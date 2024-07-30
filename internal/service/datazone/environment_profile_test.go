@@ -13,6 +13,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/datazone"
 	"github.com/aws/aws-sdk-go-v2/service/datazone/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/datazone/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfdatazone "github.com/hashicorp/terraform-provider-aws/internal/service/datazone"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -35,7 +38,61 @@ func TestAccDataZoneEnvironmentProfile_basic(t *testing.T) {
 	dName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	pName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	envProfName := "aws_datazone_environment_profile.test"
+	resourceName := "aws_datazone_environment_profile.test"
+	domainName := "aws_datazone_domain.test"
+	callName := "data.aws_caller_identity.test"
+	projectName := "aws_datazone_project.test"
+	regionName := "data.aws_region.test"
+	blueName := "data.aws_datazone_environment_blueprint.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.DataZoneEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataZoneServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEnvironmentProfileDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEnvironmentProfileConfig_basic_base(epName, dName, pName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEnvironmentProfileExists(ctx, resourceName, &environmentprofile),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAWSAccountID, callName, names.AttrAccountID),
+					resource.TestCheckResourceAttrPair(resourceName, "aws_account_region", regionName, names.AttrName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
+					resource.TestCheckResourceAttrSet(resourceName, "created_by"),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_identifier", domainName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "environment_blueprint_identifier", blueName, names.AttrID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, epName),
+					resource.TestCheckResourceAttrPair(resourceName, "project_identifier", projectName, names.AttrID),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateIdFunc:       testAccAuthorizerEnvProfImportStateIdFunc(resourceName),
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
+			},
+		},
+	})
+}
+
+func TestAccDataZoneEnvironmentProfile_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var environmentprofile datazone.GetEnvironmentProfileOutput
+	epName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	pName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resourceName := "aws_datazone_environment_profile.test"
 	domainName := "aws_datazone_domain.test"
 	callName := "data.aws_caller_identity.test"
 	projectName := "aws_datazone_project.test"
@@ -55,53 +112,53 @@ func TestAccDataZoneEnvironmentProfile_basic(t *testing.T) {
 			{
 				Config: testAccEnvironmentProfileConfig_basic(epName, dName, pName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentProfileExists(ctx, envProfName, &environmentprofile),
-					resource.TestCheckResourceAttrPair(envProfName, names.AttrAWSAccountID, callName, names.AttrAccountID),
-					resource.TestCheckResourceAttrPair(envProfName, "aws_account_region", regionName, names.AttrName),
-					resource.TestCheckResourceAttrSet(envProfName, names.AttrCreatedAt),
-					resource.TestCheckResourceAttrSet(envProfName, "created_by"),
-					resource.TestCheckResourceAttr(envProfName, names.AttrDescription, "desc"),
-					resource.TestCheckResourceAttr(envProfName, "user_parameters.0.name", "consumerGlueDbName"),
-					resource.TestCheckResourceAttr(envProfName, "user_parameters.0.value", names.AttrValue),
-					resource.TestCheckResourceAttrPair(envProfName, "domain_identifier", domainName, names.AttrID),
-					resource.TestCheckResourceAttrPair(envProfName, "environment_blueprint_identifier", blueName, names.AttrID),
-					resource.TestCheckResourceAttrSet(envProfName, names.AttrID),
-					resource.TestCheckResourceAttr(envProfName, names.AttrName, epName),
-					resource.TestCheckResourceAttrPair(envProfName, "project_identifier", projectName, names.AttrID),
+					testAccCheckEnvironmentProfileExists(ctx, resourceName, &environmentprofile),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAWSAccountID, callName, names.AttrAccountID),
+					resource.TestCheckResourceAttrPair(resourceName, "aws_account_region", regionName, names.AttrName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
+					resource.TestCheckResourceAttrSet(resourceName, "created_by"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "desc"),
+					resource.TestCheckResourceAttr(resourceName, "user_parameters.0.name", "consumerGlueDbName"),
+					resource.TestCheckResourceAttr(resourceName, "user_parameters.0.value", names.AttrValue),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_identifier", domainName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "environment_blueprint_identifier", blueName, names.AttrID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, epName),
+					resource.TestCheckResourceAttrPair(resourceName, "project_identifier", projectName, names.AttrID),
 				),
 			},
 			{
-				ResourceName:            envProfName,
+				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateIdFunc:       testAccAuthorizerEnvProfImportStateIdFunc(envProfName),
+				ImportStateIdFunc:       testAccAuthorizerEnvProfImportStateIdFunc(resourceName),
 				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
 			},
 			{
 				Config: testAccEnvironmentProfileConfig_update(epName, dName, pName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentProfileExists(ctx, envProfName, &environmentprofile),
-					testAccCheckEnvironmentProfileExists(ctx, envProfName, &environmentprofile),
-					resource.TestCheckResourceAttrPair(envProfName, names.AttrAWSAccountID, callName, names.AttrAccountID),
-					resource.TestCheckResourceAttrPair(envProfName, "aws_account_region", regionName, names.AttrName),
-					resource.TestCheckResourceAttrSet(envProfName, names.AttrCreatedAt),
-					resource.TestCheckResourceAttrSet(envProfName, "created_by"),
-					resource.TestCheckResourceAttr(envProfName, names.AttrDescription, names.AttrDescription),
-					resource.TestCheckResourceAttr(envProfName, "user_parameters.0.name", "consumerGlueDbName"),
-					resource.TestCheckResourceAttr(envProfName, "user_parameters.0.value", names.AttrValue),
-					resource.TestCheckResourceAttrPair(envProfName, "domain_identifier", domainName, names.AttrID),
-					resource.TestCheckResourceAttrPair(envProfName, "environment_blueprint_identifier", blueName, names.AttrID),
-					resource.TestCheckResourceAttrSet(envProfName, names.AttrID),
-					resource.TestCheckResourceAttr(envProfName, names.AttrName, epName),
-					resource.TestCheckResourceAttrPair(envProfName, "project_identifier", projectName, names.AttrID),
-					resource.TestCheckResourceAttrSet(envProfName, "updated_at"),
+					testAccCheckEnvironmentProfileExists(ctx, resourceName, &environmentprofile),
+					testAccCheckEnvironmentProfileExists(ctx, resourceName, &environmentprofile),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAWSAccountID, callName, names.AttrAccountID),
+					resource.TestCheckResourceAttrPair(resourceName, "aws_account_region", regionName, names.AttrName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
+					resource.TestCheckResourceAttrSet(resourceName, "created_by"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, names.AttrDescription),
+					resource.TestCheckResourceAttr(resourceName, "user_parameters.0.name", "consumerGlueDbName"),
+					resource.TestCheckResourceAttr(resourceName, "user_parameters.0.value", names.AttrValue),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_identifier", domainName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "environment_blueprint_identifier", blueName, names.AttrID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, epName),
+					resource.TestCheckResourceAttrPair(resourceName, "project_identifier", projectName, names.AttrID),
+					resource.TestCheckResourceAttrSet(resourceName, "updated_at"),
 				),
 			},
 			{
-				ResourceName:            envProfName,
+				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateIdFunc:       testAccAuthorizerEnvProfImportStateIdFunc(envProfName),
+				ImportStateIdFunc:       testAccAuthorizerEnvProfImportStateIdFunc(resourceName),
 				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
 			},
 		},
@@ -119,7 +176,7 @@ func TestAccDataZoneEnvironmentProfile_disappears(t *testing.T) {
 	dName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	pName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	envProfName := "aws_datazone_environment_profile.test"
+	resourceName := "aws_datazone_environment_profile.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -134,8 +191,8 @@ func TestAccDataZoneEnvironmentProfile_disappears(t *testing.T) {
 			{
 				Config: testAccEnvironmentProfileConfig_basic(epName, dName, pName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentProfileExists(ctx, envProfName, &environmentprofile),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdatazone.ResourceEnvironmentProfile, envProfName),
+					testAccCheckEnvironmentProfileExists(ctx, resourceName, &environmentprofile),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdatazone.ResourceEnvironmentProfile, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -152,12 +209,7 @@ func testAccCheckEnvironmentProfileDestroy(ctx context.Context) resource.TestChe
 				continue
 			}
 
-			t := rs.Primary.Attributes["domain_identifier"]
-
-			_, err := conn.GetEnvironmentProfile(ctx, &datazone.GetEnvironmentProfileInput{
-				DomainIdentifier: &t,
-				Identifier:       aws.String(rs.Primary.ID),
-			})
+			_, err := findEnvironmentProfileByID(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["domain_identifier"])
 
 			if errs.IsA[*types.ResourceNotFoundException](err) || errs.IsA[*types.AccessDeniedException](err) {
 				return nil
@@ -184,12 +236,8 @@ func testAccCheckEnvironmentProfileExists(ctx context.Context, name string, envi
 			return create.Error(names.DataZone, create.ErrActionCheckingExistence, tfdatazone.ResNameEnvironmentProfile, name, errors.New("not set"))
 		}
 
-		t := rs.Primary.Attributes["domain_identifier"]
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataZoneClient(ctx)
-		resp, err := conn.GetEnvironmentProfile(ctx, &datazone.GetEnvironmentProfileInput{
-			DomainIdentifier: &t,
-			Identifier:       &rs.Primary.ID,
-		})
+		resp, err := findEnvironmentProfileByID(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["domain_identifier"])
 
 		if err != nil {
 			return create.Error(names.DataZone, create.ErrActionCheckingExistence, tfdatazone.ResNameEnvironmentProfile, rs.Primary.ID, err)
@@ -201,21 +249,30 @@ func testAccCheckEnvironmentProfileExists(ctx context.Context, name string, envi
 	}
 }
 
-/*
-func envProfTestAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DataZoneClient(ctx)
-
-	input := &datazone.ListEnvironmentProfilesInput{}
-	_, err := conn.ListEnvironmentProfiles(ctx, input)
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
+func findEnvironmentProfileByID(ctx context.Context, conn *datazone.Client, id string, domain_id string) (*datazone.GetEnvironmentProfileOutput, error) {
+	in := &datazone.GetEnvironmentProfileInput{
+		Identifier:       aws.String(id),
+		DomainIdentifier: aws.String(domain_id),
 	}
+
+	out, err := conn.GetEnvironmentProfile(ctx, in)
 	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: in,
+			}
+		}
+
+		return nil, err
 	}
+
+	if out == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out, nil
 }
-*/
 
 func testAccAuthorizerEnvProfImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
@@ -224,7 +281,7 @@ func testAccAuthorizerEnvProfImportStateIdFunc(resourceName string) resource.Imp
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return strings.Join([]string{rs.Primary.Attributes["domain_identifier"], rs.Primary.ID, rs.Primary.Attributes["environment_blueprint_identifier"], rs.Primary.Attributes["project_identifier"]}, ":"), nil
+		return strings.Join([]string{rs.Primary.Attributes["domain_identifier"], rs.Primary.ID, rs.Primary.Attributes["environment_blueprint_identifier"], rs.Primary.Attributes["project_identifier"]}, ","), nil
 	}
 }
 
@@ -281,6 +338,20 @@ resource "aws_datazone_environment_profile" "test" {
     name  = "consumerGlueDbName"
     value = "value"
   }
+}
+`, rName))
+}
+
+func testAccEnvironmentProfileConfig_basic_base(rName, domainName, projectName string) string {
+	return acctest.ConfigCompose(testAccEnvironmentProfileConfig_base(domainName, projectName), fmt.Sprintf(`
+resource "aws_datazone_environment_profile" "test" {
+  aws_account_id                   = data.aws_caller_identity.test.account_id
+  aws_account_region               = data.aws_region.test.name
+  environment_blueprint_identifier = data.aws_datazone_environment_blueprint.test.id
+  name                             = %[1]q
+  project_identifier               = aws_datazone_project.test.id
+  domain_identifier                = aws_datazone_domain.test.id
+
 }
 `, rName))
 }

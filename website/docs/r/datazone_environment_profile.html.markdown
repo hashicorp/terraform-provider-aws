@@ -140,12 +140,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_datazone_environment_profile.example
-  id = "domain_identifier:environment_profile_id:environment_blueprint_identifier:project_identifier"
+  id = "environment-domain-id-12345678,environment_profile-id-12345678"
 }
 ```
 
-Using `terraform import`, import DataZone Environment Profile using the `id`. For example:
+Using `terraform import`, import DataZone Environment Profile using a comma-delimited string combining `enviroment-profile-id` and `enviroment-domain-id`. For example:
 
 ```console
-% terraform import aws_datazone_environment_profile.example environment_profile-id-12345678
+% terraform import aws_datazone_environment_profile.example environment-domain-id-12345678,environment_profile-id-12345678
 ```
