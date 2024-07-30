@@ -86,9 +86,6 @@ func testAccSlackChannelConfiguration_basic(t *testing.T) {
 
 func testAccSlackChannelConfiguration_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 
 	var slackchannelconfiguration types.SlackChannelConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
