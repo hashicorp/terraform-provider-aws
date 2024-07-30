@@ -139,7 +139,7 @@ func cacheParseResourceID(id string) (string, string, error) {
 		return "", "", idFormatErr
 	}
 	// gatewayARNAndDisk.Resource = gateway/sgw-12345678:pci-0000:03:00.0-scsi-0:0:0:0
-	resourceParts := strings.SplitN(gatewayARNAndDisk.Resource, ":", 2)
+	resourceParts := strings.SplitN(gatewayARNAndDisk.Resource, cacheResourceIDSeparator, 2)
 	if len(resourceParts) != 2 {
 		return "", "", idFormatErr
 	}

@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestDecodeCacheID(t *testing.T) {
+func TestCacheParseResourceID(t *testing.T) {
 	t.Parallel()
 
 	var testCases = []struct {

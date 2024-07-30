@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -53,38 +54,19 @@ func dataSourceLocalDiskRead(ctx context.Context, d *schema.ResourceData, meta i
 		GatewayARN: aws.String(d.Get("gateway_arn").(string)),
 	}
 
-	output, err := conn.ListLocalDisks(ctx, input)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Storage Gateway Local Disks: %s", err)
-	}
-
-	if output == nil || len(output.Disks) == 0 {
-		return sdkdiag.AppendErrorf(diags, "no results found for query, try adjusting your search criteria")
-	}
-
-	var matchingDisks []awstypes.Disk
-
-	for _, disk := range output.Disks {
+	disk, err := findLocalDisk(ctx, conn, input, func(disk awstypes.Disk) bool {
 		if v, ok := d.GetOk("disk_node"); ok && v.(string) == aws.ToString(disk.DiskNode) {
-			matchingDisks = append(matchingDisks, disk)
-			continue
+			return true
 		}
 		if v, ok := d.GetOk("disk_path"); ok && v.(string) == aws.ToString(disk.DiskPath) {
-			matchingDisks = append(matchingDisks, disk)
-			continue
+			return true
 		}
-	}
+		return false
+	})
 
-	if len(matchingDisks) == 0 {
-		return sdkdiag.AppendErrorf(diags, "no results found for query, try adjusting your search criteria")
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("Storage Gateway Local Disk", err))
 	}
-
-	if len(matchingDisks) > 1 {
-		return sdkdiag.AppendErrorf(diags, "multiple results found for query, try adjusting your search criteria")
-	}
-
-	disk := matchingDisks[0]
 
 	d.SetId(aws.ToString(disk.DiskId))
 	d.Set("disk_id", disk.DiskId)
