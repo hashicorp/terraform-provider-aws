@@ -95,6 +95,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
+			Factory:  resourceRepositoryCreationTemplate,
+			TypeName: "aws_ecr_repository_creation_template",
+			Name:     "Repository Creation Template",
+		},
+		{
 			Factory:  resourceRepositoryPolicy,
 			TypeName: "aws_ecr_repository_policy",
 			Name:     "Repsitory Policy",
