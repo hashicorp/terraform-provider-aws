@@ -127,6 +127,10 @@ func expandingLogLine(sourceType, targetType reflect.Type) map[string]any {
 	return infoLogLine("Expanding", sourceType, targetType)
 }
 
+func expandingWithPathLogLine(sourcePath string, sourceType reflect.Type, targetPath string, targetType reflect.Type) map[string]any {
+	return infoWithPathLogLine("Expanding", sourcePath, sourceType, targetPath, targetType)
+}
+
 func flatteningLogLine(sourceType, targetType reflect.Type) map[string]any {
 	return infoLogLine("Flattening", sourceType, targetType)
 }
