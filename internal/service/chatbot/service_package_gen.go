@@ -27,7 +27,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Factory: newSlackChannelConfigurationResource,
 			Name:    "Slack Channel Configuration",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrResourceARN,
+				IdentifierAttribute: "chat_configuration_arn",
 			},
 		},
 	}
