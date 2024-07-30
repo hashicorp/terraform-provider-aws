@@ -334,8 +334,9 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 					return sdkdiag.AppendErrorf(diags, "reading WAFv2 WebACL (%s): %s", d.Id(), err)
 				}
 
-				rules = append(r, findShieldRule(output.WebACL.Rules)...)
+				r = append(r, findShieldRule(output.WebACL.Rules)...)
 			}
+			rules = r
 		}
 
 		input := &wafv2.UpdateWebACLInput{

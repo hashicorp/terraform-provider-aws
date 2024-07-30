@@ -1920,14 +1920,6 @@ func flattenRuleLabels(l []awstypes.Label) []interface{} {
 	return out
 }
 
-func flattenRuleJSON(l []awstypes.Rule) (string, error) {
-	b, err := json.Marshal(l)
-	if err != nil {
-		return "", err
-	}
-	return string(b), nil
-}
-
 func flattenRuleGroupRootStatement(s *awstypes.Statement) interface{} {
 	if s == nil {
 		return []interface{}{}
