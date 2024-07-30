@@ -71,7 +71,7 @@ func (r *slackChannelConfigurationResource) Schema(ctx context.Context, request 
 					listplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"iam_role_arn": schema.StringAttribute{
+			names.AttrIAMRoleARN: schema.StringAttribute{
 				Required: true,
 			},
 			names.AttrID: framework.IDAttribute(),
