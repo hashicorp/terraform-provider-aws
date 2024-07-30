@@ -2146,9 +2146,9 @@ func TestExpandComplexNestedBlockWithStringEnum(t *testing.T) {
 				convertingWithPathLogLine("Field1", reflect.TypeFor[types.Int64](), "Field1", reflect.TypeFor[int64]()),
 				matchedFieldsLogLine("Field2", reflect.TypeFor[*tf02](), "Field2", reflect.TypeFor[*aws01]()),
 				convertingWithPathLogLine("Field2", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tf01]](), "Field2", reflect.TypeFor[*aws02]()),
-				matchedFieldsWithPathLogLine("Field2[0]", "Field2", reflect.TypeFor[*tf01](), "Field2", "Field2", reflect.TypeFor[*aws02]()),                 // TODO: fix target path index
-				convertingWithPathLogLine("Field2[0].Field2", reflect.TypeFor[fwtypes.StringEnum[TestEnum]](), "Field2.Field2", reflect.TypeFor[TestEnum]()), // TODO: fix target path index
-				expandNullValueLogLine("Field2[0].Field2", reflect.TypeFor[fwtypes.StringEnum[TestEnum]](), "Field2.Field2", reflect.TypeFor[TestEnum]()),    // TODO: fix target path index
+				matchedFieldsWithPathLogLine("Field2[0]", "Field2", reflect.TypeFor[*tf01](), "Field2", "Field2", reflect.TypeFor[*aws02]()),
+				convertingWithPathLogLine("Field2[0].Field2", reflect.TypeFor[fwtypes.StringEnum[TestEnum]](), "Field2.Field2", reflect.TypeFor[TestEnum]()),
+				expandNullValueLogLine("Field2[0].Field2", reflect.TypeFor[fwtypes.StringEnum[TestEnum]](), "Field2.Field2", reflect.TypeFor[TestEnum]()),
 			},
 		},
 	}
@@ -2345,7 +2345,7 @@ func TestExpandInterface(t *testing.T) {
 					"@message":           "AutoFlex Expand; incompatible types",
 					"from":               map[string]any{},
 					"to":                 float64(reflect.Interface),
-					logAttrKeySourcePath: "Field1",
+					logAttrKeySourcePath: "Field1[0]",
 					logAttrKeySourceType: fullTypeName(reflect.TypeFor[*TestFlexTF01]()),
 					logAttrKeyTargetPath: "Field1",
 					logAttrKeyTargetType: fullTypeName(reflect.TypeFor[*testFlexAWSInterfaceInterface]()),
@@ -2970,7 +2970,7 @@ func TestExpandInterfaceTypedExpander(t *testing.T) {
 					"@message":           "AutoFlex Expand; incompatible types",
 					"from":               map[string]any{},
 					"to":                 float64(reflect.Interface),
-					logAttrKeySourcePath: "Field1",
+					logAttrKeySourcePath: "Field1[0]",
 					logAttrKeySourceType: fullTypeName(reflect.TypeFor[*TestFlexTF01]()),
 					logAttrKeyTargetPath: "Field1",
 					logAttrKeyTargetType: fullTypeName(reflect.TypeFor[*testFlexAWSInterfaceInterface]()),

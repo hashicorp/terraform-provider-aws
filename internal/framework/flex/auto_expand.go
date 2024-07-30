@@ -813,6 +813,8 @@ func (expander autoExpander) nestedObjectCollection(ctx context.Context, sourceP
 		//
 		// types.List(OfObject) -> interface.
 		//
+		sourcePath := sourcePath.AtListIndex(0)
+		ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourcePath, sourcePath.String())
 		diags.Append(expander.nestedObjectToStruct(ctx, sourcePath, vFrom, targetPath, tTo, vTo)...)
 		return diags
 
