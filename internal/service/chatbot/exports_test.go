@@ -7,5 +7,5 @@ package chatbot
 var (
 	ResourceSlackChannelConfiguration = newSlackChannelConfigurationResource
 
-	FindSlackChannelConfigurationByID = findSlackChannelConfigurationByID
+	FindSlackChannelConfigurationByARN = findSlackChannelConfigurationByARN
 )
