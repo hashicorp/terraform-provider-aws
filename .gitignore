@@ -15,6 +15,7 @@
 *.log
 *.prof
 *.test
+*.venv/
 *~
 /pkg/
 aws/testdata/service/cloudformation/examplecompany-exampleservice-exampleresource/bin/handler

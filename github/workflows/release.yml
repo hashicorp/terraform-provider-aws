@@ -1,0 +1,39 @@
+# Terraform Provider release workflow.
+name: Release
+
+on:
+    push:
+        tags:
+            - "v*"
+
+permissions:
+    contents: write
+
+jobs:
+    goreleaser:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+              with:
+                  # Allow goreleaser to access older tag information.
+                  fetch-depth: 0
+            - name: Setup Go
+              uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
+              with:
+                  go-version-file: "go.mod"
+                  cache: true
+            - name: Import GPG key
+              uses: crazy-max/ghaction-import-gpg@111c56156bcc6918c056dbef52164cfa583dc549 # v5.2.0
+              id: import_gpg
+              with:
+                  gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+                  passphrase: ${{ secrets.PASSPHRASE }}
+            - name: Run GoReleaser
+              uses: goreleaser/goreleaser-action@f82d6c1c344bcacabba2c841718984797f664a6b # v4.2.0
+              with:
+                  args: release --clean
+              env:
+                  # GitHub sets the GITHUB_TOKEN secret automatically.
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
