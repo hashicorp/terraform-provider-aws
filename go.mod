@@ -6,7 +6,7 @@ require (
 	github.com/ProtonMail/go-crypto v1.1.0-alpha.5-proton
 	github.com/YakDriver/go-version v0.1.0
 	github.com/YakDriver/regexache v0.24.0
-	github.com/aws/aws-sdk-go v1.55.3
+	github.com/aws/aws-sdk-go v1.55.4
 	github.com/aws/aws-sdk-go-v2 v1.30.3
 	github.com/aws/aws-sdk-go-v2/config v1.27.27
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.27
@@ -99,7 +99,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.44.3
 	github.com/aws/aws-sdk-go-v2/service/efs v1.31.3
 	github.com/aws/aws-sdk-go-v2/service/eks v1.47.0
-	github.com/aws/aws-sdk-go-v2/service/elasticache v1.40.3
+	github.com/aws/aws-sdk-go-v2/service/elasticache v1.40.4
 	github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.26.2
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.26.3
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.34.0
@@ -206,7 +206,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.32.3
 	github.com/aws/aws-sdk-go-v2/service/ssmsap v1.15.3
 	github.com/aws/aws-sdk-go-v2/service/sso v1.22.4
-	github.com/aws/aws-sdk-go-v2/service/ssoadmin v1.27.3
+	github.com/aws/aws-sdk-go-v2/service/ssoadmin v1.27.4
 	github.com/aws/aws-sdk-go-v2/service/sts v1.30.3
 	github.com/aws/aws-sdk-go-v2/service/swf v1.25.3
 	github.com/aws/aws-sdk-go-v2/service/synthetics v1.26.3
