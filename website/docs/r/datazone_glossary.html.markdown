@@ -55,7 +55,6 @@ resource "aws_iam_role" "domain_execution_role" {
   }
 }
 
-
 resource "aws_datazone_domain" "test" {
   name                  = "example_name"
   domain_execution_role = aws_iam_role.domain_execution_role.arn
@@ -84,10 +83,7 @@ resource "aws_datazone_glossary" "test" {
 }
 ```
 
-
 ### Basic Usage
-
-
 
 ```terraform
 resource "aws_datazone_glossary" "test" {
@@ -108,8 +104,6 @@ The following arguments are required:
 * `name` - (Required) Name of the glossary. Must have length between 1 and 256.
 * `owning_project_identifier` - (Required) ID of the project that owns business glossary. Must follow regex of ^[a-zA-Z0-9_-]{1,36}$.
 
-
-
 The following arguments are optional:
 
 * `description` - (Optional) Description of the glossary. Must have a length between 0 and 4096.
@@ -122,14 +116,6 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - Id of the Glossary.
 
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
-
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DataZone Glossary using the `example_id_arg`. For example:
@@ -141,7 +127,7 @@ import {
 }
 ```
 
-Using `terraform import`, import DataZone Glossary using the `example_id_arg`. For example:
+Using `terraform import`, import DataZone Glossary using the import Datazone Glossary using a comma-delimited string combining the domain id, glossary id, and the id of the project it's under. For example:
 
 ```console
 % terraform import aws_datazone_glossary.example domain-id,glossary-id,owning-project-identifier
