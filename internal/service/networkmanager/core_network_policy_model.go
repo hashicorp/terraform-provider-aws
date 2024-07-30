@@ -100,6 +100,7 @@ type coreNetworkPolicyAttachmentPolicyAction struct {
 func (c coreNetworkPolicySegmentAction) MarshalJSON() ([]byte, error) {
 	type Alias coreNetworkPolicySegmentAction
 	var share interface{}
+	var whenSentTo *coreNetworkPolicySegmentActionWhenSentTo
 
 	if v := c.ShareWith; v != nil {
 		v := v.([]string)
@@ -114,6 +115,17 @@ func (c coreNetworkPolicySegmentAction) MarshalJSON() ([]byte, error) {
 		}
 	}
 
+	if v := c.WhenSentTo; v != nil {
+		if s := v.Segments; s != nil {
+			s := s.([]string)
+			if s[0] == "*" {
+				whenSentTo = &coreNetworkPolicySegmentActionWhenSentTo{Segments: s[0]}
+			} else {
+				whenSentTo = c.WhenSentTo
+			}
+		}
+	}
+
 	return json.Marshal(&Alias{
 		Action:                c.Action,
 		Mode:                  c.Mode,
@@ -122,7 +134,7 @@ func (c coreNetworkPolicySegmentAction) MarshalJSON() ([]byte, error) {
 		Segment:               c.Segment,
 		ShareWith:             share,
 		Via:                   c.Via,
-		WhenSentTo:            c.WhenSentTo,
+		WhenSentTo:            whenSentTo,
 	})
 }
 
