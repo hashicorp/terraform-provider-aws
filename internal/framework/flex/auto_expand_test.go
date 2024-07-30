@@ -338,10 +338,10 @@ func TestExpand(t *testing.T) {
 				convertingWithPathLogLine("Field4", reflect.TypeFor[types.Set](), "Field4", reflect.TypeFor[[]*string]()),
 				matchedFieldsLogLine("Field5", reflect.TypeFor[*TestFlexTF04](), "Field5", reflect.TypeFor[*TestFlexAWS05]()),
 				convertingWithPathLogLine("Field5", reflect.TypeFor[types.Map](), "Field5", reflect.TypeFor[map[string]string]()),
-				expandElementsAsLogLine("Field5", reflect.TypeFor[types.Map](), "Field5", reflect.TypeFor[map[string]string]()),
+				expandElementsAsLogLine("Field5", reflect.TypeFor[types.Map](), 2, "Field5", reflect.TypeFor[map[string]string]()),
 				matchedFieldsLogLine("Field6", reflect.TypeFor[*TestFlexTF04](), "Field6", reflect.TypeFor[*TestFlexAWS05]()),
 				convertingWithPathLogLine("Field6", reflect.TypeFor[types.Map](), "Field6", reflect.TypeFor[map[string]*string]()),
-				expandElementsAsLogLine("Field6", reflect.TypeFor[types.Map](), "Field6", reflect.TypeFor[map[string]*string]()),
+				expandElementsAsLogLine("Field6", reflect.TypeFor[types.Map](), 2, "Field6", reflect.TypeFor[map[string]*string]()),
 			},
 		},
 		{
@@ -754,7 +754,7 @@ func TestExpandGeneric(t *testing.T) {
 
 				matchedFieldsLogLine("Field3", reflect.TypeFor[*TestFlexTF07](), "Field3", reflect.TypeFor[*TestFlexAWS09]()),
 				convertingWithPathLogLine("Field3", reflect.TypeFor[types.Map](), "Field3", reflect.TypeFor[map[string]*string]()),
-				expandElementsAsLogLine("Field3", reflect.TypeFor[types.Map](), "Field3", reflect.TypeFor[map[string]*string]()),
+				expandElementsAsLogLine("Field3", reflect.TypeFor[types.Map](), 2, "Field3", reflect.TypeFor[map[string]*string]()),
 
 				matchedFieldsLogLine("Field4", reflect.TypeFor[*TestFlexTF07](), "Field4", reflect.TypeFor[*TestFlexAWS09]()),
 				convertingWithPathLogLine("Field4", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[TestFlexTF02]](), "Field4", reflect.TypeFor[[]TestFlexAWS03]()),
@@ -784,7 +784,7 @@ func TestExpandGeneric(t *testing.T) {
 				convertingLogLine(reflect.TypeFor[TestFlexTF11](), reflect.TypeFor[TestFlexAWS13]()),
 				matchedFieldsLogLine("FieldInner", reflect.TypeFor[*TestFlexTF11](), "FieldInner", reflect.TypeFor[*TestFlexAWS13]()),
 				convertingWithPathLogLine("FieldInner", reflect.TypeFor[fwtypes.MapValueOf[basetypes.StringValue]](), "FieldInner", reflect.TypeFor[map[string]string]()),
-				expandElementsAsLogLine("FieldInner", reflect.TypeFor[fwtypes.MapValueOf[basetypes.StringValue]](), "FieldInner", reflect.TypeFor[map[string]string]()),
+				expandElementsAsLogLine("FieldInner", reflect.TypeFor[fwtypes.MapValueOf[basetypes.StringValue]](), 1, "FieldInner", reflect.TypeFor[map[string]string]()),
 			},
 		},
 		{
@@ -805,7 +805,7 @@ func TestExpandGeneric(t *testing.T) {
 				convertingLogLine(reflect.TypeFor[TestFlexTF11](), reflect.TypeFor[awsMapOfStringPointer]()),
 				matchedFieldsLogLine("FieldInner", reflect.TypeFor[*TestFlexTF11](), "FieldInner", reflect.TypeFor[*awsMapOfStringPointer]()),
 				convertingWithPathLogLine("FieldInner", reflect.TypeFor[fwtypes.MapValueOf[basetypes.StringValue]](), "FieldInner", reflect.TypeFor[map[string]*string]()),
-				expandElementsAsLogLine("FieldInner", reflect.TypeFor[fwtypes.MapValueOf[basetypes.StringValue]](), "FieldInner", reflect.TypeFor[map[string]*string]()),
+				expandElementsAsLogLine("FieldInner", reflect.TypeFor[fwtypes.MapValueOf[basetypes.StringValue]](), 1, "FieldInner", reflect.TypeFor[map[string]*string]()),
 			},
 		},
 		{
@@ -880,7 +880,7 @@ func TestExpandGeneric(t *testing.T) {
 				convertingWithPathLogLine("FieldOuter", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[TestFlexTF11]](), "FieldOuter", reflect.TypeFor[TestFlexAWS13]()),
 				matchedFieldsWithPathLogLine("FieldOuter[0]", "FieldInner", reflect.TypeFor[*TestFlexTF11](), "FieldOuter", "FieldInner", reflect.TypeFor[*TestFlexAWS13]()),
 				convertingWithPathLogLine("FieldOuter[0].FieldInner", reflect.TypeFor[fwtypes.MapValueOf[basetypes.StringValue]](), "FieldOuter.FieldInner", reflect.TypeFor[map[string]string]()),
-				expandElementsAsLogLine("FieldOuter[0].FieldInner", reflect.TypeFor[fwtypes.MapValueOf[basetypes.StringValue]](), "FieldOuter.FieldInner", reflect.TypeFor[map[string]string]()),
+				expandElementsAsLogLine("FieldOuter[0].FieldInner", reflect.TypeFor[fwtypes.MapValueOf[basetypes.StringValue]](), 1, "FieldOuter.FieldInner", reflect.TypeFor[map[string]string]()),
 			},
 		},
 		{
@@ -2120,11 +2120,9 @@ func TestExpandOptions(t *testing.T) {
 			TestName: "ignore tags by default",
 			Source: &tf01{
 				Field1: types.BoolValue(true),
-				Tags: fwtypes.NewMapValueOfMust[types.String](
-					ctx,
-					map[string]attr.Value{
-						"foo": types.StringValue("bar"),
-					},
+				Tags: fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
+					"foo": types.StringValue("bar"),
+				},
 				),
 			},
 			Target:     &aws01{},
@@ -2146,11 +2144,9 @@ func TestExpandOptions(t *testing.T) {
 			},
 			Source: &tf01{
 				Field1: types.BoolValue(true),
-				Tags: fwtypes.NewMapValueOfMust[types.String](
-					ctx,
-					map[string]attr.Value{
-						"foo": types.StringValue("bar"),
-					},
+				Tags: fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
+					"foo": types.StringValue("bar"),
+				},
 				),
 			},
 			Target: &aws01{},
@@ -2165,7 +2161,7 @@ func TestExpandOptions(t *testing.T) {
 				convertingWithPathLogLine("Field1", reflect.TypeFor[types.Bool](), "Field1", reflect.TypeFor[bool]()),
 				matchedFieldsLogLine("Tags", reflect.TypeFor[*tf01](), "Tags", reflect.TypeFor[*aws01]()),
 				convertingWithPathLogLine("Tags", reflect.TypeFor[fwtypes.MapValueOf[basetypes.StringValue]](), "Tags", reflect.TypeFor[map[string]string]()),
-				expandElementsAsLogLine("Tags", reflect.TypeFor[fwtypes.MapValueOf[basetypes.StringValue]](), "Tags", reflect.TypeFor[map[string]string]()),
+				expandElementsAsLogLine("Tags", reflect.TypeFor[fwtypes.MapValueOf[basetypes.StringValue]](), 1, "Tags", reflect.TypeFor[map[string]string]()),
 			},
 		},
 		{
@@ -2177,11 +2173,9 @@ func TestExpandOptions(t *testing.T) {
 			},
 			Source: &tf01{
 				Field1: types.BoolValue(true),
-				Tags: fwtypes.NewMapValueOfMust[types.String](
-					ctx,
-					map[string]attr.Value{
-						"foo": types.StringValue("bar"),
-					},
+				Tags: fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
+					"foo": types.StringValue("bar"),
+				},
 				),
 			},
 			Target: &aws01{},
@@ -2194,7 +2188,7 @@ func TestExpandOptions(t *testing.T) {
 				ignoredFieldLogLine(reflect.TypeFor[*tf01](), "Field1", reflect.TypeFor[*aws01]()),
 				matchedFieldsLogLine("Tags", reflect.TypeFor[*tf01](), "Tags", reflect.TypeFor[*aws01]()),
 				convertingWithPathLogLine("Tags", reflect.TypeFor[fwtypes.MapValueOf[basetypes.StringValue]](), "Tags", reflect.TypeFor[map[string]string]()),
-				expandElementsAsLogLine("Tags", reflect.TypeFor[fwtypes.MapValueOf[basetypes.StringValue]](), "Tags", reflect.TypeFor[map[string]string]()),
+				expandElementsAsLogLine("Tags", reflect.TypeFor[fwtypes.MapValueOf[basetypes.StringValue]](), 1, "Tags", reflect.TypeFor[map[string]string]()),
 			},
 		},
 	}

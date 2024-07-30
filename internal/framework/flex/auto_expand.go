@@ -684,7 +684,9 @@ func (expander autoExpander) mapOfString(ctx context.Context, vFrom basetypes.Ma
 				//
 				// types.Map(OfString) -> map[string]string.
 				//
-				tflog.SubsystemTrace(ctx, subsystemName, "Expanding with ElementsAs")
+				tflog.SubsystemTrace(ctx, subsystemName, "Expanding with ElementsAs", map[string]any{
+					logAttrKeySourceSize: len(vFrom.Elements()),
+				})
 				var to map[string]string
 				diags.Append(vFrom.ElementsAs(ctx, &to, false)...)
 				if diags.HasError() {
@@ -700,7 +702,9 @@ func (expander autoExpander) mapOfString(ctx context.Context, vFrom basetypes.Ma
 					//
 					// types.Map(OfString) -> map[string]*string.
 					//
-					tflog.SubsystemTrace(ctx, subsystemName, "Expanding with ElementsAs")
+					tflog.SubsystemTrace(ctx, subsystemName, "Expanding with ElementsAs", map[string]any{
+						logAttrKeySourceSize: len(vFrom.Elements()),
+					})
 					var to map[string]*string
 					diags.Append(vFrom.ElementsAs(ctx, &to, false)...)
 					if diags.HasError() {
