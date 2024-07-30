@@ -40,6 +40,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Factory: newResourceProject,
 			Name:    "Project",
 		},
+		{
+			Factory: newResourceGlossary,
+			Name:    "Glossary",
+		},
 	}
 }
 
