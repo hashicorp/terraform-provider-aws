@@ -1333,6 +1333,7 @@ func TestExpandListOfInt64(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[*[]int64]()),
 				convertingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[[]int64]()),
+				expandElementsAsLogLine("", reflect.TypeFor[types.List](), 2, "", reflect.TypeFor[[]int64]()),
 			},
 		},
 		{
@@ -1343,6 +1344,7 @@ func TestExpandListOfInt64(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[*[]int64]()),
 				convertingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[[]int64]()),
+				expandElementsAsLogLine("", reflect.TypeFor[types.List](), 0, "", reflect.TypeFor[[]int64]()),
 			},
 		},
 		{
@@ -1353,6 +1355,7 @@ func TestExpandListOfInt64(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[*[]int64]()),
 				convertingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[[]int64]()),
+				// expandNullValueLogLine("", reflect.TypeFor[types.List](), "", reflect.TypeFor[[]int64]()),
 			},
 		},
 		{
@@ -1366,6 +1369,7 @@ func TestExpandListOfInt64(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[*[]*int64]()),
 				convertingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[[]*int64]()),
+				expandElementsAsLogLine("", reflect.TypeFor[types.List](), 2, "", reflect.TypeFor[[]*int64]()),
 			},
 		},
 		{
@@ -1376,6 +1380,7 @@ func TestExpandListOfInt64(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[*[]*int64]()),
 				convertingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[[]*int64]()),
+				expandElementsAsLogLine("", reflect.TypeFor[types.List](), 0, "", reflect.TypeFor[[]*int64]()),
 			},
 		},
 		{
@@ -1386,6 +1391,7 @@ func TestExpandListOfInt64(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[*[]*int64]()),
 				convertingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[[]*int64]()),
+				// expandNullValueLogLine("", reflect.TypeFor[types.List](), "", reflect.TypeFor[[]*int64]()),
 			},
 		},
 		{
@@ -1399,6 +1405,7 @@ func TestExpandListOfInt64(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[*[]int32]()),
 				convertingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[[]int32]()),
+				expandElementsAsLogLine("", reflect.TypeFor[types.List](), 2, "", reflect.TypeFor[[]int32]()),
 			},
 		},
 		{
@@ -1409,6 +1416,7 @@ func TestExpandListOfInt64(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[*[]int32]()),
 				convertingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[[]int32]()),
+				expandElementsAsLogLine("", reflect.TypeFor[types.List](), 0, "", reflect.TypeFor[[]int32]()),
 			},
 		},
 		{
@@ -1419,6 +1427,7 @@ func TestExpandListOfInt64(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[*[]int32]()),
 				convertingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[[]int32]()),
+				// expandNullValueLogLine("", reflect.TypeFor[types.List](), "", reflect.TypeFor[[]int32]()),
 			},
 		},
 		{
@@ -1432,6 +1441,7 @@ func TestExpandListOfInt64(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[*[]*int32]()),
 				convertingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[[]*int32]()),
+				expandElementsAsLogLine("", reflect.TypeFor[types.List](), 2, "", reflect.TypeFor[[]*int32]()),
 			},
 		},
 		{
@@ -1442,6 +1452,7 @@ func TestExpandListOfInt64(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[*[]*int32]()),
 				convertingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[[]*int32]()),
+				expandElementsAsLogLine("", reflect.TypeFor[types.List](), 0, "", reflect.TypeFor[[]*int32]()),
 			},
 		},
 		{
@@ -1452,6 +1463,7 @@ func TestExpandListOfInt64(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[*[]*int32]()),
 				convertingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[[]*int32]()),
+				// expandNullValueLogLine("", reflect.TypeFor[types.List](), "", reflect.TypeFor[[]*int32]()),
 			},
 		},
 	}
@@ -1473,6 +1485,7 @@ func TestExpandSetOfInt64(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[*[]int64]()),
 				convertingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[[]int64]()),
+				expandElementsAsLogLine("", reflect.TypeFor[types.Set](), 2, "", reflect.TypeFor[[]int64]()),
 			},
 		},
 		{
@@ -1483,6 +1496,7 @@ func TestExpandSetOfInt64(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[*[]int64]()),
 				convertingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[[]int64]()),
+				expandElementsAsLogLine("", reflect.TypeFor[types.Set](), 0, "", reflect.TypeFor[[]int64]()),
 			},
 		},
 		{
@@ -1493,6 +1507,7 @@ func TestExpandSetOfInt64(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[*[]int64]()),
 				convertingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[[]int64]()),
+				// expandNullValueLogLine("", reflect.TypeFor[types.List](), "", reflect.TypeFor[[]int64]()),
 			},
 		},
 		{
@@ -1506,6 +1521,7 @@ func TestExpandSetOfInt64(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[*[]*int64]()),
 				convertingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[[]*int64]()),
+				expandElementsAsLogLine("", reflect.TypeFor[types.Set](), 2, "", reflect.TypeFor[[]*int64]()),
 			},
 		},
 		{
@@ -1516,6 +1532,7 @@ func TestExpandSetOfInt64(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[*[]*int64]()),
 				convertingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[[]*int64]()),
+				expandElementsAsLogLine("", reflect.TypeFor[types.Set](), 0, "", reflect.TypeFor[[]*int64]()),
 			},
 		},
 		{
@@ -1526,6 +1543,7 @@ func TestExpandSetOfInt64(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[*[]*int64]()),
 				convertingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[[]*int64]()),
+				// expandNullValueLogLine("", reflect.TypeFor[types.Set](), "", reflect.TypeFor[[]*int64]()),
 			},
 		},
 		{
@@ -1539,6 +1557,7 @@ func TestExpandSetOfInt64(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[*[]int32]()),
 				convertingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[[]int32]()),
+				expandElementsAsLogLine("", reflect.TypeFor[types.Set](), 2, "", reflect.TypeFor[[]int32]()),
 			},
 		},
 		{
@@ -1549,6 +1568,7 @@ func TestExpandSetOfInt64(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[*[]int32]()),
 				convertingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[[]int32]()),
+				expandElementsAsLogLine("", reflect.TypeFor[types.Set](), 0, "", reflect.TypeFor[[]int32]()),
 			},
 		},
 		{
@@ -1559,6 +1579,7 @@ func TestExpandSetOfInt64(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[*[]int32]()),
 				convertingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[[]int32]()),
+				// expandNullValueLogLine("", reflect.TypeFor[types.Set](), "", reflect.TypeFor[[]int32]()),
 			},
 		},
 		{
@@ -1572,6 +1593,7 @@ func TestExpandSetOfInt64(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[*[]*int32]()),
 				convertingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[[]*int32]()),
+				expandElementsAsLogLine("", reflect.TypeFor[types.Set](), 2, "", reflect.TypeFor[[]*int32]()),
 			},
 		},
 		{
@@ -1582,6 +1604,7 @@ func TestExpandSetOfInt64(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[*[]*int32]()),
 				convertingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[[]*int32]()),
+				expandElementsAsLogLine("", reflect.TypeFor[types.Set](), 0, "", reflect.TypeFor[[]*int32]()),
 			},
 		},
 		{
@@ -1592,6 +1615,7 @@ func TestExpandSetOfInt64(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[*[]*int32]()),
 				convertingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[[]*int32]()),
+				// expandNullValueLogLine("", reflect.TypeFor[types.Set](), "", reflect.TypeFor[[]*int32]()),
 			},
 		},
 	}
@@ -1639,6 +1663,7 @@ func TestExpandListOfStringEnum(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[*[]testEnum]()),
 				convertingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[[]testEnum]()),
+				// expandNullValueLogLine("", reflect.TypeFor[types.List](), "", reflect.TypeFor[[]testEnum]()),
 			},
 		},
 	}
@@ -1686,6 +1711,7 @@ func TestExpandSetOfStringEnum(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[*[]testEnum]()),
 				convertingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[[]testEnum]()),
+				// expandNullValueLogLine("", reflect.TypeFor[types.Set](), "", reflect.TypeFor[[]testEnum]()),
 			},
 		},
 	}

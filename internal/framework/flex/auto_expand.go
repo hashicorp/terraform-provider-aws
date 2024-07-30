@@ -501,6 +501,9 @@ func (expander autoExpander) listOrSetOfInt64(ctx context.Context, vFrom valueWi
 			//
 			// types.List(OfInt64) -> []int64 or []int32
 			//
+			tflog.SubsystemTrace(ctx, subsystemName, "Expanding with ElementsAs", map[string]any{
+				logAttrKeySourceSize: len(vFrom.Elements()),
+			})
 			var to []int64
 			diags.Append(vFrom.ElementsAs(ctx, &to, false)...)
 			if diags.HasError() {
@@ -520,6 +523,9 @@ func (expander autoExpander) listOrSetOfInt64(ctx context.Context, vFrom valueWi
 				//
 				// types.List(OfInt64) -> []*int32.
 				//
+				tflog.SubsystemTrace(ctx, subsystemName, "Expanding with ElementsAs", map[string]any{
+					logAttrKeySourceSize: len(vFrom.Elements()),
+				})
 				var to []*int32
 				diags.Append(vFrom.ElementsAs(ctx, &to, false)...)
 				if diags.HasError() {
@@ -533,6 +539,9 @@ func (expander autoExpander) listOrSetOfInt64(ctx context.Context, vFrom valueWi
 				//
 				// types.List(OfInt64) -> []*int64.
 				//
+				tflog.SubsystemTrace(ctx, subsystemName, "Expanding with ElementsAs", map[string]any{
+					logAttrKeySourceSize: len(vFrom.Elements()),
+				})
 				var to []*int64
 				diags.Append(vFrom.ElementsAs(ctx, &to, false)...)
 				if diags.HasError() {
