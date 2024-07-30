@@ -11,9 +11,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/chatbot"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/chatbot/types"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -28,7 +33,7 @@ import (
 )
 
 // @FrameworkResource(name="Slack Channel Configuration")
-// @Tags(identifierAttribute="resource_arn")
+// @Tags(identifierAttribute="chat_configuration_arn")
 func newSlackChannelConfigurationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &slackChannelConfigurationResource{}
 
@@ -60,13 +65,22 @@ func (r *slackChannelConfigurationResource) Schema(ctx context.Context, request 
 			},
 			"guardrail_policy_arns": schema.ListAttribute{
 				Optional:    true,
+				Computed:    true,
 				ElementType: types.StringType,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"iam_role_arn": schema.StringAttribute{
 				Required: true,
 			},
+			names.AttrID: framework.IDAttribute(),
 			"logging_level": schema.StringAttribute{
 				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"slack_channel_id": schema.StringAttribute{
 				Required: true,
@@ -82,12 +96,20 @@ func (r *slackChannelConfigurationResource) Schema(ctx context.Context, request 
 			},
 			"sns_topic_arns": schema.ListAttribute{
 				Optional:    true,
+				Computed:    true,
 				ElementType: types.StringType,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"user_authorization_required": schema.BoolAttribute{
 				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -117,18 +139,17 @@ func (r *slackChannelConfigurationResource) Create(ctx context.Context, request 
 
 	input.Tags = getTagsIn(ctx)
 
-	_, err := conn.CreateSlackChannelConfiguration(ctx, input)
+	cout, err := conn.CreateSlackChannelConfiguration(ctx, input)
 	if err != nil {
-		create.AddError(&response.Diagnostics, names.Chatbot, create.ErrActionCreating, ResNameSlackChannelConfiguration, data.ChatConfigurationARN.String(), err)
-		response.Diagnostics.AddError("creating Chatbot Slack Channel Configuration", err.Error())
+		create.AddError(&response.Diagnostics, names.Chatbot, create.ErrActionCreating, ResNameSlackChannelConfiguration, data.ChatConfigurationARN.ValueString(), err)
 
 		return
 	}
 
-	output, err := waitSlackChannelConfigurationAvailable(ctx, conn, data.ChatConfigurationARN.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+	output, err := waitSlackChannelConfigurationAvailable(ctx, conn, aws.ToString(cout.ChannelConfiguration.ChatConfigurationArn), r.CreateTimeout(ctx, data.Timeouts))
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for Chatbot Slack Channel Configuration (%s) create", data.ChatConfigurationARN.ValueString()), err.Error())
+		create.AddError(&response.Diagnostics, names.Chatbot, create.ErrActionWaitingForCreation, ResNameSlackChannelConfiguration, aws.ToString(cout.ChannelConfiguration.ChatConfigurationArn), err)
 
 		return
 	}
@@ -136,16 +157,22 @@ func (r *slackChannelConfigurationResource) Create(ctx context.Context, request 
 	// Set values for unknowns
 	data.ChatConfigurationARN = fwflex.StringToFramework(ctx, output.ChatConfigurationArn)
 	data.setID()
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 func (r *slackChannelConfigurationResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	var data slackChannelConfigurationResourceModel
+
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
+
 	if err := data.InitFromID(); err != nil {
 		response.Diagnostics.AddError("parsing resource ID", err.Error())
 
@@ -154,7 +181,7 @@ func (r *slackChannelConfigurationResource) Read(ctx context.Context, request re
 
 	conn := r.Meta().ChatbotClient(ctx)
 
-	output, err := findSlackChannelConfigurationByID(ctx, conn, data.ID.ValueString())
+	output, err := findSlackChannelConfigurationByARN(ctx, conn, data.ChatConfigurationARN.ValueString())
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -165,7 +192,7 @@ func (r *slackChannelConfigurationResource) Read(ctx context.Context, request re
 
 	if err != nil {
 		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Chatbot, create.ErrActionReading, ResNameSlackChannelConfiguration, data.ID.String(), err),
+			create.ProblemStandardMessage(names.Chatbot, create.ErrActionReading, ResNameSlackChannelConfiguration, data.ChatConfigurationARN.String(), err),
 			err.Error(),
 		)
 		return
@@ -214,7 +241,7 @@ func (r *slackChannelConfigurationResource) Update(ctx context.Context, request 
 		}
 	}
 
-	output, err := findSlackChannelConfigurationByID(ctx, conn, old.ChatConfigurationARN.ValueString())
+	output, err := findSlackChannelConfigurationByARN(ctx, conn, old.ChatConfigurationARN.ValueString())
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("reading Chatbot Slack Channel Configuration (%s)", old.ChatConfigurationARN.ValueString()), err.Error())
 
@@ -239,7 +266,7 @@ func (r *slackChannelConfigurationResource) Delete(ctx context.Context, request 
 	conn := r.Meta().ChatbotClient(ctx)
 
 	tflog.Debug(ctx, "deleting Chatbot Slack Channel Configuration", map[string]interface{}{
-		names.AttrID: data.ID.ValueString(),
+		names.AttrID: data.ChatConfigurationARN.ValueString(),
 	})
 
 	input := &chatbot.DeleteSlackChannelConfigurationInput{
@@ -305,7 +332,7 @@ func findSlackChannelConfigurations(ctx context.Context, conn *chatbot.Client, i
 	return output, nil
 }
 
-func findSlackChannelConfigurationByID(ctx context.Context, conn *chatbot.Client, arn string) (*awstypes.SlackChannelConfiguration, error) {
+func findSlackChannelConfigurationByARN(ctx context.Context, conn *chatbot.Client, arn string) (*awstypes.SlackChannelConfiguration, error) {
 	input := &chatbot.DescribeSlackChannelConfigurationsInput{
 		ChatConfigurationArn: aws.String(arn),
 	}
@@ -317,9 +344,9 @@ const (
 	slackChannelConfigurationAvailable = "AVAILABLE"
 )
 
-func statusSlackChannelConfiguration(ctx context.Context, conn *chatbot.Client, id string) retry.StateRefreshFunc {
+func statusSlackChannelConfiguration(ctx context.Context, conn *chatbot.Client, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findSlackChannelConfigurationByID(ctx, conn, id)
+		output, err := findSlackChannelConfigurationByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -332,11 +359,11 @@ func statusSlackChannelConfiguration(ctx context.Context, conn *chatbot.Client, 
 	}
 }
 
-func waitSlackChannelConfigurationAvailable(ctx context.Context, conn *chatbot.Client, id string, timeout time.Duration) (*awstypes.SlackChannelConfiguration, error) {
+func waitSlackChannelConfigurationAvailable(ctx context.Context, conn *chatbot.Client, arn string, timeout time.Duration) (*awstypes.SlackChannelConfiguration, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{},
 		Target:     []string{slackChannelConfigurationAvailable},
-		Refresh:    statusSlackChannelConfiguration(ctx, conn, id),
+		Refresh:    statusSlackChannelConfiguration(ctx, conn, arn),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -351,11 +378,11 @@ func waitSlackChannelConfigurationAvailable(ctx context.Context, conn *chatbot.C
 	return nil, err
 }
 
-func waitSlackChannelConfigurationDeleted(ctx context.Context, conn *chatbot.Client, id string, timeout time.Duration) (*awstypes.SlackChannelConfiguration, error) {
+func waitSlackChannelConfigurationDeleted(ctx context.Context, conn *chatbot.Client, arn string, timeout time.Duration) (*awstypes.SlackChannelConfiguration, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{slackChannelConfigurationAvailable},
 		Target:     []string{},
-		Refresh:    statusSlackChannelConfiguration(ctx, conn, id),
+		Refresh:    statusSlackChannelConfiguration(ctx, conn, arn),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -389,6 +416,11 @@ type slackChannelConfigurationResourceModel struct {
 }
 
 func (data *slackChannelConfigurationResourceModel) InitFromID() error {
+	_, err := arn.Parse(data.ID.ValueString())
+	if err != nil {
+		return err
+	}
+
 	data.ChatConfigurationARN = data.ID
 
 	return nil
