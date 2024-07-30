@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_pipes_pipe: Reset EventBridge pipe input template only on change detected
+```
