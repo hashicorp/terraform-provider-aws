@@ -5,7 +5,6 @@ package chatbot
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -174,7 +173,7 @@ func (r *slackChannelConfigurationResource) Read(ctx context.Context, request re
 	}
 
 	if err := data.InitFromID(); err != nil {
-		response.Diagnostics.AddError("parsing resource ID", err.Error())
+		create.AddError(&response.Diagnostics, names.Chatbot, create.ErrActionExpandingResourceId, ResNameSlackChannelConfiguration, data.ChatConfigurationARN.ValueString(), err)
 
 		return
 	}
@@ -191,10 +190,7 @@ func (r *slackChannelConfigurationResource) Read(ctx context.Context, request re
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Chatbot, create.ErrActionReading, ResNameSlackChannelConfiguration, data.ChatConfigurationARN.String(), err),
-			err.Error(),
-		)
+		create.AddError(&response.Diagnostics, names.Chatbot, create.ErrActionReading, ResNameSlackChannelConfiguration, data.ChatConfigurationARN.ValueString(), err)
 		return
 	}
 
@@ -229,13 +225,13 @@ func (r *slackChannelConfigurationResource) Update(ctx context.Context, request 
 
 		_, err := conn.UpdateSlackChannelConfiguration(ctx, input)
 		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("updating Chatbot Slack Channel Configuration (%s)", new.ChatConfigurationARN.ValueString()), err.Error())
+			create.AddError(&response.Diagnostics, names.Chatbot, create.ErrActionUpdating, ResNameSlackChannelConfiguration, new.ChatConfigurationARN.ValueString(), err)
 
 			return
 		}
 
 		if _, err := waitSlackChannelConfigurationAvailable(ctx, conn, old.ChatConfigurationARN.ValueString(), r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("waiting for Chatbot Slack Channel Configuration (%s) update", new.ChatConfigurationARN.ValueString()), err.Error())
+			create.AddError(&response.Diagnostics, names.Chatbot, create.ErrActionWaitingForUpdate, ResNameSlackChannelConfiguration, new.ChatConfigurationARN.ValueString(), err)
 
 			return
 		}
@@ -243,7 +239,7 @@ func (r *slackChannelConfigurationResource) Update(ctx context.Context, request 
 
 	output, err := findSlackChannelConfigurationByARN(ctx, conn, old.ChatConfigurationARN.ValueString())
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading Chatbot Slack Channel Configuration (%s)", old.ChatConfigurationARN.ValueString()), err.Error())
+		create.AddError(&response.Diagnostics, names.Chatbot, create.ErrActionReading, ResNameSlackChannelConfiguration, old.ChatConfigurationARN.ValueString(), err)
 
 		return
 	}
@@ -282,14 +278,12 @@ func (r *slackChannelConfigurationResource) Delete(ctx context.Context, request 
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting Chatbot Slack Channel Configuration (%s)", data.ChatConfigurationARN.ValueString()), err.Error())
-
+		create.AddError(&response.Diagnostics, names.Chatbot, create.ErrActionDeleting, ResNameSlackChannelConfiguration, data.ChatConfigurationARN.ValueString(), err)
 		return
 	}
 
 	if _, err := waitSlackChannelConfigurationDeleted(ctx, conn, data.ChatConfigurationARN.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for Chatbot Slack Channel Configuration (%s) delete", data.ChatConfigurationARN.ValueString()), err.Error())
-
+		create.AddError(&response.Diagnostics, names.Chatbot, create.ErrActionWaitingForDeletion, ResNameSlackChannelConfiguration, data.ChatConfigurationARN.ValueString(), err)
 		return
 	}
 }
