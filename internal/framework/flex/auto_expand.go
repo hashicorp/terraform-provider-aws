@@ -564,6 +564,9 @@ func (expander autoExpander) listOrSetOfString(ctx context.Context, vFrom valueW
 			//
 			// types.List(OfString) -> []string.
 			//
+			tflog.SubsystemTrace(ctx, subsystemName, "Expanding with ElementsAs", map[string]any{
+				logAttrKeySourceSize: len(vFrom.Elements()),
+			})
 			var to []string
 			diags.Append(vFrom.ElementsAs(ctx, &to, false)...)
 			if diags.HasError() {
@@ -585,6 +588,9 @@ func (expander autoExpander) listOrSetOfString(ctx context.Context, vFrom valueW
 				//
 				// types.List(OfString) -> []*string.
 				//
+				tflog.SubsystemTrace(ctx, subsystemName, "Expanding with ElementsAs", map[string]any{
+					logAttrKeySourceSize: len(vFrom.Elements()),
+				})
 				var to []*string
 				diags.Append(vFrom.ElementsAs(ctx, &to, false)...)
 				if diags.HasError() {

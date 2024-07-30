@@ -265,5 +265,6 @@ func fieldExistsInStruct(field string, structVal reflect.Value) bool {
 type valueWithElementsAs interface {
 	attr.Value
 
+	Elements() []attr.Value
 	ElementsAs(context.Context, any, bool) diag.Diagnostics
 }

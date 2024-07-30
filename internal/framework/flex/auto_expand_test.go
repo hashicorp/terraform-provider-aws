@@ -330,12 +330,16 @@ func TestExpand(t *testing.T) {
 				convertingLogLine(reflect.TypeFor[TestFlexTF04](), reflect.TypeFor[TestFlexAWS05]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[*TestFlexTF04](), "Field1", reflect.TypeFor[*TestFlexAWS05]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[types.List](), "Field1", reflect.TypeFor[[]string]()),
+				expandElementsAsLogLine("Field1", reflect.TypeFor[types.List](), 2, "Field1", reflect.TypeFor[[]string]()),
 				matchedFieldsLogLine("Field2", reflect.TypeFor[*TestFlexTF04](), "Field2", reflect.TypeFor[*TestFlexAWS05]()),
 				convertingWithPathLogLine("Field2", reflect.TypeFor[types.List](), "Field2", reflect.TypeFor[[]*string]()),
+				expandElementsAsLogLine("Field2", reflect.TypeFor[types.List](), 2, "Field2", reflect.TypeFor[[]*string]()),
 				matchedFieldsLogLine("Field3", reflect.TypeFor[*TestFlexTF04](), "Field3", reflect.TypeFor[*TestFlexAWS05]()),
 				convertingWithPathLogLine("Field3", reflect.TypeFor[types.Set](), "Field3", reflect.TypeFor[[]string]()),
+				expandElementsAsLogLine("Field3", reflect.TypeFor[types.Set](), 2, "Field3", reflect.TypeFor[[]string]()),
 				matchedFieldsLogLine("Field4", reflect.TypeFor[*TestFlexTF04](), "Field4", reflect.TypeFor[*TestFlexAWS05]()),
 				convertingWithPathLogLine("Field4", reflect.TypeFor[types.Set](), "Field4", reflect.TypeFor[[]*string]()),
+				expandElementsAsLogLine("Field4", reflect.TypeFor[types.Set](), 2, "Field4", reflect.TypeFor[[]*string]()),
 				matchedFieldsLogLine("Field5", reflect.TypeFor[*TestFlexTF04](), "Field5", reflect.TypeFor[*TestFlexAWS05]()),
 				convertingWithPathLogLine("Field5", reflect.TypeFor[types.Map](), "Field5", reflect.TypeFor[map[string]string]()),
 				expandElementsAsLogLine("Field5", reflect.TypeFor[types.Map](), 2, "Field5", reflect.TypeFor[map[string]string]()),
@@ -412,18 +416,25 @@ func TestExpand(t *testing.T) {
 				convertingLogLine(reflect.TypeFor[TestFlexTF09](), reflect.TypeFor[TestFlexAWS11]()),
 				matchedFieldsLogLine("City", reflect.TypeFor[*TestFlexTF09](), "Cities", reflect.TypeFor[*TestFlexAWS11]()),
 				convertingWithPathLogLine("City", reflect.TypeFor[types.List](), "Cities", reflect.TypeFor[[]*string]()),
+				expandElementsAsLogLine("City", reflect.TypeFor[types.List](), 2, "Cities", reflect.TypeFor[[]*string]()),
 				matchedFieldsLogLine("Coach", reflect.TypeFor[*TestFlexTF09](), "Coaches", reflect.TypeFor[*TestFlexAWS11]()),
 				convertingWithPathLogLine("Coach", reflect.TypeFor[types.List](), "Coaches", reflect.TypeFor[[]*string]()),
+				expandElementsAsLogLine("Coach", reflect.TypeFor[types.List](), 2, "Coaches", reflect.TypeFor[[]*string]()),
 				matchedFieldsLogLine("Tomato", reflect.TypeFor[*TestFlexTF09](), "Tomatoes", reflect.TypeFor[*TestFlexAWS11]()),
 				convertingWithPathLogLine("Tomato", reflect.TypeFor[types.List](), "Tomatoes", reflect.TypeFor[[]*string]()),
+				expandElementsAsLogLine("Tomato", reflect.TypeFor[types.List](), 2, "Tomatoes", reflect.TypeFor[[]*string]()),
 				matchedFieldsLogLine("Vertex", reflect.TypeFor[*TestFlexTF09](), "Vertices", reflect.TypeFor[*TestFlexAWS11]()),
 				convertingWithPathLogLine("Vertex", reflect.TypeFor[types.List](), "Vertices", reflect.TypeFor[[]*string]()),
+				expandElementsAsLogLine("Vertex", reflect.TypeFor[types.List](), 2, "Vertices", reflect.TypeFor[[]*string]()),
 				matchedFieldsLogLine("Criterion", reflect.TypeFor[*TestFlexTF09](), "Criteria", reflect.TypeFor[*TestFlexAWS11]()),
 				convertingWithPathLogLine("Criterion", reflect.TypeFor[types.List](), "Criteria", reflect.TypeFor[[]*string]()),
+				expandElementsAsLogLine("Criterion", reflect.TypeFor[types.List](), 2, "Criteria", reflect.TypeFor[[]*string]()),
 				matchedFieldsLogLine("Datum", reflect.TypeFor[*TestFlexTF09](), "Data", reflect.TypeFor[*TestFlexAWS11]()),
 				convertingWithPathLogLine("Datum", reflect.TypeFor[types.List](), "Data", reflect.TypeFor[[]*string]()),
+				expandElementsAsLogLine("Datum", reflect.TypeFor[types.List](), 2, "Data", reflect.TypeFor[[]*string]()),
 				matchedFieldsLogLine("Hive", reflect.TypeFor[*TestFlexTF09](), "Hives", reflect.TypeFor[*TestFlexAWS11]()),
 				convertingWithPathLogLine("Hive", reflect.TypeFor[types.List](), "Hives", reflect.TypeFor[[]*string]()),
+				expandElementsAsLogLine("Hive", reflect.TypeFor[types.List](), 2, "Hives", reflect.TypeFor[[]*string]()),
 			},
 		},
 		{
@@ -1269,6 +1280,7 @@ func TestExpandComplexSingleNestedBlock(t *testing.T) {
 				convertingWithPathLogLine("Field1.Field1.Field1", reflect.TypeFor[types.Bool](), "Field1.Field1.Field1", reflect.TypeFor[bool]()),
 				matchedFieldsWithPathLogLine("Field1.Field1", "Field2", reflect.TypeFor[*tf01](), "Field1.Field1", "Field2", reflect.TypeFor[*aws01]()),
 				convertingWithPathLogLine("Field1.Field1.Field2", reflect.TypeFor[fwtypes.ListValueOf[types.String]](), "Field1.Field1.Field2", reflect.TypeFor[[]string]()),
+				expandElementsAsLogLine("Field1.Field1.Field2", reflect.TypeFor[fwtypes.ListValueOf[types.String]](), 2, "Field1.Field1.Field2", reflect.TypeFor[[]string]()),
 			},
 		},
 	}
@@ -1605,6 +1617,7 @@ func TestExpandListOfStringEnum(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[*[]testEnum]()),
 				convertingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[[]testEnum]()),
+				expandElementsAsLogLine("", reflect.TypeFor[types.List](), 2, "", reflect.TypeFor[[]testEnum]()),
 			},
 		},
 		{
@@ -1615,6 +1628,7 @@ func TestExpandListOfStringEnum(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[*[]testEnum]()),
 				convertingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[[]testEnum]()),
+				expandElementsAsLogLine("", reflect.TypeFor[types.List](), 0, "", reflect.TypeFor[[]testEnum]()),
 			},
 		},
 		{
@@ -1650,6 +1664,7 @@ func TestExpandSetOfStringEnum(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[*[]testEnum]()),
 				convertingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[[]testEnum]()),
+				expandElementsAsLogLine("", reflect.TypeFor[types.Set](), 2, "", reflect.TypeFor[[]testEnum]()),
 			},
 		},
 		{
@@ -1660,6 +1675,7 @@ func TestExpandSetOfStringEnum(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[*[]testEnum]()),
 				convertingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[[]testEnum]()),
+				expandElementsAsLogLine("", reflect.TypeFor[types.Set](), 0, "", reflect.TypeFor[[]testEnum]()),
 			},
 		},
 		{
