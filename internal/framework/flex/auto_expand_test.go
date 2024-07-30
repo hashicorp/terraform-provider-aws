@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflogtest"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -794,8 +793,8 @@ func TestExpandGeneric(t *testing.T) {
 				expandingLogLine(reflect.TypeFor[*TestFlexTF11](), reflect.TypeFor[*TestFlexAWS13]()),
 				convertingLogLine(reflect.TypeFor[TestFlexTF11](), reflect.TypeFor[TestFlexAWS13]()),
 				matchedFieldsLogLine("FieldInner", reflect.TypeFor[*TestFlexTF11](), "FieldInner", reflect.TypeFor[*TestFlexAWS13]()),
-				convertingWithPathLogLine("FieldInner", reflect.TypeFor[fwtypes.MapValueOf[basetypes.StringValue]](), "FieldInner", reflect.TypeFor[map[string]string]()),
-				expandElementsAsLogLine("FieldInner", reflect.TypeFor[fwtypes.MapValueOf[basetypes.StringValue]](), 1, "FieldInner", reflect.TypeFor[map[string]string]()),
+				convertingWithPathLogLine("FieldInner", reflect.TypeFor[fwtypes.MapValueOf[types.String]](), "FieldInner", reflect.TypeFor[map[string]string]()),
+				expandElementsAsLogLine("FieldInner", reflect.TypeFor[fwtypes.MapValueOf[types.String]](), 1, "FieldInner", reflect.TypeFor[map[string]string]()),
 			},
 		},
 		{
@@ -815,8 +814,8 @@ func TestExpandGeneric(t *testing.T) {
 				expandingLogLine(reflect.TypeFor[*TestFlexTF11](), reflect.TypeFor[*awsMapOfStringPointer]()),
 				convertingLogLine(reflect.TypeFor[TestFlexTF11](), reflect.TypeFor[awsMapOfStringPointer]()),
 				matchedFieldsLogLine("FieldInner", reflect.TypeFor[*TestFlexTF11](), "FieldInner", reflect.TypeFor[*awsMapOfStringPointer]()),
-				convertingWithPathLogLine("FieldInner", reflect.TypeFor[fwtypes.MapValueOf[basetypes.StringValue]](), "FieldInner", reflect.TypeFor[map[string]*string]()),
-				expandElementsAsLogLine("FieldInner", reflect.TypeFor[fwtypes.MapValueOf[basetypes.StringValue]](), 1, "FieldInner", reflect.TypeFor[map[string]*string]()),
+				convertingWithPathLogLine("FieldInner", reflect.TypeFor[fwtypes.MapValueOf[types.String]](), "FieldInner", reflect.TypeFor[map[string]*string]()),
+				expandElementsAsLogLine("FieldInner", reflect.TypeFor[fwtypes.MapValueOf[types.String]](), 1, "FieldInner", reflect.TypeFor[map[string]*string]()),
 			},
 		},
 		{
@@ -840,8 +839,8 @@ func TestExpandGeneric(t *testing.T) {
 				expandingLogLine(reflect.TypeFor[*TestFlexTF21](), reflect.TypeFor[*TestFlexAWS21]()),
 				convertingLogLine(reflect.TypeFor[TestFlexTF21](), reflect.TypeFor[TestFlexAWS21]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[*TestFlexTF21](), "Field1", reflect.TypeFor[*TestFlexAWS21]()),
-				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.MapValueOf[fwtypes.MapValueOf[basetypes.StringValue]]](), "Field1", reflect.TypeFor[map[string]map[string]string]()),
-				expandElementsAsLogLine("Field1", reflect.TypeFor[fwtypes.MapValueOf[fwtypes.MapValueOf[basetypes.StringValue]]](), 1, "Field1", reflect.TypeFor[map[string]map[string]string]()),
+				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.MapValueOf[fwtypes.MapValueOf[types.String]]](), "Field1", reflect.TypeFor[map[string]map[string]string]()),
+				expandElementsAsLogLine("Field1", reflect.TypeFor[fwtypes.MapValueOf[fwtypes.MapValueOf[types.String]]](), 1, "Field1", reflect.TypeFor[map[string]map[string]string]()),
 			},
 		},
 		{
@@ -865,15 +864,15 @@ func TestExpandGeneric(t *testing.T) {
 				expandingLogLine(reflect.TypeFor[*TestFlexTF21](), reflect.TypeFor[*TestFlexAWS22]()),
 				convertingLogLine(reflect.TypeFor[TestFlexTF21](), reflect.TypeFor[TestFlexAWS22]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[*TestFlexTF21](), "Field1", reflect.TypeFor[*TestFlexAWS22]()),
-				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.MapValueOf[fwtypes.MapValueOf[basetypes.StringValue]]](), "Field1", reflect.TypeFor[map[string]map[string]*string]()),
-				expandElementsAsLogLine("Field1", reflect.TypeFor[fwtypes.MapValueOf[fwtypes.MapValueOf[basetypes.StringValue]]](), 1, "Field1", reflect.TypeFor[map[string]map[string]*string]()),
+				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.MapValueOf[fwtypes.MapValueOf[types.String]]](), "Field1", reflect.TypeFor[map[string]map[string]*string]()),
+				expandElementsAsLogLine("Field1", reflect.TypeFor[fwtypes.MapValueOf[fwtypes.MapValueOf[types.String]]](), 1, "Field1", reflect.TypeFor[map[string]map[string]*string]()),
 			},
 		},
 		{
 			TestName: "nested string map",
 			Source: &TestFlexTF14{
 				FieldOuter: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &TestFlexTF11{
-					FieldInner: fwtypes.NewMapValueOfMust[basetypes.StringValue](ctx, map[string]attr.Value{
+					FieldInner: fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
 						"x": types.StringValue("y"),
 					}),
 				}),
@@ -892,8 +891,8 @@ func TestExpandGeneric(t *testing.T) {
 				matchedFieldsLogLine("FieldOuter", reflect.TypeFor[*TestFlexTF14](), "FieldOuter", reflect.TypeFor[*TestFlexAWS16]()),
 				convertingWithPathLogLine("FieldOuter", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[TestFlexTF11]](), "FieldOuter", reflect.TypeFor[TestFlexAWS13]()),
 				matchedFieldsWithPathLogLine("FieldOuter[0]", "FieldInner", reflect.TypeFor[*TestFlexTF11](), "FieldOuter", "FieldInner", reflect.TypeFor[*TestFlexAWS13]()),
-				convertingWithPathLogLine("FieldOuter[0].FieldInner", reflect.TypeFor[fwtypes.MapValueOf[basetypes.StringValue]](), "FieldOuter.FieldInner", reflect.TypeFor[map[string]string]()),
-				expandElementsAsLogLine("FieldOuter[0].FieldInner", reflect.TypeFor[fwtypes.MapValueOf[basetypes.StringValue]](), 1, "FieldOuter.FieldInner", reflect.TypeFor[map[string]string]()),
+				convertingWithPathLogLine("FieldOuter[0].FieldInner", reflect.TypeFor[fwtypes.MapValueOf[types.String]](), "FieldOuter.FieldInner", reflect.TypeFor[map[string]string]()),
+				expandElementsAsLogLine("FieldOuter[0].FieldInner", reflect.TypeFor[fwtypes.MapValueOf[types.String]](), 1, "FieldOuter.FieldInner", reflect.TypeFor[map[string]string]()),
 			},
 		},
 		{
@@ -1335,8 +1334,8 @@ func TestExpandListOfInt64(t *testing.T) {
 			Target:     &[]int64{},
 			WantTarget: &[]int64{1, -1},
 			expectedLogLines: []map[string]any{
-				expandingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[*[]int64]()),
-				convertingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[[]int64]()),
+				expandingLogLine(reflect.TypeFor[types.List](), reflect.TypeFor[*[]int64]()),
+				convertingLogLine(reflect.TypeFor[types.List](), reflect.TypeFor[[]int64]()),
 				expandElementsAsLogLine("", reflect.TypeFor[types.List](), 2, "", reflect.TypeFor[[]int64]()),
 			},
 		},
@@ -1346,8 +1345,8 @@ func TestExpandListOfInt64(t *testing.T) {
 			Target:     &[]int64{},
 			WantTarget: &[]int64{},
 			expectedLogLines: []map[string]any{
-				expandingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[*[]int64]()),
-				convertingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[[]int64]()),
+				expandingLogLine(reflect.TypeFor[types.List](), reflect.TypeFor[*[]int64]()),
+				convertingLogLine(reflect.TypeFor[types.List](), reflect.TypeFor[[]int64]()),
 				expandElementsAsLogLine("", reflect.TypeFor[types.List](), 0, "", reflect.TypeFor[[]int64]()),
 			},
 		},
@@ -1357,8 +1356,8 @@ func TestExpandListOfInt64(t *testing.T) {
 			Target:     &[]int64{},
 			WantTarget: &[]int64{},
 			expectedLogLines: []map[string]any{
-				expandingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[*[]int64]()),
-				convertingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[[]int64]()),
+				expandingLogLine(reflect.TypeFor[types.List](), reflect.TypeFor[*[]int64]()),
+				convertingLogLine(reflect.TypeFor[types.List](), reflect.TypeFor[[]int64]()),
 				expandNullValueLogLine("", reflect.TypeFor[types.List](), "", reflect.TypeFor[[]int64]()),
 			},
 		},
@@ -1371,8 +1370,8 @@ func TestExpandListOfInt64(t *testing.T) {
 			Target:     &[]*int64{},
 			WantTarget: &[]*int64{aws.Int64(1), aws.Int64(-1)},
 			expectedLogLines: []map[string]any{
-				expandingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[*[]*int64]()),
-				convertingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[[]*int64]()),
+				expandingLogLine(reflect.TypeFor[types.List](), reflect.TypeFor[*[]*int64]()),
+				convertingLogLine(reflect.TypeFor[types.List](), reflect.TypeFor[[]*int64]()),
 				expandElementsAsLogLine("", reflect.TypeFor[types.List](), 2, "", reflect.TypeFor[[]*int64]()),
 			},
 		},
@@ -1382,8 +1381,8 @@ func TestExpandListOfInt64(t *testing.T) {
 			Target:     &[]*int64{},
 			WantTarget: &[]*int64{},
 			expectedLogLines: []map[string]any{
-				expandingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[*[]*int64]()),
-				convertingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[[]*int64]()),
+				expandingLogLine(reflect.TypeFor[types.List](), reflect.TypeFor[*[]*int64]()),
+				convertingLogLine(reflect.TypeFor[types.List](), reflect.TypeFor[[]*int64]()),
 				expandElementsAsLogLine("", reflect.TypeFor[types.List](), 0, "", reflect.TypeFor[[]*int64]()),
 			},
 		},
@@ -1393,8 +1392,8 @@ func TestExpandListOfInt64(t *testing.T) {
 			Target:     &[]*int64{},
 			WantTarget: &[]*int64{},
 			expectedLogLines: []map[string]any{
-				expandingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[*[]*int64]()),
-				convertingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[[]*int64]()),
+				expandingLogLine(reflect.TypeFor[types.List](), reflect.TypeFor[*[]*int64]()),
+				convertingLogLine(reflect.TypeFor[types.List](), reflect.TypeFor[[]*int64]()),
 				expandNullValueLogLine("", reflect.TypeFor[types.List](), "", reflect.TypeFor[[]*int64]()),
 			},
 		},
@@ -1407,8 +1406,8 @@ func TestExpandListOfInt64(t *testing.T) {
 			Target:     &[]int32{},
 			WantTarget: &[]int32{1, -1},
 			expectedLogLines: []map[string]any{
-				expandingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[*[]int32]()),
-				convertingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[[]int32]()),
+				expandingLogLine(reflect.TypeFor[types.List](), reflect.TypeFor[*[]int32]()),
+				convertingLogLine(reflect.TypeFor[types.List](), reflect.TypeFor[[]int32]()),
 				expandElementsAsLogLine("", reflect.TypeFor[types.List](), 2, "", reflect.TypeFor[[]int32]()),
 			},
 		},
@@ -1418,8 +1417,8 @@ func TestExpandListOfInt64(t *testing.T) {
 			Target:     &[]int32{},
 			WantTarget: &[]int32{},
 			expectedLogLines: []map[string]any{
-				expandingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[*[]int32]()),
-				convertingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[[]int32]()),
+				expandingLogLine(reflect.TypeFor[types.List](), reflect.TypeFor[*[]int32]()),
+				convertingLogLine(reflect.TypeFor[types.List](), reflect.TypeFor[[]int32]()),
 				expandElementsAsLogLine("", reflect.TypeFor[types.List](), 0, "", reflect.TypeFor[[]int32]()),
 			},
 		},
@@ -1429,8 +1428,8 @@ func TestExpandListOfInt64(t *testing.T) {
 			Target:     &[]int32{},
 			WantTarget: &[]int32{},
 			expectedLogLines: []map[string]any{
-				expandingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[*[]int32]()),
-				convertingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[[]int32]()),
+				expandingLogLine(reflect.TypeFor[types.List](), reflect.TypeFor[*[]int32]()),
+				convertingLogLine(reflect.TypeFor[types.List](), reflect.TypeFor[[]int32]()),
 				expandNullValueLogLine("", reflect.TypeFor[types.List](), "", reflect.TypeFor[[]int32]()),
 			},
 		},
@@ -1443,8 +1442,8 @@ func TestExpandListOfInt64(t *testing.T) {
 			Target:     &[]*int32{},
 			WantTarget: &[]*int32{aws.Int32(1), aws.Int32(-1)},
 			expectedLogLines: []map[string]any{
-				expandingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[*[]*int32]()),
-				convertingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[[]*int32]()),
+				expandingLogLine(reflect.TypeFor[types.List](), reflect.TypeFor[*[]*int32]()),
+				convertingLogLine(reflect.TypeFor[types.List](), reflect.TypeFor[[]*int32]()),
 				expandElementsAsLogLine("", reflect.TypeFor[types.List](), 2, "", reflect.TypeFor[[]*int32]()),
 			},
 		},
@@ -1454,8 +1453,8 @@ func TestExpandListOfInt64(t *testing.T) {
 			Target:     &[]*int32{},
 			WantTarget: &[]*int32{},
 			expectedLogLines: []map[string]any{
-				expandingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[*[]*int32]()),
-				convertingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[[]*int32]()),
+				expandingLogLine(reflect.TypeFor[types.List](), reflect.TypeFor[*[]*int32]()),
+				convertingLogLine(reflect.TypeFor[types.List](), reflect.TypeFor[[]*int32]()),
 				expandElementsAsLogLine("", reflect.TypeFor[types.List](), 0, "", reflect.TypeFor[[]*int32]()),
 			},
 		},
@@ -1465,8 +1464,8 @@ func TestExpandListOfInt64(t *testing.T) {
 			Target:     &[]*int32{},
 			WantTarget: &[]*int32{},
 			expectedLogLines: []map[string]any{
-				expandingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[*[]*int32]()),
-				convertingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[[]*int32]()),
+				expandingLogLine(reflect.TypeFor[types.List](), reflect.TypeFor[*[]*int32]()),
+				convertingLogLine(reflect.TypeFor[types.List](), reflect.TypeFor[[]*int32]()),
 				expandNullValueLogLine("", reflect.TypeFor[types.List](), "", reflect.TypeFor[[]*int32]()),
 			},
 		},
@@ -1487,8 +1486,8 @@ func TestExpandSetOfInt64(t *testing.T) {
 			Target:     &[]int64{},
 			WantTarget: &[]int64{1, -1},
 			expectedLogLines: []map[string]any{
-				expandingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[*[]int64]()),
-				convertingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[[]int64]()),
+				expandingLogLine(reflect.TypeFor[types.Set](), reflect.TypeFor[*[]int64]()),
+				convertingLogLine(reflect.TypeFor[types.Set](), reflect.TypeFor[[]int64]()),
 				expandElementsAsLogLine("", reflect.TypeFor[types.Set](), 2, "", reflect.TypeFor[[]int64]()),
 			},
 		},
@@ -1498,8 +1497,8 @@ func TestExpandSetOfInt64(t *testing.T) {
 			Target:     &[]int64{},
 			WantTarget: &[]int64{},
 			expectedLogLines: []map[string]any{
-				expandingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[*[]int64]()),
-				convertingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[[]int64]()),
+				expandingLogLine(reflect.TypeFor[types.Set](), reflect.TypeFor[*[]int64]()),
+				convertingLogLine(reflect.TypeFor[types.Set](), reflect.TypeFor[[]int64]()),
 				expandElementsAsLogLine("", reflect.TypeFor[types.Set](), 0, "", reflect.TypeFor[[]int64]()),
 			},
 		},
@@ -1509,8 +1508,8 @@ func TestExpandSetOfInt64(t *testing.T) {
 			Target:     &[]int64{},
 			WantTarget: &[]int64{},
 			expectedLogLines: []map[string]any{
-				expandingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[*[]int64]()),
-				convertingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[[]int64]()),
+				expandingLogLine(reflect.TypeFor[types.Set](), reflect.TypeFor[*[]int64]()),
+				convertingLogLine(reflect.TypeFor[types.Set](), reflect.TypeFor[[]int64]()),
 				expandNullValueLogLine("", reflect.TypeFor[types.Set](), "", reflect.TypeFor[[]int64]()),
 			},
 		},
@@ -1523,8 +1522,8 @@ func TestExpandSetOfInt64(t *testing.T) {
 			Target:     &[]*int64{},
 			WantTarget: &[]*int64{aws.Int64(1), aws.Int64(-1)},
 			expectedLogLines: []map[string]any{
-				expandingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[*[]*int64]()),
-				convertingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[[]*int64]()),
+				expandingLogLine(reflect.TypeFor[types.Set](), reflect.TypeFor[*[]*int64]()),
+				convertingLogLine(reflect.TypeFor[types.Set](), reflect.TypeFor[[]*int64]()),
 				expandElementsAsLogLine("", reflect.TypeFor[types.Set](), 2, "", reflect.TypeFor[[]*int64]()),
 			},
 		},
@@ -1534,8 +1533,8 @@ func TestExpandSetOfInt64(t *testing.T) {
 			Target:     &[]*int64{},
 			WantTarget: &[]*int64{},
 			expectedLogLines: []map[string]any{
-				expandingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[*[]*int64]()),
-				convertingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[[]*int64]()),
+				expandingLogLine(reflect.TypeFor[types.Set](), reflect.TypeFor[*[]*int64]()),
+				convertingLogLine(reflect.TypeFor[types.Set](), reflect.TypeFor[[]*int64]()),
 				expandElementsAsLogLine("", reflect.TypeFor[types.Set](), 0, "", reflect.TypeFor[[]*int64]()),
 			},
 		},
@@ -1545,8 +1544,8 @@ func TestExpandSetOfInt64(t *testing.T) {
 			Target:     &[]*int64{},
 			WantTarget: &[]*int64{},
 			expectedLogLines: []map[string]any{
-				expandingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[*[]*int64]()),
-				convertingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[[]*int64]()),
+				expandingLogLine(reflect.TypeFor[types.Set](), reflect.TypeFor[*[]*int64]()),
+				convertingLogLine(reflect.TypeFor[types.Set](), reflect.TypeFor[[]*int64]()),
 				expandNullValueLogLine("", reflect.TypeFor[types.Set](), "", reflect.TypeFor[[]*int64]()),
 			},
 		},
@@ -1559,8 +1558,8 @@ func TestExpandSetOfInt64(t *testing.T) {
 			Target:     &[]int32{},
 			WantTarget: &[]int32{1, -1},
 			expectedLogLines: []map[string]any{
-				expandingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[*[]int32]()),
-				convertingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[[]int32]()),
+				expandingLogLine(reflect.TypeFor[types.Set](), reflect.TypeFor[*[]int32]()),
+				convertingLogLine(reflect.TypeFor[types.Set](), reflect.TypeFor[[]int32]()),
 				expandElementsAsLogLine("", reflect.TypeFor[types.Set](), 2, "", reflect.TypeFor[[]int32]()),
 			},
 		},
@@ -1570,8 +1569,8 @@ func TestExpandSetOfInt64(t *testing.T) {
 			Target:     &[]int32{},
 			WantTarget: &[]int32{},
 			expectedLogLines: []map[string]any{
-				expandingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[*[]int32]()),
-				convertingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[[]int32]()),
+				expandingLogLine(reflect.TypeFor[types.Set](), reflect.TypeFor[*[]int32]()),
+				convertingLogLine(reflect.TypeFor[types.Set](), reflect.TypeFor[[]int32]()),
 				expandElementsAsLogLine("", reflect.TypeFor[types.Set](), 0, "", reflect.TypeFor[[]int32]()),
 			},
 		},
@@ -1581,8 +1580,8 @@ func TestExpandSetOfInt64(t *testing.T) {
 			Target:     &[]int32{},
 			WantTarget: &[]int32{},
 			expectedLogLines: []map[string]any{
-				expandingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[*[]int32]()),
-				convertingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[[]int32]()),
+				expandingLogLine(reflect.TypeFor[types.Set](), reflect.TypeFor[*[]int32]()),
+				convertingLogLine(reflect.TypeFor[types.Set](), reflect.TypeFor[[]int32]()),
 				expandNullValueLogLine("", reflect.TypeFor[types.Set](), "", reflect.TypeFor[[]int32]()),
 			},
 		},
@@ -1595,8 +1594,8 @@ func TestExpandSetOfInt64(t *testing.T) {
 			Target:     &[]*int32{},
 			WantTarget: &[]*int32{aws.Int32(1), aws.Int32(-1)},
 			expectedLogLines: []map[string]any{
-				expandingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[*[]*int32]()),
-				convertingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[[]*int32]()),
+				expandingLogLine(reflect.TypeFor[types.Set](), reflect.TypeFor[*[]*int32]()),
+				convertingLogLine(reflect.TypeFor[types.Set](), reflect.TypeFor[[]*int32]()),
 				expandElementsAsLogLine("", reflect.TypeFor[types.Set](), 2, "", reflect.TypeFor[[]*int32]()),
 			},
 		},
@@ -1606,8 +1605,8 @@ func TestExpandSetOfInt64(t *testing.T) {
 			Target:     &[]*int32{},
 			WantTarget: &[]*int32{},
 			expectedLogLines: []map[string]any{
-				expandingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[*[]*int32]()),
-				convertingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[[]*int32]()),
+				expandingLogLine(reflect.TypeFor[types.Set](), reflect.TypeFor[*[]*int32]()),
+				convertingLogLine(reflect.TypeFor[types.Set](), reflect.TypeFor[[]*int32]()),
 				expandElementsAsLogLine("", reflect.TypeFor[types.Set](), 0, "", reflect.TypeFor[[]*int32]()),
 			},
 		},
@@ -1617,8 +1616,8 @@ func TestExpandSetOfInt64(t *testing.T) {
 			Target:     &[]*int32{},
 			WantTarget: &[]*int32{},
 			expectedLogLines: []map[string]any{
-				expandingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[*[]*int32]()),
-				convertingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[[]*int32]()),
+				expandingLogLine(reflect.TypeFor[types.Set](), reflect.TypeFor[*[]*int32]()),
+				convertingLogLine(reflect.TypeFor[types.Set](), reflect.TypeFor[[]*int32]()),
 				expandNullValueLogLine("", reflect.TypeFor[types.Set](), "", reflect.TypeFor[[]*int32]()),
 			},
 		},
@@ -1643,8 +1642,8 @@ func TestExpandListOfStringEnum(t *testing.T) {
 			Target:     &[]testEnum{},
 			WantTarget: &[]testEnum{testEnumFoo, testEnumBar},
 			expectedLogLines: []map[string]any{
-				expandingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[*[]testEnum]()),
-				convertingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[[]testEnum]()),
+				expandingLogLine(reflect.TypeFor[types.List](), reflect.TypeFor[*[]testEnum]()),
+				convertingLogLine(reflect.TypeFor[types.List](), reflect.TypeFor[[]testEnum]()),
 				expandElementsAsLogLine("", reflect.TypeFor[types.List](), 2, "", reflect.TypeFor[[]testEnum]()),
 			},
 		},
@@ -1654,8 +1653,8 @@ func TestExpandListOfStringEnum(t *testing.T) {
 			Target:     &[]testEnum{},
 			WantTarget: &[]testEnum{},
 			expectedLogLines: []map[string]any{
-				expandingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[*[]testEnum]()),
-				convertingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[[]testEnum]()),
+				expandingLogLine(reflect.TypeFor[types.List](), reflect.TypeFor[*[]testEnum]()),
+				convertingLogLine(reflect.TypeFor[types.List](), reflect.TypeFor[[]testEnum]()),
 				expandElementsAsLogLine("", reflect.TypeFor[types.List](), 0, "", reflect.TypeFor[[]testEnum]()),
 			},
 		},
@@ -1665,8 +1664,8 @@ func TestExpandListOfStringEnum(t *testing.T) {
 			Target:     &[]testEnum{},
 			WantTarget: &[]testEnum{},
 			expectedLogLines: []map[string]any{
-				expandingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[*[]testEnum]()),
-				convertingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[[]testEnum]()),
+				expandingLogLine(reflect.TypeFor[types.List](), reflect.TypeFor[*[]testEnum]()),
+				convertingLogLine(reflect.TypeFor[types.List](), reflect.TypeFor[[]testEnum]()),
 				expandNullValueLogLine("", reflect.TypeFor[types.List](), "", reflect.TypeFor[[]testEnum]()),
 			},
 		},
@@ -1691,8 +1690,8 @@ func TestExpandSetOfStringEnum(t *testing.T) {
 			Target:     &[]testEnum{},
 			WantTarget: &[]testEnum{testEnumFoo, testEnumBar},
 			expectedLogLines: []map[string]any{
-				expandingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[*[]testEnum]()),
-				convertingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[[]testEnum]()),
+				expandingLogLine(reflect.TypeFor[types.Set](), reflect.TypeFor[*[]testEnum]()),
+				convertingLogLine(reflect.TypeFor[types.Set](), reflect.TypeFor[[]testEnum]()),
 				expandElementsAsLogLine("", reflect.TypeFor[types.Set](), 2, "", reflect.TypeFor[[]testEnum]()),
 			},
 		},
@@ -1702,8 +1701,8 @@ func TestExpandSetOfStringEnum(t *testing.T) {
 			Target:     &[]testEnum{},
 			WantTarget: &[]testEnum{},
 			expectedLogLines: []map[string]any{
-				expandingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[*[]testEnum]()),
-				convertingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[[]testEnum]()),
+				expandingLogLine(reflect.TypeFor[types.Set](), reflect.TypeFor[*[]testEnum]()),
+				convertingLogLine(reflect.TypeFor[types.Set](), reflect.TypeFor[[]testEnum]()),
 				expandElementsAsLogLine("", reflect.TypeFor[types.Set](), 0, "", reflect.TypeFor[[]testEnum]()),
 			},
 		},
@@ -1713,8 +1712,8 @@ func TestExpandSetOfStringEnum(t *testing.T) {
 			Target:     &[]testEnum{},
 			WantTarget: &[]testEnum{},
 			expectedLogLines: []map[string]any{
-				expandingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[*[]testEnum]()),
-				convertingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[[]testEnum]()),
+				expandingLogLine(reflect.TypeFor[types.Set](), reflect.TypeFor[*[]testEnum]()),
+				convertingLogLine(reflect.TypeFor[types.Set](), reflect.TypeFor[[]testEnum]()),
 				expandNullValueLogLine("", reflect.TypeFor[types.Set](), "", reflect.TypeFor[[]testEnum]()),
 			},
 		},
@@ -2227,8 +2226,8 @@ func TestExpandOptions(t *testing.T) {
 				matchedFieldsLogLine("Field1", reflect.TypeFor[*tf01](), "Field1", reflect.TypeFor[*aws01]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[types.Bool](), "Field1", reflect.TypeFor[bool]()),
 				matchedFieldsLogLine("Tags", reflect.TypeFor[*tf01](), "Tags", reflect.TypeFor[*aws01]()),
-				convertingWithPathLogLine("Tags", reflect.TypeFor[fwtypes.MapValueOf[basetypes.StringValue]](), "Tags", reflect.TypeFor[map[string]string]()),
-				expandElementsAsLogLine("Tags", reflect.TypeFor[fwtypes.MapValueOf[basetypes.StringValue]](), 1, "Tags", reflect.TypeFor[map[string]string]()),
+				convertingWithPathLogLine("Tags", reflect.TypeFor[fwtypes.MapValueOf[types.String]](), "Tags", reflect.TypeFor[map[string]string]()),
+				expandElementsAsLogLine("Tags", reflect.TypeFor[fwtypes.MapValueOf[types.String]](), 1, "Tags", reflect.TypeFor[map[string]string]()),
 			},
 		},
 		{
@@ -2254,8 +2253,8 @@ func TestExpandOptions(t *testing.T) {
 				convertingLogLine(reflect.TypeFor[tf01](), reflect.TypeFor[aws01]()),
 				ignoredFieldLogLine(reflect.TypeFor[*tf01](), "Field1", reflect.TypeFor[*aws01]()),
 				matchedFieldsLogLine("Tags", reflect.TypeFor[*tf01](), "Tags", reflect.TypeFor[*aws01]()),
-				convertingWithPathLogLine("Tags", reflect.TypeFor[fwtypes.MapValueOf[basetypes.StringValue]](), "Tags", reflect.TypeFor[map[string]string]()),
-				expandElementsAsLogLine("Tags", reflect.TypeFor[fwtypes.MapValueOf[basetypes.StringValue]](), 1, "Tags", reflect.TypeFor[map[string]string]()),
+				convertingWithPathLogLine("Tags", reflect.TypeFor[fwtypes.MapValueOf[types.String]](), "Tags", reflect.TypeFor[map[string]string]()),
+				expandElementsAsLogLine("Tags", reflect.TypeFor[fwtypes.MapValueOf[types.String]](), 1, "Tags", reflect.TypeFor[map[string]string]()),
 			},
 		},
 	}

@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflogtest"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -1093,8 +1092,8 @@ func TestFlattenGeneric(t *testing.T) {
 				convertingWithPathLogLine("Field2.Field1.Field1", reflect.TypeFor[string](), "Field2.Field1.Field1", reflect.TypeFor[types.String]()),
 
 				matchedFieldsLogLine("Field3", reflect.TypeFor[*TestFlexAWS09](), "Field3", reflect.TypeFor[*TestFlexTF07]()),
-				convertingWithPathLogLine("Field3", reflect.TypeFor[map[string]*string](), "Field3", reflect.TypeFor[basetypes.MapValue]()),
-				flattenMapValueLogLine("Field3", reflect.TypeFor[map[string]*string](), 2, "Field3", reflect.TypeFor[basetypes.MapValue]()),
+				convertingWithPathLogLine("Field3", reflect.TypeFor[map[string]*string](), "Field3", reflect.TypeFor[types.Map]()),
+				flattenMapValueLogLine("Field3", reflect.TypeFor[map[string]*string](), 2, "Field3", reflect.TypeFor[types.Map]()),
 
 				matchedFieldsLogLine("Field4", reflect.TypeFor[*TestFlexAWS09](), "Field4", reflect.TypeFor[*TestFlexTF07]()),
 				convertingWithPathLogLine("Field4", reflect.TypeFor[[]TestFlexAWS03](), "Field4", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[TestFlexTF02]]()),
@@ -1115,7 +1114,7 @@ func TestFlattenGeneric(t *testing.T) {
 			},
 			Target: &TestFlexTF11{},
 			WantTarget: &TestFlexTF11{
-				FieldInner: fwtypes.NewMapValueOfMust[basetypes.StringValue](ctx, map[string]attr.Value{
+				FieldInner: fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
 					"x": types.StringValue("y"),
 				}),
 			},
@@ -1136,7 +1135,7 @@ func TestFlattenGeneric(t *testing.T) {
 			},
 			Target: &TestFlexTF11{},
 			WantTarget: &TestFlexTF11{
-				FieldInner: fwtypes.NewMapValueOfMust[basetypes.StringValue](ctx, map[string]attr.Value{
+				FieldInner: fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
 					"x": types.StringValue("y"),
 				}),
 			},
@@ -1160,7 +1159,7 @@ func TestFlattenGeneric(t *testing.T) {
 			Target: &TestFlexTF14{},
 			WantTarget: &TestFlexTF14{
 				FieldOuter: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &TestFlexTF11{
-					FieldInner: fwtypes.NewMapValueOfMust[basetypes.StringValue](ctx, map[string]attr.Value{
+					FieldInner: fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
 						"x": types.StringValue("y"),
 					}),
 				}),
@@ -1903,8 +1902,8 @@ func TestFlattenOptions(t *testing.T) {
 	// Example expected diff:
 	// 	    unexpected diff (+wanted, -got):   &flex.tf01{
 	//                 Field1: s"false",
-	//         -       Tags:   types.MapValueOf[github.com/hashicorp/terraform-plugin-framework/types/basetypes.StringValue]{},
-	//         +       Tags:   types.MapValueOf[github.com/hashicorp/terraform-plugin-framework/types/basetypes.StringValue]{MapValue: basetypes.MapValue{elementType: basetypes.StringType{}}},
+	//         -       Tags:   types.MapValueOf[github.com/hashicorp/terraform-plugin-framework/types/types.String]{},
+	//         +       Tags:   types.MapValueOf[github.com/hashicorp/terraform-plugin-framework/types/types.String]{MapValue: types.Map{elementType: basetypes.StringType{}}},
 	//           }
 	ctx := context.Background()
 	testCases := autoFlexTestCases{
