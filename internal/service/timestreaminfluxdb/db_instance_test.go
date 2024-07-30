@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccTimestreamInfluxDBDBInstance_basic(t *testing.T) {
+func testAccTimestreamInfluxDBDBInstance_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -65,7 +65,7 @@ func TestAccTimestreamInfluxDBDBInstance_basic(t *testing.T) {
 	})
 }
 
-func TestAccTimestreamInfluxDBDBInstance_disappears(t *testing.T) {
+func testAccTimestreamInfluxDBDBInstance_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -96,7 +96,7 @@ func TestAccTimestreamInfluxDBDBInstance_disappears(t *testing.T) {
 	})
 }
 
-func TestAccTimestreamInfluxDBDBInstance_logDeliveryConfiguration(t *testing.T) {
+func testAccTimestreamInfluxDBDBInstance_logDeliveryConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -144,7 +144,7 @@ func TestAccTimestreamInfluxDBDBInstance_logDeliveryConfiguration(t *testing.T) 
 	})
 }
 
-func TestAccTimestreamInfluxDBDBInstance_publiclyAccessible(t *testing.T) {
+func testAccTimestreamInfluxDBDBInstance_publiclyAccessible(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -181,7 +181,7 @@ func TestAccTimestreamInfluxDBDBInstance_publiclyAccessible(t *testing.T) {
 	})
 }
 
-func TestAccTimestreamInfluxDBDBInstance_deploymentTypeMultiAzStandby(t *testing.T) {
+func testAccTimestreamInfluxDBDBInstance_deploymentTypeMultiAzStandby(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")

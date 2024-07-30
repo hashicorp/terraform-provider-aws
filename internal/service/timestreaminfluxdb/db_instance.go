@@ -42,6 +42,7 @@ import (
 // @FrameworkResource("aws_timestreaminfluxdb_db_instance", name="DB Instance")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb;timestreaminfluxdb.GetDbInstanceOutput")
+// @Testing(serialize=true)
 func newResourceDBInstance(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceDBInstance{}
 
