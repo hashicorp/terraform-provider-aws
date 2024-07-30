@@ -352,10 +352,7 @@ func (r *resourceDBInstance) Create(ctx context.Context, req resource.CreateRequ
 
 	in := timestreaminfluxdb.CreateDbInstanceInput{}
 
-	option := func(o *flex.AutoFlexOptions) {
-		o.SetIgnoredFields()
-	}
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, &in, option)...)
+	resp.Diagnostics.Append(flex.Expand(ctx, plan, &in)...)
 
 	if resp.Diagnostics.HasError() {
 		return
