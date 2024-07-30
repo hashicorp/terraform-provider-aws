@@ -860,6 +860,10 @@ func (flattener autoFlattener) structMapToObjectList(ctx context.Context, source
 
 	i := 0
 	for _, key := range vFrom.MapKeys() {
+		sourcePath := sourcePath.AtMapKey(key.Interface().(string))
+		targetPath := targetPath.AtListIndex(i)
+		ctx := tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourcePath, sourcePath.String())
+		ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetPath, targetPath.String())
 		target, d := tTo.NewObjectPtr(ctx)
 		diags.Append(d...)
 		if diags.HasError() {

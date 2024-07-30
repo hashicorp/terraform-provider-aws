@@ -1268,10 +1268,10 @@ func TestFlattenGeneric(t *testing.T) {
 				convertingLogLine(reflect.TypeFor[TestFlexMapBlockKeyAWS01](), reflect.TypeFor[TestFlexMapBlockKeyTF01]()),
 				matchedFieldsLogLine("MapBlock", reflect.TypeFor[*TestFlexMapBlockKeyAWS01](), "MapBlock", reflect.TypeFor[*TestFlexMapBlockKeyTF01]()),
 				convertingWithPathLogLine("MapBlock", reflect.TypeFor[map[string]TestFlexMapBlockKeyAWS02](), "MapBlock", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[TestFlexMapBlockKeyTF02]]()),
-				matchedFieldsWithPathLogLine("MapBlock", "Attr1", reflect.TypeFor[TestFlexMapBlockKeyAWS02](), "MapBlock", "Attr1", reflect.TypeFor[*TestFlexMapBlockKeyTF02]()),
-				convertingWithPathLogLine("MapBlock.Attr1", reflect.TypeFor[string](), "MapBlock.Attr1", reflect.TypeFor[types.String]()), // TODO: fix source map index, fix target list index
-				matchedFieldsWithPathLogLine("MapBlock", "Attr2", reflect.TypeFor[TestFlexMapBlockKeyAWS02](), "MapBlock", "Attr2", reflect.TypeFor[*TestFlexMapBlockKeyTF02]()),
-				convertingWithPathLogLine("MapBlock.Attr2", reflect.TypeFor[string](), "MapBlock.Attr2", reflect.TypeFor[types.String]()), // TODO: fix source map index, fix target list index
+				matchedFieldsWithPathLogLine("MapBlock[\"x\"]", "Attr1", reflect.TypeFor[TestFlexMapBlockKeyAWS02](), "MapBlock[0]", "Attr1", reflect.TypeFor[*TestFlexMapBlockKeyTF02]()),
+				convertingWithPathLogLine("MapBlock[\"x\"].Attr1", reflect.TypeFor[string](), "MapBlock[0].Attr1", reflect.TypeFor[types.String]()),
+				matchedFieldsWithPathLogLine("MapBlock[\"x\"]", "Attr2", reflect.TypeFor[TestFlexMapBlockKeyAWS02](), "MapBlock[0]", "Attr2", reflect.TypeFor[*TestFlexMapBlockKeyTF02]()),
+				convertingWithPathLogLine("MapBlock[\"x\"].Attr2", reflect.TypeFor[string](), "MapBlock[0].Attr2", reflect.TypeFor[types.String]()),
 			},
 		},
 		{
@@ -1299,10 +1299,10 @@ func TestFlattenGeneric(t *testing.T) {
 				convertingLogLine(reflect.TypeFor[TestFlexMapBlockKeyAWS01](), reflect.TypeFor[TestFlexMapBlockKeyTF03]()),
 				matchedFieldsLogLine("MapBlock", reflect.TypeFor[*TestFlexMapBlockKeyAWS01](), "MapBlock", reflect.TypeFor[*TestFlexMapBlockKeyTF03]()),
 				convertingWithPathLogLine("MapBlock", reflect.TypeFor[map[string]TestFlexMapBlockKeyAWS02](), "MapBlock", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[TestFlexMapBlockKeyTF02]]()),
-				matchedFieldsWithPathLogLine("MapBlock", "Attr1", reflect.TypeFor[TestFlexMapBlockKeyAWS02](), "MapBlock", "Attr1", reflect.TypeFor[*TestFlexMapBlockKeyTF02]()),
-				convertingWithPathLogLine("MapBlock.Attr1", reflect.TypeFor[string](), "MapBlock.Attr1", reflect.TypeFor[types.String]()), // TODO: fix source map index, fix target list index
-				matchedFieldsWithPathLogLine("MapBlock", "Attr2", reflect.TypeFor[TestFlexMapBlockKeyAWS02](), "MapBlock", "Attr2", reflect.TypeFor[*TestFlexMapBlockKeyTF02]()),
-				convertingWithPathLogLine("MapBlock.Attr2", reflect.TypeFor[string](), "MapBlock.Attr2", reflect.TypeFor[types.String]()), // TODO: fix source map index, fix target list index
+				matchedFieldsWithPathLogLine("MapBlock[\"x\"]", "Attr1", reflect.TypeFor[TestFlexMapBlockKeyAWS02](), "MapBlock[0]", "Attr1", reflect.TypeFor[*TestFlexMapBlockKeyTF02]()),
+				convertingWithPathLogLine("MapBlock[\"x\"].Attr1", reflect.TypeFor[string](), "MapBlock[0].Attr1", reflect.TypeFor[types.String]()),
+				matchedFieldsWithPathLogLine("MapBlock[\"x\"]", "Attr2", reflect.TypeFor[TestFlexMapBlockKeyAWS02](), "MapBlock[0]", "Attr2", reflect.TypeFor[*TestFlexMapBlockKeyTF02]()),
+				convertingWithPathLogLine("MapBlock[\"x\"].Attr2", reflect.TypeFor[string](), "MapBlock[0].Attr2", reflect.TypeFor[types.String]()),
 			},
 		},
 		{
@@ -1347,10 +1347,10 @@ func TestFlattenGeneric(t *testing.T) {
 				convertingLogLine(reflect.TypeFor[TestFlexMapBlockKeyAWS03](), reflect.TypeFor[TestFlexMapBlockKeyTF01]()),
 				matchedFieldsLogLine("MapBlock", reflect.TypeFor[*TestFlexMapBlockKeyAWS03](), "MapBlock", reflect.TypeFor[*TestFlexMapBlockKeyTF01]()),
 				convertingWithPathLogLine("MapBlock", reflect.TypeFor[map[string]*TestFlexMapBlockKeyAWS02](), "MapBlock", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[TestFlexMapBlockKeyTF02]]()),
-				matchedFieldsWithPathLogLine("MapBlock", "Attr1", reflect.TypeFor[TestFlexMapBlockKeyAWS02](), "MapBlock", "Attr1", reflect.TypeFor[*TestFlexMapBlockKeyTF02]()),
-				convertingWithPathLogLine("MapBlock.Attr1", reflect.TypeFor[string](), "MapBlock.Attr1", reflect.TypeFor[types.String]()), // TODO: fix source map index, fix target list index
-				matchedFieldsWithPathLogLine("MapBlock", "Attr2", reflect.TypeFor[TestFlexMapBlockKeyAWS02](), "MapBlock", "Attr2", reflect.TypeFor[*TestFlexMapBlockKeyTF02]()),
-				convertingWithPathLogLine("MapBlock.Attr2", reflect.TypeFor[string](), "MapBlock.Attr2", reflect.TypeFor[types.String]()), // TODO: fix source map index, fix target list index
+				matchedFieldsWithPathLogLine("MapBlock[\"x\"]", "Attr1", reflect.TypeFor[TestFlexMapBlockKeyAWS02](), "MapBlock[0]", "Attr1", reflect.TypeFor[*TestFlexMapBlockKeyTF02]()),
+				convertingWithPathLogLine("MapBlock[\"x\"].Attr1", reflect.TypeFor[string](), "MapBlock[0].Attr1", reflect.TypeFor[types.String]()),
+				matchedFieldsWithPathLogLine("MapBlock[\"x\"]", "Attr2", reflect.TypeFor[TestFlexMapBlockKeyAWS02](), "MapBlock[0]", "Attr2", reflect.TypeFor[*TestFlexMapBlockKeyTF02]()),
+				convertingWithPathLogLine("MapBlock[\"x\"].Attr2", reflect.TypeFor[string](), "MapBlock[0].Attr2", reflect.TypeFor[types.String]()),
 			},
 		},
 		{
@@ -1378,10 +1378,10 @@ func TestFlattenGeneric(t *testing.T) {
 				convertingLogLine(reflect.TypeFor[TestFlexMapBlockKeyAWS03](), reflect.TypeFor[TestFlexMapBlockKeyTF01]()),
 				matchedFieldsLogLine("MapBlock", reflect.TypeFor[*TestFlexMapBlockKeyAWS03](), "MapBlock", reflect.TypeFor[*TestFlexMapBlockKeyTF01]()),
 				convertingWithPathLogLine("MapBlock", reflect.TypeFor[map[string]*TestFlexMapBlockKeyAWS02](), "MapBlock", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[TestFlexMapBlockKeyTF02]]()),
-				matchedFieldsWithPathLogLine("MapBlock", "Attr1", reflect.TypeFor[TestFlexMapBlockKeyAWS02](), "MapBlock", "Attr1", reflect.TypeFor[*TestFlexMapBlockKeyTF02]()),
-				convertingWithPathLogLine("MapBlock.Attr1", reflect.TypeFor[string](), "MapBlock.Attr1", reflect.TypeFor[types.String]()), // TODO: fix source map index, fix target list index
-				matchedFieldsWithPathLogLine("MapBlock", "Attr2", reflect.TypeFor[TestFlexMapBlockKeyAWS02](), "MapBlock", "Attr2", reflect.TypeFor[*TestFlexMapBlockKeyTF02]()),
-				convertingWithPathLogLine("MapBlock.Attr2", reflect.TypeFor[string](), "MapBlock.Attr2", reflect.TypeFor[types.String]()), // TODO: fix source map index, fix target list index
+				matchedFieldsWithPathLogLine("MapBlock[\"x\"]", "Attr1", reflect.TypeFor[TestFlexMapBlockKeyAWS02](), "MapBlock[0]", "Attr1", reflect.TypeFor[*TestFlexMapBlockKeyTF02]()),
+				convertingWithPathLogLine("MapBlock[\"x\"].Attr1", reflect.TypeFor[string](), "MapBlock[0].Attr1", reflect.TypeFor[types.String]()),
+				matchedFieldsWithPathLogLine("MapBlock[\"x\"]", "Attr2", reflect.TypeFor[TestFlexMapBlockKeyAWS02](), "MapBlock[0]", "Attr2", reflect.TypeFor[*TestFlexMapBlockKeyTF02]()),
+				convertingWithPathLogLine("MapBlock[\"x\"].Attr2", reflect.TypeFor[string](), "MapBlock[0].Attr2", reflect.TypeFor[types.String]()),
 			},
 		},
 		{
@@ -1409,10 +1409,10 @@ func TestFlattenGeneric(t *testing.T) {
 				convertingLogLine(reflect.TypeFor[TestFlexMapBlockKeyAWS01](), reflect.TypeFor[TestFlexMapBlockKeyTF04]()),
 				matchedFieldsLogLine("MapBlock", reflect.TypeFor[*TestFlexMapBlockKeyAWS01](), "MapBlock", reflect.TypeFor[*TestFlexMapBlockKeyTF04]()),
 				convertingWithPathLogLine("MapBlock", reflect.TypeFor[map[string]TestFlexMapBlockKeyAWS02](), "MapBlock", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[TestFlexMapBlockKeyTF05]]()),
-				matchedFieldsWithPathLogLine("MapBlock", "Attr1", reflect.TypeFor[TestFlexMapBlockKeyAWS02](), "MapBlock", "Attr1", reflect.TypeFor[*TestFlexMapBlockKeyTF05]()),
-				convertingWithPathLogLine("MapBlock.Attr1", reflect.TypeFor[string](), "MapBlock.Attr1", reflect.TypeFor[types.String]()), // TODO: fix source map index, fix target list index
-				matchedFieldsWithPathLogLine("MapBlock", "Attr2", reflect.TypeFor[TestFlexMapBlockKeyAWS02](), "MapBlock", "Attr2", reflect.TypeFor[*TestFlexMapBlockKeyTF05]()),
-				convertingWithPathLogLine("MapBlock.Attr2", reflect.TypeFor[string](), "MapBlock.Attr2", reflect.TypeFor[types.String]()), // TODO: fix source map index, fix target list index
+				matchedFieldsWithPathLogLine("MapBlock[\"List\"]", "Attr1", reflect.TypeFor[TestFlexMapBlockKeyAWS02](), "MapBlock[0]", "Attr1", reflect.TypeFor[*TestFlexMapBlockKeyTF05]()),
+				convertingWithPathLogLine("MapBlock[\"List\"].Attr1", reflect.TypeFor[string](), "MapBlock[0].Attr1", reflect.TypeFor[types.String]()),
+				matchedFieldsWithPathLogLine("MapBlock[\"List\"]", "Attr2", reflect.TypeFor[TestFlexMapBlockKeyAWS02](), "MapBlock[0]", "Attr2", reflect.TypeFor[*TestFlexMapBlockKeyTF05]()),
+				convertingWithPathLogLine("MapBlock[\"List\"].Attr2", reflect.TypeFor[string](), "MapBlock[0].Attr2", reflect.TypeFor[types.String]()),
 			},
 		},
 	}
