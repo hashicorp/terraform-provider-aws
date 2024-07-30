@@ -14,9 +14,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -26,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -56,9 +59,7 @@ func (r *slackChannelConfigurationResource) Metadata(_ context.Context, request 
 func (r *slackChannelConfigurationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"chat_configuration_arn": schema.StringAttribute{
-				Computed: true,
-			},
+			"chat_configuration_arn": framework.ARNAttributeComputedOnly(),
 			"configuration_name": schema.StringAttribute{
 				Required: true,
 			},
@@ -75,8 +76,10 @@ func (r *slackChannelConfigurationResource) Schema(ctx context.Context, request 
 			},
 			names.AttrID: framework.IDAttribute(),
 			"logging_level": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
+				CustomType: fwtypes.StringEnumType[loggingLevel](),
+				Optional:   true,
+				Computed:   true,
+				Default:    stringdefault.StaticString(string(loggingLevelNone)),
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -106,6 +109,7 @@ func (r *slackChannelConfigurationResource) Schema(ctx context.Context, request 
 			"user_authorization_required": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
+				Default:  booldefault.StaticBool(false),
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.UseStateForUnknown(),
 				},
@@ -392,21 +396,21 @@ func waitSlackChannelConfigurationDeleted(ctx context.Context, conn *chatbot.Cli
 }
 
 type slackChannelConfigurationResourceModel struct {
-	ChatConfigurationARN      types.String   `tfsdk:"chat_configuration_arn"`
-	ConfigurationName         types.String   `tfsdk:"configuration_name"`
-	GuardrailPolicyARNs       types.List     `tfsdk:"guardrail_policy_arns"`
-	IAMRoleARN                types.String   `tfsdk:"iam_role_arn"`
-	ID                        types.String   `tfsdk:"id"`
-	LoggingLevel              types.String   `tfsdk:"logging_level"`
-	SlackChannelID            types.String   `tfsdk:"slack_channel_id"`
-	SlackChannelName          types.String   `tfsdk:"slack_channel_name"`
-	SlackTeamID               types.String   `tfsdk:"slack_team_id"`
-	SlackTeamName             types.String   `tfsdk:"slack_team_name"`
-	SNSTopicARNs              types.List     `tfsdk:"sns_topic_arns"`
-	Tags                      types.Map      `tfsdk:"tags"`
-	TagsAll                   types.Map      `tfsdk:"tags_all"`
-	Timeouts                  timeouts.Value `tfsdk:"timeouts"`
-	UserAuthorizationRequired types.Bool     `tfsdk:"user_authorization_required"`
+	ChatConfigurationARN      types.String                     `tfsdk:"chat_configuration_arn"`
+	ConfigurationName         types.String                     `tfsdk:"configuration_name"`
+	GuardrailPolicyARNs       types.List                       `tfsdk:"guardrail_policy_arns"`
+	IAMRoleARN                types.String                     `tfsdk:"iam_role_arn"`
+	ID                        types.String                     `tfsdk:"id"`
+	LoggingLevel              fwtypes.StringEnum[loggingLevel] `tfsdk:"logging_level"`
+	SlackChannelID            types.String                     `tfsdk:"slack_channel_id"`
+	SlackChannelName          types.String                     `tfsdk:"slack_channel_name"`
+	SlackTeamID               types.String                     `tfsdk:"slack_team_id"`
+	SlackTeamName             types.String                     `tfsdk:"slack_team_name"`
+	SNSTopicARNs              types.List                       `tfsdk:"sns_topic_arns"`
+	Tags                      types.Map                        `tfsdk:"tags"`
+	TagsAll                   types.Map                        `tfsdk:"tags_all"`
+	Timeouts                  timeouts.Value                   `tfsdk:"timeouts"`
+	UserAuthorizationRequired types.Bool                       `tfsdk:"user_authorization_required"`
 }
 
 func (data *slackChannelConfigurationResourceModel) InitFromID() error {
@@ -422,6 +426,22 @@ func (data *slackChannelConfigurationResourceModel) InitFromID() error {
 
 func (data *slackChannelConfigurationResourceModel) setID() {
 	data.ID = data.ChatConfigurationARN
+}
+
+type loggingLevel string
+
+const (
+	loggingLevelError loggingLevel = "ERROR"
+	loggingLevelInfo  loggingLevel = "INFO"
+	loggingLevelNone  loggingLevel = "NONE"
+)
+
+func (loggingLevel) Values() []loggingLevel {
+	return []loggingLevel{
+		loggingLevelError,
+		loggingLevelInfo,
+		loggingLevelNone,
+	}
 }
 
 func slackChannelConfigurationHasChanges(_ context.Context, plan, state slackChannelConfigurationResourceModel) bool {
