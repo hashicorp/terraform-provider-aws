@@ -7,9 +7,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"testing"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/chatbot"
 	"github.com/aws/aws-sdk-go-v2/service/chatbot/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -23,20 +23,41 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccChatbotSlackChannelConfiguration_basic(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
+func TestAccChatbotSlackChannelConfiguration_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
+		"basic":              testAccSlackChannelConfiguration_basic,
+		acctest.CtDisappears: testAccSlackChannelConfiguration_disappears,
 	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccSlackChannelConfiguration_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 
 	var slackchannelconfiguration types.SlackChannelConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chatbot_slack_channel_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	// The slack workspace must be created via the AWS Console. It cannot be created via APIs or Terraform.
+	// Once it is created, export the name of the workspace in the env variable for this test
+	key := "CHATBOT_SLACK_TEAM_ID"
+	teamID := os.Getenv(key)
+	if teamID == "" {
+		t.Skipf("Environment variable %s is not set", key)
+	}
+
+	key = "CHATBOT_SLACK_CHANNEL_ID"
+	channelID := os.Getenv(key)
+	if channelID == "" {
+		t.Skipf("Environment variable %s is not set", key)
+	}
+
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.ChatbotServiceID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ChatbotServiceID),
@@ -44,31 +65,29 @@ func TestAccChatbotSlackChannelConfiguration_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckSlackChannelConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSlackChannelConfigurationConfig_basic(rName),
+				Config: testAccSlackChannelConfigurationConfig_basic(rName, channelID, teamID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSlackChannelConfigurationExists(ctx, resourceName, &slackchannelconfiguration),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
-						"console_access": "false",
-						"groups.#":       "0",
-						"username":       "Test",
-						"password":       "TestTest1234",
-					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "chatbot", regexache.MustCompile(`slackchannelconfiguration:+.`)),
+					resource.TestCheckResourceAttr(resourceName, "configuration_name", rName),
+					//acctest.MatchResourceAttrGlobalARN(resourceName, "chat_configuration_arn", "chatbot", regexache.MustCompile(fmt.Sprintf(`chat-configuration/slack-channel/%s`, rName))),
+					resource.TestCheckResourceAttrPair(resourceName, "iam_role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "slack_channel_id", channelID),
+					resource.TestCheckResourceAttrSet(resourceName, "slack_channel_name"),
+					resource.TestCheckResourceAttr(resourceName, "slack_team_id", teamID),
+					resource.TestCheckResourceAttrSet(resourceName, "slack_team_name"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})
 }
 
-func TestAccChatbotSlackChannelConfiguration_disappears(t *testing.T) {
+func testAccSlackChannelConfiguration_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -78,10 +97,23 @@ func TestAccChatbotSlackChannelConfiguration_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chatbot_slack_channel_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	// The slack workspace must be created via the AWS Console. It cannot be created via APIs or Terraform.
+	// Once it is created, export the name of the workspace in the env variable for this test
+	key := "CHATBOT_SLACK_TEAM_ID"
+	teamID := os.Getenv(key)
+	if teamID == "" {
+		t.Skipf("Environment variable %s is not set", key)
+	}
+
+	key = "CHATBOT_SLACK_CHANNEL_ID"
+	channelID := os.Getenv(key)
+	if channelID == "" {
+		t.Skipf("Environment variable %s is not set", key)
+	}
+
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.ChatbotServiceID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ChatbotServiceID),
@@ -89,7 +121,7 @@ func TestAccChatbotSlackChannelConfiguration_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckSlackChannelConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSlackChannelConfigurationConfig_basic(rName),
+				Config: testAccSlackChannelConfigurationConfig_basic(rName, channelID, teamID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSlackChannelConfigurationExists(ctx, resourceName, &slackchannelconfiguration),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfchatbot.ResourceSlackChannelConfiguration, resourceName),
@@ -109,7 +141,7 @@ func testAccCheckSlackChannelConfigurationDestroy(ctx context.Context) resource.
 				continue
 			}
 
-			_, err := tfchatbot.FindSlackChannelConfigurationByID(ctx, conn, rs.Primary.ID)
+			_, err := tfchatbot.FindSlackChannelConfigurationByARN(ctx, conn, rs.Primary.Attributes["chat_configuration_arn"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -139,7 +171,7 @@ func testAccCheckSlackChannelConfigurationExists(ctx context.Context, name strin
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ChatbotClient(ctx)
 
-		output, err := tfchatbot.FindSlackChannelConfigurationByID(ctx, conn, rs.Primary.ID)
+		output, err := tfchatbot.FindSlackChannelConfigurationByARN(ctx, conn, rs.Primary.Attributes["chat_configuration_arn"])
 
 		if err != nil {
 			return create.Error(names.Chatbot, create.ErrActionCheckingExistence, tfchatbot.ResNameSlackChannelConfiguration, rs.Primary.ID, err)
@@ -164,15 +196,31 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccSlackChannelConfigurationConfig_basic(rName string) string {
+func testAccSlackChannelConfigurationConfig_basic(rName, channelID, teamID string) string {
 	return fmt.Sprintf(`
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
 
+    principals {
+      type        = "Service"
+      identifiers = ["chatbot.amazonaws.com"]
+    }
+
+    actions = ["sts:AssumeRole"]
+  }
+}
+
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
 
 resource "aws_chatbot_slack_channel_configuration" "test" {
   configuration_name = %[1]q
-  iam_role_arn       = "ActiveChatbot"
-  slack_channel_id   = %[1]q
-  slack_team_id      = "chatbot.t2.micro"
+  iam_role_arn       = aws_iam_role.test.arn
+  slack_channel_id   = %[2]q
+  slack_team_id      = %[3]q
 }
-`, rName)
+`, rName, channelID, teamID)
 }
