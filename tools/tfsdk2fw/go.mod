@@ -18,7 +18,7 @@ require (
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect
-	github.com/aws/aws-sdk-go v1.55.3 // indirect
+	github.com/aws/aws-sdk-go v1.55.4 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.30.3 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.3 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.27.27 // indirect
@@ -44,6 +44,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.31.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/applicationinsights v1.26.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/applicationsignals v1.3.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/appmesh v1.27.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/apprunner v1.30.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/appstream v1.36.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/appsync v1.35.0 // indirect
@@ -115,7 +116,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.44.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/efs v1.31.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/eks v1.47.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/elasticache v1.40.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/elasticache v1.40.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.26.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.26.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.34.0 // indirect
@@ -227,7 +228,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.32.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssmsap v1.15.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.22.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssoadmin v1.27.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssoadmin v1.27.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.26.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.30.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/swf v1.25.3 // indirect
