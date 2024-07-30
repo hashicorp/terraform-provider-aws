@@ -232,6 +232,31 @@ func expandElementsAsLogLine(sourcePath string, sourceType reflect.Type, targetP
 	}
 }
 
+func flattenMapNullLogLine(sourcePath string, sourceType reflect.Type, targetPath string, targetType reflect.Type) map[string]any {
+	return map[string]any{
+		"@level":             hclog.Trace.String(),
+		"@module":            logModule,
+		"@message":           "Flattening with MapNull",
+		logAttrKeySourcePath: sourcePath,
+		logAttrKeySourceType: fullTypeName(sourceType),
+		logAttrKeyTargetPath: targetPath,
+		logAttrKeyTargetType: fullTypeName(targetType),
+	}
+}
+
+func flattenMapValueLogLine(sourcePath string, sourceType reflect.Type, sourceLen int, targetPath string, targetType reflect.Type) map[string]any {
+	return map[string]any{
+		"@level":             hclog.Trace.String(),
+		"@module":            logModule,
+		"@message":           "Flattening with MapValue",
+		logAttrKeySourcePath: sourcePath,
+		logAttrKeySourceType: fullTypeName(sourceType),
+		logAttrKeySourceSize: float64(sourceLen), // numbers are deserialized from JSON as float64
+		logAttrKeyTargetPath: targetPath,
+		logAttrKeyTargetType: fullTypeName(targetType),
+	}
+}
+
 func infoLogLine(message string, sourceType, targetType reflect.Type) map[string]any {
 	return logInfo(message, map[string]any{
 		logAttrKeySourceType: fullTypeName(sourceType),

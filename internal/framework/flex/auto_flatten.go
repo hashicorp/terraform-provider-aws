@@ -619,6 +619,7 @@ func (flattener autoFlattener) map_(ctx context.Context, sourcePath path.Path, v
 				// map[string]string -> types.Map(OfString).
 				//
 				if vFrom.IsNil() {
+					tflog.SubsystemTrace(ctx, subsystemName, "Flattening with MapNull")
 					to, d := tTo.ValueFromMap(ctx, types.MapNull(types.StringType))
 					diags.Append(d...)
 					if diags.HasError() {
@@ -630,6 +631,9 @@ func (flattener autoFlattener) map_(ctx context.Context, sourcePath path.Path, v
 				}
 
 				from := vFrom.Interface().(map[string]string)
+				tflog.SubsystemTrace(ctx, subsystemName, "Flattening with MapValue", map[string]any{
+					logAttrKeySourceSize: len(from),
+				})
 				elements := make(map[string]attr.Value, len(from))
 				for k, v := range from {
 					elements[k] = types.StringValue(v)
@@ -657,6 +661,7 @@ func (flattener autoFlattener) map_(ctx context.Context, sourcePath path.Path, v
 				// map[string]map[string]string -> types.Map(OfMap[types.String]).
 				//
 				if vFrom.IsNil() {
+					tflog.SubsystemTrace(ctx, subsystemName, "Flattening with MapNull")
 					to, d := tTo.ValueFromMap(ctx, types.MapNull(types.MapType{ElemType: types.StringType}))
 					diags.Append(d...)
 					if diags.HasError() {
@@ -756,6 +761,7 @@ func (flattener autoFlattener) map_(ctx context.Context, sourcePath path.Path, v
 					// map[string]*string -> types.Map(OfString).
 					//
 					if vFrom.IsNil() {
+						tflog.SubsystemTrace(ctx, subsystemName, "Flattening with MapNull")
 						to, d := tTo.ValueFromMap(ctx, types.MapNull(types.StringType))
 						diags.Append(d...)
 						if diags.HasError() {
@@ -767,6 +773,9 @@ func (flattener autoFlattener) map_(ctx context.Context, sourcePath path.Path, v
 					}
 
 					from := vFrom.Interface().(map[string]*string)
+					tflog.SubsystemTrace(ctx, subsystemName, "Flattening with MapValue", map[string]any{
+						logAttrKeySourceSize: len(from),
+					})
 					elements := make(map[string]attr.Value, len(from))
 					for k, v := range from {
 						elements[k] = types.StringPointerValue(v)

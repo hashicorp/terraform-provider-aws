@@ -409,6 +409,7 @@ func TestFlatten(t *testing.T) {
 				flattenMapNullLogLine("Field5", reflect.TypeFor[map[string]string](), "Field5", reflect.TypeFor[types.Map]()),
 				matchedFieldsLogLine("Field6", reflect.TypeFor[*TestFlexAWS05](), "Field6", reflect.TypeFor[*TestFlexTF04]()),
 				convertingWithPathLogLine("Field6", reflect.TypeFor[map[string]*string](), "Field6", reflect.TypeFor[types.Map]()),
+				flattenMapNullLogLine("Field6", reflect.TypeFor[map[string]*string](), "Field6", reflect.TypeFor[types.Map]()),
 			},
 		},
 		{
@@ -460,9 +461,10 @@ func TestFlatten(t *testing.T) {
 				convertingWithPathLogLine("Field4", reflect.TypeFor[[]*string](), "Field4", reflect.TypeFor[types.Set]()),
 				matchedFieldsLogLine("Field5", reflect.TypeFor[*TestFlexAWS05](), "Field5", reflect.TypeFor[*TestFlexTF04]()),
 				convertingWithPathLogLine("Field5", reflect.TypeFor[map[string]string](), "Field5", reflect.TypeFor[types.Map]()),
-				flattenMapValueLogLine("Field5", reflect.TypeFor[map[string]string](), "Field5", reflect.TypeFor[types.Map]()),
+				flattenMapValueLogLine("Field5", reflect.TypeFor[map[string]string](), 2, "Field5", reflect.TypeFor[types.Map]()),
 				matchedFieldsLogLine("Field6", reflect.TypeFor[*TestFlexAWS05](), "Field6", reflect.TypeFor[*TestFlexTF04]()),
 				convertingWithPathLogLine("Field6", reflect.TypeFor[map[string]*string](), "Field6", reflect.TypeFor[types.Map]()),
+				flattenMapValueLogLine("Field6", reflect.TypeFor[map[string]*string](), 2, "Field6", reflect.TypeFor[types.Map]()),
 			},
 		},
 		{
@@ -492,6 +494,7 @@ func TestFlatten(t *testing.T) {
 				flattenMapNullLogLine("Field5", reflect.TypeFor[map[string]string](), "Field5", reflect.TypeFor[fwtypes.MapValueOf[types.String]]()),
 				matchedFieldsLogLine("Field6", reflect.TypeFor[*TestFlexAWS05](), "Field6", reflect.TypeFor[*TestFlexTF18]()),
 				convertingWithPathLogLine("Field6", reflect.TypeFor[map[string]*string](), "Field6", reflect.TypeFor[fwtypes.MapValueOf[types.String]]()),
+				flattenMapNullLogLine("Field6", reflect.TypeFor[map[string]*string](), "Field6", reflect.TypeFor[fwtypes.MapValueOf[types.String]]()),
 			},
 		},
 		{
@@ -543,9 +546,10 @@ func TestFlatten(t *testing.T) {
 				convertingWithPathLogLine("Field4", reflect.TypeFor[[]*string](), "Field4", reflect.TypeFor[fwtypes.SetValueOf[types.String]]()),
 				matchedFieldsLogLine("Field5", reflect.TypeFor[*TestFlexAWS05](), "Field5", reflect.TypeFor[*TestFlexTF18]()),
 				convertingWithPathLogLine("Field5", reflect.TypeFor[map[string]string](), "Field5", reflect.TypeFor[fwtypes.MapValueOf[types.String]]()),
-				flattenMapValueLogLine("Field5", reflect.TypeFor[map[string]string](), "Field5", reflect.TypeFor[fwtypes.MapValueOf[types.String]]()),
+				flattenMapValueLogLine("Field5", reflect.TypeFor[map[string]string](), 2, "Field5", reflect.TypeFor[fwtypes.MapValueOf[types.String]]()),
 				matchedFieldsLogLine("Field6", reflect.TypeFor[*TestFlexAWS05](), "Field6", reflect.TypeFor[*TestFlexTF18]()),
 				convertingWithPathLogLine("Field6", reflect.TypeFor[map[string]*string](), "Field6", reflect.TypeFor[fwtypes.MapValueOf[types.String]]()),
+				flattenMapValueLogLine("Field6", reflect.TypeFor[map[string]*string](), 2, "Field6", reflect.TypeFor[fwtypes.MapValueOf[types.String]]()),
 			},
 		},
 		{
@@ -1045,6 +1049,7 @@ func TestFlattenGeneric(t *testing.T) {
 
 				matchedFieldsLogLine("Field3", reflect.TypeFor[*TestFlexAWS09](), "Field3", reflect.TypeFor[*TestFlexTF07]()),
 				convertingWithPathLogLine("Field3", reflect.TypeFor[map[string]*string](), "Field3", reflect.TypeFor[basetypes.MapValue]()),
+				flattenMapValueLogLine("Field3", reflect.TypeFor[map[string]*string](), 2, "Field3", reflect.TypeFor[basetypes.MapValue]()),
 
 				matchedFieldsLogLine("Field4", reflect.TypeFor[*TestFlexAWS09](), "Field4", reflect.TypeFor[*TestFlexTF07]()),
 				convertingWithPathLogLine("Field4", reflect.TypeFor[[]TestFlexAWS03](), "Field4", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[TestFlexTF02]]()),
@@ -1073,6 +1078,7 @@ func TestFlattenGeneric(t *testing.T) {
 				flatteningLogLine(reflect.TypeFor[*TestFlexAWS13](), reflect.TypeFor[*TestFlexTF11]()),
 				matchedFieldsLogLine("FieldInner", reflect.TypeFor[*TestFlexAWS13](), "FieldInner", reflect.TypeFor[*TestFlexTF11]()),
 				convertingWithPathLogLine("FieldInner", reflect.TypeFor[map[string]string](), "FieldInner", reflect.TypeFor[fwtypes.MapValueOf[types.String]]()),
+				flattenMapValueLogLine("FieldInner", reflect.TypeFor[map[string]string](), 1, "FieldInner", reflect.TypeFor[fwtypes.MapValueOf[types.String]]()),
 			},
 		},
 		{
@@ -1092,6 +1098,7 @@ func TestFlattenGeneric(t *testing.T) {
 				flatteningLogLine(reflect.TypeFor[*awsMapOfStringPointer](), reflect.TypeFor[*TestFlexTF11]()),
 				matchedFieldsLogLine("FieldInner", reflect.TypeFor[*awsMapOfStringPointer](), "FieldInner", reflect.TypeFor[*TestFlexTF11]()),
 				convertingWithPathLogLine("FieldInner", reflect.TypeFor[map[string]*string](), "FieldInner", reflect.TypeFor[fwtypes.MapValueOf[types.String]]()),
+				flattenMapValueLogLine("FieldInner", reflect.TypeFor[map[string]*string](), 1, "FieldInner", reflect.TypeFor[fwtypes.MapValueOf[types.String]]()),
 			},
 		},
 		{
@@ -1117,6 +1124,7 @@ func TestFlattenGeneric(t *testing.T) {
 				convertingWithPathLogLine("FieldOuter", reflect.TypeFor[TestFlexAWS13](), "FieldOuter", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[TestFlexTF11]]()),
 				matchedFieldsWithPathLogLine("FieldOuter", "FieldInner", reflect.TypeFor[TestFlexAWS13](), "FieldOuter", "FieldInner", reflect.TypeFor[*TestFlexTF11]()),
 				convertingWithPathLogLine("FieldOuter.FieldInner", reflect.TypeFor[map[string]string](), "FieldOuter.FieldInner", reflect.TypeFor[fwtypes.MapValueOf[types.String]]()),
+				flattenMapValueLogLine("FieldOuter.FieldInner", reflect.TypeFor[map[string]string](), 1, "FieldOuter.FieldInner", reflect.TypeFor[fwtypes.MapValueOf[types.String]]()),
 			},
 		},
 		{
@@ -1887,6 +1895,7 @@ func TestFlattenOptions(t *testing.T) {
 				convertingWithPathLogLine("Field1", reflect.TypeFor[bool](), "Field1", reflect.TypeFor[types.Bool]()),
 				matchedFieldsLogLine("Tags", reflect.TypeFor[*aws01](), "Tags", reflect.TypeFor[*tf01]()),
 				convertingWithPathLogLine("Tags", reflect.TypeFor[map[string]string](), "Tags", reflect.TypeFor[fwtypes.MapValueOf[types.String]]()),
+				flattenMapValueLogLine("Tags", reflect.TypeFor[map[string]string](), 1, "Tags", reflect.TypeFor[fwtypes.MapValueOf[types.String]]()),
 			},
 		},
 		{
@@ -1915,6 +1924,7 @@ func TestFlattenOptions(t *testing.T) {
 				ignoredFieldLogLine(reflect.TypeFor[*aws01](), "Field1", reflect.TypeFor[*tf01]()),
 				matchedFieldsLogLine("Tags", reflect.TypeFor[*aws01](), "Tags", reflect.TypeFor[*tf01]()),
 				convertingWithPathLogLine("Tags", reflect.TypeFor[map[string]string](), "Tags", reflect.TypeFor[fwtypes.MapValueOf[types.String]]()),
+				flattenMapValueLogLine("Tags", reflect.TypeFor[map[string]string](), 1, "Tags", reflect.TypeFor[fwtypes.MapValueOf[types.String]]()),
 			},
 		},
 	}
