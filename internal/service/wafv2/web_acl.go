@@ -323,7 +323,7 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 
 		if d.HasChange("rule_json") {
-			rules, err := expandWebACLRulesJSON(d.Get("rule_json").(string))
+			r, err := expandWebACLRulesJSON(d.Get("rule_json").(string))
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "expanding WAFv2 WebACL JSON rule (%s): %s", d.Id(), err)
 			}
@@ -334,7 +334,7 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 					return sdkdiag.AppendErrorf(diags, "reading WAFv2 WebACL (%s): %s", d.Id(), err)
 				}
 
-				rules = append(rules, findShieldRule(output.WebACL.Rules)...)
+				rules = append(r, findShieldRule(output.WebACL.Rules)...)
 			}
 		}
 
