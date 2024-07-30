@@ -896,6 +896,23 @@ func TestExpandGeneric(t *testing.T) {
 			},
 		},
 		{
+			TestName: "null map block key",
+			Source: &TestFlexMapBlockKeyTF01{
+				MapBlock: fwtypes.NewListNestedObjectValueOfNull[TestFlexMapBlockKeyTF02](ctx),
+			},
+			Target: &TestFlexMapBlockKeyAWS01{},
+			WantTarget: &TestFlexMapBlockKeyAWS01{
+				MapBlock: nil,
+			},
+			expectedLogLines: []map[string]any{
+				expandingLogLine(reflect.TypeFor[*TestFlexMapBlockKeyTF01](), reflect.TypeFor[*TestFlexMapBlockKeyAWS01]()),
+				convertingLogLine(reflect.TypeFor[TestFlexMapBlockKeyTF01](), reflect.TypeFor[TestFlexMapBlockKeyAWS01]()),
+				matchedFieldsLogLine("MapBlock", reflect.TypeFor[*TestFlexMapBlockKeyTF01](), "MapBlock", reflect.TypeFor[*TestFlexMapBlockKeyAWS01]()),
+				convertingWithPathLogLine("MapBlock", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[TestFlexMapBlockKeyTF02]](), "MapBlock", reflect.TypeFor[map[string]TestFlexMapBlockKeyAWS02]()),
+				expandNullValueLogLine("MapBlock", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[TestFlexMapBlockKeyTF02]](), "MapBlock", reflect.TypeFor[map[string]TestFlexMapBlockKeyAWS02]()),
+			},
+		},
+		{
 			TestName: "map block key list",
 			Source: &TestFlexMapBlockKeyTF01{
 				MapBlock: fwtypes.NewListNestedObjectValueOfValueSliceMust[TestFlexMapBlockKeyTF02](ctx, []TestFlexMapBlockKeyTF02{
