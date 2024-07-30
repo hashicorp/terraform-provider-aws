@@ -211,9 +211,10 @@ func TestAccTimestreamInfluxDBDBInstance_deploymentTypeMultiAzStandby(t *testing
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrBucket, names.AttrUsername, names.AttrPassword, "organization"},
 			},
 		},
 	})

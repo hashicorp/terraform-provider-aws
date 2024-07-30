@@ -358,6 +358,8 @@ func (r *resourceDBInstance) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
+	in.Tags = getTagsIn(ctx)
+
 	out, err := conn.CreateDbInstance(ctx, &in)
 	if err != nil {
 		resp.Diagnostics.AddError(
