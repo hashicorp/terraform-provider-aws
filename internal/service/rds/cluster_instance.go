@@ -132,7 +132,6 @@ func ResourceClusterInstance() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
-				ForceNew:      true,
 				ConflictsWith: []string{"identifier_prefix"},
 				ValidateFunc:  validIdentifier,
 			},
@@ -457,6 +456,10 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 
 		if d.HasChange("db_parameter_group_name") {
 			input.DBParameterGroupName = aws.String(d.Get("db_parameter_group_name").(string))
+		}
+
+		if d.HasChange(names.AttrIdentifier) {
+			input.NewDBInstanceIdentifier = aws.String(d.Get(names.AttrIdentifier).(string))
 		}
 
 		if d.HasChange("instance_class") {
