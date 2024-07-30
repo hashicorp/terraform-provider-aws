@@ -1194,6 +1194,7 @@ func TestExpandSimpleSingleNestedBlock(t *testing.T) {
 				convertingLogLine(reflect.TypeFor[tf02](), reflect.TypeFor[aws02]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[*tf02](), "Field1", reflect.TypeFor[*aws02]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.ObjectValueOf[tf01]](), "Field1", reflect.TypeFor[*aws01]()),
+				expandNullValueLogLine("Field1", reflect.TypeFor[fwtypes.ObjectValueOf[tf01]](), "Field1", reflect.TypeFor[*aws01]()),
 			},
 		},
 		{
@@ -1312,6 +1313,7 @@ func TestExpandStringEnum(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[fwtypes.StringEnum[TestEnum]](), reflect.TypeFor[*TestEnum]()),
 				convertingLogLine(reflect.TypeFor[fwtypes.StringEnum[TestEnum]](), reflect.TypeFor[TestEnum]()),
+				expandNullValueLogLine("", reflect.TypeFor[fwtypes.StringEnum[TestEnum]](), "", reflect.TypeFor[TestEnum]()),
 			},
 		},
 	}
@@ -1355,7 +1357,7 @@ func TestExpandListOfInt64(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[*[]int64]()),
 				convertingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[[]int64]()),
-				// expandNullValueLogLine("", reflect.TypeFor[types.List](), "", reflect.TypeFor[[]int64]()),
+				expandNullValueLogLine("", reflect.TypeFor[types.List](), "", reflect.TypeFor[[]int64]()),
 			},
 		},
 		{
@@ -1391,7 +1393,7 @@ func TestExpandListOfInt64(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[*[]*int64]()),
 				convertingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[[]*int64]()),
-				// expandNullValueLogLine("", reflect.TypeFor[types.List](), "", reflect.TypeFor[[]*int64]()),
+				expandNullValueLogLine("", reflect.TypeFor[types.List](), "", reflect.TypeFor[[]*int64]()),
 			},
 		},
 		{
@@ -1427,7 +1429,7 @@ func TestExpandListOfInt64(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[*[]int32]()),
 				convertingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[[]int32]()),
-				// expandNullValueLogLine("", reflect.TypeFor[types.List](), "", reflect.TypeFor[[]int32]()),
+				expandNullValueLogLine("", reflect.TypeFor[types.List](), "", reflect.TypeFor[[]int32]()),
 			},
 		},
 		{
@@ -1463,7 +1465,7 @@ func TestExpandListOfInt64(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[*[]*int32]()),
 				convertingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[[]*int32]()),
-				// expandNullValueLogLine("", reflect.TypeFor[types.List](), "", reflect.TypeFor[[]*int32]()),
+				expandNullValueLogLine("", reflect.TypeFor[types.List](), "", reflect.TypeFor[[]*int32]()),
 			},
 		},
 	}
@@ -1507,7 +1509,7 @@ func TestExpandSetOfInt64(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[*[]int64]()),
 				convertingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[[]int64]()),
-				// expandNullValueLogLine("", reflect.TypeFor[types.List](), "", reflect.TypeFor[[]int64]()),
+				expandNullValueLogLine("", reflect.TypeFor[types.Set](), "", reflect.TypeFor[[]int64]()),
 			},
 		},
 		{
@@ -1543,7 +1545,7 @@ func TestExpandSetOfInt64(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[*[]*int64]()),
 				convertingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[[]*int64]()),
-				// expandNullValueLogLine("", reflect.TypeFor[types.Set](), "", reflect.TypeFor[[]*int64]()),
+				expandNullValueLogLine("", reflect.TypeFor[types.Set](), "", reflect.TypeFor[[]*int64]()),
 			},
 		},
 		{
@@ -1579,7 +1581,7 @@ func TestExpandSetOfInt64(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[*[]int32]()),
 				convertingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[[]int32]()),
-				// expandNullValueLogLine("", reflect.TypeFor[types.Set](), "", reflect.TypeFor[[]int32]()),
+				expandNullValueLogLine("", reflect.TypeFor[types.Set](), "", reflect.TypeFor[[]int32]()),
 			},
 		},
 		{
@@ -1615,7 +1617,7 @@ func TestExpandSetOfInt64(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[*[]*int32]()),
 				convertingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[[]*int32]()),
-				// expandNullValueLogLine("", reflect.TypeFor[types.Set](), "", reflect.TypeFor[[]*int32]()),
+				expandNullValueLogLine("", reflect.TypeFor[types.Set](), "", reflect.TypeFor[[]*int32]()),
 			},
 		},
 	}
@@ -1663,7 +1665,7 @@ func TestExpandListOfStringEnum(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[*[]testEnum]()),
 				convertingLogLine(reflect.TypeFor[basetypes.ListValue](), reflect.TypeFor[[]testEnum]()),
-				// expandNullValueLogLine("", reflect.TypeFor[types.List](), "", reflect.TypeFor[[]testEnum]()),
+				expandNullValueLogLine("", reflect.TypeFor[types.List](), "", reflect.TypeFor[[]testEnum]()),
 			},
 		},
 	}
@@ -1711,7 +1713,7 @@ func TestExpandSetOfStringEnum(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[*[]testEnum]()),
 				convertingLogLine(reflect.TypeFor[basetypes.SetValue](), reflect.TypeFor[[]testEnum]()),
-				// expandNullValueLogLine("", reflect.TypeFor[types.Set](), "", reflect.TypeFor[[]testEnum]()),
+				expandNullValueLogLine("", reflect.TypeFor[types.Set](), "", reflect.TypeFor[[]testEnum]()),
 			},
 		},
 	}
@@ -1770,6 +1772,7 @@ func TestExpandListOfNestedObject(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[fwtypes.ListNestedObjectValueOf[TestFlexTF01]](), reflect.TypeFor[*[]TestFlexAWS01]()),
 				convertingLogLine(reflect.TypeFor[fwtypes.ListNestedObjectValueOf[TestFlexTF01]](), reflect.TypeFor[[]TestFlexAWS01]()),
+				expandNullValueLogLine("", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[TestFlexTF01]](), "", reflect.TypeFor[[]TestFlexAWS01]()),
 			},
 		},
 
@@ -1819,6 +1822,7 @@ func TestExpandListOfNestedObject(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[fwtypes.ListNestedObjectValueOf[TestFlexTF01]](), reflect.TypeFor[*[]*TestFlexAWS01]()),
 				convertingLogLine(reflect.TypeFor[fwtypes.ListNestedObjectValueOf[TestFlexTF01]](), reflect.TypeFor[[]*TestFlexAWS01]()),
+				expandNullValueLogLine("", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[TestFlexTF01]](), "", reflect.TypeFor[[]*TestFlexAWS01]()),
 			},
 		},
 
@@ -1858,6 +1862,7 @@ func TestExpandListOfNestedObject(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[fwtypes.ListNestedObjectValueOf[TestFlexTF01]](), reflect.TypeFor[*TestFlexAWS01]()),
 				convertingLogLine(reflect.TypeFor[fwtypes.ListNestedObjectValueOf[TestFlexTF01]](), reflect.TypeFor[TestFlexAWS01]()),
+				expandNullValueLogLine("", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[TestFlexTF01]](), "", reflect.TypeFor[TestFlexAWS01]()),
 			},
 		},
 	}
@@ -1916,6 +1921,7 @@ func TestExpandSetOfNestedObject(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[fwtypes.SetNestedObjectValueOf[TestFlexTF01]](), reflect.TypeFor[*[]TestFlexAWS01]()),
 				convertingLogLine(reflect.TypeFor[fwtypes.SetNestedObjectValueOf[TestFlexTF01]](), reflect.TypeFor[[]TestFlexAWS01]()),
+				expandNullValueLogLine("", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[TestFlexTF01]](), "", reflect.TypeFor[[]TestFlexAWS01]()),
 			},
 		},
 
@@ -1965,6 +1971,7 @@ func TestExpandSetOfNestedObject(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[fwtypes.SetNestedObjectValueOf[TestFlexTF01]](), reflect.TypeFor[*[]*TestFlexAWS01]()),
 				convertingLogLine(reflect.TypeFor[fwtypes.SetNestedObjectValueOf[TestFlexTF01]](), reflect.TypeFor[[]*TestFlexAWS01]()),
+				expandNullValueLogLine("", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[TestFlexTF01]](), "", reflect.TypeFor[[]*TestFlexAWS01]()),
 			},
 		},
 
@@ -2004,6 +2011,7 @@ func TestExpandSetOfNestedObject(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[fwtypes.SetNestedObjectValueOf[TestFlexTF01]](), reflect.TypeFor[*TestFlexAWS01]()),
 				convertingLogLine(reflect.TypeFor[fwtypes.SetNestedObjectValueOf[TestFlexTF01]](), reflect.TypeFor[TestFlexAWS01]()),
+				expandNullValueLogLine("", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[TestFlexTF01]](), "", reflect.TypeFor[TestFlexAWS01]()),
 			},
 		},
 	}
@@ -2024,10 +2032,16 @@ func TestExpandSimpleNestedBlockWithStringEnum(t *testing.T) {
 
 	testCases := autoFlexTestCases{
 		{
-			TestName:   "single nested valid value",
-			Source:     &tf01{Field1: types.Int64Value(1), Field2: fwtypes.StringEnumValue(TestEnumList)},
-			Target:     &aws01{},
-			WantTarget: &aws01{Field1: 1, Field2: TestEnumList},
+			TestName: "single nested valid value",
+			Source: &tf01{
+				Field1: types.Int64Value(1),
+				Field2: fwtypes.StringEnumValue(TestEnumList),
+			},
+			Target: &aws01{},
+			WantTarget: &aws01{
+				Field1: 1,
+				Field2: TestEnumList,
+			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*tf01](), reflect.TypeFor[*aws01]()),
 				convertingLogLine(reflect.TypeFor[tf01](), reflect.TypeFor[aws01]()),
@@ -2038,10 +2052,16 @@ func TestExpandSimpleNestedBlockWithStringEnum(t *testing.T) {
 			},
 		},
 		{
-			TestName:   "single nested empty value",
-			Source:     &tf01{Field1: types.Int64Value(1), Field2: fwtypes.StringEnumNull[TestEnum]()},
-			Target:     &aws01{},
-			WantTarget: &aws01{Field1: 1, Field2: ""},
+			TestName: "single nested null value",
+			Source: &tf01{
+				Field1: types.Int64Value(1),
+				Field2: fwtypes.StringEnumNull[TestEnum](),
+			},
+			Target: &aws01{},
+			WantTarget: &aws01{
+				Field1: 1,
+				Field2: "",
+			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*tf01](), reflect.TypeFor[*aws01]()),
 				convertingLogLine(reflect.TypeFor[tf01](), reflect.TypeFor[aws01]()),
@@ -2049,6 +2069,7 @@ func TestExpandSimpleNestedBlockWithStringEnum(t *testing.T) {
 				convertingWithPathLogLine("Field1", reflect.TypeFor[types.Int64](), "Field1", reflect.TypeFor[int64]()),
 				matchedFieldsLogLine("Field2", reflect.TypeFor[*tf01](), "Field2", reflect.TypeFor[*aws01]()),
 				convertingWithPathLogLine("Field2", reflect.TypeFor[fwtypes.StringEnum[TestEnum]](), "Field2", reflect.TypeFor[TestEnum]()),
+				expandNullValueLogLine("Field2", reflect.TypeFor[fwtypes.StringEnum[TestEnum]](), "Field2", reflect.TypeFor[TestEnum]()),
 			},
 		},
 	}
@@ -2102,7 +2123,7 @@ func TestExpandComplexNestedBlockWithStringEnum(t *testing.T) {
 			},
 		},
 		{
-			TestName: "single nested empty value",
+			TestName: "single nested null value",
 			Source: &tf02{
 				Field1: types.Int64Value(1),
 				Field2: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tf01{
@@ -2123,8 +2144,9 @@ func TestExpandComplexNestedBlockWithStringEnum(t *testing.T) {
 				convertingWithPathLogLine("Field1", reflect.TypeFor[types.Int64](), "Field1", reflect.TypeFor[int64]()),
 				matchedFieldsLogLine("Field2", reflect.TypeFor[*tf02](), "Field2", reflect.TypeFor[*aws01]()),
 				convertingWithPathLogLine("Field2", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tf01]](), "Field2", reflect.TypeFor[*aws02]()),
-				matchedFieldsWithPathLogLine("Field2[0]", "Field2", reflect.TypeFor[*tf01](), "Field2", "Field2", reflect.TypeFor[*aws02]()),
-				convertingWithPathLogLine("Field2[0].Field2", reflect.TypeFor[fwtypes.StringEnum[TestEnum]](), "Field2.Field2", reflect.TypeFor[TestEnum]()),
+				matchedFieldsWithPathLogLine("Field2[0]", "Field2", reflect.TypeFor[*tf01](), "Field2", "Field2", reflect.TypeFor[*aws02]()),                 // TODO: fix target path index
+				convertingWithPathLogLine("Field2[0].Field2", reflect.TypeFor[fwtypes.StringEnum[TestEnum]](), "Field2.Field2", reflect.TypeFor[TestEnum]()), // TODO: fix target path index
+				expandNullValueLogLine("Field2[0].Field2", reflect.TypeFor[fwtypes.StringEnum[TestEnum]](), "Field2.Field2", reflect.TypeFor[TestEnum]()),    // TODO: fix target path index
 			},
 		},
 	}
@@ -2155,6 +2177,7 @@ func TestExpandOptions(t *testing.T) {
 				convertingLogLine(reflect.TypeFor[tf01](), reflect.TypeFor[aws01]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[*tf01](), "Field1", reflect.TypeFor[*aws01]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[types.Bool](), "Field1", reflect.TypeFor[bool]()),
+				expandNullValueLogLine("Field1", reflect.TypeFor[types.Bool](), "Field1", reflect.TypeFor[bool]()),
 				ignoredFieldLogLine(reflect.TypeFor[*tf01](), "Tags", reflect.TypeFor[*aws01]()),
 			},
 		},

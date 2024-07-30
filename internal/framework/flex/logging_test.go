@@ -220,6 +220,18 @@ func noCorrespondingFieldLogLine(sourceType reflect.Type, sourceFieldName string
 	}
 }
 
+func expandNullValueLogLine(sourcePath string, sourceType reflect.Type, targetPath string, targetType reflect.Type) map[string]any {
+	return map[string]any{
+		"@level":             hclog.Trace.String(),
+		"@module":            logModule,
+		"@message":           "Expanding null value",
+		logAttrKeySourcePath: sourcePath,
+		logAttrKeySourceType: fullTypeName(sourceType),
+		logAttrKeyTargetPath: targetPath,
+		logAttrKeyTargetType: fullTypeName(targetType),
+	}
+}
+
 func expandElementsAsLogLine(sourcePath string, sourceType reflect.Type, sourceLen int, targetPath string, targetType reflect.Type) map[string]any {
 	return map[string]any{
 		"@level":             hclog.Trace.String(),

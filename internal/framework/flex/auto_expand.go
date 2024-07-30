@@ -152,7 +152,12 @@ func (expander autoExpander) convert(ctx context.Context, sourcePath path.Path, 
 	}
 
 	// No need to set the target value if there's no source value.
-	if vFrom.IsNull() || vFrom.IsUnknown() {
+	if vFrom.IsNull() {
+		tflog.SubsystemTrace(ctx, subsystemName, "Expanding null value")
+		return diags
+	}
+	if vFrom.IsUnknown() {
+		tflog.SubsystemTrace(ctx, subsystemName, "Expanding unknown value")
 		return diags
 	}
 
