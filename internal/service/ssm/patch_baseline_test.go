@@ -5,7 +5,9 @@ package ssm_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -24,6 +26,7 @@ import (
 	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/jmespath/go-jmespath"
 )
 
 func TestAccSSMPatchBaseline_basic(t *testing.T) {
@@ -303,6 +306,55 @@ func TestAccSSMPatchBaseline_approvedPatchesNonSec(t *testing.T) {
 	})
 }
 
+// TestAccSSMPatchBaseline_approvalRuleEmpty verifies that empty values in the ApprovalRules
+// response object are removed from the `json` attribute
+func TestAccSSMPatchBaseline_approvalRuleEmpty(t *testing.T) {
+	ctx := acctest.Context(t)
+	var before, after ssm.GetPatchBaselineOutput
+	name := sdkacctest.RandString(10)
+	resourceName := "aws_ssm_patch_baseline.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPatchBaselineDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPatchBaselineConfig_approvalRuleEmpty(name),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrJSON)),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPatchBaselineExists(ctx, resourceName, &before),
+					acctest.CheckResourceAttrJMES(resourceName, names.AttrJSON, "ApprovalRules.PatchRules[0].ApproveUntilDate", "2024-01-02"),
+					checkResourceAttrJMESNotExists(resourceName, names.AttrJSON, "ApprovalRules.PatchRules[0].ApproveAfterDays"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccPatchBaselineConfig_approvalRuleEmptyUpdated(name),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrJSON)),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPatchBaselineExists(ctx, resourceName, &after),
+					acctest.CheckResourceAttrJMES(resourceName, names.AttrJSON, "ApprovalRules.PatchRules[0].ApproveAfterDays", "7"),
+					checkResourceAttrJMESNotExists(resourceName, names.AttrJSON, "ApprovalRules.PatchRules[0].ApproveUntilDate"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccSSMPatchBaseline_rejectPatchesAction(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ssmPatch ssm.GetPatchBaselineOutput
@@ -422,6 +474,47 @@ func testAccCheckPatchBaselineDestroy(ctx context.Context) resource.TestCheckFun
 		}
 
 		return nil
+	}
+}
+
+func checkResourceAttrJMESNotExists(name, key, jmesPath string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		is, err := acctest.PrimaryInstanceState(s, name)
+		if err != nil {
+			return err
+		}
+
+		attr, ok := is.Attributes[key]
+		if !ok {
+			return fmt.Errorf("%s: Attribute %q not set", name, key)
+		}
+
+		var jsonData any
+		err = json.Unmarshal([]byte(attr), &jsonData)
+		if err != nil {
+			return fmt.Errorf("%s: Expected attribute %q to be JSON: %w", name, key, err)
+		}
+
+		result, err := jmespath.Search(jmesPath, jsonData)
+		if err != nil {
+			return fmt.Errorf("%s: Expected attribute %q not not found: %w", name, key, err)
+		}
+
+		var v string
+		switch x := result.(type) {
+		case nil:
+			return nil
+		case string:
+			v = x
+		case float64:
+			v = strconv.FormatFloat(x, 'f', -1, 64)
+		case bool:
+			v = fmt.Sprint(x)
+		default:
+			return fmt.Errorf(`%[1]s: Attribute %[2]q, JMESPath %[3]q got "%#[4]v" (%[4]T), expected no attribute`, name, key, jmesPath, result)
+		}
+
+		return fmt.Errorf("%s: Attribute %q, JMESPath %q expected no attribute, got %#v", name, key, jmesPath, v)
 	}
 }
 
@@ -629,6 +722,42 @@ resource "aws_ssm_patch_baseline" "test" {
   approved_patches                  = ["KB123456"]
   approved_patches_compliance_level = "CRITICAL"
   rejected_patches_action           = "ALLOW_AS_DEPENDENCY"
+}
+`, rName)
+}
+
+func testAccPatchBaselineConfig_approvalRuleEmpty(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_patch_baseline" "test" {
+  name                              = "patch-baseline-%[1]s"
+  description                       = "Baseline containing all updates approved for production systems"
+  approved_patches                  = ["KB123456"]
+  approved_patches_compliance_level = "CRITICAL"
+  approval_rule {
+    approve_until_date = "2024-01-02"
+    patch_filter {
+      key    = "CLASSIFICATION"
+      values = ["CriticalUpdates"]
+    }
+  }
+}
+`, rName)
+}
+
+func testAccPatchBaselineConfig_approvalRuleEmptyUpdated(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_patch_baseline" "test" {
+  name                              = "patch-baseline-%[1]s"
+  description                       = "Baseline containing all updates approved for production systems"
+  approved_patches                  = ["KB123456"]
+  approved_patches_compliance_level = "CRITICAL"
+  approval_rule {
+    approve_after_days = "7"
+    patch_filter {
+      key    = "CLASSIFICATION"
+      values = ["CriticalUpdates"]
+    }
+  }
 }
 `, rName)
 }
