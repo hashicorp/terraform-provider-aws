@@ -653,6 +653,9 @@ func (expander autoExpander) map_(ctx context.Context, vFrom basetypes.MapValuab
 			//
 			switch k := tMapElem.Elem().Kind(); k {
 			case reflect.String:
+				tflog.SubsystemTrace(ctx, subsystemName, "Expanding with ElementsAs", map[string]any{
+					logAttrKeySourceSize: len(data.Elements()),
+				})
 				var out map[string]map[string]string
 				diags.Append(data.ElementsAs(ctx, &out, false)...)
 
@@ -669,6 +672,9 @@ func (expander autoExpander) map_(ctx context.Context, vFrom basetypes.MapValuab
 					//
 					// types.Map(OfMap) -> map[string]map[string]*string.
 					//
+					tflog.SubsystemTrace(ctx, subsystemName, "Expanding with ElementsAs", map[string]any{
+						logAttrKeySourceSize: len(data.Elements()),
+					})
 					var to map[string]map[string]*string
 					diags.Append(data.ElementsAs(ctx, &to, false)...)
 

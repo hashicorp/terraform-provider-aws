@@ -841,6 +841,7 @@ func TestExpandGeneric(t *testing.T) {
 				convertingLogLine(reflect.TypeFor[TestFlexTF21](), reflect.TypeFor[TestFlexAWS21]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[*TestFlexTF21](), "Field1", reflect.TypeFor[*TestFlexAWS21]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.MapValueOf[fwtypes.MapValueOf[basetypes.StringValue]]](), "Field1", reflect.TypeFor[map[string]map[string]string]()),
+				expandElementsAsLogLine("Field1", reflect.TypeFor[fwtypes.MapValueOf[fwtypes.MapValueOf[basetypes.StringValue]]](), 1, "Field1", reflect.TypeFor[map[string]map[string]string]()),
 			},
 		},
 		{
@@ -865,6 +866,7 @@ func TestExpandGeneric(t *testing.T) {
 				convertingLogLine(reflect.TypeFor[TestFlexTF21](), reflect.TypeFor[TestFlexAWS22]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[*TestFlexTF21](), "Field1", reflect.TypeFor[*TestFlexAWS22]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.MapValueOf[fwtypes.MapValueOf[basetypes.StringValue]]](), "Field1", reflect.TypeFor[map[string]map[string]*string]()),
+				expandElementsAsLogLine("Field1", reflect.TypeFor[fwtypes.MapValueOf[fwtypes.MapValueOf[basetypes.StringValue]]](), 1, "Field1", reflect.TypeFor[map[string]map[string]*string]()),
 			},
 		},
 		{
