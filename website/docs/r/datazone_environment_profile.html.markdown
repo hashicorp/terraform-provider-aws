@@ -119,7 +119,6 @@ The following arguments are required:
 The following arguments are optional:
 
 * `description` - (Optional) Description of environment profile. Must be between the length of 0 and 2048.
-* `aws_account_Id` - (Optional) -  Id of the AWS account being used. Must follow regex of ^\d{12}$
 * `user_parameters` - (Optional) -  Array of user parameters of the environment profile with the following attributes:
     * `name` - (Required) -  Name of the environment profile parameter.
     * `value` - (Required) -  Value of the environment profile parameter.
@@ -140,11 +139,11 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_datazone_environment_profile.example
-  id = "environment-domain-id-12345678,environment_profile-id-12345678"
+  id = "domain-id-12345678,environment_profile-id-12345678"
 }
 ```
 
-Using `terraform import`, import DataZone Environment Profile using a comma-delimited string combining `enviroment-profile-id` and `enviroment-domain-id`. For example:
+Using `terraform import`, import DataZone Environment Profile using a comma-delimited string combining `environment-profile-id` and `domain-id`. For example:
 
 ```console
 % terraform import aws_datazone_environment_profile.example environment-domain-id-12345678,environment_profile-id-12345678
