@@ -839,6 +839,7 @@ func (flattener autoFlattener) structMapToObjectList(ctx context.Context, source
 
 	if vFrom.IsNil() {
 		val, d := tTo.NullValue(ctx)
+		tflog.SubsystemTrace(ctx, subsystemName, "Flattening null value")
 		diags.Append(d...)
 		if diags.HasError() {
 			return diags

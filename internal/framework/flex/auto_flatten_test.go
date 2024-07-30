@@ -1227,6 +1227,23 @@ func TestFlattenGeneric(t *testing.T) {
 			},
 		},
 		{
+			TestName: "nil map block key",
+			Source: &TestFlexMapBlockKeyAWS01{
+				MapBlock: nil,
+			},
+			Target: &TestFlexMapBlockKeyTF01{},
+			WantTarget: &TestFlexMapBlockKeyTF01{
+				MapBlock: fwtypes.NewListNestedObjectValueOfNull[TestFlexMapBlockKeyTF02](ctx),
+			},
+			expectedLogLines: []map[string]any{
+				flatteningLogLine(reflect.TypeFor[*TestFlexMapBlockKeyAWS01](), reflect.TypeFor[*TestFlexMapBlockKeyTF01]()),
+				convertingLogLine(reflect.TypeFor[TestFlexMapBlockKeyAWS01](), reflect.TypeFor[TestFlexMapBlockKeyTF01]()),
+				matchedFieldsLogLine("MapBlock", reflect.TypeFor[*TestFlexMapBlockKeyAWS01](), "MapBlock", reflect.TypeFor[*TestFlexMapBlockKeyTF01]()),
+				convertingWithPathLogLine("MapBlock", reflect.TypeFor[map[string]TestFlexMapBlockKeyAWS02](), "MapBlock", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[TestFlexMapBlockKeyTF02]]()),
+				flattenNullValueLogLine("MapBlock", reflect.TypeFor[map[string]TestFlexMapBlockKeyAWS02](), "MapBlock", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[TestFlexMapBlockKeyTF02]]()),
+			},
+		},
+		{
 			TestName: "map block key list",
 			Source: &TestFlexMapBlockKeyAWS01{
 				MapBlock: map[string]TestFlexMapBlockKeyAWS02{
@@ -1286,6 +1303,23 @@ func TestFlattenGeneric(t *testing.T) {
 				convertingWithPathLogLine("MapBlock.Attr1", reflect.TypeFor[string](), "MapBlock.Attr1", reflect.TypeFor[types.String]()), // TODO: fix source map index, fix target list index
 				matchedFieldsWithPathLogLine("MapBlock", "Attr2", reflect.TypeFor[TestFlexMapBlockKeyAWS02](), "MapBlock", "Attr2", reflect.TypeFor[*TestFlexMapBlockKeyTF02]()),
 				convertingWithPathLogLine("MapBlock.Attr2", reflect.TypeFor[string](), "MapBlock.Attr2", reflect.TypeFor[types.String]()), // TODO: fix source map index, fix target list index
+			},
+		},
+		{
+			TestName: "nil map block key ptr",
+			Source: &TestFlexMapBlockKeyAWS03{
+				MapBlock: nil,
+			},
+			Target: &TestFlexMapBlockKeyTF01{},
+			WantTarget: &TestFlexMapBlockKeyTF01{
+				MapBlock: fwtypes.NewListNestedObjectValueOfNull[TestFlexMapBlockKeyTF02](ctx),
+			},
+			expectedLogLines: []map[string]any{
+				flatteningLogLine(reflect.TypeFor[*TestFlexMapBlockKeyAWS03](), reflect.TypeFor[*TestFlexMapBlockKeyTF01]()),
+				convertingLogLine(reflect.TypeFor[TestFlexMapBlockKeyAWS03](), reflect.TypeFor[TestFlexMapBlockKeyTF01]()),
+				matchedFieldsLogLine("MapBlock", reflect.TypeFor[*TestFlexMapBlockKeyAWS03](), "MapBlock", reflect.TypeFor[*TestFlexMapBlockKeyTF01]()),
+				convertingWithPathLogLine("MapBlock", reflect.TypeFor[map[string]*TestFlexMapBlockKeyAWS02](), "MapBlock", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[TestFlexMapBlockKeyTF02]]()),
+				flattenNullValueLogLine("MapBlock", reflect.TypeFor[map[string]*TestFlexMapBlockKeyAWS02](), "MapBlock", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[TestFlexMapBlockKeyTF02]]()),
 			},
 		},
 		{
