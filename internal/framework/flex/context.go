@@ -12,7 +12,7 @@ import (
 )
 
 func RegisterLogger(ctx context.Context) context.Context {
-	// tflog.WithLevelFromEnv() does not accomodate a custom default level,
+	// tflog.WithLevelFromEnv() does not accommodate a custom default level,
 	// so manage it ourselves here
 	level := defaultLogLevel
 	if l := hclog.LevelFromString(os.Getenv(envvar)); l != hclog.NoLevel {
