@@ -6135,7 +6135,7 @@ resource "aws_wafv2_web_acl" "test" {
   rule_json = jsonencode([{
     Name     = "rule-1",
     Priority = 1,
-    Action  = {
+    Action = {
       Count = {}
     },
     Statement = {
