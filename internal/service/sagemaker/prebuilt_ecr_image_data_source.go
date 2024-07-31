@@ -84,13 +84,13 @@ const (
 	// SageMaker DLC MXNet Inference EIA
 	RepositoryMXNetInferenceEIA = "mxnet-inference-eia"
 	// SageMaker DLC SageMaker MXNet
-	RepositorySageMakerMXNet = "sagemaker-mxnet"
+	RepositorySageMakerMXNet = "sagemaker-mxnet" // nosemgrep:ci.sagemaker-in-var-name,ci.sagemaker-in-const-name
 	// SageMaker DLC SageMaker MXNet Serving
-	RepositorySageMakerMXNetServing = "sagemaker-mxnet-serving"
+	RepositorySageMakerMXNetServing = "sagemaker-mxnet-serving" // nosemgrep:ci.sagemaker-in-var-name,ci.sagemaker-in-const-name
 	// SageMaker DLC SageMaker MXNet EIA
-	RepositorySageMakerMXNetEIA = "sagemaker-mxnet-eia"
+	RepositorySageMakerMXNetEIA = "sagemaker-mxnet-eia" // nosemgrep:ci.sagemaker-in-var-name,ci.sagemaker-in-const-name
 	// SageMaker DLC SageMaker MXNet Serving EIA
-	RepositorySageMakerMXNetServingEIA = "sagemaker-mxnet-serving-eia"
+	RepositorySageMakerMXNetServingEIA = "sagemaker-mxnet-serving-eia" // nosemgrep:ci.sagemaker-in-var-name,ci.sagemaker-in-const-name
 	// SageMaker DLC MXNet Coach
 	RepositoryMXNetCoach = "sagemaker-rl-mxnet"
 	// SageMaker Model Monitor
@@ -128,7 +128,7 @@ const (
 	// SageMaker DLC PyTorch Inference NeuronX
 	RepositoryPyTorchInferenceNeuronX = "pytorch-inference-neuronx"
 	// SageMaker DLC SageMaker PyTorch
-	RepositorySageMakerPyTorch = "sagemaker-pytorch"
+	RepositorySageMakerPyTorch = "sagemaker-pytorch" // nosemgrep:ci.sagemaker-in-var-name,ci.sagemaker-in-const-name
 	// SageMaker Algorithm Random Cut Forest
 	RepositoryRandomCutForest = "randomcutforest"
 	// SageMaker DLC RL Ray PyTorch
@@ -154,15 +154,15 @@ const (
 	// SageMaker DLC TensorFlow Inference Graviton
 	RepositoryTensorFlowInferenceGraviton = "tensorflow-inference-graviton"
 	// SageMaker DLC SageMaker TensorFlow
-	RepositorySageMakerTensorFlow = "sagemaker-tensorflow"
+	RepositorySageMakerTensorFlow = "sagemaker-tensorflow" // nosemgrep:ci.sagemaker-in-var-name,ci.sagemaker-in-const-name
 	// SageMaker DLC SageMaker TensorFlow EIA
-	RepositorySageMakerTensorFlowEIA = "sagemaker-tensorflow-eia"
+	RepositorySageMakerTensorFlowEIA = "sagemaker-tensorflow-eia" // nosemgrep:ci.sagemaker-in-var-name,ci.sagemaker-in-const-name
 	// SageMaker DLC SageMaker TensorFlow Serving
 	RepositoryTensorFlowServing = "sagemaker-tensorflow-serving"
 	// SageMaker DLC SageMaker TensorFlow Serving EIA
 	RepositoryTensorFlowServingEIA = "sagemaker-tensorflow-serving-eia"
 	// SageMaker DLC SageMaker TensorFlow Serving
-	RepositorySageMakerTensorFlowScriptMode = "sagemaker-tensorflow-scriptmode"
+	RepositorySageMakerTensorFlowScriptMode = "sagemaker-tensorflow-scriptmode" // nosemgrep:ci.sagemaker-in-var-name,ci.sagemaker-in-const-name
 	// SageMaker DLC Tensorflow Coach
 	RepositoryTensorflowCoach = "sagemaker-rl-tensorflow"
 	// SageMaker DLC Tensorflow Inferentia
@@ -174,9 +174,9 @@ const (
 	// SageMaker Algorithm XGBoost
 	RepositoryXGBoost = "sagemaker-xgboost"
 	// SageMaker Base Python
-	RepositorySageMakerBasePython = "sagemaker-base-python"
+	RepositorySageMakerBasePython = "sagemaker-base-python" // nosemgrep:ci.sagemaker-in-var-name,ci.sagemaker-in-const-name
 	// SageMaker Geospatial
-	RepositorySageMakerGeospatial = "sagemaker-geospatial-v1-0"
+	RepositorySageMakerGeospatial = "sagemaker-geospatial-v1-0" // nosemgrep:ci.sagemaker-in-var-name,ci.sagemaker-in-const-name
 	// SageMaker NVIDIA Triton Inference
 	RepositoryNVIDIATritonInference = "sagemaker-tritonserver"
 )
@@ -359,7 +359,7 @@ var PrebuiltECRImageIDByRegion_inferentiaNeo = map[string]string{
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/coach-tensorflow.json
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/tensorflow.json
 
-var PrebuiltECRImageIDByRegion_SageMakerCustom = map[string]string{
+var PrebuiltECRImageIDByRegion_SageMakerCustom = map[string]string{ // nosemgrep:ci.sagemaker-in-var-name
 	endpoints.AfSouth1RegionID:     "313743910680",
 	endpoints.ApEast1RegionID:      "057415533634",
 	endpoints.ApNortheast1RegionID: "520713654638",
@@ -391,7 +391,7 @@ var PrebuiltECRImageIDByRegion_SageMakerCustom = map[string]string{
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/coach-tensorflow.json
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/vw.json
 
-var PrebuiltECRImageIDByRegion_SageMakerRL = map[string]string{
+var PrebuiltECRImageIDByRegion_SageMakerRL = map[string]string{ // nosemgrep:ci.sagemaker-in-var-name
 	endpoints.ApNortheast1RegionID: "462105765813",
 	endpoints.ApNortheast2RegionID: "462105765813",
 	endpoints.ApSouth1RegionID:     "462105765813",
@@ -447,7 +447,7 @@ var PrebuiltECRImageIDByRegion_spark = map[string]string{
 
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/sagemaker-base-python.json
 
-var PrebuiltECRImageIDByRegion_SageMakerBasePython = map[string]string{
+var PrebuiltECRImageIDByRegion_SageMakerBasePython = map[string]string{ // nosemgrep:ci.sagemaker-in-var-name
 	endpoints.AfSouth1RegionID:     "559312083959",
 	endpoints.ApEast1RegionID:      "493642496378",
 	endpoints.ApNortheast1RegionID: "102112518831",
@@ -481,7 +481,7 @@ var PrebuiltECRImageIDByRegion_SageMakerBasePython = map[string]string{
 
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/sagemaker-geospatial.json
 
-var PrebuiltECRImageIDByRegion_SageMakerGeospatial = map[string]string{
+var PrebuiltECRImageIDByRegion_SageMakerGeospatial = map[string]string{ // nosemgrep:ci.sagemaker-in-var-name
 	endpoints.UsWest2RegionID: "081189585635",
 }
 
