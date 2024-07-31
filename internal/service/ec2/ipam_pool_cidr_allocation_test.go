@@ -53,6 +53,43 @@ func TestAccIPAMPoolCIDRAllocation_ipv4Basic(t *testing.T) {
 	})
 }
 
+func TestAccIPAMPoolCIDRAllocation_ipv4Description(t *testing.T) {
+	ctx := acctest.Context(t)
+	var allocationV1, allocationV2 awstypes.IpamPoolAllocation
+	resourceName := "aws_vpc_ipam_pool_cidr_allocation.test"
+	originalDescription := "original"
+	updatedDescription := "updated"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIPAMPoolAllocationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIPAMPoolCIDRAllocationConfig_description(originalDescription),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIPAMPoolCIDRAllocationExists(ctx, resourceName, &allocationV1),
+					resource.TestCheckResourceAttr(resourceName, "description", originalDescription),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccIPAMPoolCIDRAllocationConfig_description(updatedDescription),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIPAMPoolCIDRAllocationExists(ctx, resourceName, &allocationV2),
+					testAccCheckIPAMPoolCIDRAllocationRecreated(&allocationV1, &allocationV2),
+					resource.TestCheckResourceAttr(resourceName, "description", updatedDescription),
+				),
+			},
+		},
+	})
+}
+
 func TestAccIPAMPoolCIDRAllocation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var allocation awstypes.IpamPoolAllocation
@@ -266,6 +303,16 @@ func testAccCheckIPAMPoolCIDRAllocationExistsWithProvider(ctx context.Context, n
 	}
 }
 
+func testAccCheckIPAMPoolCIDRAllocationRecreated(before, after *awstypes.IpamPoolAllocation) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if before, after := aws.ToString(before.IpamPoolAllocationId), aws.ToString(after.IpamPoolAllocationId); before == after {
+			return fmt.Errorf("IPAM Pool Cidr Allocation (%s) not recreated", before)
+		}
+
+		return nil
+	}
+}
+
 func testAccCheckIPAMPoolAllocationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
@@ -324,6 +371,20 @@ resource "aws_vpc_ipam_pool_cidr_allocation" "test" {
   ]
 }
 `, cidr))
+}
+
+func testAccIPAMPoolCIDRAllocationConfig_description(description string) string {
+	return acctest.ConfigCompose(testAccIPAMPoolCIDRAllocationConfig_base, fmt.Sprintf(`
+resource "aws_vpc_ipam_pool_cidr_allocation" "test" {
+  ipam_pool_id = aws_vpc_ipam_pool.test.id
+  cidr         = "172.2.0.0/28"
+  description  = %[1]q
+
+  depends_on = [
+    aws_vpc_ipam_pool_cidr.test
+  ]
+}
+`, description))
 }
 
 func testAccIPAMPoolCIDRAllocationConfig_ipv4Netmask(netmask string) string {
