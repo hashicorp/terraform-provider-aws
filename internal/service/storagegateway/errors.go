@@ -10,11 +10,11 @@ import (
 )
 
 // Operation error code constants missing from AWS Go SDK: https://docs.aws.amazon.com/sdk-for-go/api/service/storagegateway/#pkg-constants.
-// See https://docs.aws.amazon.com/storagegateway/latest/userguide/AWSStorageGatewayAPI.html#APIOperationErrorCodes for details.
+// See e.g. https://docs.aws.amazon.com/filegateway/latest/files3/AWSStorageGatewayAPI.html#APIOperationErrorCodes for details.
 const (
-	operationErrCodeFileShareNotFound             = "FileShareNotFound"
-	operationErrCodeFileSystemAssociationNotFound = "FileSystemAssociationNotFound"
-	operationErrCodeGatewayNotFound               = "GatewayNotFound"
+	operationErrCodeFileShareNotFound             awstypes.ErrorCode = "FileShareNotFound"
+	operationErrCodeFileSystemAssociationNotFound awstypes.ErrorCode = "FileSystemAssociationNotFound"
+	operationErrCodeGatewayNotFound               awstypes.ErrorCode = "GatewayNotFound"
 )
 
 // operationErrorCode returns the operation error code from the specified error:
@@ -22,13 +22,13 @@ const (
 //   - Error_ is not nil
 //
 // See https://docs.aws.amazon.com/storagegateway/latest/userguide/AWSStorageGatewayAPI.html#APIErrorResponses for details.
-func operationErrorCode(err error) string {
+func operationErrorCode(err error) awstypes.ErrorCode {
 	if v, ok := errs.As[*awstypes.InternalServerError](err); ok && v.Error_ != nil {
-		return string(v.Error_.ErrorCode)
+		return v.Error_.ErrorCode
 	}
 
 	if v, ok := errs.As[*awstypes.InvalidGatewayRequestException](err); ok && v.Error_ != nil {
-		return string(v.Error_.ErrorCode)
+		return v.Error_.ErrorCode
 	}
 
 	return ""
