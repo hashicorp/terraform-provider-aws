@@ -71,7 +71,7 @@ func TestAccIPAMPoolCIDRAllocation_ipv4Description(t *testing.T) {
 				Config: testAccIPAMPoolCIDRAllocationConfig_description(originalDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMPoolCIDRAllocationExists(ctx, resourceName, &allocationV1),
-					resource.TestCheckResourceAttr(resourceName, "description", originalDescription),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, originalDescription),
 				),
 			},
 			{
@@ -84,7 +84,7 @@ func TestAccIPAMPoolCIDRAllocation_ipv4Description(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMPoolCIDRAllocationExists(ctx, resourceName, &allocationV2),
 					testAccCheckIPAMPoolCIDRAllocationRecreated(&allocationV1, &allocationV2),
-					resource.TestCheckResourceAttr(resourceName, "description", updatedDescription),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, updatedDescription),
 				),
 			},
 		},
