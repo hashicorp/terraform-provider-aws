@@ -373,6 +373,10 @@ func (m configuration) expandToUpdateConfiguration(ctx context.Context) (result 
 }
 ```
 
+To turn on logging for AutoFlex, use the environment variable `TF_LOG_AWS_AUTOFLEX` to set the logging level.
+Valid values are `ERROR`, `WARN`, `INFO`, `DEBUG`, and `TRACE`.
+By default, AutoFlex logging is set to `ERROR`.
+
 ### Manually Defined Flattening and Expanding Functions
 
 By convention in the codebase, each level of Block handling beyond root attributes should be separated into "expand" functions that convert Terraform Plugin SDK data into the equivalent AWS Go SDK type (typically named `expand{Service}{Type}`) and "flatten" functions that convert an AWS Go SDK type into the equivalent Terraform Plugin SDK data (typically named `flatten{Service}{Type}`).
