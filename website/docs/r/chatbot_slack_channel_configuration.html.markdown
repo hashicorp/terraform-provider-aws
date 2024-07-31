@@ -38,7 +38,7 @@ resource "aws_chatbot_slack_channel_configuration" "example" {
   user_authorization_required = false
   tags = {
     key1 = value1
-   }
+  }
 }
 ```
 
@@ -72,7 +72,7 @@ The following arguments are optional:
 
 ## Attribute Reference
 
-This resource exports the following attribute in addition to the arguments above:
+This resource exports the following attributes in addition to the arguments above:
 
 * `chat_configuration_arn` - ARN of the Slack Channel Configuration.
 

@@ -74,7 +74,7 @@ func TestAccChatbotSlackChannelConfiguration_basic(t *testing.T) {
 					testAccCheckSlackChannelConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "guardrail_policy_arns.#", acctest.Ct1),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "iam_role_arn", "iam", regexache.MustCompile("role/.+-1$")),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrIAMRoleARN, "iam", regexache.MustCompile("role/.+-1$")),
 					resource.TestCheckResourceAttr(resourceName, "logging_level", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "slack_channel_id", slackChannelId),
 					//SlackChannelName is not being tested as the Slack Channel Name (if not provided as input) is not always available.
@@ -129,7 +129,7 @@ func TestAccChatbotSlackChannelConfiguration_all(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "guardrail_policy_arns.#", acctest.Ct2),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "guardrail_policy_arns.0", "iam", regexache.MustCompile("policy/.+-[12]$")),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "guardrail_policy_arns.1", "iam", regexache.MustCompile("policy/.+-[12]$")),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "iam_role_arn", "iam", regexache.MustCompile("role/.+-1$")),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrIAMRoleARN, "iam", regexache.MustCompile("role/.+-1$")),
 					resource.TestCheckResourceAttr(resourceName, "logging_level", "ERROR"),
 					resource.TestCheckResourceAttr(resourceName, "slack_channel_id", slackChannelId),
 					resource.TestCheckResourceAttr(resourceName, "slack_channel_name", "terraform1"),
@@ -152,7 +152,7 @@ func TestAccChatbotSlackChannelConfiguration_all(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "guardrail_policy_arns.#", acctest.Ct1),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "guardrail_policy_arns.0", "iam", regexache.MustCompile("policy/.+-1$")),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "iam_role_arn", "iam", regexache.MustCompile("role/.+-2$")),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrIAMRoleARN, "iam", regexache.MustCompile("role/.+-2$")),
 					resource.TestCheckResourceAttr(resourceName, "logging_level", "INFO"),
 					resource.TestCheckResourceAttr(resourceName, "slack_channel_id", slackChannelId),
 					resource.TestCheckResourceAttr(resourceName, "slack_channel_name", "terraform2"),
@@ -172,7 +172,7 @@ func TestAccChatbotSlackChannelConfiguration_all(t *testing.T) {
 	})
 }
 
-func TestAccChatbotSlackChannelConfiguration_guardrailPolicyArns(t *testing.T) {
+func TestAccChatbotSlackChannelConfiguration_guardrailPolicyARNs(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -194,13 +194,13 @@ func TestAccChatbotSlackChannelConfiguration_guardrailPolicyArns(t *testing.T) {
 		CheckDestroy:             testAccCheckSlackChannelConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSlackChannelConfigurationConfig_guardrailPolicyArns(rName, workspaceName, slackChannelId),
+				Config: testAccSlackChannelConfigurationConfig_guardrailPolicyARNs(rName, workspaceName, slackChannelId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSlackChannelConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "guardrail_policy_arns.#", acctest.Ct1),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "guardrail_policy_arns.0", "iam", regexache.MustCompile("policy/.+-1$")),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "iam_role_arn", "iam", regexache.MustCompile("role/.+-1$")),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrIAMRoleARN, "iam", regexache.MustCompile("role/.+-1$")),
 					resource.TestCheckResourceAttr(resourceName, "slack_channel_id", slackChannelId),
 					resource.TestCheckResourceAttrSet(resourceName, "slack_team_id"),
 				),
@@ -215,14 +215,14 @@ func TestAccChatbotSlackChannelConfiguration_guardrailPolicyArns(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccSlackChannelConfigurationConfig_guardrailPolicyArnsUpdated(rName, workspaceName, slackChannelId),
+				Config: testAccSlackChannelConfigurationConfig_guardrailPolicyARNsUpdated(rName, workspaceName, slackChannelId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSlackChannelConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "guardrail_policy_arns.#", acctest.Ct2),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "guardrail_policy_arns.0", "iam", regexache.MustCompile("policy/.+-1$")),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "guardrail_policy_arns.1", "iam", regexache.MustCompile("policy/.+-2$")),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "iam_role_arn", "iam", regexache.MustCompile("role/.+-1$")),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrIAMRoleARN, "iam", regexache.MustCompile("role/.+-1$")),
 					resource.TestCheckResourceAttr(resourceName, "slack_channel_id", slackChannelId),
 					resource.TestCheckResourceAttrSet(resourceName, "slack_team_id"),
 				),
@@ -240,7 +240,7 @@ func TestAccChatbotSlackChannelConfiguration_guardrailPolicyArns(t *testing.T) {
 	})
 }
 
-func TestAccChatbotSlackChannelConfiguration_iamRoleArn(t *testing.T) {
+func TestAccChatbotSlackChannelConfiguration_iamRoleARN(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -262,11 +262,11 @@ func TestAccChatbotSlackChannelConfiguration_iamRoleArn(t *testing.T) {
 		CheckDestroy:             testAccCheckSlackChannelConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSlackChannelConfigurationConfig_iamRoleArn(rName, workspaceName, slackChannelId),
+				Config: testAccSlackChannelConfigurationConfig_iamRoleARN(rName, workspaceName, slackChannelId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSlackChannelConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration_name", rName),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "iam_role_arn", "iam", regexache.MustCompile("role/.+-1$")),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrIAMRoleARN, "iam", regexache.MustCompile("role/.+-1$")),
 					resource.TestCheckResourceAttr(resourceName, "slack_channel_id", slackChannelId),
 					resource.TestCheckResourceAttrSet(resourceName, "slack_team_id"),
 				),
@@ -281,11 +281,11 @@ func TestAccChatbotSlackChannelConfiguration_iamRoleArn(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccSlackChannelConfigurationConfig_iamRoleArnUpdated(rName, workspaceName, slackChannelId),
+				Config: testAccSlackChannelConfigurationConfig_iamRoleARNUpdated(rName, workspaceName, slackChannelId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSlackChannelConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration_name", rName),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "iam_role_arn", "iam", regexache.MustCompile("role/.+-2$")),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrIAMRoleARN, "iam", regexache.MustCompile("role/.+-2$")),
 					resource.TestCheckResourceAttr(resourceName, "slack_channel_id", slackChannelId),
 					resource.TestCheckResourceAttrSet(resourceName, "slack_team_id"),
 				),
@@ -329,7 +329,7 @@ func TestAccChatbotSlackChannelConfiguration_loggingLevel(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSlackChannelConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration_name", rName),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "iam_role_arn", "iam", regexache.MustCompile("role/.+-1$")),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrIAMRoleARN, "iam", regexache.MustCompile("role/.+-1$")),
 					resource.TestCheckResourceAttr(resourceName, "logging_level", "INFO"),
 					resource.TestCheckResourceAttr(resourceName, "slack_channel_id", slackChannelId),
 					resource.TestCheckResourceAttrSet(resourceName, "slack_team_id"),
@@ -349,7 +349,7 @@ func TestAccChatbotSlackChannelConfiguration_loggingLevel(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSlackChannelConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration_name", rName),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "iam_role_arn", "iam", regexache.MustCompile("role/.+-1$")),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrIAMRoleARN, "iam", regexache.MustCompile("role/.+-1$")),
 					resource.TestCheckResourceAttr(resourceName, "logging_level", "ERROR"),
 					resource.TestCheckResourceAttr(resourceName, "slack_channel_id", slackChannelId),
 					resource.TestCheckResourceAttrSet(resourceName, "slack_team_id"),
@@ -394,7 +394,7 @@ func TestAccChatbotSlackChannelConfiguration_slackChannelName(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSlackChannelConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration_name", rName),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "iam_role_arn", "iam", regexache.MustCompile("role/.+-1$")),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrIAMRoleARN, "iam", regexache.MustCompile("role/.+-1$")),
 					resource.TestCheckResourceAttr(resourceName, "slack_channel_name", "test_chatbot_slack_channel_1"),
 					resource.TestCheckResourceAttr(resourceName, "slack_channel_id", slackChannelId),
 					resource.TestCheckResourceAttrSet(resourceName, "slack_channel_name"),
@@ -412,7 +412,7 @@ func TestAccChatbotSlackChannelConfiguration_slackChannelName(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSlackChannelConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration_name", rName),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "iam_role_arn", "iam", regexache.MustCompile("role/.+-1$")),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrIAMRoleARN, "iam", regexache.MustCompile("role/.+-1$")),
 					resource.TestCheckResourceAttr(resourceName, "slack_channel_name", "test_chatbot_slack_channel_2"),
 					resource.TestCheckResourceAttr(resourceName, "slack_channel_id", slackChannelId),
 					resource.TestCheckResourceAttrSet(resourceName, "slack_channel_name"),
@@ -451,12 +451,12 @@ func TestAccChatbotSlackChannelConfiguration_userAuthorizationRequired(t *testin
 		CheckDestroy:             testAccCheckSlackChannelConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSlackChannelConfigurationConfig_userAuthorizationRequired(rName, workspaceName, slackChannelId, "true"),
+				Config: testAccSlackChannelConfigurationConfig_userAuthorizationRequired(rName, workspaceName, slackChannelId, acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSlackChannelConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration_name", rName),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "iam_role_arn", "iam", regexache.MustCompile("role/.+-1$")),
-					resource.TestCheckResourceAttr(resourceName, "user_authorization_required", "true"),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrIAMRoleARN, "iam", regexache.MustCompile("role/.+-1$")),
+					resource.TestCheckResourceAttr(resourceName, "user_authorization_required", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "slack_channel_id", slackChannelId),
 					resource.TestCheckResourceAttrSet(resourceName, "slack_team_id"),
 				),
@@ -471,12 +471,12 @@ func TestAccChatbotSlackChannelConfiguration_userAuthorizationRequired(t *testin
 				},
 			},
 			{
-				Config: testAccSlackChannelConfigurationConfig_userAuthorizationRequired(rName, workspaceName, slackChannelId, "false"),
+				Config: testAccSlackChannelConfigurationConfig_userAuthorizationRequired(rName, workspaceName, slackChannelId, acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSlackChannelConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration_name", rName),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "iam_role_arn", "iam", regexache.MustCompile("role/.+-1$")),
-					resource.TestCheckResourceAttr(resourceName, "user_authorization_required", "false"),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrIAMRoleARN, "iam", regexache.MustCompile("role/.+-1$")),
+					resource.TestCheckResourceAttr(resourceName, "user_authorization_required", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "slack_channel_id", slackChannelId),
 					resource.TestCheckResourceAttrSet(resourceName, "slack_team_id"),
 				),
@@ -528,7 +528,7 @@ func TestAccChatbotSlackChannelConfiguration_disappears(t *testing.T) {
 	})
 }
 
-func TestAccChatbotSlackChannelConfiguration_snsTopicArns(t *testing.T) {
+func TestAccChatbotSlackChannelConfiguration_snsTopicARNs(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -550,12 +550,12 @@ func TestAccChatbotSlackChannelConfiguration_snsTopicArns(t *testing.T) {
 		CheckDestroy:             testAccCheckSlackChannelConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSlackChannelConfigurationConfig_snsTopicArns(rName, workspaceName, slackChannelId),
+				Config: testAccSlackChannelConfigurationConfig_snsTopicARNs(rName, workspaceName, slackChannelId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSlackChannelConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "sns_topic_arns.#", acctest.Ct1),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "iam_role_arn", "iam", regexache.MustCompile("role/.+-1$")),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrIAMRoleARN, "iam", regexache.MustCompile("role/.+-1$")),
 					resource.TestCheckResourceAttr(resourceName, "slack_channel_id", slackChannelId),
 					resource.TestCheckResourceAttrSet(resourceName, "slack_team_id"),
 				),
@@ -570,12 +570,12 @@ func TestAccChatbotSlackChannelConfiguration_snsTopicArns(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccSlackChannelConfigurationConfig_snsTopicArnsUpdated(rName, workspaceName, slackChannelId),
+				Config: testAccSlackChannelConfigurationConfig_snsTopicARNsUpdated(rName, workspaceName, slackChannelId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSlackChannelConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "sns_topic_arns.#", acctest.Ct2),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "iam_role_arn", "iam", regexache.MustCompile("role/.+-1$")),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrIAMRoleARN, "iam", regexache.MustCompile("role/.+-1$")),
 					resource.TestCheckResourceAttr(resourceName, "slack_channel_id", slackChannelId),
 					resource.TestCheckResourceAttrSet(resourceName, "slack_team_id"),
 				),
@@ -615,11 +615,11 @@ func TestAccChatbotSlackChannelConfiguration_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckSlackChannelConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccChatbotSlackChannelConfiguration_tags1(rName, workspaceName, slackChannelId, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccSlackChannelConfiguration_tags1(rName, workspaceName, slackChannelId, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSlackChannelConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration_name", rName),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "iam_role_arn", "iam", regexache.MustCompile("role/.+-1$")),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrIAMRoleARN, "iam", regexache.MustCompile("role/.+-1$")),
 					resource.TestCheckResourceAttr(resourceName, "slack_channel_id", slackChannelId),
 					resource.TestCheckResourceAttrSet(resourceName, "slack_team_id"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
@@ -635,11 +635,11 @@ func TestAccChatbotSlackChannelConfiguration_tags(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccChatbotSlackChannelConfiguration_tags2(rName, workspaceName, slackChannelId, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccSlackChannelConfiguration_tags2(rName, workspaceName, slackChannelId, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSlackChannelConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration_name", rName),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "iam_role_arn", "iam", regexache.MustCompile("role/.+-1$")),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrIAMRoleARN, "iam", regexache.MustCompile("role/.+-1$")),
 					resource.TestCheckResourceAttr(resourceName, "slack_channel_id", slackChannelId),
 					resource.TestCheckResourceAttrSet(resourceName, "slack_team_id"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
@@ -656,11 +656,11 @@ func TestAccChatbotSlackChannelConfiguration_tags(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccChatbotSlackChannelConfiguration_tags1(rName, workspaceName, slackChannelId, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccSlackChannelConfiguration_tags1(rName, workspaceName, slackChannelId, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSlackChannelConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration_name", rName),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "iam_role_arn", "iam", regexache.MustCompile("role/.+-1$")),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrIAMRoleARN, "iam", regexache.MustCompile("role/.+-1$")),
 					resource.TestCheckResourceAttr(resourceName, "slack_channel_id", slackChannelId),
 					resource.TestCheckResourceAttrSet(resourceName, "slack_team_id"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
@@ -680,7 +680,7 @@ func testAccCheckSlackChannelConfigurationDestroy(ctx context.Context) resource.
 				continue
 			}
 
-			_, err := tfchatbot.FindSlackChannelConfigurationByID(ctx, conn, *aws.String(rs.Primary.Attributes["chat_configuration_arn"]))
+			_, err := tfchatbot.FindSlackChannelConfigurationByID(ctx, conn, rs.Primary.Attributes["chat_configuration_arn"])
 			if tfresource.NotFound(err) {
 				continue
 			}
@@ -715,7 +715,6 @@ func testAccCheckSlackChannelConfigurationExists(ctx context.Context, name strin
 		}
 
 		return err
-
 	}
 }
 
@@ -773,7 +772,7 @@ resource "aws_sns_topic" "test_sns_topic_2" {
 }
 
 resource "aws_iam_role" "test_chatbot_role_1" {
-  name   = "%[1]s-1"
+  name = "%[1]s-1"
 
   assume_role_policy = <<EOF
 {
@@ -792,7 +791,7 @@ EOF
 }
 
 resource "aws_iam_role" "test_chatbot_role_2" {
-  name   = "%[1]s-2"
+  name = "%[1]s-2"
 
   assume_role_policy = <<EOF
 {
@@ -819,10 +818,10 @@ func testAccSlackChannelConfigurationConfig_basic(rName string, workspaceName st
 	return acctest.ConfigCompose(fmt.Sprintf(testAccSlackChannelConfigurationConfig_base, rName, workspaceName), fmt.Sprintf(`
 
 resource "aws_chatbot_slack_channel_configuration" "test" {
-  configuration_name   = %[1]q
-  iam_role_arn         = aws_iam_role.test_chatbot_role_1.arn
-  slack_channel_id     = "%[2]s"
-  slack_team_id        = data.aws_chatbot_slack_workspace.test.slack_team_id
+  configuration_name = %[1]q
+  iam_role_arn       = aws_iam_role.test_chatbot_role_1.arn
+  slack_channel_id   = "%[2]s"
+  slack_team_id      = data.aws_chatbot_slack_workspace.test.slack_team_id
 }
 `, rName, slackChannelId))
 }
@@ -830,18 +829,18 @@ resource "aws_chatbot_slack_channel_configuration" "test" {
 func testAccSlackChannelConfigurationConfig_all(rName string, workspaceName string, loggingLevel string, slackChannelId string, slackChannelName string, tagKey1 string, tagValue1 string) string {
 	return acctest.ConfigCompose(fmt.Sprintf(testAccSlackChannelConfigurationConfig_base, rName, workspaceName), fmt.Sprintf(`
 resource "aws_chatbot_slack_channel_configuration" "test" {
-  configuration_name   = %[1]q
-  guardrail_policy_arns   = [aws_iam_policy.test_guardrail_policy_1.arn, aws_iam_policy.test_guardrail_policy_2.arn]
-  iam_role_arn         = aws_iam_role.test_chatbot_role_1.arn
-  logging_level        = "%[2]s"
-  slack_channel_id     = "%[3]s"
-  slack_channel_name   = "%[4]s"
-  slack_team_id        = data.aws_chatbot_slack_workspace.test.slack_team_id
-  sns_topic_arns       = [aws_sns_topic.test_sns_topic_1.arn, aws_sns_topic.test_sns_topic_2.arn]
+  configuration_name          = %[1]q
+  guardrail_policy_arns       = [aws_iam_policy.test_guardrail_policy_1.arn, aws_iam_policy.test_guardrail_policy_2.arn]
+  iam_role_arn                = aws_iam_role.test_chatbot_role_1.arn
+  logging_level               = "%[2]s"
+  slack_channel_id            = "%[3]s"
+  slack_channel_name          = "%[4]s"
+  slack_team_id               = data.aws_chatbot_slack_workspace.test.slack_team_id
+  sns_topic_arns              = [aws_sns_topic.test_sns_topic_1.arn, aws_sns_topic.test_sns_topic_2.arn]
   user_authorization_required = true
   tags = {
     %[5]q = %[6]q
-   }
+  }
 }
 `, rName, loggingLevel, slackChannelId, slackChannelName, tagKey1, tagValue1))
 }
@@ -849,64 +848,64 @@ resource "aws_chatbot_slack_channel_configuration" "test" {
 func testAccSlackChannelConfigurationConfig_allUpdated(rName string, workspaceName string, loggingLevel string, slackChannelId string, slackChannelName string, tagKey1 string, tagValue1 string) string {
 	return acctest.ConfigCompose(fmt.Sprintf(testAccSlackChannelConfigurationConfig_base, rName, workspaceName), fmt.Sprintf(`
 resource "aws_chatbot_slack_channel_configuration" "test" {
-  configuration_name   = %[1]q
-  guardrail_policy_arns   = [aws_iam_policy.test_guardrail_policy_1.arn]
-  iam_role_arn         = aws_iam_role.test_chatbot_role_2.arn
-  logging_level        = "%[2]s"
-  slack_channel_id     = "%[3]s"
-  slack_channel_name   = "%[4]s"
-  slack_team_id        = data.aws_chatbot_slack_workspace.test.slack_team_id
-  sns_topic_arns       = [aws_sns_topic.test_sns_topic_2.arn]
+  configuration_name          = %[1]q
+  guardrail_policy_arns       = [aws_iam_policy.test_guardrail_policy_1.arn]
+  iam_role_arn                = aws_iam_role.test_chatbot_role_2.arn
+  logging_level               = "%[2]s"
+  slack_channel_id            = "%[3]s"
+  slack_channel_name          = "%[4]s"
+  slack_team_id               = data.aws_chatbot_slack_workspace.test.slack_team_id
+  sns_topic_arns              = [aws_sns_topic.test_sns_topic_2.arn]
   user_authorization_required = false
   tags = {
     %[5]q = %[6]q
-   }
+  }
 }
 `, rName, loggingLevel, slackChannelId, slackChannelName, tagKey1, tagValue1))
 }
 
-func testAccSlackChannelConfigurationConfig_guardrailPolicyArns(rName string, workspaceName string, slackChannelId string) string {
+func testAccSlackChannelConfigurationConfig_guardrailPolicyARNs(rName string, workspaceName string, slackChannelId string) string {
 	return acctest.ConfigCompose(fmt.Sprintf(testAccSlackChannelConfigurationConfig_base, rName, workspaceName), fmt.Sprintf(`
 resource "aws_chatbot_slack_channel_configuration" "test" {
-  configuration_name   = %[1]q
-  guardrail_policy_arns   = [aws_iam_policy.test_guardrail_policy_1.arn]
-  iam_role_arn         = aws_iam_role.test_chatbot_role_1.arn
-  slack_channel_id     = "%[2]s"
-  slack_team_id        = data.aws_chatbot_slack_workspace.test.slack_team_id
+  configuration_name    = %[1]q
+  guardrail_policy_arns = [aws_iam_policy.test_guardrail_policy_1.arn]
+  iam_role_arn          = aws_iam_role.test_chatbot_role_1.arn
+  slack_channel_id      = "%[2]s"
+  slack_team_id         = data.aws_chatbot_slack_workspace.test.slack_team_id
 }
 `, rName, slackChannelId))
 }
 
-func testAccSlackChannelConfigurationConfig_guardrailPolicyArnsUpdated(rName string, workspaceName string, slackChannelId string) string {
+func testAccSlackChannelConfigurationConfig_guardrailPolicyARNsUpdated(rName string, workspaceName string, slackChannelId string) string {
 	return acctest.ConfigCompose(fmt.Sprintf(testAccSlackChannelConfigurationConfig_base, rName, workspaceName), fmt.Sprintf(`
 resource "aws_chatbot_slack_channel_configuration" "test" {
-  configuration_name   = %[1]q
-  guardrail_policy_arns   = [aws_iam_policy.test_guardrail_policy_1.arn, aws_iam_policy.test_guardrail_policy_2.arn]
-  iam_role_arn         = aws_iam_role.test_chatbot_role_1.arn
-  slack_channel_id     = "%[2]s"
-  slack_team_id        = data.aws_chatbot_slack_workspace.test.slack_team_id
+  configuration_name    = %[1]q
+  guardrail_policy_arns = [aws_iam_policy.test_guardrail_policy_1.arn, aws_iam_policy.test_guardrail_policy_2.arn]
+  iam_role_arn          = aws_iam_role.test_chatbot_role_1.arn
+  slack_channel_id      = "%[2]s"
+  slack_team_id         = data.aws_chatbot_slack_workspace.test.slack_team_id
 }
 `, rName, slackChannelId))
 }
 
-func testAccSlackChannelConfigurationConfig_iamRoleArn(rName string, workspaceName string, slackChannelId string) string {
+func testAccSlackChannelConfigurationConfig_iamRoleARN(rName string, workspaceName string, slackChannelId string) string {
 	return acctest.ConfigCompose(fmt.Sprintf(testAccSlackChannelConfigurationConfig_base, rName, workspaceName), fmt.Sprintf(`
 resource "aws_chatbot_slack_channel_configuration" "test" {
-  configuration_name   = %[1]q
-  iam_role_arn         = aws_iam_role.test_chatbot_role_1.arn
-  slack_channel_id     = "%[2]s"
-  slack_team_id        = data.aws_chatbot_slack_workspace.test.slack_team_id
+  configuration_name = %[1]q
+  iam_role_arn       = aws_iam_role.test_chatbot_role_1.arn
+  slack_channel_id   = "%[2]s"
+  slack_team_id      = data.aws_chatbot_slack_workspace.test.slack_team_id
 }
 `, rName, slackChannelId))
 }
 
-func testAccSlackChannelConfigurationConfig_iamRoleArnUpdated(rName string, workspaceName string, slackChannelId string) string {
+func testAccSlackChannelConfigurationConfig_iamRoleARNUpdated(rName string, workspaceName string, slackChannelId string) string {
 	return acctest.ConfigCompose(fmt.Sprintf(testAccSlackChannelConfigurationConfig_base, rName, workspaceName), fmt.Sprintf(`
 resource "aws_chatbot_slack_channel_configuration" "test" {
-  configuration_name   = %[1]q
-  iam_role_arn         = aws_iam_role.test_chatbot_role_2.arn
-  slack_channel_id     = "%[2]s"
-  slack_team_id        = data.aws_chatbot_slack_workspace.test.slack_team_id
+  configuration_name = %[1]q
+  iam_role_arn       = aws_iam_role.test_chatbot_role_2.arn
+  slack_channel_id   = "%[2]s"
+  slack_team_id      = data.aws_chatbot_slack_workspace.test.slack_team_id
 }
 `, rName, slackChannelId))
 }
@@ -914,11 +913,11 @@ resource "aws_chatbot_slack_channel_configuration" "test" {
 func testAccSlackChannelConfigurationConfig_loggingLevel(rName string, workspaceName string, slackChannelId string, loggingLevel string) string {
 	return acctest.ConfigCompose(fmt.Sprintf(testAccSlackChannelConfigurationConfig_base, rName, workspaceName), fmt.Sprintf(`
 resource "aws_chatbot_slack_channel_configuration" "test" {
-  configuration_name   = %[1]q
-  iam_role_arn         = aws_iam_role.test_chatbot_role_1.arn
-  logging_level        = "%[3]s"
-  slack_channel_id     = "%[2]s"
-  slack_team_id        = data.aws_chatbot_slack_workspace.test.slack_team_id
+  configuration_name = %[1]q
+  iam_role_arn       = aws_iam_role.test_chatbot_role_1.arn
+  logging_level      = "%[3]s"
+  slack_channel_id   = "%[2]s"
+  slack_team_id      = data.aws_chatbot_slack_workspace.test.slack_team_id
 }
 `, rName, slackChannelId, loggingLevel))
 }
@@ -926,35 +925,35 @@ resource "aws_chatbot_slack_channel_configuration" "test" {
 func testAccSlackChannelConfigurationConfig_slackChannelName(rName string, workspaceName string, slackChannelId string, slackChannelName string) string {
 	return acctest.ConfigCompose(fmt.Sprintf(testAccSlackChannelConfigurationConfig_base, rName, workspaceName), fmt.Sprintf(`
 resource "aws_chatbot_slack_channel_configuration" "test" {
-  configuration_name   = %[1]q
-  iam_role_arn         = aws_iam_role.test_chatbot_role_1.arn
-  slack_channel_id     = "%[2]s"
-  slack_team_id        = data.aws_chatbot_slack_workspace.test.slack_team_id
-  slack_channel_name   = "%[3]s"
+  configuration_name = %[1]q
+  iam_role_arn       = aws_iam_role.test_chatbot_role_1.arn
+  slack_channel_id   = "%[2]s"
+  slack_team_id      = data.aws_chatbot_slack_workspace.test.slack_team_id
+  slack_channel_name = "%[3]s"
 }
 `, rName, slackChannelId, slackChannelName))
 }
 
-func testAccSlackChannelConfigurationConfig_snsTopicArns(rName string, workspaceName string, slackChannelId string) string {
+func testAccSlackChannelConfigurationConfig_snsTopicARNs(rName string, workspaceName string, slackChannelId string) string {
 	return acctest.ConfigCompose(fmt.Sprintf(testAccSlackChannelConfigurationConfig_base, rName, workspaceName), fmt.Sprintf(`
 resource "aws_chatbot_slack_channel_configuration" "test" {
-  configuration_name   = %[1]q
-  sns_topic_arns       = [aws_sns_topic.test_sns_topic_1.arn]
-  iam_role_arn         = aws_iam_role.test_chatbot_role_1.arn
-  slack_channel_id     = "%[2]s"
-  slack_team_id        = data.aws_chatbot_slack_workspace.test.slack_team_id
+  configuration_name = %[1]q
+  sns_topic_arns     = [aws_sns_topic.test_sns_topic_1.arn]
+  iam_role_arn       = aws_iam_role.test_chatbot_role_1.arn
+  slack_channel_id   = "%[2]s"
+  slack_team_id      = data.aws_chatbot_slack_workspace.test.slack_team_id
 }
 `, rName, slackChannelId))
 }
 
-func testAccSlackChannelConfigurationConfig_snsTopicArnsUpdated(rName string, workspaceName string, slackChannelId string) string {
+func testAccSlackChannelConfigurationConfig_snsTopicARNsUpdated(rName string, workspaceName string, slackChannelId string) string {
 	return acctest.ConfigCompose(fmt.Sprintf(testAccSlackChannelConfigurationConfig_base, rName, workspaceName), fmt.Sprintf(`
 resource "aws_chatbot_slack_channel_configuration" "test" {
-  configuration_name   = %[1]q
-  sns_topic_arns       = [aws_sns_topic.test_sns_topic_1.arn, aws_sns_topic.test_sns_topic_2.arn]
-  iam_role_arn         = aws_iam_role.test_chatbot_role_1.arn
-  slack_channel_id     = "%[2]s"
-  slack_team_id        = data.aws_chatbot_slack_workspace.test.slack_team_id
+  configuration_name = %[1]q
+  sns_topic_arns     = [aws_sns_topic.test_sns_topic_1.arn, aws_sns_topic.test_sns_topic_2.arn]
+  iam_role_arn       = aws_iam_role.test_chatbot_role_1.arn
+  slack_channel_id   = "%[2]s"
+  slack_team_id      = data.aws_chatbot_slack_workspace.test.slack_team_id
 }
 `, rName, slackChannelId))
 }
@@ -962,22 +961,22 @@ resource "aws_chatbot_slack_channel_configuration" "test" {
 func testAccSlackChannelConfigurationConfig_userAuthorizationRequired(rName string, workspaceName string, slackChannelId string, userAuthorizationRequired string) string {
 	return acctest.ConfigCompose(fmt.Sprintf(testAccSlackChannelConfigurationConfig_base, rName, workspaceName), fmt.Sprintf(`
 resource "aws_chatbot_slack_channel_configuration" "test" {
-  configuration_name   = %[1]q
-  iam_role_arn         = aws_iam_role.test_chatbot_role_1.arn
-  slack_channel_id     = "%[2]s"
-  slack_team_id        = data.aws_chatbot_slack_workspace.test.slack_team_id
+  configuration_name          = %[1]q
+  iam_role_arn                = aws_iam_role.test_chatbot_role_1.arn
+  slack_channel_id            = "%[2]s"
+  slack_team_id               = data.aws_chatbot_slack_workspace.test.slack_team_id
   user_authorization_required = %[3]s
 }
 `, rName, slackChannelId, userAuthorizationRequired))
 }
 
-func testAccChatbotSlackChannelConfiguration_tags1(rName, workspaceName, slackChannelId, tagKey1, tagValue1 string) string {
+func testAccSlackChannelConfiguration_tags1(rName, workspaceName, slackChannelId, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(fmt.Sprintf(testAccSlackChannelConfigurationConfig_base, rName, workspaceName), fmt.Sprintf(`
 resource "aws_chatbot_slack_channel_configuration" "test" {
-  configuration_name   = %[1]q
-  iam_role_arn         = aws_iam_role.test_chatbot_role_1.arn
-  slack_channel_id     = "%[2]s"
-  slack_team_id        = data.aws_chatbot_slack_workspace.test.slack_team_id
+  configuration_name = %[1]q
+  iam_role_arn       = aws_iam_role.test_chatbot_role_1.arn
+  slack_channel_id   = "%[2]s"
+  slack_team_id      = data.aws_chatbot_slack_workspace.test.slack_team_id
   tags = {
     %[3]q = %[4]q
   }
@@ -985,17 +984,16 @@ resource "aws_chatbot_slack_channel_configuration" "test" {
 `, rName, slackChannelId, tagKey1, tagValue1))
 }
 
-func testAccChatbotSlackChannelConfiguration_tags2(rName, workspaceName, slackChannelId, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccSlackChannelConfiguration_tags2(rName, workspaceName, slackChannelId, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(fmt.Sprintf(testAccSlackChannelConfigurationConfig_base, rName, workspaceName), fmt.Sprintf(`
 resource "aws_chatbot_slack_channel_configuration" "test" {
-  configuration_name   = %[1]q
-  iam_role_arn         = aws_iam_role.test_chatbot_role_1.arn
-  slack_channel_id     = "%[2]s"
-  slack_team_id        = data.aws_chatbot_slack_workspace.test.slack_team_id
+  configuration_name = %[1]q
+  iam_role_arn       = aws_iam_role.test_chatbot_role_1.arn
+  slack_channel_id   = "%[2]s"
+  slack_team_id      = data.aws_chatbot_slack_workspace.test.slack_team_id
   tags = {
     %[3]q = %[4]q
-	%[5]q = %[6]q
-
+    %[5]q = %[6]q
   }
 }
 `, rName, slackChannelId, tagKey1, tagValue1, tagKey2, tagValue2))

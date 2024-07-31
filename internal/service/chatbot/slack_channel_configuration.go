@@ -198,7 +198,6 @@ func (r *resourceSlackChannelConfiguration) Read(ctx context.Context, req resour
 }
 
 func findSlackChannelConfigurationByID(ctx context.Context, conn *chatbot.Client, ID string) (*awstypes.SlackChannelConfiguration, error) {
-
 	input := &chatbot.DescribeSlackChannelConfigurationsInput{
 		ChatConfigurationArn: aws.String(ID),
 	}
@@ -280,7 +279,6 @@ func (r *resourceSlackChannelConfiguration) Update(ctx context.Context, request 
 }
 
 func (r *resourceSlackChannelConfiguration) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-
 	var state resourceSlackChannelConfigurationData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -306,7 +304,6 @@ func (r *resourceSlackChannelConfiguration) Delete(ctx context.Context, req reso
 		)
 		return
 	}
-
 }
 
 type resourceSlackChannelConfigurationData struct {
