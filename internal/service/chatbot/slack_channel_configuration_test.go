@@ -11,7 +11,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -708,7 +707,7 @@ func testAccCheckSlackChannelConfigurationExists(ctx context.Context, name strin
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ChatbotClient(ctx)
-		_, err := tfchatbot.FindSlackChannelConfigurationByID(ctx, conn, *aws.String(rs.Primary.Attributes["chat_configuration_arn"]))
+		_, err := tfchatbot.FindSlackChannelConfigurationByID(ctx, conn, rs.Primary.Attributes["chat_configuration_arn"])
 
 		if err != nil {
 			return create.Error(names.Chatbot, create.ErrActionCheckingExistence, tfchatbot.ResNameSlackChannelConfiguration, rs.Primary.ID, err)

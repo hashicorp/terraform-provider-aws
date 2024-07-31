@@ -65,7 +65,7 @@ func (r *resourceSlackChannelConfiguration) Schema(ctx context.Context, req reso
 				Optional:    true,
 				Computed:    true,
 			},
-			"iam_role_arn": schema.StringAttribute{
+			names.AttrIAMRoleARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
 			},
