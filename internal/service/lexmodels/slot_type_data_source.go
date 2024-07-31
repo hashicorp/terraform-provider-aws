@@ -84,7 +84,7 @@ func DataSourceSlotType() *schema.Resource {
 
 func dataSourceSlotTypeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LexModelsConn(ctx)
+	conn := meta.(*conns.AWSClient).LexModelsClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	version := d.Get(names.AttrVersion).(string)

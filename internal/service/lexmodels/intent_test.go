@@ -9,9 +9,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tflexmodels "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodels"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -32,7 +33,7 @@ func TestAccLexModelsIntent_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -82,7 +83,7 @@ func TestAccLexModelsIntent_createVersion(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -128,7 +129,7 @@ func TestAccLexModelsIntent_conclusionStatement(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -185,7 +186,7 @@ func TestAccLexModelsIntent_confirmationPromptAndRejectionStatement(t *testing.T
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -252,7 +253,7 @@ func TestAccLexModelsIntent_dialogCodeHook(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -289,7 +290,7 @@ func TestAccLexModelsIntent_followUpPrompt(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -362,7 +363,7 @@ func TestAccLexModelsIntent_fulfillmentActivity(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -401,7 +402,7 @@ func TestAccLexModelsIntent_sampleUtterances(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -447,7 +448,7 @@ func TestAccLexModelsIntent_slots(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -504,7 +505,7 @@ func TestAccLexModelsIntent_slotsCustom(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -552,7 +553,7 @@ func TestAccLexModelsIntent_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -578,7 +579,7 @@ func TestAccLexModelsIntent_updateWithExternalChange(t *testing.T) {
 
 	testAccCheckAWSLexIntentUpdateDescription := func(provider *schema.Provider, _ *schema.Resource, resourceName string) resource.TestCheckFunc {
 		return func(s *terraform.State) error {
-			conn := provider.Meta().(*conns.AWSClient).LexModelsConn(ctx)
+			conn := provider.Meta().(*conns.AWSClient).LexModelsClient(ctx)
 
 			resourceState, ok := s.RootModule().Resources[resourceName]
 			if !ok {
@@ -589,14 +590,14 @@ func TestAccLexModelsIntent_updateWithExternalChange(t *testing.T) {
 				Checksum:    aws.String(resourceState.Primary.Attributes["checksum"]),
 				Description: aws.String("Updated externally without Terraform"),
 				Name:        aws.String(resourceState.Primary.ID),
-				FulfillmentActivity: &lexmodelbuildingservice.FulfillmentActivity{
-					Type: aws.String("ReturnIntent"),
+				FulfillmentActivity: &awstypes.FulfillmentActivity{
+					Type: awstypes.FulfillmentActivityType("ReturnIntent"),
 				},
 			}
 			err := retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
-				_, err := conn.PutIntentWithContext(ctx, input)
+				_, err := conn.PutIntent(ctx, input)
 
-				if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeConflictException) {
+				if errs.IsA[*awstypes.ConflictException](err) {
 					return retry.RetryableError(fmt.Errorf("%q: intent still updating", resourceName))
 				}
 				if err != nil {
@@ -616,7 +617,7 @@ func TestAccLexModelsIntent_updateWithExternalChange(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -652,7 +653,7 @@ func TestAccLexModelsIntent_computeVersion(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -704,13 +705,13 @@ func testAccCheckIntentExistsWithVersion(ctx context.Context, rName, intentVersi
 		}
 
 		var err error
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsClient(ctx)
 
-		output, err = conn.GetIntentWithContext(ctx, &lexmodelbuildingservice.GetIntentInput{
+		output, err = conn.GetIntent(ctx, &lexmodelbuildingservice.GetIntentInput{
 			Name:    aws.String(rs.Primary.ID),
 			Version: aws.String(intentVersion),
 		})
-		if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeNotFoundException) {
+		if errs.IsA[*awstypes.NotFoundException](err) {
 			return fmt.Errorf("error intent %q version %s not found", rs.Primary.ID, intentVersion)
 		}
 		if err != nil {
@@ -727,13 +728,13 @@ func testAccCheckIntentExists(ctx context.Context, rName string, output *lexmode
 
 func testAccCheckIntentNotExists(ctx context.Context, intentName, intentVersion string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsClient(ctx)
 
-		_, err := conn.GetIntentWithContext(ctx, &lexmodelbuildingservice.GetIntentInput{
+		_, err := conn.GetIntent(ctx, &lexmodelbuildingservice.GetIntentInput{
 			Name:    aws.String(intentName),
 			Version: aws.String(intentVersion),
 		})
-		if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeNotFoundException) {
+		if errs.IsA[*awstypes.NotFoundException](err) {
 			return nil
 		}
 		if err != nil {
@@ -746,17 +747,17 @@ func testAccCheckIntentNotExists(ctx context.Context, intentName, intentVersion 
 
 func testAccCheckIntentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lex_intent" {
 				continue
 			}
 
-			output, err := conn.GetIntentVersionsWithContext(ctx, &lexmodelbuildingservice.GetIntentVersionsInput{
+			output, err := conn.GetIntentVersions(ctx, &lexmodelbuildingservice.GetIntentVersionsInput{
 				Name: aws.String(rs.Primary.ID),
 			})
-			if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeNotFoundException) {
+			if errs.IsA[*awstypes.NotFoundException](err) {
 				continue
 			}
 			if err != nil {

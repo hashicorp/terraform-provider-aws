@@ -7,22 +7,23 @@ import (
 	"context"
 	"strconv"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindBotVersionByName(ctx context.Context, conn *lexmodelbuildingservice.LexModelBuildingService, name, version string) (*lexmodelbuildingservice.GetBotOutput, error) {
+func FindBotVersionByName(ctx context.Context, conn *lexmodelbuildingservice.Client, name, version string) (*lexmodelbuildingservice.GetBotOutput, error) {
 	input := &lexmodelbuildingservice.GetBotInput{
 		Name:           aws.String(name),
 		VersionOrAlias: aws.String(version),
 	}
 
-	output, err := conn.GetBotWithContext(ctx, input)
+	output, err := conn.GetBot(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -40,15 +41,15 @@ func FindBotVersionByName(ctx context.Context, conn *lexmodelbuildingservice.Lex
 	return output, nil
 }
 
-func FindSlotTypeVersionByName(ctx context.Context, conn *lexmodelbuildingservice.LexModelBuildingService, name, version string) (*lexmodelbuildingservice.GetSlotTypeOutput, error) {
+func FindSlotTypeVersionByName(ctx context.Context, conn *lexmodelbuildingservice.Client, name, version string) (*lexmodelbuildingservice.GetSlotTypeOutput, error) {
 	input := &lexmodelbuildingservice.GetSlotTypeInput{
 		Name:    aws.String(name),
 		Version: aws.String(version),
 	}
 
-	output, err := conn.GetSlotTypeWithContext(ctx, input)
+	output, err := conn.GetSlotType(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -68,19 +69,23 @@ func FindSlotTypeVersionByName(ctx context.Context, conn *lexmodelbuildingservic
 
 // FindLatestBotVersionByName returns the latest published version of a bot or $LATEST if the bot has never been published.
 // See https://docs.aws.amazon.com/lex/latest/dg/versioning-aliases.html.
-func FindLatestBotVersionByName(ctx context.Context, conn *lexmodelbuildingservice.LexModelBuildingService, name string) (string, error) {
+func FindLatestBotVersionByName(ctx context.Context, conn *lexmodelbuildingservice.Client, name string) (string, error) {
 	input := &lexmodelbuildingservice.GetBotVersionsInput{
 		Name: aws.String(name),
 	}
 	var latestVersion int
 
-	err := conn.GetBotVersionsPagesWithContext(ctx, input, func(page *lexmodelbuildingservice.GetBotVersionsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := lexmodelbuildingservice.NewGetBotVersionsPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return "", err
 		}
 
 		for _, bot := range page.Bots {
-			version := aws.StringValue(bot.Version)
+			version := aws.ToString(bot.Version)
 
 			if version == BotVersionLatest {
 				continue
@@ -92,12 +97,6 @@ func FindLatestBotVersionByName(ctx context.Context, conn *lexmodelbuildingservi
 				latestVersion = version
 			}
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return "", err
 	}
 
 	if latestVersion == 0 {
@@ -109,19 +108,23 @@ func FindLatestBotVersionByName(ctx context.Context, conn *lexmodelbuildingservi
 
 // FindLatestIntentVersionByName returns the latest published version of an intent or $LATEST if the intent has never been published.
 // See https://docs.aws.amazon.com/lex/latest/dg/versioning-aliases.html.
-func FindLatestIntentVersionByName(ctx context.Context, conn *lexmodelbuildingservice.LexModelBuildingService, name string) (string, error) {
+func FindLatestIntentVersionByName(ctx context.Context, conn *lexmodelbuildingservice.Client, name string) (string, error) {
 	input := &lexmodelbuildingservice.GetIntentVersionsInput{
 		Name: aws.String(name),
 	}
 	var latestVersion int
 
-	err := conn.GetIntentVersionsPagesWithContext(ctx, input, func(page *lexmodelbuildingservice.GetIntentVersionsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := lexmodelbuildingservice.NewGetIntentVersionsPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return "", err
 		}
 
 		for _, intent := range page.Intents {
-			version := aws.StringValue(intent.Version)
+			version := aws.ToString(intent.Version)
 
 			if version == IntentVersionLatest {
 				continue
@@ -133,12 +136,6 @@ func FindLatestIntentVersionByName(ctx context.Context, conn *lexmodelbuildingse
 				latestVersion = version
 			}
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return "", err
 	}
 
 	if latestVersion == 0 {
@@ -150,19 +147,23 @@ func FindLatestIntentVersionByName(ctx context.Context, conn *lexmodelbuildingse
 
 // FindLatestSlotTypeVersionByName returns the latest published version of a slot or $LATEST if the slot has never been published.
 // See https://docs.aws.amazon.com/lex/latest/dg/versioning-aliases.html.
-func FindLatestSlotTypeVersionByName(ctx context.Context, conn *lexmodelbuildingservice.LexModelBuildingService, name string) (string, error) {
+func FindLatestSlotTypeVersionByName(ctx context.Context, conn *lexmodelbuildingservice.Client, name string) (string, error) {
 	input := &lexmodelbuildingservice.GetSlotTypeVersionsInput{
 		Name: aws.String(name),
 	}
 	var latestVersion int
 
-	err := conn.GetSlotTypeVersionsPagesWithContext(ctx, input, func(page *lexmodelbuildingservice.GetSlotTypeVersionsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := lexmodelbuildingservice.NewGetSlotTypeVersionsPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return "", err
 		}
 
 		for _, slot := range page.SlotTypes {
-			version := aws.StringValue(slot.Version)
+			version := aws.ToString(slot.Version)
 
 			if version == SlotTypeVersionLatest {
 				continue
@@ -174,12 +175,6 @@ func FindLatestSlotTypeVersionByName(ctx context.Context, conn *lexmodelbuilding
 				latestVersion = version
 			}
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return "", err
 	}
 
 	if latestVersion == 0 {
