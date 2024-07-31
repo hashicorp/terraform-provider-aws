@@ -10,6 +10,8 @@ description: |-
 
 Manages a Route53 Hosted Zone. For managing Domain Name System Security Extensions (DNSSEC), see the [`aws_route53_key_signing_key`](route53_key_signing_key.html) and [`aws_route53_hosted_zone_dnssec`](route53_hosted_zone_dnssec.html) resources.
 
+~> **NOTE:** Terraform provides both exclusive VPC associations defined in-line in this resource via `vpc` configuration blocks and a separate [Zone VPC Association](/docs/providers/aws/r/route53_zone_association.html) resource. At this time, you cannot use in-line VPC associations in conjunction with any `aws_route53_zone_association` resources with the same zone ID otherwise it will cause a perpetual difference in plan output. You can optionally use the generic Terraform resource [lifecycle configuration block](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html) with `ignore_changes` to manage additional associations via the `aws_route53_zone_association` resource.
+
 ## Example Usage
 
 ### Public Zone
@@ -50,9 +52,7 @@ resource "aws_route53_record" "dev-ns" {
 
 ### Private Zone
 
-~> **NOTE:** Terraform provides both exclusive VPC associations defined in-line in this resource via `vpc` configuration blocks and a separate [Zone VPC Association](/docs/providers/aws/r/route53_zone_association.html) resource. At this time, you cannot use in-line VPC associations in conjunction with any `aws_route53_zone_association` resources with the same zone ID otherwise it will cause a perpetual difference in plan output. You can optionally use the generic Terraform resource [lifecycle configuration block](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html) with `ignore_changes` to manage additional associations via the `aws_route53_zone_association` resource.
-
-~> **NOTE:** Private zones require at least one VPC association at all times.
+Make a private zone by associating a VPC either inline:
 
 ```terraform
 resource "aws_route53_zone" "private" {
@@ -61,6 +61,19 @@ resource "aws_route53_zone" "private" {
   vpc {
     vpc_id = aws_vpc.example.id
   }
+}
+```
+
+or with a separate [Zone VPC Association](/docs/providers/aws/r/route53_zone_association.html) resource:
+
+```terraform
+resource "aws_route53_zone" "private" {
+  name = "example.com"
+}
+
+resource "aws_route53_zone_association" "private" {
+  zone_id = aws_route53_zone.private.zone_id
+  vpc_id  aws_vpc.example.id
 }
 ```
 
