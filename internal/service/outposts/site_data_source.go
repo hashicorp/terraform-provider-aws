@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package outposts
 
 import (
@@ -9,32 +12,34 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKDataSource("aws_outposts_site")
 func DataSourceSite() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSiteRead,
 
 		Schema: map[string]*schema.Schema{
-			"account_id": {
+			names.AttrAccountID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"id": {
+			names.AttrID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"id", "name"},
+				ExactlyOneOf: []string{names.AttrID, names.AttrName},
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"id", "name"},
+				ExactlyOneOf: []string{names.AttrID, names.AttrName},
 			},
 		},
 	}
@@ -42,7 +47,7 @@ func DataSourceSite() *schema.Resource {
 
 func dataSourceSiteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OutpostsConn()
+	conn := meta.(*conns.AWSClient).OutpostsConn(ctx)
 
 	input := &outposts.ListSitesInput{}
 
@@ -58,11 +63,11 @@ func dataSourceSiteRead(ctx context.Context, d *schema.ResourceData, meta interf
 				continue
 			}
 
-			if v, ok := d.GetOk("id"); ok && v.(string) != aws.StringValue(site.SiteId) {
+			if v, ok := d.GetOk(names.AttrID); ok && v.(string) != aws.StringValue(site.SiteId) {
 				continue
 			}
 
-			if v, ok := d.GetOk("name"); ok && v.(string) != aws.StringValue(site.Name) {
+			if v, ok := d.GetOk(names.AttrName); ok && v.(string) != aws.StringValue(site.Name) {
 				continue
 			}
 
@@ -87,9 +92,9 @@ func dataSourceSiteRead(ctx context.Context, d *schema.ResourceData, meta interf
 	site := results[0]
 
 	d.SetId(aws.StringValue(site.SiteId))
-	d.Set("account_id", site.AccountId)
-	d.Set("description", site.Description)
-	d.Set("name", site.Name)
+	d.Set(names.AttrAccountID, site.AccountId)
+	d.Set(names.AttrDescription, site.Description)
+	d.Set(names.AttrName, site.Name)
 
 	return diags
 }

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53recoverycontrolconfig
 
 import (
@@ -5,7 +8,7 @@ import (
 	"time"
 
 	r53rcc "github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 const (
@@ -14,7 +17,7 @@ const (
 )
 
 func waitClusterCreated(ctx context.Context, conn *r53rcc.Route53RecoveryControlConfig, clusterArn string) (*r53rcc.DescribeClusterOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{r53rcc.StatusPending},
 		Target:     []string{r53rcc.StatusDeployed},
 		Refresh:    statusCluster(ctx, conn, clusterArn),
@@ -32,7 +35,7 @@ func waitClusterCreated(ctx context.Context, conn *r53rcc.Route53RecoveryControl
 }
 
 func waitClusterDeleted(ctx context.Context, conn *r53rcc.Route53RecoveryControlConfig, clusterArn string) (*r53rcc.DescribeClusterOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:        []string{r53rcc.StatusPendingDeletion},
 		Target:         []string{},
 		Refresh:        statusCluster(ctx, conn, clusterArn),
@@ -51,7 +54,7 @@ func waitClusterDeleted(ctx context.Context, conn *r53rcc.Route53RecoveryControl
 }
 
 func waitRoutingControlCreated(ctx context.Context, conn *r53rcc.Route53RecoveryControlConfig, routingControlArn string) (*r53rcc.DescribeRoutingControlOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{r53rcc.StatusPending},
 		Target:     []string{r53rcc.StatusDeployed},
 		Refresh:    statusRoutingControl(ctx, conn, routingControlArn),
@@ -69,7 +72,7 @@ func waitRoutingControlCreated(ctx context.Context, conn *r53rcc.Route53Recovery
 }
 
 func waitRoutingControlDeleted(ctx context.Context, conn *r53rcc.Route53RecoveryControlConfig, routingControlArn string) (*r53rcc.DescribeRoutingControlOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:        []string{r53rcc.StatusPendingDeletion},
 		Target:         []string{},
 		Refresh:        statusRoutingControl(ctx, conn, routingControlArn),
@@ -88,7 +91,7 @@ func waitRoutingControlDeleted(ctx context.Context, conn *r53rcc.Route53Recovery
 }
 
 func waitControlPanelCreated(ctx context.Context, conn *r53rcc.Route53RecoveryControlConfig, controlPanelArn string) (*r53rcc.DescribeControlPanelOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{r53rcc.StatusPending},
 		Target:     []string{r53rcc.StatusDeployed},
 		Refresh:    statusControlPanel(ctx, conn, controlPanelArn),
@@ -106,7 +109,7 @@ func waitControlPanelCreated(ctx context.Context, conn *r53rcc.Route53RecoveryCo
 }
 
 func waitControlPanelDeleted(ctx context.Context, conn *r53rcc.Route53RecoveryControlConfig, controlPanelArn string) (*r53rcc.DescribeControlPanelOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:        []string{r53rcc.StatusPendingDeletion},
 		Target:         []string{},
 		Refresh:        statusControlPanel(ctx, conn, controlPanelArn),
@@ -125,7 +128,7 @@ func waitControlPanelDeleted(ctx context.Context, conn *r53rcc.Route53RecoveryCo
 }
 
 func waitSafetyRuleCreated(ctx context.Context, conn *r53rcc.Route53RecoveryControlConfig, safetyRuleArn string) (*r53rcc.DescribeSafetyRuleOutput, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{r53rcc.StatusPending},
 		Target:     []string{r53rcc.StatusDeployed},
 		Refresh:    statusSafetyRule(ctx, conn, safetyRuleArn),
@@ -143,7 +146,7 @@ func waitSafetyRuleCreated(ctx context.Context, conn *r53rcc.Route53RecoveryCont
 }
 
 func waitSafetyRuleDeleted(ctx context.Context, conn *r53rcc.Route53RecoveryControlConfig, safetyRuleArn string) (*r53rcc.DescribeSafetyRuleOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:        []string{r53rcc.StatusPendingDeletion},
 		Target:         []string{},
 		Refresh:        statusSafetyRule(ctx, conn, safetyRuleArn),

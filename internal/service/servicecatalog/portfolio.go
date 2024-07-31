@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package servicecatalog
 
 import (
@@ -6,18 +9,24 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_servicecatalog_portfolio", name="Portfolio")
+// @Tags
+// @Testing(existsType="github.com/aws/aws-sdk-go/service/servicecatalog;servicecatalog.DescribePortfolioOutput", generator="github.com/hashicorp/terraform-plugin-testing/helper/acctest;sdkacctest;sdkacctest.RandString(5)", skipEmptyTags=true)
 func ResourcePortfolio() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePortfolioCreate,
@@ -37,32 +46,32 @@ func ResourcePortfolio() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_time": {
+			names.AttrCreatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 100),
-			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.StringLenBetween(0, 2000),
 			},
-			"provider_name": {
+			names.AttrName: {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringLenBetween(1, 100),
+			},
+			names.AttrProviderName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 50),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -70,131 +79,146 @@ func ResourcePortfolio() *schema.Resource {
 }
 func resourcePortfolioCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
-	input := servicecatalog.CreatePortfolioInput{
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
+
+	name := d.Get(names.AttrName).(string)
+	input := &servicecatalog.CreatePortfolioInput{
 		AcceptLanguage:   aws.String(AcceptLanguageEnglish),
-		DisplayName:      aws.String(d.Get("name").(string)),
-		IdempotencyToken: aws.String(resource.UniqueId()),
-		Tags:             Tags(tags.IgnoreAWS()),
+		DisplayName:      aws.String(name),
+		IdempotencyToken: aws.String(id.UniqueId()),
+		Tags:             getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("provider_name"); ok {
+	if v, ok := d.GetOk(names.AttrProviderName); ok {
 		input.ProviderName = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating Service Catalog Portfolio: %#v", input)
-	resp, err := conn.CreatePortfolioWithContext(ctx, &input)
+	output, err := conn.CreatePortfolioWithContext(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Creating Service Catalog Portfolio failed: %s", err.Error())
+		return sdkdiag.AppendErrorf(diags, "creating Service Catalog Portfolio (%s): %s", name, err)
 	}
-	d.SetId(aws.StringValue(resp.PortfolioDetail.Id))
+
+	d.SetId(aws.StringValue(output.PortfolioDetail.Id))
 
 	return append(diags, resourcePortfolioRead(ctx, d, meta)...)
 }
 
 func resourcePortfolioRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
-	input := servicecatalog.DescribePortfolioInput{
-		AcceptLanguage: aws.String(AcceptLanguageEnglish),
+	output, err := FindPortfolioByID(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Service Catalog Portfolio (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
 	}
-	input.Id = aws.String(d.Id())
 
-	log.Printf("[DEBUG] Reading Service Catalog Portfolio: %#v", input)
-	resp, err := conn.DescribePortfolioWithContext(ctx, &input)
 	if err != nil {
-		if scErr, ok := err.(awserr.Error); ok && scErr.Code() == "ResourceNotFoundException" {
-			log.Printf("[WARN] Service Catalog Portfolio %q not found, removing from state", d.Id())
-			d.SetId("")
-			return diags
-		}
-		return sdkdiag.AppendErrorf(diags, "Reading ServiceCatalog Portfolio '%s' failed: %s", *input.Id, err.Error())
-	}
-	portfolioDetail := resp.PortfolioDetail
-	if err := d.Set("created_time", portfolioDetail.CreatedTime.Format(time.RFC3339)); err != nil {
-		log.Printf("[DEBUG] Error setting created_time: %s", err)
-	}
-	d.Set("arn", portfolioDetail.ARN)
-	d.Set("description", portfolioDetail.Description)
-	d.Set("name", portfolioDetail.DisplayName)
-	d.Set("provider_name", portfolioDetail.ProviderName)
-
-	tags := KeyValueTags(resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading Service Catalog Portfolio (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	portfolioDetail := output.PortfolioDetail
+	d.Set(names.AttrARN, portfolioDetail.ARN)
+	d.Set(names.AttrCreatedTime, portfolioDetail.CreatedTime.Format(time.RFC3339))
+	d.Set(names.AttrDescription, portfolioDetail.Description)
+	d.Set(names.AttrName, portfolioDetail.DisplayName)
+	d.Set(names.AttrProviderName, portfolioDetail.ProviderName)
+
+	setTagsOut(ctx, output.Tags)
 
 	return diags
 }
 
 func resourcePortfolioUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
-	input := servicecatalog.UpdatePortfolioInput{
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
+
+	input := &servicecatalog.UpdatePortfolioInput{
 		AcceptLanguage: aws.String(AcceptLanguageEnglish),
 		Id:             aws.String(d.Id()),
 	}
 
-	if d.HasChange("name") {
-		v, _ := d.GetOk("name")
-		input.DisplayName = aws.String(v.(string))
-	}
-
 	if d.HasChange("accept_language") {
-		v, _ := d.GetOk("accept_language")
-		input.AcceptLanguage = aws.String(v.(string))
+		input.AcceptLanguage = aws.String(d.Get("accept_language").(string))
 	}
 
-	if d.HasChange("description") {
-		v, _ := d.GetOk("description")
-		input.Description = aws.String(v.(string))
+	if d.HasChange(names.AttrDescription) {
+		input.Description = aws.String(d.Get(names.AttrDescription).(string))
 	}
 
-	if d.HasChange("provider_name") {
-		v, _ := d.GetOk("provider_name")
-		input.ProviderName = aws.String(v.(string))
+	if d.HasChange(names.AttrName) {
+		input.DisplayName = aws.String(d.Get(names.AttrName).(string))
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		input.AddTags = Tags(tftags.New(n).IgnoreAWS())
-		input.RemoveTags = aws.StringSlice(tftags.New(o).IgnoreAWS().Keys())
+	if d.HasChange(names.AttrProviderName) {
+		input.ProviderName = aws.String(d.Get(names.AttrProviderName).(string))
 	}
 
-	log.Printf("[DEBUG] Update Service Catalog Portfolio: %#v", input)
-	_, err := conn.UpdatePortfolioWithContext(ctx, &input)
+	if d.HasChange(names.AttrTagsAll) {
+		o, n := d.GetChange(names.AttrTagsAll)
+
+		input.AddTags = Tags(tftags.New(ctx, n).IgnoreAWS())
+		input.RemoveTags = aws.StringSlice(tftags.New(ctx, o).IgnoreAWS().Keys())
+	}
+
+	_, err := conn.UpdatePortfolioWithContext(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Updating Service Catalog Portfolio '%s' failed: %s", *input.Id, err.Error())
+		return sdkdiag.AppendErrorf(diags, "updating Service Catalog Portfolio (%s): %s", d.Id(), err)
 	}
+
 	return append(diags, resourcePortfolioRead(ctx, d, meta)...)
 }
 
 func resourcePortfolioDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
-	input := servicecatalog.DeletePortfolioInput{}
-	input.Id = aws.String(d.Id())
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
-	log.Printf("[DEBUG] Delete Service Catalog Portfolio: %#v", input)
-	_, err := conn.DeletePortfolioWithContext(ctx, &input)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Deleting Service Catalog Portfolio '%s' failed: %s", *input.Id, err.Error())
+	log.Printf("[DEBUG] Deleting Service Catalog Portfolio: %s", d.Id())
+	_, err := conn.DeletePortfolioWithContext(ctx, &servicecatalog.DeletePortfolioInput{
+		Id: aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
+		return diags
 	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting Service Catalog Portfolio (%s): %s", d.Id(), err)
+	}
+
 	return diags
+}
+
+func FindPortfolioByID(ctx context.Context, conn *servicecatalog.ServiceCatalog, id string) (*servicecatalog.DescribePortfolioOutput, error) {
+	input := &servicecatalog.DescribePortfolioInput{
+		AcceptLanguage: aws.String(AcceptLanguageEnglish),
+		Id:             aws.String(id),
+	}
+
+	output, err := conn.DescribePortfolioWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }

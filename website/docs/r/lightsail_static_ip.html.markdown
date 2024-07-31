@@ -22,13 +22,13 @@ resource "aws_lightsail_static_ip" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name for the allocated static IP
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the Lightsail static IP
 * `ip_address` - The allocated static IP address

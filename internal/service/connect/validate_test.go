@@ -1,7 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect
 
 import (
 	"testing"
+
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestValidDeskPhoneNumber(t *testing.T) {
@@ -41,7 +46,7 @@ func TestValidPhoneNumberPrefix(t *testing.T) {
 		"+1",
 	}
 	for _, v := range validPrefixes {
-		_, errors := validPhoneNumberPrefix(v, "prefix")
+		_, errors := validPhoneNumberPrefix(v, names.AttrPrefix)
 		if len(errors) != 0 {
 			t.Fatalf("%q should be a valid phone number prefix: %q", v, errors)
 		}
@@ -53,7 +58,7 @@ func TestValidPhoneNumberPrefix(t *testing.T) {
 		"invalid",
 	}
 	for _, v := range invalidPrefixes {
-		_, errors := validPhoneNumberPrefix(v, "prefix")
+		_, errors := validPhoneNumberPrefix(v, names.AttrPrefix)
 		if len(errors) == 0 {
 			t.Fatalf("%q should be a invalid phone number prefix: %q", v, errors)
 		}

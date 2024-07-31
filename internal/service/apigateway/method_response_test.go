@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigateway_test
 
 import (
@@ -5,50 +8,39 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/service/apigateway"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAPIGatewayMethodResponse_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.MethodResponse
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(10))
-	resourceName := "aws_api_gateway_method_response.error"
+	var conf apigateway.GetMethodResponseOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_api_gateway_method_response.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMethodResponseDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMethodResponseConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMethodResponseExists(ctx, resourceName, &conf),
-					testAccCheckMethodResponseAttributes(&conf),
-					resource.TestCheckResourceAttr(
-						resourceName, "status_code", "400"),
-					resource.TestCheckResourceAttr(
-						resourceName, "response_models.application/json", "Error"),
-				),
-			},
-
-			{
-				Config: testAccMethodResponseConfig_update(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMethodResponseExists(ctx, resourceName, &conf),
-					testAccCheckMethodResponseAttributesUpdate(&conf),
-					resource.TestCheckResourceAttr(
-						resourceName, "status_code", "400"),
-					resource.TestCheckResourceAttr(
-						resourceName, "response_models.application/json", "Empty"),
+					resource.TestCheckResourceAttr(resourceName, "http_method", "GET"),
+					resource.TestCheckResourceAttr(resourceName, "response_models.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "response_models.application/json", "Error"),
+					resource.TestCheckResourceAttr(resourceName, "response_parameters.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "response_parameters.method.response.header.Content-Type", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatusCode, "400"),
 				),
 			},
 			{
@@ -57,19 +49,31 @@ func TestAccAPIGatewayMethodResponse_basic(t *testing.T) {
 				ImportStateIdFunc: testAccMethodResponseImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
+			{
+				Config: testAccMethodResponseConfig_update(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMethodResponseExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "http_method", "GET"),
+					resource.TestCheckResourceAttr(resourceName, "response_models.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "response_models.application/json", "Empty"),
+					resource.TestCheckResourceAttr(resourceName, "response_parameters.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "response_parameters.method.response.header.Host", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatusCode, "400"),
+				),
+			},
 		},
 	})
 }
 
 func TestAccAPIGatewayMethodResponse_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.MethodResponse
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(10))
-	resourceName := "aws_api_gateway_method_response.error"
+	var conf apigateway.GetMethodResponseOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_api_gateway_method_response.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMethodResponseDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -85,73 +89,22 @@ func TestAccAPIGatewayMethodResponse_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckMethodResponseAttributes(conf *apigateway.MethodResponse) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if *conf.StatusCode == "" {
-			return fmt.Errorf("empty StatusCode")
-		}
-		if val, ok := conf.ResponseModels["application/json"]; !ok {
-			return fmt.Errorf("missing application/json ResponseModel")
-		} else {
-			if *val != "Error" {
-				return fmt.Errorf("wrong application/json ResponseModel")
-			}
-		}
-		if val, ok := conf.ResponseParameters["method.response.header.Content-Type"]; !ok {
-			return fmt.Errorf("missing Content-Type ResponseParameters")
-		} else {
-			if !*val {
-				return fmt.Errorf("wrong ResponseParameters value")
-			}
-		}
-		return nil
-	}
-}
-
-func testAccCheckMethodResponseAttributesUpdate(conf *apigateway.MethodResponse) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if *conf.StatusCode == "" {
-			return fmt.Errorf("empty StatusCode")
-		}
-		if val, ok := conf.ResponseModels["application/json"]; !ok {
-			return fmt.Errorf("missing application/json ResponseModel")
-		} else {
-			if *val != "Empty" {
-				return fmt.Errorf("wrong application/json ResponseModel")
-			}
-		}
-		if conf.ResponseParameters["method.response.header.Content-Type"] != nil {
-			return fmt.Errorf("Content-Type ResponseParameters shouldn't exist")
-		}
-		return nil
-	}
-}
-
-func testAccCheckMethodResponseExists(ctx context.Context, n string, res *apigateway.MethodResponse) resource.TestCheckFunc {
+func testAccCheckMethodResponseExists(ctx context.Context, n string, v *apigateway.GetMethodResponseOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No API Gateway Method ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
+		output, err := tfapigateway.FindMethodResponseByFourPartKey(ctx, conn, rs.Primary.Attributes["http_method"], rs.Primary.Attributes[names.AttrResourceID], rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes[names.AttrStatusCode])
 
-		req := &apigateway.GetMethodResponseInput{
-			HttpMethod: aws.String("GET"),
-			ResourceId: aws.String(s.RootModule().Resources["aws_api_gateway_resource.test"].Primary.ID),
-			RestApiId:  aws.String(s.RootModule().Resources["aws_api_gateway_rest_api.test"].Primary.ID),
-			StatusCode: aws.String(rs.Primary.Attributes["status_code"]),
-		}
-		describe, err := conn.GetMethodResponseWithContext(ctx, req)
 		if err != nil {
 			return err
 		}
 
-		*res = *describe
+		*v = *output
 
 		return nil
 	}
@@ -159,34 +112,24 @@ func testAccCheckMethodResponseExists(ctx context.Context, n string, res *apigat
 
 func testAccCheckMethodResponseDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_api_gateway_method_response" {
 				continue
 			}
 
-			req := &apigateway.GetMethodResponseInput{
-				HttpMethod: aws.String("GET"),
-				ResourceId: aws.String(s.RootModule().Resources["aws_api_gateway_resource.test"].Primary.ID),
-				RestApiId:  aws.String(s.RootModule().Resources["aws_api_gateway_rest_api.test"].Primary.ID),
-				StatusCode: aws.String(rs.Primary.Attributes["status_code"]),
-			}
-			_, err := conn.GetMethodResponseWithContext(ctx, req)
+			_, err := tfapigateway.FindMethodResponseByFourPartKey(ctx, conn, rs.Primary.Attributes["http_method"], rs.Primary.Attributes[names.AttrResourceID], rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes[names.AttrStatusCode])
 
-			if err == nil {
-				return fmt.Errorf("API Gateway Method still exists")
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			aws2err, ok := err.(awserr.Error)
-			if !ok {
-				return err
-			}
-			if aws2err.Code() != "NotFoundException" {
+			if err != nil {
 				return err
 			}
 
-			return nil
+			return fmt.Errorf("API Gateway Method Response %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -200,14 +143,14 @@ func testAccMethodResponseImportStateIdFunc(resourceName string) resource.Import
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return fmt.Sprintf("%s/%s/%s/%s", rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes["resource_id"], rs.Primary.Attributes["http_method"], rs.Primary.Attributes["status_code"]), nil
+		return fmt.Sprintf("%s/%s/%s/%s", rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes[names.AttrResourceID], rs.Primary.Attributes["http_method"], rs.Primary.Attributes[names.AttrStatusCode]), nil
 	}
 }
 
 func testAccMethodResponseConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name = "%s"
+  name = %[1]q
 }
 
 resource "aws_api_gateway_resource" "test" {
@@ -227,7 +170,7 @@ resource "aws_api_gateway_method" "test" {
   }
 }
 
-resource "aws_api_gateway_method_response" "error" {
+resource "aws_api_gateway_method_response" "test" {
   rest_api_id = aws_api_gateway_rest_api.test.id
   resource_id = aws_api_gateway_resource.test.id
   http_method = aws_api_gateway_method.test.http_method
@@ -247,7 +190,7 @@ resource "aws_api_gateway_method_response" "error" {
 func testAccMethodResponseConfig_update(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name = "%s"
+  name = %[1]q
 }
 
 resource "aws_api_gateway_resource" "test" {
@@ -267,7 +210,7 @@ resource "aws_api_gateway_method" "test" {
   }
 }
 
-resource "aws_api_gateway_method_response" "error" {
+resource "aws_api_gateway_method_response" "test" {
   rest_api_id = aws_api_gateway_rest_api.test.id
   resource_id = aws_api_gateway_resource.test.id
   http_method = aws_api_gateway_method.test.http_method
@@ -278,7 +221,7 @@ resource "aws_api_gateway_method_response" "error" {
   }
 
   response_parameters = {
-    "method.response.header.Host" = true
+    "method.response.header.Host" = false
   }
 }
 `, rName)

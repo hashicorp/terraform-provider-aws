@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package directconnect
 
 import (
@@ -11,8 +14,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_dx_connection_confirmation")
 func ResourceConnectionConfirmation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConnectionConfirmationCreate,
@@ -20,7 +25,7 @@ func ResourceConnectionConfirmation() *schema.Resource {
 		DeleteWithoutTimeout: resourceConnectionConfirmationDelete,
 
 		Schema: map[string]*schema.Schema{
-			"connection_id": {
+			names.AttrConnectionID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -31,9 +36,9 @@ func ResourceConnectionConfirmation() *schema.Resource {
 
 func resourceConnectionConfirmationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
-	connectionID := d.Get("connection_id").(string)
+	connectionID := d.Get(names.AttrConnectionID).(string)
 	input := &directconnect.ConfirmConnectionInput{
 		ConnectionId: aws.String(connectionID),
 	}
@@ -56,7 +61,7 @@ func resourceConnectionConfirmationCreate(ctx context.Context, d *schema.Resourc
 
 func resourceConnectionConfirmationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	_, err := FindConnectionByID(ctx, conn, d.Id())
 

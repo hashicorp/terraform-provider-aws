@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package servicecatalog
 
 import (
@@ -8,14 +11,17 @@ import (
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_servicecatalog_service_action")
 func ResourceServiceAction() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServiceActionCreate,
@@ -50,36 +56,36 @@ func ResourceServiceAction() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"name": { // ServiceActionDefinitionKeyName
+						names.AttrName: { // ServiceActionDefinitionKeyName
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"parameters": { // ServiceActionDefinitionKeyParameters
+						names.AttrParameters: { // ServiceActionDefinitionKeyParameters
 							Type:             schema.TypeString,
 							Optional:         true,
 							ValidateFunc:     validation.StringIsJSON,
 							DiffSuppressFunc: suppressEquivalentJSONEmptyNilDiffs,
 						},
-						"type": {
+						names.AttrType: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      servicecatalog.ServiceActionDefinitionTypeSsmAutomation,
 							ForceNew:     true,
 							ValidateFunc: validation.StringInSlice(servicecatalog.ServiceActionDefinitionType_Values(), false),
 						},
-						"version": { // ServiceActionDefinitionKeyVersion
+						names.AttrVersion: { // ServiceActionDefinitionKeyVersion
 							Type:     schema.TypeString,
 							Required: true,
 						},
 					},
 				},
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -89,11 +95,11 @@ func ResourceServiceAction() *schema.Resource {
 
 func resourceServiceActionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	input := &servicecatalog.CreateServiceActionInput{
-		IdempotencyToken: aws.String(resource.UniqueId()),
-		Name:             aws.String(d.Get("name").(string)),
+		IdempotencyToken: aws.String(id.UniqueId()),
+		Name:             aws.String(d.Get(names.AttrName).(string)),
 		Definition:       expandServiceActionDefinition(d.Get("definition").([]interface{})[0].(map[string]interface{})),
 		DefinitionType:   aws.String(d.Get("definition.0.type").(string)),
 	}
@@ -102,22 +108,22 @@ func resourceServiceActionCreate(ctx context.Context, d *schema.ResourceData, me
 		input.AcceptLanguage = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
 	var output *servicecatalog.CreateServiceActionOutput
-	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
 		var err error
 
 		output, err = conn.CreateServiceActionWithContext(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, servicecatalog.ErrCodeInvalidParametersException, "profile does not exist") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -142,7 +148,7 @@ func resourceServiceActionCreate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceServiceActionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	output, err := WaitServiceActionReady(ctx, conn, d.Get("accept_language").(string), d.Id(), d.Timeout(schema.TimeoutRead))
 
@@ -162,8 +168,8 @@ func resourceServiceActionRead(ctx context.Context, d *schema.ResourceData, meta
 
 	sas := output.ServiceActionSummary
 
-	d.Set("description", sas.Description)
-	d.Set("name", sas.Name)
+	d.Set(names.AttrDescription, sas.Description)
+	d.Set(names.AttrName, sas.Name)
 
 	if output.Definition != nil {
 		d.Set("definition", []interface{}{flattenServiceActionDefinition(output.Definition, aws.StringValue(sas.DefinitionType))})
@@ -176,7 +182,7 @@ func resourceServiceActionRead(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceServiceActionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	input := &servicecatalog.UpdateServiceActionInput{
 		Id: aws.String(d.Id()),
@@ -190,23 +196,23 @@ func resourceServiceActionUpdate(ctx context.Context, d *schema.ResourceData, me
 		input.Definition = expandServiceActionDefinition(d.Get("definition").([]interface{})[0].(map[string]interface{}))
 	}
 
-	if d.HasChange("description") {
-		input.Description = aws.String(d.Get("description").(string))
+	if d.HasChange(names.AttrDescription) {
+		input.Description = aws.String(d.Get(names.AttrDescription).(string))
 	}
 
-	if d.HasChange("name") {
-		input.Name = aws.String(d.Get("name").(string))
+	if d.HasChange(names.AttrName) {
+		input.Name = aws.String(d.Get(names.AttrName).(string))
 	}
 
-	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
+	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *retry.RetryError {
 		_, err := conn.UpdateServiceActionWithContext(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, servicecatalog.ErrCodeInvalidParametersException, "profile does not exist") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -225,21 +231,21 @@ func resourceServiceActionUpdate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceServiceActionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	input := &servicecatalog.DeleteServiceActionInput{
 		Id: aws.String(d.Id()),
 	}
 
-	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *retry.RetryError {
 		_, err := conn.DeleteServiceActionWithContext(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceInUseException) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -276,15 +282,15 @@ func expandServiceActionDefinition(tfMap map[string]interface{}) map[string]*str
 		apiObject[servicecatalog.ServiceActionDefinitionKeyAssumeRole] = aws.String(v)
 	}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject[servicecatalog.ServiceActionDefinitionKeyName] = aws.String(v)
 	}
 
-	if v, ok := tfMap["parameters"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrParameters].(string); ok && v != "" {
 		apiObject[servicecatalog.ServiceActionDefinitionKeyParameters] = aws.String(v)
 	}
 
-	if v, ok := tfMap["version"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrVersion].(string); ok && v != "" {
 		apiObject[servicecatalog.ServiceActionDefinitionKeyVersion] = aws.String(v)
 	}
 
@@ -303,19 +309,19 @@ func flattenServiceActionDefinition(apiObject map[string]*string, definitionType
 	}
 
 	if v, ok := apiObject[servicecatalog.ServiceActionDefinitionKeyName]; ok && v != nil {
-		tfMap["name"] = aws.StringValue(v)
+		tfMap[names.AttrName] = aws.StringValue(v)
 	}
 
 	if v, ok := apiObject[servicecatalog.ServiceActionDefinitionKeyParameters]; ok && v != nil {
-		tfMap["parameters"] = aws.StringValue(v)
+		tfMap[names.AttrParameters] = aws.StringValue(v)
 	}
 
 	if v, ok := apiObject[servicecatalog.ServiceActionDefinitionKeyVersion]; ok && v != nil {
-		tfMap["version"] = aws.StringValue(v)
+		tfMap[names.AttrVersion] = aws.StringValue(v)
 	}
 
 	if definitionType != "" {
-		tfMap["type"] = definitionType
+		tfMap[names.AttrType] = definitionType
 	}
 
 	return tfMap

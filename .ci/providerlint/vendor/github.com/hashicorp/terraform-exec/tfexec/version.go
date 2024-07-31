@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package tfexec
 
 import (
@@ -25,7 +28,12 @@ var (
 	tf0_14_0 = version.Must(version.NewVersion("0.14.0"))
 	tf0_15_0 = version.Must(version.NewVersion("0.15.0"))
 	tf0_15_2 = version.Must(version.NewVersion("0.15.2"))
+	tf0_15_3 = version.Must(version.NewVersion("0.15.3"))
+	tf0_15_4 = version.Must(version.NewVersion("0.15.4"))
 	tf1_1_0  = version.Must(version.NewVersion("1.1.0"))
+	tf1_4_0  = version.Must(version.NewVersion("1.4.0"))
+	tf1_6_0  = version.Must(version.NewVersion("1.6.0"))
+	tf1_9_0  = version.Must(version.NewVersion("1.9.0"))
 )
 
 // Version returns structured output from the terraform version command including both the Terraform CLI version
@@ -171,6 +179,22 @@ func (tf *Terraform) compatible(ctx context.Context, minInclusive *version.Versi
 	}
 
 	return nil
+}
+
+// experimentsEnabled asserts the cached terraform version has experiments enabled in the executable,
+// and returns a well known error if not. Experiments are enabled in alpha and (potentially) dev builds of Terraform.
+func (tf *Terraform) experimentsEnabled(ctx context.Context) error {
+	tfv, _, err := tf.Version(ctx, false)
+	if err != nil {
+		return err
+	}
+
+	preRelease := tfv.Prerelease()
+	if preRelease == "dev" || strings.Contains(preRelease, "alpha") {
+		return nil
+	}
+
+	return fmt.Errorf("experiments are not enabled in version %s, as it's not an alpha or dev build", errorVersionString(tfv))
 }
 
 func stripPrereleaseAndMeta(v *version.Version) *version.Version {

@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package rum
 
@@ -7,15 +7,14 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudwatchrum"
-	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/rum"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_rum_app_monitor", &resource.Sweeper{
 		Name: "aws_rum_app_monitor",
 		F:    sweepAppMonitors,
@@ -24,46 +23,41 @@ func init() {
 
 func sweepAppMonitors(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
-
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-
-	conn := client.(*conns.AWSClient).RUMConn()
+	conn := client.RUMClient(ctx)
+	input := &rum.ListAppMonitorsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
 
-	err = conn.ListAppMonitorsPagesWithContext(ctx, &cloudwatchrum.ListAppMonitorsInput{}, func(resp *cloudwatchrum.ListAppMonitorsOutput, lastPage bool) bool {
-		if len(resp.AppMonitorSummaries) == 0 {
-			log.Print("[DEBUG] No RUM App Monitors to sweep")
-			return !lastPage
+	pages := rum.NewListAppMonitorsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping CloudWatch RUM App Monitor sweep for %s: %s", region, err)
+			return nil
 		}
 
-		for _, c := range resp.AppMonitorSummaries {
-			r := ResourceAppMonitor()
+		if err != nil {
+			return fmt.Errorf("error listing CloudWatch RUM App Monitors (%s): %w", region, err)
+		}
+
+		for _, v := range page.AppMonitorSummaries {
+			r := resourceAppMonitor()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(c.Name))
+			d.SetId(aws.ToString(v.Name))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
+	}
 
-		return !lastPage
-	})
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error describing RUM App Monitors: %w", err))
-		// in case work can be done, don't jump out yet
+		return fmt.Errorf("error sweeping CloudWatch RUM App Monitors (%s): %w", region, err)
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping RUM App Monitors for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping RUM App Monitor sweep for %s: %s", region, err)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
+	return nil
 }

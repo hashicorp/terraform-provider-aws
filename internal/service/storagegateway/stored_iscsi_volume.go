@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package storagegateway
 
 import (
@@ -9,27 +12,31 @@ import (
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceStorediSCSIVolume() *schema.Resource {
+// @SDKResource("aws_storagegateway_stored_iscsi_volume", name="Stored iSCSI Volume")
+// @Tags(identifierAttribute="arn")
+func resourceStorediSCSIVolume() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStorediSCSIVolumeCreate,
 		ReadWithoutTimeout:   resourceStorediSCSIVolumeRead,
 		UpdateWithoutTimeout: resourceStorediSCSIVolumeUpdate,
 		DeleteWithoutTimeout: resourceStorediSCSIVolumeDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -59,7 +66,7 @@ func ResourceStorediSCSIVolume() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"kms_key": {
+			names.AttrKMSKey: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -67,7 +74,7 @@ func ResourceStorediSCSIVolume() *schema.Resource {
 				RequiredWith: []string{"kms_encrypted"},
 			},
 			// Poor API naming: this accepts the IP address of the network interface
-			"network_interface_id": {
+			names.AttrNetworkInterfaceID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -76,7 +83,7 @@ func ResourceStorediSCSIVolume() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"snapshot_id": {
+			names.AttrSnapshotID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -89,7 +96,7 @@ func ResourceStorediSCSIVolume() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"target_arn": {
+			names.AttrTargetARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -109,12 +116,12 @@ func ResourceStorediSCSIVolume() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"volume_type": {
+			names.AttrVolumeType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -123,24 +130,22 @@ func ResourceStorediSCSIVolume() *schema.Resource {
 
 func resourceStorediSCSIVolumeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
 	input := &storagegateway.CreateStorediSCSIVolumeInput{
 		DiskId:               aws.String(d.Get("disk_id").(string)),
 		GatewayARN:           aws.String(d.Get("gateway_arn").(string)),
-		NetworkInterfaceId:   aws.String(d.Get("network_interface_id").(string)),
+		NetworkInterfaceId:   aws.String(d.Get(names.AttrNetworkInterfaceID).(string)),
 		TargetName:           aws.String(d.Get("target_name").(string)),
 		PreserveExistingData: aws.Bool(d.Get("preserve_existing_data").(bool)),
-		Tags:                 Tags(tags.IgnoreAWS()),
+		Tags:                 getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("snapshot_id"); ok {
+	if v, ok := d.GetOk(names.AttrSnapshotID); ok {
 		input.SnapshotId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("kms_key"); ok {
+	if v, ok := d.GetOk(names.AttrKMSKey); ok {
 		input.KMSKey = aws.String(v.(string))
 	}
 
@@ -165,25 +170,9 @@ func resourceStorediSCSIVolumeCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceStorediSCSIVolumeRead(ctx, d, meta)...)
 }
 
-func resourceStorediSCSIVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn()
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
-		}
-	}
-
-	return append(diags, resourceStorediSCSIVolumeRead(ctx, d, meta)...)
-}
-
 func resourceStorediSCSIVolumeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
 	input := &storagegateway.DescribeStorediSCSIVolumesInput{
 		VolumeARNs: []*string{aws.String(d.Id())},
@@ -210,41 +199,26 @@ func resourceStorediSCSIVolumeRead(ctx context.Context, d *schema.ResourceData, 
 	volume := output.StorediSCSIVolumes[0]
 
 	arn := aws.StringValue(volume.VolumeARN)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("disk_id", volume.VolumeDiskId)
-	d.Set("snapshot_id", volume.SourceSnapshotId)
+	d.Set(names.AttrSnapshotID, volume.SourceSnapshotId)
 	d.Set("volume_id", volume.VolumeId)
-	d.Set("volume_type", volume.VolumeType)
+	d.Set(names.AttrVolumeType, volume.VolumeType)
 	d.Set("volume_size_in_bytes", volume.VolumeSizeInBytes)
 	d.Set("volume_status", volume.VolumeStatus)
 	d.Set("volume_attachment_status", volume.VolumeAttachmentStatus)
 	d.Set("preserve_existing_data", volume.PreservedExistingData)
-	d.Set("kms_key", volume.KMSKey)
+	d.Set(names.AttrKMSKey, volume.KMSKey)
 	d.Set("kms_encrypted", volume.KMSKey != nil)
-
-	tags, err := ListTags(ctx, conn, arn)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for resource (%s): %s", arn, err)
-	}
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
 
 	attr := volume.VolumeiSCSIAttributes
 	d.Set("chap_enabled", attr.ChapEnabled)
 	d.Set("lun_number", attr.LunNumber)
-	d.Set("network_interface_id", attr.NetworkInterfaceId)
+	d.Set(names.AttrNetworkInterfaceID, attr.NetworkInterfaceId)
 	d.Set("network_interface_port", attr.NetworkInterfacePort)
 
 	targetARN := aws.StringValue(attr.TargetARN)
-	d.Set("target_arn", targetARN)
+	d.Set(names.AttrTargetARN, targetARN)
 
 	gatewayARN, targetName, err := ParseVolumeGatewayARNAndTargetNameFromARN(targetARN)
 	if err != nil {
@@ -256,16 +230,24 @@ func resourceStorediSCSIVolumeRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
+func resourceStorediSCSIVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	// Tags only.
+
+	return append(diags, resourceStorediSCSIVolumeRead(ctx, d, meta)...)
+}
+
 func resourceStorediSCSIVolumeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn()
+	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
 	input := &storagegateway.DeleteVolumeInput{
 		VolumeARN: aws.String(d.Id()),
 	}
 
 	log.Printf("[DEBUG] Deleting Storage Gateway Stored iSCSI volume: %s", input)
-	err := resource.RetryContext(ctx, 2*time.Minute, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, 2*time.Minute, func() *retry.RetryError {
 		_, err := conn.DeleteVolumeWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, storagegateway.ErrorCodeVolumeNotFound) {
@@ -274,9 +256,9 @@ func resourceStorediSCSIVolumeDelete(ctx context.Context, d *schema.ResourceData
 			// InvalidGatewayRequestException: The specified gateway is not connected.
 			// Can occur during concurrent DeleteVolume operations
 			if tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified gateway is not connected") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})

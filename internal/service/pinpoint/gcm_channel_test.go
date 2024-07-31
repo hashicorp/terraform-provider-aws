@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package pinpoint_test
 
 import (
@@ -9,10 +12,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/pinpoint"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 /**
@@ -33,8 +37,8 @@ func TestAccPinpointGCMChannel_basic(t *testing.T) {
 	apiKey := os.Getenv("GCM_API_KEY")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckApp(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, pinpoint.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGCMChannelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -42,7 +46,7 @@ func TestAccPinpointGCMChannel_basic(t *testing.T) {
 				Config: testAccGCMChannelConfig_basic(apiKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGCMChannelExists(ctx, resourceName, &channel),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 				),
 			},
 			{
@@ -55,7 +59,7 @@ func TestAccPinpointGCMChannel_basic(t *testing.T) {
 				Config: testAccGCMChannelConfig_basic(apiKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGCMChannelExists(ctx, resourceName, &channel),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 				),
 			},
 		},
@@ -73,7 +77,7 @@ func testAccCheckGCMChannelExists(ctx context.Context, n string, channel *pinpoi
 			return fmt.Errorf("No Pinpoint GCM Channel with that application ID exists")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn(ctx)
 
 		// Check if the app exists
 		params := &pinpoint.GetGcmChannelInput{
@@ -105,7 +109,7 @@ resource "aws_pinpoint_gcm_channel" "test_gcm_channel" {
 
 func testAccCheckGCMChannelDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_pinpoint_gcm_channel" {

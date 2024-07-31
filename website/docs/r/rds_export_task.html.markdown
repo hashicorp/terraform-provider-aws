@@ -113,7 +113,7 @@ resource "aws_db_instance" "example" {
 }
 
 resource "aws_db_snapshot" "example" {
-  db_instance_identifier = aws_db_instance.example.id
+  db_instance_identifier = aws_db_instance.example.identifier
   db_snapshot_identifier = "example"
 }
 
@@ -144,9 +144,9 @@ The following arguments are optional:
 * `export_only` - (Optional) Data to be exported from the snapshot. If this parameter is not provided, all the snapshot data is exported. Valid values are documented in the [AWS StartExportTask API documentation](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_StartExportTask.html#API_StartExportTask_RequestParameters).
 * `s3_prefix` - (Optional) Amazon S3 bucket prefix to use as the file name and path of the exported snapshot.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `failure_cause` - Reason the export failed, if it failed.
 * `id` - Unique identifier for the snapshot export task (same value as `export_task_identifier`).
@@ -160,8 +160,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-A RDS (Relational Database) Export Task can be imported using the `export_task_identifier`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a RDS (Relational Database) Export Task using the `export_task_identifier`. For example:
 
+```terraform
+import {
+  to = aws_rds_export_task.example
+  id = "example"
+}
 ```
-$ terraform import aws_rds_export_task.example example
+
+Using `terraform import`, import a RDS (Relational Database) Export Task using the `export_task_identifier`. For example:
+
+```console
+% terraform import aws_rds_export_task.example example
 ```

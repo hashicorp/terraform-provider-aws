@@ -42,7 +42,7 @@ New certificate materials can be supplied to an existing imported certificate to
 
 ## Private Certificates
 
-Private certificates are issued by an ACM Private Cerificate Authority, which can be created using the resource type [`aws_acmpca_certificate_authority`](acmpca_certificate_authority.html).
+Private certificates are issued by an ACM Private Certificate Authority, which can be created using the resource type [`aws_acmpca_certificate_authority`](acmpca_certificate_authority.html).
 
 Private certificates created using this resource are eligible for managed renewal if they have been exported or associated with another AWS service.
 See [managed renewal documentation](https://docs.aws.amazon.com/acm/latest/userguide/managed-renewal.html) for more information.
@@ -138,12 +138,12 @@ resource "aws_route53_record" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * Creating an Amazon issued certificate
     * `domain_name` - (Required) Domain name for which the certificate should be issued
     * `subject_alternative_names` - (Optional) Set of domains that should be SANs in the issued certificate. To remove all elements of a previously configured list, set this value equal to an empty list (`[]`) or use the [`terraform taint` command](https://www.terraform.io/docs/commands/taint.html) to trigger recreation.
-    * `validation_method` - (Required) Which method to use for validation. `DNS` or `EMAIL` are valid, `NONE` can be used for certificates that were imported into ACM and then into Terraform.
+    * `validation_method` - (Optional) Which method to use for validation. `DNS` or `EMAIL` are valid. This parameter must not be set for certificates that were imported into ACM and then into Terraform.
     * `key_algorithm` - (Optional) Specifies the algorithm of the public and private key pair that your Amazon issued certificate uses to encrypt data. See [ACM Certificate characteristics](https://docs.aws.amazon.com/acm/latest/userguide/acm-certificate.html#algorithms) for more details.
     * `options` - (Optional) Configuration block used to set certificate options. Detailed below.
     * `validation_option` - (Optional) Configuration block used to specify information about the initial validation of each domain name. Detailed below.
@@ -177,9 +177,9 @@ Supported nested arguments for the `validation_option` configuration block:
 * `domain_name` - (Required) Fully qualified domain name (FQDN) in the certificate.
 * `validation_domain` - (Required) Domain name that you want ACM to use to send you validation emails. This domain name is the suffix of the email addresses that you want ACM to use. This must be the same as the `domain_name` value or a superdomain of the `domain_name` value. For example, if you request a certificate for `"testing.example.com"`, you can specify `"example.com"` for this value.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ARN of the certificate
 * `arn` - ARN of the certificate
@@ -213,8 +213,17 @@ Renewal summary objects export the following attributes:
 
 ## Import
 
-Certificates can be imported using their ARN, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import certificates using their ARN. For example:
 
+```terraform
+import {
+  to = aws_acm_certificate.cert
+  id = "arn:aws:acm:eu-central-1:123456789012:certificate/7e7a28d2-163f-4b8f-b9cd-822f96c08d6a"
+}
 ```
-$ terraform import aws_acm_certificate.cert arn:aws:acm:eu-central-1:123456789012:certificate/7e7a28d2-163f-4b8f-b9cd-822f96c08d6a
+
+Using `terraform import`, import certificates using their ARN. For example:
+
+```console
+% terraform import aws_acm_certificate.cert arn:aws:acm:eu-central-1:123456789012:certificate/7e7a28d2-163f-4b8f-b9cd-822f96c08d6a
 ```

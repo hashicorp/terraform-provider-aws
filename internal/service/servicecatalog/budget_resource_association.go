@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package servicecatalog
 
 import (
@@ -8,13 +11,15 @@ import (
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_servicecatalog_budget_resource_association")
 func ResourceBudgetResourceAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBudgetResourceAssociationCreate,
@@ -36,7 +41,7 @@ func ResourceBudgetResourceAssociation() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"resource_id": {
+			names.AttrResourceID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -47,25 +52,25 @@ func ResourceBudgetResourceAssociation() *schema.Resource {
 
 func resourceBudgetResourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	input := &servicecatalog.AssociateBudgetWithResourceInput{
 		BudgetName: aws.String(d.Get("budget_name").(string)),
-		ResourceId: aws.String(d.Get("resource_id").(string)),
+		ResourceId: aws.String(d.Get(names.AttrResourceID).(string)),
 	}
 
 	var output *servicecatalog.AssociateBudgetWithResourceOutput
-	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
 		var err error
 
 		output, err = conn.AssociateBudgetWithResourceWithContext(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, servicecatalog.ErrCodeInvalidParametersException, "profile does not exist") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -83,14 +88,14 @@ func resourceBudgetResourceAssociationCreate(ctx context.Context, d *schema.Reso
 		return sdkdiag.AppendErrorf(diags, "creating Service Catalog Budget Resource Association: empty response")
 	}
 
-	d.SetId(BudgetResourceAssociationID(d.Get("budget_name").(string), d.Get("resource_id").(string)))
+	d.SetId(BudgetResourceAssociationID(d.Get("budget_name").(string), d.Get(names.AttrResourceID).(string)))
 
 	return append(diags, resourceBudgetResourceAssociationRead(ctx, d, meta)...)
 }
 
 func resourceBudgetResourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	budgetName, resourceID, err := BudgetResourceAssociationParseID(d.Id())
 
@@ -114,7 +119,7 @@ func resourceBudgetResourceAssociationRead(ctx context.Context, d *schema.Resour
 		return sdkdiag.AppendErrorf(diags, "getting Service Catalog Budget Resource Association (%s): empty response", d.Id())
 	}
 
-	d.Set("resource_id", resourceID)
+	d.Set(names.AttrResourceID, resourceID)
 	d.Set("budget_name", output.BudgetName)
 
 	return diags
@@ -122,7 +127,7 @@ func resourceBudgetResourceAssociationRead(ctx context.Context, d *schema.Resour
 
 func resourceBudgetResourceAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	budgetName, resourceID, err := BudgetResourceAssociationParseID(d.Id())
 

@@ -113,7 +113,7 @@ resource "aws_backup_framework" "Example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `control` - (Required) One or more control blocks that make up the framework. Each control in the list has a name, input parameters, and scope. Detailed below.
 * `description` - (Optional) The description of the framework with a maximum of 1,024 characters
@@ -121,28 +121,31 @@ The following arguments are supported:
 * `tags` - (Optional) Metadata that you can assign to help organize the frameworks you create. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Control Arguments
-For **control** the following attributes are supported:
+
+`control` has the following attributes:
 
 * `input_parameter` - (Optional) One or more input parameter blocks. An example of a control with two parameters is: "backup plan frequency is at least daily and the retention period is at least 1 year". The first parameter is daily. The second parameter is 1 year. Detailed below.
 * `name` - (Required) The name of a control. This name is between 1 and 256 characters.
 * `scope` - (Optional) The scope of a control. The control scope defines what the control will evaluate. Three examples of control scopes are: a specific backup plan, all backup plans with a specific tag, or all backup plans. Detailed below.
 
 ### Input Parameter Arguments
-For **input_parameter** the following attributes are supported:
+
+`input_parameter` has the following attributes:
 
 * `name` - (Optional) The name of a parameter, for example, BackupPlanFrequency.
 * `value` - (Optional) The value of parameter, for example, hourly.
 
 ### Scope Arguments
-For **scope** the following attributes are supported:
+
+`scope` has the following attributes:
 
 * `compliance_resource_ids` - (Optional) The ID of the only AWS resource that you want your control scope to contain. Minimum number of 1 item. Maximum number of 100 items.
 * `compliance_resource_types` - (Optional) Describes whether the control scope includes one or more types of resources, such as EFS or RDS.
 * `tags` - (Optional) The tag key-value pair applied to those AWS resources that you want to trigger an evaluation for a rule. A maximum of one key-value pair can be provided.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the backup framework.
 * `creation_time` - The date and time that a framework is created, in Unix format and Coordinated Universal Time (UTC).
@@ -161,8 +164,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Backup Framework can be imported using the `id` which corresponds to the name of the Backup Framework, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Backup Framework using the `id` which corresponds to the name of the Backup Framework. For example:
 
+```terraform
+import {
+  to = aws_backup_framework.test
+  id = "<id>"
+}
 ```
-$ terraform import aws_backup_framework.test <id>
+
+Using `terraform import`, import Backup Framework using the `id` which corresponds to the name of the Backup Framework. For example:
+
+```console
+% terraform import aws_backup_framework.test <id>
 ```

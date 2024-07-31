@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift_test
 
 import (
@@ -5,32 +8,51 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/redshift"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccRedshiftParameterGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v redshift.ClusterParameterGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_redshift_parameter_group.test"
-	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccParameterGroupConfig_basic(rInt),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccParameterGroupConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "redshift", fmt.Sprintf("parametergroup:%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "redshift-1.0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct3),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+						names.AttrName:  "require_ssl",
+						names.AttrValue: acctest.CtTrue,
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+						names.AttrName:  "query_group",
+						names.AttrValue: "example",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+						names.AttrName:  "enable_user_activity_logging",
+						names.AttrValue: acctest.CtTrue,
+					}),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -42,105 +64,106 @@ func TestAccRedshiftParameterGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccRedshiftParameterGroup_withParameters(t *testing.T) {
+func TestAccRedshiftParameterGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v redshift.ClusterParameterGroup
-	rInt := sdkacctest.RandInt()
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_redshift_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccParameterGroupConfig_basic(rInt),
+				Config: testAccParameterGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(
-						resourceName, "name", fmt.Sprintf("test-terraform-%d", rInt)),
-					resource.TestCheckResourceAttr(
-						resourceName, "family", "redshift-1.0"),
-					resource.TestCheckResourceAttr(
-						resourceName, "description", "Managed by Terraform"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
-						"name":  "require_ssl",
-						"value": "true",
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
-						"name":  "query_group",
-						"value": "example",
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
-						"name":  "enable_user_activity_logging",
-						"value": "true",
-					}),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceParameterGroup(), resourceName),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
 }
 
-func TestAccRedshiftParameterGroup_withoutParameters(t *testing.T) {
+func TestAccRedshiftParameterGroup_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v redshift.ClusterParameterGroup
-	rInt := sdkacctest.RandInt()
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_redshift_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccParameterGroupConfig_only(rInt),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccParameterGroupConfig_noParameters(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(
-						resourceName, "name", fmt.Sprintf("test-terraform-%d", rInt)),
-					resource.TestCheckResourceAttr(
-						resourceName, "family", "redshift-1.0"),
-					resource.TestCheckResourceAttr(
-						resourceName, "description", "Test parameter group for terraform"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "redshift", fmt.Sprintf("parametergroup:%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "redshift-1.0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccParameterGroupConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckParameterGroupExists(ctx, resourceName, &v),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "redshift", fmt.Sprintf("parametergroup:%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "redshift-1.0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct3),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+						names.AttrName:  "require_ssl",
+						names.AttrValue: acctest.CtTrue,
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+						names.AttrName:  "query_group",
+						names.AttrValue: "example",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+						names.AttrName:  "enable_user_activity_logging",
+						names.AttrValue: acctest.CtTrue,
+					}),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+				),
 			},
 		},
 	})
 }
 
-func TestAccRedshiftParameterGroup_withTags(t *testing.T) {
+func TestAccRedshiftParameterGroup_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v redshift.ClusterParameterGroup
-	rInt := sdkacctest.RandInt()
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_redshift_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccParameterGroupConfig_tags(rInt, "aaa"),
+				Config: testAccParameterGroupConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(
-						resourceName, "tags.%", "3"),
-					resource.TestCheckResourceAttr(resourceName, "tags.name", fmt.Sprintf("test-terraform-%d", rInt)),
-					resource.TestCheckResourceAttr(resourceName, "tags.environment", "Production"),
-					resource.TestCheckResourceAttr(resourceName, "tags.description", fmt.Sprintf("Test parameter group for terraform %s", "aaa")),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test parameter group for terraform"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -149,21 +172,20 @@ func TestAccRedshiftParameterGroup_withTags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccParameterGroupConfig_tags(rInt, "bbb"),
+				Config: testAccParameterGroupConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(
-						resourceName, "tags.%", "3"),
-					resource.TestCheckResourceAttr(resourceName, "tags.description", fmt.Sprintf("Test parameter group for terraform %s", "bbb")),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccParameterGroupConfig_tagsUpdate(rInt),
+				Config: testAccParameterGroupConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(
-						resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.name", fmt.Sprintf("test-terraform-%d", rInt)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -172,33 +194,24 @@ func TestAccRedshiftParameterGroup_withTags(t *testing.T) {
 
 func testAccCheckParameterGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_redshift_parameter_group" {
 				continue
 			}
 
-			// Try to find the Group
-			resp, err := conn.DescribeClusterParameterGroupsWithContext(ctx, &redshift.DescribeClusterParameterGroupsInput{
-				ParameterGroupName: aws.String(rs.Primary.ID),
-			})
+			_, err := tfredshift.FindParameterGroupByName(ctx, conn, rs.Primary.ID)
 
-			if err == nil {
-				if len(resp.ParameterGroups) != 0 &&
-					*resp.ParameterGroups[0].ParameterGroupName == rs.Primary.ID {
-					return fmt.Errorf("Redshift Parameter Group still exists")
-				}
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			// Verify the error
-			newerr, ok := err.(awserr.Error)
-			if !ok {
+			if err != nil {
 				return err
 			}
-			if newerr.Code() != "ClusterParameterGroupNotFound" {
-				return err
-			}
+
+			return fmt.Errorf("Redshift Parameter Group %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -216,43 +229,24 @@ func testAccCheckParameterGroupExists(ctx context.Context, n string, v *redshift
 			return fmt.Errorf("No Redshift Parameter Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
 
-		opts := redshift.DescribeClusterParameterGroupsInput{
-			ParameterGroupName: aws.String(rs.Primary.ID),
-		}
-
-		resp, err := conn.DescribeClusterParameterGroupsWithContext(ctx, &opts)
+		output, err := tfredshift.FindParameterGroupByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if len(resp.ParameterGroups) != 1 ||
-			*resp.ParameterGroups[0].ParameterGroupName != rs.Primary.ID {
-			return fmt.Errorf("Redshift Parameter Group not found")
-		}
-
-		*v = *resp.ParameterGroups[0]
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccParameterGroupConfig_only(rInt int) string {
+func testAccParameterGroupConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_redshift_parameter_group" "test" {
-  name        = "test-terraform-%d"
-  family      = "redshift-1.0"
-  description = "Test parameter group for terraform"
-}
-`, rInt)
-}
-
-func testAccParameterGroupConfig_basic(rInt int) string {
-	return fmt.Sprintf(`
-resource "aws_redshift_parameter_group" "test" {
-  name   = "test-terraform-%d"
+  name   = %[1]q
   family = "redshift-1.0"
 
   parameter {
@@ -270,35 +264,43 @@ resource "aws_redshift_parameter_group" "test" {
     value = "true"
   }
 }
-`, rInt)
+`, rName)
 }
 
-func testAccParameterGroupConfig_tags(rInt int, rString string) string {
+func testAccParameterGroupConfig_noParameters(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_redshift_parameter_group" "test" {
-  name        = "test-terraform-%[1]d"
+  name   = %[1]q
+  family = "redshift-1.0"
+}
+`, rName)
+}
+
+func testAccParameterGroupConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_redshift_parameter_group" "test" {
+  name        = %[1]q
   family      = "redshift-1.0"
   description = "Test parameter group for terraform"
 
   tags = {
-    environment = "Production"
-    name        = "test-terraform-%[1]d"
-    description = "Test parameter group for terraform %[2]s"
+    %[2]q = %[3]q
   }
 }
-`, rInt, rString)
+`, rName, tagKey1, tagValue1)
 }
 
-func testAccParameterGroupConfig_tagsUpdate(rInt int) string {
+func testAccParameterGroupConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_redshift_parameter_group" "test" {
-  name        = "test-terraform-%[1]d"
+  name        = %[1]q
   family      = "redshift-1.0"
   description = "Test parameter group for terraform"
 
   tags = {
-    name = "test-terraform-%[1]d"
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
-`, rInt)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }

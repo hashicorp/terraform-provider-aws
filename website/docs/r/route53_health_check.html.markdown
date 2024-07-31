@@ -81,13 +81,13 @@ resource "aws_route53_health_check" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 ~> **Note:** At least one of either `fqdn` or `ip_address` must be specified.
 
 * `reference_name` - (Optional) This is a reference name used in Caller Reference
     (helpful for identifying single health_check set amongst others)
-* `fqdn` - (Optional) The fully qualified domain name of the endpoint to be checked.
+* `fqdn` - (Optional) The fully qualified domain name of the endpoint to be checked. If a value is set for `ip_address`, the value set for `fqdn` will be passed in the `Host` header.
 * `ip_address` - (Optional) The IP address of the endpoint to be checked.
 * `port` - (Optional) The port of the endpoint to be checked.
 * `type` - (Required) The protocol to use when performing health checks. Valid values are `HTTP`, `HTTPS`, `HTTP_STR_MATCH`, `HTTPS_STR_MATCH`, `TCP`, `CALCULATED`, `CLOUDWATCH_METRIC` and `RECOVERY_CONTROL`.
@@ -113,9 +113,9 @@ The following arguments are supported:
 * `routing_control_arn` - (Optional) The Amazon Resource Name (ARN) for the Route 53 Application Recovery Controller routing control. This is used when health check type is `RECOVERY_CONTROL`
 * `tags` - (Optional) A map of tags to assign to the health check. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the Health Check.
 * `id` - The id of the health check
@@ -123,8 +123,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Route53 Health Checks can be imported using the `health check id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Route53 Health Checks using the health check `id`. For example:
 
+```terraform
+import {
+  to = aws_route53_health_check.http_check
+  id = "abcdef11-2222-3333-4444-555555fedcba"
+}
 ```
-$ terraform import aws_route53_health_check.http_check abcdef11-2222-3333-4444-555555fedcba
+
+Using `terraform import`, import Route53 Health Checks using the health check `id`. For example:
+
+```console
+% terraform import aws_route53_health_check.http_check abcdef11-2222-3333-4444-555555fedcba
 ```

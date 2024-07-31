@@ -1,0 +1,3 @@
+```release-note:enhancement
+data-source/aws_ce_cost_category: Add `default_value` attribute
+```

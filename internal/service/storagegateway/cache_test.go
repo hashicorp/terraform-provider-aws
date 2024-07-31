@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package storagegateway_test
 
 import (
@@ -7,12 +10,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestDecodeCacheID(t *testing.T) {
@@ -57,7 +61,7 @@ func TestDecodeCacheID(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		gatewayARN, diskID, err := tfstoragegateway.DecodeCacheID(tc.Input)
+		gatewayARN, diskID, err := tfstoragegateway.CacheParseResourceID(tc.Input)
 		if tc.ErrCount == 0 && err != nil {
 			t.Fatalf("expected %q not to trigger an error, received: %s", tc.Input, err)
 		}
@@ -80,8 +84,8 @@ func TestAccStorageGatewayCache_fileGateway(t *testing.T) {
 	gatewayResourceName := "aws_storagegateway_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		// Storage Gateway API does not support removing caches,
 		// but we want to ensure other resources are removed.
@@ -92,7 +96,7 @@ func TestAccStorageGatewayCache_fileGateway(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCacheExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "disk_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", gatewayResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", gatewayResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -111,8 +115,8 @@ func TestAccStorageGatewayCache_tapeAndVolumeGateway(t *testing.T) {
 	gatewayResourceName := "aws_storagegateway_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		// Storage Gateway API does not support removing caches,
 		// but we want to ensure other resources are removed.
@@ -123,7 +127,7 @@ func TestAccStorageGatewayCache_tapeAndVolumeGateway(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCacheExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "disk_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", gatewayResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", gatewayResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -142,9 +146,9 @@ func testAccCheckCacheExists(ctx context.Context, resourceName string) resource.
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn(ctx)
 
-		gatewayARN, diskID, err := tfstoragegateway.DecodeCacheID(rs.Primary.ID)
+		gatewayARN, diskID, err := tfstoragegateway.CacheParseResourceID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package storagegateway_test
 
 import (
@@ -7,12 +10,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestDecodeWorkingStorageID(t *testing.T) {
@@ -81,8 +85,8 @@ func TestAccStorageGatewayWorkingStorage_basic(t *testing.T) {
 	gatewayResourceName := "aws_storagegateway_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		// Storage Gateway API does not support removing working storages,
 		// but we want to ensure other resources are removed.
@@ -92,8 +96,8 @@ func TestAccStorageGatewayWorkingStorage_basic(t *testing.T) {
 				Config: testAccWorkingStorageConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkingStorageExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "disk_id", localDiskDataSourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", gatewayResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "disk_id", localDiskDataSourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", gatewayResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -112,7 +116,7 @@ func testAccCheckWorkingStorageExists(ctx context.Context, resourceName string) 
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn(ctx)
 
 		gatewayARN, diskID, err := tfstoragegateway.DecodeWorkingStorageID(rs.Primary.ID)
 		if err != nil {

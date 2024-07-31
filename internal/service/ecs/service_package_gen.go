@@ -5,78 +5,129 @@ package ecs
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	ecs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ecs"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-type servicePackage struct {
-	frameworkDataSourceFactories []func(context.Context) (datasource.DataSourceWithConfigure, error)
-	frameworkResourceFactories   []func(context.Context) (resource.ResourceWithConfigure, error)
-	sdkDataSourceFactories       []struct {
-		TypeName string
-		Factory  func() *schema.Resource
+type servicePackage struct{}
+
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
+	return []*types.ServicePackageFrameworkDataSource{}
+}
+
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
+	return []*types.ServicePackageFrameworkResource{}
+}
+
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
+	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  dataSourceCluster,
+			TypeName: "aws_ecs_cluster",
+			Name:     "Cluster",
+			Tags:     &types.ServicePackageResourceTags{},
+		},
+		{
+			Factory:  dataSourceContainerDefinition,
+			TypeName: "aws_ecs_container_definition",
+			Name:     "Container Definition",
+		},
+		{
+			Factory:  dataSourceService,
+			TypeName: "aws_ecs_service",
+			Name:     "Service",
+			Tags:     &types.ServicePackageResourceTags{},
+		},
+		{
+			Factory:  dataSourceTaskDefinition,
+			TypeName: "aws_ecs_task_definition",
+			Name:     "Task Definition",
+		},
+		{
+			Factory:  dataSourceTaskExecution,
+			TypeName: "aws_ecs_task_execution",
+			Name:     "Task Execution",
+		},
 	}
-	sdkResourceFactories []struct {
-		TypeName string
-		Factory  func() *schema.Resource
+}
+
+func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  resourceAccountSettingDefault,
+			TypeName: "aws_ecs_account_setting_default",
+			Name:     "Account Setting Default",
+		},
+		{
+			Factory:  resourceCapacityProvider,
+			TypeName: "aws_ecs_capacity_provider",
+			Name:     "Capacity Provider",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			},
+		},
+		{
+			Factory:  resourceCluster,
+			TypeName: "aws_ecs_cluster",
+			Name:     "Cluster",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			},
+		},
+		{
+			Factory:  resourceClusterCapacityProviders,
+			TypeName: "aws_ecs_cluster_capacity_providers",
+			Name:     "Cluster Capacity Providers",
+		},
+		{
+			Factory:  resourceService,
+			TypeName: "aws_ecs_service",
+			Name:     "Service",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			},
+		},
+		{
+			Factory:  resourceTag,
+			TypeName: "aws_ecs_tag",
+			Name:     "ECS Resource Tag",
+		},
+		{
+			Factory:  resourceTaskDefinition,
+			TypeName: "aws_ecs_task_definition",
+			Name:     "Task Definition",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory:  resourceTaskSet,
+			TypeName: "aws_ecs_task_set",
+			Name:     "Task Set",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
 	}
-}
-
-func (p *servicePackage) Configure(ctx context.Context, meta any) error {
-	return nil
-}
-
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return p.frameworkDataSourceFactories
-}
-
-func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.Context) (resource.ResourceWithConfigure, error) {
-	return p.frameworkResourceFactories
-}
-
-func (p *servicePackage) SDKDataSources(ctx context.Context) []struct {
-	TypeName string
-	Factory  func() *schema.Resource
-} {
-	return p.sdkDataSourceFactories
-}
-
-func (p *servicePackage) SDKResources(ctx context.Context) []struct {
-	TypeName string
-	Factory  func() *schema.Resource
-} {
-	return p.sdkResourceFactories
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "ecs"
+	return names.ECS
 }
 
-func (p *servicePackage) registerFrameworkDataSourceFactory(factory func(context.Context) (datasource.DataSourceWithConfigure, error)) {
-	p.frameworkDataSourceFactories = append(p.frameworkDataSourceFactories, factory)
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*ecs_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+
+	return ecs_sdkv2.NewFromConfig(cfg,
+		ecs_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+	), nil
 }
 
-func (p *servicePackage) registerFrameworkResourceFactory(factory func(context.Context) (resource.ResourceWithConfigure, error)) {
-	p.frameworkResourceFactories = append(p.frameworkResourceFactories, factory)
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
 }
-
-func (p *servicePackage) registerSDKDataSourceFactory(typeName string, factory func() *schema.Resource) {
-	p.sdkDataSourceFactories = append(p.sdkDataSourceFactories, struct {
-		TypeName string
-		Factory  func() *schema.Resource
-	}{TypeName: typeName, Factory: factory})
-}
-
-func (p *servicePackage) registerSDKResourceFactory(typeName string, factory func() *schema.Resource) {
-	p.sdkResourceFactories = append(p.sdkResourceFactories, struct {
-		TypeName string
-		Factory  func() *schema.Resource
-	}{TypeName: typeName, Factory: factory})
-}
-
-var (
-	_sp                                = &servicePackage{}
-	ServicePackage intf.ServicePackage = _sp
-)

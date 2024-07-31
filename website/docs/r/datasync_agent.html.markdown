@@ -50,7 +50,7 @@ data "aws_network_interface" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Name of the DataSync Agent.
 * `activation_key` - (Optional) DataSync Agent activation key during resource creation. Conflicts with `ip_address`. If an `ip_address` is provided instead, Terraform will retrieve the `activation_key` as part of the resource creation.
@@ -61,9 +61,9 @@ The following arguments are supported:
 * `tags` - (Optional) Key-value pairs of resource tags to assign to the DataSync Agent. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpc_endpoint_id` - (Optional) The ID of the VPC (virtual private cloud) endpoint that the agent has access to.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Amazon Resource Name (ARN) of the DataSync Agent.
 * `arn` - Amazon Resource Name (ARN) of the DataSync Agent.
@@ -77,8 +77,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_datasync_agent` can be imported by using the DataSync Agent Amazon Resource Name (ARN), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_datasync_agent` using the DataSync Agent Amazon Resource Name (ARN). For example:
 
+```terraform
+import {
+  to = aws_datasync_agent.example
+  id = "arn:aws:datasync:us-east-1:123456789012:agent/agent-12345678901234567"
+}
 ```
-$ terraform import aws_datasync_agent.example arn:aws:datasync:us-east-1:123456789012:agent/agent-12345678901234567
+
+Using `terraform import`, import `aws_datasync_agent` using the DataSync Agent Amazon Resource Name (ARN). For example:
+
+```console
+% terraform import aws_datasync_agent.example arn:aws:datasync:us-east-1:123456789012:agent/agent-12345678901234567
 ```

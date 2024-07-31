@@ -30,7 +30,9 @@ output "description" {
 
 * `name` - (Required) Name of the application
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - Name of the application
 * `arn` - ARN of the application.

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -5,20 +8,26 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceCarrierGateway() *schema.Resource {
+// @SDKResource("aws_ec2_carrier_gateway, name="Carrier Gateway")
+// @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
+func resourceCarrierGateway() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCarrierGatewayCreate,
 		ReadWithoutTimeout:   resourceCarrierGatewayRead,
@@ -32,17 +41,17 @@ func ResourceCarrierGateway() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
-			"vpc_id": {
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -53,26 +62,23 @@ func ResourceCarrierGateway() *schema.Resource {
 
 func resourceCarrierGatewayCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.CreateCarrierGatewayInput{
-		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeCarrierGateway),
-		VpcId:             aws.String(d.Get("vpc_id").(string)),
+		ClientToken:       aws.String(id.UniqueId()),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeCarrierGateway),
+		VpcId:             aws.String(d.Get(names.AttrVPCID).(string)),
 	}
 
-	output, err := conn.CreateCarrierGatewayWithContext(ctx, input)
+	output, err := conn.CreateCarrierGateway(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Carrier Gateway: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.CarrierGateway.CarrierGatewayId))
+	d.SetId(aws.ToString(output.CarrierGateway.CarrierGatewayId))
 
-	_, err = WaitCarrierGatewayCreated(ctx, conn, d.Id())
-
-	if err != nil {
+	if _, err := waitCarrierGatewayCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Carrier Gateway (%s) create: %s", d.Id(), err)
 	}
 
@@ -81,11 +87,9 @@ func resourceCarrierGatewayCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceCarrierGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	carrierGateway, err := FindCarrierGatewayByID(ctx, conn, d.Id())
+	carrierGateway, err := findCarrierGatewayByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Carrier Gateway (%s) not found, removing from state", d.Id())
@@ -97,53 +101,37 @@ func resourceCarrierGatewayRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Carrier Gateway (%s): %s", d.Id(), err)
 	}
 
-	ownerID := aws.StringValue(carrierGateway.OwnerId)
+	ownerID := aws.ToString(carrierGateway.OwnerId)
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   ec2.ServiceName,
+		Service:   names.EC2,
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: ownerID,
 		Resource:  fmt.Sprintf("carrier-gateway/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
-	d.Set("owner_id", ownerID)
-	d.Set("vpc_id", carrierGateway.VpcId)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrOwnerID, ownerID)
+	d.Set(names.AttrVPCID, carrierGateway.VpcId)
 
-	tags := KeyValueTags(carrierGateway.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	setTagsOut(ctx, carrierGateway.Tags)
 
 	return diags
 }
 
 func resourceCarrierGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EC2 Carrier Gateway (%s) tags: %s", d.Id(), err)
-		}
-	}
+	// Tags only.
 
 	return append(diags, resourceCarrierGatewayRead(ctx, d, meta)...)
 }
 
 func resourceCarrierGatewayDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[INFO] Deleting EC2 Carrier Gateway (%s)", d.Id())
-	_, err := conn.DeleteCarrierGatewayWithContext(ctx, &ec2.DeleteCarrierGatewayInput{
+	_, err := conn.DeleteCarrierGateway(ctx, &ec2.DeleteCarrierGatewayInput{
 		CarrierGatewayId: aws.String(d.Id()),
 	})
 
@@ -155,9 +143,7 @@ func resourceCarrierGatewayDelete(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "deleting EC2 Carrier Gateway (%s): %s", d.Id(), err)
 	}
 
-	_, err = WaitCarrierGatewayDeleted(ctx, conn, d.Id())
-
-	if err != nil {
+	if _, err := waitCarrierGatewayDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Carrier Gateway (%s) delete: %s", d.Id(), err)
 	}
 

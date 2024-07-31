@@ -1,91 +1,45 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ses
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"sort"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_ses_receipt_rule")
 func ResourceReceiptRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReceiptRuleCreate,
 		UpdateWithoutTimeout: resourceReceiptRuleUpdate,
 		ReadWithoutTimeout:   resourceReceiptRuleRead,
 		DeleteWithoutTimeout: resourceReceiptRuleDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceReceiptRuleImport,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z._-]+$`), "must contain only alphanumeric, period, underscore, and hyphen characters"),
-					validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z]`), "must begin with a alphanumeric character"),
-					validation.StringMatch(regexp.MustCompile(`[0-9a-zA-Z]$`), "must end with a alphanumeric character"),
-				),
-			},
-
-			"rule_set_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-
-			"after": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
-			"enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-
-			"recipients": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Optional: true,
-			},
-
-			"scan_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-
-			"tls_policy": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(ses.TlsPolicy_Values(), false),
-			},
-
 			"add_header_action": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -96,197 +50,152 @@ func ResourceReceiptRule() *schema.Resource {
 							Required: true,
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(1, 50),
-								validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z-]+$`), "must contain only alphanumeric and dash characters"),
+								validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+$`), "must contain only alphanumeric and dash characters"),
 							),
 						},
-
 						"header_value": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(0, 2048),
 						},
-
 						"position": {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
 					},
 				},
-				Set: func(v interface{}) int {
-					var buf bytes.Buffer
-					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["header_name"].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m["header_value"].(string)))
-					buf.WriteString(fmt.Sprintf("%d-", m["position"].(int)))
-
-					return create.StringHashcode(buf.String())
-				},
 			},
-
+			"after": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"bounce_action": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"message": {
+						names.AttrMessage: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-
-						"sender": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-
-						"smtp_reply_code": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-
-						"status_code": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-
-						"topic_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-
 						"position": {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
+						"sender": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"smtp_reply_code": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						names.AttrStatusCode: {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						names.AttrTopicARN: {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
+						},
 					},
 				},
-				Set: func(v interface{}) int {
-					var buf bytes.Buffer
-					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["message"].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m["sender"].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m["smtp_reply_code"].(string)))
-
-					if _, ok := m["status_code"]; ok {
-						buf.WriteString(fmt.Sprintf("%s-", m["status_code"].(string)))
-					}
-
-					if _, ok := m["topic_arn"]; ok {
-						buf.WriteString(fmt.Sprintf("%s-", m["topic_arn"].(string)))
-					}
-
-					buf.WriteString(fmt.Sprintf("%d-", m["position"].(int)))
-
-					return create.StringHashcode(buf.String())
-				},
 			},
-
+			names.AttrEnabled: {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"lambda_action": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"function_arn": {
+						names.AttrFunctionARN: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-
 						"invocation_type": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      ses.InvocationTypeEvent,
 							ValidateFunc: validation.StringInSlice(ses.InvocationType_Values(), false),
 						},
-
-						"topic_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-
 						"position": {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
+						names.AttrTopicARN: {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
+						},
 					},
 				},
-				Set: func(v interface{}) int {
-					var buf bytes.Buffer
-					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["function_arn"].(string)))
-
-					if _, ok := m["invocation_type"]; ok {
-						buf.WriteString(fmt.Sprintf("%s-", m["invocation_type"].(string)))
-					}
-
-					if _, ok := m["topic_arn"]; ok {
-						buf.WriteString(fmt.Sprintf("%s-", m["topic_arn"].(string)))
-					}
-
-					buf.WriteString(fmt.Sprintf("%d-", m["position"].(int)))
-
-					return create.StringHashcode(buf.String())
-				},
 			},
-
+			names.AttrName: {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 64),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), "must contain only alphanumeric, period, underscore, and hyphen characters"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]`), "must begin with a alphanumeric character"),
+					validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z]$`), "must end with a alphanumeric character"),
+				),
+			},
+			"recipients": {
+				Type:     schema.TypeSet,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Optional: true,
+			},
+			"rule_set_name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
 			"s3_action": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"bucket_name": {
+						names.AttrBucketName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-
-						"kms_key_arn": {
+						names.AttrKMSKeyARN: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-
 						"object_key_prefix": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-
-						"topic_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-
 						"position": {
 							Type:         schema.TypeInt,
 							Required:     true,
 							ValidateFunc: validation.IntAtLeast(1),
 						},
+						names.AttrTopicARN: {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
+						},
 					},
 				},
-				Set: func(v interface{}) int {
-					var buf bytes.Buffer
-					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["bucket_name"].(string)))
-
-					if _, ok := m["kms_key_arn"]; ok {
-						buf.WriteString(fmt.Sprintf("%s-", m["kms_key_arn"].(string)))
-					}
-
-					if _, ok := m["object_key_prefix"]; ok {
-						buf.WriteString(fmt.Sprintf("%s-", m["object_key_prefix"].(string)))
-					}
-
-					if _, ok := m["topic_arn"]; ok {
-						buf.WriteString(fmt.Sprintf("%s-", m["topic_arn"].(string)))
-					}
-
-					buf.WriteString(fmt.Sprintf("%d-", m["position"].(int)))
-
-					return create.StringHashcode(buf.String())
-				},
 			},
-
+			"scan_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"sns_action": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -298,67 +207,46 @@ func ResourceReceiptRule() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.StringInSlice(ses.SNSActionEncoding_Values(), false),
 						},
-						"topic_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-
 						"position": {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
+						names.AttrTopicARN: {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: verify.ValidARN,
+						},
 					},
 				},
-				Set: func(v interface{}) int {
-					var buf bytes.Buffer
-					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["encoding"].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m["topic_arn"].(string)))
-					buf.WriteString(fmt.Sprintf("%d-", m["position"].(int)))
-
-					return create.StringHashcode(buf.String())
-				},
 			},
-
 			"stop_action": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"scope": {
+						names.AttrScope: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(ses.StopScope_Values(), false),
 						},
-
-						"topic_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-
 						"position": {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
+						names.AttrTopicARN: {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
+						},
 					},
 				},
-				Set: func(v interface{}) int {
-					var buf bytes.Buffer
-					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["scope"].(string)))
-
-					if _, ok := m["topic_arn"]; ok {
-						buf.WriteString(fmt.Sprintf("%s-", m["topic_arn"].(string)))
-					}
-
-					buf.WriteString(fmt.Sprintf("%d-", m["position"].(int)))
-
-					return create.StringHashcode(buf.String())
-				},
 			},
-
+			"tls_policy": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(ses.TlsPolicy_Values(), false),
+			},
 			"workmail_action": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -369,135 +257,68 @@ func ResourceReceiptRule() *schema.Resource {
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-
-						"topic_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-
 						"position": {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
+						names.AttrTopicARN: {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
+						},
 					},
-				},
-				Set: func(v interface{}) int {
-					var buf bytes.Buffer
-					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["organization_arn"].(string)))
-
-					if _, ok := m["topic_arn"]; ok {
-						buf.WriteString(fmt.Sprintf("%s-", m["topic_arn"].(string)))
-					}
-
-					buf.WriteString(fmt.Sprintf("%d-", m["position"].(int)))
-
-					return create.StringHashcode(buf.String())
 				},
 			},
 		},
 	}
 }
 
-func resourceReceiptRuleImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	idParts := strings.Split(d.Id(), ":")
-	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-		return nil, fmt.Errorf("unexpected format of ID (%q), expected <ruleset-name>:<rule-name>", d.Id())
-	}
-
-	ruleSetName := idParts[0]
-	ruleName := idParts[1]
-
-	d.Set("rule_set_name", ruleSetName)
-	d.Set("name", ruleName)
-	d.SetId(ruleName)
-
-	return []*schema.ResourceData{d}, nil
-}
-
 func resourceReceiptRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
-	createOpts := &ses.CreateReceiptRuleInput{
+	name := d.Get(names.AttrName).(string)
+	input := &ses.CreateReceiptRuleInput{
 		Rule:        buildReceiptRule(d),
 		RuleSetName: aws.String(d.Get("rule_set_name").(string)),
 	}
 
 	if v, ok := d.GetOk("after"); ok {
-		createOpts.After = aws.String(v.(string))
+		input.After = aws.String(v.(string))
 	}
 
-	_, err := conn.CreateReceiptRuleWithContext(ctx, createOpts)
+	_, err := conn.CreateReceiptRuleWithContext(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SES rule: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating SES Receipt Rule (%s): %s", name, err)
 	}
 
-	d.SetId(d.Get("name").(string))
-
-	return append(diags, resourceReceiptRuleRead(ctx, d, meta)...)
-}
-
-func resourceReceiptRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
-
-	updateOpts := &ses.UpdateReceiptRuleInput{
-		Rule:        buildReceiptRule(d),
-		RuleSetName: aws.String(d.Get("rule_set_name").(string)),
-	}
-
-	_, err := conn.UpdateReceiptRuleWithContext(ctx, updateOpts)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating SES rule: %s", err)
-	}
-
-	if d.HasChange("after") {
-		changePosOpts := &ses.SetReceiptRulePositionInput{
-			After:       aws.String(d.Get("after").(string)),
-			RuleName:    aws.String(d.Get("name").(string)),
-			RuleSetName: aws.String(d.Get("rule_set_name").(string)),
-		}
-
-		_, err := conn.SetReceiptRulePositionWithContext(ctx, changePosOpts)
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SES rule: %s", err)
-		}
-	}
+	d.SetId(name)
 
 	return append(diags, resourceReceiptRuleRead(ctx, d, meta)...)
 }
 
 func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	ruleSetName := d.Get("rule_set_name").(string)
-	describeOpts := &ses.DescribeReceiptRuleInput{
-		RuleName:    aws.String(d.Id()),
-		RuleSetName: aws.String(ruleSetName),
+	rule, err := FindReceiptRuleByTwoPartKey(ctx, conn, d.Id(), ruleSetName)
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] SES Receipt Rule (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
 	}
 
-	response, err := conn.DescribeReceiptRuleWithContext(ctx, describeOpts)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, ses.ErrCodeRuleDoesNotExistException) {
-			log.Printf("[WARN] SES Receipt Rule (%s) not found", d.Id())
-			d.SetId("")
-			return diags
-		}
-		if tfawserr.ErrCodeEquals(err, ses.ErrCodeRuleSetDoesNotExistException) {
-			log.Printf("[WARN] SES Receipt Rule Set (%s) belonging to SES Receipt Rule (%s) not found, removing from state", aws.StringValue(describeOpts.RuleSetName), d.Id())
-			d.SetId("")
-			return diags
-		}
 		return sdkdiag.AppendErrorf(diags, "reading SES Receipt Rule (%s): %s", d.Id(), err)
 	}
 
-	d.Set("enabled", response.Rule.Enabled)
-	d.Set("recipients", flex.FlattenStringSet(response.Rule.Recipients))
-	d.Set("scan_enabled", response.Rule.ScanEnabled)
-	d.Set("tls_policy", response.Rule.TlsPolicy)
+	d.Set(names.AttrEnabled, rule.Enabled)
+	d.Set("recipients", flex.FlattenStringSet(rule.Recipients))
+	d.Set("scan_enabled", rule.ScanEnabled)
+	d.Set("tls_policy", rule.TlsPolicy)
 
 	addHeaderActionList := []map[string]interface{}{}
 	bounceActionList := []map[string]interface{}{}
@@ -507,7 +328,7 @@ func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 	stopActionList := []map[string]interface{}{}
 	workmailActionList := []map[string]interface{}{}
 
-	for i, element := range response.Rule.Actions {
+	for i, element := range rule.Actions {
 		if element.AddHeaderAction != nil {
 			addHeaderAction := map[string]interface{}{
 				"header_name":  aws.StringValue(element.AddHeaderAction.HeaderName),
@@ -519,18 +340,18 @@ func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 
 		if element.BounceAction != nil {
 			bounceAction := map[string]interface{}{
-				"message":         aws.StringValue(element.BounceAction.Message),
+				names.AttrMessage: aws.StringValue(element.BounceAction.Message),
 				"sender":          aws.StringValue(element.BounceAction.Sender),
 				"smtp_reply_code": aws.StringValue(element.BounceAction.SmtpReplyCode),
 				"position":        i + 1,
 			}
 
 			if element.BounceAction.StatusCode != nil {
-				bounceAction["status_code"] = aws.StringValue(element.BounceAction.StatusCode)
+				bounceAction[names.AttrStatusCode] = aws.StringValue(element.BounceAction.StatusCode)
 			}
 
 			if element.BounceAction.TopicArn != nil {
-				bounceAction["topic_arn"] = aws.StringValue(element.BounceAction.TopicArn)
+				bounceAction[names.AttrTopicARN] = aws.StringValue(element.BounceAction.TopicArn)
 			}
 
 			bounceActionList = append(bounceActionList, bounceAction)
@@ -538,8 +359,8 @@ func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 
 		if element.LambdaAction != nil {
 			lambdaAction := map[string]interface{}{
-				"function_arn": aws.StringValue(element.LambdaAction.FunctionArn),
-				"position":     i + 1,
+				names.AttrFunctionARN: aws.StringValue(element.LambdaAction.FunctionArn),
+				"position":            i + 1,
 			}
 
 			if element.LambdaAction.InvocationType != nil {
@@ -547,7 +368,7 @@ func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 			}
 
 			if element.LambdaAction.TopicArn != nil {
-				lambdaAction["topic_arn"] = aws.StringValue(element.LambdaAction.TopicArn)
+				lambdaAction[names.AttrTopicARN] = aws.StringValue(element.LambdaAction.TopicArn)
 			}
 
 			lambdaActionList = append(lambdaActionList, lambdaAction)
@@ -555,12 +376,12 @@ func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 
 		if element.S3Action != nil {
 			s3Action := map[string]interface{}{
-				"bucket_name": aws.StringValue(element.S3Action.BucketName),
-				"position":    i + 1,
+				names.AttrBucketName: aws.StringValue(element.S3Action.BucketName),
+				"position":           i + 1,
 			}
 
 			if element.S3Action.KmsKeyArn != nil {
-				s3Action["kms_key_arn"] = aws.StringValue(element.S3Action.KmsKeyArn)
+				s3Action[names.AttrKMSKeyARN] = aws.StringValue(element.S3Action.KmsKeyArn)
 			}
 
 			if element.S3Action.ObjectKeyPrefix != nil {
@@ -568,7 +389,7 @@ func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 			}
 
 			if element.S3Action.TopicArn != nil {
-				s3Action["topic_arn"] = aws.StringValue(element.S3Action.TopicArn)
+				s3Action[names.AttrTopicARN] = aws.StringValue(element.S3Action.TopicArn)
 			}
 
 			s3ActionList = append(s3ActionList, s3Action)
@@ -576,9 +397,9 @@ func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 
 		if element.SNSAction != nil {
 			snsAction := map[string]interface{}{
-				"topic_arn": aws.StringValue(element.SNSAction.TopicArn),
-				"encoding":  aws.StringValue(element.SNSAction.Encoding),
-				"position":  i + 1,
+				names.AttrTopicARN: aws.StringValue(element.SNSAction.TopicArn),
+				"encoding":         aws.StringValue(element.SNSAction.Encoding),
+				"position":         i + 1,
 			}
 
 			snsActionList = append(snsActionList, snsAction)
@@ -586,12 +407,12 @@ func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 
 		if element.StopAction != nil {
 			stopAction := map[string]interface{}{
-				"scope":    aws.StringValue(element.StopAction.Scope),
-				"position": i + 1,
+				names.AttrScope: aws.StringValue(element.StopAction.Scope),
+				"position":      i + 1,
 			}
 
 			if element.StopAction.TopicArn != nil {
-				stopAction["topic_arn"] = aws.StringValue(element.StopAction.TopicArn)
+				stopAction[names.AttrTopicARN] = aws.StringValue(element.StopAction.TopicArn)
 			}
 
 			stopActionList = append(stopActionList, stopAction)
@@ -604,7 +425,7 @@ func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 			}
 
 			if element.WorkmailAction.TopicArn != nil {
-				workmailAction["topic_arn"] = aws.StringValue(element.WorkmailAction.TopicArn)
+				workmailAction[names.AttrTopicARN] = aws.StringValue(element.WorkmailAction.TopicArn)
 			}
 
 			workmailActionList = append(workmailActionList, workmailAction)
@@ -653,34 +474,108 @@ func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("receipt-rule-set/%s:receipt-rule/%s", ruleSetName, d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 
 	return diags
+}
+
+func resourceReceiptRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
+
+	input := &ses.UpdateReceiptRuleInput{
+		Rule:        buildReceiptRule(d),
+		RuleSetName: aws.String(d.Get("rule_set_name").(string)),
+	}
+
+	_, err := conn.UpdateReceiptRuleWithContext(ctx, input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating SES Receipt Rule (%s): %s", d.Id(), err)
+	}
+
+	if d.HasChange("after") {
+		input := &ses.SetReceiptRulePositionInput{
+			After:       aws.String(d.Get("after").(string)),
+			RuleName:    aws.String(d.Get(names.AttrName).(string)),
+			RuleSetName: aws.String(d.Get("rule_set_name").(string)),
+		}
+
+		_, err := conn.SetReceiptRulePositionWithContext(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting SES Receipt Rule (%s) position: %s", d.Id(), err)
+		}
+	}
+
+	return append(diags, resourceReceiptRuleRead(ctx, d, meta)...)
 }
 
 func resourceReceiptRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
-	deleteOpts := &ses.DeleteReceiptRuleInput{
+	log.Printf("[DEBUG] Deleting SES Receipt Rule: %s", d.Id())
+	_, err := conn.DeleteReceiptRuleWithContext(ctx, &ses.DeleteReceiptRuleInput{
 		RuleName:    aws.String(d.Id()),
 		RuleSetName: aws.String(d.Get("rule_set_name").(string)),
-	}
+	})
 
-	_, err := conn.DeleteReceiptRuleWithContext(ctx, deleteOpts)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting SES receipt rule: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting SES Receipt Rule (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func buildReceiptRule(d *schema.ResourceData) *ses.ReceiptRule {
-	receiptRule := &ses.ReceiptRule{
-		Name: aws.String(d.Get("name").(string)),
+func resourceReceiptRuleImport(_ context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	idParts := strings.Split(d.Id(), ":")
+	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+		return nil, fmt.Errorf("unexpected format of ID (%q), expected <ruleset-name>:<rule-name>", d.Id())
 	}
 
-	if v, ok := d.GetOk("enabled"); ok {
+	ruleSetName := idParts[0]
+	ruleName := idParts[1]
+
+	d.Set("rule_set_name", ruleSetName)
+	d.Set(names.AttrName, ruleName)
+	d.SetId(ruleName)
+
+	return []*schema.ResourceData{d}, nil
+}
+
+func FindReceiptRuleByTwoPartKey(ctx context.Context, conn *ses.SES, ruleName, ruleSetName string) (*ses.ReceiptRule, error) {
+	input := &ses.DescribeReceiptRuleInput{
+		RuleName:    aws.String(ruleName),
+		RuleSetName: aws.String(ruleSetName),
+	}
+
+	output, err := conn.DescribeReceiptRuleWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, ses.ErrCodeRuleDoesNotExistException, ses.ErrCodeRuleSetDoesNotExistException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Rule == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Rule, nil
+}
+
+func buildReceiptRule(d *schema.ResourceData) *ses.ReceiptRule {
+	receiptRule := &ses.ReceiptRule{
+		Name: aws.String(d.Get(names.AttrName).(string)),
+	}
+
+	if v, ok := d.GetOk(names.AttrEnabled); ok {
 		receiptRule.Enabled = aws.Bool(v.(bool))
 	}
 
@@ -716,17 +611,17 @@ func buildReceiptRule(d *schema.ResourceData) *ses.ReceiptRule {
 			elem := element.(map[string]interface{})
 
 			bounceAction := &ses.BounceAction{
-				Message:       aws.String(elem["message"].(string)),
+				Message:       aws.String(elem[names.AttrMessage].(string)),
 				Sender:        aws.String(elem["sender"].(string)),
 				SmtpReplyCode: aws.String(elem["smtp_reply_code"].(string)),
 			}
 
-			if elem["status_code"] != "" {
-				bounceAction.StatusCode = aws.String(elem["status_code"].(string))
+			if elem[names.AttrStatusCode] != "" {
+				bounceAction.StatusCode = aws.String(elem[names.AttrStatusCode].(string))
 			}
 
-			if elem["topic_arn"] != "" {
-				bounceAction.TopicArn = aws.String(elem["topic_arn"].(string))
+			if elem[names.AttrTopicARN] != "" {
+				bounceAction.TopicArn = aws.String(elem[names.AttrTopicARN].(string))
 			}
 
 			actions[elem["position"].(int)] = &ses.ReceiptAction{
@@ -740,15 +635,15 @@ func buildReceiptRule(d *schema.ResourceData) *ses.ReceiptRule {
 			elem := element.(map[string]interface{})
 
 			lambdaAction := &ses.LambdaAction{
-				FunctionArn: aws.String(elem["function_arn"].(string)),
+				FunctionArn: aws.String(elem[names.AttrFunctionARN].(string)),
 			}
 
 			if elem["invocation_type"] != "" {
 				lambdaAction.InvocationType = aws.String(elem["invocation_type"].(string))
 			}
 
-			if elem["topic_arn"] != "" {
-				lambdaAction.TopicArn = aws.String(elem["topic_arn"].(string))
+			if elem[names.AttrTopicARN] != "" {
+				lambdaAction.TopicArn = aws.String(elem[names.AttrTopicARN].(string))
 			}
 
 			actions[elem["position"].(int)] = &ses.ReceiptAction{
@@ -762,19 +657,19 @@ func buildReceiptRule(d *schema.ResourceData) *ses.ReceiptRule {
 			elem := element.(map[string]interface{})
 
 			s3Action := &ses.S3Action{
-				BucketName: aws.String(elem["bucket_name"].(string)),
+				BucketName: aws.String(elem[names.AttrBucketName].(string)),
 			}
 
-			if elem["kms_key_arn"] != "" {
-				s3Action.KmsKeyArn = aws.String(elem["kms_key_arn"].(string))
+			if elem[names.AttrKMSKeyARN] != "" {
+				s3Action.KmsKeyArn = aws.String(elem[names.AttrKMSKeyARN].(string))
 			}
 
 			if elem["object_key_prefix"] != "" {
 				s3Action.ObjectKeyPrefix = aws.String(elem["object_key_prefix"].(string))
 			}
 
-			if elem["topic_arn"] != "" {
-				s3Action.TopicArn = aws.String(elem["topic_arn"].(string))
+			if elem[names.AttrTopicARN] != "" {
+				s3Action.TopicArn = aws.String(elem[names.AttrTopicARN].(string))
 			}
 
 			actions[elem["position"].(int)] = &ses.ReceiptAction{
@@ -788,7 +683,7 @@ func buildReceiptRule(d *schema.ResourceData) *ses.ReceiptRule {
 			elem := element.(map[string]interface{})
 
 			snsAction := &ses.SNSAction{
-				TopicArn: aws.String(elem["topic_arn"].(string)),
+				TopicArn: aws.String(elem[names.AttrTopicARN].(string)),
 				Encoding: aws.String(elem["encoding"].(string)),
 			}
 
@@ -803,11 +698,11 @@ func buildReceiptRule(d *schema.ResourceData) *ses.ReceiptRule {
 			elem := element.(map[string]interface{})
 
 			stopAction := &ses.StopAction{
-				Scope: aws.String(elem["scope"].(string)),
+				Scope: aws.String(elem[names.AttrScope].(string)),
 			}
 
-			if elem["topic_arn"] != "" {
-				stopAction.TopicArn = aws.String(elem["topic_arn"].(string))
+			if elem[names.AttrTopicARN] != "" {
+				stopAction.TopicArn = aws.String(elem[names.AttrTopicARN].(string))
 			}
 
 			actions[elem["position"].(int)] = &ses.ReceiptAction{
@@ -824,8 +719,8 @@ func buildReceiptRule(d *schema.ResourceData) *ses.ReceiptRule {
 				OrganizationArn: aws.String(elem["organization_arn"].(string)),
 			}
 
-			if elem["topic_arn"] != "" {
-				workmailAction.TopicArn = aws.String(elem["topic_arn"].(string))
+			if elem[names.AttrTopicARN] != "" {
+				workmailAction.TopicArn = aws.String(elem[names.AttrTopicARN].(string))
 			}
 
 			actions[elem["position"].(int)] = &ses.ReceiptAction{

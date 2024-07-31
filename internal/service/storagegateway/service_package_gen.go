@@ -5,78 +5,133 @@ package storagegateway
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
+	storagegateway_sdkv1 "github.com/aws/aws-sdk-go/service/storagegateway"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-type servicePackage struct {
-	frameworkDataSourceFactories []func(context.Context) (datasource.DataSourceWithConfigure, error)
-	frameworkResourceFactories   []func(context.Context) (resource.ResourceWithConfigure, error)
-	sdkDataSourceFactories       []struct {
-		TypeName string
-		Factory  func() *schema.Resource
+type servicePackage struct{}
+
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
+	return []*types.ServicePackageFrameworkDataSource{}
+}
+
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
+	return []*types.ServicePackageFrameworkResource{}
+}
+
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
+	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  dataSourceLocalDisk,
+			TypeName: "aws_storagegateway_local_disk",
+			Name:     "Local Disk",
+		},
 	}
-	sdkResourceFactories []struct {
-		TypeName string
-		Factory  func() *schema.Resource
+}
+
+func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  resourceCache,
+			TypeName: "aws_storagegateway_cache",
+			Name:     "Cache",
+		},
+		{
+			Factory:  resourceCachediSCSIVolume,
+			TypeName: "aws_storagegateway_cached_iscsi_volume",
+			Name:     "Cached iSCSI Volume",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory:  resourceFileSystemAssociation,
+			TypeName: "aws_storagegateway_file_system_association",
+			Name:     "File System Association",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory:  resourceGateway,
+			TypeName: "aws_storagegateway_gateway",
+			Name:     "Gateway",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory:  resourceNFSFileShare,
+			TypeName: "aws_storagegateway_nfs_file_share",
+			Name:     "NFS File Share",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory:  resourceSMBFileShare,
+			TypeName: "aws_storagegateway_smb_file_share",
+			Name:     "SMB File Share",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory:  resourceStorediSCSIVolume,
+			TypeName: "aws_storagegateway_stored_iscsi_volume",
+			Name:     "Stored iSCSI Volume",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory:  resourceTapePool,
+			TypeName: "aws_storagegateway_tape_pool",
+			Name:     "Tape Pool",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory:  resourceUploadBuffer,
+			TypeName: "aws_storagegateway_upload_buffer",
+			Name:     "Upload Buffer",
+		},
+		{
+			Factory:  ResourceWorkingStorage,
+			TypeName: "aws_storagegateway_working_storage",
+			Name:     "Working Storage",
+		},
 	}
-}
-
-func (p *servicePackage) Configure(ctx context.Context, meta any) error {
-	return nil
-}
-
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return p.frameworkDataSourceFactories
-}
-
-func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.Context) (resource.ResourceWithConfigure, error) {
-	return p.frameworkResourceFactories
-}
-
-func (p *servicePackage) SDKDataSources(ctx context.Context) []struct {
-	TypeName string
-	Factory  func() *schema.Resource
-} {
-	return p.sdkDataSourceFactories
-}
-
-func (p *servicePackage) SDKResources(ctx context.Context) []struct {
-	TypeName string
-	Factory  func() *schema.Resource
-} {
-	return p.sdkResourceFactories
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "storagegateway"
+	return names.StorageGateway
 }
 
-func (p *servicePackage) registerFrameworkDataSourceFactory(factory func(context.Context) (datasource.DataSourceWithConfigure, error)) {
-	p.frameworkDataSourceFactories = append(p.frameworkDataSourceFactories, factory)
+// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
+func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*storagegateway_sdkv1.StorageGateway, error) {
+	sess := config[names.AttrSession].(*session_sdkv1.Session)
+
+	cfg := aws_sdkv1.Config{}
+
+	if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
+		tflog.Debug(ctx, "setting endpoint", map[string]any{
+			"tf_aws.endpoint": endpoint,
+		})
+		cfg.Endpoint = aws_sdkv1.String(endpoint)
+	} else {
+		cfg.EndpointResolver = newEndpointResolverSDKv1(ctx)
+	}
+
+	return storagegateway_sdkv1.New(sess.Copy(&cfg)), nil
 }
 
-func (p *servicePackage) registerFrameworkResourceFactory(factory func(context.Context) (resource.ResourceWithConfigure, error)) {
-	p.frameworkResourceFactories = append(p.frameworkResourceFactories, factory)
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
 }
-
-func (p *servicePackage) registerSDKDataSourceFactory(typeName string, factory func() *schema.Resource) {
-	p.sdkDataSourceFactories = append(p.sdkDataSourceFactories, struct {
-		TypeName string
-		Factory  func() *schema.Resource
-	}{TypeName: typeName, Factory: factory})
-}
-
-func (p *servicePackage) registerSDKResourceFactory(typeName string, factory func() *schema.Resource) {
-	p.sdkResourceFactories = append(p.sdkResourceFactories, struct {
-		TypeName string
-		Factory  func() *schema.Resource
-	}{TypeName: typeName, Factory: factory})
-}
-
-var (
-	_sp                                = &servicePackage{}
-	ServicePackage intf.ServicePackage = _sp
-)

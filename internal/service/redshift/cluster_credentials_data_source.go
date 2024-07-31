@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift
 
 import (
@@ -12,9 +15,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceClusterCredentials() *schema.Resource {
+// @SDKDataSource("aws_redshift_cluster_credentials", name="Cluster Credentials")
+func dataSourceClusterCredentials() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceClusterCredentialsRead,
 
@@ -23,7 +28,7 @@ func DataSourceClusterCredentials() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"cluster_identifier": {
+			names.AttrClusterIdentifier: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -61,9 +66,9 @@ func DataSourceClusterCredentials() *schema.Resource {
 
 func dataSourceClusterCredentialsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	clusterID := d.Get("cluster_identifier").(string)
+	clusterID := d.Get(names.AttrClusterIdentifier).(string)
 	input := &redshift.GetClusterCredentialsInput{
 		AutoCreate:        aws.Bool(d.Get("auto_create").(bool)),
 		ClusterIdentifier: aws.String(clusterID),

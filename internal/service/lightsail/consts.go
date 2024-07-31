@@ -1,8 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lightsail
 
 const (
 	ResBucket                             = "Bucket"
 	ResBucketAccessKey                    = "Bucket Access Key"
+	ResBucketResourceAccess               = "Bucket Resource Access"
 	ResCertificate                        = "Certificate"
 	ResDatabase                           = "Database"
 	ResDisk                               = "Disk"

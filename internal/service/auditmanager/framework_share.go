@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package auditmanager
 
 import (
@@ -13,19 +16,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkv2resource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func init() {
-	_sp.registerFrameworkResourceFactory(newResourceFrameworkShare)
-}
-
+// @FrameworkResource
 func newResourceFrameworkShare(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceFrameworkShare{}, nil
 }
@@ -45,7 +45,7 @@ func (r *resourceFrameworkShare) Metadata(_ context.Context, request resource.Me
 func (r *resourceFrameworkShare) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"comment": schema.StringAttribute{
+			names.AttrComment: schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -69,8 +69,8 @@ func (r *resourceFrameworkShare) Schema(ctx context.Context, req resource.Schema
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"id": framework.IDAttribute(),
-			"status": schema.StringAttribute{
+			names.AttrID: framework.IDAttribute(),
+			names.AttrStatus: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -81,7 +81,7 @@ func (r *resourceFrameworkShare) Schema(ctx context.Context, req resource.Schema
 }
 
 func (r *resourceFrameworkShare) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().AuditManagerClient()
+	conn := r.Meta().AuditManagerClient(ctx)
 
 	var plan resourceFrameworkShareData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -119,7 +119,7 @@ func (r *resourceFrameworkShare) Create(ctx context.Context, req resource.Create
 }
 
 func (r *resourceFrameworkShare) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().AuditManagerClient()
+	conn := r.Meta().AuditManagerClient(ctx)
 
 	var state resourceFrameworkShareData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -150,7 +150,7 @@ func (r *resourceFrameworkShare) Update(ctx context.Context, req resource.Update
 }
 
 func (r *resourceFrameworkShare) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().AuditManagerClient()
+	conn := r.Meta().AuditManagerClient(ctx)
 
 	var state resourceFrameworkShareData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -188,7 +188,7 @@ func (r *resourceFrameworkShare) Delete(ctx context.Context, req resource.Delete
 }
 
 func (r *resourceFrameworkShare) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func FindFrameworkShareByID(ctx context.Context, conn *auditmanager.Client, id string) (*awstypes.AssessmentFrameworkShareRequest, error) {
@@ -210,7 +210,7 @@ func FindFrameworkShareByID(ctx context.Context, conn *auditmanager.Client, id s
 		}
 	}
 
-	return nil, &sdkv2resource.NotFoundError{
+	return nil, &retry.NotFoundError{
 		LastRequest: in,
 	}
 }

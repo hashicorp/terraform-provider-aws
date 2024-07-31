@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker_test
 
 import (
@@ -8,12 +11,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSageMakerModelPackageGroup_basic(t *testing.T) {
@@ -23,8 +27,8 @@ func TestAccSageMakerModelPackageGroup_basic(t *testing.T) {
 	resourceName := "aws_sagemaker_model_package_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckModelPackageGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -33,8 +37,8 @@ func TestAccSageMakerModelPackageGroup_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelPackageGroupExists(ctx, resourceName, &mpg),
 					resource.TestCheckResourceAttr(resourceName, "model_package_group_name", rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("model-package-group/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("model-package-group/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -53,8 +57,8 @@ func TestAccSageMakerModelPackageGroup_description(t *testing.T) {
 	resourceName := "aws_sagemaker_model_package_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckModelPackageGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -81,17 +85,17 @@ func TestAccSageMakerModelPackageGroup_tags(t *testing.T) {
 	resourceName := "aws_sagemaker_model_package_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckModelPackageGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccModelPackageGroupConfig_tags1(rName, "key1", "value1"),
+				Config: testAccModelPackageGroupConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelPackageGroupExists(ctx, resourceName, &mpg),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -100,20 +104,20 @@ func TestAccSageMakerModelPackageGroup_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccModelPackageGroupConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccModelPackageGroupConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelPackageGroupExists(ctx, resourceName, &mpg),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccModelPackageGroupConfig_tags1(rName, "key2", "value2"),
+				Config: testAccModelPackageGroupConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelPackageGroupExists(ctx, resourceName, &mpg),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -127,8 +131,8 @@ func TestAccSageMakerModelPackageGroup_disappears(t *testing.T) {
 	resourceName := "aws_sagemaker_model_package_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckModelPackageGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -146,7 +150,7 @@ func TestAccSageMakerModelPackageGroup_disappears(t *testing.T) {
 
 func testAccCheckModelPackageGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sagemaker_model_package_group" {
@@ -183,7 +187,7 @@ func testAccCheckModelPackageGroupExists(ctx context.Context, n string, mpg *sag
 			return fmt.Errorf("No sagmaker Model Package Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
 		resp, err := tfsagemaker.FindModelPackageGroupByName(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err

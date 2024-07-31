@@ -1,13 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package types_test
 
 import (
 	"context"
 	"testing"
-	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/attr/xattr"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
@@ -16,9 +19,8 @@ func TestDurationTypeValueFromTerraform(t *testing.T) {
 	t.Parallel()
 
 	tests := map[string]struct {
-		val         tftypes.Value
-		expected    attr.Value
-		expectError bool
+		val      tftypes.Value
+		expected attr.Value
 	}{
 		"null value": {
 			val:      tftypes.NewValue(tftypes.String, nil),
@@ -30,11 +32,11 @@ func TestDurationTypeValueFromTerraform(t *testing.T) {
 		},
 		"valid duration": {
 			val:      tftypes.NewValue(tftypes.String, "2h"),
-			expected: fwtypes.DurationValue(2 * time.Hour),
+			expected: fwtypes.DurationValue("2h"),
 		},
 		"invalid duration": {
-			val:         tftypes.NewValue(tftypes.String, "not ok"),
-			expectError: true,
+			val:      tftypes.NewValue(tftypes.String, "not ok"),
+			expected: fwtypes.DurationUnknown(),
 		},
 	}
 
@@ -46,10 +48,7 @@ func TestDurationTypeValueFromTerraform(t *testing.T) {
 			ctx := context.Background()
 			val, err := fwtypes.DurationType.ValueFromTerraform(ctx, test.val)
 
-			if err == nil && test.expectError {
-				t.Fatal("expected error, got no error")
-			}
-			if err != nil && !test.expectError {
+			if err != nil {
 				t.Fatalf("got unexpected error: %s", err)
 			}
 
@@ -60,29 +59,25 @@ func TestDurationTypeValueFromTerraform(t *testing.T) {
 	}
 }
 
-func TestDurationTypeValidate(t *testing.T) {
+func TestDurationValidateAttribute(t *testing.T) {
 	t.Parallel()
 
 	type testCase struct {
-		val         tftypes.Value
+		val         fwtypes.Duration
 		expectError bool
 	}
 	tests := map[string]testCase{
-		"not a string": {
-			val:         tftypes.NewValue(tftypes.Bool, true),
-			expectError: true,
+		"unknown": {
+			val: fwtypes.DurationUnknown(),
 		},
-		"unknown string": {
-			val: tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+		"null": {
+			val: fwtypes.DurationNull(),
 		},
-		"null string": {
-			val: tftypes.NewValue(tftypes.String, nil),
+		"valid": {
+			val: fwtypes.DurationValue("2h"),
 		},
-		"valid string": {
-			val: tftypes.NewValue(tftypes.String, "2h"),
-		},
-		"invalid string": {
-			val:         tftypes.NewValue(tftypes.String, "not ok"),
+		"invalid": {
+			val:         fwtypes.DurationValue("not ok"),
 			expectError: true,
 		},
 	}
@@ -94,14 +89,49 @@ func TestDurationTypeValidate(t *testing.T) {
 
 			ctx := context.Background()
 
-			diags := fwtypes.DurationType.Validate(ctx, test.val, path.Root("test"))
+			req := xattr.ValidateAttributeRequest{}
+			resp := xattr.ValidateAttributeResponse{}
 
-			if !diags.HasError() && test.expectError {
-				t.Fatal("expected error, got no error")
+			test.val.ValidateAttribute(ctx, req, &resp)
+			if resp.Diagnostics.HasError() != test.expectError {
+				t.Errorf("resp.Diagnostics.HasError() = %t, want = %t", resp.Diagnostics.HasError(), test.expectError)
 			}
+		})
+	}
+}
 
-			if diags.HasError() && !test.expectError {
-				t.Fatalf("got unexpected error: %#v", diags)
+func TestDurationToStringValue(t *testing.T) {
+	t.Parallel()
+
+	tests := map[string]struct {
+		duration fwtypes.Duration
+		expected types.String
+	}{
+		"value": {
+			duration: fwtypes.DurationValue("2h"),
+			expected: types.StringValue("2h"),
+		},
+		"null": {
+			duration: fwtypes.DurationNull(),
+			expected: types.StringNull(),
+		},
+		"unknown": {
+			duration: fwtypes.DurationUnknown(),
+			expected: types.StringUnknown(),
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			ctx := context.Background()
+
+			s, _ := test.duration.ToStringValue(ctx)
+
+			if !test.expected.Equal(s) {
+				t.Fatalf("expected %#v to equal %#v", s, test.expected)
 			}
 		})
 	}

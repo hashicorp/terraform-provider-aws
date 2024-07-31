@@ -15,6 +15,8 @@ Provides the ability to register instances and containers with an Application Lo
 
 ## Example Usage
 
+### Basic Usage
+
 ```terraform
 resource "aws_lb_target_group_attachment" "test" {
   target_group_arn = aws_lb_target_group.test.arn
@@ -31,7 +33,7 @@ resource "aws_instance" "test" {
 }
 ```
 
-## Usage with lambda
+### Lambda Target
 
 ```terraform
 resource "aws_lambda_permission" "with_lb" {
@@ -58,21 +60,50 @@ resource "aws_lb_target_group_attachment" "test" {
 }
 ```
 
+### Registering Multiple Targets
+
+```terraform
+resource "aws_instance" "example" {
+  count = 3
+  # ... other configuration ...
+}
+
+resource "aws_lb_target_group" "example" {
+  # ... other configuration ...
+}
+
+resource "aws_lb_target_group_attachment" "example" {
+  # covert a list of instance objects to a map with instance ID as the key, and an instance
+  # object as the value.
+  for_each = {
+    for k, v in aws_instance.example :
+    k => v
+  }
+
+  target_group_arn = aws_lb_target_group.example.arn
+  target_id        = each.value.id
+  port             = 80
+}
+```
+
 ## Argument Reference
 
-The following arguments are supported:
+The following arguments are required:
 
-* `target_group_arn` - (Required) The ARN of the target group with which to register targets
-* `target_id` (Required) The ID of the target. This is the Instance ID for an instance, or the container ID for an ECS container. If the target type is ip, specify an IP address. If the target type is lambda, specify the arn of lambda. If the target type is alb, specify the arn of alb.
+* `target_group_arn` - (Required) The ARN of the target group with which to register targets.
+* `target_id` (Required) The ID of the target. This is the Instance ID for an instance, or the container ID for an ECS container. If the target type is `ip`, specify an IP address. If the target type is `lambda`, specify the Lambda function ARN. If the target type is `alb`, specify the ALB ARN.
+
+The following arguments are optional:
+
+* `availability_zone` - (Optional) The Availability Zone where the IP address of the target is to be registered. If the private IP address is outside of the VPC scope, this value must be set to `all`.
 * `port` - (Optional) The port on which targets receive traffic.
-* `availability_zone` - (Optional) The Availability Zone where the IP address of the target is to be registered. If the private ip address is outside of the VPC scope, this value must be set to 'all'.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
-* `id` - A unique identifier for the attachment
+* `id` - A unique identifier for the attachment.
 
 ## Import
 
-Target Group Attachments cannot be imported.
+You cannot import Target Group Attachments.

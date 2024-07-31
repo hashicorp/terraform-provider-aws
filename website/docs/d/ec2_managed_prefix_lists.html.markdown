@@ -41,7 +41,9 @@ which take the following arguments:
 * `values` - (Required) Set of values that are accepted for the given field.
   A managed prefix list will be selected if any one of the given values matches.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - AWS Region.
 * `ids` - List of all the managed prefix list ids found.

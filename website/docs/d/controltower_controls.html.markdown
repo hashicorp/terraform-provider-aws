@@ -38,6 +38,6 @@ The following arguments are required:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `enabled_controls` - List of all the ARNs for the controls applied to the `target_identifier`.

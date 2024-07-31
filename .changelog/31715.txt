@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_autoscaling_group: Fix `The AutoRollback parameter cannot be set to true when the DesiredConfiguration parameter is empty` errors when refreshing instances
+```

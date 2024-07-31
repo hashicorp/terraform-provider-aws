@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package directconnect
 
 import (
@@ -18,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_dx_gateway_association_proposal")
 func ResourceGatewayAssociationProposal() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGatewayAssociationProposalCreate,
@@ -32,7 +36,7 @@ func ResourceGatewayAssociationProposal() *schema.Resource {
 			// Accepting the proposal with overridden prefixes changes the returned RequestedAllowedPrefixesToDirectConnectGateway value (allowed_prefixes attribute).
 			// We only want to force a new resource if this value changes and the current proposal state is "requested".
 			customdiff.ForceNewIf("allowed_prefixes", func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) bool {
-				conn := meta.(*conns.AWSClient).DirectConnectConn()
+				conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 				log.Printf("[DEBUG] CustomizeDiff for Direct Connect Gateway Association Proposal (%s) allowed_prefixes", d.Id())
 
@@ -94,7 +98,7 @@ func ResourceGatewayAssociationProposal() *schema.Resource {
 
 func resourceGatewayAssociationProposalCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	directConnectGatewayID := d.Get("dx_gateway_id").(string)
 	associatedGatewayID := d.Get("associated_gateway_id").(string)
@@ -122,7 +126,7 @@ func resourceGatewayAssociationProposalCreate(ctx context.Context, d *schema.Res
 
 func resourceGatewayAssociationProposalRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	// First attempt to find by proposal ID.
 	output, err := FindGatewayAssociationProposalByID(ctx, conn, d.Id())
@@ -177,7 +181,7 @@ func resourceGatewayAssociationProposalRead(ctx context.Context, d *schema.Resou
 
 func resourceGatewayAssociationProposalDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Direct Connect Gateway Association Proposal: %s", d.Id())
 	_, err := conn.DeleteDirectConnectGatewayAssociationProposalWithContext(ctx, &directconnect.DeleteDirectConnectGatewayAssociationProposalInput{

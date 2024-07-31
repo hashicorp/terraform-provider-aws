@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift
 
 import (
@@ -12,41 +15,43 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceSubnetGroup() *schema.Resource {
+// @SDKDataSource("aws_redshift_subnet_group", name="Subnet Group")
+// @Tags
+func dataSourceSubnetGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSubnetGroupRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"subnet_ids": {
+			names.AttrSubnetIDs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func dataSourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	subnetgroup, err := FindSubnetGroupByName(ctx, conn, d.Get("name").(string))
+	subnetgroup, err := findSubnetGroupByName(ctx, conn, d.Get(names.AttrName).(string))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Redshift Subnet Group (%s): %s", d.Id(), err)
@@ -60,15 +65,12 @@ func dataSourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("subnetgroup:%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
-	d.Set("description", subnetgroup.Description)
-	d.Set("name", subnetgroup.ClusterSubnetGroupName)
-	d.Set("subnet_ids", subnetIdsToSlice(subnetgroup.Subnets))
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrDescription, subnetgroup.Description)
+	d.Set(names.AttrName, subnetgroup.ClusterSubnetGroupName)
+	d.Set(names.AttrSubnetIDs, subnetIdsToSlice(subnetgroup.Subnets))
 
-	//lintignore:AWSR002
-	if err := d.Set("tags", KeyValueTags(subnetgroup.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOut(ctx, subnetgroup.Tags)
 
 	return diags
 }

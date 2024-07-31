@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package storagegateway
 
 import (
@@ -13,20 +16,24 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceTapePool() *schema.Resource {
+// @SDKResource("aws_storagegateway_tape_pool", name="Tape Pool")
+// @Tags(identifierAttribute="arn")
+func resourceTapePool() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTapePoolCreate,
 		ReadWithoutTimeout:   resourceTapePoolRead,
 		UpdateWithoutTimeout: resourceTapePoolUpdate,
 		DeleteWithoutTimeout: resourceTapePoolDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -36,7 +43,7 @@ func ResourceTapePool() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
-			"storage_class": {
+			names.AttrStorageClass: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -56,8 +63,8 @@ func ResourceTapePool() *schema.Resource {
 				Default:      0,
 				ValidateFunc: validation.IntBetween(0, 36500),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -66,16 +73,14 @@ func ResourceTapePool() *schema.Resource {
 
 func resourceTapePoolCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
 	input := &storagegateway.CreateTapePoolInput{
 		PoolName:                aws.String(d.Get("pool_name").(string)),
-		StorageClass:            aws.String(d.Get("storage_class").(string)),
+		StorageClass:            aws.String(d.Get(names.AttrStorageClass).(string)),
 		RetentionLockType:       aws.String(d.Get("retention_lock_type").(string)),
 		RetentionLockTimeInDays: aws.Int64(int64(d.Get("retention_lock_time_in_days").(int))),
-		Tags:                    Tags(tags.IgnoreAWS()),
+		Tags:                    getTagsIn(ctx),
 	}
 
 	log.Printf("[DEBUG] Creating Storage Gateway Tape Pool: %s", input)
@@ -89,25 +94,9 @@ func resourceTapePoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceTapePoolRead(ctx, d, meta)...)
 }
 
-func resourceTapePoolUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn()
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
-		}
-	}
-
-	return append(diags, resourceTapePoolRead(ctx, d, meta)...)
-}
-
 func resourceTapePoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
 	input := &storagegateway.ListTapePoolsInput{
 		PoolARNs: []*string{aws.String(d.Id())},
@@ -129,33 +118,26 @@ func resourceTapePoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 	pool := output.PoolInfos[0]
 
 	poolArn := aws.StringValue(pool.PoolARN)
-	d.Set("arn", poolArn)
+	d.Set(names.AttrARN, poolArn)
 	d.Set("pool_name", pool.PoolName)
 	d.Set("retention_lock_time_in_days", pool.RetentionLockTimeInDays)
 	d.Set("retention_lock_type", pool.RetentionLockType)
-	d.Set("storage_class", pool.StorageClass)
-
-	tags, err := ListTags(ctx, conn, poolArn)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for resource (%s): %s", poolArn, err)
-	}
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	d.Set(names.AttrStorageClass, pool.StorageClass)
 
 	return diags
 }
 
+func resourceTapePoolUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	// Tags only.
+
+	return append(diags, resourceTapePoolRead(ctx, d, meta)...)
+}
+
 func resourceTapePoolDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn()
+	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
 	input := &storagegateway.DeleteTapePoolInput{
 		PoolARN: aws.String(d.Id()),

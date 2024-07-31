@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package auditmanager
 
 import (
@@ -15,20 +18,17 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkv2resource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const reportCompletionTimeout = 5 * time.Minute
 
-func init() {
-	_sp.registerFrameworkResourceFactory(newResourceAssessmentReport)
-}
-
+// @FrameworkResource
 func newResourceAssessmentReport(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceAssessmentReport{}, nil
 }
@@ -57,20 +57,20 @@ func (r *resourceAssessmentReport) Schema(ctx context.Context, req resource.Sche
 			"author": schema.StringAttribute{
 				Computed: true,
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"id": framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			names.AttrID: framework.IDAttribute(),
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"status": schema.StringAttribute{
+			names.AttrStatus: schema.StringAttribute{
 				Computed: true,
 			},
 		},
@@ -78,7 +78,7 @@ func (r *resourceAssessmentReport) Schema(ctx context.Context, req resource.Sche
 }
 
 func (r *resourceAssessmentReport) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().AuditManagerClient()
+	conn := r.Meta().AuditManagerClient(ctx)
 
 	var plan resourceAssessmentReportData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -116,7 +116,7 @@ func (r *resourceAssessmentReport) Create(ctx context.Context, req resource.Crea
 }
 
 func (r *resourceAssessmentReport) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().AuditManagerClient()
+	conn := r.Meta().AuditManagerClient(ctx)
 
 	var state resourceAssessmentReportData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -150,7 +150,7 @@ func (r *resourceAssessmentReport) Update(ctx context.Context, req resource.Upda
 }
 
 func (r *resourceAssessmentReport) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().AuditManagerClient()
+	conn := r.Meta().AuditManagerClient(ctx)
 
 	var state resourceAssessmentReportData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -163,7 +163,7 @@ func (r *resourceAssessmentReport) Delete(ctx context.Context, req resource.Dele
 	// Example:
 	//   ValidationException: The assessment report is currently being generated and can’t be
 	//   deleted. You can only delete assessment reports that are completed or failed
-	err := tfresource.Retry(ctx, reportCompletionTimeout, func() *sdkv2resource.RetryError {
+	err := tfresource.Retry(ctx, reportCompletionTimeout, func() *retry.RetryError {
 		_, err := conn.DeleteAssessmentReport(ctx, &auditmanager.DeleteAssessmentReportInput{
 			AssessmentId:       aws.String(state.AssessmentID.ValueString()),
 			AssessmentReportId: aws.String(state.ID.ValueString()),
@@ -171,9 +171,9 @@ func (r *resourceAssessmentReport) Delete(ctx context.Context, req resource.Dele
 		if err != nil {
 			var ve *awstypes.ValidationException
 			if errors.As(err, &ve) {
-				return sdkv2resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
-			return sdkv2resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
@@ -190,7 +190,7 @@ func (r *resourceAssessmentReport) Delete(ctx context.Context, req resource.Dele
 }
 
 func (r *resourceAssessmentReport) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func FindAssessmentReportByID(ctx context.Context, conn *auditmanager.Client, id string) (*awstypes.AssessmentReportMetadata, error) {
@@ -212,7 +212,7 @@ func FindAssessmentReportByID(ctx context.Context, conn *auditmanager.Client, id
 		}
 	}
 
-	return nil, &sdkv2resource.NotFoundError{
+	return nil, &retry.NotFoundError{
 		LastRequest: in,
 	}
 }

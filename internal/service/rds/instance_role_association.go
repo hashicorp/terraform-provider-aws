@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
@@ -11,12 +14,13 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // Constants not currently provided by the AWS Go SDK
@@ -30,6 +34,7 @@ const (
 	dbInstanceRoleAssociationDeletedTimeout = 10 * time.Minute
 )
 
+// @SDKResource("aws_db_instance_role_association")
 func ResourceInstanceRoleAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceRoleAssociationCreate,
@@ -51,7 +56,7 @@ func ResourceInstanceRoleAssociation() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -63,10 +68,10 @@ func ResourceInstanceRoleAssociation() *schema.Resource {
 
 func resourceInstanceRoleAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	dbInstanceIdentifier := d.Get("db_instance_identifier").(string)
-	roleArn := d.Get("role_arn").(string)
+	roleArn := d.Get(names.AttrRoleARN).(string)
 
 	input := &rds.AddRoleToDBInstanceInput{
 		DBInstanceIdentifier: aws.String(dbInstanceIdentifier),
@@ -74,14 +79,14 @@ func resourceInstanceRoleAssociationCreate(ctx context.Context, d *schema.Resour
 		RoleArn:              aws.String(roleArn),
 	}
 
-	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		var err error
 		_, err = conn.AddRoleToDBInstanceWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
@@ -103,10 +108,9 @@ func resourceInstanceRoleAssociationCreate(ctx context.Context, d *schema.Resour
 
 func resourceInstanceRoleAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	dbInstanceIdentifier, roleArn, err := InstanceRoleAssociationDecodeID(d.Id())
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading resource ID: %s", err)
 	}
@@ -125,17 +129,16 @@ func resourceInstanceRoleAssociationRead(ctx context.Context, d *schema.Resource
 
 	d.Set("db_instance_identifier", dbInstanceIdentifier)
 	d.Set("feature_name", dbInstanceRole.FeatureName)
-	d.Set("role_arn", dbInstanceRole.RoleArn)
+	d.Set(names.AttrRoleARN, dbInstanceRole.RoleArn)
 
 	return diags
 }
 
 func resourceInstanceRoleAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	dbInstanceIdentifier, roleArn, err := InstanceRoleAssociationDecodeID(d.Id())
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading resource ID: %s", err)
 	}
@@ -194,7 +197,7 @@ func DescribeDBInstanceRole(ctx context.Context, conn *rds.RDS, dbInstanceIdenti
 }
 
 func waitForDBInstanceRoleAssociation(ctx context.Context, conn *rds.RDS, dbInstanceIdentifier, roleArn string) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{dbInstanceRoleStatusPending},
 		Target:  []string{dbInstanceRoleStatusActive},
 		Refresh: statusDBInstanceRoleAssociation(ctx, conn, dbInstanceIdentifier, roleArn),
@@ -208,7 +211,7 @@ func waitForDBInstanceRoleAssociation(ctx context.Context, conn *rds.RDS, dbInst
 }
 
 func WaitForDBInstanceRoleDisassociation(ctx context.Context, conn *rds.RDS, dbInstanceIdentifier, roleArn string) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			dbInstanceRoleStatusActive,
 			dbInstanceRoleStatusPending,
@@ -224,7 +227,7 @@ func WaitForDBInstanceRoleDisassociation(ctx context.Context, conn *rds.RDS, dbI
 	return err
 }
 
-func statusDBInstanceRoleAssociation(ctx context.Context, conn *rds.RDS, dbInstanceIdentifier, roleArn string) resource.StateRefreshFunc {
+func statusDBInstanceRoleAssociation(ctx context.Context, conn *rds.RDS, dbInstanceIdentifier, roleArn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		dbInstanceRole, err := DescribeDBInstanceRole(ctx, conn, dbInstanceIdentifier, roleArn)
 

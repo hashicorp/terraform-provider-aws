@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53recoverycontrolconfig
 
 import (
@@ -8,14 +11,16 @@ import (
 	r53rcc "github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_route53recoverycontrolconfig_safety_rule")
 func ResourceSafetyRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSafetyRuleCreate,
@@ -27,7 +32,7 @@ func ResourceSafetyRule() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -60,7 +65,7 @@ func ResourceSafetyRule() *schema.Resource {
 					"gating_controls",
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -79,7 +84,7 @@ func ResourceSafetyRule() *schema.Resource {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(r53rcc.RuleType_Values(), true),
@@ -87,7 +92,7 @@ func ResourceSafetyRule() *schema.Resource {
 					},
 				},
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -125,7 +130,7 @@ func resourceSafetyRuleCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceSafetyRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn()
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn(ctx)
 
 	input := &r53rcc.DescribeSafetyRuleInput{
 		SafetyRuleArn: aws.String(d.Id()),
@@ -149,10 +154,10 @@ func resourceSafetyRuleRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	if output.AssertionRule != nil {
 		result := output.AssertionRule
-		d.Set("arn", result.SafetyRuleArn)
+		d.Set(names.AttrARN, result.SafetyRuleArn)
 		d.Set("control_panel_arn", result.ControlPanelArn)
-		d.Set("name", result.Name)
-		d.Set("status", result.Status)
+		d.Set(names.AttrName, result.Name)
+		d.Set(names.AttrStatus, result.Status)
 		d.Set("wait_period_ms", result.WaitPeriodMs)
 
 		if err := d.Set("asserted_controls", flex.FlattenStringList(result.AssertedControls)); err != nil {
@@ -170,10 +175,10 @@ func resourceSafetyRuleRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	if output.GatingRule != nil {
 		result := output.GatingRule
-		d.Set("arn", result.SafetyRuleArn)
+		d.Set(names.AttrARN, result.SafetyRuleArn)
 		d.Set("control_panel_arn", result.ControlPanelArn)
-		d.Set("name", result.Name)
-		d.Set("status", result.Status)
+		d.Set(names.AttrName, result.Name)
+		d.Set(names.AttrStatus, result.Status)
 		d.Set("wait_period_ms", result.WaitPeriodMs)
 
 		if err := d.Set("gating_controls", flex.FlattenStringList(result.GatingControls)); err != nil {
@@ -209,7 +214,7 @@ func resourceSafetyRuleUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceSafetyRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn()
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn(ctx)
 
 	log.Printf("[INFO] Deleting Route53 Recovery Control Config Safety Rule: %s", d.Id())
 	_, err := conn.DeleteSafetyRuleWithContext(ctx, &r53rcc.DeleteSafetyRuleInput{
@@ -239,10 +244,10 @@ func resourceSafetyRuleDelete(ctx context.Context, d *schema.ResourceData, meta 
 
 func createAssertionRule(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn()
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn(ctx)
 
 	assertionRule := &r53rcc.NewAssertionRule{
-		Name:             aws.String(d.Get("name").(string)),
+		Name:             aws.String(d.Get(names.AttrName).(string)),
 		ControlPanelArn:  aws.String(d.Get("control_panel_arn").(string)),
 		WaitPeriodMs:     aws.Int64(int64(d.Get("wait_period_ms").(int))),
 		RuleConfig:       testAccSafetyRuleConfig_expandRule(d.Get("rule_config").([]interface{})[0].(map[string]interface{})),
@@ -250,7 +255,7 @@ func createAssertionRule(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	input := &r53rcc.CreateSafetyRuleInput{
-		ClientToken:   aws.String(resource.UniqueId()),
+		ClientToken:   aws.String(id.UniqueId()),
 		AssertionRule: assertionRule,
 	}
 
@@ -276,10 +281,10 @@ func createAssertionRule(ctx context.Context, d *schema.ResourceData, meta inter
 
 func createGatingRule(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn()
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn(ctx)
 
 	gatingRule := &r53rcc.NewGatingRule{
-		Name:            aws.String(d.Get("name").(string)),
+		Name:            aws.String(d.Get(names.AttrName).(string)),
 		ControlPanelArn: aws.String(d.Get("control_panel_arn").(string)),
 		WaitPeriodMs:    aws.Int64(int64(d.Get("wait_period_ms").(int))),
 		RuleConfig:      testAccSafetyRuleConfig_expandRule(d.Get("rule_config").([]interface{})[0].(map[string]interface{})),
@@ -288,7 +293,7 @@ func createGatingRule(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 
 	input := &r53rcc.CreateSafetyRuleInput{
-		ClientToken: aws.String(resource.UniqueId()),
+		ClientToken: aws.String(id.UniqueId()),
 		GatingRule:  gatingRule,
 	}
 
@@ -314,14 +319,14 @@ func createGatingRule(ctx context.Context, d *schema.ResourceData, meta interfac
 
 func updateAssertionRule(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn()
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn(ctx)
 
 	assertionRuleUpdate := &r53rcc.AssertionRuleUpdate{
-		SafetyRuleArn: aws.String(d.Get("arn").(string)),
+		SafetyRuleArn: aws.String(d.Get(names.AttrARN).(string)),
 	}
 
-	if d.HasChange("name") {
-		assertionRuleUpdate.Name = aws.String(d.Get("name").(string))
+	if d.HasChange(names.AttrName) {
+		assertionRuleUpdate.Name = aws.String(d.Get(names.AttrName).(string))
 	}
 
 	if d.HasChange("wait_period_ms") {
@@ -343,14 +348,14 @@ func updateAssertionRule(ctx context.Context, d *schema.ResourceData, meta inter
 
 func updateGatingRule(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn()
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn(ctx)
 
 	gatingRuleUpdate := &r53rcc.GatingRuleUpdate{
-		SafetyRuleArn: aws.String(d.Get("arn").(string)),
+		SafetyRuleArn: aws.String(d.Get(names.AttrARN).(string)),
 	}
 
-	if d.HasChange("name") {
-		gatingRuleUpdate.Name = aws.String(d.Get("name").(string))
+	if d.HasChange(names.AttrName) {
+		gatingRuleUpdate.Name = aws.String(d.Get(names.AttrName).(string))
 	}
 
 	if d.HasChange("wait_period_ms") {
@@ -385,7 +390,7 @@ func testAccSafetyRuleConfig_expandRule(tfMap map[string]interface{}) *r53rcc.Ru
 		apiObject.Threshold = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		apiObject.Type = aws.String(v)
 	}
 	return apiObject
@@ -407,7 +412,7 @@ func flattenRuleConfig(apiObject *r53rcc.RuleConfig) map[string]interface{} {
 	}
 
 	if v := apiObject.Type; v != nil {
-		tfMap["type"] = aws.StringValue(v)
+		tfMap[names.AttrType] = aws.StringValue(v)
 	}
 
 	return tfMap

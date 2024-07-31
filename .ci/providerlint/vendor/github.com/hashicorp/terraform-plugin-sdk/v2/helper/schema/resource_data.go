@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package schema
 
 import (
@@ -588,8 +591,12 @@ func (d *ResourceData) GetProviderMeta(dst interface{}) error {
 // GetRawConfig is considered experimental and advanced functionality, and
 // familiarity with the Terraform protocol is suggested when using it.
 func (d *ResourceData) GetRawConfig() cty.Value {
+	// These methods follow the field readers preference order.
 	if d.diff != nil && !d.diff.RawConfig.IsNull() {
 		return d.diff.RawConfig
+	}
+	if d.config != nil && !d.config.CtyValue.IsNull() {
+		return d.config.CtyValue
 	}
 	if d.state != nil && !d.state.RawConfig.IsNull() {
 		return d.state.RawConfig
@@ -604,6 +611,7 @@ func (d *ResourceData) GetRawConfig() cty.Value {
 // GetRawState is considered experimental and advanced functionality, and
 // familiarity with the Terraform protocol is suggested when using it.
 func (d *ResourceData) GetRawState() cty.Value {
+	// These methods follow the field readers preference order.
 	if d.diff != nil && !d.diff.RawState.IsNull() {
 		return d.diff.RawState
 	}
@@ -620,6 +628,7 @@ func (d *ResourceData) GetRawState() cty.Value {
 // GetRawPlan is considered experimental and advanced functionality, and
 // familiarity with the Terraform protocol is suggested when using it.
 func (d *ResourceData) GetRawPlan() cty.Value {
+	// These methods follow the field readers preference order.
 	if d.diff != nil && !d.diff.RawPlan.IsNull() {
 		return d.diff.RawPlan
 	}

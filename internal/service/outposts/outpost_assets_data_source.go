@@ -1,9 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package outposts
 
 import (
 	"context"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/outposts"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -13,14 +16,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKDataSource("aws_outposts_assets")
 func DataSourceOutpostAssets() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: DataSourceOutpostAssetsRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -37,7 +42,7 @@ func DataSourceOutpostAssets() *schema.Resource {
 					Type: schema.TypeString,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 50),
-						validation.StringMatch(regexp.MustCompile(`^[A-Za-z0-9-]*$`), "must match [a-zA-Z0-9-]"),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]*$`), "must match [0-9A-Za-z-]"),
 					),
 				},
 			},
@@ -58,8 +63,8 @@ func DataSourceOutpostAssets() *schema.Resource {
 
 func DataSourceOutpostAssetsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OutpostsConn()
-	outpost_id := aws.String(d.Get("arn").(string))
+	conn := meta.(*conns.AWSClient).OutpostsConn(ctx)
+	outpost_id := aws.String(d.Get(names.AttrARN).(string))
 
 	input := &outposts.ListAssetsInput{
 		OutpostIdentifier: outpost_id,

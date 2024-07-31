@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker
 
 import (
@@ -11,8 +14,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_sagemaker_image_version")
 func ResourceImageVersion() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceImageVersionCreate,
@@ -23,7 +28,7 @@ func ResourceImageVersion() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -45,7 +50,7 @@ func ResourceImageVersion() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"version": {
+			names.AttrVersion: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -55,7 +60,7 @@ func ResourceImageVersion() *schema.Resource {
 
 func resourceImageVersionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	name := d.Get("image_name").(string)
 	input := &sagemaker.CreateImageVersionInput{
@@ -79,7 +84,7 @@ func resourceImageVersionCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceImageVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	image, err := FindImageVersionByName(ctx, conn, d.Id())
 	if err != nil {
@@ -91,11 +96,11 @@ func resourceImageVersionRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading SageMaker Image Version (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", image.ImageVersionArn)
+	d.Set(names.AttrARN, image.ImageVersionArn)
 	d.Set("base_image", image.BaseImage)
 	d.Set("image_arn", image.ImageArn)
 	d.Set("container_image", image.ContainerImage)
-	d.Set("version", image.Version)
+	d.Set(names.AttrVersion, image.Version)
 	d.Set("image_name", d.Id())
 
 	return diags
@@ -103,11 +108,11 @@ func resourceImageVersionRead(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceImageVersionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	input := &sagemaker.DeleteImageVersionInput{
 		ImageName: aws.String(d.Id()),
-		Version:   aws.Int64(int64(d.Get("version").(int))),
+		Version:   aws.Int64(int64(d.Get(names.AttrVersion).(int))),
 	}
 
 	if _, err := conn.DeleteImageVersionWithContext(ctx, input); err != nil {

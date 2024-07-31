@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package storagegateway
 
 import (
@@ -6,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -15,7 +18,7 @@ const (
 	storediSCSIVolumeStatusNotFound = "NotFound"
 )
 
-func statusGateway(ctx context.Context, conn *storagegateway.StorageGateway, gatewayARN string) resource.StateRefreshFunc {
+func statusGateway(ctx context.Context, conn *storagegateway.StorageGateway, gatewayARN string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &storagegateway.DescribeGatewayInformationInput{
 			GatewayARN: aws.String(gatewayARN),
@@ -35,7 +38,7 @@ func statusGateway(ctx context.Context, conn *storagegateway.StorageGateway, gat
 	}
 }
 
-func statusGatewayJoinDomain(ctx context.Context, conn *storagegateway.StorageGateway, gatewayARN string) resource.StateRefreshFunc {
+func statusGatewayJoinDomain(ctx context.Context, conn *storagegateway.StorageGateway, gatewayARN string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &storagegateway.DescribeSMBSettingsInput{
 			GatewayARN: aws.String(gatewayARN),
@@ -56,7 +59,7 @@ func statusGatewayJoinDomain(ctx context.Context, conn *storagegateway.StorageGa
 }
 
 // statusStorediSCSIVolume fetches the Volume and its Status
-func statusStorediSCSIVolume(ctx context.Context, conn *storagegateway.StorageGateway, volumeARN string) resource.StateRefreshFunc {
+func statusStorediSCSIVolume(ctx context.Context, conn *storagegateway.StorageGateway, volumeARN string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &storagegateway.DescribeStorediSCSIVolumesInput{
 			VolumeARNs: []*string{aws.String(volumeARN)},
@@ -81,7 +84,7 @@ func statusStorediSCSIVolume(ctx context.Context, conn *storagegateway.StorageGa
 	}
 }
 
-func statusNFSFileShare(ctx context.Context, conn *storagegateway.StorageGateway, arn string) resource.StateRefreshFunc {
+func statusNFSFileShare(ctx context.Context, conn *storagegateway.StorageGateway, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindNFSFileShareByARN(ctx, conn, arn)
 
@@ -97,7 +100,7 @@ func statusNFSFileShare(ctx context.Context, conn *storagegateway.StorageGateway
 	}
 }
 
-func statusSMBFileShare(ctx context.Context, conn *storagegateway.StorageGateway, arn string) resource.StateRefreshFunc {
+func statusSMBFileShare(ctx context.Context, conn *storagegateway.StorageGateway, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindSMBFileShareByARN(ctx, conn, arn)
 
@@ -113,7 +116,7 @@ func statusSMBFileShare(ctx context.Context, conn *storagegateway.StorageGateway
 	}
 }
 
-func statusFileSystemAssociation(ctx context.Context, conn *storagegateway.StorageGateway, arn string) resource.StateRefreshFunc {
+func statusFileSystemAssociation(ctx context.Context, conn *storagegateway.StorageGateway, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindFileSystemAssociationByARN(ctx, conn, arn)
 

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package batch
 
 import (
@@ -9,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
 	"github.com/aws/aws-sdk-go/service/batch"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
 type containerProperties batch.ContainerProperties
@@ -23,6 +27,14 @@ func (cp *containerProperties) Reduce() error {
 	if len(cp.Command) == 0 {
 		cp.Command = nil
 	}
+
+	// Remove environment variables with empty values
+	cp.Environment = tfslices.Filter(cp.Environment, func(kvp *batch.KeyValuePair) bool {
+		if kvp == nil {
+			return false
+		}
+		return aws.StringValue(kvp.Value) != ""
+	})
 
 	// Prevent difference of API response that adds an empty array when not configured during the request
 	if len(cp.Environment) == 0 {

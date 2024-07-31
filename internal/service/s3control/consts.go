@@ -1,7 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3control
 
-// AsyncOperation.RequestStatus values.
+import (
+	"time"
+)
+
 const (
-	RequestStatusFailed    = "FAILED"
-	RequestStatusSucceeded = "SUCCEEDED"
+	propagationTimeout = 2 * time.Minute
 )

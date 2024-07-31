@@ -1,15 +1,17 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package comprehend
 
 import (
-	"regexp"
-
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 const (
 	modelIdentifierMaxLen       = 63 // Documentation says 256, Console says 63
-	modelIdentifierPrefixMaxLen = modelIdentifierMaxLen - resource.UniqueIDSuffixLength
+	modelIdentifierPrefixMaxLen = modelIdentifierMaxLen - id.UniqueIDSuffixLength
 )
 
 var validModelName = validIdentifier
@@ -29,4 +31,4 @@ var validIdentifierPrefix = validation.All(
 	validIdentifierPattern,
 )
 
-var validIdentifierPattern = validation.StringMatch(regexp.MustCompile(`^[[:alnum:]-]+$`), "must contain A-Z, a-z, 0-9, and hypen (-)")
+var validIdentifierPattern = validation.StringMatch(regexache.MustCompile(`^[[:alnum:]-]+$`), "must contain A-Z, a-z, 0-9, and hypen (-)")

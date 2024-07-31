@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package location
 
 import (
@@ -15,8 +18,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_location_tracker", name="Route Calculator")
+// @Tags(identifierAttribute="tracker_arn")
 func ResourceTracker() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTrackerCreate,
@@ -27,16 +33,16 @@ func ResourceTracker() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
-			"create_time": {
+			names.AttrCreateTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1000),
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -48,8 +54,8 @@ func ResourceTracker() *schema.Resource {
 				Default:      locationservice.PositionFilteringTimeBased,
 				ValidateFunc: validation.StringInSlice(locationservice.PositionFiltering_Values(), false),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"tracker_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -70,26 +76,22 @@ func ResourceTracker() *schema.Resource {
 
 func resourceTrackerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LocationConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).LocationConn(ctx)
 
-	input := &locationservice.CreateTrackerInput{}
+	input := &locationservice.CreateTrackerInput{
+		Tags: getTagsIn(ctx),
+	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("kms_key_id"); ok {
+	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("position_filtering"); ok {
 		input.PositionFiltering = aws.String(v.(string))
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	if v, ok := d.GetOk("tracker_name"); ok {
@@ -113,9 +115,7 @@ func resourceTrackerCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceTrackerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LocationConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).LocationConn(ctx)
 
 	input := &locationservice.DescribeTrackerInput{
 		TrackerName: aws.String(d.Id()),
@@ -137,20 +137,12 @@ func resourceTrackerRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "getting Location Service Map (%s): empty response", d.Id())
 	}
 
-	d.Set("create_time", aws.TimeValue(output.CreateTime).Format(time.RFC3339))
-	d.Set("description", output.Description)
-	d.Set("kms_key_id", output.KmsKeyId)
+	d.Set(names.AttrCreateTime, aws.TimeValue(output.CreateTime).Format(time.RFC3339))
+	d.Set(names.AttrDescription, output.Description)
+	d.Set(names.AttrKMSKeyID, output.KmsKeyId)
 	d.Set("position_filtering", output.PositionFiltering)
 
-	tags := KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	setTagsOut(ctx, output.Tags)
 
 	d.Set("tracker_arn", output.TrackerArn)
 	d.Set("tracker_name", output.TrackerName)
@@ -161,14 +153,14 @@ func resourceTrackerRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceTrackerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LocationConn()
+	conn := meta.(*conns.AWSClient).LocationConn(ctx)
 
-	if d.HasChanges("description", "position_filtering") {
+	if d.HasChanges(names.AttrDescription, "position_filtering") {
 		input := &locationservice.UpdateTrackerInput{
 			TrackerName: aws.String(d.Id()),
 		}
 
-		if v, ok := d.GetOk("description"); ok {
+		if v, ok := d.GetOk(names.AttrDescription); ok {
 			input.Description = aws.String(v.(string))
 		}
 
@@ -183,20 +175,12 @@ func resourceTrackerUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("tracker_arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags for Location Service Tracker (%s): %s", d.Id(), err)
-		}
-	}
-
 	return append(diags, resourceTrackerRead(ctx, d, meta)...)
 }
 
 func resourceTrackerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LocationConn()
+	conn := meta.(*conns.AWSClient).LocationConn(ctx)
 
 	input := &locationservice.DeleteTrackerInput{
 		TrackerName: aws.String(d.Id()),

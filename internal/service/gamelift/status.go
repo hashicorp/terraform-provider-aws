@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package gamelift
 
 import (
@@ -5,11 +8,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/gamelift"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusBuild(ctx context.Context, conn *gamelift.GameLift, id string) resource.StateRefreshFunc {
+func statusBuild(ctx context.Context, conn *gamelift.GameLift, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindBuildByID(ctx, conn, id)
 
@@ -25,7 +28,7 @@ func statusBuild(ctx context.Context, conn *gamelift.GameLift, id string) resour
 	}
 }
 
-func statusFleet(ctx context.Context, conn *gamelift.GameLift, id string) resource.StateRefreshFunc {
+func statusFleet(ctx context.Context, conn *gamelift.GameLift, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindFleetByID(ctx, conn, id)
 
@@ -41,7 +44,7 @@ func statusFleet(ctx context.Context, conn *gamelift.GameLift, id string) resour
 	}
 }
 
-func statusGameServerGroup(ctx context.Context, conn *gamelift.GameLift, name string) resource.StateRefreshFunc {
+func statusGameServerGroup(ctx context.Context, conn *gamelift.GameLift, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindGameServerGroupByName(ctx, conn, name)
 

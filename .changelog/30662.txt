@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_cognito_user_pool_client: Allow removing `token_validity_units`
+```
+
+```release-note:bug
+resource/aws_cognito_managed_user_pool_client: Allow removing `token_validity_units`
+```

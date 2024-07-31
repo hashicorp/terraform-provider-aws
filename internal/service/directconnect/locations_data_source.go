@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package directconnect
 
 import (
@@ -11,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_dx_locations")
 func DataSourceLocations() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLocationsRead,
@@ -27,7 +31,7 @@ func DataSourceLocations() *schema.Resource {
 
 func dataSourceLocationsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	locations, err := FindLocations(ctx, conn, &directconnect.DescribeLocationsInput{})
 

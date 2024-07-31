@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package guardduty
 
 import (
@@ -11,14 +14,16 @@ import (
 	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_guardduty_member")
 func ResourceMember() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMemberCreate,
@@ -31,7 +36,7 @@ func ResourceMember() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"account_id": {
+			names.AttrAccountID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -42,7 +47,7 @@ func ResourceMember() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"email": {
+			names.AttrEmail: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -75,14 +80,14 @@ func ResourceMember() *schema.Resource {
 
 func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
-	accountID := d.Get("account_id").(string)
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
+	accountID := d.Get(names.AttrAccountID).(string)
 	detectorID := d.Get("detector_id").(string)
 
 	input := guardduty.CreateMembersInput{
 		AccountDetails: []*guardduty.AccountDetail{{
 			AccountId: aws.String(accountID),
-			Email:     aws.String(d.Get("email").(string)),
+			Email:     aws.String(d.Get(names.AttrEmail).(string)),
 		}},
 		DetectorId: aws.String(detectorID),
 	}
@@ -122,7 +127,7 @@ func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	accountID, detectorID, err := DecodeMemberID(d.Id())
 	if err != nil {
@@ -152,9 +157,9 @@ func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	member := gmo.Members[0]
-	d.Set("account_id", member.AccountId)
+	d.Set(names.AttrAccountID, member.AccountId)
 	d.Set("detector_id", detectorID)
-	d.Set("email", member.Email)
+	d.Set(names.AttrEmail, member.Email)
 
 	status := aws.StringValue(member.RelationshipStatus)
 	d.Set("relationship_status", status)
@@ -170,7 +175,7 @@ func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceMemberUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	accountID, detectorID, err := DecodeMemberID(d.Id())
 	if err != nil {
@@ -219,7 +224,7 @@ func resourceMemberUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceMemberDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	accountID, detectorID, err := DecodeMemberID(d.Id())
 	if err != nil {
@@ -247,21 +252,21 @@ func inviteMemberWaiter(ctx context.Context, accountID, detectorID string, timeo
 
 	// wait until e-mail verification finishes
 	var out *guardduty.GetMembersOutput
-	err := resource.RetryContext(ctx, timeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, timeout, func() *retry.RetryError {
 		log.Printf("[DEBUG] Reading GuardDuty Member: %s", input)
 		var err error
 		out, err = conn.GetMembersWithContext(ctx, &input)
 
 		if err != nil {
-			return resource.NonRetryableError(fmt.Errorf("error reading GuardDuty Member %q: %s", accountID, err))
+			return retry.NonRetryableError(fmt.Errorf("reading GuardDuty Member %q: %s", accountID, err))
 		}
 
 		retryable, err := memberInvited(out, accountID)
 		if err != nil {
 			if retryable {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -270,20 +275,20 @@ func inviteMemberWaiter(ctx context.Context, accountID, detectorID string, timeo
 		out, err = conn.GetMembersWithContext(ctx, &input)
 
 		if err != nil {
-			return fmt.Errorf("Error reading GuardDuty member: %w", err)
+			return fmt.Errorf("reading GuardDuty member: %w", err)
 		}
 		_, err = memberInvited(out, accountID)
 		return err
 	}
 	if err != nil {
-		return fmt.Errorf("Error waiting for GuardDuty email verification: %w", err)
+		return fmt.Errorf("waiting for GuardDuty email verification: %w", err)
 	}
 	return nil
 }
 
 func memberInvited(out *guardduty.GetMembersOutput, accountID string) (bool, error) {
 	if out == nil || len(out.Members) == 0 {
-		return true, fmt.Errorf("error reading GuardDuty Member %q: member missing from response", accountID)
+		return true, fmt.Errorf("reading GuardDuty Member %q: member missing from response", accountID)
 	}
 
 	member := out.Members[0]
@@ -297,7 +302,7 @@ func memberInvited(out *guardduty.GetMembersOutput, accountID string) (bool, err
 		return true, fmt.Errorf("Expected member to be invited but was in state: %s", status)
 	}
 
-	return false, fmt.Errorf("error inviting GuardDuty Member %q: invalid status: %s", accountID, status)
+	return false, fmt.Errorf("inviting GuardDuty Member %q: invalid status: %s", accountID, status)
 }
 
 func DecodeMemberID(id string) (accountID, detectorID string, err error) {

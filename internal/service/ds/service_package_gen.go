@@ -5,78 +5,96 @@ package ds
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	directoryservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/directoryservice"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-type servicePackage struct {
-	frameworkDataSourceFactories []func(context.Context) (datasource.DataSourceWithConfigure, error)
-	frameworkResourceFactories   []func(context.Context) (resource.ResourceWithConfigure, error)
-	sdkDataSourceFactories       []struct {
-		TypeName string
-		Factory  func() *schema.Resource
+type servicePackage struct{}
+
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
+	return []*types.ServicePackageFrameworkDataSource{}
+}
+
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
+	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory: newTrustResource,
+			Name:    "Trust",
+		},
 	}
-	sdkResourceFactories []struct {
-		TypeName string
-		Factory  func() *schema.Resource
+}
+
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
+	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  dataSourceDirectory,
+			TypeName: "aws_directory_service_directory",
+			Name:     "Directory",
+		},
 	}
 }
 
-func (p *servicePackage) Configure(ctx context.Context, meta any) error {
-	return nil
-}
-
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return p.frameworkDataSourceFactories
-}
-
-func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.Context) (resource.ResourceWithConfigure, error) {
-	return p.frameworkResourceFactories
-}
-
-func (p *servicePackage) SDKDataSources(ctx context.Context) []struct {
-	TypeName string
-	Factory  func() *schema.Resource
-} {
-	return p.sdkDataSourceFactories
-}
-
-func (p *servicePackage) SDKResources(ctx context.Context) []struct {
-	TypeName string
-	Factory  func() *schema.Resource
-} {
-	return p.sdkResourceFactories
+func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  resourceConditionalForwarder,
+			TypeName: "aws_directory_service_conditional_forwarder",
+			Name:     "Conditional Forwarder",
+		},
+		{
+			Factory:  resourceDirectory,
+			TypeName: "aws_directory_service_directory",
+			Name:     "Directory",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			},
+		},
+		{
+			Factory:  resourceLogSubscription,
+			TypeName: "aws_directory_service_log_subscription",
+			Name:     "Log Subscription",
+		},
+		{
+			Factory:  resourceRadiusSettings,
+			TypeName: "aws_directory_service_radius_settings",
+			Name:     "RADIUS Settings",
+		},
+		{
+			Factory:  resourceRegion,
+			TypeName: "aws_directory_service_region",
+			Name:     "Region",
+			Tags:     &types.ServicePackageResourceTags{},
+		},
+		{
+			Factory:  resourceSharedDirectory,
+			TypeName: "aws_directory_service_shared_directory",
+			Name:     "Shared Directory",
+		},
+		{
+			Factory:  resourceSharedDirectoryAccepter,
+			TypeName: "aws_directory_service_shared_directory_accepter",
+			Name:     "Shared Directory Accepter",
+		},
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "ds"
+	return names.DS
 }
 
-func (p *servicePackage) registerFrameworkDataSourceFactory(factory func(context.Context) (datasource.DataSourceWithConfigure, error)) {
-	p.frameworkDataSourceFactories = append(p.frameworkDataSourceFactories, factory)
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*directoryservice_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+
+	return directoryservice_sdkv2.NewFromConfig(cfg,
+		directoryservice_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+	), nil
 }
 
-func (p *servicePackage) registerFrameworkResourceFactory(factory func(context.Context) (resource.ResourceWithConfigure, error)) {
-	p.frameworkResourceFactories = append(p.frameworkResourceFactories, factory)
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
 }
-
-func (p *servicePackage) registerSDKDataSourceFactory(typeName string, factory func() *schema.Resource) {
-	p.sdkDataSourceFactories = append(p.sdkDataSourceFactories, struct {
-		TypeName string
-		Factory  func() *schema.Resource
-	}{TypeName: typeName, Factory: factory})
-}
-
-func (p *servicePackage) registerSDKResourceFactory(typeName string, factory func() *schema.Resource) {
-	p.sdkResourceFactories = append(p.sdkResourceFactories, struct {
-		TypeName string
-		Factory  func() *schema.Resource
-	}{TypeName: typeName, Factory: factory})
-}
-
-var (
-	_sp                                = &servicePackage{}
-	ServicePackage intf.ServicePackage = _sp
-)

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ses_test
 
 import (
@@ -8,12 +11,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfses "github.com/hashicorp/terraform-provider-aws/internal/service/ses"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSESReceiptRuleSet_basic(t *testing.T) {
@@ -22,8 +26,8 @@ func TestAccSESReceiptRuleSet_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t); testAccPreCheckReceiptRule(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t); testAccPreCheckReceiptRule(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReceiptRuleSetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -32,7 +36,7 @@ func TestAccSESReceiptRuleSet_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReceiptRuleSetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "rule_set_name", rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "ses", fmt.Sprintf("receipt-rule-set/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "ses", fmt.Sprintf("receipt-rule-set/%s", rName)),
 				),
 			},
 			{
@@ -50,8 +54,8 @@ func TestAccSESReceiptRuleSet_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t); testAccPreCheckReceiptRule(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t); testAccPreCheckReceiptRule(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReceiptRuleSetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -69,7 +73,7 @@ func TestAccSESReceiptRuleSet_disappears(t *testing.T) {
 
 func testAccCheckReceiptRuleSetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ses_receipt_rule_set" {
@@ -108,7 +112,7 @@ func testAccCheckReceiptRuleSetExists(ctx context.Context, n string) resource.Te
 			return fmt.Errorf("SES Receipt Rule Set name not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn(ctx)
 
 		params := &ses.DescribeReceiptRuleSetInput{
 			RuleSetName: aws.String(rs.Primary.ID),

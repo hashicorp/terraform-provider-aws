@@ -10,7 +10,7 @@ description: |-
 
 ## Example Usage
 
-The following shows outputing all network interface ids in a region.
+The following shows outputting all network interface ids in a region.
 
 ```terraform
 data "aws_network_interfaces" "example" {}
@@ -65,7 +65,9 @@ which take the following arguments:
 
 * `values` - (Required) Set of values that are accepted for the given field.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - AWS Region.
 * `ids` - List of all the network interface ids found.

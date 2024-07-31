@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package servicecatalog
 
 import (
@@ -10,8 +13,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_servicecatalog_organizations_access")
 func ResourceOrganizationsAccess() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOrganizationsAccessCreate,
@@ -23,7 +28,7 @@ func ResourceOrganizationsAccess() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"enabled": {
+			names.AttrEnabled: {
 				Type:     schema.TypeBool,
 				Required: true,
 				ForceNew: true,
@@ -34,14 +39,14 @@ func ResourceOrganizationsAccess() *schema.Resource {
 
 func resourceOrganizationsAccessCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	d.SetId(meta.(*conns.AWSClient).AccountID)
 
 	// During create, if enabled = "true", then Enable Access and vice versa
 	// During delete, the opposite
 
-	if _, ok := d.GetOk("enabled"); ok {
+	if _, ok := d.GetOk(names.AttrEnabled); ok {
 		_, err := conn.EnableAWSOrganizationsAccessWithContext(ctx, &servicecatalog.EnableAWSOrganizationsAccessInput{})
 
 		if err != nil {
@@ -62,7 +67,7 @@ func resourceOrganizationsAccessCreate(ctx context.Context, d *schema.ResourceDa
 
 func resourceOrganizationsAccessRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	output, err := WaitOrganizationsAccessStable(ctx, conn, d.Timeout(schema.TimeoutRead))
 
@@ -82,22 +87,22 @@ func resourceOrganizationsAccessRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	if output == servicecatalog.AccessStatusEnabled {
-		d.Set("enabled", true)
+		d.Set(names.AttrEnabled, true)
 		return diags
 	}
 
-	d.Set("enabled", false)
+	d.Set(names.AttrEnabled, false)
 	return diags
 }
 
 func resourceOrganizationsAccessDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	// During create, if enabled = "true", then Enable Access and vice versa
 	// During delete, the opposite
 
-	if _, ok := d.GetOk("enabled"); !ok {
+	if _, ok := d.GetOk(names.AttrEnabled); !ok {
 		_, err := conn.EnableAWSOrganizationsAccessWithContext(ctx, &servicecatalog.EnableAWSOrganizationsAccessInput{})
 
 		if err != nil {

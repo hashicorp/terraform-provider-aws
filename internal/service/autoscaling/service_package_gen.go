@@ -5,78 +5,107 @@ package autoscaling
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	autoscaling_sdkv2 "github.com/aws/aws-sdk-go-v2/service/autoscaling"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-type servicePackage struct {
-	frameworkDataSourceFactories []func(context.Context) (datasource.DataSourceWithConfigure, error)
-	frameworkResourceFactories   []func(context.Context) (resource.ResourceWithConfigure, error)
-	sdkDataSourceFactories       []struct {
-		TypeName string
-		Factory  func() *schema.Resource
+type servicePackage struct{}
+
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
+	return []*types.ServicePackageFrameworkDataSource{}
+}
+
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
+	return []*types.ServicePackageFrameworkResource{}
+}
+
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
+	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  dataSourceGroup,
+			TypeName: "aws_autoscaling_group",
+			Name:     "Group",
+		},
+		{
+			Factory:  dataSourceGroups,
+			TypeName: "aws_autoscaling_groups",
+			Name:     "Groups",
+		},
+		{
+			Factory:  dataSourceLaunchConfiguration,
+			TypeName: "aws_launch_configuration",
+			Name:     "Launch Configuration",
+		},
 	}
-	sdkResourceFactories []struct {
-		TypeName string
-		Factory  func() *schema.Resource
+}
+
+func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  resourceAttachment,
+			TypeName: "aws_autoscaling_attachment",
+			Name:     "Attachment",
+		},
+		{
+			Factory:  resourceGroup,
+			TypeName: "aws_autoscaling_group",
+			Name:     "Group",
+		},
+		{
+			Factory:  resourceGroupTag,
+			TypeName: "aws_autoscaling_group_tag",
+			Name:     "Group Tag",
+		},
+		{
+			Factory:  resourceLifecycleHook,
+			TypeName: "aws_autoscaling_lifecycle_hook",
+			Name:     "Lifecycle Hook",
+		},
+		{
+			Factory:  resourceNotification,
+			TypeName: "aws_autoscaling_notification",
+			Name:     "Notification",
+		},
+		{
+			Factory:  resourcePolicy,
+			TypeName: "aws_autoscaling_policy",
+			Name:     "Policy",
+		},
+		{
+			Factory:  resourceSchedule,
+			TypeName: "aws_autoscaling_schedule",
+			Name:     "Scheduled Action",
+		},
+		{
+			Factory:  resourceTrafficSourceAttachment,
+			TypeName: "aws_autoscaling_traffic_source_attachment",
+			Name:     "Traffic Source Attachment",
+		},
+		{
+			Factory:  resourceLaunchConfiguration,
+			TypeName: "aws_launch_configuration",
+			Name:     "Launch Configuration",
+		},
 	}
-}
-
-func (p *servicePackage) Configure(ctx context.Context, meta any) error {
-	return nil
-}
-
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return p.frameworkDataSourceFactories
-}
-
-func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.Context) (resource.ResourceWithConfigure, error) {
-	return p.frameworkResourceFactories
-}
-
-func (p *servicePackage) SDKDataSources(ctx context.Context) []struct {
-	TypeName string
-	Factory  func() *schema.Resource
-} {
-	return p.sdkDataSourceFactories
-}
-
-func (p *servicePackage) SDKResources(ctx context.Context) []struct {
-	TypeName string
-	Factory  func() *schema.Resource
-} {
-	return p.sdkResourceFactories
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "autoscaling"
+	return names.AutoScaling
 }
 
-func (p *servicePackage) registerFrameworkDataSourceFactory(factory func(context.Context) (datasource.DataSourceWithConfigure, error)) {
-	p.frameworkDataSourceFactories = append(p.frameworkDataSourceFactories, factory)
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*autoscaling_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+
+	return autoscaling_sdkv2.NewFromConfig(cfg,
+		autoscaling_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+	), nil
 }
 
-func (p *servicePackage) registerFrameworkResourceFactory(factory func(context.Context) (resource.ResourceWithConfigure, error)) {
-	p.frameworkResourceFactories = append(p.frameworkResourceFactories, factory)
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
 }
-
-func (p *servicePackage) registerSDKDataSourceFactory(typeName string, factory func() *schema.Resource) {
-	p.sdkDataSourceFactories = append(p.sdkDataSourceFactories, struct {
-		TypeName string
-		Factory  func() *schema.Resource
-	}{TypeName: typeName, Factory: factory})
-}
-
-func (p *servicePackage) registerSDKResourceFactory(typeName string, factory func() *schema.Resource) {
-	p.sdkResourceFactories = append(p.sdkResourceFactories, struct {
-		TypeName string
-		Factory  func() *schema.Resource
-	}{TypeName: typeName, Factory: factory})
-}
-
-var (
-	_sp                                = &servicePackage{}
-	ServicePackage intf.ServicePackage = _sp
-)

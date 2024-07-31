@@ -1,19 +1,23 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package storagegateway_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccStorageGatewayNFSFileShare_basic(t *testing.T) {
@@ -26,8 +30,8 @@ func TestAccStorageGatewayNFSFileShare_basic(t *testing.T) {
 	iamResourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckNFSFileShareDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -35,28 +39,28 @@ func TestAccStorageGatewayNFSFileShare_basic(t *testing.T) {
 				Config: testAccNFSFileShareConfig_required(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNFSFileShareExists(ctx, resourceName, &nfsFileShare),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexp.MustCompile(`share/share-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`share/share-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "bucket_region", ""),
-					resource.TestCheckResourceAttr(resourceName, "cache_attributes.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "client_list.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cache_attributes.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "client_list.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "client_list.*", "0.0.0.0/0"),
 					resource.TestCheckResourceAttr(resourceName, "default_storage_class", "S3_STANDARD"),
 					resource.TestCheckResourceAttr(resourceName, "file_share_name", rName),
-					resource.TestMatchResourceAttr(resourceName, "fileshare_id", regexp.MustCompile(`^share-`)),
-					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", gatewayResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "guess_mime_type_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "kms_encrypted", "false"),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_arn", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "location_arn", bucketResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "nfs_file_share_defaults.#", "0"),
+					resource.TestMatchResourceAttr(resourceName, "fileshare_id", regexache.MustCompile(`^share-`)),
+					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", gatewayResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "guess_mime_type_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "kms_encrypted", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyARN, ""),
+					resource.TestCheckResourceAttrPair(resourceName, "location_arn", bucketResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "nfs_file_share_defaults.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "notification_policy", "{}"),
 					resource.TestCheckResourceAttr(resourceName, "object_acl", storagegateway.ObjectACLPrivate),
-					resource.TestMatchResourceAttr(resourceName, "path", regexp.MustCompile(`^/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "read_only", "false"),
-					resource.TestCheckResourceAttr(resourceName, "requester_pays", "false"),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", iamResourceName, "arn"),
+					resource.TestMatchResourceAttr(resourceName, names.AttrPath, regexache.MustCompile(`^/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "read_only", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "requester_pays", acctest.CtFalse),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, iamResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "squash", "RootSquash"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_dns_name", ""),
 				),
 			},
@@ -78,8 +82,8 @@ func TestAccStorageGatewayNFSFileShare_audit(t *testing.T) {
 	logResourceNameSecond := "aws_cloudwatch_log_group.test2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckNFSFileShareDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -87,7 +91,7 @@ func TestAccStorageGatewayNFSFileShare_audit(t *testing.T) {
 				Config: testAccNFSFileShareConfig_audit(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNFSFileShareExists(ctx, resourceName, &nfsFileShare),
-					resource.TestCheckResourceAttrPair(resourceName, "audit_destination_arn", logResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "audit_destination_arn", logResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -99,7 +103,7 @@ func TestAccStorageGatewayNFSFileShare_audit(t *testing.T) {
 				Config: testAccNFSFileShareConfig_auditUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNFSFileShareExists(ctx, resourceName, &nfsFileShare),
-					resource.TestCheckResourceAttrPair(resourceName, "audit_destination_arn", logResourceNameSecond, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "audit_destination_arn", logResourceNameSecond, names.AttrARN),
 				),
 			},
 		},
@@ -113,18 +117,18 @@ func TestAccStorageGatewayNFSFileShare_tags(t *testing.T) {
 	resourceName := "aws_storagegateway_nfs_file_share.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckNFSFileShareDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNFSFileShareConfig_tags1(rName, "key1", "value1"),
+				Config: testAccNFSFileShareConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNFSFileShareExists(ctx, resourceName, &nfsFileShare),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexp.MustCompile(`share/share-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`share/share-.+`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -133,22 +137,22 @@ func TestAccStorageGatewayNFSFileShare_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccNFSFileShareConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccNFSFileShareConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNFSFileShareExists(ctx, resourceName, &nfsFileShare),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexp.MustCompile(`share/share-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`share/share-.+`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccNFSFileShareConfig_tags1(rName, "key2", "value2"),
+				Config: testAccNFSFileShareConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNFSFileShareExists(ctx, resourceName, &nfsFileShare),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexp.MustCompile(`share/share-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`share/share-.+`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -162,8 +166,8 @@ func TestAccStorageGatewayNFSFileShare_fileShareName(t *testing.T) {
 	resourceName := "aws_storagegateway_nfs_file_share.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckNFSFileShareDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -197,8 +201,8 @@ func TestAccStorageGatewayNFSFileShare_clientList(t *testing.T) {
 	resourceName := "aws_storagegateway_nfs_file_share.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckNFSFileShareDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -206,7 +210,7 @@ func TestAccStorageGatewayNFSFileShare_clientList(t *testing.T) {
 				Config: testAccNFSFileShareConfig_clientListSingle(rName, "1.1.1.1/32"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNFSFileShareExists(ctx, resourceName, &nfsFileShare),
-					resource.TestCheckResourceAttr(resourceName, "client_list.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_list.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "client_list.*", "1.1.1.1/32"),
 				),
 			},
@@ -214,7 +218,7 @@ func TestAccStorageGatewayNFSFileShare_clientList(t *testing.T) {
 				Config: testAccNFSFileShareConfig_clientListMultiple(rName, "2.2.2.2/32", "3.3.3.3/32"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNFSFileShareExists(ctx, resourceName, &nfsFileShare),
-					resource.TestCheckResourceAttr(resourceName, "client_list.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "client_list.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemAttr(resourceName, "client_list.*", "2.2.2.2/32"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "client_list.*", "3.3.3.3/32"),
 				),
@@ -223,7 +227,7 @@ func TestAccStorageGatewayNFSFileShare_clientList(t *testing.T) {
 				Config: testAccNFSFileShareConfig_clientListSingle(rName, "4.4.4.4"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNFSFileShareExists(ctx, resourceName, &nfsFileShare),
-					resource.TestCheckResourceAttr(resourceName, "client_list.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_list.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "client_list.*", "4.4.4.4"),
 				),
 			},
@@ -243,8 +247,8 @@ func TestAccStorageGatewayNFSFileShare_defaultStorageClass(t *testing.T) {
 	resourceName := "aws_storagegateway_nfs_file_share.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckNFSFileShareDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -278,8 +282,8 @@ func TestAccStorageGatewayNFSFileShare_guessMIMETypeEnabled(t *testing.T) {
 	resourceName := "aws_storagegateway_nfs_file_share.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckNFSFileShareDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -287,14 +291,14 @@ func TestAccStorageGatewayNFSFileShare_guessMIMETypeEnabled(t *testing.T) {
 				Config: testAccNFSFileShareConfig_guessMIMETypeEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNFSFileShareExists(ctx, resourceName, &nfsFileShare),
-					resource.TestCheckResourceAttr(resourceName, "guess_mime_type_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "guess_mime_type_enabled", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccNFSFileShareConfig_guessMIMETypeEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNFSFileShareExists(ctx, resourceName, &nfsFileShare),
-					resource.TestCheckResourceAttr(resourceName, "guess_mime_type_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "guess_mime_type_enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -313,20 +317,20 @@ func TestAccStorageGatewayNFSFileShare_kmsEncrypted(t *testing.T) {
 	resourceName := "aws_storagegateway_nfs_file_share.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckNFSFileShareDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccNFSFileShareConfig_kmsEncrypted(rName, true),
-				ExpectError: regexp.MustCompile(`KMSKey is missing`),
+				ExpectError: regexache.MustCompile(`KMSKey is missing`),
 			},
 			{
 				Config: testAccNFSFileShareConfig_kmsEncrypted(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNFSFileShareExists(ctx, resourceName, &nfsFileShare),
-					resource.TestCheckResourceAttr(resourceName, "kms_encrypted", "false"),
+					resource.TestCheckResourceAttr(resourceName, "kms_encrypted", acctest.CtFalse),
 				),
 			},
 			{
@@ -347,8 +351,8 @@ func TestAccStorageGatewayNFSFileShare_kmsKeyARN(t *testing.T) {
 	keyUpdatedName := "aws_kms_key.test.1"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckNFSFileShareDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -356,16 +360,16 @@ func TestAccStorageGatewayNFSFileShare_kmsKeyARN(t *testing.T) {
 				Config: testAccNFSFileShareConfig_kmsKeyARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNFSFileShareExists(ctx, resourceName, &nfsFileShare),
-					resource.TestCheckResourceAttr(resourceName, "kms_encrypted", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_arn", keyName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "kms_encrypted", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, keyName, names.AttrARN),
 				),
 			},
 			{
 				Config: testAccNFSFileShareConfig_kmsKeyARNUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNFSFileShareExists(ctx, resourceName, &nfsFileShare),
-					resource.TestCheckResourceAttr(resourceName, "kms_encrypted", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_arn", keyUpdatedName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "kms_encrypted", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, keyUpdatedName, names.AttrARN),
 				),
 			},
 			{
@@ -377,7 +381,7 @@ func TestAccStorageGatewayNFSFileShare_kmsKeyARN(t *testing.T) {
 				Config: testAccNFSFileShareConfig_kmsEncrypted(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNFSFileShareExists(ctx, resourceName, &nfsFileShare),
-					resource.TestCheckResourceAttr(resourceName, "kms_encrypted", "false"),
+					resource.TestCheckResourceAttr(resourceName, "kms_encrypted", acctest.CtFalse),
 				),
 			},
 		},
@@ -391,8 +395,8 @@ func TestAccStorageGatewayNFSFileShare_nFSFileShareDefaults(t *testing.T) {
 	resourceName := "aws_storagegateway_nfs_file_share.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckNFSFileShareDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -400,22 +404,22 @@ func TestAccStorageGatewayNFSFileShare_nFSFileShareDefaults(t *testing.T) {
 				Config: testAccNFSFileShareConfig_defaults(rName, "0700", "0600", 1, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNFSFileShareExists(ctx, resourceName, &nfsFileShare),
-					resource.TestCheckResourceAttr(resourceName, "nfs_file_share_defaults.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "nfs_file_share_defaults.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "nfs_file_share_defaults.0.directory_mode", "0700"),
 					resource.TestCheckResourceAttr(resourceName, "nfs_file_share_defaults.0.file_mode", "0600"),
-					resource.TestCheckResourceAttr(resourceName, "nfs_file_share_defaults.0.group_id", "1"),
-					resource.TestCheckResourceAttr(resourceName, "nfs_file_share_defaults.0.owner_id", "2"),
+					resource.TestCheckResourceAttr(resourceName, "nfs_file_share_defaults.0.group_id", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "nfs_file_share_defaults.0.owner_id", acctest.Ct2),
 				),
 			},
 			{
 				Config: testAccNFSFileShareConfig_defaults(rName, "0770", "0660", 3, 4),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNFSFileShareExists(ctx, resourceName, &nfsFileShare),
-					resource.TestCheckResourceAttr(resourceName, "nfs_file_share_defaults.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "nfs_file_share_defaults.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "nfs_file_share_defaults.0.directory_mode", "0770"),
 					resource.TestCheckResourceAttr(resourceName, "nfs_file_share_defaults.0.file_mode", "0660"),
-					resource.TestCheckResourceAttr(resourceName, "nfs_file_share_defaults.0.group_id", "3"),
-					resource.TestCheckResourceAttr(resourceName, "nfs_file_share_defaults.0.owner_id", "4"),
+					resource.TestCheckResourceAttr(resourceName, "nfs_file_share_defaults.0.group_id", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "nfs_file_share_defaults.0.owner_id", acctest.Ct4),
 				),
 			},
 			{
@@ -434,8 +438,8 @@ func TestAccStorageGatewayNFSFileShare_objectACL(t *testing.T) {
 	resourceName := "aws_storagegateway_nfs_file_share.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckNFSFileShareDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -469,8 +473,8 @@ func TestAccStorageGatewayNFSFileShare_readOnly(t *testing.T) {
 	resourceName := "aws_storagegateway_nfs_file_share.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckNFSFileShareDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -478,14 +482,14 @@ func TestAccStorageGatewayNFSFileShare_readOnly(t *testing.T) {
 				Config: testAccNFSFileShareConfig_readOnly(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNFSFileShareExists(ctx, resourceName, &nfsFileShare),
-					resource.TestCheckResourceAttr(resourceName, "read_only", "false"),
+					resource.TestCheckResourceAttr(resourceName, "read_only", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccNFSFileShareConfig_readOnly(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNFSFileShareExists(ctx, resourceName, &nfsFileShare),
-					resource.TestCheckResourceAttr(resourceName, "read_only", "true"),
+					resource.TestCheckResourceAttr(resourceName, "read_only", acctest.CtTrue),
 				),
 			},
 			{
@@ -504,8 +508,8 @@ func TestAccStorageGatewayNFSFileShare_requesterPays(t *testing.T) {
 	resourceName := "aws_storagegateway_nfs_file_share.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckNFSFileShareDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -513,14 +517,14 @@ func TestAccStorageGatewayNFSFileShare_requesterPays(t *testing.T) {
 				Config: testAccNFSFileShareConfig_requesterPays(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNFSFileShareExists(ctx, resourceName, &nfsFileShare),
-					resource.TestCheckResourceAttr(resourceName, "requester_pays", "false"),
+					resource.TestCheckResourceAttr(resourceName, "requester_pays", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccNFSFileShareConfig_requesterPays(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNFSFileShareExists(ctx, resourceName, &nfsFileShare),
-					resource.TestCheckResourceAttr(resourceName, "requester_pays", "true"),
+					resource.TestCheckResourceAttr(resourceName, "requester_pays", acctest.CtTrue),
 				),
 			},
 			{
@@ -539,8 +543,8 @@ func TestAccStorageGatewayNFSFileShare_squash(t *testing.T) {
 	resourceName := "aws_storagegateway_nfs_file_share.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckNFSFileShareDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -574,8 +578,8 @@ func TestAccStorageGatewayNFSFileShare_notificationPolicy(t *testing.T) {
 	resourceName := "aws_storagegateway_nfs_file_share.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckNFSFileShareDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -616,8 +620,8 @@ func TestAccStorageGatewayNFSFileShare_cacheAttributes(t *testing.T) {
 	resourceName := "aws_storagegateway_nfs_file_share.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckNFSFileShareDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -625,7 +629,7 @@ func TestAccStorageGatewayNFSFileShare_cacheAttributes(t *testing.T) {
 				Config: testAccNFSFileShareConfig_cacheAttributes(rName, 300),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNFSFileShareExists(ctx, resourceName, &nfsFileShare),
-					resource.TestCheckResourceAttr(resourceName, "cache_attributes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cache_attributes.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "cache_attributes.0.cache_stale_timeout_in_seconds", "300"),
 				),
 			},
@@ -638,7 +642,7 @@ func TestAccStorageGatewayNFSFileShare_cacheAttributes(t *testing.T) {
 				Config: testAccNFSFileShareConfig_cacheAttributes(rName, 500),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNFSFileShareExists(ctx, resourceName, &nfsFileShare),
-					resource.TestCheckResourceAttr(resourceName, "cache_attributes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cache_attributes.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "cache_attributes.0.cache_stale_timeout_in_seconds", "500"),
 				),
 			},
@@ -646,7 +650,7 @@ func TestAccStorageGatewayNFSFileShare_cacheAttributes(t *testing.T) {
 				Config: testAccNFSFileShareConfig_cacheAttributes(rName, 300),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNFSFileShareExists(ctx, resourceName, &nfsFileShare),
-					resource.TestCheckResourceAttr(resourceName, "cache_attributes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cache_attributes.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "cache_attributes.0.cache_stale_timeout_in_seconds", "300"),
 				),
 			},
@@ -661,8 +665,8 @@ func TestAccStorageGatewayNFSFileShare_disappears(t *testing.T) {
 	resourceName := "aws_storagegateway_nfs_file_share.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckNFSFileShareDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -681,7 +685,7 @@ func TestAccStorageGatewayNFSFileShare_disappears(t *testing.T) {
 
 func testAccCheckNFSFileShareDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_storagegateway_nfs_file_share" {
@@ -712,7 +716,7 @@ func testAccCheckNFSFileShareExists(ctx context.Context, resourceName string, nf
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn(ctx)
 
 		output, err := tfstoragegateway.FindNFSFileShareByARN(ctx, conn, rs.Primary.ID)
 

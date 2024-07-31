@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package pinpoint
 
 import (
@@ -11,8 +14,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_pinpoint_gcm_channel")
 func ResourceGCMChannel() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGCMChannelUpsert,
@@ -24,7 +29,7 @@ func ResourceGCMChannel() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"application_id": {
+			names.AttrApplicationID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -34,7 +39,7 @@ func ResourceGCMChannel() *schema.Resource {
 				Required:  true,
 				Sensitive: true,
 			},
-			"enabled": {
+			names.AttrEnabled: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
@@ -45,14 +50,14 @@ func ResourceGCMChannel() *schema.Resource {
 
 func resourceGCMChannelUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).PinpointConn()
+	conn := meta.(*conns.AWSClient).PinpointConn(ctx)
 
-	applicationId := d.Get("application_id").(string)
+	applicationId := d.Get(names.AttrApplicationID).(string)
 
 	params := &pinpoint.GCMChannelRequest{}
 
 	params.ApiKey = aws.String(d.Get("api_key").(string))
-	params.Enabled = aws.Bool(d.Get("enabled").(bool))
+	params.Enabled = aws.Bool(d.Get(names.AttrEnabled).(bool))
 
 	req := pinpoint.UpdateGcmChannelInput{
 		ApplicationId:     aws.String(applicationId),
@@ -71,7 +76,7 @@ func resourceGCMChannelUpsert(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceGCMChannelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).PinpointConn()
+	conn := meta.(*conns.AWSClient).PinpointConn(ctx)
 
 	log.Printf("[INFO] Reading Pinpoint GCM Channel for application %s", d.Id())
 
@@ -88,8 +93,8 @@ func resourceGCMChannelRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "getting Pinpoint GCM Channel for application %s: %s", d.Id(), err)
 	}
 
-	d.Set("application_id", output.GCMChannelResponse.ApplicationId)
-	d.Set("enabled", output.GCMChannelResponse.Enabled)
+	d.Set(names.AttrApplicationID, output.GCMChannelResponse.ApplicationId)
+	d.Set(names.AttrEnabled, output.GCMChannelResponse.Enabled)
 	// api_key is never returned
 
 	return diags
@@ -97,7 +102,7 @@ func resourceGCMChannelRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceGCMChannelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).PinpointConn()
+	conn := meta.(*conns.AWSClient).PinpointConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Pinpoint GCM Channel for application %s", d.Id())
 	_, err := conn.DeleteGcmChannelWithContext(ctx, &pinpoint.DeleteGcmChannelInput{

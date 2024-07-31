@@ -1,10 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
 	"strings"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestValidEventSubscriptionName(t *testing.T) {
@@ -16,7 +20,7 @@ func TestValidEventSubscriptionName(t *testing.T) {
 		"Valid-Name1",
 	}
 	for _, v := range validNames {
-		_, errors := validEventSubscriptionName(v, "name")
+		_, errors := validEventSubscriptionName(v, names.AttrName)
 		if len(errors) != 0 {
 			t.Fatalf("%q should be a valid RDS Event Subscription Name: %q", v, errors)
 		}
@@ -35,7 +39,7 @@ func TestValidEventSubscriptionName(t *testing.T) {
 		strings.Repeat("W", 256),
 	}
 	for _, v := range invalidNames {
-		_, errors := validEventSubscriptionName(v, "name")
+		_, errors := validEventSubscriptionName(v, names.AttrName)
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid RDS Event Subscription Name", v)
 		}
@@ -121,6 +125,10 @@ func TestValidParamGroupName(t *testing.T) {
 		Value    string
 		ErrCount int
 	}{
+		{
+			Value:    "default.postgres9.6",
+			ErrCount: 0,
+		},
 		{
 			Value:    "tEsting123",
 			ErrCount: 1,

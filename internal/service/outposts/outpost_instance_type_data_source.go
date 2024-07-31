@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package outposts
 
 import (
@@ -10,19 +13,21 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKDataSource("aws_outposts_outpost_instance_type")
 func DataSourceOutpostInstanceType() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceOutpostInstanceTypeRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"instance_type": {
+			names.AttrInstanceType: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -31,7 +36,7 @@ func DataSourceOutpostInstanceType() *schema.Resource {
 			"preferred_instance_types": {
 				Type:          schema.TypeList,
 				Optional:      true,
-				ConflictsWith: []string{"instance_type"},
+				ConflictsWith: []string{names.AttrInstanceType},
 				Elem:          &schema.Schema{Type: schema.TypeString},
 			},
 		},
@@ -40,10 +45,10 @@ func DataSourceOutpostInstanceType() *schema.Resource {
 
 func dataSourceOutpostInstanceTypeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OutpostsConn()
+	conn := meta.(*conns.AWSClient).OutpostsConn(ctx)
 
 	input := &outposts.GetOutpostInstanceTypesInput{
-		OutpostId: aws.String(d.Get("arn").(string)), // Accepts both ARN and ID; prefer ARN which is more common
+		OutpostId: aws.String(d.Get(names.AttrARN).(string)), // Accepts both ARN and ID; prefer ARN which is more common
 	}
 
 	var outpostID string
@@ -80,7 +85,7 @@ func dataSourceOutpostInstanceTypeRead(ctx context.Context, d *schema.ResourceDa
 	var resultInstanceType string
 
 	// Check requested instance type
-	if v, ok := d.GetOk("instance_type"); ok {
+	if v, ok := d.GetOk(names.AttrInstanceType); ok {
 		for _, foundInstanceType := range foundInstanceTypes {
 			if foundInstanceType == v.(string) {
 				resultInstanceType = v.(string)
@@ -124,7 +129,7 @@ func dataSourceOutpostInstanceTypeRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "no Outpost Instance Types found matching criteria; try different search")
 	}
 
-	d.Set("instance_type", resultInstanceType)
+	d.Set(names.AttrInstanceType, resultInstanceType)
 
 	d.SetId(outpostID)
 

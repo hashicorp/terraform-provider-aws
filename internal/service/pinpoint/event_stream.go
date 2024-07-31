@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package pinpoint
 
 import (
@@ -8,14 +11,16 @@ import (
 	"github.com/aws/aws-sdk-go/service/pinpoint"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_pinpoint_event_stream")
 func ResourceEventStream() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEventStreamUpsert,
@@ -27,7 +32,7 @@ func ResourceEventStream() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"application_id": {
+			names.AttrApplicationID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -37,7 +42,7 @@ func ResourceEventStream() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -48,13 +53,13 @@ func ResourceEventStream() *schema.Resource {
 
 func resourceEventStreamUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).PinpointConn()
+	conn := meta.(*conns.AWSClient).PinpointConn(ctx)
 
-	applicationId := d.Get("application_id").(string)
+	applicationId := d.Get(names.AttrApplicationID).(string)
 
 	params := &pinpoint.WriteEventStream{
 		DestinationStreamArn: aws.String(d.Get("destination_stream_arn").(string)),
-		RoleArn:              aws.String(d.Get("role_arn").(string)),
+		RoleArn:              aws.String(d.Get(names.AttrRoleARN).(string)),
 	}
 
 	req := pinpoint.PutEventStreamInput{
@@ -63,15 +68,15 @@ func resourceEventStreamUpsert(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	// Retry for IAM eventual consistency
-	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		_, err := conn.PutEventStreamWithContext(ctx, &req)
 
 		if tfawserr.ErrMessageContains(err, pinpoint.ErrCodeBadRequestException, "make sure the IAM Role is configured correctly") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -92,7 +97,7 @@ func resourceEventStreamUpsert(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceEventStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).PinpointConn()
+	conn := meta.(*conns.AWSClient).PinpointConn(ctx)
 
 	log.Printf("[INFO] Reading Pinpoint Event Stream for application %s", d.Id())
 
@@ -110,16 +115,16 @@ func resourceEventStreamRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	res := output.EventStream
-	d.Set("application_id", res.ApplicationId)
+	d.Set(names.AttrApplicationID, res.ApplicationId)
 	d.Set("destination_stream_arn", res.DestinationStreamArn)
-	d.Set("role_arn", res.RoleArn)
+	d.Set(names.AttrRoleARN, res.RoleArn)
 
 	return diags
 }
 
 func resourceEventStreamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).PinpointConn()
+	conn := meta.(*conns.AWSClient).PinpointConn(ctx)
 
 	log.Printf("[DEBUG] Pinpoint Delete Event Stream: %s", d.Id())
 	_, err := conn.DeleteEventStreamWithContext(ctx, &pinpoint.DeleteEventStreamInput{

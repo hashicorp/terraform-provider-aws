@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package storagegateway
 
 import (
@@ -5,7 +8,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/storagegateway"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 const (
@@ -22,7 +25,7 @@ const (
 )
 
 func waitGatewayConnected(ctx context.Context, conn *storagegateway.StorageGateway, gatewayARN string, timeout time.Duration) (*storagegateway.DescribeGatewayInformationOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{storagegateway.ErrorCodeGatewayNotConnected},
 		Target:                    []string{gatewayStatusConnected},
 		Refresh:                   statusGateway(ctx, conn, gatewayARN),
@@ -42,7 +45,7 @@ func waitGatewayConnected(ctx context.Context, conn *storagegateway.StorageGatew
 }
 
 func waitGatewayJoinDomainJoined(ctx context.Context, conn *storagegateway.StorageGateway, volumeARN string) (*storagegateway.DescribeSMBSettingsOutput, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{storagegateway.ActiveDirectoryStatusJoining},
 		Target:  []string{storagegateway.ActiveDirectoryStatusJoined},
 		Refresh: statusGatewayJoinDomain(ctx, conn, volumeARN),
@@ -60,7 +63,7 @@ func waitGatewayJoinDomainJoined(ctx context.Context, conn *storagegateway.Stora
 
 // waitStorediSCSIVolumeAvailable waits for a StoredIscsiVolume to return Available
 func waitStorediSCSIVolumeAvailable(ctx context.Context, conn *storagegateway.StorageGateway, volumeARN string) (*storagegateway.DescribeStorediSCSIVolumesOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{"BOOTSTRAPPING", "CREATING", "RESTORING"},
 		Target:  []string{"AVAILABLE"},
 		Refresh: statusStorediSCSIVolume(ctx, conn, volumeARN),
@@ -77,7 +80,7 @@ func waitStorediSCSIVolumeAvailable(ctx context.Context, conn *storagegateway.St
 }
 
 func waitNFSFileShareCreated(ctx context.Context, conn *storagegateway.StorageGateway, arn string, timeout time.Duration) (*storagegateway.NFSFileShareInfo, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{fileShareStatusCreating},
 		Target:  []string{fileShareStatusAvailable},
 		Refresh: statusNFSFileShare(ctx, conn, arn),
@@ -95,7 +98,7 @@ func waitNFSFileShareCreated(ctx context.Context, conn *storagegateway.StorageGa
 }
 
 func waitNFSFileShareDeleted(ctx context.Context, conn *storagegateway.StorageGateway, arn string, timeout time.Duration) (*storagegateway.NFSFileShareInfo, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:        []string{fileShareStatusAvailable, fileShareStatusDeleting, fileShareStatusForceDeleting},
 		Target:         []string{},
 		Refresh:        statusNFSFileShare(ctx, conn, arn),
@@ -114,7 +117,7 @@ func waitNFSFileShareDeleted(ctx context.Context, conn *storagegateway.StorageGa
 }
 
 func waitNFSFileShareUpdated(ctx context.Context, conn *storagegateway.StorageGateway, arn string, timeout time.Duration) (*storagegateway.NFSFileShareInfo, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{fileShareStatusUpdating},
 		Target:  []string{fileShareStatusAvailable},
 		Refresh: statusNFSFileShare(ctx, conn, arn),
@@ -132,7 +135,7 @@ func waitNFSFileShareUpdated(ctx context.Context, conn *storagegateway.StorageGa
 }
 
 func waitSMBFileShareCreated(ctx context.Context, conn *storagegateway.StorageGateway, arn string, timeout time.Duration) (*storagegateway.SMBFileShareInfo, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{fileShareStatusCreating},
 		Target:  []string{fileShareStatusAvailable},
 		Refresh: statusSMBFileShare(ctx, conn, arn),
@@ -150,7 +153,7 @@ func waitSMBFileShareCreated(ctx context.Context, conn *storagegateway.StorageGa
 }
 
 func waitSMBFileShareDeleted(ctx context.Context, conn *storagegateway.StorageGateway, arn string, timeout time.Duration) (*storagegateway.SMBFileShareInfo, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:        []string{fileShareStatusAvailable, fileShareStatusDeleting, fileShareStatusForceDeleting},
 		Target:         []string{},
 		Refresh:        statusSMBFileShare(ctx, conn, arn),
@@ -169,7 +172,7 @@ func waitSMBFileShareDeleted(ctx context.Context, conn *storagegateway.StorageGa
 }
 
 func waitSMBFileShareUpdated(ctx context.Context, conn *storagegateway.StorageGateway, arn string, timeout time.Duration) (*storagegateway.SMBFileShareInfo, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{fileShareStatusUpdating},
 		Target:  []string{fileShareStatusAvailable},
 		Refresh: statusSMBFileShare(ctx, conn, arn),
@@ -187,7 +190,7 @@ func waitSMBFileShareUpdated(ctx context.Context, conn *storagegateway.StorageGa
 }
 
 func waitFileSystemAssociationAvailable(ctx context.Context, conn *storagegateway.StorageGateway, fileSystemArn string, timeout time.Duration) (*storagegateway.FileSystemAssociationInfo, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{fileSystemAssociationStatusCreating, fileSystemAssociationStatusUpdating},
 		Target:  []string{fileSystemAssociationStatusAvailable},
 		Refresh: statusFileSystemAssociation(ctx, conn, fileSystemArn),
@@ -205,7 +208,7 @@ func waitFileSystemAssociationAvailable(ctx context.Context, conn *storagegatewa
 }
 
 func waitFileSystemAssociationDeleted(ctx context.Context, conn *storagegateway.StorageGateway, fileSystemArn string, timeout time.Duration) (*storagegateway.FileSystemAssociationInfo, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:        []string{fileSystemAssociationStatusAvailable, fileSystemAssociationStatusDeleting, fileSystemAssociationStatusForceDeleting},
 		Target:         []string{},
 		Refresh:        statusFileSystemAssociation(ctx, conn, fileSystemArn),

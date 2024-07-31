@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package auditmanager
 
 import (
@@ -11,18 +14,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkv2resource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func init() {
-	_sp.registerFrameworkDataSourceFactory(newDataSourceFramework)
-}
-
+// @FrameworkDataSource
 func newDataSourceFramework(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceFramework{}, nil
 }
@@ -38,11 +39,11 @@ func (d *dataSourceFramework) Metadata(_ context.Context, request datasource.Met
 func (d *dataSourceFramework) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"compliance_type": schema.StringAttribute{
 				Computed: true,
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Computed: true,
 			},
 			"framework_type": schema.StringAttribute{
@@ -51,18 +52,18 @@ func (d *dataSourceFramework) Schema(ctx context.Context, req datasource.SchemaR
 					enum.FrameworkValidate[awstypes.FrameworkType](),
 				},
 			},
-			"id": framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			names.AttrID: framework.IDAttribute(),
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 			},
-			"tags": tftags.TagsAttributeComputedOnly(),
+			names.AttrTags: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
 			"control_sets": schema.SetNestedBlock{
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"id": framework.IDAttribute(),
-						"name": schema.StringAttribute{
+						names.AttrID: framework.IDAttribute(),
+						names.AttrName: schema.StringAttribute{
 							Computed: true,
 						},
 					},
@@ -70,7 +71,7 @@ func (d *dataSourceFramework) Schema(ctx context.Context, req datasource.SchemaR
 						"controls": schema.SetNestedBlock{
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"id": schema.StringAttribute{
+									names.AttrID: schema.StringAttribute{
 										Computed: true,
 									},
 								},
@@ -84,7 +85,7 @@ func (d *dataSourceFramework) Schema(ctx context.Context, req datasource.SchemaR
 }
 
 func (d *dataSourceFramework) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	conn := d.Meta().AuditManagerClient()
+	conn := d.Meta().AuditManagerClient(ctx)
 
 	var data dataSourceFrameworkData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
@@ -129,7 +130,7 @@ func FindFrameworkByName(ctx context.Context, conn *auditmanager.Client, name, f
 		}
 	}
 
-	return nil, &sdkv2resource.NotFoundError{
+	return nil, &retry.NotFoundError{
 		LastRequest: in,
 	}
 }
@@ -165,7 +166,7 @@ func (rd *dataSourceFrameworkData) refreshFromOutput(ctx context.Context, meta *
 	rd.ARN = flex.StringToFramework(ctx, out.Arn)
 
 	ignoreTagsConfig := meta.IgnoreTagsConfig
-	tags := KeyValueTags(out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 	rd.Tags = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.Map())
 
 	return diags
