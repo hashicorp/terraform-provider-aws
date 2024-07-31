@@ -677,7 +677,9 @@ func TestFlatten(t *testing.T) {
 			},
 		},
 		"resource name prefix": {
-			Options: []AutoFlexOptionsFunc{WithFieldNamePrefix("Intent")},
+			Options: []AutoFlexOptionsFunc{
+				WithFieldNamePrefix("Intent"),
+			},
 			Source: &TestFlexAWS18{
 				IntentName: aws.String("Ovodoghen"),
 			},
@@ -2716,9 +2718,6 @@ func runAutoFlattenTestCases(t *testing.T, testCases autoFlexTestCases) {
 			t.Parallel()
 
 			ctx := context.Background()
-			if testCase.ContextFn != nil {
-				ctx = testCase.ContextFn(ctx)
-			}
 
 			var buf bytes.Buffer
 			ctx = tflogtest.RootLogger(ctx, &buf)

@@ -208,7 +208,7 @@ func traceSkipMapBlockKey(sourcePath string, sourceType reflect.Type, targetPath
 		"@message":                "Skipping map block key",
 		logAttrKeySourcePath:      sourcePath,
 		logAttrKeySourceType:      fullTypeName(sourceType),
-		logAttrKeySourceFieldname: MapBlockKey,
+		logAttrKeySourceFieldname: mapBlockKeyFieldName,
 		logAttrKeyTargetPath:      targetPath,
 		logAttrKeyTargetType:      fullTypeName(targetType),
 	}

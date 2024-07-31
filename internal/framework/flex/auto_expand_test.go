@@ -434,7 +434,9 @@ func TestExpand(t *testing.T) {
 			},
 		},
 		"resource name prefix": {
-			Options: []AutoFlexOptionsFunc{WithFieldNamePrefix("Intent")},
+			Options: []AutoFlexOptionsFunc{
+				WithFieldNamePrefix("Intent"),
+			},
 			Source: &TestFlexTF16{
 				Name: types.StringValue("Ovodoghen"),
 			},
@@ -3603,9 +3605,7 @@ func TestExpandTypedExpander(t *testing.T) {
 }
 
 type autoFlexTestCase struct {
-	ContextFn func(context.Context) context.Context
-	Options   []AutoFlexOptionsFunc
-	// TestName         string
+	Options          []AutoFlexOptionsFunc
 	Source           any
 	Target           any
 	expectedDiags    diag.Diagnostics
@@ -3625,9 +3625,6 @@ func runAutoExpandTestCases(t *testing.T, testCases autoFlexTestCases) {
 			t.Parallel()
 
 			ctx := context.Background()
-			if testCase.ContextFn != nil {
-				ctx = testCase.ContextFn(ctx)
-			}
 
 			var buf bytes.Buffer
 			ctx = tflogtest.RootLogger(ctx, &buf)
