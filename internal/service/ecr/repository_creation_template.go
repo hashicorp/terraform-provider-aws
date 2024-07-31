@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -140,18 +141,8 @@ func resourceRepositoryCreationTemplateCreate(ctx context.Context, d *schema.Res
 		Prefix:                  aws.String(prefix),
 	}
 
-	if appliedForSet, ok := d.Get("applied_for").(*schema.Set); ok {
-		input.AppliedFor = make([]types.RCTAppliedFor, 0, len(appliedForSet.List()))
-
-		for _, appliedForRaw := range appliedForSet.List() {
-			appliedFor, ok := appliedForRaw.(string)
-
-			if !ok {
-				continue
-			}
-
-			input.AppliedFor = append(input.AppliedFor, types.RCTAppliedFor(appliedFor))
-		}
+	if v, ok := d.GetOk("applied_for"); ok && v.(*schema.Set).Len() > 0 {
+		input.AppliedFor = flex.ExpandStringyValueSet[types.RCTAppliedFor](v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("custom_role_arn"); ok {
@@ -211,15 +202,12 @@ func resourceRepositoryCreationTemplateRead(ctx context.Context, d *schema.Resou
 		return sdkdiag.AppendErrorf(diags, "reading ECR Repository Creation Template (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrPrefix, rct.Prefix)
 	d.Set("applied_for", rct.AppliedFor)
 	d.Set("custom_role_arn", rct.CustomRoleArn)
 	d.Set(names.AttrDescription, rct.Description)
-
 	if err := d.Set(names.AttrEncryptionConfiguration, flattenRepositoryEncryptionConfigurationForRepositoryCreationTemplate(rct.EncryptionConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting encryption_configuration: %s", err)
 	}
-
 	d.Set("image_tag_mutability", rct.ImageTagMutability)
 
 	if _, err := equivalentLifecyclePolicyJSON(d.Get("lifecycle_policy").(string), aws.ToString(rct.LifecyclePolicy)); err != nil {
@@ -232,7 +220,7 @@ func resourceRepositoryCreationTemplateRead(ctx context.Context, d *schema.Resou
 	}
 
 	d.Set("lifecycle_policy", policyToSet)
-
+	d.Set(names.AttrPrefix, rct.Prefix)
 	d.Set("registry_id", registryID)
 
 	policyToSet, err = verify.SecondJSONUnlessEquivalent(d.Get("repository_policy").(string), aws.ToString(rct.RepositoryPolicy))
@@ -246,7 +234,6 @@ func resourceRepositoryCreationTemplateRead(ctx context.Context, d *schema.Resou
 	}
 
 	d.Set("repository_policy", policyToSet)
-
 	d.Set(names.AttrResourceTags, KeyValueTags(ctx, rct.ResourceTags).Map())
 
 	return diags
@@ -262,18 +249,8 @@ func resourceRepositoryCreationTemplateUpdate(ctx context.Context, d *schema.Res
 	}
 
 	if d.HasChange("applied_for") {
-		if appliedForSet, ok := d.Get("applied_for").(*schema.Set); ok {
-			input.AppliedFor = make([]types.RCTAppliedFor, 0, len(appliedForSet.List()))
-
-			for _, appliedForRaw := range appliedForSet.List() {
-				appliedFor, ok := appliedForRaw.(string)
-
-				if !ok {
-					continue
-				}
-
-				input.AppliedFor = append(input.AppliedFor, types.RCTAppliedFor(appliedFor))
-			}
+		if v, ok := d.GetOk("applied_for"); ok && v.(*schema.Set).Len() > 0 {
+			input.AppliedFor = flex.ExpandStringyValueSet[types.RCTAppliedFor](v.(*schema.Set))
 		}
 	}
 
@@ -344,7 +321,7 @@ func resourceRepositoryCreationTemplateDelete(ctx context.Context, d *schema.Res
 	return diags
 }
 
-func findRepositoryCreationTemplateByRepositoryPrefix(ctx context.Context, conn *ecr.Client, repositoryPrefix string) (*types.RepositoryCreationTemplate, string, error) {
+func findRepositoryCreationTemplateByRepositoryPrefix(ctx context.Context, conn *ecr.Client, repositoryPrefix string) (*types.RepositoryCreationTemplate, *string, error) {
 	input := &ecr.DescribeRepositoryCreationTemplatesInput{
 		Prefixes: []string{repositoryPrefix},
 	}
@@ -352,11 +329,11 @@ func findRepositoryCreationTemplateByRepositoryPrefix(ctx context.Context, conn 
 	return findRepositoryCreationTemplate(ctx, conn, input)
 }
 
-func findRepositoryCreationTemplate(ctx context.Context, conn *ecr.Client, input *ecr.DescribeRepositoryCreationTemplatesInput) (*types.RepositoryCreationTemplate, string, error) {
+func findRepositoryCreationTemplate(ctx context.Context, conn *ecr.Client, input *ecr.DescribeRepositoryCreationTemplatesInput) (*types.RepositoryCreationTemplate, *string, error) {
 	output, registryID, err := findRepositoryCreationTemplates(ctx, conn, input)
 
 	if err != nil {
-		return nil, "", err
+		return nil, nil, err
 	}
 
 	rct, err := tfresource.AssertSingleValueResult(output)
@@ -364,10 +341,10 @@ func findRepositoryCreationTemplate(ctx context.Context, conn *ecr.Client, input
 	return rct, registryID, err
 }
 
-func findRepositoryCreationTemplates(ctx context.Context, conn *ecr.Client, input *ecr.DescribeRepositoryCreationTemplatesInput) ([]types.RepositoryCreationTemplate, string, error) {
+func findRepositoryCreationTemplates(ctx context.Context, conn *ecr.Client, input *ecr.DescribeRepositoryCreationTemplatesInput) ([]types.RepositoryCreationTemplate, *string, error) {
 	var (
 		output     []types.RepositoryCreationTemplate
-		registryID string
+		registryID *string
 	)
 
 	pages := ecr.NewDescribeRepositoryCreationTemplatesPaginator(conn, input)
@@ -375,18 +352,18 @@ func findRepositoryCreationTemplates(ctx context.Context, conn *ecr.Client, inpu
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.TemplateNotFoundException](err) {
-			return nil, "", &retry.NotFoundError{
+			return nil, nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
 		}
 
 		if err != nil {
-			return nil, "", err
+			return nil, nil, err
 		}
 
 		output = append(output, page.RepositoryCreationTemplates...)
-		registryID = aws.ToString(page.RegistryId)
+		registryID = page.RegistryId
 	}
 
 	return output, registryID, nil
