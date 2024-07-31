@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -142,15 +141,11 @@ func (r *resourceSlackChannelConfiguration) Create(ctx context.Context, req reso
 		return
 	}
 
-	const (
-		timeout = 2 * time.Minute
-	)
+	output, err := findSlackChannelConfigurationByID(ctx, conn, *outputRaw.ChannelConfiguration.ChatConfigurationArn)
 
-	//Waiter needed as the SlackChannelName, if not passed as an input attributed, might not be immediately available in the Read operation because the AWS Chatbot service has to query Slack to get the Slack Channel Name.
-	output, err := waitSlackChannelConfigurationSlackChannelNameUpdated(ctx, conn, *outputRaw.ChannelConfiguration.ChatConfigurationArn, timeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Chatbot, create.ErrActionWaitingForCreation, ResNameSlackChannelConfiguration, plan.ID.String(), err),
+			create.ProblemStandardMessage(names.Chatbot, create.ErrActionCreating, ResNameSlackChannelConfiguration, plan.ID.String(), err),
 			err.Error(),
 		)
 		return
@@ -313,65 +308,6 @@ func (r *resourceSlackChannelConfiguration) Delete(ctx context.Context, req reso
 		return
 	}
 
-}
-
-//func (r *resourceSlackChannelConfiguration) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-//	resource.ImportStatePassthroughID(ctx, path.Root("chat_configuration_arn"), req, resp)
-//}
-
-/*
-	 func (r *resourceSlackChannelConfiguration) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-		idParts := strings.Split(req.ID, ",")
-
-		if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-			resp.Diagnostics.AddError(
-				"Unexpected Import Identifier",
-				fmt.Sprintf("Expected import identifier with format: attr_one,attr_two. Got: %q", req.ID),
-			)
-			return
-		}
-
-		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("attr_one"), idParts[0])...)
-		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("attr_two"), idParts[1])...)
-	}
-*/
-
-// ThingAttribute fetches the Thing and its Attribute
-func SlackChannelConfigurationSlackChannelName(ctx context.Context, conn *chatbot.Client, ID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := findSlackChannelConfigurationByID(ctx, conn, ID)
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		if output == nil {
-			return nil, "", nil
-		}
-
-		if output.SlackChannelName == nil {
-			return nil, "", nil
-		}
-
-		return output, "Success", nil
-	}
-}
-
-// waitThingAttributeUpdated is an attribute waiter for Thing.Attribute
-func waitSlackChannelConfigurationSlackChannelNameUpdated(ctx context.Context, conn *chatbot.Client, ID string, timeout time.Duration) (*awstypes.SlackChannelConfiguration, error) {
-	stateConf := &retry.StateChangeConf{
-		Target:  []string{"Success"},
-		Refresh: SlackChannelConfigurationSlackChannelName(ctx, conn, ID),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.SlackChannelConfiguration); ok {
-		return output, err
-	}
-
-	return nil, err
 }
 
 type resourceSlackChannelConfigurationData struct {

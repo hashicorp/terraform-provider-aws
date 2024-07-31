@@ -79,7 +79,10 @@ func TestAccChatbotSlackChannelConfiguration_basic(t *testing.T) {
 					acctest.MatchResourceAttrGlobalARN(resourceName, "iam_role_arn", "iam", regexache.MustCompile("role/.+-1$")),
 					resource.TestCheckResourceAttr(resourceName, "logging_level", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "slack_channel_id", slackChannelId),
-					resource.TestCheckResourceAttrSet(resourceName, "slack_channel_name"),
+					//SlackChannelName is not being tested as the Slack Channel Name (if not provided as input) is not always available.
+					//The service queries Slack to get the channel name, but if the Slack Channel is a private channle without @aws both installed in the channel, then the SlackChannelName will not be available for the service.
+					//The only tests where SlackChannelName is validated is when the SlackChannelName is provided as an input attribute
+					//resource.TestCheckResourceAttrSet(resourceName, "slack_channel_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "slack_team_id"),
 					resource.TestCheckResourceAttr(resourceName, "sns_topic_arns.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "user_authorization_required", acctest.CtFalse),
@@ -91,6 +94,9 @@ func TestAccChatbotSlackChannelConfiguration_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"slack_channel_name", // This attribute is not always returned by the Create API immediately. And sometimes never. See the comment in TestAccChatbotSlackChannelConfiguration_basic
+				},
 			},
 		},
 	})
@@ -198,7 +204,6 @@ func TestAccChatbotSlackChannelConfiguration_guardrailPolicyArns(t *testing.T) {
 					acctest.MatchResourceAttrGlobalARN(resourceName, "guardrail_policy_arns.0", "iam", regexache.MustCompile("policy/.+-1$")),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "iam_role_arn", "iam", regexache.MustCompile("role/.+-1$")),
 					resource.TestCheckResourceAttr(resourceName, "slack_channel_id", slackChannelId),
-					resource.TestCheckResourceAttrSet(resourceName, "slack_channel_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "slack_team_id"),
 				),
 				ExpectNonEmptyPlan: false,
@@ -207,6 +212,9 @@ func TestAccChatbotSlackChannelConfiguration_guardrailPolicyArns(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"slack_channel_name", // This attribute is not always returned by the Create API immediately. And sometimes never. See the comment in TestAccChatbotSlackChannelConfiguration_basic
+				},
 			},
 			{
 				Config: testAccSlackChannelConfigurationConfig_guardrailPolicyArnsUpdated(rName, workspaceName, slackChannelId),
@@ -218,7 +226,6 @@ func TestAccChatbotSlackChannelConfiguration_guardrailPolicyArns(t *testing.T) {
 					acctest.MatchResourceAttrGlobalARN(resourceName, "guardrail_policy_arns.1", "iam", regexache.MustCompile("policy/.+-2$")),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "iam_role_arn", "iam", regexache.MustCompile("role/.+-1$")),
 					resource.TestCheckResourceAttr(resourceName, "slack_channel_id", slackChannelId),
-					resource.TestCheckResourceAttrSet(resourceName, "slack_channel_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "slack_team_id"),
 				),
 				ExpectNonEmptyPlan: false,
@@ -227,6 +234,9 @@ func TestAccChatbotSlackChannelConfiguration_guardrailPolicyArns(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"slack_channel_name", // This attribute is not always returned by the Create API immediately. And sometimes never. See the comment in TestAccChatbotSlackChannelConfiguration_basic
+				},
 			},
 		},
 	})
@@ -260,7 +270,6 @@ func TestAccChatbotSlackChannelConfiguration_iamRoleArn(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration_name", rName),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "iam_role_arn", "iam", regexache.MustCompile("role/.+-1$")),
 					resource.TestCheckResourceAttr(resourceName, "slack_channel_id", slackChannelId),
-					resource.TestCheckResourceAttrSet(resourceName, "slack_channel_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "slack_team_id"),
 				),
 				ExpectNonEmptyPlan: false,
@@ -269,6 +278,9 @@ func TestAccChatbotSlackChannelConfiguration_iamRoleArn(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"slack_channel_name", // This attribute is not always returned by the Create API immediately. And sometimes never. See the comment in TestAccChatbotSlackChannelConfiguration_basic
+				},
 			},
 			{
 				Config: testAccSlackChannelConfigurationConfig_iamRoleArnUpdated(rName, workspaceName, slackChannelId),
@@ -277,7 +289,6 @@ func TestAccChatbotSlackChannelConfiguration_iamRoleArn(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration_name", rName),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "iam_role_arn", "iam", regexache.MustCompile("role/.+-2$")),
 					resource.TestCheckResourceAttr(resourceName, "slack_channel_id", slackChannelId),
-					resource.TestCheckResourceAttrSet(resourceName, "slack_channel_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "slack_team_id"),
 				),
 				ExpectNonEmptyPlan: false,
@@ -286,6 +297,9 @@ func TestAccChatbotSlackChannelConfiguration_iamRoleArn(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"slack_channel_name", // This attribute is not always returned by the Create API immediately. And sometimes never. See the comment in TestAccChatbotSlackChannelConfiguration_basic
+				},
 			},
 		},
 	})
@@ -320,7 +334,6 @@ func TestAccChatbotSlackChannelConfiguration_loggingLevel(t *testing.T) {
 					acctest.MatchResourceAttrGlobalARN(resourceName, "iam_role_arn", "iam", regexache.MustCompile("role/.+-1$")),
 					resource.TestCheckResourceAttr(resourceName, "logging_level", "INFO"),
 					resource.TestCheckResourceAttr(resourceName, "slack_channel_id", slackChannelId),
-					resource.TestCheckResourceAttrSet(resourceName, "slack_channel_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "slack_team_id"),
 				),
 				ExpectNonEmptyPlan: false,
@@ -329,6 +342,9 @@ func TestAccChatbotSlackChannelConfiguration_loggingLevel(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"slack_channel_name", // This attribute is not always returned by the Create API immediately. And sometimes never. See the comment in TestAccChatbotSlackChannelConfiguration_basic
+				},
 			},
 			{
 				Config: testAccSlackChannelConfigurationConfig_loggingLevel(rName, workspaceName, slackChannelId, "ERROR"),
@@ -338,7 +354,6 @@ func TestAccChatbotSlackChannelConfiguration_loggingLevel(t *testing.T) {
 					acctest.MatchResourceAttrGlobalARN(resourceName, "iam_role_arn", "iam", regexache.MustCompile("role/.+-1$")),
 					resource.TestCheckResourceAttr(resourceName, "logging_level", "ERROR"),
 					resource.TestCheckResourceAttr(resourceName, "slack_channel_id", slackChannelId),
-					resource.TestCheckResourceAttrSet(resourceName, "slack_channel_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "slack_team_id"),
 				),
 				ExpectNonEmptyPlan: false,
@@ -347,6 +362,9 @@ func TestAccChatbotSlackChannelConfiguration_loggingLevel(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"slack_channel_name", // This attribute is not always returned by the Create API immediately. And sometimes never. See the comment in TestAccChatbotSlackChannelConfiguration_basic
+				},
 			},
 		},
 	})
@@ -442,7 +460,6 @@ func TestAccChatbotSlackChannelConfiguration_userAuthorizationRequired(t *testin
 					acctest.MatchResourceAttrGlobalARN(resourceName, "iam_role_arn", "iam", regexache.MustCompile("role/.+-1$")),
 					resource.TestCheckResourceAttr(resourceName, "user_authorization_required", "true"),
 					resource.TestCheckResourceAttr(resourceName, "slack_channel_id", slackChannelId),
-					resource.TestCheckResourceAttrSet(resourceName, "slack_channel_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "slack_team_id"),
 				),
 				ExpectNonEmptyPlan: false,
@@ -451,6 +468,9 @@ func TestAccChatbotSlackChannelConfiguration_userAuthorizationRequired(t *testin
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"slack_channel_name", // This attribute is not always returned by the Create API immediately. And sometimes never. See the comment in TestAccChatbotSlackChannelConfiguration_basic
+				},
 			},
 			{
 				Config: testAccSlackChannelConfigurationConfig_userAuthorizationRequired(rName, workspaceName, slackChannelId, "false"),
@@ -460,7 +480,6 @@ func TestAccChatbotSlackChannelConfiguration_userAuthorizationRequired(t *testin
 					acctest.MatchResourceAttrGlobalARN(resourceName, "iam_role_arn", "iam", regexache.MustCompile("role/.+-1$")),
 					resource.TestCheckResourceAttr(resourceName, "user_authorization_required", "false"),
 					resource.TestCheckResourceAttr(resourceName, "slack_channel_id", slackChannelId),
-					resource.TestCheckResourceAttrSet(resourceName, "slack_channel_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "slack_team_id"),
 				),
 				ExpectNonEmptyPlan: false,
@@ -469,6 +488,9 @@ func TestAccChatbotSlackChannelConfiguration_userAuthorizationRequired(t *testin
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"slack_channel_name", // This attribute is not always returned by the Create API immediately. And sometimes never. See the comment in TestAccChatbotSlackChannelConfiguration_basic
+				},
 			},
 		},
 	})
@@ -537,7 +559,6 @@ func TestAccChatbotSlackChannelConfiguration_snsTopicArns(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "sns_topic_arns.#", acctest.Ct1),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "iam_role_arn", "iam", regexache.MustCompile("role/.+-1$")),
 					resource.TestCheckResourceAttr(resourceName, "slack_channel_id", slackChannelId),
-					resource.TestCheckResourceAttrSet(resourceName, "slack_channel_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "slack_team_id"),
 				),
 				ExpectNonEmptyPlan: false,
@@ -546,6 +567,9 @@ func TestAccChatbotSlackChannelConfiguration_snsTopicArns(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"slack_channel_name", // This attribute is not always returned by the Create API immediately. And sometimes never. See the comment in TestAccChatbotSlackChannelConfiguration_basic
+				},
 			},
 			{
 				Config: testAccSlackChannelConfigurationConfig_snsTopicArnsUpdated(rName, workspaceName, slackChannelId),
@@ -555,7 +579,6 @@ func TestAccChatbotSlackChannelConfiguration_snsTopicArns(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "sns_topic_arns.#", acctest.Ct2),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "iam_role_arn", "iam", regexache.MustCompile("role/.+-1$")),
 					resource.TestCheckResourceAttr(resourceName, "slack_channel_id", slackChannelId),
-					resource.TestCheckResourceAttrSet(resourceName, "slack_channel_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "slack_team_id"),
 				),
 				ExpectNonEmptyPlan: false,
@@ -564,6 +587,9 @@ func TestAccChatbotSlackChannelConfiguration_snsTopicArns(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"slack_channel_name", // This attribute is not always returned by the Create API immediately. And sometimes never. See the comment in TestAccChatbotSlackChannelConfiguration_basic
+				},
 			},
 		},
 	})
@@ -598,7 +624,6 @@ func TestAccChatbotSlackChannelConfiguration_tags(t *testing.T) {
 					acctest.MatchResourceAttrGlobalARN(resourceName, "iam_role_arn", "iam", regexache.MustCompile("role/.+-1$")),
 					resource.TestCheckResourceAttr(resourceName, "slack_channel_id", slackChannelId),
 					resource.TestCheckResourceAttrSet(resourceName, "slack_team_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "slack_channel_name"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -607,6 +632,9 @@ func TestAccChatbotSlackChannelConfiguration_tags(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"slack_channel_name", // This attribute is not always returned by the Create API immediately. And sometimes never. See the comment in TestAccChatbotSlackChannelConfiguration_basic
+				},
 			},
 		},
 	})
