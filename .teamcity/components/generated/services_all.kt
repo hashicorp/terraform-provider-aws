@@ -183,6 +183,7 @@ val services = mapOf(
     "redshiftdata" to ServiceSpec("Redshift Data"),
     "redshiftserverless" to ServiceSpec("Redshift Serverless"),
     "rekognition" to ServiceSpec("Rekognition"),
+    "resiliencehub" to ServiceSpec("Resilience Hub"),
     "resourceexplorer2" to ServiceSpec("Resource Explorer"),
     "resourcegroups" to ServiceSpec("Resource Groups"),
     "resourcegroupstaggingapi" to ServiceSpec("Resource Groups Tagging"),
