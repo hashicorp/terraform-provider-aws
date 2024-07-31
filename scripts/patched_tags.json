@@ -1303,13 +1303,13 @@
     },
     "v3.61.0": {
         "tag": "v3.61.0",
-        "sdk_version": null,
+        "sdk_version": "v2.8.0",
         "sdk_patched": false,
         "terraform_patched": false
     },
     "v3.62.0": {
         "tag": "v3.62.0",
-        "sdk_version": null,
+        "sdk_version": "v2.8.0",
         "sdk_patched": false,
         "terraform_patched": false
     },

@@ -29,6 +29,32 @@ jobs:
               with:
                   gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
                   passphrase: ${{ secrets.PASSPHRASE }}
+
+            # - name: Set up Python 3.10.5
+            # uses: actions/setup-python@v4
+            # with:
+            #     python-version: '3.10.5'
+            #     cache: 'pip'
+
+            # - name: Install system dependencies
+            # run: |
+            #     python -m venv .venv
+            #     source .venv/bin/activate
+            #     pip install --upgrade pip
+            #     pip install -r requirements.txt
+
+            # - name: Extract 
+            # run: |
+            #     source .venv/bin/activate
+            #     python -m terraform_pytest.main patch
+
+            # - name: Apply Terraform Plugin Sdk Patch
+            #     run: |
+            #         cd terraform-provider-aws
+            #         sdk_version=$(go list -m github.com/hashicorp/terraform-plugin-sdk/v2 | sed -n -e 's/^.* //p')
+            #         go mod edit --replace github.com/hashicorp/terraform-plugin-sdk/v2=github.com/cloutierMat/terraform-plugin-sdk/v2@${sdk_version}-001
+            #         go mod tidy
+
             - name: Run GoReleaser
               uses: goreleaser/goreleaser-action@f82d6c1c344bcacabba2c841718984797f664a6b # v4.2.0
               with:
