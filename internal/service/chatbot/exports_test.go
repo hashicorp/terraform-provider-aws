@@ -6,6 +6,8 @@ package chatbot
 // Exports for use in tests only.
 var (
 	ResourceSlackChannelConfiguration = newSlackChannelConfigurationResource
+	ResourceTeamsChannelConfiguration = newTeamsChannelConfigurationResource
 
-	FindSlackChannelConfigurationByARN = findSlackChannelConfigurationByARN
+	FindSlackChannelConfigurationByARN    = findSlackChannelConfigurationByARN
+	FindTeamsChannelConfigurationByTeamID = findTeamsChannelConfigurationByTeamID
 )
