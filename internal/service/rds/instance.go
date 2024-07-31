@@ -2726,7 +2726,7 @@ func findDBInstancesSDKv1(ctx context.Context, conn *rds.RDS, input *rds.Describ
 // findDBInstanceByIDSDKv2 in general should be called with a DbiResourceId of the form
 // "db-BE6UI2KLPQP3OVDYD74ZEV6NUM" rather than a DB identifier. However, in some cases only
 // the identifier is available, and can be used.
-func findDBInstanceByIDSDKv2(ctx context.Context, conn *rds_sdkv2.Client, id string) (*types.DBInstance, error) {
+func findDBInstanceByIDSDKv2(ctx context.Context, conn *rds_sdkv2.Client, id string, optFns ...func(*rds_sdkv2.Options)) (*types.DBInstance, error) {
 	input := &rds_sdkv2.DescribeDBInstancesInput{}
 
 	if regexache.MustCompile(`^db-[0-9A-Za-z]{2,255}$`).MatchString(id) {
@@ -2740,14 +2740,14 @@ func findDBInstanceByIDSDKv2(ctx context.Context, conn *rds_sdkv2.Client, id str
 		input.DBInstanceIdentifier = aws.String(id)
 	}
 
-	output, err := conn.DescribeDBInstances(ctx, input)
+	output, err := conn.DescribeDBInstances(ctx, input, optFns...)
 
 	// in case a DB has an *identifier* starting with "db-""
 	if regexache.MustCompile(`^db-[0-9A-Za-z]{2,255}$`).MatchString(id) && (output == nil || len(output.DBInstances) == 0) {
 		input = &rds_sdkv2.DescribeDBInstancesInput{
 			DBInstanceIdentifier: aws.String(id),
 		}
-		output, err = conn.DescribeDBInstances(ctx, input)
+		output, err = conn.DescribeDBInstances(ctx, input, optFns...)
 	}
 
 	if errs.IsA[*types.DBInstanceNotFoundFault](err) {
