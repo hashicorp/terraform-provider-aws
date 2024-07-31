@@ -27,7 +27,7 @@ import (
 // @SDKResource("aws_s3_bucket_notification", name="Bucket Notification")
 func resourceBucketNotification() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceBucketNotificationPut,
+		CreateWithoutTimeout: resourceBucketNotificationCreate,
 		ReadWithoutTimeout:   resourceBucketNotificationRead,
 		UpdateWithoutTimeout: resourceBucketNotificationPut,
 		DeleteWithoutTimeout: resourceBucketNotificationDelete,
@@ -139,6 +139,26 @@ func resourceBucketNotification() *schema.Resource {
 			},
 		},
 	}
+}
+
+// Due to the limitation of AWS API, there is no explicit Create-like API for bucket notification.
+// Using Put-like API with proper error handling is one possible workaround.
+// https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutBucketNotificationConfiguration.html
+func resourceBucketNotificationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).S3Client(ctx)
+
+	bucket := d.Get(names.AttrBucket).(string)
+	output, _ := findBucketNotificationConfiguration(ctx, conn, bucket, "")
+	isBucketNotificationAlreadyExists := output != nil
+
+	// Prevent overwritting bucket notification by resourceBucketNotificationPut
+	// if the bucket notification already exists.
+	if d.IsNewResource() && isBucketNotificationAlreadyExists {
+		return sdkdiag.AppendErrorf(diags, "S3 Bucket (%s) already has bucket notification.", bucket)
+	}
+
+	return append(diags, resourceBucketNotificationPut(ctx, d, meta)...)
 }
 
 func resourceBucketNotificationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
