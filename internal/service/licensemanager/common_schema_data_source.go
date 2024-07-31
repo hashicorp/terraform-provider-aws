@@ -4,21 +4,21 @@
 package licensemanager
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/licensemanager"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/licensemanager/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func BuildFiltersDataSource(set *schema.Set) []*licensemanager.Filter {
-	var filters []*licensemanager.Filter
+func BuildFiltersDataSource(set *schema.Set) []awstypes.Filter {
+	var filters []awstypes.Filter
 	for _, v := range set.List() {
 		m := v.(map[string]interface{})
-		var filterValues []*string
+		var filterValues []string
 		for _, e := range m[names.AttrValues].([]interface{}) {
-			filterValues = append(filterValues, aws.String(e.(string)))
+			filterValues = append(filterValues, e.(string))
 		}
-		filters = append(filters, &licensemanager.Filter{
+		filters = append(filters, awstypes.Filter{
 			Name:   aws.String(m[names.AttrName].(string)),
 			Values: filterValues,
 		})

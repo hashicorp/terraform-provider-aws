@@ -9,8 +9,9 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/licensemanager"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/licensemanager"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/licensemanager/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -52,20 +53,20 @@ func ResourceAssociation() *schema.Resource {
 func resourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).LicenseManagerConn(ctx)
+	conn := meta.(*conns.AWSClient).LicenseManagerClient(ctx)
 
 	licenseConfigurationARN := d.Get("license_configuration_arn").(string)
 	resourceARN := d.Get(names.AttrResourceARN).(string)
 
 	input := &licensemanager.UpdateLicenseSpecificationsForResourceInput{
-		AddLicenseSpecifications: []*licensemanager.LicenseSpecification{{
+		AddLicenseSpecifications: []awstypes.LicenseSpecification{{
 			LicenseConfigurationArn: aws.String(licenseConfigurationARN),
 		}},
 		ResourceArn: aws.String(resourceARN),
 	}
 
-	log.Printf("[DEBUG] Creating License Manager Association: %s", input)
-	_, err := conn.UpdateLicenseSpecificationsForResourceWithContext(ctx, input)
+	log.Printf("[DEBUG] Creating License Manager Association: %+v", input)
+	_, err := conn.UpdateLicenseSpecificationsForResource(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating License Manager Association: %s", err)
@@ -79,7 +80,7 @@ func resourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta
 func resourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).LicenseManagerConn(ctx)
+	conn := meta.(*conns.AWSClient).LicenseManagerClient(ctx)
 
 	resourceARN, licenseConfigurationARN, err := AssociationParseResourceID(d.Id())
 
@@ -108,7 +109,7 @@ func resourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta i
 func resourceAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).LicenseManagerConn(ctx)
+	conn := meta.(*conns.AWSClient).LicenseManagerClient(ctx)
 
 	resourceARN, licenseConfigurationARN, err := AssociationParseResourceID(d.Id())
 
@@ -117,13 +118,13 @@ func resourceAssociationDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	input := &licensemanager.UpdateLicenseSpecificationsForResourceInput{
-		RemoveLicenseSpecifications: []*licensemanager.LicenseSpecification{{
+		RemoveLicenseSpecifications: []awstypes.LicenseSpecification{{
 			LicenseConfigurationArn: aws.String(licenseConfigurationARN),
 		}},
 		ResourceArn: aws.String(resourceARN),
 	}
 
-	_, err = conn.UpdateLicenseSpecificationsForResourceWithContext(ctx, input)
+	_, err = conn.UpdateLicenseSpecificationsForResource(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting License Manager Association (%s): %s", d.Id(), err)
@@ -132,22 +133,18 @@ func resourceAssociationDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func FindAssociation(ctx context.Context, conn *licensemanager.LicenseManager, resourceARN, licenseConfigurationARN string) error {
+func FindAssociation(ctx context.Context, conn *licensemanager.Client, resourceARN, licenseConfigurationARN string) error {
 	input := &licensemanager.ListLicenseSpecificationsForResourceInput{
 		ResourceArn: aws.String(resourceARN),
 	}
-	var output []*licensemanager.LicenseSpecification
+	var output []awstypes.LicenseSpecification
 
 	err := listLicenseSpecificationsForResourcePages(ctx, conn, input, func(page *licensemanager.ListLicenseSpecificationsForResourceOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, v := range page.LicenseSpecifications {
-			if v != nil {
-				output = append(output, v)
-			}
-		}
+		output = append(output, page.LicenseSpecifications...)
 
 		return !lastPage
 	})
@@ -157,7 +154,7 @@ func FindAssociation(ctx context.Context, conn *licensemanager.LicenseManager, r
 	}
 
 	for _, v := range output {
-		if aws.StringValue(v.LicenseConfigurationArn) == licenseConfigurationARN {
+		if aws.ToString(v.LicenseConfigurationArn) == licenseConfigurationARN {
 			return nil
 		}
 	}

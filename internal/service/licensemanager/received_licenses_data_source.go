@@ -6,13 +6,14 @@ package licensemanager
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/licensemanager"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/licensemanager"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/licensemanager/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -34,7 +35,7 @@ func DataSourceReceivedLicenses() *schema.Resource {
 
 func dataSourceReceivedLicensesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LicenseManagerConn(ctx)
+	conn := meta.(*conns.AWSClient).LicenseManagerClient(ctx)
 
 	in := &licensemanager.ListReceivedLicensesInput{}
 
@@ -55,7 +56,7 @@ func dataSourceReceivedLicensesRead(ctx context.Context, d *schema.ResourceData,
 	var licenseARNs []string
 
 	for _, v := range out {
-		licenseARNs = append(licenseARNs, aws.StringValue(v.LicenseArn))
+		licenseARNs = append(licenseARNs, aws.ToString(v.LicenseArn))
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
@@ -64,24 +65,20 @@ func dataSourceReceivedLicensesRead(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func FindReceivedLicenses(ctx context.Context, conn *licensemanager.LicenseManager, in *licensemanager.ListReceivedLicensesInput) ([]*licensemanager.GrantedLicense, error) {
-	var out []*licensemanager.GrantedLicense
+func FindReceivedLicenses(ctx context.Context, conn *licensemanager.Client, in *licensemanager.ListReceivedLicensesInput) ([]awstypes.GrantedLicense, error) {
+	var out []awstypes.GrantedLicense
 
 	err := listReceivedLicensesPages(ctx, conn, in, func(page *licensemanager.ListReceivedLicensesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, v := range page.Licenses {
-			if v != nil {
-				out = append(out, v)
-			}
-		}
+		out = append(out, page.Licenses...)
 
 		return !lastPage
 	})
 
-	if tfawserr.ErrCodeEquals(err, licensemanager.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,

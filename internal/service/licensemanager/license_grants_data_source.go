@@ -6,13 +6,14 @@ package licensemanager
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/licensemanager"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/licensemanager"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/licensemanager/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -34,7 +35,7 @@ func DataSourceDistributedGrants() *schema.Resource {
 
 func dataSourceDistributedGrantsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LicenseManagerConn(ctx)
+	conn := meta.(*conns.AWSClient).LicenseManagerClient(ctx)
 
 	in := &licensemanager.ListDistributedGrantsInput{}
 
@@ -55,7 +56,7 @@ func dataSourceDistributedGrantsRead(ctx context.Context, d *schema.ResourceData
 	var grantARNs []string
 
 	for _, v := range out {
-		grantARNs = append(grantARNs, aws.StringValue(v.GrantArn))
+		grantARNs = append(grantARNs, aws.ToString(v.GrantArn))
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
@@ -64,24 +65,20 @@ func dataSourceDistributedGrantsRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func FindDistributedDistributedGrants(ctx context.Context, conn *licensemanager.LicenseManager, in *licensemanager.ListDistributedGrantsInput) ([]*licensemanager.Grant, error) {
-	var out []*licensemanager.Grant
+func FindDistributedDistributedGrants(ctx context.Context, conn *licensemanager.Client, in *licensemanager.ListDistributedGrantsInput) ([]awstypes.Grant, error) {
+	var out []awstypes.Grant
 
 	err := listDistributedGrantsPages(ctx, conn, in, func(page *licensemanager.ListDistributedGrantsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, v := range page.Grants {
-			if v != nil {
-				out = append(out, v)
-			}
-		}
+		out = append(out, page.Grants...)
 
 		return !lastPage
 	})
 
-	if tfawserr.ErrCodeEquals(err, licensemanager.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
