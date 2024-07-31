@@ -56,6 +56,11 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
+		{
+			Factory:  dataSourceRepositoryCreationTemplate,
+			TypeName: "aws_ecr_repository_creation_template",
+			Name:     "Repository Creation Template",
+		},
 	}
 }
 
