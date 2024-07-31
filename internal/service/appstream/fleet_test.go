@@ -439,9 +439,6 @@ func testAccFleetConfig_complete(name, description, fleetType, instanceType stri
 		testAccFleetConfig_base,
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
-data "aws_region" "current" {}
-data "aws_partition" "current" {}
-
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 }
@@ -582,9 +579,6 @@ func testAccFleetConfig_multiSession(name, instanceType string, desiredSessions,
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
-data "aws_region" "current" {}
-data "aws_partition" "current" {}
-
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 }

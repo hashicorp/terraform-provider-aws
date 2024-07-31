@@ -336,8 +336,6 @@ resource "aws_appstream_image_builder" "test" {
 
 func testAccImageBuilderConfig_byARN(rName, instanceType string) string {
 	return acctest.ConfigCompose(testAccImageBuilderConfig_base, fmt.Sprintf(`
-data "aws_partition" "current" {}
-
 resource "aws_appstream_image_builder" "test" {
   image_arn     = data.aws_appstream_image.test.arn
   instance_type = %[1]q
