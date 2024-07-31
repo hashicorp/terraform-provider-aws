@@ -184,10 +184,10 @@ When using the Terraform Plugin SDK v2, flattening and expanding functions must 
 AutoFlex provides two entry-point functions, `Flatten` and `Expand` defined in the package `github.com/hashicorp/terraform-provider-aws/internal/framework/flex`.
 Without configuration, these two functions should be able to convert most provider and AWS API structures.
 
-AutoFlex uses field names to map bewteen the source and target structures:
+AutoFlex uses field names to map between the source and target structures:
 
-1. An exact, case-senstive match
-1. An exact, case-insenstive match
+1. An exact, case-sensitive match
+1. An exact, case-insensitive match
 1. Comparing plural and singular field names
 1. Adding a resource name prefix set on the `context.Context` passed to the function with the key `flex.ResourcePrefix`, e.g. Lex v2 Intents in `internal/service/lexv2models/intent.go`
 
