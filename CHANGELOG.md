@@ -27,7 +27,11 @@ BUG FIXES:
 * data-source/aws_appstream_image: Fix issue where the most recent image is not returned ([#38571](https://github.com/hashicorp/terraform-provider-aws/issues/38571))
 * datasource/aws_networkmanager_core_network_policy_document: Fix `CoreNetworkPolicyException` when putting policy with single wildcard in `when_sent_to` ([#38595](https://github.com/hashicorp/terraform-provider-aws/issues/38595))
 * resource/aws_cloudsearch_domain: Fix `index_name` character length validation ([#38509](https://github.com/hashicorp/terraform-provider-aws/issues/38509))
+* resource/aws_ecs_task_definition: Ensure that JSON keys in `container_definitions` start with a lowercase letter ([#38622](https://github.com/hashicorp/terraform-provider-aws/issues/38622))
+* resource/aws_opensearchserverless_security_policy: Normalize `policy` content to prevent persistent differences ([#38604](https://github.com/hashicorp/terraform-provider-aws/issues/38604))
 * resource/aws_rds_instance: Allow `domain_dns_ips` to use single DNS server IP ([#36500](https://github.com/hashicorp/terraform-provider-aws/issues/36500))
+* resource/aws_vpc_ipam_pool_cidr_allocation: Set `description` on Read ([#38618](https://github.com/hashicorp/terraform-provider-aws/issues/38618))
+* resource/aws_vpc_ipam_pool_cidr_allocation: Set `netmask_length` on Read ([#38618](https://github.com/hashicorp/terraform-provider-aws/issues/38618))
 
 ## 5.60.0 (July 25, 2024)
 
