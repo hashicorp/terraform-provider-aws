@@ -773,6 +773,47 @@ func CheckResourceAttrJMESPair(nameFirst, keyFirst, jmesPath, nameSecond, keySec
 	}
 }
 
+func CheckResourceAttrJMESNotExists(name, key, jmesPath string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		is, err := PrimaryInstanceState(s, name)
+		if err != nil {
+			return err
+		}
+
+		attr, ok := is.Attributes[key]
+		if !ok {
+			return fmt.Errorf("%s: Attribute %q not set", name, key)
+		}
+
+		var jsonData any
+		err = json.Unmarshal([]byte(attr), &jsonData)
+		if err != nil {
+			return fmt.Errorf("%s: Expected attribute %q to be JSON: %w", name, key, err)
+		}
+
+		result, err := jmespath.Search(jmesPath, jsonData)
+		if err != nil {
+			return fmt.Errorf("invalid JMESPath %q: %w", jmesPath, err)
+		}
+
+		var v string
+		switch x := result.(type) {
+		case nil:
+			return nil
+		case string:
+			v = x
+		case float64:
+			v = strconv.FormatFloat(x, 'f', -1, 64)
+		case bool:
+			v = fmt.Sprint(x)
+		default:
+			return fmt.Errorf(`%[1]s: Attribute %[2]q, JMESPath %[3]q got "%#[4]v" (%[4]T), expected no attribute`, name, key, jmesPath, result)
+		}
+
+		return fmt.Errorf("%s: Attribute %q, JMESPath %q expected no attribute, got %#v", name, key, jmesPath, v)
+	}
+}
+
 // CheckResourceAttrContains ensures the Terraform state value contains the specified substr.
 func CheckResourceAttrContains(name, key, substr string) resource.TestCheckFunc {
 	return resource.TestCheckResourceAttrWith(name, key, func(value string) error {

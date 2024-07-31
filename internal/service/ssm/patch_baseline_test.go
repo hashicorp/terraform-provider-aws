@@ -5,9 +5,7 @@ package ssm_test
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"strconv"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -26,7 +24,6 @@ import (
 	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"github.com/jmespath/go-jmespath"
 )
 
 func TestAccSSMPatchBaseline_basic(t *testing.T) {
@@ -330,7 +327,7 @@ func TestAccSSMPatchBaseline_approvalRuleEmpty(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchBaselineExists(ctx, resourceName, &before),
 					acctest.CheckResourceAttrJMES(resourceName, names.AttrJSON, "ApprovalRules.PatchRules[0].ApproveUntilDate", "2024-01-02"),
-					checkResourceAttrJMESNotExists(resourceName, names.AttrJSON, "ApprovalRules.PatchRules[0].ApproveAfterDays"),
+					acctest.CheckResourceAttrJMESNotExists(resourceName, names.AttrJSON, "ApprovalRules.PatchRules[0].ApproveAfterDays"),
 				),
 			},
 			{
@@ -348,7 +345,7 @@ func TestAccSSMPatchBaseline_approvalRuleEmpty(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchBaselineExists(ctx, resourceName, &after),
 					acctest.CheckResourceAttrJMES(resourceName, names.AttrJSON, "ApprovalRules.PatchRules[0].ApproveAfterDays", "7"),
-					checkResourceAttrJMESNotExists(resourceName, names.AttrJSON, "ApprovalRules.PatchRules[0].ApproveUntilDate"),
+					acctest.CheckResourceAttrJMESNotExists(resourceName, names.AttrJSON, "ApprovalRules.PatchRules[0].ApproveUntilDate"),
 				),
 			},
 		},
@@ -474,47 +471,6 @@ func testAccCheckPatchBaselineDestroy(ctx context.Context) resource.TestCheckFun
 		}
 
 		return nil
-	}
-}
-
-func checkResourceAttrJMESNotExists(name, key, jmesPath string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		is, err := acctest.PrimaryInstanceState(s, name)
-		if err != nil {
-			return err
-		}
-
-		attr, ok := is.Attributes[key]
-		if !ok {
-			return fmt.Errorf("%s: Attribute %q not set", name, key)
-		}
-
-		var jsonData any
-		err = json.Unmarshal([]byte(attr), &jsonData)
-		if err != nil {
-			return fmt.Errorf("%s: Expected attribute %q to be JSON: %w", name, key, err)
-		}
-
-		result, err := jmespath.Search(jmesPath, jsonData)
-		if err != nil {
-			return fmt.Errorf("%s: Expected attribute %q not not found: %w", name, key, err)
-		}
-
-		var v string
-		switch x := result.(type) {
-		case nil:
-			return nil
-		case string:
-			v = x
-		case float64:
-			v = strconv.FormatFloat(x, 'f', -1, 64)
-		case bool:
-			v = fmt.Sprint(x)
-		default:
-			return fmt.Errorf(`%[1]s: Attribute %[2]q, JMESPath %[3]q got "%#[4]v" (%[4]T), expected no attribute`, name, key, jmesPath, result)
-		}
-
-		return fmt.Errorf("%s: Attribute %q, JMESPath %q expected no attribute, got %#v", name, key, jmesPath, v)
 	}
 }
 
