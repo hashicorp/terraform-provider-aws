@@ -1267,8 +1267,8 @@ func TestAccECSTaskDefinition_v5590ContainerDefinitionsRegression(t *testing.T) 
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "length(@)", acctest.Ct1),
-					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].cpu", "10"),
-					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].essential", "true"),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].cpu", acctest.Ct10),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].essential", acctest.CtTrue),
 					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].image", "alpine"),
 					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].memory", "512"),
 					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].name", "first"),
@@ -1295,8 +1295,8 @@ func TestAccECSTaskDefinition_v5590ContainerDefinitionsRegression(t *testing.T) 
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "length(@)", acctest.Ct1),
-					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].Cpu", "10"),
-					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].Essential", "true"),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].Cpu", acctest.Ct10),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].Essential", acctest.CtTrue),
 					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].Image", "jenkins"),
 					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].Memory", "512"),
 					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].Name", "first"),
@@ -1317,8 +1317,8 @@ func TestAccECSTaskDefinition_v5590ContainerDefinitionsRegression(t *testing.T) 
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "length(@)", acctest.Ct1),
-					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].cpu", "10"),
-					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].essential", "true"),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].cpu", acctest.Ct10),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].essential", acctest.CtTrue),
 					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].image", "nginx"),
 					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].memory", "512"),
 					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].name", "first"),
