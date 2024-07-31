@@ -16,6 +16,51 @@ Manages a Route53 Hosted Zone VPC association. VPC associations can only be made
 
 ## Example Usage
 
+### Cross-account authorization
+
+```terraform
+provider "aws" {
+}
+
+provider "aws" {
+  alias = "secondary"
+}
+
+resource "aws_vpc" "primary" {
+  cidr_block           = "10.6.0.0/16"
+  enable_dns_hostnames = true
+  enable_dns_support   = true
+}
+
+resource "aws_vpc" "secondary" {
+  provider             = aws.secondary
+  cidr_block           = "10.7.0.0/16"
+  enable_dns_hostnames = true
+  enable_dns_support   = true
+}
+
+resource "aws_route53_zone" "example" {
+  name = "example.com"
+}
+
+resource "aws_route53_zone_association" "primary" {
+  zone_id = aws_route53_zone.example.zone_id
+  vpc_id  = aws_vpc.primary.id
+}
+
+resource "aws_route53_vpc_association_authorization" "example" {
+  vpc_id  = aws_vpc.secondary.id
+  zone_id = aws_route53_zone.example.id
+}
+
+resource "aws_route53_zone_association" "secondary" {
+  provider = aws.secondary
+  zone_id  = aws_route53_zone.example.zone_id
+  vpc_id   = aws_vpc.secondary.id
+}
+```
+
+### With ignore_changes lifecycle
 ```terraform
 resource "aws_vpc" "primary" {
   cidr_block           = "10.6.0.0/16"
