@@ -974,6 +974,8 @@ func (flattener autoFlattener) interfaceToNestedObject(ctx context.Context, vFro
 		return diags
 	}
 
+	tflog.SubsystemInfo(ctx, subsystemName, "Source implements flex.Flattener")
+
 	// Dereference interface
 	vFrom = vFrom.Elem()
 	// If it's a pointer, dereference again to get the underlying type

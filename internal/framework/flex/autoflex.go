@@ -141,6 +141,7 @@ func autoFlexConvertStruct(ctx context.Context, sourcePath path.Path, from any, 
 	}
 
 	if toFlattener, ok := to.(Flattener); ok {
+		tflog.SubsystemInfo(ctx, subsystemName, "Source implements flex.Flattener")
 		diags.Append(flattenFlattener(ctx, valFrom, toFlattener)...)
 		return diags
 	}
