@@ -1,3 +1,0 @@
-```release-note:new-service
-resiliencehub: Add a new service client
-```
