@@ -3,8 +3,8 @@ archives:
       name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
 before:
     hooks:
-        - sdk_version=$(go list -m -f '{{ .Version }}' github.com/hashicorp/terraform-plugin-sdk/v2)
-        - go mod edit --replace github.com/hashicorp/terraform-plugin-sdk/v2=github.com/cloutierMat/terraform-plugin-sdk/v2@$sdk_version
+        # - export sdk_version="v2.34.0" # go list -m github.com/hashicorp/terraform-plugin-sdk/v2 | awk '{print $2}'
+        - go mod edit --replace github.com/hashicorp/terraform-plugin-sdk/v2=github.com/cloutierMat/terraform-plugin-sdk/v2@v2.34.0
         - go mod tidy
 builds:
     - binary: "{{ .ProjectName }}_v{{ .Version }}"
