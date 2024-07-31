@@ -154,7 +154,7 @@ func TestAccOpenSearchServerlessSecurityPolicy_string(t *testing.T) {
 				ImportStateIdFunc:       testAccSecurityPolicyImportStateIdFunc(resourceName),
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"policy"}, // JSON is semantically correct but can be set in state in a different order
+				ImportStateVerifyIgnore: []string{names.AttrPolicy}, // JSON is semantically correct but can be set in state in a different order
 			},
 		},
 	})
