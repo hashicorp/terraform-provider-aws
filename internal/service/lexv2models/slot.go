@@ -448,6 +448,17 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 		},
 	}
 
+	subSlotSettingLNB := schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[SubSlotSettingData](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"expression": schema.StringAttribute{
+					Optional: true,
+				},
+			},
+		},
+	}
+
 	valueElicitationSettingLNB := schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[ValueElicitationSettingData](ctx),
 		Validators: []validator.List{
@@ -521,7 +532,7 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 			"multiple_values_setting":   multValueSettingsLNB,
 			"obfuscation_setting":       obfuscationSettingLNB,
 			"value_elicitation_setting": valueElicitationSettingLNB,
-			//sub_slot_setting
+			"sub_slot_setting":          subSlotSettingLNB,
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
