@@ -17,39 +17,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccTimestreamInfluxDBDBInstance_tagsSerial(t *testing.T) {
-	t.Helper()
-
-	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:                             testAccTimestreamInfluxDBDBInstance_tags,
-		"null":                                      testAccTimestreamInfluxDBDBInstance_tags_null,
-		"AddOnUpdate":                               testAccTimestreamInfluxDBDBInstance_tags_AddOnUpdate,
-		"EmptyTag_OnCreate":                         testAccTimestreamInfluxDBDBInstance_tags_EmptyTag_OnCreate,
-		"EmptyTag_OnUpdate_Add":                     testAccTimestreamInfluxDBDBInstance_tags_EmptyTag_OnUpdate_Add,
-		"EmptyTag_OnUpdate_Replace":                 testAccTimestreamInfluxDBDBInstance_tags_EmptyTag_OnUpdate_Replace,
-		"DefaultTags_providerOnly":                  testAccTimestreamInfluxDBDBInstance_tags_DefaultTags_providerOnly,
-		"DefaultTags_nonOverlapping":                testAccTimestreamInfluxDBDBInstance_tags_DefaultTags_nonOverlapping,
-		"DefaultTags_overlapping":                   testAccTimestreamInfluxDBDBInstance_tags_DefaultTags_overlapping,
-		"DefaultTags_updateToProviderOnly":          testAccTimestreamInfluxDBDBInstance_tags_DefaultTags_updateToProviderOnly,
-		"DefaultTags_updateToResourceOnly":          testAccTimestreamInfluxDBDBInstance_tags_DefaultTags_updateToResourceOnly,
-		"DefaultTags_emptyResourceTag":              testAccTimestreamInfluxDBDBInstance_tags_DefaultTags_emptyResourceTag,
-		"DefaultTags_nullOverlappingResourceTag":    testAccTimestreamInfluxDBDBInstance_tags_DefaultTags_nullOverlappingResourceTag,
-		"DefaultTags_nullNonOverlappingResourceTag": testAccTimestreamInfluxDBDBInstance_tags_DefaultTags_nullNonOverlappingResourceTag,
-		"ComputedTag_OnCreate":                      testAccTimestreamInfluxDBDBInstance_tags_ComputedTag_OnCreate,
-		"ComputedTag_OnUpdate_Add":                  testAccTimestreamInfluxDBDBInstance_tags_ComputedTag_OnUpdate_Add,
-		"ComputedTag_OnUpdate_Replace":              testAccTimestreamInfluxDBDBInstance_tags_ComputedTag_OnUpdate_Replace,
-	}
-
-	acctest.RunSerialTests1Level(t, testCases, 0)
-}
-
-func testAccTimestreamInfluxDBDBInstance_tags(t *testing.T) {
+func TestAccTimestreamInfluxDBDBInstance_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v timestreaminfluxdb.GetDbInstanceOutput
 	resourceName := "aws_timestreaminfluxdb_db_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
 		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
@@ -226,7 +200,7 @@ func testAccTimestreamInfluxDBDBInstance_tags(t *testing.T) {
 	})
 }
 
-func testAccTimestreamInfluxDBDBInstance_tags_null(t *testing.T) {
+func TestAccTimestreamInfluxDBDBInstance_tags_null(t *testing.T) {
 	t.Skip("Tags with null values are not correctly handled with the Plugin Framework")
 
 	ctx := acctest.Context(t)
@@ -234,7 +208,7 @@ func testAccTimestreamInfluxDBDBInstance_tags_null(t *testing.T) {
 	resourceName := "aws_timestreaminfluxdb_db_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
 		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
@@ -290,13 +264,13 @@ func testAccTimestreamInfluxDBDBInstance_tags_null(t *testing.T) {
 	})
 }
 
-func testAccTimestreamInfluxDBDBInstance_tags_AddOnUpdate(t *testing.T) {
+func TestAccTimestreamInfluxDBDBInstance_tags_AddOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v timestreaminfluxdb.GetDbInstanceOutput
 	resourceName := "aws_timestreaminfluxdb_db_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
 		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
@@ -369,13 +343,13 @@ func testAccTimestreamInfluxDBDBInstance_tags_AddOnUpdate(t *testing.T) {
 	})
 }
 
-func testAccTimestreamInfluxDBDBInstance_tags_EmptyTag_OnCreate(t *testing.T) {
+func TestAccTimestreamInfluxDBDBInstance_tags_EmptyTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v timestreaminfluxdb.GetDbInstanceOutput
 	resourceName := "aws_timestreaminfluxdb_db_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
 		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
@@ -461,13 +435,13 @@ func testAccTimestreamInfluxDBDBInstance_tags_EmptyTag_OnCreate(t *testing.T) {
 	})
 }
 
-func testAccTimestreamInfluxDBDBInstance_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
+func TestAccTimestreamInfluxDBDBInstance_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v timestreaminfluxdb.GetDbInstanceOutput
 	resourceName := "aws_timestreaminfluxdb_db_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
 		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
@@ -596,13 +570,13 @@ func testAccTimestreamInfluxDBDBInstance_tags_EmptyTag_OnUpdate_Add(t *testing.T
 	})
 }
 
-func testAccTimestreamInfluxDBDBInstance_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
+func TestAccTimestreamInfluxDBDBInstance_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v timestreaminfluxdb.GetDbInstanceOutput
 	resourceName := "aws_timestreaminfluxdb_db_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
 		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
@@ -683,13 +657,13 @@ func testAccTimestreamInfluxDBDBInstance_tags_EmptyTag_OnUpdate_Replace(t *testi
 	})
 }
 
-func testAccTimestreamInfluxDBDBInstance_tags_DefaultTags_providerOnly(t *testing.T) {
+func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v timestreaminfluxdb.GetDbInstanceOutput
 	resourceName := "aws_timestreaminfluxdb_db_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
 		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
@@ -876,13 +850,13 @@ func testAccTimestreamInfluxDBDBInstance_tags_DefaultTags_providerOnly(t *testin
 	})
 }
 
-func testAccTimestreamInfluxDBDBInstance_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v timestreaminfluxdb.GetDbInstanceOutput
 	resourceName := "aws_timestreaminfluxdb_db_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
 		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
@@ -1045,13 +1019,13 @@ func testAccTimestreamInfluxDBDBInstance_tags_DefaultTags_nonOverlapping(t *test
 	})
 }
 
-func testAccTimestreamInfluxDBDBInstance_tags_DefaultTags_overlapping(t *testing.T) {
+func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v timestreaminfluxdb.GetDbInstanceOutput
 	resourceName := "aws_timestreaminfluxdb_db_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
 		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
@@ -1230,13 +1204,13 @@ func testAccTimestreamInfluxDBDBInstance_tags_DefaultTags_overlapping(t *testing
 	})
 }
 
-func testAccTimestreamInfluxDBDBInstance_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
+func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v timestreaminfluxdb.GetDbInstanceOutput
 	resourceName := "aws_timestreaminfluxdb_db_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
 		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
@@ -1323,13 +1297,13 @@ func testAccTimestreamInfluxDBDBInstance_tags_DefaultTags_updateToProviderOnly(t
 	})
 }
 
-func testAccTimestreamInfluxDBDBInstance_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
+func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v timestreaminfluxdb.GetDbInstanceOutput
 	resourceName := "aws_timestreaminfluxdb_db_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
 		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
@@ -1415,13 +1389,13 @@ func testAccTimestreamInfluxDBDBInstance_tags_DefaultTags_updateToResourceOnly(t
 	})
 }
 
-func testAccTimestreamInfluxDBDBInstance_tags_DefaultTags_emptyResourceTag(t *testing.T) {
+func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v timestreaminfluxdb.GetDbInstanceOutput
 	resourceName := "aws_timestreaminfluxdb_db_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
 		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
@@ -1484,13 +1458,13 @@ func testAccTimestreamInfluxDBDBInstance_tags_DefaultTags_emptyResourceTag(t *te
 	})
 }
 
-func testAccTimestreamInfluxDBDBInstance_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
+func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v timestreaminfluxdb.GetDbInstanceOutput
 	resourceName := "aws_timestreaminfluxdb_db_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
 		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
@@ -1545,7 +1519,7 @@ func testAccTimestreamInfluxDBDBInstance_tags_DefaultTags_emptyProviderOnlyTag(t
 	})
 }
 
-func testAccTimestreamInfluxDBDBInstance_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
+func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	t.Skip("Tags with null values are not correctly handled with the Plugin Framework")
 
 	ctx := acctest.Context(t)
@@ -1553,7 +1527,7 @@ func testAccTimestreamInfluxDBDBInstance_tags_DefaultTags_nullOverlappingResourc
 	resourceName := "aws_timestreaminfluxdb_db_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
 		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
@@ -1612,7 +1586,7 @@ func testAccTimestreamInfluxDBDBInstance_tags_DefaultTags_nullOverlappingResourc
 	})
 }
 
-func testAccTimestreamInfluxDBDBInstance_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
+func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	t.Skip("Tags with null values are not correctly handled with the Plugin Framework")
 
 	ctx := acctest.Context(t)
@@ -1620,7 +1594,7 @@ func testAccTimestreamInfluxDBDBInstance_tags_DefaultTags_nullNonOverlappingReso
 	resourceName := "aws_timestreaminfluxdb_db_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
 		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
@@ -1679,13 +1653,13 @@ func testAccTimestreamInfluxDBDBInstance_tags_DefaultTags_nullNonOverlappingReso
 	})
 }
 
-func testAccTimestreamInfluxDBDBInstance_tags_ComputedTag_OnCreate(t *testing.T) {
+func TestAccTimestreamInfluxDBDBInstance_tags_ComputedTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v timestreaminfluxdb.GetDbInstanceOutput
 	resourceName := "aws_timestreaminfluxdb_db_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
 		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
@@ -1736,13 +1710,13 @@ func testAccTimestreamInfluxDBDBInstance_tags_ComputedTag_OnCreate(t *testing.T)
 	})
 }
 
-func testAccTimestreamInfluxDBDBInstance_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
+func TestAccTimestreamInfluxDBDBInstance_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v timestreaminfluxdb.GetDbInstanceOutput
 	resourceName := "aws_timestreaminfluxdb_db_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
 		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
@@ -1829,13 +1803,13 @@ func testAccTimestreamInfluxDBDBInstance_tags_ComputedTag_OnUpdate_Add(t *testin
 	})
 }
 
-func testAccTimestreamInfluxDBDBInstance_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
+func TestAccTimestreamInfluxDBDBInstance_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v timestreaminfluxdb.GetDbInstanceOutput
 	resourceName := "aws_timestreaminfluxdb_db_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
 		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),

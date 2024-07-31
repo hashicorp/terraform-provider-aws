@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccTimestreamInfluxDBDBInstance_basic(t *testing.T) {
+func TestAccTimestreamInfluxDBDBInstance_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -34,7 +34,7 @@ func testAccTimestreamInfluxDBDBInstance_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_timestreaminfluxdb_db_instance.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -65,7 +65,7 @@ func testAccTimestreamInfluxDBDBInstance_basic(t *testing.T) {
 	})
 }
 
-func testAccTimestreamInfluxDBDBInstance_disappears(t *testing.T) {
+func TestAccTimestreamInfluxDBDBInstance_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -75,7 +75,7 @@ func testAccTimestreamInfluxDBDBInstance_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_timestreaminfluxdb_db_instance.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -96,7 +96,7 @@ func testAccTimestreamInfluxDBDBInstance_disappears(t *testing.T) {
 	})
 }
 
-func testAccTimestreamInfluxDBDBInstance_logDeliveryConfiguration(t *testing.T) {
+func TestAccTimestreamInfluxDBDBInstance_logDeliveryConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -106,7 +106,7 @@ func testAccTimestreamInfluxDBDBInstance_logDeliveryConfiguration(t *testing.T) 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_timestreaminfluxdb_db_instance.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -144,7 +144,7 @@ func testAccTimestreamInfluxDBDBInstance_logDeliveryConfiguration(t *testing.T) 
 	})
 }
 
-func testAccTimestreamInfluxDBDBInstance_publiclyAccessible(t *testing.T) {
+func TestAccTimestreamInfluxDBDBInstance_publiclyAccessible(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -154,7 +154,7 @@ func testAccTimestreamInfluxDBDBInstance_publiclyAccessible(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_timestreaminfluxdb_db_instance.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -181,7 +181,7 @@ func testAccTimestreamInfluxDBDBInstance_publiclyAccessible(t *testing.T) {
 	})
 }
 
-func testAccTimestreamInfluxDBDBInstance_deploymentTypeMultiAzStandby(t *testing.T) {
+func TestAccTimestreamInfluxDBDBInstance_deploymentTypeMultiAzStandby(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -191,7 +191,7 @@ func testAccTimestreamInfluxDBDBInstance_deploymentTypeMultiAzStandby(t *testing
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_timestreaminfluxdb_db_instance.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)

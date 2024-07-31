@@ -5,14 +5,6 @@ page_title: "AWS: aws_timestreaminfluxdb_db_instance"
 description: |-
   Terraform resource for managing an Amazon Timestream for InfluxDB Db Instance.
 ---
-<!---
-TIP: A few guiding principles for writing documentation:
-1. Use simple language while avoiding jargon and figures of speech.
-2. Focus on brevity and clarity to keep a reader's attention.
-3. Use active voice and present tense whenever you can.
-4. Document your feature as it exists now; do not mention the future or past if you can help it.
-5. Use accessible and inclusive language.
---->`
 
 # Resource: aws_timestreaminfluxdb_db_instance
 
@@ -29,8 +21,8 @@ resource "aws_timestreaminfluxdb_db_instance" "example" {
   db_instance_type       = "db.influx.medium"
   username               = "admin"
   password               = "example-password"
-  vpc_subnet_ids         = [aws_subnet.test_subnet.id]
-  vpc_security_group_ids = [aws_security_group.example_security_group.id]
+  vpc_subnet_ids         = [aws_subnet.exampleid]
+  vpc_security_group_ids = [aws_security_group.example.id]
   name                   = "example-db-instance"
 }
 ```
@@ -40,18 +32,18 @@ resource "aws_timestreaminfluxdb_db_instance" "example" {
 All Timestream for InfluxDB instances require a VPC, subnet, and security group. The following example shows how these prerequisite resources can be created and used with `aws_timestreaminfluxdb_db_instance`.
 
 ```terraform
-resource "aws_vpc" "example_vpc" {
+resource "aws_vpc" "example" {
   cidr_block = "10.0.0.0/16"
 }
 
-resource "aws_subnet" "example_subnet" {
-  vpc_id     = aws_vpc.example_vpc.id
+resource "aws_subnet" "example" {
+  vpc_id     = aws_vpc.example.id
   cidr_block = "10.0.1.0/24"
 }
 
-resource "aws_security_group" "example_security_group" {
-  name   = "example_security_group"
-  vpc_id = aws_vpc.example_vpc.id
+resource "aws_security_group" "example" {
+  name   = "example"
+  vpc_id = aws_vpc.example.id
 }
 
 resource "aws_timestreaminfluxdb_db_instance" "example" {
@@ -60,8 +52,8 @@ resource "aws_timestreaminfluxdb_db_instance" "example" {
   db_instance_type       = "db.influx.medium"
   username               = "admin"
   password               = "example-password"
-  vpc_subnet_ids         = [aws_subnet.example_subnet.id]
-  vpc_security_group_ids = [aws_security_group.example_security_group.id]
+  vpc_subnet_ids         = [aws_subnet.example.id]
+  vpc_security_group_ids = [aws_security_group.example.id]
   name                   = "example-db-instance"
 }
 ```
@@ -71,47 +63,47 @@ resource "aws_timestreaminfluxdb_db_instance" "example" {
 The following configuration shows how to define the necessary resources and arguments to allow public internet access on your Timestream for InfluxDB instance's endpoint on port `8086`. After applying this configuration, the instance's InfluxDB UI can be accessed by visiting your instance's endpoint at port `8086`.
 
 ```terraform
-resource "aws_vpc" "example_vpc" {
+resource "aws_vpc" "example" {
   cidr_block = "10.0.0.0/16"
 }
 
-resource "aws_subnet" "example_subnet" {
-  vpc_id     = aws_vpc.example_vpc.id
+resource "aws_subnet" "example" {
+  vpc_id     = aws_vpc.example.id
   cidr_block = "10.0.1.0/24"
 }
 
-resource "aws_security_group" "example_security_group" {
-  name   = "example_security_group"
-  vpc_id = aws_vpc.example_vpc.id
+resource "aws_security_group" "example" {
+  name   = "example"
+  vpc_id = aws_vpc.example.id
 }
 
-resource "aws_internet_gateway" "test_internet_gateway" {
-  vpc_id = aws_vpc.test_vpc.id
+resource "aws_internet_gateway" "example" {
+  vpc_id = aws_vpc.example.id
 
   tags = {
-    Name = "test_internet_gateway"
+    Name = "example"
   }
 }
 
 resource "aws_route" "test_route" {
-  route_table_id         = aws_vpc.test_vpc.main_route_table_id
+  route_table_id         = aws_vpc.example.main_route_table_id
   destination_cidr_block = "0.0.0.0/0"
-  gateway_id             = aws_internet_gateway.test_internet_gateway.id
+  gateway_id             = aws_internet_gateway.example.id
 }
 
 resource "aws_route_table_association" "test_route_table_association" {
   subnet_id      = aws_subnet.test_subnet.id
-  route_table_id = aws_vpc.test_vpc.main_route_table_id
+  route_table_id = aws_vpc.example.main_route_table_id
 }
 
-resource "aws_vpc_security_group_ingress_rule" "test_vpc_security_group_ingress_rule_vpc" {
-  security_group_id            = aws_security_group.test_security_group.id
-  referenced_security_group_id = aws_security_group.test_security_group.id
+resource "aws_vpc_security_group_ingress_rule" "example" {
+  security_group_id            = aws_security_group.example.id
+  referenced_security_group_id = aws_security_group.example.id
   ip_protocol                  = -1
 }
 
-resource "aws_vpc_security_group_ingress_rule" "test_vpc_security_group_ingress_rule_influxdb" {
-  security_group_id = aws_security_group.test_security_group.id
+resource "aws_vpc_security_group_ingress_rule" "example" {
+  security_group_id = aws_security_group.example.id
   cidr_ipv4         = "0.0.0.0/0"
   ip_protocol       = "tcp"
   from_port         = 8086
@@ -124,8 +116,8 @@ resource "aws_timestreaminfluxdb_db_instance" "example" {
   db_instance_type       = "db.influx.medium"
   username               = "admin"
   password               = "example-password"
-  vpc_subnet_ids         = [aws_subnet.example_subnet.id]
-  vpc_security_group_ids = [aws_security_group.example_security_group.id]
+  vpc_subnet_ids         = [aws_subnet.example.id]
+  vpc_security_group_ids = [aws_security_group.example.id]
   name                   = "example-db-instance"
   publicly_accessible    = true # False by default
 }
@@ -136,11 +128,11 @@ resource "aws_timestreaminfluxdb_db_instance" "example" {
 You can use an S3 bucket to store logs generated by your Timestream for InfluxDB instance. The following example shows what resources and arguments are required to configure an S3 bucket for logging, including the IAM policy that needs to be set in order to allow Timestream for InfluxDB to place logs in your S3 bucket. The configuration of the required VPC, security group, and subnet have been left out of the example for brevity.
 
 ```terraform
-resource "aws_s3_bucket" "example_s3_bucket" {
+resource "aws_s3_bucket" "example" {
   bucket = "example-s3-bucket"
 }
 
-data "aws_iam_policy_document" "allow_timestreaminfluxdb_policy_document" {
+data "aws_iam_policy_document" "example" {
   statement {
     actions = ["s3:PutObject"]
     principals {
@@ -148,14 +140,14 @@ data "aws_iam_policy_document" "allow_timestreaminfluxdb_policy_document" {
       identifiers = ["timestream-influxdb.amazonaws.com"]
     }
     resources = [
-      "${aws_s3_bucket.example_s3_bucket.arn}/*"
+      "${aws_s3_bucket.example.arn}/*"
     ]
   }
 }
 
-resource "aws_s3_bucket_policy" "allow_timestreaminfluxdb_policy" {
-  bucket = aws_s3_bucket.example_s3_bucket.id
-  policy = data.aws_iam_policy_document.allow_timestreaminfluxdb_policy_document.json
+resource "aws_s3_bucket_policy" "example" {
+  bucket = aws_s3_bucket.example.id
+  policy = data.aws_iam_policy_document.example.json
 }
 
 resource "aws_timestreaminfluxdb_db_instance" "example" {
@@ -164,13 +156,13 @@ resource "aws_timestreaminfluxdb_db_instance" "example" {
   db_instance_type       = "db.influx.medium"
   username               = "admin"
   password               = "example-password"
-  vpc_subnet_ids         = [aws_subnet.example_subnet.id]
-  vpc_security_group_ids = [aws_security_group.example_security_group.id]
+  vpc_subnet_ids         = [aws_subnet.example.id]
+  vpc_security_group_ids = [aws_security_group.example.id]
   name                   = "example-db-instance"
 
   log_delivery_configuration {
     s3_configuration {
-      bucket_name = aws_s3_bucket.example_s3_bucket.name
+      bucket_name = aws_s3_bucket.example.name
       enabled     = true
     }
   }
@@ -182,14 +174,14 @@ resource "aws_timestreaminfluxdb_db_instance" "example" {
 To use multi-region availability, at least two subnets must be created in different availability zones and used with your Timestream for InfluxDB instance.
 
 ```terraform
-resource "aws_subnet" "example_subnet_1" {
-  vpc_id            = aws_vpc.example_vpc.id
+resource "aws_subnet" "example_1" {
+  vpc_id            = aws_vpc.example.id
   cidr_block        = "10.0.1.0/24"
   availability_zone = "us-west-2a"
 }
 
-resource "aws_subnet" "example_subnet_2" {
-  vpc_id            = aws_vpc.example_vpc.id
+resource "aws_subnet" "example_2" {
+  vpc_id            = aws_vpc.example.id
   cidr_block        = "10.0.2.0/24"
   availability_zone = "us-west-2b"
 }
@@ -201,8 +193,8 @@ resource "aws_timestreaminfluxdb_db_instance" "example" {
   deployment_type        = "WITH_MULTIAZ_STANDBY"
   username               = "admin"
   password               = "example-password"
-  vpc_subnet_ids         = [aws_subnet.example_subnet_1.id, aws_subnet.example_subnet_2.id]
-  vpc_security_group_ids = [aws_security_group.example_security_group.id]
+  vpc_subnet_ids         = [aws_subnet.example_1.id, aws_subnet.example_2.id]
+  vpc_security_group_ids = [aws_security_group.example.id]
   name                   = "example-db-instance"
 }
 ```
