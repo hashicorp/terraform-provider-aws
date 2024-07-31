@@ -26,7 +26,7 @@ func TestAccStorageGatewayLocalDiskDataSource_diskNode(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccLocalDiskDataSourceConfig_nodeNonExistent(rName),
-				ExpectError: regexache.MustCompile(`no results found`),
+				ExpectError: regexache.MustCompile(`no matching Storage Gateway Local Disk found`),
 			},
 			{
 				Config: testAccLocalDiskDataSourceConfig_node(rName),
@@ -52,7 +52,7 @@ func TestAccStorageGatewayLocalDiskDataSource_diskPath(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccLocalDiskDataSourceConfig_pathNonExistent(rName),
-				ExpectError: regexache.MustCompile(`no results found`),
+				ExpectError: regexache.MustCompile(`no matching Storage Gateway Local Disk found`),
 			},
 			{
 				Config: testAccLocalDiskDataSourceConfig_path(rName),
