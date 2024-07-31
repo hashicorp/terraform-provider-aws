@@ -83,14 +83,14 @@ const (
 	RepositoryMXNetInference = "mxnet-inference"
 	// SageMaker DLC MXNet Inference EIA
 	RepositoryMXNetInferenceEIA = "mxnet-inference-eia"
-	// SageMaker DLC Sagemaker MXNet
-	RepositorySagemakerMXNet = "sagemaker-mxnet"
-	// SageMaker DLC Sagemaker MXNet Serving
-	RepositorySagemakerMXNetServing = "sagemaker-mxnet-serving"
-	// SageMaker DLC Sagemaker MXNet EIA
-	RepositorySagemakerMXNetEIA = "sagemaker-mxnet-eia"
-	// SageMaker DLC Sagemaker MXNet Serving EIA
-	RepositorySagemakerMXNetServingEIA = "sagemaker-mxnet-serving-eia"
+	// SageMaker DLC SageMaker MXNet
+	RepositorySageMakerMXNet = "sagemaker-mxnet"
+	// SageMaker DLC SageMaker MXNet Serving
+	RepositorySageMakerMXNetServing = "sagemaker-mxnet-serving"
+	// SageMaker DLC SageMaker MXNet EIA
+	RepositorySageMakerMXNetEIA = "sagemaker-mxnet-eia"
+	// SageMaker DLC SageMaker MXNet Serving EIA
+	RepositorySageMakerMXNetServingEIA = "sagemaker-mxnet-serving-eia"
 	// SageMaker DLC MXNet Coach
 	RepositoryMXNetCoach = "sagemaker-rl-mxnet"
 	// SageMaker Model Monitor
@@ -119,7 +119,7 @@ const (
 	RepositoryPyTorchTrainingNeuronX = "pytorch-training-neuronx"
 	// SageMaker DLC PyTorch Training Compiler
 	RepositoryPyTorchTrainingCompiler = "pytorch-trcomp-training"
-	// SageMaker DLC Sagemaker PyTorch Inference
+	// SageMaker DLC SageMaker PyTorch Inference
 	RepositoryPyTorchInference = "pytorch-inference"
 	// SageMaker DLC PyTorch Inference EIA
 	RepositoryPyTorchInferenceEIA = "pytorch-inference-eia"
@@ -127,8 +127,8 @@ const (
 	RepositoryPyTorchInferenceGraviton = "pytorch-inference-graviton"
 	// SageMaker DLC PyTorch Inference NeuronX
 	RepositoryPyTorchInferenceNeuronX = "pytorch-inference-neuronx"
-	// SageMaker DLC Sagemaker PyTorch
-	RepositorySagemakerPyTorch = "sagemaker-pytorch"
+	// SageMaker DLC SageMaker PyTorch
+	RepositorySageMakerPyTorch = "sagemaker-pytorch"
 	// SageMaker Algorithm Random Cut Forest
 	RepositoryRandomCutForest = "randomcutforest"
 	// SageMaker DLC RL Ray PyTorch
@@ -153,16 +153,16 @@ const (
 	RepositoryTensorFlowInferenceEIA = "tensorflow-inference-eia"
 	// SageMaker DLC TensorFlow Inference Graviton
 	RepositoryTensorFlowInferenceGraviton = "tensorflow-inference-graviton"
-	// SageMaker DLC Sagemaker TensorFlow
-	RepositorySagemakerTensorFlow = "sagemaker-tensorflow"
-	// SageMaker DLC Sagemaker TensorFlow EIA
-	RepositorySagemakerTensorFlowEIA = "sagemaker-tensorflow-eia"
-	// SageMaker DLC Sagemaker TensorFlow Serving
+	// SageMaker DLC SageMaker TensorFlow
+	RepositorySageMakerTensorFlow = "sagemaker-tensorflow"
+	// SageMaker DLC SageMaker TensorFlow EIA
+	RepositorySageMakerTensorFlowEIA = "sagemaker-tensorflow-eia"
+	// SageMaker DLC SageMaker TensorFlow Serving
 	RepositoryTensorFlowServing = "sagemaker-tensorflow-serving"
-	// SageMaker DLC Sagemaker TensorFlow Serving EIA
+	// SageMaker DLC SageMaker TensorFlow Serving EIA
 	RepositoryTensorFlowServingEIA = "sagemaker-tensorflow-serving-eia"
-	// SageMaker DLC Sagemaker TensorFlow Serving
-	RepositorySagemakerTensorFlowScriptMode = "sagemaker-tensorflow-scriptmode"
+	// SageMaker DLC SageMaker TensorFlow Serving
+	RepositorySageMakerTensorFlowScriptMode = "sagemaker-tensorflow-scriptmode"
 	// SageMaker DLC Tensorflow Coach
 	RepositoryTensorflowCoach = "sagemaker-rl-tensorflow"
 	// SageMaker DLC Tensorflow Inferentia
@@ -174,9 +174,9 @@ const (
 	// SageMaker Algorithm XGBoost
 	RepositoryXGBoost = "sagemaker-xgboost"
 	// SageMaker Base Python
-	RepositorySagemakerBasePython = "sagemaker-base-python"
+	RepositorySageMakerBasePython = "sagemaker-base-python"
 	// SageMaker Geospatial
-	RepositorySagemakerGeospatial = "sagemaker-geospatial-v1-0"
+	RepositorySageMakerGeospatial = "sagemaker-geospatial-v1-0"
 	// SageMaker NVIDIA Triton Inference
 	RepositoryNVIDIATritonInference = "sagemaker-tritonserver"
 )
@@ -359,7 +359,7 @@ var PrebuiltECRImageIDByRegion_inferentiaNeo = map[string]string{
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/coach-tensorflow.json
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/tensorflow.json
 
-var PrebuiltECRImageIDByRegion_sagemakerCustom = map[string]string{
+var PrebuiltECRImageIDByRegion_SageMakerCustom = map[string]string{
 	endpoints.AfSouth1RegionID:     "313743910680",
 	endpoints.ApEast1RegionID:      "057415533634",
 	endpoints.ApNortheast1RegionID: "520713654638",
@@ -391,7 +391,7 @@ var PrebuiltECRImageIDByRegion_sagemakerCustom = map[string]string{
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/coach-tensorflow.json
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/vw.json
 
-var PrebuiltECRImageIDByRegion_sagemakerRL = map[string]string{
+var PrebuiltECRImageIDByRegion_SageMakerRL = map[string]string{
 	endpoints.ApNortheast1RegionID: "462105765813",
 	endpoints.ApNortheast2RegionID: "462105765813",
 	endpoints.ApSouth1RegionID:     "462105765813",
@@ -447,7 +447,7 @@ var PrebuiltECRImageIDByRegion_spark = map[string]string{
 
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/sagemaker-base-python.json
 
-var PrebuiltECRImageIDByRegion_sagemakerBasePython = map[string]string{
+var PrebuiltECRImageIDByRegion_SageMakerBasePython = map[string]string{
 	endpoints.AfSouth1RegionID:     "559312083959",
 	endpoints.ApEast1RegionID:      "493642496378",
 	endpoints.ApNortheast1RegionID: "102112518831",
@@ -481,7 +481,7 @@ var PrebuiltECRImageIDByRegion_sagemakerBasePython = map[string]string{
 
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/sagemaker-geospatial.json
 
-var PrebuiltECRImageIDByRegion_sagemakerGeospatial = map[string]string{
+var PrebuiltECRImageIDByRegion_SageMakerGeospatial = map[string]string{
 	endpoints.UsWest2RegionID: "081189585635",
 }
 
@@ -783,15 +783,15 @@ func DataSourcePrebuiltECRImage() *schema.Resource {
 					RepositoryRandomCutForest,
 					RepositoryRLRayPyTorch,
 					RepositoryRLCoachPyTorch,
-					RepositorySagemakerBasePython,
-					RepositorySagemakerGeospatial,
-					RepositorySagemakerMXNet,
-					RepositorySagemakerMXNetServing,
-					RepositorySagemakerMXNetEIA,
-					RepositorySagemakerMXNetServingEIA,
-					RepositorySagemakerPyTorch,
-					RepositorySagemakerTensorFlow,
-					RepositorySagemakerTensorFlowEIA,
+					RepositorySageMakerBasePython,
+					RepositorySageMakerGeospatial,
+					RepositorySageMakerMXNet,
+					RepositorySageMakerMXNetServing,
+					RepositorySageMakerMXNetEIA,
+					RepositorySageMakerMXNetServingEIA,
+					RepositorySageMakerPyTorch,
+					RepositorySageMakerTensorFlow,
+					RepositorySageMakerTensorFlowEIA,
 					RepositoryScikitLearn,
 					RepositorySemanticSegmentation,
 					RepositorySeq2Seq,
@@ -803,7 +803,7 @@ func DataSourcePrebuiltECRImage() *schema.Resource {
 					RepositoryTensorFlowInferenceGraviton,
 					RepositoryTensorFlowServing,
 					RepositoryTensorFlowServingEIA,
-					RepositorySagemakerTensorFlowScriptMode,
+					RepositorySageMakerTensorFlowScriptMode,
 					RepositoryTensorflowCoach,
 					RepositoryTensorflowInferentia,
 					RepositoryStabilityAI,
@@ -892,18 +892,18 @@ func dataSourcePrebuiltECRImageRead(ctx context.Context, d *schema.ResourceData,
 		RepositoryHuggingFaceTEICPU:
 		id = PrebuiltECRImageIDByRegion_XGBoost[region]
 	case RepositoryChainer,
-		RepositorySagemakerMXNet,
-		RepositorySagemakerMXNetServing,
-		RepositorySagemakerMXNetEIA,
-		RepositorySagemakerMXNetServingEIA,
-		RepositorySagemakerPyTorch,
-		RepositorySagemakerTensorFlow,
-		RepositorySagemakerTensorFlowEIA,
-		RepositorySagemakerTensorFlowScriptMode,
+		RepositorySageMakerMXNet,
+		RepositorySageMakerMXNetServing,
+		RepositorySageMakerMXNetEIA,
+		RepositorySageMakerMXNetServingEIA,
+		RepositorySageMakerPyTorch,
+		RepositorySageMakerTensorFlow,
+		RepositorySageMakerTensorFlowEIA,
+		RepositorySageMakerTensorFlowScriptMode,
 		RepositoryTensorflowCoach,
 		RepositoryTensorFlowServing,
 		RepositoryTensorFlowServingEIA:
-		id = PrebuiltECRImageIDByRegion_sagemakerCustom[region]
+		id = PrebuiltECRImageIDByRegion_SageMakerCustom[region]
 	case RepositoryAutoGluonTraining,
 		RepositoryAutoGluonInference,
 		RepositoryDJLDeepSpeed,
@@ -937,11 +937,11 @@ func dataSourcePrebuiltECRImageRead(ctx context.Context, d *schema.ResourceData,
 	case RepositoryRLRayPyTorch,
 		RepositoryRLCoachPyTorch,
 		RepositoryVW:
-		id = PrebuiltECRImageIDByRegion_sagemakerRL[region]
-	case RepositorySagemakerBasePython:
-		id = PrebuiltECRImageIDByRegion_sagemakerBasePython[region]
-	case RepositorySagemakerGeospatial:
-		id = PrebuiltECRImageIDByRegion_sagemakerGeospatial[region]
+		id = PrebuiltECRImageIDByRegion_SageMakerRL[region]
+	case RepositorySageMakerBasePython:
+		id = PrebuiltECRImageIDByRegion_SageMakerBasePython[region]
+	case RepositorySageMakerGeospatial:
+		id = PrebuiltECRImageIDByRegion_SageMakerGeospatial[region]
 	case RepositorySpark:
 		id = PrebuiltECRImageIDByRegion_spark[region]
 	default:

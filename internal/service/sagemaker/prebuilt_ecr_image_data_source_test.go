@@ -220,9 +220,9 @@ func TestAccSageMakerPrebuiltECRImageDataSource_caseXGBoostHuggingFaceTEICPU(t *
 	})
 }
 
-func TestAccSageMakerPrebuiltECRImageDataSource_caseSagemakerCustomSagemakerChainer(t *testing.T) {
+func TestAccSageMakerPrebuiltECRImageDataSource_caseSageMakerCustomSageMakerChainer(t *testing.T) {
 	ctx := acctest.Context(t)
-	expectedID := tfsagemaker.PrebuiltECRImageIDByRegion_sagemakerCustom[acctest.Region()]
+	expectedID := tfsagemaker.PrebuiltECRImageIDByRegion_SageMakerCustom[acctest.Region()]
 
 	dataSourceName := "data.aws_sagemaker_prebuilt_ecr_image.test"
 
@@ -243,9 +243,9 @@ func TestAccSageMakerPrebuiltECRImageDataSource_caseSagemakerCustomSagemakerChai
 	})
 }
 
-func TestAccSageMakerPrebuiltECRImageDataSource_caseSagemakerCustomSagemakerMXNetServingEIA(t *testing.T) {
+func TestAccSageMakerPrebuiltECRImageDataSource_caseSageMakerCustomSageMakerMXNetServingEIA(t *testing.T) {
 	ctx := acctest.Context(t)
-	expectedID := tfsagemaker.PrebuiltECRImageIDByRegion_sagemakerCustom[acctest.Region()]
+	expectedID := tfsagemaker.PrebuiltECRImageIDByRegion_SageMakerCustom[acctest.Region()]
 
 	dataSourceName := "data.aws_sagemaker_prebuilt_ecr_image.test"
 
@@ -266,9 +266,9 @@ func TestAccSageMakerPrebuiltECRImageDataSource_caseSagemakerCustomSagemakerMXNe
 	})
 }
 
-func TestAccSageMakerPrebuiltECRImageDataSource_caseSagemakerCustomSagemakerTensorFlowEIA(t *testing.T) {
+func TestAccSageMakerPrebuiltECRImageDataSource_caseSageMakerCustomSageMakerTensorFlowEIA(t *testing.T) {
 	ctx := acctest.Context(t)
-	expectedID := tfsagemaker.PrebuiltECRImageIDByRegion_sagemakerCustom[acctest.Region()]
+	expectedID := tfsagemaker.PrebuiltECRImageIDByRegion_SageMakerCustom[acctest.Region()]
 
 	dataSourceName := "data.aws_sagemaker_prebuilt_ecr_image.test"
 
@@ -358,9 +358,9 @@ func TestAccSageMakerPrebuiltECRImageDataSource_caseDeepLearningStabilityAI(t *t
 	})
 }
 
-func TestAccSageMakerPrebuiltECRImageDataSource_caseSagemakerBasePython(t *testing.T) {
+func TestAccSageMakerPrebuiltECRImageDataSource_caseSageMakerBasePython(t *testing.T) {
 	ctx := acctest.Context(t)
-	expectedID := tfsagemaker.PrebuiltECRImageIDByRegion_sagemakerBasePython[acctest.Region()]
+	expectedID := tfsagemaker.PrebuiltECRImageIDByRegion_SageMakerBasePython[acctest.Region()]
 
 	dataSourceName := "data.aws_sagemaker_prebuilt_ecr_image.test"
 
@@ -381,9 +381,9 @@ func TestAccSageMakerPrebuiltECRImageDataSource_caseSagemakerBasePython(t *testi
 	})
 }
 
-func TestAccSageMakerPrebuiltECRImageDataSource_caseSagemakerRL(t *testing.T) {
+func TestAccSageMakerPrebuiltECRImageDataSource_caseSageMakerRL(t *testing.T) {
 	ctx := acctest.Context(t)
-	expectedID := tfsagemaker.PrebuiltECRImageIDByRegion_sagemakerRL[acctest.Region()]
+	expectedID := tfsagemaker.PrebuiltECRImageIDByRegion_SageMakerRL[acctest.Region()]
 
 	dataSourceName := "data.aws_sagemaker_prebuilt_ecr_image.test"
 
