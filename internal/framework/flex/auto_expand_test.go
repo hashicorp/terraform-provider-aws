@@ -2298,6 +2298,7 @@ func TestExpandInterface(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				infoExpanding(reflect.TypeFor[testFlexTFInterfaceFlexer](), reflect.TypeFor[*testFlexAWSInterfaceInterface]()),
 				infoConverting(reflect.TypeFor[testFlexTFInterfaceFlexer](), reflect.TypeFor[testFlexAWSInterfaceInterface]()),
+				infoSourceImplementsFlexExpander("", reflect.TypeFor[testFlexTFInterfaceFlexer](), "", reflect.TypeFor[testFlexAWSInterfaceInterface]()),
 				// StringValueFromFramework in testFlexTFInterfaceFlexer.Expand()
 				infoExpandingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[*string]()), // TODO: fix path
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
@@ -2316,6 +2317,7 @@ func TestExpandInterface(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				infoExpanding(reflect.TypeFor[testFlexTFInterfaceIncompatibleExpander](), reflect.TypeFor[*testFlexAWSInterfaceInterface]()),
 				infoConverting(reflect.TypeFor[testFlexTFInterfaceIncompatibleExpander](), reflect.TypeFor[testFlexAWSInterfaceInterface]()),
+				infoSourceImplementsFlexExpander("", reflect.TypeFor[testFlexTFInterfaceIncompatibleExpander](), "", reflect.TypeFor[testFlexAWSInterfaceInterface]()),
 				// StringValueFromFramework in testFlexTFInterfaceFlexer.Expand()
 				infoExpandingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[*string]()), // TODO: fix path
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
@@ -2341,6 +2343,7 @@ func TestExpandInterface(t *testing.T) {
 				infoConverting(reflect.TypeFor[testFlexTFListNestedObject[testFlexTFInterfaceFlexer]](), reflect.TypeFor[testFlexAWSInterfaceSingle]()),
 				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFListNestedObject[testFlexTFInterfaceFlexer]](), "Field1", reflect.TypeFor[*testFlexAWSInterfaceSingle]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFInterfaceFlexer]](), "Field1", reflect.TypeFor[testFlexAWSInterfaceInterface]()),
+				infoSourceImplementsFlexExpander("Field1[0]", reflect.TypeFor[*testFlexTFInterfaceFlexer](), "Field1", reflect.TypeFor[*testFlexAWSInterfaceInterface]()),
 				// StringValueFromFramework in testFlexTFInterfaceFlexer.Expand()
 				infoExpandingWithPath("Field1[0]", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[*string]()), // TODO: fix path
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()),                // TODO: fix path
@@ -2397,6 +2400,7 @@ func TestExpandInterface(t *testing.T) {
 				infoConverting(reflect.TypeFor[testFlexTFSetNestedObject[testFlexTFInterfaceFlexer]](), reflect.TypeFor[testFlexAWSInterfaceSingle]()),
 				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFSetNestedObject[testFlexTFInterfaceFlexer]](), "Field1", reflect.TypeFor[*testFlexAWSInterfaceSingle]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFInterfaceFlexer]](), "Field1", reflect.TypeFor[testFlexAWSInterfaceInterface]()),
+				infoSourceImplementsFlexExpander("Field1[0]", reflect.TypeFor[*testFlexTFInterfaceFlexer](), "Field1", reflect.TypeFor[*testFlexAWSInterfaceInterface]()),
 				// StringValueFromFramework in testFlexTFInterfaceFlexer.Expand()
 				infoExpandingWithPath("Field1[0]", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
@@ -2446,9 +2450,11 @@ func TestExpandInterface(t *testing.T) {
 				infoConverting(reflect.TypeFor[testFlexTFListNestedObject[testFlexTFInterfaceFlexer]](), reflect.TypeFor[testFlexAWSInterfaceSlice]()),
 				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFListNestedObject[testFlexTFInterfaceFlexer]](), "Field1", reflect.TypeFor[*testFlexAWSInterfaceSlice]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFInterfaceFlexer]](), "Field1", reflect.TypeFor[[]testFlexAWSInterfaceInterface]()),
+				infoSourceImplementsFlexExpander("Field1[0]", reflect.TypeFor[*testFlexTFInterfaceFlexer](), "Field1[0]", reflect.TypeFor[*testFlexAWSInterfaceInterface]()),
 				// StringValueFromFramework in testFlexTFInterfaceFlexer.Expand()
 				infoExpandingWithPath("Field1[0]", reflect.TypeFor[types.String](), "Field1[0]", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
+				infoSourceImplementsFlexExpander("Field1[1]", reflect.TypeFor[*testFlexTFInterfaceFlexer](), "Field1[1]", reflect.TypeFor[*testFlexAWSInterfaceInterface]()),
 				// StringValueFromFramework in testFlexTFInterfaceFlexer.Expand()
 				infoExpandingWithPath("Field1[1]", reflect.TypeFor[types.String](), "Field1[1]", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
@@ -2498,9 +2504,11 @@ func TestExpandInterface(t *testing.T) {
 				infoConverting(reflect.TypeFor[testFlexTFSetNestedObject[testFlexTFInterfaceFlexer]](), reflect.TypeFor[testFlexAWSInterfaceSlice]()),
 				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFSetNestedObject[testFlexTFInterfaceFlexer]](), "Field1", reflect.TypeFor[*testFlexAWSInterfaceSlice]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFInterfaceFlexer]](), "Field1", reflect.TypeFor[[]testFlexAWSInterfaceInterface]()),
+				infoSourceImplementsFlexExpander("Field1[0]", reflect.TypeFor[*testFlexTFInterfaceFlexer](), "Field1[0]", reflect.TypeFor[*testFlexAWSInterfaceInterface]()),
 				// StringValueFromFramework in testFlexTFInterfaceFlexer.Expand()
 				infoExpandingWithPath("Field1[0]", reflect.TypeFor[types.String](), "Field1[0]", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
+				infoSourceImplementsFlexExpander("Field1[1]", reflect.TypeFor[*testFlexTFInterfaceFlexer](), "Field1[1]", reflect.TypeFor[*testFlexAWSInterfaceInterface]()),
 				// StringValueFromFramework in testFlexTFInterfaceFlexer.Expand()
 				infoExpandingWithPath("Field1[1]", reflect.TypeFor[types.String](), "Field1[1]", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
@@ -2524,6 +2532,7 @@ func TestExpandInterface(t *testing.T) {
 				infoConverting(reflect.TypeFor[testFlexTFObjectValue[testFlexTFInterfaceFlexer]](), reflect.TypeFor[testFlexAWSInterfaceSingle]()),
 				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFObjectValue[testFlexTFInterfaceFlexer]](), "Field1", reflect.TypeFor[*testFlexAWSInterfaceSingle]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ObjectValueOf[testFlexTFInterfaceFlexer]](), "Field1", reflect.TypeFor[testFlexAWSInterfaceInterface]()),
+				infoSourceImplementsFlexExpander("Field1", reflect.TypeFor[*testFlexTFInterfaceFlexer](), "Field1", reflect.TypeFor[*testFlexAWSInterfaceInterface]()),
 				// StringValueFromFramework in testFlexTFInterfaceFlexer.Expand()
 				infoExpandingWithPath("Field1", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
@@ -2555,6 +2564,7 @@ func TestExpandExpander(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				infoExpanding(reflect.TypeFor[testFlexTFFlexer](), reflect.TypeFor[*testFlexAWSExpander]()),
 				infoConverting(reflect.TypeFor[testFlexTFFlexer](), reflect.TypeFor[testFlexAWSExpander]()),
+				infoSourceImplementsFlexExpander("", reflect.TypeFor[testFlexTFFlexer](), "", reflect.TypeFor[*testFlexAWSExpander]()),
 				// StringValueFromFramework in testFlexTFFlexer.Expand()
 				infoExpandingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
@@ -2570,6 +2580,7 @@ func TestExpandExpander(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				infoExpanding(reflect.TypeFor[testFlexTFExpanderToString](), reflect.TypeFor[*string]()),
 				infoConverting(reflect.TypeFor[testFlexTFExpanderToString](), reflect.TypeFor[string]()),
+				infoSourceImplementsFlexExpander("", reflect.TypeFor[testFlexTFExpanderToString](), "", reflect.TypeFor[string]()),
 				// StringValueFromFramework in testFlexTFFlexer.Expand()
 				infoExpandingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
@@ -2588,6 +2599,7 @@ func TestExpandExpander(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				infoExpanding(reflect.TypeFor[testFlexTFFlexer](), reflect.TypeFor[*testFlexAWSExpanderIncompatible]()),
 				infoConverting(reflect.TypeFor[testFlexTFFlexer](), reflect.TypeFor[testFlexAWSExpanderIncompatible]()),
+				infoSourceImplementsFlexExpander("", reflect.TypeFor[testFlexTFFlexer](), "", reflect.TypeFor[*testFlexAWSExpanderIncompatible]()),
 				// StringValueFromFramework in testFlexTFFlexer.Expand()
 				infoExpandingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[*string]()), // TODO: fix path
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
@@ -2606,6 +2618,7 @@ func TestExpandExpander(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				infoExpanding(reflect.TypeFor[testFlexTFExpanderToNil](), reflect.TypeFor[*testFlexAWSExpander]()),
 				infoConverting(reflect.TypeFor[testFlexTFExpanderToNil](), reflect.TypeFor[testFlexAWSExpander]()),
+				infoSourceImplementsFlexExpander("", reflect.TypeFor[testFlexTFExpanderToNil](), "", reflect.TypeFor[*testFlexAWSExpander]()),
 			},
 		},
 		{
@@ -2621,6 +2634,7 @@ func TestExpandExpander(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				infoExpanding(reflect.TypeFor[testFlexTFExpanderToString](), reflect.TypeFor[*int64]()),
 				infoConverting(reflect.TypeFor[testFlexTFExpanderToString](), reflect.TypeFor[int64]()),
+				infoSourceImplementsFlexExpander("", reflect.TypeFor[testFlexTFExpanderToString](), "", reflect.TypeFor[int64]()),
 				// StringValueFromFramework in testFlexTFFlexer.Expand()
 				infoExpandingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
@@ -2646,6 +2660,7 @@ func TestExpandExpander(t *testing.T) {
 				infoConverting(reflect.TypeFor[testFlexTFExpanderListNestedObject](), reflect.TypeFor[testFlexAWSExpanderSingleStruct]()),
 				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFExpanderListNestedObject](), "Field1", reflect.TypeFor[*testFlexAWSExpanderSingleStruct]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFFlexer]](), "Field1", reflect.TypeFor[testFlexAWSExpander]()),
+				infoSourceImplementsFlexExpander("Field1[0]", reflect.TypeFor[*testFlexTFFlexer](), "Field1", reflect.TypeFor[*testFlexAWSExpander]()),
 				// StringValueFromFramework in testFlexTFFlexer.Expand()
 				infoExpandingWithPath("Field1[0]", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
@@ -2671,6 +2686,7 @@ func TestExpandExpander(t *testing.T) {
 				infoConverting(reflect.TypeFor[testFlexTFExpanderSetNestedObject](), reflect.TypeFor[testFlexAWSExpanderSingleStruct]()),
 				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFExpanderSetNestedObject](), "Field1", reflect.TypeFor[*testFlexAWSExpanderSingleStruct]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFFlexer]](), "Field1", reflect.TypeFor[testFlexAWSExpander]()),
+				infoSourceImplementsFlexExpander("Field1[0]", reflect.TypeFor[*testFlexTFFlexer](), "Field1", reflect.TypeFor[*testFlexAWSExpander]()),
 				// StringValueFromFramework in testFlexTFFlexer.Expand()
 				infoExpandingWithPath("Field1[0]", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
@@ -2696,6 +2712,7 @@ func TestExpandExpander(t *testing.T) {
 				infoConverting(reflect.TypeFor[testFlexTFExpanderListNestedObject](), reflect.TypeFor[testFlexAWSExpanderSinglePtr]()),
 				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFExpanderListNestedObject](), "Field1", reflect.TypeFor[*testFlexAWSExpanderSinglePtr]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFFlexer]](), "Field1", reflect.TypeFor[*testFlexAWSExpander]()),
+				infoSourceImplementsFlexExpander("Field1[0]", reflect.TypeFor[*testFlexTFFlexer](), "Field1", reflect.TypeFor[*testFlexAWSExpander]()),
 				// StringValueFromFramework in testFlexTFFlexer.Expand()
 				infoExpandingWithPath("Field1[0]", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
@@ -2721,6 +2738,7 @@ func TestExpandExpander(t *testing.T) {
 				infoConverting(reflect.TypeFor[testFlexTFExpanderSetNestedObject](), reflect.TypeFor[testFlexAWSExpanderSinglePtr]()),
 				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFExpanderSetNestedObject](), "Field1", reflect.TypeFor[*testFlexAWSExpanderSinglePtr]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFFlexer]](), "Field1", reflect.TypeFor[*testFlexAWSExpander]()),
+				infoSourceImplementsFlexExpander("Field1[0]", reflect.TypeFor[*testFlexTFFlexer](), "Field1", reflect.TypeFor[*testFlexAWSExpander]()),
 				// StringValueFromFramework in testFlexTFFlexer.Expand()
 				infoExpandingWithPath("Field1[0]", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
@@ -2770,9 +2788,11 @@ func TestExpandExpander(t *testing.T) {
 				infoConverting(reflect.TypeFor[testFlexTFExpanderListNestedObject](), reflect.TypeFor[testFlexAWSExpanderStructSlice]()),
 				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFExpanderListNestedObject](), "Field1", reflect.TypeFor[*testFlexAWSExpanderStructSlice]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFFlexer]](), "Field1", reflect.TypeFor[[]testFlexAWSExpander]()),
+				infoSourceImplementsFlexExpander("Field1[0]", reflect.TypeFor[*testFlexTFFlexer](), "Field1[0]", reflect.TypeFor[*testFlexAWSExpander]()),
 				// StringValueFromFramework in testFlexTFFlexer.Expand()
 				infoExpandingWithPath("Field1[0]", reflect.TypeFor[types.String](), "Field1[0]", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
+				infoSourceImplementsFlexExpander("Field1[1]", reflect.TypeFor[*testFlexTFFlexer](), "Field1[1]", reflect.TypeFor[*testFlexAWSExpander]()),
 				// StringValueFromFramework in testFlexTFFlexer.Expand()
 				infoExpandingWithPath("Field1[1]", reflect.TypeFor[types.String](), "Field1[1]", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
@@ -2822,9 +2842,11 @@ func TestExpandExpander(t *testing.T) {
 				infoConverting(reflect.TypeFor[testFlexTFExpanderListNestedObject](), reflect.TypeFor[testFlexAWSExpanderPtrSlice]()),
 				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFExpanderListNestedObject](), "Field1", reflect.TypeFor[*testFlexAWSExpanderPtrSlice]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFFlexer]](), "Field1", reflect.TypeFor[[]*testFlexAWSExpander]()),
+				infoSourceImplementsFlexExpander("Field1[0]", reflect.TypeFor[*testFlexTFFlexer](), "Field1[0]", reflect.TypeFor[*testFlexAWSExpander]()),
 				// StringValueFromFramework in testFlexTFFlexer.Expand()
 				infoExpandingWithPath("Field1[0]", reflect.TypeFor[types.String](), "Field1[0]", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
+				infoSourceImplementsFlexExpander("Field1[1]", reflect.TypeFor[*testFlexTFFlexer](), "Field1[1]", reflect.TypeFor[*testFlexAWSExpander]()),
 				// StringValueFromFramework in testFlexTFFlexer.Expand()
 				infoExpandingWithPath("Field1[1]", reflect.TypeFor[types.String](), "Field1[1]", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
@@ -2874,9 +2896,11 @@ func TestExpandExpander(t *testing.T) {
 				infoConverting(reflect.TypeFor[testFlexTFExpanderSetNestedObject](), reflect.TypeFor[testFlexAWSExpanderStructSlice]()),
 				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFExpanderSetNestedObject](), "Field1", reflect.TypeFor[*testFlexAWSExpanderStructSlice]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFFlexer]](), "Field1", reflect.TypeFor[[]testFlexAWSExpander]()),
+				infoSourceImplementsFlexExpander("Field1[0]", reflect.TypeFor[*testFlexTFFlexer](), "Field1[0]", reflect.TypeFor[*testFlexAWSExpander]()),
 				// StringValueFromFramework in testFlexTFFlexer.Expand()
 				infoExpandingWithPath("Field1[0]", reflect.TypeFor[types.String](), "Field1[0]", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
+				infoSourceImplementsFlexExpander("Field1[1]", reflect.TypeFor[*testFlexTFFlexer](), "Field1[1]", reflect.TypeFor[*testFlexAWSExpander]()),
 				// StringValueFromFramework in testFlexTFFlexer.Expand()
 				infoExpandingWithPath("Field1[1]", reflect.TypeFor[types.String](), "Field1[1]", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
@@ -2926,9 +2950,11 @@ func TestExpandExpander(t *testing.T) {
 				infoConverting(reflect.TypeFor[testFlexTFExpanderSetNestedObject](), reflect.TypeFor[testFlexAWSExpanderPtrSlice]()),
 				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFExpanderSetNestedObject](), "Field1", reflect.TypeFor[*testFlexAWSExpanderPtrSlice]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFFlexer]](), "Field1", reflect.TypeFor[[]*testFlexAWSExpander]()),
+				infoSourceImplementsFlexExpander("Field1[0]", reflect.TypeFor[*testFlexTFFlexer](), "Field1[0]", reflect.TypeFor[*testFlexAWSExpander]()),
 				// StringValueFromFramework in testFlexTFFlexer.Expand()
 				infoExpandingWithPath("Field1[0]", reflect.TypeFor[types.String](), "Field1[0]", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
+				infoSourceImplementsFlexExpander("Field1[1]", reflect.TypeFor[*testFlexTFFlexer](), "Field1[1]", reflect.TypeFor[*testFlexAWSExpander]()),
 				// StringValueFromFramework in testFlexTFFlexer.Expand()
 				infoExpandingWithPath("Field1[1]", reflect.TypeFor[types.String](), "Field1[1]", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
@@ -2952,6 +2978,7 @@ func TestExpandExpander(t *testing.T) {
 				infoConverting(reflect.TypeFor[testFlexTFExpanderObjectValue](), reflect.TypeFor[testFlexAWSExpanderSingleStruct]()),
 				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFExpanderObjectValue](), "Field1", reflect.TypeFor[*testFlexAWSExpanderSingleStruct]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ObjectValueOf[testFlexTFFlexer]](), "Field1", reflect.TypeFor[testFlexAWSExpander]()),
+				infoSourceImplementsFlexExpander("Field1", reflect.TypeFor[*testFlexTFFlexer](), "Field1", reflect.TypeFor[*testFlexAWSExpander]()),
 				// StringValueFromFramework in testFlexTFFlexer.Expand()
 				infoExpandingWithPath("Field1", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
@@ -2975,6 +3002,7 @@ func TestExpandExpander(t *testing.T) {
 				infoConverting(reflect.TypeFor[testFlexTFExpanderObjectValue](), reflect.TypeFor[testFlexAWSExpanderSinglePtr]()),
 				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFExpanderObjectValue](), "Field1", reflect.TypeFor[*testFlexAWSExpanderSinglePtr]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ObjectValueOf[testFlexTFFlexer]](), "Field1", reflect.TypeFor[*testFlexAWSExpander]()),
+				infoSourceImplementsFlexExpander("Field1", reflect.TypeFor[*testFlexTFFlexer](), "Field1", reflect.TypeFor[*testFlexAWSExpander]()),
 				// StringValueFromFramework in testFlexTFFlexer.Expand()
 				infoExpandingWithPath("Field1", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path

@@ -136,6 +136,7 @@ func (expander autoExpander) convert(ctx context.Context, sourcePath path.Path, 
 	tflog.SubsystemInfo(ctx, subsystemName, "Converting")
 
 	if fromExpander, ok := valFrom.Interface().(Expander); ok {
+		tflog.SubsystemInfo(ctx, subsystemName, "Source implements flex.Expander")
 		diags.Append(expandExpander(ctx, fromExpander, vTo)...)
 		return diags
 	}
