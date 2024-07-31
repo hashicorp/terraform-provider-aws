@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/neptune"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/neptune/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -23,7 +23,7 @@ import (
 
 func TestAccNeptuneClusterInstance_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v neptune.DBInstance
+	var v awstypes.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_cluster_instance.cluster_instances"
 	clusterResourceName := "aws_neptune_cluster.test"
@@ -83,7 +83,7 @@ func TestAccNeptuneClusterInstance_basic(t *testing.T) {
 
 func TestAccNeptuneClusterInstance_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v neptune.DBInstance
+	var v awstypes.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_cluster_instance.cluster_instances"
 
@@ -107,7 +107,7 @@ func TestAccNeptuneClusterInstance_disappears(t *testing.T) {
 
 func TestAccNeptuneClusterInstance_identifierGenerated(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v neptune.DBInstance
+	var v awstypes.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_cluster_instance.test"
 
@@ -136,7 +136,7 @@ func TestAccNeptuneClusterInstance_identifierGenerated(t *testing.T) {
 
 func TestAccNeptuneClusterInstance_identifierPrefix(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v neptune.DBInstance
+	var v awstypes.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_cluster_instance.test"
 
@@ -165,7 +165,7 @@ func TestAccNeptuneClusterInstance_identifierPrefix(t *testing.T) {
 
 func TestAccNeptuneClusterInstance_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v neptune.DBInstance
+	var v awstypes.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_cluster_instance.cluster_instances"
 
@@ -211,7 +211,7 @@ func TestAccNeptuneClusterInstance_tags(t *testing.T) {
 
 func TestAccNeptuneClusterInstance_withAZ(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v neptune.DBInstance
+	var v awstypes.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_cluster_instance.cluster_instances"
 	availabiltyZonesDataSourceName := "data.aws_availability_zones.available"
@@ -240,7 +240,7 @@ func TestAccNeptuneClusterInstance_withAZ(t *testing.T) {
 
 func TestAccNeptuneClusterInstance_withSubnetGroup(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v neptune.DBInstance
+	var v awstypes.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_cluster_instance.test"
 	subnetGroupResourceName := "aws_neptune_subnet_group.test"
@@ -269,7 +269,7 @@ func TestAccNeptuneClusterInstance_withSubnetGroup(t *testing.T) {
 
 func TestAccNeptuneClusterInstance_kmsKey(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v neptune.DBInstance
+	var v awstypes.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_cluster_instance.cluster_instances"
 	kmsKeyResourceName := "aws_kms_key.test"
@@ -291,7 +291,7 @@ func TestAccNeptuneClusterInstance_kmsKey(t *testing.T) {
 	})
 }
 
-func testAccCheckClusterInstanceExists(ctx context.Context, n string, v *neptune.DBInstance) resource.TestCheckFunc {
+func testAccCheckClusterInstanceExists(ctx context.Context, n string, v *awstypes.DBInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -302,7 +302,7 @@ func testAccCheckClusterInstanceExists(ctx context.Context, n string, v *neptune
 			return fmt.Errorf("No Neptune Cluster Instance ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneClient(ctx)
 
 		output, err := tfneptune.FindDBInstanceByID(ctx, conn, rs.Primary.ID)
 
@@ -318,7 +318,7 @@ func testAccCheckClusterInstanceExists(ctx context.Context, n string, v *neptune
 
 func testAccCheckClusterInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_neptune_cluster_instance" {

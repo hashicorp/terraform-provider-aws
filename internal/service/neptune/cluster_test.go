@@ -9,8 +9,9 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/neptune"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/neptune"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/neptune/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -40,7 +41,7 @@ func testAccClusterImportStep(n string) resource.TestStep {
 
 func TestAccNeptuneCluster_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster neptune.DBCluster
+	var dbCluster awstypes.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_cluster.test"
 
@@ -99,7 +100,7 @@ func TestAccNeptuneCluster_basic(t *testing.T) {
 
 func TestAccNeptuneCluster_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster neptune.DBCluster
+	var dbCluster awstypes.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_cluster.test"
 
@@ -123,7 +124,7 @@ func TestAccNeptuneCluster_disappears(t *testing.T) {
 
 func TestAccNeptuneCluster_identifierGenerated(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v neptune.DBCluster
+	var v awstypes.DBCluster
 	resourceName := "aws_neptune_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -147,7 +148,7 @@ func TestAccNeptuneCluster_identifierGenerated(t *testing.T) {
 
 func TestAccNeptuneCluster_identifierPrefix(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v neptune.DBCluster
+	var v awstypes.DBCluster
 	resourceName := "aws_neptune_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -171,7 +172,7 @@ func TestAccNeptuneCluster_identifierPrefix(t *testing.T) {
 
 func TestAccNeptuneCluster_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v neptune.DBCluster
+	var v awstypes.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_cluster.test"
 
@@ -213,7 +214,7 @@ func TestAccNeptuneCluster_tags(t *testing.T) {
 
 func TestAccNeptuneCluster_copyTagsToSnapshot(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster neptune.DBCluster
+	var dbCluster awstypes.DBCluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_neptune_cluster.test"
 
@@ -251,7 +252,7 @@ func TestAccNeptuneCluster_copyTagsToSnapshot(t *testing.T) {
 
 func TestAccNeptuneCluster_serverlessConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v neptune.DBCluster
+	var v awstypes.DBCluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_neptune_cluster.test"
 
@@ -277,7 +278,7 @@ func TestAccNeptuneCluster_serverlessConfiguration(t *testing.T) {
 
 func TestAccNeptuneCluster_takeFinalSnapshot(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v neptune.DBCluster
+	var v awstypes.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_cluster.test"
 
@@ -300,7 +301,7 @@ func TestAccNeptuneCluster_takeFinalSnapshot(t *testing.T) {
 
 func TestAccNeptuneCluster_updateIAMRoles(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v neptune.DBCluster
+	var v awstypes.DBCluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_neptune_cluster.test"
 
@@ -337,7 +338,7 @@ func TestAccNeptuneCluster_updateIAMRoles(t *testing.T) {
 
 func TestAccNeptuneCluster_kmsKey(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v neptune.DBCluster
+	var v awstypes.DBCluster
 	resourceName := "aws_neptune_cluster.test"
 	keyResourceName := "aws_kms_key.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
@@ -362,7 +363,7 @@ func TestAccNeptuneCluster_kmsKey(t *testing.T) {
 
 func TestAccNeptuneCluster_encrypted(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v neptune.DBCluster
+	var v awstypes.DBCluster
 	resourceName := "aws_neptune_cluster.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 
@@ -386,7 +387,7 @@ func TestAccNeptuneCluster_encrypted(t *testing.T) {
 
 func TestAccNeptuneCluster_backupsUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v neptune.DBCluster
+	var v awstypes.DBCluster
 	resourceName := "aws_neptune_cluster.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 
@@ -421,7 +422,7 @@ func TestAccNeptuneCluster_backupsUpdate(t *testing.T) {
 
 func TestAccNeptuneCluster_iamAuth(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v neptune.DBCluster
+	var v awstypes.DBCluster
 	resourceName := "aws_neptune_cluster.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 
@@ -445,7 +446,7 @@ func TestAccNeptuneCluster_iamAuth(t *testing.T) {
 
 func TestAccNeptuneCluster_updateCloudWatchLogsExports(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster neptune.DBCluster
+	var dbCluster awstypes.DBCluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_neptune_cluster.test"
 
@@ -485,7 +486,7 @@ func TestAccNeptuneCluster_updateCloudWatchLogsExports(t *testing.T) {
 
 func TestAccNeptuneCluster_updateEngineVersion(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster neptune.DBCluster
+	var dbCluster awstypes.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_cluster.test"
 
@@ -517,7 +518,7 @@ func TestAccNeptuneCluster_updateEngineVersion(t *testing.T) {
 
 func TestAccNeptuneCluster_updateEngineMajorVersion(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster neptune.DBCluster
+	var dbCluster awstypes.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_cluster.test"
 
@@ -550,7 +551,7 @@ func TestAccNeptuneCluster_updateEngineMajorVersion(t *testing.T) {
 func TestAccNeptuneCluster_GlobalClusterIdentifier_PrimarySecondaryClusters(t *testing.T) {
 	ctx := acctest.Context(t)
 	var providers []*schema.Provider
-	var primaryDbCluster, secondaryDbCluster neptune.DBCluster
+	var primaryDbCluster, secondaryDbCluster awstypes.DBCluster
 
 	rNameGlobal := sdkacctest.RandomWithPrefix("tf-acc-test-global")
 	rNamePrimary := sdkacctest.RandomWithPrefix("tf-acc-test-primary")
@@ -582,7 +583,7 @@ func TestAccNeptuneCluster_GlobalClusterIdentifier_PrimarySecondaryClusters(t *t
 
 func TestAccNeptuneCluster_deleteProtection(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster neptune.DBCluster
+	var dbCluster awstypes.DBCluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_neptune_cluster.test"
 
@@ -620,7 +621,7 @@ func TestAccNeptuneCluster_deleteProtection(t *testing.T) {
 
 func TestAccNeptuneCluster_restoreFromSnapshot(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster neptune.DBCluster
+	var dbCluster awstypes.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_cluster.test"
 	keyResourceName := "aws_kms_key.test2"
@@ -652,7 +653,7 @@ func TestAccNeptuneCluster_restoreFromSnapshot(t *testing.T) {
 
 func TestAccNeptuneCluster_storageType(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v neptune.DBCluster
+	var v awstypes.DBCluster
 	resourceName := "aws_neptune_cluster.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 
@@ -683,7 +684,7 @@ func TestAccNeptuneCluster_storageType(t *testing.T) {
 
 func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_neptune_cluster" {
@@ -707,11 +708,11 @@ func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckClusterExists(ctx context.Context, n string, v *neptune.DBCluster) resource.TestCheckFunc {
+func testAccCheckClusterExists(ctx context.Context, n string, v *awstypes.DBCluster) resource.TestCheckFunc {
 	return testAccCheckClusterExistsWithProvider(ctx, n, v, func() *schema.Provider { return acctest.Provider })
 }
 
-func testAccCheckClusterExistsWithProvider(ctx context.Context, n string, v *neptune.DBCluster, providerF func() *schema.Provider) resource.TestCheckFunc {
+func testAccCheckClusterExistsWithProvider(ctx context.Context, n string, v *awstypes.DBCluster, providerF func() *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -722,7 +723,7 @@ func testAccCheckClusterExistsWithProvider(ctx context.Context, n string, v *nep
 			return fmt.Errorf("No Neptune Cluster ID is set")
 		}
 
-		conn := providerF().Meta().(*conns.AWSClient).NeptuneConn(ctx)
+		conn := providerF().Meta().(*conns.AWSClient).NeptuneClient(ctx)
 
 		output, err := tfneptune.FindDBClusterByID(ctx, conn, rs.Primary.ID)
 
@@ -743,7 +744,7 @@ func testAccCheckClusterDestroyWithFinalSnapshot(ctx context.Context) resource.T
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneClient(ctx)
 
 			finalSnapshotID := rs.Primary.Attributes[names.AttrFinalSnapshotIdentifier]
 			_, err := tfneptune.FindClusterSnapshotByID(ctx, conn, finalSnapshotID)
@@ -752,7 +753,7 @@ func testAccCheckClusterDestroyWithFinalSnapshot(ctx context.Context) resource.T
 				return err
 			}
 
-			_, err = conn.DeleteDBClusterSnapshotWithContext(ctx, &neptune.DeleteDBClusterSnapshotInput{
+			_, err = conn.DeleteDBClusterSnapshot(ctx, &neptune.DeleteDBClusterSnapshotInput{
 				DBClusterSnapshotIdentifier: aws.String(finalSnapshotID),
 			})
 

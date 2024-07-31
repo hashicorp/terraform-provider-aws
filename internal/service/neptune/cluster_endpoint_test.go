@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/neptune"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/neptune/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func TestAccNeptuneClusterEndpoint_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster neptune.DBClusterEndpoint
+	var dbCluster awstypes.DBClusterEndpoint
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_neptune_cluster_endpoint.test"
 
@@ -56,7 +56,7 @@ func TestAccNeptuneClusterEndpoint_basic(t *testing.T) {
 
 func TestAccNeptuneClusterEndpoint_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v neptune.DBClusterEndpoint
+	var v awstypes.DBClusterEndpoint
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_neptune_cluster_endpoint.test"
 
@@ -102,7 +102,7 @@ func TestAccNeptuneClusterEndpoint_tags(t *testing.T) {
 
 func TestAccNeptuneClusterEndpoint_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster neptune.DBClusterEndpoint
+	var dbCluster awstypes.DBClusterEndpoint
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_neptune_cluster_endpoint.test"
 
@@ -126,7 +126,7 @@ func TestAccNeptuneClusterEndpoint_disappears(t *testing.T) {
 
 func TestAccNeptuneClusterEndpoint_Disappears_cluster(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster neptune.DBClusterEndpoint
+	var dbCluster awstypes.DBClusterEndpoint
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_neptune_cluster_endpoint.test"
 
@@ -150,7 +150,7 @@ func TestAccNeptuneClusterEndpoint_Disappears_cluster(t *testing.T) {
 
 func testAccCheckClusterEndpointDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_neptune_cluster_endpoint" {
@@ -174,14 +174,14 @@ func testAccCheckClusterEndpointDestroy(ctx context.Context) resource.TestCheckF
 	}
 }
 
-func testAccCheckClusterEndpointExists(ctx context.Context, n string, v *neptune.DBClusterEndpoint) resource.TestCheckFunc {
+func testAccCheckClusterEndpointExists(ctx context.Context, n string, v *awstypes.DBClusterEndpoint) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneClient(ctx)
 
 		output, err := tfneptune.FindClusterEndpointByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrClusterIdentifier], rs.Primary.Attributes["cluster_endpoint_identifier"])
 
