@@ -5472,16 +5472,16 @@ resource "aws_rds_cluster" "test" {
 func testAccClusterConfig_performanceInsightsEnabled(rName string, performanceInsightsEnabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-	cluster_identifier           = %[1]q
-	engine                       = %[3]q
-	db_cluster_instance_class    = "db.m6gd.large"
-	storage_type                 = "io1"
-	allocated_storage            = 100
-	iops                         = 1000
-	master_username              = "tfacctest"
-	master_password              = "avoid-plaintext-passwords"
-	skip_final_snapshot 	     = true
-	performance_insights_enabled = %[2]t
+  cluster_identifier           = %[1]q
+  engine                       = %[3]q
+  db_cluster_instance_class    = "db.m6gd.large"
+  storage_type                 = "io1"
+  allocated_storage            = 100
+  iops                         = 1000
+  master_username              = "tfacctest"
+  master_password              = "avoid-plaintext-passwords"
+  skip_final_snapshot 	       = true
+  performance_insights_enabled = %[2]t
 }
 `, rName, performanceInsightsEnabled, tfrds.ClusterEngineMySQL)
 }
@@ -5489,22 +5489,22 @@ resource "aws_rds_cluster" "test" {
 func testAccClusterConfig_performanceInsightsKMSKeyID(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
- description              = %[1]q
-  deletion_window_in_days = 7
+  description              = %[1]q
+  deletion_window_in_days  = 7
 }
 
 resource "aws_rds_cluster" "test" {
-	cluster_identifier              = %[1]q
-	engine                          = %[2]q
-	db_cluster_instance_class       = "db.m6gd.large"
-	storage_type                    = "io1"
-	allocated_storage               = 100
-	iops                            = 1000
-	master_username                 = "tfacctest"
-	master_password                 = "avoid-plaintext-passwords"
-	skip_final_snapshot 	        = true
-	performance_insights_enabled    = true
-	performance_insights_kms_key_id = aws_kms_key.test.arn
+  cluster_identifier              = %[1]q
+  engine                          = %[2]q
+  db_cluster_instance_class       = "db.m6gd.large"
+  storage_type                    = "io1"
+  allocated_storage               = 100
+  iops                            = 1000
+  master_username                 = "tfacctest"
+  master_password                 = "avoid-plaintext-passwords"
+  skip_final_snapshot 	          = true
+  performance_insights_enabled    = true
+  performance_insights_kms_key_id = aws_kms_key.test.arn
 }
 `, rName, tfrds.ClusterEngineMySQL)
 }
@@ -5512,17 +5512,17 @@ resource "aws_rds_cluster" "test" {
 func testAccClusterConfig_performanceInsightsRetentionPeriod(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-	cluster_identifier                    = %[1]q
-	engine                                = %[2]q
-	db_cluster_instance_class             = "db.m6gd.large"
-	storage_type                          = "io1"
-	allocated_storage                     = 100
-	iops                                  = 1000
-	master_username                       = "tfacctest"
-	master_password                       = "avoid-plaintext-passwords"
-	skip_final_snapshot 	              = true
-	performance_insights_enabled          = true
-	performance_insights_retention_period = 62
+  cluster_identifier                    = %[1]q
+  engine                                = %[2]q
+  db_cluster_instance_class             = "db.m6gd.large"
+  storage_type                          = "io1"
+  allocated_storage                     = 100
+  iops                                  = 1000
+  master_username                       = "tfacctest"
+  master_password                       = "avoid-plaintext-passwords"
+  skip_final_snapshot 	                = true
+  performance_insights_enabled          = true
+  performance_insights_retention_period = 62
 }
 `, rName, tfrds.ClusterEngineMySQL)
 }
