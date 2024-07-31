@@ -122,11 +122,7 @@ func testAccCheckWorkingStorageExists(ctx context.Context, n string) resource.Te
 
 		_, err = tfstoragegateway.FindWorkingStorageDiskIDByTwoPartKey(ctx, conn, gatewayARN, diskID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

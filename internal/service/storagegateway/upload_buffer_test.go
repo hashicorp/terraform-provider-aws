@@ -156,11 +156,7 @@ func testAccCheckUploadBufferExists(ctx context.Context, n string) resource.Test
 
 		_, err = tfstoragegateway.FindUploadBufferDiskIDByTwoPartKey(ctx, conn, gatewayARN, diskID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
