@@ -5480,7 +5480,7 @@ resource "aws_rds_cluster" "test" {
   iops                         = 1000
   master_username              = "tfacctest"
   master_password              = "avoid-plaintext-passwords"
-  skip_final_snapshot 	       = true
+  skip_final_snapshot          = true
   performance_insights_enabled = %[2]t
 }
 `, rName, performanceInsightsEnabled, tfrds.ClusterEngineMySQL)
@@ -5489,8 +5489,8 @@ resource "aws_rds_cluster" "test" {
 func testAccClusterConfig_performanceInsightsKMSKeyID(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description              = %[1]q
-  deletion_window_in_days  = 7
+  description             = %[1]q
+  deletion_window_in_days = 7
 }
 
 resource "aws_rds_cluster" "test" {
@@ -5502,7 +5502,7 @@ resource "aws_rds_cluster" "test" {
   iops                            = 1000
   master_username                 = "tfacctest"
   master_password                 = "avoid-plaintext-passwords"
-  skip_final_snapshot 	          = true
+  skip_final_snapshot             = true
   performance_insights_enabled    = true
   performance_insights_kms_key_id = aws_kms_key.test.arn
 }
@@ -5520,7 +5520,7 @@ resource "aws_rds_cluster" "test" {
   iops                                  = 1000
   master_username                       = "tfacctest"
   master_password                       = "avoid-plaintext-passwords"
-  skip_final_snapshot 	                = true
+  skip_final_snapshot                   = true
   performance_insights_enabled          = true
   performance_insights_retention_period = 62
 }
