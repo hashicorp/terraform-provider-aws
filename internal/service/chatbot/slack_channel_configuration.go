@@ -12,6 +12,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/chatbot/types"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
@@ -48,7 +49,6 @@ func newSlackChannelConfigurationResource(_ context.Context) (resource.ResourceW
 
 type slackChannelConfigurationResource struct {
 	framework.ResourceWithConfigure
-	framework.WithImportByID
 	framework.WithTimeouts
 }
 
@@ -74,7 +74,6 @@ func (r *slackChannelConfigurationResource) Schema(ctx context.Context, request 
 			names.AttrIAMRoleARN: schema.StringAttribute{
 				Required: true,
 			},
-			names.AttrID: framework.IDAttribute(),
 			"logging_level": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[loggingLevel](),
 				Optional:   true,
@@ -159,7 +158,6 @@ func (r *slackChannelConfigurationResource) Create(ctx context.Context, request 
 
 	// Set values for unknowns
 	data.ChatConfigurationARN = fwflex.StringToFramework(ctx, output.ChatConfigurationArn)
-	data.setID()
 	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -266,7 +264,7 @@ func (r *slackChannelConfigurationResource) Delete(ctx context.Context, request 
 	conn := r.Meta().ChatbotClient(ctx)
 
 	tflog.Debug(ctx, "deleting Chatbot Slack Channel Configuration", map[string]interface{}{
-		names.AttrID: data.ChatConfigurationARN.ValueString(),
+		"chat_configuration_arn": data.ChatConfigurationARN.ValueString(),
 	})
 
 	input := &chatbot.DeleteSlackChannelConfigurationInput{
@@ -294,6 +292,10 @@ func (r *slackChannelConfigurationResource) Delete(ctx context.Context, request 
 
 func (r *slackChannelConfigurationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
 	r.SetTagsAll(ctx, request, response)
+}
+
+func (r *slackChannelConfigurationResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("chat_configuration_arn"), request, response)
 }
 
 func findSlackChannelConfiguration(ctx context.Context, conn *chatbot.Client, input *chatbot.DescribeSlackChannelConfigurationsInput) (*awstypes.SlackChannelConfiguration, error) {
@@ -400,7 +402,6 @@ type slackChannelConfigurationResourceModel struct {
 	ConfigurationName         types.String                     `tfsdk:"configuration_name"`
 	GuardrailPolicyARNs       types.List                       `tfsdk:"guardrail_policy_arns"`
 	IAMRoleARN                types.String                     `tfsdk:"iam_role_arn"`
-	ID                        types.String                     `tfsdk:"id"`
 	LoggingLevel              fwtypes.StringEnum[loggingLevel] `tfsdk:"logging_level"`
 	SlackChannelID            types.String                     `tfsdk:"slack_channel_id"`
 	SlackChannelName          types.String                     `tfsdk:"slack_channel_name"`
@@ -414,18 +415,12 @@ type slackChannelConfigurationResourceModel struct {
 }
 
 func (data *slackChannelConfigurationResourceModel) InitFromID() error {
-	_, err := arn.Parse(data.ID.ValueString())
+	_, err := arn.Parse(data.ChatConfigurationARN.ValueString())
 	if err != nil {
 		return err
 	}
 
-	data.ChatConfigurationARN = data.ID
-
 	return nil
-}
-
-func (data *slackChannelConfigurationResourceModel) setID() {
-	data.ID = data.ChatConfigurationARN
 }
 
 type loggingLevel string

@@ -75,10 +75,11 @@ func testAccSlackChannelConfiguration_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            testResourceSlackChannelConfiguration,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{},
+				ResourceName:                         testResourceSlackChannelConfiguration,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccSlackChannelConfigurationImportStateIDFunc(testResourceSlackChannelConfiguration),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "chat_configuration_arn",
 			},
 		},
 	})
@@ -132,10 +133,10 @@ func testAccCheckSlackChannelConfigurationDestroy(ctx context.Context) resource.
 			}
 
 			if err != nil {
-				return create.Error(names.Chatbot, create.ErrActionCheckingDestroyed, tfchatbot.ResNameSlackChannelConfiguration, rs.Primary.ID, err)
+				return err
 			}
 
-			return create.Error(names.Chatbot, create.ErrActionCheckingDestroyed, tfchatbot.ResNameSlackChannelConfiguration, rs.Primary.ID, errors.New("not destroyed"))
+			return create.Error(names.Chatbot, create.ErrActionCheckingDestroyed, tfchatbot.ResNameSlackChannelConfiguration, rs.Primary.Attributes["chat_configuration_arn"], errors.New("not destroyed"))
 		}
 
 		return nil
@@ -149,16 +150,12 @@ func testAccCheckSlackChannelConfigurationExists(ctx context.Context, name strin
 			return create.Error(names.Chatbot, create.ErrActionCheckingExistence, tfchatbot.ResNameSlackChannelConfiguration, name, errors.New("not found"))
 		}
 
-		if rs.Primary.ID == "" {
-			return create.Error(names.Chatbot, create.ErrActionCheckingExistence, tfchatbot.ResNameSlackChannelConfiguration, name, errors.New("not set"))
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ChatbotClient(ctx)
 
 		output, err := tfchatbot.FindSlackChannelConfigurationByARN(ctx, conn, rs.Primary.Attributes["chat_configuration_arn"])
 
 		if err != nil {
-			return create.Error(names.Chatbot, create.ErrActionCheckingExistence, tfchatbot.ResNameSlackChannelConfiguration, rs.Primary.ID, err)
+			return err
 		}
 
 		*slackchannelconfiguration = *output
@@ -177,6 +174,17 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 	if err != nil {
 		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
+func testAccSlackChannelConfigurationImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return rs.Primary.Attributes["chat_configuration_arn"], nil
 	}
 }
 

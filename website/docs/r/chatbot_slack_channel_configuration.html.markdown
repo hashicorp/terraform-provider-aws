@@ -49,7 +49,6 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `chat_configuration_arn` - ARN of the Slack channel configuration.
-* `id` - ID (ARN) of the Slack channel configuration.
 * `slack_channel_name` - Name of the Slack channel.
 * `slack_team_name` - Name of the Slack team.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
