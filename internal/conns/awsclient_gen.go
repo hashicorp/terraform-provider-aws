@@ -168,6 +168,7 @@ import (
 	redshiftdata_sdkv2 "github.com/aws/aws-sdk-go-v2/service/redshiftdata"
 	redshiftserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/redshiftserverless"
 	rekognition_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rekognition"
+	resiliencehub_sdkv2 "github.com/aws/aws-sdk-go-v2/service/resiliencehub"
 	resourceexplorer2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
 	resourcegroups_sdkv2 "github.com/aws/aws-sdk-go-v2/service/resourcegroups"
 	resourcegroupstaggingapi_sdkv2 "github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi"
@@ -1007,6 +1008,10 @@ func (c *AWSClient) RedshiftServerlessClient(ctx context.Context) *redshiftserve
 
 func (c *AWSClient) RekognitionClient(ctx context.Context) *rekognition_sdkv2.Client {
 	return errs.Must(client[*rekognition_sdkv2.Client](ctx, c, names.Rekognition, make(map[string]any)))
+}
+
+func (c *AWSClient) ResilienceHubClient(ctx context.Context) *resiliencehub_sdkv2.Client {
+	return errs.Must(client[*resiliencehub_sdkv2.Client](ctx, c, names.ResilienceHub, make(map[string]any)))
 }
 
 func (c *AWSClient) ResourceExplorer2Client(ctx context.Context) *resourceexplorer2_sdkv2.Client {
