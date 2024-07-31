@@ -14,7 +14,7 @@ import (
 func KeyFirstLower(in []byte) []byte {
 	out := make([]byte, 0, len(in))
 
-	err := ujson.Walk([]byte(in), func(_ int, key, value []byte) bool {
+	err := ujson.Walk(in, func(_ int, key, value []byte) bool {
 		// Write to output.
 		if len(out) != 0 && ujson.ShouldAddComma(value, out[len(out)-1]) {
 			out = append(out, ',')
