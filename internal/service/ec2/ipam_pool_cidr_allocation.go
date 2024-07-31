@@ -167,6 +167,7 @@ func resourceIPAMPoolCIDRAllocationRead(ctx context.Context, d *schema.ResourceD
 	d.Set("cidr", allocation.Cidr)
 	d.Set("ipam_pool_allocation_id", allocation.IpamPoolAllocationId)
 	d.Set("ipam_pool_id", poolID)
+	d.Set(names.AttrDescription, allocation.Description)
 	d.Set(names.AttrResourceID, allocation.ResourceId)
 	d.Set(names.AttrResourceOwner, allocation.ResourceOwner)
 	d.Set(names.AttrResourceType, allocation.ResourceType)
