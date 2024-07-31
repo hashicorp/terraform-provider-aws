@@ -166,13 +166,13 @@ func resourceIPAMPoolCIDRAllocationRead(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "reading IPAM Pool CIDR Allocation (%s): %s", d.Id(), err)
 	}
 
-	d.Set("cidr", allocation.Cidr)
+	cidr := aws.ToString(allocation.Cidr)
+	d.Set("cidr", cidr)
+	d.Set(names.AttrDescription, allocation.Description)
 	d.Set("ipam_pool_allocation_id", allocation.IpamPoolAllocationId)
 	d.Set("ipam_pool_id", poolID)
-	cidr := aws.ToString(allocation.Cidr)
 	d.Set("netmask_length", nil)
-	parts := strings.Split(cidr, "/")
-	if len(parts) == 2 {
+	if parts := strings.Split(cidr, "/"); len(parts) == 2 {
 		if v, err := strconv.Atoi(parts[1]); err == nil {
 			d.Set("netmask_length", v)
 		} else {
@@ -181,7 +181,7 @@ func resourceIPAMPoolCIDRAllocationRead(ctx context.Context, d *schema.ResourceD
 	} else {
 		log.Printf("[WARN] Invalid CIDR block format: %s", cidr)
 	}
-	d.Set(names.AttrDescription, allocation.Description)
+
 	d.Set(names.AttrResourceID, allocation.ResourceId)
 	d.Set(names.AttrResourceOwner, allocation.ResourceOwner)
 	d.Set(names.AttrResourceType, allocation.ResourceType)
