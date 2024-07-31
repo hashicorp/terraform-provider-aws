@@ -324,6 +324,18 @@ func infoSourceImplementsFlexExpander(sourcePath string, sourceType reflect.Type
 	}
 }
 
+func infoSourceImplementsFlexTypedExpander(sourcePath string, sourceType reflect.Type, targetPath string, targetType reflect.Type) map[string]any {
+	return map[string]any{
+		"@level":             hclog.Info.String(),
+		"@module":            logModule,
+		"@message":           "Source implements flex.TypedExpander",
+		logAttrKeySourcePath: sourcePath,
+		logAttrKeySourceType: fullTypeName(sourceType),
+		logAttrKeyTargetPath: targetPath,
+		logAttrKeyTargetType: fullTypeName(targetType),
+	}
+}
+
 func infoLogLine(message string, sourceType, targetType reflect.Type) map[string]any {
 	return logInfo(message, map[string]any{
 		logAttrKeySourceType: fullTypeName(sourceType),

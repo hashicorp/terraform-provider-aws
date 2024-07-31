@@ -127,6 +127,7 @@ func autoFlexConvertStruct(ctx context.Context, sourcePath path.Path, from any, 
 	}
 
 	if fromTypedExpander, ok := valFrom.Interface().(TypedExpander); ok {
+		tflog.SubsystemInfo(ctx, subsystemName, "Source implements flex.TypedExpander")
 		diags.Append(expandTypedExpander(ctx, fromTypedExpander, valTo)...)
 		return diags
 	}
