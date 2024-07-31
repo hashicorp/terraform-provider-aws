@@ -140,6 +140,30 @@ func resourceGraphQLAPI() *schema.Resource {
 				Required:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.AuthenticationType](),
 			},
+			"enhanced_metrics_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"data_source_level_metrics_behavior": {
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.DataSourceLevelMetricsBehavior](),
+						},
+						"operation_level_metrics_config": {
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.OperationLevelMetricsConfig](),
+						},
+						"resolver_level_metrics_behavior": {
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.ResolverLevelMetricsBehavior](),
+						},
+					},
+				},
+			},
 			"introspection_config": {
 				Type:             schema.TypeString,
 				Optional:         true,
@@ -305,6 +329,10 @@ func resourceGraphQLAPICreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.AdditionalAuthenticationProviders = expandAdditionalAuthenticationProviders(v.([]interface{}), meta.(*conns.AWSClient).Region)
 	}
 
+	if v, ok := d.GetOk("enhanced_metrics_config"); ok {
+		input.EnhancedMetricsConfig = expandEnhancedMetricsConfig(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("introspection_config"); ok {
 		input.IntrospectionConfig = awstypes.GraphQLApiIntrospectionConfig(v.(string))
 	}
@@ -379,6 +407,9 @@ func resourceGraphQLAPIRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	d.Set(names.AttrARN, api.Arn)
 	d.Set("authentication_type", api.AuthenticationType)
+	if err := d.Set("enhanced_metrics_config", flattenEnhancedMetricsConfig(api.EnhancedMetricsConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting enhanced_metrics_config: %s", err)
+	}
 	d.Set("introspection_config", api.IntrospectionConfig)
 	if err := d.Set("lambda_authorizer_config", flattenLambdaAuthorizerConfig(api.LambdaAuthorizerConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting lambda_authorizer_config: %s", err)
@@ -417,6 +448,10 @@ func resourceGraphQLAPIUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 		if v, ok := d.GetOk("additional_authentication_provider"); ok {
 			input.AdditionalAuthenticationProviders = expandAdditionalAuthenticationProviders(v.([]interface{}), meta.(*conns.AWSClient).Region)
+		}
+
+		if v, ok := d.GetOk("enhanced_metrics_config"); ok {
+			input.EnhancedMetricsConfig = expandEnhancedMetricsConfig(v.([]interface{}))
 		}
 
 		if v, ok := d.GetOk("introspection_config"); ok {
@@ -655,6 +690,21 @@ func expandUserPoolConfig(tfList []interface{}, currentRegion string) *awstypes.
 	return apiObject
 }
 
+func expandEnhancedMetricsConfig(tfList []interface{}) *awstypes.EnhancedMetricsConfig {
+	if len(tfList) < 1 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]interface{})
+	apiObject := &awstypes.EnhancedMetricsConfig{
+		DataSourceLevelMetricsBehavior: awstypes.DataSourceLevelMetricsBehavior(tfMap["data_source_level_metrics_behavior"].(string)),
+		OperationLevelMetricsConfig:    awstypes.OperationLevelMetricsConfig(tfMap["operation_level_metrics_config"].(string)),
+		ResolverLevelMetricsBehavior:   awstypes.ResolverLevelMetricsBehavior(tfMap["resolver_level_metrics_behavior"].(string)),
+	}
+
+	return apiObject
+}
+
 func expandLambdaAuthorizerConfig(tfList []interface{}) *awstypes.LambdaAuthorizerConfig {
 	if len(tfList) < 1 || tfList[0] == nil {
 		return nil
@@ -771,6 +821,20 @@ func flattenUserPoolConfig(apiObject *awstypes.UserPoolConfig) []interface{} {
 
 	if apiObject.AppIdClientRegex != nil {
 		tfMap["app_id_client_regex"] = aws.ToString(apiObject.AppIdClientRegex)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenEnhancedMetricsConfig(apiObject *awstypes.EnhancedMetricsConfig) []interface{} {
+	if apiObject == nil {
+		return []interface{}{}
+	}
+
+	tfMap := map[string]interface{}{
+		"data_source_level_metrics_behavior": apiObject.DataSourceLevelMetricsBehavior,
+		"operation_level_metrics_config":     apiObject.OperationLevelMetricsConfig,
+		"resolver_level_metrics_behavior":    apiObject.ResolverLevelMetricsBehavior,
 	}
 
 	return []interface{}{tfMap}

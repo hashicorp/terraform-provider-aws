@@ -45,6 +45,23 @@ func TestAccNetworkManagerCoreNetworkPolicyDocumentDataSource_serviceInsertion(t
 	})
 }
 
+func TestAccNetworkManagerCoreNetworkPolicyDocumentDataSource_whenSentTo(t *testing.T) {
+	ctx := acctest.Context(t)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCoreNetworkPolicyDocumentDataSourceConfig_whenSentTo,
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckResourceAttrEquivalentJSON("data.aws_networkmanager_core_network_policy_document.test", names.AttrJSON, testAccPolicyDocumentWildCardWhenSentToExpectedJSON),
+				),
+			},
+		},
+	})
+}
+
 // lintignore:AWSAT003
 const testAccCoreNetworkPolicyDocumentDataSourceConfig_basic = `
 data "aws_networkmanager_core_network_policy_document" "test" {
@@ -656,6 +673,158 @@ const testAccPolicyDocumentServiceInsertionExpectedJSON = `{
         "segments": [
           "production"
         ]
+      },
+      "via": {
+        "network-function-groups": [
+          "InspectionVPC"
+        ]
+      }
+    }
+  ],
+  "attachment-policies": [
+    {
+      "rule-number": 125,
+      "condition-logic": "and",
+      "conditions": [
+        {
+          "type": "tag-exists",
+          "key": "InspectionVpcs"
+        }
+      ],
+      "action": {
+        "add-to-network-function-group": "InspectionVPC"
+      }
+    }
+  ]
+}`
+
+// lintignore:AWSAT003
+const testAccCoreNetworkPolicyDocumentDataSourceConfig_whenSentTo = `
+data "aws_networkmanager_core_network_policy_document" "test" {
+  core_network_configuration {
+    vpn_ecmp_support = true
+    asn_ranges = [
+      "64512-65534"
+    ]
+    inside_cidr_blocks = [
+      "10.0.0.0/16"
+    ]
+    edge_locations {
+      location = "us-east-2"
+    }
+    edge_locations {
+      location = "us-west-2"
+    }
+  }
+
+  segments {
+    name                          = "development"
+    require_attachment_acceptance = true
+    isolate_attachments           = true
+    edge_locations = [
+      "us-east-2"
+    ]
+  }
+
+  segments {
+    name                          = "production"
+    require_attachment_acceptance = true
+    isolate_attachments           = true
+    edge_locations = [
+      "us-east-2"
+    ]
+  }
+
+  segment_actions {
+    action  = "send-via"
+    segment = "development"
+    mode    = "single-hop"
+
+    when_sent_to {
+      segments = [
+        "*",
+      ]
+    }
+
+    via {
+      network_function_groups = ["InspectionVPC"]
+    }
+  }
+
+  attachment_policies {
+    rule_number     = 125
+    condition_logic = "and"
+
+    conditions {
+      type = "tag-exists"
+      key  = "InspectionVpcs"
+    }
+
+    action {
+      add_to_network_function_group = "InspectionVPC"
+    }
+  }
+
+  network_function_groups {
+    name                          = "InspectionVPC"
+    description                   = "Route segment traffic to the inspection VPC"
+    require_attachment_acceptance = true
+  }
+}
+`
+
+// lintignore:AWSAT003
+const testAccPolicyDocumentWildCardWhenSentToExpectedJSON = `{
+  "version": "2021.12",
+  "core-network-configuration": {
+    "vpn-ecmp-support": true,
+    "inside-cidr-blocks": [
+      "10.0.0.0/16"
+    ],
+    "asn-ranges": [
+      "64512-65534"
+    ],
+    "edge-locations": [
+      {
+        "location": "us-east-2"
+      },
+      {
+        "location": "us-west-2"
+      }
+    ]
+  },
+  "segments": [
+    {
+      "name": "development",
+      "edge-locations": [
+        "us-east-2"
+      ],
+      "require-attachment-acceptance": true,
+      "isolate-attachments": true
+    },
+    {
+      "name": "production",
+      "edge-locations": [
+        "us-east-2"
+      ],
+      "require-attachment-acceptance": true,
+      "isolate-attachments": true
+    }
+  ],
+  "network-function-groups": [
+    {
+      "name": "InspectionVPC",
+      "description": "Route segment traffic to the inspection VPC",
+      "require-attachment-acceptance": true
+    }
+  ],
+  "segment-actions": [
+    {
+      "action": "send-via",
+      "segment": "development",
+      "mode": "single-hop",
+      "when-sent-to": {
+        "segments": "*"
       },
       "via": {
         "network-function-groups": [

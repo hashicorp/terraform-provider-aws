@@ -355,7 +355,7 @@ service "appmesh" {
 
   sdk {
     id             = "App Mesh"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {

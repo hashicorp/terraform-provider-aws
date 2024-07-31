@@ -2,15 +2,32 @@
 
 ENHANCEMENTS:
 
+* data-source/aws_eks_cluster: Add `upgrade_policy` attribute ([#38573](https://github.com/hashicorp/terraform-provider-aws/issues/38573))
+* resource/aws_appsync_graphql_api: Add `enhanced_metrics_config` configuration block ([#38570](https://github.com/hashicorp/terraform-provider-aws/issues/38570))
 * resource/aws_default_vpc: Support `ipv6_cidr_block` sizes between `/44` and `/60` in increments of /4 ([#35614](https://github.com/hashicorp/terraform-provider-aws/issues/35614))
 * resource/aws_default_vpc: Support `ipv6_netmask_length` values between `44` and `60` in increments of 4 ([#35614](https://github.com/hashicorp/terraform-provider-aws/issues/35614))
+* resource/aws_eks_cluster: Add `upgrade_policy` configuration block ([#38573](https://github.com/hashicorp/terraform-provider-aws/issues/38573))
 * resource/aws_elasticache_user_group_association: Add configurable create and delete timeouts ([#38559](https://github.com/hashicorp/terraform-provider-aws/issues/38559))
+* resource/aws_pipes_pipe: Add `log_configuration.include_execution_data` argument ([#38569](https://github.com/hashicorp/terraform-provider-aws/issues/38569))
+* resource/aws_rds_cluster: Add `restore_to_point_in_time.source_cluster_resource_id` argument ([#38540](https://github.com/hashicorp/terraform-provider-aws/issues/38540))
+* resource/aws_rds_cluster: Mark `restore_to_point_in_time.source_cluster_identifier` as Optional ([#38540](https://github.com/hashicorp/terraform-provider-aws/issues/38540))
+* resource/aws_sfn_activity: Add `encryption_configuration` configuration block to support the use of Customer Managed Keys with AWS KMS to encrypt Step Functions Activity resources ([#38574](https://github.com/hashicorp/terraform-provider-aws/issues/38574))
+* resource/aws_sfn_state_machine: Add `encryption_configuration` configuration block to support the use of Customer Managed Keys with AWS KMS to encrypt Step Functions State Machine resources ([#38574](https://github.com/hashicorp/terraform-provider-aws/issues/38574))
+* resource/aws_ssm_patch_baseline: Remove empty fields from `json` attribute value ([#35950](https://github.com/hashicorp/terraform-provider-aws/issues/35950))
 * resource/aws_vpc: Support `ipv6_cidr_block` sizes between `/44` and `/60` in increments of /4 ([#35614](https://github.com/hashicorp/terraform-provider-aws/issues/35614))
 * resource/aws_vpc: Support `ipv6_netmask_length` values between `44` and `60` in increments of 4 ([#35614](https://github.com/hashicorp/terraform-provider-aws/issues/35614))
+* resource/aws_vpc_ipv6_cidr_block_association: Add `assign_generated_ipv6_cidr_block` and `ipv6_pool` arguments ([#27274](https://github.com/hashicorp/terraform-provider-aws/issues/27274))
 * resource/aws_vpc_ipv6_cidr_block_association: Support `ipv6_cidr_block` sizes between `/44` and `/60` in increments of /4 ([#35614](https://github.com/hashicorp/terraform-provider-aws/issues/35614))
 * resource/aws_vpc_ipv6_cidr_block_association: Support `ipv6_netmask_length` values between `44` and `60` in increments of 4 ([#35614](https://github.com/hashicorp/terraform-provider-aws/issues/35614))
 * resource/aws_vpc_security_group_egress_rule: Add `tags` to the `AuthorizeSecurityGroupEgress` EC2 API call instead of making a separate `CreateTags` call ([#35614](https://github.com/hashicorp/terraform-provider-aws/issues/35614))
 * resource/aws_vpc_security_group_ingress_rule: Add `tags` to the `AuthorizeSecurityGroupIngress` EC2 API call instead of making a separate `CreateTags` call ([#35614](https://github.com/hashicorp/terraform-provider-aws/issues/35614))
+
+BUG FIXES:
+
+* data-source/aws_appstream_image: Fix issue where the most recent image is not returned ([#38571](https://github.com/hashicorp/terraform-provider-aws/issues/38571))
+* datasource/aws_networkmanager_core_network_policy_document: Fix `CoreNetworkPolicyException` when putting policy with single wildcard in `when_sent_to` ([#38595](https://github.com/hashicorp/terraform-provider-aws/issues/38595))
+* resource/aws_cloudsearch_domain: Fix `index_name` character length validation ([#38509](https://github.com/hashicorp/terraform-provider-aws/issues/38509))
+* resource/aws_rds_instance: Allow `domain_dns_ips` to use single DNS server IP ([#36500](https://github.com/hashicorp/terraform-provider-aws/issues/36500))
 
 ## 5.60.0 (July 25, 2024)
 

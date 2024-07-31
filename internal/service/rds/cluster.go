@@ -387,11 +387,14 @@ func resourceCluster() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"restore_to_time": {
-							Type:          schema.TypeString,
-							Optional:      true,
-							ForceNew:      true,
-							ValidateFunc:  verify.ValidUTCTimestamp,
-							ConflictsWith: []string{"restore_to_point_in_time.0.use_latest_restorable_time"},
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: verify.ValidUTCTimestamp,
+							ExactlyOneOf: []string{
+								"restore_to_point_in_time.0.restore_to_time",
+								"restore_to_point_in_time.0.use_latest_restorable_time",
+							},
 						},
 						"restore_type": {
 							Type:         schema.TypeString,
@@ -401,18 +404,34 @@ func resourceCluster() *schema.Resource {
 						},
 						"source_cluster_identifier": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 							ForceNew: true,
 							ValidateFunc: validation.Any(
 								verify.ValidARN,
 								validIdentifier,
 							),
+							ExactlyOneOf: []string{
+								"restore_to_point_in_time.0.source_cluster_identifier",
+								"restore_to_point_in_time.0.source_cluster_resource_id",
+							},
+						},
+						"source_cluster_resource_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ForceNew: true,
+							ExactlyOneOf: []string{
+								"restore_to_point_in_time.0.source_cluster_identifier",
+								"restore_to_point_in_time.0.source_cluster_resource_id",
+							},
 						},
 						"use_latest_restorable_time": {
-							Type:          schema.TypeBool,
-							Optional:      true,
-							ForceNew:      true,
-							ConflictsWith: []string{"restore_to_point_in_time.0.restore_to_time"},
+							Type:     schema.TypeBool,
+							Optional: true,
+							ForceNew: true,
+							ExactlyOneOf: []string{
+								"restore_to_point_in_time.0.restore_to_time",
+								"restore_to_point_in_time.0.use_latest_restorable_time",
+							},
 						},
 					},
 				},
@@ -872,11 +891,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	} else if v, ok := d.GetOk("restore_to_point_in_time"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		tfMap := v.([]interface{})[0].(map[string]interface{})
 		input := &rds.RestoreDBClusterToPointInTimeInput{
-			CopyTagsToSnapshot:        aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
-			DBClusterIdentifier:       aws.String(identifier),
-			DeletionProtection:        aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
-			SourceDBClusterIdentifier: aws.String(tfMap["source_cluster_identifier"].(string)),
-			Tags:                      getTagsIn(ctx),
+			CopyTagsToSnapshot:  aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
+			DBClusterIdentifier: aws.String(identifier),
+			DeletionProtection:  aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
+			Tags:                getTagsIn(ctx),
 		}
 
 		if v, ok := tfMap["restore_to_time"].(string); ok && v != "" {
@@ -884,12 +902,16 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.RestoreToTime = aws.Time(v)
 		}
 
-		if v, ok := tfMap["use_latest_restorable_time"].(bool); ok && v {
-			input.UseLatestRestorableTime = aws.Bool(v)
+		if v, ok := tfMap["source_cluster_identifier"].(string); ok && v != "" {
+			input.SourceDBClusterIdentifier = aws.String(v)
 		}
 
-		if input.RestoreToTime == nil && input.UseLatestRestorableTime == nil {
-			return sdkdiag.AppendErrorf(diags, `Either "restore_to_time" or "use_latest_restorable_time" must be set`)
+		if v, ok := tfMap["source_cluster_resource_id"].(string); ok && v != "" {
+			input.SourceDbClusterResourceId = aws.String(v)
+		}
+
+		if v, ok := tfMap["use_latest_restorable_time"].(bool); ok && v {
+			input.UseLatestRestorableTime = aws.Bool(v)
 		}
 
 		if v, ok := d.GetOk("backtrack_window"); ok {
