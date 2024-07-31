@@ -416,11 +416,7 @@ type slackChannelConfigurationResourceModel struct {
 
 func (data *slackChannelConfigurationResourceModel) InitFromID() error {
 	_, err := arn.Parse(data.ChatConfigurationARN.ValueString())
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 type loggingLevel string
