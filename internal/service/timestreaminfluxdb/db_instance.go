@@ -43,6 +43,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb;timestreaminfluxdb.GetDbInstanceOutput")
 // @Testing(serialize=true)
+// @Testing(importIgnore="bucket;username;organization;password")
 func newResourceDBInstance(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceDBInstance{}
 
@@ -153,7 +154,10 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 					with a Multi-AZ standby for high availability.`,
 			},
 			names.AttrEndpoint: schema.StringAttribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Description: `The endpoint used to connect to InfluxDB. The default InfluxDB port is 8086.`,
 			},
 			names.AttrID: framework.IDAttribute(),
@@ -398,6 +402,9 @@ func (r *resourceDBInstance) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
+	// flatten using legacy since this computed output may be null
+	state.SecondaryAvailabilityZone = flex.StringToFrameworkLegacy(ctx, output.SecondaryAvailabilityZone)
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -410,7 +417,7 @@ func (r *resourceDBInstance) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	out, err := findDBInstanceByID(ctx, conn, state.ID.ValueString())
+	output, err := findDBInstanceByID(ctx, conn, state.ID.ValueString())
 
 	if tfresource.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -426,11 +433,14 @@ func (r *resourceDBInstance) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
+	resp.Diagnostics.Append(flex.Flatten(ctx, output, &state)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	// flatten using legacy since this computed output may be null
+	state.SecondaryAvailabilityZone = flex.StringToFrameworkLegacy(ctx, output.SecondaryAvailabilityZone)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -457,19 +467,11 @@ func (r *resourceDBInstance) Update(ctx context.Context, req resource.UpdateRequ
 			return
 		}
 
-		out, err := conn.UpdateDbInstance(ctx, &in)
+		_, err := conn.UpdateDbInstance(ctx, &in)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionUpdating, ResNameDBInstance, plan.ID.String(), err),
 				err.Error(),
-			)
-			return
-		}
-
-		if out == nil || out.Id == nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionUpdating, ResNameDBInstance, plan.ID.String(), nil),
-				errors.New("empty output").Error(),
 			)
 			return
 		}
@@ -489,6 +491,9 @@ func (r *resourceDBInstance) Update(ctx context.Context, req resource.UpdateRequ
 		if resp.Diagnostics.HasError() {
 			return
 		}
+
+		// flatten using legacy since this computed output may be null
+		plan.SecondaryAvailabilityZone = flex.StringToFrameworkLegacy(ctx, output.SecondaryAvailabilityZone)
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
@@ -536,7 +541,7 @@ func (r *resourceDBInstance) ModifyPlan(ctx context.Context, request resource.Mo
 
 func waitDBInstanceCreated(ctx context.Context, conn *timestreaminfluxdb.Client, id string, timeout time.Duration) (*timestreaminfluxdb.GetDbInstanceOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.StatusCreating, awstypes.StatusUpdating, awstypes.StatusModifying),
+		Pending:                   enum.Slice(awstypes.StatusCreating),
 		Target:                    enum.Slice(awstypes.StatusAvailable),
 		Refresh:                   statusDBInstance(ctx, conn, id),
 		Timeout:                   timeout,
@@ -572,12 +577,11 @@ func waitDBInstanceUpdated(ctx context.Context, conn *timestreaminfluxdb.Client,
 
 func waitDBInstanceDeleted(ctx context.Context, conn *timestreaminfluxdb.Client, id string, timeout time.Duration) (*timestreaminfluxdb.GetDbInstanceOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:      enum.Slice(awstypes.StatusDeleting, awstypes.StatusModifying, awstypes.StatusUpdating, awstypes.StatusAvailable),
-		Target:       []string{},
-		Refresh:      statusDBInstance(ctx, conn, id),
-		Timeout:      timeout,
-		Delay:        30 * time.Second,
-		PollInterval: 30 * time.Second,
+		Pending: enum.Slice(awstypes.StatusDeleting),
+		Target:  []string{},
+		Refresh: statusDBInstance(ctx, conn, id),
+		Timeout: timeout,
+		Delay:   30 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

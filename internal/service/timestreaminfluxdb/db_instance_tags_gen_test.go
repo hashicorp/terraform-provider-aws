@@ -94,6 +94,9 @@ func testAccTimestreamInfluxDBDBInstance_tags(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrBucket, names.AttrUsername, "organization", names.AttrPassword,
+				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DBInstance/tags/"),
@@ -139,6 +142,9 @@ func testAccTimestreamInfluxDBDBInstance_tags(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrBucket, names.AttrUsername, "organization", names.AttrPassword,
+				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DBInstance/tags/"),
@@ -179,6 +185,9 @@ func testAccTimestreamInfluxDBDBInstance_tags(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrBucket, names.AttrUsername, "organization", names.AttrPassword,
+				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DBInstance/tags/"),
@@ -209,6 +218,9 @@ func testAccTimestreamInfluxDBDBInstance_tags(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrBucket, names.AttrUsername, "organization", names.AttrPassword,
+				},
 			},
 		},
 	})
@@ -261,6 +273,9 @@ func testAccTimestreamInfluxDBDBInstance_tags_null(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrBucket, names.AttrUsername, "organization", names.AttrPassword,
+				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DBInstance/tags/"),
@@ -346,6 +361,9 @@ func testAccTimestreamInfluxDBDBInstance_tags_AddOnUpdate(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrBucket, names.AttrUsername, "organization", names.AttrPassword,
+				},
 			},
 		},
 	})
@@ -402,6 +420,9 @@ func testAccTimestreamInfluxDBDBInstance_tags_EmptyTag_OnCreate(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrBucket, names.AttrUsername, "organization", names.AttrPassword,
+				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DBInstance/tags/"),
@@ -432,6 +453,9 @@ func testAccTimestreamInfluxDBDBInstance_tags_EmptyTag_OnCreate(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrBucket, names.AttrUsername, "organization", names.AttrPassword,
+				},
 			},
 		},
 	})
@@ -521,6 +545,9 @@ func testAccTimestreamInfluxDBDBInstance_tags_EmptyTag_OnUpdate_Add(t *testing.T
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrBucket, names.AttrUsername, "organization", names.AttrPassword,
+				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DBInstance/tags/"),
@@ -561,6 +588,9 @@ func testAccTimestreamInfluxDBDBInstance_tags_EmptyTag_OnUpdate_Add(t *testing.T
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrBucket, names.AttrUsername, "organization", names.AttrPassword,
+				},
 			},
 		},
 	})
@@ -645,6 +675,9 @@ func testAccTimestreamInfluxDBDBInstance_tags_EmptyTag_OnUpdate_Replace(t *testi
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrBucket, names.AttrUsername, "organization", names.AttrPassword,
+				},
 			},
 		},
 	})
@@ -703,6 +736,9 @@ func testAccTimestreamInfluxDBDBInstance_tags_DefaultTags_providerOnly(t *testin
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrBucket, names.AttrUsername, "organization", names.AttrPassword,
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -750,6 +786,9 @@ func testAccTimestreamInfluxDBDBInstance_tags_DefaultTags_providerOnly(t *testin
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrBucket, names.AttrUsername, "organization", names.AttrPassword,
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -793,6 +832,9 @@ func testAccTimestreamInfluxDBDBInstance_tags_DefaultTags_providerOnly(t *testin
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrBucket, names.AttrUsername, "organization", names.AttrPassword,
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -826,6 +868,9 @@ func testAccTimestreamInfluxDBDBInstance_tags_DefaultTags_providerOnly(t *testin
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrBucket, names.AttrUsername, "organization", names.AttrPassword,
+				},
 			},
 		},
 	})
@@ -894,6 +939,9 @@ func testAccTimestreamInfluxDBDBInstance_tags_DefaultTags_nonOverlapping(t *test
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrBucket, names.AttrUsername, "organization", names.AttrPassword,
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -953,6 +1001,9 @@ func testAccTimestreamInfluxDBDBInstance_tags_DefaultTags_nonOverlapping(t *test
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrBucket, names.AttrUsername, "organization", names.AttrPassword,
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -986,6 +1037,9 @@ func testAccTimestreamInfluxDBDBInstance_tags_DefaultTags_nonOverlapping(t *test
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrBucket, names.AttrUsername, "organization", names.AttrPassword,
+				},
 			},
 		},
 	})
@@ -1052,6 +1106,9 @@ func testAccTimestreamInfluxDBDBInstance_tags_DefaultTags_overlapping(t *testing
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrBucket, names.AttrUsername, "organization", names.AttrPassword,
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1111,6 +1168,9 @@ func testAccTimestreamInfluxDBDBInstance_tags_DefaultTags_overlapping(t *testing
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrBucket, names.AttrUsername, "organization", names.AttrPassword,
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1162,6 +1222,9 @@ func testAccTimestreamInfluxDBDBInstance_tags_DefaultTags_overlapping(t *testing
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrBucket, names.AttrUsername, "organization", names.AttrPassword,
+				},
 			},
 		},
 	})
@@ -1252,6 +1315,9 @@ func testAccTimestreamInfluxDBDBInstance_tags_DefaultTags_updateToProviderOnly(t
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrBucket, names.AttrUsername, "organization", names.AttrPassword,
+				},
 			},
 		},
 	})
@@ -1341,6 +1407,9 @@ func testAccTimestreamInfluxDBDBInstance_tags_DefaultTags_updateToResourceOnly(t
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrBucket, names.AttrUsername, "organization", names.AttrPassword,
+				},
 			},
 		},
 	})
@@ -1407,6 +1476,9 @@ func testAccTimestreamInfluxDBDBInstance_tags_DefaultTags_emptyResourceTag(t *te
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrBucket, names.AttrUsername, "organization", names.AttrPassword,
+				},
 			},
 		},
 	})
@@ -1465,6 +1537,9 @@ func testAccTimestreamInfluxDBDBInstance_tags_DefaultTags_emptyProviderOnlyTag(t
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrBucket, names.AttrUsername, "organization", names.AttrPassword,
+				},
 			},
 		},
 	})
@@ -1529,6 +1604,9 @@ func testAccTimestreamInfluxDBDBInstance_tags_DefaultTags_nullOverlappingResourc
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrBucket, names.AttrUsername, "organization", names.AttrPassword,
+				},
 			},
 		},
 	})
@@ -1593,6 +1671,9 @@ func testAccTimestreamInfluxDBDBInstance_tags_DefaultTags_nullNonOverlappingReso
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrBucket, names.AttrUsername, "organization", names.AttrPassword,
+				},
 			},
 		},
 	})
@@ -1647,6 +1728,9 @@ func testAccTimestreamInfluxDBDBInstance_tags_ComputedTag_OnCreate(t *testing.T)
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrBucket, names.AttrUsername, "organization", names.AttrPassword,
+				},
 			},
 		},
 	})
@@ -1737,6 +1821,9 @@ func testAccTimestreamInfluxDBDBInstance_tags_ComputedTag_OnUpdate_Add(t *testin
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrBucket, names.AttrUsername, "organization", names.AttrPassword,
+				},
 			},
 		},
 	})
@@ -1820,6 +1907,9 @@ func testAccTimestreamInfluxDBDBInstance_tags_ComputedTag_OnUpdate_Replace(t *te
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrBucket, names.AttrUsername, "organization", names.AttrPassword,
+				},
 			},
 		},
 	})
