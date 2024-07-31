@@ -116,9 +116,10 @@ func TestAccIPAMPoolCIDRAllocation_disappears(t *testing.T) {
 
 func TestAccIPAMPoolCIDRAllocation_ipv4BasicNetmask(t *testing.T) {
 	ctx := acctest.Context(t)
-	var allocation awstypes.IpamPoolAllocation
+	var allocationV1, allocationV2 awstypes.IpamPoolAllocation
 	resourceName := "aws_vpc_ipam_pool_cidr_allocation.test"
-	netmask := "28"
+	originalNetmask := "28"
+	updatedNetmask := "25"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -127,17 +128,24 @@ func TestAccIPAMPoolCIDRAllocation_ipv4BasicNetmask(t *testing.T) {
 		CheckDestroy:             testAccCheckIPAMPoolAllocationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIPAMPoolCIDRAllocationConfig_ipv4Netmask(netmask),
+				Config: testAccIPAMPoolCIDRAllocationConfig_ipv4Netmask(originalNetmask),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMPoolCIDRAllocationExists(ctx, resourceName, &allocation),
-					testAccCheckIPAMCIDRPrefix(&allocation, netmask),
+					testAccCheckIPAMPoolCIDRAllocationExists(ctx, resourceName, &allocationV1),
+					testAccCheckIPAMCIDRPrefix(&allocationV1, originalNetmask),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"netmask_length"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccIPAMPoolCIDRAllocationConfig_ipv4Netmask(updatedNetmask),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIPAMPoolCIDRAllocationExists(ctx, resourceName, &allocationV2),
+					testAccCheckIPAMPoolCIDRAllocationRecreated(&allocationV1, &allocationV2),
+					testAccCheckIPAMCIDRPrefix(&allocationV2, updatedNetmask),
+				),
 			},
 		},
 	})
