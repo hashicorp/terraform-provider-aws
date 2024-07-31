@@ -99,15 +99,12 @@ func dataSourceRepositoryCreationTemplateRead(ctx context.Context, d *schema.Res
 	}
 
 	d.SetId(aws.ToString(rct.Prefix))
-	d.Set(names.AttrPrefix, rct.Prefix)
 	d.Set("applied_for", rct.AppliedFor)
 	d.Set("custom_role_arn", rct.CustomRoleArn)
 	d.Set(names.AttrDescription, rct.Description)
-
 	if err := d.Set(names.AttrEncryptionConfiguration, flattenRepositoryEncryptionConfigurationForRepositoryCreationTemplate(rct.EncryptionConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting encryption_configuration: %s", err)
 	}
-
 	d.Set("image_tag_mutability", rct.ImageTagMutability)
 
 	policy, err := structure.NormalizeJsonString(aws.ToString(rct.LifecyclePolicy))
@@ -116,6 +113,7 @@ func dataSourceRepositoryCreationTemplateRead(ctx context.Context, d *schema.Res
 	}
 
 	d.Set("lifecycle_policy", policy)
+	d.Set(names.AttrPrefix, rct.Prefix)
 	d.Set("registry_id", registryID)
 
 	policy, err = structure.NormalizeJsonString(aws.ToString(rct.RepositoryPolicy))
@@ -124,7 +122,6 @@ func dataSourceRepositoryCreationTemplateRead(ctx context.Context, d *schema.Res
 	}
 
 	d.Set("repository_policy", policy)
-
 	d.Set(names.AttrResourceTags, KeyValueTags(ctx, rct.ResourceTags).Map())
 
 	return diags
