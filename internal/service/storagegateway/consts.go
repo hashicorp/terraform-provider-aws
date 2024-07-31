@@ -3,10 +3,6 @@
 
 package storagegateway
 
-import (
-	"time"
-)
-
 const (
 	authenticationActiveDirectory = "ActiveDirectory"
 	authenticationGuestAccess     = "GuestAccess"
@@ -105,12 +101,6 @@ const (
 	fileShareStatusDeleting      = "DELETING"
 	fileShareStatusForceDeleting = "FORCE_DELETING"
 	fileShareStatusUpdating      = "UPDATING"
-)
-
-const (
-	fileSystemAssociationCreateTimeout = 10 * time.Minute
-	fileSystemAssociationUpdateTimeout = 10 * time.Minute
-	fileSystemAssociationDeleteTimeout = 10 * time.Minute
 )
 
 const (

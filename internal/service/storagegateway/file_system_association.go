@@ -43,6 +43,12 @@ func resourceFileSystemAssociation() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(30 * time.Minute),
+			Delete: schema.DefaultTimeout(30 * time.Minute),
+			Update: schema.DefaultTimeout(30 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -138,7 +144,7 @@ func resourceFileSystemAssociationCreate(ctx context.Context, d *schema.Resource
 
 	d.SetId(aws.ToString(output.FileSystemAssociationARN))
 
-	if _, err = waitFileSystemAssociationAvailable(ctx, conn, d.Id(), fileSystemAssociationCreateTimeout); err != nil {
+	if _, err = waitFileSystemAssociationAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Storage Gateway File System Association (%s) create: %s", d.Id(), err)
 	}
 
@@ -196,7 +202,7 @@ func resourceFileSystemAssociationUpdate(ctx context.Context, d *schema.Resource
 			return sdkdiag.AppendErrorf(diags, "updating Storage Gateway File System Association (%s): %s", d.Id(), err)
 		}
 
-		if _, err = waitFileSystemAssociationAvailable(ctx, conn, d.Id(), fileSystemAssociationUpdateTimeout); err != nil {
+		if _, err = waitFileSystemAssociationAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Storage Gateway File System Association (%s) update: %s", d.Id(), err)
 		}
 	}
@@ -221,7 +227,7 @@ func resourceFileSystemAssociationDelete(ctx context.Context, d *schema.Resource
 		return sdkdiag.AppendErrorf(diags, "deleting Storage Gateway File System Association (%s): %s", d.Id(), err)
 	}
 
-	if _, err = waitFileSystemAssociationDeleted(ctx, conn, d.Id(), fileSystemAssociationDeleteTimeout); err != nil {
+	if _, err = waitFileSystemAssociationDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Storage Gateway File System Association (%s) delete: %s", d.Id(), err)
 	}
 
