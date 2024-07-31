@@ -249,6 +249,19 @@ func traceExpandingWithElementsAs(sourcePath string, sourceType reflect.Type, so
 	}
 }
 
+func traceExpandingNestedObjectCollection(sourcePath string, sourceType reflect.Type, sourceLen int, targetPath string, targetType reflect.Type) map[string]any {
+	return map[string]any{
+		"@level":             hclog.Trace.String(),
+		"@module":            logModule,
+		"@message":           "Expanding nested object collection",
+		logAttrKeySourcePath: sourcePath,
+		logAttrKeySourceType: fullTypeName(sourceType),
+		logAttrKeySourceSize: float64(sourceLen), // numbers are deserialized from JSON as float64
+		logAttrKeyTargetPath: targetPath,
+		logAttrKeyTargetType: fullTypeName(targetType),
+	}
+}
+
 func traceFlatteningNullValue(sourcePath string, sourceType reflect.Type, targetPath string, targetType reflect.Type) map[string]any {
 	return map[string]any{
 		"@level":             hclog.Trace.String(),

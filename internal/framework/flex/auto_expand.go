@@ -843,7 +843,7 @@ func (expander autoExpander) nestedObjectCollection(ctx context.Context, sourceP
 			//
 			// types.List(OfObject) -> []struct
 			//
-			diags.Append(expander.nestedObjectToSlice(ctx, sourcePath, vFrom, targetPath, tTo, tElem, vTo)...)
+			diags.Append(expander.nestedObjectCollectionToSlice(ctx, sourcePath, vFrom, targetPath, tTo, tElem, vTo)...)
 			return diags
 
 		case reflect.Ptr:
@@ -852,7 +852,7 @@ func (expander autoExpander) nestedObjectCollection(ctx context.Context, sourceP
 				//
 				// types.List(OfObject) -> []*struct.
 				//
-				diags.Append(expander.nestedObjectToSlice(ctx, sourcePath, vFrom, targetPath, tTo, tElem, vTo)...)
+				diags.Append(expander.nestedObjectCollectionToSlice(ctx, sourcePath, vFrom, targetPath, tTo, tElem, vTo)...)
 				return diags
 			}
 
@@ -860,7 +860,7 @@ func (expander autoExpander) nestedObjectCollection(ctx context.Context, sourceP
 			//
 			// types.List(OfObject) -> []interface.
 			//
-			diags.Append(expander.nestedObjectToSlice(ctx, sourcePath, vFrom, targetPath, tTo, tElem, vTo)...)
+			diags.Append(expander.nestedObjectCollectionToSlice(ctx, sourcePath, vFrom, targetPath, tTo, tElem, vTo)...)
 			return diags
 		}
 	}
@@ -901,8 +901,8 @@ func (expander autoExpander) nestedObjectToStruct(ctx context.Context, sourcePat
 	return diags
 }
 
-// nestedObjectToSlice copies a Plugin Framework NestedObjectCollectionValue to a compatible AWS API [](*)struct value.
-func (expander autoExpander) nestedObjectToSlice(ctx context.Context, sourcePath path.Path, vFrom fwtypes.NestedObjectCollectionValue, targetPath path.Path, tSlice, tElem reflect.Type, vTo reflect.Value) diag.Diagnostics {
+// nestedObjectCollectionToSlice copies a Plugin Framework NestedObjectCollectionValue to a compatible AWS API [](*)struct value.
+func (expander autoExpander) nestedObjectCollectionToSlice(ctx context.Context, sourcePath path.Path, vFrom fwtypes.NestedObjectCollectionValue, targetPath path.Path, tSlice, tElem reflect.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Get the nested Objects as a slice.
@@ -915,6 +915,11 @@ func (expander autoExpander) nestedObjectToSlice(ctx context.Context, sourcePath
 	// Create a new target slice and expand each element.
 	f := reflect.ValueOf(from)
 	n := f.Len()
+
+	tflog.SubsystemTrace(ctx, subsystemName, "Expanding nested object collection", map[string]any{
+		logAttrKeySourceSize: n,
+	})
+
 	t := reflect.MakeSlice(tSlice, n, n)
 	for i := 0; i < n; i++ {
 		sourcePath := sourcePath.AtListIndex(i)
