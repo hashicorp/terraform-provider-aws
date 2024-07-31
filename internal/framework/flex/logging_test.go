@@ -12,6 +12,8 @@ import (
 )
 
 func TestFullTypeName_nil(t *testing.T) {
+	t.Parallel()
+
 	expected := "<nil>"
 	result := fullTypeName(nil)
 
@@ -21,6 +23,8 @@ func TestFullTypeName_nil(t *testing.T) {
 }
 
 func TestFullTypeName_primitive(t *testing.T) {
+	t.Parallel()
+
 	expected := "string"
 	result := fullTypeName(reflect.TypeFor[string]())
 
@@ -30,6 +34,8 @@ func TestFullTypeName_primitive(t *testing.T) {
 }
 
 func TestFullTypeName_type(t *testing.T) {
+	t.Parallel()
+
 	expected := "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.TestFlex00"
 	result := fullTypeName(reflect.TypeFor[TestFlex00]())
 
@@ -39,6 +45,8 @@ func TestFullTypeName_type(t *testing.T) {
 }
 
 func TestFullTypeName_pointerToPrimitive(t *testing.T) {
+	t.Parallel()
+
 	expected := "*string"
 	result := fullTypeName(reflect.TypeFor[*string]())
 
@@ -48,6 +56,8 @@ func TestFullTypeName_pointerToPrimitive(t *testing.T) {
 }
 
 func TestFullTypeName_pointerToType(t *testing.T) {
+	t.Parallel()
+
 	expected := "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.TestFlex00"
 	result := fullTypeName(reflect.TypeFor[*TestFlex00]())
 
@@ -57,6 +67,8 @@ func TestFullTypeName_pointerToType(t *testing.T) {
 }
 
 func TestFullTypeName_sliceOfPrimitive(t *testing.T) {
+	t.Parallel()
+
 	expected := "[]string"
 	result := fullTypeName(reflect.TypeFor[[]string]())
 
@@ -66,6 +78,8 @@ func TestFullTypeName_sliceOfPrimitive(t *testing.T) {
 }
 
 func TestFullTypeName_sliceOfType(t *testing.T) {
+	t.Parallel()
+
 	expected := "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.TestFlex00"
 	result := fullTypeName(reflect.TypeFor[[]TestFlex00]())
 
@@ -75,6 +89,8 @@ func TestFullTypeName_sliceOfType(t *testing.T) {
 }
 
 func TestFullTypeName_sliceOfPointerToPrimitive(t *testing.T) {
+	t.Parallel()
+
 	expected := "[]*string"
 	result := fullTypeName(reflect.TypeFor[[]*string]())
 
@@ -84,6 +100,8 @@ func TestFullTypeName_sliceOfPointerToPrimitive(t *testing.T) {
 }
 
 func TestFullTypeName_sliceOfPointerToType(t *testing.T) {
+	t.Parallel()
+
 	expected := "[]*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.TestFlex00"
 	result := fullTypeName(reflect.TypeFor[[]*TestFlex00]())
 
@@ -93,6 +111,8 @@ func TestFullTypeName_sliceOfPointerToType(t *testing.T) {
 }
 
 func TestFullTypeName_mapPrimitiveKeyPrimitiveValue(t *testing.T) {
+	t.Parallel()
+
 	expected := "map[string]string"
 	result := fullTypeName(reflect.TypeFor[map[string]string]())
 
@@ -102,6 +122,8 @@ func TestFullTypeName_mapPrimitiveKeyPrimitiveValue(t *testing.T) {
 }
 
 func TestFullTypeName_mapTypedKeyPrimitiveValue(t *testing.T) {
+	t.Parallel()
+
 	expected := "map[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.TestEnum]string"
 	result := fullTypeName(reflect.TypeFor[map[TestEnum]string]())
 
@@ -111,6 +133,8 @@ func TestFullTypeName_mapTypedKeyPrimitiveValue(t *testing.T) {
 }
 
 func TestFullTypeName_mapPrimitiveKeyTypedValue(t *testing.T) {
+	t.Parallel()
+
 	expected := "map[string]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.TestEnum"
 	result := fullTypeName(reflect.TypeFor[map[string]TestEnum]())
 

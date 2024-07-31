@@ -3801,7 +3801,6 @@ func runAutoExpandTestCases(t *testing.T, testCases autoFlexTestCases) {
 				t.Fatalf("Expand: decoding log lines: %s", err)
 			}
 			if diff := cmp.Diff(lines, testCase.expectedLogLines); diff != "" {
-
 				t.Errorf("unexpected log lines diff (+wanted, -got): %s", diff)
 			}
 
