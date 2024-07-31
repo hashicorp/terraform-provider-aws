@@ -21,6 +21,7 @@ resource "aws_timestreaminfluxdb_db_instance" "example" {
   db_instance_type       = "db.influx.medium"
   username               = "admin"
   password               = "example-password"
+  organization           = "organization"
   vpc_subnet_ids         = [aws_subnet.exampleid]
   vpc_security_group_ids = [aws_security_group.example.id]
   name                   = "example-db-instance"
@@ -52,6 +53,7 @@ resource "aws_timestreaminfluxdb_db_instance" "example" {
   db_instance_type       = "db.influx.medium"
   username               = "admin"
   password               = "example-password"
+  organization           = "organization"
   vpc_subnet_ids         = [aws_subnet.example.id]
   vpc_security_group_ids = [aws_security_group.example.id]
   name                   = "example-db-instance"
@@ -116,6 +118,7 @@ resource "aws_timestreaminfluxdb_db_instance" "example" {
   db_instance_type       = "db.influx.medium"
   username               = "admin"
   password               = "example-password"
+  organization           = "organization"  
   vpc_subnet_ids         = [aws_subnet.example.id]
   vpc_security_group_ids = [aws_security_group.example.id]
   name                   = "example-db-instance"
@@ -156,6 +159,7 @@ resource "aws_timestreaminfluxdb_db_instance" "example" {
   db_instance_type       = "db.influx.medium"
   username               = "admin"
   password               = "example-password"
+  organization           = "organization"  
   vpc_subnet_ids         = [aws_subnet.example.id]
   vpc_security_group_ids = [aws_security_group.example.id]
   name                   = "example-db-instance"
@@ -193,6 +197,7 @@ resource "aws_timestreaminfluxdb_db_instance" "example" {
   deployment_type        = "WITH_MULTIAZ_STANDBY"
   username               = "admin"
   password               = "example-password"
+  organization           = "organization"  
   vpc_subnet_ids         = [aws_subnet.example_1.id, aws_subnet.example_2.id]
   vpc_security_group_ids = [aws_security_group.example.id]
   name                   = "example-db-instance"
@@ -204,22 +209,22 @@ resource "aws_timestreaminfluxdb_db_instance" "example" {
 The following arguments are required:
 
 * `allocated_storage` - (Required) Amount of storage in GiB (gibibytes). The minimum value is 20, the maximum value is 16384.
+* `bucket` - (Required) Name of the initial InfluxDB bucket. All InfluxDB data is stored in a bucket. A bucket combines the concept of a database and a retention period (the duration of time that each data point persists). A bucket belongs to an organization. Along with `organization`, `username`, and `password`, this argument will be stored in the secret referred to by the `influx_auth_parameters_secret_arn` attribute.
 * `db_instance_type` - (Required) Timestream for InfluxDB DB instance type to run InfluxDB on. Valid options are: `"db.influx.medium"`, `"db.influx.large"`, `"db.influx.xlarge"`, `"db.influx.2xlarge"`, `"db.influx.4xlarge"`, `"db.influx.8xlarge"`, `"db.influx.12xlarge"`, and `"db.influx.16xlarge"`.
 * `name` - (Required) Name that uniquely identifies the DB instance when interacting with the Amazon Timestream for InfluxDB API and CLI commands. This name will also be a prefix included in the endpoint. DB instance names must be unique per customer and per region. The argument must start with a letter, cannot contain consecutive hyphens (`-`) and cannot end with a hyphen.
 * `password` - (Required) Password of the initial admin user created in InfluxDB. This password will allow you to access the InfluxDB UI to perform various administrative tasks and also use the InfluxDB CLI to create an operator token. Along with `bucket`, `username`, and `organization`, this argument will be stored in the secret referred to by the `influx_auth_parameters_secret_arn` attribute.
+* `organization` - (Required) Name of the initial organization for the initial admin user in InfluxDB. An InfluxDB organization is a workspace for a group of users. Along with `bucket`, `username`, and `password`, this argument will be stored in the secret referred to by the `influx_auth_parameters_secret_arn` attribute.
+* `username` - (Required) Username of the initial admin user created in InfluxDB. Must start with a letter and can't end with a hyphen or contain two consecutive hyphens. This username will allow you to access the InfluxDB UI to perform various administrative tasks and also use the InfluxDB CLI to create an operator token. Along with `bucket`, `organization`, and `password`, this argument will be stored in the secret referred to by the `influx_auth_parameters_secret_arn` attribute.
 * `vpc_security_group_ids` - (Required) List of VPC security group IDs to associate with the DB instance.
 * `vpc_subnet_ids` - (Required) List of VPC subnet IDs to associate with the DB instance. Provide at least two VPC subnet IDs in different availability zones when deploying with a Multi-AZ standby.
 
 The following arguments are optional:
 
-* `bucket` - (Default `"bucket"`) Name of the initial InfluxDB bucket. All InfluxDB data is stored in a bucket. A bucket combines the concept of a database and a retention period (the duration of time that each data point persists). A bucket belongs to an organization. Along with `organization`, `username`, and `password`, this argument will be stored in the secret referred to by the `influx_auth_parameters_secret_arn` attribute.
 * `db_parameter_group_identifier` - (Optional) ID of the DB parameter group assigned to your DB instance. If added to an existing Timestream for InfluxDB instance or given a new value, will cause an in-place update to the instance. However, if an instance already has a value for `db_parameter_group_identifier`, removing `db_parameter_group_identifier` will cause the instance to be destroyed and recreated.
 * `db_storage_type` - (Default `"InfluxIOIncludedT1"`) Timestream for InfluxDB DB storage type to read and write InfluxDB data. You can choose between 3 different types of provisioned Influx IOPS included storage according to your workloads requirements: Influx IO Included 3000 IOPS, Influx IO Included 12000 IOPS, Influx IO Included 16000 IOPS. Valid options are: `"InfluxIOIncludedT1"`, `"InfluxIOIncludedT2"`, and `"InfluxIOIncludedT1"`. If you use `"InfluxIOIncludedT2" or "InfluxIOIncludedT3", the minimum value for `allocated_storage` is 400.
 * `deployment_type` - (Default `"SINGLE_AZ"`) Specifies whether the DB instance will be deployed as a standalone instance or with a Multi-AZ standby for high availability. Valid options are: `"SINGLE_AZ"`, `"WITH_MULTIAZ_STANDBY"`.
 * `log_delivery_configuration` - (Optional) Configuration for sending InfluxDB engine logs to a specified S3 bucket.
-* `organization` - (Default `"organization"`) Name of the initial organization for the initial admin user in InfluxDB. An InfluxDB organization is a workspace for a group of users. Along with `bucket`, `username`, and `password`, this argument will be stored in the secret referred to by the `influx_auth_parameters_secret_arn` attribute.
 * `publicly_accessible` - (Default `false`) Configures the DB instance with a public IP to facilitate access. Other resources, such as a VPC, a subnet, an internet gateway, and a route table with routes, are also required to enabled public access, in addition to this argument. See "[Usage with Public Internet Access Enabled](#usage-with-public-internet-access-enabled)" for an example configuration with all required resources for public internet access.
-* `username` - (Default `"admin"`) Username of the initial admin user created in InfluxDB. Must start with a letter and can't end with a hyphen or contain two consecutive hyphens. This username will allow you to access the InfluxDB UI to perform various administrative tasks and also use the InfluxDB CLI to create an operator token. Along with `bucket`, `organization`, and `password`, this argument will be stored in the secret referred to by the `influx_auth_parameters_secret_arn` attribute.
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Nested Fields
@@ -245,7 +250,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - ID of the Timestream for InfluxDB instance.
 * `influx_auth_parameters_secret_arn` - ARN of the AWS Secrets Manager secret containing the initial InfluxDB authorization parameters. The secret value is a JSON formatted key-value pair holding InfluxDB authorization values: organization, bucket, username, and password. This secret will be read by the `aws_timestreaminfluxdb_db_instance` resource in order to support importing: deleting the secret or secret values can cause errors.
 * `secondary_availability_zone` - Availability Zone in which the standby instance is located when deploying with a MultiAZ standby instance.
-* `status` - The status of the Timestream for InfluxDB instance.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
