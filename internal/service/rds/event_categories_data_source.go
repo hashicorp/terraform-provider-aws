@@ -5,6 +5,7 @@ package rds
 
 import (
 	"context"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rds"
@@ -56,9 +57,9 @@ func dataSourceEventCategoriesRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("event_categories", tfslices.ApplyToAll(output, func(v types.EventCategoriesMap) []string {
+	d.Set("event_categories", slices.Concat(tfslices.ApplyToAll(output, func(v types.EventCategoriesMap) []string {
 		return v.EventCategories
-	}))
+	})...))
 
 	return diags
 }
