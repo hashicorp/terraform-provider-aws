@@ -39,8 +39,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceEventCategories,
+			Factory:  dataSourceEventCategories,
 			TypeName: "aws_db_event_categories",
+			Name:     "Event Categories",
 		},
 		{
 			Factory:  DataSourceInstance,
