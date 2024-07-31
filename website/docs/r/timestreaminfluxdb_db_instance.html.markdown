@@ -118,7 +118,7 @@ resource "aws_timestreaminfluxdb_db_instance" "example" {
   db_instance_type       = "db.influx.medium"
   username               = "admin"
   password               = "example-password"
-  organization           = "organization"  
+  organization           = "organization"
   vpc_subnet_ids         = [aws_subnet.example.id]
   vpc_security_group_ids = [aws_security_group.example.id]
   name                   = "example-db-instance"
@@ -159,7 +159,7 @@ resource "aws_timestreaminfluxdb_db_instance" "example" {
   db_instance_type       = "db.influx.medium"
   username               = "admin"
   password               = "example-password"
-  organization           = "organization"  
+  organization           = "organization"
   vpc_subnet_ids         = [aws_subnet.example.id]
   vpc_security_group_ids = [aws_security_group.example.id]
   name                   = "example-db-instance"
@@ -197,7 +197,7 @@ resource "aws_timestreaminfluxdb_db_instance" "example" {
   deployment_type        = "WITH_MULTIAZ_STANDBY"
   username               = "admin"
   password               = "example-password"
-  organization           = "organization"  
+  organization           = "organization"
   vpc_subnet_ids         = [aws_subnet.example_1.id, aws_subnet.example_2.id]
   vpc_security_group_ids = [aws_security_group.example.id]
   name                   = "example-db-instance"

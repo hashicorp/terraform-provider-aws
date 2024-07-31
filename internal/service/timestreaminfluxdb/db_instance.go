@@ -259,8 +259,7 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 					setplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.Set{
-					setvalidator.SizeAtLeast(1),
-					setvalidator.SizeAtMost(5),
+					setvalidator.SizeBetween(1, 5),
 					setvalidator.ValueStringsAre(
 						stringvalidator.LengthAtMost(64),
 						stringvalidator.RegexMatches(regexache.MustCompile("^sg-[a-z0-9]+$"), ""),
