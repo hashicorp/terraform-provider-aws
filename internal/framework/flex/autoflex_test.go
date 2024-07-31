@@ -365,6 +365,10 @@ type TestFlexAWS22 struct {
 	Field1 map[string]map[string]*string
 }
 
+type awsMapOfStringPointer struct {
+	FieldInner map[string]*string
+}
+
 type testFlexTFListNestedObject[T any] struct {
 	Field1 fwtypes.ListNestedObjectValueOf[T] `tfsdk:"field1"`
 }
@@ -388,7 +392,7 @@ var (
 
 func (t testFlexTFInterfaceFlexer) Expand(ctx context.Context) (any, diag.Diagnostics) {
 	return &testFlexAWSInterfaceInterfaceImpl{
-		AWSField: t.Field1.ValueString(),
+		AWSField: StringValueFromFramework(ctx, t.Field1),
 	}, nil
 }
 
@@ -411,7 +415,7 @@ var _ Expander = testFlexTFInterfaceIncompatibleExpander{}
 
 func (t testFlexTFInterfaceIncompatibleExpander) Expand(ctx context.Context) (any, diag.Diagnostics) {
 	return &testFlexAWSInterfaceIncompatibleImpl{
-		AWSField: t.Field1.ValueString(),
+		AWSField: StringValueFromFramework(ctx, t.Field1),
 	}, nil
 }
 
@@ -450,7 +454,7 @@ var (
 
 func (t testFlexTFFlexer) Expand(ctx context.Context) (any, diag.Diagnostics) {
 	return &testFlexAWSExpander{
-		AWSField: t.Field1.ValueString(),
+		AWSField: StringValueFromFramework(ctx, t.Field1),
 	}, nil
 }
 
@@ -484,7 +488,7 @@ type testFlexTFExpanderToString struct {
 var _ Expander = testFlexTFExpanderToString{}
 
 func (t testFlexTFExpanderToString) Expand(ctx context.Context) (any, diag.Diagnostics) {
-	return t.Field1.ValueString(), nil
+	return StringValueFromFramework(ctx, t.Field1), nil
 }
 
 type testFlexTFExpanderToNil struct {
@@ -505,7 +509,7 @@ var _ TypedExpander = testFlexTFTypedExpander{}
 
 func (t testFlexTFTypedExpander) ExpandTo(ctx context.Context, targetType reflect.Type) (any, diag.Diagnostics) {
 	return &testFlexAWSExpander{
-		AWSField: t.Field1.ValueString(),
+		AWSField: StringValueFromFramework(ctx, t.Field1),
 	}, nil
 }
 
@@ -529,7 +533,7 @@ func (t testFlexTFInterfaceTypedExpander) ExpandTo(ctx context.Context, targetTy
 	switch targetType {
 	case reflect.TypeFor[testFlexAWSInterfaceInterface]():
 		return &testFlexAWSInterfaceInterfaceImpl{
-			AWSField: t.Field1.ValueString(),
+			AWSField: StringValueFromFramework(ctx, t.Field1),
 		}, nil
 	}
 
@@ -544,7 +548,7 @@ var _ TypedExpander = testFlexTFInterfaceIncompatibleTypedExpander{}
 
 func (t testFlexTFInterfaceIncompatibleTypedExpander) ExpandTo(ctx context.Context, targetType reflect.Type) (any, diag.Diagnostics) {
 	return &testFlexAWSInterfaceIncompatibleImpl{
-		AWSField: t.Field1.ValueString(),
+		AWSField: StringValueFromFramework(ctx, t.Field1),
 	}, nil
 }
 
