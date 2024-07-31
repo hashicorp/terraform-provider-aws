@@ -1223,8 +1223,8 @@ func TestFlattenInterface(t *testing.T) {
 			Source: testFlexAWSInterfaceSingle{
 				Field1: nil,
 			},
-			Target: &testFlexTFInterfaceListNestedObject{},
-			WantTarget: &testFlexTFInterfaceListNestedObject{
+			Target: &testFlexTFListNestedObject[testFlexTFInterfaceFlexer]{},
+			WantTarget: &testFlexTFListNestedObject[testFlexTFInterfaceFlexer]{
 				Field1: fwtypes.NewListNestedObjectValueOfNull[testFlexTFInterfaceFlexer](ctx),
 			},
 		},
@@ -1235,8 +1235,8 @@ func TestFlattenInterface(t *testing.T) {
 					AWSField: "value1",
 				},
 			},
-			Target: &testFlexTFInterfaceListNestedObject{},
-			WantTarget: &testFlexTFInterfaceListNestedObject{
+			Target: &testFlexTFListNestedObject[testFlexTFInterfaceFlexer]{},
+			WantTarget: &testFlexTFListNestedObject[testFlexTFInterfaceFlexer]{
 				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceFlexer{
 					{
 						Field1: types.StringValue("value1"),
@@ -1249,8 +1249,8 @@ func TestFlattenInterface(t *testing.T) {
 			Source: testFlexAWSInterfaceSingle{
 				Field1: nil,
 			},
-			Target: &testFlexTFInterfaceListNestedObjectNonFlexer{},
-			WantTarget: &testFlexTFInterfaceListNestedObjectNonFlexer{
+			Target: &testFlexTFListNestedObject[TestFlexTF01]{},
+			WantTarget: &testFlexTFListNestedObject[TestFlexTF01]{
 				Field1: fwtypes.NewListNestedObjectValueOfNull[TestFlexTF01](ctx),
 			},
 		},
@@ -1261,8 +1261,8 @@ func TestFlattenInterface(t *testing.T) {
 					AWSField: "value1",
 				},
 			},
-			Target: &testFlexTFInterfaceListNestedObjectNonFlexer{},
-			WantTarget: &testFlexTFInterfaceListNestedObjectNonFlexer{
+			Target: &testFlexTFListNestedObject[TestFlexTF01]{},
+			WantTarget: &testFlexTFListNestedObject[TestFlexTF01]{
 				Field1: fwtypes.NewListNestedObjectValueOfNull[TestFlexTF01](ctx),
 			},
 			expectedLogLines: []map[string]any{
@@ -1287,8 +1287,8 @@ func TestFlattenInterface(t *testing.T) {
 			Source: testFlexAWSInterfaceSingle{
 				Field1: nil,
 			},
-			Target: &testFlexTFInterfaceSetNestedObject{},
-			WantTarget: &testFlexTFInterfaceSetNestedObject{
+			Target: &testFlexTFSetNestedObject[testFlexTFInterfaceFlexer]{},
+			WantTarget: &testFlexTFSetNestedObject[testFlexTFInterfaceFlexer]{
 				Field1: fwtypes.NewSetNestedObjectValueOfNull[testFlexTFInterfaceFlexer](ctx),
 			},
 		},
@@ -1299,8 +1299,8 @@ func TestFlattenInterface(t *testing.T) {
 					AWSField: "value1",
 				},
 			},
-			Target: &testFlexTFInterfaceSetNestedObject{},
-			WantTarget: &testFlexTFInterfaceSetNestedObject{
+			Target: &testFlexTFSetNestedObject[testFlexTFInterfaceFlexer]{},
+			WantTarget: &testFlexTFSetNestedObject[testFlexTFInterfaceFlexer]{
 				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceFlexer{
 					{
 						Field1: types.StringValue("value1"),
@@ -1314,8 +1314,8 @@ func TestFlattenInterface(t *testing.T) {
 			Source: testFlexAWSInterfaceSlice{
 				Field1: nil,
 			},
-			Target: &testFlexTFInterfaceListNestedObject{},
-			WantTarget: &testFlexTFInterfaceListNestedObject{
+			Target: &testFlexTFListNestedObject[testFlexTFInterfaceFlexer]{},
+			WantTarget: &testFlexTFListNestedObject[testFlexTFInterfaceFlexer]{
 				Field1: fwtypes.NewListNestedObjectValueOfNull[testFlexTFInterfaceFlexer](ctx),
 			},
 		},
@@ -1324,8 +1324,8 @@ func TestFlattenInterface(t *testing.T) {
 			Source: testFlexAWSInterfaceSlice{
 				Field1: []testFlexAWSInterfaceInterface{},
 			},
-			Target: &testFlexTFInterfaceListNestedObject{},
-			WantTarget: &testFlexTFInterfaceListNestedObject{
+			Target: &testFlexTFListNestedObject[testFlexTFInterfaceFlexer]{},
+			WantTarget: &testFlexTFListNestedObject[testFlexTFInterfaceFlexer]{
 				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceFlexer{}),
 			},
 		},
@@ -1341,8 +1341,8 @@ func TestFlattenInterface(t *testing.T) {
 					},
 				},
 			},
-			Target: &testFlexTFInterfaceListNestedObject{},
-			WantTarget: &testFlexTFInterfaceListNestedObject{
+			Target: &testFlexTFListNestedObject[testFlexTFInterfaceFlexer]{},
+			WantTarget: &testFlexTFListNestedObject[testFlexTFInterfaceFlexer]{
 				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceFlexer{
 					{
 						Field1: types.StringValue("value1"),
@@ -1359,8 +1359,8 @@ func TestFlattenInterface(t *testing.T) {
 			Source: testFlexAWSInterfaceSlice{
 				Field1: nil,
 			},
-			Target: &testFlexTFInterfaceSetNestedObject{},
-			WantTarget: &testFlexTFInterfaceSetNestedObject{
+			Target: &testFlexTFSetNestedObject[testFlexTFInterfaceFlexer]{},
+			WantTarget: &testFlexTFSetNestedObject[testFlexTFInterfaceFlexer]{
 				Field1: fwtypes.NewSetNestedObjectValueOfNull[testFlexTFInterfaceFlexer](ctx),
 			},
 		},
@@ -1369,8 +1369,8 @@ func TestFlattenInterface(t *testing.T) {
 			Source: testFlexAWSInterfaceSlice{
 				Field1: []testFlexAWSInterfaceInterface{},
 			},
-			Target: &testFlexTFInterfaceSetNestedObject{},
-			WantTarget: &testFlexTFInterfaceSetNestedObject{
+			Target: &testFlexTFSetNestedObject[testFlexTFInterfaceFlexer]{},
+			WantTarget: &testFlexTFSetNestedObject[testFlexTFInterfaceFlexer]{
 				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceFlexer{}),
 			},
 		},
@@ -1386,8 +1386,8 @@ func TestFlattenInterface(t *testing.T) {
 					},
 				},
 			},
-			Target: &testFlexTFInterfaceListNestedObject{},
-			WantTarget: &testFlexTFInterfaceListNestedObject{
+			Target: &testFlexTFListNestedObject[testFlexTFInterfaceFlexer]{},
+			WantTarget: &testFlexTFListNestedObject[testFlexTFInterfaceFlexer]{
 				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceFlexer{
 					{
 						Field1: types.StringValue("value1"),
@@ -1403,8 +1403,8 @@ func TestFlattenInterface(t *testing.T) {
 			Source: testFlexAWSInterfaceSingle{
 				Field1: nil,
 			},
-			Target: &testFlexTFInterfaceObjectValue{},
-			WantTarget: &testFlexTFInterfaceObjectValue{
+			Target: &testFlexTFObjectValue[testFlexTFInterfaceFlexer]{},
+			WantTarget: &testFlexTFObjectValue[testFlexTFInterfaceFlexer]{
 				Field1: fwtypes.NewObjectValueOfNull[testFlexTFInterfaceFlexer](ctx),
 			},
 		},
@@ -1415,8 +1415,8 @@ func TestFlattenInterface(t *testing.T) {
 					AWSField: "value1",
 				},
 			},
-			Target: &testFlexTFInterfaceObjectValue{},
-			WantTarget: &testFlexTFInterfaceObjectValue{
+			Target: &testFlexTFObjectValue[testFlexTFInterfaceFlexer]{},
+			WantTarget: &testFlexTFObjectValue[testFlexTFInterfaceFlexer]{
 				Field1: fwtypes.NewObjectValueOfMust(ctx, &testFlexTFInterfaceFlexer{
 					Field1: types.StringValue("value1"),
 				}),

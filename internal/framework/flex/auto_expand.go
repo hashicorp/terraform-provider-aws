@@ -24,6 +24,11 @@ type Expander interface {
 	Expand(ctx context.Context) (any, diag.Diagnostics)
 }
 
+// Expander is implemented by types that customize their expansion and can have multiple target types
+type TypedExpander interface {
+	ExpandTo(ctx context.Context, targetType reflect.Type) (any, diag.Diagnostics)
+}
+
 // Expand "expands" a resource's "business logic" data structure,
 // implemented using Terraform Plugin Framework data types, into
 // an AWS SDK for Go v2 API data structure.
@@ -34,7 +39,7 @@ func Expand(ctx context.Context, tfObject, apiObject any, optFns ...AutoFlexOpti
 	var diags diag.Diagnostics
 	expander := newAutoExpander(optFns)
 
-	diags.Append(autoFlexConvert(ctx, tfObject, apiObject, expander)...)
+	diags.Append(autoExpandConvert(ctx, tfObject, apiObject, expander)...)
 	if diags.HasError() {
 		diags.AddError("AutoFlEx", fmt.Sprintf("Expand[%T, %T]", tfObject, apiObject))
 		return diags
@@ -67,6 +72,31 @@ func (expander autoExpander) getOptions() AutoFlexOptions {
 	return expander.Options
 }
 
+// autoFlexConvert converts `from` to `to` using the specified auto-flexer.
+func autoExpandConvert(ctx context.Context, from, to any, flexer autoFlexer) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	valFrom, valTo, d := autoFlexValues(ctx, from, to)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	// Top-level struct to struct conversion.
+	if valFrom.IsValid() && valTo.IsValid() {
+		if typFrom, typTo := valFrom.Type(), valTo.Type(); typFrom.Kind() == reflect.Struct && typTo.Kind() == reflect.Struct &&
+			!typFrom.Implements(reflect.TypeFor[basetypes.ListValuable]()) &&
+			!typFrom.Implements(reflect.TypeFor[basetypes.SetValuable]()) {
+			diags.Append(autoFlexConvertStruct(ctx, from, to, flexer)...)
+			return diags
+		}
+	}
+
+	// Anything else.
+	diags.Append(flexer.convert(ctx, valFrom, valTo)...)
+	return diags
+}
+
 // convert converts a single Plugin Framework value to its AWS API equivalent.
 func (expander autoExpander) convert(ctx context.Context, valFrom, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
@@ -83,6 +113,11 @@ func (expander autoExpander) convert(ctx context.Context, valFrom, vTo reflect.V
 
 	if fromExpander, ok := valFrom.Interface().(Expander); ok {
 		diags.Append(expandExpander(ctx, fromExpander, vTo)...)
+		return diags
+	}
+
+	if fromTypedExpander, ok := valFrom.Interface().(TypedExpander); ok {
+		diags.Append(expandTypedExpander(ctx, fromTypedExpander, vTo)...)
 		return diags
 	}
 
@@ -783,9 +818,11 @@ func (expander autoExpander) nestedObjectToStruct(ctx context.Context, vFrom fwt
 
 	// Create a new target structure and walk its fields.
 	to := reflect.New(tStruct)
-	diags.Append(autoFlexConvertStruct(ctx, from, to.Interface(), expander)...)
-	if diags.HasError() {
-		return diags
+	if !reflect.ValueOf(from).IsNil() {
+		diags.Append(autoFlexConvertStruct(ctx, from, to.Interface(), expander)...)
+		if diags.HasError() {
+			return diags
+		}
 	}
 
 	// Set value.
@@ -939,6 +976,50 @@ func expandExpander(ctx context.Context, fromExpander Expander, toVal reflect.Va
 
 	if expanded == nil {
 		diags.Append(diagExpandsToNil(reflect.TypeOf(fromExpander)))
+		return diags
+	}
+
+	expandedVal := reflect.ValueOf(expanded)
+
+	targetType := toVal.Type()
+	if targetType.Kind() == reflect.Interface {
+		expandedType := reflect.TypeOf(expanded)
+		if !expandedType.Implements(targetType) {
+			diags.Append(diagExpandedTypeDoesNotImplement(expandedType, targetType))
+			return diags
+		}
+
+		toVal.Set(expandedVal)
+
+		return diags
+	}
+
+	if targetType.Kind() == reflect.Struct {
+		expandedVal = expandedVal.Elem()
+	}
+	expandedType := expandedVal.Type()
+
+	if !expandedType.AssignableTo(targetType) {
+		diags.Append(diagCannotBeAssigned(expandedType, targetType))
+		return diags
+	}
+
+	toVal.Set(expandedVal)
+
+	return diags
+}
+
+func expandTypedExpander(ctx context.Context, fromTypedExpander TypedExpander, toVal reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	expanded, d := fromTypedExpander.ExpandTo(ctx, toVal.Type())
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	if expanded == nil {
+		diags.Append(diagExpandsToNil(reflect.TypeOf(fromTypedExpander)))
 		return diags
 	}
 
