@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -78,6 +79,7 @@ func resourceIPAMPoolCIDRAllocation() *schema.Resource {
 				Type:          schema.TypeInt,
 				Optional:      true,
 				ForceNew:      true,
+				Computed:      true,
 				ValidateFunc:  validation.IntBetween(0, 128),
 				ConflictsWith: []string{"cidr"},
 			},
@@ -167,6 +169,18 @@ func resourceIPAMPoolCIDRAllocationRead(ctx context.Context, d *schema.ResourceD
 	d.Set("cidr", allocation.Cidr)
 	d.Set("ipam_pool_allocation_id", allocation.IpamPoolAllocationId)
 	d.Set("ipam_pool_id", poolID)
+	cidr := aws.ToString(allocation.Cidr)
+	d.Set("netmask_length", nil)
+	parts := strings.Split(cidr, "/")
+	if len(parts) == 2 {
+		if v, err := strconv.Atoi(parts[1]); err == nil {
+			d.Set("netmask_length", v)
+		} else {
+			log.Printf("[WARN] Unable to parse CIDR (%s) netmask length: %s", cidr, err)
+		}
+	} else {
+		log.Printf("[WARN] Invalid CIDR block format: %s", cidr)
+	}
 	d.Set(names.AttrDescription, allocation.Description)
 	d.Set(names.AttrResourceID, allocation.ResourceId)
 	d.Set(names.AttrResourceOwner, allocation.ResourceOwner)
