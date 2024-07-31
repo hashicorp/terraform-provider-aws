@@ -42,6 +42,7 @@ func TestAccIPAMPoolCIDRAllocation_ipv4Basic(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, names.AttrID, regexache.MustCompile(`^ipam-pool-alloc-[0-9a-f]+_ipam-pool(-[0-9a-f]+)$`)),
 					resource.TestMatchResourceAttr(resourceName, "ipam_pool_allocation_id", regexache.MustCompile(`^ipam-pool-alloc-[0-9a-f]+$`)),
 					resource.TestCheckResourceAttrPair(resourceName, "ipam_pool_id", "aws_vpc_ipam_pool.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "netmask_length", strings.Split(cidr, "/")[1]),
 				),
 			},
 			{
