@@ -665,6 +665,10 @@ func ResourceInstance() *schema.Resource {
 					"s3_import",
 				},
 			},
+			"upgrade_storage_config": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			names.AttrUsername: {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -866,6 +870,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if v, ok := d.GetOk(names.AttrStorageType); ok {
 			input.StorageType = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("upgrade_storage_config"); ok {
+			input.UpgradeStorageConfig = aws.Bool(v.(bool))
 		}
 
 		if v, ok := d.GetOk(names.AttrVPCSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {

@@ -133,11 +133,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Instance Automated Backups Replication",
 		},
 		{
-			Factory:  ResourceInstanceRoleAssociation,
+			Factory:  resourceInstanceRoleAssociation,
 			TypeName: "aws_db_instance_role_association",
+			Name:     "DB Instance IAM Role Association",
 		},
 		{
-			Factory:  ResourceOptionGroup,
+			Factory:  resourceOptionGroup,
 			TypeName: "aws_db_option_group",
 			Name:     "DB Option Group",
 			Tags: &types.ServicePackageResourceTags{
