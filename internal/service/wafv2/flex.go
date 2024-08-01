@@ -992,7 +992,7 @@ func expandWebACLRulesJSON(rawRules string) ([]awstypes.Rule, error) {
 	}
 
 	for i, r := range rules {
-		if reflect.DeepEqual(r, nil) {
+		if reflect.DeepEqual(r, awstypes.Rule{}) {
 			return nil, fmt.Errorf("invalid ACL Rule supplied at index (%d)", i)
 		}
 	}
