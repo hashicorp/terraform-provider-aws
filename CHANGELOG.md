@@ -17,6 +17,7 @@ ENHANCEMENTS:
 * resource/aws_eks_cluster: Add `upgrade_policy` configuration block ([#38573](https://github.com/hashicorp/terraform-provider-aws/issues/38573))
 * resource/aws_elasticache_user_group_association: Add configurable create and delete timeouts ([#38559](https://github.com/hashicorp/terraform-provider-aws/issues/38559))
 * resource/aws_pipes_pipe: Add `log_configuration.include_execution_data` argument ([#38569](https://github.com/hashicorp/terraform-provider-aws/issues/38569))
+* resource/aws_rds_cluster: Add `performance_insights_enabled`, `performance_insights_kms_key_id`, and `performance_insights_retention_period` arguments ([#29415](https://github.com/hashicorp/terraform-provider-aws/issues/29415))
 * resource/aws_rds_cluster: Add `restore_to_point_in_time.source_cluster_resource_id` argument ([#38540](https://github.com/hashicorp/terraform-provider-aws/issues/38540))
 * resource/aws_rds_cluster: Mark `restore_to_point_in_time.source_cluster_identifier` as Optional ([#38540](https://github.com/hashicorp/terraform-provider-aws/issues/38540))
 * resource/aws_sfn_activity: Add `encryption_configuration` configuration block to support the use of Customer Managed Keys with AWS KMS to encrypt Step Functions Activity resources ([#38574](https://github.com/hashicorp/terraform-provider-aws/issues/38574))
