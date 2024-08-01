@@ -5,20 +5,16 @@ package rds_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/rds"
-	rdsv1 "github.com/aws/aws-sdk-go/service/rds"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/rds/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -30,29 +26,29 @@ func TestAccRDSIntegration_basic(t *testing.T) {
 	}
 
 	ctx := acctest.Context(t)
-
-	var integration rds.DescribeIntegrationsOutput
+	var integration awstypes.Integration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_integration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rdsv1.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIntegrationConfigBase(rName),
+				Config: testAccIntegrationConfig_base(rName),
 				Check: resource.ComposeTestCheckFunc(
 					waitUntilRDSReboot(ctx, rName),
 				),
 			},
 			{
 				Config: testAccIntegrationConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIntegrationExists(ctx, resourceName, &integration),
 					resource.TestCheckResourceAttr(resourceName, "integration_name", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "source_arn", "aws_rds_cluster.mysql_test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "source_arn", "aws_rds_cluster.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "tags.#", acctest.Ct0),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTargetARN, "aws_redshiftserverless_namespace.test", names.AttrARN),
 				),
 			},
@@ -65,6 +61,40 @@ func TestAccRDSIntegration_basic(t *testing.T) {
 	})
 }
 
+func TestAccRDSIntegration_disappears(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	var integration awstypes.Integration
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_integration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIntegrationConfig_base(rName),
+				Check: resource.ComposeTestCheckFunc(
+					waitUntilRDSReboot(ctx, rName),
+				),
+			},
+			{
+				Config: testAccIntegrationConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntegrationExists(ctx, resourceName, &integration),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfrds.ResourceIntegration, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccRDSIntegration_optional(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -72,18 +102,18 @@ func TestAccRDSIntegration_optional(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var integration rds.DescribeIntegrationsOutput
+	var integration awstypes.Integration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_integration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rdsv1.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIntegrationConfigBase(rName),
+				Config: testAccIntegrationConfig_base(rName),
 				Check: resource.ComposeTestCheckFunc(
 					waitUntilRDSReboot(ctx, rName),
 				),
@@ -94,10 +124,11 @@ func TestAccRDSIntegration_optional(t *testing.T) {
 					testAccCheckIntegrationExists(ctx, resourceName, &integration),
 					resource.TestCheckResourceAttr(resourceName, "integration_name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, "aws_kms_key.test", names.AttrARN),
-					resource.TestCheckResourceAttrPair(resourceName, "source_arn", "aws_rds_cluster.mysql_test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "source_arn", "aws_rds_cluster.test", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTargetARN, "aws_redshiftserverless_namespace.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "additional_encryption_context.department", "test"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Test", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
 			{
@@ -121,89 +152,54 @@ func testAccCheckIntegrationDestroy(ctx context.Context) resource.TestCheckFunc 
 			_, err := tfrds.FindIntegrationByARN(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.RDS, create.ErrActionCheckingDestroyed, tfrds.ResNameIntegration, rs.Primary.ID, err)
+				continue
 			}
 
-			return create.Error(names.RDS, create.ErrActionCheckingDestroyed, tfrds.ResNameIntegration, rs.Primary.ID, errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("RDS Integration %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckIntegrationExists(ctx context.Context, name string, integration *rds.DescribeIntegrationsOutput) resource.TestCheckFunc {
+func testAccCheckIntegrationExists(ctx context.Context, n string, v *awstypes.Integration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.RDS, create.ErrActionCheckingExistence, tfrds.ResNameIntegration, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.RDS, create.ErrActionCheckingExistence, tfrds.ResNameIntegration, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
-		resp, err := conn.DescribeIntegrations(ctx, &rds.DescribeIntegrationsInput{
-			IntegrationIdentifier: aws.String(rs.Primary.ID),
-		})
+
+		output, err := tfrds.FindIntegrationByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
-			return create.Error(names.RDS, create.ErrActionCheckingExistence, tfrds.ResNameIntegration, rs.Primary.ID, err)
+			return err
 		}
 
-		*integration = *resp
+		*v = *output
 
 		return nil
 	}
 }
 
-// Wait RDS rebooting for static DB parameter changes
 func waitUntilRDSReboot(ctx context.Context, instanceIdentifier string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
-		// Wait for rebooting
+		// Wait for rebooting.
 		time.Sleep(60 * time.Second)
 
-		// Wait for being available
-		for {
-			status := getDBInstanceStatus(ctx, instanceIdentifier)
-			if status == "available" {
-				break
-			}
+		_, err := tfrds.WaitDBInstanceAvailable(ctx, acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx), instanceIdentifier, 30*time.Minute)
 
-			time.Sleep(10 * time.Second)
-		}
-
-		return nil
+		return err
 	}
 }
 
-func getDBInstanceStatus(ctx context.Context, instanceIdentifier string) string {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
-
-	result, err := conn.DescribeDBInstances(ctx, &rds.DescribeDBInstancesInput{
-		DBInstanceIdentifier: aws.String(instanceIdentifier),
-	})
-	if err != nil {
-		fmt.Errorf("failed to describe DB instances, %v", err)
-	}
-
-	if len(result.DBInstances) == 0 {
-		fmt.Errorf("DB instance %s not found", instanceIdentifier)
-	}
-
-	instance := result.DBInstances[0]
-	status := *instance.DBInstanceStatus
-	fmt.Printf("Current DB instance status: %s\n", status)
-
-	return status
-}
-
-func testAccIntegrationConfigBase(rName string) string {
-	return fmt.Sprintf(`
+func testAccIntegrationConfig_base(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 3), fmt.Sprintf(`
 locals {
   cluster_parameters = {
     "binlog_replication_globaldb" = {
@@ -235,54 +231,8 @@ locals {
 
 data "aws_caller_identity" "current" {}
 
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test1" {
-  cidr_block        = "10.1.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = "%[1]s-1"
-  }
-}
-
-resource "aws_subnet" "test2" {
-  cidr_block        = "10.1.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = "%[1]s-2"
-  }
-}
-
-resource "aws_subnet" "test3" {
-  cidr_block        = "10.1.3.0/24"
-  availability_zone = data.aws_availability_zones.available.names[2]
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = "%[1]s-3"
-  }
-}
-
 resource "aws_security_group" "test" {
+  name   = %[1]q
   vpc_id = aws_vpc.test.id
 
   ingress {
@@ -298,14 +248,15 @@ resource "aws_security_group" "test" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_db_subnet_group" "test" {
   name       = %[1]q
-  subnet_ids = [
-    aws_subnet.test1.id,
-    aws_subnet.test2.id,
-  ]
+  subnet_ids = aws_subnet.test[*].id
 
   tags = {
     Name = %[1]q
@@ -313,7 +264,7 @@ resource "aws_db_subnet_group" "test" {
 }
 
 resource "aws_rds_cluster_parameter_group" "test" {
-  name        = "%[1]s"
+  name        = %[1]q
   family      = "aurora-mysql8.0"
 
   dynamic "parameter" {
@@ -326,46 +277,45 @@ resource "aws_rds_cluster_parameter_group" "test" {
   }
 }
 
-resource "aws_rds_cluster" "mysql_test" {
+resource "aws_rds_cluster" "test" {
   cluster_identifier = %[1]q
   engine              = "aurora-mysql"
   engine_version      = "8.0.mysql_aurora.3.05.1"
-  database_name       = "tftest"
-  master_username     = "testuser"
-  master_password     = "Testpassword123"
+  database_name       = "test"
+  master_username     = "tfacctest"
+  master_password     = "avoid-plaintext-passwords"
   skip_final_snapshot = true
+
   vpc_security_group_ids          = [aws_security_group.test.id]
   db_subnet_group_name            = aws_db_subnet_group.test.name
   db_cluster_parameter_group_name = aws_rds_cluster_parameter_group.test.name
+
   apply_immediately = true
 }
 
-resource "aws_rds_cluster_instance" "mysql_test" {
-  identifier        = %[1]q
-  cluster_identifier = aws_rds_cluster.mysql_test.id
+resource "aws_rds_cluster_instance" "test" {
+  identifier         = %[1]q
+  cluster_identifier = aws_rds_cluster.test.id
   instance_class     = "db.r6g.large"
-  engine             = aws_rds_cluster.mysql_test.engine
-  engine_version     = aws_rds_cluster.mysql_test.engine_version
+  engine             = aws_rds_cluster.test.engine
+  engine_version     = aws_rds_cluster.test.engine_version
 }
 
 resource "aws_redshift_cluster" "test" {
   cluster_identifier  = %[1]q
   availability_zone   = data.aws_availability_zones.available.names[0]
-  database_name       = "test"
-  master_username     = "testuser"
-  master_password     = "Testpassword123"
+  database_name       = "mydb"
+  master_username     = "foo"
+  master_password     = "Mustbe8characters"
   node_type           = "dc2.large"
   cluster_type        = "single-node"
   skip_final_snapshot = true
 }
-
-`, rName)
+`, rName))
 }
 
 func testAccIntegrationConfig_basic(rName string) string {
-	return acctest.ConfigCompose(
-		testAccIntegrationConfigBase(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccIntegrationConfig_base(rName), fmt.Sprintf(`
 resource "aws_redshiftserverless_namespace" "test" {
   namespace_name = %[1]q
 }
@@ -373,13 +323,10 @@ resource "aws_redshiftserverless_namespace" "test" {
 resource "aws_redshiftserverless_workgroup" "test" {
   namespace_name = aws_redshiftserverless_namespace.test.namespace_name
   workgroup_name = %[1]q
-  base_capacity = 8
+  base_capacity  = 8
+
   publicly_accessible = false
-  subnet_ids = [
-    aws_subnet.test1.id,
-    aws_subnet.test2.id,
-    aws_subnet.test3.id,
-  ]
+  subnet_ids          = aws_subnet.test[*].id
 
   config_parameter {
     parameter_key = "enable_case_sensitive_identifier"
@@ -441,7 +388,7 @@ resource "aws_redshift_resource_policy" "test" {
       Resource = aws_redshiftserverless_namespace.test.arn
       Condition = {
         StringEquals = {
-          "aws:SourceArn" = aws_rds_cluster.mysql_test.arn
+          "aws:SourceArn" = aws_rds_cluster.test.arn
         }
       }
     }]
@@ -450,11 +397,11 @@ resource "aws_redshift_resource_policy" "test" {
 
 resource "aws_rds_integration" "test" {
   integration_name = %[1]q
-  source_arn       = aws_rds_cluster.mysql_test.arn
+  source_arn       = aws_rds_cluster.test.arn
   target_arn       = aws_redshiftserverless_namespace.test.arn
 
   depends_on = [
-    aws_rds_cluster.mysql_test,
+    aws_rds_cluster.test,
     aws_redshiftserverless_namespace.test,
     aws_redshiftserverless_workgroup.test,
     aws_redshift_resource_policy.test,
@@ -470,9 +417,7 @@ resource "aws_rds_integration" "test" {
 }
 
 func testAccIntegrationConfig_optional(rName string) string {
-	return acctest.ConfigCompose(
-		testAccIntegrationConfigBase(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccIntegrationConfig_base(rName), fmt.Sprintf(`
 resource "aws_redshiftserverless_namespace" "test" {
   namespace_name = %[1]q
 }
@@ -480,13 +425,10 @@ resource "aws_redshiftserverless_namespace" "test" {
 resource "aws_redshiftserverless_workgroup" "test" {
   namespace_name = aws_redshiftserverless_namespace.test.namespace_name
   workgroup_name = %[1]q
-  base_capacity = 8
+  base_capacity  = 8
+
   publicly_accessible = false
-  subnet_ids = [
-    aws_subnet.test1.id,
-    aws_subnet.test2.id,
-    aws_subnet.test3.id,
-  ]
+  subnet_ids          = aws_subnet.test[*].id
 
   config_parameter {
     parameter_key = "enable_case_sensitive_identifier"
@@ -530,6 +472,7 @@ resource "aws_redshiftserverless_workgroup" "test" {
 # Therefore we need to use the "aws_redshift_resource_policy" resource for RedShift-serverless instead.
 resource "aws_redshift_resource_policy" "test" {
   resource_arn = aws_redshiftserverless_namespace.test.arn
+
   policy = jsonencode({
     Version = "2008-10-17"
     Statement = [{
@@ -548,7 +491,7 @@ resource "aws_redshift_resource_policy" "test" {
       Resource = aws_redshiftserverless_namespace.test.arn
       Condition = {
         StringEquals = {
-          "aws:SourceArn" = aws_rds_cluster.mysql_test.arn
+          "aws:SourceArn" = aws_rds_cluster.test.arn
         }
       }
     }]
@@ -582,20 +525,20 @@ data "aws_iam_policy_document" "key_policy" {
 
 resource "aws_rds_integration" "test" {
   integration_name = %[1]q
-  source_arn       = aws_rds_cluster.mysql_test.arn
+  source_arn       = aws_rds_cluster.test.arn
   target_arn       = aws_redshiftserverless_namespace.test.arn
-
   kms_key_id       = aws_kms_key.test.arn
+
   additional_encryption_context = {
     "department": "test",
   }
 
   tags = {
-    Test = "true"
+    Name = %[1]q
   }
 
   depends_on = [
-    aws_rds_cluster.mysql_test,
+    aws_rds_cluster.test,
     aws_redshiftserverless_namespace.test,
     aws_redshiftserverless_workgroup.test,
     aws_redshift_resource_policy.test,
