@@ -152,8 +152,7 @@ func autoFlexConvertStruct(ctx context.Context, sourcePath path.Path, from any, 
 
 		diags.Append(flexer.convert(ctx, sourcePath.AtName(fieldName), valFrom.Field(i), targetPath.AtName(toFieldName), toFieldVal)...)
 		if diags.HasError() {
-			diags.AddError("AutoFlEx", fmt.Sprintf("convert (%s)", fieldName))
-			return diags
+			break
 		}
 	}
 

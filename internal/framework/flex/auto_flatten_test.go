@@ -187,7 +187,6 @@ func TestFlatten(t *testing.T) {
 			Target: &TestFlexAWS01{},
 			expectedDiags: diag.Diagnostics{
 				diag.NewErrorDiagnostic("AutoFlEx", "does not implement attr.Value: string"),
-				diag.NewErrorDiagnostic("AutoFlEx", "convert (Field1)"),
 			},
 			expectedLogLines: []map[string]any{
 				infoFlattening(reflect.TypeFor[*TestFlexAWS01](), reflect.TypeFor[*TestFlexAWS01]()),
