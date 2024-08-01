@@ -10,4 +10,5 @@ var (
 	IsResourceMissing                         = isResourceMissing
 	ResourceProject                           = newResourceProject
 	ResourceEnvironmentProfile                = newResourceEnvironmentProfile
+	FindEnvironmentProfileByID                = findEnvironmentProfileByID
 )

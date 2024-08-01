@@ -10,10 +10,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/datazone"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/datazone/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfdatazone "github.com/hashicorp/terraform-provider-aws/internal/service/datazone"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -208,7 +205,7 @@ func testAccCheckEnvironmentProfileDestroy(ctx context.Context) resource.TestChe
 				continue
 			}
 
-			_, err := findEnvironmentProfileByID(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["domain_identifier"])
+			_, err := tfdatazone.FindEnvironmentProfileByID(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["domain_identifier"])
 
 			if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsA[*awstypes.AccessDeniedException](err) {
 				return nil
@@ -236,7 +233,7 @@ func testAccCheckEnvironmentProfileExists(ctx context.Context, name string, envi
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataZoneClient(ctx)
-		resp, err := findEnvironmentProfileByID(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["domain_identifier"])
+		resp, err := tfdatazone.FindEnvironmentProfileByID(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["domain_identifier"])
 
 		if err != nil {
 			return create.Error(names.DataZone, create.ErrActionCheckingExistence, tfdatazone.ResNameEnvironmentProfile, rs.Primary.ID, err)
@@ -246,31 +243,6 @@ func testAccCheckEnvironmentProfileExists(ctx context.Context, name string, envi
 
 		return nil
 	}
-}
-
-func findEnvironmentProfileByID(ctx context.Context, conn *datazone.Client, id string, domain_id string) (*datazone.GetEnvironmentProfileOutput, error) {
-	in := &datazone.GetEnvironmentProfileInput{
-		Identifier:       aws.String(id),
-		DomainIdentifier: aws.String(domain_id),
-	}
-
-	out, err := conn.GetEnvironmentProfile(ctx, in)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
-
-		return nil, err
-	}
-
-	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-
-	return out, nil
 }
 
 func testAccAuthorizerEnvProfImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
