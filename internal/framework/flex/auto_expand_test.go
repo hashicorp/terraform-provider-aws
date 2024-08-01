@@ -91,22 +91,24 @@ func TestExpand(t *testing.T) {
 			Source: testString,
 			Target: &TestFlex00{},
 			expectedDiags: diag.Diagnostics{
-				diag.NewErrorDiagnostic("AutoFlEx", "does not implement attr.Value: string"),
+				diagSourceDoesNotImplementAttrValue(reflect.TypeFor[string]()),
 			},
 			expectedLogLines: []map[string]any{
 				infoExpanding(reflect.TypeFor[string](), reflect.TypeFor[*TestFlex00]()),
 				infoConverting(reflect.TypeFor[string](), reflect.TypeFor[TestFlex00]()),
+				errorSourceDoesNotImplementAttrValue("", reflect.TypeFor[string](), "", reflect.TypeFor[TestFlex00]()),
 			},
 		},
 		"non-struct Target": {
 			Source: TestFlex00{},
 			Target: &testString,
 			expectedDiags: diag.Diagnostics{
-				diag.NewErrorDiagnostic("AutoFlEx", "does not implement attr.Value: struct"),
+				diagSourceDoesNotImplementAttrValue(reflect.TypeFor[TestFlex00]()),
 			},
 			expectedLogLines: []map[string]any{
 				infoExpanding(reflect.TypeFor[TestFlex00](), reflect.TypeFor[*string]()),
 				infoConverting(reflect.TypeFor[TestFlex00](), reflect.TypeFor[string]()),
+				errorSourceDoesNotImplementAttrValue("", reflect.TypeFor[TestFlex00](), "", reflect.TypeFor[string]()),
 			},
 		},
 		"types.String to string": {
@@ -150,13 +152,14 @@ func TestExpand(t *testing.T) {
 			Source: &TestFlexAWS01{Field1: "a"},
 			Target: &TestFlexAWS01{},
 			expectedDiags: diag.Diagnostics{
-				diag.NewErrorDiagnostic("AutoFlEx", "does not implement attr.Value: string"),
+				diagSourceDoesNotImplementAttrValue(reflect.TypeFor[string]()),
 			},
 			expectedLogLines: []map[string]any{
 				infoExpanding(reflect.TypeFor[*TestFlexAWS01](), reflect.TypeFor[*TestFlexAWS01]()),
 				infoConverting(reflect.TypeFor[TestFlexAWS01](), reflect.TypeFor[TestFlexAWS01]()),
 				traceMatchedFields("Field1", reflect.TypeFor[*TestFlexAWS01](), "Field1", reflect.TypeFor[*TestFlexAWS01]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[string](), "Field1", reflect.TypeFor[string]()),
+				errorSourceDoesNotImplementAttrValue("Field1", reflect.TypeFor[string](), "Field1", reflect.TypeFor[string]()),
 			},
 		},
 		"single string Source and single string Target": {
