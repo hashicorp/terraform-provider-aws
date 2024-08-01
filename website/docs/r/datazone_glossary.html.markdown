@@ -87,7 +87,6 @@ resource "aws_datazone_glossary" "test" {
 
 ```terraform
 resource "aws_datazone_glossary" "test" {
-  client_token              = "example_token"
   description               = "description"
   name                      = "example_name"
   owning_project_identifier = aws_datazone_project.test.id
@@ -100,7 +99,6 @@ resource "aws_datazone_glossary" "test" {
 
 The following arguments are required:
 
-* `client_token` - (Required) Unique case-sensitive identifier that is provided to ensure the idempotency of the request. Must follow regex pattern of ^[\x21-\x7E]+$ and have length between 1 and 128.
 * `name` - (Required) Name of the glossary. Must have length between 1 and 256.
 * `owning_project_identifier` - (Required) ID of the project that owns business glossary. Must follow regex of ^[a-zA-Z0-9_-]{1,36}$.
 

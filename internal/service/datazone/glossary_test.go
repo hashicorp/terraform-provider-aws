@@ -56,7 +56,7 @@ func TestAccDataZoneGlossary_basic(t *testing.T) {
 					testAccCheckGlossaryExists(ctx, resourceName, &glossary),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "owning_project_identifier", projectName, names.AttrID),
-					resource.TestCheckResourceAttrPair(resourceName, "domain_id", projectName, "domain_identifier"),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_identifier", projectName, "domain_identifier"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 				),
 			},
@@ -102,7 +102,7 @@ func TestAccDataZoneGlossary_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "owning_project_identifier", projectName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ENABLED"),
-					resource.TestCheckResourceAttrPair(resourceName, "domain_id", projectName, "domain_identifier"),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_identifier", projectName, "domain_identifier"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 				),
 			},
@@ -122,7 +122,7 @@ func TestAccDataZoneGlossary_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "owning_project_identifier", projectName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "DISABLED"),
-					resource.TestCheckResourceAttrPair(resourceName, "domain_id", projectName, "domain_identifier"),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_identifier", projectName, "domain_identifier"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 				),
 			},
@@ -178,7 +178,7 @@ func testAccCheckGlossaryDestroy(ctx context.Context) resource.TestCheckFunc {
 			if rs.Type != "aws_datazone_glossary" {
 				continue
 			}
-			_, err := findGlossaryByID(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["domain_id"])
+			_, err := findGlossaryByID(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["domain_identifier"])
 			if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsA[*awstypes.AccessDeniedException](err) {
 				return nil
 			}
@@ -203,11 +203,11 @@ func testAccCheckGlossaryExists(ctx context.Context, name string, glossary *data
 		if rs.Primary.ID == "" {
 			return create.Error(names.DataZone, create.ErrActionCheckingExistence, tfdatazone.ResNameGlossary, name, errors.New("not set"))
 		}
-		if rs.Primary.Attributes["domain_id"] == "" {
+		if rs.Primary.Attributes["domain_identifier"] == "" {
 			return create.Error(names.DataZone, create.ErrActionCheckingExistence, tfdatazone.ResNameProject, name, errors.New("domain identifier not set"))
 		}
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataZoneClient(ctx)
-		resp, err := findGlossaryByID(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["domain_id"])
+		resp, err := findGlossaryByID(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["domain_identifier"])
 
 		if err != nil {
 			return create.Error(names.DataZone, create.ErrActionCheckingExistence, tfdatazone.ResNameGlossary, rs.Primary.ID, err)
@@ -261,38 +261,30 @@ func testAccAuthorizerGlossaryImportStateIdFunc(resourceName string) resource.Im
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return strings.Join([]string{rs.Primary.Attributes["domain_id"], rs.Primary.ID, rs.Primary.Attributes["owning_project_identifier"]}, ","), nil
+		return strings.Join([]string{rs.Primary.Attributes["domain_identifier"], rs.Primary.ID, rs.Primary.Attributes["owning_project_identifier"]}, ","), nil
 	}
 }
 
 func testAccGlossaryConfig_basic(rName, token, dName, pName string) string {
 	return acctest.ConfigCompose(testAccProjectConfig_basic(pName, dName), fmt.Sprintf(`
-
-
-
-
 resource "aws_datazone_glossary" "test" {
   description               = "desc"
   name                      = %[1]q
   owning_project_identifier = aws_datazone_project.test.id
   status                    = "ENABLED"
-  domain_id                 = aws_datazone_project.test.domain_identifier
+  domain_identifier         = aws_datazone_project.test.domain_identifier
 }
 `, rName, token))
 }
 
 func testAccGlossaryConfig_update(rName, token, dName, pName string) string {
 	return acctest.ConfigCompose(testAccProjectConfig_basic(pName, dName), fmt.Sprintf(`
-
-
-
-
 resource "aws_datazone_glossary" "test" {
   description               = "description"
   name                      = %[1]q
   owning_project_identifier = aws_datazone_project.test.id
   status                    = "DISABLED"
-  domain_id                 = aws_datazone_project.test.domain_identifier
+  domain_identifier         = aws_datazone_project.test.domain_identifier
 }
 `, rName, token))
 }
