@@ -52,8 +52,8 @@ func TestAccRDSIntegration_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(ctx, resourceName, &integration),
 					resource.TestCheckResourceAttr(resourceName, "integration_name", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "source_arn", "aws_rds_cluster.mysql_test", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "target_arn", "aws_redshiftserverless_namespace.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "source_arn", "aws_rds_cluster.mysql_test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTargetARN, "aws_redshiftserverless_namespace.test", names.AttrARN),
 				),
 			},
 			{
@@ -93,11 +93,11 @@ func TestAccRDSIntegration_optional(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(ctx, resourceName, &integration),
 					resource.TestCheckResourceAttr(resourceName, "integration_name", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", "aws_kms_key.test", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "source_arn", "aws_rds_cluster.mysql_test", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "target_arn", "aws_redshiftserverless_namespace.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, "aws_kms_key.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "source_arn", "aws_rds_cluster.mysql_test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTargetARN, "aws_redshiftserverless_namespace.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "additional_encryption_context.department", "test"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Test", "true"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Test", acctest.CtTrue),
 				),
 			},
 			{

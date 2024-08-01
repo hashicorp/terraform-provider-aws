@@ -68,7 +68,7 @@ func (r *resourceIntegration) Metadata(_ context.Context, req resource.MetadataR
 func (r *resourceIntegration) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"additional_encryption_context": schema.MapAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
@@ -76,14 +76,14 @@ func (r *resourceIntegration) Schema(ctx context.Context, req resource.SchemaReq
 					mapplanmodifier.RequiresReplace(),
 				},
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"integration_name": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"kms_key_id": schema.StringAttribute{
+			names.AttrKMSKeyID: schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -98,7 +98,7 @@ func (r *resourceIntegration) Schema(ctx context.Context, req resource.SchemaReq
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
-			"target_arn": schema.StringAttribute{
+			names.AttrTargetARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
 				PlanModifiers: []planmodifier.String{
@@ -107,7 +107,7 @@ func (r *resourceIntegration) Schema(ctx context.Context, req resource.SchemaReq
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
@@ -254,7 +254,7 @@ func (r *resourceIntegration) Delete(ctx context.Context, req resource.DeleteReq
 }
 
 func (r *resourceIntegration) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("arn"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), req, resp)
 }
 
 func (r *resourceIntegration) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
