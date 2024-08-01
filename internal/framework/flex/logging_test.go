@@ -409,6 +409,18 @@ func errorTargetDoesNotImplementAttrValue(sourcePath string, sourceType reflect.
 	}
 }
 
+func errorTargetIsNotPointer(sourcePath string, sourceType reflect.Type, targetPath string, targetType reflect.Type) map[string]any {
+	return map[string]any{
+		"@level":             hclog.Error.String(),
+		"@module":            logModule,
+		"@message":           "Target is not a pointer",
+		logAttrKeySourcePath: sourcePath,
+		logAttrKeySourceType: fullTypeName(sourceType),
+		logAttrKeyTargetPath: targetPath,
+		logAttrKeyTargetType: fullTypeName(targetType),
+	}
+}
+
 func infoLogLine(message string, sourceType, targetType reflect.Type) map[string]any {
 	return logInfo(message, map[string]any{
 		logAttrKeySourceType: fullTypeName(sourceType),

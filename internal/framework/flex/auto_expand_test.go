@@ -81,10 +81,11 @@ func TestExpand(t *testing.T) {
 			Source: TestFlex00{},
 			Target: 0,
 			expectedDiags: diag.Diagnostics{
-				diag.NewErrorDiagnostic("AutoFlEx", "target (int): int, want pointer"),
+				diagConvertingTargetIsNotPointer(reflect.TypeFor[int]()),
 			},
 			expectedLogLines: []map[string]any{
 				infoExpanding(reflect.TypeFor[TestFlex00](), reflect.TypeFor[int]()),
+				errorTargetIsNotPointer("", reflect.TypeFor[TestFlex00](), "", reflect.TypeFor[int]()),
 			},
 		},
 		"non-struct Source struct Target": {

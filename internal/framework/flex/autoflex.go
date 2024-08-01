@@ -35,7 +35,7 @@ type autoFlexer interface {
 }
 
 // autoFlexValues returns the underlying `reflect.Value`s of `from` and `to`.
-func autoFlexValues(_ context.Context, from, to any) (reflect.Value, reflect.Value, diag.Diagnostics) {
+func autoFlexValues(ctx context.Context, from, to any) (reflect.Value, reflect.Value, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	valFrom, valTo := reflect.ValueOf(from), reflect.ValueOf(to)
@@ -58,7 +58,11 @@ func autoFlexValues(_ context.Context, from, to any) (reflect.Value, reflect.Val
 		return reflect.Value{}, reflect.Value{}, diags
 
 	default:
-		diags.AddError("AutoFlEx", fmt.Sprintf("target (%T): %s, want pointer", to, kind))
+		tflog.SubsystemError(ctx, subsystemName, "Target is not a pointer", map[string]any{
+			logAttrKeySourceType: fullTypeName(valFrom.Type()),
+			logAttrKeyTargetType: fullTypeName(valTo.Type()),
+		})
+		diags.Append(diagConvertingTargetIsNotPointer(valTo.Type()))
 		return reflect.Value{}, reflect.Value{}, diags
 	}
 }
@@ -244,4 +248,14 @@ type valueWithElementsAs interface {
 
 	Elements() []attr.Value
 	ElementsAs(context.Context, any, bool) diag.Diagnostics
+}
+
+func diagConvertingTargetIsNotPointer(targetType reflect.Type) diag.ErrorDiagnostic {
+	return diag.NewErrorDiagnostic(
+		"Incompatible Types",
+		"An unexpected error occurred while converting configuration. "+
+			"This is always an error in the provider. "+
+			"Please report the following to the provider developer:\n\n"+
+			fmt.Sprintf("Target type %q is not a pointer", fullTypeName(targetType)),
+	)
 }
