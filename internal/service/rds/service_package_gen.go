@@ -39,8 +39,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceEventCategories,
+			Factory:  dataSourceEventCategories,
 			TypeName: "aws_db_event_categories",
+			Name:     "Event Categories",
 		},
 		{
 			Factory:  DataSourceInstance,
@@ -127,8 +128,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceInstanceAutomatedBackupsReplication,
+			Factory:  resourceInstanceAutomatedBackupsReplication,
 			TypeName: "aws_db_instance_automated_backups_replication",
+			Name:     "Instance Automated Backups Replication",
 		},
 		{
 			Factory:  ResourceInstanceRoleAssociation,
