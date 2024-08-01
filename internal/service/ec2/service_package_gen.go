@@ -636,6 +636,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
+			Factory:  resourceEBSSnapshotBlockPublicAccess,
+			TypeName: "aws_ebs_snapshot_block_public_access",
+		},
+		{
 			Factory:  resourceEBSSnapshotCopy,
 			TypeName: "aws_ebs_snapshot_copy",
 			Name:     "EBS Snapshot Copy",
