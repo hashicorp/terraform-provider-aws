@@ -5,5 +5,8 @@ package directconnect
 
 // Exports for use in tests only.
 var (
-	ValidConnectionBandWidth = validConnectionBandWidth
+	ResourceBGPPeer = resourceBGPPeer
+
+	FindBGPPeerByThreePartKey = findBGPPeerByThreePartKey
+	ValidConnectionBandWidth  = validConnectionBandWidth
 )

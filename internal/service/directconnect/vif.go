@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func virtualInterfaceRead(ctx context.Context, id string, conn *directconnect.Client) (*awstypes.VirtualInterface, error) {
@@ -139,4 +140,48 @@ func virtualInterfaceWaitUntilAvailable(ctx context.Context, conn *directconnect
 	}
 
 	return nil
+}
+
+func findVirtualInterfaceByID(ctx context.Context, conn *directconnect.Client, id string) (*awstypes.VirtualInterface, error) {
+	input := &directconnect.DescribeVirtualInterfacesInput{
+		VirtualInterfaceId: aws.String(id),
+	}
+	output, err := findVirtualInterface(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.VirtualInterfaceState; state == awstypes.VirtualInterfaceStateDeleted {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findVirtualInterface(ctx context.Context, conn *directconnect.Client, input *directconnect.DescribeVirtualInterfacesInput) (*awstypes.VirtualInterface, error) {
+	output, err := findVirtualInterfaces(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findVirtualInterfaces(ctx context.Context, conn *directconnect.Client, input *directconnect.DescribeVirtualInterfacesInput) ([]awstypes.VirtualInterface, error) {
+	output, err := conn.DescribeVirtualInterfaces(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.VirtualInterfaces, nil
 }

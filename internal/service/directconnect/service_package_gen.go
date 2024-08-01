@@ -50,8 +50,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceBGPPeer,
+			Factory:  resourceBGPPeer,
 			TypeName: "aws_dx_bgp_peer",
+			Name:     "BGP Peer",
 		},
 		{
 			Factory:  ResourceConnection,
