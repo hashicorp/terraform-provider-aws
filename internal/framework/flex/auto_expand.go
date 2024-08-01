@@ -46,10 +46,6 @@ func Expand(ctx context.Context, tfObject, apiObject any, optFns ...AutoFlexOpti
 	})
 
 	diags.Append(autoExpandConvert(ctx, tfObject, apiObject, expander)...)
-	if diags.HasError() {
-		diags.AddError("AutoFlEx", fmt.Sprintf("Expand[%T, %T]", tfObject, apiObject))
-		return diags
-	}
 
 	return diags
 }

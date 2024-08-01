@@ -43,7 +43,6 @@ func TestExpand(t *testing.T) {
 			Target: &TestFlex00{},
 			expectedDiags: diag.Diagnostics{
 				diag.NewErrorDiagnostic("AutoFlEx", "Cannot expand nil source"),
-				diag.NewErrorDiagnostic("AutoFlEx", "Expand[<nil>, *flex.TestFlex00]"),
 			},
 			expectedLogLines: []map[string]any{
 				infoExpanding(nil, reflect.TypeFor[*TestFlex00]()),
@@ -54,7 +53,6 @@ func TestExpand(t *testing.T) {
 			Target: &TestFlex00{},
 			expectedDiags: diag.Diagnostics{
 				diag.NewErrorDiagnostic("AutoFlEx", "Cannot expand nil source"),
-				diag.NewErrorDiagnostic("AutoFlEx", "Expand[*flex.TestFlex00, *flex.TestFlex00]"),
 			},
 			expectedLogLines: []map[string]any{
 				infoExpanding(reflect.TypeFor[*TestFlex00](), reflect.TypeFor[*TestFlex00]()),
@@ -64,7 +62,6 @@ func TestExpand(t *testing.T) {
 			Source: TestFlex00{},
 			expectedDiags: diag.Diagnostics{
 				diag.NewErrorDiagnostic("AutoFlEx", "Target cannot be nil"),
-				diag.NewErrorDiagnostic("AutoFlEx", "Expand[flex.TestFlex00, <nil>]"),
 			},
 			expectedLogLines: []map[string]any{
 				infoExpanding(reflect.TypeFor[TestFlex00](), nil),
@@ -75,7 +72,6 @@ func TestExpand(t *testing.T) {
 			Target: typedNilTarget,
 			expectedDiags: diag.Diagnostics{
 				diag.NewErrorDiagnostic("AutoFlEx", "Target cannot be nil"),
-				diag.NewErrorDiagnostic("AutoFlEx", "Expand[flex.TestFlex00, *flex.TestFlex00]"),
 			},
 			expectedLogLines: []map[string]any{
 				infoExpanding(reflect.TypeFor[TestFlex00](), reflect.TypeFor[*TestFlex00]()),
@@ -86,7 +82,6 @@ func TestExpand(t *testing.T) {
 			Target: 0,
 			expectedDiags: diag.Diagnostics{
 				diag.NewErrorDiagnostic("AutoFlEx", "target (int): int, want pointer"),
-				diag.NewErrorDiagnostic("AutoFlEx", "Expand[flex.TestFlex00, int]"),
 			},
 			expectedLogLines: []map[string]any{
 				infoExpanding(reflect.TypeFor[TestFlex00](), reflect.TypeFor[int]()),
@@ -97,7 +92,6 @@ func TestExpand(t *testing.T) {
 			Target: &TestFlex00{},
 			expectedDiags: diag.Diagnostics{
 				diag.NewErrorDiagnostic("AutoFlEx", "does not implement attr.Value: string"),
-				diag.NewErrorDiagnostic("AutoFlEx", "Expand[string, *flex.TestFlex00]"),
 			},
 			expectedLogLines: []map[string]any{
 				infoExpanding(reflect.TypeFor[string](), reflect.TypeFor[*TestFlex00]()),
@@ -109,7 +103,6 @@ func TestExpand(t *testing.T) {
 			Target: &testString,
 			expectedDiags: diag.Diagnostics{
 				diag.NewErrorDiagnostic("AutoFlEx", "does not implement attr.Value: struct"),
-				diag.NewErrorDiagnostic("AutoFlEx", "Expand[flex.TestFlex00, *string]"),
 			},
 			expectedLogLines: []map[string]any{
 				infoExpanding(reflect.TypeFor[TestFlex00](), reflect.TypeFor[*string]()),
@@ -159,7 +152,6 @@ func TestExpand(t *testing.T) {
 			expectedDiags: diag.Diagnostics{
 				diag.NewErrorDiagnostic("AutoFlEx", "does not implement attr.Value: string"),
 				diag.NewErrorDiagnostic("AutoFlEx", "convert (Field1)"),
-				diag.NewErrorDiagnostic("AutoFlEx", "Expand[*flex.TestFlexAWS01, *flex.TestFlexAWS01]"),
 			},
 			expectedLogLines: []map[string]any{
 				infoExpanding(reflect.TypeFor[*TestFlexAWS01](), reflect.TypeFor[*TestFlexAWS01]()),
@@ -2239,7 +2231,6 @@ func TestExpandInterface(t *testing.T) {
 			Target: &targetInterface,
 			expectedDiags: diag.Diagnostics{
 				diagExpandedTypeDoesNotImplement(reflect.TypeFor[*testFlexAWSInterfaceIncompatibleImpl](), reflect.TypeFor[testFlexAWSInterfaceInterface]()),
-				diag.NewErrorDiagnostic("AutoFlEx", "Expand[flex.testFlexTFInterfaceIncompatibleExpander, *flex.testFlexAWSInterfaceInterface]"),
 			},
 			expectedLogLines: []map[string]any{
 				infoExpanding(reflect.TypeFor[testFlexTFInterfaceIncompatibleExpander](), reflect.TypeFor[*testFlexAWSInterfaceInterface]()),
@@ -2514,7 +2505,6 @@ func TestExpandExpander(t *testing.T) {
 			Target: &testFlexAWSExpanderIncompatible{},
 			expectedDiags: diag.Diagnostics{
 				diagCannotBeAssigned(reflect.TypeFor[testFlexAWSExpander](), reflect.TypeFor[testFlexAWSExpanderIncompatible]()),
-				diag.NewErrorDiagnostic("AutoFlEx", "Expand[flex.testFlexTFFlexer, *flex.testFlexAWSExpanderIncompatible]"),
 			},
 			expectedLogLines: []map[string]any{
 				infoExpanding(reflect.TypeFor[testFlexTFFlexer](), reflect.TypeFor[*testFlexAWSExpanderIncompatible]()),
@@ -2532,7 +2522,6 @@ func TestExpandExpander(t *testing.T) {
 			Target: &testFlexAWSExpander{},
 			expectedDiags: diag.Diagnostics{
 				diagExpandsToNil(reflect.TypeFor[testFlexTFExpanderToNil]()),
-				diag.NewErrorDiagnostic("AutoFlEx", "Expand[flex.testFlexTFExpanderToNil, *flex.testFlexAWSExpander]"),
 			},
 			expectedLogLines: []map[string]any{
 				infoExpanding(reflect.TypeFor[testFlexTFExpanderToNil](), reflect.TypeFor[*testFlexAWSExpander]()),
@@ -2547,7 +2536,6 @@ func TestExpandExpander(t *testing.T) {
 			Target: aws.Int64(0),
 			expectedDiags: diag.Diagnostics{
 				diagCannotBeAssigned(reflect.TypeFor[string](), reflect.TypeFor[int64]()),
-				diag.NewErrorDiagnostic("AutoFlEx", "Expand[flex.testFlexTFExpanderToString, *int64]"),
 			},
 			expectedLogLines: []map[string]any{
 				infoExpanding(reflect.TypeFor[testFlexTFExpanderToString](), reflect.TypeFor[*int64]()),
@@ -2956,7 +2944,6 @@ func TestExpandInterfaceTypedExpander(t *testing.T) {
 			Target: &targetInterface,
 			expectedDiags: diag.Diagnostics{
 				diagExpandedTypeDoesNotImplement(reflect.TypeFor[*testFlexAWSInterfaceIncompatibleImpl](), reflect.TypeFor[testFlexAWSInterfaceInterface]()),
-				diag.NewErrorDiagnostic("AutoFlEx", "Expand[flex.testFlexTFInterfaceIncompatibleTypedExpander, *flex.testFlexAWSInterfaceInterface]"),
 			},
 			expectedLogLines: []map[string]any{
 				infoExpanding(reflect.TypeFor[testFlexTFInterfaceIncompatibleTypedExpander](), reflect.TypeFor[*testFlexAWSInterfaceInterface]()),
@@ -3212,7 +3199,6 @@ func TestExpandTypedExpander(t *testing.T) {
 			Target: &testFlexAWSExpanderIncompatible{},
 			expectedDiags: diag.Diagnostics{
 				diagCannotBeAssigned(reflect.TypeFor[testFlexAWSExpander](), reflect.TypeFor[testFlexAWSExpanderIncompatible]()),
-				diag.NewErrorDiagnostic("AutoFlEx", "Expand[flex.testFlexTFTypedExpander, *flex.testFlexAWSExpanderIncompatible]"),
 			},
 			expectedLogLines: []map[string]any{
 				infoExpanding(reflect.TypeFor[testFlexTFTypedExpander](), reflect.TypeFor[*testFlexAWSExpanderIncompatible]()),
@@ -3230,7 +3216,6 @@ func TestExpandTypedExpander(t *testing.T) {
 			Target: &testFlexAWSExpander{},
 			expectedDiags: diag.Diagnostics{
 				diagExpandsToNil(reflect.TypeFor[testFlexTFTypedExpanderToNil]()),
-				diag.NewErrorDiagnostic("AutoFlEx", "Expand[flex.testFlexTFTypedExpanderToNil, *flex.testFlexAWSExpander]"),
 			},
 			expectedLogLines: []map[string]any{
 				infoExpanding(reflect.TypeFor[testFlexTFTypedExpanderToNil](), reflect.TypeFor[*testFlexAWSExpander]()),
