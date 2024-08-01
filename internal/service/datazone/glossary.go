@@ -81,12 +81,7 @@ func (r *resourceGlossary) Schema(ctx context.Context, req resource.SchemaReques
 			"domain_id": schema.StringAttribute{
 				Required: true,
 			},
-			names.AttrID: schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
+			names.AttrID: framework.IDAttribute(),
 		},
 	}
 }
