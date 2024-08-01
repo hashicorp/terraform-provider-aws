@@ -342,27 +342,36 @@ func resourceConfiguredTableAnalysisRuleCreate(ctx context.Context, d *schema.Re
 }
 
 func resourceConfiguredTableAnalysisRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).CleanRoomsClient(ctx)
 
-	out, err := findAnalysisRuleByID(ctx, conn, d.Get("configured_table_identifier").(string), d.Get("analysis_rule_type").(string))
+	_, tableErr := findConfiguredTableByID(ctx, conn, d.Get("configured_table_identifier").(string))
+	ruleOut, ruleErr := findAnalysisRuleByID(ctx, conn, d.Get("configured_table_identifier").(string), d.Get("analysis_rule_type").(string))
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && tfresource.NotFound(ruleErr) {
 		log.Printf("[WARN] CleanRooms Configured Table Analysis Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
-	if err != nil {
-		return create.DiagError(names.CleanRooms, create.ErrActionReading, ResNameConfiguredTableAnalysisRule, d.Id(), err)
+	if tableErr == nil && ruleErr != nil {
+		log.Printf("[WARN] CleanRooms Configured Table found but associated Analysis Rule (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
 	}
 
-	analysisRule := out.AnalysisRule
+	if ruleErr != nil {
+		return create.DiagError(names.CleanRooms, create.ErrActionReading, ResNameConfiguredTableAnalysisRule, d.Id(), ruleErr)
+	}
+
+	analysisRule := ruleOut.AnalysisRule
 	d.Set(names.AttrARN, analysisRule.ConfiguredTableArn)
 	d.Set(names.AttrID, analysisRule.ConfiguredTableId)
 	d.Set("create_time", analysisRule.CreateTime.Format(time.RFC3339))
 	d.Set("analysis_rule_type", analysisRule.Type)
 
-	return nil
+	return diags
 }
 
 func resourceConfiguredTableAnalysisRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -402,6 +411,13 @@ func resourceConfiguredTableAnalysisRuleDelete(ctx context.Context, d *schema.Re
 
 	ruleType, _ := expandAnalysisRuleType(d.Get("analysis_rule_type").(string))
 
+	_, tableErr := findConfiguredTableByID(ctx, conn, d.Get("configured_table_identifier").(string))
+	_, ruleErr := findAnalysisRuleByID(ctx, conn, d.Get("configured_table_identifier").(string), d.Get("analysis_rule_type").(string))
+
+	if tableErr == nil && ruleErr != nil {
+		log.Printf("[WARN] CleanRooms Configured Table found but associated Analysis Rule (%s) not found, removing from state", d.Id())
+		return diags
+	}
 	_, err := conn.DeleteConfiguredTableAnalysisRule(ctx, &cleanrooms.DeleteConfiguredTableAnalysisRuleInput{
 		ConfiguredTableIdentifier: aws.String(d.Get("configured_table_identifier").(string)),
 		AnalysisRuleType:          ruleType,
