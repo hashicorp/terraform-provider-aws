@@ -264,8 +264,8 @@ resource "aws_db_subnet_group" "test" {
 }
 
 resource "aws_rds_cluster_parameter_group" "test" {
-  name        = %[1]q
-  family      = "aurora-mysql8.0"
+  name   = %[1]q
+  family = "aurora-mysql8.0"
 
   dynamic "parameter" {
     for_each = local.cluster_parameters
@@ -278,7 +278,7 @@ resource "aws_rds_cluster_parameter_group" "test" {
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier = %[1]q
+  cluster_identifier  = %[1]q
   engine              = "aurora-mysql"
   engine_version      = "8.0.mysql_aurora.3.05.1"
   database_name       = "test"
@@ -329,7 +329,7 @@ resource "aws_redshiftserverless_workgroup" "test" {
   subnet_ids          = aws_subnet.test[*].id
 
   config_parameter {
-    parameter_key = "enable_case_sensitive_identifier"
+    parameter_key   = "enable_case_sensitive_identifier"
     parameter_value = "true"
   }
   config_parameter {
@@ -379,7 +379,7 @@ resource "aws_redshift_resource_policy" "test" {
       }
       Action   = "redshift:CreateInboundIntegration"
       Resource = aws_redshiftserverless_namespace.test.arn
-    },{
+      }, {
       Effect = "Allow"
       Principal = {
         Service = "redshift.amazonaws.com"
@@ -431,7 +431,7 @@ resource "aws_redshiftserverless_workgroup" "test" {
   subnet_ids          = aws_subnet.test[*].id
 
   config_parameter {
-    parameter_key = "enable_case_sensitive_identifier"
+    parameter_key   = "enable_case_sensitive_identifier"
     parameter_value = "true"
   }
   config_parameter {
@@ -482,7 +482,7 @@ resource "aws_redshift_resource_policy" "test" {
       }
       Action   = "redshift:CreateInboundIntegration"
       Resource = aws_redshiftserverless_namespace.test.arn
-    },{
+      }, {
       Effect = "Allow"
       Principal = {
         Service = "redshift.amazonaws.com"
@@ -530,7 +530,7 @@ resource "aws_rds_integration" "test" {
   kms_key_id       = aws_kms_key.test.arn
 
   additional_encryption_context = {
-    "department": "test",
+    "department" : "test",
   }
 
   tags = {
