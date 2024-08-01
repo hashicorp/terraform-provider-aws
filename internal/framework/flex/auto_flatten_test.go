@@ -48,7 +48,6 @@ func TestFlatten(t *testing.T) {
 			Target: &TestFlex00{},
 			expectedDiags: diag.Diagnostics{
 				diag.NewErrorDiagnostic("AutoFlEx", "Cannot flatten nil source"),
-				diag.NewErrorDiagnostic("AutoFlEx", "Flatten[<nil>, *flex.TestFlex00]"),
 			},
 			expectedLogLines: []map[string]any{
 				infoFlattening(nil, reflect.TypeFor[*TestFlex00]()),
@@ -59,7 +58,6 @@ func TestFlatten(t *testing.T) {
 			Target: &TestFlex00{},
 			expectedDiags: diag.Diagnostics{
 				diag.NewErrorDiagnostic("AutoFlEx", "Cannot flatten nil source"),
-				diag.NewErrorDiagnostic("AutoFlEx", "Flatten[*flex.TestFlex00, *flex.TestFlex00]"),
 			},
 			expectedLogLines: []map[string]any{
 				infoFlattening(reflect.TypeFor[*TestFlex00](), reflect.TypeFor[*TestFlex00]()),
@@ -69,7 +67,6 @@ func TestFlatten(t *testing.T) {
 			Source: TestFlex00{},
 			expectedDiags: diag.Diagnostics{
 				diag.NewErrorDiagnostic("AutoFlEx", "Target cannot be nil"),
-				diag.NewErrorDiagnostic("AutoFlEx", "Flatten[flex.TestFlex00, <nil>]"),
 			},
 			expectedLogLines: []map[string]any{
 				infoFlattening(reflect.TypeFor[TestFlex00](), nil),
@@ -80,7 +77,6 @@ func TestFlatten(t *testing.T) {
 			Target: typedNilTarget,
 			expectedDiags: diag.Diagnostics{
 				diag.NewErrorDiagnostic("AutoFlEx", "Target cannot be nil"),
-				diag.NewErrorDiagnostic("AutoFlEx", "Flatten[flex.TestFlex00, *flex.TestFlex00]"),
 			},
 			expectedLogLines: []map[string]any{
 				infoFlattening(reflect.TypeFor[TestFlex00](), reflect.TypeFor[*TestFlex00]()),
@@ -91,7 +87,6 @@ func TestFlatten(t *testing.T) {
 			Target: 0,
 			expectedDiags: diag.Diagnostics{
 				diag.NewErrorDiagnostic("AutoFlEx", "target (int): int, want pointer"),
-				diag.NewErrorDiagnostic("AutoFlEx", "Flatten[flex.TestFlex00, int]"),
 			},
 			expectedLogLines: []map[string]any{
 				infoFlattening(reflect.TypeFor[TestFlex00](), reflect.TypeFor[int]()),
@@ -102,7 +97,6 @@ func TestFlatten(t *testing.T) {
 			Target: &TestFlex00{},
 			expectedDiags: diag.Diagnostics{
 				diag.NewErrorDiagnostic("AutoFlEx", "does not implement attr.Value: struct"),
-				diag.NewErrorDiagnostic("AutoFlEx", "Flatten[string, *flex.TestFlex00]"),
 			},
 			expectedLogLines: []map[string]any{
 				infoFlattening(reflect.TypeFor[string](), reflect.TypeFor[*TestFlex00]()),
@@ -113,7 +107,6 @@ func TestFlatten(t *testing.T) {
 			Target: &testString,
 			expectedDiags: diag.Diagnostics{
 				diag.NewErrorDiagnostic("AutoFlEx", "does not implement attr.Value: string"),
-				diag.NewErrorDiagnostic("AutoFlEx", "Flatten[flex.TestFlex00, *string]"),
 			},
 			expectedLogLines: []map[string]any{
 				infoFlattening(reflect.TypeFor[TestFlex00](), reflect.TypeFor[*string]()),
@@ -195,7 +188,6 @@ func TestFlatten(t *testing.T) {
 			expectedDiags: diag.Diagnostics{
 				diag.NewErrorDiagnostic("AutoFlEx", "does not implement attr.Value: string"),
 				diag.NewErrorDiagnostic("AutoFlEx", "convert (Field1)"),
-				diag.NewErrorDiagnostic("AutoFlEx", "Flatten[*flex.TestFlexAWS01, *flex.TestFlexAWS01]"),
 			},
 			expectedLogLines: []map[string]any{
 				infoFlattening(reflect.TypeFor[*TestFlexAWS01](), reflect.TypeFor[*TestFlexAWS01]()),

@@ -45,10 +45,6 @@ func Flatten(ctx context.Context, apiObject, tfObject any, optFns ...AutoFlexOpt
 	})
 
 	diags.Append(autoFlattenConvert(ctx, apiObject, tfObject, flattener)...)
-	if diags.HasError() {
-		diags.AddError("AutoFlEx", fmt.Sprintf("Flatten[%T, %T]", apiObject, tfObject))
-		return diags
-	}
 
 	return diags
 }
