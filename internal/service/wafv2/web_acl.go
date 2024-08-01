@@ -209,7 +209,10 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if v, ok := d.GetOk("rule_json"); ok {
-		rules, _ := expandWebACLRulesJSON(v.(string))
+		rules, err := expandWebACLRulesJSON(v.(string))
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
+		}
 		input.Rules = rules
 	}
 
