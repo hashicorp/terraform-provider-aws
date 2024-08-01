@@ -16,12 +16,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
-type ResourcePrefixCtxKey string
+type AutoFlexCtxKey string
 
 const (
-	ResourcePrefix        ResourcePrefixCtxKey = "RESOURCE_PREFIX"
-	resourcePrefixRecurse ResourcePrefixCtxKey = "RESOURCE_PREFIX_RECURSE"
-	MapBlockKey                                = "MapBlockKey"
+	FieldNamePrefixRecurse AutoFlexCtxKey = "FIELD_NAME_PREFIX_RECURSE"
+
+	MapBlockKey = "MapBlockKey"
 )
 
 // Expand  = TF -->  AWS
@@ -204,11 +204,11 @@ func findFieldFuzzy(ctx context.Context, fieldNameFrom string, valTo, valFrom re
 	}
 
 	// fourth precedence is using resource prefix
-	if v, ok := ctx.Value(ResourcePrefix).(string); ok && v != "" {
+	if v := opts.fieldNamePrefix; v != "" {
 		v = strings.ReplaceAll(v, " ", "")
-		if ctx.Value(resourcePrefixRecurse) == nil {
+		if ctx.Value(FieldNamePrefixRecurse) == nil {
 			// so it will only recurse once
-			ctx = context.WithValue(ctx, resourcePrefixRecurse, true)
+			ctx = context.WithValue(ctx, FieldNamePrefixRecurse, true)
 			if strings.HasPrefix(fieldNameFrom, v) {
 				return findFieldFuzzy(ctx, strings.TrimPrefix(fieldNameFrom, v), valTo, valFrom, flexer)
 			}

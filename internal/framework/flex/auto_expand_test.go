@@ -434,7 +434,7 @@ func TestExpand(t *testing.T) {
 			},
 		},
 		"resource name prefix": {
-			ContextFn: func(ctx context.Context) context.Context { return context.WithValue(ctx, ResourcePrefix, "Intent") },
+			Options: []AutoFlexOptionsFunc{NewFieldNamePrefixOptionsFunc("Intent")},
 			Source: &TestFlexTF16{
 				Name: types.StringValue("Ovodoghen"),
 			},

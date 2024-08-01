@@ -677,7 +677,7 @@ func TestFlatten(t *testing.T) {
 			},
 		},
 		"resource name prefix": {
-			ContextFn: func(ctx context.Context) context.Context { return context.WithValue(ctx, ResourcePrefix, "Intent") },
+			Options: []AutoFlexOptionsFunc{NewFieldNamePrefixOptionsFunc("Intent")},
 			Source: &TestFlexAWS18{
 				IntentName: aws.String("Ovodoghen"),
 			},
