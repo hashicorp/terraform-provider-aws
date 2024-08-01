@@ -31,7 +31,7 @@ func TestAccImageDeregistrationProtection_basic(t *testing.T) {
 			{
 				Config: testAccImageDeregistrationProtectionBasic(rName, "t2.medium"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "with_cooldown", "false"),
+					resource.TestCheckResourceAttr(resourceName, "with_cooldown", acctest.CtFalse),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownOutputValueAtPath(

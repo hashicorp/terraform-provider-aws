@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-// @SDKDataSource("aws_ec2_image_deregistration_protection", name="Image Deregistration Protection")
+// @SDKResource("aws_ec2_image_deregistration_protection", name="Image Deregistration Protection")
 func resourceImageDeregistrationProtection() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceImageDeregistrationProtectionRequestCreate,
@@ -70,7 +70,7 @@ func resourceImageDeregistrationProtectionRequestRead(ctx context.Context, d *sc
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	output, err := checkEc2DeregistrationProtection(ctx, conn, &ec2.DescribeImagesInput{
+	output, err := checkDeregistrationProtection(ctx, conn, &ec2.DescribeImagesInput{
 		ImageIds: []string{d.Id()},
 	})
 	if err != nil {
@@ -118,7 +118,7 @@ func resourceImageDeregistrationProtectionRequestDelete(ctx context.Context, d *
 	return diags
 }
 
-func checkEc2DeregistrationProtection(ctx context.Context, conn *ec2.Client, input *ec2.DescribeImagesInput) (*ec2.DescribeImagesOutput, error) {
+func checkDeregistrationProtection(ctx context.Context, conn *ec2.Client, input *ec2.DescribeImagesInput) (*ec2.DescribeImagesOutput, error) {
 	output, err := conn.DescribeImages(ctx, input)
 
 	if err != nil {
