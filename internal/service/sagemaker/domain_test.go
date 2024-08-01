@@ -1923,7 +1923,7 @@ resource "aws_sagemaker_domain" "test" {
       r_studio_package_manager_url = %[3]q
       domain_execution_role_arn    = aws_iam_role.test.arn
       default_resource_spec {
-        instance_type = "system" 
+        instance_type = "system"
       }
     }
   }
@@ -1940,7 +1940,7 @@ resource "aws_sagemaker_domain" "test" {
   # it would be too hard to create the logic to find the default Rstudio image: https://docs.aws.amazon.com/sagemaker/latest/dg/rstudio-version.html
   # it changes for every region
   lifecycle {
-    ignore_changes = [ 
+    ignore_changes = [
       domain_settings[0].r_studio_server_pro_domain_settings[0].default_resource_spec[0]
     ]
   }
