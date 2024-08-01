@@ -39,7 +39,7 @@ func TestAccRDSIntegration_basic(t *testing.T) {
 			{
 				Config: testAccIntegrationConfig_base(rName),
 				Check: resource.ComposeTestCheckFunc(
-					waitUntilRDSReboot(ctx, rName),
+					waitUntilDBInstanceRebooted(ctx, rName),
 				),
 			},
 			{
@@ -48,7 +48,7 @@ func TestAccRDSIntegration_basic(t *testing.T) {
 					testAccCheckIntegrationExists(ctx, resourceName, &integration),
 					resource.TestCheckResourceAttr(resourceName, "integration_name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "source_arn", "aws_rds_cluster.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "tags.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTargetARN, "aws_redshiftserverless_namespace.test", names.AttrARN),
 				),
 			},
@@ -80,7 +80,7 @@ func TestAccRDSIntegration_disappears(t *testing.T) {
 			{
 				Config: testAccIntegrationConfig_base(rName),
 				Check: resource.ComposeTestCheckFunc(
-					waitUntilRDSReboot(ctx, rName),
+					waitUntilDBInstanceRebooted(ctx, rName),
 				),
 			},
 			{
@@ -115,7 +115,7 @@ func TestAccRDSIntegration_optional(t *testing.T) {
 			{
 				Config: testAccIntegrationConfig_base(rName),
 				Check: resource.ComposeTestCheckFunc(
-					waitUntilRDSReboot(ctx, rName),
+					waitUntilDBInstanceRebooted(ctx, rName),
 				),
 			},
 			{
@@ -127,7 +127,7 @@ func TestAccRDSIntegration_optional(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "source_arn", "aws_rds_cluster.test", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTargetARN, "aws_redshiftserverless_namespace.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "additional_encryption_context.department", "test"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -187,7 +187,7 @@ func testAccCheckIntegrationExists(ctx context.Context, n string, v *awstypes.In
 	}
 }
 
-func waitUntilRDSReboot(ctx context.Context, instanceIdentifier string) resource.TestCheckFunc {
+func waitUntilDBInstanceRebooted(ctx context.Context, instanceIdentifier string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// Wait for rebooting.
 		time.Sleep(60 * time.Second)
