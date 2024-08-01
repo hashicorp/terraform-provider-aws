@@ -13,7 +13,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_route53_resolver_rules")
@@ -27,7 +29,7 @@ func DataSourceRules() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringIsValidRegExp,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ValidateFunc: validation.Any(
@@ -60,6 +62,7 @@ func DataSourceRules() *schema.Resource {
 }
 
 func dataSourceRulesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	input := &route53resolver.ListResolverRulesInput{}
@@ -70,7 +73,7 @@ func dataSourceRulesRead(ctx context.Context, d *schema.ResourceData, meta inter
 			if v, ok := d.GetOk("name_regex"); ok && !regexache.MustCompile(v.(string)).MatchString(aws.StringValue(rule.Name)) {
 				continue
 			}
-			if v, ok := d.GetOk("owner_id"); ok && aws.StringValue(rule.OwnerId) != v.(string) {
+			if v, ok := d.GetOk(names.AttrOwnerID); ok && aws.StringValue(rule.OwnerId) != v.(string) {
 				continue
 			}
 			if v, ok := d.GetOk("resolver_endpoint_id"); ok && aws.StringValue(rule.ResolverEndpointId) != v.(string) {
@@ -90,12 +93,12 @@ func dataSourceRulesRead(ctx context.Context, d *schema.ResourceData, meta inter
 	})
 
 	if err != nil {
-		return diag.Errorf("listing Route53 Resolver Rules: %s", err)
+		return sdkdiag.AppendErrorf(diags, "listing Route53 Resolver Rules: %s", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
 
 	d.Set("resolver_rule_ids", aws.StringValueSlice(ruleIDs))
 
-	return nil
+	return diags
 }

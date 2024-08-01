@@ -24,6 +24,7 @@ const (
 	replicationTaskStatusDeleting  = "deleting"
 	replicationTaskStatusFailed    = "failed"
 	replicationTaskStatusModifying = "modifying"
+	replicationTaskStatusMoving    = "moving"
 	replicationTaskStatusReady     = "ready"
 	replicationTaskStatusStopped   = "stopped"
 	replicationTaskStatusStopping  = "stopping"
@@ -174,3 +175,10 @@ func networkType_Values() []string {
 		networkTypeIPv4,
 	}
 }
+
+const (
+	eventSubscriptionStatusActive    = "active"
+	eventSubscriptionStatusCreating  = "creating"
+	eventSubscriptionStatusDeleting  = "deleting"
+	eventSubscriptionStatusModifying = "modifying"
+)

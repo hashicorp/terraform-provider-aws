@@ -16,10 +16,26 @@ Terraform resource for managing an AWS Lex V2 Models Bot Locale.
 
 ```terraform
 resource "aws_lexv2models_bot_locale" "example" {
-  bot_id                           = aws_lexv2models_bot.test.id
+  bot_id                           = aws_lexv2models_bot.example.id
   bot_version                      = "DRAFT"
   locale_id                        = "en_US"
   n_lu_intent_confidence_threshold = 0.70
+}
+```
+
+### Voice Settings
+
+```terraform
+resource "aws_lexv2models_bot_locale" "example" {
+  bot_id                           = aws_lexv2models_bot.example.id
+  bot_version                      = "DRAFT"
+  locale_id                        = "en_US"
+  n_lu_intent_confidence_threshold = 0.70
+
+  voice_settings {
+    voice_id = "Kendra"
+    engine   = "standard"
+  }
 }
 ```
 
@@ -35,13 +51,18 @@ The following arguments are required:
 The following arguments are optional:
 
 * `description` - Description of the bot locale. Use this to help identify the bot locale in lists.
-* `voice_settings` - Amazon Polly voice ID that Amazon Lex uses for voice interaction with the user.
+* `voice_settings` - Amazon Polly voice ID that Amazon Lex uses for voice interaction with the user. See [`voice_settings`](#voice-settings).
+
+### Voice Settings
+
+* `voice_id` - (Required) Identifier of the Amazon Polly voice to use.
+* `engine` - (Optional) Indicates the type of Amazon Polly voice that Amazon Lex should use for voice interaction with the user. Valid values are `standard` and `neural`. If not specified, the default is `standard`.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Comma-delimited string joining locale ID, bot ID, and bot version.
+* `id` - Comma-delimited string joining `locale_id`, `bot_id`, and `bot_version`.
 * `name` - Specified locale name.
 
 ## Timeouts
@@ -54,17 +75,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lex V2 Models Bot Locale using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lex V2 Models Bot Locale using the `id`. For example:
 
 ```terraform
 import {
   to = aws_lexv2models_bot_locale.example
-  id = "bot_locale-id-12345678"
+  id = "en_US,abcd-12345678,1"
 }
 ```
 
 Using `terraform import`, import Lex V2 Models Bot Locale using the `id`. For example:
 
 ```console
-% terraform import aws_lexv2models_bot_locale.example bot_locale-id-12345678
+% terraform import aws_lexv2models_bot_locale.example en_US,abcd-12345678,1
 ```

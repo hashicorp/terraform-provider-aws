@@ -31,8 +31,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Integration")
+// @FrameworkResource("aws_rds_integration", name="Integration")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func newResourceIntegration(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceIntegration{}
 

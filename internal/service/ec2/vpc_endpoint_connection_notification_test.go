@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -16,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccVPCEndpointConnectionNotification_basic(t *testing.T) {
@@ -25,7 +25,7 @@ func TestAccVPCEndpointConnectionNotification_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCEndpointConnectionNotificationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -33,9 +33,9 @@ func TestAccVPCEndpointConnectionNotification_basic(t *testing.T) {
 				Config: testAccVPCEndpointConnectionNotificationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointConnectionNotificationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "connection_events.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "connection_events.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "notification_type", "Topic"),
-					resource.TestCheckResourceAttr(resourceName, "state", "Enabled"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "Enabled"),
 				),
 			},
 			{
@@ -47,9 +47,9 @@ func TestAccVPCEndpointConnectionNotification_basic(t *testing.T) {
 				Config: testAccVPCEndpointConnectionNotificationConfig_modified(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointConnectionNotificationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "connection_events.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "connection_events.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "notification_type", "Topic"),
-					resource.TestCheckResourceAttr(resourceName, "state", "Enabled"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "Enabled"),
 				),
 			},
 		},
@@ -58,14 +58,14 @@ func TestAccVPCEndpointConnectionNotification_basic(t *testing.T) {
 
 func testAccCheckVPCEndpointConnectionNotificationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpc_endpoint_connection_notification" {
 				continue
 			}
 
-			_, err := tfec2.FindVPCConnectionNotificationByID(ctx, conn, rs.Primary.ID)
+			_, err := tfec2.FindVPCEndpointConnectionNotificationByID(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -93,9 +93,9 @@ func testAccCheckVPCEndpointConnectionNotificationExists(ctx context.Context, n 
 			return fmt.Errorf("No EC2 VPC Endpoint Connection Notification ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		_, err := tfec2.FindVPCConnectionNotificationByID(ctx, conn, rs.Primary.ID)
+		_, err := tfec2.FindVPCEndpointConnectionNotificationByID(ctx, conn, rs.Primary.ID)
 
 		return err
 	}

@@ -44,9 +44,9 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `email` - (Required) The email address of the user that you want to register.
-* `identityType` - (Required) Amazon QuickSight supports several ways of managing the identity of users. This parameter accepts either  `IAM` or `QUICKSIGHT`. If `IAM` is specified, the `iam_arn` must also be specified.
+* `identityType` - (Required) Amazon QuickSight supports several ways of managing the identity of users. This parameter accepts either  `IAM` or `QUICKSIGHT`. If `IAM` is specified, the `iamArn` must also be specified.
 * `userRole` - (Required) The Amazon QuickSight role of the user. The user role can be one of the following: `READER`, `AUTHOR`, or `ADMIN`
-* `userName` - (Optional) The Amazon QuickSight user name that you want to create for the user you are registering. Only valid for registering a user with `identity_type` set to `QUICKSIGHT`.
+* `userName` - (Optional) The Amazon QuickSight user name that you want to create for the user you are registering. Only valid for registering a user with `identityType` set to `QUICKSIGHT`.
 * `awsAccountId` - (Optional) The ID for the AWS account that the user is in. Currently, you use the ID for the AWS account that contains your Amazon QuickSight account.
 * `iamArn` - (Optional) The ARN of the IAM user or role that you are registering with Amazon QuickSight.
 * `namespace`  - (Optional) The Amazon Quicksight namespace to create the user in. Defaults to `default`.
@@ -62,4 +62,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 You cannot import this resource.
 
-<!-- cache-key: cdktf-0.19.0 input-9dc8c87fc6da12d6f8933cfaeb31b94be75e8878bade439becdab1a05ff17eaa -->
+<!-- cache-key: cdktf-0.20.1 input-9dc8c87fc6da12d6f8933cfaeb31b94be75e8878bade439becdab1a05ff17eaa -->

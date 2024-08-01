@@ -10,9 +10,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_memorydb_subnet_group")
@@ -21,25 +23,25 @@ func DataSourceSubnetGroup() *schema.Resource {
 		ReadWithoutTimeout: dataSourceSubnetGroupRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"subnet_ids": {
+			names.AttrSubnetIDs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags": tftags.TagsSchemaComputed(),
-			"vpc_id": {
+			names.AttrTags: tftags.TagsSchemaComputed(),
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -48,15 +50,17 @@ func DataSourceSubnetGroup() *schema.Resource {
 }
 
 func dataSourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 
 	group, err := FindSubnetGroupByName(ctx, conn, name)
 
 	if err != nil {
-		return diag.FromErr(tfresource.SingularDataSourceFindError("MemoryDB Subnet Group", err))
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("MemoryDB Subnet Group", err))
 	}
 
 	d.SetId(aws.StringValue(group.Name))
@@ -66,21 +70,21 @@ func dataSourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta
 		subnetIds = append(subnetIds, subnet.Identifier)
 	}
 
-	d.Set("arn", group.ARN)
-	d.Set("description", group.Description)
-	d.Set("subnet_ids", flex.FlattenStringSet(subnetIds))
-	d.Set("name", group.Name)
-	d.Set("vpc_id", group.VpcId)
+	d.Set(names.AttrARN, group.ARN)
+	d.Set(names.AttrDescription, group.Description)
+	d.Set(names.AttrSubnetIDs, flex.FlattenStringSet(subnetIds))
+	d.Set(names.AttrName, group.Name)
+	d.Set(names.AttrVPCID, group.VpcId)
 
-	tags, err := listTags(ctx, conn, d.Get("arn").(string))
+	tags, err := listTags(ctx, conn, d.Get(names.AttrARN).(string))
 
 	if err != nil {
-		return diag.Errorf("listing tags for MemoryDB Subnet Group (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for MemoryDB Subnet Group (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
+	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

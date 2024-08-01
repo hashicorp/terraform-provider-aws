@@ -270,6 +270,9 @@ class MyConvertedCode(TerraformStack):
         LambdaFunction(self, "test_lambda",
             depends_on=[lambda_logs, example],
             function_name=lambda_function_name.string_value,
+            logging_config=LambdaFunctionLoggingConfig(
+                log_format="Text"
+            ),
             role=role
         )
 ```
@@ -304,18 +307,23 @@ The following arguments are optional:
 * `image_uri` - (Optional) ECR image URI containing the function's deployment package. Exactly one of `filename`, `image_uri`,  or `s3_bucket` must be specified.
 * `kms_key_arn` - (Optional) Amazon Resource Name (ARN) of the AWS Key Management Service (KMS) key that is used to encrypt environment variables. If this configuration is not provided when environment variables are in use, AWS Lambda uses a default service key. If this configuration is provided when environment variables are not in use, the AWS Lambda API does not save this configuration and Terraform will show a perpetual difference of adding the key. To fix the perpetual difference, remove this configuration.
 * `layers` - (Optional) List of Lambda Layer Version ARNs (maximum of 5) to attach to your Lambda Function. See [Lambda Layers][10]
+* `logging_config` - (Optional) Configuration block used to specify advanced logging settings. Detailed below.
 * `memory_size` - (Optional) Amount of memory in MB your Lambda Function can use at runtime. Defaults to `128`. See [Limits][5]
 * `package_type` - (Optional) Lambda deployment package type. Valid values are `Zip` and `Image`. Defaults to `Zip`.
 * `publish` - (Optional) Whether to publish creation/change as new Lambda Function Version. Defaults to `false`.
 * `reserved_concurrent_executions` - (Optional) Amount of reserved concurrent executions for this lambda function. A value of `0` disables lambda from being triggered and `-1` removes any concurrency limitations. Defaults to Unreserved Concurrency Limits `-1`. See [Managing Concurrency][9]
-* `replace_security_groups_on_destroy` - (Optional, **Deprecated**) **AWS no longer supports this operation. This attribute now has no effect and will be removed in a future major version.** Whether to replace the security groups on associated lambda network interfaces upon destruction. Removing these security groups from orphaned network interfaces can speed up security group deletion times by avoiding a dependency on AWS's internal cleanup operations. By default, the ENI security groups will be replaced with the `default` security group in the function's VPC. Set the `replacement_security_group_ids` attribute to use a custom list of security groups for replacement.
-* `replacement_security_group_ids` - (Optional, **Deprecated**) List of security group IDs to assign to orphaned Lambda function network interfaces upon destruction. `replace_security_groups_on_destroy` must be set to `true` to use this attribute.
+* `replace_security_groups_on_destroy` - (Optional) Whether to replace the security groups on the function's VPC configuration prior to destruction.
+Removing these security group associations prior to function destruction can speed up security group deletion times of AWS's internal cleanup operations.
+By default, the security groups will be replaced with the `default` security group in the function's configured VPC.
+Set the `replacement_security_group_ids` attribute to use a custom list of security groups for replacement.
+* `replacement_security_group_ids` - (Optional) List of security group IDs to assign to the function's VPC configuration prior to destruction.
+`replace_security_groups_on_destroy` must be set to `true` to use this attribute.
 * `runtime` - (Optional) Identifier of the function's runtime. See [Runtimes][6] for valid values.
 * `s3_bucket` - (Optional) S3 bucket location containing the function's deployment package. This bucket must reside in the same AWS region where you are creating the Lambda function. Exactly one of `filename`, `image_uri`, or `s3_bucket` must be specified. When `s3_bucket` is set, `s3_key` is required.
 * `s3_key` - (Optional) S3 key of an object containing the function's deployment package. When `s3_bucket` is set, `s3_key` is required.
 * `s3_object_version` - (Optional) Object version containing the function's deployment package. Conflicts with `filename` and `image_uri`.
 * `skip_destroy` - (Optional) Set to true if you do not wish the function to be deleted at destroy time, and instead just remove the function from the Terraform state.
-* `source_code_hash` - (Optional) Used to trigger updates. Must be set to a base64-encoded SHA256 hash of the package file specified with either `filename` or `s3_key`. The usual way to set this is `filebase64sha256("file.zip")` (Terraform 0.11.12 and later) or `base64sha256(file("file.zip"))` (Terraform 0.11.11 and earlier), where "file.zip" is the local filename of the lambda function source archive.
+* `source_code_hash` - (Optional) Virtual attribute used to trigger replacement when source code changes. Must be set to a base64-encoded SHA256 hash of the package file specified with either `filename` or `s3_key`. The usual way to set this is `filebase64sha256("file.zip")` (Terraform 0.11.12 and later) or `base64sha256(file("file.zip"))` (Terraform 0.11.11 and earlier), where "file.zip" is the local filename of the lambda function source archive.
 * `snap_start` - (Optional) Snap start settings block. Detailed below.
 * `tags` - (Optional) Map of tags to assign to the object. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `timeout` - (Optional) Amount of time your Lambda Function has to run in seconds. Defaults to `3`. See [Limits][5].
@@ -351,9 +359,18 @@ Container image configuration values that override the values in the container i
 * `entry_point` - (Optional) Entry point to your application, which is typically the location of the runtime executable.
 * `working_directory` - (Optional) Working directory.
 
+### logging_config
+
+Advanced logging settings. See [Configuring advanced logging controls for your Lambda function][13].
+
+* `application_log_level` - (Optional) for JSON structured logs, choose the detail level of the logs your application sends to CloudWatch when using supported logging libraries.
+* `log_format` - (Required) select between `Text` and structured `JSON` format for your function's logs.
+* `log_group` - (Optional) the CloudWatch log group your function sends logs to.
+* `system_log_level` - (optional) for JSON structured logs, choose the detail level of the Lambda platform event logs sent to CloudWatch, such as `ERROR`, `DEBUG`, or `INFO`.
+
 ### snap_start
 
-Snap start settings for low-latency startups. This feature is currently only supported for `java11` and `java17` runtimes. Remove this block to delete the associated settings (rather than setting `apply_on = "None"`).
+Snap start settings for low-latency startups. This feature is currently only supported for `java11`, `java17` and `java21` runtimes. Remove this block to delete the associated settings (rather than setting `apply_on = "None"`).
 
 * `apply_on` - (Required) Conditions where snap start is enabled. Valid values are `PublishedVersions`.
 
@@ -376,6 +393,7 @@ For network connectivity to AWS resources in a VPC, specify a list of security g
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) identifying your Lambda Function.
+* `code_sha256` - Base64-encoded representation of raw SHA-256 sum of the zip file.
 * `invoke_arn` - ARN to be used for invoking Lambda Function from API Gateway - to be used in [`aws_api_gateway_integration`](/docs/providers/aws/r/api_gateway_integration.html)'s `uri`.
 * `last_modified` - Date this resource was last modified.
 * `qualified_arn` - ARN identifying your Lambda Function Version (if versioning is enabled via `publish = true`).
@@ -399,6 +417,7 @@ This resource exports the following attributes in addition to the arguments abov
 [10]: https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html
 [11]: https://learn.hashicorp.com/terraform/aws/lambda-api-gateway
 [12]: https://docs.aws.amazon.com/lambda/latest/dg/services-efs.html
+[13]: https://docs.aws.amazon.com/lambda/latest/dg/monitoring-cloudwatchlogs.html#monitoring-cloudwatchlogs-advanced
 
 ## Timeouts
 
@@ -416,9 +435,15 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 # DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 from constructs import Construct
 from cdktf import TerraformStack
+#
+# Provider bindings are generated by running `cdktf get`.
+# See https://cdk.tf/provider-generation for more details.
+#
+from imports.aws.lambda_function import LambdaFunction
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
+        LambdaFunction.generate_config_for_import(self, "testLambda", "my_test_lambda_function")
 ```
 
 Using `terraform import`, import Lambda Functions using the `function_name`. For example:
@@ -427,4 +452,4 @@ Using `terraform import`, import Lambda Functions using the `function_name`. For
 % terraform import aws_lambda_function.test_lambda my_test_lambda_function
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-169b7bbe476a39e939fb773a4176feae6d770083a7a351a021d29d9dd52746cd -->
+<!-- cache-key: cdktf-0.20.1 input-09e3d947dc3352a06633a4c2aa2aeb6c59e586b4a02ec7eb223b3b2d30f03f9f -->

@@ -12,7 +12,7 @@ description: |-
 
 Retrieve information about a Service Quota.
 
-~> **NOTE:** Global quotas apply to all AWS regions, but can only be accessed in `usEast1` in the Commercial partition or `usGovWest1` in the GovCloud partition. In other regions, the AWS API will return the error `The request failed because the specified service does not exist.`
+~> **NOTE:** Global quotas apply to all AWS regions, but can only be accessed in `us-east-1` in the Commercial partition or `us-gov-west-1` in the GovCloud partition. In other regions, the AWS API will return the error `The request failed because the specified service does not exist.`
 
 ## Example Usage
 
@@ -46,8 +46,8 @@ class MyConvertedCode extends TerraformStack {
 ~> *NOTE:* Either `quotaCode` or `quotaName` must be configured.
 
 * `serviceCode` - (Required) Service code for the quota. Available values can be found with the [`aws_servicequotas_service` data source](/docs/providers/aws/d/servicequotas_service.html) or [AWS CLI service-quotas list-services command](https://docs.aws.amazon.com/cli/latest/reference/service-quotas/list-services.html).
-* `quotaCode` - (Optional) Quota code within the service. When configured, the data source directly looks up the service quota. Available values can be found with the [AWS CLI service-quotas list-service-quotas command](https://docs.aws.amazon.com/cli/latest/reference/service-quotas/list-service-quotas.html). One of `quota_code` or `quota_name` must be specified.
-* `quotaName` - (Optional) Quota name within the service. When configured, the data source searches through all service quotas to find the matching quota name. Available values can be found with the [AWS CLI service-quotas list-service-quotas command](https://docs.aws.amazon.com/cli/latest/reference/service-quotas/list-service-quotas.html). One of `quota_name` or `quota_code` must be specified.
+* `quotaCode` - (Optional) Quota code within the service. When configured, the data source directly looks up the service quota. Available values can be found with the [AWS CLI service-quotas list-service-quotas command](https://docs.aws.amazon.com/cli/latest/reference/service-quotas/list-service-quotas.html). One of `quotaCode` or `quotaName` must be specified.
+* `quotaName` - (Optional) Quota name within the service. When configured, the data source searches through all service quotas to find the matching quota name. Available values can be found with the [AWS CLI service-quotas list-service-quotas command](https://docs.aws.amazon.com/cli/latest/reference/service-quotas/list-service-quotas.html). One of `quotaName` or `quotaCode` must be specified.
 
 ## Attribute Reference
 
@@ -65,9 +65,9 @@ This data source exports the following attributes in addition to the arguments a
         * `resource`
         * `service`
         * `type`
-    * `metric_name` - The name of the metric.
-    * `metric_namespace` - The namespace of the metric.
+    * `metricName` - The name of the metric.
+    * `metricNamespace` - The namespace of the metric.
     * `metric_statistic_recommendation` - The metric statistic that AWS recommend you use when determining quota usage.
 * `value` - Current value of the service quota.
 
-<!-- cache-key: cdktf-0.19.0 input-bc36008b8483826c556e6fd6e192b7a6b4c3b1b4a2f09174ab402172ccc82dd9 -->
+<!-- cache-key: cdktf-0.20.1 input-bc36008b8483826c556e6fd6e192b7a6b4c3b1b4a2f09174ab402172ccc82dd9 -->

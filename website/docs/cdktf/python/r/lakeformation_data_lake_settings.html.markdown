@@ -81,6 +81,7 @@ class MyConvertedCode(TerraformStack):
         LakeformationDataLakeSettings(self, "example",
             admins=[test.arn, Token.as_string(aws_iam_role_test.arn)],
             allow_external_data_filtering=True,
+            allow_full_table_external_data_access=True,
             authorized_session_tag_value_list=["Amazon EMR"],
             create_database_default_permissions=[LakeformationDataLakeSettingsCreateDatabaseDefaultPermissions(
                 permissions=["SELECT", "ALTER", "DROP"],
@@ -112,6 +113,7 @@ The following arguments are optional:
 * `allow_external_data_filtering` - (Optional) Whether to allow Amazon EMR clusters to access data managed by Lake Formation.
 * `external_data_filtering_allow_list` - (Optional) A list of the account IDs of Amazon Web Services accounts with Amazon EMR clusters that are to perform data filtering.
 * `authorized_session_tag_value_list` - (Optional) Lake Formation relies on a privileged process secured by Amazon EMR or the third party integrator to tag the user's role while assuming it.
+* `allow_full_table_external_data_access` - (Optional) Whether to allow a third-party query engine to get data access credentials without session tags when a caller has full data access permissions.
 
 ~> **NOTE:** Although optional, not including `admins`, `create_database_default_permissions`, `create_table_default_permissions`, and/or `trusted_resource_owners` results in the setting being cleared.
 
@@ -133,4 +135,4 @@ The following arguments are optional:
 
 This resource exports no additional attributes.
 
-<!-- cache-key: cdktf-0.19.0 input-417a6f6da709dcf8d9f1bd94d43d2cf8836515780173f60b9dd4db641440c4d0 -->
+<!-- cache-key: cdktf-0.20.1 input-70e2f57b01577db37fcbc380a1bb18df92d52900f6854efe9d584f7eab7a581f -->

@@ -72,4 +72,4 @@ This data source exports the following attributes in addition to the arguments a
 * `tags` - Key-value map of resource tags for the image.
 * `version` - Version of the image.
 
-<!-- cache-key: cdktf-0.19.0 input-c16581cc1f73d4143d3834e3f16be4e4ace35e8a4c70a0907ae9057adf65efee -->
+<!-- cache-key: cdktf-0.20.1 input-c16581cc1f73d4143d3834e3f16be4e4ace35e8a4c70a0907ae9057adf65efee -->

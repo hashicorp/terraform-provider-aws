@@ -56,6 +56,7 @@ This data source exports the following attributes in addition to the arguments a
 ### encryption_at_rest
 
 * `catalog_encryption_mode` - The encryption-at-rest mode for encrypting Data Catalog data.
+* `catalog_encryption_service_role` - The ARN of the AWS IAM role used for accessing encrypted Data Catalog data.
 * `sse_aws_kms_key_id` - ARN of the AWS KMS key to use for encryption at rest.
 
-<!-- cache-key: cdktf-0.19.0 input-e959f72d2bff30ad397e7c3f8e5c026335f7731049187b56bb28d0f687ba62fd -->
+<!-- cache-key: cdktf-0.20.1 input-78a160a18efc6d43f60575420d37772ff044fbb513e2720991b26149cc501c21 -->

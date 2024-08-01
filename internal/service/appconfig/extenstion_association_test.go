@@ -9,15 +9,17 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/appconfig"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/appconfig"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/appconfig/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfappconfig "github.com/hashicorp/terraform-provider-aws/internal/service/appconfig"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAppConfigExtensionAssociation_basic(t *testing.T) {
@@ -27,7 +29,7 @@ func TestAccAppConfigExtensionAssociation_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, appconfig.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppConfigServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckExtensionAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -36,7 +38,7 @@ func TestAccAppConfigExtensionAssociation_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionAssociationExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "extension_arn", "appconfig", regexache.MustCompile(`extension/*`)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "resource_arn", "appconfig", regexache.MustCompile(`application/*`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrResourceARN, "appconfig", regexache.MustCompile(`application/*`)),
 				),
 			},
 			{
@@ -54,24 +56,22 @@ func TestAccAppConfigExtensionAssociation_Parameters(t *testing.T) {
 	resourceName := "aws_appconfig_extension_association.test"
 	pName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	pDescription1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	pRequiredTrue := "true"
 	pValue1 := "ParameterValue1"
 	pName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	pDescription2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	pRequiredFalse := "false"
 	pValue2 := "ParameterValue2"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, appconfig.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppConfigServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckExtensionAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccExtensionAssociationConfig_parameters1(rName, pName1, pDescription1, pRequiredTrue, pValue1),
+				Config: testAccExtensionAssociationConfig_parameters1(rName, pName1, pDescription1, acctest.CtTrue, pValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("parameters.%s", pName1), pValue1),
 				),
 			},
@@ -84,24 +84,24 @@ func TestAccAppConfigExtensionAssociation_Parameters(t *testing.T) {
 				Config: testAccExtensionAssociationConfig_parameters2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "parameters.parameter1", pValue1),
 					resource.TestCheckResourceAttr(resourceName, "parameters.parameter2", pValue2),
 				),
 			},
 			{
-				Config: testAccExtensionAssociationConfig_parameters1(rName, pName2, pDescription2, pRequiredFalse, pValue2),
+				Config: testAccExtensionAssociationConfig_parameters1(rName, pName2, pDescription2, acctest.CtFalse, pValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("parameters.%s", pName2), pValue2),
 				),
 			},
 			{
-				Config: testAccExtensionAssociationConfig_parametersNotRequired(rName, pName2, pDescription2, pRequiredFalse, pValue2),
+				Config: testAccExtensionAssociationConfig_parametersNotRequired(rName, pName2, pDescription2, acctest.CtFalse, pValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct0),
 				),
 			},
 		},
@@ -115,7 +115,7 @@ func TestAccAppConfigExtensionAssociation_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, appconfig.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppConfigServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckExtensionAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -133,7 +133,7 @@ func TestAccAppConfigExtensionAssociation_disappears(t *testing.T) {
 
 func testAccCheckExtensionAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appconfig_environment" {
@@ -144,9 +144,9 @@ func testAccCheckExtensionAssociationDestroy(ctx context.Context) resource.TestC
 				ExtensionAssociationId: aws.String(rs.Primary.ID),
 			}
 
-			output, err := conn.GetExtensionAssociationWithContext(ctx, input)
+			output, err := conn.GetExtensionAssociation(ctx, input)
 
-			if tfawserr.ErrCodeEquals(err, appconfig.ErrCodeResourceNotFoundException) {
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 				continue
 			}
 
@@ -174,13 +174,13 @@ func testAccCheckExtensionAssociationExists(ctx context.Context, resourceName st
 			return fmt.Errorf("Resource (%s) ID not set", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigClient(ctx)
 
 		in := &appconfig.GetExtensionAssociationInput{
 			ExtensionAssociationId: aws.String(rs.Primary.ID),
 		}
 
-		output, err := conn.GetExtensionAssociationWithContext(ctx, in)
+		output, err := conn.GetExtensionAssociation(ctx, in)
 
 		if err != nil {
 			return fmt.Errorf("error reading AppConfig ExtensionAssociation (%s): %w", rs.Primary.ID, err)

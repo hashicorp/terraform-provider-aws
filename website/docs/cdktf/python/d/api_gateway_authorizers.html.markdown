@@ -43,4 +43,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `ids` - List of Authorizer identifiers.
 
-<!-- cache-key: cdktf-0.19.0 input-c3a17d70af9b0ac8d5e391a543335f1243e9dec902c7497cf1df2083482e833c -->
+<!-- cache-key: cdktf-0.20.1 input-c3a17d70af9b0ac8d5e391a543335f1243e9dec902c7497cf1df2083482e833c -->

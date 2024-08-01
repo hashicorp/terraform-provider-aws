@@ -48,12 +48,6 @@ jobs:
           GH_TOKEN: ${{ steps.token.outputs.token }}
         run: gh issue edit ${{ env.ISSUE_URL }} --add-label prioritized
 
-      - name: 'Add prioritized to regressions'
-        if: github.event.label.name == 'regression'
-        env:
-          GH_TOKEN: ${{ steps.token.outputs.token }}
-        run: gh issue edit ${{ env.ISSUE_URL }} --add-label prioritized
-
       - name: 'Remove unnecessary labels on closure'
         if: github.event.action == 'closed'
         env:
@@ -66,7 +60,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 'Apply Labels'
-        uses: github/issue-labeler@6bea9ed491bb74fce38775b3d863e64a59dbd9eb # v3.3
+        uses: github/issue-labeler@c1b0f9f52a63158c4adc09425e858e87b32e9685 # v3.4
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           configuration-path: .github/labeler-issue-triage.yml
@@ -103,8 +97,8 @@ jobs:
           gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.STATUS_FIELD_ID }} --single-select-option-id ${{ vars.team_project_status_in_progress }}
           gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.VIEW_FIELD_ID }} --single-select-option-id ${{ vars.team_project_view_working_board }}
 
-      - name: 'Labeled Prioritized or Regression'
-        if: contains(fromJSON('["prioritized", "regression"]'), github.event.label.name)
+      - name: 'Labeled Prioritized'
+        if: github.event.label.name == 'prioritized'
         env:
           GH_TOKEN: ${{ steps.token.outputs.token }}
         run: |
@@ -125,7 +119,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 'Add community note to new Issues'
-        uses: peter-evans/create-or-update-comment@23ff15729ef2fc348714a3bb66d2f655ca9066f2 # v3.1.0
+        uses: peter-evans/create-or-update-comment@71345be0265236311c031f5c7866368bd1eff043 # v4.0.0
         with:
           issue-number: ${{ github.event.issue.number }}
           body: |
@@ -141,3 +135,18 @@ jobs:
 
             * If you are interested in working on this issue, please leave a comment.
             * If this would be your first contribution, please review the [contribution guide](https://hashicorp.github.io/terraform-provider-aws/).
+
+  closed_issue_comment:
+    name: 'Closed Issue Comment'
+    if: github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Add comment on closed issues'
+        uses: peter-evans/create-or-update-comment@71345be0265236311c031f5c7866368bd1eff043 # v4.0.0
+        with:
+          issue-number: ${{ github.event.issue.number }}
+          body: |
+            > [!WARNING]
+            > This issue has been closed, meaning that any additional comments are hard for our team to see. Please assume that the maintainers will not see them.
+            >
+            > Ongoing conversations amongst community members are welcome, however, the issue will be locked after 30 days. Moving conversations to another venue, such as the [AWS Provider forum](https://discuss.hashicorp.com/c/terraform-providers/tf-aws/33), is recommended. If you have additional concerns, please open a new issue, referencing this one where needed.

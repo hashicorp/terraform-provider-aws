@@ -119,44 +119,44 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `name` - (Required, ForceNew) The name of the service.
+* `name` - (Required, Forces new resource) The name of the service.
 * `description` - (Optional) The description of the service.
-* `dnsConfig` - (Optional) A complex type that contains information about the resource record sets that you want Amazon Route 53 to create when you register an instance.
-* `healthCheckConfig` - (Optional) A complex type that contains settings for an optional health check. Only for Public DNS namespaces.
-* `forceDestroy` - (Optional, Default:false ) A boolean that indicates all instances should be deleted from the service so that the service can be destroyed without error. These instances are not recoverable.
-* `healthCheckCustomConfig` - (Optional, ForceNew) A complex type that contains settings for ECS managed health checks.
+* `dnsConfig` - (Optional) A complex type that contains information about the resource record sets that you want Amazon Route 53 to create when you register an instance. See [`dnsConfig` Block](#dns_config-block) for details.
+* `healthCheckConfig` - (Optional) A complex type that contains settings for an optional health check. Only for Public DNS namespaces. See [`healthCheckConfig` Block](#health_check_config-block) for details.
+* `forceDestroy` - (Optional) A boolean that indicates all instances should be deleted from the service so that the service can be destroyed without error. These instances are not recoverable. Defaults to `false`.
+* `healthCheckCustomConfig` - (Optional, Forces new resource) A complex type that contains settings for ECS managed health checks. See [`healthCheckCustomConfig` Block](#health_check_custom_config-block) for details.
 * `namespaceId` - (Optional) The ID of the namespace that you want to use to create the service.
 * `type` - (Optional) If present, specifies that the service instances are only discoverable using the `DiscoverInstances` API operation. No DNS records is registered for the service instances. The only valid value is `HTTP`.
-* `tags` - (Optional) A map of tags to assign to the service. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the service. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### dns_config
+### `dnsConfig` Block
 
-This argument supports the following arguments:
+The `dnsConfig` configuration block supports the following arguments:
 
-* `namespaceId` - (Required, ForceNew) The ID of the namespace to use for DNS configuration.
-* `dnsRecords` - (Required) An array that contains one DnsRecord object for each resource record set.
+* `namespaceId` - (Required, Forces new resource) The ID of the namespace to use for DNS configuration.
+* `dnsRecords` - (Required) An array that contains one DnsRecord object for each resource record set. See [`dnsRecords` Block](#dns_records-block) for details.
 * `routingPolicy` - (Optional) The routing policy that you want to apply to all records that Route 53 creates when you register an instance and specify the service. Valid Values: MULTIVALUE, WEIGHTED
 
-#### dns_records
+#### `dnsRecords` Block
 
-This argument supports the following arguments:
+The `dnsRecords` configuration block supports the following arguments:
 
 * `ttl` - (Required) The amount of time, in seconds, that you want DNS resolvers to cache the settings for this resource record set.
-* `type` - (Required, ForceNew) The type of the resource, which indicates the value that Amazon Route 53 returns in response to DNS queries. Valid Values: A, AAAA, SRV, CNAME
+* `type` - (Required, Forces new resource) The type of the resource, which indicates the value that Amazon Route 53 returns in response to DNS queries. Valid Values: A, AAAA, SRV, CNAME
 
-### health_check_config
+### `healthCheckConfig` Block
 
-This argument supports the following arguments:
+The `healthCheckConfig` configuration block supports the following arguments:
 
 * `failureThreshold` - (Optional) The number of consecutive health checks. Maximum value of 10.
 * `resourcePath` - (Optional) The path that you want Route 53 to request when performing health checks. Route 53 automatically adds the DNS name for the service. If you don't specify a value, the default value is /.
-* `type` - (Optional, ForceNew) The type of health check that you want to create, which indicates how Route 53 determines whether an endpoint is healthy. Valid Values: HTTP, HTTPS, TCP
+* `type` - (Optional, Forces new resource) The type of health check that you want to create, which indicates how Route 53 determines whether an endpoint is healthy. Valid Values: HTTP, HTTPS, TCP
 
-### health_check_custom_config
+### `healthCheckCustomConfig` Block
 
-This argument supports the following arguments:
+The `healthCheckCustomConfig` configuration block supports the following arguments:
 
-* `failureThreshold` - (Optional, ForceNew) The number of 30-second intervals that you want service discovery to wait before it changes the health status of a service instance.  Maximum value of 10.
+* `failureThreshold` - (Optional, Forces new resource) The number of 30-second intervals that you want service discovery to wait before it changes the health status of a service instance.  Maximum value of 10.
 
 ## Attribute Reference
 
@@ -164,7 +164,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The ID of the service.
 * `arn` - The ARN of the service.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -174,9 +174,19 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { ServiceDiscoveryService } from "./.gen/providers/aws/service-discovery-service";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    ServiceDiscoveryService.generateConfigForImport(
+      this,
+      "example",
+      "0123456789"
+    );
   }
 }
 
@@ -188,4 +198,4 @@ Using `terraform import`, import Service Discovery Service using the service ID.
 % terraform import aws_service_discovery_service.example 0123456789
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-5ade767584d977305ecc43e9b30413e85a11a275bc3038025a2c51ba270c6462 -->
+<!-- cache-key: cdktf-0.20.1 input-bae0abf761352b2967d57b6cd0d452ce01af3694a0b8e973fcbe2e8f6f7ce1fa -->

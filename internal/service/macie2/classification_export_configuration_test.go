@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccClassificationExportConfiguration_basic(t *testing.T) {
@@ -28,17 +29,17 @@ func testAccClassificationExportConfiguration_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClassificationExportConfigurationDestroy(ctx),
-		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Macie2ServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClassificationExportConfigurationConfig_basic("macieprefix/"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassificationExportConfigurationExists(ctx, resourceName, &macie2Output),
-					resource.TestCheckResourceAttr(macieAccountResourceName, "status", macie2.MacieStatusEnabled),
-					resource.TestCheckResourceAttr(resourceName, "s3_destination.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "s3_destination.0.bucket_name", s3BucketResourceName, "bucket"),
+					resource.TestCheckResourceAttr(macieAccountResourceName, names.AttrStatus, macie2.MacieStatusEnabled),
+					resource.TestCheckResourceAttr(resourceName, "s3_destination.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "s3_destination.0.bucket_name", s3BucketResourceName, names.AttrBucket),
 					resource.TestCheckResourceAttr(resourceName, "s3_destination.0.key_prefix", "macieprefix/"),
-					resource.TestCheckResourceAttrPair(resourceName, "s3_destination.0.kms_key_arn", kmsKeyResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "s3_destination.0.kms_key_arn", kmsKeyResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -50,11 +51,11 @@ func testAccClassificationExportConfiguration_basic(t *testing.T) {
 				Config: testAccClassificationExportConfigurationConfig_basic(""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassificationExportConfigurationExists(ctx, resourceName, &macie2Output),
-					resource.TestCheckResourceAttr(macieAccountResourceName, "status", macie2.MacieStatusEnabled),
-					resource.TestCheckResourceAttr(resourceName, "s3_destination.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "s3_destination.0.bucket_name", s3BucketResourceName, "bucket"),
+					resource.TestCheckResourceAttr(macieAccountResourceName, names.AttrStatus, macie2.MacieStatusEnabled),
+					resource.TestCheckResourceAttr(resourceName, "s3_destination.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "s3_destination.0.bucket_name", s3BucketResourceName, names.AttrBucket),
 					resource.TestCheckResourceAttr(resourceName, "s3_destination.0.key_prefix", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "s3_destination.0.kms_key_arn", kmsKeyResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "s3_destination.0.kms_key_arn", kmsKeyResourceName, names.AttrARN),
 				),
 			},
 		},

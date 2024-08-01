@@ -143,7 +143,7 @@ This resource supports the following arguments:
 
 * `referenceName` - (Optional) This is a reference name used in Caller Reference
     (helpful for identifying single health_check set amongst others)
-* `fqdn` - (Optional) The fully qualified domain name of the endpoint to be checked. If a value is set for `ip_address`, the value set for `fqdn` will be passed in the `Host` header.
+* `fqdn` - (Optional) The fully qualified domain name of the endpoint to be checked. If a value is set for `ipAddress`, the value set for `fqdn` will be passed in the `Host` header.
 * `ipAddress` - (Optional) The IP address of the endpoint to be checked.
 * `port` - (Optional) The port of the endpoint to be checked.
 * `type` - (Required) The protocol to use when performing health checks. Valid values are `HTTP`, `HTTPS`, `HTTP_STR_MATCH`, `HTTPS_STR_MATCH`, `TCP`, `CALCULATED`, `CLOUDWATCH_METRIC` and `RECOVERY_CONTROL`.
@@ -158,8 +158,8 @@ This resource supports the following arguments:
     * For calculated health checks, Route 53 stops aggregating the status of the referenced health checks.
     * For health checks that monitor CloudWatch alarms, Route 53 stops monitoring the corresponding CloudWatch metrics.
 
-    ~> **Note:** After you disable a health check, Route 53 considers the status of the health check to always be healthy. If you configured DNS failover, Route 53 continues to route traffic to the corresponding resources. If you want to stop routing traffic to a resource, change the value of `invert_healthcheck`.
-* `enableSni` - (Optional) A boolean value that indicates whether Route53 should send the `fqdn` to the endpoint when performing the health check. This defaults to AWS' defaults: when the `type` is "HTTPS" `enable_sni` defaults to `true`, when `type` is anything else `enable_sni` defaults to `false`.
+    ~> **Note:** After you disable a health check, Route 53 considers the status of the health check to always be healthy. If you configured DNS failover, Route 53 continues to route traffic to the corresponding resources. If you want to stop routing traffic to a resource, change the value of `invertHealthcheck`.
+* `enableSni` - (Optional) A boolean value that indicates whether Route53 should send the `fqdn` to the endpoint when performing the health check. This defaults to AWS' defaults: when the `type` is "HTTPS" `enableSni` defaults to `true`, when `type` is anything else `enableSni` defaults to `false`.
 * `childHealthchecks` - (Optional) For a specified parent health check, a list of HealthCheckId values for the associated child health checks.
 * `childHealthThreshold` - (Optional) The minimum number of child health checks that must be healthy for Route 53 to consider the parent health check to be healthy. Valid values are integers between 0 and 256, inclusive
 * `cloudwatchAlarmName` - (Optional) The name of the CloudWatch alarm.
@@ -167,7 +167,7 @@ This resource supports the following arguments:
 * `insufficientDataHealthStatus` - (Optional) The status of the health check when CloudWatch has insufficient data about the state of associated alarm. Valid values are `Healthy` , `Unhealthy` and `LastKnownStatus`.
 * `regions` - (Optional) A list of AWS regions that you want Amazon Route 53 health checkers to check the specified endpoint from.
 * `routingControlArn` - (Optional) The Amazon Resource Name (ARN) for the Route 53 Application Recovery Controller routing control. This is used when health check type is `RECOVERY_CONTROL`
-* `tags` - (Optional) A map of tags to assign to the health check. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the health check. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -175,7 +175,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - The Amazon Resource Name (ARN) of the Health Check.
 * `id` - The id of the health check
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -185,9 +185,19 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { Route53HealthCheck } from "./.gen/providers/aws/route53-health-check";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    Route53HealthCheck.generateConfigForImport(
+      this,
+      "httpCheck",
+      "abcdef11-2222-3333-4444-555555fedcba"
+    );
   }
 }
 
@@ -199,4 +209,4 @@ Using `terraform import`, import Route53 Health Checks using the health check `i
 % terraform import aws_route53_health_check.http_check abcdef11-2222-3333-4444-555555fedcba
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-77cb2549229efadce71f35371e65ef572daabb8208abd05dfd647f7309112065 -->
+<!-- cache-key: cdktf-0.20.1 input-77cb2549229efadce71f35371e65ef572daabb8208abd05dfd647f7309112065 -->

@@ -24,7 +24,7 @@ func TestAccSESV2DedicatedIPPoolDataSource_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDedicatedIPPool(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDedicatedIPPoolDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -33,7 +33,7 @@ func TestAccSESV2DedicatedIPPoolDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDedicatedIPPoolExists(ctx, dataSourceName),
 					resource.TestCheckResourceAttr(dataSourceName, "pool_name", rName),
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "ses", regexache.MustCompile(`dedicated-ip-pool/.+`)),
+					acctest.MatchResourceAttrRegionalARN(dataSourceName, names.AttrARN, "ses", regexache.MustCompile(`dedicated-ip-pool/.+`)),
 				),
 			},
 		},

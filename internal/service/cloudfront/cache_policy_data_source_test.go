@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/cloudfront"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCloudFrontCachePolicyDataSource_basic(t *testing.T) {
@@ -21,15 +21,14 @@ func TestAccCloudFrontCachePolicyDataSource_basic(t *testing.T) {
 	resourceName := "aws_cloudfront_cache_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPublicKeyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCachePolicyDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSource1Name, "comment", resourceName, "comment"),
+					resource.TestCheckResourceAttrPair(dataSource1Name, names.AttrComment, resourceName, names.AttrComment),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "default_ttl", resourceName, "default_ttl"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "min_ttl", resourceName, "min_ttl"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "max_ttl", resourceName, "max_ttl"),
@@ -46,7 +45,7 @@ func TestAccCloudFrontCachePolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSource1Name, "parameters_in_cache_key_and_forwarded_to_origin.0.query_strings_config.0.query_string_behavior", resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.query_strings_config.0.query_string_behavior"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "parameters_in_cache_key_and_forwarded_to_origin.0.query_strings_config.0.query_strings.#", resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.query_strings_config.0.query_strings.#"),
 
-					resource.TestCheckResourceAttrPair(dataSource2Name, "comment", resourceName, "comment"),
+					resource.TestCheckResourceAttrPair(dataSource2Name, names.AttrComment, resourceName, names.AttrComment),
 					resource.TestCheckResourceAttrPair(dataSource2Name, "default_ttl", resourceName, "default_ttl"),
 					resource.TestCheckResourceAttrPair(dataSource2Name, "min_ttl", resourceName, "min_ttl"),
 					resource.TestCheckResourceAttrPair(dataSource2Name, "max_ttl", resourceName, "max_ttl"),

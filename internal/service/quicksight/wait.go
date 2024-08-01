@@ -5,13 +5,13 @@ package quicksight
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/quicksight"
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -79,15 +79,16 @@ func waitTemplateCreated(ctx context.Context, conn *quicksight.QuickSight, id st
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*quicksight.Template); ok {
 		if status, apiErrors := aws.StringValue(out.Version.Status), out.Version.Errors; status == quicksight.ResourceStatusCreationFailed && apiErrors != nil {
-			var errors *multierror.Error
+			var errs []error
 
 			for _, apiError := range apiErrors {
 				if apiError == nil {
 					continue
 				}
-				errors = multierror.Append(errors, awserr.New(aws.StringValue(apiError.Type), aws.StringValue(apiError.Message), nil))
+				errs = append(errs, awserr.New(aws.StringValue(apiError.Type), aws.StringValue(apiError.Message), nil))
 			}
-			tfresource.SetLastError(err, errors)
+
+			tfresource.SetLastError(err, errors.Join(errs...))
 		}
 
 		return out, err
@@ -109,15 +110,17 @@ func waitTemplateUpdated(ctx context.Context, conn *quicksight.QuickSight, id st
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*quicksight.Template); ok {
 		if status, apiErrors := aws.StringValue(out.Version.Status), out.Version.Errors; status == quicksight.ResourceStatusCreationFailed && apiErrors != nil {
-			var errors *multierror.Error
+			var errs []error
 
 			for _, apiError := range apiErrors {
 				if apiError == nil {
 					continue
 				}
-				errors = multierror.Append(errors, awserr.New(aws.StringValue(apiError.Type), aws.StringValue(apiError.Message), nil))
+
+				errs = append(errs, awserr.New(aws.StringValue(apiError.Type), aws.StringValue(apiError.Message), nil))
 			}
-			tfresource.SetLastError(err, errors)
+
+			tfresource.SetLastError(err, errors.Join(errs...))
 		}
 
 		return out, err
@@ -130,7 +133,7 @@ func waitDashboardCreated(ctx context.Context, conn *quicksight.QuickSight, id s
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{quicksight.ResourceStatusCreationInProgress},
 		Target:                    []string{quicksight.ResourceStatusCreationSuccessful},
-		Refresh:                   statusDashboard(ctx, conn, id),
+		Refresh:                   statusDashboard(ctx, conn, id, DashboardLatestVersion),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -139,15 +142,17 @@ func waitDashboardCreated(ctx context.Context, conn *quicksight.QuickSight, id s
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*quicksight.Dashboard); ok {
 		if status, apiErrors := aws.StringValue(out.Version.Status), out.Version.Errors; status == quicksight.ResourceStatusCreationFailed && apiErrors != nil {
-			var errors *multierror.Error
+			var errs []error
 
 			for _, apiError := range apiErrors {
 				if apiError == nil {
 					continue
 				}
-				errors = multierror.Append(errors, awserr.New(aws.StringValue(apiError.Type), aws.StringValue(apiError.Message), nil))
+
+				errs = append(errs, awserr.New(aws.StringValue(apiError.Type), aws.StringValue(apiError.Message), nil))
 			}
-			tfresource.SetLastError(err, errors)
+
+			tfresource.SetLastError(err, errors.Join(errs...))
 		}
 
 		return out, err
@@ -156,11 +161,11 @@ func waitDashboardCreated(ctx context.Context, conn *quicksight.QuickSight, id s
 	return nil, err
 }
 
-func waitDashboardUpdated(ctx context.Context, conn *quicksight.QuickSight, id string, timeout time.Duration) (*quicksight.Dashboard, error) {
+func waitDashboardUpdated(ctx context.Context, conn *quicksight.QuickSight, id string, version int64, timeout time.Duration) (*quicksight.Dashboard, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{quicksight.ResourceStatusUpdateInProgress, quicksight.ResourceStatusCreationInProgress},
 		Target:                    []string{quicksight.ResourceStatusUpdateSuccessful, quicksight.ResourceStatusCreationSuccessful},
-		Refresh:                   statusDashboard(ctx, conn, id),
+		Refresh:                   statusDashboard(ctx, conn, id, version),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -169,15 +174,17 @@ func waitDashboardUpdated(ctx context.Context, conn *quicksight.QuickSight, id s
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*quicksight.Dashboard); ok {
 		if status, apiErrors := aws.StringValue(out.Version.Status), out.Version.Errors; status == quicksight.ResourceStatusCreationFailed && apiErrors != nil {
-			var errors *multierror.Error
+			var errs []error
 
 			for _, apiError := range apiErrors {
 				if apiError == nil {
 					continue
 				}
-				errors = multierror.Append(errors, awserr.New(aws.StringValue(apiError.Type), aws.StringValue(apiError.Message), nil))
+
+				errs = append(errs, awserr.New(aws.StringValue(apiError.Type), aws.StringValue(apiError.Message), nil))
 			}
-			tfresource.SetLastError(err, errors)
+
+			tfresource.SetLastError(err, errors.Join(errs...))
 		}
 
 		return out, err
@@ -199,15 +206,17 @@ func waitAnalysisCreated(ctx context.Context, conn *quicksight.QuickSight, id st
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*quicksight.Analysis); ok {
 		if status, apiErrors := aws.StringValue(out.Status), out.Errors; status == quicksight.ResourceStatusCreationFailed && apiErrors != nil {
-			var errors *multierror.Error
+			var errs []error
 
 			for _, apiError := range apiErrors {
 				if apiError == nil {
 					continue
 				}
-				errors = multierror.Append(errors, awserr.New(aws.StringValue(apiError.Type), aws.StringValue(apiError.Message), nil))
+
+				errs = append(errs, awserr.New(aws.StringValue(apiError.Type), aws.StringValue(apiError.Message), nil))
 			}
-			tfresource.SetLastError(err, errors)
+
+			tfresource.SetLastError(err, errors.Join(errs...))
 		}
 
 		return out, err
@@ -229,15 +238,17 @@ func waitAnalysisUpdated(ctx context.Context, conn *quicksight.QuickSight, id st
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*quicksight.Analysis); ok {
 		if status, apiErrors := aws.StringValue(out.Status), out.Errors; status == quicksight.ResourceStatusCreationFailed && apiErrors != nil {
-			var errors *multierror.Error
+			var errs []error
 
 			for _, apiError := range apiErrors {
 				if apiError == nil {
 					continue
 				}
-				errors = multierror.Append(errors, awserr.New(aws.StringValue(apiError.Type), aws.StringValue(apiError.Message), nil))
+
+				errs = append(errs, awserr.New(aws.StringValue(apiError.Type), aws.StringValue(apiError.Message), nil))
 			}
-			tfresource.SetLastError(err, errors)
+
+			tfresource.SetLastError(err, errors.Join(errs...))
 		}
 
 		return out, err
@@ -259,15 +270,17 @@ func waitThemeCreated(ctx context.Context, conn *quicksight.QuickSight, id strin
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*quicksight.Theme); ok {
 		if status, apiErrors := aws.StringValue(out.Version.Status), out.Version.Errors; status == quicksight.ResourceStatusCreationFailed && apiErrors != nil {
-			var errors *multierror.Error
+			var errs []error
 
 			for _, apiError := range apiErrors {
 				if apiError == nil {
 					continue
 				}
-				errors = multierror.Append(errors, awserr.New(aws.StringValue(apiError.Type), aws.StringValue(apiError.Message), nil))
+
+				errs = append(errs, awserr.New(aws.StringValue(apiError.Type), aws.StringValue(apiError.Message), nil))
 			}
-			tfresource.SetLastError(err, errors)
+
+			tfresource.SetLastError(err, errors.Join(errs...))
 		}
 
 		return out, err
@@ -289,15 +302,17 @@ func waitThemeUpdated(ctx context.Context, conn *quicksight.QuickSight, id strin
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*quicksight.Theme); ok {
 		if status, apiErrors := aws.StringValue(out.Version.Status), out.Version.Errors; status == quicksight.ResourceStatusCreationFailed && apiErrors != nil {
-			var errors *multierror.Error
+			var errs []error
 
 			for _, apiError := range apiErrors {
 				if apiError == nil {
 					continue
 				}
-				errors = multierror.Append(errors, awserr.New(aws.StringValue(apiError.Type), aws.StringValue(apiError.Message), nil))
+
+				errs = append(errs, awserr.New(aws.StringValue(apiError.Type), aws.StringValue(apiError.Message), nil))
 			}
-			tfresource.SetLastError(err, errors)
+
+			tfresource.SetLastError(err, errors.Join(errs...))
 		}
 
 		return out, err

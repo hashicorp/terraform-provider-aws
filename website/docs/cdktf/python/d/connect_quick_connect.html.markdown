@@ -58,7 +58,7 @@ class MyConvertedCode(TerraformStack):
 
 ~> **NOTE:** `instance_id` and one of either `name` or `quick_connect_id` is required.
 
-This argument supports the following arguments:
+This data source supports the following arguments:
 
 * `quick_connect_id` - (Optional) Returns information on a specific Quick Connect by Quick Connect id
 * `instance_id` - (Required) Reference to the hosting Amazon Connect Instance
@@ -96,4 +96,4 @@ A `user_config` block contains the following arguments:
 * `contact_flow_id` - Identifier of the contact flow.
 * `user_id` - Identifier for the user.
 
-<!-- cache-key: cdktf-0.19.0 input-47e113eb2f3ca472b6251d59440456f77334d6f7906ea4bbe83c661c839f9048 -->
+<!-- cache-key: cdktf-0.20.1 input-1e2e1b2ceb151f2cb7fda8fbd589ffdc0902ba5adbb006078987f7d294a8e289 -->

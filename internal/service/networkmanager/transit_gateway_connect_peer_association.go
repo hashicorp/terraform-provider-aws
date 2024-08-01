@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -64,6 +65,8 @@ func ResourceTransitGatewayConnectPeerAssociation() *schema.Resource {
 }
 
 func resourceTransitGatewayConnectPeerAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID := d.Get("global_network_id").(string)
@@ -83,25 +86,27 @@ func resourceTransitGatewayConnectPeerAssociationCreate(ctx context.Context, d *
 	_, err := conn.AssociateTransitGatewayConnectPeerWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Network Manager Transit Gateway Connect Peer Association (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "creating Network Manager Transit Gateway Connect Peer Association (%s): %s", id, err)
 	}
 
 	d.SetId(id)
 
 	if _, err := waitTransitGatewayConnectPeerAssociationCreated(ctx, conn, globalNetworkID, connectPeerARN, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for Network Manager Transit Gateway Connect Peer Association (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Network Manager Transit Gateway Connect Peer Association (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceTransitGatewayConnectPeerAssociationRead(ctx, d, meta)
+	return append(diags, resourceTransitGatewayConnectPeerAssociationRead(ctx, d, meta)...)
 }
 
 func resourceTransitGatewayConnectPeerAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID, connectPeerARN, err := TransitGatewayConnectPeerAssociationParseResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	output, err := FindTransitGatewayConnectPeerAssociationByTwoPartKey(ctx, conn, globalNetworkID, connectPeerARN)
@@ -109,11 +114,11 @@ func resourceTransitGatewayConnectPeerAssociationRead(ctx context.Context, d *sc
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Network Manager Transit Gateway Connect Peer Association %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Network Manager Transit Gateway Connect Peer Association (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Network Manager Transit Gateway Connect Peer Association (%s): %s", d.Id(), err)
 	}
 
 	d.Set("device_id", output.DeviceId)
@@ -121,25 +126,27 @@ func resourceTransitGatewayConnectPeerAssociationRead(ctx context.Context, d *sc
 	d.Set("link_id", output.LinkId)
 	d.Set("transit_gateway_connect_peer_arn", output.TransitGatewayConnectPeerArn)
 
-	return nil
+	return diags
 }
 
 func resourceTransitGatewayConnectPeerAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID, connectPeerARN, err := TransitGatewayConnectPeerAssociationParseResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	err = disassociateTransitGatewayConnectPeer(ctx, conn, globalNetworkID, connectPeerARN, d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	return nil
+	return diags
 }
 
 func disassociateTransitGatewayConnectPeer(ctx context.Context, conn *networkmanager.NetworkManager, globalNetworkID, connectPeerARN string, timeout time.Duration) error {

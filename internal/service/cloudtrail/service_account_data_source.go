@@ -12,13 +12,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // See http://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-supported-regions.html
 // See https://docs.aws.amazon.com/govcloud-us/latest/ug-east/verifying-cloudtrail.html
 // See https://docs.aws.amazon.com/govcloud-us/latest/ug-west/verifying-cloudtrail.html
 
-var ServiceAccountPerRegionMap = map[string]string{
+var serviceAccountPerRegionMap = map[string]string{
 	endpoints.AfSouth1RegionID:     "525921808201",
 	endpoints.ApEast1RegionID:      "119688915426",
 	endpoints.ApNortheast1RegionID: "216624486486",
@@ -53,19 +54,19 @@ var ServiceAccountPerRegionMap = map[string]string{
 	endpoints.UsWest2RegionID:      "113285607260",
 }
 
-// @SDKDataSource("aws_cloudtrail_service_account")
-func DataSourceServiceAccount() *schema.Resource {
+// @SDKDataSource("aws_cloudtrail_service_account", name="Service Account")
+func dataSourceServiceAccount() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceServiceAccountRead,
 
 		Schema: map[string]*schema.Schema{
-			"region": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			names.AttrRegion: {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 		},
 	}
@@ -73,23 +74,24 @@ func DataSourceServiceAccount() *schema.Resource {
 
 func dataSourceServiceAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+
 	region := meta.(*conns.AWSClient).Region
-	if v, ok := d.GetOk("region"); ok {
+	if v, ok := d.GetOk(names.AttrRegion); ok {
 		region = v.(string)
 	}
 
-	if accid, ok := ServiceAccountPerRegionMap[region]; ok {
-		d.SetId(accid)
+	if v, ok := serviceAccountPerRegionMap[region]; ok {
+		d.SetId(v)
 		arn := arn.ARN{
 			Partition: meta.(*conns.AWSClient).Partition,
 			Service:   "iam",
-			AccountID: accid,
+			AccountID: v,
 			Resource:  "root",
 		}.String()
-		d.Set("arn", arn)
+		d.Set(names.AttrARN, arn)
 
 		return diags
 	}
 
-	return sdkdiag.AppendErrorf(diags, "Unknown region (%q)", region)
+	return sdkdiag.AppendErrorf(diags, "unsupported CloudTrail Service Account Region (%s)", region)
 }

@@ -63,4 +63,4 @@ This data source exports the following attributes in addition to the arguments a
 * `thumbprint_list` - List of server certificate thumbprints for the OpenID Connect (OIDC) identity provider's server certificate(s).
 * `tags` - Map of resource tags for the IAM OIDC provider.
 
-<!-- cache-key: cdktf-0.19.0 input-642346d1cceb7b38df3f8226fec2a77e31214afb1bcf46792639e9604b9060a4 -->
+<!-- cache-key: cdktf-0.20.1 input-642346d1cceb7b38df3f8226fec2a77e31214afb1bcf46792639e9604b9060a4 -->

@@ -12,9 +12,9 @@ description: |-
 
 Provides a resource to create a new launch configuration, used for autoscaling groups.
 
-!> **WARNING:** The use of launch configurations is discouraged in favour of launch templates. Read more in the [AWS EC2 Documentation](https://docs.aws.amazon.com/autoscaling/ec2/userguide/launch-configurations.html).
+!> **WARNING:** The use of launch configurations is discouraged in favor of launch templates. Read more in the [AWS EC2 Documentation](https://docs.aws.amazon.com/autoscaling/ec2/userguide/launch-configurations.html).
 
--> **Note** When using `awsLaunchConfiguration` with `awsAutoscalingGroup`, it is recommended to use the `namePrefix` (Optional) instead of the `name` (Optional) attribute. This will allow Terraform lifecycles to detect changes to the launch configuration and update the autoscaling group correctly.
+-> **Note** When using `aws_launch_configuration` with `aws_autoscaling_group`, it is recommended to use the `namePrefix` (Optional) instead of the `name` (Optional) attribute. This will allow Terraform lifecycles to detect changes to the launch configuration and update the autoscaling group correctly.
 
 ## Example Usage
 
@@ -61,7 +61,7 @@ Launch Configurations cannot be updated after creation with the Amazon
 Web Service API. In order to update a Launch Configuration, Terraform will
 destroy the existing resource and create a replacement. In order to effectively
 use a Launch Configuration resource with an [AutoScaling Group resource][1],
-it's recommended to specify `createBeforeDestroy` in a [lifecycle][2] block.
+it's recommended to specify `create_before_destroy` in a [lifecycle][2] block.
 Either omit the Launch Configuration `name` attribute, or specify a partial name
 with `namePrefix`.  Example:
 
@@ -196,21 +196,21 @@ The following arguments are optional:
 * `iamInstanceProfile` - (Optional) The name attribute of the IAM instance profile to associate with launched instances.
 * `keyName` - (Optional) The key name that should be used for the instance.
 * `metadataOptions` - The metadata options for the instance.
-    * `http_endpoint` - The state of the metadata service: `enabled`, `disabled`.
-    * `http_tokens` - If session tokens are required: `optional`, `required`.
-    * `http_put_response_hop_limit` - The desired HTTP PUT response hop limit for instance metadata requests.
-* `name` - (Optional) The name of the launch configuration. If you leave this blank, Terraform will auto-generate a unique name. Conflicts with `name_prefix`.
+    * `httpEndpoint` - The state of the metadata service: `enabled`, `disabled`.
+    * `httpTokens` - If session tokens are required: `optional`, `required`.
+    * `httpPutResponseHopLimit` - The desired HTTP PUT response hop limit for instance metadata requests.
+* `name` - (Optional) The name of the launch configuration. If you leave this blank, Terraform will auto-generate a unique name. Conflicts with `namePrefix`.
 * `namePrefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `securityGroups` - (Optional) A list of associated security group IDS.
 * `placementTenancy` - (Optional) The tenancy of the instance. Valid values are `default` or `dedicated`, see [AWS's Create Launch Configuration](http://docs.aws.amazon.com/AutoScaling/latest/APIReference/API_CreateLaunchConfiguration.html) for more details.
 * `rootBlockDevice` - (Optional) Customize details about the root block device of the instance. See [Block Devices](#block-devices) below for details.
 * `spotPrice` - (Optional; Default: On-demand price) The maximum price to use for reserving spot instances.
-* `userData` - (Optional) The user data to provide when launching the instance. Do not pass gzip-compressed data via this argument; see `user_data_base64` instead.
-* `userDataBase64` - (Optional) Can be used instead of `user_data` to pass base64-encoded binary data directly. Use this instead of `user_data` whenever the value is not a valid UTF-8 string. For example, gzip-encoded user data must be base64-encoded and passed via this argument to avoid corruption.
+* `userData` - (Optional) The user data to provide when launching the instance. Do not pass gzip-compressed data via this argument; see `userDataBase64` instead.
+* `userDataBase64` - (Optional) Can be used instead of `userData` to pass base64-encoded binary data directly. Use this instead of `userData` whenever the value is not a valid UTF-8 string. For example, gzip-encoded user data must be base64-encoded and passed via this argument to avoid corruption.
 
 ## Block devices
 
-Each of the `*BlockDevice` attributes controls a portion of the AWS
+Each of the `*_block_device` attributes controls a portion of the AWS
 Launch Configuration's "Block Device Mapping". It's a good idea to familiarize yourself with [AWS's Block Device
 Mapping docs](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/block-device-mapping-concepts.html)
 to understand the implications of using these attributes.
@@ -219,9 +219,9 @@ Each AWS Instance type has a different set of Instance Store block devices
 available for attachment. AWS [publishes a
 list](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/InstanceStorage.html#StorageOnInstanceTypes)
 of which ephemeral devices are available on each type. The devices are always
-identified by the `virtualName` in the format `ephemeral{0N}`.
+identified by the `virtualName` in the format `ephemeral{0..N}`.
 
-~> **NOTE:** Changes to `*BlockDevice` configuration of _existing_ resources
+~> **NOTE:** Changes to `*_block_device` configuration of _existing_ resources
 cannot currently be detected by Terraform. After updating to block device
 configuration, resource recreation can be manually triggered by using the
 [`taint` command](https://www.terraform.io/docs/commands/taint.html).
@@ -236,7 +236,7 @@ Modifying any of the `ebsBlockDevice` settings requires resource replacement.
 * `volumeSize` - (Optional) The size of the volume in gigabytes.
 * `iops` - (Optional) The amount of provisioned
   [IOPS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html).
-  This must be set with a `volume_type` of `"io1"`.
+  This must be set with a `volumeType` of `"io1"`.
 * `throughput` - (Optional) The throughput (MiBps) to provision for a `gp3` volume.
 * `deleteOnTermination` - (Optional) Whether the volume should be destroyed
   on instance termination (Default: `true`).
@@ -255,7 +255,7 @@ Modifying any of the `ebsBlockDevice` settings requires resource replacement.
 
 * `deleteOnTermination` - (Optional) Whether the volume should be destroyed on instance termination. Defaults to `true`.
 * `encrypted` - (Optional) Whether the volume should be encrypted or not. Defaults to `false`.
-* `iops` - (Optional) The amount of provisioned [IOPS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html). This must be set with a `volume_type` of `io1`.
+* `iops` - (Optional) The amount of provisioned [IOPS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html). This must be set with a `volumeType` of `io1`.
 * `throughput` - (Optional) The throughput (MiBps) to provision for a `gp3` volume.
 * `volumeSize` - (Optional) The size of the volume in gigabytes.
 * `volumeType` - (Optional) The type of volume. Can be `standard`, `gp2`, `gp3`, `st1`, `sc1` or `io1`.
@@ -280,9 +280,19 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { LaunchConfiguration } from "./.gen/providers/aws/launch-configuration";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    LaunchConfiguration.generateConfigForImport(
+      this,
+      "asConf",
+      "terraform-lg-123456"
+    );
   }
 }
 
@@ -294,4 +304,4 @@ Using `terraform import`, import launch configurations using the `name`. For exa
 % terraform import aws_launch_configuration.as_conf terraform-lg-123456
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-1afc8a9c3b0aae557f61ece671e34889248cace0f6b278c49774c6baa830fa60 -->
+<!-- cache-key: cdktf-0.20.1 input-33767c5a9ca1d6412b860039e7d8d73f580cca0d60122a24b3571e1b2da8bb0a -->

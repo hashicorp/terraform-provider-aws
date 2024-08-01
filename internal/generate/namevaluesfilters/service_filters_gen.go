@@ -7,7 +7,6 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	"github.com/aws/aws-sdk-go/service/docdb"
-	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/elasticinference"
 	"github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	"github.com/aws/aws-sdk-go/service/fsx"
@@ -17,7 +16,6 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/resourcegroupstaggingapi"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
-	"github.com/aws/aws-sdk-go/service/secretsmanager"
 )
 
 // []*SERVICE.Filter handling
@@ -78,28 +76,6 @@ func (filters NameValuesFilters) DocDBFilters() []*docdb.Filter {
 
 	for k, v := range m {
 		filter := &docdb.Filter{
-			Name:   aws.String(k),
-			Values: aws.StringSlice(v),
-		}
-
-		result = append(result, filter)
-	}
-
-	return result
-}
-
-// EC2Filters returns ec2 service filters.
-func (filters NameValuesFilters) EC2Filters() []*ec2.Filter {
-	m := filters.Map()
-
-	if len(m) == 0 {
-		return nil
-	}
-
-	result := make([]*ec2.Filter, 0, len(m))
-
-	for k, v := range m {
-		filter := &ec2.Filter{
 			Name:   aws.String(k),
 			Values: aws.StringSlice(v),
 		}
@@ -299,28 +275,6 @@ func (filters NameValuesFilters) Route53resolverFilters() []*route53resolver.Fil
 	for k, v := range m {
 		filter := &route53resolver.Filter{
 			Name:   aws.String(k),
-			Values: aws.StringSlice(v),
-		}
-
-		result = append(result, filter)
-	}
-
-	return result
-}
-
-// SecretsmanagerFilters returns secretsmanager service filters.
-func (filters NameValuesFilters) SecretsmanagerFilters() []*secretsmanager.Filter {
-	m := filters.Map()
-
-	if len(m) == 0 {
-		return nil
-	}
-
-	result := make([]*secretsmanager.Filter, 0, len(m))
-
-	for k, v := range m {
-		filter := &secretsmanager.Filter{
-			Key:    aws.String(k),
 			Values: aws.StringSlice(v),
 		}
 

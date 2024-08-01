@@ -48,74 +48,77 @@ This data source exports the following attributes in addition to the arguments a
 * `advancedOptions` - Key-value string pairs to specify advanced configuration options.
 * `advancedSecurityOptions` - Status of the OpenSearch domain's advanced security options. The block consists of the following attributes:
     * `enabled` - Whether advanced security is enabled.
-    * `internal_user_database_enabled` - Whether the internal user database is enabled.
+    * `internalUserDatabaseEnabled` - Whether the internal user database is enabled.
 * `arn` – ARN of the domain.
 * `autoTuneOptions` - Configuration of the Auto-Tune options of the domain.
-    * `desired_state` - Auto-Tune desired state for the domain.
-    * `maintenance_schedule` - A list of the nested configurations for the Auto-Tune maintenance windows of the domain.
-        * `start_at` - Date and time at which the Auto-Tune maintenance schedule starts in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
+    * `desiredState` - Auto-Tune desired state for the domain.
+    * `maintenanceSchedule` - A list of the nested configurations for the Auto-Tune maintenance windows of the domain.
+        * `startAt` - Date and time at which the Auto-Tune maintenance schedule starts in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
         * `duration` - Configuration block for the duration of the Auto-Tune maintenance window.
             * `value` - Duration of an Auto-Tune maintenance window.
             * `unit` - Unit of time.
-        * `cron_expression_for_recurrence` - Cron expression for an Auto-Tune maintenance schedule.
-    * `rollback_on_disable` - Whether the domain is set to roll back to default Auto-Tune settings when disabling Auto-Tune.
+        * `cronExpressionForRecurrence` - Cron expression for an Auto-Tune maintenance schedule.
+    * `rollbackOnDisable` - Whether the domain is set to roll back to default Auto-Tune settings when disabling Auto-Tune.
+    * `useOffPeakWindow` - Whether to schedule Auto-Tune optimizations that require blue/green deployments during the domain's configured daily off-peak window.
 * `clusterConfig` - Cluster configuration of the domain.
-    * `cold_storage_options` - Configuration block containing cold storage configuration.
+    * `coldStorageOptions` - Configuration block containing cold storage configuration.
         * `enabled` - Indicates  cold storage is enabled.
-    * `instance_type` - Instance type of data nodes in the cluster.
-    * `instance_count` - Number of instances in the cluster.
-    * `dedicated_master_enabled` - Indicates whether dedicated master nodes are enabled for the cluster.
-    * `dedicated_master_type` - Instance type of the dedicated master nodes in the cluster.
-    * `dedicated_master_count` - Number of dedicated master nodes in the cluster.
-    * `zone_awareness_enabled` - Indicates whether zone awareness is enabled.
-    * `zone_awareness_config` - Configuration block containing zone awareness settings.
-        * `availability_zone_count` - Number of availability zones used.
-    * `warm_enabled` - Warm storage is enabled.
-    * `warm_count` - Number of warm nodes in the cluster.
-    * `warm_type` - Instance type for the OpenSearch cluster's warm nodes.
+    * `instanceType` - Instance type of data nodes in the cluster.
+    * `instanceCount` - Number of instances in the cluster.
+    * `dedicatedMasterEnabled` - Indicates whether dedicated master nodes are enabled for the cluster.
+    * `dedicatedMasterType` - Instance type of the dedicated master nodes in the cluster.
+    * `dedicatedMasterCount` - Number of dedicated master nodes in the cluster.
+    * `multiAzWithStandbyEnabled` - Whether a multi-AZ domain is turned on with a standby AZ.
+    * `zoneAwarenessEnabled` - Indicates whether zone awareness is enabled.
+    * `zoneAwarenessConfig` - Configuration block containing zone awareness settings.
+        * `availabilityZoneCount` - Number of availability zones used.
+    * `warmEnabled` - Warm storage is enabled.
+    * `warmCount` - Number of warm nodes in the cluster.
+    * `warmType` - Instance type for the OpenSearch cluster's warm nodes.
 * `cognitoOptions` - Domain Amazon Cognito Authentication options for Dashboard.
     * `enabled` - Whether Amazon Cognito Authentication is enabled.
-    * `user_pool_id` - Cognito User pool used by the domain.
-    * `identity_pool_id` - Cognito Identity pool used by the domain.
-    * `role_arn` - IAM Role with the AmazonOpenSearchServiceCognitoAccess policy attached.
+    * `userPoolId` - Cognito User pool used by the domain.
+    * `identityPoolId` - Cognito Identity pool used by the domain.
+    * `roleArn` - IAM Role with the AmazonOpenSearchServiceCognitoAccess policy attached.
 * `created` – Status of the creation of the domain.
+* `dashboardEndpoint` - Domain-specific endpoint used to access the [Dashboard application](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/dashboards.html).
 * `deleted` – Status of the deletion of the domain.
 * `domainId` – Unique identifier for the domain.
 * `ebsOptions` - EBS Options for the instances in the domain.
-    * `ebs_enabled` - Whether EBS volumes are attached to data nodes in the domain.
+    * `ebsEnabled` - Whether EBS volumes are attached to data nodes in the domain.
     * `throughput` - The throughput (in MiB/s) of the EBS volumes attached to data nodes.
-    * `volume_type` - Type of EBS volumes attached to data nodes.
-    * `volume_size` - Size of EBS volumes attached to data nodes (in GB).
+    * `volumeType` - Type of EBS volumes attached to data nodes.
+    * `volumeSize` - Size of EBS volumes attached to data nodes (in GB).
     * `iops` - Baseline input/output (I/O) performance of EBS volumes attached to data nodes.
 * `engineVersion` – OpenSearch version for the domain.
 * `encryptionAtRest` - Domain encryption at rest related options.
     * `enabled` - Whether encryption at rest is enabled in the domain.
-    * `kms_key_id` - KMS key id used to encrypt data at rest.
+    * `kmsKeyId` - KMS key id used to encrypt data at rest.
 * `endpoint` – Domain-specific endpoint used to submit index, search, and data upload requests.
-* `dashboardEndpoint` - Domain-specific endpoint used to access the [Dashboard application](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/dashboards.html).
-* `kibanaEndpoint` - (**Deprecated**) Domain-specific endpoint for kibana without https scheme. Use the `dashboard_endpoint` attribute instead.
+* `ipAddressType` - Type of IP addresses supported by the endpoint for the domain.
+* `kibanaEndpoint` - (**Deprecated**) Domain-specific endpoint for kibana without https scheme. Use the `dashboardEndpoint` attribute instead.
 * `logPublishingOptions` - Domain log publishing related options.
-    * `log_type` - Type of OpenSearch log being published.
-    * `cloudwatch_log_group_arn` - CloudWatch Log Group where the logs are published.
+    * `logType` - Type of OpenSearch log being published.
+    * `cloudwatchLogGroupArn` - CloudWatch Log Group where the logs are published.
     * `enabled` - Whether log publishing is enabled.
 * `nodeToNodeEncryption` - Domain in transit encryption related options.
     * `enabled` - Whether node to node encryption is enabled.
 * `offPeakWindowOptions` - Off Peak update options
     * `enabled` - Enabled disabled toggle for off-peak update window
-    * `off_peak_window`
-        * `window_start_time` - 10h window for updates
+    * `offPeakWindow`
+        * `windowStartTime` - 10h window for updates
             * `hours` - Starting hour of the 10-hour window for updates
             * `minutes` - Starting minute of the 10-hour window for updates
 * `processing` – Status of a configuration change in the domain.
 * `snapshotOptions` – Domain snapshot related options.
-    * `automated_snapshot_start_hour` - Hour during which the service takes an automated daily snapshot of the indices in the domain.
+    * `automatedSnapshotStartHour` - Hour during which the service takes an automated daily snapshot of the indices in the domain.
 * `softwareUpdateOptions` - Software update options for the domain
-    * `auto_software_update_enabled` - Enabled or disabled.
+    * `autoSoftwareUpdateEnabled` - Enabled or disabled.
 * `tags` - Tags assigned to the domain.
 * `vpcOptions` - VPC Options for private OpenSearch domains.
-    * `availability_zones` - Availability zones used by the domain.
-    * `security_group_ids` - Security groups used by the domain.
-    * `subnet_ids` - Subnets used by the domain.
-    * `vpc_id` - VPC used by the domain.
+    * `availabilityZones` - Availability zones used by the domain.
+    * `securityGroupIds` - Security groups used by the domain.
+    * `subnetIds` - Subnets used by the domain.
+    * `vpcId` - VPC used by the domain.
 
-<!-- cache-key: cdktf-0.19.0 input-4b1000ae383db531a922afd36d146f59e8c9e92158fd3664a1e082f23a890d8d -->
+<!-- cache-key: cdktf-0.20.1 input-9ad96ddccd055a8801cf41664d1bc56b8cf4e140901a238bc44f8b3314f475e2 -->

@@ -12,4 +12,4 @@ description: |-
 
 !> **WARNING:** This data source was removed in version 2.0.0 of the Terraform AWS Provider. You can migrate existing configurations to the [`aws_kms_secrets` data source](/docs/providers/aws/d/kms_secrets.html) following instructions available in the [Version 2 Upgrade Guide](../guides/version-2-upgrade.html#data-source-aws_kms_secret).
 
-<!-- cache-key: cdktf-0.19.0 input-fcfeaaa83a200a1ed43647d46ae1fe5be1d50d9ede7fb6ba139fb2957f734790 -->
+<!-- cache-key: cdktf-0.20.1 input-fcfeaaa83a200a1ed43647d46ae1fe5be1d50d9ede7fb6ba139fb2957f734790 -->

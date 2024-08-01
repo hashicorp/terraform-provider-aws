@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -65,11 +66,11 @@ func ResourceSite() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
@@ -79,13 +80,13 @@ func ResourceSite() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"location": {
+			names.AttrLocation: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"address": {
+						names.AttrAddress: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(0, 256),
@@ -110,6 +111,8 @@ func ResourceSite() *schema.Resource {
 }
 
 func resourceSiteCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID := d.Get("global_network_id").(string)
@@ -118,11 +121,11 @@ func resourceSiteCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		Tags:            getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("location"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrLocation); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Location = expandLocation(v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -130,19 +133,21 @@ func resourceSiteCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	output, err := conn.CreateSiteWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Network Manager Site: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Network Manager Site: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.Site.SiteId))
 
 	if _, err := waitSiteCreated(ctx, conn, globalNetworkID, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for Network Manager Site (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Network Manager Site (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceSiteRead(ctx, d, meta)
+	return append(diags, resourceSiteRead(ctx, d, meta)...)
 }
 
 func resourceSiteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID := d.Get("global_network_id").(string)
@@ -151,41 +156,43 @@ func resourceSiteRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Network Manager Site %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Network Manager Site (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Network Manager Site (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", site.SiteArn)
-	d.Set("description", site.Description)
+	d.Set(names.AttrARN, site.SiteArn)
+	d.Set(names.AttrDescription, site.Description)
 	d.Set("global_network_id", site.GlobalNetworkId)
 	if site.Location != nil {
-		if err := d.Set("location", []interface{}{flattenLocation(site.Location)}); err != nil {
-			return diag.Errorf("setting location: %s", err)
+		if err := d.Set(names.AttrLocation, []interface{}{flattenLocation(site.Location)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting location: %s", err)
 		}
 	} else {
-		d.Set("location", nil)
+		d.Set(names.AttrLocation, nil)
 	}
 
 	setTagsOut(ctx, site.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceSiteUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		globalNetworkID := d.Get("global_network_id").(string)
 		input := &networkmanager.UpdateSiteInput{
-			Description:     aws.String(d.Get("description").(string)),
+			Description:     aws.String(d.Get(names.AttrDescription).(string)),
 			GlobalNetworkId: aws.String(globalNetworkID),
 			SiteId:          aws.String(d.Id()),
 		}
 
-		if v, ok := d.GetOk("location"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if v, ok := d.GetOk(names.AttrLocation); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			input.Location = expandLocation(v.([]interface{})[0].(map[string]interface{}))
 		}
 
@@ -193,18 +200,20 @@ func resourceSiteUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		_, err := conn.UpdateSiteWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating Network Manager Site (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Network Manager Site (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitSiteUpdated(ctx, conn, globalNetworkID, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("waiting for Network Manager Site (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for Network Manager Site (%s) update: %s", d.Id(), err)
 		}
 	}
 
-	return resourceSiteRead(ctx, d, meta)
+	return append(diags, resourceSiteRead(ctx, d, meta)...)
 }
 
 func resourceSiteDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID := d.Get("global_network_id").(string)
@@ -227,18 +236,18 @@ func resourceSiteDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	)
 
 	if globalNetworkIDNotFoundError(err) || tfawserr.ErrCodeEquals(err, networkmanager.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Network Manager Site (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Network Manager Site (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitSiteDeleted(ctx, conn, globalNetworkID, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for Network Manager Site (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Network Manager Site (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindSite(ctx context.Context, conn *networkmanager.NetworkManager, input *networkmanager.GetSitesInput) (*networkmanager.Site, error) {
@@ -392,7 +401,7 @@ func expandLocation(tfMap map[string]interface{}) *networkmanager.Location {
 
 	apiObject := &networkmanager.Location{}
 
-	if v, ok := tfMap["address"].(string); ok {
+	if v, ok := tfMap[names.AttrAddress].(string); ok {
 		apiObject.Address = aws.String(v)
 	}
 
@@ -415,7 +424,7 @@ func flattenLocation(apiObject *networkmanager.Location) map[string]interface{} 
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Address; v != nil {
-		tfMap["address"] = aws.StringValue(v)
+		tfMap[names.AttrAddress] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Latitude; v != nil {

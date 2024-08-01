@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func dataSetIdentifierDeclarationsSchema() *schema.Schema {
@@ -19,8 +20,8 @@ func dataSetIdentifierDeclarationsSchema() *schema.Schema {
 		Required: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"data_set_arn": stringSchema(false, verify.ValidARN),
-				"identifier":   stringSchema(false, validation.StringLenBetween(1, 2048)),
+				"data_set_arn":       stringSchema(false, verify.ValidARN),
+				names.AttrIdentifier: stringSchema(false, validation.StringLenBetween(1, 2048)),
 			},
 		},
 	}
@@ -80,7 +81,7 @@ func expandDataSetIdentifierDeclaration(tfMap map[string]interface{}) *quicksigh
 	if v, ok := tfMap["data_set_arn"].(string); ok && v != "" {
 		identifier.DataSetArn = aws.String(v)
 	}
-	if v, ok := tfMap["identifier"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrIdentifier].(string); ok && v != "" {
 		identifier.Identifier = aws.String(v)
 	}
 
@@ -103,7 +104,7 @@ func flattenDataSetIdentifierDeclarations(apiObject []*quicksight.DataSetIdentif
 			tfMap["data_set_arn"] = aws.StringValue(identifier.DataSetArn)
 		}
 		if identifier.Identifier != nil {
-			tfMap["identifier"] = aws.StringValue(identifier.Identifier)
+			tfMap[names.AttrIdentifier] = aws.StringValue(identifier.Identifier)
 		}
 		tfList = append(tfList, tfMap)
 	}

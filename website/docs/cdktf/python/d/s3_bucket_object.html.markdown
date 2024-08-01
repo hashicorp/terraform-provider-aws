@@ -15,7 +15,7 @@ description: |-
 The S3 object data source allows access to the metadata and
 _optionally_ (see below) content of an object stored inside S3 bucket.
 
-~> **Note:** The content of an object (`body` field) is available only for objects which have a human-readable `Content-Type` (`text/*` and `application/json`). This is to prevent printing unsafe characters and potentially downloading large amount of data which would be thrown away in favour of metadata.
+~> **Note:** The content of an object (`body` field) is available only for objects which have a human-readable `Content-Type` (`text/*` and `application/json`). This is to prevent printing unsafe characters and potentially downloading large amount of data which would be thrown away in favor of metadata.
 
 ## Example Usage
 
@@ -116,4 +116,4 @@ This data source exports the following attributes in addition to the arguments a
 
 -> **Note:** Terraform ignores all leading `/`s in the object's `key` and treats multiple `/`s in the rest of the object's `key` as a single `/`, so values of `/index.html` and `index.html` correspond to the same S3 object as do `first//second///third//` and `first/second/third/`.
 
-<!-- cache-key: cdktf-0.19.0 input-eeace90dfa8946b66ba3858986cd60a6630259121cbd2b07283b6d57a5c252cb -->
+<!-- cache-key: cdktf-0.20.1 input-1c9f93546343cc319f2c016556a9d3d387bb7edadd8094325646d3e0015a6242 -->

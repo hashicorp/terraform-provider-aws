@@ -35,7 +35,7 @@ class MyConvertedCode extends TerraformStack {
     new LightsailInstance(this, "gitlab_test", {
       availabilityZone: "us-east-1b",
       blueprintId: "amazon_linux_2",
-      bundleId: "nano_1_0",
+      bundleId: "nano_3_0",
       keyPairName: "some_key_name",
       name: "custom_gitlab",
       tags: {
@@ -66,7 +66,7 @@ class MyConvertedCode extends TerraformStack {
     new LightsailInstance(this, "custom", {
       availabilityZone: "us-east-1b",
       blueprintId: "amazon_linux_2",
-      bundleId: "nano_1_0",
+      bundleId: "nano_3_0",
       name: "custom",
       userData:
         "sudo yum install -y httpd && sudo systemctl start httpd && sudo systemctl enable httpd && echo '<h1>Deployed via Terraform</h1>' | sudo tee /var/www/html/index.html",
@@ -98,7 +98,7 @@ class MyConvertedCode extends TerraformStack {
       },
       availabilityZone: "us-east-1b",
       blueprintId: "amazon_linux_2",
-      bundleId: "nano_1_0",
+      bundleId: "nano_3_0",
       name: "custom_instance",
       tags: {
         foo: "bar",
@@ -113,17 +113,22 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `name` - (Required) The name of the Lightsail Instance. Names be unique within each AWS Region in your Lightsail account.
-* `availabilityZone` - (Required) The Availability Zone in which to create your
-instance (see list below)
-* `blueprintId` - (Required) The ID for a virtual private server image. A list of available blueprint IDs can be obtained using the AWS CLI command: `aws lightsail get-blueprints`
-* `bundleId` - (Required) The bundle of specification information (see list below)
+* `name` - (Required) The name of the Lightsail Instance. Names must be unique within each AWS Region in your Lightsail account.
+* `availabilityZone` - (Required) The Availability Zone in which to create your instance. A
+  list of available zones can be obtained using the AWS CLI command:
+  [`aws lightsail get-regions --include-availability-zones`](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/lightsail/get-regions.html).
+* `blueprintId` - (Required) The ID for a virtual private server image. A list of available
+  blueprint IDs can be obtained using the AWS CLI command:
+  [`aws lightsail get-blueprints`](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/lightsail/get-blueprints.html).
+* `bundleId` - (Required) The bundle of specification information. A list of available
+  bundle IDs can be obtained using the AWS CLI command:
+  [`aws lightsail get-bundles`](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/lightsail/get-bundles.html).
 * `keyPairName` - (Optional) The name of your key pair. Created in the
 Lightsail console (cannot use `aws_key_pair` at this time)
 * `userData` - (Optional) Single lined launch script as a string to configure server with additional user data
 * `ipAddressType` - (Optional) The IP address type of the Lightsail Instance. Valid Values: `dualstack` | `ipv4`.
 * `addOn` - (Optional) The add on configuration for the instance. [Detailed below](#add_on).
-* `tags` - (Optional) A map of tags to assign to the resource. To create a key-only tag, use an empty string as the value. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. To create a key-only tag, use an empty string as the value. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `addOn`
 
@@ -132,58 +137,6 @@ Defines the add on configuration for the instance. The `addOn` configuration blo
 * `type` - (Required) The add-on type. There is currently only one valid type `AutoSnapshot`.
 * `snapshotTime` - (Required) The daily time when an automatic snapshot will be created. Must be in HH:00 format, and in an hourly increment and specified in Coordinated Universal Time (UTC). The snapshot will be automatically created between the time specified and up to 45 minutes after.
 * `status` - (Required) The status of the add on. Valid Values: `Enabled`, `Disabled`.
-
-## Availability Zones
-
-Lightsail currently supports the following Availability Zones (e.g., `usEast1A`):
-
-- `apNortheast1{a,c,d}`
-- `apNortheast2{a,c}`
-- `apSouth1{a,b}`
-- `apSoutheast1{a,b,c}`
-- `apSoutheast2{a,b,c}`
-- `caCentral1{a,b}`
-- `euCentral1{a,b,c}`
-- `euWest1{a,b,c}`
-- `euWest2{a,b,c}`
-- `euWest3{a,b,c}`
-- `usEast1{a,b,c,d,e,f}`
-- `usEast2{a,b,c}`
-- `usWest2{a,b,c}`
-
-## Bundles
-
-Lightsail currently supports the following Bundle IDs (e.g., an instance in `apNortheast1` would use `small20`):
-
-### Prefix
-
-A Bundle ID starts with one of the below size prefixes:
-
-- `nano`
-- `micro`
-- `small`
-- `medium`
-- `large`
-- `xlarge`
-- `2Xlarge`
-
-### Suffix
-
-A Bundle ID ends with one of the following suffixes depending on Availability Zone:
-
-- ap-northeast-1: `20`
-- ap-northeast-2: `20`
-- ap-south-1: `21`
-- ap-southeast-1: `20`
-- ap-southeast-2: `22`
-- ca-central-1: `20`
-- eu-central-1: `20`
-- eu-west-1: `20`
-- eu-west-2: `20`
-- eu-west-3: `20`
-- us-east-1: `20`
-- us-east-2: `20`
-- us-west-2: `20`
 
 ## Attribute Reference
 
@@ -199,7 +152,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `publicIpAddress` - The public IP address of the instance.
 * `isStaticIp` - A Boolean value indicating whether this instance has a static IP assigned to it.
 * `username` - The user name for connecting to the instance (e.g., ec2-user).
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -209,9 +162,19 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { LightsailInstance } from "./.gen/providers/aws/lightsail-instance";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    LightsailInstance.generateConfigForImport(
+      this,
+      "gitlabTest",
+      "custom_gitlab"
+    );
   }
 }
 
@@ -223,4 +186,4 @@ Using `terraform import`, import Lightsail Instances using their name. For examp
 % terraform import aws_lightsail_instance.gitlab_test 'custom_gitlab'
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-e45f06a6953879f3cfd81982aebd4f0e53550836431aaac4a1538503c4509c48 -->
+<!-- cache-key: cdktf-0.20.1 input-ef6246029fb47439878b12b68e78f6d0a13e30690e470c6653c3c4d65c83bfd2 -->

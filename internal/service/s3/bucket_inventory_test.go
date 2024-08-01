@@ -29,7 +29,7 @@ func TestAccS3BucketInventory_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketInventoryDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -37,20 +37,20 @@ func TestAccS3BucketInventory_basic(t *testing.T) {
 				Config: testAccBucketInventoryConfig_basic(rName, inventoryName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketInventoryExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "bucket", rName),
-					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrBucket, rName),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", "documents/"),
-					resource.TestCheckResourceAttr(resourceName, "name", inventoryName),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, inventoryName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "included_object_versions", "All"),
 
-					resource.TestCheckResourceAttr(resourceName, "optional_fields.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "optional_fields.#", acctest.Ct2),
 
-					resource.TestCheckResourceAttr(resourceName, "schedule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.frequency", "Weekly"),
 
-					resource.TestCheckResourceAttr(resourceName, "destination.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "destination.0.bucket.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "destination.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "destination.0.bucket.#", acctest.Ct1),
 					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, "destination.0.bucket.0.bucket_arn", "s3", rName),
 					acctest.CheckResourceAttrAccountID(resourceName, "destination.0.bucket.0.account_id"),
 					resource.TestCheckResourceAttr(resourceName, "destination.0.bucket.0.format", "ORC"),
@@ -75,7 +75,7 @@ func TestAccS3BucketInventory_encryptWithSSES3(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketInventoryDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -83,7 +83,7 @@ func TestAccS3BucketInventory_encryptWithSSES3(t *testing.T) {
 				Config: testAccBucketInventoryConfig_encryptSSE(rName, inventoryName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketInventoryExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "destination.0.bucket.0.encryption.0.sse_s3.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "destination.0.bucket.0.encryption.0.sse_s3.#", acctest.Ct1),
 				),
 			},
 			{
@@ -104,7 +104,7 @@ func TestAccS3BucketInventory_encryptWithSSEKMS(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketInventoryDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -112,7 +112,7 @@ func TestAccS3BucketInventory_encryptWithSSEKMS(t *testing.T) {
 				Config: testAccBucketInventoryConfig_encryptSSEKMS(rName, inventoryName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketInventoryExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "destination.0.bucket.0.encryption.0.sse_kms.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "destination.0.bucket.0.encryption.0.sse_kms.#", acctest.Ct1),
 					resource.TestMatchResourceAttr(resourceName, "destination.0.bucket.0.encryption.0.sse_kms.0.key_id", regexache.MustCompile(fmt.Sprintf("^arn:%s:kms:", acctest.Partition()))),
 				),
 			},
@@ -120,6 +120,25 @@ func TestAccS3BucketInventory_encryptWithSSEKMS(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccS3BucketInventory_directoryBucket(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	inventoryName := t.Name()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketInventoryDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccBucketInventoryConfig_directoryBucket(rName, inventoryName),
+				ExpectError: regexache.MustCompile(`directory buckets are not supported`),
 			},
 		},
 	})
@@ -282,4 +301,47 @@ resource "aws_s3_bucket_inventory" "test" {
   }
 }
 `, bucketName, inventoryName))
+}
+
+func testAccBucketInventoryConfig_directoryBucket(bucketName, inventoryName string) string {
+	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(bucketName), fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+resource "aws_s3_directory_bucket" "test" {
+  bucket = local.bucket
+
+  location {
+    name = local.location_name
+  }
+}
+
+resource "aws_s3_bucket_inventory" "test" {
+  bucket = aws_s3_directory_bucket.test.id
+  name   = %[1]q
+
+  included_object_versions = "All"
+
+  optional_fields = [
+    "Size",
+    "LastModifiedDate",
+  ]
+
+  filter {
+    prefix = "documents/"
+  }
+
+  schedule {
+    frequency = "Weekly"
+  }
+
+  destination {
+    bucket {
+      format     = "ORC"
+      bucket_arn = aws_s3_directory_bucket.test.arn
+      account_id = data.aws_caller_identity.current.account_id
+      prefix     = "inventory"
+    }
+  }
+}
+`, inventoryName))
 }

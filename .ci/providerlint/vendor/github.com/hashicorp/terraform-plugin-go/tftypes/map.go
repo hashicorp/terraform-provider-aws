@@ -4,6 +4,7 @@
 package tftypes
 
 import (
+	"bytes"
 	"fmt"
 	"sort"
 )
@@ -87,11 +88,17 @@ func (m Map) supportedGoTypes() []string {
 //
 // Deprecated: this is not meant to be called by third-party code.
 func (m Map) MarshalJSON() ([]byte, error) {
-	attributeType, err := m.ElementType.MarshalJSON()
-	if err != nil {
-		return nil, fmt.Errorf("error marshaling tftypes.Map's attribute type %T to JSON: %w", m.ElementType, err)
-	}
-	return []byte(`["map",` + string(attributeType) + `]`), nil
+	var buf bytes.Buffer
+
+	buf.WriteString(`["map",`)
+
+	// MarshalJSON is always error safe
+	elementTypeBytes, _ := m.ElementType.MarshalJSON()
+
+	buf.Write(elementTypeBytes)
+	buf.WriteString(`]`)
+
+	return buf.Bytes(), nil
 }
 
 func valueFromMap(typ Type, in interface{}) (Value, error) {

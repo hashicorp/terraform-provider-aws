@@ -86,105 +86,145 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-This resource supports the following arguments:
+The following arguments are required:
 
-* `capacity` - (Required) Information about the capacity allocated to the connector. See below.
+* `capacity` - (Required) Information about the capacity allocated to the connector. See [`capacity` Block](#capacity-block) for details.
 * `connectorConfiguration` - (Required) A map of keys to values that represent the configuration for the connector.
-* `description` - (Optional) A summary description of the connector.
-* `kafkaCluster` - (Required) Specifies which Apache Kafka cluster to connect to. See below.
-* `kafkaClusterClientAuthentication` - (Required) Details of the client authentication used by the Apache Kafka cluster. See below.
-* `kafkaClusterEncryptionInTransit` - (Required) Details of encryption in transit to the Apache Kafka cluster. See below.
+* `kafkaCluster` - (Required) Specifies which Apache Kafka cluster to connect to. See [`kafkaCluster` Block](#kafka_cluster-block) for details.
+* `kafkaClusterClientAuthentication` - (Required) Details of the client authentication used by the Apache Kafka cluster. See [`kafkaClusterClientAuthentication` Block](#kafka_cluster_client_authentication-block) for details.
+* `kafkaClusterEncryptionInTransit` - (Required) Details of encryption in transit to the Apache Kafka cluster. See [`kafkaClusterEncryptionInTransit` Block](#kafka_cluster_encryption_in_transit-block) for details.
 * `kafkaconnectVersion` - (Required) The version of Kafka Connect. It has to be compatible with both the Apache Kafka cluster's version and the plugins.
-* `logDelivery` - (Optional) Details about log delivery. See below.
 * `name` - (Required) The name of the connector.
-* `plugin` - (Required) Specifies which plugins to use for the connector. See below.
+* `plugin` - (Required) Specifies which plugins to use for the connector. See [`plugin` Block](#plugin-block) for details.
 * `serviceExecutionRoleArn` - (Required) The Amazon Resource Name (ARN) of the IAM role used by the connector to access the Amazon Web Services resources that it needs. The types of resources depends on the logic of the connector. For example, a connector that has Amazon S3 as a destination must have permissions that allow it to write to the S3 destination bucket.
-* `workerConfiguration` - (Optional) Specifies which worker configuration to use with the connector. See below.
 
-### capacity Configuration Block
+The following arguments are optional:
 
-* `autoscaling` - (Optional) Information about the auto scaling parameters for the connector. See below.
-* `provisionedCapacity` - (Optional) Details about a fixed capacity allocated to a connector. See below.
+* `description` - (Optional) A summary description of the connector.
+* `logDelivery` - (Optional) Details about log delivery. See [`logDelivery` Block](#log_delivery-block) for details.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `workerConfiguration` - (Optional) Specifies which worker configuration to use with the connector. See [`workerConfiguration` Block](#worker_configuration-block) for details.
 
-### autoscaling Configuration Block
+### `capacity` Block
+
+The `capacity` configuration block supports the following arguments:
+
+* `autoscaling` - (Optional) Information about the auto scaling parameters for the connector. See [`autoscaling` Block](#autoscaling-block) for details.
+* `provisionedCapacity` - (Optional) Details about a fixed capacity allocated to a connector. See [`provisionedCapacity` Block](#provisioned_capacity-block) for details.
+
+### `autoscaling` Block
+
+The `autoscaling` configuration block supports the following arguments:
 
 * `maxWorkerCount` - (Required) The maximum number of workers allocated to the connector.
 * `mcuCount` - (Optional) The number of microcontroller units (MCUs) allocated to each connector worker. Valid values: `1`, `2`, `4`, `8`. The default value is `1`.
 * `minWorkerCount` - (Required) The minimum number of workers allocated to the connector.
-* `scaleInPolicy` - (Optional) The scale-in policy for the connector. See below.
-* `scaleOutPolicy` - (Optional) The scale-out policy for the connector. See below.
+* `scaleInPolicy` - (Optional) The scale-in policy for the connector. See [`scaleInPolicy` Block](#scale_in_policy-block) for details.
+* `scaleOutPolicy` - (Optional) The scale-out policy for the connector. See [`scaleOutPolicy` Block](#scale_out_policy-block) for details.
 
-### scale_in_policy Configuration Block
+### `scaleInPolicy` Block
+
+The `scaleInPolicy` configuration block supports the following arguments:
 
 * `cpuUtilizationPercentage` - (Required) Specifies the CPU utilization percentage threshold at which you want connector scale in to be triggered.
 
-### scale_out_policy Configuration Block
+### `scaleOutPolicy` Block
+
+The `scaleOutPolicy` configuration block supports the following arguments:
 
 * `cpuUtilizationPercentage` - (Required) The CPU utilization percentage threshold at which you want connector scale out to be triggered.
 
-### provisioned_capacity Configuration Block
+### `provisionedCapacity` Block
+
+The `provisionedCapacity` configuration block supports the following arguments:
 
 * `mcuCount` - (Optional) The number of microcontroller units (MCUs) allocated to each connector worker. Valid values: `1`, `2`, `4`, `8`. The default value is `1`.
 * `workerCount` - (Required) The number of workers that are allocated to the connector.
 
-### kafka_cluster Configuration Block
+### `kafkaCluster` Block
 
-* `apacheKafkaCluster` - (Required) The Apache Kafka cluster to which the connector is connected.
+The `kafkaCluster` configuration block supports the following arguments:
 
-### apache_kafka_cluster Configuration Block
+* `apacheKafkaCluster` - (Required) The Apache Kafka cluster to which the connector is connected. See [`apacheKafkaCluster` Block](#apache_kafka_cluster-block) for details.
+
+### `apacheKafkaCluster` Block
+
+The `apacheKafkaCluster` configuration block supports the following arguments:
 
 * `bootstrapServers` - (Required) The bootstrap servers of the cluster.
-* `vpc` - (Required) Details of an Amazon VPC which has network connectivity to the Apache Kafka cluster.
+* `vpc` - (Required) Details of an Amazon VPC which has network connectivity to the Apache Kafka cluster. See [`vpc` Block](#vpc-block) for details.
 
-### vpc Configuration Block
+### `vpc` Block
+
+The `vpc` configuration block supports the following arguments:
 
 * `securityGroups` - (Required) The security groups for the connector.
 * `subnets` - (Required) The subnets for the connector.
 
-### kafka_cluster_client_authentication Configuration Block
+### `kafkaClusterClientAuthentication` Block
+
+The `kafkaClusterClientAuthentication` configuration block supports the following arguments:
 
 * `authenticationType` - (Optional) The type of client authentication used to connect to the Apache Kafka cluster. Valid values: `IAM`, `NONE`. A value of `NONE` means that no client authentication is used. The default value is `NONE`.
 
-### kafka_cluster_encryption_in_transit Configuration Block
+### `kafkaClusterEncryptionInTransit` Block
+
+The `kafkaClusterEncryptionInTransit` configuration block supports the following arguments:
 
 * `encryptionType` - (Optional) The type of encryption in transit to the Apache Kafka cluster. Valid values: `PLAINTEXT`, `TLS`. The default values is `PLAINTEXT`.
 
-### log_delivery Configuration Block
+### `logDelivery` Block
 
-* `workerLogDelivery` - (Required) The workers can send worker logs to different destination types. This configuration specifies the details of these destinations. See below.
+The `logDelivery` configuration block supports the following arguments:
 
-### worker_log_delivery Configuration Block
+* `workerLogDelivery` - (Required) The workers can send worker logs to different destination types. This configuration specifies the details of these destinations. See [`workerLogDelivery` Block](#worker_log_delivery-block) for details.
 
-* `cloudwatchLogs` - (Optional) Details about delivering logs to Amazon CloudWatch Logs. See below.
-* `firehose` - (Optional) Details about delivering logs to Amazon Kinesis Data Firehose. See below.
-* `s3` - (Optional) Details about delivering logs to Amazon S3. See below.
+### `workerLogDelivery` Block
 
-### cloudwatch_logs Configuration Block
+The `workerLogDelivery` configuration block supports the following arguments:
+
+* `cloudwatchLogs` - (Optional) Details about delivering logs to Amazon CloudWatch Logs. See [`cloudwatchLogs` Block](#cloudwatch_logs-block) for details.
+* `firehose` - (Optional) Details about delivering logs to Amazon Kinesis Data Firehose. See [`firehose` Block](#firehose-block) for details.
+* `s3` - (Optional) Details about delivering logs to Amazon S3. See [`s3` Block](#s3-block) for deetails.
+
+### `cloudwatchLogs` Block
+
+The `cloudwatchLogs` configuration block supports the following arguments:
 
 * `enabled` - (Optional) Whether log delivery to Amazon CloudWatch Logs is enabled.
 * `logGroup` - (Required) The name of the CloudWatch log group that is the destination for log delivery.
 
-### firehose Configuration Block
+### `firehose` Block
+
+The `firehose` configuration block supports the following arguments:
 
 * `deliveryStream` - (Optional) The name of the Kinesis Data Firehose delivery stream that is the destination for log delivery.
 * `enabled` - (Required) Specifies whether connector logs get delivered to Amazon Kinesis Data Firehose.
 
-### s3 Configuration Block
+### `s3` Block
+
+The `s3` configuration block supports the following arguments:
 
 * `bucket` - (Optional) The name of the S3 bucket that is the destination for log delivery.
 * `enabled` - (Required) Specifies whether connector logs get sent to the specified Amazon S3 destination.
 * `prefix` - (Optional) The S3 prefix that is the destination for log delivery.
 
-### plugin Configuration Block
+### `plugin` Block
 
-* `customPlugin` - (Required) Details about a custom plugin. See below.
+The `plugin` configuration block supports the following argumens:
 
-### custom_plugin Configuration Block
+* `customPlugin` - (Required) Details about a custom plugin. See [`customPlugin` Block](#custom_plugin-block) for details.
+
+### `customPlugin` Block
+
+The `customPlugin` configuration block supports the following arguments:
 
 * `arn` - (Required) The Amazon Resource Name (ARN) of the custom plugin.
 * `revision` - (Required) The revision of the custom plugin.
 
-### worker_configuration Configuration Block
+### `workerConfiguration` Block
+
+The `workerConfiguration` configuration block supports the following arguments:
 
 * `arn` - (Required) The Amazon Resource Name (ARN) of the worker configuration.
 * `revision` - (Required) The revision of the worker configuration.
@@ -194,6 +234,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the connector.
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `version` - The current version of the connector.
 
 ## Timeouts
@@ -212,9 +253,19 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { MskconnectConnector } from "./.gen/providers/aws/mskconnect-connector";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    MskconnectConnector.generateConfigForImport(
+      this,
+      "example",
+      "arn:aws:kafkaconnect:eu-central-1:123456789012:connector/example/264edee4-17a3-412e-bd76-6681cfc93805-3"
+    );
   }
 }
 
@@ -226,4 +277,4 @@ Using `terraform import`, import MSK Connect Connector using the connector's `ar
 % terraform import aws_mskconnect_connector.example 'arn:aws:kafkaconnect:eu-central-1:123456789012:connector/example/264edee4-17a3-412e-bd76-6681cfc93805-3'
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-40619f08de26cd7fcad3cf70d7685484652ad1f0806e16438690dce5d953aa3a -->
+<!-- cache-key: cdktf-0.20.1 input-8bf765ae92b4515b183aeeaf6db394f4d9e92daef2b158bdb10a64871f0845b2 -->

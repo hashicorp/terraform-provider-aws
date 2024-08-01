@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfses "github.com/hashicorp/terraform-provider-aws/internal/service/ses"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // Only one SES Receipt RuleSet can be active at a time, so run serially
@@ -25,11 +26,11 @@ func TestAccSESActiveReceiptRuleSet_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"Resource": {
-			"basic":      testAccActiveReceiptRuleSet_basic,
-			"disappears": testAccActiveReceiptRuleSet_disappears,
+			acctest.CtBasic:      testAccActiveReceiptRuleSet_basic,
+			acctest.CtDisappears: testAccActiveReceiptRuleSet_disappears,
 		},
 		"DataSource": {
-			"basic":           testAccActiveReceiptRuleSetDataSource_basic,
+			acctest.CtBasic:   testAccActiveReceiptRuleSetDataSource_basic,
 			"noActiveRuleSet": testAccActiveReceiptRuleSetDataSource_noActiveRuleSet,
 		},
 	}
@@ -48,7 +49,7 @@ func testAccActiveReceiptRuleSet_basic(t *testing.T) {
 			testAccPreCheck(ctx, t)
 			testAccPreCheckReceiptRule(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckActiveReceiptRuleSetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -56,7 +57,7 @@ func testAccActiveReceiptRuleSet_basic(t *testing.T) {
 				Config: testAccActiveReceiptRuleSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckActiveReceiptRuleSetExists(ctx, resourceName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "ses", fmt.Sprintf("receipt-rule-set/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "ses", fmt.Sprintf("receipt-rule-set/%s", rName)),
 				),
 			},
 			{
@@ -79,7 +80,7 @@ func testAccActiveReceiptRuleSet_disappears(t *testing.T) {
 			testAccPreCheck(ctx, t)
 			testAccPreCheckReceiptRule(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckActiveReceiptRuleSetDestroy(ctx),
 		Steps: []resource.TestStep{

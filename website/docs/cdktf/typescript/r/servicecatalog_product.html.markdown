@@ -12,7 +12,7 @@ description: |-
 
 Manages a Service Catalog Product.
 
-~> **NOTE:** The user or role that uses this resources must have the `cloudformation:getTemplate` IAM policy permission. This policy permission is required when using the `templatePhysicalId` argument.
+~> **NOTE:** The user or role that uses this resources must have the `cloudformation:GetTemplate` IAM policy permission. This policy permission is required when using the `templatePhysicalId` argument.
 
 -> A "provisioning artifact" is also referred to as a "version." A "distributor" is also referred to as a "vendor."
 
@@ -55,7 +55,7 @@ The following arguments are required:
 
 * `name` - (Required) Name of the product.
 * `owner` - (Required) Owner of the product.
-* `provisioningArtifactParameters` - (Required) Configuration block for provisioning artifact (i.e., version) parameters. Detailed below.
+* `provisioningArtifactParameters` - (Required) Configuration block for provisioning artifact (i.e., version) parameters. See [`provisioningArtifactParameters` Block](#provisioning_artifact_parameters-block) for details.
 * `type` - (Required) Type of product. See [AWS Docs](https://docs.aws.amazon.com/servicecatalog/latest/dg/API_CreateProduct.html#API_CreateProduct_RequestSyntax) for valid list of values.
 
 The following arguments are optional:
@@ -66,17 +66,17 @@ The following arguments are optional:
 * `supportDescription` - (Optional) Support information about the product.
 * `supportEmail` - (Optional) Contact email for product support.
 * `supportUrl` - (Optional) Contact URL for product support.
-* `tags` - (Optional) Tags to apply to the product. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Tags to apply to the product. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### provisioning_artifact_parameters
+### `provisioningArtifactParameters` Block
 
-This argument supports the following arguments:
+The `provisioningArtifactParameters` configuration block supports the following arguments:
 
 * `description` - (Optional) Description of the provisioning artifact (i.e., version), including how it differs from the previous provisioning artifact.
 * `disableTemplateValidation` - (Optional) Whether AWS Service Catalog stops validating the specified provisioning artifact template even if it is invalid.
 * `name` - (Optional) Name of the provisioning artifact (for example, `v1`, `v2beta`). No spaces are allowed.
-* `templatePhysicalId` - (Required if `template_url` is not provided) Template source as the physical ID of the resource that contains the template. Currently only supports CloudFormation stack ARN. Specify the physical ID as `arn:[partition]:cloudformation:[region]:[account ID]:stack/[stack name]/[resource ID]`.
-* `templateUrl` - (Required if `template_physical_id` is not provided) Template source as URL of the CloudFormation template in Amazon S3.
+* `templatePhysicalId` - (Required if `templateUrl` is not provided) Template source as the physical ID of the resource that contains the template. Currently only supports CloudFormation stack ARN. Specify the physical ID as `arn:[partition]:cloudformation:[region]:[account ID]:stack/[stack name]/[resource ID]`.
+* `templateUrl` - (Required if `templatePhysicalId` is not provided) Template source as URL of the CloudFormation template in Amazon S3.
 * `type` - (Optional) Type of provisioning artifact. See [AWS Docs](https://docs.aws.amazon.com/servicecatalog/latest/dg/API_ProvisioningArtifactProperties.html) for valid list of values.
 
 ## Attribute Reference
@@ -88,7 +88,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `hasDefaultPath` - Whether the product has a default path. If the product does not have a default path, call `ListLaunchPaths` to disambiguate between paths.  Otherwise, `ListLaunchPaths` is not required, and the output of ProductViewSummary can be used directly with `DescribeProvisioningParameters`.
 * `id` - Product ID. For example, `prod-dnigbtea24ste`.
 * `status` - Status of the product.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
@@ -101,24 +101,34 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `awsServicecatalogProduct` using the product ID. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_servicecatalog_product` using the product ID. For example:
 
 ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { ServicecatalogProduct } from "./.gen/providers/aws/servicecatalog-product";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    ServicecatalogProduct.generateConfigForImport(
+      this,
+      "example",
+      "prod-dnigbtea24ste"
+    );
   }
 }
 
 ```
 
-Using `terraform import`, import `awsServicecatalogProduct` using the product ID. For example:
+Using `terraform import`, import `aws_servicecatalog_product` using the product ID. For example:
 
 ```console
 % terraform import aws_servicecatalog_product.example prod-dnigbtea24ste
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-1f4523af61444a389c63a7aa67dc5375eed39f2f4564f496463f6674fac90f74 -->
+<!-- cache-key: cdktf-0.20.1 input-555bf936590705c11ffd58506686ab02acd4f1e772862100e0dcf4858b9f8b7f -->

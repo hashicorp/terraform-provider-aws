@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const customActionsMaxItems = 10
@@ -108,7 +109,7 @@ func tooltipOptionsSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"column":      columnSchema(),                   // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+													"column":      columnSchema(true),               // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 													"aggregation": aggregationFunctionSchema(false), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AggregationFunction.html
 													"label": {
 														Type:     schema.TypeString,
@@ -1911,7 +1912,7 @@ func flattenNumericEqualityDrillDownFilter(apiObject *quicksight.NumericEquality
 		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
 	}
 	if apiObject.Value != nil {
-		tfMap["value"] = aws.Float64Value(apiObject.Value)
+		tfMap[names.AttrValue] = aws.Float64Value(apiObject.Value)
 	}
 
 	return []interface{}{tfMap}

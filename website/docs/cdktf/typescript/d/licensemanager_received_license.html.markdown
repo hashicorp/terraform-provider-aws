@@ -45,7 +45,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `id` - The received license ARN (Same as: `license_arn`).
+* `id` - The received license ARN (Same as: `licenseArn`).
 * `beneficiary` - Granted license beneficiary. This is in the form of the ARN of the root user of the account.
 * `consumptionConfiguration` - Configuration for consumption of the license. [Detailed below](#consumption_configuration)
 * `createTime` - Creation time of the granted license in RFC 3339 format.
@@ -64,28 +64,28 @@ This data source exports the following attributes in addition to the arguments a
 
 ### consumption_configuration
 
-* `borrowConfiguration` - Details about a borrow configuration. [Detailed below](#borrow_configuration)
-* `provisionalConfiguration` - Details about a provisional configuration. [Detailed below](#provisional_configuration)
-* `renewalFrequency` - Renewal frequency.
+* `borrow_configuration` - Details about a borrow configuration. [Detailed below](#borrow_configuration)
+* `provisional_configuration` - Details about a provisional configuration. [Detailed below](#provisional_configuration)
+* `renewal_frequency` - Renewal frequency.
 
 #### borrow_configuration
 
 A list with a single map.
 
-* `allowEarlyCheckIn` - Indicates whether early check-ins are allowed.
-* `maxTimeToLiveInMinutes` - Maximum time for the borrow configuration, in minutes.
+* `allow_early_check_in` - Indicates whether early check-ins are allowed.
+* `max_time_to_live_in_minutes` - Maximum time for the borrow configuration, in minutes.
 
 #### provisional_configuration
 
 A list with a single map.
 
-* `maxTimeToLiveInMinutes` - Maximum time for the provisional configuration, in minutes.
+* `max_time_to_live_in_minutes` - Maximum time for the provisional configuration, in minutes.
 
 ### entitlements
 
 A list with a single map.
 
-* `allowCheckIn` - Indicates whether check-ins are allowed.
+* `allow_check_in` - Indicates whether check-ins are allowed.
 * `maxCount` - Maximum entitlement count. Use if the unit is not None.
 * `name` - Entitlement name.
 * `overage` - Indicates whether overages are allowed.
@@ -98,7 +98,7 @@ A list with a single map.
 
 * `keyFingerprint` - Issuer key fingerprint.
 * `name` - Issuer name.
-* `signKey` - Asymmetric KMS key from AWS Key Management Service. The KMS key must have a key usage of sign and verify, and support the RSASSA-PSS SHA-256 signing algorithm.
+* `sign_key` - Asymmetric KMS key from AWS Key Management Service. The KMS key must have a key usage of sign and verify, and support the RSASSA-PSS SHA-256 signing algorithm.
 
 ### license_metadata
 
@@ -112,8 +112,8 @@ Each metadata item will have the following attributes.
 A list with a single map.
 
 * `allowedOperations` - A list of allowed operations.
-* `receivedStatus` - Received status.
-* `receivedStatusReason` - Received status reason.
+* `received_status` - Received status.
+* `received_status_reason` - Received status reason.
 
 ### validity
 
@@ -122,4 +122,4 @@ A list with a single map.
 * `begin` - Start of the validity time range.
 * `end` - End of the validity time range.
 
-<!-- cache-key: cdktf-0.19.0 input-8e7789e1a13e838a8446f36566c96cb32c65c9068530cd596b7f17f7e9d88382 -->
+<!-- cache-key: cdktf-0.20.1 input-8e7789e1a13e838a8446f36566c96cb32c65c9068530cd596b7f17f7e9d88382 -->
