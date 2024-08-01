@@ -83,7 +83,7 @@ func autoFlattenConvert(ctx context.Context, from, to any, flexer autoFlexer) di
 	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourcePath, sourcePath.String())
 	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetPath, targetPath.String())
 
-	valFrom, valTo, d := autoFlexValues(ctx, from, to)
+	ctx, valFrom, valTo, d := autoFlexValues(ctx, from, to)
 	diags.Append(d...)
 	if diags.HasError() {
 		return diags

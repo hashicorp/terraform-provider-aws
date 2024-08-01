@@ -35,7 +35,7 @@ type autoFlexer interface {
 }
 
 // autoFlexValues returns the underlying `reflect.Value`s of `from` and `to`.
-func autoFlexValues(ctx context.Context, from, to any) (reflect.Value, reflect.Value, diag.Diagnostics) {
+func autoFlexValues(ctx context.Context, from, to any) (context.Context, reflect.Value, reflect.Value, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	valFrom, valTo := reflect.ValueOf(from), reflect.ValueOf(to)
@@ -43,35 +43,36 @@ func autoFlexValues(ctx context.Context, from, to any) (reflect.Value, reflect.V
 		valFrom = valFrom.Elem()
 	}
 
+	var fromType, toType reflect.Type
+	if valFrom.Kind() != reflect.Invalid {
+		fromType = valFrom.Type()
+	}
+	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourceType, fullTypeName(fromType))
+	if valTo.Kind() != reflect.Invalid {
+		toType = valTo.Type()
+	}
+	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetType, fullTypeName(toType))
+
 	kind := valTo.Kind()
 	switch kind {
 	case reflect.Ptr:
 		if valTo.IsNil() {
-			tflog.SubsystemError(ctx, subsystemName, "Target is nil", map[string]any{
-				logAttrKeySourceType: fullTypeName(valFrom.Type()),
-				logAttrKeyTargetType: fullTypeName(valTo.Type()),
-			})
+			tflog.SubsystemError(ctx, subsystemName, "Target is nil")
 			diags.Append(diagConvertingTargetIsNil(valTo.Type()))
-			return reflect.Value{}, reflect.Value{}, diags
+			return ctx, reflect.Value{}, reflect.Value{}, diags
 		}
 		valTo = valTo.Elem()
-		return valFrom, valTo, diags
+		return ctx, valFrom, valTo, diags
 
 	case reflect.Invalid:
-		tflog.SubsystemError(ctx, subsystemName, "Target is nil", map[string]any{
-			logAttrKeySourceType: fullTypeName(valFrom.Type()),
-			logAttrKeyTargetType: fullTypeName(nil),
-		})
+		tflog.SubsystemError(ctx, subsystemName, "Target is nil")
 		diags.Append(diagConvertingTargetIsNil(nil))
-		return reflect.Value{}, reflect.Value{}, diags
+		return ctx, reflect.Value{}, reflect.Value{}, diags
 
 	default:
-		tflog.SubsystemError(ctx, subsystemName, "Target is not a pointer", map[string]any{
-			logAttrKeySourceType: fullTypeName(valFrom.Type()),
-			logAttrKeyTargetType: fullTypeName(valTo.Type()),
-		})
+		tflog.SubsystemError(ctx, subsystemName, "Target is not a pointer")
 		diags.Append(diagConvertingTargetIsNotPointer(valTo.Type()))
-		return reflect.Value{}, reflect.Value{}, diags
+		return ctx, reflect.Value{}, reflect.Value{}, diags
 	}
 }
 
@@ -84,11 +85,9 @@ func autoFlexConvertStruct(ctx context.Context, sourcePath path.Path, from any, 
 	var diags diag.Diagnostics
 
 	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourcePath, sourcePath.String())
-	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourceType, fullTypeName(reflect.TypeOf(from)))
 	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetPath, targetPath.String())
-	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetType, fullTypeName(reflect.TypeOf(to)))
 
-	valFrom, valTo, d := autoFlexValues(ctx, from, to)
+	ctx, valFrom, valTo, d := autoFlexValues(ctx, from, to)
 	diags.Append(d...)
 	if diags.HasError() {
 		return diags
