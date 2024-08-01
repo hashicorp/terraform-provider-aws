@@ -19,6 +19,7 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"is not supported in region",
 		"is not supported for the chosen region",
+		"No available licenses were found",
 	)
 }
 
