@@ -10,8 +10,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -25,7 +25,7 @@ import (
 
 func TestAccRDSOptionGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v rds.OptionGroup
+	var v types.OptionGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_option_group.test"
 
@@ -60,7 +60,7 @@ func TestAccRDSOptionGroup_basic(t *testing.T) {
 
 func TestAccRDSOptionGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v rds.OptionGroup
+	var v types.OptionGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_option_group.test"
 
@@ -84,7 +84,7 @@ func TestAccRDSOptionGroup_disappears(t *testing.T) {
 
 func TestAccRDSOptionGroup_nameGenerated(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v rds.OptionGroup
+	var v types.OptionGroup
 	resourceName := "aws_db_option_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -112,7 +112,7 @@ func TestAccRDSOptionGroup_nameGenerated(t *testing.T) {
 
 func TestAccRDSOptionGroup_namePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v rds.OptionGroup
+	var v types.OptionGroup
 	resourceName := "aws_db_option_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -140,7 +140,7 @@ func TestAccRDSOptionGroup_namePrefix(t *testing.T) {
 
 func TestAccRDSOptionGroup_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var optionGroup1, optionGroup2, optionGroup3 rds.OptionGroup
+	var optionGroup1, optionGroup2, optionGroup3 types.OptionGroup
 	resourceName := "aws_db_option_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -186,7 +186,7 @@ func TestAccRDSOptionGroup_tags(t *testing.T) {
 
 func TestAccRDSOptionGroup_timeoutBlock(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v rds.OptionGroup
+	var v types.OptionGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_option_group.test"
 
@@ -214,7 +214,7 @@ func TestAccRDSOptionGroup_timeoutBlock(t *testing.T) {
 
 func TestAccRDSOptionGroup_optionGroupDescription(t *testing.T) {
 	ctx := acctest.Context(t)
-	var optionGroup1 rds.OptionGroup
+	var optionGroup1 types.OptionGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_option_group.test"
 
@@ -269,7 +269,7 @@ func TestAccRDSOptionGroup_basicDestroyWithInstance(t *testing.T) {
 
 func TestAccRDSOptionGroup_Option_optionSettings(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v rds.OptionGroup
+	var v types.OptionGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_option_group.test"
 
@@ -320,7 +320,7 @@ func TestAccRDSOptionGroup_Option_optionSettings(t *testing.T) {
 
 func TestAccRDSOptionGroup_OptionOptionSettings_iamRole(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v rds.OptionGroup
+	var v types.OptionGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_option_group.test"
 
@@ -350,7 +350,7 @@ func TestAccRDSOptionGroup_OptionOptionSettings_iamRole(t *testing.T) {
 
 func TestAccRDSOptionGroup_sqlServerOptionsUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v rds.OptionGroup
+	var v types.OptionGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_option_group.test"
 
@@ -386,7 +386,7 @@ func TestAccRDSOptionGroup_sqlServerOptionsUpdate(t *testing.T) {
 
 func TestAccRDSOptionGroup_oracleOptionsUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v rds.OptionGroup
+	var v types.OptionGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_option_group.test"
 
@@ -428,7 +428,7 @@ func TestAccRDSOptionGroup_oracleOptionsUpdate(t *testing.T) {
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/1876
 func TestAccRDSOptionGroup_OptionOptionSettings_multipleNonDefault(t *testing.T) {
 	ctx := acctest.Context(t)
-	var optionGroup1, optionGroup2 rds.OptionGroup
+	var optionGroup1, optionGroup2 types.OptionGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_option_group.test"
 
@@ -463,7 +463,7 @@ func TestAccRDSOptionGroup_OptionOptionSettings_multipleNonDefault(t *testing.T)
 
 func TestAccRDSOptionGroup_multipleOptions(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v rds.OptionGroup
+	var v types.OptionGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_option_group.test"
 
@@ -493,7 +493,7 @@ func TestAccRDSOptionGroup_multipleOptions(t *testing.T) {
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/7114
 func TestAccRDSOptionGroup_Tags_withOptions(t *testing.T) {
 	ctx := acctest.Context(t)
-	var optionGroup1, optionGroup2, optionGroup3 rds.OptionGroup
+	var optionGroup1, optionGroup2, optionGroup3 types.OptionGroup
 	resourceName := "aws_db_option_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -543,7 +543,7 @@ func TestAccRDSOptionGroup_Tags_withOptions(t *testing.T) {
 // https://github.com/hashicorp/terraform-provider-aws/issues/21367
 func TestAccRDSOptionGroup_badDiffs(t *testing.T) {
 	ctx := acctest.Context(t)
-	var optionGroup1 rds.OptionGroup
+	var optionGroup1 types.OptionGroup
 	resourceName := "aws_db_option_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -593,7 +593,7 @@ func TestAccRDSOptionGroup_badDiffs(t *testing.T) {
 	})
 }
 
-func testAccCheckOptionGroupOptionSettingsIAMRole(optionGroup *rds.OptionGroup) resource.TestCheckFunc {
+func testAccCheckOptionGroupOptionSettingsIAMRole(optionGroup *types.OptionGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if optionGroup == nil {
 			return errors.New("Option Group does not exist")
@@ -605,12 +605,12 @@ func testAccCheckOptionGroupOptionSettingsIAMRole(optionGroup *rds.OptionGroup) 
 			return errors.New("Option Group does not have any option settings")
 		}
 
-		settingName := aws.StringValue(optionGroup.Options[0].OptionSettings[0].Name)
+		settingName := aws.ToString(optionGroup.Options[0].OptionSettings[0].Name)
 		if settingName != "IAM_ROLE_ARN" {
 			return fmt.Errorf("Expected option setting IAM_ROLE_ARN and received %s", settingName)
 		}
 
-		settingValue := aws.StringValue(optionGroup.Options[0].OptionSettings[0].Value)
+		settingValue := aws.ToString(optionGroup.Options[0].OptionSettings[0].Value)
 		iamArnRegExp := regexache.MustCompile(fmt.Sprintf(`^arn:%s:iam::\d{12}:role/.+`, acctest.Partition()))
 		if !iamArnRegExp.MatchString(settingValue) {
 			return fmt.Errorf("Expected option setting to be a valid IAM role but received %s", settingValue)
@@ -619,7 +619,7 @@ func testAccCheckOptionGroupOptionSettingsIAMRole(optionGroup *rds.OptionGroup) 
 	}
 }
 
-func testAccCheckOptionGroupOptionVersionAttribute(optionGroup *rds.OptionGroup, optionVersion string) resource.TestCheckFunc {
+func testAccCheckOptionGroupOptionVersionAttribute(optionGroup *types.OptionGroup, optionVersion string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if optionGroup == nil {
 			return errors.New("Option Group does not exist")
@@ -627,7 +627,7 @@ func testAccCheckOptionGroupOptionVersionAttribute(optionGroup *rds.OptionGroup,
 		if len(optionGroup.Options) == 0 {
 			return errors.New("Option Group does not have any options")
 		}
-		foundOptionVersion := aws.StringValue(optionGroup.Options[0].OptionVersion)
+		foundOptionVersion := aws.ToString(optionGroup.Options[0].OptionVersion)
 		if foundOptionVersion != optionVersion {
 			return fmt.Errorf("Expected option version %q and received %q", optionVersion, foundOptionVersion)
 		}
@@ -635,14 +635,14 @@ func testAccCheckOptionGroupOptionVersionAttribute(optionGroup *rds.OptionGroup,
 	}
 }
 
-func testAccCheckOptionGroupExists(ctx context.Context, n string, v *rds.OptionGroup) resource.TestCheckFunc {
+func testAccCheckOptionGroupExists(ctx context.Context, n string, v *types.OptionGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
 
 		output, err := tfrds.FindOptionGroupByName(ctx, conn, rs.Primary.ID)
 
@@ -658,7 +658,7 @@ func testAccCheckOptionGroupExists(ctx context.Context, n string, v *rds.OptionG
 
 func testAccCheckOptionGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_db_option_group" {

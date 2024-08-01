@@ -434,7 +434,7 @@ func sweepOptionGroups(region string) error {
 				continue
 			}
 
-			r := ResourceOptionGroup()
+			r := resourceOptionGroup()
 			d := r.Data(nil)
 			d.SetId(name)
 

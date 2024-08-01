@@ -15,6 +15,7 @@ var (
 	ResourceEventSubscription                   = resourceEventSubscription
 	ResourceInstanceAutomatedBackupsReplication = resourceInstanceAutomatedBackupsReplication
 	ResourceInstanceRoleAssociation             = resourceInstanceRoleAssociation
+	ResourceOptionGroup                         = resourceOptionGroup
 	ResourceParameterGroup                      = resourceParameterGroup
 	ResourceProxy                               = resourceProxy
 	ResourceProxyDefaultTargetGroup             = resourceProxyDefaultTargetGroup
@@ -41,6 +42,7 @@ var (
 	FindDefaultCertificate                     = findDefaultCertificate
 	FindDefaultDBProxyTargetGroupByDBProxyName = findDefaultDBProxyTargetGroupByDBProxyName
 	FindEventSubscriptionByID                  = findEventSubscriptionByID
+	FindOptionGroupByName                      = findOptionGroupByName
 	ListTags                                   = listTags
 	NewBlueGreenOrchestrator                   = newBlueGreenOrchestrator
 	ParameterGroupModifyChunk                  = parameterGroupModifyChunk

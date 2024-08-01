@@ -138,7 +138,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "DB Instance IAM Role Association",
 		},
 		{
-			Factory:  ResourceOptionGroup,
+			Factory:  resourceOptionGroup,
 			TypeName: "aws_db_option_group",
 			Name:     "DB Option Group",
 			Tags: &types.ServicePackageResourceTags{
