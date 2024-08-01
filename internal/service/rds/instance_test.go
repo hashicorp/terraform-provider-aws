@@ -1077,7 +1077,7 @@ func TestAccRDSInstance_ReplicateSourceDB_basic(t *testing.T) {
 	})
 }
 
-func TestAccRDSInstance_ReplicateSourceDB_upgrade(t *testing.T) {
+func TestAccRDSInstance_ReplicateSourceDB_upgradeStorageConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -1096,7 +1096,7 @@ func TestAccRDSInstance_ReplicateSourceDB_upgrade(t *testing.T) {
 		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_ReplicateSourceDB_upgrade(rName),
+				Config: testAccInstanceConfig_ReplicateSourceDB_upgradeStorageConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDBInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
 					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
@@ -8779,7 +8779,7 @@ resource "aws_db_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfig_ReplicateSourceDB_upgrade(rName string) string {
+func testAccInstanceConfig_ReplicateSourceDB_upgradeStorageConfig(rName string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_orderableClassMySQL(),
 		fmt.Sprintf(`
