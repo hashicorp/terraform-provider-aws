@@ -114,7 +114,7 @@ func autoFlexConvertStruct(ctx context.Context, sourcePath path.Path, from any, 
 			continue // Skip unexported fields.
 		}
 		fieldName := field.Name
-		if opts.IsIgnoredField(fieldName) {
+		if opts.isIgnoredField(fieldName) {
 			tflog.SubsystemTrace(ctx, subsystemName, "Skipping ignored field", map[string]any{
 				logAttrKeySourceFieldname: fieldName,
 			})
@@ -179,7 +179,7 @@ func findFieldFuzzy(ctx context.Context, fieldNameFrom string, valTo, valFrom re
 			continue // Skip unexported fields.
 		}
 		fieldNameTo := field.Name
-		if opts.IsIgnoredField(fieldNameTo) {
+		if opts.isIgnoredField(fieldNameTo) {
 			continue
 		}
 		if v := valTo.FieldByName(fieldNameTo); v.IsValid() && strings.EqualFold(fieldNameFrom, fieldNameTo) && !fieldExistsInStruct(fieldNameTo, valFrom) {

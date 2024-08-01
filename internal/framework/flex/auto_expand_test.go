@@ -2140,11 +2140,7 @@ func TestExpandOptions(t *testing.T) {
 			},
 		},
 		"include tags with option override": {
-			Options: []AutoFlexOptionsFunc{
-				func(opts *AutoFlexOptions) {
-					opts.SetIgnoredFields([]string{})
-				},
-			},
+			Options: []AutoFlexOptionsFunc{NewIgnoredFieldOptionsFunc([]string{})},
 			Source: &tf01{
 				Field1: types.BoolValue(true),
 				Tags: fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
@@ -2168,11 +2164,7 @@ func TestExpandOptions(t *testing.T) {
 			},
 		},
 		"ignore custom field": {
-			Options: []AutoFlexOptionsFunc{
-				func(opts *AutoFlexOptions) {
-					opts.SetIgnoredFields([]string{"Field1"})
-				},
-			},
+			Options: []AutoFlexOptionsFunc{NewIgnoredFieldOptionsFunc([]string{"Field1"})},
 			Source: &tf01{
 				Field1: types.BoolValue(true),
 				Tags: fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{

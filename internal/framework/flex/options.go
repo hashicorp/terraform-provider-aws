@@ -34,21 +34,27 @@ func NewFieldNamePrefixOptionsFunc(s string) AutoFlexOptionsFunc {
 	}
 }
 
-// AddIgnoredField appends s to the list of ignored field names
-func (o *AutoFlexOptions) AddIgnoredField(s string) {
-	o.ignoredFieldNames = append(o.ignoredFieldNames, s)
-}
-
-// SetIgnoredFields replaces the list of ignored field names
+// NewIgnoredFieldAppendOptionsFunc appends to the list of ignored field names
 //
-// To preseve existing items in the list, use the AddIgnoredField
-// method instead.
-func (o *AutoFlexOptions) SetIgnoredFields(fields []string) {
-	o.ignoredFieldNames = fields
+// Use this option to preserve preexisting items in the ignored fields list.
+func NewIgnoredFieldAppendOptionsFunc(s string) AutoFlexOptionsFunc {
+	return func(o *AutoFlexOptions) {
+		o.ignoredFieldNames = append(o.ignoredFieldNames, s)
+	}
 }
 
-// IsIgnoredField returns true if s is in the list of ignored field names
-func (o *AutoFlexOptions) IsIgnoredField(s string) bool {
+// NewIgnoredFieldOptionsFunc sets the list of ignored field names
+//
+// Use this option to fully overwrite the ignored fields list. To preseve
+// preexisting items, use NewIgnoredFieldAppendOptionsFunc instead.
+func NewIgnoredFieldOptionsFunc(fields []string) AutoFlexOptionsFunc {
+	return func(o *AutoFlexOptions) {
+		o.ignoredFieldNames = fields
+	}
+}
+
+// isIgnoredField returns true if s is in the list of ignored field names
+func (o *AutoFlexOptions) isIgnoredField(s string) bool {
 	for _, name := range o.ignoredFieldNames {
 		if s == name {
 			return true

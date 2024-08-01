@@ -1900,11 +1900,7 @@ func TestFlattenOptions(t *testing.T) {
 			},
 		},
 		"include tags with option override": {
-			Options: []AutoFlexOptionsFunc{
-				func(opts *AutoFlexOptions) {
-					opts.SetIgnoredFields([]string{})
-				},
-			},
+			Options: []AutoFlexOptionsFunc{NewIgnoredFieldOptionsFunc([]string{})},
 			Source: &aws01{
 				Field1: true,
 				Tags:   map[string]string{"foo": "bar"},
@@ -1927,11 +1923,7 @@ func TestFlattenOptions(t *testing.T) {
 			},
 		},
 		"ignore custom field": {
-			Options: []AutoFlexOptionsFunc{
-				func(opts *AutoFlexOptions) {
-					opts.SetIgnoredFields([]string{"Field1"})
-				},
-			},
+			Options: []AutoFlexOptionsFunc{NewIgnoredFieldOptionsFunc([]string{"Field1"})},
 			Source: &aws01{
 				Field1: true,
 				Tags:   map[string]string{"foo": "bar"},
