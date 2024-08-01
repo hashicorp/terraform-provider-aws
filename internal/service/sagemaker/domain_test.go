@@ -1923,8 +1923,8 @@ resource "aws_sagemaker_domain" "test" {
       r_studio_package_manager_url = %[3]q
       domain_execution_role_arn    = aws_iam_role.test.arn
       default_resource_spec {
-        instance_type                 = "system" 
-       }
+        instance_type = "system" 
+      }
     }
   }
 
@@ -1941,8 +1941,8 @@ resource "aws_sagemaker_domain" "test" {
   # it changes for every region
   lifecycle {
     ignore_changes = [ 
-        domain_settings[0].r_studio_server_pro_domain_settings[0].default_resource_spec[0]
-     ]
+      domain_settings[0].r_studio_server_pro_domain_settings[0].default_resource_spec[0]
+    ]
   }
 }
 `, rName, connectURL, packageURL))
