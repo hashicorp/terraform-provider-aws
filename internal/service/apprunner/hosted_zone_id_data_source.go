@@ -48,7 +48,7 @@ func (d *hostedZoneIDDataSource) Schema(ctx context.Context, request datasource.
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
-			"region": schema.StringAttribute{
+			names.AttrRegion: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},

@@ -6,21 +6,25 @@ package waf
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/waf"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/waf"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_waf_web_acl")
-func DataSourceWebACL() *schema.Resource {
+// @SDKDataSource("aws_waf_web_acl", name="Web ACL")
+func dataSourceWebACL() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceWebACLRead,
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -30,40 +34,53 @@ func DataSourceWebACL() *schema.Resource {
 
 func dataSourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn(ctx)
-	name := d.Get("name").(string)
+	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
-	acls := make([]*waf.WebACLSummary, 0)
-	// ListWebACLsInput does not have a name parameter for filtering
+	name := d.Get(names.AttrName).(string)
 	input := &waf.ListWebACLsInput{}
-	for {
-		output, err := conn.ListWebACLsWithContext(ctx, input)
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading web ACLs: %s", err)
+	output, err := findWebACL(ctx, conn, input, func(v *awstypes.WebACLSummary) bool {
+		return aws.ToString(v.Name) == name
+	})
+
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("WAF Web ACL", err))
+	}
+
+	d.SetId(aws.ToString(output.WebACLId))
+
+	return diags
+}
+
+func findWebACL(ctx context.Context, conn *waf.Client, input *waf.ListWebACLsInput, filter tfslices.Predicate[*awstypes.WebACLSummary]) (*awstypes.WebACLSummary, error) {
+	output, err := findWebACLs(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findWebACLs(ctx context.Context, conn *waf.Client, input *waf.ListWebACLsInput, filter tfslices.Predicate[*awstypes.WebACLSummary]) ([]awstypes.WebACLSummary, error) {
+	var output []awstypes.WebACLSummary
+
+	err := listWebACLsPages(ctx, conn, input, func(page *waf.ListWebACLsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
-		for _, acl := range output.WebACLs {
-			if aws.StringValue(acl.Name) == name {
-				acls = append(acls, acl)
+
+		for _, v := range page.WebACLs {
+			if filter(&v) {
+				output = append(output, v)
 			}
 		}
 
-		if output.NextMarker == nil {
-			break
-		}
-		input.NextMarker = output.NextMarker
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
 	}
 
-	if len(acls) == 0 {
-		return sdkdiag.AppendErrorf(diags, "web ACLs not found for name: %s", name)
-	}
-
-	if len(acls) > 1 {
-		return sdkdiag.AppendErrorf(diags, "multiple web ACLs found for name: %s", name)
-	}
-
-	acl := acls[0]
-
-	d.SetId(aws.StringValue(acl.WebACLId))
-
-	return diags
+	return output, nil
 }

@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -258,7 +259,7 @@ func sweepContinuousDeploymentPolicies(region string) error {
 
 		for _, v := range page.ContinuousDeploymentPolicyList.Items {
 			sweepResources = append(sweepResources, framework.NewSweepResource(newContinuousDeploymentPolicyResource, client,
-				framework.NewAttribute("id", aws.ToString(v.ContinuousDeploymentPolicy.Id)),
+				framework.NewAttribute(names.AttrID, aws.ToString(v.ContinuousDeploymentPolicy.Id)),
 			))
 		}
 

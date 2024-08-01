@@ -10,8 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
-	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -240,15 +241,18 @@ func sweepGatewayAssociations(region string) error {
 	// these within the service itself so they can only be found
 	// via AssociatedGatewayId of the EC2 Transit Gateway since the
 	// DirectConnectGatewayId lives in the other account.
-	ec2conn := client.EC2Conn(ctx)
+	ec2conn := client.EC2Client(ctx)
 
-	err = ec2conn.DescribeTransitGatewaysPagesWithContext(ctx, &ec2.DescribeTransitGatewaysInput{}, func(page *ec2.DescribeTransitGatewaysOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := ec2.NewDescribeTransitGatewaysPaginator(ec2conn, &ec2.DescribeTransitGatewaysInput{})
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EC2 Transit Gateways (%s): %w", region, err))
 		}
 
 		for _, transitGateway := range page.TransitGateways {
-			if aws.ToString(transitGateway.State) == ec2.TransitGatewayStateDeleted {
+			if transitGateway.State == ec2types.TransitGatewayStateDeleted {
 				continue
 			}
 
@@ -286,12 +290,6 @@ func sweepGatewayAssociations(region string) error {
 				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Direct Connect Gateway Associations (%s): %w", region, err))
 			}
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EC2 Transit Gateways (%s): %w", region, err))
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)

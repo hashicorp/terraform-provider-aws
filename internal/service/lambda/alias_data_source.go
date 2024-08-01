@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_lambda_alias", Name="Alias")
@@ -19,11 +20,11 @@ func dataSourceAlias() *schema.Resource {
 		ReadWithoutTimeout: dataSourceAliasRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -39,7 +40,7 @@ func dataSourceAlias() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -51,7 +52,7 @@ func dataSourceAliasRead(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
-	output, err := findAliasByTwoPartKey(ctx, conn, d.Get("function_name").(string), d.Get("name").(string))
+	output, err := findAliasByTwoPartKey(ctx, conn, d.Get("function_name").(string), d.Get(names.AttrName).(string))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Lambda Alias: %s", err)
@@ -59,8 +60,8 @@ func dataSourceAliasRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	aliasARN := aws.ToString(output.AliasArn)
 	d.SetId(aliasARN)
-	d.Set("arn", aliasARN)
-	d.Set("description", output.Description)
+	d.Set(names.AttrARN, aliasARN)
+	d.Set(names.AttrDescription, output.Description)
 	d.Set("function_version", output.FunctionVersion)
 	d.Set("invoke_arn", invokeARN(meta.(*conns.AWSClient), aliasARN))
 

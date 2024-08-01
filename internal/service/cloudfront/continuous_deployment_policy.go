@@ -23,6 +23,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource(name="Continuous Deployment Policy")
@@ -42,13 +43,13 @@ func (*continuousDeploymentPolicyResource) Metadata(_ context.Context, request r
 func (r *continuousDeploymentPolicyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"enabled": schema.BoolAttribute{
+			names.AttrEnabled: schema.BoolAttribute{
 				Required: true,
 			},
 			"etag": schema.StringAttribute{
 				Computed: true,
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"last_modified_time": schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
@@ -82,7 +83,7 @@ func (r *continuousDeploymentPolicyResource) Schema(ctx context.Context, request
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"type": schema.StringAttribute{
+						names.AttrType: schema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.ContinuousDeploymentPolicyType](),
 							Required:   true,
 						},
@@ -95,10 +96,10 @@ func (r *continuousDeploymentPolicyResource) Schema(ctx context.Context, request
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"header": schema.StringAttribute{
+									names.AttrHeader: schema.StringAttribute{
 										Required: true,
 									},
-									"value": schema.StringAttribute{
+									names.AttrValue: schema.StringAttribute{
 										Required: true,
 									},
 								},
@@ -111,7 +112,7 @@ func (r *continuousDeploymentPolicyResource) Schema(ctx context.Context, request
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"weight": schema.Float64Attribute{
+									names.AttrWeight: schema.Float64Attribute{
 										Required: true,
 									},
 								},

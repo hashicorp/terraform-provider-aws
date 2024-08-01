@@ -49,7 +49,7 @@ func (d *dataSourceFindingIds) Schema(ctx context.Context, req datasource.Schema
 				Computed:    true,
 				ElementType: types.StringType,
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 		},
 	}
 }

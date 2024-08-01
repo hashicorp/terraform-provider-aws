@@ -38,7 +38,7 @@ func resourceSnapshotSchedule() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -47,17 +47,17 @@ func resourceSnapshotSchedule() *schema.Resource {
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"force_destroy": {
+			names.AttrForceDestroy: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-			"identifier": {
+			names.AttrIdentifier: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -69,7 +69,7 @@ func resourceSnapshotSchedule() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"identifier"},
+				ConflictsWith: []string{names.AttrIdentifier},
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -83,14 +83,14 @@ func resourceSnapshotScheduleCreate(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	identifier := create.Name(d.Get("identifier").(string), d.Get("identifier_prefix").(string))
+	identifier := create.Name(d.Get(names.AttrIdentifier).(string), d.Get("identifier_prefix").(string))
 	input := &redshift.CreateSnapshotScheduleInput{
 		ScheduleIdentifier:  aws.String(identifier),
 		ScheduleDefinitions: flex.ExpandStringSet(d.Get("definitions").(*schema.Set)),
 		Tags:                getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.ScheduleDescription = aws.String(v.(string))
 	}
 
@@ -128,10 +128,10 @@ func resourceSnapshotScheduleRead(ctx context.Context, d *schema.ResourceData, m
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("snapshotschedule:%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("definitions", aws.StringValueSlice(snapshotSchedule.ScheduleDefinitions))
-	d.Set("description", snapshotSchedule.ScheduleDescription)
-	d.Set("identifier", snapshotSchedule.ScheduleIdentifier)
+	d.Set(names.AttrDescription, snapshotSchedule.ScheduleDescription)
+	d.Set(names.AttrIdentifier, snapshotSchedule.ScheduleIdentifier)
 	d.Set("identifier_prefix", create.NamePrefixFromName(aws.StringValue(snapshotSchedule.ScheduleIdentifier)))
 
 	setTagsOut(ctx, snapshotSchedule.Tags)
@@ -163,7 +163,7 @@ func resourceSnapshotScheduleDelete(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	if d.Get("force_destroy").(bool) {
+	if d.Get(names.AttrForceDestroy).(bool) {
 		diags = append(diags, snapshotScheduleDisassociateAll(ctx, conn, d.Id())...)
 
 		if diags.HasError() {

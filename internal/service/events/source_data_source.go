@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_cloudwatch_event_source", name="Source")
@@ -22,7 +23,7 @@ func dataSourceSource() *schema.Resource {
 		ReadWithoutTimeout: dataSourceSourceRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -30,15 +31,15 @@ func dataSourceSource() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -52,7 +53,7 @@ func dataSourceSourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	input := &eventbridge.ListEventSourcesInput{}
 
-	if v, ok := d.GetOk("name_prefix"); ok {
+	if v, ok := d.GetOk(names.AttrNamePrefix); ok {
 		input.NamePrefix = aws.String(v.(string))
 	}
 
@@ -63,10 +64,10 @@ func dataSourceSourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.SetId(aws.ToString(es.Name))
-	d.Set("arn", es.Arn)
+	d.Set(names.AttrARN, es.Arn)
 	d.Set("created_by", es.CreatedBy)
-	d.Set("name", es.Name)
-	d.Set("state", es.State)
+	d.Set(names.AttrName, es.Name)
+	d.Set(names.AttrState, es.State)
 
 	return diags
 }

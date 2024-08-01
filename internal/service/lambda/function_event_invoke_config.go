@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_lambda_function_event_invoke_config", name="Function Event Invoke Config")
@@ -49,7 +50,7 @@ func resourceFunctionEventInvokeConfig() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"destination": {
+									names.AttrDestination: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
@@ -63,7 +64,7 @@ func resourceFunctionEventInvokeConfig() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"destination": {
+									names.AttrDestination: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
@@ -369,7 +370,7 @@ func expandFunctionEventInvokeConfigDestinationConfigOnFailure(tfList []interfac
 
 	onFailure := &awstypes.OnFailure{}
 
-	if v, ok := tfMap["destination"].(string); ok {
+	if v, ok := tfMap[names.AttrDestination].(string); ok {
 		onFailure.Destination = aws.String(v)
 	}
 
@@ -385,7 +386,7 @@ func expandFunctionEventInvokeConfigDestinationConfigOnSuccess(tfList []interfac
 
 	onSuccess := &awstypes.OnSuccess{}
 
-	if v, ok := tfMap["destination"].(string); ok {
+	if v, ok := tfMap[names.AttrDestination].(string); ok {
 		onSuccess.Destination = aws.String(v)
 	}
 
@@ -427,7 +428,7 @@ func flattenFunctionEventInvokeConfigDestinationConfigOnFailure(apiObject *awsty
 	}
 
 	tfMap := map[string]interface{}{
-		"destination": aws.ToString(apiObject.Destination),
+		names.AttrDestination: aws.ToString(apiObject.Destination),
 	}
 
 	return []interface{}{tfMap}
@@ -443,7 +444,7 @@ func flattenFunctionEventInvokeConfigDestinationConfigOnSuccess(apiObject *awsty
 	}
 
 	m := map[string]interface{}{
-		"destination": aws.ToString(apiObject.Destination),
+		names.AttrDestination: aws.ToString(apiObject.Destination),
 	}
 
 	return []interface{}{m}

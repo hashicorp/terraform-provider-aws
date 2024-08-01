@@ -54,18 +54,18 @@ func resourceApp() *schema.Resource {
 				}
 
 				d.SetId(appCreateResourceID(aws.ToString(application.ApplicationId), applicationName))
-				d.Set("name", applicationName)
+				d.Set(names.AttrName, applicationName)
 
 				return []*schema.ResourceData{d}, nil
 			},
 		},
 
 		Schema: map[string]*schema.Schema{
-			"application_id": {
+			names.AttrApplicationID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -84,7 +84,7 @@ func resourceApp() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
@@ -101,7 +101,7 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeployClient(ctx)
 
-	application := d.Get("name").(string)
+	application := d.Get(names.AttrName).(string)
 	input := &codedeploy.CreateApplicationInput{
 		ApplicationName: aws.String(application),
 		ComputePlatform: types.ComputePlatform(d.Get("compute_platform").(string)),
@@ -129,7 +129,7 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface
 	conn := meta.(*conns.AWSClient).DeployClient(ctx)
 
 	application := appParseResourceID(d.Id())
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	if name != "" && application != name {
 		application = name
 	}
@@ -152,7 +152,7 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface
 		d.SetId(appCreateResourceID(aws.ToString(app.ApplicationId), appName))
 	}
 
-	d.Set("application_id", app.ApplicationId)
+	d.Set(names.AttrApplicationID, app.ApplicationId)
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "codedeploy",
@@ -160,11 +160,11 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("application:%s", appName),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("compute_platform", app.ComputePlatform)
 	d.Set("github_account_name", app.GitHubAccountName)
 	d.Set("linked_to_github", app.LinkedToGitHub)
-	d.Set("name", appName)
+	d.Set(names.AttrName, appName)
 
 	return diags
 }
@@ -173,8 +173,8 @@ func resourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeployClient(ctx)
 
-	if d.HasChange("name") {
-		o, n := d.GetChange("name")
+	if d.HasChange(names.AttrName) {
+		o, n := d.GetChange(names.AttrName)
 		input := &codedeploy.UpdateApplicationInput{
 			ApplicationName:    aws.String(o.(string)),
 			NewApplicationName: aws.String(n.(string)),
@@ -196,7 +196,7 @@ func resourceAppDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	log.Printf("[INFO] Deleting CodeDeploy Application: %s", d.Id())
 	_, err := conn.DeleteApplication(ctx, &codedeploy.DeleteApplicationInput{
-		ApplicationName: aws.String(d.Get("name").(string)),
+		ApplicationName: aws.String(d.Get(names.AttrName).(string)),
 	})
 
 	if errs.IsA[*types.ApplicationDoesNotExistException](err) {

@@ -85,16 +85,20 @@ When custom service client configurations are applied, these will be defined in 
     func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*s3_sdkv2.Client, error) {
     	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
     
-    	return s3_sdkv2.NewFromConfig(cfg, func(o *s3_sdkv2.Options) {
-            // ..other configuration..
-    
-    		o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws_sdkv2.RetryerV2), retry_sdkv2.IsErrorRetryableFunc(func(err error) aws_sdkv2.Ternary {
-    			if tfawserr_sdkv2.ErrMessageContains(err, errCodeOperationAborted, "A conflicting conditional operation is currently in progress against this resource. Please try again.") {
-    				return aws_sdkv2.TrueTernary
-    			}
-    			return aws_sdkv2.UnknownTernary // Delegate to configured Retryer.
-    		}))
-    	}), nil
+    	return s3_sdkv2.NewFromConfig(cfg,
+			s3.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+			withBaseEndpoint(config[names.AttrEndpoint].(string)),
+			func(o *s3_sdkv2.Options) {
+				// ..other configuration..
+		
+				o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws_sdkv2.RetryerV2), retry_sdkv2.IsErrorRetryableFunc(func(err error) aws_sdkv2.Ternary {
+					if tfawserr_sdkv2.ErrMessageContains(err, errCodeOperationAborted, "A conflicting conditional operation is currently in progress against this resource. Please try again.") {
+						return aws_sdkv2.TrueTernary
+					}
+					return aws_sdkv2.UnknownTernary // Delegate to configured Retryer.
+				}))
+			},
+		), nil
     }
     ```
 

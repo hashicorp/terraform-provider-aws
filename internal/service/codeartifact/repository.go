@@ -43,15 +43,15 @@ func resourceRepository() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"domain": {
+			names.AttrDomain: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -77,7 +77,7 @@ func resourceRepository() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"status": {
+						names.AttrStatus: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -97,7 +97,7 @@ func resourceRepository() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"repository_name": {
+						names.AttrRepositoryName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -115,12 +115,12 @@ func resourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).CodeArtifactClient(ctx)
 
 	input := &codeartifact.CreateRepositoryInput{
-		Domain:     aws.String(d.Get("domain").(string)),
+		Domain:     aws.String(d.Get(names.AttrDomain).(string)),
 		Repository: aws.String(d.Get("repository").(string)),
 		Tags:       getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -183,9 +183,9 @@ func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	d.Set("administrator_account", repository.AdministratorAccount)
-	d.Set("arn", repository.Arn)
-	d.Set("description", repository.Description)
-	d.Set("domain", repository.DomainName)
+	d.Set(names.AttrARN, repository.Arn)
+	d.Set(names.AttrDescription, repository.Description)
+	d.Set(names.AttrDomain, repository.DomainName)
 	d.Set("domain_owner", repository.DomainOwner)
 	if err := d.Set("external_connections", flattenRepositoryExternalConnectionInfos(repository.ExternalConnections)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting external_connections: %s", err)
@@ -207,15 +207,15 @@ func resourceRepositoryUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if d.HasChanges("description", "upstream") {
+	if d.HasChanges(names.AttrDescription, "upstream") {
 		input := &codeartifact.UpdateRepositoryInput{
 			Domain:      aws.String(domainName),
 			DomainOwner: aws.String(owner),
 			Repository:  aws.String(repositoryName),
 		}
 
-		if d.HasChange("description") {
-			input.Description = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
 		if d.HasChange("upstream") {
@@ -353,7 +353,7 @@ func expandUpstreams(tfList []interface{}) []types.UpstreamRepository {
 
 		apiObject := types.UpstreamRepository{}
 
-		if v, ok := tfMap["repository_name"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrRepositoryName].(string); ok && v != "" {
 			apiObject.RepositoryName = aws.String(v)
 		}
 
@@ -374,7 +374,7 @@ func flattenUpstreamRepositoryInfos(apiObjects []types.UpstreamRepositoryInfo) [
 		tfMap := map[string]interface{}{}
 
 		if v := apiObject.RepositoryName; v != nil {
-			tfMap["repository_name"] = aws.ToString(v)
+			tfMap[names.AttrRepositoryName] = aws.ToString(v)
 		}
 
 		tfList = append(tfList, tfMap)
@@ -393,7 +393,7 @@ func flattenRepositoryExternalConnectionInfos(apiObjects []types.RepositoryExter
 	for _, apiObject := range apiObjects {
 		tfMap := map[string]interface{}{
 			"package_format": apiObject.PackageFormat,
-			"status":         apiObject.Status,
+			names.AttrStatus: apiObject.Status,
 		}
 
 		if v := apiObject.ExternalConnectionName; v != nil {

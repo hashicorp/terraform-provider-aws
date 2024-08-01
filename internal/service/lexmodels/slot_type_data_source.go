@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_lex_slot_type")
@@ -25,11 +26,11 @@ func DataSourceSlotType() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_date": {
+			names.AttrCreatedDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -45,18 +46,18 @@ func DataSourceSlotType() *schema.Resource {
 								Type: schema.TypeString,
 							},
 						},
-						"value": {
+						names.AttrValue: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			"last_updated_date": {
+			names.AttrLastUpdatedDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.All(
@@ -68,7 +69,7 @@ func DataSourceSlotType() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"version": {
+			names.AttrVersion: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  SlotTypeVersionLatest,
@@ -85,8 +86,8 @@ func dataSourceSlotTypeRead(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LexModelsConn(ctx)
 
-	name := d.Get("name").(string)
-	version := d.Get("version").(string)
+	name := d.Get(names.AttrName).(string)
+	version := d.Get(names.AttrVersion).(string)
 	output, err := FindSlotTypeVersionByName(ctx, conn, name, version)
 
 	if err != nil {
@@ -95,13 +96,13 @@ func dataSourceSlotTypeRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.SetId(name)
 	d.Set("checksum", output.Checksum)
-	d.Set("created_date", output.CreatedDate.Format(time.RFC3339))
-	d.Set("description", output.Description)
+	d.Set(names.AttrCreatedDate, output.CreatedDate.Format(time.RFC3339))
+	d.Set(names.AttrDescription, output.Description)
 	d.Set("enumeration_value", flattenEnumerationValues(output.EnumerationValues))
-	d.Set("last_updated_date", output.LastUpdatedDate.Format(time.RFC3339))
-	d.Set("name", output.Name)
+	d.Set(names.AttrLastUpdatedDate, output.LastUpdatedDate.Format(time.RFC3339))
+	d.Set(names.AttrName, output.Name)
 	d.Set("value_selection_strategy", output.ValueSelectionStrategy)
-	d.Set("version", output.Version)
+	d.Set(names.AttrVersion, output.Version)
 
 	return diags
 }

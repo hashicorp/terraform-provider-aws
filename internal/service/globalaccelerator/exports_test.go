@@ -20,4 +20,7 @@ var (
 	FindCustomRoutingListenerByARN      = findCustomRoutingListenerByARN
 	FindEndpointGroupByARN              = findEndpointGroupByARN
 	FindListenerByARN                   = findListenerByARN
+
+	ListenerOrEndpointGroupARNToAcceleratorARN = listenerOrEndpointGroupARNToAcceleratorARN
+	EndpointGroupARNToListenerARN              = endpointGroupARNToListenerARN
 )

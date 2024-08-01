@@ -32,7 +32,7 @@ func DataSourceClusters() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": namevaluesfilters.Schema(),
+			names.AttrFilter: namevaluesfilters.Schema(),
 		},
 	}
 }
@@ -42,11 +42,12 @@ const (
 )
 
 func dataSourceClustersRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	input := &rds.DescribeDBClustersInput{}
 
-	if v, ok := d.GetOk("filter"); ok {
+	if v, ok := d.GetOk(names.AttrFilter); ok {
 		input.Filters = namevaluesfilters.New(v.(*schema.Set)).RDSFilters()
 	}
 
@@ -70,12 +71,12 @@ func dataSourceClustersRead(ctx context.Context, d *schema.ResourceData, meta in
 		return !lastPage
 	})
 	if err != nil {
-		return create.DiagError(names.RDS, create.ErrActionReading, DSNameClusters, "", err)
+		return create.AppendDiagError(diags, names.RDS, create.ErrActionReading, DSNameClusters, "", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
 	d.Set("cluster_arns", clusterArns)
 	d.Set("cluster_identifiers", clusterIdentifiers)
 
-	return nil
+	return diags
 }

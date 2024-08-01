@@ -54,7 +54,7 @@ func (r *keyValueStoreResource) Schema(ctx context.Context, request resource.Sch
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			"comment": schema.StringAttribute{
+			names.AttrComment: schema.StringAttribute{
 				Optional: true,
 			},
 			"etag": schema.StringAttribute{
