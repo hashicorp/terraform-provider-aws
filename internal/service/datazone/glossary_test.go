@@ -61,11 +61,10 @@ func TestAccDataZoneGlossary_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateIdFunc:       testAccAuthorizerGlossaryImportStateIdFunc(resourceName),
-				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccAuthorizerGlossaryImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -107,11 +106,10 @@ func TestAccDataZoneGlossary_update(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateIdFunc:       testAccAuthorizerGlossaryImportStateIdFunc(resourceName),
-				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccAuthorizerGlossaryImportStateIdFunc(resourceName),
 			},
 			{
 				Config: testAccGlossaryConfig_update(rName, token, pName, dName),
@@ -127,11 +125,10 @@ func TestAccDataZoneGlossary_update(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateIdFunc:       testAccAuthorizerGlossaryImportStateIdFunc(resourceName),
-				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccAuthorizerGlossaryImportStateIdFunc(resourceName),
 			},
 		},
 	})
