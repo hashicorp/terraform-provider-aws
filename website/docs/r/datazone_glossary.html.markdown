@@ -74,7 +74,6 @@ resource "aws_datazone_project" "test" {
 
 
 resource "aws_datazone_glossary" "test" {
-  client_token              = "example_token"
   description               = "description"
   name                      = "example_name"
   owning_project_identifier = aws_datazone_project.test.id

@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -59,12 +60,10 @@ func (r *resourceGlossary) Schema(ctx context.Context, req resource.SchemaReques
 					stringvalidator.LengthBetween(1, 128),
 				},
 			},
-			names.AttrName: schema.StringAttribute{
+			"domain_identifier": schema.StringAttribute{
 				Required: true,
-				Validators: []validator.String{
-					stringvalidator.LengthBetween(1, 256),
-				},
 			},
+			names.AttrID: framework.IDAttribute(),
 			"owning_project_identifier": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
@@ -74,14 +73,16 @@ func (r *resourceGlossary) Schema(ctx context.Context, req resource.SchemaReques
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			names.AttrName: schema.StringAttribute{
+				Required: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 256),
+				},
+			},
 			names.AttrStatus: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.GlossaryStatus](),
 				Optional:   true,
 			},
-			"domain_identifier": schema.StringAttribute{
-				Required: true,
-			},
-			names.AttrID: framework.IDAttribute(),
 		},
 	}
 }
@@ -135,10 +136,10 @@ func (r *resourceGlossary) Read(ctx context.Context, req resource.ReadRequest, r
 
 	out, err := findGlossaryByID(ctx, conn, state.Id.ValueString(), state.DomainIdentifier.ValueString())
 	if tfresource.NotFound(err) {
+		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
-
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.DataZone, create.ErrActionSetting, ResNameProject, state.Id.String(), err),
