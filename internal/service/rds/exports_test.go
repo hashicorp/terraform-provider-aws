@@ -14,6 +14,7 @@ var (
 	ResourceCustomDBEngineVersion               = resourceCustomDBEngineVersion
 	ResourceEventSubscription                   = resourceEventSubscription
 	ResourceInstanceAutomatedBackupsReplication = resourceInstanceAutomatedBackupsReplication
+	ResourceInstanceRoleAssociation             = resourceInstanceRoleAssociation
 	ResourceParameterGroup                      = resourceParameterGroup
 	ResourceProxy                               = resourceProxy
 	ResourceProxyDefaultTargetGroup             = resourceProxyDefaultTargetGroup
@@ -30,6 +31,7 @@ var (
 	FindDBClusterSnapshotByID                  = findDBClusterSnapshotByID
 	FindDBInstanceAutomatedBackupByARN         = findDBInstanceAutomatedBackupByARN
 	FindDBInstanceByID                         = findDBInstanceByIDSDKv1
+	FindDBInstanceRoleByTwoPartKey             = findDBInstanceRoleByTwoPartKey
 	FindDBParameterGroupByName                 = findDBParameterGroupByName
 	FindDBProxyByName                          = findDBProxyByName
 	FindDBProxyEndpointByTwoPartKey            = findDBProxyEndpointByTwoPartKey
