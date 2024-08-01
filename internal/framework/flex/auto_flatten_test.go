@@ -92,24 +92,26 @@ func TestFlatten(t *testing.T) {
 				infoFlattening(reflect.TypeFor[TestFlex00](), reflect.TypeFor[int]()),
 			},
 		},
-		"non-struct Source": {
+		"non-struct Source struct Target": {
 			Source: testString,
 			Target: &TestFlex00{},
 			expectedDiags: diag.Diagnostics{
-				diag.NewErrorDiagnostic("AutoFlEx", "does not implement attr.Value: struct"),
+				diagFlatteningTargetDoesNotImplementAttrValue(reflect.TypeFor[TestFlex00]()),
 			},
 			expectedLogLines: []map[string]any{
 				infoFlattening(reflect.TypeFor[string](), reflect.TypeFor[*TestFlex00]()),
+				errorTargetDoesNotImplementAttrValue("", reflect.TypeFor[string](), "", reflect.TypeFor[TestFlex00]()),
 			},
 		},
-		"non-struct Target": {
+		"struct Source non-struct Target": {
 			Source: TestFlex00{},
 			Target: &testString,
 			expectedDiags: diag.Diagnostics{
-				diag.NewErrorDiagnostic("AutoFlEx", "does not implement attr.Value: string"),
+				diagFlatteningTargetDoesNotImplementAttrValue(reflect.TypeFor[string]()),
 			},
 			expectedLogLines: []map[string]any{
 				infoFlattening(reflect.TypeFor[TestFlex00](), reflect.TypeFor[*string]()),
+				errorTargetDoesNotImplementAttrValue("", reflect.TypeFor[TestFlex00](), "", reflect.TypeFor[string]()),
 			},
 		},
 		"json interface Source string Target": {
@@ -182,16 +184,17 @@ func TestFlatten(t *testing.T) {
 				debugNoCorrespondingField(reflect.TypeFor[*TestFlexAWS01](), "Field1", reflect.TypeFor[*TestFlex00]()),
 			},
 		},
-		"does not implement attr.Value Target": {
+		"target field does not implement attr.Value Target": {
 			Source: &TestFlexAWS01{Field1: "a"},
 			Target: &TestFlexAWS01{},
 			expectedDiags: diag.Diagnostics{
-				diag.NewErrorDiagnostic("AutoFlEx", "does not implement attr.Value: string"),
+				diagFlatteningTargetDoesNotImplementAttrValue(reflect.TypeFor[string]()),
 			},
 			expectedLogLines: []map[string]any{
 				infoFlattening(reflect.TypeFor[*TestFlexAWS01](), reflect.TypeFor[*TestFlexAWS01]()),
 				infoConverting(reflect.TypeFor[TestFlexAWS01](), reflect.TypeFor[TestFlexAWS01]()),
 				traceMatchedFields("Field1", reflect.TypeFor[*TestFlexAWS01](), "Field1", reflect.TypeFor[*TestFlexAWS01]()),
+				errorTargetDoesNotImplementAttrValue("Field1", reflect.TypeFor[string](), "Field1", reflect.TypeFor[string]()),
 			},
 		},
 		"single empty string Source and single string Target": {

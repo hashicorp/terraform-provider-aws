@@ -87,7 +87,7 @@ func TestExpand(t *testing.T) {
 				infoExpanding(reflect.TypeFor[TestFlex00](), reflect.TypeFor[int]()),
 			},
 		},
-		"non-struct Source": {
+		"non-struct Source struct Target": {
 			Source: testString,
 			Target: &TestFlex00{},
 			expectedDiags: diag.Diagnostics{
@@ -99,9 +99,7 @@ func TestExpand(t *testing.T) {
 				errorSourceDoesNotImplementAttrValue("", reflect.TypeFor[string](), "", reflect.TypeFor[TestFlex00]()),
 			},
 		},
-		// FIXME: This test does not check the target, becuase the source causes the failure
-		// https://github.com/hashicorp/terraform-provider-aws/issues/38645
-		"non-struct Target": {
+		"struct Source non-struct Target": {
 			Source: TestFlex00{},
 			Target: &testString,
 			expectedDiags: diag.Diagnostics{
@@ -150,7 +148,7 @@ func TestExpand(t *testing.T) {
 				debugNoCorrespondingField(reflect.TypeFor[*TestFlexTF01](), "Field1", reflect.TypeFor[*TestFlex00]()),
 			},
 		},
-		"does not implement attr.Value Source": {
+		"source field does not implement attr.Value Source": {
 			Source: &TestFlexAWS01{Field1: "a"},
 			Target: &TestFlexAWS01{},
 			expectedDiags: diag.Diagnostics{

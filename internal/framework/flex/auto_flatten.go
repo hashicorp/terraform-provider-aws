@@ -113,24 +113,25 @@ func (flattener autoFlattener) convert(ctx context.Context, sourcePath path.Path
 	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourcePath, sourcePath.String())
 	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetPath, targetPath.String())
 
-	valTo, ok := vTo.Interface().(attr.Value)
-	if !ok {
-		// Check for `nil` (i.e. Kind == Invalid) here, because primitive types can be `nil`
-		if vFrom.Kind() == reflect.Invalid {
-			diags.AddError("AutoFlEx", "Cannot flatten nil source")
-			return diags
-		}
-
-		diags.AddError("AutoFlEx", fmt.Sprintf("does not implement attr.Value: %s", vTo.Kind()))
-		return diags
-	}
-
 	if vFrom.Kind() == reflect.Invalid {
 		ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourceType, fullTypeName(nil))
 	} else {
 		ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourceType, fullTypeName(vFrom.Type()))
 	}
 	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetType, fullTypeName(vTo.Type()))
+
+	valTo, ok := vTo.Interface().(attr.Value)
+	if !ok {
+		// Check for `nil` (i.e. Kind == Invalid) here, because we allow primitive types to be `nil`
+		if vFrom.Kind() == reflect.Invalid {
+			diags.AddError("AutoFlEx", "Cannot flatten nil source")
+			return diags
+		}
+
+		tflog.SubsystemError(ctx, subsystemName, "Target does not implement attr.Value")
+		diags.Append(diagFlatteningTargetDoesNotImplementAttrValue(reflect.TypeOf(vTo.Interface())))
+		return diags
+	}
 
 	tflog.SubsystemInfo(ctx, subsystemName, "Converting")
 
@@ -1254,4 +1255,14 @@ func flattenPrePopulate(ctx context.Context, toVal reflect.Value) diag.Diagnosti
 	}
 
 	return diags
+}
+
+func diagFlatteningTargetDoesNotImplementAttrValue(targetType reflect.Type) diag.ErrorDiagnostic {
+	return diag.NewErrorDiagnostic(
+		"Incompatible Types",
+		"An unexpected error occurred while flattening configuration. "+
+			"This is always an error in the provider. "+
+			"Please report the following to the provider developer:\n\n"+
+			fmt.Sprintf("Target type %q does not implement attr.Value", fullTypeName(targetType)),
+	)
 }
