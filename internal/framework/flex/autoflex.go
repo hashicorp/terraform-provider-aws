@@ -47,14 +47,22 @@ func autoFlexValues(ctx context.Context, from, to any) (reflect.Value, reflect.V
 	switch kind {
 	case reflect.Ptr:
 		if valTo.IsNil() {
-			diags.AddError("AutoFlEx", "Target cannot be nil")
+			tflog.SubsystemError(ctx, subsystemName, "Target is nil", map[string]any{
+				logAttrKeySourceType: fullTypeName(valFrom.Type()),
+				logAttrKeyTargetType: fullTypeName(valTo.Type()),
+			})
+			diags.Append(diagConvertingTargetIsNil(valTo.Type()))
 			return reflect.Value{}, reflect.Value{}, diags
 		}
 		valTo = valTo.Elem()
 		return valFrom, valTo, diags
 
 	case reflect.Invalid:
-		diags.AddError("AutoFlEx", "Target cannot be nil")
+		tflog.SubsystemError(ctx, subsystemName, "Target is nil", map[string]any{
+			logAttrKeySourceType: fullTypeName(valFrom.Type()),
+			logAttrKeyTargetType: fullTypeName(nil),
+		})
+		diags.Append(diagConvertingTargetIsNil(nil))
 		return reflect.Value{}, reflect.Value{}, diags
 
 	default:
@@ -248,6 +256,16 @@ type valueWithElementsAs interface {
 
 	Elements() []attr.Value
 	ElementsAs(context.Context, any, bool) diag.Diagnostics
+}
+
+func diagConvertingTargetIsNil(targetType reflect.Type) diag.ErrorDiagnostic {
+	return diag.NewErrorDiagnostic(
+		"Incompatible Types",
+		"An unexpected error occurred while converting configuration. "+
+			"This is always an error in the provider. "+
+			"Please report the following to the provider developer:\n\n"+
+			fmt.Sprintf("Target of type %q is nil", fullTypeName(targetType)),
+	)
 }
 
 func diagConvertingTargetIsNotPointer(targetType reflect.Type) diag.ErrorDiagnostic {

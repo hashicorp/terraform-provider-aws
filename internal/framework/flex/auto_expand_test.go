@@ -61,20 +61,22 @@ func TestExpand(t *testing.T) {
 		"nil Target": {
 			Source: TestFlex00{},
 			expectedDiags: diag.Diagnostics{
-				diag.NewErrorDiagnostic("AutoFlEx", "Target cannot be nil"),
+				diagConvertingTargetIsNil(nil),
 			},
 			expectedLogLines: []map[string]any{
 				infoExpanding(reflect.TypeFor[TestFlex00](), nil),
+				errorTargetIsNil("", reflect.TypeFor[TestFlex00](), "", nil),
 			},
 		},
 		"typed nil Target": {
 			Source: TestFlex00{},
 			Target: typedNilTarget,
 			expectedDiags: diag.Diagnostics{
-				diag.NewErrorDiagnostic("AutoFlEx", "Target cannot be nil"),
+				diagConvertingTargetIsNil(reflect.TypeFor[*TestFlex00]()),
 			},
 			expectedLogLines: []map[string]any{
 				infoExpanding(reflect.TypeFor[TestFlex00](), reflect.TypeFor[*TestFlex00]()),
+				errorTargetIsNil("", reflect.TypeFor[TestFlex00](), "", reflect.TypeFor[*TestFlex00]()),
 			},
 		},
 		"non-pointer Target": {

@@ -121,11 +121,6 @@ func (expander autoExpander) convert(ctx context.Context, sourcePath path.Path, 
 		return diags
 	}
 
-	if vTo.Kind() == reflect.Invalid {
-		diags.AddError("AutoFlEx", "Cannot expand into nil target")
-		return diags
-	}
-
 	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourceType, fullTypeName(valFrom.Type()))
 	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetType, fullTypeName(vTo.Type()))
 
