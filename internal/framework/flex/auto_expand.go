@@ -146,7 +146,7 @@ func (expander autoExpander) convert(ctx context.Context, sourcePath path.Path, 
 	vFrom, ok := valFrom.Interface().(attr.Value)
 	if !ok {
 		tflog.SubsystemError(ctx, subsystemName, "Source does not implement attr.Value")
-		diags.Append(diagSourceDoesNotImplementAttrValue(reflect.TypeOf(valFrom.Interface())))
+		diags.Append(diagExpandingSourceDoesNotImplementAttrValue(reflect.TypeOf(valFrom.Interface())))
 		return diags
 	}
 
@@ -1158,7 +1158,7 @@ func diagCannotBeAssigned(expandedType, targetType reflect.Type) diag.ErrorDiagn
 	)
 }
 
-func diagSourceDoesNotImplementAttrValue(sourceType reflect.Type) diag.ErrorDiagnostic {
+func diagExpandingSourceDoesNotImplementAttrValue(sourceType reflect.Type) diag.ErrorDiagnostic {
 	return diag.NewErrorDiagnostic(
 		"Incompatible Types",
 		"An unexpected error occurred while expanding configuration. "+

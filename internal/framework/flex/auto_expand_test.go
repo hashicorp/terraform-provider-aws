@@ -91,7 +91,7 @@ func TestExpand(t *testing.T) {
 			Source: testString,
 			Target: &TestFlex00{},
 			expectedDiags: diag.Diagnostics{
-				diagSourceDoesNotImplementAttrValue(reflect.TypeFor[string]()),
+				diagExpandingSourceDoesNotImplementAttrValue(reflect.TypeFor[string]()),
 			},
 			expectedLogLines: []map[string]any{
 				infoExpanding(reflect.TypeFor[string](), reflect.TypeFor[*TestFlex00]()),
@@ -99,11 +99,13 @@ func TestExpand(t *testing.T) {
 				errorSourceDoesNotImplementAttrValue("", reflect.TypeFor[string](), "", reflect.TypeFor[TestFlex00]()),
 			},
 		},
+		// FIXME: This test does not check the target, becuase the source causes the failure
+		// https://github.com/hashicorp/terraform-provider-aws/issues/38645
 		"non-struct Target": {
 			Source: TestFlex00{},
 			Target: &testString,
 			expectedDiags: diag.Diagnostics{
-				diagSourceDoesNotImplementAttrValue(reflect.TypeFor[TestFlex00]()),
+				diagExpandingSourceDoesNotImplementAttrValue(reflect.TypeFor[TestFlex00]()),
 			},
 			expectedLogLines: []map[string]any{
 				infoExpanding(reflect.TypeFor[TestFlex00](), reflect.TypeFor[*string]()),
@@ -152,7 +154,7 @@ func TestExpand(t *testing.T) {
 			Source: &TestFlexAWS01{Field1: "a"},
 			Target: &TestFlexAWS01{},
 			expectedDiags: diag.Diagnostics{
-				diagSourceDoesNotImplementAttrValue(reflect.TypeFor[string]()),
+				diagExpandingSourceDoesNotImplementAttrValue(reflect.TypeFor[string]()),
 			},
 			expectedLogLines: []map[string]any{
 				infoExpanding(reflect.TypeFor[*TestFlexAWS01](), reflect.TypeFor[*TestFlexAWS01]()),
