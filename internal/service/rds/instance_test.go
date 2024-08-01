@@ -1101,7 +1101,7 @@ func TestAccRDSInstance_ReplicateSourceDB_upgradeStorageConfig(t *testing.T) {
 					testAccCheckDBInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
 					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "upgrade_storage_config", "true"),
+					resource.TestCheckResourceAttr(resourceName, "upgrade_storage_config", acctest.CtTrue),
 				),
 			},
 		},
