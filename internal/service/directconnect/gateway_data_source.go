@@ -26,11 +26,11 @@ func DataSourceGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"owner_account_id": {
+			names.AttrOwnerAccountID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -41,7 +41,7 @@ func DataSourceGateway() *schema.Resource {
 func dataSourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 
 	gateways := make([]awstypes.DirectConnectGateway, 0)
 	// DescribeDirectConnectGatewaysInput does not have a name parameter for filtering
@@ -74,7 +74,7 @@ func dataSourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.SetId(aws.ToString(gateway.DirectConnectGatewayId))
 	d.Set("amazon_side_asn", strconv.FormatInt(aws.ToInt64(gateway.AmazonSideAsn), 10))
-	d.Set("owner_account_id", gateway.OwnerAccount)
+	d.Set(names.AttrOwnerAccountID, gateway.OwnerAccount)
 
 	return diags
 }

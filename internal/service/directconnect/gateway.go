@@ -40,11 +40,11 @@ func ResourceGateway() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAmazonSideASN,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"owner_account_id": {
+			names.AttrOwnerAccountID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -61,7 +61,7 @@ func resourceGatewayCreate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &directconnect.CreateDirectConnectGatewayInput{
 		DirectConnectGatewayName: aws.String(name),
 	}
@@ -103,8 +103,8 @@ func resourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	d.Set("amazon_side_asn", strconv.FormatInt(aws.ToInt64(output.AmazonSideAsn), 10))
-	d.Set("name", output.DirectConnectGatewayName)
-	d.Set("owner_account_id", output.OwnerAccount)
+	d.Set(names.AttrName, output.DirectConnectGatewayName)
+	d.Set(names.AttrOwnerAccountID, output.OwnerAccount)
 
 	return diags
 }
@@ -113,10 +113,10 @@ func resourceGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
-	if d.HasChange("name") {
+	if d.HasChange(names.AttrName) {
 		input := &directconnect.UpdateDirectConnectGatewayInput{
 			DirectConnectGatewayId:      aws.String(d.Id()),
-			NewDirectConnectGatewayName: aws.String(d.Get("name").(string)),
+			NewDirectConnectGatewayName: aws.String(d.Get(names.AttrName).(string)),
 		}
 
 		_, err := conn.UpdateDirectConnectGateway(ctx, input)

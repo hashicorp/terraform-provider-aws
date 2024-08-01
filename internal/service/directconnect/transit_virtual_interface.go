@@ -54,7 +54,7 @@ func ResourceTransitVirtualInterface() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -73,7 +73,7 @@ func ResourceTransitVirtualInterface() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"connection_id": {
+			names.AttrConnectionID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -99,7 +99,7 @@ func ResourceTransitVirtualInterface() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IntInSlice([]int{1500, 8500}),
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -133,7 +133,7 @@ func resourceTransitVirtualInterfaceCreate(ctx context.Context, d *schema.Resour
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
 	req := &directconnect.CreateTransitVirtualInterfaceInput{
-		ConnectionId: aws.String(d.Get("connection_id").(string)),
+		ConnectionId: aws.String(d.Get(names.AttrConnectionID).(string)),
 		NewTransitVirtualInterface: &awstypes.NewTransitVirtualInterface{
 			AddressFamily:          awstypes.AddressFamily(d.Get("address_family").(string)),
 			Asn:                    int32(d.Get("bgp_asn").(int)),
@@ -141,7 +141,7 @@ func resourceTransitVirtualInterfaceCreate(ctx context.Context, d *schema.Resour
 			EnableSiteLink:         aws.Bool(d.Get("sitelink_enabled").(bool)),
 			Mtu:                    aws.Int32(int32(d.Get("mtu").(int))),
 			Tags:                   getTagsIn(ctx),
-			VirtualInterfaceName:   aws.String(d.Get("name").(string)),
+			VirtualInterfaceName:   aws.String(d.Get(names.AttrName).(string)),
 			Vlan:                   int32(d.Get("vlan").(int)),
 		},
 	}
@@ -194,16 +194,16 @@ func resourceTransitVirtualInterfaceRead(ctx context.Context, d *schema.Resource
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("dxvif/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("aws_device", vif.AwsDeviceV2)
 	d.Set("bgp_asn", vif.Asn)
 	d.Set("bgp_auth_key", vif.AuthKey)
-	d.Set("connection_id", vif.ConnectionId)
+	d.Set(names.AttrConnectionID, vif.ConnectionId)
 	d.Set("customer_address", vif.CustomerAddress)
 	d.Set("dx_gateway_id", vif.DirectConnectGatewayId)
 	d.Set("jumbo_frame_capable", vif.JumboFrameCapable)
 	d.Set("mtu", vif.Mtu)
-	d.Set("name", vif.VirtualInterfaceName)
+	d.Set(names.AttrName, vif.VirtualInterfaceName)
 	d.Set("sitelink_enabled", vif.SiteLinkEnabled)
 	d.Set("vlan", vif.Vlan)
 
