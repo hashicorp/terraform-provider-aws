@@ -5,9 +5,9 @@ package ec2_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccEc2ImageDeregistrationProtection_basic(t *testing.T) {
+func TestAccImageDeregistrationProtection_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_image_deregistration_protection.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -29,7 +29,7 @@ func TestAccEc2ImageDeregistrationProtection_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckAMIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEc2ImageDeregistrationProtectionBasic(rName, "t2.medium"),
+				Config: testAccImageDeregistrationProtectionBasic(rName, "t2.medium"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "with_cooldown", "false"),
 				),
@@ -37,7 +37,7 @@ func TestAccEc2ImageDeregistrationProtection_basic(t *testing.T) {
 					statecheck.ExpectKnownOutputValueAtPath(
 						"deregistration_protection",
 						tfjsonpath.New("deregistration_protection"),
-						knownvalue.StringRegexp(regexp.MustCompile("enabled-without-cooldown")),
+						knownvalue.StringRegexp(regexache.MustCompile("enabled-without-cooldown")),
 					),
 				},
 			},
@@ -45,7 +45,7 @@ func TestAccEc2ImageDeregistrationProtection_basic(t *testing.T) {
 	})
 }
 
-func testAccEc2ImageDeregistrationProtectionBasic(rName, instanceType string) string {
+func testAccImageDeregistrationProtectionBasic(rName, instanceType string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		testAccInstanceVPCConfig(rName, false, 0),
