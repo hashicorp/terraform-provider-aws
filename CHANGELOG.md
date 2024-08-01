@@ -9,6 +9,7 @@ FEATURES:
 * **New Data Source:** `aws_ecr_repository_creation_template` ([#38597](https://github.com/hashicorp/terraform-provider-aws/issues/38597))
 * **New Resource:** `aws_chatbot_slack_channel_configuration` ([#38124](https://github.com/hashicorp/terraform-provider-aws/issues/38124))
 * **New Resource:** `aws_chatbot_teams_channel_configuration` ([#38630](https://github.com/hashicorp/terraform-provider-aws/issues/38630))
+* **New Resource:** `aws_datazone_glossary` ([#38602](https://github.com/hashicorp/terraform-provider-aws/issues/38602))
 * **New Resource:** `aws_ecr_repository_creation_template` ([#38597](https://github.com/hashicorp/terraform-provider-aws/issues/38597))
 * **New Resource:** `aws_timestreaminfluxdb_db_instance` ([#37963](https://github.com/hashicorp/terraform-provider-aws/issues/37963))
 
@@ -37,6 +38,7 @@ ENHANCEMENTS:
 * resource/aws_vpc_ipv6_cidr_block_association: Support `ipv6_netmask_length` values between `44` and `60` in increments of 4 ([#35614](https://github.com/hashicorp/terraform-provider-aws/issues/35614))
 * resource/aws_vpc_security_group_egress_rule: Add `tags` to the `AuthorizeSecurityGroupEgress` EC2 API call instead of making a separate `CreateTags` call ([#35614](https://github.com/hashicorp/terraform-provider-aws/issues/35614))
 * resource/aws_vpc_security_group_ingress_rule: Add `tags` to the `AuthorizeSecurityGroupIngress` EC2 API call instead of making a separate `CreateTags` call ([#35614](https://github.com/hashicorp/terraform-provider-aws/issues/35614))
+* resource/aws_wafv2_web_acl: Add `rule_json` attribute to allow raw JSON for rules. ([#38309](https://github.com/hashicorp/terraform-provider-aws/issues/38309))
 
 BUG FIXES:
 
