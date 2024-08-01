@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/worklink"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func flattenIdentityProviderConfigResponse(c *worklink.DescribeIdentityProviderConfigurationOutput) []map[string]interface{} {
@@ -17,7 +18,7 @@ func flattenIdentityProviderConfigResponse(c *worklink.DescribeIdentityProviderC
 	}
 
 	if c.IdentityProviderType != nil {
-		config["type"] = aws.StringValue(c.IdentityProviderType)
+		config[names.AttrType] = aws.StringValue(c.IdentityProviderType)
 	}
 	if c.IdentityProviderSamlMetadata != nil {
 		config["saml_metadata"] = aws.StringValue(c.IdentityProviderSamlMetadata)
@@ -37,9 +38,9 @@ func flattenNetworkConfigResponse(c *worklink.DescribeCompanyNetworkConfiguratio
 		return nil
 	}
 
-	config["subnet_ids"] = flex.FlattenStringSet(c.SubnetIds)
-	config["security_group_ids"] = flex.FlattenStringSet(c.SecurityGroupIds)
-	config["vpc_id"] = aws.StringValue(c.VpcId)
+	config[names.AttrSubnetIDs] = flex.FlattenStringSet(c.SubnetIds)
+	config[names.AttrSecurityGroupIDs] = flex.FlattenStringSet(c.SecurityGroupIds)
+	config[names.AttrVPCID] = aws.StringValue(c.VpcId)
 
 	return []map[string]interface{}{config}
 }

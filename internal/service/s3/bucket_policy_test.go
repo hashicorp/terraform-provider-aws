@@ -444,7 +444,7 @@ func TestAccS3BucketPolicy_directoryBucket(t *testing.T) {
 			{
 				Config: testAccBucketPolicyConfig_directoryBucket(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 				),
 			},
 		},

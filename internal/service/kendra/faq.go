@@ -47,15 +47,15 @@ func ResourceFaq() *schema.Resource {
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -84,7 +84,7 @@ func ResourceFaq() *schema.Resource {
 					"Starts with an alphanumeric character. Subsequently, can contain alphanumeric characters and hyphens. Fixed length of 36.",
 				),
 			},
-			"language_code": {
+			names.AttrLanguageCode: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -97,7 +97,7 @@ func ResourceFaq() *schema.Resource {
 					),
 				),
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -109,7 +109,7 @@ func ResourceFaq() *schema.Resource {
 					),
 				),
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -122,12 +122,12 @@ func ResourceFaq() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"bucket": {
+						names.AttrBucket: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
 						},
-						"key": {
+						names.AttrKey: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
@@ -135,7 +135,7 @@ func ResourceFaq() *schema.Resource {
 					},
 				},
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -154,17 +154,17 @@ func resourceFaqCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &kendra.CreateFaqInput{
 		ClientToken: aws.String(id.UniqueId()),
 		IndexId:     aws.String(d.Get("index_id").(string)),
 		Name:        aws.String(name),
-		RoleArn:     aws.String(d.Get("role_arn").(string)),
+		RoleArn:     aws.String(d.Get(names.AttrRoleARN).(string)),
 		S3Path:      expandS3Path(d.Get("s3_path").([]interface{})),
 		Tags:        getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -172,7 +172,7 @@ func resourceFaqCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.FileFormat = types.FaqFileFormat(v.(string))
 	}
 
-	if v, ok := d.GetOk("language_code"); ok {
+	if v, ok := d.GetOk(names.AttrLanguageCode); ok {
 		input.LanguageCode = aws.String(v.(string))
 	}
 
@@ -243,17 +243,17 @@ func resourceFaqRead(ctx context.Context, d *schema.ResourceData, meta interface
 		Resource:  fmt.Sprintf("index/%s/faq/%s", indexId, id),
 	}.String()
 
-	d.Set("arn", arn)
-	d.Set("created_at", aws.ToTime(resp.CreatedAt).Format(time.RFC3339))
-	d.Set("description", resp.Description)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrCreatedAt, aws.ToTime(resp.CreatedAt).Format(time.RFC3339))
+	d.Set(names.AttrDescription, resp.Description)
 	d.Set("error_message", resp.ErrorMessage)
 	d.Set("faq_id", resp.Id)
 	d.Set("file_format", resp.FileFormat)
 	d.Set("index_id", resp.IndexId)
-	d.Set("language_code", resp.LanguageCode)
-	d.Set("name", resp.Name)
-	d.Set("role_arn", resp.RoleArn)
-	d.Set("status", resp.Status)
+	d.Set(names.AttrLanguageCode, resp.LanguageCode)
+	d.Set(names.AttrName, resp.Name)
+	d.Set(names.AttrRoleARN, resp.RoleArn)
+	d.Set(names.AttrStatus, resp.Status)
 	d.Set("updated_at", aws.ToTime(resp.UpdatedAt).Format(time.RFC3339))
 
 	if err := d.Set("s3_path", flattenS3Path(resp.S3Path)); err != nil {
@@ -370,11 +370,11 @@ func expandS3Path(tfList []interface{}) *types.S3Path {
 
 	result := &types.S3Path{}
 
-	if v, ok := tfMap["bucket"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucket].(string); ok && v != "" {
 		result.Bucket = aws.String(v)
 	}
 
-	if v, ok := tfMap["key"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrKey].(string); ok && v != "" {
 		result.Key = aws.String(v)
 	}
 
@@ -389,11 +389,11 @@ func flattenS3Path(apiObject *types.S3Path) []interface{} {
 	m := map[string]interface{}{}
 
 	if v := apiObject.Bucket; v != nil {
-		m["bucket"] = aws.ToString(v)
+		m[names.AttrBucket] = aws.ToString(v)
 	}
 
 	if v := apiObject.Key; v != nil {
-		m["key"] = aws.ToString(v)
+		m[names.AttrKey] = aws.ToString(v)
 	}
 
 	return []interface{}{m}

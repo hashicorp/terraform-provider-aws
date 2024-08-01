@@ -36,11 +36,11 @@ func TestAccMediaConvertQueue_basic(t *testing.T) {
 				Config: testAccQueueConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queue),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mediaconvert", regexache.MustCompile(`queues/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "mediaconvert", regexache.MustCompile(`queues/.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "pricing_plan", string(types.PricingPlanOnDemand)),
-					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.QueueStatusActive)),
+					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.QueueStatusActive)),
 				),
 			},
 			{
@@ -89,11 +89,11 @@ func TestAccMediaConvertQueue_withTags(t *testing.T) {
 		CheckDestroy:             testAccCheckQueueDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccQueueConfig_tags1(rName, "key1", "value1"),
+				Config: testAccQueueConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queue),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -102,20 +102,20 @@ func TestAccMediaConvertQueue_withTags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccQueueConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccQueueConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queue),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccQueueConfig_tags1(rName, "key2", "value2"),
+				Config: testAccQueueConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queue),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -141,10 +141,10 @@ func TestAccMediaConvertQueue_reservationPlanSettings(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queue),
 					resource.TestCheckResourceAttr(resourceName, "pricing_plan", string(types.PricingPlanReserved)),
-					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.0.commitment", string(types.CommitmentOneYear)),
 					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.0.renewal_type", string(types.RenewalTypeAutoRenew)),
-					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.0.reserved_slots", "1"),
+					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.0.reserved_slots", acctest.Ct1),
 				),
 			},
 			{
@@ -152,10 +152,10 @@ func TestAccMediaConvertQueue_reservationPlanSettings(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queue),
 					resource.TestCheckResourceAttr(resourceName, "pricing_plan", string(types.PricingPlanReserved)),
-					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.0.commitment", string(types.CommitmentOneYear)),
 					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.0.renewal_type", string(types.RenewalTypeExpire)),
-					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.0.reserved_slots", "1"),
+					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.0.reserved_slots", acctest.Ct1),
 				),
 			},
 			{
@@ -183,14 +183,14 @@ func TestAccMediaConvertQueue_withStatus(t *testing.T) {
 				Config: testAccQueueConfig_status(rName, string(types.QueueStatusPaused)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queue),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.QueueStatusPaused)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.QueueStatusPaused)),
 				),
 			},
 			{
 				Config: testAccQueueConfig_status(rName, string(types.QueueStatusActive)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queue),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.QueueStatusActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.QueueStatusActive)),
 				),
 			},
 			{
@@ -220,14 +220,14 @@ func TestAccMediaConvertQueue_withDescription(t *testing.T) {
 				Config: testAccQueueConfig_description(rName, description1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queue),
-					resource.TestCheckResourceAttr(resourceName, "description", description1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description1),
 				),
 			},
 			{
 				Config: testAccQueueConfig_description(rName, description2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queue),
-					resource.TestCheckResourceAttr(resourceName, "description", description2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description2),
 				),
 			},
 		},

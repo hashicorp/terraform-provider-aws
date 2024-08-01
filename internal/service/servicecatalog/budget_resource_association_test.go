@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // add sweeper to delete known test servicecat budget resource associations
@@ -35,8 +36,8 @@ func TestAccServiceCatalogBudgetResourceAssociation_basic(t *testing.T) {
 				Config: testAccBudgetResourceAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBudgetResourceAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_id", "aws_servicecatalog_portfolio.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "budget_name", "aws_budgets_budget.test", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceID, "aws_servicecatalog_portfolio.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "budget_name", "aws_budgets_budget.test", names.AttrName),
 				),
 			},
 			{

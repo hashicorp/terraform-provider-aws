@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package elasticache
+package elasticache_test
 
 import (
 	"fmt"
@@ -11,6 +11,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/go-version"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestValidMemcachedVersionString(t *testing.T) {
@@ -41,7 +44,7 @@ func TestValidMemcachedVersionString(t *testing.T) {
 			valid:   false,
 		},
 		{
-			version: "1",
+			version: acctest.Ct1,
 			valid:   false,
 		},
 		{
@@ -59,7 +62,7 @@ func TestValidMemcachedVersionString(t *testing.T) {
 		t.Run(testcase.version, func(t *testing.T) {
 			t.Parallel()
 
-			warnings, errors := validMemcachedVersionString(testcase.version, "key")
+			warnings, errors := tfelasticache.ValidMemcachedVersionString(testcase.version, names.AttrKey)
 
 			if l := len(warnings); l != 0 {
 				t.Errorf("expected no warnings, got %d", l)
@@ -186,7 +189,7 @@ func TestValidRedisVersionString(t *testing.T) {
 		t.Run(testcase.version, func(t *testing.T) {
 			t.Parallel()
 
-			warnings, errors := validRedisVersionString(testcase.version, "key")
+			warnings, errors := tfelasticache.ValidRedisVersionString(testcase.version, names.AttrKey)
 
 			if l := len(warnings); l != 0 {
 				t.Errorf("expected no warnings, got %d", l)
@@ -238,43 +241,43 @@ func TestValidateClusterEngineVersion(t *testing.T) {
 		},
 
 		{
-			engine:  engineMemcached,
+			engine:  tfelasticache.EngineMemcached,
 			version: "1.2.3",
 			valid:   true,
 		},
 		{
-			engine:  engineMemcached,
+			engine:  tfelasticache.EngineMemcached,
 			version: "6.x",
 			valid:   false,
 		},
 		{
-			engine:  engineMemcached,
+			engine:  tfelasticache.EngineMemcached,
 			version: "6.0",
 			valid:   false,
 		},
 		{
-			engine:  engineMemcached,
+			engine:  tfelasticache.EngineMemcached,
 			version: "7.0",
 			valid:   false,
 		},
 
 		{
-			engine:  engineRedis,
+			engine:  tfelasticache.EngineRedis,
 			version: "1.2.3",
 			valid:   true,
 		},
 		{
-			engine:  engineRedis,
+			engine:  tfelasticache.EngineRedis,
 			version: "6.x",
 			valid:   true,
 		},
 		{
-			engine:  engineRedis,
+			engine:  tfelasticache.EngineRedis,
 			version: "6.0",
 			valid:   true,
 		},
 		{
-			engine:  engineRedis,
+			engine:  tfelasticache.EngineRedis,
 			version: "7.0",
 			valid:   true,
 		},
@@ -284,7 +287,7 @@ func TestValidateClusterEngineVersion(t *testing.T) {
 		testcase := testcase
 		t.Run(fmt.Sprintf("%s %s", testcase.engine, testcase.version), func(t *testing.T) {
 			t.Parallel()
-			err := validateClusterEngineVersion(testcase.engine, testcase.version)
+			err := tfelasticache.ValidateClusterEngineVersion(testcase.engine, testcase.version)
 
 			if testcase.valid {
 				if err != nil {
@@ -395,7 +398,7 @@ func TestCustomizeDiffEngineVersionIsDowngrade(t *testing.T) {
 				new: testcase.new,
 			}
 
-			actual, err := engineVersionIsDowngrade(diff)
+			actual, err := tfelasticache.EngineVersionIsDowngrade(diff)
 
 			if err != nil {
 				t.Fatalf("no error expected, got %s", err)
@@ -461,7 +464,7 @@ func TestCustomizeDiffEngineVersionIsDowngrade_6xTo6digit(t *testing.T) {
 
 			diff := mockChangesDiffer{
 				values: map[string]mockDiff{
-					"engine_version": {
+					names.AttrEngineVersion: {
 						old: testcase.versionOld,
 						new: testcase.versionNew,
 					},
@@ -471,7 +474,7 @@ func TestCustomizeDiffEngineVersionIsDowngrade_6xTo6digit(t *testing.T) {
 				},
 			}
 
-			actual, err := engineVersionIsDowngrade(&diff)
+			actual, err := tfelasticache.EngineVersionIsDowngrade(&diff)
 
 			if err != nil {
 				t.Fatalf("no error expected, got %s", err)
@@ -626,7 +629,7 @@ func TestCustomizeDiffEngineVersionForceNewOnDowngrade(t *testing.T) {
 			}
 			diff.hasChange = testcase.hasChange
 
-			err := engineVersionForceNewOnDowngrade(diff)
+			err := tfelasticache.EngineVersionForceNewOnDowngrade(diff)
 
 			if err != nil {
 				t.Fatalf("no error expected, got %s", err)
@@ -688,7 +691,7 @@ func TestNormalizeEngineVersion(t *testing.T) {
 		t.Run(testcase.version, func(t *testing.T) {
 			t.Parallel()
 
-			version, err := normalizeEngineVersion(testcase.version)
+			version, err := tfelasticache.NormalizeEngineVersion(testcase.version)
 
 			if testcase.valid {
 				if err != nil {
@@ -712,15 +715,15 @@ func TestVersionDiff(t *testing.T) {
 	cases := []struct {
 		v1       string
 		v2       string
-		expected versionDiff
+		expected tfelasticache.VersionDiff
 	}{
-		{"1.2.3", "1.2.3", versionDiff{0, 0, 0}},
-		{"1.2.3", "1.1.7", versionDiff{0, 1, 0}},
-		{"1.2.3", "1.4.5", versionDiff{0, -1, 0}},
-		{"2.0.0", "1.2.3", versionDiff{1, 0, 0}},
-		{"1.2.3", "2.0.0", versionDiff{-1, 0, 0}},
-		{"1.2.3", "1.2.1", versionDiff{0, 0, 1}},
-		{"1.2.3", "1.2.4", versionDiff{0, 0, -1}},
+		{"1.2.3", "1.2.3", tfelasticache.VersionDiff{0, 0, 0}},
+		{"1.2.3", "1.1.7", tfelasticache.VersionDiff{0, 1, 0}},
+		{"1.2.3", "1.4.5", tfelasticache.VersionDiff{0, -1, 0}},
+		{"2.0.0", "1.2.3", tfelasticache.VersionDiff{1, 0, 0}},
+		{"1.2.3", "2.0.0", tfelasticache.VersionDiff{-1, 0, 0}},
+		{"1.2.3", "1.2.1", tfelasticache.VersionDiff{0, 0, 1}},
+		{"1.2.3", "1.2.4", tfelasticache.VersionDiff{0, 0, -1}},
 	}
 
 	for _, tc := range cases {
@@ -734,7 +737,7 @@ func TestVersionDiff(t *testing.T) {
 			t.Fatalf("err: %s", err)
 		}
 
-		actual := diffVersion(v1, v2)
+		actual := tfelasticache.DiffVersion(v1, v2)
 		expected := tc.expected
 		if actual != expected {
 			t.Fatalf(
@@ -775,8 +778,16 @@ func (d *mockChangesDiffer) Get(key string) any {
 	return d.values[key].Get()
 }
 
+func (d *mockChangesDiffer) GetOk(string) (any, bool) {
+	return nil, false
+}
+
 func (d *mockChangesDiffer) HasChange(key string) bool {
 	return d.values[key].HasChange()
+}
+
+func (d *mockChangesDiffer) HasChanges(...string) bool {
+	return false
 }
 
 func (d *mockChangesDiffer) GetChange(key string) (any, any) {
@@ -868,12 +879,12 @@ func TestParamGroupNameRequiresMajorVersionUpgrade(t *testing.T) {
 
 			diff := &mockChangesDiffer{
 				values: map[string]mockDiff{
-					"parameter_group_name": {
+					names.AttrParameterGroupName: {
 						old:       testcase.paramOld,
 						new:       testcase.paramNew,
 						hasChange: testcase.paramHasChange,
 					},
-					"engine_version": {
+					names.AttrEngineVersion: {
 						old:       testcase.versionOld,
 						new:       testcase.versionNew,
 						hasChange: testcase.versionHasChange,
@@ -884,7 +895,7 @@ func TestParamGroupNameRequiresMajorVersionUpgrade(t *testing.T) {
 				diff.id = "some id"
 			}
 
-			err := paramGroupNameRequiresMajorVersionUpgrade(diff)
+			err := tfelasticache.ParamGroupNameRequiresMajorVersionUpgrade(diff)
 
 			if testcase.expectError == nil {
 				if err != nil {

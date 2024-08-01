@@ -37,7 +37,7 @@ func (d *dataSourceDataShares) Metadata(_ context.Context, req datasource.Metada
 func (d *dataSourceDataShares) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 		},
 		Blocks: map[string]schema.Block{
 			"data_shares": schema.ListNestedBlock{

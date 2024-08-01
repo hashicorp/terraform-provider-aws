@@ -39,13 +39,13 @@ func TestAccNeptuneGlobalCluster_basic(t *testing.T) {
 				Config: testAccGlobalClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "rds", fmt.Sprintf("global-cluster:%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "engine"),
-					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
+					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "rds", fmt.Sprintf("global-cluster:%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngine),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
 					resource.TestCheckResourceAttr(resourceName, "global_cluster_identifier", rName),
 					resource.TestMatchResourceAttr(resourceName, "global_cluster_resource_id", regexache.MustCompile(`cluster-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageEncrypted, acctest.CtFalse),
 				),
 			},
 			{
@@ -73,13 +73,13 @@ func TestAccNeptuneGlobalCluster_completeBasic(t *testing.T) {
 				Config: testAccGlobalClusterConfig_completeBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "rds", fmt.Sprintf("global-cluster:%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "engine"),
-					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
+					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "rds", fmt.Sprintf("global-cluster:%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngine),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
 					resource.TestCheckResourceAttr(resourceName, "global_cluster_identifier", rName),
 					resource.TestMatchResourceAttr(resourceName, "global_cluster_resource_id", regexache.MustCompile(`cluster-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageEncrypted, acctest.CtFalse),
 				),
 			},
 			{
@@ -131,7 +131,7 @@ func TestAccNeptuneGlobalCluster_DeletionProtection(t *testing.T) {
 				Config: testAccGlobalClusterConfig_deletionProtection(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster1),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtTrue),
 				),
 			},
 			{
@@ -144,7 +144,7 @@ func TestAccNeptuneGlobalCluster_DeletionProtection(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster2),
 					testAccCheckGlobalClusterNotRecreated(&globalCluster1, &globalCluster2),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
 				),
 			},
 		},
@@ -167,7 +167,7 @@ func TestAccNeptuneGlobalCluster_Engine(t *testing.T) {
 				Config: testAccGlobalClusterConfig_engine(rName, "neptune"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "engine", "neptune"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "neptune"),
 				),
 			},
 			{
@@ -197,7 +197,7 @@ func TestAccNeptuneGlobalCluster_EngineVersion(t *testing.T) {
 				Config: testAccGlobalClusterConfig_engineVersion(rName1, rName2, rName3, "1.2.0.0"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "1.2.0.0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "1.2.0.0"),
 				),
 			},
 			{
@@ -209,7 +209,7 @@ func TestAccNeptuneGlobalCluster_EngineVersion(t *testing.T) {
 				Config: testAccGlobalClusterConfig_engineVersion(rName1, rName2, rName3, "1.2.0.1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "1.2.0.1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "1.2.0.1"),
 				),
 			},
 		},
@@ -233,7 +233,7 @@ func TestAccNeptuneGlobalCluster_SourceDBClusterIdentifier_basic(t *testing.T) {
 				Config: testAccGlobalClusterConfig_sourceDBIdentifier(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "source_db_cluster_identifier", clusterResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "source_db_cluster_identifier", clusterResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -263,7 +263,7 @@ func TestAccNeptuneGlobalCluster_SourceDBClusterIdentifier_storageEncrypted(t *t
 				Config: testAccGlobalClusterConfig_sourceDBIdentifierStorageEncrypted(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "source_db_cluster_identifier", clusterResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "source_db_cluster_identifier", clusterResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -292,7 +292,7 @@ func TestAccNeptuneGlobalCluster_StorageEncrypted(t *testing.T) {
 				Config: testAccGlobalClusterConfig_storageEncrypted(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster1),
-					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageEncrypted, acctest.CtTrue),
 				),
 			},
 			{
@@ -305,7 +305,7 @@ func TestAccNeptuneGlobalCluster_StorageEncrypted(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster2),
 					testAccCheckGlobalClusterRecreated(&globalCluster1, &globalCluster2),
-					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageEncrypted, acctest.CtFalse),
 				),
 			},
 		},

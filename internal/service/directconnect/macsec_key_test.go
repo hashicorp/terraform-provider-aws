@@ -37,7 +37,7 @@ func TestAccDirectConnectMacSecKey_withCkn(t *testing.T) {
 			{
 				Config: testAccMacSecConfig_withCkn(ckn, cak, connectionId),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "connection_id", connectionId),
+					resource.TestCheckResourceAttr(resourceName, names.AttrConnectionID, connectionId),
 					resource.TestMatchResourceAttr(resourceName, "ckn", regexache.MustCompile(ckn)),
 				),
 			},
@@ -78,7 +78,7 @@ func TestAccDirectConnectMacSecKey_withSecret(t *testing.T) {
 			{
 				Config: testAccMacSecConfig_withSecret(secretArn, connectionId),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "connection_id", connectionId),
+					resource.TestCheckResourceAttr(resourceName, names.AttrConnectionID, connectionId),
 					resource.TestCheckResourceAttr(resourceName, "secret_arn", secretArn),
 				),
 			},

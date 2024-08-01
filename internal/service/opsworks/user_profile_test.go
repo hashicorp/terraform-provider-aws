@@ -37,7 +37,7 @@ func TestAccOpsWorksUserProfile_basic(t *testing.T) {
 					testAccCheckUserProfileExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "ssh_public_key", ""),
 					resource.TestCheckResourceAttr(resourceName, "ssh_username", rName1),
-					resource.TestCheckResourceAttr(resourceName, "allow_self_management", "false"),
+					resource.TestCheckResourceAttr(resourceName, "allow_self_management", acctest.CtFalse),
 				),
 			},
 			{
@@ -46,7 +46,7 @@ func TestAccOpsWorksUserProfile_basic(t *testing.T) {
 					testAccCheckUserProfileExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "ssh_public_key", ""),
 					resource.TestCheckResourceAttr(resourceName, "ssh_username", rName2),
-					resource.TestCheckResourceAttr(resourceName, "allow_self_management", "false"),
+					resource.TestCheckResourceAttr(resourceName, "allow_self_management", acctest.CtFalse),
 				),
 			},
 		},

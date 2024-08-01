@@ -71,7 +71,7 @@ func testAccCheckHostedZone(resourceName string, region string) resource.TestChe
 			return fmt.Errorf("Unsupported region: %s", region)
 		}
 
-		return resource.TestCheckResourceAttr(resourceName, "id", expectedValue)(s)
+		return resource.TestCheckResourceAttr(resourceName, names.AttrID, expectedValue)(s)
 	}
 }
 

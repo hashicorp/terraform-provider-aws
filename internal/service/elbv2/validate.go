@@ -5,6 +5,7 @@ package elbv2
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
@@ -96,6 +97,32 @@ func validTargetGroupNamePrefix(v interface{}, k string) (ws []string, errors []
 	if regexache.MustCompile(`^-`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"%q cannot begin with a hyphen", k))
+	}
+	return
+}
+
+func validTargetGroupHealthInput(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+
+	if value != "off" {
+		_, err := strconv.Atoi(value)
+		if err != nil {
+			errors = append(errors, fmt.Errorf(
+				"%q must be an integer or 'off'", k))
+		}
+	}
+	return
+}
+
+func validTargetGroupHealthPercentageInput(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+
+	if value != "off" {
+		intValue, err := strconv.Atoi(value)
+		if err != nil || intValue < 1 || intValue > 100 {
+			errors = append(errors, fmt.Errorf(
+				"%q must be an integer between 0 and 100 or 'off'", k))
+		}
 	}
 	return
 }

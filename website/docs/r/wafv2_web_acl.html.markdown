@@ -417,6 +417,42 @@ resource "aws_wafv2_web_acl" "test" {
 }
 ```
 
+### Large Request Body Inspections for Regional Resources
+
+```terraform
+resource "aws_wafv2_web_acl" "example" {
+  name  = "large-request-body-example"
+  scope = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  association_config {
+    request_body {
+      api_gateway {
+        default_size_inspection_limit = "KB_64"
+      }
+      app_runner_service {
+        default_size_inspection_limit = "KB_64"
+      }
+      cognito_user_pool {
+        default_size_inspection_limit = "KB_64"
+      }
+      verified_access_instance {
+        default_size_inspection_limit = "KB_64"
+      }
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
@@ -721,6 +757,7 @@ An SQL injection match condition identifies the part of web requests, such as th
 The `sqli_match_statement` block supports the following arguments:
 
 * `field_to_match` - (Optional) Part of a web request that you want AWS WAF to inspect. See [`field_to_match`](#field_to_match-block) below for details.
+* `sensitivity_level` - (Optional) Sensitivity that you want AWS WAF to use to inspect for SQL injection attacks. Valid values include: `LOW`, `HIGH`.
 * `text_transformation` - (Required) Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. At least one transformation is required. See [`text_transformation`](#text_transformation-block) below for details.
 
 ### `xss_match_statement` Block
@@ -753,6 +790,7 @@ The `managed_rule_group_configs` block support the following arguments:
 
 ### `aws_managed_rules_bot_control_rule_set` Block
 
+* `enable_machine_learning` - (Optional) Applies only to the targeted inspection level. Determines whether to use machine learning (ML) to analyze your web traffic for bot-related activity. Defaults to `true`.
 * `inspection_level` - (Optional) The inspection level to use for the Bot Control rule group.
 
 ### `aws_managed_rules_acfp_rule_set` Block
@@ -910,7 +948,7 @@ Inspect a single header. Provide the name of the header to inspect, for example,
 
 The `single_header` block supports the following arguments:
 
-* `name` - (Optional) Name of the query header to inspect. This setting must be provided as lower case characters.
+* `name` - (Required) Name of the query header to inspect. This setting must be provided as lower case characters.
 
 ### `single_query_argument` Block
 
@@ -918,7 +956,7 @@ Inspect a single query argument. Provide the name of the query argument to inspe
 
 The `single_query_argument` block supports the following arguments:
 
-* `name` - (Optional) Name of the query header to inspect. This setting must be provided as lower case characters.
+* `name` - (Required) Name of the query header to inspect. This setting must be provided as lower case characters.
 
 ### `body` Block
 
@@ -973,13 +1011,41 @@ The `immunity_time_property` block supports the following arguments:
 
 The `request_body` block supports the following arguments:
 
-* `cloudfront` - (Optional) Customizes the request body that your protected CloudFront distributions forward to AWS WAF for inspection. See [`cloudfront`](#cloudfront-block) below for details.
+* `api_gateway` - (Optional) Customizes the request body that your protected Amazon API Gateway REST APIs forward to AWS WAF for inspection. Applicable only when `scope` is set to `CLOUDFRONT`. See [`api_gateway`](#api_gateway-block) below for details.
+* `app_runner_service` - (Optional) Customizes the request body that your protected Amazon App Runner services forward to AWS WAF for inspection. Applicable only when `scope` is set to `REGIONAL`. See [`app_runner_service`](#app_runner_service-block) below for details.
+* `cloudfront` - (Optional) Customizes the request body that your protected Amazon CloudFront distributions forward to AWS WAF for inspection. Applicable only when `scope` is set to `REGIONAL`. See [`cloudfront`](#cloudfront-block) below for details.
+* `cognito_user_pool` - (Optional) Customizes the request body that your protected Amazon Cognito user pools forward to AWS WAF for inspection. Applicable only when `scope` is set to `REGIONAL`. See [`cognito_user_pool`](#cognito_user_pool-block) below for details.
+* `verified_access_instance` - (Optional) Customizes the request body that your protected AWS Verfied Access instances forward to AWS WAF for inspection. Applicable only when `scope` is set to `REGIONAL`. See [`verified_access_instance`](#verified_access_instance-block) below for details.
+
+### `api_gateway` Block
+
+The `api_gateway` block supports the following arguments:
+
+* `default_size_inspection_limit` - (Required) Specifies the maximum size of the web request body component that an associated Amazon API Gateway REST APIs should send to AWS WAF for inspection. This applies to statements in the web ACL that inspect the body or JSON body. Valid values are `KB_16`, `KB_32`, `KB_48` and `KB_64`.
+
+### `app_runner_service` Block
+
+The `app_runner_service` block supports the following arguments:
+
+* `default_size_inspection_limit` - (Required) Specifies the maximum size of the web request body component that an associated Amazon App Runner services should send to AWS WAF for inspection. This applies to statements in the web ACL that inspect the body or JSON body. Valid values are `KB_16`, `KB_32`, `KB_48` and `KB_64`.
 
 ### `cloudfront` Block
 
 The `cloudfront` block supports the following arguments:
 
-* `default_size_inspection_limit` - (Required) Specifies the maximum size of the web request body component that an associated CloudFront distribution should send to AWS WAF for inspection. This applies to statements in the web ACL that inspect the body or JSON body. Valid values are `KB_16`, `KB_32`, `KB_48` and `KB_64`.
+* `default_size_inspection_limit` - (Required) Specifies the maximum size of the web request body component that an associated Amazon CloudFront distribution should send to AWS WAF for inspection. This applies to statements in the web ACL that inspect the body or JSON body. Valid values are `KB_16`, `KB_32`, `KB_48` and `KB_64`.
+
+### `cognito_user_pool` Block
+
+The `cognito_user_pool` block supports the following arguments:
+
+* `default_size_inspection_limit` - (Required) Specifies the maximum size of the web request body component that an associated Amazon Cognito user pools should send to AWS WAF for inspection. This applies to statements in the web ACL that inspect the body or JSON body. Valid values are `KB_16`, `KB_32`, `KB_48` and `KB_64`.
+
+### `verified_access_instance` Block
+
+The `verified_access_instance` block supports the following arguments:
+
+* `default_size_inspection_limit` - (Required) Specifies the maximum size of the web request body component that an associated AWS Verified Access instances should send to AWS WAF for inspection. This applies to statements in the web ACL that inspect the body or JSON body. Valid values are `KB_16`, `KB_32`, `KB_48` and `KB_64`.
 
 ### `custom_key` Block
 
