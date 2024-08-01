@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccSnapshotBlockPublicAccess_basic(t *testing.T) {
+func TestAccEC2EBSSnapshotBlockPublicAccess_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ebs_snapshot_block_public_access.this"
 
@@ -26,11 +26,11 @@ func TestAccSnapshotBlockPublicAccess_basic(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		WorkingDir:               "/tmp",
-		CheckDestroy:             testAccCheckSnapshotBlockAccessDestroy(ctx),
+		CheckDestroy:             testAccEC2EBSCheckSnapshotBlockAccessDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				ResourceName: resourceName,
-				Config:       testAccEbsSnapshotBlockPublicAccess_basic(string(types.SnapshotBlockPublicAccessStateBlockAllSharing)),
+				Config:       testAccEC2EBSSnapshotBlockPublicAccess_basic(string(types.SnapshotBlockPublicAccessStateBlockAllSharing)),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "block-all-sharing"),
 				),
@@ -42,7 +42,7 @@ func TestAccSnapshotBlockPublicAccess_basic(t *testing.T) {
 			},
 			{
 				ResourceName: resourceName,
-				Config:       testAccEbsSnapshotBlockPublicAccess_basic(string(types.SnapshotBlockPublicAccessStateBlockNewSharing)),
+				Config:       testAccEC2EBSSnapshotBlockPublicAccess_basic(string(types.SnapshotBlockPublicAccessStateBlockNewSharing)),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "block-new-sharing"),
 				),
@@ -51,7 +51,7 @@ func TestAccSnapshotBlockPublicAccess_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckSnapshotBlockAccessDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccEC2EBSCheckSnapshotBlockAccessDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 		response, err := conn.GetSnapshotBlockPublicAccessState(ctx, &ec2.GetSnapshotBlockPublicAccessStateInput{})
@@ -66,10 +66,10 @@ func testAccCheckSnapshotBlockAccessDestroy(ctx context.Context) resource.TestCh
 	}
 }
 
-func testAccEbsSnapshotBlockPublicAccess_basic(state string) string {
+func testAccEC2EBSSnapshotBlockPublicAccess_basic(state string) string {
 	return fmt.Sprintf(`
 resource "aws_ebs_snapshot_block_public_access" "this" {
-   state = "%[1]s"
+  state = "%[1]s"
 }
 `, state)
 }
