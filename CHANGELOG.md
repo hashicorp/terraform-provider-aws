@@ -48,6 +48,7 @@ BUG FIXES:
 * resource/aws_opensearchserverless_security_policy: Normalize `policy` content to prevent persistent differences ([#38604](https://github.com/hashicorp/terraform-provider-aws/issues/38604))
 * resource/aws_pipes_pipe: Don't reset `target_parameters` if the configured value has not changed ([#38598](https://github.com/hashicorp/terraform-provider-aws/issues/38598))
 * resource/aws_rds_instance: Allow `domain_dns_ips` to use single DNS server IP ([#36500](https://github.com/hashicorp/terraform-provider-aws/issues/36500))
+* resource/aws_sagemaker_domain: Properly send `domain_settings.r_studio_server_pro_domain_settings.r_studio_package_manager_url` argument on create ([#38547](https://github.com/hashicorp/terraform-provider-aws/issues/38547))
 * resource/aws_vpc_ipam_pool_cidr_allocation: Set `description` on Read ([#38618](https://github.com/hashicorp/terraform-provider-aws/issues/38618))
 * resource/aws_vpc_ipam_pool_cidr_allocation: Set `netmask_length` on Read ([#38618](https://github.com/hashicorp/terraform-provider-aws/issues/38618))
 
