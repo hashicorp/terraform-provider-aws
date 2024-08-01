@@ -10,4 +10,5 @@ var (
 	IsResourceMissing                         = isResourceMissing
 	ResourceProject                           = newResourceProject
 	ResourceGlossary                          = newResourceGlossary
+	FindGlossaryByID                          = findGlossaryByID
 )

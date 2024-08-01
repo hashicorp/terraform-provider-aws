@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/datazone"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/datazone/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfdatazone "github.com/hashicorp/terraform-provider-aws/internal/service/datazone"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -175,7 +173,7 @@ func testAccCheckGlossaryDestroy(ctx context.Context) resource.TestCheckFunc {
 			if rs.Type != "aws_datazone_glossary" {
 				continue
 			}
-			_, err := findGlossaryByID(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["domain_identifier"])
+			_, err := tfdatazone.FindGlossaryByID(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["domain_identifier"])
 			if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsA[*awstypes.AccessDeniedException](err) {
 				return nil
 			}
@@ -204,7 +202,7 @@ func testAccCheckGlossaryExists(ctx context.Context, name string, glossary *data
 			return create.Error(names.DataZone, create.ErrActionCheckingExistence, tfdatazone.ResNameProject, name, errors.New("domain identifier not set"))
 		}
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataZoneClient(ctx)
-		resp, err := findGlossaryByID(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["domain_identifier"])
+		resp, err := tfdatazone.FindGlossaryByID(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["domain_identifier"])
 
 		if err != nil {
 			return create.Error(names.DataZone, create.ErrActionCheckingExistence, tfdatazone.ResNameGlossary, rs.Primary.ID, err)
@@ -214,31 +212,6 @@ func testAccCheckGlossaryExists(ctx context.Context, name string, glossary *data
 
 		return nil
 	}
-}
-
-func findGlossaryByID(ctx context.Context, conn *datazone.Client, id string, domain_id string) (*datazone.GetGlossaryOutput, error) {
-	in := &datazone.GetGlossaryInput{
-		Identifier:       aws.String(id),
-		DomainIdentifier: aws.String(domain_id),
-	}
-
-	out, err := conn.GetGlossary(ctx, in)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
-
-		return nil, err
-	}
-
-	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-
-	return out, nil
 }
 
 func testAccCheckGlossaryNotRecreated(before, after *datazone.GetGlossaryOutput) resource.TestCheckFunc {
