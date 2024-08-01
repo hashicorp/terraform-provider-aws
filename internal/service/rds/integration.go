@@ -85,8 +85,10 @@ func (r *integrationResource) Schema(ctx context.Context, request resource.Schem
 			},
 			names.AttrKMSKeyID: schema.StringAttribute{
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"source_arn": schema.StringAttribute{
@@ -146,12 +148,17 @@ func (r *integrationResource) Create(ctx context.Context, request resource.Creat
 	data.IntegrationARN = fwflex.StringToFramework(ctx, output.IntegrationArn)
 	data.setID()
 
-	if _, err := waitIntegrationCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+	integration, err := waitIntegrationCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+
+	if err != nil {
 		response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID) // Set 'id' so as to taint the resource.
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for RDS Integration (%s) create", data.ID.ValueString()), err.Error())
 
 		return
 	}
+
+	// Set values for unknowns.
+	data.KMSKeyID = fwflex.StringToFramework(ctx, integration.KMSKeyId)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }

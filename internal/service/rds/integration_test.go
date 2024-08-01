@@ -37,7 +37,7 @@ func TestAccRDSIntegration_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIntegrationConfig_base(rName),
+				Config: testAccIntegrationConfig_baseClusterWithInstance(rName),
 				Check: resource.ComposeTestCheckFunc(
 					waitUntilDBInstanceRebooted(ctx, rName),
 				),
@@ -78,7 +78,7 @@ func TestAccRDSIntegration_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIntegrationConfig_base(rName),
+				Config: testAccIntegrationConfig_baseClusterWithInstance(rName),
 				Check: resource.ComposeTestCheckFunc(
 					waitUntilDBInstanceRebooted(ctx, rName),
 				),
@@ -113,7 +113,7 @@ func TestAccRDSIntegration_optional(t *testing.T) {
 		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIntegrationConfig_base(rName),
+				Config: testAccIntegrationConfig_baseClusterWithInstance(rName),
 				Check: resource.ComposeTestCheckFunc(
 					waitUntilDBInstanceRebooted(ctx, rName),
 				),
@@ -198,7 +198,7 @@ func waitUntilDBInstanceRebooted(ctx context.Context, instanceIdentifier string)
 	}
 }
 
-func testAccIntegrationConfig_base(rName string) string {
+func testAccIntegrationConfig_baseClusterWithInstance(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 3), fmt.Sprintf(`
 locals {
   cluster_parameters = {
@@ -314,8 +314,8 @@ resource "aws_redshift_cluster" "test" {
 `, rName))
 }
 
-func testAccIntegrationConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccIntegrationConfig_base(rName), fmt.Sprintf(`
+func testAccIntegrationConfig_base(rName string) string {
+	return acctest.ConfigCompose(testAccIntegrationConfig_baseClusterWithInstance(rName), fmt.Sprintf(`
 resource "aws_redshiftserverless_namespace" "test" {
   namespace_name = %[1]q
 }
@@ -394,7 +394,11 @@ resource "aws_redshift_resource_policy" "test" {
     }]
   })
 }
+`, rName))
+}
 
+func testAccIntegrationConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccIntegrationConfig_base(rName), fmt.Sprintf(`
 resource "aws_rds_integration" "test" {
   integration_name = %[1]q
   source_arn       = aws_rds_cluster.test.arn
@@ -406,99 +410,14 @@ resource "aws_rds_integration" "test" {
     aws_redshiftserverless_workgroup.test,
     aws_redshift_resource_policy.test,
   ]
-
-  lifecycle {
-    ignore_changes = [
-      kms_key_id
-    ]
-  }
 }
 `, rName))
 }
 
 func testAccIntegrationConfig_optional(rName string) string {
 	return acctest.ConfigCompose(testAccIntegrationConfig_base(rName), fmt.Sprintf(`
-resource "aws_redshiftserverless_namespace" "test" {
-  namespace_name = %[1]q
-}
-
-resource "aws_redshiftserverless_workgroup" "test" {
-  namespace_name = aws_redshiftserverless_namespace.test.namespace_name
-  workgroup_name = %[1]q
-  base_capacity  = 8
-
-  publicly_accessible = false
-  subnet_ids          = aws_subnet.test[*].id
-
-  config_parameter {
-    parameter_key   = "enable_case_sensitive_identifier"
-    parameter_value = "true"
-  }
-  config_parameter {
-    parameter_key   = "auto_mv"
-    parameter_value = "true"
-  }
-  config_parameter {
-    parameter_key   = "datestyle"
-    parameter_value = "ISO, MDY"
-  }
-  config_parameter {
-    parameter_key   = "enable_user_activity_logging"
-    parameter_value = "true"
-  }
-  config_parameter {
-    parameter_key   = "max_query_execution_time"
-    parameter_value = "14400"
-  }
-  config_parameter {
-    parameter_key   = "query_group"
-    parameter_value = "default"
-  }
-  config_parameter {
-    parameter_key   = "require_ssl"
-    parameter_value = "false"
-  }
-  config_parameter {
-    parameter_key   = "search_path"
-    parameter_value = "$user, public"
-  }
-  config_parameter {
-    parameter_key   = "use_fips_ssl"
-    parameter_value = "false"
-  }
-}
-
-# The "aws_redshiftserverless_resource_policy" resource doesn't support the following action types.
-# Therefore we need to use the "aws_redshift_resource_policy" resource for RedShift-serverless instead.
-resource "aws_redshift_resource_policy" "test" {
-  resource_arn = aws_redshiftserverless_namespace.test.arn
-
-  policy = jsonencode({
-    Version = "2008-10-17"
-    Statement = [{
-      Effect = "Allow"
-      Principal = {
-        AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
-      }
-      Action   = "redshift:CreateInboundIntegration"
-      Resource = aws_redshiftserverless_namespace.test.arn
-      }, {
-      Effect = "Allow"
-      Principal = {
-        Service = "redshift.amazonaws.com"
-      }
-      Action   = "redshift:AuthorizeInboundIntegration"
-      Resource = aws_redshiftserverless_namespace.test.arn
-      Condition = {
-        StringEquals = {
-          "aws:SourceArn" = aws_rds_cluster.test.arn
-        }
-      }
-    }]
-  })
-}
-
 resource "aws_kms_key" "test" {
+  description             = %[1]q
   deletion_window_in_days = 10
   policy                  = data.aws_iam_policy_document.key_policy.json
 }
