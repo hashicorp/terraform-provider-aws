@@ -1,4 +1,5 @@
-## 5.61.0 (Unreleased)
+## 5.62.0 (Unreleased)
+## 5.61.0 (August  1, 2024)
 
 NOTES:
 
