@@ -1,9 +1,14 @@
 ## 5.61.0 (Unreleased)
 
+NOTES:
+
+* resource/aws_chatbot_teams_channel_configuration: This resource is provided on a best-effort basis, and we welcome the community's help in testing it. ([#38630](https://github.com/hashicorp/terraform-provider-aws/issues/38630))
+
 FEATURES:
 
 * **New Data Source:** `aws_ecr_repository_creation_template` ([#38597](https://github.com/hashicorp/terraform-provider-aws/issues/38597))
 * **New Resource:** `aws_chatbot_slack_channel_configuration` ([#38124](https://github.com/hashicorp/terraform-provider-aws/issues/38124))
+* **New Resource:** `aws_chatbot_teams_channel_configuration` ([#38630](https://github.com/hashicorp/terraform-provider-aws/issues/38630))
 * **New Resource:** `aws_ecr_repository_creation_template` ([#38597](https://github.com/hashicorp/terraform-provider-aws/issues/38597))
 * **New Resource:** `aws_timestreaminfluxdb_db_instance` ([#37963](https://github.com/hashicorp/terraform-provider-aws/issues/37963))
 
