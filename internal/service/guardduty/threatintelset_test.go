@@ -177,46 +177,81 @@ func testAccCheckThreatIntelSetExists(ctx context.Context, name string) resource
 	}
 }
 
-func testAccThreatIntelSetConfig_basic(bucketName, keyName, threatintelsetName string, activate bool) string {
+func testAccThreatIntelSetConfig_base(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_guardduty_detector" "test" {}
-
-resource "aws_s3_bucket" "test" {
-  bucket        = "%s"
-  force_destroy = true
-}
-
-resource "aws_s3_object" "test" {
-  acl     = "public-read"
-  content = "10.0.0.0/8\n"
-  bucket  = aws_s3_bucket.test.id
-  key     = "%s"
-}
-
-resource "aws_guardduty_threatintelset" "test" {
-  name        = "%s"
-  detector_id = aws_guardduty_detector.test.id
-  format      = "TXT"
-  location    = "https://s3.amazonaws.com/${aws_s3_object.test.bucket}/${aws_s3_object.test.key}"
-  activate    = %t
-}
-`, bucketName, keyName, threatintelsetName, activate)
-}
-
-func testAccThreatIntelSetConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_guardduty_detector" "test" {}
-
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
 }
+
+resource "aws_s3_bucket_ownership_controls" "test" {
+  bucket = aws_s3_bucket.test.id
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  depends_on = [
+    aws_s3_bucket_ownership_controls.test,
+    aws_s3_bucket_public_access_block.test,
+  ]
+
+  bucket = aws_s3_bucket.test.id
+  acl    = "public-read"
+}
+`, rName)
+}
+
+func testAccThreatIntelSetConfig_basic(bucketName, keyName, threatintelsetName string, activate bool) string {
+	return acctest.ConfigCompose(testAccThreatIntelSetConfig_base(bucketName),
+		fmt.Sprintf(`
+resource "aws_guardduty_detector" "test" {}
 
 resource "aws_s3_object" "test" {
   acl     = "public-read"
   content = "10.0.0.0/8\n"
   bucket  = aws_s3_bucket.test.id
   key     = %[1]q
+
+  depends_on = [
+    aws_s3_bucket_acl.test,
+  ]
+}
+
+resource "aws_guardduty_threatintelset" "test" {
+  name        = %[2]q
+  detector_id = aws_guardduty_detector.test.id
+  format      = "TXT"
+  location    = "https://s3.amazonaws.com/${aws_s3_object.test.bucket}/${aws_s3_object.test.key}"
+  activate    = %[3]t
+}
+`, keyName, threatintelsetName, activate))
+}
+
+func testAccThreatIntelSetConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccThreatIntelSetConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_guardduty_detector" "test" {}
+
+resource "aws_s3_object" "test" {
+  acl     = "public-read"
+  content = "10.0.0.0/8\n"
+  bucket  = aws_s3_bucket.test.id
+  key     = %[1]q
+
+  depends_on = [
+    aws_s3_bucket_acl.test,
+  ]
 }
 
 resource "aws_guardduty_threatintelset" "test" {
@@ -230,23 +265,23 @@ resource "aws_guardduty_threatintelset" "test" {
     %[2]q = %[3]q
   }
 }
-`, rName, tagKey1, tagValue1)
+`, rName, tagKey1, tagValue1))
 }
 
 func testAccThreatIntelSetConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccThreatIntelSetConfig_base(rName),
+		fmt.Sprintf(`
 resource "aws_guardduty_detector" "test" {}
-
-resource "aws_s3_bucket" "test" {
-  bucket        = %[1]q
-  force_destroy = true
-}
 
 resource "aws_s3_object" "test" {
   acl     = "public-read"
   content = "10.0.0.0/8\n"
   bucket  = aws_s3_bucket.test.id
   key     = %[1]q
+
+  depends_on = [
+    aws_s3_bucket_acl.test,
+  ]
 }
 
 resource "aws_guardduty_threatintelset" "test" {
@@ -261,5 +296,5 @@ resource "aws_guardduty_threatintelset" "test" {
     %[4]q = %[5]q
   }
 }
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
