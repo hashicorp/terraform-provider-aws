@@ -397,6 +397,18 @@ func errorSourceDoesNotImplementAttrValue(sourcePath string, sourceType reflect.
 	}
 }
 
+func errorSourceIsNil(sourcePath string, sourceType reflect.Type, targetPath string, targetType reflect.Type) map[string]any {
+	return map[string]any{
+		"@level":             hclog.Error.String(),
+		"@module":            logModule,
+		"@message":           "Source is nil",
+		logAttrKeySourcePath: sourcePath,
+		logAttrKeySourceType: fullTypeName(sourceType),
+		logAttrKeyTargetPath: targetPath,
+		logAttrKeyTargetType: fullTypeName(targetType),
+	}
+}
+
 func errorTargetDoesNotImplementAttrValue(sourcePath string, sourceType reflect.Type, targetPath string, targetType reflect.Type) map[string]any {
 	return map[string]any{
 		"@level":             hclog.Error.String(),

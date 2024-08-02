@@ -110,18 +110,15 @@ func (flattener autoFlattener) convert(ctx context.Context, sourcePath path.Path
 	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourcePath, sourcePath.String())
 	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetPath, targetPath.String())
 
-	if vFrom.Kind() == reflect.Invalid {
-		ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourceType, fullTypeName(nil))
-	} else {
-		ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourceType, fullTypeName(vFrom.Type()))
-	}
-	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetType, fullTypeName(vTo.Type()))
+	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourceType, fullTypeName(valueType(vFrom)))
+	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetType, fullTypeName(valueType(vTo)))
 
 	valTo, ok := vTo.Interface().(attr.Value)
 	if !ok {
 		// Check for `nil` (i.e. Kind == Invalid) here, because we allow primitive types to be `nil`
 		if vFrom.Kind() == reflect.Invalid {
-			diags.AddError("AutoFlEx", "Cannot flatten nil source")
+			tflog.SubsystemError(ctx, subsystemName, "Source is nil")
+			diags.Append(diagFlatteningSourceIsNil(valueType(vFrom)))
 			return diags
 		}
 
@@ -1252,6 +1249,16 @@ func flattenPrePopulate(ctx context.Context, toVal reflect.Value) diag.Diagnosti
 	}
 
 	return diags
+}
+
+func diagFlatteningSourceIsNil(sourceType reflect.Type) diag.ErrorDiagnostic {
+	return diag.NewErrorDiagnostic(
+		"Incompatible Types",
+		"An unexpected error occurred while flattening configuration. "+
+			"This is always an error in the provider. "+
+			"Please report the following to the provider developer:\n\n"+
+			fmt.Sprintf("Source of type %q is nil.", fullTypeName(sourceType)),
+	)
 }
 
 func diagFlatteningTargetDoesNotImplementAttrValue(targetType reflect.Type) diag.ErrorDiagnostic {

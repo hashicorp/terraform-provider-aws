@@ -43,15 +43,8 @@ func autoFlexValues(ctx context.Context, from, to any) (context.Context, reflect
 		valFrom = valFrom.Elem()
 	}
 
-	var fromType, toType reflect.Type
-	if valFrom.Kind() != reflect.Invalid {
-		fromType = valFrom.Type()
-	}
-	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourceType, fullTypeName(fromType))
-	if valTo.Kind() != reflect.Invalid {
-		toType = valTo.Type()
-	}
-	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetType, fullTypeName(toType))
+	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourceType, fullTypeName(valueType(valFrom)))
+	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetType, fullTypeName(valueType(valTo)))
 
 	kind := valTo.Kind()
 	switch kind {
@@ -275,4 +268,11 @@ func diagConvertingTargetIsNotPointer(targetType reflect.Type) diag.ErrorDiagnos
 			"Please report the following to the provider developer:\n\n"+
 			fmt.Sprintf("Target type %q is not a pointer", fullTypeName(targetType)),
 	)
+}
+
+func valueType(v reflect.Value) reflect.Type {
+	if v.Kind() == reflect.Invalid {
+		return nil
+	}
+	return v.Type()
 }

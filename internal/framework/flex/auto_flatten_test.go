@@ -47,20 +47,22 @@ func TestFlatten(t *testing.T) {
 		"nil Source": {
 			Target: &TestFlex00{},
 			expectedDiags: diag.Diagnostics{
-				diag.NewErrorDiagnostic("AutoFlEx", "Cannot flatten nil source"),
+				diagFlatteningSourceIsNil(nil),
 			},
 			expectedLogLines: []map[string]any{
 				infoFlattening(nil, reflect.TypeFor[*TestFlex00]()),
+				errorSourceIsNil("", nil, "", reflect.TypeFor[TestFlex00]()),
 			},
 		},
 		"typed nil Source": {
 			Source: typedNilSource,
 			Target: &TestFlex00{},
 			expectedDiags: diag.Diagnostics{
-				diag.NewErrorDiagnostic("AutoFlEx", "Cannot flatten nil source"),
+				diagFlatteningSourceIsNil(nil), // FIXME: Should give the actual type
 			},
 			expectedLogLines: []map[string]any{
 				infoFlattening(reflect.TypeFor[*TestFlex00](), reflect.TypeFor[*TestFlex00]()),
+				errorSourceIsNil("", nil, "", reflect.TypeFor[TestFlex00]()), // FIXME: Should give the actual type
 			},
 		},
 		"nil Target": {

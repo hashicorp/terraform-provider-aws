@@ -113,13 +113,14 @@ func (expander autoExpander) convert(ctx context.Context, sourcePath path.Path, 
 	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourcePath, sourcePath.String())
 	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetPath, targetPath.String())
 
+	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourceType, fullTypeName(valueType(valFrom)))
+	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetType, fullTypeName(valueType(vTo)))
+
 	if valFrom.Kind() == reflect.Invalid {
-		diags.AddError("AutoFlEx", "Cannot expand nil source")
+		tflog.SubsystemError(ctx, subsystemName, "Source is nil")
+		diags.Append(diagExpandingSourceIsNil(valueType(valFrom)))
 		return diags
 	}
-
-	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourceType, fullTypeName(valFrom.Type()))
-	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetType, fullTypeName(vTo.Type()))
 
 	tflog.SubsystemInfo(ctx, subsystemName, "Converting")
 
@@ -1118,6 +1119,16 @@ func expandTypedExpander(ctx context.Context, fromTypedExpander TypedExpander, t
 	toVal.Set(expandedVal)
 
 	return diags
+}
+
+func diagExpandingSourceIsNil(sourceType reflect.Type) diag.ErrorDiagnostic {
+	return diag.NewErrorDiagnostic(
+		"Incompatible Types",
+		"An unexpected error occurred while expanding configuration. "+
+			"This is always an error in the provider. "+
+			"Please report the following to the provider developer:\n\n"+
+			fmt.Sprintf("Source of type %q is nil.", fullTypeName(sourceType)),
+	)
 }
 
 func diagExpandsToNil(expanderType reflect.Type) diag.ErrorDiagnostic {
