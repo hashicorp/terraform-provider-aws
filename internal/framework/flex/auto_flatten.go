@@ -391,8 +391,7 @@ func (flattener autoFlattener) interface_(ctx context.Context, vFrom reflect.Val
 			//
 			// JSONStringer -> types.String-ish.
 			//
-			if vFrom.Type().Implements(reflect.TypeOf((*smithyjson.JSONStringer)(nil)).Elem()) {
-				doc := vFrom.Interface().(smithyjson.JSONStringer)
+			if doc, ok := vFrom.Interface().(smithyjson.JSONStringer); ok {
 				b, err := doc.MarshalSmithyDocument()
 				if err != nil {
 					diags.AddError("AutoFlEx", err.Error())
