@@ -893,262 +893,6 @@ func TestExpandGeneric(t *testing.T) {
 				traceExpandingWithElementsAs("FieldOuter[0].FieldInner", reflect.TypeFor[fwtypes.MapValueOf[types.String]](), 1, "FieldOuter.FieldInner", reflect.TypeFor[map[string]string]()),
 			},
 		},
-		"null map block key": {
-			Source: &TestFlexMapBlockKeyTF01{
-				MapBlock: fwtypes.NewListNestedObjectValueOfNull[TestFlexMapBlockKeyTF02](ctx),
-			},
-			Target: &TestFlexMapBlockKeyAWS01{},
-			WantTarget: &TestFlexMapBlockKeyAWS01{
-				MapBlock: nil,
-			},
-			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[*TestFlexMapBlockKeyTF01](), reflect.TypeFor[*TestFlexMapBlockKeyAWS01]()),
-				infoConverting(reflect.TypeFor[TestFlexMapBlockKeyTF01](), reflect.TypeFor[*TestFlexMapBlockKeyAWS01]()),
-				traceMatchedFields("MapBlock", reflect.TypeFor[TestFlexMapBlockKeyTF01](), "MapBlock", reflect.TypeFor[*TestFlexMapBlockKeyAWS01]()),
-				infoConvertingWithPath("MapBlock", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[TestFlexMapBlockKeyTF02]](), "MapBlock", reflect.TypeFor[map[string]TestFlexMapBlockKeyAWS02]()),
-				traceExpandingNullValue("MapBlock", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[TestFlexMapBlockKeyTF02]](), "MapBlock", reflect.TypeFor[map[string]TestFlexMapBlockKeyAWS02]()),
-			},
-		},
-		"map block key list": {
-			Source: &TestFlexMapBlockKeyTF01{
-				MapBlock: fwtypes.NewListNestedObjectValueOfValueSliceMust[TestFlexMapBlockKeyTF02](ctx, []TestFlexMapBlockKeyTF02{
-					{
-						MapBlockKey: types.StringValue("x"),
-						Attr1:       types.StringValue("a"),
-						Attr2:       types.StringValue("b"),
-					},
-					{
-						MapBlockKey: types.StringValue("y"),
-						Attr1:       types.StringValue("c"),
-						Attr2:       types.StringValue("d"),
-					},
-				}),
-			},
-			Target: &TestFlexMapBlockKeyAWS01{},
-			WantTarget: &TestFlexMapBlockKeyAWS01{
-				MapBlock: map[string]TestFlexMapBlockKeyAWS02{
-					"x": {
-						Attr1: "a",
-						Attr2: "b",
-					},
-					"y": {
-						Attr1: "c",
-						Attr2: "d",
-					},
-				},
-			},
-			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[*TestFlexMapBlockKeyTF01](), reflect.TypeFor[*TestFlexMapBlockKeyAWS01]()),
-				infoConverting(reflect.TypeFor[TestFlexMapBlockKeyTF01](), reflect.TypeFor[*TestFlexMapBlockKeyAWS01]()),
-
-				traceMatchedFields("MapBlock", reflect.TypeFor[TestFlexMapBlockKeyTF01](), "MapBlock", reflect.TypeFor[*TestFlexMapBlockKeyAWS01]()),
-				infoConvertingWithPath("MapBlock", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[TestFlexMapBlockKeyTF02]](), "MapBlock", reflect.TypeFor[map[string]TestFlexMapBlockKeyAWS02]()),
-
-				traceSkipMapBlockKey("MapBlock[0]", reflect.TypeFor[TestFlexMapBlockKeyTF02](), "MapBlock[\"x\"]", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
-				traceMatchedFieldsWithPath("MapBlock[0]", "Attr1", reflect.TypeFor[TestFlexMapBlockKeyTF02](), "MapBlock[\"x\"]", "Attr1", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
-				infoConvertingWithPath("MapBlock[0].Attr1", reflect.TypeFor[types.String](), "MapBlock[\"x\"].Attr1", reflect.TypeFor[string]()),
-				traceMatchedFieldsWithPath("MapBlock[0]", "Attr2", reflect.TypeFor[TestFlexMapBlockKeyTF02](), "MapBlock[\"x\"]", "Attr2", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
-				infoConvertingWithPath("MapBlock[0].Attr2", reflect.TypeFor[types.String](), "MapBlock[\"x\"].Attr2", reflect.TypeFor[string]()),
-
-				traceSkipMapBlockKey("MapBlock[1]", reflect.TypeFor[TestFlexMapBlockKeyTF02](), "MapBlock[\"y\"]", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
-				traceMatchedFieldsWithPath("MapBlock[1]", "Attr1", reflect.TypeFor[TestFlexMapBlockKeyTF02](), "MapBlock[\"y\"]", "Attr1", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
-				infoConvertingWithPath("MapBlock[1].Attr1", reflect.TypeFor[types.String](), "MapBlock[\"y\"].Attr1", reflect.TypeFor[string]()),
-				traceMatchedFieldsWithPath("MapBlock[1]", "Attr2", reflect.TypeFor[TestFlexMapBlockKeyTF02](), "MapBlock[\"y\"]", "Attr2", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
-				infoConvertingWithPath("MapBlock[1].Attr2", reflect.TypeFor[types.String](), "MapBlock[\"y\"].Attr2", reflect.TypeFor[string]()),
-			},
-		},
-		"map block key set": {
-			Source: &TestFlexMapBlockKeyTF03{
-				MapBlock: fwtypes.NewSetNestedObjectValueOfValueSliceMust[TestFlexMapBlockKeyTF02](ctx, []TestFlexMapBlockKeyTF02{
-					{
-						MapBlockKey: types.StringValue("x"),
-						Attr1:       types.StringValue("a"),
-						Attr2:       types.StringValue("b"),
-					},
-					{
-						MapBlockKey: types.StringValue("y"),
-						Attr1:       types.StringValue("c"),
-						Attr2:       types.StringValue("d"),
-					},
-				}),
-			},
-			Target: &TestFlexMapBlockKeyAWS01{},
-			WantTarget: &TestFlexMapBlockKeyAWS01{
-				MapBlock: map[string]TestFlexMapBlockKeyAWS02{
-					"x": {
-						Attr1: "a",
-						Attr2: "b",
-					},
-					"y": {
-						Attr1: "c",
-						Attr2: "d",
-					},
-				},
-			},
-			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[*TestFlexMapBlockKeyTF03](), reflect.TypeFor[*TestFlexMapBlockKeyAWS01]()),
-				infoConverting(reflect.TypeFor[TestFlexMapBlockKeyTF03](), reflect.TypeFor[*TestFlexMapBlockKeyAWS01]()),
-
-				traceMatchedFields("MapBlock", reflect.TypeFor[TestFlexMapBlockKeyTF03](), "MapBlock", reflect.TypeFor[*TestFlexMapBlockKeyAWS01]()),
-				infoConvertingWithPath("MapBlock", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[TestFlexMapBlockKeyTF02]](), "MapBlock", reflect.TypeFor[map[string]TestFlexMapBlockKeyAWS02]()),
-
-				traceSkipMapBlockKey("MapBlock[0]", reflect.TypeFor[TestFlexMapBlockKeyTF02](), "MapBlock[\"x\"]", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
-				traceMatchedFieldsWithPath("MapBlock[0]", "Attr1", reflect.TypeFor[TestFlexMapBlockKeyTF02](), "MapBlock[\"x\"]", "Attr1", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
-				infoConvertingWithPath("MapBlock[0].Attr1", reflect.TypeFor[types.String](), "MapBlock[\"x\"].Attr1", reflect.TypeFor[string]()),
-				traceMatchedFieldsWithPath("MapBlock[0]", "Attr2", reflect.TypeFor[TestFlexMapBlockKeyTF02](), "MapBlock[\"x\"]", "Attr2", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
-				infoConvertingWithPath("MapBlock[0].Attr2", reflect.TypeFor[types.String](), "MapBlock[\"x\"].Attr2", reflect.TypeFor[string]()),
-
-				traceSkipMapBlockKey("MapBlock[1]", reflect.TypeFor[TestFlexMapBlockKeyTF02](), "MapBlock[\"y\"]", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
-				traceMatchedFieldsWithPath("MapBlock[1]", "Attr1", reflect.TypeFor[TestFlexMapBlockKeyTF02](), "MapBlock[\"y\"]", "Attr1", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
-				infoConvertingWithPath("MapBlock[1].Attr1", reflect.TypeFor[types.String](), "MapBlock[\"y\"].Attr1", reflect.TypeFor[string]()),
-				traceMatchedFieldsWithPath("MapBlock[1]", "Attr2", reflect.TypeFor[TestFlexMapBlockKeyTF02](), "MapBlock[\"y\"]", "Attr2", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
-				infoConvertingWithPath("MapBlock[1].Attr2", reflect.TypeFor[types.String](), "MapBlock[\"y\"].Attr2", reflect.TypeFor[string]()),
-			},
-		},
-		"map block key ptr source": {
-			Source: &TestFlexMapBlockKeyTF01{
-				MapBlock: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*TestFlexMapBlockKeyTF02{
-					{
-						MapBlockKey: types.StringValue("x"),
-						Attr1:       types.StringValue("a"),
-						Attr2:       types.StringValue("b"),
-					},
-					{
-						MapBlockKey: types.StringValue("y"),
-						Attr1:       types.StringValue("c"),
-						Attr2:       types.StringValue("d"),
-					},
-				}),
-			},
-			Target: &TestFlexMapBlockKeyAWS01{},
-			WantTarget: &TestFlexMapBlockKeyAWS01{
-				MapBlock: map[string]TestFlexMapBlockKeyAWS02{
-					"x": {
-						Attr1: "a",
-						Attr2: "b",
-					},
-					"y": {
-						Attr1: "c",
-						Attr2: "d",
-					},
-				},
-			},
-			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[*TestFlexMapBlockKeyTF01](), reflect.TypeFor[*TestFlexMapBlockKeyAWS01]()),
-				infoConverting(reflect.TypeFor[TestFlexMapBlockKeyTF01](), reflect.TypeFor[*TestFlexMapBlockKeyAWS01]()),
-
-				traceMatchedFields("MapBlock", reflect.TypeFor[TestFlexMapBlockKeyTF01](), "MapBlock", reflect.TypeFor[*TestFlexMapBlockKeyAWS01]()),
-				infoConvertingWithPath("MapBlock", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[TestFlexMapBlockKeyTF02]](), "MapBlock", reflect.TypeFor[map[string]TestFlexMapBlockKeyAWS02]()),
-
-				traceSkipMapBlockKey("MapBlock[0]", reflect.TypeFor[TestFlexMapBlockKeyTF02](), "MapBlock[\"x\"]", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
-				traceMatchedFieldsWithPath("MapBlock[0]", "Attr1", reflect.TypeFor[TestFlexMapBlockKeyTF02](), "MapBlock[\"x\"]", "Attr1", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
-				infoConvertingWithPath("MapBlock[0].Attr1", reflect.TypeFor[types.String](), "MapBlock[\"x\"].Attr1", reflect.TypeFor[string]()),
-				traceMatchedFieldsWithPath("MapBlock[0]", "Attr2", reflect.TypeFor[TestFlexMapBlockKeyTF02](), "MapBlock[\"x\"]", "Attr2", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
-				infoConvertingWithPath("MapBlock[0].Attr2", reflect.TypeFor[types.String](), "MapBlock[\"x\"].Attr2", reflect.TypeFor[string]()),
-
-				traceSkipMapBlockKey("MapBlock[1]", reflect.TypeFor[TestFlexMapBlockKeyTF02](), "MapBlock[\"y\"]", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
-				traceMatchedFieldsWithPath("MapBlock[1]", "Attr1", reflect.TypeFor[TestFlexMapBlockKeyTF02](), "MapBlock[\"y\"]", "Attr1", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
-				infoConvertingWithPath("MapBlock[1].Attr1", reflect.TypeFor[types.String](), "MapBlock[\"y\"].Attr1", reflect.TypeFor[string]()),
-				traceMatchedFieldsWithPath("MapBlock[1]", "Attr2", reflect.TypeFor[TestFlexMapBlockKeyTF02](), "MapBlock[\"y\"]", "Attr2", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
-				infoConvertingWithPath("MapBlock[1].Attr2", reflect.TypeFor[types.String](), "MapBlock[\"y\"].Attr2", reflect.TypeFor[string]()),
-			},
-		},
-		"map block key ptr both": {
-			Source: &TestFlexMapBlockKeyTF01{
-				MapBlock: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*TestFlexMapBlockKeyTF02{
-					{
-						MapBlockKey: types.StringValue("x"),
-						Attr1:       types.StringValue("a"),
-						Attr2:       types.StringValue("b"),
-					},
-					{
-						MapBlockKey: types.StringValue("y"),
-						Attr1:       types.StringValue("c"),
-						Attr2:       types.StringValue("d"),
-					},
-				}),
-			},
-			Target: &TestFlexMapBlockKeyAWS03{},
-			WantTarget: &TestFlexMapBlockKeyAWS03{
-				MapBlock: map[string]*TestFlexMapBlockKeyAWS02{
-					"x": {
-						Attr1: "a",
-						Attr2: "b",
-					},
-					"y": {
-						Attr1: "c",
-						Attr2: "d",
-					},
-				},
-			},
-			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[*TestFlexMapBlockKeyTF01](), reflect.TypeFor[*TestFlexMapBlockKeyAWS03]()),
-				infoConverting(reflect.TypeFor[TestFlexMapBlockKeyTF01](), reflect.TypeFor[*TestFlexMapBlockKeyAWS03]()),
-
-				traceMatchedFields("MapBlock", reflect.TypeFor[TestFlexMapBlockKeyTF01](), "MapBlock", reflect.TypeFor[*TestFlexMapBlockKeyAWS03]()),
-				infoConvertingWithPath("MapBlock", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[TestFlexMapBlockKeyTF02]](), "MapBlock", reflect.TypeFor[map[string]*TestFlexMapBlockKeyAWS02]()),
-
-				traceSkipMapBlockKey("MapBlock[0]", reflect.TypeFor[TestFlexMapBlockKeyTF02](), "MapBlock[\"x\"]", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
-				traceMatchedFieldsWithPath("MapBlock[0]", "Attr1", reflect.TypeFor[TestFlexMapBlockKeyTF02](), "MapBlock[\"x\"]", "Attr1", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
-				infoConvertingWithPath("MapBlock[0].Attr1", reflect.TypeFor[types.String](), "MapBlock[\"x\"].Attr1", reflect.TypeFor[string]()),
-				traceMatchedFieldsWithPath("MapBlock[0]", "Attr2", reflect.TypeFor[TestFlexMapBlockKeyTF02](), "MapBlock[\"x\"]", "Attr2", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
-				infoConvertingWithPath("MapBlock[0].Attr2", reflect.TypeFor[types.String](), "MapBlock[\"x\"].Attr2", reflect.TypeFor[string]()),
-
-				traceSkipMapBlockKey("MapBlock[1]", reflect.TypeFor[TestFlexMapBlockKeyTF02](), "MapBlock[\"y\"]", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
-				traceMatchedFieldsWithPath("MapBlock[1]", "Attr1", reflect.TypeFor[TestFlexMapBlockKeyTF02](), "MapBlock[\"y\"]", "Attr1", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
-				infoConvertingWithPath("MapBlock[1].Attr1", reflect.TypeFor[types.String](), "MapBlock[\"y\"].Attr1", reflect.TypeFor[string]()),
-				traceMatchedFieldsWithPath("MapBlock[1]", "Attr2", reflect.TypeFor[TestFlexMapBlockKeyTF02](), "MapBlock[\"y\"]", "Attr2", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
-				infoConvertingWithPath("MapBlock[1].Attr2", reflect.TypeFor[types.String](), "MapBlock[\"y\"].Attr2", reflect.TypeFor[string]()),
-			},
-		},
-		"map block enum key": {
-			Source: &TestFlexMapBlockKeyTF04{
-				MapBlock: fwtypes.NewListNestedObjectValueOfValueSliceMust[TestFlexMapBlockKeyTF05](ctx, []TestFlexMapBlockKeyTF05{
-					{
-						MapBlockKey: fwtypes.StringEnumValue(TestEnumList),
-						Attr1:       types.StringValue("a"),
-						Attr2:       types.StringValue("b"),
-					},
-					{
-						MapBlockKey: fwtypes.StringEnumValue(TestEnumScalar),
-						Attr1:       types.StringValue("c"),
-						Attr2:       types.StringValue("d"),
-					},
-				}),
-			},
-			Target: &TestFlexMapBlockKeyAWS01{},
-			WantTarget: &TestFlexMapBlockKeyAWS01{
-				MapBlock: map[string]TestFlexMapBlockKeyAWS02{
-					string(TestEnumList): {
-						Attr1: "a",
-						Attr2: "b",
-					},
-					string(TestEnumScalar): {
-						Attr1: "c",
-						Attr2: "d",
-					},
-				},
-			},
-			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[*TestFlexMapBlockKeyTF04](), reflect.TypeFor[*TestFlexMapBlockKeyAWS01]()),
-				infoConverting(reflect.TypeFor[TestFlexMapBlockKeyTF04](), reflect.TypeFor[*TestFlexMapBlockKeyAWS01]()),
-
-				traceMatchedFields("MapBlock", reflect.TypeFor[TestFlexMapBlockKeyTF04](), "MapBlock", reflect.TypeFor[*TestFlexMapBlockKeyAWS01]()),
-				infoConvertingWithPath("MapBlock", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[TestFlexMapBlockKeyTF05]](), "MapBlock", reflect.TypeFor[map[string]TestFlexMapBlockKeyAWS02]()),
-
-				traceSkipMapBlockKey("MapBlock[0]", reflect.TypeFor[TestFlexMapBlockKeyTF05](), "MapBlock[\"List\"]", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
-				traceMatchedFieldsWithPath("MapBlock[0]", "Attr1", reflect.TypeFor[TestFlexMapBlockKeyTF05](), "MapBlock[\"List\"]", "Attr1", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
-				infoConvertingWithPath("MapBlock[0].Attr1", reflect.TypeFor[types.String](), "MapBlock[\"List\"].Attr1", reflect.TypeFor[string]()),
-				traceMatchedFieldsWithPath("MapBlock[0]", "Attr2", reflect.TypeFor[TestFlexMapBlockKeyTF05](), "MapBlock[\"List\"]", "Attr2", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
-				infoConvertingWithPath("MapBlock[0].Attr2", reflect.TypeFor[types.String](), "MapBlock[\"List\"].Attr2", reflect.TypeFor[string]()),
-
-				traceSkipMapBlockKey("MapBlock[1]", reflect.TypeFor[TestFlexMapBlockKeyTF05](), "MapBlock[\"Scalar\"]", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
-				traceMatchedFieldsWithPath("MapBlock[1]", "Attr1", reflect.TypeFor[TestFlexMapBlockKeyTF05](), "MapBlock[\"Scalar\"]", "Attr1", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
-				infoConvertingWithPath("MapBlock[1].Attr1", reflect.TypeFor[types.String](), "MapBlock[\"Scalar\"].Attr1", reflect.TypeFor[string]()),
-				traceMatchedFieldsWithPath("MapBlock[1]", "Attr2", reflect.TypeFor[TestFlexMapBlockKeyTF05](), "MapBlock[\"Scalar\"]", "Attr2", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
-				infoConvertingWithPath("MapBlock[1].Attr2", reflect.TypeFor[types.String](), "MapBlock[\"Scalar\"].Attr2", reflect.TypeFor[string]()),
-			},
-		},
 	}
 
 	runAutoExpandTestCases(t, testCases)
@@ -2107,6 +1851,272 @@ func TestExpandComplexNestedBlockWithStringEnum(t *testing.T) {
 				traceMatchedFieldsWithPath("Field2[0]", "Field2", reflect.TypeFor[tf01](), "Field2", "Field2", reflect.TypeFor[*aws02]()),
 				infoConvertingWithPath("Field2[0].Field2", reflect.TypeFor[fwtypes.StringEnum[TestEnum]](), "Field2.Field2", reflect.TypeFor[TestEnum]()),
 				traceExpandingNullValue("Field2[0].Field2", reflect.TypeFor[fwtypes.StringEnum[TestEnum]](), "Field2.Field2", reflect.TypeFor[TestEnum]()),
+			},
+		},
+	}
+	runAutoExpandTestCases(t, testCases)
+}
+
+func TestExpandMapBlock(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	testCases := autoFlexTestCases{
+		"nil map block key": {
+			Source: &TestFlexMapBlockKeyTF01{
+				MapBlock: fwtypes.NewListNestedObjectValueOfNull[TestFlexMapBlockKeyTF02](ctx),
+			},
+			Target: &TestFlexMapBlockKeyAWS01{},
+			WantTarget: &TestFlexMapBlockKeyAWS01{
+				MapBlock: nil,
+			},
+			expectedLogLines: []map[string]any{
+				infoExpanding(reflect.TypeFor[*TestFlexMapBlockKeyTF01](), reflect.TypeFor[*TestFlexMapBlockKeyAWS01]()),
+				infoConverting(reflect.TypeFor[TestFlexMapBlockKeyTF01](), reflect.TypeFor[*TestFlexMapBlockKeyAWS01]()),
+				traceMatchedFields("MapBlock", reflect.TypeFor[TestFlexMapBlockKeyTF01](), "MapBlock", reflect.TypeFor[*TestFlexMapBlockKeyAWS01]()),
+				infoConvertingWithPath("MapBlock", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[TestFlexMapBlockKeyTF02]](), "MapBlock", reflect.TypeFor[map[string]TestFlexMapBlockKeyAWS02]()),
+				traceExpandingNullValue("MapBlock", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[TestFlexMapBlockKeyTF02]](), "MapBlock", reflect.TypeFor[map[string]TestFlexMapBlockKeyAWS02]()),
+			},
+		},
+		"map block key list": {
+			Source: &TestFlexMapBlockKeyTF01{
+				MapBlock: fwtypes.NewListNestedObjectValueOfValueSliceMust[TestFlexMapBlockKeyTF02](ctx, []TestFlexMapBlockKeyTF02{
+					{
+						MapBlockKey: types.StringValue("x"),
+						Attr1:       types.StringValue("a"),
+						Attr2:       types.StringValue("b"),
+					},
+					{
+						MapBlockKey: types.StringValue("y"),
+						Attr1:       types.StringValue("c"),
+						Attr2:       types.StringValue("d"),
+					},
+				}),
+			},
+			Target: &TestFlexMapBlockKeyAWS01{},
+			WantTarget: &TestFlexMapBlockKeyAWS01{
+				MapBlock: map[string]TestFlexMapBlockKeyAWS02{
+					"x": {
+						Attr1: "a",
+						Attr2: "b",
+					},
+					"y": {
+						Attr1: "c",
+						Attr2: "d",
+					},
+				},
+			},
+			expectedLogLines: []map[string]any{
+				infoExpanding(reflect.TypeFor[*TestFlexMapBlockKeyTF01](), reflect.TypeFor[*TestFlexMapBlockKeyAWS01]()),
+				infoConverting(reflect.TypeFor[TestFlexMapBlockKeyTF01](), reflect.TypeFor[*TestFlexMapBlockKeyAWS01]()),
+
+				traceMatchedFields("MapBlock", reflect.TypeFor[TestFlexMapBlockKeyTF01](), "MapBlock", reflect.TypeFor[*TestFlexMapBlockKeyAWS01]()),
+				infoConvertingWithPath("MapBlock", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[TestFlexMapBlockKeyTF02]](), "MapBlock", reflect.TypeFor[map[string]TestFlexMapBlockKeyAWS02]()),
+
+				traceSkipMapBlockKey("MapBlock[0]", reflect.TypeFor[TestFlexMapBlockKeyTF02](), "MapBlock[\"x\"]", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
+				traceMatchedFieldsWithPath("MapBlock[0]", "Attr1", reflect.TypeFor[TestFlexMapBlockKeyTF02](), "MapBlock[\"x\"]", "Attr1", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
+				infoConvertingWithPath("MapBlock[0].Attr1", reflect.TypeFor[types.String](), "MapBlock[\"x\"].Attr1", reflect.TypeFor[string]()),
+				traceMatchedFieldsWithPath("MapBlock[0]", "Attr2", reflect.TypeFor[TestFlexMapBlockKeyTF02](), "MapBlock[\"x\"]", "Attr2", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
+				infoConvertingWithPath("MapBlock[0].Attr2", reflect.TypeFor[types.String](), "MapBlock[\"x\"].Attr2", reflect.TypeFor[string]()),
+
+				traceSkipMapBlockKey("MapBlock[1]", reflect.TypeFor[TestFlexMapBlockKeyTF02](), "MapBlock[\"y\"]", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
+				traceMatchedFieldsWithPath("MapBlock[1]", "Attr1", reflect.TypeFor[TestFlexMapBlockKeyTF02](), "MapBlock[\"y\"]", "Attr1", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
+				infoConvertingWithPath("MapBlock[1].Attr1", reflect.TypeFor[types.String](), "MapBlock[\"y\"].Attr1", reflect.TypeFor[string]()),
+				traceMatchedFieldsWithPath("MapBlock[1]", "Attr2", reflect.TypeFor[TestFlexMapBlockKeyTF02](), "MapBlock[\"y\"]", "Attr2", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
+				infoConvertingWithPath("MapBlock[1].Attr2", reflect.TypeFor[types.String](), "MapBlock[\"y\"].Attr2", reflect.TypeFor[string]()),
+			},
+		},
+		"map block key set": {
+			Source: &TestFlexMapBlockKeyTF03{
+				MapBlock: fwtypes.NewSetNestedObjectValueOfValueSliceMust[TestFlexMapBlockKeyTF02](ctx, []TestFlexMapBlockKeyTF02{
+					{
+						MapBlockKey: types.StringValue("x"),
+						Attr1:       types.StringValue("a"),
+						Attr2:       types.StringValue("b"),
+					},
+					{
+						MapBlockKey: types.StringValue("y"),
+						Attr1:       types.StringValue("c"),
+						Attr2:       types.StringValue("d"),
+					},
+				}),
+			},
+			Target: &TestFlexMapBlockKeyAWS01{},
+			WantTarget: &TestFlexMapBlockKeyAWS01{
+				MapBlock: map[string]TestFlexMapBlockKeyAWS02{
+					"x": {
+						Attr1: "a",
+						Attr2: "b",
+					},
+					"y": {
+						Attr1: "c",
+						Attr2: "d",
+					},
+				},
+			},
+			expectedLogLines: []map[string]any{
+				infoExpanding(reflect.TypeFor[*TestFlexMapBlockKeyTF03](), reflect.TypeFor[*TestFlexMapBlockKeyAWS01]()),
+				infoConverting(reflect.TypeFor[TestFlexMapBlockKeyTF03](), reflect.TypeFor[*TestFlexMapBlockKeyAWS01]()),
+
+				traceMatchedFields("MapBlock", reflect.TypeFor[TestFlexMapBlockKeyTF03](), "MapBlock", reflect.TypeFor[*TestFlexMapBlockKeyAWS01]()),
+				infoConvertingWithPath("MapBlock", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[TestFlexMapBlockKeyTF02]](), "MapBlock", reflect.TypeFor[map[string]TestFlexMapBlockKeyAWS02]()),
+
+				traceSkipMapBlockKey("MapBlock[0]", reflect.TypeFor[TestFlexMapBlockKeyTF02](), "MapBlock[\"x\"]", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
+				traceMatchedFieldsWithPath("MapBlock[0]", "Attr1", reflect.TypeFor[TestFlexMapBlockKeyTF02](), "MapBlock[\"x\"]", "Attr1", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
+				infoConvertingWithPath("MapBlock[0].Attr1", reflect.TypeFor[types.String](), "MapBlock[\"x\"].Attr1", reflect.TypeFor[string]()),
+				traceMatchedFieldsWithPath("MapBlock[0]", "Attr2", reflect.TypeFor[TestFlexMapBlockKeyTF02](), "MapBlock[\"x\"]", "Attr2", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
+				infoConvertingWithPath("MapBlock[0].Attr2", reflect.TypeFor[types.String](), "MapBlock[\"x\"].Attr2", reflect.TypeFor[string]()),
+
+				traceSkipMapBlockKey("MapBlock[1]", reflect.TypeFor[TestFlexMapBlockKeyTF02](), "MapBlock[\"y\"]", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
+				traceMatchedFieldsWithPath("MapBlock[1]", "Attr1", reflect.TypeFor[TestFlexMapBlockKeyTF02](), "MapBlock[\"y\"]", "Attr1", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
+				infoConvertingWithPath("MapBlock[1].Attr1", reflect.TypeFor[types.String](), "MapBlock[\"y\"].Attr1", reflect.TypeFor[string]()),
+				traceMatchedFieldsWithPath("MapBlock[1]", "Attr2", reflect.TypeFor[TestFlexMapBlockKeyTF02](), "MapBlock[\"y\"]", "Attr2", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
+				infoConvertingWithPath("MapBlock[1].Attr2", reflect.TypeFor[types.String](), "MapBlock[\"y\"].Attr2", reflect.TypeFor[string]()),
+			},
+		},
+		"map block key ptr source": {
+			Source: &TestFlexMapBlockKeyTF01{
+				MapBlock: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*TestFlexMapBlockKeyTF02{
+					{
+						MapBlockKey: types.StringValue("x"),
+						Attr1:       types.StringValue("a"),
+						Attr2:       types.StringValue("b"),
+					},
+					{
+						MapBlockKey: types.StringValue("y"),
+						Attr1:       types.StringValue("c"),
+						Attr2:       types.StringValue("d"),
+					},
+				}),
+			},
+			Target: &TestFlexMapBlockKeyAWS01{},
+			WantTarget: &TestFlexMapBlockKeyAWS01{
+				MapBlock: map[string]TestFlexMapBlockKeyAWS02{
+					"x": {
+						Attr1: "a",
+						Attr2: "b",
+					},
+					"y": {
+						Attr1: "c",
+						Attr2: "d",
+					},
+				},
+			},
+			expectedLogLines: []map[string]any{
+				infoExpanding(reflect.TypeFor[*TestFlexMapBlockKeyTF01](), reflect.TypeFor[*TestFlexMapBlockKeyAWS01]()),
+				infoConverting(reflect.TypeFor[TestFlexMapBlockKeyTF01](), reflect.TypeFor[*TestFlexMapBlockKeyAWS01]()),
+
+				traceMatchedFields("MapBlock", reflect.TypeFor[TestFlexMapBlockKeyTF01](), "MapBlock", reflect.TypeFor[*TestFlexMapBlockKeyAWS01]()),
+				infoConvertingWithPath("MapBlock", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[TestFlexMapBlockKeyTF02]](), "MapBlock", reflect.TypeFor[map[string]TestFlexMapBlockKeyAWS02]()),
+
+				traceSkipMapBlockKey("MapBlock[0]", reflect.TypeFor[TestFlexMapBlockKeyTF02](), "MapBlock[\"x\"]", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
+				traceMatchedFieldsWithPath("MapBlock[0]", "Attr1", reflect.TypeFor[TestFlexMapBlockKeyTF02](), "MapBlock[\"x\"]", "Attr1", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
+				infoConvertingWithPath("MapBlock[0].Attr1", reflect.TypeFor[types.String](), "MapBlock[\"x\"].Attr1", reflect.TypeFor[string]()),
+				traceMatchedFieldsWithPath("MapBlock[0]", "Attr2", reflect.TypeFor[TestFlexMapBlockKeyTF02](), "MapBlock[\"x\"]", "Attr2", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
+				infoConvertingWithPath("MapBlock[0].Attr2", reflect.TypeFor[types.String](), "MapBlock[\"x\"].Attr2", reflect.TypeFor[string]()),
+
+				traceSkipMapBlockKey("MapBlock[1]", reflect.TypeFor[TestFlexMapBlockKeyTF02](), "MapBlock[\"y\"]", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
+				traceMatchedFieldsWithPath("MapBlock[1]", "Attr1", reflect.TypeFor[TestFlexMapBlockKeyTF02](), "MapBlock[\"y\"]", "Attr1", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
+				infoConvertingWithPath("MapBlock[1].Attr1", reflect.TypeFor[types.String](), "MapBlock[\"y\"].Attr1", reflect.TypeFor[string]()),
+				traceMatchedFieldsWithPath("MapBlock[1]", "Attr2", reflect.TypeFor[TestFlexMapBlockKeyTF02](), "MapBlock[\"y\"]", "Attr2", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
+				infoConvertingWithPath("MapBlock[1].Attr2", reflect.TypeFor[types.String](), "MapBlock[\"y\"].Attr2", reflect.TypeFor[string]()),
+			},
+		},
+		"map block key ptr both": {
+			Source: &TestFlexMapBlockKeyTF01{
+				MapBlock: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*TestFlexMapBlockKeyTF02{
+					{
+						MapBlockKey: types.StringValue("x"),
+						Attr1:       types.StringValue("a"),
+						Attr2:       types.StringValue("b"),
+					},
+					{
+						MapBlockKey: types.StringValue("y"),
+						Attr1:       types.StringValue("c"),
+						Attr2:       types.StringValue("d"),
+					},
+				}),
+			},
+			Target: &TestFlexMapBlockKeyAWS03{},
+			WantTarget: &TestFlexMapBlockKeyAWS03{
+				MapBlock: map[string]*TestFlexMapBlockKeyAWS02{
+					"x": {
+						Attr1: "a",
+						Attr2: "b",
+					},
+					"y": {
+						Attr1: "c",
+						Attr2: "d",
+					},
+				},
+			},
+			expectedLogLines: []map[string]any{
+				infoExpanding(reflect.TypeFor[*TestFlexMapBlockKeyTF01](), reflect.TypeFor[*TestFlexMapBlockKeyAWS03]()),
+				infoConverting(reflect.TypeFor[TestFlexMapBlockKeyTF01](), reflect.TypeFor[*TestFlexMapBlockKeyAWS03]()),
+
+				traceMatchedFields("MapBlock", reflect.TypeFor[TestFlexMapBlockKeyTF01](), "MapBlock", reflect.TypeFor[*TestFlexMapBlockKeyAWS03]()),
+				infoConvertingWithPath("MapBlock", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[TestFlexMapBlockKeyTF02]](), "MapBlock", reflect.TypeFor[map[string]*TestFlexMapBlockKeyAWS02]()),
+
+				traceSkipMapBlockKey("MapBlock[0]", reflect.TypeFor[TestFlexMapBlockKeyTF02](), "MapBlock[\"x\"]", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
+				traceMatchedFieldsWithPath("MapBlock[0]", "Attr1", reflect.TypeFor[TestFlexMapBlockKeyTF02](), "MapBlock[\"x\"]", "Attr1", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
+				infoConvertingWithPath("MapBlock[0].Attr1", reflect.TypeFor[types.String](), "MapBlock[\"x\"].Attr1", reflect.TypeFor[string]()),
+				traceMatchedFieldsWithPath("MapBlock[0]", "Attr2", reflect.TypeFor[TestFlexMapBlockKeyTF02](), "MapBlock[\"x\"]", "Attr2", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
+				infoConvertingWithPath("MapBlock[0].Attr2", reflect.TypeFor[types.String](), "MapBlock[\"x\"].Attr2", reflect.TypeFor[string]()),
+
+				traceSkipMapBlockKey("MapBlock[1]", reflect.TypeFor[TestFlexMapBlockKeyTF02](), "MapBlock[\"y\"]", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
+				traceMatchedFieldsWithPath("MapBlock[1]", "Attr1", reflect.TypeFor[TestFlexMapBlockKeyTF02](), "MapBlock[\"y\"]", "Attr1", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
+				infoConvertingWithPath("MapBlock[1].Attr1", reflect.TypeFor[types.String](), "MapBlock[\"y\"].Attr1", reflect.TypeFor[string]()),
+				traceMatchedFieldsWithPath("MapBlock[1]", "Attr2", reflect.TypeFor[TestFlexMapBlockKeyTF02](), "MapBlock[\"y\"]", "Attr2", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
+				infoConvertingWithPath("MapBlock[1].Attr2", reflect.TypeFor[types.String](), "MapBlock[\"y\"].Attr2", reflect.TypeFor[string]()),
+			},
+		},
+		"map block enum key": {
+			Source: &TestFlexMapBlockKeyTF04{
+				MapBlock: fwtypes.NewListNestedObjectValueOfValueSliceMust[TestFlexMapBlockKeyTF05](ctx, []TestFlexMapBlockKeyTF05{
+					{
+						MapBlockKey: fwtypes.StringEnumValue(TestEnumList),
+						Attr1:       types.StringValue("a"),
+						Attr2:       types.StringValue("b"),
+					},
+					{
+						MapBlockKey: fwtypes.StringEnumValue(TestEnumScalar),
+						Attr1:       types.StringValue("c"),
+						Attr2:       types.StringValue("d"),
+					},
+				}),
+			},
+			Target: &TestFlexMapBlockKeyAWS01{},
+			WantTarget: &TestFlexMapBlockKeyAWS01{
+				MapBlock: map[string]TestFlexMapBlockKeyAWS02{
+					string(TestEnumList): {
+						Attr1: "a",
+						Attr2: "b",
+					},
+					string(TestEnumScalar): {
+						Attr1: "c",
+						Attr2: "d",
+					},
+				},
+			},
+			expectedLogLines: []map[string]any{
+				infoExpanding(reflect.TypeFor[*TestFlexMapBlockKeyTF04](), reflect.TypeFor[*TestFlexMapBlockKeyAWS01]()),
+				infoConverting(reflect.TypeFor[TestFlexMapBlockKeyTF04](), reflect.TypeFor[*TestFlexMapBlockKeyAWS01]()),
+
+				traceMatchedFields("MapBlock", reflect.TypeFor[TestFlexMapBlockKeyTF04](), "MapBlock", reflect.TypeFor[*TestFlexMapBlockKeyAWS01]()),
+				infoConvertingWithPath("MapBlock", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[TestFlexMapBlockKeyTF05]](), "MapBlock", reflect.TypeFor[map[string]TestFlexMapBlockKeyAWS02]()),
+
+				traceSkipMapBlockKey("MapBlock[0]", reflect.TypeFor[TestFlexMapBlockKeyTF05](), "MapBlock[\"List\"]", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
+				traceMatchedFieldsWithPath("MapBlock[0]", "Attr1", reflect.TypeFor[TestFlexMapBlockKeyTF05](), "MapBlock[\"List\"]", "Attr1", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
+				infoConvertingWithPath("MapBlock[0].Attr1", reflect.TypeFor[types.String](), "MapBlock[\"List\"].Attr1", reflect.TypeFor[string]()),
+				traceMatchedFieldsWithPath("MapBlock[0]", "Attr2", reflect.TypeFor[TestFlexMapBlockKeyTF05](), "MapBlock[\"List\"]", "Attr2", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
+				infoConvertingWithPath("MapBlock[0].Attr2", reflect.TypeFor[types.String](), "MapBlock[\"List\"].Attr2", reflect.TypeFor[string]()),
+
+				traceSkipMapBlockKey("MapBlock[1]", reflect.TypeFor[TestFlexMapBlockKeyTF05](), "MapBlock[\"Scalar\"]", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
+				traceMatchedFieldsWithPath("MapBlock[1]", "Attr1", reflect.TypeFor[TestFlexMapBlockKeyTF05](), "MapBlock[\"Scalar\"]", "Attr1", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
+				infoConvertingWithPath("MapBlock[1].Attr1", reflect.TypeFor[types.String](), "MapBlock[\"Scalar\"].Attr1", reflect.TypeFor[string]()),
+				traceMatchedFieldsWithPath("MapBlock[1]", "Attr2", reflect.TypeFor[TestFlexMapBlockKeyTF05](), "MapBlock[\"Scalar\"]", "Attr2", reflect.TypeFor[*TestFlexMapBlockKeyAWS02]()),
+				infoConvertingWithPath("MapBlock[1].Attr2", reflect.TypeFor[types.String](), "MapBlock[\"Scalar\"].Attr2", reflect.TypeFor[string]()),
 			},
 		},
 	}
