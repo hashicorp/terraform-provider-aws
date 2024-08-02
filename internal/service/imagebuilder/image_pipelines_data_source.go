@@ -43,7 +43,7 @@ func dataSourceImagePipelinesRead(ctx context.Context, d *schema.ResourceData, m
 	input := &imagebuilder.ListImagePipelinesInput{}
 
 	if v, ok := d.GetOk(names.AttrFilter); ok {
-		input.Filters = namevaluesfilters.New(v.(*schema.Set)).ImagebuilderFilters()
+		input.Filters = namevaluesfilters.New(v.(*schema.Set)).ImageBuilderFilters()
 	}
 
 	var results []*imagebuilder.ImagePipeline

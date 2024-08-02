@@ -14,8 +14,8 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 // []*SERVICE.Filter handling
 {{- range .SliceServiceNames }}
 
-// {{ . | Title }}Filters returns {{ . }} service filters.
-func (filters NameValuesFilters) {{ . | Title }}Filters() []*{{ . | FilterPackage }}.{{ . | FilterType }} {
+// {{ . | ProviderNameUpper }}Filters returns {{ . }} service filters.
+func (filters NameValuesFilters) {{ . | ProviderNameUpper }}Filters() []*{{ . | FilterPackage }}.{{ . | FilterType }} {
 	m := filters.Map()
 
 	if len(m) == 0 {

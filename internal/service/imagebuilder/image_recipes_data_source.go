@@ -53,7 +53,7 @@ func dataSourceImageRecipesRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if v, ok := d.GetOk(names.AttrFilter); ok {
-		input.Filters = namevaluesfilters.New(v.(*schema.Set)).ImagebuilderFilters()
+		input.Filters = namevaluesfilters.New(v.(*schema.Set)).ImageBuilderFilters()
 	}
 
 	var results []*imagebuilder.ImageRecipeSummary

@@ -43,7 +43,7 @@ func dataSourceInfrastructureConfigurationsRead(ctx context.Context, d *schema.R
 	input := &imagebuilder.ListInfrastructureConfigurationsInput{}
 
 	if v, ok := d.GetOk(names.AttrFilter); ok {
-		input.Filters = namevaluesfilters.New(v.(*schema.Set)).ImagebuilderFilters()
+		input.Filters = namevaluesfilters.New(v.(*schema.Set)).ImageBuilderFilters()
 	}
 
 	var results []*imagebuilder.InfrastructureConfigurationSummary

@@ -13,6 +13,7 @@ import (
 
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfilters"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type TemplateData struct {
@@ -29,17 +30,8 @@ func main() {
 
 	// Representing types such as []*fsx.Filter, []*rds.Filter, ...
 	sliceServiceNames := []string{
-		"autoscaling",
-		"databasemigrationservice",
-		"docdb",
-		"elasticinference",
-		"elasticsearchservice",
-		"fsx",
 		"imagebuilder",
-		"licensemanager",
-		"neptune",
 		"rds",
-		"resourcegroupstaggingapi",
 		"route53resolver",
 	}
 	// Always sort to reduce any potential generation churn
@@ -53,6 +45,7 @@ func main() {
 		"FilterType":            namevaluesfilters.ServiceFilterType,
 		"FilterTypeNameField":   namevaluesfilters.ServiceFilterTypeNameField,
 		"FilterTypeValuesField": namevaluesfilters.ServiceFilterTypeValuesField,
+		"ProviderNameUpper":     names.ProviderNameUpper,
 	}
 
 	d := g.NewGoFileDestination(filename)
