@@ -19,7 +19,7 @@ import (
 
 func TestAccEC2EBSSnapshotBlockPublicAccess_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_ebs_snapshot_block_public_access.this"
+	resourceName := "aws_ebs_snapshot_block_public_access.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -68,8 +68,8 @@ func testAccCheckEBSSnapshotBlockAccessDestroy(ctx context.Context) resource.Tes
 
 func testAccEBSSnapshotBlockPublicAccess_basic(state string) string {
 	return fmt.Sprintf(`
-resource "aws_ebs_snapshot_block_public_access" "this" {
-  state = "%[1]s"
+resource "aws_ebs_snapshot_block_public_access" "test" {
+  state = %[1]q
 }
 `, state)
 }
