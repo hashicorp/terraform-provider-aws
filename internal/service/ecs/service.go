@@ -2352,7 +2352,7 @@ func expandTagSpecifications(ts []interface{}) []awstypes.EBSTagSpecification {
 		}
 
 		var config awstypes.EBSTagSpecification
-		if v, ok := raw["resource_type"].(string); ok && v != "" {
+		if v, ok := raw[names.AttrResourceType].(string); ok && v != "" {
 			config.ResourceType = awstypes.EBSResourceType(v)
 		}
 		if v, ok := raw[names.AttrPropagateTags].(string); ok && v != "" {
