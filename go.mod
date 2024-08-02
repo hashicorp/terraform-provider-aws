@@ -60,6 +60,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/codebuild v1.40.3
 	github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.15.3
 	github.com/aws/aws-sdk-go-v2/service/codecommit v1.25.0
+	github.com/aws/aws-sdk-go-v2/service/codeconnections v1.2.3
 	github.com/aws/aws-sdk-go-v2/service/codedeploy v1.27.3
 	github.com/aws/aws-sdk-go-v2/service/codeguruprofiler v1.22.3
 	github.com/aws/aws-sdk-go-v2/service/codegurureviewer v1.27.3
@@ -283,7 +284,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.15 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.0 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.3.15 // indirect
-	github.com/aws/aws-sdk-go-v2/service/codeconnections v1.2.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.11.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.3.17 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.9.16 // indirect
