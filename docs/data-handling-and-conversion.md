@@ -189,26 +189,22 @@ AutoFlex uses field names to map between the source and target structures:
 1. An exact, case-sensitive match
 1. An exact, case-insensitive match
 1. Comparing plural and singular field names
-1. Adding a resource name prefix set on the `context.Context` passed to the function with the key `flex.ResourcePrefix`, e.g. Lex v2 Intents in `internal/service/lexv2models/intent.go`
+1. Adding a field name prefix set using the AutoFlex options function `flex.NewFieldNamePrefixOptionsFunc`, e.g. Lex v2 Intents in `internal/service/lexv2models/intent.go`
 
 By default, AutoFlex ignores fields with the name `Tags`, as AWS resource tags are [handled separately](./resource-tagging.md).
 Additional fields can be ignored and the `Tags` field can be included by passing optional `flex.AutoFlexOptionsFunc`s to `Flatten` or `Expand`.
-For example, to add an additional ignored field, use
+For example, to add an additional ignored field, use the `flex.NewIgnoredFieldAppendOptionsFunc` function constructor
 
 ```go
-diags := flex.Expand(ctx, source, &target, func(opts *flex.AutoFlexOptions) {
-    opts.AddIgnoredField("OtherField")
-})
+diags := flex.Expand(ctx, source, &target, flex.NewIgnoredFieldAppendOptionsFunc("OtherField"))
 ```
 
 This will ignore both `Tags` and `OtherField`.
-To override existing ignored fields, call `opts.SetIgnoredFields`.
+To override existing ignored fields, use `flex.NewIgnoredFieldOptionsFunc`.
 For example, to include `Tags`, call
 
 ```go
-diags := flex.Expand(ctx, source, &target, func(opts *flex.AutoFlexOptions) {
-    opts.SetIgnoredFields([]string{})
-})
+diags := flex.Expand(ctx, source, &target, flex.NewIgnoredFieldOptionsFunc([]string{}))
 ```
 
 In some cases, flattening and expanding need conditional handling.
