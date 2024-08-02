@@ -8,5 +8,6 @@ var (
 	ResourceBGPPeer = resourceBGPPeer
 
 	FindBGPPeerByThreePartKey = findBGPPeerByThreePartKey
+	FindVirtualInterfaceByID  = findVirtualInterfaceByID
 	ValidConnectionBandWidth  = validConnectionBandWidth
 )
