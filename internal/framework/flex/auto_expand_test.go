@@ -434,7 +434,7 @@ func TestExpand(t *testing.T) {
 			},
 		},
 		"resource name prefix": {
-			ContextFn: func(ctx context.Context) context.Context { return context.WithValue(ctx, ResourcePrefix, "Intent") },
+			Options: []AutoFlexOptionsFunc{WithFieldNamePrefix("Intent")},
 			Source: &TestFlexTF16{
 				Name: types.StringValue("Ovodoghen"),
 			},
@@ -2140,11 +2140,7 @@ func TestExpandOptions(t *testing.T) {
 			},
 		},
 		"include tags with option override": {
-			Options: []AutoFlexOptionsFunc{
-				func(opts *AutoFlexOptions) {
-					opts.SetIgnoredFields([]string{})
-				},
-			},
+			Options: []AutoFlexOptionsFunc{WithNoIgnoredFieldNames()},
 			Source: &tf01{
 				Field1: types.BoolValue(true),
 				Tags: fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
@@ -2168,11 +2164,7 @@ func TestExpandOptions(t *testing.T) {
 			},
 		},
 		"ignore custom field": {
-			Options: []AutoFlexOptionsFunc{
-				func(opts *AutoFlexOptions) {
-					opts.SetIgnoredFields([]string{"Field1"})
-				},
-			},
+			Options: []AutoFlexOptionsFunc{WithIgnoredFieldNames([]string{"Field1"})},
 			Source: &tf01{
 				Field1: types.BoolValue(true),
 				Tags: fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{

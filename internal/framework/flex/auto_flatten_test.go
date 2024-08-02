@@ -677,7 +677,7 @@ func TestFlatten(t *testing.T) {
 			},
 		},
 		"resource name prefix": {
-			ContextFn: func(ctx context.Context) context.Context { return context.WithValue(ctx, ResourcePrefix, "Intent") },
+			Options: []AutoFlexOptionsFunc{WithFieldNamePrefix("Intent")},
 			Source: &TestFlexAWS18{
 				IntentName: aws.String("Ovodoghen"),
 			},
@@ -1900,11 +1900,7 @@ func TestFlattenOptions(t *testing.T) {
 			},
 		},
 		"include tags with option override": {
-			Options: []AutoFlexOptionsFunc{
-				func(opts *AutoFlexOptions) {
-					opts.SetIgnoredFields([]string{})
-				},
-			},
+			Options: []AutoFlexOptionsFunc{WithNoIgnoredFieldNames()},
 			Source: &aws01{
 				Field1: true,
 				Tags:   map[string]string{"foo": "bar"},
@@ -1927,11 +1923,7 @@ func TestFlattenOptions(t *testing.T) {
 			},
 		},
 		"ignore custom field": {
-			Options: []AutoFlexOptionsFunc{
-				func(opts *AutoFlexOptions) {
-					opts.SetIgnoredFields([]string{"Field1"})
-				},
-			},
+			Options: []AutoFlexOptionsFunc{WithIgnoredFieldNames([]string{"Field1"})},
 			Source: &aws01{
 				Field1: true,
 				Tags:   map[string]string{"foo": "bar"},
