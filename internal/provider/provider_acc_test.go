@@ -111,7 +111,7 @@ func TestAccProvider_DefaultTagsTags_multiple(t *testing.T) {
 	})
 }
 
-func TestAccProvider_DefaultTagsTags_env_vars(t *testing.T) {
+func TestAccProvider_DefaultTagsTags_envVars(t *testing.T) {
 	ctx := acctest.Context(t)
 	var p *schema.Provider
 

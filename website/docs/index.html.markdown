@@ -691,7 +691,9 @@ vpc_all_tags = tomap({
 
 The `default_tags` configuration block supports the following argument:
 
-* `tags` - (Optional) Key-value map of tags to apply to all resources. Default tags will also be read from environment variables like `TF_AWS_DEFAULT_TAGS_<tag_key>=<tag_value>`. If a tag is present in both an environment variable and this argument, the value in the Terraform argument takes precedence.
+* `tags` - (Optional) Key-value map of tags to apply to all resources.
+Default tags will also be read from environment variables matching the pattern `TF_AWS_DEFAULT_TAGS_<tag_key>=<tag_value>`.
+If a tag is present in both an environment variable and this argument, the value in the provider configuration takes precedence.
 
 ### ignore_tags Configuration Block
 

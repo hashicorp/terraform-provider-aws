@@ -842,8 +842,6 @@ func expandAssumeRoleWithWebIdentity(_ context.Context, tfMap map[string]interfa
 }
 
 func expandDefaultTags(ctx context.Context, tfMap map[string]interface{}) *tftags.DefaultConfig {
-	defaultConfig := &tftags.DefaultConfig{}
-
 	tags := make(map[string]interface{})
 	for _, ev := range os.Environ() {
 		k, v, _ := strings.Cut(ev, "=")
@@ -860,8 +858,9 @@ func expandDefaultTags(ctx context.Context, tfMap map[string]interface{}) *tftag
 	}
 
 	if len(tags) > 0 {
-		defaultConfig.Tags = tftags.New(ctx, tags)
-		return defaultConfig
+		return &tftags.DefaultConfig{
+			Tags: tftags.New(ctx, tags),
+		}
 	}
 
 	return nil
