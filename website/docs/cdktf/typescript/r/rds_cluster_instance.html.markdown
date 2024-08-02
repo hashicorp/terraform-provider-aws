@@ -92,7 +92,7 @@ This resource supports the following arguments:
   Valid Values: `aurora-mysql`, `aurora-postgresql`, `mysql`, `postgres`.(Note that `mysql` and `postgres` are Multi-AZ RDS clusters).
 * `identifierPrefix` - (Optional, Forces new resource) Creates a unique identifier beginning with the specified prefix. Conflicts with `identifier`.
 * `identifier` - (Optional, Forces new resource) Identifier for the RDS instance, if omitted, Terraform will assign a random, unique identifier.
-* `instanceClass` - (Required) Instance class to use. For details on CPU and memory, see [Scaling Aurora DB Instances][4]. Aurora uses `db.*` instance classes/types. Please see [AWS Documentation][7] for currently available instance classes and complete details.
+* `instanceClass` - (Required) Instance class to use. For details on CPU and memory, see [Scaling Aurora DB Instances][4]. Aurora uses `db.*` instance classes/types. Please see [AWS Documentation][7] for currently available instance classes and complete details. For Aurora Serverless v2 use `db.serverless`.
 * `monitoringInterval` - (Optional) Interval, in seconds, between points when Enhanced Monitoring metrics are collected for the DB instance. To disable collecting Enhanced Monitoring metrics, specify 0. The default is 0. Valid Values: 0, 1, 5, 10, 15, 30, 60.
 * `monitoringRoleArn` - (Optional) ARN for the IAM role that permits RDS to send enhanced monitoring metrics to CloudWatch Logs. You can find more information on the [AWS Documentation](http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Monitoring.html) what IAM permissions are needed to allow Enhanced Monitoring for RDS Instances.
 * `performanceInsightsEnabled` - (Optional) Specifies whether Performance Insights is enabled or not.
@@ -173,4 +173,4 @@ Using `terraform import`, import RDS Cluster Instances using the `identifier`. F
 % terraform import aws_rds_cluster_instance.prod_instance_1 aurora-cluster-instance-1
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-642cdfb497dfa63bd812cbb8469d2add6280112bff60519459faddbfe7149873 -->
+<!-- cache-key: cdktf-0.20.1 input-3432ce539b59fda8ba91657d459a86e2081f2d650ecc139482315dc284b9923b -->

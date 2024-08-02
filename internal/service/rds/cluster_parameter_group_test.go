@@ -5,12 +5,12 @@ package rds_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/rds"
+	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -24,7 +24,7 @@ import (
 
 func TestAccRDSClusterParameterGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v rds.DBClusterParameterGroup
+	var v types.DBClusterParameterGroup
 	resourceName := "aws_rds_cluster_parameter_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -123,7 +123,7 @@ func TestAccRDSClusterParameterGroup_basic(t *testing.T) {
 
 func TestAccRDSClusterParameterGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v rds.DBClusterParameterGroup
+	var v types.DBClusterParameterGroup
 	resourceName := "aws_rds_cluster_parameter_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -147,7 +147,7 @@ func TestAccRDSClusterParameterGroup_disappears(t *testing.T) {
 
 func TestAccRDSClusterParameterGroup_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v rds.DBClusterParameterGroup
+	var v types.DBClusterParameterGroup
 	resourceName := "aws_rds_cluster_parameter_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -193,7 +193,7 @@ func TestAccRDSClusterParameterGroup_tags(t *testing.T) {
 
 func TestAccRDSClusterParameterGroup_withApplyMethod(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v rds.DBClusterParameterGroup
+	var v types.DBClusterParameterGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster_parameter_group.test"
 
@@ -235,7 +235,7 @@ func TestAccRDSClusterParameterGroup_withApplyMethod(t *testing.T) {
 
 func TestAccRDSClusterParameterGroup_namePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v rds.DBClusterParameterGroup
+	var v types.DBClusterParameterGroup
 	resourceName := "aws_rds_cluster_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -263,7 +263,7 @@ func TestAccRDSClusterParameterGroup_namePrefix(t *testing.T) {
 
 func TestAccRDSClusterParameterGroup_NamePrefix_parameter(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v rds.DBClusterParameterGroup
+	var v types.DBClusterParameterGroup
 	resourceName := "aws_rds_cluster_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -291,7 +291,7 @@ func TestAccRDSClusterParameterGroup_NamePrefix_parameter(t *testing.T) {
 
 func TestAccRDSClusterParameterGroup_generatedName(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v rds.DBClusterParameterGroup
+	var v types.DBClusterParameterGroup
 	resourceName := "aws_rds_cluster_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -319,7 +319,7 @@ func TestAccRDSClusterParameterGroup_generatedName(t *testing.T) {
 
 func TestAccRDSClusterParameterGroup_GeneratedName_parameter(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v rds.DBClusterParameterGroup
+	var v types.DBClusterParameterGroup
 	resourceName := "aws_rds_cluster_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -347,7 +347,7 @@ func TestAccRDSClusterParameterGroup_GeneratedName_parameter(t *testing.T) {
 
 func TestAccRDSClusterParameterGroup_only(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v rds.DBClusterParameterGroup
+	var v types.DBClusterParameterGroup
 	resourceName := "aws_rds_cluster_parameter_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -378,7 +378,7 @@ func TestAccRDSClusterParameterGroup_only(t *testing.T) {
 
 func TestAccRDSClusterParameterGroup_updateParameters(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v rds.DBClusterParameterGroup
+	var v types.DBClusterParameterGroup
 	resourceName := "aws_rds_cluster_parameter_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -439,7 +439,7 @@ func TestAccRDSClusterParameterGroup_updateParameters(t *testing.T) {
 
 func TestAccRDSClusterParameterGroup_caseParameters(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v rds.DBClusterParameterGroup
+	var v types.DBClusterParameterGroup
 	resourceName := "aws_rds_cluster_parameter_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -476,7 +476,7 @@ func TestAccRDSClusterParameterGroup_caseParameters(t *testing.T) {
 
 func TestAccRDSClusterParameterGroup_dynamicDiffs(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v rds.DBClusterParameterGroup
+	var v types.DBClusterParameterGroup
 	resourceName := "aws_rds_cluster_parameter_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -515,7 +515,7 @@ func TestAccRDSClusterParameterGroup_dynamicDiffs(t *testing.T) {
 
 func testAccCheckClusterParameterGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_rds_cluster_parameter_group" {
@@ -532,7 +532,7 @@ func testAccCheckClusterParameterGroupDestroy(ctx context.Context) resource.Test
 				return err
 			}
 
-			return fmt.Errorf("RDS DB Cluster Parameter Group %s still exists", rs.Primary.ID)
+			return fmt.Errorf("RDS Cluster Parameter Group %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -546,33 +546,38 @@ func testAccCheckClusterParameterNotUserDefined(ctx context.Context, n, paramNam
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No DB Parameter Group ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
-
-		opts := rds.DescribeDBClusterParametersInput{
+		input := &rds.DescribeDBClusterParametersInput{
 			DBClusterParameterGroupName: aws.String(rs.Primary.ID),
 		}
 
 		userDefined := false
-		out, err := conn.DescribeDBClusterParametersWithContext(ctx, &opts)
-		for _, param := range out.Parameters {
-			if *param.ParameterName == paramName && aws.StringValue(param.ParameterValue) != "" {
-				// Some of these resets leave the parameter name present but with a nil value
-				userDefined = true
+		pages := rds.NewDescribeDBClusterParametersPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx)
+
+			if err != nil {
+				return err
+			}
+
+			for _, param := range page.Parameters {
+				if aws.ToString(param.ParameterName) == paramName && aws.ToString(param.ParameterValue) != "" {
+					// Some of these resets leave the parameter name present but with a nil value.
+					userDefined = true
+				}
 			}
 		}
 
 		if userDefined {
-			return fmt.Errorf("DB Parameter %s is user defined", paramName)
+			return fmt.Errorf("Cluster Parameter %s is user defined", paramName)
 		}
-		return err
+
+		return nil
 	}
 }
 
-func testAccCheckClusterParameterGroupAttributes(v *rds.DBClusterParameterGroup, name string) resource.TestCheckFunc {
+func testAccCheckClusterParameterGroupAttributes(v *types.DBClusterParameterGroup, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if *v.DBClusterParameterGroupName != name {
 			return fmt.Errorf("bad name: %#v expected: %v", *v.DBClusterParameterGroupName, name)
@@ -586,20 +591,17 @@ func testAccCheckClusterParameterGroupAttributes(v *rds.DBClusterParameterGroup,
 	}
 }
 
-func testAccCheckClusterParameterGroupExists(ctx context.Context, n string, v *rds.DBClusterParameterGroup) resource.TestCheckFunc {
+func testAccCheckClusterParameterGroupExists(ctx context.Context, n string, v *types.DBClusterParameterGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return errors.New("No RDS DB Cluster Parameter Group ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
 
 		output, err := tfrds.FindDBClusterParameterGroupByName(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}

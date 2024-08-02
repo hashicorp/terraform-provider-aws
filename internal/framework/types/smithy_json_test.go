@@ -142,6 +142,12 @@ func TestSmithyJSONValueInterface(t *testing.T) {
 				},
 			},
 		},
+		"valid SmithyJSON slice": { // lintignore:AWSAT003,AWSAT005
+			val: fwtypes.SmithyJSONValue[smithyjson.JSONStringer](`["value1","value"]`, newTestJSONDocument), // lintignore:AWSAT003,AWSAT005
+			expected: &testJSONDocument{
+				Value: []any{"value1", "value"},
+			},
+		},
 		"invalid SmithyJSON": {
 			val:         fwtypes.SmithyJSONValue[smithyjson.JSONStringer]("not ok", newTestJSONDocument), // lintignore:AWSAT003,AWSAT005
 			expectError: true,

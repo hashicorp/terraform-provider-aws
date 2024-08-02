@@ -9,15 +9,14 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/storagegateway"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/storagegateway/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -81,7 +80,7 @@ func TestParseVolumeGatewayARNAndTargetNameFromARN(t *testing.T) {
 
 func TestAccStorageGatewayCachediSCSIVolume_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cachedIscsiVolume storagegateway.CachediSCSIVolume
+	var cachedIscsiVolume awstypes.CachediSCSIVolume
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_cached_iscsi_volume.test"
 
@@ -121,7 +120,7 @@ func TestAccStorageGatewayCachediSCSIVolume_basic(t *testing.T) {
 
 func TestAccStorageGatewayCachediSCSIVolume_kms(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cachedIscsiVolume storagegateway.CachediSCSIVolume
+	var cachedIscsiVolume awstypes.CachediSCSIVolume
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_cached_iscsi_volume.test"
 	keyResourceName := "aws_kms_key.test"
@@ -151,7 +150,7 @@ func TestAccStorageGatewayCachediSCSIVolume_kms(t *testing.T) {
 
 func TestAccStorageGatewayCachediSCSIVolume_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cachedIscsiVolume storagegateway.CachediSCSIVolume
+	var cachedIscsiVolume awstypes.CachediSCSIVolume
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_cached_iscsi_volume.test"
 
@@ -200,7 +199,7 @@ func TestAccStorageGatewayCachediSCSIVolume_tags(t *testing.T) {
 
 func TestAccStorageGatewayCachediSCSIVolume_snapshotID(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cachedIscsiVolume storagegateway.CachediSCSIVolume
+	var cachedIscsiVolume awstypes.CachediSCSIVolume
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_cached_iscsi_volume.test"
 
@@ -240,7 +239,7 @@ func TestAccStorageGatewayCachediSCSIVolume_snapshotID(t *testing.T) {
 func TestAccStorageGatewayCachediSCSIVolume_sourceVolumeARN(t *testing.T) {
 	acctest.Skip(t, "This test can cause Storage Gateway 2.0.10.0 to enter an irrecoverable state during volume deletion.")
 	ctx := acctest.Context(t)
-	var cachedIscsiVolume storagegateway.CachediSCSIVolume
+	var cachedIscsiVolume awstypes.CachediSCSIVolume
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_cached_iscsi_volume.test"
 
@@ -279,7 +278,7 @@ func TestAccStorageGatewayCachediSCSIVolume_sourceVolumeARN(t *testing.T) {
 
 func TestAccStorageGatewayCachediSCSIVolume_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var storedIscsiVolume storagegateway.CachediSCSIVolume
+	var storedIscsiVolume awstypes.CachediSCSIVolume
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_cached_iscsi_volume.test"
 
@@ -301,30 +300,22 @@ func TestAccStorageGatewayCachediSCSIVolume_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckCachediSCSIVolumeExists(ctx context.Context, resourceName string, cachedIscsiVolume *storagegateway.CachediSCSIVolume) resource.TestCheckFunc {
+func testAccCheckCachediSCSIVolumeExists(ctx context.Context, n string, v *awstypes.CachediSCSIVolume) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayClient(ctx)
 
-		input := &storagegateway.DescribeCachediSCSIVolumesInput{
-			VolumeARNs: []*string{aws.String(rs.Primary.ID)},
-		}
-
-		output, err := conn.DescribeCachediSCSIVolumesWithContext(ctx, input)
+		output, err := tfstoragegateway.FindCachediSCSIVolumeByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("error reading Storage Gateway cached iSCSI volume: %s", err)
+			return err
 		}
 
-		if output == nil || len(output.CachediSCSIVolumes) == 0 || output.CachediSCSIVolumes[0] == nil || aws.StringValue(output.CachediSCSIVolumes[0].VolumeARN) != rs.Primary.ID {
-			return fmt.Errorf("Storage Gateway cached iSCSI volume %q not found", rs.Primary.ID)
-		}
-
-		*cachedIscsiVolume = *output.CachediSCSIVolumes[0]
+		*v = *output
 
 		return nil
 	}
@@ -332,35 +323,24 @@ func testAccCheckCachediSCSIVolumeExists(ctx context.Context, resourceName strin
 
 func testAccCheckCachediSCSIVolumeDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_storagegateway_cached_iscsi_volume" {
 				continue
 			}
 
-			input := &storagegateway.DescribeCachediSCSIVolumesInput{
-				VolumeARNs: []*string{aws.String(rs.Primary.ID)},
+			_, err := tfstoragegateway.FindCachediSCSIVolumeByARN(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			output, err := conn.DescribeCachediSCSIVolumesWithContext(ctx, input)
-
 			if err != nil {
-				if tfstoragegateway.IsErrGatewayNotFound(err) {
-					return nil
-				}
-				if tfawserr.ErrCodeEquals(err, storagegateway.ErrorCodeVolumeNotFound) {
-					return nil
-				}
-				if tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified volume was not found") {
-					return nil
-				}
 				return err
 			}
 
-			if output != nil && len(output.CachediSCSIVolumes) > 0 && output.CachediSCSIVolumes[0] != nil && aws.StringValue(output.CachediSCSIVolumes[0].VolumeARN) == rs.Primary.ID {
-				return fmt.Errorf("Storage Gateway cached iSCSI volume %q still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("Storage Gateway Cached iSCSI Volume %s still exists", rs.Primary.ID)
 		}
 
 		return nil

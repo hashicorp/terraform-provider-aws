@@ -50,7 +50,7 @@ class MyConvertedCode extends TerraformStack {
       databaseName: "mydb",
       engine: "aurora-mysql",
       engineVersion: "5.7.mysql_aurora.2.03.2",
-      masterPassword: "bar",
+      masterPassword: "must_be_eight_characters",
       masterUsername: "foo",
       preferredBackupWindow: "07:00-09:00",
     });
@@ -81,7 +81,7 @@ class MyConvertedCode extends TerraformStack {
       backupRetentionPeriod: 5,
       clusterIdentifier: "aurora-cluster-demo",
       databaseName: "mydb",
-      masterPassword: "bar",
+      masterPassword: "must_be_eight_characters",
       masterUsername: "foo",
       preferredBackupWindow: "07:00-09:00",
       engine: config.engine,
@@ -111,7 +111,7 @@ class MyConvertedCode extends TerraformStack {
       clusterIdentifier: "aurora-cluster-demo",
       databaseName: "mydb",
       engine: "aurora-postgresql",
-      masterPassword: "bar",
+      masterPassword: "must_be_eight_characters",
       masterUsername: "foo",
       preferredBackupWindow: "07:00-09:00",
     });
@@ -362,6 +362,7 @@ This resource supports the following arguments:
 * `enableLocalWriteForwarding` - (Optional) Whether read replicas can forward write operations to the writer DB instance in the DB cluster. By default, write operations aren't allowed on reader DB instances.. See the [User Guide for Aurora](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-mysql-write-forwarding.html) for more information. **NOTE:** Local write forwarding requires Aurora MySQL version 3.04 or higher.
 * `enabledCloudwatchLogsExports` - (Optional) Set of log types to export to cloudwatch. If omitted, no logs will be exported. The following log types are supported: `audit`, `error`, `general`, `slowquery`, `postgresql` (PostgreSQL).
 * `engineMode` - (Optional) Database engine mode. Valid values: `global` (only valid for Aurora MySQL 1.21 and earlier), `parallelquery`, `provisioned`, `serverless`. Defaults to: `provisioned`. See the [RDS User Guide](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless.html) for limitations when using `serverless`.
+* `engineLifecycleSupport` - (Optional) The life cycle type for this DB instance. This setting is valid for cluster types Aurora DB clusters and Multi-AZ DB clusters. Valid values are `open-source-rds-extended-support`, `open-source-rds-extended-support-disabled`. Default value is `open-source-rds-extended-support`. [Using Amazon RDS Extended Support]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/extended-support.html
 * `engineVersion` - (Optional) Database engine version. Updating this argument results in an outage. See the [Aurora MySQL](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/AuroraMySQL.Updates.html) and [Aurora Postgres](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/AuroraPostgreSQL.Updates.html) documentation for your configured engine to determine this value, or by running `aws rds describe-db-engine-versions`. For example with Aurora MySQL 2, a potential value for this argument is `5.7.mysql_aurora.2.03.2`. The value can contain a partial version where supported by the API. The actual engine version used is returned in the attribute `engineVersionActual`, , see [Attribute Reference](#attribute-reference) below.
 * `engine` - (Required) Name of the database engine to be used for this DB cluster. Valid Values: `aurora-mysql`, `aurora-postgresql`, `mysql`, `postgres`. (Note that `mysql` and `postgres` are Multi-AZ RDS clusters).
 * `finalSnapshotIdentifier` - (Optional) Name of your final DB snapshot when this DB cluster is deleted. If omitted, no final snapshot will be made.
@@ -499,6 +500,7 @@ class MyConvertedCode extends TerraformStack {
         autoPause: true,
         maxCapacity: 256,
         minCapacity: 2,
+        secondsBeforeTimeout: 360,
         secondsUntilAutoPause: 300,
         timeoutAction: "ForceApplyCapacityChange",
       },
@@ -512,6 +514,7 @@ class MyConvertedCode extends TerraformStack {
 * `autoPause` - (Optional) Whether to enable automatic pause. A DB cluster can be paused only when it's idle (it has no connections). If a DB cluster is paused for more than seven days, the DB cluster might be backed up with a snapshot. In this case, the DB cluster is restored when there is a request to connect to it. Defaults to `true`.
 * `maxCapacity` - (Optional) Maximum capacity for an Aurora DB cluster in `serverless` DB engine mode. The maximum capacity must be greater than or equal to the minimum capacity. Valid Aurora MySQL capacity values are `1`, `2`, `4`, `8`, `16`, `32`, `64`, `128`, `256`. Valid Aurora PostgreSQL capacity values are (`2`, `4`, `8`, `16`, `32`, `64`, `192`, and `384`). Defaults to `16`.
 * `minCapacity` - (Optional) Minimum capacity for an Aurora DB cluster in `serverless` DB engine mode. The minimum capacity must be lesser than or equal to the maximum capacity. Valid Aurora MySQL capacity values are `1`, `2`, `4`, `8`, `16`, `32`, `64`, `128`, `256`. Valid Aurora PostgreSQL capacity values are (`2`, `4`, `8`, `16`, `32`, `64`, `192`, and `384`). Defaults to `1`.
+* `secondsBeforeTimeout` - (Optional) Amount of time, in seconds, that Aurora Serverless v1 tries to find a scaling point to perform seamless scaling before enforcing the timeout action. Valid values are `60` through `600`. Defaults to `300`.
 * `secondsUntilAutoPause` - (Optional) Time, in seconds, before an Aurora DB cluster in serverless mode is paused. Valid values are `300` through `86400`. Defaults to `300`.
 * `timeoutAction` - (Optional) Action to take when the timeout is reached. Valid values: `ForceApplyCapacityChange`, `RollbackCapacityChange`. Defaults to `RollbackCapacityChange`. See [documentation](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless-v1.how-it-works.html#aurora-serverless.how-it-works.timeout-action).
 
@@ -635,4 +638,4 @@ Using `terraform import`, import RDS Clusters using the `clusterIdentifier`. For
 % terraform import aws_rds_cluster.aurora_cluster aurora-prod-cluster
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-d9c6f82d6f9015fa053c5a6decf5143141782eb5860e2728cbeabedfbeb46d20 -->
+<!-- cache-key: cdktf-0.20.1 input-36122fdbe5e48033cead0df2a7bdacd2ee87c8495c33578fa7123d090dfc7fb0 -->

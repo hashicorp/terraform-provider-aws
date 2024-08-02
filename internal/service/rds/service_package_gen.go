@@ -33,14 +33,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceClusterSnapshot,
+			Factory:  dataSourceClusterSnapshot,
 			TypeName: "aws_db_cluster_snapshot",
 			Name:     "DB Cluster Snapshot",
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceEventCategories,
+			Factory:  dataSourceEventCategories,
 			TypeName: "aws_db_event_categories",
+			Name:     "Event Categories",
 		},
 		{
 			Factory:  DataSourceInstance,
@@ -62,7 +63,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "DB Proxy",
 		},
 		{
-			Factory:  DataSourceSnapshot,
+			Factory:  dataSourceSnapshot,
 			TypeName: "aws_db_snapshot",
 			Name:     "DB Snapshot",
 			Tags:     &types.ServicePackageResourceTags{},
@@ -93,8 +94,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_rds_orderable_db_instance",
 		},
 		{
-			Factory:  DataSourceReservedOffering,
+			Factory:  dataSourceReservedOffering,
 			TypeName: "aws_rds_reserved_instance_offering",
+			Name:     "Reserved Instance Offering",
 		},
 	}
 }
@@ -102,7 +104,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceClusterSnapshot,
+			Factory:  resourceClusterSnapshot,
 			TypeName: "aws_db_cluster_snapshot",
 			Name:     "DB Cluster Snapshot",
 			Tags: &types.ServicePackageResourceTags{
@@ -126,15 +128,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceInstanceAutomatedBackupsReplication,
+			Factory:  resourceInstanceAutomatedBackupsReplication,
 			TypeName: "aws_db_instance_automated_backups_replication",
+			Name:     "Instance Automated Backups Replication",
 		},
 		{
-			Factory:  ResourceInstanceRoleAssociation,
+			Factory:  resourceInstanceRoleAssociation,
 			TypeName: "aws_db_instance_role_association",
+			Name:     "DB Instance IAM Role Association",
 		},
 		{
-			Factory:  ResourceOptionGroup,
+			Factory:  resourceOptionGroup,
 			TypeName: "aws_db_option_group",
 			Name:     "DB Option Group",
 			Tags: &types.ServicePackageResourceTags{
@@ -142,7 +146,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceParameterGroup,
+			Factory:  resourceParameterGroup,
 			TypeName: "aws_db_parameter_group",
 			Name:     "DB Parameter Group",
 			Tags: &types.ServicePackageResourceTags{
@@ -176,7 +180,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "DB Proxy Target",
 		},
 		{
-			Factory:  ResourceSnapshot,
+			Factory:  resourceSnapshot,
 			TypeName: "aws_db_snapshot",
 			Name:     "DB Snapshot",
 			Tags: &types.ServicePackageResourceTags{
@@ -184,9 +188,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceSnapshotCopy,
+			Factory:  resourceSnapshotCopy,
 			TypeName: "aws_db_snapshot_copy",
-			Name:     "DB Snapshot",
+			Name:     "DB Snapshot Copy",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "db_snapshot_arn",
 			},
@@ -205,7 +209,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Default Certificate",
 		},
 		{
-			Factory:  ResourceCluster,
+			Factory:  resourceCluster,
 			TypeName: "aws_rds_cluster",
 			Name:     "Cluster",
 			Tags: &types.ServicePackageResourceTags{
@@ -217,7 +221,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_rds_cluster_activity_stream",
 		},
 		{
-			Factory:  ResourceClusterEndpoint,
+			Factory:  resourceClusterEndpoint,
 			TypeName: "aws_rds_cluster_endpoint",
 			Name:     "Cluster Endpoint",
 			Tags: &types.ServicePackageResourceTags{
@@ -233,7 +237,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceClusterParameterGroup,
+			Factory:  resourceClusterParameterGroup,
 			TypeName: "aws_rds_cluster_parameter_group",
 			Name:     "Cluster Parameter Group",
 			Tags: &types.ServicePackageResourceTags{
@@ -241,11 +245,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceClusterRoleAssociation,
+			Factory:  resourceClusterRoleAssociation,
 			TypeName: "aws_rds_cluster_role_association",
+			Name:     "Cluster IAM Role Association",
 		},
 		{
-			Factory:  ResourceCustomDBEngineVersion,
+			Factory:  resourceCustomDBEngineVersion,
 			TypeName: "aws_rds_custom_db_engine_version",
 			Name:     "Custom DB Engine Version",
 			Tags: &types.ServicePackageResourceTags{

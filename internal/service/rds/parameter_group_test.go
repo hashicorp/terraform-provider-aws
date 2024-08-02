@@ -10,8 +10,9 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/rds"
+	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -24,7 +25,7 @@ import (
 
 func TestAccRDSParameterGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v rds.DBParameterGroup
+	var v types.DBParameterGroup
 	resourceName := "aws_db_parameter_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -119,7 +120,7 @@ func TestAccRDSParameterGroup_basic(t *testing.T) {
 
 func TestAccRDSParameterGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v rds.DBParameterGroup
+	var v types.DBParameterGroup
 	resourceName := "aws_db_parameter_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -143,7 +144,7 @@ func TestAccRDSParameterGroup_disappears(t *testing.T) {
 
 func TestAccRDSParameterGroup_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v rds.DBParameterGroup
+	var v types.DBParameterGroup
 	resourceName := "aws_db_parameter_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -207,7 +208,7 @@ func TestAccRDSParameterGroup_caseWithMixedParameters(t *testing.T) {
 
 func TestAccRDSParameterGroup_limit(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v rds.DBParameterGroup
+	var v types.DBParameterGroup
 	resourceName := "aws_db_parameter_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -576,7 +577,7 @@ func TestAccRDSParameterGroup_limit(t *testing.T) {
 
 func TestAccRDSParameterGroup_namePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v rds.DBParameterGroup
+	var v types.DBParameterGroup
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -597,7 +598,7 @@ func TestAccRDSParameterGroup_namePrefix(t *testing.T) {
 
 func TestAccRDSParameterGroup_generatedName(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v rds.DBParameterGroup
+	var v types.DBParameterGroup
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -617,7 +618,7 @@ func TestAccRDSParameterGroup_generatedName(t *testing.T) {
 
 func TestAccRDSParameterGroup_withApplyMethod(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v rds.DBParameterGroup
+	var v types.DBParameterGroup
 	resourceName := "aws_db_parameter_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -658,7 +659,7 @@ func TestAccRDSParameterGroup_withApplyMethod(t *testing.T) {
 
 func TestAccRDSParameterGroup_only(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v rds.DBParameterGroup
+	var v types.DBParameterGroup
 	resourceName := "aws_db_parameter_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -688,7 +689,7 @@ func TestAccRDSParameterGroup_only(t *testing.T) {
 
 func TestAccRDSParameterGroup_matchDefault(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v rds.DBParameterGroup
+	var v types.DBParameterGroup
 	resourceName := "aws_db_parameter_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -718,7 +719,7 @@ func TestAccRDSParameterGroup_matchDefault(t *testing.T) {
 
 func TestAccRDSParameterGroup_updateParameters(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v rds.DBParameterGroup
+	var v types.DBParameterGroup
 	resourceName := "aws_db_parameter_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -779,7 +780,7 @@ func TestAccRDSParameterGroup_updateParameters(t *testing.T) {
 
 func TestAccRDSParameterGroup_caseParameters(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v rds.DBParameterGroup
+	var v types.DBParameterGroup
 	resourceName := "aws_db_parameter_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -803,9 +804,10 @@ func TestAccRDSParameterGroup_caseParameters(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"parameter.0.name"},
 			},
 			{
 				Config: testAccParameterGroupConfig_upperCase(rName, "max_connections"),
@@ -814,15 +816,15 @@ func TestAccRDSParameterGroup_caseParameters(t *testing.T) {
 	})
 }
 
-func TestDBParameterModifyChunk(t *testing.T) {
+func TestParameterGroupModifyChunk(t *testing.T) {
 	t.Parallel()
 
 	cases := []struct {
 		Name              string
 		ChunkSize         int
-		Parameters        []*rds.Parameter
-		ExpectedModify    []*rds.Parameter
-		ExpectedRemainder []*rds.Parameter
+		Parameters        []types.Parameter
+		ExpectedModify    []types.Parameter
+		ExpectedRemainder []types.Parameter
 	}{
 		{
 			Name:              "Empty",
@@ -834,26 +836,26 @@ func TestDBParameterModifyChunk(t *testing.T) {
 		{
 			Name:      "A couple",
 			ChunkSize: 20,
-			Parameters: []*rds.Parameter{
+			Parameters: []types.Parameter{
 				{
-					ApplyMethod:    aws.String("immediate"),
+					ApplyMethod:    types.ApplyMethodImmediate,
 					ParameterName:  aws.String("tx_isolation"),
 					ParameterValue: aws.String("repeatable-read"),
 				},
 				{
-					ApplyMethod:    aws.String("immediate"),
+					ApplyMethod:    types.ApplyMethodImmediate,
 					ParameterName:  aws.String("binlog_cache_size"),
 					ParameterValue: aws.String("131072"),
 				},
 			},
-			ExpectedModify: []*rds.Parameter{
+			ExpectedModify: []types.Parameter{
 				{
-					ApplyMethod:    aws.String("immediate"),
+					ApplyMethod:    types.ApplyMethodImmediate,
 					ParameterName:  aws.String("tx_isolation"),
 					ParameterValue: aws.String("repeatable-read"),
 				},
 				{
-					ApplyMethod:    aws.String("immediate"),
+					ApplyMethod:    types.ApplyMethodImmediate,
 					ParameterName:  aws.String("binlog_cache_size"),
 					ParameterValue: aws.String("131072"),
 				},
@@ -863,68 +865,68 @@ func TestDBParameterModifyChunk(t *testing.T) {
 		{
 			Name:      "Over 3 max, 6 in",
 			ChunkSize: 3,
-			Parameters: []*rds.Parameter{
+			Parameters: []types.Parameter{
 				{
-					ApplyMethod:    aws.String("immediate"),
+					ApplyMethod:    types.ApplyMethodImmediate,
 					ParameterName:  aws.String("tx_isolation"),
 					ParameterValue: aws.String("repeatable-read"),
 				},
 				{
-					ApplyMethod:    aws.String("immediate"),
+					ApplyMethod:    types.ApplyMethodImmediate,
 					ParameterName:  aws.String("binlog_cache_size"),
 					ParameterValue: aws.String("131072"),
 				},
 				{
-					ApplyMethod:    aws.String("pending-reboot"),
+					ApplyMethod:    types.ApplyMethodPendingReboot,
 					ParameterName:  aws.String("innodb_read_io_threads"),
 					ParameterValue: aws.String("64"),
 				},
 				{
-					ApplyMethod:    aws.String("immediate"),
+					ApplyMethod:    types.ApplyMethodImmediate,
 					ParameterName:  aws.String("character_set_server"),
 					ParameterValue: aws.String("utf8"),
 				},
 				{
-					ApplyMethod:    aws.String("immediate"),
+					ApplyMethod:    types.ApplyMethodImmediate,
 					ParameterName:  aws.String("innodb_flush_log_at_trx_commit"),
 					ParameterValue: aws.String(acctest.Ct0),
 				},
 				{
-					ApplyMethod:    aws.String("immediate"),
+					ApplyMethod:    types.ApplyMethodImmediate,
 					ParameterName:  aws.String("character_set_filesystem"),
 					ParameterValue: aws.String("utf8"),
 				},
 			},
-			ExpectedModify: []*rds.Parameter{
+			ExpectedModify: []types.Parameter{
 				{
-					ApplyMethod:    aws.String("immediate"),
+					ApplyMethod:    types.ApplyMethodImmediate,
 					ParameterName:  aws.String("character_set_server"),
 					ParameterValue: aws.String("utf8"),
 				},
 				{
-					ApplyMethod:    aws.String("immediate"),
+					ApplyMethod:    types.ApplyMethodImmediate,
 					ParameterName:  aws.String("character_set_filesystem"),
 					ParameterValue: aws.String("utf8"),
 				},
 				{
-					ApplyMethod:    aws.String("immediate"),
+					ApplyMethod:    types.ApplyMethodImmediate,
 					ParameterName:  aws.String("tx_isolation"),
 					ParameterValue: aws.String("repeatable-read"),
 				},
 			},
-			ExpectedRemainder: []*rds.Parameter{
+			ExpectedRemainder: []types.Parameter{
 				{
-					ApplyMethod:    aws.String("immediate"),
+					ApplyMethod:    types.ApplyMethodImmediate,
 					ParameterName:  aws.String("binlog_cache_size"),
 					ParameterValue: aws.String("131072"),
 				},
 				{
-					ApplyMethod:    aws.String("pending-reboot"),
+					ApplyMethod:    types.ApplyMethodPendingReboot,
 					ParameterName:  aws.String("innodb_read_io_threads"),
 					ParameterValue: aws.String("64"),
 				},
 				{
-					ApplyMethod:    aws.String("immediate"),
+					ApplyMethod:    types.ApplyMethodImmediate,
 					ParameterName:  aws.String("innodb_flush_log_at_trx_commit"),
 					ParameterValue: aws.String(acctest.Ct0),
 				},
@@ -933,98 +935,98 @@ func TestDBParameterModifyChunk(t *testing.T) {
 		{
 			Name:      "Over 3 max, 9 in",
 			ChunkSize: 3,
-			Parameters: []*rds.Parameter{
+			Parameters: []types.Parameter{
 				{
-					ApplyMethod:    aws.String("pending-reboot"),
+					ApplyMethod:    types.ApplyMethodPendingReboot,
 					ParameterName:  aws.String("tx_isolation"),
 					ParameterValue: aws.String("repeatable-read"),
 				},
 				{
-					ApplyMethod:    aws.String("pending-reboot"),
+					ApplyMethod:    types.ApplyMethodPendingReboot,
 					ParameterName:  aws.String("binlog_cache_size"),
 					ParameterValue: aws.String("131072"),
 				},
 				{
-					ApplyMethod:    aws.String("pending-reboot"),
+					ApplyMethod:    types.ApplyMethodPendingReboot,
 					ParameterName:  aws.String("innodb_read_io_threads"),
 					ParameterValue: aws.String("64"),
 				},
 				{
-					ApplyMethod:    aws.String("pending-reboot"),
+					ApplyMethod:    types.ApplyMethodPendingReboot,
 					ParameterName:  aws.String("character_set_server"),
 					ParameterValue: aws.String("utf8"),
 				},
 				{
-					ApplyMethod:    aws.String("immediate"),
+					ApplyMethod:    types.ApplyMethodImmediate,
 					ParameterName:  aws.String("innodb_flush_log_at_trx_commit"),
 					ParameterValue: aws.String(acctest.Ct0),
 				},
 				{
-					ApplyMethod:    aws.String("immediate"),
+					ApplyMethod:    types.ApplyMethodImmediate,
 					ParameterName:  aws.String("character_set_filesystem"),
 					ParameterValue: aws.String("utf8"),
 				},
 				{
-					ApplyMethod:    aws.String("pending-reboot"),
+					ApplyMethod:    types.ApplyMethodPendingReboot,
 					ParameterName:  aws.String("innodb_max_dirty_pages_pct"),
 					ParameterValue: aws.String("90"),
 				},
 				{
-					ApplyMethod:    aws.String("immediate"),
+					ApplyMethod:    types.ApplyMethodImmediate,
 					ParameterName:  aws.String("character_set_connection"),
 					ParameterValue: aws.String("utf8"),
 				},
 				{
-					ApplyMethod:    aws.String("immediate"),
+					ApplyMethod:    types.ApplyMethodImmediate,
 					ParameterName:  aws.String("key_buffer_size"),
 					ParameterValue: aws.String("67108864"),
 				},
 			},
-			ExpectedModify: []*rds.Parameter{
+			ExpectedModify: []types.Parameter{
 				{
-					ApplyMethod:    aws.String("immediate"),
+					ApplyMethod:    types.ApplyMethodImmediate,
 					ParameterName:  aws.String("character_set_filesystem"),
 					ParameterValue: aws.String("utf8"),
 				},
 				{
-					ApplyMethod:    aws.String("immediate"),
+					ApplyMethod:    types.ApplyMethodImmediate,
 					ParameterName:  aws.String("character_set_connection"),
 					ParameterValue: aws.String("utf8"),
 				},
 				{
-					ApplyMethod:    aws.String("immediate"),
+					ApplyMethod:    types.ApplyMethodImmediate,
 					ParameterName:  aws.String("innodb_flush_log_at_trx_commit"),
 					ParameterValue: aws.String(acctest.Ct0),
 				},
 			},
-			ExpectedRemainder: []*rds.Parameter{
+			ExpectedRemainder: []types.Parameter{
 				{
-					ApplyMethod:    aws.String("pending-reboot"),
+					ApplyMethod:    types.ApplyMethodPendingReboot,
 					ParameterName:  aws.String("tx_isolation"),
 					ParameterValue: aws.String("repeatable-read"),
 				},
 				{
-					ApplyMethod:    aws.String("pending-reboot"),
+					ApplyMethod:    types.ApplyMethodPendingReboot,
 					ParameterName:  aws.String("binlog_cache_size"),
 					ParameterValue: aws.String("131072"),
 				},
 				{
-					ApplyMethod:    aws.String("pending-reboot"),
+					ApplyMethod:    types.ApplyMethodPendingReboot,
 					ParameterName:  aws.String("innodb_read_io_threads"),
 					ParameterValue: aws.String("64"),
 				},
 				{
-					ApplyMethod:    aws.String("pending-reboot"),
+					ApplyMethod:    types.ApplyMethodPendingReboot,
 					ParameterName:  aws.String("character_set_server"),
 					ParameterValue: aws.String("utf8"),
 				},
 				{
-					ApplyMethod:    aws.String("pending-reboot"),
+					ApplyMethod:    types.ApplyMethodPendingReboot,
 					ParameterName:  aws.String("innodb_max_dirty_pages_pct"),
 					ParameterValue: aws.String("90"),
 				},
 				{
-					ApplyMethod:    aws.String("immediate"),
+					ApplyMethod:    types.ApplyMethodImmediate,
 					ParameterName:  aws.String("key_buffer_size"),
 					ParameterValue: aws.String("67108864"),
 				},
@@ -1033,7 +1035,7 @@ func TestDBParameterModifyChunk(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		mod, rem := tfrds.ResourceParameterModifyChunk(tc.Parameters, tc.ChunkSize)
+		mod, rem := tfrds.ParameterGroupModifyChunk(tc.Parameters, tc.ChunkSize)
 		if !reflect.DeepEqual(mod, tc.ExpectedModify) {
 			t.Errorf("Case %q: Modify did not match\n%#v\n\nGot:\n%#v", tc.Name, tc.ExpectedModify, mod)
 		}
@@ -1045,7 +1047,7 @@ func TestDBParameterModifyChunk(t *testing.T) {
 
 func testAccCheckParameterGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_db_parameter_group" {
@@ -1069,35 +1071,32 @@ func testAccCheckParameterGroupDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckParameterGroupAttributes(v *rds.DBParameterGroup, name string) resource.TestCheckFunc {
+func testAccCheckParameterGroupAttributes(v *types.DBParameterGroup, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if *v.DBParameterGroupName != name {
 			return fmt.Errorf("Bad Parameter Group name, expected (%s), got (%s)", name, *v.DBParameterGroupName)
 		}
 
 		family := "mysql5.6"
-		if aws.StringValue(v.DBParameterGroupFamily) != family {
-			return fmt.Errorf("bad family, got: %s, expecting: %s", aws.StringValue(v.DBParameterGroupFamily), family)
+		if aws.ToString(v.DBParameterGroupFamily) != family {
+			return fmt.Errorf("bad family, got: %s, expecting: %s", aws.ToString(v.DBParameterGroupFamily), family)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckParameterGroupExists(ctx context.Context, n string, v *rds.DBParameterGroup) resource.TestCheckFunc {
+func testAccCheckParameterGroupExists(ctx context.Context, n string, v *types.DBParameterGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No RDS DB Parameter Group ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
 
 		output, err := tfrds.FindDBParameterGroupByName(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
@@ -1115,33 +1114,34 @@ func testAccCheckParameterNotUserDefined(ctx context.Context, rName, paramName s
 			return fmt.Errorf("Not found: %s", rName)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No DB Parameter Group ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
-
-		opts := rds.DescribeDBParametersInput{
+		input := &rds.DescribeDBParametersInput{
 			DBParameterGroupName: aws.String(rs.Primary.ID),
 			Source:               aws.String("user"),
 		}
 
 		userDefined := false
-		err := conn.DescribeDBParametersPagesWithContext(ctx, &opts, func(page *rds.DescribeDBParametersOutput, lastPage bool) bool {
+		pages := rds.NewDescribeDBParametersPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx)
+
+			if err != nil {
+				return err
+			}
+
 			for _, param := range page.Parameters {
-				if *param.ParameterName == paramName {
+				if aws.ToString(param.ParameterName) == paramName {
 					userDefined = true
-					return false
 				}
 			}
-			return true
-		})
+		}
 
 		if userDefined {
 			return fmt.Errorf("DB Parameter is user defined")
 		}
 
-		return err
+		return nil
 	}
 }
 

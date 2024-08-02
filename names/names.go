@@ -35,6 +35,7 @@ const (
 	AppConfigEndpointID                  = "appconfig"
 	AppFabricEndpointID                  = "appfabric"
 	AppIntegrationsEndpointID            = "app-integrations"
+	AppMeshEndpointID                    = "appmesh"
 	AppStreamEndpointID                  = "appstream2"
 	AppSyncEndpointID                    = "appsync"
 	ApplicationAutoscalingEndpointID     = "application-autoscaling"
@@ -48,6 +49,7 @@ const (
 	BedrockAgentEndpointID               = "bedrockagent"
 	BedrockEndpointID                    = "bedrock"
 	BudgetsEndpointID                    = "budgets"
+	ChimeEndpointID                      = "chime"
 	ChimeSDKMediaPipelinesEndpointID     = "media-pipelines-chime"
 	ChimeSDKVoiceEndpointID              = "voice-chime"
 	Cloud9EndpointID                     = "cloud9"
@@ -68,15 +70,20 @@ const (
 	DevOpsGuruEndpointID                 = "devops-guru"
 	DLMEndpointID                        = "dlm"
 	ECREndpointID                        = "api.ecr"
+	ECSEndpointID                        = "ecs"
 	EFSEndpointID                        = "elasticfilesystem"
 	EKSEndpointID                        = "eks"
 	ELBEndpointID                        = "elasticloadbalancing"
 	EMREndpointID                        = "elasticmapreduce"
+	ElasticTranscoderEndpointID          = "elastictranscoder"
 	ElastiCacheEndpointID                = "elasticache"
 	EventsEndpointID                     = "events"
 	EvidentlyEndpointID                  = "evidently"
 	FMSEndpointID                        = "fms"
+	FSxEndpointID                        = "fsx"
 	GrafanaEndpointID                    = "grafana"
+	GlueEndpointID                       = "glue"
+	IVSEndpointID                        = "ivs"
 	IVSChatEndpointID                    = "ivschat"
 	IdentityStoreEndpointID              = "identitystore"
 	Inspector2EndpointID                 = "inspector2"
@@ -248,6 +255,51 @@ func DNSSuffixForPartition(partition string) string {
 	default:
 		return "amazonaws.com"
 	}
+}
+
+func ServicePrincipalSuffixForPartition(partition string) string {
+	switch partition {
+	case ChinaPartitionID:
+		return "amazonaws.com.cn"
+	case ISOPartitionID:
+		return "c2s.ic.gov"
+	case ISOBPartitionID:
+		return "sc2s.sgov.gov"
+	default:
+		return "amazonaws.com"
+	}
+}
+
+// SPN region unique taken from
+// https://github.com/aws/aws-cdk/blob/main/packages/aws-cdk-lib/region-info/lib/default.ts
+func ServicePrincipalNameForPartition(service string, partition string) string {
+	if service != "" && partition != StandardPartitionID {
+		switch partition {
+		case ISOPartitionID:
+			switch service {
+			case "cloudhsm",
+				"config",
+				"logs",
+				"workspaces":
+				return DNSSuffixForPartition(partition)
+			}
+		case ISOBPartitionID:
+			switch service {
+			case "dms",
+				"logs":
+				return DNSSuffixForPartition(partition)
+			}
+		case ChinaPartitionID:
+			switch service {
+			case "codedeploy",
+				"elasticmapreduce",
+				"logs":
+				return DNSSuffixForPartition(partition)
+			}
+		}
+	}
+
+	return "amazonaws.com"
 }
 
 func IsOptInRegion(region string) bool {

@@ -5,7 +5,7 @@ package appmesh_test
 import (
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/appmesh"
+	"github.com/aws/aws-sdk-go-v2/service/appmesh/types"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -45,7 +45,7 @@ func testAccAppMeshServiceMesh_tagsSerial(t *testing.T) {
 
 func testAccAppMeshServiceMesh_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v appmesh.MeshData
+	var v types.MeshData
 	resourceName := "aws_appmesh_mesh.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -216,7 +216,7 @@ func testAccAppMeshServiceMesh_tags(t *testing.T) {
 
 func testAccAppMeshServiceMesh_tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v appmesh.MeshData
+	var v types.MeshData
 	resourceName := "aws_appmesh_mesh.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -276,7 +276,7 @@ func testAccAppMeshServiceMesh_tags_null(t *testing.T) {
 
 func testAccAppMeshServiceMesh_tags_AddOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v appmesh.MeshData
+	var v types.MeshData
 	resourceName := "aws_appmesh_mesh.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -353,7 +353,7 @@ func testAccAppMeshServiceMesh_tags_AddOnUpdate(t *testing.T) {
 
 func testAccAppMeshServiceMesh_tags_EmptyTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v appmesh.MeshData
+	var v types.MeshData
 	resourceName := "aws_appmesh_mesh.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -438,7 +438,7 @@ func testAccAppMeshServiceMesh_tags_EmptyTag_OnCreate(t *testing.T) {
 
 func testAccAppMeshServiceMesh_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v appmesh.MeshData
+	var v types.MeshData
 	resourceName := "aws_appmesh_mesh.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -565,7 +565,7 @@ func testAccAppMeshServiceMesh_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 
 func testAccAppMeshServiceMesh_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v appmesh.MeshData
+	var v types.MeshData
 	resourceName := "aws_appmesh_mesh.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -648,7 +648,7 @@ func testAccAppMeshServiceMesh_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 
 func testAccAppMeshServiceMesh_tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v appmesh.MeshData
+	var v types.MeshData
 	resourceName := "aws_appmesh_mesh.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -829,7 +829,7 @@ func testAccAppMeshServiceMesh_tags_DefaultTags_providerOnly(t *testing.T) {
 
 func testAccAppMeshServiceMesh_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v appmesh.MeshData
+	var v types.MeshData
 	resourceName := "aws_appmesh_mesh.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -989,7 +989,7 @@ func testAccAppMeshServiceMesh_tags_DefaultTags_nonOverlapping(t *testing.T) {
 
 func testAccAppMeshServiceMesh_tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v appmesh.MeshData
+	var v types.MeshData
 	resourceName := "aws_appmesh_mesh.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1165,7 +1165,7 @@ func testAccAppMeshServiceMesh_tags_DefaultTags_overlapping(t *testing.T) {
 
 func testAccAppMeshServiceMesh_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v appmesh.MeshData
+	var v types.MeshData
 	resourceName := "aws_appmesh_mesh.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1255,7 +1255,7 @@ func testAccAppMeshServiceMesh_tags_DefaultTags_updateToProviderOnly(t *testing.
 
 func testAccAppMeshServiceMesh_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v appmesh.MeshData
+	var v types.MeshData
 	resourceName := "aws_appmesh_mesh.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1344,7 +1344,7 @@ func testAccAppMeshServiceMesh_tags_DefaultTags_updateToResourceOnly(t *testing.
 
 func testAccAppMeshServiceMesh_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v appmesh.MeshData
+	var v types.MeshData
 	resourceName := "aws_appmesh_mesh.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1409,7 +1409,7 @@ func testAccAppMeshServiceMesh_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 
 func testAccAppMeshServiceMesh_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v appmesh.MeshData
+	var v types.MeshData
 	resourceName := "aws_appmesh_mesh.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1466,7 +1466,7 @@ func testAccAppMeshServiceMesh_tags_DefaultTags_emptyProviderOnlyTag(t *testing.
 
 func testAccAppMeshServiceMesh_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v appmesh.MeshData
+	var v types.MeshData
 	resourceName := "aws_appmesh_mesh.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1528,7 +1528,7 @@ func testAccAppMeshServiceMesh_tags_DefaultTags_nullOverlappingResourceTag(t *te
 
 func testAccAppMeshServiceMesh_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v appmesh.MeshData
+	var v types.MeshData
 	resourceName := "aws_appmesh_mesh.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1590,7 +1590,7 @@ func testAccAppMeshServiceMesh_tags_DefaultTags_nullNonOverlappingResourceTag(t 
 
 func testAccAppMeshServiceMesh_tags_ComputedTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v appmesh.MeshData
+	var v types.MeshData
 	resourceName := "aws_appmesh_mesh.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1644,7 +1644,7 @@ func testAccAppMeshServiceMesh_tags_ComputedTag_OnCreate(t *testing.T) {
 
 func testAccAppMeshServiceMesh_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v appmesh.MeshData
+	var v types.MeshData
 	resourceName := "aws_appmesh_mesh.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1734,7 +1734,7 @@ func testAccAppMeshServiceMesh_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 
 func testAccAppMeshServiceMesh_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v appmesh.MeshData
+	var v types.MeshData
 	resourceName := "aws_appmesh_mesh.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 

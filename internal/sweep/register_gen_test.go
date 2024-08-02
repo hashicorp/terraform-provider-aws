@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/appautoscaling"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appconfig"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appflow"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/applicationinsights"
@@ -24,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/batch"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bcmdataexports"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/chime"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloud9"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
@@ -149,6 +151,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/swf"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/synthetics"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/timestreaminfluxdb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/timestreamwrite"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/transcribe"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
@@ -168,6 +171,7 @@ func registerSweepers() {
 	amplify.RegisterSweepers()
 	apigateway.RegisterSweepers()
 	apigatewayv2.RegisterSweepers()
+	appautoscaling.RegisterSweepers()
 	appconfig.RegisterSweepers()
 	appflow.RegisterSweepers()
 	applicationinsights.RegisterSweepers()
@@ -183,6 +187,7 @@ func registerSweepers() {
 	batch.RegisterSweepers()
 	bcmdataexports.RegisterSweepers()
 	budgets.RegisterSweepers()
+	chime.RegisterSweepers()
 	cloud9.RegisterSweepers()
 	cloudformation.RegisterSweepers()
 	cloudfront.RegisterSweepers()
@@ -308,6 +313,7 @@ func registerSweepers() {
 	storagegateway.RegisterSweepers()
 	swf.RegisterSweepers()
 	synthetics.RegisterSweepers()
+	timestreaminfluxdb.RegisterSweepers()
 	timestreamwrite.RegisterSweepers()
 	transcribe.RegisterSweepers()
 	transfer.RegisterSweepers()
