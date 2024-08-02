@@ -69,6 +69,7 @@ func (r *integrationResource) Schema(ctx context.Context, request resource.Schem
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"additional_encryption_context": schema.MapAttribute{
+				CustomType:  fwtypes.MapOfStringType,
 				ElementType: types.StringType,
 				Optional:    true,
 				PlanModifiers: []planmodifier.Map{
@@ -128,7 +129,7 @@ func (r *integrationResource) Create(ctx context.Context, request resource.Creat
 
 	name := data.IntegrationName.ValueString()
 	input := &rds.CreateIntegrationInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -193,10 +194,17 @@ func (r *integrationResource) Read(ctx context.Context, request resource.ReadReq
 		return
 	}
 
+	prevAdditionalEncryptionContext := data.AdditionalEncryptionContext
+
 	// Set attributes for import.
 	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
 	if response.Diagnostics.HasError() {
 		return
+	}
+
+	// Null vs. empty map handling.
+	if prevAdditionalEncryptionContext.IsNull() && !data.AdditionalEncryptionContext.IsNull() && len(data.AdditionalEncryptionContext.Elements()) == 0 {
+		data.AdditionalEncryptionContext = prevAdditionalEncryptionContext
 	}
 
 	setTagsOutV2(ctx, output.Tags)
@@ -343,16 +351,16 @@ func integrationError(v awstypes.IntegrationError) error {
 }
 
 type integrationResourceModel struct {
-	AdditionalEncryptionContext types.Map      `tfsdk:"additional_encryption_context"`
-	ID                          types.String   `tfsdk:"id"`
-	IntegrationARN              types.String   `tfsdk:"arn"`
-	IntegrationName             types.String   `tfsdk:"integration_name"`
-	KMSKeyID                    types.String   `tfsdk:"kms_key_id"`
-	SourceARN                   fwtypes.ARN    `tfsdk:"source_arn"`
-	Tags                        types.Map      `tfsdk:"tags"`
-	TagsAll                     types.Map      `tfsdk:"tags_all"`
-	TargetARN                   fwtypes.ARN    `tfsdk:"target_arn"`
-	Timeouts                    timeouts.Value `tfsdk:"timeouts"`
+	AdditionalEncryptionContext fwtypes.MapValueOf[types.String] `tfsdk:"additional_encryption_context"`
+	ID                          types.String                     `tfsdk:"id"`
+	IntegrationARN              types.String                     `tfsdk:"arn"`
+	IntegrationName             types.String                     `tfsdk:"integration_name"`
+	KMSKeyID                    types.String                     `tfsdk:"kms_key_id"`
+	SourceARN                   fwtypes.ARN                      `tfsdk:"source_arn"`
+	Tags                        types.Map                        `tfsdk:"tags"`
+	TagsAll                     types.Map                        `tfsdk:"tags_all"`
+	TargetARN                   fwtypes.ARN                      `tfsdk:"target_arn"`
+	Timeouts                    timeouts.Value                   `tfsdk:"timeouts"`
 }
 
 func (model *integrationResourceModel) InitFromID() error {

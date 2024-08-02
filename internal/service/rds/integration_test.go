@@ -120,7 +120,7 @@ func TestAccRDSIntegration_optional(t *testing.T) {
 			},
 			{
 				Config: testAccIntegrationConfig_optional(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIntegrationExists(ctx, resourceName, &integration),
 					resource.TestCheckResourceAttr(resourceName, "integration_name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, "aws_kms_key.test", names.AttrARN),
@@ -280,7 +280,7 @@ resource "aws_rds_cluster_parameter_group" "test" {
 resource "aws_rds_cluster" "test" {
   cluster_identifier  = %[1]q
   engine              = "aurora-mysql"
-  engine_version      = "8.0.mysql_aurora.3.05.1"
+  engine_version      = "8.0.mysql_aurora.3.05.2"
   database_name       = "test"
   master_username     = "tfacctest"
   master_password     = "avoid-plaintext-passwords"
