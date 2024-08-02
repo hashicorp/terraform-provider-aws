@@ -24,6 +24,7 @@ import (
 func dataSourceOrderableInstance() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceOrderableInstanceRead,
+
 		Schema: map[string]*schema.Schema{
 			"availability_zone_group": {
 				Type:     schema.TypeString,
