@@ -3,7 +3,7 @@
 
 // This file contains code generation customizations for each AWS Go SDK service.
 
-package namevaluesfilters
+package v1
 
 // ServiceFilterPackage determines the service filter type package.
 func ServiceFilterPackage(serviceName string) string {

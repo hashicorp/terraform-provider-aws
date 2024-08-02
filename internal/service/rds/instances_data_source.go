@@ -12,7 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfilters"
+	"github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters"
+	namevaluesfiltersv1 "github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters/v1"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -47,7 +48,7 @@ func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta i
 	input := &rds.DescribeDBInstancesInput{}
 
 	if v, ok := d.GetOk(names.AttrFilter); ok {
-		input.Filters = namevaluesfilters.New(v.(*schema.Set)).RDSFilters()
+		input.Filters = namevaluesfiltersv1.New(v.(*schema.Set)).RDSFilters()
 	}
 
 	filter := tfslices.PredicateTrue[*rds.DBInstance]()

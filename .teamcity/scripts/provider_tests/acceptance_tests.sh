@@ -48,6 +48,7 @@ TF_ACC=1 go test \
     ./internal/json/... \
     ./internal/logging/... \
     ./internal/maps/... \
+    ./internal/namevaluesfilters/... \
     ./internal/provider/... \
     ./internal/retry/... \
     ./internal/sdkv2/... \
