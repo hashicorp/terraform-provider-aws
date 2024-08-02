@@ -61,8 +61,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_db_instances",
 		},
 		{
-			Factory:  DataSourceParameterGroup,
+			Factory:  dataSourceParameterGroup,
 			TypeName: "aws_db_parameter_group",
+			Name:     "DB Parameter Group",
 		},
 		{
 			Factory:  dataSourceProxy,
