@@ -866,13 +866,17 @@ func (flattener autoFlattener) structMapToObjectList(ctx context.Context, source
 			fromInterface = vFrom.MapIndex(key).Elem().Interface()
 		}
 
-		diags.Append(autoFlexConvertStruct(ctx, sourcePath, fromInterface, targetPath, target, flattener)...)
+		ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourceType, fullTypeName(reflect.TypeOf(fromInterface)))
+
+		diags.Append(setMapBlockKey(ctx, target, key)...)
 		if diags.HasError() {
 			return diags
 		}
 
-		d = blockKeyMapSet(target, key)
-		diags.Append(d...)
+		diags.Append(autoFlexConvertStruct(ctx, sourcePath, fromInterface, targetPath, target, flattener)...)
+		if diags.HasError() {
+			return diags
+		}
 
 		t.Index(i).Set(reflect.ValueOf(target))
 		i++
@@ -1114,14 +1118,16 @@ func (flattener autoFlattener) sliceOfStructToNestedObjectCollection(ctx context
 	return diags
 }
 
-// blockKeyMapSet takes a struct and assigns the value of the `key`
-func blockKeyMapSet(to any, key reflect.Value) diag.Diagnostics {
+// setMapBlockKey takes a struct and assigns the value of the `key`
+func setMapBlockKey(ctx context.Context, to any, key reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	valTo := reflect.ValueOf(to)
 	if kind := valTo.Kind(); kind == reflect.Ptr {
 		valTo = valTo.Elem()
 	}
+
+	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetType, fullTypeName(valueType(valTo)))
 
 	if valTo.Kind() != reflect.Struct {
 		diags.AddError("AutoFlEx", fmt.Sprintf("wrong type (%T), expected struct", valTo))
@@ -1156,7 +1162,8 @@ func blockKeyMapSet(to any, key reflect.Value) diag.Diagnostics {
 		return diags
 	}
 
-	diags.AddError("AutoFlEx", fmt.Sprintf("unable to find map block key (%s)", mapBlockKeyFieldName))
+	tflog.SubsystemError(ctx, subsystemName, "Target has no map block key")
+	diags.Append(diagFlatteningNoMapBlockKey(valTo.Type()))
 
 	return diags
 }
@@ -1268,5 +1275,15 @@ func diagFlatteningTargetDoesNotImplementAttrValue(targetType reflect.Type) diag
 			"This is always an error in the provider. "+
 			"Please report the following to the provider developer:\n\n"+
 			fmt.Sprintf("Target type %q does not implement attr.Value", fullTypeName(targetType)),
+	)
+}
+
+func diagFlatteningNoMapBlockKey(sourceType reflect.Type) diag.ErrorDiagnostic {
+	return diag.NewErrorDiagnostic(
+		"Incompatible Types",
+		"An unexpected error occurred while flattening configuration. "+
+			"This is always an error in the provider. "+
+			"Please report the following to the provider developer:\n\n"+
+			fmt.Sprintf("Target type %q does not contain field %q", fullTypeName(sourceType), mapBlockKeyFieldName),
 	)
 }

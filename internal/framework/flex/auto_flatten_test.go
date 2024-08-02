@@ -1910,6 +1910,28 @@ func TestFlattenMapBlock(t *testing.T) {
 				infoConvertingWithPath("MapBlock[\"List\"].Attr2", reflect.TypeFor[string](), "MapBlock[0].Attr2", reflect.TypeFor[types.String]()),
 			},
 		},
+
+		"map block list no key": {
+			Source: &TestFlexMapBlockKeyAWS01{
+				MapBlock: map[string]TestFlexMapBlockKeyAWS02{
+					"x": {
+						Attr1: "a",
+						Attr2: "b",
+					},
+				},
+			},
+			Target: &tfMapBlockListNoKey{},
+			expectedDiags: diag.Diagnostics{
+				diagFlatteningNoMapBlockKey(reflect.TypeFor[tfMapBlockElementNoKey]()),
+			},
+			expectedLogLines: []map[string]any{
+				infoFlattening(reflect.TypeFor[*TestFlexMapBlockKeyAWS01](), reflect.TypeFor[*tfMapBlockListNoKey]()),
+				infoConverting(reflect.TypeFor[TestFlexMapBlockKeyAWS01](), reflect.TypeFor[*tfMapBlockListNoKey]()),
+				traceMatchedFields("MapBlock", reflect.TypeFor[TestFlexMapBlockKeyAWS01](), "MapBlock", reflect.TypeFor[*tfMapBlockListNoKey]()),
+				infoConvertingWithPath("MapBlock", reflect.TypeFor[map[string]TestFlexMapBlockKeyAWS02](), "MapBlock", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfMapBlockElementNoKey]]()),
+				errorTargetHasNoMapBlockKey("MapBlock[\"x\"]", reflect.TypeFor[TestFlexMapBlockKeyAWS02](), "MapBlock[0]", reflect.TypeFor[tfMapBlockElementNoKey]()),
+			},
+		},
 	}
 	runAutoFlattenTestCases(t, testCases)
 }
