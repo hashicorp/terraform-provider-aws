@@ -5,11 +5,13 @@ package directconnect
 
 // Exports for use in tests only.
 var (
-	ResourceBGPPeer    = resourceBGPPeer
-	ResourceConnection = resourceConnection
+	ResourceBGPPeer               = resourceBGPPeer
+	ResourceConnection            = resourceConnection
+	ResourceConnectionAssociation = resourceConnectionAssociation
 
-	FindBGPPeerByThreePartKey = findBGPPeerByThreePartKey
-	FindConnectionByID        = findConnectionByID
-	FindVirtualInterfaceByID  = findVirtualInterfaceByID
-	ValidConnectionBandWidth  = validConnectionBandWidth
+	FindBGPPeerByThreePartKey    = findBGPPeerByThreePartKey
+	FindConnectionByID           = findConnectionByID
+	FindConnectionLAGAssociation = findConnectionLAGAssociation
+	FindVirtualInterfaceByID     = findVirtualInterfaceByID
+	ValidConnectionBandWidth     = validConnectionBandWidth
 )

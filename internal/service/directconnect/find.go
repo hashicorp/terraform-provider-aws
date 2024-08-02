@@ -14,20 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindConnectionAssociationExists(ctx context.Context, conn *directconnect.Client, connectionID, lagID string) error {
-	connection, err := findConnectionByID(ctx, conn, connectionID)
-
-	if err != nil {
-		return err
-	}
-
-	if lagID != aws.ToString(connection.LagId) {
-		return &retry.NotFoundError{}
-	}
-
-	return nil
-}
-
 func FindGatewayByID(ctx context.Context, conn *directconnect.Client, id string) (*awstypes.DirectConnectGateway, error) {
 	input := &directconnect.DescribeDirectConnectGatewaysInput{
 		DirectConnectGatewayId: aws.String(id),

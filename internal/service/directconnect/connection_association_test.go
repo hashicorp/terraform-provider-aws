@@ -92,7 +92,7 @@ func testAccCheckConnectionAssociationDestroy(ctx context.Context) resource.Test
 				continue
 			}
 
-			err := tfdirectconnect.FindConnectionAssociationExists(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["lag_id"])
+			err := tfdirectconnect.FindConnectionLAGAssociation(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["lag_id"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -109,20 +109,16 @@ func testAccCheckConnectionAssociationDestroy(ctx context.Context) resource.Test
 	}
 }
 
-func testAccCheckConnectionAssociationExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckConnectionAssociationExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectClient(ctx)
 
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
-
-		return tfdirectconnect.FindConnectionAssociationExists(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["lag_id"])
+		return tfdirectconnect.FindConnectionLAGAssociation(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["lag_id"])
 	}
 }
 

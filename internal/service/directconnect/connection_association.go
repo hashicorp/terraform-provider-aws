@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -20,8 +21,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_dx_connection_association")
-func ResourceConnectionAssociation() *schema.Resource {
+// @SDKResource("aws_dx_connection_association", name="Connection LAG Association")
+func resourceConnectionAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConnectionAssociationCreate,
 		ReadWithoutTimeout:   resourceConnectionAssociationRead,
@@ -53,7 +54,6 @@ func resourceConnectionAssociationCreate(ctx context.Context, d *schema.Resource
 		LagId:        aws.String(lagID),
 	}
 
-	log.Printf("[DEBUG] Creating Direct Connect Connection LAG Association: %#v", input)
 	output, err := conn.AssociateConnectionWithLag(ctx, input)
 
 	if err != nil {
@@ -62,7 +62,7 @@ func resourceConnectionAssociationCreate(ctx context.Context, d *schema.Resource
 
 	d.SetId(aws.ToString(output.ConnectionId))
 
-	return diags
+	return append(diags, resourceConnectionAssociationRead(ctx, d, meta)...)
 }
 
 func resourceConnectionAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -70,7 +70,7 @@ func resourceConnectionAssociationRead(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
 	lagID := d.Get("lag_id").(string)
-	err := FindConnectionAssociationExists(ctx, conn, d.Id(), lagID)
+	err := findConnectionLAGAssociation(ctx, conn, d.Id(), lagID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Direct Connect Connection (%s) LAG (%s) Association not found, removing from state", d.Id(), lagID)
@@ -92,6 +92,7 @@ func resourceConnectionAssociationDelete(ctx context.Context, d *schema.Resource
 	if err := deleteConnectionLAGAssociation(ctx, conn, d.Id(), d.Get("lag_id").(string)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
+
 	return diags
 }
 
@@ -101,27 +102,33 @@ func deleteConnectionLAGAssociation(ctx context.Context, conn *directconnect.Cli
 		LagId:        aws.String(lagID),
 	}
 
-	_, err := tfresource.RetryWhen(ctx, connectionDisassociatedTimeout,
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.DirectConnectClientException](ctx, connectionDisassociatedTimeout,
 		func() (interface{}, error) {
 			return conn.DisassociateConnectionFromLag(ctx, input)
-		},
-		func(err error) (bool, error) {
-			if errs.IsAErrorMessageContains[*awstypes.DirectConnectClientException](err, "Connection does not exist") ||
-				errs.IsAErrorMessageContains[*awstypes.DirectConnectClientException](err, "Lag does not exist") {
-				return false, nil
-			}
+		}, "is in a transitioning state")
 
-			if errs.IsAErrorMessageContains[*awstypes.DirectConnectClientException](err, "is in a transitioning state") {
-				return true, err
-			}
-
-			return false, err
-		},
-	)
+	if errs.IsAErrorMessageContains[*awstypes.DirectConnectClientException](err, "Connection does not exist") ||
+		errs.IsAErrorMessageContains[*awstypes.DirectConnectClientException](err, "Lag does not exist") {
+		return nil
+	}
 
 	if err != nil {
 		return fmt.Errorf("deleting Direct Connect Connection (%s) LAG (%s) Association: %w", connectionID, lagID, err)
 	}
 
-	return err
+	return nil
+}
+
+func findConnectionLAGAssociation(ctx context.Context, conn *directconnect.Client, connectionID, lagID string) error {
+	connection, err := findConnectionByID(ctx, conn, connectionID)
+
+	if err != nil {
+		return err
+	}
+
+	if lagID != aws.ToString(connection.LagId) {
+		return &retry.NotFoundError{}
+	}
+
+	return nil
 }
