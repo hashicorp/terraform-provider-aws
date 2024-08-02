@@ -105,7 +105,7 @@ func resourceClusterRoleAssociationRead(ctx context.Context, d *schema.ResourceD
 	output, err := findDBClusterRoleByTwoPartKey(ctx, conn, dbClusterID, roleARN)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] RDS DB Cluster (%s) IAM Role (%s) Association not found, removing from state", dbClusterID, roleARN)
+		log.Printf("[WARN] RDS Cluster (%s) IAM Role (%s) Association not found, removing from state", dbClusterID, roleARN)
 		d.SetId("")
 		return diags
 	}
