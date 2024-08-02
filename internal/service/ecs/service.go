@@ -1051,7 +1051,7 @@ func resourceService() *schema.Resource {
 										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"resource_type": {
+												names.AttrResourceType: {
 													Type:     schema.TypeString,
 													Required: true,
 												},
@@ -2359,7 +2359,7 @@ func expandTagSpecifications(ts []interface{}) []awstypes.EBSTagSpecification {
 			config.PropagateTags = awstypes.PropagateTags(v)
 		}
 		if v, ok := raw[names.AttrTags].([]interface{}); ok && len(v) > 0 {
-			config.Tags = expandECSTags(v)
+			config.Tags = expandTags(v)
 		}
 
 		s = append(s, config)
@@ -2368,7 +2368,7 @@ func expandTagSpecifications(ts []interface{}) []awstypes.EBSTagSpecification {
 	return s
 }
 
-func expandECSTags(tfList []interface{}) []awstypes.Tag {
+func expandTags(tfList []interface{}) []awstypes.Tag {
 	if len(tfList) == 0 {
 		return nil
 	}

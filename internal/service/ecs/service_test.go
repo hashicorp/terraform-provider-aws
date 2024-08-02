@@ -2325,7 +2325,7 @@ resource "aws_ecs_service" "test" {
       role_arn   = aws_iam_role.ecs_service.arn
       size_in_gb = "8"
       tag_specifications {
-        resource_type = "volume"
+        resource_type  = "volume"
         propagate_tags = "SERVICE"
         tags = {
           Name = %[1]q
