@@ -1046,6 +1046,30 @@ func resourceService() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
+									"tag_specifications": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"resource_type": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												names.AttrPropagateTags: {
+													Type:     schema.TypeString,
+													Optional: true,
+													DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+														if awstypes.PropagateTags(old) == awstypes.PropagateTagsNone && new == "" {
+															return true
+														}
+														return false
+													},
+													ValidateDiagFunc: enum.Validate[awstypes.PropagateTags](),
+												},
+												names.AttrTags: tftags.TagsSchema(),
+											},
+										},
+									},
 								},
 							},
 						},
@@ -2308,8 +2332,66 @@ func expandManagedEBSVolume(ebs []interface{}) *awstypes.ServiceManagedEBSVolume
 	if v, ok := raw[names.AttrVolumeType].(string); ok && v != "" {
 		config.VolumeType = aws.String(v)
 	}
+	if v, ok := raw["tag_specifications"].([]interface{}); ok && len(v) > 0 {
+		config.TagSpecifications = expandTagSpecifications(v)
+	}
 
 	return config
+}
+
+func expandTagSpecifications(ts []interface{}) []awstypes.EBSTagSpecification {
+	if len(ts) == 0 {
+		return []awstypes.EBSTagSpecification{}
+	}
+
+	var s []awstypes.EBSTagSpecification
+	for _, item := range ts {
+		raw, ok := item.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		var config awstypes.EBSTagSpecification
+		if v, ok := raw["resource_type"].(string); ok && v != "" {
+			config.ResourceType = awstypes.EBSResourceType(v)
+		}
+		if v, ok := raw[names.AttrPropagateTags].(string); ok && v != "" {
+			config.PropagateTags = awstypes.PropagateTags(v)
+		}
+		if v, ok := raw[names.AttrTags].([]interface{}); ok && len(v) > 0 {
+			config.Tags = expandECSTags(v)
+		}
+
+		s = append(s, config)
+	}
+
+	return s
+}
+
+func expandECSTags(tfList []interface{}) []awstypes.Tag {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var ecsTags []awstypes.Tag
+
+	for _, tfMapRaw := range tfList {
+		tfMap, _ := tfMapRaw.(map[string]interface{})
+
+		ecsTag := awstypes.Tag{}
+
+		if v, ok := tfMap[names.AttrKey].(string); ok && v != "" {
+			ecsTag.Key = aws.String(v)
+		}
+
+		if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
+			ecsTag.Value = aws.String(v)
+		}
+
+		ecsTags = append(ecsTags, ecsTag)
+	}
+
+	return ecsTags
 }
 
 func expandServices(srv []interface{}) []awstypes.ServiceConnectService {
