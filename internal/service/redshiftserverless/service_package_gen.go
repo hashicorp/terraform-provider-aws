@@ -28,6 +28,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Factory: newCustomDomainAssociationResource,
 			Name:    "Custom Domain Association",
 		},
+		{
+			Factory: newResourceSnapshotCopyConfiguration,
+			Name:    "Snapshot Copy Configuration",
+		},
 	}
 }
 
