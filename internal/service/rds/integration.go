@@ -225,7 +225,7 @@ func (r *integrationResource) Delete(ctx context.Context, request resource.Delet
 		IntegrationIdentifier: aws.String(data.ID.ValueString()),
 	})
 
-	if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
+	if errs.IsA[*awstypes.IntegrationNotFoundFault](err) {
 		return
 	}
 
