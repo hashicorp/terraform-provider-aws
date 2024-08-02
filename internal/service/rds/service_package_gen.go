@@ -25,14 +25,14 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceExportTask,
-		},
-		{
 			Factory: newIntegrationResource,
 			Name:    "Integration",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+		},
+		{
+			Factory: newResourceExportTask,
 		},
 	}
 }
@@ -97,8 +97,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_rds_engine_version",
 		},
 		{
-			Factory:  DataSourceOrderableInstance,
+			Factory:  dataSourceOrderableInstance,
 			TypeName: "aws_rds_orderable_db_instance",
+			Name:     "Orderable DB Instance",
 		},
 		{
 			Factory:  dataSourceReservedOffering,
