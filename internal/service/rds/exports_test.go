@@ -22,6 +22,7 @@ var (
 	ResourceProxyDefaultTargetGroup             = resourceProxyDefaultTargetGroup
 	ResourceProxyEndpoint                       = resourceProxyEndpoint
 	ResourceProxyTarget                         = resourceProxyTarget
+	ResourceReservedInstance                    = resourceReservedInstance
 	ResourceSnapshot                            = resourceSnapshot
 	ResourceSnapshotCopy                        = resourceSnapshotCopy
 	ResourceSubnetGroup                         = resourceSubnetGroup
@@ -45,6 +46,7 @@ var (
 	FindEventSubscriptionByID                  = findEventSubscriptionByID
 	FindIntegrationByARN                       = findIntegrationByARN
 	FindOptionGroupByName                      = findOptionGroupByName
+	FindReservedDBInstanceByID                 = findReservedDBInstanceByID
 	ListTags                                   = listTags
 	NewBlueGreenOrchestrator                   = newBlueGreenOrchestrator
 	ParameterGroupModifyChunk                  = parameterGroupModifyChunk
