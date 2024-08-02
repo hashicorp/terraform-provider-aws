@@ -16,7 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfiltersv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters"
+	namevaluesfiltersv2 "github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters/v2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -48,7 +49,7 @@ func dataSourceEngineVersion() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
 			},
-			names.AttrFilter: namevaluesfiltersv2.Schema(),
+			names.AttrFilter: namevaluesfilters.Schema(),
 			"has_major_target": {
 				Type:     schema.TypeBool,
 				Optional: true,

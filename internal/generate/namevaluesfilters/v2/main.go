@@ -12,7 +12,7 @@ import (
 	"text/template"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
-	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfiltersv2"
+	namevaluesfiltersv2 "github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters/v2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -26,7 +26,7 @@ func main() {
 	)
 	g := common.NewGenerator()
 
-	g.Infof("Generating internal/generate/namevaluesfiltersv2/%s", filename)
+	g.Infof("Generating internal/namevaluesfilters/v2/%s", filename)
 
 	// Representing types such as []*ec2.Filter, []*rds.Filter, ...
 	sliceServiceNames := []string{

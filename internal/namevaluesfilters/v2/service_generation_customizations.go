@@ -3,7 +3,7 @@
 
 // This file contains code generation customizations for each AWS Go SDK service.
 
-package namevaluesfiltersv2
+package v2
 
 import "fmt"
 

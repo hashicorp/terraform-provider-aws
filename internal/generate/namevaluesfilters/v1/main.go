@@ -12,7 +12,7 @@ import (
 	"text/template"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
-	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfilters"
+	namevaluesfiltersv1 "github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters/v1"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -26,7 +26,7 @@ func main() {
 	)
 	g := common.NewGenerator()
 
-	g.Infof("Generating internal/generate/namevaluesfilters/%s", filename)
+	g.Infof("Generating internal/namevaluesfilters/v1/%s", filename)
 
 	// Representing types such as []*fsx.Filter, []*rds.Filter, ...
 	sliceServiceNames := []string{
@@ -41,10 +41,10 @@ func main() {
 		SliceServiceNames: sliceServiceNames,
 	}
 	templateFuncMap := template.FuncMap{
-		"FilterPackage":         namevaluesfilters.ServiceFilterPackage,
-		"FilterType":            namevaluesfilters.ServiceFilterType,
-		"FilterTypeNameField":   namevaluesfilters.ServiceFilterTypeNameField,
-		"FilterTypeValuesField": namevaluesfilters.ServiceFilterTypeValuesField,
+		"FilterPackage":         namevaluesfiltersv1.ServiceFilterPackage,
+		"FilterType":            namevaluesfiltersv1.ServiceFilterType,
+		"FilterTypeNameField":   namevaluesfiltersv1.ServiceFilterTypeNameField,
+		"FilterTypeValuesField": namevaluesfiltersv1.ServiceFilterTypeValuesField,
 		"ProviderNameUpper":     names.ProviderNameUpper,
 	}
 
