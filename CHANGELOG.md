@@ -1,4 +1,17 @@
 ## 5.62.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_ebs_snapshot_block_public_access` ([#38641](https://github.com/hashicorp/terraform-provider-aws/issues/38641))
+
+ENHANCEMENTS:
+
+* resource/aws_lb_target_group: Add `target_health_state.unhealthy_draining_interval` argument ([#38654](https://github.com/hashicorp/terraform-provider-aws/issues/38654))
+
+BUG FIXES:
+
+* resource/aws_sfn_state_machine: Mark `revision_id` and `state_machine_version_arn` as Computed on update if `publish` is `true` ([#38657](https://github.com/hashicorp/terraform-provider-aws/issues/38657))
+
 ## 5.61.0 (August  1, 2024)
 
 NOTES:
