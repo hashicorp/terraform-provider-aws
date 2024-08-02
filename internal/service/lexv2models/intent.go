@@ -899,7 +899,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 	}
 }
 
-var intentFlexOpt = flex.NewFieldNamePrefixOptionsFunc(ResNameIntent)
+var intentFlexOpt = flex.WithFieldNamePrefix(ResNameIntent)
 
 func (r *resourceIntent) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().LexV2ModelsClient(ctx)

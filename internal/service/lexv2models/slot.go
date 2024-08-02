@@ -531,7 +531,7 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 	}
 }
 
-var slotFlexOpt = flex.NewFieldNamePrefixOptionsFunc(ResNameSlot)
+var slotFlexOpt = flex.WithFieldNamePrefix(ResNameSlot)
 
 func (r *resourceSlot) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().LexV2ModelsClient(ctx)

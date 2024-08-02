@@ -148,7 +148,7 @@ func (r *replicationConfigurationTemplateResource) Schema(ctx context.Context, r
 	}
 }
 
-var flexOpt = flex.NewFieldNamePrefixOptionsFunc(ResNameReplicationConfigurationTemplate)
+var flexOpt = flex.WithFieldNamePrefix(ResNameReplicationConfigurationTemplate)
 
 func (r *replicationConfigurationTemplateResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data replicationConfigurationTemplateResourceModel

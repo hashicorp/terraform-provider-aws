@@ -242,7 +242,7 @@ func (r *resourceSlotType) Schema(ctx context.Context, req resource.SchemaReques
 	}
 }
 
-var slotTypeFlexOpt = flex.NewFieldNamePrefixOptionsFunc(ResNameSlotType)
+var slotTypeFlexOpt = flex.WithFieldNamePrefix(ResNameSlotType)
 
 func (r *resourceSlotType) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().LexV2ModelsClient(ctx)

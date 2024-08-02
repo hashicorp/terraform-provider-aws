@@ -23,31 +23,31 @@ type AutoFlexOptions struct {
 	ignoredFieldNames []string
 }
 
-// NewFieldNamePrefixOptionsFunc specifies a prefix to be accounted for when
+// WithFieldNamePrefix specifies a prefix to be accounted for when
 // matching field names between Terraform and AWS data structures
 //
 // Use this option to improve fuzzy matching of field names during AutoFlex
 // expand/flatten operations.
-func NewFieldNamePrefixOptionsFunc(s string) AutoFlexOptionsFunc {
+func WithFieldNamePrefix(s string) AutoFlexOptionsFunc {
 	return func(o *AutoFlexOptions) {
 		o.fieldNamePrefix = s
 	}
 }
 
-// NewIgnoredFieldAppendOptionsFunc appends to the list of ignored field names
+// WithIgnoredFieldNamesAppend appends to the list of ignored field names
 //
 // Use this option to preserve preexisting items in the ignored fields list.
-func NewIgnoredFieldAppendOptionsFunc(s string) AutoFlexOptionsFunc {
+func WithIgnoredFieldNamesAppend(s string) AutoFlexOptionsFunc {
 	return func(o *AutoFlexOptions) {
 		o.ignoredFieldNames = append(o.ignoredFieldNames, s)
 	}
 }
 
-// NewIgnoredFieldOptionsFunc sets the list of ignored field names
+// WithIgnoredFieldNames sets the list of ignored field names
 //
 // Use this option to fully overwrite the ignored fields list. To preseve
-// preexisting items, use NewIgnoredFieldAppendOptionsFunc instead.
-func NewIgnoredFieldOptionsFunc(fields []string) AutoFlexOptionsFunc {
+// preexisting items, use WithIgnoredFieldNamesAppend instead.
+func WithIgnoredFieldNames(fields []string) AutoFlexOptionsFunc {
 	return func(o *AutoFlexOptions) {
 		o.ignoredFieldNames = fields
 	}
