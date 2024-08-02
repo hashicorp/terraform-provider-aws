@@ -31,7 +31,7 @@ The following arguments are optional:
 
 ## Attribute Reference
 
-This resource exports the following attributes to the arguments above:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - AMI ID to which image deregistration protection has to be enabled or disabled.
 * `deregistration_protection` - Image deregistration protection enabled or disabled, e.g., `enabled-without-cooldown` or `enabled-with-cooldown`.
