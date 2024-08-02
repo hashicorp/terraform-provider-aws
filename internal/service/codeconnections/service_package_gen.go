@@ -23,11 +23,30 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
-	return []*types.ServicePackageSDKDataSource{}
+	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  dataSourceConnection,
+			TypeName: "aws_codeconnections_connection",
+		},
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
-	return []*types.ServicePackageSDKResource{}
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  resourceConnection,
+			TypeName: "aws_codeconnections_connection",
+			Name:     "Connection",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory:  resourceHost,
+			TypeName: "aws_codeconnections_host",
+			Name:     "Host",
+		},
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
