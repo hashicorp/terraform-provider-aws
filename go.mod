@@ -38,7 +38,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/backup v1.36.3
 	github.com/aws/aws-sdk-go-v2/service/batch v1.43.0
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.5.3
-	github.com/aws/aws-sdk-go-v2/service/bedrock v1.12.0
+	github.com/aws/aws-sdk-go-v2/service/bedrock v1.13.0
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.16.0
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.25.3
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.4.3
@@ -72,7 +72,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.37.3
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.48.3
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.19.3
-	github.com/aws/aws-sdk-go-v2/service/controltower v1.16.3
+	github.com/aws/aws-sdk-go-v2/service/controltower v1.16.4
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.26.3
 	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.40.3
 	github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.7.3
@@ -171,7 +171,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.23.3
 	github.com/aws/aws-sdk-go-v2/service/ram v1.27.3
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.18.3
-	github.com/aws/aws-sdk-go-v2/service/rds v1.81.5
+	github.com/aws/aws-sdk-go-v2/service/rds v1.82.0
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.46.4
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.27.3
 	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.21.0

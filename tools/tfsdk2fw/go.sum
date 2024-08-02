@@ -96,8 +96,8 @@ github.com/aws/aws-sdk-go-v2/service/batch v1.43.0 h1:LQDwHqwORPQC1cP8iF+gaEbw6g
 github.com/aws/aws-sdk-go-v2/service/batch v1.43.0/go.mod h1:gzEWhQvhwjniRJbCksLNPR6//8dmfRHJGJMfFcNqOdk=
 github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.5.3 h1:SUgFOQbtQNPqjvN68d8esf9qHWqh45wTZ7205wOz7oo=
 github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.5.3/go.mod h1:KS4Up5owaEKw+EUTveQsSf9zsaUiJCSdoxZW1M8dbuE=
-github.com/aws/aws-sdk-go-v2/service/bedrock v1.12.0 h1:Ie1I5DsX0N5cQlJw+XwK8x/nZuca9MK7V/3FjumxSNc=
-github.com/aws/aws-sdk-go-v2/service/bedrock v1.12.0/go.mod h1:KP4dFAvbA6N2iUkDj61pqd140QyfceyK69PeKPD6860=
+github.com/aws/aws-sdk-go-v2/service/bedrock v1.13.0 h1:ICt45h6DW9ziJpX9K6KAg8D3pmwOyPtSGJvYhHFXHeI=
+github.com/aws/aws-sdk-go-v2/service/bedrock v1.13.0/go.mod h1:KP4dFAvbA6N2iUkDj61pqd140QyfceyK69PeKPD6860=
 github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.16.0 h1:9DpqAvqAPGhJ4bnqJX8WiDJZUDdmRlotYoh95K8NgVc=
 github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.16.0/go.mod h1:RhcOKxIQHAqPTPIEUtEMG9eMnIRruBMY6+cmx4Mh8Dg=
 github.com/aws/aws-sdk-go-v2/service/budgets v1.25.3 h1:BfuKcgSyNTzS2N57JSM4uQ/dq1Qw8TQkoOoVvsFXoCw=
@@ -164,8 +164,8 @@ github.com/aws/aws-sdk-go-v2/service/configservice v1.48.3 h1:Ir1tfXyCY3XE/ENEb0
 github.com/aws/aws-sdk-go-v2/service/configservice v1.48.3/go.mod h1:Z4sA07QNZ7IWEix3oW3QeiIe21jaCTTOW8ftLgeWI3s=
 github.com/aws/aws-sdk-go-v2/service/connectcases v1.19.3 h1:6UpDqIDPvl6j+OpjjMfAWRyAKfNvZdRp6e88/gKubis=
 github.com/aws/aws-sdk-go-v2/service/connectcases v1.19.3/go.mod h1:/ni69CCzOeSFB/ySFHzJnWh6MQDJe/rNkvKW8+jfe9k=
-github.com/aws/aws-sdk-go-v2/service/controltower v1.16.3 h1:uivw03qvOgsT9OHDdL7FQQ9rjnL4DoML867QemUTaOI=
-github.com/aws/aws-sdk-go-v2/service/controltower v1.16.3/go.mod h1:tOyU8KwO9JqZlUXjpX3eXnf0r9iKkK/6sqlaNloJ5IQ=
+github.com/aws/aws-sdk-go-v2/service/controltower v1.16.4 h1:Ksp3RZgjFCIfBN5Qfc4eTOZIdUoEeZb5czg7hiLnl5k=
+github.com/aws/aws-sdk-go-v2/service/controltower v1.16.4/go.mod h1:tOyU8KwO9JqZlUXjpX3eXnf0r9iKkK/6sqlaNloJ5IQ=
 github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.26.3 h1:t+h4OYWHsU9pQ6W7cDHso8TbM0fDfTjO7IPRsAl7CfY=
 github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.26.3/go.mod h1:mclb7wohFWSVV4EgpRd12YtX5SLAX++hKSWco/GqH8o=
 github.com/aws/aws-sdk-go-v2/service/costexplorer v1.40.3 h1:wzusAKyjqSBbOjulrFF2caN+D4ylnI14cTT8xTKm7Sw=
@@ -372,8 +372,8 @@ github.com/aws/aws-sdk-go-v2/service/ram v1.27.3 h1:MoQ0up3IiE2fl0+qySx3Lb0swK6G
 github.com/aws/aws-sdk-go-v2/service/ram v1.27.3/go.mod h1:XymSCzlSx2QjdvU/KdV/+niPQBZRC1A8luPDFz3pjyg=
 github.com/aws/aws-sdk-go-v2/service/rbin v1.18.3 h1:5Izo7ZI9zrvG9VLpJdnDl97gNyCFr310RtriuKIJgFk=
 github.com/aws/aws-sdk-go-v2/service/rbin v1.18.3/go.mod h1:GlAG1tgrchQnNlO/fxXLmmF6t+v+9fQMNHNdW7Zc8Zc=
-github.com/aws/aws-sdk-go-v2/service/rds v1.81.5 h1:0vEV6OFcCInf/G98MIwwNJM21cd0g+8/jcxXNE40pJA=
-github.com/aws/aws-sdk-go-v2/service/rds v1.81.5/go.mod h1:j27FNXhbbHXC3ExFsJkoxq2Y+4dQypf8KFX1IkgwVvM=
+github.com/aws/aws-sdk-go-v2/service/rds v1.82.0 h1:+1qRsLNukmvIDNBjz5Osqy4dvIBLwpCeMhmrh9evOUw=
+github.com/aws/aws-sdk-go-v2/service/rds v1.82.0/go.mod h1:j27FNXhbbHXC3ExFsJkoxq2Y+4dQypf8KFX1IkgwVvM=
 github.com/aws/aws-sdk-go-v2/service/redshift v1.46.4 h1:wNBruTRRDfBv2Pz3Mvw6JIJS7ujfTd1ztCG5pIlrfRk=
 github.com/aws/aws-sdk-go-v2/service/redshift v1.46.4/go.mod h1:AhuwOvTE4nMwWfJQNZ2khZGV9yXexB2MjNYtCuLQA4s=
 github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.27.3 h1:rtX1ZHGPpqbQGZlPuN1u7nA+0zjq0DB7QTVNlYY/gfw=
@@ -785,8 +785,9 @@ google.golang.org/protobuf v1.26.0/go.mod h1:9q0QmTI4eRPtz6boOQmLYwt+qCgq0jsYwAQ
 google.golang.org/protobuf v1.34.0 h1:Qo/qEd2RZPCf2nKuorzksSknv0d3ERwp1vFG38gSmH4=
 google.golang.org/protobuf v1.34.0/go.mod h1:c6P6GXX6sHbq/GpV6MGZEdwhWPcYBgnhAHhKbcUYpos=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
-gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 h1:qIbj1fsPNlZgppZ+VLlY7N33q108Sa+fhmuc+sWQYwY=
 gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
+gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c h1:Hei/4ADfdWqJk1ZMxUNpqntNwaWcugrBjAiHlqqRiVk=
+gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c/go.mod h1:JHkPIbrfpd72SG/EVd6muEfDQjcINNoR0C8j2r3qZ4Q=
 gopkg.in/dnaeon/go-vcr.v3 v3.2.0 h1:Rltp0Vf+Aq0u4rQXgmXgtgoRDStTnFN83cWgSGSoRzM=
 gopkg.in/dnaeon/go-vcr.v3 v3.2.0/go.mod h1:2IMOnnlx9I6u9x+YBsM3tAMx6AlOxnJ0pWxQAzZ79Ag=
 gopkg.in/warnings.v0 v0.1.2 h1:wFXVbFY8DY5/xOe1ECiWdKCzZlxgshcYVNkBHstARME=
