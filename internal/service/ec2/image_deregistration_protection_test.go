@@ -72,6 +72,7 @@ resource "aws_ec2_image_deregistration_protection" "test" {
 
 output "deregistration_protection_output" {
   value = aws_ec2_image_deregistration_protection.test
+  
 }	
 `, instanceType, rName))
 }
