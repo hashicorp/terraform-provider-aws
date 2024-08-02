@@ -63,7 +63,7 @@ func resourceConnectionConfirmationRead(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
-	_, err := FindConnectionByID(ctx, conn, d.Id())
+	_, err := findConnectionByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Direct Connect Connection (%s) not found, removing from state", d.Id())

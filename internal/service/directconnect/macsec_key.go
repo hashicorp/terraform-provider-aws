@@ -116,7 +116,7 @@ func resourceMacSecKeyRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "unexpected format of ID (%s), expected secretArn_connectionId", d.Id())
 	}
 
-	connection, err := FindConnectionByID(ctx, conn, connId)
+	connection, err := findConnectionByID(ctx, conn, connId)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Direct Connect Connection (%s): %s", d.Id(), err)
 	}

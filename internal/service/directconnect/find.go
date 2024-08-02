@@ -14,42 +14,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindConnectionByID(ctx context.Context, conn *directconnect.Client, id string) (*awstypes.Connection, error) {
-	input := &directconnect.DescribeConnectionsInput{
-		ConnectionId: aws.String(id),
-	}
-
-	output, err := conn.DescribeConnections(ctx, input)
-
-	if errs.IsAErrorMessageContains[*awstypes.DirectConnectClientException](err, "Could not find Connection with ID") {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	connection, err := tfresource.AssertSingleValueResult(output.Connections)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if connection.ConnectionState == awstypes.ConnectionStateDeleted || connection.ConnectionState == awstypes.ConnectionStateRejected {
-		return nil, &retry.NotFoundError{
-			Message:     string(connection.ConnectionState),
-			LastRequest: input,
-		}
-	}
-
-	return connection, nil
-}
-
 func FindConnectionAssociationExists(ctx context.Context, conn *directconnect.Client, connectionID, lagID string) error {
-	connection, err := FindConnectionByID(ctx, conn, connectionID)
+	connection, err := findConnectionByID(ctx, conn, connectionID)
 
 	if err != nil {
 		return err

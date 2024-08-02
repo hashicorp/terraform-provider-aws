@@ -6,7 +6,6 @@ package directconnect_test
 import (
 	"context"
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -48,7 +47,6 @@ func TestAccDirectConnectConnection_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "vlan_id", acctest.Ct0),
 				),
 			},
-			// Test import.
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
@@ -85,17 +83,8 @@ func TestAccDirectConnectConnection_disappears(t *testing.T) {
 
 func TestAccDirectConnectConnection_encryptionMode(t *testing.T) {
 	ctx := acctest.Context(t)
-	dxKey := "DX_CONNECTION_ID"
-	connectionId := os.Getenv(dxKey)
-	if connectionId == "" {
-		t.Skipf("Environment variable %s is not set", dxKey)
-	}
-
-	dxName := "DX_CONNECTION_NAME"
-	connectionName := os.Getenv(dxName)
-	if connectionName == "" {
-		t.Skipf("Environment variable %s is not set", dxName)
-	}
+	connectionID := acctest.SkipIfEnvVarNotSet(t, "DX_CONNECTION_ID")
+	connectionName := acctest.SkipIfEnvVarNotSet(t, "DX_CONNECTION_NAME")
 
 	var connection awstypes.Connection
 	resourceName := "aws_dx_connection.test"
@@ -112,7 +101,7 @@ func TestAccDirectConnectConnection_encryptionMode(t *testing.T) {
 				Config:             testAccConnectionConfig_encryptionModeShouldEncrypt(connectionName, ckn, cak),
 				ResourceName:       resourceName,
 				ImportState:        true,
-				ImportStateId:      connectionId,
+				ImportStateId:      connectionID,
 				ImportStatePersist: true,
 			},
 			{
@@ -202,7 +191,6 @@ func TestAccDirectConnectConnection_providerName(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
-			// Test import.
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
@@ -257,7 +245,6 @@ func TestAccDirectConnectConnection_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
-			// Test import.
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
@@ -385,26 +372,22 @@ func testAccCheckConnectionDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckConnectionExists(ctx context.Context, name string, v *awstypes.Connection) resource.TestCheckFunc {
+func testAccCheckConnectionExists(ctx context.Context, n string, v *awstypes.Connection) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectClient(ctx)
 
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Direct Connect Connection ID is set")
-		}
-
-		connection, err := tfdirectconnect.FindConnectionByID(ctx, conn, rs.Primary.ID)
+		output, err := tfdirectconnect.FindConnectionByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		*v = *connection
+		*v = *output
 
 		return nil
 	}

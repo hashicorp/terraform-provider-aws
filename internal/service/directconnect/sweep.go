@@ -97,7 +97,7 @@ func sweepConnections(region string) error {
 	for _, connection := range output.Connections {
 		id := aws.ToString(connection.ConnectionId)
 
-		r := ResourceConnection()
+		r := resourceConnection()
 		d := r.Data(nil)
 		d.SetId(id)
 

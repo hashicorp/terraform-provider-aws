@@ -11,22 +11,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusConnectionState(ctx context.Context, conn *directconnect.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindConnectionByID(ctx, conn, id)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, string(output.ConnectionState), nil
-	}
-}
-
 func statusGatewayState(ctx context.Context, conn *directconnect.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindGatewayByID(ctx, conn, id)

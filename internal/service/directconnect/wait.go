@@ -17,46 +17,10 @@ import (
 )
 
 const (
-	connectionConfirmedTimeout     = 10 * time.Minute
-	connectionDeletedTimeout       = 10 * time.Minute
 	connectionDisassociatedTimeout = 1 * time.Minute
 	hostedConnectionDeletedTimeout = 10 * time.Minute
 	lagDeletedTimeout              = 10 * time.Minute
 )
-
-func waitConnectionConfirmed(ctx context.Context, conn *directconnect.Client, id string) (*awstypes.Connection, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.ConnectionStatePending, awstypes.ConnectionStateOrdering, awstypes.ConnectionStateRequested),
-		Target:  enum.Slice(awstypes.ConnectionStateAvailable),
-		Refresh: statusConnectionState(ctx, conn, id),
-		Timeout: connectionConfirmedTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.Connection); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitConnectionDeleted(ctx context.Context, conn *directconnect.Client, id string) (*awstypes.Connection, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.ConnectionStatePending, awstypes.ConnectionStateOrdering, awstypes.ConnectionStateAvailable, awstypes.ConnectionStateRequested, awstypes.ConnectionStateDeleting),
-		Target:  []string{},
-		Refresh: statusConnectionState(ctx, conn, id),
-		Timeout: connectionDeletedTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.Connection); ok {
-		return output, err
-	}
-
-	return nil, err
-}
 
 func waitGatewayCreated(ctx context.Context, conn *directconnect.Client, id string, timeout time.Duration) (*awstypes.DirectConnectGateway, error) {
 	stateConf := &retry.StateChangeConf{

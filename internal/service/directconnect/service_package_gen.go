@@ -55,7 +55,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "BGP Peer",
 		},
 		{
-			Factory:  ResourceConnection,
+			Factory:  resourceConnection,
 			TypeName: "aws_dx_connection",
 			Name:     "Connection",
 			Tags: &types.ServicePackageResourceTags{
