@@ -2140,7 +2140,7 @@ func TestExpandOptions(t *testing.T) {
 			},
 		},
 		"include tags with option override": {
-			Options: []AutoFlexOptionsFunc{WithIgnoredFieldNames([]string{})},
+			Options: []AutoFlexOptionsFunc{WithNoIgnoredFieldNames()},
 			Source: &tf01{
 				Field1: types.BoolValue(true),
 				Tags: fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{

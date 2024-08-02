@@ -1900,7 +1900,7 @@ func TestFlattenOptions(t *testing.T) {
 			},
 		},
 		"include tags with option override": {
-			Options: []AutoFlexOptionsFunc{WithIgnoredFieldNames([]string{})},
+			Options: []AutoFlexOptionsFunc{WithNoIgnoredFieldNames()},
 			Source: &aws01{
 				Field1: true,
 				Tags:   map[string]string{"foo": "bar"},

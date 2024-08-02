@@ -200,11 +200,11 @@ diags := flex.Expand(ctx, source, &target, flex.WithIgnoredFieldNamesAppend("Oth
 ```
 
 This will ignore both `Tags` and `OtherField`.
-To override existing ignored fields, use `flex.NewIgnoredFieldOptionsFunc`.
+To empty the list of ignored fields, use `flex.WithNoIgoredFieldNames`.
 For example, to include `Tags`, call
 
 ```go
-diags := flex.Expand(ctx, source, &target, flex.WithIgnoredFieldNames([]string{}))
+diags := flex.Expand(ctx, source, &target, flex.WithNoIgnoredFieldNames())
 ```
 
 In some cases, flattening and expanding need conditional handling.

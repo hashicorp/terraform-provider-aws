@@ -53,6 +53,13 @@ func WithIgnoredFieldNames(fields []string) AutoFlexOptionsFunc {
 	}
 }
 
+// WithNoIgnoredFieldNames empties the list of ignored field names
+func WithNoIgnoredFieldNames() AutoFlexOptionsFunc {
+	return func(o *AutoFlexOptions) {
+		o.ignoredFieldNames = []string{}
+	}
+}
+
 // isIgnoredField returns true if s is in the list of ignored field names
 func (o *AutoFlexOptions) isIgnoredField(s string) bool {
 	for _, name := range o.ignoredFieldNames {
