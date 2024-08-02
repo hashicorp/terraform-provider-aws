@@ -13,6 +13,7 @@ import (
 
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfiltersv2"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type TemplateData struct {
@@ -45,6 +46,7 @@ func main() {
 		"FilterTypeNameField":   namevaluesfiltersv2.ServiceFilterTypeNameField,
 		"FilterTypeNameFunc":    namevaluesfiltersv2.ServiceFilterTypeNameFunc,
 		"FilterTypeValuesField": namevaluesfiltersv2.ServiceFilterTypeValuesField,
+		"ProviderNameUpper":     names.ProviderNameUpper,
 	}
 
 	d := g.NewGoFileDestination(filename)

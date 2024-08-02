@@ -175,7 +175,7 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if v, ok := d.GetOk(names.AttrFilter); ok {
-		input.Filters = namevaluesfiltersv2.New(v.(*schema.Set)).RdsFilters()
+		input.Filters = namevaluesfiltersv2.New(v.(*schema.Set)).RDSFilters()
 	}
 
 	if v, ok := d.GetOk("parameter_group_family"); ok {

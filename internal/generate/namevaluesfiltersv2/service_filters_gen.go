@@ -10,8 +10,8 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 
 // []*SERVICE.Filter handling
 
-// RdsFilters returns rds service filters.
-func (filters NameValuesFilters) RdsFilters() []rdstypes.Filter {
+// RDSFilters returns rds service filters.
+func (filters NameValuesFilters) RDSFilters() []rdstypes.Filter {
 	m := filters.Map()
 
 	if len(m) == 0 {
@@ -32,8 +32,8 @@ func (filters NameValuesFilters) RdsFilters() []rdstypes.Filter {
 	return result
 }
 
-// SecretsmanagerFilters returns secretsmanager service filters.
-func (filters NameValuesFilters) SecretsmanagerFilters() []secretsmanagertypes.Filter {
+// SecretsManagerFilters returns secretsmanager service filters.
+func (filters NameValuesFilters) SecretsManagerFilters() []secretsmanagertypes.Filter {
 	m := filters.Map()
 
 	if len(m) == 0 {

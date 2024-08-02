@@ -45,7 +45,7 @@ func dataSourceSecretsRead(ctx context.Context, d *schema.ResourceData, meta int
 	input := &secretsmanager.ListSecretsInput{}
 
 	if v, ok := d.GetOk(names.AttrFilter); ok {
-		input.Filters = namevaluesfiltersv2.New(v.(*schema.Set)).SecretsmanagerFilters()
+		input.Filters = namevaluesfiltersv2.New(v.(*schema.Set)).SecretsManagerFilters()
 	}
 
 	var results []types.SecretListEntry
