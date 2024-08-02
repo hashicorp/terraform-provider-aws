@@ -168,7 +168,7 @@ func (flattener autoFlattener) convert(ctx context.Context, sourcePath path.Path
 		return diags
 	}
 
-	tflog.SubsystemInfo(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
 		"from": vFrom.Kind(),
 		"to":   tTo,
 	})
@@ -199,7 +199,7 @@ func (flattener autoFlattener) bool(ctx context.Context, vFrom reflect.Value, is
 		return diags
 	}
 
-	tflog.SubsystemInfo(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
 		"from": vFrom.Kind(),
 		"to":   tTo,
 	})
@@ -236,7 +236,7 @@ func (flattener autoFlattener) float(ctx context.Context, vFrom reflect.Value, i
 		return diags
 	}
 
-	tflog.SubsystemInfo(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
 		"from": vFrom.Kind(),
 		"to":   tTo,
 	})
@@ -267,7 +267,7 @@ func (flattener autoFlattener) int(ctx context.Context, vFrom reflect.Value, isN
 		return diags
 	}
 
-	tflog.SubsystemInfo(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
 		"from": vFrom.Kind(),
 		"to":   tTo,
 	})
@@ -301,7 +301,7 @@ func (flattener autoFlattener) string(ctx context.Context, vFrom reflect.Value, 
 		return diags
 	}
 
-	tflog.SubsystemInfo(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
 		"from": vFrom.Kind(),
 		"to":   tTo,
 	})
@@ -339,7 +339,7 @@ func (flattener autoFlattener) time(ctx context.Context, vFrom reflect.Value, is
 		return diags
 	}
 
-	tflog.SubsystemInfo(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
 		"from": vFrom.Kind(),
 		"to":   vTo,
 	})
@@ -373,7 +373,7 @@ func (flattener autoFlattener) pointer(ctx context.Context, sourcePath path.Path
 		return diags
 	}
 
-	tflog.SubsystemInfo(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
 		"from": vFrom.Kind(),
 		"to":   tTo,
 	})
@@ -423,7 +423,7 @@ func (flattener autoFlattener) interface_(ctx context.Context, vFrom reflect.Val
 		return diags
 	}
 
-	tflog.SubsystemInfo(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
 		"from": vFrom.Kind(),
 		"to":   tTo,
 	})
@@ -579,7 +579,7 @@ func (flattener autoFlattener) slice(ctx context.Context, sourcePath path.Path, 
 		}
 	}
 
-	tflog.SubsystemInfo(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
 		"from": vFrom.Kind(),
 		"to":   tTo,
 	})
@@ -822,7 +822,7 @@ func (flattener autoFlattener) map_(ctx context.Context, sourcePath path.Path, v
 		}
 	}
 
-	tflog.SubsystemInfo(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
 		"from": vFrom.Kind(),
 		"to":   tTo,
 	})
@@ -967,7 +967,7 @@ func (flattener autoFlattener) interfaceToNestedObject(ctx context.Context, vFro
 
 		vTo.Set(reflect.ValueOf(val))
 
-		tflog.SubsystemInfo(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]any{
+		tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]any{
 			"from": vFrom.Kind(),
 			"to":   tTo,
 		})

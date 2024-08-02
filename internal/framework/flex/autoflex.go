@@ -99,7 +99,7 @@ func autoFlexConvertStruct(ctx context.Context, sourcePath path.Path, from any, 
 	}
 
 	if valTo.Kind() == reflect.Interface {
-		tflog.SubsystemInfo(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
+		tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
 			"from": valFrom.Type(),
 			"to":   valTo.Kind(),
 		})

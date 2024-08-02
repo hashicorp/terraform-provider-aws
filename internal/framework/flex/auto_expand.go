@@ -189,7 +189,7 @@ func (expander autoExpander) convert(ctx context.Context, sourcePath path.Path, 
 		return diags
 	}
 
-	tflog.SubsystemInfo(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]interface{}{
 		"from": vFrom.Type(ctx),
 		"to":   vTo.Kind(),
 	})
@@ -226,7 +226,7 @@ func (expander autoExpander) bool(ctx context.Context, vFrom basetypes.BoolValua
 		}
 	}
 
-	tflog.SubsystemInfo(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]interface{}{
 		"from": vFrom.Type(ctx),
 		"to":   vTo.Kind(),
 	})
@@ -271,7 +271,7 @@ func (expander autoExpander) float64(ctx context.Context, vFrom basetypes.Float6
 		}
 	}
 
-	tflog.SubsystemInfo(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]interface{}{
 		"from": vFrom.Type(ctx),
 		"to":   vTo.Kind(),
 	})
@@ -316,7 +316,7 @@ func (expander autoExpander) int64(ctx context.Context, vFrom basetypes.Int64Val
 		}
 	}
 
-	tflog.SubsystemInfo(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]interface{}{
 		"from": vFrom.Type(ctx),
 		"to":   vTo.Kind(),
 	})
@@ -395,7 +395,7 @@ func (expander autoExpander) string(ctx context.Context, vFrom basetypes.StringV
 		}
 	}
 
-	tflog.SubsystemInfo(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]interface{}{
 		"from": vFrom.Type(ctx),
 		"to":   vTo.Kind(),
 	})
@@ -445,7 +445,7 @@ func (expander autoExpander) object(ctx context.Context, sourcePath path.Path, v
 		}
 	}
 
-	tflog.SubsystemInfo(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]interface{}{
 		"from": vFrom.Type(ctx),
 		"to":   vTo.Kind(),
 	})
@@ -479,7 +479,7 @@ func (expander autoExpander) list(ctx context.Context, sourcePath path.Path, vFr
 		}
 	}
 
-	tflog.SubsystemInfo(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]interface{}{
 		"from list[%s]": v.ElementType(ctx),
 		"to":            vTo.Kind(),
 	})
@@ -551,7 +551,7 @@ func (expander autoExpander) listOrSetOfInt64(ctx context.Context, vFrom valueWi
 		}
 	}
 
-	tflog.SubsystemInfo(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]interface{}{
 		"from": vFrom.Type(ctx),
 		"to":   vTo.Kind(),
 	})
@@ -609,7 +609,7 @@ func (expander autoExpander) listOrSetOfString(ctx context.Context, vFrom valueW
 		}
 	}
 
-	tflog.SubsystemInfo(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]interface{}{
 		"from": vFrom.Type(ctx),
 		"to":   vTo.Kind(),
 	})
@@ -681,7 +681,7 @@ func (expander autoExpander) map_(ctx context.Context, vFrom basetypes.MapValuab
 		}
 	}
 
-	tflog.SubsystemInfo(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]interface{}{
 		"from map[string, %s]": v.ElementType(ctx),
 		"to":                   vTo.Kind(),
 	})
@@ -736,7 +736,7 @@ func (expander autoExpander) mapOfString(ctx context.Context, vFrom basetypes.Ma
 		}
 	}
 
-	tflog.SubsystemInfo(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]interface{}{
 		"from map[string, %s]": vFrom.ElementType(ctx),
 		"to":                   vTo.Kind(),
 	})
@@ -770,7 +770,7 @@ func (expander autoExpander) set(ctx context.Context, sourcePath path.Path, vFro
 		}
 	}
 
-	tflog.SubsystemInfo(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]interface{}{
 		"from set[%s]": v.ElementType(ctx),
 		"to":           vTo.Kind(),
 	})

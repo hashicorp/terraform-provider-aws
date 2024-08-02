@@ -274,7 +274,7 @@ func TestFlatten(t *testing.T) {
 				traceMatchedFields("Field1", reflect.TypeFor[TestFlexAWS01](), "Field1", reflect.TypeFor[*TestFlexTF02]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[string](), "Field1", reflect.TypeFor[types.Int64]()),
 				{
-					"@level":             "info",
+					"@level":             "error",
 					"@module":            "provider.autoflex",
 					"@message":           "AutoFlex Flatten; incompatible types",
 					"from":               float64(reflect.String),
@@ -2148,7 +2148,7 @@ func TestFlattenInterface(t *testing.T) {
 				traceMatchedFields("Field1", reflect.TypeFor[testFlexAWSInterfaceSingle](), "Field1", reflect.TypeFor[*testFlexTFListNestedObject[TestFlexTF01]]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[testFlexAWSInterfaceInterface](), "Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[TestFlexTF01]]()),
 				{
-					"@level":   "info",
+					"@level":   "error",
 					"@module":  "provider.autoflex",
 					"@message": "AutoFlex Flatten; incompatible types",
 					"from":     float64(reflect.Interface),

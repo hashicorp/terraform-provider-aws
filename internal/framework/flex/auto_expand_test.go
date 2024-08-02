@@ -201,7 +201,7 @@ func TestExpand(t *testing.T) {
 				traceMatchedFields("Field1", reflect.TypeFor[TestFlexTF01](), "Field1", reflect.TypeFor[*TestFlexAWS03]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[int64]()),
 				{
-					"@level":             "info",
+					"@level":             "error",
 					"@module":            "provider.autoflex",
 					"@message":           "AutoFlex Expand; incompatible types",
 					"from":               map[string]any{},
@@ -2329,7 +2329,7 @@ func TestExpandInterface(t *testing.T) {
 				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFListNestedObject[TestFlexTF01]](), "Field1", reflect.TypeFor[*testFlexAWSInterfaceSingle]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[TestFlexTF01]](), "Field1", reflect.TypeFor[testFlexAWSInterfaceInterface]()),
 				{
-					"@level":             "info",
+					"@level":             "error",
 					"@module":            "provider.autoflex",
 					"@message":           "AutoFlex Expand; incompatible types",
 					"from":               map[string]any{},
@@ -3042,7 +3042,7 @@ func TestExpandInterfaceTypedExpander(t *testing.T) {
 				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFListNestedObject[TestFlexTF01]](), "Field1", reflect.TypeFor[*testFlexAWSInterfaceSingle]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[TestFlexTF01]](), "Field1", reflect.TypeFor[testFlexAWSInterfaceInterface]()),
 				{
-					"@level":             "info",
+					"@level":             "error",
 					"@module":            "provider.autoflex",
 					"@message":           "AutoFlex Expand; incompatible types",
 					"from":               map[string]any{},
