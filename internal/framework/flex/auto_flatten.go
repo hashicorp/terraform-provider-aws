@@ -147,8 +147,8 @@ func (flattener autoFlattener) convert(ctx context.Context, sourcePath path.Path
 		diags.Append(flattener.string(ctx, vFrom, false, tTo, vTo)...)
 		return diags
 
-	case reflect.Ptr:
-		diags.Append(flattener.ptr(ctx, sourcePath, vFrom, targetPath, tTo, vTo)...)
+	case reflect.Pointer:
+		diags.Append(flattener.pointer(ctx, sourcePath, vFrom, targetPath, tTo, vTo)...)
 		return diags
 
 	case reflect.Slice:
@@ -347,8 +347,8 @@ func (flattener autoFlattener) time(ctx context.Context, vFrom reflect.Value, is
 	return diags
 }
 
-// ptr copies an AWS API pointer value to a compatible Plugin Framework value.
-func (flattener autoFlattener) ptr(ctx context.Context, sourcePath path.Path, vFrom reflect.Value, targetPath path.Path, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+// pointer copies an AWS API pointer value to a compatible Plugin Framework value.
+func (flattener autoFlattener) pointer(ctx context.Context, sourcePath path.Path, vFrom reflect.Value, targetPath path.Path, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch vElem, isNilFrom := vFrom.Elem(), vFrom.IsNil(); vFrom.Type().Elem().Kind() {
@@ -497,7 +497,7 @@ func (flattener autoFlattener) slice(ctx context.Context, sourcePath path.Path, 
 			return diags
 		}
 
-	case reflect.Ptr:
+	case reflect.Pointer:
 		switch tSliceElem.Elem().Kind() {
 		case reflect.Int32:
 			switch tTo := tTo.(type) {
@@ -717,7 +717,7 @@ func (flattener autoFlattener) map_(ctx context.Context, sourcePath path.Path, v
 					vTo.Set(reflect.ValueOf(to))
 					return diags
 
-				case reflect.Ptr:
+				case reflect.Pointer:
 					from := vFrom.Interface().(map[string]map[string]*string)
 					tflog.SubsystemTrace(ctx, subsystemName, "Flattening map", map[string]any{
 						logAttrKeySourceSize: len(from),
@@ -760,7 +760,7 @@ func (flattener autoFlattener) map_(ctx context.Context, sourcePath path.Path, v
 				}
 			}
 
-		case reflect.Ptr:
+		case reflect.Pointer:
 			switch tMapElem.Elem().Kind() {
 			case reflect.Struct:
 				if tTo, ok := tTo.(fwtypes.NestedObjectCollectionType); ok {
@@ -867,7 +867,7 @@ func (flattener autoFlattener) structMapToObjectList(ctx context.Context, source
 		}
 
 		fromInterface := vFrom.MapIndex(key).Interface()
-		if vFrom.MapIndex(key).Kind() == reflect.Ptr {
+		if vFrom.MapIndex(key).Kind() == reflect.Pointer {
 			fromInterface = vFrom.MapIndex(key).Elem().Interface()
 		}
 
@@ -1128,7 +1128,7 @@ func setMapBlockKey(ctx context.Context, to any, key reflect.Value) diag.Diagnos
 	var diags diag.Diagnostics
 
 	valTo := reflect.ValueOf(to)
-	if kind := valTo.Kind(); kind == reflect.Ptr {
+	if kind := valTo.Kind(); kind == reflect.Pointer {
 		valTo = valTo.Elem()
 	}
 
@@ -1219,7 +1219,7 @@ func flattenFlattener(ctx context.Context, fromVal reflect.Value, toFlattener Fl
 func flattenPrePopulate(ctx context.Context, toVal reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	if toVal.Kind() == reflect.Ptr {
+	if toVal.Kind() == reflect.Pointer {
 		toVal = toVal.Elem()
 	}
 

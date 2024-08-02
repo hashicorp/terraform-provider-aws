@@ -215,7 +215,7 @@ func (expander autoExpander) bool(ctx context.Context, vFrom basetypes.BoolValua
 		vTo.SetBool(v.ValueBool())
 		return diags
 
-	case reflect.Ptr:
+	case reflect.Pointer:
 		switch tElem := tTo.Elem(); tElem.Kind() {
 		case reflect.Bool:
 			//
@@ -252,7 +252,7 @@ func (expander autoExpander) float64(ctx context.Context, vFrom basetypes.Float6
 		vTo.SetFloat(v.ValueFloat64())
 		return diags
 
-	case reflect.Ptr:
+	case reflect.Pointer:
 		switch tElem := tTo.Elem(); tElem.Kind() {
 		case reflect.Float32:
 			//
@@ -297,7 +297,7 @@ func (expander autoExpander) int64(ctx context.Context, vFrom basetypes.Int64Val
 		vTo.SetInt(v.ValueInt64())
 		return diags
 
-	case reflect.Ptr:
+	case reflect.Pointer:
 		switch tElem := tTo.Elem(); tElem.Kind() {
 		case reflect.Int32:
 			//
@@ -369,7 +369,7 @@ func (expander autoExpander) string(ctx context.Context, vFrom basetypes.StringV
 			return diags
 		}
 
-	case reflect.Ptr:
+	case reflect.Pointer:
 		switch tElem := tTo.Elem(); tElem.Kind() {
 		case reflect.String:
 			//
@@ -423,7 +423,7 @@ func (expander autoExpander) object(ctx context.Context, sourcePath path.Path, v
 			return diags
 		}
 
-	case reflect.Ptr:
+	case reflect.Pointer:
 		switch tElem := tTo.Elem(); tElem.Kind() {
 		case reflect.Struct:
 			//
@@ -514,7 +514,7 @@ func (expander autoExpander) listOrSetOfInt64(ctx context.Context, vFrom valueWi
 			vTo.Set(vals)
 			return diags
 
-		case reflect.Ptr:
+		case reflect.Pointer:
 			switch tSliceElem.Elem().Kind() {
 			case reflect.Int32:
 				//
@@ -588,7 +588,7 @@ func (expander autoExpander) listOrSetOfString(ctx context.Context, vFrom valueW
 			vTo.Set(vals)
 			return diags
 
-		case reflect.Ptr:
+		case reflect.Pointer:
 			switch tSliceElem.Elem().Kind() {
 			case reflect.String:
 				//
@@ -658,7 +658,7 @@ func (expander autoExpander) map_(ctx context.Context, vFrom basetypes.MapValuab
 				vTo.Set(reflect.ValueOf(out))
 				return diags
 
-			case reflect.Ptr:
+			case reflect.Pointer:
 				switch k := tMapElem.Elem().Elem().Kind(); k {
 				case reflect.String:
 					//
@@ -714,7 +714,7 @@ func (expander autoExpander) mapOfString(ctx context.Context, vFrom basetypes.Ma
 				vTo.Set(reflect.ValueOf(to))
 				return diags
 
-			case reflect.Ptr:
+			case reflect.Pointer:
 				switch k := tMapElem.Elem().Kind(); k {
 				case reflect.String:
 					//
@@ -789,7 +789,7 @@ func (expander autoExpander) nestedObjectCollection(ctx context.Context, sourceP
 		diags.Append(expander.nestedObjectToStruct(ctx, sourcePath, vFrom, targetPath, tTo, vTo)...)
 		return diags
 
-	case reflect.Ptr:
+	case reflect.Pointer:
 		switch tElem := tTo.Elem(); tElem.Kind() {
 		case reflect.Struct:
 			//
@@ -819,7 +819,7 @@ func (expander autoExpander) nestedObjectCollection(ctx context.Context, sourceP
 			diags.Append(expander.nestedKeyObjectToMap(ctx, sourcePath, vFrom, targetPath, tElem, vTo)...)
 			return diags
 
-		case reflect.Ptr:
+		case reflect.Pointer:
 			//
 			// types.List(OfObject) -> map[string]*struct
 			//
@@ -836,7 +836,7 @@ func (expander autoExpander) nestedObjectCollection(ctx context.Context, sourceP
 			diags.Append(expander.nestedObjectCollectionToSlice(ctx, sourcePath, vFrom, targetPath, tTo, tElem, vTo)...)
 			return diags
 
-		case reflect.Ptr:
+		case reflect.Pointer:
 			switch tElem := tElem.Elem(); tElem.Kind() {
 			case reflect.Struct:
 				//
@@ -949,7 +949,7 @@ func (expander autoExpander) nestedKeyObjectToMap(ctx context.Context, sourcePat
 		return diags
 	}
 
-	if tElem.Kind() == reflect.Ptr {
+	if tElem.Kind() == reflect.Pointer {
 		tElem = tElem.Elem()
 	}
 
@@ -996,7 +996,7 @@ func mapBlockKey(ctx context.Context, from any) (reflect.Value, diag.Diagnostics
 	var diags diag.Diagnostics
 
 	valFrom := reflect.ValueOf(from)
-	if kind := valFrom.Kind(); kind == reflect.Ptr {
+	if kind := valFrom.Kind(); kind == reflect.Pointer {
 		valFrom = valFrom.Elem()
 	}
 

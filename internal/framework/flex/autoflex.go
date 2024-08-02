@@ -39,7 +39,7 @@ func autoFlexValues(ctx context.Context, from, to any) (context.Context, reflect
 	var diags diag.Diagnostics
 
 	valFrom, valTo := reflect.ValueOf(from), reflect.ValueOf(to)
-	if kind := valFrom.Kind(); kind == reflect.Ptr {
+	if kind := valFrom.Kind(); kind == reflect.Pointer {
 		valFrom = valFrom.Elem()
 	}
 
@@ -48,7 +48,7 @@ func autoFlexValues(ctx context.Context, from, to any) (context.Context, reflect
 
 	kind := valTo.Kind()
 	switch kind {
-	case reflect.Ptr:
+	case reflect.Pointer:
 		if valTo.IsNil() {
 			tflog.SubsystemError(ctx, subsystemName, "Target is nil")
 			diags.Append(diagConvertingTargetIsNil(valTo.Type()))
