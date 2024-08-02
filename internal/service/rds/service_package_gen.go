@@ -81,8 +81,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "DB Subnet Group",
 		},
 		{
-			Factory:  DataSourceCertificate,
+			Factory:  dataSourceCertificate,
 			TypeName: "aws_rds_certificate",
+			Name:     "Certificate",
 		},
 		{
 			Factory:  DataSourceCluster,
