@@ -11,7 +11,7 @@ import "fmt"
 func ServiceFilterPackage(serviceName string) string {
 	switch serviceName {
 	default:
-		return fmt.Sprintf("%[1]stypes \"github.com/aws/aws-sdk-go-v2/service/%[1]s/types\"", serviceName)
+		return fmt.Sprintf("%[1]s \"github.com/aws/aws-sdk-go-v2/service/%[2]s/types\"", ServiceFilterPackagePrefix(serviceName), serviceName)
 	}
 }
 
@@ -34,8 +34,20 @@ func ServiceFilterType(serviceName string) string {
 // ServiceFilterTypeNameField determines the service filter type name field.
 func ServiceFilterTypeNameField(serviceName string) string {
 	switch serviceName {
-	default:
+	case "secretsmanager":
 		return "Key"
+	default:
+		return "Name"
+	}
+}
+
+// ServiceFilterTypeNameFunc determines the function called on the service filter type name.
+func ServiceFilterTypeNameFunc(serviceName string) string {
+	switch serviceName {
+	case "secretsmanager":
+		return fmt.Sprintf("%[1]s.FilterNameStringType", ServiceFilterPackagePrefix(serviceName))
+	default:
+		return "aws.String"
 	}
 }
 
