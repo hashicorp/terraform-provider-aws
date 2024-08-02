@@ -15,64 +15,6 @@ Terraform resource for managing an AWS DataZone Form Type.
 ### Basic Usage
 
 ```terraform
-resource "aws_iam_role" "domain_execution_role" {
-  name = %[1]q
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = ["sts:AssumeRole", "sts:TagSession"]
-        Effect = "Allow"
-        Principal = {
-          Service = "datazone.amazonaws.com"
-        }
-      },
-      {
-        Action = ["sts:AssumeRole", "sts:TagSession"]
-        Effect = "Allow"
-        Principal = {
-          Service = "cloudformation.amazonaws.com"
-        }
-      },
-    ]
-  })
-
-  inline_policy {
-    name = %[1]q
-    policy = jsonencode({
-      Version = "2012-10-17"
-      Statement = [
-        {
-          Action = [
-            "datazone:*",
-            "ram:*",
-            "sso:*",
-            "kms:*",
-          ]
-          Effect   = "Allow"
-          Resource = "*"
-        },
-      ]
-    })
-  }
-}
-
-resource "aws_datazone_domain" "test" {
-  name                  = %[1]q
-  domain_execution_role = aws_iam_role.domain_execution_role.arn
-}
-
-resource "aws_security_group" "test" {
-  name = %[1]q
-}
-
-resource "aws_datazone_project" "test" {
-  domain_identifier   = aws_datazone_domain.test.id
-  glossary_terms      = ["2N8w6XJCwZf"]
-  name                = %[1]q
-  description         = "desc"
-  skip_deletion_check = true
-}
 
 resource "aws_datazone_form_type" "test" {
   description               = "desc"
@@ -118,16 +60,16 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `created_at` - Creation time of the Form Type. 
-* `created_by` - Creator of the Form Type. 
-* `origin_domain_id` - Origin domain id of the Form Type. 
+* `created_at` - Creation time of the Form Type.
+* `created_by` - Creator of the Form Type.
+* `origin_domain_id` - Origin domain id of the Form Type.
 * `origin_project_id` - Origin project id of the Form Type. 
-* `owning_project_id` - Owning project id of the Form Type. 
-* `revision` - Revision of the Form Type. 
+* `owning_project_id` - Owning project id of the Form Type.
+* `revision` - Revision of the Form Type.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DataZone Form Type using a comma seperated value of DomainIdentifier,Name,Revision. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DataZone Form Type using a comma separated value of DomainIdentifier,Name,Revision. For example:
 
 ```terraform
 import {
@@ -136,7 +78,7 @@ import {
 }
 ```
 
-Using `terraform import`, import DataZone Form Type using a comma seperated value of DomainIdentifier,Name,Revision. For example:
+Using `terraform import`, import DataZone Form Type using a comma separated value of DomainIdentifier,Name,Revision. For example:
 
 ```console
 % terraform import aws_datazone_form_type.example domain-identifier,name,revision
