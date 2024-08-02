@@ -49,7 +49,7 @@ func TestAccPinpointGCMChannel_basicAPIKey(t *testing.T) {
 					testAccCheckGCMChannelExists(ctx, resourceName, &channel),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrApplicationID, "aws_pinpoint_app.test_app", names.AttrApplicationID),
 					resource.TestCheckResourceAttr(resourceName, "default_authentication_method", tfpinpoint.DefaultAuthenticationMethodKey),
-					resource.TestCheckResourceAttr(resourceName, "api_key", apiKey),
+					resource.TestCheckResourceAttr(resourceName, "api_key", ""),
 					resource.TestCheckNoResourceAttr(resourceName, "service_json"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 				),
@@ -86,7 +86,7 @@ func TestAccPinpointGCMChannel_apiKeyAuthMethod(t *testing.T) {
 					testAccCheckGCMChannelExists(ctx, resourceName, &channel),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrApplicationID, "aws_pinpoint_app.test_app", names.AttrApplicationID),
 					resource.TestCheckResourceAttr(resourceName, "default_authentication_method", tfpinpoint.DefaultAuthenticationMethodKey),
-					resource.TestCheckResourceAttr(resourceName, "api_key", apiKey),
+					resource.TestCheckResourceAttr(resourceName, "api_key", ""),
 					resource.TestCheckNoResourceAttr(resourceName, "service_json"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 				),
@@ -110,11 +110,6 @@ func TestAccPinpointGCMChannel_tokenAuthMethod(t *testing.T) {
 	}
 
 	serviceJsonFile := os.Getenv("GCM_SERVICE_JSON_FILE")
-	d, err := os.ReadFile(serviceJsonFile)
-	if err != nil {
-		t.Fatalf("reading token file: %s", err)
-	}
-	token := string(d)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
@@ -129,7 +124,7 @@ func TestAccPinpointGCMChannel_tokenAuthMethod(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrApplicationID, "aws_pinpoint_app.test_app", names.AttrApplicationID),
 					resource.TestCheckResourceAttr(resourceName, "default_authentication_method", tfpinpoint.DefaultAuthenticationMethodToken),
 					resource.TestCheckNoResourceAttr(resourceName, "api_key"),
-					resource.TestCheckResourceAttr(resourceName, "service_json", token),
+					resource.TestCheckResourceAttr(resourceName, "service_json", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 				),
 			},
