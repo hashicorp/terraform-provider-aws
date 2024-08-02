@@ -2119,6 +2119,32 @@ func TestExpandMapBlock(t *testing.T) {
 				infoConvertingWithPath("MapBlock[1].Attr2", reflect.TypeFor[types.String](), "MapBlock[\"Scalar\"].Attr2", reflect.TypeFor[string]()),
 			},
 		},
+
+		"map block list no key": {
+			Source: &tfMapBlockListNoKey{
+				MapBlock: fwtypes.NewListNestedObjectValueOfValueSliceMust[tfMapBlockElementNoKey](ctx, []tfMapBlockElementNoKey{
+					{
+						Attr1: types.StringValue("a"),
+						Attr2: types.StringValue("b"),
+					},
+					{
+						Attr1: types.StringValue("c"),
+						Attr2: types.StringValue("d"),
+					},
+				}),
+			},
+			Target: &TestFlexMapBlockKeyAWS01{},
+			expectedDiags: diag.Diagnostics{
+				diagExpandingNoMapBlockKey(reflect.TypeFor[tfMapBlockElementNoKey]()),
+			},
+			expectedLogLines: []map[string]any{
+				infoExpanding(reflect.TypeFor[*tfMapBlockListNoKey](), reflect.TypeFor[*TestFlexMapBlockKeyAWS01]()),
+				infoConverting(reflect.TypeFor[tfMapBlockListNoKey](), reflect.TypeFor[*TestFlexMapBlockKeyAWS01]()),
+				traceMatchedFields("MapBlock", reflect.TypeFor[tfMapBlockListNoKey](), "MapBlock", reflect.TypeFor[*TestFlexMapBlockKeyAWS01]()),
+				infoConvertingWithPath("MapBlock", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfMapBlockElementNoKey]](), "MapBlock", reflect.TypeFor[map[string]TestFlexMapBlockKeyAWS02]()),
+				errorSourceHasNoMapBlockKey("MapBlock[0]", reflect.TypeFor[tfMapBlockElementNoKey](), "MapBlock", reflect.TypeFor[TestFlexMapBlockKeyAWS02]()),
+			},
+		},
 	}
 	runAutoExpandTestCases(t, testCases)
 }

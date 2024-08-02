@@ -953,19 +953,22 @@ func (expander autoExpander) nestedKeyObjectToMap(ctx context.Context, sourcePat
 		tElem = tElem.Elem()
 	}
 
+	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetType, fullTypeName(tElem))
+
 	// Create a new target slice and expand each element.
 	f := reflect.ValueOf(from)
 	m := reflect.MakeMap(vTo.Type())
 	for i := 0; i < f.Len(); i++ {
-		key, d := blockKeyMap(f.Index(i).Interface())
+		sourcePath := sourcePath.AtListIndex(i)
+		ctx := tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourcePath, sourcePath.String())
+
+		key, d := mapBlockKey(ctx, f.Index(i).Interface())
 		diags.Append(d...)
 		if diags.HasError() {
 			return diags
 		}
 
-		sourcePath := sourcePath.AtListIndex(i)
 		targetPath := targetPath.AtMapKey(key.Interface().(string))
-		ctx := tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourcePath, sourcePath.String())
 		ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetPath, targetPath.String())
 
 		// Create a new target structure and walk its fields.
@@ -988,14 +991,16 @@ func (expander autoExpander) nestedKeyObjectToMap(ctx context.Context, sourcePat
 	return diags
 }
 
-// blockKeyMap takes a struct and extracts the value of the `key`
-func blockKeyMap(from any) (reflect.Value, diag.Diagnostics) {
+// mapBlockKey takes a struct and extracts the value of the `key`
+func mapBlockKey(ctx context.Context, from any) (reflect.Value, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	valFrom := reflect.ValueOf(from)
 	if kind := valFrom.Kind(); kind == reflect.Ptr {
 		valFrom = valFrom.Elem()
 	}
+
+	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourceType, fullTypeName(valueType(valFrom)))
 
 	for i, typFrom := 0, valFrom.Type(); i < typFrom.NumField(); i++ {
 		field := typFrom.Field(i)
@@ -1028,7 +1033,8 @@ func blockKeyMap(from any) (reflect.Value, diag.Diagnostics) {
 		}
 	}
 
-	diags.AddError("AutoFlEx", fmt.Sprintf("unable to find map block key (%s)", mapBlockKeyFieldName))
+	tflog.SubsystemError(ctx, subsystemName, "Source has no map block key")
+	diags.Append(diagExpandingNoMapBlockKey(valFrom.Type()))
 
 	return reflect.Zero(reflect.TypeOf("")), diags
 }
@@ -1168,5 +1174,15 @@ func diagExpandingSourceDoesNotImplementAttrValue(sourceType reflect.Type) diag.
 			"This is always an error in the provider. "+
 			"Please report the following to the provider developer:\n\n"+
 			fmt.Sprintf("Source type %q does not implement attr.Value", fullTypeName(sourceType)),
+	)
+}
+
+func diagExpandingNoMapBlockKey(sourceType reflect.Type) diag.ErrorDiagnostic {
+	return diag.NewErrorDiagnostic(
+		"Incompatible Types",
+		"An unexpected error occurred while expanding configuration. "+
+			"This is always an error in the provider. "+
+			"Please report the following to the provider developer:\n\n"+
+			fmt.Sprintf("Source type %q does not contain field %q", fullTypeName(sourceType), mapBlockKeyFieldName),
 	)
 }

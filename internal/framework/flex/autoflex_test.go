@@ -326,6 +326,15 @@ type TestFlexMapBlockKeyTF05 struct {
 	Attr2       types.String                 `tfsdk:"attr2"`
 }
 
+type tfMapBlockListNoKey struct {
+	MapBlock fwtypes.ListNestedObjectValueOf[tfMapBlockElementNoKey] `tfsdk:"map_block"`
+}
+
+type tfMapBlockElementNoKey struct {
+	Attr1 types.String `tfsdk:"attr1"`
+	Attr2 types.String `tfsdk:"attr2"`
+}
+
 var _ smithyjson.JSONStringer = (*testJSONDocument)(nil)
 var _ smithydocument.Marshaler = (*testJSONDocument)(nil)
 
