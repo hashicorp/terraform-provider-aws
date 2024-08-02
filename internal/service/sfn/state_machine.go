@@ -192,7 +192,7 @@ func resourceStateMachine() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			updateComputedAttributesOnPublish,
+			stateMachineUpdateComputedAttributesOnPublish,
 			verify.SetTagsDiff,
 		),
 	}
@@ -534,16 +534,16 @@ func flattenTracingConfiguration(apiObject *awstypes.TracingConfiguration) map[s
 	return tfMap
 }
 
-func updateComputedAttributesOnPublish(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+func stateMachineUpdateComputedAttributesOnPublish(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
 	publish := d.Get("publish").(bool)
-	if publish && needsConfigUpdate(d) {
+	if publish && stateMachineNeedsConfigUpdate(d) {
 		d.SetNewComputed("revision_id")
 		d.SetNewComputed("state_machine_version_arn")
 	}
 	return nil
 }
 
-func needsConfigUpdate(d sdkv2.ResourceDiffer) bool {
+func stateMachineNeedsConfigUpdate(d sdkv2.ResourceDiffer) bool {
 	for k, attr := range resourceStateMachine().Schema {
 		if attr.ForceNew {
 			continue
