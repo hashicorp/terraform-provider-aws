@@ -28,6 +28,9 @@ const (
 	ElasticbeanstalkTagKeyPrefix                = `elasticbeanstalk:`
 	NameTagKey                                  = `Name`
 	ServerlessApplicationRepositoryTagKeyPrefix = `serverlessrepo:`
+
+	// Environment variables prefixed with this string will be treated as default_tags.
+	DefaultTagsEnvVarPrefix = "TF_AWS_DEFAULT_TAGS_"
 )
 
 // DefaultConfig contains tags to default across all resources.
