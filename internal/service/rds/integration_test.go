@@ -230,6 +230,7 @@ locals {
 }
 
 data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
 
 resource "aws_security_group" "test" {
   name   = %[1]q
@@ -375,7 +376,7 @@ resource "aws_redshift_resource_policy" "test" {
     Statement = [{
       Effect = "Allow"
       Principal = {
-        AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
       }
       Action   = "redshift:CreateInboundIntegration"
       Resource = aws_redshiftserverless_namespace.test.arn
@@ -428,7 +429,7 @@ data "aws_iam_policy_document" "key_policy" {
     resources = ["*"]
     principals {
       type        = "AWS"
-      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
+      identifiers = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"]
     }
   }
 
