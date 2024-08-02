@@ -20,14 +20,15 @@ resource "aws_redshiftserverless_namespace" "example" {
 }
 
 resource "aws_redshiftserverless_workgroup" "example" {
-  namespace_name = aws_redshiftserverless_namespace.example.namespace_name
-  workgroup_name = "example-workspace"
-  base_capacity = 8
+  namespace_name      = aws_redshiftserverless_namespace.example.namespace_name
+  workgroup_name      = "example-workspace"
+  base_capacity       = 8
   publicly_accessible = false
+
   subnet_ids = [aws_subnet.example1.id, aws_subnet.example2.id, aws_subnet.example3.id]
 
   config_parameter {
-    parameter_key = "enable_case_sensitive_identifier"
+    parameter_key   = "enable_case_sensitive_identifier"
     parameter_value = "true"
   }
 }
@@ -79,10 +80,10 @@ resource "aws_rds_integration" "example" {
   integration_name = "example"
   source_arn       = aws_rds_cluster.example.arn
   target_arn       = aws_redshiftserverless_namespace.example.arn
-
   kms_key_id       = aws_kms_key.example.arn
+
   additional_encryption_context = {
-    "example": "test",
+    "example" : "test",
   }
 }
 ```
