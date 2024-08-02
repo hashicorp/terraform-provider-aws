@@ -119,6 +119,7 @@ func TestFlatten(t *testing.T) {
 				errorTargetDoesNotImplementAttrValue("", reflect.TypeFor[TestFlex00](), "", reflect.TypeFor[string]()),
 			},
 		},
+
 		"json interface Source string Target": {
 			Source: &TestFlexAWS19{
 				Field1: &testJSONDocument{
@@ -161,6 +162,23 @@ func TestFlatten(t *testing.T) {
 				infoConvertingWithPath("Field1", reflect.TypeFor[smithyjson.JSONStringer](), "Field1", reflect.TypeFor[fwtypes.SmithyJSON[smithyjson.JSONStringer]]()),
 			},
 		},
+		"json interface Source marshal error": {
+			Source: &TestFlexAWS19{
+				Field1: &testJSONDocumentError{},
+			},
+			Target: &TestFlexTF19{},
+			expectedDiags: diag.Diagnostics{
+				diagFlatteningMarshalSmithyDocument(reflect.TypeFor[*testJSONDocumentError](), marshallSmithyDocumentErr),
+			},
+			expectedLogLines: []map[string]any{
+				infoFlattening(reflect.TypeFor[*TestFlexAWS19](), reflect.TypeFor[*TestFlexTF19]()),
+				infoConverting(reflect.TypeFor[TestFlexAWS19](), reflect.TypeFor[*TestFlexTF19]()),
+				traceMatchedFields("Field1", reflect.TypeFor[TestFlexAWS19](), "Field1", reflect.TypeFor[*TestFlexTF19]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[smithyjson.JSONStringer](), "Field1", reflect.TypeFor[types.String]()),
+				errorMarshallingJSONDocument("Field1", reflect.TypeFor[smithyjson.JSONStringer](), "Field1", reflect.TypeFor[types.String](), marshallSmithyDocumentErr),
+			},
+		},
+
 		"empty struct Source and Target": {
 			Source:     TestFlex00{},
 			Target:     &TestFlex00{},

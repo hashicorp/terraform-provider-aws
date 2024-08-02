@@ -6,6 +6,7 @@ package flex
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"reflect"
 	"time"
 
@@ -357,6 +358,23 @@ func (m *testJSONDocument) UnmarshalSmithyDocument(v interface{}) error {
 func (m *testJSONDocument) MarshalSmithyDocument() ([]byte, error) {
 	return json.Marshal(m.Value)
 }
+
+var _ smithyjson.JSONStringer = &testJSONDocumentError{}
+
+type testJSONDocumentError struct{}
+
+func (m *testJSONDocumentError) UnmarshalSmithyDocument(v interface{}) error {
+	return unmarshallSmithyDocumentErr
+}
+
+func (m *testJSONDocumentError) MarshalSmithyDocument() ([]byte, error) {
+	return nil, marshallSmithyDocumentErr
+}
+
+var (
+	unmarshallSmithyDocumentErr = errors.New("test marshal error")
+	marshallSmithyDocumentErr   = errors.New("test marshal error")
+)
 
 type TestFlexAWS19 struct {
 	Field1 smithyjson.JSONStringer `json:"field1"`
