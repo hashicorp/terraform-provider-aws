@@ -82,7 +82,7 @@ func (r *resourceDataShareConsumerAssociation) Schema(ctx context.Context, req r
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"managed_by": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -262,7 +262,7 @@ func (r *resourceDataShareConsumerAssociation) Delete(ctx context.Context, req r
 }
 
 func (r *resourceDataShareConsumerAssociation) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 func (r *resourceDataShareConsumerAssociation) ConfigValidators(_ context.Context) []resource.ConfigValidator {
 	return []resource.ConfigValidator{

@@ -74,12 +74,10 @@ This resource supports the following arguments:
 * `name` - (Required) The name of the environment.
 * `instance_type` - (Required) The type of instance to connect to the environment, e.g., `t2.micro`.
 * `image_id` - (Required) The identifier for the Amazon Machine Image (AMI) that's used to create the EC2 instance. Valid values are
-    * `amazonlinux-1-x86_64`
     * `amazonlinux-2-x86_64`
     * `amazonlinux-2023-x86_64`
     * `ubuntu-18.04-x86_64`
     * `ubuntu-22.04-x86_64`
-    * `resolve:ssm:/aws/service/cloud9/amis/amazonlinux-1-x86_64`
     * `resolve:ssm:/aws/service/cloud9/amis/amazonlinux-2-x86_64`
     * `resolve:ssm:/aws/service/cloud9/amis/amazonlinux-2023-x86_64`
     * `resolve:ssm:/aws/service/cloud9/amis/ubuntu-18.04-x86_64`

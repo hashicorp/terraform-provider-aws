@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cloudfront_origin_access_identity", name="Origin Access Identity")
@@ -42,7 +43,7 @@ func resourceOriginAccessIdentity() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"comment": {
+			names.AttrComment: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "",
@@ -101,7 +102,7 @@ func resourceOriginAccessIdentityRead(ctx context.Context, d *schema.ResourceDat
 	apiObject := output.CloudFrontOriginAccessIdentity.CloudFrontOriginAccessIdentityConfig
 	d.Set("caller_reference", apiObject.CallerReference)
 	d.Set("cloudfront_access_identity_path", "origin-access-identity/cloudfront/"+d.Id())
-	d.Set("comment", apiObject.Comment)
+	d.Set(names.AttrComment, apiObject.Comment)
 	d.Set("etag", output.ETag)
 	d.Set("iam_arn", originAccessIdentityARN(meta.(*conns.AWSClient), d.Id()))
 	d.Set("s3_canonical_user_id", output.CloudFrontOriginAccessIdentity.S3CanonicalUserId)
@@ -175,7 +176,7 @@ func findOriginAccessIdentityByID(ctx context.Context, conn *cloudfront.Client, 
 
 func expandCloudFrontOriginAccessIdentityConfig(d *schema.ResourceData) *awstypes.CloudFrontOriginAccessIdentityConfig { // nosemgrep:ci.cloudfront-in-func-name
 	apiObject := &awstypes.CloudFrontOriginAccessIdentityConfig{
-		Comment: aws.String(d.Get("comment").(string)),
+		Comment: aws.String(d.Get(names.AttrComment).(string)),
 	}
 
 	// This sets CallerReference if it's still pending computation (ie: new resource)

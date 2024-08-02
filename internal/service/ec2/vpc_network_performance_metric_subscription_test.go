@@ -21,8 +21,8 @@ func TestAccVPCNetworkPerformanceMetricSubscription_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		"basic":      testAccNetworkPerformanceMetricSubscription_basic,
-		"disappears": testAccNetworkPerformanceMetricSubscription_disappears,
+		acctest.CtBasic:      testAccNetworkPerformanceMetricSubscription_basic,
+		acctest.CtDisappears: testAccNetworkPerformanceMetricSubscription_disappears,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -44,10 +44,10 @@ func testAccNetworkPerformanceMetricSubscription_basic(t *testing.T) {
 				Config: testAccVPCNetworkPerformanceMetricSubscription_basic(src, dst),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkPerformanceMetricSubscriptionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "destination", dst),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDestination, dst),
 					resource.TestCheckResourceAttr(resourceName, "metric", "aggregate-latency"),
 					resource.TestCheckResourceAttr(resourceName, "period", "five-minutes"),
-					resource.TestCheckResourceAttr(resourceName, "source", src),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSource, src),
 					resource.TestCheckResourceAttr(resourceName, "statistic", "p50"),
 				),
 			},
@@ -85,19 +85,10 @@ func testAccCheckNetworkPerformanceMetricSubscriptionExists(ctx context.Context,
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EC2 AWS Network Performance Metric Subscription ID is set")
-		}
-
-		source, destination, metric, statistic, err := tfec2.NetworkPerformanceMetricSubscriptionResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		_, err = tfec2.FindNetworkPerformanceMetricSubscriptionByFourPartKey(ctx, conn, source, destination, metric, statistic)
+		_, err := tfec2.FindNetworkPerformanceMetricSubscriptionByFourPartKey(ctx, conn, rs.Primary.Attributes[names.AttrSource], rs.Primary.Attributes[names.AttrDestination], rs.Primary.Attributes["metric"], rs.Primary.Attributes["statistic"])
 
 		return err
 	}
@@ -112,13 +103,7 @@ func testAccCheckNetworkPerformanceMetricSubscriptionDestroy(ctx context.Context
 				continue
 			}
 
-			source, destination, metric, statistic, err := tfec2.NetworkPerformanceMetricSubscriptionResourceID(rs.Primary.ID)
-
-			if err != nil {
-				return err
-			}
-
-			_, err = tfec2.FindNetworkPerformanceMetricSubscriptionByFourPartKey(ctx, conn, source, destination, metric, statistic)
+			_, err := tfec2.FindNetworkPerformanceMetricSubscriptionByFourPartKey(ctx, conn, rs.Primary.Attributes[names.AttrSource], rs.Primary.Attributes[names.AttrDestination], rs.Primary.Attributes["metric"], rs.Primary.Attributes["statistic"])
 
 			if tfresource.NotFound(err) {
 				continue

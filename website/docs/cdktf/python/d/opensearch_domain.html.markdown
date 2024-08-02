@@ -78,6 +78,7 @@ This data source exports the following attributes in addition to the arguments a
     * `identity_pool_id` - Cognito Identity pool used by the domain.
     * `role_arn` - IAM Role with the AmazonOpenSearchServiceCognitoAccess policy attached.
 * `created` – Status of the creation of the domain.
+* `dashboard_endpoint` - Domain-specific endpoint used to access the [Dashboard application](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/dashboards.html).
 * `deleted` – Status of the deletion of the domain.
 * `domain_id` – Unique identifier for the domain.
 * `ebs_options` - EBS Options for the instances in the domain.
@@ -91,7 +92,7 @@ This data source exports the following attributes in addition to the arguments a
     * `enabled` - Whether encryption at rest is enabled in the domain.
     * `kms_key_id` - KMS key id used to encrypt data at rest.
 * `endpoint` – Domain-specific endpoint used to submit index, search, and data upload requests.
-* `dashboard_endpoint` - Domain-specific endpoint used to access the [Dashboard application](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/dashboards.html).
+* `ip_address_type` - Type of IP addresses supported by the endpoint for the domain.
 * `kibana_endpoint` - (**Deprecated**) Domain-specific endpoint for kibana without https scheme. Use the `dashboard_endpoint` attribute instead.
 * `log_publishing_options` - Domain log publishing related options.
     * `log_type` - Type of OpenSearch log being published.
@@ -117,4 +118,4 @@ This data source exports the following attributes in addition to the arguments a
     * `subnet_ids` - Subnets used by the domain.
     * `vpc_id` - VPC used by the domain.
 
-<!-- cache-key: cdktf-0.20.1 input-3ece174b178ec49f160e5c18c9b72c0faf4ab9039bc2b4501cc2e402815d2a3e -->
+<!-- cache-key: cdktf-0.20.1 input-9ad96ddccd055a8801cf41664d1bc56b8cf4e140901a238bc44f8b3314f475e2 -->

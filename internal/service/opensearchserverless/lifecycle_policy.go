@@ -51,14 +51,14 @@ func (r *resourceLifecyclePolicy) Metadata(_ context.Context, _ resource.Metadat
 func (r *resourceLifecyclePolicy) Schema(ctx context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 1000),
 				},
 			},
-			"id": framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			names.AttrID: framework.IDAttribute(),
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 32),
@@ -67,7 +67,7 @@ func (r *resourceLifecyclePolicy) Schema(ctx context.Context, _ resource.SchemaR
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"policy": schema.StringAttribute{
+			names.AttrPolicy: schema.StringAttribute{
 				CustomType: fwtypes.NewSmithyJSONType(ctx, document.NewLazyDocument),
 				Required:   true,
 				Validators: []validator.String{
@@ -80,7 +80,7 @@ func (r *resourceLifecyclePolicy) Schema(ctx context.Context, _ resource.SchemaR
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"type": schema.StringAttribute{
+			names.AttrType: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.LifecyclePolicyType](),
 				Required:   true,
 				PlanModifiers: []planmodifier.String{

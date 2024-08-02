@@ -36,6 +36,10 @@ issues:
     # Per-Service
     - linters:
         - staticcheck
+      path: internal/service/auditmanager/
+      text: "SA1019: apiObject.AwsServices is deprecated"
+    - linters:
+        - staticcheck
       path: internal/service/batch/
       text: "SA1019: apiObject.ImageId is deprecated: This field is deprecated"
     - linters:
@@ -129,32 +133,31 @@ linters:
     - goconst
     - gocritic
     - gofmt
-    - gomnd
     - gosimple
+    - govet
     - ineffassign
     - makezero
     - misspell
+    - mnd
     - nakedret
     - nilerr
     - nolintlint
     - nosprintfhostport
     - paralleltest
-    # - perfsprint
     - predeclared
     - revive
     - staticcheck
     - stylecheck
     - tenv
-    # - thelper
     - tparallel
     - typecheck
     - unconvert
     - unparam
     - unused
     - usestdlibvars
-    - vet
-    - vetshadow
     - whitespace
+    # - perfsprint
+    # - thelper
 
 linters-settings:
   dogsled:
@@ -174,7 +177,7 @@ linters-settings:
       - performance
       - experimental
       - opinionated
-  gomnd:
+  mnd:
     checks:
       - argument
     ignored-functions:
@@ -213,7 +216,7 @@ linters-settings:
     require-explanation: true
     require-specific: true
     allow-no-explanation:
-      - gomnd
+      - mnd
       - paralleltest
       - tparallel
       - unparam

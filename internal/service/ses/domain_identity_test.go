@@ -173,8 +173,8 @@ func testAccCheckDomainIdentityARN(n string, domain string) resource.TestCheckFu
 			Service:   "ses",
 		}
 
-		if rs.Primary.Attributes["arn"] != expected.String() {
-			return fmt.Errorf("Incorrect ARN: expected %q, got %q", expected, rs.Primary.Attributes["arn"])
+		if rs.Primary.Attributes[names.AttrARN] != expected.String() {
+			return fmt.Errorf("Incorrect ARN: expected %q, got %q", expected, rs.Primary.Attributes[names.AttrARN])
 		}
 
 		return nil

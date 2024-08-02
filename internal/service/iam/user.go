@@ -42,17 +42,17 @@ func resourceUser() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"force_destroy": {
+			names.AttrForceDestroy: {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
 				Description: "Delete user even if it has non-Terraform-managed IAM access keys, login profile or MFA devices",
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.StringMatch(
@@ -60,7 +60,7 @@ func resourceUser() *schema.Resource {
 					"must only contain alphanumeric characters, hyphens, underscores, commas, periods, @ symbols, plus and equals signs",
 				),
 			},
-			"path": {
+			names.AttrPath: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "/",
@@ -94,8 +94,8 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	name := d.Get("name").(string)
-	path := d.Get("path").(string)
+	name := d.Get(names.AttrName).(string)
+	path := d.Get(names.AttrPath).(string)
 	input := &iam.CreateUserInput{
 		Path:     aws.String(path),
 		Tags:     getTagsIn(ctx),
@@ -159,9 +159,9 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 	user := outputRaw.(*awstypes.User)
 
-	d.Set("arn", user.Arn)
-	d.Set("name", user.UserName)
-	d.Set("path", user.Path)
+	d.Set(names.AttrARN, user.Arn)
+	d.Set(names.AttrName, user.UserName)
+	d.Set(names.AttrPath, user.Path)
 	if user.PermissionsBoundary != nil {
 		d.Set("permissions_boundary", user.PermissionsBoundary.PermissionsBoundaryArn)
 	} else {
@@ -178,12 +178,12 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	if d.HasChanges("name", "path") {
-		o, n := d.GetChange("name")
+	if d.HasChanges(names.AttrName, names.AttrPath) {
+		o, n := d.GetChange(names.AttrName)
 		input := &iam.UpdateUserInput{
 			UserName:    aws.String(o.(string)),
 			NewUserName: aws.String(n.(string)),
-			NewPath:     aws.String(d.Get("path").(string)),
+			NewPath:     aws.String(d.Get(names.AttrPath).(string)),
 		}
 
 		_, err := conn.UpdateUser(ctx, input)
@@ -234,7 +234,7 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	// All access keys, MFA devices and login profile for the user must be removed.
-	if d.Get("force_destroy").(bool) {
+	if d.Get(names.AttrForceDestroy).(bool) {
 		for _, v := range []struct {
 			f      func(context.Context, *iam.Client, string) error
 			format string

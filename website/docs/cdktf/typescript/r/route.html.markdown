@@ -16,6 +16,8 @@ Provides a resource to create a routing table entry (a route) in a VPC routing t
 
 ~> **NOTE on `gatewayId` attribute:** The AWS API is very forgiving with the resource ID passed in the `gatewayId` attribute. For example an `aws_route` resource can be created with an [`aws_nat_gateway`](nat_gateway.html) or [`aws_egress_only_internet_gateway`](egress_only_internet_gateway.html) ID specified for the `gatewayId` attribute. Specifying anything other than an [`aws_internet_gateway`](internet_gateway.html) or [`aws_vpn_gateway`](vpn_gateway.html) ID will lead to Terraform reporting a permanent diff between your configuration and recorded state, as the AWS API returns the more-specific attribute. If you are experiencing constant diffs with an `aws_route` resource, the first thing to check is that the correct attribute is being specified.
 
+~> **NOTE on combining `vpcEndpointId` and `destinationPrefixListId` attributes:** To associate a Gateway VPC Endpoint (such as S3) with destination prefix list, use the [`aws_vpc_endpoint_route_table_association`](vpc_endpoint_route_table_association.html) resource instead.
+
 ## Example Usage
 
 ```typescript
@@ -216,4 +218,4 @@ Import a route in route table `rtb-656C65616E6F72` with a managed prefix list de
 % terraform import aws_route.my_route rtb-656C65616E6F72_pl-0570a1d2d725c16be
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-acd7ced5ea391aca7fec001fb7ccca36d5b1b371d3a058994f80e01a34a00681 -->
+<!-- cache-key: cdktf-0.20.1 input-82a10ad295ce34577ba999c5af56984db204da17baee1b7f51f6c4821fa0366d -->

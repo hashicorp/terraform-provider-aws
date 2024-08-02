@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_cloudfront_realtime_log_config", name="Real-time Log Config")
@@ -21,11 +22,11 @@ func dataSourceRealtimeLogConfig() *schema.Resource {
 		ReadWithoutTimeout: dataSourceRealtimeLogConfigRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -35,11 +36,11 @@ func dataSourceRealtimeLogConfig() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"role_arn": {
+									names.AttrRoleARN: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"stream_arn": {
+									names.AttrStreamARN: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -58,7 +59,7 @@ func dataSourceRealtimeLogConfig() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -74,7 +75,7 @@ func dataSourceRealtimeLogConfigRead(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	logConfig, err := findRealtimeLogConfigByName(ctx, conn, name)
 
 	if err != nil {
@@ -83,12 +84,12 @@ func dataSourceRealtimeLogConfigRead(ctx context.Context, d *schema.ResourceData
 
 	arn := aws.ToString(logConfig.ARN)
 	d.SetId(arn)
-	d.Set("arn", arn)
-	if err := d.Set("endpoint", flattenEndPoints(logConfig.EndPoints)); err != nil {
+	d.Set(names.AttrARN, arn)
+	if err := d.Set(names.AttrEndpoint, flattenEndPoints(logConfig.EndPoints)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoint: %s", err)
 	}
 	d.Set("fields", logConfig.Fields)
-	d.Set("name", logConfig.Name)
+	d.Set(names.AttrName, logConfig.Name)
 	d.Set("sampling_rate", logConfig.SamplingRate)
 
 	return diags

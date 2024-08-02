@@ -29,6 +29,7 @@ import (
 
 // @SDKResource("aws_key_pair", name="Key Pair")
 // @Tags(identifierAttribute="key_pair_id")
+// @Testing(tagsTest=false)
 func resourceKeyPair() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -44,10 +45,10 @@ func resourceKeyPair() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		SchemaVersion: 1,
-		MigrateState:  KeyPairMigrateState,
+		MigrateState:  keyPairMigrateState,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -79,7 +80,7 @@ func resourceKeyPair() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"public_key": {
+			names.AttrPublicKey: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -105,8 +106,8 @@ func resourceKeyPairCreate(ctx context.Context, d *schema.ResourceData, meta int
 	keyName := create.Name(d.Get("key_name").(string), d.Get("key_name_prefix").(string))
 	input := &ec2.ImportKeyPairInput{
 		KeyName:           aws.String(keyName),
-		PublicKeyMaterial: []byte(d.Get("public_key").(string)),
-		TagSpecifications: getTagSpecificationsInV2(ctx, types.ResourceTypeKeyPair),
+		PublicKeyMaterial: []byte(d.Get(names.AttrPublicKey).(string)),
+		TagSpecifications: getTagSpecificationsIn(ctx, types.ResourceTypeKeyPair),
 	}
 
 	output, err := conn.ImportKeyPair(ctx, input)
@@ -138,19 +139,19 @@ func resourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "ec2",
+		Service:   names.EC2,
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  "key-pair/" + d.Id(),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("fingerprint", keyPair.KeyFingerprint)
 	d.Set("key_name", keyPair.KeyName)
 	d.Set("key_name_prefix", create.NamePrefixFromName(aws.ToString(keyPair.KeyName)))
 	d.Set("key_pair_id", keyPair.KeyPairId)
 	d.Set("key_type", keyPair.KeyType)
 
-	setTagsOutV2(ctx, keyPair.Tags)
+	setTagsOut(ctx, keyPair.Tags)
 
 	return diags
 }
@@ -181,7 +182,7 @@ func resourceKeyPairDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 // OpenSSHPublicKeysEqual returns whether or not two OpenSSH public key format strings represent the same key.
 // Any key comment is ignored when comparing values.
-func OpenSSHPublicKeysEqual(v1, v2 string) bool {
+func openSSHPublicKeysEqual(v1, v2 string) bool {
 	key1, _, _, _, err := ssh.ParseAuthorizedKey([]byte(v1))
 
 	if err != nil {

@@ -36,8 +36,8 @@ func TestAccAPIGatewayV2Deployment_basic(t *testing.T) {
 				Config: testAccDeploymentConfig_basic(rName, "Test description"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "auto_deployed", "false"),
-					resource.TestCheckResourceAttr(resourceName, "description", "Test description"),
+					resource.TestCheckResourceAttr(resourceName, "auto_deployed", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test description"),
 				),
 			},
 			{
@@ -50,8 +50,8 @@ func TestAccAPIGatewayV2Deployment_basic(t *testing.T) {
 				Config: testAccDeploymentConfig_basic(rName, "Test description updated"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "auto_deployed", "false"),
-					resource.TestCheckResourceAttr(resourceName, "description", "Test description updated"),
+					resource.TestCheckResourceAttr(resourceName, "auto_deployed", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test description updated"),
 				),
 			},
 		},
@@ -122,7 +122,7 @@ func TestAccAPIGatewayV2Deployment_triggers(t *testing.T) {
 				ImportStateIdFunc:       testAccDeploymentImportStateIdFunc(resourceName),
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"triggers"},
+				ImportStateVerifyIgnore: []string{names.AttrTriggers},
 			},
 			{
 				Config: testAccDeploymentConfig_triggers(rName, true),

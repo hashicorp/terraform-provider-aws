@@ -38,7 +38,7 @@ func ResourceUserProfile() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -84,10 +84,24 @@ func ResourceUserProfile() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"status": {
+												names.AttrStatus: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringInSlice(sagemaker.FeatureStatus_Values(), false),
+												},
+											},
+										},
+									},
+									"generative_ai_settings": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"amazon_bedrock_role_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
 												},
 											},
 										},
@@ -108,7 +122,7 @@ func ResourceUserProfile() *schema.Resource {
 													Required:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"status": {
+												names.AttrStatus: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringInSlice(sagemaker.FeatureStatus_Values(), false),
@@ -122,7 +136,7 @@ func ResourceUserProfile() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"status": {
+												names.AttrStatus: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringInSlice(sagemaker.FeatureStatus_Values(), false),
@@ -141,7 +155,7 @@ func ResourceUserProfile() *schema.Resource {
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"status": {
+												names.AttrStatus: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringInSlice(sagemaker.FeatureStatus_Values(), false),
@@ -160,7 +174,7 @@ func ResourceUserProfile() *schema.Resource {
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"status": {
+												names.AttrStatus: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringInSlice(sagemaker.FeatureStatus_Values(), false),
@@ -204,7 +218,7 @@ func ResourceUserProfile() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"instance_type": {
+												names.AttrInstanceType: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringInSlice(sagemaker.AppInstanceType_Values(), false),
@@ -239,6 +253,27 @@ func ResourceUserProfile() *schema.Resource {
 											ValidateFunc: verify.ValidARN,
 										},
 									},
+									"custom_image": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 200,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"app_image_config_name": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"image_name": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"image_version_number": {
+													Type:     schema.TypeInt,
+													Optional: true,
+												},
+											},
+										},
+									},
 								},
 							},
 						},
@@ -252,7 +287,7 @@ func ResourceUserProfile() *schema.Resource {
 										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"file_system_id": {
+												names.AttrFileSystemID: {
 													Type:     schema.TypeString,
 													Required: true,
 												},
@@ -342,7 +377,7 @@ func ResourceUserProfile() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"instance_type": {
+												names.AttrInstanceType: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringInSlice(sagemaker.AppInstanceType_Values(), false),
@@ -406,7 +441,7 @@ func ResourceUserProfile() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"instance_type": {
+												names.AttrInstanceType: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringInSlice(sagemaker.AppInstanceType_Values(), false),
@@ -456,7 +491,7 @@ func ResourceUserProfile() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"instance_type": {
+												names.AttrInstanceType: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringInSlice(sagemaker.AppInstanceType_Values(), false),
@@ -535,7 +570,7 @@ func ResourceUserProfile() *schema.Resource {
 								},
 							},
 						},
-						"security_groups": {
+						names.AttrSecurityGroups: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							MaxItems: 5,
@@ -553,7 +588,7 @@ func ResourceUserProfile() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"instance_type": {
+												names.AttrInstanceType: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringInSlice(sagemaker.AppInstanceType_Values(), false),
@@ -672,7 +707,7 @@ func ResourceUserProfile() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"instance_type": {
+												names.AttrInstanceType: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringInSlice(sagemaker.AppInstanceType_Values(), false),
@@ -780,7 +815,7 @@ func resourceUserProfileRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	arn := aws.StringValue(userProfile.UserProfileArn)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("domain_id", userProfile.DomainId)
 	d.Set("home_efs_file_system_uid", userProfile.HomeEfsFileSystemUid)
 	d.Set("single_sign_on_user_identifier", userProfile.SingleSignOnUserIdentifier)

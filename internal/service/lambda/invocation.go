@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_lambda_invocation", name="Invocation")
@@ -64,7 +65,7 @@ func resourceInvocation() *schema.Resource {
 				Optional: true,
 				Default:  "tf",
 			},
-			"triggers": {
+			names.AttrTriggers: {
 				Type:     schema.TypeMap,
 				Optional: true,
 				ForceNew: true,
@@ -125,8 +126,8 @@ func buildInput(d *schema.ResourceData, action invocationAction) ([]byte, error)
 	}
 
 	newInputMap[d.Get("terraform_key").(string)] = map[string]interface{}{
-		"action":     action,
-		"prev_input": oldInputMap,
+		names.AttrAction: action,
+		"prev_input":     oldInputMap,
 	}
 	return json.Marshal(&newInputMap)
 }

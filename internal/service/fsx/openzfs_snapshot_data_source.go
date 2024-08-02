@@ -8,8 +8,9 @@ import (
 	"sort"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/fsx"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/fsx"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,31 +22,30 @@ import (
 )
 
 // @SDKDataSource("aws_fsx_openzfs_snapshot", name="OpenZFS Snapshot")
-// @Tags
 func dataSourceOpenzfsSnapshot() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceOpenZFSSnapshotRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"creation_time": {
+			names.AttrCreationTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"filter": snapshotFiltersSchema(),
-			"most_recent": {
+			names.AttrFilter: snapshotFiltersSchema(),
+			names.AttrMostRecent: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"snapshot_id": {
+			names.AttrSnapshotID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -65,23 +65,24 @@ func dataSourceOpenzfsSnapshot() *schema.Resource {
 
 func dataSourceOpenZFSSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn(ctx)
+	conn := meta.(*conns.AWSClient).FSxClient(ctx)
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &fsx.DescribeSnapshotsInput{}
 
 	if v, ok := d.GetOk("snapshot_ids"); ok && len(v.([]interface{})) > 0 {
-		input.SnapshotIds = flex.ExpandStringList(v.([]interface{}))
+		input.SnapshotIds = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
 	input.Filters = append(input.Filters, newSnapshotFilterList(
-		d.Get("filter").(*schema.Set),
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
 	if len(input.Filters) == 0 {
 		input.Filters = nil
 	}
 
-	snapshots, err := findSnapshots(ctx, conn, input, tfslices.PredicateTrue[*fsx.Snapshot]())
+	snapshots, err := findSnapshots(ctx, conn, input, tfslices.PredicateTrue[*awstypes.Snapshot]())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading FSx Snapshots: %s", err)
@@ -92,25 +93,37 @@ func dataSourceOpenZFSSnapshotRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if len(snapshots) > 1 {
-		if !d.Get("most_recent").(bool) {
+		if !d.Get(names.AttrMostRecent).(bool) {
 			return sdkdiag.AppendErrorf(diags, "Your query returned more than one result. Please try a more "+
 				"specific search criteria, or set `most_recent` attribute to true.")
 		}
 
 		sort.Slice(snapshots, func(i, j int) bool {
-			return aws.TimeValue(snapshots[i].CreationTime).Unix() > aws.TimeValue(snapshots[j].CreationTime).Unix()
+			return aws.ToTime(snapshots[i].CreationTime).Unix() > aws.ToTime(snapshots[j].CreationTime).Unix()
 		})
 	}
 
 	snapshot := snapshots[0]
-	d.SetId(aws.StringValue(snapshot.SnapshotId))
-	d.Set("arn", snapshot.ResourceARN)
-	d.Set("creation_time", snapshot.CreationTime.Format(time.RFC3339))
-	d.Set("name", snapshot.Name)
-	d.Set("snapshot_id", snapshot.SnapshotId)
+	d.SetId(aws.ToString(snapshot.SnapshotId))
+	arn := aws.ToString(snapshot.ResourceARN)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrCreationTime, snapshot.CreationTime.Format(time.RFC3339))
+	d.Set(names.AttrName, snapshot.Name)
+	d.Set(names.AttrSnapshotID, snapshot.SnapshotId)
 	d.Set("volume_id", snapshot.VolumeId)
 
-	setTagsOut(ctx, snapshot.Tags)
+	// Snapshot tags aren't set in the Describe response.
+	// setTagsOut(ctx, snapshot.Tags)
+
+	tags, err := listTags(ctx, conn, arn)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "listing tags for FSx OpenZFS Snapshot (%s): %s", arn, err)
+	}
+
+	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
+	}
 
 	return diags
 }

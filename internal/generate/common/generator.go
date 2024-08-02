@@ -11,6 +11,8 @@ import (
 	"path"
 	"strings"
 	"text/template"
+	"unicode"
+	"unicode/utf8"
 
 	"github.com/hashicorp/cli"
 	"golang.org/x/text/cases"
@@ -100,7 +102,7 @@ func (d *fileDestination) Write() error {
 	} else {
 		flags = os.O_TRUNC | os.O_CREATE | os.O_WRONLY
 	}
-	f, err := os.OpenFile(d.filename, flags, 0644) //nolint:gomnd
+	f, err := os.OpenFile(d.filename, flags, 0644) //nolint:mnd // good protection for new files
 
 	if err != nil {
 		return fmt.Errorf("opening file (%s): %w", d.filename, err)
@@ -144,6 +146,15 @@ func (d *baseDestination) WriteTemplate(templateName, templateBody string, templ
 
 func parseTemplate(templateName, templateBody string, templateData any) ([]byte, error) {
 	funcMap := template.FuncMap{
+		// FirstUpper returns a string with the first character as upper case.
+		"FirstUpper": func(s string) string {
+			if s == "" {
+				return ""
+			}
+			r, n := utf8.DecodeRuneInString(s)
+			return string(unicode.ToUpper(r)) + s[n:]
+		},
+		// Title returns a string with the first character of each word as upper case.
 		"Title": cases.Title(language.Und, cases.NoLower).String,
 	}
 	tmpl, err := template.New(templateName).Funcs(funcMap).Parse(templateBody)

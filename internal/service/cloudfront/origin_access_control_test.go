@@ -41,9 +41,9 @@ func TestAccCloudFrontOriginAccessControl_basic(t *testing.T) {
 				Config: testAccOriginAccessControlConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOriginAccessControlExists(ctx, resourceName, &originaccesscontrol),
-					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
-					resource.TestCheckResourceAttrWith(resourceName, "id", func(value string) error {
+					resource.TestCheckResourceAttrWith(resourceName, names.AttrID, func(value string) error {
 						if value == "" {
 							return fmt.Errorf("expected attribute to be set")
 						}
@@ -54,7 +54,7 @@ func TestAccCloudFrontOriginAccessControl_basic(t *testing.T) {
 
 						return nil
 					}),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "origin_access_control_origin_type", "s3"),
 					resource.TestCheckResourceAttr(resourceName, "signing_behavior", "always"),
 					resource.TestCheckResourceAttr(resourceName, "signing_protocol", "sigv4"),
@@ -116,7 +116,7 @@ func TestAccCloudFrontOriginAccessControl_Name(t *testing.T) {
 			{
 				Config: testAccOriginAccessControlConfig_name(rName1),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", rName1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 				),
 			},
 			{
@@ -127,7 +127,7 @@ func TestAccCloudFrontOriginAccessControl_Name(t *testing.T) {
 			{
 				Config: testAccOriginAccessControlConfig_name(rName2),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 				),
 			},
 		},
@@ -152,7 +152,7 @@ func TestAccCloudFrontOriginAccessControl_Description(t *testing.T) {
 			{
 				Config: testAccOriginAccessControlConfig_description(rName, "Acceptance Test 1"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "description", "Acceptance Test 1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Acceptance Test 1"),
 				),
 			},
 			{
@@ -163,7 +163,7 @@ func TestAccCloudFrontOriginAccessControl_Description(t *testing.T) {
 			{
 				Config: testAccOriginAccessControlConfig_description(rName, "Acceptance Test 2"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "description", "Acceptance Test 2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Acceptance Test 2"),
 				),
 			},
 			{
@@ -174,7 +174,7 @@ func TestAccCloudFrontOriginAccessControl_Description(t *testing.T) {
 			{
 				Config: testAccOriginAccessControlConfig_description(rName, ""),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 				),
 			},
 		},
@@ -237,9 +237,9 @@ func TestAccCloudFrontOriginAccessControl_lambdaOriginType(t *testing.T) {
 				Config: testAccOriginAccessControlConfig_originType(rName, "lambda"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOriginAccessControlExists(ctx, resourceName, &originaccesscontrol),
-					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
-					resource.TestCheckResourceAttrWith(resourceName, "id", func(value string) error {
+					resource.TestCheckResourceAttrWith(resourceName, names.AttrID, func(value string) error {
 						if value == "" {
 							return fmt.Errorf("expected attribute to be set")
 						}
@@ -250,7 +250,7 @@ func TestAccCloudFrontOriginAccessControl_lambdaOriginType(t *testing.T) {
 
 						return nil
 					}),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "origin_access_control_origin_type", "lambda"),
 					resource.TestCheckResourceAttr(resourceName, "signing_behavior", "always"),
 					resource.TestCheckResourceAttr(resourceName, "signing_protocol", "sigv4"),
@@ -285,9 +285,9 @@ func TestAccCloudFrontOriginAccessControl_mediaPackageV2Type(t *testing.T) {
 				Config: testAccOriginAccessControlConfig_originType(rName, "mediapackagev2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOriginAccessControlExists(ctx, resourceName, &originaccesscontrol),
-					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
-					resource.TestCheckResourceAttrWith(resourceName, "id", func(value string) error {
+					resource.TestCheckResourceAttrWith(resourceName, names.AttrID, func(value string) error {
 						if value == "" {
 							return fmt.Errorf("expected attribute to be set")
 						}
@@ -298,7 +298,7 @@ func TestAccCloudFrontOriginAccessControl_mediaPackageV2Type(t *testing.T) {
 
 						return nil
 					}),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "origin_access_control_origin_type", "mediapackagev2"),
 					resource.TestCheckResourceAttr(resourceName, "signing_behavior", "always"),
 					resource.TestCheckResourceAttr(resourceName, "signing_protocol", "sigv4"),

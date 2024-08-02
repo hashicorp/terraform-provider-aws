@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -43,7 +44,7 @@ func resourceLayerVersionPermission() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"action": {
+			names.AttrAction: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -62,11 +63,11 @@ func resourceLayerVersionPermission() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"policy": {
+			names.AttrPolicy: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"principal": {
+			names.AttrPrincipal: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -75,7 +76,7 @@ func resourceLayerVersionPermission() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"skip_destroy": {
+			names.AttrSkipDestroy: {
 				Type:     schema.TypeBool,
 				Default:  false,
 				ForceNew: true,
@@ -103,9 +104,9 @@ func resourceLayerVersionPermissionCreate(ctx context.Context, d *schema.Resourc
 	versionNumber := d.Get("version_number").(int)
 	id := errs.Must(flex.FlattenResourceId([]string{layerName, strconv.FormatInt(int64(versionNumber), 10)}, layerVersionPermissionResourceIDPartCount, true))
 	input := &lambda.AddLayerVersionPermissionInput{
-		Action:        aws.String(d.Get("action").(string)),
+		Action:        aws.String(d.Get(names.AttrAction).(string)),
 		LayerName:     aws.String(layerName),
-		Principal:     aws.String(d.Get("principal").(string)),
+		Principal:     aws.String(d.Get(names.AttrPrincipal).(string)),
 		StatementId:   aws.String(d.Get("statement_id").(string)),
 		VersionNumber: aws.Int64(int64(versionNumber)),
 	}
@@ -152,7 +153,7 @@ func resourceLayerVersionPermissionRead(ctx context.Context, d *schema.ResourceD
 	}
 
 	d.Set("layer_name", layerName)
-	d.Set("policy", output.Policy)
+	d.Set(names.AttrPolicy, output.Policy)
 	d.Set("revision_id", output.RevisionId)
 	d.Set("version_number", versionNumber)
 
@@ -168,7 +169,7 @@ func resourceLayerVersionPermissionRead(ctx context.Context, d *schema.ResourceD
 				action = actions.(string)
 			}
 
-			d.Set("action", action)
+			d.Set(names.AttrAction, action)
 		}
 
 		if len(policyDoc.Statements[0].Conditions) > 0 {
@@ -199,7 +200,7 @@ func resourceLayerVersionPermissionRead(ctx context.Context, d *schema.ResourceD
 					principal = policyPrincipalARN.AccountID
 				}
 
-				d.Set("principal", principal)
+				d.Set(names.AttrPrincipal, principal)
 			}
 		}
 	}
@@ -216,7 +217,7 @@ func resourceLayerVersionPermissionDelete(ctx context.Context, d *schema.Resourc
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if v, ok := d.GetOk("skip_destroy"); ok && v.(bool) {
+	if v, ok := d.GetOk(names.AttrSkipDestroy); ok && v.(bool) {
 		log.Printf("[DEBUG] Retaining Lambda Layer Permission Version %q", d.Id())
 		return diags
 	}

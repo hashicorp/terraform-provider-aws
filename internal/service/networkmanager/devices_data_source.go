@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_networkmanager_devices")
@@ -25,7 +26,7 @@ func DataSourceDevices() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"ids": {
+			names.AttrIDs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -34,7 +35,7 @@ func DataSourceDevices() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"tags": tftags.TagsSchema(),
+			names.AttrTags: tftags.TagsSchema(),
 		},
 	}
 }
@@ -44,7 +45,7 @@ func dataSourceDevicesRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tagsToMatch := tftags.New(ctx, d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tagsToMatch := tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	input := &networkmanager.GetDevicesInput{
 		GlobalNetworkId: aws.String(d.Get("global_network_id").(string)),
@@ -73,7 +74,7 @@ func dataSourceDevicesRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("ids", deviceIDs)
+	d.Set(names.AttrIDs, deviceIDs)
 
 	return diags
 }

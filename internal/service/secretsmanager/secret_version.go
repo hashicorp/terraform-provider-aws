@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -43,7 +44,7 @@ func resourceSecretVersion() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -146,7 +147,7 @@ func resourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret Version (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", output.ARN)
+	d.Set(names.AttrARN, output.ARN)
 	d.Set("secret_binary", itypes.Base64EncodeOnce(output.SecretBinary))
 	d.Set("secret_id", secretID)
 	d.Set("secret_string", output.SecretString)

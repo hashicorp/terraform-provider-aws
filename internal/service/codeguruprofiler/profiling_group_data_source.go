@@ -47,16 +47,16 @@ func (d *dataSourceProfilingGroup) Schema(ctx context.Context, req datasource.Sc
 				Computed:    true,
 				ElementType: fwtypes.NewObjectTypeOf[dsAgentOrchestrationConfig](ctx),
 			},
-			"arn": framework.ARNAttributeComputedOnly(),
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"compute_platform": schema.StringAttribute{
 				CustomType: computePlatform,
 				Computed:   true,
 			},
-			"created_at": schema.StringAttribute{
+			names.AttrCreatedAt: schema.StringAttribute{
 				Computed: true,
 			},
-			"id": framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			names.AttrID: framework.IDAttribute(),
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 			},
 			"profiling_status": schema.ListAttribute{
