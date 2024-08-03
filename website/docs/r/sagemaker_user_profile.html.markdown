@@ -112,7 +112,7 @@ This resource supports the following arguments:
 * `access_status` - (Optional) Indicates whether the current user has access to the RStudioServerPro app. Valid values are `ENABLED` and `DISABLED`.
 * `user_group` - (Optional) The level of permissions that the user has within the RStudioServerPro app. This value defaults to `R_STUDIO_USER`. The `R_STUDIO_ADMIN` value allows the user access to the RStudio Administrative Dashboard. Valid values are `R_STUDIO_USER` and `R_STUDIO_ADMIN`.
 
-#### `studio_web_portal_settings`
+#### studio_web_portal_settings
 
 * `hidden_app_types` - (Optional) The Applications supported in Studio that are hidden from the Studio left navigation pane.
 * `hidden_ml_tools` - (Optional) The machine learning tools that are hidden from the Studio left navigation pane.
