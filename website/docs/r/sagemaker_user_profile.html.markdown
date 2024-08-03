@@ -47,10 +47,10 @@ This resource supports the following arguments:
 * `r_studio_server_pro_app_settings` - (Optional) A collection of settings that configure user interaction with the RStudioServerPro app. See [RStudioServerProAppSettings](#r_studio_server_pro_app_settings) below.
 * `security_groups` - (Optional) A list of security group IDs that will be attached to the user.
 * `sharing_settings` - (Optional) The sharing settings. See [Sharing Settings](#sharing_settings) below.
-* `space_storage_settings` - (Optional) The storage settings for a private space. See [Space Storage Settings](#space_storage_settings) below.
+* `space_storage_settings` - (Optional) The st6orage settings for a private space. See [Space Storage Settings](#space_storage_settings) below.
 * `studio_web_portal` - (Optional) Whether the user can access Studio. If this value is set to `DISABLED`, the user cannot access Studio, even if that is the default experience for the domain. Valid values are `ENABLED` and `DISABLED`.
 * `tensor_board_app_settings` - (Optional) The TensorBoard app settings. See [TensorBoard App Settings](#tensor_board_app_settings) below.
-* `studio_web_portal_settings` - (Optional) The Studio Web Portal settings. See [`studio_web_portal_settings` Block](#studio_web_portal_settings-block) below.
+* `studio_web_portal_settings` - (Optional) The Studio Web Portal settings. See [`studio_web_portal_settings`](#studio_web_portal_settings) below.
 
 #### space_storage_settings
 
