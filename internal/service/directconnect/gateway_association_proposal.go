@@ -137,7 +137,7 @@ func resourceGatewayAssociationProposalRead(ctx context.Context, d *schema.Resou
 		directConnectGatewayID := d.Get("dx_gateway_id").(string)
 		associatedGatewayID := d.Get("associated_gateway_id").(string)
 
-		output, err := FindGatewayAssociationByGatewayIDAndAssociatedGatewayID(ctx, conn, directConnectGatewayID, associatedGatewayID)
+		output, err := findGatewayAssociationByGatewayIDAndAssociatedGatewayID(ctx, conn, directConnectGatewayID, associatedGatewayID)
 
 		if !d.IsNewResource() && tfresource.NotFound(err) {
 			log.Printf("[WARN] Direct Connect Gateway Association Proposal (%s) not found, removing from state", d.Id())

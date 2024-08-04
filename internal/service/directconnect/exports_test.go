@@ -10,11 +10,14 @@ var (
 	ResourceConnectionAssociation  = resourceConnectionAssociation
 	ResourceConnectionConfirmation = resourceConnectionConfirmation
 	ResourceGateway                = resourceGateway
+	ResourceGatewayAssociation     = resourceGatewayAssociation
 
-	FindBGPPeerByThreePartKey    = findBGPPeerByThreePartKey
-	FindConnectionByID           = findConnectionByID
-	FindConnectionLAGAssociation = findConnectionLAGAssociation
-	FindGatewayByID              = findGatewayByID
-	FindVirtualInterfaceByID     = findVirtualInterfaceByID
-	ValidConnectionBandWidth     = validConnectionBandWidth
+	FindBGPPeerByThreePartKey        = findBGPPeerByThreePartKey
+	FindConnectionByID               = findConnectionByID
+	FindConnectionLAGAssociation     = findConnectionLAGAssociation
+	FindGatewayAssociationByID       = findGatewayAssociationByID
+	FindGatewayByID                  = findGatewayByID
+	FindVirtualInterfaceByID         = findVirtualInterfaceByID
+	GatewayAssociationStateUpgradeV0 = gatewayAssociationStateUpgradeV0
+	ValidConnectionBandWidth         = validConnectionBandWidth
 )

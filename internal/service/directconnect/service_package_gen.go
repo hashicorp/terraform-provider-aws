@@ -80,8 +80,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Gateway",
 		},
 		{
-			Factory:  ResourceGatewayAssociation,
+			Factory:  resourceGatewayAssociation,
 			TypeName: "aws_dx_gateway_association",
+			Name:     "Gateway Association",
 		},
 		{
 			Factory:  ResourceGatewayAssociationProposal,

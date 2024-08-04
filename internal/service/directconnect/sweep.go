@@ -208,9 +208,9 @@ func sweepGatewayAssociations(region string) error {
 						continue
 					}
 
-					r := ResourceGatewayAssociation()
+					r := resourceGatewayAssociation()
 					d := r.Data(nil)
-					d.SetId(GatewayAssociationCreateResourceID(directConnectGatewayID, gatewayID))
+					d.SetId(gatewayAssociationCreateResourceID(directConnectGatewayID, gatewayID))
 					d.Set("dx_gateway_association_id", association.AssociationId)
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
@@ -275,9 +275,9 @@ func sweepGatewayAssociations(region string) error {
 						continue
 					}
 
-					r := ResourceGatewayAssociation()
+					r := resourceGatewayAssociation()
 					d := r.Data(nil)
-					d.SetId(GatewayAssociationCreateResourceID(directConnectGatewayID, transitGatewayID))
+					d.SetId(gatewayAssociationCreateResourceID(directConnectGatewayID, transitGatewayID))
 					d.Set("dx_gateway_association_id", association.AssociationId)
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))

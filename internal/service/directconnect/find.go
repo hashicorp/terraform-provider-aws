@@ -14,62 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindGatewayAssociationByID(ctx context.Context, conn *directconnect.Client, id string) (*awstypes.DirectConnectGatewayAssociation, error) {
-	input := &directconnect.DescribeDirectConnectGatewayAssociationsInput{
-		AssociationId: aws.String(id),
-	}
-
-	return FindGatewayAssociation(ctx, conn, input)
-}
-
-func FindGatewayAssociationByGatewayIDAndAssociatedGatewayID(ctx context.Context, conn *directconnect.Client, directConnectGatewayID, associatedGatewayID string) (*awstypes.DirectConnectGatewayAssociation, error) {
-	input := &directconnect.DescribeDirectConnectGatewayAssociationsInput{
-		AssociatedGatewayId:    aws.String(associatedGatewayID),
-		DirectConnectGatewayId: aws.String(directConnectGatewayID),
-	}
-
-	return FindGatewayAssociation(ctx, conn, input)
-}
-
-func FindGatewayAssociationByGatewayIDAndVirtualGatewayID(ctx context.Context, conn *directconnect.Client, directConnectGatewayID, virtualGatewayID string) (*awstypes.DirectConnectGatewayAssociation, error) {
-	input := &directconnect.DescribeDirectConnectGatewayAssociationsInput{
-		DirectConnectGatewayId: aws.String(directConnectGatewayID),
-		VirtualGatewayId:       aws.String(virtualGatewayID),
-	}
-
-	return FindGatewayAssociation(ctx, conn, input)
-}
-
-func FindGatewayAssociation(ctx context.Context, conn *directconnect.Client, input *directconnect.DescribeDirectConnectGatewayAssociationsInput) (*awstypes.DirectConnectGatewayAssociation, error) {
-	output, err := conn.DescribeDirectConnectGatewayAssociations(ctx, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	association, err := tfresource.AssertSingleValueResult(output.DirectConnectGatewayAssociations)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if association.AssociationState == awstypes.DirectConnectGatewayAssociationStateDisassociated {
-		return nil, &retry.NotFoundError{
-			Message:     string(association.AssociationState),
-			LastRequest: input,
-		}
-	}
-
-	if association.AssociatedGateway == nil {
-		return nil, &retry.NotFoundError{
-			Message:     "Empty AssociatedGateway",
-			LastRequest: input,
-		}
-	}
-
-	return association, nil
-}
-
 func FindGatewayAssociationProposalByID(ctx context.Context, conn *directconnect.Client, id string) (*awstypes.DirectConnectGatewayAssociationProposal, error) {
 	input := &directconnect.DescribeDirectConnectGatewayAssociationProposalsInput{
 		ProposalId: aws.String(id),
