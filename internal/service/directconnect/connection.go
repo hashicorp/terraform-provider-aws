@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -371,7 +372,7 @@ func findConnectionByID(ctx context.Context, conn *directconnect.Client, id stri
 	input := &directconnect.DescribeConnectionsInput{
 		ConnectionId: aws.String(id),
 	}
-	output, err := findConnection(ctx, conn, input)
+	output, err := findConnection(ctx, conn, input, tfslices.PredicateTrue[*awstypes.Connection]())
 
 	if err != nil {
 		return nil, err
@@ -387,8 +388,8 @@ func findConnectionByID(ctx context.Context, conn *directconnect.Client, id stri
 	return output, nil
 }
 
-func findConnection(ctx context.Context, conn *directconnect.Client, input *directconnect.DescribeConnectionsInput) (*awstypes.Connection, error) {
-	output, err := findConnections(ctx, conn, input)
+func findConnection(ctx context.Context, conn *directconnect.Client, input *directconnect.DescribeConnectionsInput, filter tfslices.Predicate[*awstypes.Connection]) (*awstypes.Connection, error) {
+	output, err := findConnections(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
@@ -397,7 +398,7 @@ func findConnection(ctx context.Context, conn *directconnect.Client, input *dire
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findConnections(ctx context.Context, conn *directconnect.Client, input *directconnect.DescribeConnectionsInput) ([]awstypes.Connection, error) {
+func findConnections(ctx context.Context, conn *directconnect.Client, input *directconnect.DescribeConnectionsInput, filter tfslices.Predicate[*awstypes.Connection]) ([]awstypes.Connection, error) {
 	output, err := conn.DescribeConnections(ctx, input)
 
 	if errs.IsAErrorMessageContains[*awstypes.DirectConnectClientException](err, "Could not find Connection with ID") {
@@ -415,7 +416,7 @@ func findConnections(ctx context.Context, conn *directconnect.Client, input *dir
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return output.Connections, nil
+	return tfslices.Filter(output.Connections, tfslices.PredicateValue(filter)), nil
 }
 
 func statusConnection(ctx context.Context, conn *directconnect.Client, id string) retry.StateRefreshFunc {

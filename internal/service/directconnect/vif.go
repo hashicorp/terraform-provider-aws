@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -146,7 +147,7 @@ func findVirtualInterfaceByID(ctx context.Context, conn *directconnect.Client, i
 	input := &directconnect.DescribeVirtualInterfacesInput{
 		VirtualInterfaceId: aws.String(id),
 	}
-	output, err := findVirtualInterface(ctx, conn, input)
+	output, err := findVirtualInterface(ctx, conn, input, tfslices.PredicateTrue[*awstypes.VirtualInterface]())
 
 	if err != nil {
 		return nil, err
@@ -162,8 +163,8 @@ func findVirtualInterfaceByID(ctx context.Context, conn *directconnect.Client, i
 	return output, nil
 }
 
-func findVirtualInterface(ctx context.Context, conn *directconnect.Client, input *directconnect.DescribeVirtualInterfacesInput) (*awstypes.VirtualInterface, error) {
-	output, err := findVirtualInterfaces(ctx, conn, input)
+func findVirtualInterface(ctx context.Context, conn *directconnect.Client, input *directconnect.DescribeVirtualInterfacesInput, filter tfslices.Predicate[*awstypes.VirtualInterface]) (*awstypes.VirtualInterface, error) {
+	output, err := findVirtualInterfaces(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
@@ -172,7 +173,7 @@ func findVirtualInterface(ctx context.Context, conn *directconnect.Client, input
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findVirtualInterfaces(ctx context.Context, conn *directconnect.Client, input *directconnect.DescribeVirtualInterfacesInput) ([]awstypes.VirtualInterface, error) {
+func findVirtualInterfaces(ctx context.Context, conn *directconnect.Client, input *directconnect.DescribeVirtualInterfacesInput, filter tfslices.Predicate[*awstypes.VirtualInterface]) ([]awstypes.VirtualInterface, error) {
 	output, err := conn.DescribeVirtualInterfaces(ctx, input)
 
 	if err != nil {
@@ -183,5 +184,5 @@ func findVirtualInterfaces(ctx context.Context, conn *directconnect.Client, inpu
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return output.VirtualInterfaces, nil
+	return tfslices.Filter(output.VirtualInterfaces, tfslices.PredicateValue(filter)), nil
 }

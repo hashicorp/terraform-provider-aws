@@ -16,11 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_dx_connection")
-func DataSourceConnection() *schema.Resource {
+// @SDKDataSource("aws_dx_connection", name="Connection")
+func dataSourceConnection() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceConnectionRead,
 
@@ -71,35 +72,18 @@ func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	var connections []awstypes.Connection
-	input := &directconnect.DescribeConnectionsInput{}
 	name := d.Get(names.AttrName).(string)
+	input := &directconnect.DescribeConnectionsInput{}
 
-	// DescribeConnections is not paginated.
-	output, err := conn.DescribeConnections(ctx, input)
+	connection, err := findConnection(ctx, conn, input, func(v *awstypes.Connection) bool {
+		return aws.ToString(v.ConnectionName) == name
+	})
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Direct Connect Connections: %s", err)
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("Direct Connect Connection", err))
 	}
-
-	for _, connection := range output.Connections {
-		if aws.ToString(connection.ConnectionName) == name {
-			connections = append(connections, connection)
-		}
-	}
-
-	switch count := len(connections); count {
-	case 0:
-		return sdkdiag.AppendErrorf(diags, "no matching Direct Connect Connection found")
-	case 1:
-	default:
-		return sdkdiag.AppendErrorf(diags, "%d Direct Connect Connections matched; use additional constraints to reduce matches to a single Direct Connect Connection", count)
-	}
-
-	connection := connections[0]
 
 	d.SetId(aws.ToString(connection.ConnectionId))
-
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Region:    aws.ToString(connection.Region),
