@@ -4,6 +4,9 @@
 package wafv2
 
 import (
+	"encoding/json"
+	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -978,6 +981,22 @@ func expandHeaderMatchPattern(l []interface{}) *awstypes.HeaderMatchPattern {
 	}
 
 	return f
+}
+
+func expandWebACLRulesJSON(rawRules string) ([]awstypes.Rule, error) {
+	var rules []awstypes.Rule
+
+	err := json.Unmarshal([]byte(rawRules), &rules)
+	if err != nil {
+		return nil, fmt.Errorf("decoding JSON: %s", err)
+	}
+
+	for i, r := range rules {
+		if reflect.DeepEqual(r, awstypes.Rule{}) {
+			return nil, fmt.Errorf("invalid ACL Rule supplied at index (%d)", i)
+		}
+	}
+	return rules, nil
 }
 
 func expandWebACLRules(l []interface{}) []awstypes.Rule {

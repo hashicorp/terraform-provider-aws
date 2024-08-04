@@ -847,7 +847,7 @@ func TestIntentAutoFlex(t *testing.T) {
 		t.Run(fmt.Sprintf("expand %s", testCase.TestName), func(t *testing.T) {
 			t.Parallel()
 
-			diags := flex.Expand(context.WithValue(ctx, flex.ResourcePrefix, "Intent"), testCase.TFFull, testCase.AWSEmpty)
+			diags := flex.Expand(ctx, testCase.TFFull, testCase.AWSEmpty, tflexv2models.IntentFlexOpt)
 
 			gotErr := diags != nil
 
@@ -869,7 +869,7 @@ func TestIntentAutoFlex(t *testing.T) {
 		t.Run(fmt.Sprintf("flatten %s", testCase.TestName), func(t *testing.T) {
 			t.Parallel()
 
-			diags := flex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, "Intent"), testCase.AWSFull, testCase.TFEmpty)
+			diags := flex.Flatten(ctx, testCase.AWSFull, testCase.TFEmpty, tflexv2models.IntentFlexOpt)
 
 			gotErr := diags != nil
 

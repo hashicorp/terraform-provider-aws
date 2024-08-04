@@ -1238,7 +1238,7 @@ func expandRStudioServerProDomainSettings(l []interface{}) *sagemaker.RStudioSer
 		config.RStudioConnectUrl = aws.String(v)
 	}
 
-	if v, ok := m["r_studio_packageManager_url"].(string); ok && v != "" {
+	if v, ok := m["r_studio_package_manager_url"].(string); ok && v != "" {
 		config.RStudioPackageManagerUrl = aws.String(v)
 	}
 

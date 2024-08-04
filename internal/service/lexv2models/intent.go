@@ -899,6 +899,8 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 	}
 }
 
+var intentFlexOpt = flex.WithFieldNamePrefix(ResNameIntent)
+
 func (r *resourceIntent) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().LexV2ModelsClient(ctx)
 
@@ -909,7 +911,7 @@ func (r *resourceIntent) Create(ctx context.Context, req resource.CreateRequest,
 	}
 
 	in := &lexmodelsv2.CreateIntentInput{}
-	resp.Diagnostics.Append(flex.Expand(context.WithValue(ctx, flex.ResourcePrefix, ResNameIntent), &data, in)...)
+	resp.Diagnostics.Append(flex.Expand(ctx, &data, in, intentFlexOpt)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -944,7 +946,7 @@ func (r *resourceIntent) Create(ctx context.Context, req resource.CreateRequest,
 
 	// get some data from the intent
 	var dataAfter ResourceIntentData
-	resp.Diagnostics.Append(flex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, ResNameIntent), intent, &dataAfter)...)
+	resp.Diagnostics.Append(flex.Flatten(ctx, intent, &dataAfter, intentFlexOpt)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -985,7 +987,7 @@ func (r *resourceIntent) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, ResNameIntent), out, &data)...)
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &data, intentFlexOpt)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -1053,7 +1055,7 @@ func (r *resourceIntent) Update(ctx context.Context, req resource.UpdateRequest,
 	}
 
 	input := &lexmodelsv2.UpdateIntentInput{}
-	resp.Diagnostics.Append(flex.Expand(context.WithValue(ctx, flex.ResourcePrefix, ResNameIntent), &new, input)...)
+	resp.Diagnostics.Append(flex.Expand(ctx, &new, input, intentFlexOpt)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
