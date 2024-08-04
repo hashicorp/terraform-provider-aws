@@ -16,12 +16,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
-type ResourcePrefixCtxKey string
+type AutoFlexCtxKey string
 
 const (
-	ResourcePrefix        ResourcePrefixCtxKey = "RESOURCE_PREFIX"
-	resourcePrefixRecurse ResourcePrefixCtxKey = "RESOURCE_PREFIX_RECURSE"
-	MapBlockKey                                = "MapBlockKey"
+	FieldNamePrefixRecurse AutoFlexCtxKey = "FIELD_NAME_PREFIX_RECURSE"
+
+	MapBlockKey = "MapBlockKey"
 )
 
 // Expand  = TF -->  AWS
@@ -32,45 +32,6 @@ type autoFlexer interface {
 	convert(context.Context, path.Path, reflect.Value, path.Path, reflect.Value) diag.Diagnostics
 	getOptions() AutoFlexOptions
 }
-
-// AutoFlexOptions stores configurable options for an auto-flattener or expander.
-type AutoFlexOptions struct {
-	// ignoredFieldNames stores names which expanders and flatteners will
-	// not read from or write to
-	ignoredFieldNames []string
-}
-
-// IsIgnoredField returns true if s is in the list of ignored field names
-func (o *AutoFlexOptions) IsIgnoredField(s string) bool {
-	for _, name := range o.ignoredFieldNames {
-		if s == name {
-			return true
-		}
-	}
-	return false
-}
-
-// AddIgnoredField appends s to the list of ignored field names
-func (o *AutoFlexOptions) AddIgnoredField(s string) {
-	o.ignoredFieldNames = append(o.ignoredFieldNames, s)
-}
-
-// SetIgnoredFields replaces the list of ignored field names
-//
-// To preseve existing items in the list, use the AddIgnoredField
-// method instead.
-func (o *AutoFlexOptions) SetIgnoredFields(fields []string) {
-	o.ignoredFieldNames = fields
-}
-
-var (
-	DefaultIgnoredFieldNames = []string{
-		"Tags", // Resource tags are handled separately.
-	}
-)
-
-// AutoFlexOptionsFunc is a type alias for an autoFlexer functional option.
-type AutoFlexOptionsFunc func(*AutoFlexOptions)
 
 // autoFlexValues returns the underlying `reflect.Value`s of `from` and `to`.
 func autoFlexValues(_ context.Context, from, to any) (reflect.Value, reflect.Value, diag.Diagnostics) {
@@ -153,7 +114,7 @@ func autoFlexConvertStruct(ctx context.Context, sourcePath path.Path, from any, 
 			continue // Skip unexported fields.
 		}
 		fieldName := field.Name
-		if opts.IsIgnoredField(fieldName) {
+		if opts.isIgnoredField(fieldName) {
 			tflog.SubsystemTrace(ctx, subsystemName, "Skipping ignored field", map[string]any{
 				logAttrKeySourceFieldname: fieldName,
 			})
@@ -218,7 +179,7 @@ func findFieldFuzzy(ctx context.Context, fieldNameFrom string, valTo, valFrom re
 			continue // Skip unexported fields.
 		}
 		fieldNameTo := field.Name
-		if opts.IsIgnoredField(fieldNameTo) {
+		if opts.isIgnoredField(fieldNameTo) {
 			continue
 		}
 		if v := valTo.FieldByName(fieldNameTo); v.IsValid() && strings.EqualFold(fieldNameFrom, fieldNameTo) && !fieldExistsInStruct(fieldNameTo, valFrom) {
@@ -243,11 +204,11 @@ func findFieldFuzzy(ctx context.Context, fieldNameFrom string, valTo, valFrom re
 	}
 
 	// fourth precedence is using resource prefix
-	if v, ok := ctx.Value(ResourcePrefix).(string); ok && v != "" {
+	if v := opts.fieldNamePrefix; v != "" {
 		v = strings.ReplaceAll(v, " ", "")
-		if ctx.Value(resourcePrefixRecurse) == nil {
+		if ctx.Value(FieldNamePrefixRecurse) == nil {
 			// so it will only recurse once
-			ctx = context.WithValue(ctx, resourcePrefixRecurse, true)
+			ctx = context.WithValue(ctx, FieldNamePrefixRecurse, true)
 			if strings.HasPrefix(fieldNameFrom, v) {
 				return findFieldFuzzy(ctx, strings.TrimPrefix(fieldNameFrom, v), valTo, valFrom, flexer)
 			}

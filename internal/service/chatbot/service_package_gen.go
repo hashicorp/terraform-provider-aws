@@ -30,6 +30,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 				IdentifierAttribute: "chat_configuration_arn",
 			},
 		},
+		{
+			Factory: newTeamsChannelConfigurationResource,
+			Name:    "Teams Channel Configuration",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "chat_configuration_arn",
+			},
+		},
 	}
 }
 

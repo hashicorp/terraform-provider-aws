@@ -39,9 +39,8 @@ func TestExpand(t *testing.T) {
 	testTimeTime := errs.Must(time.Parse(time.RFC3339, testTimeStr))
 
 	testCases := autoFlexTestCases{
-		{
-			TestName: "nil Source",
-			Target:   &TestFlex00{},
+		"nil Source": {
+			Target: &TestFlex00{},
 			expectedDiags: diag.Diagnostics{
 				diag.NewErrorDiagnostic("AutoFlEx", "Cannot expand nil source"),
 				diag.NewErrorDiagnostic("AutoFlEx", "Expand[<nil>, *flex.TestFlex00]"),
@@ -50,10 +49,9 @@ func TestExpand(t *testing.T) {
 				infoExpanding(nil, reflect.TypeFor[*TestFlex00]()),
 			},
 		},
-		{
-			TestName: "typed nil Source",
-			Source:   typedNilSource,
-			Target:   &TestFlex00{},
+		"typed nil Source": {
+			Source: typedNilSource,
+			Target: &TestFlex00{},
 			expectedDiags: diag.Diagnostics{
 				diag.NewErrorDiagnostic("AutoFlEx", "Cannot expand nil source"),
 				diag.NewErrorDiagnostic("AutoFlEx", "Expand[*flex.TestFlex00, *flex.TestFlex00]"),
@@ -62,9 +60,8 @@ func TestExpand(t *testing.T) {
 				infoExpanding(reflect.TypeFor[*TestFlex00](), reflect.TypeFor[*TestFlex00]()),
 			},
 		},
-		{
-			TestName: "nil Target",
-			Source:   TestFlex00{},
+		"nil Target": {
+			Source: TestFlex00{},
 			expectedDiags: diag.Diagnostics{
 				diag.NewErrorDiagnostic("AutoFlEx", "Target cannot be nil"),
 				diag.NewErrorDiagnostic("AutoFlEx", "Expand[flex.TestFlex00, <nil>]"),
@@ -73,10 +70,9 @@ func TestExpand(t *testing.T) {
 				infoExpanding(reflect.TypeFor[TestFlex00](), nil),
 			},
 		},
-		{
-			TestName: "typed nil Target",
-			Source:   TestFlex00{},
-			Target:   typedNilTarget,
+		"typed nil Target": {
+			Source: TestFlex00{},
+			Target: typedNilTarget,
 			expectedDiags: diag.Diagnostics{
 				diag.NewErrorDiagnostic("AutoFlEx", "Target cannot be nil"),
 				diag.NewErrorDiagnostic("AutoFlEx", "Expand[flex.TestFlex00, *flex.TestFlex00]"),
@@ -85,10 +81,9 @@ func TestExpand(t *testing.T) {
 				infoExpanding(reflect.TypeFor[TestFlex00](), reflect.TypeFor[*TestFlex00]()),
 			},
 		},
-		{
-			TestName: "non-pointer Target",
-			Source:   TestFlex00{},
-			Target:   0,
+		"non-pointer Target": {
+			Source: TestFlex00{},
+			Target: 0,
 			expectedDiags: diag.Diagnostics{
 				diag.NewErrorDiagnostic("AutoFlEx", "target (int): int, want pointer"),
 				diag.NewErrorDiagnostic("AutoFlEx", "Expand[flex.TestFlex00, int]"),
@@ -97,10 +92,9 @@ func TestExpand(t *testing.T) {
 				infoExpanding(reflect.TypeFor[TestFlex00](), reflect.TypeFor[int]()),
 			},
 		},
-		{
-			TestName: "non-struct Source",
-			Source:   testString,
-			Target:   &TestFlex00{},
+		"non-struct Source": {
+			Source: testString,
+			Target: &TestFlex00{},
 			expectedDiags: diag.Diagnostics{
 				diag.NewErrorDiagnostic("AutoFlEx", "does not implement attr.Value: string"),
 				diag.NewErrorDiagnostic("AutoFlEx", "Expand[string, *flex.TestFlex00]"),
@@ -110,10 +104,9 @@ func TestExpand(t *testing.T) {
 				infoConverting(reflect.TypeFor[string](), reflect.TypeFor[TestFlex00]()),
 			},
 		},
-		{
-			TestName: "non-struct Target",
-			Source:   TestFlex00{},
-			Target:   &testString,
+		"non-struct Target": {
+			Source: TestFlex00{},
+			Target: &testString,
 			expectedDiags: diag.Diagnostics{
 				diag.NewErrorDiagnostic("AutoFlEx", "does not implement attr.Value: struct"),
 				diag.NewErrorDiagnostic("AutoFlEx", "Expand[flex.TestFlex00, *string]"),
@@ -123,8 +116,7 @@ func TestExpand(t *testing.T) {
 				infoConverting(reflect.TypeFor[TestFlex00](), reflect.TypeFor[string]()),
 			},
 		},
-		{
-			TestName:   "types.String to string",
+		"types.String to string": {
 			Source:     types.StringValue("a"),
 			Target:     &testString,
 			WantTarget: &testStringResult,
@@ -133,8 +125,7 @@ func TestExpand(t *testing.T) {
 				infoConverting(reflect.TypeFor[types.String](), reflect.TypeFor[string]()),
 			},
 		},
-		{
-			TestName:   "empty struct Source and Target",
+		"empty struct Source and Target": {
 			Source:     TestFlex00{},
 			Target:     &TestFlex00{},
 			WantTarget: &TestFlex00{},
@@ -143,8 +134,7 @@ func TestExpand(t *testing.T) {
 				infoConverting(reflect.TypeFor[TestFlex00](), reflect.TypeFor[TestFlex00]()),
 			},
 		},
-		{
-			TestName:   "empty struct pointer Source and Target",
+		"empty struct pointer Source and Target": {
 			Source:     &TestFlex00{},
 			Target:     &TestFlex00{},
 			WantTarget: &TestFlex00{},
@@ -153,8 +143,7 @@ func TestExpand(t *testing.T) {
 				infoConverting(reflect.TypeFor[TestFlex00](), reflect.TypeFor[TestFlex00]()),
 			},
 		},
-		{
-			TestName:   "single string struct pointer Source and empty Target",
+		"single string struct pointer Source and empty Target": {
 			Source:     &TestFlexTF01{Field1: types.StringValue("a")},
 			Target:     &TestFlex00{},
 			WantTarget: &TestFlex00{},
@@ -164,10 +153,9 @@ func TestExpand(t *testing.T) {
 				debugNoCorrespondingField(reflect.TypeFor[*TestFlexTF01](), "Field1", reflect.TypeFor[*TestFlex00]()),
 			},
 		},
-		{
-			TestName: "does not implement attr.Value Source",
-			Source:   &TestFlexAWS01{Field1: "a"},
-			Target:   &TestFlexAWS01{},
+		"does not implement attr.Value Source": {
+			Source: &TestFlexAWS01{Field1: "a"},
+			Target: &TestFlexAWS01{},
 			expectedDiags: diag.Diagnostics{
 				diag.NewErrorDiagnostic("AutoFlEx", "does not implement attr.Value: string"),
 				diag.NewErrorDiagnostic("AutoFlEx", "convert (Field1)"),
@@ -180,8 +168,7 @@ func TestExpand(t *testing.T) {
 				infoConvertingWithPath("Field1", reflect.TypeFor[string](), "Field1", reflect.TypeFor[string]()),
 			},
 		},
-		{
-			TestName:   "single string Source and single string Target",
+		"single string Source and single string Target": {
 			Source:     &TestFlexTF01{Field1: types.StringValue("a")},
 			Target:     &TestFlexAWS01{},
 			WantTarget: &TestFlexAWS01{Field1: "a"},
@@ -192,8 +179,7 @@ func TestExpand(t *testing.T) {
 				infoConvertingWithPath("Field1", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[string]()),
 			},
 		},
-		{
-			TestName:   "single string Source and single *string Target",
+		"single string Source and single *string Target": {
 			Source:     &TestFlexTF01{Field1: types.StringValue("a")},
 			Target:     &TestFlexAWS02{},
 			WantTarget: &TestFlexAWS02{Field1: aws.String("a")},
@@ -204,8 +190,7 @@ func TestExpand(t *testing.T) {
 				infoConvertingWithPath("Field1", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[*string]()),
 			},
 		},
-		{
-			TestName:   "single string Source and single int64 Target",
+		"single string Source and single int64 Target": {
 			Source:     &TestFlexTF01{Field1: types.StringValue("a")},
 			Target:     &TestFlexAWS03{},
 			WantTarget: &TestFlexAWS03{},
@@ -227,8 +212,7 @@ func TestExpand(t *testing.T) {
 				},
 			},
 		},
-		{
-			TestName: "primitive types Source and primtive types Target",
+		"primitive types Source and primtive types Target": {
 			Source: &TestFlexTF03{
 				Field1:  types.StringValue("field1"),
 				Field2:  types.StringValue("field2"),
@@ -287,8 +271,7 @@ func TestExpand(t *testing.T) {
 				infoConvertingWithPath("Field12", reflect.TypeFor[types.Bool](), "Field12", reflect.TypeFor[*bool]()),
 			},
 		},
-		{
-			TestName: "Collection of primitive types Source and slice or map of primtive types Target",
+		"Collection of primitive types Source and slice or map of primtive types Target": {
 			Source: &TestFlexTF04{
 				Field1: types.ListValueMust(types.StringType, []attr.Value{
 					types.StringValue("a"),
@@ -347,8 +330,7 @@ func TestExpand(t *testing.T) {
 				traceExpandingWithElementsAs("Field6", reflect.TypeFor[types.Map](), 2, "Field6", reflect.TypeFor[map[string]*string]()),
 			},
 		},
-		{
-			TestName: "plural field names",
+		"plural field names": {
 			Source: &TestFlexTF09{
 				City: types.ListValueMust(types.StringType, []attr.Value{
 					types.StringValue("paris"),
@@ -436,8 +418,7 @@ func TestExpand(t *testing.T) {
 				traceExpandingWithElementsAs("Hive", reflect.TypeFor[types.List](), 2, "Hives", reflect.TypeFor[[]*string]()),
 			},
 		},
-		{
-			TestName: "capitalization field names",
+		"capitalization field names": {
 			Source: &TestFlexTF10{
 				FieldURL: types.StringValue("h"),
 			},
@@ -452,9 +433,8 @@ func TestExpand(t *testing.T) {
 				infoConvertingWithPath("FieldURL", reflect.TypeFor[types.String](), "FieldUrl", reflect.TypeFor[*string]()),
 			},
 		},
-		{
-			TestName:  "resource name prefix",
-			ContextFn: func(ctx context.Context) context.Context { return context.WithValue(ctx, ResourcePrefix, "Intent") },
+		"resource name prefix": {
+			Options: []AutoFlexOptionsFunc{WithFieldNamePrefix("Intent")},
 			Source: &TestFlexTF16{
 				Name: types.StringValue("Ovodoghen"),
 			},
@@ -469,8 +449,7 @@ func TestExpand(t *testing.T) {
 				infoConvertingWithPath("Name", reflect.TypeFor[types.String](), "IntentName", reflect.TypeFor[*string]()),
 			},
 		},
-		{
-			TestName:   "single ARN Source and single string Target",
+		"single ARN Source and single string Target": {
 			Source:     &TestFlexTF17{Field1: fwtypes.ARNValue(testARN)},
 			Target:     &TestFlexAWS01{},
 			WantTarget: &TestFlexAWS01{Field1: testARN},
@@ -481,8 +460,7 @@ func TestExpand(t *testing.T) {
 				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ARN](), "Field1", reflect.TypeFor[string]()),
 			},
 		},
-		{
-			TestName:   "single ARN Source and single *string Target",
+		"single ARN Source and single *string Target": {
 			Source:     &TestFlexTF17{Field1: fwtypes.ARNValue(testARN)},
 			Target:     &TestFlexAWS02{},
 			WantTarget: &TestFlexAWS02{Field1: aws.String(testARN)},
@@ -493,8 +471,7 @@ func TestExpand(t *testing.T) {
 				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ARN](), "Field1", reflect.TypeFor[*string]()),
 			},
 		},
-		{
-			TestName: "timestamp pointer",
+		"timestamp pointer": {
 			Source: &TestFlexTimeTF01{
 				CreationDateTime: timetypes.NewRFC3339ValueMust(testTimeStr),
 			},
@@ -509,8 +486,7 @@ func TestExpand(t *testing.T) {
 				infoConvertingWithPath("CreationDateTime", reflect.TypeFor[timetypes.RFC3339](), "CreationDateTime", reflect.TypeFor[*time.Time]()),
 			},
 		},
-		{
-			TestName: "timestamp",
+		"timestamp": {
 			Source: &TestFlexTimeTF01{
 				CreationDateTime: timetypes.NewRFC3339ValueMust(testTimeStr),
 			},
@@ -525,10 +501,9 @@ func TestExpand(t *testing.T) {
 				infoConvertingWithPath("CreationDateTime", reflect.TypeFor[timetypes.RFC3339](), "CreationDateTime", reflect.TypeFor[time.Time]()),
 			},
 		},
-		{
-			TestName: "JSONValue Source to json interface Target",
-			Source:   &TestFlexTF20{Field1: fwtypes.SmithyJSONValue(`{"field1": "a"}`, newTestJSONDocument)},
-			Target:   &TestFlexAWS19{},
+		"JSONValue Source to json interface Target": {
+			Source: &TestFlexTF20{Field1: fwtypes.SmithyJSONValue(`{"field1": "a"}`, newTestJSONDocument)},
+			Target: &TestFlexAWS19{},
 			WantTarget: &TestFlexAWS19{
 				Field1: &testJSONDocument{
 					Value: map[string]any{
@@ -554,8 +529,7 @@ func TestExpandGeneric(t *testing.T) {
 	ctx := context.Background()
 
 	testCases := autoFlexTestCases{
-		{
-			TestName: "single list Source and *struct Target",
+		"single list Source and *struct Target": {
 			Source: &TestFlexTF05{
 				Field1: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &TestFlexTF01{
 					Field1: types.StringValue("a"),
@@ -576,8 +550,7 @@ func TestExpandGeneric(t *testing.T) {
 				infoConvertingWithPath("Field1[0].Field1", reflect.TypeFor[types.String](), "Field1.Field1", reflect.TypeFor[string]()),
 			},
 		},
-		{
-			TestName: "single set Source and *struct Target",
+		"single set Source and *struct Target": {
 			Source: &TestFlexTF06{
 				Field1: fwtypes.NewSetNestedObjectValueOfPtrMust(ctx, &TestFlexTF01{
 					Field1: types.StringValue("a"),
@@ -598,8 +571,7 @@ func TestExpandGeneric(t *testing.T) {
 				infoConvertingWithPath("Field1[0].Field1", reflect.TypeFor[types.String](), "Field1.Field1", reflect.TypeFor[string]()),
 			},
 		},
-		{
-			TestName:   "empty list Source and empty []struct Target",
+		"empty list Source and empty []struct Target": {
 			Source:     &TestFlexTF05{Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []TestFlexTF01{})},
 			Target:     &TestFlexAWS08{},
 			WantTarget: &TestFlexAWS08{Field1: []TestFlexAWS01{}},
@@ -611,8 +583,7 @@ func TestExpandGeneric(t *testing.T) {
 				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[TestFlexTF01]](), 0, "Field1", reflect.TypeFor[[]TestFlexAWS01]()),
 			},
 		},
-		{
-			TestName: "non-empty list Source and non-empty []struct Target",
+		"non-empty list Source and non-empty []struct Target": {
 			Source: &TestFlexTF05{Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []TestFlexTF01{
 				{Field1: types.StringValue("a")},
 				{Field1: types.StringValue("b")},
@@ -634,8 +605,7 @@ func TestExpandGeneric(t *testing.T) {
 				infoConvertingWithPath("Field1[1].Field1", reflect.TypeFor[types.String](), "Field1[1].Field1", reflect.TypeFor[string]()),
 			},
 		},
-		{
-			TestName:   "empty list Source and empty []*struct Target",
+		"empty list Source and empty []*struct Target": {
 			Source:     &TestFlexTF05{Field1: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*TestFlexTF01{})},
 			Target:     &TestFlexAWS07{},
 			WantTarget: &TestFlexAWS07{Field1: []*TestFlexAWS01{}},
@@ -647,8 +617,7 @@ func TestExpandGeneric(t *testing.T) {
 				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[TestFlexTF01]](), 0, "Field1", reflect.TypeFor[[]*TestFlexAWS01]()),
 			},
 		},
-		{
-			TestName: "non-empty list Source and non-empty []*struct Target",
+		"non-empty list Source and non-empty []*struct Target": {
 			Source: &TestFlexTF05{Field1: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*TestFlexTF01{
 				{Field1: types.StringValue("a")},
 				{Field1: types.StringValue("b")},
@@ -670,8 +639,7 @@ func TestExpandGeneric(t *testing.T) {
 				infoConvertingWithPath("Field1[1].Field1", reflect.TypeFor[types.String](), "Field1[1].Field1", reflect.TypeFor[string]()),
 			},
 		},
-		{
-			TestName:   "empty set Source and empty []*struct Target",
+		"empty set Source and empty []*struct Target": {
 			Source:     &TestFlexTF06{Field1: fwtypes.NewSetNestedObjectValueOfSliceMust(ctx, []*TestFlexTF01{})},
 			Target:     &TestFlexAWS07{},
 			WantTarget: &TestFlexAWS07{Field1: []*TestFlexAWS01{}},
@@ -683,8 +651,7 @@ func TestExpandGeneric(t *testing.T) {
 				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[TestFlexTF01]](), 0, "Field1", reflect.TypeFor[[]*TestFlexAWS01]()),
 			},
 		},
-		{
-			TestName: "non-empty set Source and non-empty []*struct Target",
+		"non-empty set Source and non-empty []*struct Target": {
 			Source: &TestFlexTF06{Field1: fwtypes.NewSetNestedObjectValueOfSliceMust(ctx, []*TestFlexTF01{
 				{Field1: types.StringValue("a")},
 				{Field1: types.StringValue("b")},
@@ -706,8 +673,7 @@ func TestExpandGeneric(t *testing.T) {
 				infoConvertingWithPath("Field1[1].Field1", reflect.TypeFor[types.String](), "Field1[1].Field1", reflect.TypeFor[string]()),
 			},
 		},
-		{
-			TestName: "non-empty set Source and non-empty []struct Target",
+		"non-empty set Source and non-empty []struct Target": {
 			Source: &TestFlexTF06{Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []TestFlexTF01{
 				{Field1: types.StringValue("a")},
 				{Field1: types.StringValue("b")},
@@ -729,8 +695,7 @@ func TestExpandGeneric(t *testing.T) {
 				infoConvertingWithPath("Field1[1].Field1", reflect.TypeFor[types.String](), "Field1[1].Field1", reflect.TypeFor[string]()),
 			},
 		},
-		{
-			TestName: "complex Source and complex Target",
+		"complex Source and complex Target": {
 			Source: &TestFlexTF07{
 				Field1: types.StringValue("m"),
 				Field2: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &TestFlexTF05{
@@ -795,8 +760,7 @@ func TestExpandGeneric(t *testing.T) {
 				infoConvertingWithPath("Field4[2].Field1", reflect.TypeFor[types.Int64](), "Field4[2].Field1", reflect.TypeFor[int64]()),
 			},
 		},
-		{
-			TestName: "map of string",
+		"map of string": {
 			Source: &TestFlexTF11{
 				FieldInner: fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
 					"x": types.StringValue("y"),
@@ -816,8 +780,7 @@ func TestExpandGeneric(t *testing.T) {
 				traceExpandingWithElementsAs("FieldInner", reflect.TypeFor[fwtypes.MapValueOf[types.String]](), 1, "FieldInner", reflect.TypeFor[map[string]string]()),
 			},
 		},
-		{
-			TestName: "map of string pointer",
+		"map of string pointer": {
 			Source: &TestFlexTF11{
 				FieldInner: fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
 					"x": types.StringValue("y"),
@@ -837,8 +800,7 @@ func TestExpandGeneric(t *testing.T) {
 				traceExpandingWithElementsAs("FieldInner", reflect.TypeFor[fwtypes.MapValueOf[types.String]](), 1, "FieldInner", reflect.TypeFor[map[string]*string]()),
 			},
 		},
-		{
-			TestName: "map of map of string",
+		"map of map of string": {
 			Source: &TestFlexTF21{
 				Field1: fwtypes.NewMapValueOfMust[fwtypes.MapValueOf[types.String]](ctx, map[string]attr.Value{
 					"x": fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
@@ -862,8 +824,7 @@ func TestExpandGeneric(t *testing.T) {
 				traceExpandingWithElementsAs("Field1", reflect.TypeFor[fwtypes.MapValueOf[fwtypes.MapValueOf[types.String]]](), 1, "Field1", reflect.TypeFor[map[string]map[string]string]()),
 			},
 		},
-		{
-			TestName: "map of map of string pointer",
+		"map of map of string pointer": {
 			Source: &TestFlexTF21{
 				Field1: fwtypes.NewMapValueOfMust[fwtypes.MapValueOf[types.String]](ctx, map[string]attr.Value{
 					"x": fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
@@ -887,8 +848,7 @@ func TestExpandGeneric(t *testing.T) {
 				traceExpandingWithElementsAs("Field1", reflect.TypeFor[fwtypes.MapValueOf[fwtypes.MapValueOf[types.String]]](), 1, "Field1", reflect.TypeFor[map[string]map[string]*string]()),
 			},
 		},
-		{
-			TestName: "nested string map",
+		"nested string map": {
 			Source: &TestFlexTF14{
 				FieldOuter: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &TestFlexTF11{
 					FieldInner: fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
@@ -914,8 +874,7 @@ func TestExpandGeneric(t *testing.T) {
 				traceExpandingWithElementsAs("FieldOuter[0].FieldInner", reflect.TypeFor[fwtypes.MapValueOf[types.String]](), 1, "FieldOuter.FieldInner", reflect.TypeFor[map[string]string]()),
 			},
 		},
-		{
-			TestName: "null map block key",
+		"null map block key": {
 			Source: &TestFlexMapBlockKeyTF01{
 				MapBlock: fwtypes.NewListNestedObjectValueOfNull[TestFlexMapBlockKeyTF02](ctx),
 			},
@@ -931,8 +890,7 @@ func TestExpandGeneric(t *testing.T) {
 				traceExpandingNullValue("MapBlock", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[TestFlexMapBlockKeyTF02]](), "MapBlock", reflect.TypeFor[map[string]TestFlexMapBlockKeyAWS02]()),
 			},
 		},
-		{
-			TestName: "map block key list",
+		"map block key list": {
 			Source: &TestFlexMapBlockKeyTF01{
 				MapBlock: fwtypes.NewListNestedObjectValueOfValueSliceMust[TestFlexMapBlockKeyTF02](ctx, []TestFlexMapBlockKeyTF02{
 					{
@@ -980,8 +938,7 @@ func TestExpandGeneric(t *testing.T) {
 				infoConvertingWithPath("MapBlock[1].Attr2", reflect.TypeFor[types.String](), "MapBlock[\"y\"].Attr2", reflect.TypeFor[string]()),
 			},
 		},
-		{
-			TestName: "map block key set",
+		"map block key set": {
 			Source: &TestFlexMapBlockKeyTF03{
 				MapBlock: fwtypes.NewSetNestedObjectValueOfValueSliceMust[TestFlexMapBlockKeyTF02](ctx, []TestFlexMapBlockKeyTF02{
 					{
@@ -1029,8 +986,7 @@ func TestExpandGeneric(t *testing.T) {
 				infoConvertingWithPath("MapBlock[1].Attr2", reflect.TypeFor[types.String](), "MapBlock[\"y\"].Attr2", reflect.TypeFor[string]()),
 			},
 		},
-		{
-			TestName: "map block key ptr source",
+		"map block key ptr source": {
 			Source: &TestFlexMapBlockKeyTF01{
 				MapBlock: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*TestFlexMapBlockKeyTF02{
 					{
@@ -1078,8 +1034,7 @@ func TestExpandGeneric(t *testing.T) {
 				infoConvertingWithPath("MapBlock[1].Attr2", reflect.TypeFor[types.String](), "MapBlock[\"y\"].Attr2", reflect.TypeFor[string]()),
 			},
 		},
-		{
-			TestName: "map block key ptr both",
+		"map block key ptr both": {
 			Source: &TestFlexMapBlockKeyTF01{
 				MapBlock: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*TestFlexMapBlockKeyTF02{
 					{
@@ -1127,8 +1082,7 @@ func TestExpandGeneric(t *testing.T) {
 				infoConvertingWithPath("MapBlock[1].Attr2", reflect.TypeFor[types.String](), "MapBlock[\"y\"].Attr2", reflect.TypeFor[string]()),
 			},
 		},
-		{
-			TestName: "map block enum key",
+		"map block enum key": {
 			Source: &TestFlexMapBlockKeyTF04{
 				MapBlock: fwtypes.NewListNestedObjectValueOfValueSliceMust[TestFlexMapBlockKeyTF05](ctx, []TestFlexMapBlockKeyTF05{
 					{
@@ -1205,8 +1159,7 @@ func TestExpandSimpleSingleNestedBlock(t *testing.T) {
 
 	ctx := context.Background()
 	testCases := autoFlexTestCases{
-		{
-			TestName:   "single nested block pointer",
+		"single nested block pointer": {
 			Source:     &tf02{Field1: fwtypes.NewObjectValueOfMust[tf01](ctx, &tf01{Field1: types.StringValue("a"), Field2: types.Int64Value(1)})},
 			Target:     &aws02{},
 			WantTarget: &aws02{Field1: &aws01{Field1: aws.String("a"), Field2: 1}},
@@ -1221,8 +1174,7 @@ func TestExpandSimpleSingleNestedBlock(t *testing.T) {
 				infoConvertingWithPath("Field1.Field2", reflect.TypeFor[types.Int64](), "Field1.Field2", reflect.TypeFor[int64]()),
 			},
 		},
-		{
-			TestName:   "single nested block nil",
+		"single nested block nil": {
 			Source:     &tf02{Field1: fwtypes.NewObjectValueOfNull[tf01](ctx)},
 			Target:     &aws02{},
 			WantTarget: &aws02{},
@@ -1234,8 +1186,7 @@ func TestExpandSimpleSingleNestedBlock(t *testing.T) {
 				traceExpandingNullValue("Field1", reflect.TypeFor[fwtypes.ObjectValueOf[tf01]](), "Field1", reflect.TypeFor[*aws01]()),
 			},
 		},
-		{
-			TestName:   "single nested block value",
+		"single nested block value": {
 			Source:     &tf02{Field1: fwtypes.NewObjectValueOfMust[tf01](ctx, &tf01{Field1: types.StringValue("a"), Field2: types.Int64Value(1)})},
 			Target:     &aws03{},
 			WantTarget: &aws03{Field1: aws01{Field1: aws.String("a"), Field2: 1}},
@@ -1282,8 +1233,7 @@ func TestExpandComplexSingleNestedBlock(t *testing.T) {
 
 	ctx := context.Background()
 	testCases := autoFlexTestCases{
-		{
-			TestName: "single nested block pointer",
+		"single nested block pointer": {
 			Source: &tf03{
 				Field1: fwtypes.NewObjectValueOfMust[tf02](
 					ctx,
@@ -1332,8 +1282,7 @@ func TestExpandStringEnum(t *testing.T) {
 	testEnumList := TestEnumList
 
 	testCases := autoFlexTestCases{
-		{
-			TestName:   "valid value",
+		"valid value": {
 			Source:     fwtypes.StringEnumValue(TestEnumList),
 			Target:     &testEnum,
 			WantTarget: &testEnumList,
@@ -1342,8 +1291,7 @@ func TestExpandStringEnum(t *testing.T) {
 				infoConverting(reflect.TypeFor[fwtypes.StringEnum[TestEnum]](), reflect.TypeFor[TestEnum]()),
 			},
 		},
-		{
-			TestName:   "empty value",
+		"empty value": {
 			Source:     fwtypes.StringEnumNull[TestEnum](),
 			Target:     &testEnum,
 			WantTarget: &testEnum,
@@ -1361,8 +1309,7 @@ func TestExpandListOfInt64(t *testing.T) {
 	t.Parallel()
 
 	testCases := autoFlexTestCases{
-		{
-			TestName: "valid value []int64",
+		"valid value []int64": {
 			Source: types.ListValueMust(types.Int64Type, []attr.Value{
 				types.Int64Value(1),
 				types.Int64Value(-1),
@@ -1375,8 +1322,7 @@ func TestExpandListOfInt64(t *testing.T) {
 				traceExpandingWithElementsAs("", reflect.TypeFor[types.List](), 2, "", reflect.TypeFor[[]int64]()),
 			},
 		},
-		{
-			TestName:   "empty value []int64",
+		"empty value []int64": {
 			Source:     types.ListValueMust(types.Int64Type, []attr.Value{}),
 			Target:     &[]int64{},
 			WantTarget: &[]int64{},
@@ -1386,8 +1332,7 @@ func TestExpandListOfInt64(t *testing.T) {
 				traceExpandingWithElementsAs("", reflect.TypeFor[types.List](), 0, "", reflect.TypeFor[[]int64]()),
 			},
 		},
-		{
-			TestName:   "null value []int64",
+		"null value []int64": {
 			Source:     types.ListNull(types.Int64Type),
 			Target:     &[]int64{},
 			WantTarget: &[]int64{},
@@ -1397,8 +1342,7 @@ func TestExpandListOfInt64(t *testing.T) {
 				traceExpandingNullValue("", reflect.TypeFor[types.List](), "", reflect.TypeFor[[]int64]()),
 			},
 		},
-		{
-			TestName: "valid value []*int64",
+		"valid value []*int64": {
 			Source: types.ListValueMust(types.Int64Type, []attr.Value{
 				types.Int64Value(1),
 				types.Int64Value(-1),
@@ -1411,8 +1355,7 @@ func TestExpandListOfInt64(t *testing.T) {
 				traceExpandingWithElementsAs("", reflect.TypeFor[types.List](), 2, "", reflect.TypeFor[[]*int64]()),
 			},
 		},
-		{
-			TestName:   "empty value []*int64",
+		"empty value []*int64": {
 			Source:     types.ListValueMust(types.Int64Type, []attr.Value{}),
 			Target:     &[]*int64{},
 			WantTarget: &[]*int64{},
@@ -1422,8 +1365,7 @@ func TestExpandListOfInt64(t *testing.T) {
 				traceExpandingWithElementsAs("", reflect.TypeFor[types.List](), 0, "", reflect.TypeFor[[]*int64]()),
 			},
 		},
-		{
-			TestName:   "null value []*int64",
+		"null value []*int64": {
 			Source:     types.ListNull(types.Int64Type),
 			Target:     &[]*int64{},
 			WantTarget: &[]*int64{},
@@ -1433,8 +1375,7 @@ func TestExpandListOfInt64(t *testing.T) {
 				traceExpandingNullValue("", reflect.TypeFor[types.List](), "", reflect.TypeFor[[]*int64]()),
 			},
 		},
-		{
-			TestName: "valid value []int32",
+		"valid value []int32": {
 			Source: types.ListValueMust(types.Int64Type, []attr.Value{
 				types.Int64Value(1),
 				types.Int64Value(-1),
@@ -1447,8 +1388,7 @@ func TestExpandListOfInt64(t *testing.T) {
 				traceExpandingWithElementsAs("", reflect.TypeFor[types.List](), 2, "", reflect.TypeFor[[]int32]()),
 			},
 		},
-		{
-			TestName:   "empty value []int32",
+		"empty value []int32": {
 			Source:     types.ListValueMust(types.Int64Type, []attr.Value{}),
 			Target:     &[]int32{},
 			WantTarget: &[]int32{},
@@ -1458,8 +1398,7 @@ func TestExpandListOfInt64(t *testing.T) {
 				traceExpandingWithElementsAs("", reflect.TypeFor[types.List](), 0, "", reflect.TypeFor[[]int32]()),
 			},
 		},
-		{
-			TestName:   "null value []int32",
+		"null value []int32": {
 			Source:     types.ListNull(types.Int64Type),
 			Target:     &[]int32{},
 			WantTarget: &[]int32{},
@@ -1469,8 +1408,7 @@ func TestExpandListOfInt64(t *testing.T) {
 				traceExpandingNullValue("", reflect.TypeFor[types.List](), "", reflect.TypeFor[[]int32]()),
 			},
 		},
-		{
-			TestName: "valid value []*int32",
+		"valid value []*int32": {
 			Source: types.ListValueMust(types.Int64Type, []attr.Value{
 				types.Int64Value(1),
 				types.Int64Value(-1),
@@ -1483,8 +1421,7 @@ func TestExpandListOfInt64(t *testing.T) {
 				traceExpandingWithElementsAs("", reflect.TypeFor[types.List](), 2, "", reflect.TypeFor[[]*int32]()),
 			},
 		},
-		{
-			TestName:   "empty value []*int32",
+		"empty value []*int32": {
 			Source:     types.ListValueMust(types.Int64Type, []attr.Value{}),
 			Target:     &[]*int32{},
 			WantTarget: &[]*int32{},
@@ -1494,8 +1431,7 @@ func TestExpandListOfInt64(t *testing.T) {
 				traceExpandingWithElementsAs("", reflect.TypeFor[types.List](), 0, "", reflect.TypeFor[[]*int32]()),
 			},
 		},
-		{
-			TestName:   "null value []*int32",
+		"null value []*int32": {
 			Source:     types.ListNull(types.Int64Type),
 			Target:     &[]*int32{},
 			WantTarget: &[]*int32{},
@@ -1513,8 +1449,7 @@ func TestExpandSetOfInt64(t *testing.T) {
 	t.Parallel()
 
 	testCases := autoFlexTestCases{
-		{
-			TestName: "valid value []int64",
+		"valid value []int64": {
 			Source: types.SetValueMust(types.Int64Type, []attr.Value{
 				types.Int64Value(1),
 				types.Int64Value(-1),
@@ -1527,8 +1462,7 @@ func TestExpandSetOfInt64(t *testing.T) {
 				traceExpandingWithElementsAs("", reflect.TypeFor[types.Set](), 2, "", reflect.TypeFor[[]int64]()),
 			},
 		},
-		{
-			TestName:   "empty value []int64",
+		"empty value []int64": {
 			Source:     types.SetValueMust(types.Int64Type, []attr.Value{}),
 			Target:     &[]int64{},
 			WantTarget: &[]int64{},
@@ -1538,8 +1472,7 @@ func TestExpandSetOfInt64(t *testing.T) {
 				traceExpandingWithElementsAs("", reflect.TypeFor[types.Set](), 0, "", reflect.TypeFor[[]int64]()),
 			},
 		},
-		{
-			TestName:   "null value []int64",
+		"null value []int64": {
 			Source:     types.SetNull(types.Int64Type),
 			Target:     &[]int64{},
 			WantTarget: &[]int64{},
@@ -1549,8 +1482,7 @@ func TestExpandSetOfInt64(t *testing.T) {
 				traceExpandingNullValue("", reflect.TypeFor[types.Set](), "", reflect.TypeFor[[]int64]()),
 			},
 		},
-		{
-			TestName: "valid value []*int64",
+		"valid value []*int64": {
 			Source: types.SetValueMust(types.Int64Type, []attr.Value{
 				types.Int64Value(1),
 				types.Int64Value(-1),
@@ -1563,8 +1495,7 @@ func TestExpandSetOfInt64(t *testing.T) {
 				traceExpandingWithElementsAs("", reflect.TypeFor[types.Set](), 2, "", reflect.TypeFor[[]*int64]()),
 			},
 		},
-		{
-			TestName:   "empty value []*int64",
+		"empty value []*int64": {
 			Source:     types.SetValueMust(types.Int64Type, []attr.Value{}),
 			Target:     &[]*int64{},
 			WantTarget: &[]*int64{},
@@ -1574,8 +1505,7 @@ func TestExpandSetOfInt64(t *testing.T) {
 				traceExpandingWithElementsAs("", reflect.TypeFor[types.Set](), 0, "", reflect.TypeFor[[]*int64]()),
 			},
 		},
-		{
-			TestName:   "null value []*int64",
+		"null value []*int64": {
 			Source:     types.SetNull(types.Int64Type),
 			Target:     &[]*int64{},
 			WantTarget: &[]*int64{},
@@ -1585,8 +1515,7 @@ func TestExpandSetOfInt64(t *testing.T) {
 				traceExpandingNullValue("", reflect.TypeFor[types.Set](), "", reflect.TypeFor[[]*int64]()),
 			},
 		},
-		{
-			TestName: "valid value []int32",
+		"valid value []int32": {
 			Source: types.SetValueMust(types.Int64Type, []attr.Value{
 				types.Int64Value(1),
 				types.Int64Value(-1),
@@ -1599,8 +1528,7 @@ func TestExpandSetOfInt64(t *testing.T) {
 				traceExpandingWithElementsAs("", reflect.TypeFor[types.Set](), 2, "", reflect.TypeFor[[]int32]()),
 			},
 		},
-		{
-			TestName:   "empty value []int32",
+		"empty value []int32": {
 			Source:     types.SetValueMust(types.Int64Type, []attr.Value{}),
 			Target:     &[]int32{},
 			WantTarget: &[]int32{},
@@ -1610,8 +1538,7 @@ func TestExpandSetOfInt64(t *testing.T) {
 				traceExpandingWithElementsAs("", reflect.TypeFor[types.Set](), 0, "", reflect.TypeFor[[]int32]()),
 			},
 		},
-		{
-			TestName:   "null value []int32",
+		"null value []int32": {
 			Source:     types.SetNull(types.Int64Type),
 			Target:     &[]int32{},
 			WantTarget: &[]int32{},
@@ -1621,8 +1548,7 @@ func TestExpandSetOfInt64(t *testing.T) {
 				traceExpandingNullValue("", reflect.TypeFor[types.Set](), "", reflect.TypeFor[[]int32]()),
 			},
 		},
-		{
-			TestName: "valid value []*int32",
+		"valid value []*int32": {
 			Source: types.SetValueMust(types.Int64Type, []attr.Value{
 				types.Int64Value(1),
 				types.Int64Value(-1),
@@ -1635,8 +1561,7 @@ func TestExpandSetOfInt64(t *testing.T) {
 				traceExpandingWithElementsAs("", reflect.TypeFor[types.Set](), 2, "", reflect.TypeFor[[]*int32]()),
 			},
 		},
-		{
-			TestName:   "empty value []*int32",
+		"empty value []*int32": {
 			Source:     types.SetValueMust(types.Int64Type, []attr.Value{}),
 			Target:     &[]*int32{},
 			WantTarget: &[]*int32{},
@@ -1646,8 +1571,7 @@ func TestExpandSetOfInt64(t *testing.T) {
 				traceExpandingWithElementsAs("", reflect.TypeFor[types.Set](), 0, "", reflect.TypeFor[[]*int32]()),
 			},
 		},
-		{
-			TestName:   "null value []*int32",
+		"null value []*int32": {
 			Source:     types.SetNull(types.Int64Type),
 			Target:     &[]*int32{},
 			WantTarget: &[]*int32{},
@@ -1669,8 +1593,7 @@ func TestExpandListOfStringEnum(t *testing.T) {
 	var testEnumBar testEnum = "bar"
 
 	testCases := autoFlexTestCases{
-		{
-			TestName: "valid value",
+		"valid value": {
 			Source: types.ListValueMust(types.StringType, []attr.Value{
 				types.StringValue(string(testEnumFoo)),
 				types.StringValue(string(testEnumBar)),
@@ -1683,8 +1606,7 @@ func TestExpandListOfStringEnum(t *testing.T) {
 				traceExpandingWithElementsAs("", reflect.TypeFor[types.List](), 2, "", reflect.TypeFor[[]testEnum]()),
 			},
 		},
-		{
-			TestName:   "empty value",
+		"empty value": {
 			Source:     types.ListValueMust(types.StringType, []attr.Value{}),
 			Target:     &[]testEnum{},
 			WantTarget: &[]testEnum{},
@@ -1694,8 +1616,7 @@ func TestExpandListOfStringEnum(t *testing.T) {
 				traceExpandingWithElementsAs("", reflect.TypeFor[types.List](), 0, "", reflect.TypeFor[[]testEnum]()),
 			},
 		},
-		{
-			TestName:   "null value",
+		"null value": {
 			Source:     types.ListNull(types.StringType),
 			Target:     &[]testEnum{},
 			WantTarget: &[]testEnum{},
@@ -1717,8 +1638,7 @@ func TestExpandSetOfStringEnum(t *testing.T) {
 	var testEnumBar testEnum = "bar"
 
 	testCases := autoFlexTestCases{
-		{
-			TestName: "valid value",
+		"valid value": {
 			Source: types.SetValueMust(types.StringType, []attr.Value{
 				types.StringValue(string(testEnumFoo)),
 				types.StringValue(string(testEnumBar)),
@@ -1731,8 +1651,7 @@ func TestExpandSetOfStringEnum(t *testing.T) {
 				traceExpandingWithElementsAs("", reflect.TypeFor[types.Set](), 2, "", reflect.TypeFor[[]testEnum]()),
 			},
 		},
-		{
-			TestName:   "empty value",
+		"empty value": {
 			Source:     types.SetValueMust(types.StringType, []attr.Value{}),
 			Target:     &[]testEnum{},
 			WantTarget: &[]testEnum{},
@@ -1742,8 +1661,7 @@ func TestExpandSetOfStringEnum(t *testing.T) {
 				traceExpandingWithElementsAs("", reflect.TypeFor[types.Set](), 0, "", reflect.TypeFor[[]testEnum]()),
 			},
 		},
-		{
-			TestName:   "null value",
+		"null value": {
 			Source:     types.SetNull(types.StringType),
 			Target:     &[]testEnum{},
 			WantTarget: &[]testEnum{},
@@ -1763,8 +1681,7 @@ func TestExpandListOfNestedObject(t *testing.T) {
 	ctx := context.Background()
 
 	testCases := autoFlexTestCases{
-		{
-			TestName: "valid value to []struct",
+		"valid value to []struct": {
 			Source: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []TestFlexTF01{
 				{
 					Field1: types.StringValue("value1"),
@@ -1792,8 +1709,7 @@ func TestExpandListOfNestedObject(t *testing.T) {
 				infoConvertingWithPath("[1].Field1", reflect.TypeFor[types.String](), "[1].Field1", reflect.TypeFor[string]()),
 			},
 		},
-		{
-			TestName:   "empty value to []struct",
+		"empty value to []struct": {
 			Source:     fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []TestFlexTF01{}),
 			Target:     &[]TestFlexAWS01{},
 			WantTarget: &[]TestFlexAWS01{},
@@ -1803,8 +1719,7 @@ func TestExpandListOfNestedObject(t *testing.T) {
 				traceExpandingNestedObjectCollection("", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[TestFlexTF01]](), 0, "", reflect.TypeFor[[]TestFlexAWS01]()),
 			},
 		},
-		{
-			TestName:   "null value to []struct",
+		"null value to []struct": {
 			Source:     fwtypes.NewListNestedObjectValueOfNull[TestFlexTF01](ctx),
 			Target:     &[]TestFlexAWS01{},
 			WantTarget: &[]TestFlexAWS01{},
@@ -1815,8 +1730,7 @@ func TestExpandListOfNestedObject(t *testing.T) {
 			},
 		},
 
-		{
-			TestName: "valid value to []*struct",
+		"valid value to []*struct": {
 			Source: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []TestFlexTF01{
 				{
 					Field1: types.StringValue("value1"),
@@ -1844,8 +1758,7 @@ func TestExpandListOfNestedObject(t *testing.T) {
 				infoConvertingWithPath("[1].Field1", reflect.TypeFor[types.String](), "[1].Field1", reflect.TypeFor[string]()),
 			},
 		},
-		{
-			TestName:   "empty value to []*struct",
+		"empty value to []*struct": {
 			Source:     fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []TestFlexTF01{}),
 			Target:     &[]*TestFlexAWS01{},
 			WantTarget: &[]*TestFlexAWS01{},
@@ -1855,8 +1768,7 @@ func TestExpandListOfNestedObject(t *testing.T) {
 				traceExpandingNestedObjectCollection("", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[TestFlexTF01]](), 0, "", reflect.TypeFor[[]*TestFlexAWS01]()),
 			},
 		},
-		{
-			TestName:   "null value to []*struct",
+		"null value to []*struct": {
 			Source:     fwtypes.NewListNestedObjectValueOfNull[TestFlexTF01](ctx),
 			Target:     &[]*TestFlexAWS01{},
 			WantTarget: &[]*TestFlexAWS01{},
@@ -1867,8 +1779,7 @@ func TestExpandListOfNestedObject(t *testing.T) {
 			},
 		},
 
-		{
-			TestName: "single list value to single struct",
+		"single list value to single struct": {
 			Source: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []TestFlexTF01{
 				{
 					Field1: types.StringValue("value1"),
@@ -1885,8 +1796,7 @@ func TestExpandListOfNestedObject(t *testing.T) {
 				infoConvertingWithPath("[0].Field1", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[string]()),
 			},
 		},
-		{
-			TestName:   "empty list value to single struct",
+		"empty list value to single struct": {
 			Source:     fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []TestFlexTF01{}),
 			Target:     &TestFlexAWS01{},
 			WantTarget: &TestFlexAWS01{},
@@ -1895,8 +1805,7 @@ func TestExpandListOfNestedObject(t *testing.T) {
 				infoConverting(reflect.TypeFor[fwtypes.ListNestedObjectValueOf[TestFlexTF01]](), reflect.TypeFor[TestFlexAWS01]()),
 			},
 		},
-		{
-			TestName:   "null value to single struct",
+		"null value to single struct": {
 			Source:     fwtypes.NewListNestedObjectValueOfNull[TestFlexTF01](ctx),
 			Target:     &TestFlexAWS01{},
 			WantTarget: &TestFlexAWS01{},
@@ -1916,8 +1825,7 @@ func TestExpandSetOfNestedObject(t *testing.T) {
 	ctx := context.Background()
 
 	testCases := autoFlexTestCases{
-		{
-			TestName: "valid value to []struct",
+		"valid value to []struct": {
 			Source: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []TestFlexTF01{
 				{
 					Field1: types.StringValue("value1"),
@@ -1945,8 +1853,7 @@ func TestExpandSetOfNestedObject(t *testing.T) {
 				infoConvertingWithPath("[1].Field1", reflect.TypeFor[types.String](), "[1].Field1", reflect.TypeFor[string]()),
 			},
 		},
-		{
-			TestName:   "empty value to []struct",
+		"empty value to []struct": {
 			Source:     fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []TestFlexTF01{}),
 			Target:     &[]TestFlexAWS01{},
 			WantTarget: &[]TestFlexAWS01{},
@@ -1956,8 +1863,7 @@ func TestExpandSetOfNestedObject(t *testing.T) {
 				traceExpandingNestedObjectCollection("", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[TestFlexTF01]](), 0, "", reflect.TypeFor[[]TestFlexAWS01]()),
 			},
 		},
-		{
-			TestName:   "null value to []struct",
+		"null value to []struct": {
 			Source:     fwtypes.NewSetNestedObjectValueOfNull[TestFlexTF01](ctx),
 			Target:     &[]TestFlexAWS01{},
 			WantTarget: &[]TestFlexAWS01{},
@@ -1968,8 +1874,7 @@ func TestExpandSetOfNestedObject(t *testing.T) {
 			},
 		},
 
-		{
-			TestName: "valid value to []*struct",
+		"valid value to []*struct": {
 			Source: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []TestFlexTF01{
 				{
 					Field1: types.StringValue("value1"),
@@ -1997,8 +1902,7 @@ func TestExpandSetOfNestedObject(t *testing.T) {
 				infoConvertingWithPath("[1].Field1", reflect.TypeFor[types.String](), "[1].Field1", reflect.TypeFor[string]()),
 			},
 		},
-		{
-			TestName:   "empty value to []*struct",
+		"empty value to []*struct": {
 			Source:     fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []TestFlexTF01{}),
 			Target:     &[]*TestFlexAWS01{},
 			WantTarget: &[]*TestFlexAWS01{},
@@ -2008,8 +1912,7 @@ func TestExpandSetOfNestedObject(t *testing.T) {
 				traceExpandingNestedObjectCollection("", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[TestFlexTF01]](), 0, "", reflect.TypeFor[[]*TestFlexAWS01]()),
 			},
 		},
-		{
-			TestName:   "null value to []*struct",
+		"null value to []*struct": {
 			Source:     fwtypes.NewSetNestedObjectValueOfNull[TestFlexTF01](ctx),
 			Target:     &[]*TestFlexAWS01{},
 			WantTarget: &[]*TestFlexAWS01{},
@@ -2020,8 +1923,7 @@ func TestExpandSetOfNestedObject(t *testing.T) {
 			},
 		},
 
-		{
-			TestName: "single set value to single struct",
+		"single set value to single struct": {
 			Source: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []TestFlexTF01{
 				{
 					Field1: types.StringValue("value1"),
@@ -2038,8 +1940,7 @@ func TestExpandSetOfNestedObject(t *testing.T) {
 				infoConvertingWithPath("[0].Field1", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[string]()),
 			},
 		},
-		{
-			TestName:   "empty set value to single struct",
+		"empty set value to single struct": {
 			Source:     fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []TestFlexTF01{}),
 			Target:     &TestFlexAWS01{},
 			WantTarget: &TestFlexAWS01{},
@@ -2048,8 +1949,7 @@ func TestExpandSetOfNestedObject(t *testing.T) {
 				infoConverting(reflect.TypeFor[fwtypes.SetNestedObjectValueOf[TestFlexTF01]](), reflect.TypeFor[TestFlexAWS01]()),
 			},
 		},
-		{
-			TestName:   "null value to single struct",
+		"null value to single struct": {
 			Source:     fwtypes.NewSetNestedObjectValueOfNull[TestFlexTF01](ctx),
 			Target:     &TestFlexAWS01{},
 			WantTarget: &TestFlexAWS01{},
@@ -2076,8 +1976,7 @@ func TestExpandSimpleNestedBlockWithStringEnum(t *testing.T) {
 	}
 
 	testCases := autoFlexTestCases{
-		{
-			TestName: "single nested valid value",
+		"single nested valid value": {
 			Source: &tf01{
 				Field1: types.Int64Value(1),
 				Field2: fwtypes.StringEnumValue(TestEnumList),
@@ -2096,8 +1995,7 @@ func TestExpandSimpleNestedBlockWithStringEnum(t *testing.T) {
 				infoConvertingWithPath("Field2", reflect.TypeFor[fwtypes.StringEnum[TestEnum]](), "Field2", reflect.TypeFor[TestEnum]()),
 			},
 		},
-		{
-			TestName: "single nested null value",
+		"single nested null value": {
 			Source: &tf01{
 				Field1: types.Int64Value(1),
 				Field2: fwtypes.StringEnumNull[TestEnum](),
@@ -2141,8 +2039,7 @@ func TestExpandComplexNestedBlockWithStringEnum(t *testing.T) {
 
 	ctx := context.Background()
 	testCases := autoFlexTestCases{
-		{
-			TestName: "single nested valid value",
+		"single nested valid value": {
 			Source: &tf02{
 				Field1: types.Int64Value(1),
 				Field2: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tf01{
@@ -2167,8 +2064,7 @@ func TestExpandComplexNestedBlockWithStringEnum(t *testing.T) {
 				infoConvertingWithPath("Field2[0].Field2", reflect.TypeFor[fwtypes.StringEnum[TestEnum]](), "Field2.Field2", reflect.TypeFor[TestEnum]()),
 			},
 		},
-		{
-			TestName: "single nested null value",
+		"single nested null value": {
 			Source: &tf02{
 				Field1: types.Int64Value(1),
 				Field2: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tf01{
@@ -2212,8 +2108,7 @@ func TestExpandOptions(t *testing.T) {
 
 	ctx := context.Background()
 	testCases := autoFlexTestCases{
-		{
-			TestName:   "empty source with tags",
+		"empty source with tags": {
 			Source:     &tf01{},
 			Target:     &aws01{},
 			WantTarget: &aws01{},
@@ -2226,8 +2121,7 @@ func TestExpandOptions(t *testing.T) {
 				traceSkipIgnoredField(reflect.TypeFor[*tf01](), "Tags", reflect.TypeFor[*aws01]()),
 			},
 		},
-		{
-			TestName: "ignore tags by default",
+		"ignore tags by default": {
 			Source: &tf01{
 				Field1: types.BoolValue(true),
 				Tags: fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
@@ -2245,13 +2139,8 @@ func TestExpandOptions(t *testing.T) {
 				traceSkipIgnoredField(reflect.TypeFor[*tf01](), "Tags", reflect.TypeFor[*aws01]()),
 			},
 		},
-		{
-			TestName: "include tags with option override",
-			Options: []AutoFlexOptionsFunc{
-				func(opts *AutoFlexOptions) {
-					opts.SetIgnoredFields([]string{})
-				},
-			},
+		"include tags with option override": {
+			Options: []AutoFlexOptionsFunc{WithNoIgnoredFieldNames()},
 			Source: &tf01{
 				Field1: types.BoolValue(true),
 				Tags: fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
@@ -2274,13 +2163,8 @@ func TestExpandOptions(t *testing.T) {
 				traceExpandingWithElementsAs("Tags", reflect.TypeFor[fwtypes.MapValueOf[types.String]](), 1, "Tags", reflect.TypeFor[map[string]string]()),
 			},
 		},
-		{
-			TestName: "ignore custom field",
-			Options: []AutoFlexOptionsFunc{
-				func(opts *AutoFlexOptions) {
-					opts.SetIgnoredFields([]string{"Field1"})
-				},
-			},
+		"ignore custom field": {
+			Options: []AutoFlexOptionsFunc{WithIgnoredFieldNames([]string{"Field1"})},
 			Source: &tf01{
 				Field1: types.BoolValue(true),
 				Tags: fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
@@ -2313,8 +2197,7 @@ func TestExpandInterface(t *testing.T) {
 	var targetInterface testFlexAWSInterfaceInterface
 
 	testCases := autoFlexTestCases{
-		{
-			TestName: "top level",
+		"top level": {
 			Source: testFlexTFInterfaceFlexer{
 				Field1: types.StringValue("value1"),
 			},
@@ -2331,8 +2214,7 @@ func TestExpandInterface(t *testing.T) {
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
-		{
-			TestName: "top level return value does not implement target interface",
+		"top level return value does not implement target interface": {
 			Source: testFlexTFInterfaceIncompatibleExpander{
 				Field1: types.StringValue("value1"),
 			},
@@ -2350,8 +2232,7 @@ func TestExpandInterface(t *testing.T) {
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
-		{
-			TestName: "single list Source and single interface Target",
+		"single list Source and single interface Target": {
 			Source: testFlexTFListNestedObject[testFlexTFInterfaceFlexer]{
 				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceFlexer{
 					{
@@ -2376,8 +2257,7 @@ func TestExpandInterface(t *testing.T) {
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()),                // TODO: fix path
 			},
 		},
-		{
-			TestName: "single list non-Expander Source and single interface Target",
+		"single list non-Expander Source and single interface Target": {
 			Source: testFlexTFListNestedObject[TestFlexTF01]{
 				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []TestFlexTF01{
 					{
@@ -2407,8 +2287,7 @@ func TestExpandInterface(t *testing.T) {
 				},
 			},
 		},
-		{
-			TestName: "single set Source and single interface Target",
+		"single set Source and single interface Target": {
 			Source: testFlexTFSetNestedObject[testFlexTFInterfaceFlexer]{
 				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceFlexer{
 					{
@@ -2433,8 +2312,7 @@ func TestExpandInterface(t *testing.T) {
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
-		{
-			TestName: "empty list Source and empty interface Target",
+		"empty list Source and empty interface Target": {
 			Source: testFlexTFListNestedObject[testFlexTFInterfaceFlexer]{
 				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceFlexer{}),
 			},
@@ -2450,8 +2328,7 @@ func TestExpandInterface(t *testing.T) {
 				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFInterfaceFlexer]](), 0, "Field1", reflect.TypeFor[[]testFlexAWSInterfaceInterface]()),
 			},
 		},
-		{
-			TestName: "non-empty list Source and non-empty interface Target",
+		"non-empty list Source and non-empty interface Target": {
 			Source: testFlexTFListNestedObject[testFlexTFInterfaceFlexer]{
 				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceFlexer{
 					{
@@ -2489,8 +2366,7 @@ func TestExpandInterface(t *testing.T) {
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
-		{
-			TestName: "empty set Source and empty interface Target",
+		"empty set Source and empty interface Target": {
 			Source: testFlexTFSetNestedObject[testFlexTFInterfaceFlexer]{
 				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceFlexer{}),
 			},
@@ -2506,8 +2382,7 @@ func TestExpandInterface(t *testing.T) {
 				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFInterfaceFlexer]](), 0, "Field1", reflect.TypeFor[[]testFlexAWSInterfaceInterface]()),
 			},
 		},
-		{
-			TestName: "non-empty set Source and non-empty interface Target",
+		"non-empty set Source and non-empty interface Target": {
 			Source: testFlexTFSetNestedObject[testFlexTFInterfaceFlexer]{
 				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceFlexer{
 					{
@@ -2545,8 +2420,7 @@ func TestExpandInterface(t *testing.T) {
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
-		{
-			TestName: "object value Source and struct Target",
+		"object value Source and struct Target": {
 			Source: testFlexTFObjectValue[testFlexTFInterfaceFlexer]{
 				Field1: fwtypes.NewObjectValueOfMust(ctx, &testFlexTFInterfaceFlexer{
 					Field1: types.StringValue("value1"),
@@ -2583,8 +2457,7 @@ func TestExpandExpander(t *testing.T) {
 	ctx := context.Background()
 
 	testCases := autoFlexTestCases{
-		{
-			TestName: "top level struct Target",
+		"top level struct Target": {
 			Source: testFlexTFFlexer{
 				Field1: types.StringValue("value1"),
 			},
@@ -2601,8 +2474,7 @@ func TestExpandExpander(t *testing.T) {
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
-		{
-			TestName: "top level string Target",
+		"top level string Target": {
 			Source: testFlexTFExpanderToString{
 				Field1: types.StringValue("value1"),
 			},
@@ -2617,8 +2489,7 @@ func TestExpandExpander(t *testing.T) {
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
-		{
-			TestName: "top level incompatible struct Target",
+		"top level incompatible struct Target": {
 			Source: testFlexTFFlexer{
 				Field1: types.StringValue("value1"),
 			},
@@ -2636,8 +2507,7 @@ func TestExpandExpander(t *testing.T) {
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
-		{
-			TestName: "top level expands to nil",
+		"top level expands to nil": {
 			Source: testFlexTFExpanderToNil{
 				Field1: types.StringValue("value1"),
 			},
@@ -2652,8 +2522,7 @@ func TestExpandExpander(t *testing.T) {
 				infoSourceImplementsFlexExpander("", reflect.TypeFor[testFlexTFExpanderToNil](), "", reflect.TypeFor[*testFlexAWSExpander]()),
 			},
 		},
-		{
-			TestName: "top level incompatible non-struct Target",
+		"top level incompatible non-struct Target": {
 			Source: testFlexTFExpanderToString{
 				Field1: types.StringValue("value1"),
 			},
@@ -2671,8 +2540,7 @@ func TestExpandExpander(t *testing.T) {
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
-		{
-			TestName: "single list Source and single struct Target",
+		"single list Source and single struct Target": {
 			Source: testFlexTFExpanderListNestedObject{
 				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFFlexer{
 					{
@@ -2697,8 +2565,7 @@ func TestExpandExpander(t *testing.T) {
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
-		{
-			TestName: "single set Source and single struct Target",
+		"single set Source and single struct Target": {
 			Source: testFlexTFExpanderSetNestedObject{
 				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFFlexer{
 					{
@@ -2723,8 +2590,7 @@ func TestExpandExpander(t *testing.T) {
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
-		{
-			TestName: "single list Source and single *struct Target",
+		"single list Source and single *struct Target": {
 			Source: testFlexTFExpanderListNestedObject{
 				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFFlexer{
 					{
@@ -2749,8 +2615,7 @@ func TestExpandExpander(t *testing.T) {
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
-		{
-			TestName: "single set Source and single *struct Target",
+		"single set Source and single *struct Target": {
 			Source: testFlexTFExpanderSetNestedObject{
 				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFFlexer{
 					{
@@ -2775,8 +2640,7 @@ func TestExpandExpander(t *testing.T) {
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
-		{
-			TestName: "empty list Source and empty struct Target",
+		"empty list Source and empty struct Target": {
 			Source: testFlexTFExpanderListNestedObject{
 				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFFlexer{}),
 			},
@@ -2792,8 +2656,7 @@ func TestExpandExpander(t *testing.T) {
 				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFFlexer]](), 0, "Field1", reflect.TypeFor[[]testFlexAWSExpander]()),
 			},
 		},
-		{
-			TestName: "non-empty list Source and non-empty struct Target",
+		"non-empty list Source and non-empty struct Target": {
 			Source: testFlexTFExpanderListNestedObject{
 				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFFlexer{
 					{
@@ -2831,8 +2694,7 @@ func TestExpandExpander(t *testing.T) {
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
-		{
-			TestName: "empty list Source and empty *struct Target",
+		"empty list Source and empty *struct Target": {
 			Source: testFlexTFExpanderListNestedObject{
 				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFFlexer{}),
 			},
@@ -2848,8 +2710,7 @@ func TestExpandExpander(t *testing.T) {
 				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFFlexer]](), 0, "Field1", reflect.TypeFor[[]*testFlexAWSExpander]()),
 			},
 		},
-		{
-			TestName: "non-empty list Source and non-empty *struct Target",
+		"non-empty list Source and non-empty *struct Target": {
 			Source: testFlexTFExpanderListNestedObject{
 				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFFlexer{
 					{
@@ -2887,8 +2748,7 @@ func TestExpandExpander(t *testing.T) {
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
-		{
-			TestName: "empty set Source and empty struct Target",
+		"empty set Source and empty struct Target": {
 			Source: testFlexTFExpanderSetNestedObject{
 				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFFlexer{}),
 			},
@@ -2904,8 +2764,7 @@ func TestExpandExpander(t *testing.T) {
 				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFFlexer]](), 0, "Field1", reflect.TypeFor[[]testFlexAWSExpander]()),
 			},
 		},
-		{
-			TestName: "non-empty set Source and non-empty struct Target",
+		"non-empty set Source and non-empty struct Target": {
 			Source: testFlexTFExpanderSetNestedObject{
 				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFFlexer{
 					{
@@ -2943,8 +2802,7 @@ func TestExpandExpander(t *testing.T) {
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
-		{
-			TestName: "empty set Source and empty *struct Target",
+		"empty set Source and empty *struct Target": {
 			Source: testFlexTFExpanderSetNestedObject{
 				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFFlexer{}),
 			},
@@ -2960,8 +2818,7 @@ func TestExpandExpander(t *testing.T) {
 				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFFlexer]](), 0, "Field1", reflect.TypeFor[[]*testFlexAWSExpander]()),
 			},
 		},
-		{
-			TestName: "non-empty set Source and non-empty *struct Target",
+		"non-empty set Source and non-empty *struct Target": {
 			Source: testFlexTFExpanderSetNestedObject{
 				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFFlexer{
 					{
@@ -2999,8 +2856,7 @@ func TestExpandExpander(t *testing.T) {
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
-		{
-			TestName: "object value Source and struct Target",
+		"object value Source and struct Target": {
 			Source: testFlexTFExpanderObjectValue{
 				Field1: fwtypes.NewObjectValueOfMust(ctx, &testFlexTFFlexer{
 					Field1: types.StringValue("value1"),
@@ -3023,8 +2879,7 @@ func TestExpandExpander(t *testing.T) {
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
-		{
-			TestName: "object value Source and *struct Target",
+		"object value Source and *struct Target": {
 			Source: testFlexTFExpanderObjectValue{
 				Field1: fwtypes.NewObjectValueOfMust(ctx, &testFlexTFFlexer{
 					Field1: types.StringValue("value1"),
@@ -3059,8 +2914,7 @@ func TestExpandInterfaceTypedExpander(t *testing.T) {
 	var targetInterface testFlexAWSInterfaceInterface
 
 	testCases := autoFlexTestCases{
-		{
-			TestName: "top level",
+		"top level": {
 			Source: testFlexTFInterfaceTypedExpander{
 				Field1: types.StringValue("value1"),
 			},
@@ -3077,8 +2931,7 @@ func TestExpandInterfaceTypedExpander(t *testing.T) {
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
-		{
-			TestName: "top level return value does not implement target interface",
+		"top level return value does not implement target interface": {
 			Source: testFlexTFInterfaceIncompatibleTypedExpander{
 				Field1: types.StringValue("value1"),
 			},
@@ -3096,8 +2949,7 @@ func TestExpandInterfaceTypedExpander(t *testing.T) {
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
-		{
-			TestName: "single list Source and single interface Target",
+		"single list Source and single interface Target": {
 			Source: testFlexTFListNestedObject[testFlexTFInterfaceTypedExpander]{
 				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceTypedExpander{
 					{
@@ -3122,8 +2974,7 @@ func TestExpandInterfaceTypedExpander(t *testing.T) {
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()),                // TODO: fix path
 			},
 		},
-		{
-			TestName: "single list non-Expander Source and single interface Target",
+		"single list non-Expander Source and single interface Target": {
 			Source: testFlexTFListNestedObject[TestFlexTF01]{
 				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []TestFlexTF01{
 					{
@@ -3153,8 +3004,7 @@ func TestExpandInterfaceTypedExpander(t *testing.T) {
 				},
 			},
 		},
-		{
-			TestName: "single set Source and single interface Target",
+		"single set Source and single interface Target": {
 			Source: testFlexTFSetNestedObject[testFlexTFInterfaceTypedExpander]{
 				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceTypedExpander{
 					{
@@ -3179,8 +3029,7 @@ func TestExpandInterfaceTypedExpander(t *testing.T) {
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()),                // TODO: fix path
 			},
 		},
-		{
-			TestName: "empty list Source and empty interface Target",
+		"empty list Source and empty interface Target": {
 			Source: testFlexTFListNestedObject[testFlexTFInterfaceTypedExpander]{
 				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceTypedExpander{}),
 			},
@@ -3196,8 +3045,7 @@ func TestExpandInterfaceTypedExpander(t *testing.T) {
 				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFInterfaceTypedExpander]](), 0, "Field1", reflect.TypeFor[[]testFlexAWSInterfaceInterface]()),
 			},
 		},
-		{
-			TestName: "non-empty list Source and non-empty interface Target",
+		"non-empty list Source and non-empty interface Target": {
 			Source: testFlexTFListNestedObject[testFlexTFInterfaceTypedExpander]{
 				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceTypedExpander{
 					{
@@ -3235,8 +3083,7 @@ func TestExpandInterfaceTypedExpander(t *testing.T) {
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()),                   // TODO: fix path
 			},
 		},
-		{
-			TestName: "empty set Source and empty interface Target",
+		"empty set Source and empty interface Target": {
 			Source: testFlexTFSetNestedObject[testFlexTFInterfaceTypedExpander]{
 				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceTypedExpander{}),
 			},
@@ -3252,8 +3099,7 @@ func TestExpandInterfaceTypedExpander(t *testing.T) {
 				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFInterfaceTypedExpander]](), 0, "Field1", reflect.TypeFor[[]testFlexAWSInterfaceInterface]()),
 			},
 		},
-		{
-			TestName: "non-empty set Source and non-empty interface Target",
+		"non-empty set Source and non-empty interface Target": {
 			Source: testFlexTFSetNestedObject[testFlexTFInterfaceTypedExpander]{
 				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceTypedExpander{
 					{
@@ -3291,8 +3137,7 @@ func TestExpandInterfaceTypedExpander(t *testing.T) {
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
-		{
-			TestName: "object value Source and struct Target",
+		"object value Source and struct Target": {
 			Source: testFlexTFObjectValue[testFlexTFInterfaceTypedExpander]{
 				Field1: fwtypes.NewObjectValueOfMust(ctx, &testFlexTFInterfaceTypedExpander{
 					Field1: types.StringValue("value1"),
@@ -3325,8 +3170,7 @@ func TestExpandTypedExpander(t *testing.T) {
 	ctx := context.Background()
 
 	testCases := autoFlexTestCases{
-		{
-			TestName: "top level struct Target",
+		"top level struct Target": {
 			Source: testFlexTFTypedExpander{
 				Field1: types.StringValue("value1"),
 			},
@@ -3343,8 +3187,7 @@ func TestExpandTypedExpander(t *testing.T) {
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
-		{
-			TestName: "top level incompatible struct Target",
+		"top level incompatible struct Target": {
 			Source: testFlexTFTypedExpander{
 				Field1: types.StringValue("value1"),
 			},
@@ -3362,8 +3205,7 @@ func TestExpandTypedExpander(t *testing.T) {
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
-		{
-			TestName: "top level expands to nil",
+		"top level expands to nil": {
 			Source: testFlexTFTypedExpanderToNil{
 				Field1: types.StringValue("value1"),
 			},
@@ -3378,8 +3220,7 @@ func TestExpandTypedExpander(t *testing.T) {
 				infoSourceImplementsFlexTypedExpander("", reflect.TypeFor[testFlexTFTypedExpanderToNil](), "", reflect.TypeFor[*testFlexAWSExpander]()),
 			},
 		},
-		{
-			TestName: "single list Source and single struct Target",
+		"single list Source and single struct Target": {
 			Source: testFlexTFTypedExpanderListNestedObject{
 				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFTypedExpander{
 					{
@@ -3404,8 +3245,7 @@ func TestExpandTypedExpander(t *testing.T) {
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
-		{
-			TestName: "single set Source and single struct Target",
+		"single set Source and single struct Target": {
 			Source: testFlexTFSetNestedObject[testFlexTFTypedExpander]{
 				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFTypedExpander{
 					{
@@ -3430,8 +3270,7 @@ func TestExpandTypedExpander(t *testing.T) {
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
-		{
-			TestName: "single list Source and single *struct Target",
+		"single list Source and single *struct Target": {
 			Source: testFlexTFTypedExpanderListNestedObject{
 				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFTypedExpander{
 					{
@@ -3456,8 +3295,7 @@ func TestExpandTypedExpander(t *testing.T) {
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
-		{
-			TestName: "single set Source and single *struct Target",
+		"single set Source and single *struct Target": {
 			Source: testFlexTFTypedExpanderSetNestedObject{
 				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFTypedExpander{
 					{
@@ -3482,8 +3320,7 @@ func TestExpandTypedExpander(t *testing.T) {
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
-		{
-			TestName: "empty list Source and empty struct Target",
+		"empty list Source and empty struct Target": {
 			Source: testFlexTFTypedExpanderListNestedObject{
 				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFTypedExpander{}),
 			},
@@ -3499,8 +3336,7 @@ func TestExpandTypedExpander(t *testing.T) {
 				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFTypedExpander]](), 0, "Field1", reflect.TypeFor[[]testFlexAWSExpander]()),
 			},
 		},
-		{
-			TestName: "non-empty list Source and non-empty struct Target",
+		"non-empty list Source and non-empty struct Target": {
 			Source: testFlexTFTypedExpanderListNestedObject{
 				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFTypedExpander{
 					{
@@ -3538,8 +3374,7 @@ func TestExpandTypedExpander(t *testing.T) {
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
-		{
-			TestName: "empty list Source and empty *struct Target",
+		"empty list Source and empty *struct Target": {
 			Source: testFlexTFTypedExpanderListNestedObject{
 				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFTypedExpander{}),
 			},
@@ -3555,8 +3390,7 @@ func TestExpandTypedExpander(t *testing.T) {
 				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFTypedExpander]](), 0, "Field1", reflect.TypeFor[[]*testFlexAWSExpander]()),
 			},
 		},
-		{
-			TestName: "non-empty list Source and non-empty *struct Target",
+		"non-empty list Source and non-empty *struct Target": {
 			Source: testFlexTFTypedExpanderListNestedObject{
 				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFTypedExpander{
 					{
@@ -3594,8 +3428,7 @@ func TestExpandTypedExpander(t *testing.T) {
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
-		{
-			TestName: "empty set Source and empty struct Target",
+		"empty set Source and empty struct Target": {
 			Source: testFlexTFTypedExpanderSetNestedObject{
 				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFTypedExpander{}),
 			},
@@ -3611,8 +3444,7 @@ func TestExpandTypedExpander(t *testing.T) {
 				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFTypedExpander]](), 0, "Field1", reflect.TypeFor[[]testFlexAWSExpander]()),
 			},
 		},
-		{
-			TestName: "non-empty set Source and non-empty struct Target",
+		"non-empty set Source and non-empty struct Target": {
 			Source: testFlexTFTypedExpanderSetNestedObject{
 				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFTypedExpander{
 					{
@@ -3650,8 +3482,7 @@ func TestExpandTypedExpander(t *testing.T) {
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
-		{
-			TestName: "empty set Source and empty *struct Target",
+		"empty set Source and empty *struct Target": {
 			Source: testFlexTFTypedExpanderSetNestedObject{
 				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFTypedExpander{}),
 			},
@@ -3667,8 +3498,7 @@ func TestExpandTypedExpander(t *testing.T) {
 				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFTypedExpander]](), 0, "Field1", reflect.TypeFor[[]*testFlexAWSExpander]()),
 			},
 		},
-		{
-			TestName: "non-empty set Source and non-empty *struct Target",
+		"non-empty set Source and non-empty *struct Target": {
 			Source: testFlexTFTypedExpanderSetNestedObject{
 				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFTypedExpander{
 					{
@@ -3706,8 +3536,7 @@ func TestExpandTypedExpander(t *testing.T) {
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
-		{
-			TestName: "object value Source and struct Target",
+		"object value Source and struct Target": {
 			Source: testFlexTFTypedExpanderObjectValue{
 				Field1: fwtypes.NewObjectValueOfMust(ctx, &testFlexTFTypedExpander{
 					Field1: types.StringValue("value1"),
@@ -3730,8 +3559,7 @@ func TestExpandTypedExpander(t *testing.T) {
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
-		{
-			TestName: "object value Source and *struct Target",
+		"object value Source and *struct Target": {
 			Source: testFlexTFTypedExpanderObjectValue{
 				Field1: fwtypes.NewObjectValueOfMust(ctx, &testFlexTFTypedExpander{
 					Field1: types.StringValue("value1"),
@@ -3759,9 +3587,9 @@ func TestExpandTypedExpander(t *testing.T) {
 }
 
 type autoFlexTestCase struct {
-	ContextFn        func(context.Context) context.Context
-	Options          []AutoFlexOptionsFunc
-	TestName         string
+	ContextFn func(context.Context) context.Context
+	Options   []AutoFlexOptionsFunc
+	// TestName         string
 	Source           any
 	Target           any
 	expectedDiags    diag.Diagnostics
@@ -3770,14 +3598,14 @@ type autoFlexTestCase struct {
 	WantDiff         bool
 }
 
-type autoFlexTestCases []autoFlexTestCase
+type autoFlexTestCases map[string]autoFlexTestCase
 
 func runAutoExpandTestCases(t *testing.T, testCases autoFlexTestCases) {
 	t.Helper()
 
-	for _, testCase := range testCases {
+	for testName, testCase := range testCases {
 		testCase := testCase
-		t.Run(testCase.TestName, func(t *testing.T) {
+		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
 			ctx := context.Background()
