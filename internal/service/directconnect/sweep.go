@@ -358,7 +358,7 @@ func sweepGateways(region string) error {
 				continue
 			}
 
-			r := ResourceGateway()
+			r := resourceGateway()
 			d := r.Data(nil)
 			d.SetId(directConnectGatewayID)
 

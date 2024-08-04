@@ -9,10 +9,12 @@ var (
 	ResourceConnection             = resourceConnection
 	ResourceConnectionAssociation  = resourceConnectionAssociation
 	ResourceConnectionConfirmation = resourceConnectionConfirmation
+	ResourceGateway                = resourceGateway
 
 	FindBGPPeerByThreePartKey    = findBGPPeerByThreePartKey
 	FindConnectionByID           = findConnectionByID
 	FindConnectionLAGAssociation = findConnectionLAGAssociation
+	FindGatewayByID              = findGatewayByID
 	FindVirtualInterfaceByID     = findVirtualInterfaceByID
 	ValidConnectionBandWidth     = validConnectionBandWidth
 )

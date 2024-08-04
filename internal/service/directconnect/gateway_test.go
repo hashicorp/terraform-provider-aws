@@ -166,10 +166,6 @@ func testAccCheckGatewayExists(ctx context.Context, name string, v *awstypes.Dir
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectClient(ctx)
 
 		output, err := tfdirectconnect.FindGatewayByID(ctx, conn, rs.Primary.ID)

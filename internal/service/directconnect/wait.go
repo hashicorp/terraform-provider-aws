@@ -22,44 +22,6 @@ const (
 	lagDeletedTimeout              = 10 * time.Minute
 )
 
-func waitGatewayCreated(ctx context.Context, conn *directconnect.Client, id string, timeout time.Duration) (*awstypes.DirectConnectGateway, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.DirectConnectGatewayStatePending),
-		Target:  enum.Slice(awstypes.DirectConnectGatewayStateAvailable),
-		Refresh: statusGatewayState(ctx, conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.DirectConnectGateway); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateChangeError)))
-
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitGatewayDeleted(ctx context.Context, conn *directconnect.Client, id string, timeout time.Duration) (*awstypes.DirectConnectGateway, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.DirectConnectGatewayStatePending, awstypes.DirectConnectGatewayStateAvailable, awstypes.DirectConnectGatewayStateDeleting),
-		Target:  []string{},
-		Refresh: statusGatewayState(ctx, conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.DirectConnectGateway); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateChangeError)))
-
-		return output, err
-	}
-
-	return nil, err
-}
-
 func waitGatewayAssociationCreated(ctx context.Context, conn *directconnect.Client, id string, timeout time.Duration) (*awstypes.DirectConnectGatewayAssociation, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DirectConnectGatewayAssociationStateAssociating),

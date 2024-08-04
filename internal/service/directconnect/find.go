@@ -14,33 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindGatewayByID(ctx context.Context, conn *directconnect.Client, id string) (*awstypes.DirectConnectGateway, error) {
-	input := &directconnect.DescribeDirectConnectGatewaysInput{
-		DirectConnectGatewayId: aws.String(id),
-	}
-
-	output, err := conn.DescribeDirectConnectGateways(ctx, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	gateway, err := tfresource.AssertSingleValueResult(output.DirectConnectGateways)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if gateway.DirectConnectGatewayState == awstypes.DirectConnectGatewayStateDeleted {
-		return nil, &retry.NotFoundError{
-			Message:     string(gateway.DirectConnectGatewayState),
-			LastRequest: input,
-		}
-	}
-
-	return gateway, nil
-}
-
 func FindGatewayAssociationByID(ctx context.Context, conn *directconnect.Client, id string) (*awstypes.DirectConnectGatewayAssociation, error) {
 	input := &directconnect.DescribeDirectConnectGatewayAssociationsInput{
 		AssociationId: aws.String(id),

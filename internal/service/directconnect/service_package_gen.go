@@ -74,8 +74,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Connection Confirmation",
 		},
 		{
-			Factory:  ResourceGateway,
+			Factory:  resourceGateway,
 			TypeName: "aws_dx_gateway",
+			Name:     "Gateway",
 		},
 		{
 			Factory:  ResourceGatewayAssociation,
