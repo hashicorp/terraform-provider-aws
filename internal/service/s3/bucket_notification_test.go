@@ -274,11 +274,12 @@ func TestAccS3BucketNotification_directoryBucket(t *testing.T) {
 func TestAccS3BucketNotification_preventCreateBucketNotificationWhenExists(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v s3.GetBucketNotificationConfigurationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_s3_bucket_notification.test"
 
-	initialConfig := testAccBucketNotificationConfig_tryToCreateBucketNotification(testAccBucketConfig_basic(rName))
-	testConfig := testAccBucketNotificationConfig_tryToCreateBucketNotification(initialConfig)
+	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_notification.test1"
+
+	initialConfig := acctest.ConfigCompose(testAccBucketConfig_basic(bucketName), testAccBucketNotificationConfig_basic("test1"))
+	testConfig := acctest.ConfigCompose(initialConfig, testAccBucketNotificationConfig_basic("test2"))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -799,12 +800,12 @@ resource "aws_s3_bucket_notification" "test" {
 `)
 }
 
-func testAccBucketNotificationConfig_tryToCreateBucketNotification(base string) string {
-	return acctest.ConfigCompose(base, `
-resource "aws_s3_bucket_notification" "test1" {
+func testAccBucketNotificationConfig_basic(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket_notification" "%[1]q" {
   bucket = aws_s3_bucket.test.id
 
   eventbridge = true
 }
-`)
+`, rName)
 }
