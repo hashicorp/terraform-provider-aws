@@ -14,40 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindGatewayAssociationProposalByID(ctx context.Context, conn *directconnect.Client, id string) (*awstypes.DirectConnectGatewayAssociationProposal, error) {
-	input := &directconnect.DescribeDirectConnectGatewayAssociationProposalsInput{
-		ProposalId: aws.String(id),
-	}
-
-	output, err := conn.DescribeDirectConnectGatewayAssociationProposals(ctx, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	proposal, err := tfresource.AssertSingleValueResult(output.DirectConnectGatewayAssociationProposals)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if proposal.ProposalState == awstypes.DirectConnectGatewayAssociationProposalStateDeleted {
-		return nil, &retry.NotFoundError{
-			Message:     string(proposal.ProposalState),
-			LastRequest: input,
-		}
-	}
-
-	if proposal.AssociatedGateway == nil {
-		return nil, &retry.NotFoundError{
-			Message:     "Empty AssociatedGateway",
-			LastRequest: input,
-		}
-	}
-
-	return proposal, nil
-}
-
 func FindHostedConnectionByID(ctx context.Context, conn *directconnect.Client, id string) (*awstypes.Connection, error) {
 	input := &directconnect.DescribeHostedConnectionsInput{
 		ConnectionId: aws.String(id),

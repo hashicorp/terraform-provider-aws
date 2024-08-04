@@ -295,6 +295,28 @@ func findGatewayAssociationByID(ctx context.Context, conn *directconnect.Client,
 		AssociationId: aws.String(id),
 	}
 
+	return findNonDisassociatedGatewayAssociation(ctx, conn, input, tfslices.PredicateTrue[*awstypes.DirectConnectGatewayAssociation]())
+}
+
+func findGatewayAssociationByGatewayIDAndAssociatedGatewayID(ctx context.Context, conn *directconnect.Client, directConnectGatewayID, associatedGatewayID string) (*awstypes.DirectConnectGatewayAssociation, error) {
+	input := &directconnect.DescribeDirectConnectGatewayAssociationsInput{
+		AssociatedGatewayId:    aws.String(associatedGatewayID),
+		DirectConnectGatewayId: aws.String(directConnectGatewayID),
+	}
+
+	return findNonDisassociatedGatewayAssociation(ctx, conn, input, tfslices.PredicateTrue[*awstypes.DirectConnectGatewayAssociation]())
+}
+
+func findGatewayAssociationByGatewayIDAndVirtualGatewayID(ctx context.Context, conn *directconnect.Client, directConnectGatewayID, virtualGatewayID string) (*awstypes.DirectConnectGatewayAssociation, error) {
+	input := &directconnect.DescribeDirectConnectGatewayAssociationsInput{
+		DirectConnectGatewayId: aws.String(directConnectGatewayID),
+		VirtualGatewayId:       aws.String(virtualGatewayID),
+	}
+
+	return findNonDisassociatedGatewayAssociation(ctx, conn, input, tfslices.PredicateTrue[*awstypes.DirectConnectGatewayAssociation]())
+}
+
+func findNonDisassociatedGatewayAssociation(ctx context.Context, conn *directconnect.Client, input *directconnect.DescribeDirectConnectGatewayAssociationsInput, filter tfslices.Predicate[*awstypes.DirectConnectGatewayAssociation]) (*awstypes.DirectConnectGatewayAssociation, error) {
 	output, err := findGatewayAssociation(ctx, conn, input, tfslices.PredicateTrue[*awstypes.DirectConnectGatewayAssociation]())
 
 	if err != nil {
@@ -309,24 +331,6 @@ func findGatewayAssociationByID(ctx context.Context, conn *directconnect.Client,
 	}
 
 	return output, nil
-}
-
-func findGatewayAssociationByGatewayIDAndAssociatedGatewayID(ctx context.Context, conn *directconnect.Client, directConnectGatewayID, associatedGatewayID string) (*awstypes.DirectConnectGatewayAssociation, error) {
-	input := &directconnect.DescribeDirectConnectGatewayAssociationsInput{
-		AssociatedGatewayId:    aws.String(associatedGatewayID),
-		DirectConnectGatewayId: aws.String(directConnectGatewayID),
-	}
-
-	return findGatewayAssociation(ctx, conn, input, tfslices.PredicateTrue[*awstypes.DirectConnectGatewayAssociation]())
-}
-
-func findGatewayAssociationByGatewayIDAndVirtualGatewayID(ctx context.Context, conn *directconnect.Client, directConnectGatewayID, virtualGatewayID string) (*awstypes.DirectConnectGatewayAssociation, error) {
-	input := &directconnect.DescribeDirectConnectGatewayAssociationsInput{
-		DirectConnectGatewayId: aws.String(directConnectGatewayID),
-		VirtualGatewayId:       aws.String(virtualGatewayID),
-	}
-
-	return findGatewayAssociation(ctx, conn, input, tfslices.PredicateTrue[*awstypes.DirectConnectGatewayAssociation]())
 }
 
 func findGatewayAssociation(ctx context.Context, conn *directconnect.Client, input *directconnect.DescribeDirectConnectGatewayAssociationsInput, filter tfslices.Predicate[*awstypes.DirectConnectGatewayAssociation]) (*awstypes.DirectConnectGatewayAssociation, error) {

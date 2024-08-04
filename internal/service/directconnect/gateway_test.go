@@ -159,11 +159,11 @@ func testAccCheckGatewayDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckGatewayExists(ctx context.Context, name string, v *awstypes.DirectConnectGateway) resource.TestCheckFunc {
+func testAccCheckGatewayExists(ctx context.Context, n string, v *awstypes.DirectConnectGateway) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectClient(ctx)

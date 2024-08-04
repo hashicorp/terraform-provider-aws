@@ -85,8 +85,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Gateway Association",
 		},
 		{
-			Factory:  ResourceGatewayAssociationProposal,
+			Factory:  resourceGatewayAssociationProposal,
 			TypeName: "aws_dx_gateway_association_proposal",
+			Name:     "Gateway Association Proposal",
 		},
 		{
 			Factory:  ResourceHostedConnection,

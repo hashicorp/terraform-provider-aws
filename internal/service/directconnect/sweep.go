@@ -139,7 +139,7 @@ func sweepGatewayAssociationProposals(region string) error {
 				continue
 			}
 
-			r := ResourceGatewayAssociationProposal()
+			r := resourceGatewayAssociationProposal()
 			d := r.Data(nil)
 			d.SetId(proposalID)
 

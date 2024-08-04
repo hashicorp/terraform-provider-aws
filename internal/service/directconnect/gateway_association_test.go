@@ -389,15 +389,11 @@ func testAccCheckGatewayAssociationDestroy(ctx context.Context) resource.TestChe
 	}
 }
 
-func testAccCheckGatewayAssociationExists(ctx context.Context, name string, ga *awstypes.DirectConnectGatewayAssociation, gap *awstypes.DirectConnectGatewayAssociationProposal) resource.TestCheckFunc {
+func testAccCheckGatewayAssociationExists(ctx context.Context, n string, v *awstypes.DirectConnectGatewayAssociation, gap *awstypes.DirectConnectGatewayAssociationProposal) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
-
-		if rs.Primary.Attributes["dx_gateway_association_id"] == "" {
-			return fmt.Errorf("No Direct Connect Gateway Association ID is set")
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectClient(ctx)
@@ -418,7 +414,7 @@ func testAccCheckGatewayAssociationExists(ctx context.Context, name string, ga *
 			*gap = *output
 		}
 
-		*ga = *output
+		*v = *output
 
 		return nil
 	}
@@ -440,10 +436,6 @@ func testAccCheckGatewayAssociationStateUpgradeV0(ctx context.Context, name stri
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
 		}
 
 		rawState := map[string]interface{}{

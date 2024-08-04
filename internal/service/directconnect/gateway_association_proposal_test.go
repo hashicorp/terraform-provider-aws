@@ -258,15 +258,11 @@ func testAccCheckGatewayAssociationProposalDestroy(ctx context.Context) resource
 	}
 }
 
-func testAccCheckGatewayAssociationProposalExists(ctx context.Context, resourceName string, gatewayAssociationProposal *awstypes.DirectConnectGatewayAssociationProposal) resource.TestCheckFunc {
+func testAccCheckGatewayAssociationProposalExists(ctx context.Context, n string, v *awstypes.DirectConnectGatewayAssociationProposal) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectClient(ctx)
@@ -277,7 +273,7 @@ func testAccCheckGatewayAssociationProposalExists(ctx context.Context, resourceN
 			return err
 		}
 
-		*gatewayAssociationProposal = *output
+		*v = *output
 
 		return nil
 	}

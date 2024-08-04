@@ -14,16 +14,18 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_dx_gateway_association_proposal")
-func ResourceGatewayAssociationProposal() *schema.Resource {
+// @SDKResource("aws_dx_gateway_association_proposal", name="Gateway Association Proposal")
+func resourceGatewayAssociationProposal() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGatewayAssociationProposalCreate,
 		ReadWithoutTimeout:   resourceGatewayAssociationProposalRead,
@@ -41,7 +43,7 @@ func ResourceGatewayAssociationProposal() *schema.Resource {
 
 				log.Printf("[DEBUG] CustomizeDiff for Direct Connect Gateway Association Proposal (%s) allowed_prefixes", d.Id())
 
-				output, err := FindGatewayAssociationProposalByID(ctx, conn, d.Id())
+				output, err := findGatewayAssociationProposalByID(ctx, conn, d.Id())
 
 				if tfresource.NotFound(err) {
 					// Proposal may be end-of-life and removed by AWS.
@@ -64,29 +66,24 @@ func ResourceGatewayAssociationProposal() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-
 			"associated_gateway_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-
 			"associated_gateway_owner_account_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"associated_gateway_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"dx_gateway_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-
 			"dx_gateway_owner_account_id": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -113,7 +110,6 @@ func resourceGatewayAssociationProposalCreate(ctx context.Context, d *schema.Res
 		input.AddAllowedPrefixesToDirectConnectGateway = expandRouteFilterPrefixes(v.(*schema.Set).List())
 	}
 
-	log.Printf("[DEBUG] Creating Direct Connect Gateway Association Proposal: %#v", input)
 	output, err := conn.CreateDirectConnectGatewayAssociationProposal(ctx, input)
 
 	if err != nil {
@@ -130,7 +126,7 @@ func resourceGatewayAssociationProposalRead(ctx context.Context, d *schema.Resou
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
 	// First attempt to find by proposal ID.
-	output, err := FindGatewayAssociationProposalByID(ctx, conn, d.Id())
+	output, err := findGatewayAssociationProposalByID(ctx, conn, d.Id())
 
 	if tfresource.NotFound(err) {
 		// Attempt to find an existing association.
@@ -200,6 +196,91 @@ func resourceGatewayAssociationProposalDelete(ctx context.Context, d *schema.Res
 	return diags
 }
 
+func resourceGatewayAssociationProposalImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	switch parts := strings.Split(strings.ToLower(d.Id()), "/"); len(parts) {
+	case 1:
+		break
+
+	case 3:
+		proposalID := parts[0]
+		directConnectGatewayID := parts[1]
+		associatedGatewayID := parts[2]
+
+		if proposalID == "" || directConnectGatewayID == "" || associatedGatewayID == "" {
+			return nil, fmt.Errorf("Incorrect resource ID format: %q. PROPOSALID, DXGATEWAYID and ASSOCIATEDGATEWAYID must not be empty strings", d.Id())
+		}
+
+		// Use pseudo-proposal ID and actual DirectConnectGatewayId and AssociatedGatewayId.
+		d.SetId(proposalID)
+		d.Set("associated_gateway_id", associatedGatewayID)
+		d.Set("dx_gateway_id", directConnectGatewayID)
+
+	default:
+		return nil, fmt.Errorf("Incorrect resource ID format: %q. Expected PROPOSALID or PROPOSALID/DXGATEWAYID/ASSOCIATEDGATEWAYID", d.Id())
+	}
+
+	return []*schema.ResourceData{d}, nil
+}
+
+func findGatewayAssociationProposalByID(ctx context.Context, conn *directconnect.Client, id string) (*awstypes.DirectConnectGatewayAssociationProposal, error) {
+	input := &directconnect.DescribeDirectConnectGatewayAssociationProposalsInput{
+		ProposalId: aws.String(id),
+	}
+
+	output, err := findGatewayAssociationProposal(ctx, conn, input, tfslices.PredicateTrue[*awstypes.DirectConnectGatewayAssociationProposal]())
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.ProposalState; state == awstypes.DirectConnectGatewayAssociationProposalStateDeleted {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: input,
+		}
+	}
+
+	if output.AssociatedGateway == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func findGatewayAssociationProposal(ctx context.Context, conn *directconnect.Client, input *directconnect.DescribeDirectConnectGatewayAssociationProposalsInput, filter tfslices.Predicate[*awstypes.DirectConnectGatewayAssociationProposal]) (*awstypes.DirectConnectGatewayAssociationProposal, error) {
+	output, err := findGatewayAssociationProposals(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findGatewayAssociationProposals(ctx context.Context, conn *directconnect.Client, input *directconnect.DescribeDirectConnectGatewayAssociationProposalsInput, filter tfslices.Predicate[*awstypes.DirectConnectGatewayAssociationProposal]) ([]awstypes.DirectConnectGatewayAssociationProposal, error) {
+	var output []awstypes.DirectConnectGatewayAssociationProposal
+
+	err := describeDirectConnectGatewayAssociationProposalsPages(ctx, conn, input, func(page *directconnect.DescribeDirectConnectGatewayAssociationProposalsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.DirectConnectGatewayAssociationProposals {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
 func expandRouteFilterPrefixes(tfList []interface{}) []awstypes.RouteFilterPrefix {
 	if len(tfList) == 0 {
 		return nil
@@ -209,7 +290,6 @@ func expandRouteFilterPrefixes(tfList []interface{}) []awstypes.RouteFilterPrefi
 
 	for _, tfStringRaw := range tfList {
 		tfString, ok := tfStringRaw.(string)
-
 		if !ok {
 			continue
 		}
@@ -236,30 +316,4 @@ func flattenRouteFilterPrefixes(apiObjects []awstypes.RouteFilterPrefix) []inter
 	}
 
 	return tfList
-}
-
-func resourceGatewayAssociationProposalImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	switch parts := strings.Split(strings.ToLower(d.Id()), "/"); len(parts) {
-	case 1:
-		break
-
-	case 3:
-		proposalID := parts[0]
-		directConnectGatewayID := parts[1]
-		associatedGatewayID := parts[2]
-
-		if proposalID == "" || directConnectGatewayID == "" || associatedGatewayID == "" {
-			return nil, fmt.Errorf("Incorrect resource ID format: %q. PROPOSALID, DXGATEWAYID and ASSOCIATEDGATEWAYID must not be empty strings", d.Id())
-		}
-
-		// Use pseudo-proposal ID and actual DirectConnectGatewayId and AssociatedGatewayId.
-		d.SetId(proposalID)
-		d.Set("associated_gateway_id", associatedGatewayID)
-		d.Set("dx_gateway_id", directConnectGatewayID)
-
-	default:
-		return nil, fmt.Errorf("Incorrect resource ID format: %q. Expected PROPOSALID or PROPOSALID/DXGATEWAYID/ASSOCIATEDGATEWAYID", d.Id())
-	}
-
-	return []*schema.ResourceData{d}, nil
 }
