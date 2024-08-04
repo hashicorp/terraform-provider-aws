@@ -69,8 +69,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Connection LAG Association",
 		},
 		{
-			Factory:  ResourceConnectionConfirmation,
+			Factory:  resourceConnectionConfirmation,
 			TypeName: "aws_dx_connection_confirmation",
+			Name:     "Connection Confirmation",
 		},
 		{
 			Factory:  ResourceGateway,

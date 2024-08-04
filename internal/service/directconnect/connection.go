@@ -435,26 +435,6 @@ func statusConnection(ctx context.Context, conn *directconnect.Client, id string
 	}
 }
 
-func waitConnectionConfirmed(ctx context.Context, conn *directconnect.Client, id string) (*awstypes.Connection, error) { //nolint:unparam
-	const (
-		timeout = 10 * time.Minute
-	)
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.ConnectionStatePending, awstypes.ConnectionStateOrdering, awstypes.ConnectionStateRequested),
-		Target:  enum.Slice(awstypes.ConnectionStateAvailable),
-		Refresh: statusConnection(ctx, conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.Connection); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
 func waitConnectionDeleted(ctx context.Context, conn *directconnect.Client, id string) (*awstypes.Connection, error) {
 	const (
 		timeout = 10 * time.Minute
