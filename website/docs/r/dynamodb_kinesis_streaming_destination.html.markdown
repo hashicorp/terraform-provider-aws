@@ -29,8 +29,9 @@ resource "aws_kinesis_stream" "example" {
 }
 
 resource "aws_dynamodb_kinesis_streaming_destination" "example" {
-  stream_arn = aws_kinesis_stream.example.arn
-  table_name = aws_dynamodb_table.example.name
+  stream_arn                               = aws_kinesis_stream.example.arn
+  table_name                               = aws_dynamodb_table.example.name
+  approximate_creation_date_time_precision = "MICROSECOND"
 }
 ```
 
@@ -42,7 +43,10 @@ This resource supports the following arguments:
   
 * `table_name` - (Required) The name of the DynamoDB table. There
   can only be one Kinesis streaming destination for a given DynamoDB table.
-  
+
+* `approximate_creation_date_time_precision` - (Optional) Toggle for the precision of Kinesis data stream timestamp. The
+  values are either MILLISECOND or MICROSECOND. If no value is specified, the precision will be set to MILLISECOND.
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
