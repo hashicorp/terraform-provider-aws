@@ -200,6 +200,7 @@ import (
 	ssmsap_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssmsap"
 	sso_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sso"
 	ssoadmin_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssoadmin"
+	storagegateway_sdkv2 "github.com/aws/aws-sdk-go-v2/service/storagegateway"
 	sts_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sts"
 	swf_sdkv2 "github.com/aws/aws-sdk-go-v2/service/swf"
 	synthetics_sdkv2 "github.com/aws/aws-sdk-go-v2/service/synthetics"
@@ -222,7 +223,6 @@ import (
 	elasticsearchservice_sdkv1 "github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	emr_sdkv1 "github.com/aws/aws-sdk-go/service/emr"
 	gamelift_sdkv1 "github.com/aws/aws-sdk-go/service/gamelift"
-	guardduty_sdkv1 "github.com/aws/aws-sdk-go/service/guardduty"
 	imagebuilder_sdkv1 "github.com/aws/aws-sdk-go/service/imagebuilder"
 	kinesisvideo_sdkv1 "github.com/aws/aws-sdk-go/service/kinesisvideo"
 	lexmodelbuildingservice_sdkv1 "github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
@@ -248,7 +248,6 @@ import (
 	servicecatalog_sdkv1 "github.com/aws/aws-sdk-go/service/servicecatalog"
 	ses_sdkv1 "github.com/aws/aws-sdk-go/service/ses"
 	simpledb_sdkv1 "github.com/aws/aws-sdk-go/service/simpledb"
-	storagegateway_sdkv1 "github.com/aws/aws-sdk-go/service/storagegateway"
 	worklink_sdkv1 "github.com/aws/aws-sdk-go/service/worklink"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -704,10 +703,6 @@ func (c *AWSClient) GreengrassClient(ctx context.Context) *greengrass_sdkv2.Clie
 
 func (c *AWSClient) GroundStationClient(ctx context.Context) *groundstation_sdkv2.Client {
 	return errs.Must(client[*groundstation_sdkv2.Client](ctx, c, names.GroundStation, make(map[string]any)))
-}
-
-func (c *AWSClient) GuardDutyConn(ctx context.Context) *guardduty_sdkv1.GuardDuty {
-	return errs.Must(conn[*guardduty_sdkv1.GuardDuty](ctx, c, names.GuardDuty, make(map[string]any)))
 }
 
 func (c *AWSClient) GuardDutyClient(ctx context.Context) *guardduty_sdkv2.Client {
@@ -1174,8 +1169,8 @@ func (c *AWSClient) SimpleDBConn(ctx context.Context) *simpledb_sdkv1.SimpleDB {
 	return errs.Must(conn[*simpledb_sdkv1.SimpleDB](ctx, c, names.SimpleDB, make(map[string]any)))
 }
 
-func (c *AWSClient) StorageGatewayConn(ctx context.Context) *storagegateway_sdkv1.StorageGateway {
-	return errs.Must(conn[*storagegateway_sdkv1.StorageGateway](ctx, c, names.StorageGateway, make(map[string]any)))
+func (c *AWSClient) StorageGatewayClient(ctx context.Context) *storagegateway_sdkv2.Client {
+	return errs.Must(client[*storagegateway_sdkv2.Client](ctx, c, names.StorageGateway, make(map[string]any)))
 }
 
 func (c *AWSClient) SyntheticsClient(ctx context.Context) *synthetics_sdkv2.Client {

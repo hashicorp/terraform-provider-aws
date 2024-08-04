@@ -1244,6 +1244,99 @@ func TestAccECSTaskDefinition_unknownContainerDefinitions(t *testing.T) {
 	})
 }
 
+// https://github.com/hashicorp/terraform-provider-aws/issues/38543.
+func TestAccECSTaskDefinition_v5590ContainerDefinitionsRegression(t *testing.T) {
+	ctx := acctest.Context(t)
+	var def awstypes.TaskDefinition
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_task_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.ECSServiceID),
+		CheckDestroy: testAccCheckTaskDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.58.0",
+					},
+				},
+				Config: testAccTaskDefinitionConfig_v5590ContainerDefinitionsRegression(rName, "alpine"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "length(@)", acctest.Ct1),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].cpu", acctest.Ct10),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].essential", acctest.CtTrue),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].image", "alpine"),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].memory", "512"),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].name", "first"),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "length([0].portMappings)", acctest.Ct1),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].portMappings[0].containerPort", "80"),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].portMappings[0].hostPort", "80"),
+					acctest.CheckResourceAttrJMESNotExists(resourceName, "container_definitions", "[0].Cpu"),
+					acctest.CheckResourceAttrJMESNotExists(resourceName, "container_definitions", "[0].Essential"),
+					acctest.CheckResourceAttrJMESNotExists(resourceName, "container_definitions", "[0].Image"),
+					acctest.CheckResourceAttrJMESNotExists(resourceName, "container_definitions", "[0].Memory"),
+					acctest.CheckResourceAttrJMESNotExists(resourceName, "container_definitions", "[0].Name"),
+					acctest.CheckResourceAttrJMESNotExists(resourceName, "container_definitions", "[0].PortMappings"),
+				),
+			},
+			// At v5.59.0 and v5.60.0, JSON keys were returned with leading capital letters.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.60.0",
+					},
+				},
+				Config: testAccTaskDefinitionConfig_v5590ContainerDefinitionsRegression(rName, "jenkins"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "length(@)", acctest.Ct1),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].Cpu", acctest.Ct10),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].Essential", acctest.CtTrue),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].Image", "jenkins"),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].Memory", "512"),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].Name", "first"),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "length([0].PortMappings)", acctest.Ct1),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].PortMappings[0].ContainerPort", "80"),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].PortMappings[0].HostPort", "80"),
+					acctest.CheckResourceAttrJMESNotExists(resourceName, "container_definitions", "[0].cpu"),
+					acctest.CheckResourceAttrJMESNotExists(resourceName, "container_definitions", "[0].essential"),
+					acctest.CheckResourceAttrJMESNotExists(resourceName, "container_definitions", "[0].image"),
+					acctest.CheckResourceAttrJMESNotExists(resourceName, "container_definitions", "[0].memory"),
+					acctest.CheckResourceAttrJMESNotExists(resourceName, "container_definitions", "[0].name"),
+					acctest.CheckResourceAttrJMESNotExists(resourceName, "container_definitions", "[0].portMappings"),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccTaskDefinitionConfig_v5590ContainerDefinitionsRegression(rName, "nginx"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "length(@)", acctest.Ct1),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].cpu", acctest.Ct10),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].essential", acctest.CtTrue),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].image", "nginx"),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].memory", "512"),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].name", "first"),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "length([0].portMappings)", acctest.Ct1),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].portMappings[0].containerPort", "80"),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].portMappings[0].hostPort", "80"),
+					acctest.CheckResourceAttrJMESNotExists(resourceName, "container_definitions", "[0].Cpu"),
+					acctest.CheckResourceAttrJMESNotExists(resourceName, "container_definitions", "[0].Essential"),
+					acctest.CheckResourceAttrJMESNotExists(resourceName, "container_definitions", "[0].Image"),
+					acctest.CheckResourceAttrJMESNotExists(resourceName, "container_definitions", "[0].Memory"),
+					acctest.CheckResourceAttrJMESNotExists(resourceName, "container_definitions", "[0].Name"),
+					acctest.CheckResourceAttrJMESNotExists(resourceName, "container_definitions", "[0].PortMappings"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckTaskDefinitionProxyConfiguration(after *awstypes.TaskDefinition, containerName string, proxyType string,
 	ignoredUid string, ignoredGid string, appPorts string, proxyIngressPort string, proxyEgressPort string,
 	egressIgnoredPorts string, egressIgnoredIPs string) resource.TestCheckFunc {
@@ -3144,4 +3237,27 @@ resource "aws_ecs_task_definition" "test" {
   ])
 }
 `, rName)
+}
+
+func testAccTaskDefinitionConfig_v5590ContainerDefinitionsRegression(rName, image string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_task_definition" "test" {
+  family = %[1]q
+  container_definitions = jsonencode([
+    {
+      name      = "first"
+      image     = %[2]q
+      cpu       = 10
+      memory    = 512
+      essential = true
+      portMappings = [
+        {
+          containerPort = 80
+          hostPort      = 80
+        }
+      ]
+    }
+  ])
+}
+`, rName, image)
 }

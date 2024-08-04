@@ -1758,6 +1758,7 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)ECR"
+            - pattern-not-regex: "TemplateCreate"
       - focus-metavariable: $NAME
       - pattern-not: func $NAME($T *testing.T)
     severity: WARNING

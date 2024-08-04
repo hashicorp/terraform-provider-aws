@@ -1212,7 +1212,16 @@ func flattenFSxWinVolumeAuthorizationConfig(config *awstypes.FSxWindowsFileServe
 }
 
 func flattenContainerDefinitions(apiObjects []awstypes.ContainerDefinition) (string, error) {
-	return tfjson.EncodeToString(apiObjects)
+	json, err := tfjson.EncodeToBytes(apiObjects)
+	if err != nil {
+		return "", err
+	}
+
+	// Remove empty fields and convert first character of keys to lowercase.
+	json = tfjson.RemoveEmptyFields(json)
+	json = tfjson.KeyFirstLower(json)
+
+	return string(json), nil
 }
 
 func expandContainerDefinitions(tfString string) ([]awstypes.ContainerDefinition, error) {

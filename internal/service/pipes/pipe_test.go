@@ -785,6 +785,66 @@ func TestAccPipesPipe_targetParameters_inputTemplate(t *testing.T) {
 	})
 }
 
+func TestAccPipesPipe_targetParameters_inputTemplate_preserveUnchanged(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pipe pipes.DescribePipeOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_pipes_pipe.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPipeConfig_targetParameters_filterCriteria_inputTemplate(rName, "test1", "$.first"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.input_template", "$.first"),
+				),
+			},
+			{
+				Config: testAccPipeConfig_targetParameters_filterCriteria_inputTemplate(rName, "test2", "$.first"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.input_template", "$.first"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccPipeConfig_targetParameters_filterCriteria_inputTemplate(rName, "test2", "$.second"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.input_template", "$.second"),
+				),
+			},
+			{
+				Config: testAccPipeConfig_targetParameters_filterCriteria_inputTemplate(rName, "test1", "$.second"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.input_template", "$.second"),
+				),
+			},
+			{
+				Config: testAccPipeConfig_basicSQS(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					resource.TestCheckNoResourceAttr(resourceName, "target_parameters.0.input_template"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccPipesPipe_kinesisSourceAndTarget(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipe pipes.DescribePipeOutput
@@ -2356,6 +2416,37 @@ resource "aws_pipes_pipe" "test" {
   }
 }
 `, rName, template))
+}
+
+func testAccPipeConfig_targetParameters_filterCriteria_inputTemplate(rName, criteria string, template string) string {
+	return acctest.ConfigCompose(
+		testAccPipeConfig_base(rName),
+		testAccPipeConfig_baseSQSSource(rName),
+		testAccPipeConfig_baseSQSTarget(rName),
+		fmt.Sprintf(`
+resource "aws_pipes_pipe" "test" {
+  depends_on = [aws_iam_role_policy.source, aws_iam_role_policy.target]
+
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+  source   = aws_sqs_queue.source.arn
+  target   = aws_sqs_queue.target.arn
+
+  source_parameters {
+    filter_criteria {
+      filter {
+        pattern = jsonencode({
+          source = [%[2]q]
+        })
+      }
+    }
+  }
+
+  target_parameters {
+    input_template = %[3]q
+  }
+}
+`, rName, criteria, template))
 }
 
 func testAccPipeConfig_basicKinesis(rName string) string {

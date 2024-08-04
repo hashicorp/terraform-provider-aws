@@ -194,6 +194,7 @@ This resource supports the following arguments:
 ~> **NOTE:** This block is only valid for a Network Load Balancer (NLB) target group when `protocol` is `TCP` or `TLS`.
 
 * `enable_unhealthy_connection_termination` - (Optional) Indicates whether the load balancer terminates connections to unhealthy targets. Possible values are `true` or `false`. Default: `true`.
+* `unhealthy_draining_interval` - (Optional) Indicates the time to wait for in-flight requests to complete when a target becomes unhealthy. The range is `0-360000`. This value has to be set only if `enable_unhealthy_connection_termination` is set to false. Default: `0`.
 
 ### target_group_health
 

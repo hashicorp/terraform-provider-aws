@@ -348,6 +348,21 @@ func resourceCluster() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice(NetworkType_Values(), false),
 			},
+			"performance_insights_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"performance_insights_kms_key_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: verify.ValidARN,
+			},
+			"performance_insights_retention_period": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
 			names.AttrPort: {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -1133,6 +1148,18 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.NetworkType = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("performance_insights_enabled"); ok {
+			input.EnablePerformanceInsights = aws.Bool(v.(bool))
+		}
+
+		if v, ok := d.GetOk("performance_insights_kms_key_id"); ok {
+			input.PerformanceInsightsKMSKeyId = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("performance_insights_retention_period"); ok {
+			input.PerformanceInsightsRetentionPeriod = aws.Int64(int64(v.(int)))
+		}
+
 		if v, ok := d.GetOk(names.AttrPort); ok {
 			input.Port = aws.Int64(int64(v.(int)))
 		}
@@ -1304,6 +1331,9 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	d.Set("master_username", dbc.MasterUsername)
 	d.Set("network_type", dbc.NetworkType)
+	d.Set("performance_insights_enabled", dbc.PerformanceInsightsEnabled)
+	d.Set("performance_insights_kms_key_id", dbc.PerformanceInsightsKMSKeyId)
+	d.Set("performance_insights_retention_period", dbc.PerformanceInsightsRetentionPeriod)
 	d.Set(names.AttrPort, dbc.Port)
 	d.Set("preferred_backup_window", dbc.PreferredBackupWindow)
 	d.Set(names.AttrPreferredMaintenanceWindow, dbc.PreferredMaintenanceWindow)
@@ -1478,6 +1508,18 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if d.HasChange("network_type") {
 			input.NetworkType = aws.String(d.Get("network_type").(string))
+		}
+
+		if d.HasChange("performance_insights_enabled") {
+			input.EnablePerformanceInsights = aws.Bool(d.Get("performance_insights_enabled").(bool))
+		}
+
+		if d.HasChange("performance_insights_kms_key_id") {
+			input.PerformanceInsightsKMSKeyId = aws.String(d.Get("performance_insights_kms_key_id").(string))
+		}
+
+		if d.HasChange("performance_insights_retention_period") {
+			input.PerformanceInsightsRetentionPeriod = aws.Int64(int64(d.Get("performance_insights_retention_period").(int)))
 		}
 
 		if d.HasChange(names.AttrPort) {
@@ -1870,6 +1912,7 @@ func waitDBClusterUpdated(ctx context.Context, conn *rds.RDS, id string, waitNoP
 	pendingStatuses := []string{
 		clusterStatusBackingUp,
 		clusterStatusConfiguringIAMDatabaseAuth,
+		clusterStatusConfiguringEnhancedMonitoring,
 		clusterStatusModifying,
 		clusterStatusRenaming,
 		clusterStatusResettingMasterCredentials,
