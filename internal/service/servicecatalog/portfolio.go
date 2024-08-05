@@ -10,7 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
-	"github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -166,7 +166,7 @@ func resourcePortfolioUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		o, n := d.GetChange(names.AttrTagsAll)
 
 		input.AddTags = Tags(tftags.New(ctx, n).IgnoreAWS())
-		input.RemoveTags = aws.StringSlice(tftags.New(ctx, o).IgnoreAWS().Keys())
+		input.RemoveTags = tftags.New(ctx, o).IgnoreAWS().Keys()
 	}
 
 	_, err := conn.UpdatePortfolio(ctx, input)
@@ -187,7 +187,7 @@ func resourcePortfolioDelete(ctx context.Context, d *schema.ResourceData, meta i
 		Id: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -206,7 +206,7 @@ func FindPortfolioByID(ctx context.Context, conn *servicecatalog.Client, id stri
 
 	output, err := conn.DescribePortfolio(ctx, input)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
