@@ -138,7 +138,7 @@ func (r *lifecyclePolicyResource) Schema(ctx context.Context, request resource.S
 								},
 							},
 						},
-						"exclusion_rules": schema.ListNestedBlock{
+						"exclusion_rule": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[lifecyclePolicyDetailExclusionRulesModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
@@ -474,7 +474,7 @@ func (model *lifecyclePolicyResourceModel) setID() {
 
 type lifecyclePolicyDetailModel struct {
 	Action         fwtypes.ListNestedObjectValueOf[lifecyclePolicyDetailActionModel]         `tfsdk:"action"`
-	ExclusionRules fwtypes.ListNestedObjectValueOf[lifecyclePolicyDetailExclusionRulesModel] `tfsdk:"exclusion_rules"`
+	ExclusionRules fwtypes.ListNestedObjectValueOf[lifecyclePolicyDetailExclusionRulesModel] `tfsdk:"exclusion_rule"`
 	Filter         fwtypes.ListNestedObjectValueOf[lifecyclePolicyDetailFilterModel]         `tfsdk:"filter"`
 }
 
