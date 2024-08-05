@@ -13,6 +13,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * data-source/aws_ecr_repository_creation_template: Support `ROOT` as a valid value for `prefix` ([#38685](https://github.com/hashicorp/terraform-provider-aws/issues/38685))
+* resource/aws_ec2_capacity_block_reservation: Fix error during apply for missing `created_date` attribute ([#38689](https://github.com/hashicorp/terraform-provider-aws/issues/38689))
 * resource/aws_ecr_repository_creation_template: Support `ROOT` as a valid value for `prefix` ([#38685](https://github.com/hashicorp/terraform-provider-aws/issues/38685))
 * resource/aws_lexv2models_bot: Handle `PreconditionFailedException` on delete for resources deleted out-of-band ([#38661](https://github.com/hashicorp/terraform-provider-aws/issues/38661))
 * resource/aws_lexv2models_bot_locale: Handle `PreconditionFailedException` on delete for resources deleted out-of-band ([#38661](https://github.com/hashicorp/terraform-provider-aws/issues/38661))
