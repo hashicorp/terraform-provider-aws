@@ -185,7 +185,7 @@ func dataSourceImageRead(ctx context.Context, d *schema.ResourceData, meta inter
 	image, err := findImageByARN(ctx, conn, arn)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Image Builder Image: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading Image Builder Image (%s): %s", arn, err)
 	}
 
 	d.SetId(aws.ToString(image.Arn))

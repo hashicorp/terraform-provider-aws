@@ -78,8 +78,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceImagePipelines,
+			Factory:  dataSourceImagePipelines,
 			TypeName: "aws_imagebuilder_image_pipelines",
+			Name:     "Image Pipelines",
 		},
 		{
 			Factory:  DataSourceImageRecipe,

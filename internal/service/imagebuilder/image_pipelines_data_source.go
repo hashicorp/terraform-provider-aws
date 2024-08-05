@@ -8,19 +8,22 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/imagebuilder"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters"
 	namevaluesfiltersv2 "github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters/v2"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_imagebuilder_image_pipelines")
-func DataSourceImagePipelines() *schema.Resource {
+// @SDKDataSource("aws_imagebuilder_image_pipelines", name="Image Pipelines")
+func dataSourceImagePipelines() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceImagePipelinesRead,
+
 		Schema: map[string]*schema.Schema{
 			names.AttrARNs: {
 				Type:     schema.TypeSet,
@@ -47,22 +50,36 @@ func dataSourceImagePipelinesRead(ctx context.Context, d *schema.ResourceData, m
 		input.Filters = namevaluesfiltersv2.New(v.(*schema.Set)).ImageBuilderFilters()
 	}
 
-	out, err := conn.ListImagePipelines(ctx, input)
+	imagePipelines, err := findImagePipelines(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Image Builder Image Pipelines: %s", err)
 	}
 
-	var arns, nms []string
-
-	for _, r := range out.ImagePipelineList {
-		arns = append(arns, aws.ToString(r.Arn))
-		nms = append(nms, aws.ToString(r.Name))
-	}
-
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set(names.AttrARNs, arns)
-	d.Set(names.AttrNames, nms)
+	d.Set(names.AttrARNs, tfslices.ApplyToAll(imagePipelines, func(v awstypes.ImagePipeline) string {
+		return aws.ToString(v.Arn)
+	}))
+	d.Set(names.AttrNames, tfslices.ApplyToAll(imagePipelines, func(v awstypes.ImagePipeline) string {
+		return aws.ToString(v.Name)
+	}))
 
 	return diags
+}
+
+func findImagePipelines(ctx context.Context, conn *imagebuilder.Client, input *imagebuilder.ListImagePipelinesInput) ([]awstypes.ImagePipeline, error) {
+	var output []awstypes.ImagePipeline
+
+	pages := imagebuilder.NewListImagePipelinesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.ImagePipelineList...)
+	}
+
+	return output, nil
 }
