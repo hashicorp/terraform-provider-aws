@@ -856,8 +856,8 @@ func flattenPolicyDetails(ctx context.Context, apiObject []awstypes.LifecyclePol
 		diags.Append(d...)
 
 		obj := map[string]attr.Value{
-			names.AttrAction:          action,
-			names.AttrFilter:          filter,
+			names.AttrAction:  action,
+			names.AttrFilter:  filter,
 			"exclusion_rules": exclusionRules,
 		}
 
@@ -886,7 +886,7 @@ func flattenDetailAction(ctx context.Context, apiObject *awstypes.LifecyclePolic
 
 	obj := map[string]attr.Value{
 		"include_resources": includeResources,
-		names.AttrType:              flex.StringValueToFramework(ctx, apiObject.Type),
+		names.AttrType:      flex.StringValueToFramework(ctx, apiObject.Type),
 	}
 
 	objVal, d := types.ObjectValue(resourceActionAttrTypes, obj)
@@ -930,10 +930,10 @@ func flattenDetailFilter(ctx context.Context, apiObject *awstypes.LifecyclePolic
 	}
 
 	obj := map[string]attr.Value{
-		names.AttrType:            flex.StringValueToFramework(ctx, apiObject.Type),
-		names.AttrValue:           flex.Int32ToFramework(ctx, apiObject.Value),
+		names.AttrType:    flex.StringValueToFramework(ctx, apiObject.Type),
+		names.AttrValue:   flex.Int32ToFramework(ctx, apiObject.Value),
 		"retain_at_least": flex.Int32ToFramework(ctx, apiObject.RetainAtLeast),
-		names.AttrUnit:            flex.StringValueToFramework(ctx, apiObject.Unit),
+		names.AttrUnit:    flex.StringValueToFramework(ctx, apiObject.Unit),
 	}
 
 	objVal, d := types.ObjectValue(resourceFilterAttrTypes, obj)
@@ -1057,7 +1057,7 @@ func flattenResourceSelectionRecipes(ctx context.Context, apiObject []awstypes.L
 
 	for _, recipe := range apiObject {
 		obj := map[string]attr.Value{
-			names.AttrName:             flex.StringToFramework(ctx, recipe.Name),
+			names.AttrName:     flex.StringToFramework(ctx, recipe.Name),
 			"semantic_version": flex.StringToFramework(ctx, recipe.SemanticVersion),
 		}
 
@@ -1140,13 +1140,13 @@ type resourceLastLaunchedData struct {
 }
 
 var resourcePolicyDetailAttrTypes = map[string]attr.Type{
-	names.AttrAction:          types.ListType{ElemType: types.ObjectType{AttrTypes: resourceActionAttrTypes}},
-	names.AttrFilter:          types.ListType{ElemType: types.ObjectType{AttrTypes: resourceFilterAttrTypes}},
+	names.AttrAction:  types.ListType{ElemType: types.ObjectType{AttrTypes: resourceActionAttrTypes}},
+	names.AttrFilter:  types.ListType{ElemType: types.ObjectType{AttrTypes: resourceFilterAttrTypes}},
 	"exclusion_rules": types.ListType{ElemType: types.ObjectType{AttrTypes: resourceExclusionRulesAttrTypes}},
 }
 
 var resourceActionAttrTypes = map[string]attr.Type{
-	names.AttrType:              types.StringType,
+	names.AttrType:      types.StringType,
 	"include_resources": types.ListType{ElemType: types.ObjectType{AttrTypes: resourceIncludeResourcesAttrTypes}},
 }
 
@@ -1157,10 +1157,10 @@ var resourceIncludeResourcesAttrTypes = map[string]attr.Type{
 }
 
 var resourceFilterAttrTypes = map[string]attr.Type{
-	names.AttrType:            types.StringType,
-	names.AttrValue:           types.Int64Type,
+	names.AttrType:    types.StringType,
+	names.AttrValue:   types.Int64Type,
 	"retain_at_least": types.Int64Type,
-	names.AttrUnit:            types.StringType,
+	names.AttrUnit:    types.StringType,
 }
 
 var resourceExclusionRulesAttrTypes = map[string]attr.Type{
@@ -1187,6 +1187,6 @@ var resourceResourceSelectionAttrTypes = map[string]attr.Type{
 }
 
 var resourceRecipeAttrTypes = map[string]attr.Type{
-	names.AttrName:             types.StringType,
+	names.AttrName:     types.StringType,
 	"semantic_version": types.StringType,
 }
