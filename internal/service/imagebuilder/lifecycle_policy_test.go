@@ -32,7 +32,7 @@ func TestAccImageBuilderLifecyclePolicy_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecyclePolicyConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLifecyclePolicyExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "imagebuilder", fmt.Sprintf("lifecycle-policy/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Used for setting lifecycle policies"),
@@ -75,7 +75,7 @@ func TestAccImageBuilderLifecyclePolicy_policyDetails(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecyclePolicyConfig_policyDetails(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLifecyclePolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_detail.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.action.#", acctest.Ct1),
@@ -104,7 +104,7 @@ func TestAccImageBuilderLifecyclePolicy_policyDetails(t *testing.T) {
 			},
 			{
 				Config: testAccLifecyclePolicyConfig_policyDetailsUpdated(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLifecyclePolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_detail.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.action.#", acctest.Ct1),
@@ -144,7 +144,7 @@ func TestAccImageBuilderLifecyclePolicy_resourceSelection(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecyclePolicyConfig_resourceSelection(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLifecyclePolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "resource_selection.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "resource_selection.0.recipe.#", acctest.Ct1),
@@ -159,7 +159,7 @@ func TestAccImageBuilderLifecyclePolicy_resourceSelection(t *testing.T) {
 			},
 			{
 				Config: testAccLifecyclePolicyConfig_resourceSelectionUpdated(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLifecyclePolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "resource_selection.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "resource_selection.0.recipe.#", acctest.Ct1),
@@ -280,7 +280,7 @@ func testAccCheckLifecyclePolicyDestroy(ctx context.Context) resource.TestCheckF
 	}
 }
 
-func testAccLifecyclePolicyBaseConfig(rName string) string {
+func testAccLifecyclePolicyConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 
@@ -307,7 +307,7 @@ resource "aws_iam_role_policy_attachment" "test" {
 `, rName)
 }
 
-func testAccLifecyclePolicyBaseConfigComponent(rName string) string {
+func testAccLifecyclePolicyConfig_baseComponent(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_imagebuilder_component" "test" {
   data = yamlencode({
@@ -332,9 +332,7 @@ resource "aws_imagebuilder_component" "test" {
 }
 
 func testAccLifecyclePolicyConfig_basic(rName string) string {
-	return acctest.ConfigCompose(
-		testAccLifecyclePolicyBaseConfig(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccLifecyclePolicyConfig_base(rName), fmt.Sprintf(`
 resource "aws_imagebuilder_lifecycle_policy" "test" {
   name           = %[1]q
   description    = "Used for setting lifecycle policies"
@@ -364,9 +362,7 @@ resource "aws_imagebuilder_lifecycle_policy" "test" {
 }
 
 func testAccLifecyclePolicyConfig_policyDetails(rName string) string {
-	return acctest.ConfigCompose(
-		testAccLifecyclePolicyBaseConfig(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccLifecyclePolicyConfig_base(rName), fmt.Sprintf(`
 resource "aws_imagebuilder_lifecycle_policy" "test" {
   name           = %[1]q
   description    = "Used for setting lifecycle policies"
@@ -411,9 +407,7 @@ resource "aws_imagebuilder_lifecycle_policy" "test" {
 }
 
 func testAccLifecyclePolicyConfig_policyDetailsUpdated(rName string) string {
-	return acctest.ConfigCompose(
-		testAccLifecyclePolicyBaseConfig(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccLifecyclePolicyConfig_base(rName), fmt.Sprintf(`
 resource "aws_imagebuilder_lifecycle_policy" "test" {
   name           = %[1]q
   description    = "Used for setting lifecycle policies"
@@ -460,8 +454,8 @@ resource "aws_imagebuilder_lifecycle_policy" "test" {
 
 func testAccLifecyclePolicyConfig_resourceSelection(rName string) string {
 	return acctest.ConfigCompose(
-		testAccLifecyclePolicyBaseConfig(rName),
-		testAccLifecyclePolicyBaseConfigComponent(rName),
+		testAccLifecyclePolicyConfig_base(rName),
+		testAccLifecyclePolicyConfig_baseComponent(rName),
 		fmt.Sprintf(`
 resource "aws_imagebuilder_image_recipe" "test" {
   component {
@@ -503,8 +497,8 @@ resource "aws_imagebuilder_lifecycle_policy" "test" {
 
 func testAccLifecyclePolicyConfig_resourceSelectionUpdated(rName string) string {
 	return acctest.ConfigCompose(
-		testAccLifecyclePolicyBaseConfig(rName),
-		testAccLifecyclePolicyBaseConfigComponent(rName),
+		testAccLifecyclePolicyConfig_base(rName),
+		testAccLifecyclePolicyConfig_baseComponent(rName),
 		fmt.Sprintf(`
 resource "aws_imagebuilder_image_recipe" "test" {
   component {
@@ -545,9 +539,7 @@ resource "aws_imagebuilder_lifecycle_policy" "test" {
 }
 
 func testAccLifecyclePolicyConfig_tags1(rName string, tagKey1 string, tagValue1 string) string {
-	return acctest.ConfigCompose(
-		testAccLifecyclePolicyBaseConfig(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccLifecyclePolicyConfig_base(rName), fmt.Sprintf(`
 resource "aws_imagebuilder_lifecycle_policy" "test" {
   name           = %[1]q
   execution_role = aws_iam_role.test.arn
@@ -578,9 +570,7 @@ resource "aws_imagebuilder_lifecycle_policy" "test" {
 }
 
 func testAccLifecyclePolicyConfig_tags2(rName string, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
-	return acctest.ConfigCompose(
-		testAccLifecyclePolicyBaseConfig(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccLifecyclePolicyConfig_base(rName), fmt.Sprintf(`
 resource "aws_imagebuilder_lifecycle_policy" "test" {
   name           = %[1]q
   execution_role = aws_iam_role.test.arn

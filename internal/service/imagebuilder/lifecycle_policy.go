@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/imagebuilder"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
@@ -24,7 +25,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -50,6 +50,8 @@ func (*lifecyclePolicyResource) Metadata(_ context.Context, request resource.Met
 }
 
 func (r *lifecyclePolicyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	lifecyclePolicyStatusType := fwtypes.StringEnumType[awstypes.LifecyclePolicyStatus]()
+
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -78,8 +80,13 @@ func (r *lifecyclePolicyResource) Schema(ctx context.Context, request resource.S
 				Required:   true,
 			},
 			names.AttrStatus: schema.StringAttribute{
-				CustomType: fwtypes.StringEnumType[awstypes.LifecyclePolicyStatus](),
+				CustomType: lifecyclePolicyStatusType,
 				Optional:   true,
+				Computed:   true,
+				Default:    lifecyclePolicyStatusType.AttributeDefault(awstypes.LifecyclePolicyStatusEnabled),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
@@ -303,9 +310,9 @@ func (r *lifecyclePolicyResource) Create(ctx context.Context, request resource.C
 	input.ClientToken = aws.String(sdkid.UniqueId())
 	input.Tags = getTagsIn(ctx)
 
-	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidParameterValueException](ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
 		return conn.CreateLifecyclePolicy(ctx, input)
-	}, "The provided role does not exist or does not have sufficient permissions")
+	}, errCodeInvalidParameterValueException, "The provided role does not exist or does not have sufficient permissions")
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("creating Image Builder Lifecycle Policy (%s)", name), err.Error())
@@ -326,6 +333,12 @@ func (r *lifecyclePolicyResource) Read(ctx context.Context, request resource.Rea
 	var data lifecyclePolicyResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if err := data.InitFromID(); err != nil {
+		response.Diagnostics.AddError("parsing resource ID", err.Error())
+
 		return
 	}
 
@@ -385,9 +398,9 @@ func (r *lifecyclePolicyResource) Update(ctx context.Context, request resource.U
 		// Additional fields.
 		input.ClientToken = aws.String(sdkid.UniqueId())
 
-		_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidParameterValueException](ctx, propagationTimeout, func() (interface{}, error) {
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
 			return conn.UpdateLifecyclePolicy(ctx, input)
-		}, "The provided role does not exist or does not have sufficient permissions")
+		}, errCodeInvalidParameterValueException, "The provided role does not exist or does not have sufficient permissions")
 
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("updating Image Builder Lifecycle Policy (%s)", new.ID.ValueString()), err.Error())
@@ -412,7 +425,7 @@ func (r *lifecyclePolicyResource) Delete(ctx context.Context, request resource.D
 		LifecyclePolicyArn: aws.String(data.ID.ValueString()),
 	})
 
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
 		return
 	}
 
@@ -434,7 +447,7 @@ func findLifecyclePolicyByARN(ctx context.Context, conn *imagebuilder.Client, ar
 
 	output, err := conn.GetLifecyclePolicy(ctx, input)
 
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
