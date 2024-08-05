@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_pinpoint_event_stream")
@@ -31,7 +32,7 @@ func ResourceEventStream() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"application_id": {
+			names.AttrApplicationID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -41,7 +42,7 @@ func ResourceEventStream() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -54,11 +55,11 @@ func resourceEventStreamUpsert(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointConn(ctx)
 
-	applicationId := d.Get("application_id").(string)
+	applicationId := d.Get(names.AttrApplicationID).(string)
 
 	params := &pinpoint.WriteEventStream{
 		DestinationStreamArn: aws.String(d.Get("destination_stream_arn").(string)),
-		RoleArn:              aws.String(d.Get("role_arn").(string)),
+		RoleArn:              aws.String(d.Get(names.AttrRoleARN).(string)),
 	}
 
 	req := pinpoint.PutEventStreamInput{
@@ -114,9 +115,9 @@ func resourceEventStreamRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	res := output.EventStream
-	d.Set("application_id", res.ApplicationId)
+	d.Set(names.AttrApplicationID, res.ApplicationId)
 	d.Set("destination_stream_arn", res.DestinationStreamArn)
-	d.Set("role_arn", res.RoleArn)
+	d.Set(names.AttrRoleARN, res.RoleArn)
 
 	return diags
 }

@@ -19,8 +19,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -38,7 +38,7 @@ func ResourceImageRecipe() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -48,7 +48,7 @@ func ResourceImageRecipe() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"device_name": {
+						names.AttrDeviceName: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
@@ -61,45 +61,45 @@ func ResourceImageRecipe() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"delete_on_termination": {
+									names.AttrDeleteOnTermination: {
 										Type:             nullable.TypeNullableBool,
 										Optional:         true,
 										ForceNew:         true,
 										DiffSuppressFunc: nullable.DiffSuppressNullableBool,
 										ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 									},
-									"encrypted": {
+									names.AttrEncrypted: {
 										Type:             nullable.TypeNullableBool,
 										Optional:         true,
 										ForceNew:         true,
 										DiffSuppressFunc: nullable.DiffSuppressNullableBool,
 										ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 									},
-									"iops": {
+									names.AttrIOPS: {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										ForceNew:     true,
 										ValidateFunc: validation.IntBetween(100, 10000),
 									},
-									"kms_key_id": {
+									names.AttrKMSKeyID: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ForceNew:     true,
 										ValidateFunc: validation.StringLenBetween(1, 1024),
 									},
-									"snapshot_id": {
+									names.AttrSnapshotID: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ForceNew:     true,
 										ValidateFunc: validation.StringLenBetween(1, 1024),
 									},
-									"throughput": {
+									names.AttrThroughput: {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										ForceNew:     true,
 										ValidateFunc: validation.IntBetween(125, 1000),
 									},
-									"volume_size": {
+									names.AttrVolumeSize: {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										ForceNew:     true,
@@ -123,7 +123,7 @@ func ResourceImageRecipe() *schema.Resource {
 							Computed: true,
 							ForceNew: true,
 						},
-						"virtual_name": {
+						names.AttrVirtualName: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
@@ -145,18 +145,18 @@ func ResourceImageRecipe() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"parameter": {
+						names.AttrParameter: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ForceNew:     true,
 										ValidateFunc: validation.StringLenBetween(1, 256),
 									},
-									"value": {
+									names.AttrValue: {
 										Type:     schema.TypeString,
 										Required: true,
 										ForceNew: true,
@@ -171,19 +171,19 @@ func ResourceImageRecipe() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
-			"owner": {
+			names.AttrOwner: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -225,7 +225,7 @@ func ResourceImageRecipe() *schema.Resource {
 					verify.ValidBase64String,
 				),
 			},
-			"version": {
+			names.AttrVersion: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -260,11 +260,11 @@ func resourceImageRecipeCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.Components = expandComponentConfigurations(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("name"); ok {
+	if v, ok := d.GetOk(names.AttrName); ok {
 		input.Name = aws.String(v.(string))
 	}
 
@@ -285,7 +285,7 @@ func resourceImageRecipeCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.AdditionalInstanceConfiguration.UserDataOverride = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("version"); ok {
+	if v, ok := d.GetOk(names.AttrVersion); ok {
 		input.SemanticVersion = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("working_directory"); ok {
@@ -333,13 +333,13 @@ func resourceImageRecipeRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	imageRecipe := output.ImageRecipe
 
-	d.Set("arn", imageRecipe.Arn)
+	d.Set(names.AttrARN, imageRecipe.Arn)
 	d.Set("block_device_mapping", flattenInstanceBlockDeviceMappings(imageRecipe.BlockDeviceMappings))
 	d.Set("component", flattenComponentConfigurations(imageRecipe.Components))
 	d.Set("date_created", imageRecipe.DateCreated)
-	d.Set("description", imageRecipe.Description)
-	d.Set("name", imageRecipe.Name)
-	d.Set("owner", imageRecipe.Owner)
+	d.Set(names.AttrDescription, imageRecipe.Description)
+	d.Set(names.AttrName, imageRecipe.Name)
+	d.Set(names.AttrOwner, imageRecipe.Owner)
 	d.Set("parent_image", imageRecipe.ParentImage)
 	d.Set("platform", imageRecipe.Platform)
 
@@ -350,7 +350,7 @@ func resourceImageRecipeRead(ctx context.Context, d *schema.ResourceData, meta i
 		d.Set("user_data_base64", imageRecipe.AdditionalInstanceConfiguration.UserDataOverride)
 	}
 
-	d.Set("version", imageRecipe.Version)
+	d.Set(names.AttrVersion, imageRecipe.Version)
 	d.Set("working_directory", imageRecipe.WorkingDirectory)
 
 	return diags
@@ -396,7 +396,7 @@ func expandComponentConfiguration(tfMap map[string]interface{}) *awstypes.Compon
 		apiObject.ComponentArn = aws.String(v)
 	}
 
-	if v, ok := tfMap["parameter"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrParameter].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.Parameters = expandComponentParameters(v.List())
 	}
 
@@ -436,11 +436,11 @@ func expandComponentParameter(tfMap map[string]interface{}) *awstypes.ComponentP
 
 	apiObject := &awstypes.ComponentParameter{}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
-	if v, ok := tfMap["value"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
 		// ImageBuilder API quirk
 		// Even though Value is a slice, only one element is accepted.
 		apiObject.Value = []string{v}
@@ -482,11 +482,11 @@ func expandEBSInstanceBlockDeviceSpecification(tfMap map[string]interface{}) *aw
 
 	apiObject := &awstypes.EbsInstanceBlockDeviceSpecification{}
 
-	if v, null, _ := nullable.Bool(tfMap["delete_on_termination"].(string)).Value(); !null {
+	if v, null, _ := nullable.Bool(tfMap[names.AttrDeleteOnTermination].(string)).ValueBool(); !null {
 		apiObject.DeleteOnTermination = aws.Bool(v)
 	}
 
-	if v, null, _ := nullable.Bool(tfMap["encrypted"].(string)).Value(); !null {
+	if v, null, _ := nullable.Bool(tfMap[names.AttrEncrypted].(string)).ValueBool(); !null {
 		apiObject.Encrypted = aws.Bool(v)
 	}
 
@@ -494,11 +494,11 @@ func expandEBSInstanceBlockDeviceSpecification(tfMap map[string]interface{}) *aw
 		apiObject.Iops = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["kms_key_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrKMSKeyID].(string); ok && v != "" {
 		apiObject.KmsKeyId = aws.String(v)
 	}
 
-	if v, ok := tfMap["snapshot_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrSnapshotID].(string); ok && v != "" {
 		apiObject.SnapshotId = aws.String(v)
 	}
 
@@ -520,7 +520,7 @@ func expandEBSInstanceBlockDeviceSpecification(tfMap map[string]interface{}) *aw
 func expandInstanceBlockDeviceMapping(tfMap map[string]interface{}) awstypes.InstanceBlockDeviceMapping {
 	apiObject := awstypes.InstanceBlockDeviceMapping{}
 
-	if v, ok := tfMap["device_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDeviceName].(string); ok && v != "" {
 		apiObject.DeviceName = aws.String(v)
 	}
 
@@ -532,7 +532,7 @@ func expandInstanceBlockDeviceMapping(tfMap map[string]interface{}) awstypes.Ins
 		apiObject.NoDevice = aws.String("")
 	}
 
-	if v, ok := tfMap["virtual_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrVirtualName].(string); ok && v != "" {
 		apiObject.VirtualName = aws.String(v)
 	}
 
@@ -581,7 +581,7 @@ func flattenComponentConfiguration(apiObject awstypes.ComponentConfiguration) ma
 	}
 
 	if v := apiObject.Parameters; v != nil {
-		tfMap["parameter"] = flattenComponentParameters(v)
+		tfMap[names.AttrParameter] = flattenComponentParameters(v)
 	}
 
 	return tfMap

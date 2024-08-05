@@ -53,6 +53,7 @@ class MyConvertedCode extends TerraformStack {
     new VpcDhcpOptions(this, "foo", {
       domainName: "service.consul",
       domainNameServers: ["127.0.0.1", "10.0.0.2"],
+      ipv6AddressPreferredLeaseTime: Token.asString(1440),
       netbiosNameServers: ["127.0.0.1"],
       netbiosNodeType: Token.asString(2),
       ntpServers: ["127.0.0.1"],
@@ -71,6 +72,7 @@ This resource supports the following arguments:
 
 * `domainName` - (Optional) the suffix domain name to use by default when resolving non Fully Qualified Domain Names. In other words, this is what ends up being the `search` value in the `/etc/resolv.conf` file.
 * `domainNameServers` - (Optional) List of name servers to configure in `/etc/resolv.conf`. If you want to use the default AWS nameservers you should set this to `AmazonProvidedDNS`.
+* `ipv6AddressPreferredLeaseTime` - (Optional) How frequently, in seconds, a running instance with an IPv6 assigned to it goes through DHCPv6 lease renewal. Acceptable values are between 140 and 2147483647 (approximately 68 years). If no value is entered, the default lease time is 140 seconds. If you use long-term addressing for EC2 instances, you can increase the lease time and avoid frequent lease renewal requests. Lease renewal typically occurs when half of the lease time has elapsed.
 * `ntpServers` - (Optional) List of NTP servers to configure.
 * `netbiosNameServers` - (Optional) List of NETBIOS name servers.
 * `netbiosNodeType` - (Optional) The NetBIOS node type (1, 2, 4, or 8). AWS recommends to specify 2 since broadcast and multicast are not supported in their network. For more information about these node types, see [RFC 2132](http://www.ietf.org/rfc/rfc2132.txt).
@@ -124,4 +126,4 @@ Using `terraform import`, import VPC DHCP Options using the DHCP Options `id`. F
 % terraform import aws_vpc_dhcp_options.my_options dopt-d9070ebb
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-e86ad5600e185c6fcfac37962334f477301d705d06ab42100c161640170994e2 -->
+<!-- cache-key: cdktf-0.20.1 input-19fb505b29b6d299dfb8c0c8062064b31eab8b68d174e47bfa7c65ef7fc917e5 -->

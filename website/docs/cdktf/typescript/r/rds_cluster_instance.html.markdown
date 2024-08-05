@@ -76,7 +76,7 @@ class MyConvertedCode extends TerraformStack {
 For more detailed documentation about each argument, refer to
 the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/rds/create-db-instance.html).
 
-This argument supports the following arguments:
+This resource supports the following arguments:
 
 * `applyImmediately` - (Optional) Specifies whether any database modifications are applied immediately, or during the next maintenance window. Default is`false`.
 * `autoMinorVersionUpgrade` - (Optional) Indicates that minor engine upgrades will be applied automatically to the DB instance during the maintenance window. Default `true`.
@@ -87,12 +87,12 @@ This argument supports the following arguments:
 * `customIamInstanceProfile` - (Optional) Instance profile associated with the underlying Amazon EC2 instance of an RDS Custom DB instance.
 * `dbParameterGroupName` - (Optional) Name of the DB parameter group to associate with this instance.
 * `dbSubnetGroupName` - (Required if `publicly_accessible = false`, Optional otherwise, Forces new resource) DB subnet group to associate with this DB instance. **NOTE:** This must match the `dbSubnetGroupName` of the attached [`aws_rds_cluster`](/docs/providers/aws/r/rds_cluster.html).
-* `engineVersion` - (Optional) Database engine version.
+* `engineVersion` - (Optional) Database engine version. Please note that to upgrade the `engineVersion` of the instance, it must be done on the `aws_rds_cluster` `engineVersion`. Trying to upgrade in `aws_cluster_instance` will not update the `engineVersion`.
 * `engine` - (Required, Forces new resource) Name of the database engine to be used for the RDS cluster instance.
   Valid Values: `aurora-mysql`, `aurora-postgresql`, `mysql`, `postgres`.(Note that `mysql` and `postgres` are Multi-AZ RDS clusters).
 * `identifierPrefix` - (Optional, Forces new resource) Creates a unique identifier beginning with the specified prefix. Conflicts with `identifier`.
 * `identifier` - (Optional, Forces new resource) Identifier for the RDS instance, if omitted, Terraform will assign a random, unique identifier.
-* `instanceClass` - (Required) Instance class to use. For details on CPU and memory, see [Scaling Aurora DB Instances][4]. Aurora uses `db.*` instance classes/types. Please see [AWS Documentation][7] for currently available instance classes and complete details.
+* `instanceClass` - (Required) Instance class to use. For details on CPU and memory, see [Scaling Aurora DB Instances][4]. Aurora uses `db.*` instance classes/types. Please see [AWS Documentation][7] for currently available instance classes and complete details. For Aurora Serverless v2 use `db.serverless`.
 * `monitoringInterval` - (Optional) Interval, in seconds, between points when Enhanced Monitoring metrics are collected for the DB instance. To disable collecting Enhanced Monitoring metrics, specify 0. The default is 0. Valid Values: 0, 1, 5, 10, 15, 30, 60.
 * `monitoringRoleArn` - (Optional) ARN for the IAM role that permits RDS to send enhanced monitoring metrics to CloudWatch Logs. You can find more information on the [AWS Documentation](http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Monitoring.html) what IAM permissions are needed to allow Enhanced Monitoring for RDS Instances.
 * `performanceInsightsEnabled` - (Optional) Specifies whether Performance Insights is enabled or not.
@@ -173,4 +173,4 @@ Using `terraform import`, import RDS Cluster Instances using the `identifier`. F
 % terraform import aws_rds_cluster_instance.prod_instance_1 aurora-cluster-instance-1
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-3ee005b8c9c46693a4a392553b9ac641d82b924b0c61b21e9b52a23a6f618d45 -->
+<!-- cache-key: cdktf-0.20.1 input-3432ce539b59fda8ba91657d459a86e2081f2d650ecc139482315dc284b9923b -->

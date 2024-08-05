@@ -43,7 +43,7 @@ func TestAccCodeCatalystProject_basic(t *testing.T) {
 				Config: testAccProjectConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "description", "Sample CC project created by TF"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Sample CC project created by TF"),
 					resource.TestCheckResourceAttr(resourceName, "space_name", "tf-cc-aws-provider"),
 				),
 			},

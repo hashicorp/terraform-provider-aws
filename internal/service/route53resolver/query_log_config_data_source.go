@@ -13,7 +13,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfilters"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters"
+	namevaluesfiltersv1 "github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters/v1"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -24,21 +26,21 @@ func DataSourceQueryLogConfig() *schema.Resource {
 		ReadWithoutTimeout: dataSourceQueryLogConfigRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"destination_arn": {
+			names.AttrDestinationARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"filter": namevaluesfilters.Schema(),
-			"name": {
+			names.AttrFilter: namevaluesfilters.Schema(),
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validResolverName,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -50,7 +52,7 @@ func DataSourceQueryLogConfig() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -60,14 +62,15 @@ const (
 )
 
 func dataSourceQueryLogConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	configID := d.Get("resolver_query_log_config_id").(string)
 
 	input := &route53resolver.ListResolverQueryLogConfigsInput{}
 
-	if v, ok := d.GetOk("filter"); ok && v.(*schema.Set).Len() > 0 {
-		input.Filters = namevaluesfilters.New(v.(*schema.Set)).Route53resolverFilters()
+	if v, ok := d.GetOk(names.AttrFilter); ok && v.(*schema.Set).Len() > 0 {
+		input.Filters = namevaluesfiltersv1.New(v.(*schema.Set)).Route53ResolverFilters()
 	}
 
 	var configs []*route53resolver.ResolverQueryLogConfig
@@ -91,14 +94,14 @@ func dataSourceQueryLogConfigRead(ctx context.Context, d *schema.ResourceData, m
 	})
 
 	if err != nil {
-		return diag.Errorf("listing Route53 resolver Query Logging Configurations: %s", err)
+		return sdkdiag.AppendErrorf(diags, "listing Route53 resolver Query Logging Configurations: %s", err)
 	}
 
 	if n := len(configs); n == 0 {
-		return create.DiagError(names.Route53Resolver, create.ErrActionReading, DSNameQueryLogConfig, configID, errors.New("your query returned no results, "+
+		return create.AppendDiagError(diags, names.Route53Resolver, create.ErrActionReading, DSNameQueryLogConfig, configID, errors.New("your query returned no results, "+
 			"please change your search criteria and try again"))
 	} else if n > 1 {
-		return create.DiagError(names.Route53Resolver, create.ErrActionReading, DSNameQueryLogConfig, configID, errors.New("your query returned more than one result, "+
+		return create.AppendDiagError(diags, names.Route53Resolver, create.ErrActionReading, DSNameQueryLogConfig, configID, errors.New("your query returned more than one result, "+
 			"please try more specific search criteria"))
 	}
 
@@ -106,10 +109,10 @@ func dataSourceQueryLogConfigRead(ctx context.Context, d *schema.ResourceData, m
 
 	d.SetId(aws.StringValue(config.Id))
 	arn := aws.StringValue(config.Arn)
-	d.Set("arn", arn)
-	d.Set("destination_arn", config.DestinationArn)
-	d.Set("name", config.Name)
-	d.Set("owner_id", config.OwnerId)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrDestinationARN, config.DestinationArn)
+	d.Set(names.AttrName, config.Name)
+	d.Set(names.AttrOwnerID, config.OwnerId)
 	d.Set("resolver_query_log_config_id", config.Id)
 
 	shareStatus := aws.StringValue(config.ShareStatus)
@@ -119,17 +122,17 @@ func dataSourceQueryLogConfigRead(ctx context.Context, d *schema.ResourceData, m
 		tags, err := listTags(ctx, conn, arn)
 
 		if err != nil {
-			return create.DiagError(names.AppConfig, create.ErrActionReading, DSNameQueryLogConfig, configID, err)
+			return create.AppendDiagError(diags, names.AppConfig, create.ErrActionReading, DSNameQueryLogConfig, configID, err)
 		}
 
 		ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 		tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 		//lintignore:AWSR002
-		if err := d.Set("tags", tags.Map()); err != nil {
-			return create.DiagError(names.AppConfig, create.ErrActionSetting, DSNameQueryLogConfig, configID, err)
+		if err := d.Set(names.AttrTags, tags.Map()); err != nil {
+			return create.AppendDiagError(diags, names.AppConfig, create.ErrActionSetting, DSNameQueryLogConfig, configID, err)
 		}
 	}
 
-	return nil
+	return diags
 }

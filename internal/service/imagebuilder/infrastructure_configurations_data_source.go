@@ -12,7 +12,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfiltersv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters"
+	namevaluesfiltersv2 "github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters/v2"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_imagebuilder_infrastructure_configurations")
@@ -20,12 +22,12 @@ func DataSourceInfrastructureConfigurations() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceInfrastructureConfigurationsRead,
 		Schema: map[string]*schema.Schema{
-			"arns": {
+			names.AttrARNs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": namevaluesfiltersv2.Schema(),
+			"filter": namevaluesfilters.Schema(),
 			"names": {
 				Type:     schema.TypeSet,
 				Computed: true,
@@ -42,7 +44,7 @@ func dataSourceInfrastructureConfigurationsRead(ctx context.Context, d *schema.R
 	input := &imagebuilder.ListInfrastructureConfigurationsInput{}
 
 	if v, ok := d.GetOk("filter"); ok {
-		input.Filters = namevaluesfiltersv2.New(v.(*schema.Set)).ImagebuilderFilters()
+		input.Filters = namevaluesfiltersv2.New(v.(*schema.Set)).ImageBuilderFilters()
 	}
 
 	out, err := conn.ListInfrastructureConfigurations(ctx, input)
@@ -51,16 +53,16 @@ func dataSourceInfrastructureConfigurationsRead(ctx context.Context, d *schema.R
 		return sdkdiag.AppendErrorf(diags, "reading Image Builder Infrastructure Configurations: %s", err)
 	}
 
-	var arns, names []string
+	var arns, nms []string
 
 	for _, r := range out.InfrastructureConfigurationSummaryList {
 		arns = append(arns, aws.ToString(r.Arn))
-		names = append(names, aws.ToString(r.Name))
+		nms = append(nms, aws.ToString(r.Name))
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("arns", arns)
-	d.Set("names", names)
+	d.Set(names.AttrARNs, arns)
+	d.Set(names.AttrNames, nms)
 
 	return diags
 }

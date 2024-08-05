@@ -6,21 +6,30 @@ package globalaccelerator
 import (
 	"context"
 
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	endpoints_sdkv1 "github.com/aws/aws-sdk-go/aws/endpoints"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	globalaccelerator_sdkv1 "github.com/aws/aws-sdk-go/service/globalaccelerator"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/globalaccelerator"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context, m map[string]any) (*globalaccelerator_sdkv1.GlobalAccelerator, error) {
-	sess := m["session"].(*session_sdkv1.Session)
-	config := &aws_sdkv1.Config{Endpoint: aws_sdkv1.String(m["endpoint"].(string))}
+// NewConn returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*globalaccelerator.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
-	// Force "global" services to correct Regions.
-	if m["partition"].(string) == endpoints_sdkv1.AwsPartitionID {
-		config.Region = aws_sdkv1.String(endpoints_sdkv1.UsWest2RegionID)
-	}
-
-	return globalaccelerator_sdkv1.New(sess.Copy(config)), nil
+	return globalaccelerator.NewFromConfig(cfg,
+		globalaccelerator.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+		func(o *globalaccelerator.Options) {
+			if config["partition"].(string) == names.StandardPartitionID {
+				// Global Accelerator endpoint is only available in AWS Commercial us-west-2 Region.
+				if cfg.Region != names.USWest2RegionID {
+					tflog.Info(ctx, "overriding region", map[string]any{
+						"original_region": cfg.Region,
+						"override_region": names.USWest2RegionID,
+					})
+					o.Region = names.USWest2RegionID
+				}
+			}
+		},
+	), nil
 }

@@ -37,7 +37,7 @@ func ResourceComponent() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -52,36 +52,36 @@ func ResourceComponent() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"data", "uri"},
+				ExactlyOneOf: []string{"data", names.AttrURI},
 				ValidateFunc: validation.StringLenBetween(1, 16000),
 			},
 			"date_created": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
-			"encrypted": {
+			names.AttrEncrypted: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 126),
 			},
-			"owner": {
+			names.AttrOwner: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -91,7 +91,7 @@ func ResourceComponent() *schema.Resource {
 				ForceNew:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.Platform](),
 			},
-			"skip_destroy": {
+			names.AttrSkipDestroy: {
 				Type:     schema.TypeBool,
 				Default:  false,
 				Optional: true,
@@ -109,17 +109,17 @@ func ResourceComponent() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"type": {
+			names.AttrType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"uri": {
+			names.AttrURI: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"data", "uri"},
+				ExactlyOneOf: []string{"data", names.AttrURI},
 			},
-			"version": {
+			names.AttrVersion: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -148,15 +148,15 @@ func resourceComponentCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.Data = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("kms_key_id"); ok {
+	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("name"); ok {
+	if v, ok := d.GetOk(names.AttrName); ok {
 		input.Name = aws.String(v.(string))
 	}
 
@@ -168,11 +168,11 @@ func resourceComponentCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.SupportedOsVersions = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("uri"); ok {
+	if v, ok := d.GetOk(names.AttrURI); ok {
 		input.Uri = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("version"); ok {
+	if v, ok := d.GetOk(names.AttrVersion); ok {
 		input.SemanticVersion = aws.String(v.(string))
 	}
 
@@ -217,22 +217,22 @@ func resourceComponentRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	component := output.Component
 
-	d.Set("arn", component.Arn)
+	d.Set(names.AttrARN, component.Arn)
 	d.Set("change_description", component.ChangeDescription)
 	d.Set("data", component.Data)
 	d.Set("date_created", component.DateCreated)
-	d.Set("description", component.Description)
-	d.Set("encrypted", component.Encrypted)
-	d.Set("kms_key_id", component.KmsKeyId)
-	d.Set("name", component.Name)
-	d.Set("owner", component.Owner)
+	d.Set(names.AttrDescription, component.Description)
+	d.Set(names.AttrEncrypted, component.Encrypted)
+	d.Set(names.AttrKMSKeyID, component.KmsKeyId)
+	d.Set(names.AttrName, component.Name)
+	d.Set(names.AttrOwner, component.Owner)
 	d.Set("platform", component.Platform)
 	d.Set("supported_os_versions", component.SupportedOsVersions)
 
 	setTagsOut(ctx, component.Tags)
 
-	d.Set("type", component.Type)
-	d.Set("version", component.Version)
+	d.Set(names.AttrType, component.Type)
+	d.Set(names.AttrVersion, component.Version)
 
 	return diags
 }
@@ -248,7 +248,7 @@ func resourceComponentUpdate(ctx context.Context, d *schema.ResourceData, meta i
 func resourceComponentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	if v, ok := d.GetOk("skip_destroy"); ok && v.(bool) {
+	if v, ok := d.GetOk(names.AttrSkipDestroy); ok && v.(bool) {
 		log.Printf("[DEBUG] Retaining Imagebuilder Component version %q", d.Id())
 		return diags
 	}
