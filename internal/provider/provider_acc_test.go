@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -426,7 +425,7 @@ func TestAccProvider_IgnoreTagsKeys_envVarOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 	var provider *schema.Provider
 
-	t.Setenv(envvar.IgnoreTagsKeys, "test3,test4")
+	t.Setenv(tftags.IgnoreTagsKeysEnvVar, "test3,test4")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -448,7 +447,7 @@ func TestAccProvider_IgnoreTagsKeys_envVarMerged(t *testing.T) {
 	ctx := acctest.Context(t)
 	var provider *schema.Provider
 
-	t.Setenv(envvar.IgnoreTagsKeys, "test3,test4")
+	t.Setenv(tftags.IgnoreTagsKeysEnvVar, "test3,test4")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -470,7 +469,7 @@ func TestAccProvider_IgnoreTagsKeyPrefixes_envVarOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 	var provider *schema.Provider
 
-	t.Setenv(envvar.IgnoreTagsKeyPrefixes, "test3,test4")
+	t.Setenv(tftags.IgnoreTagsKeyPrefixesEnvVar, "test3,test4")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -492,7 +491,7 @@ func TestAccProvider_IgnoreTagsKeyPrefixes_envVarMerged(t *testing.T) {
 	ctx := acctest.Context(t)
 	var provider *schema.Provider
 
-	t.Setenv(envvar.IgnoreTagsKeyPrefixes, "test3,test4")
+	t.Setenv(tftags.IgnoreTagsKeyPrefixesEnvVar, "test3,test4")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },

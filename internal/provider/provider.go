@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -119,14 +118,14 @@ func New(ctx context.Context) (*schema.Provider, error) {
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							Description: "Resource tag keys to ignore across all resources. " +
-								"Can also be configured with the " + envvar.IgnoreTagsKeys + " environment variable.",
+								"Can also be configured with the " + tftags.IgnoreTagsKeysEnvVar + " environment variable.",
 						},
 						"key_prefixes": {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							Description: "Resource tag key prefixes to ignore across all resources. " +
-								"Can also be configured with the " + envvar.IgnoreTagsKeyPrefixes + " environment variable.",
+								"Can also be configured with the " + tftags.IgnoreTagsKeyPrefixesEnvVar + " environment variable.",
 						},
 					},
 				},
@@ -883,7 +882,7 @@ func expandIgnoreTags(ctx context.Context, tfMap map[string]interface{}) *tftags
 		}
 	}
 
-	if v := os.Getenv(envvar.IgnoreTagsKeys); v != "" {
+	if v := os.Getenv(tftags.IgnoreTagsKeysEnvVar); v != "" {
 		for _, k := range strings.Split(v, ",") {
 			if trimmed := strings.TrimSpace(k); trimmed != "" {
 				keys = append(keys, trimmed)
@@ -891,7 +890,7 @@ func expandIgnoreTags(ctx context.Context, tfMap map[string]interface{}) *tftags
 		}
 	}
 
-	if v := os.Getenv(envvar.IgnoreTagsKeyPrefixes); v != "" {
+	if v := os.Getenv(tftags.IgnoreTagsKeyPrefixesEnvVar); v != "" {
 		for _, kp := range strings.Split(v, ",") {
 			if trimmed := strings.TrimSpace(kp); trimmed != "" {
 				keyPrefixes = append(keyPrefixes, trimmed)

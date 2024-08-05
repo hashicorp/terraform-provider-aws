@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tffunction "github.com/hashicorp/terraform-provider-aws/internal/function"
@@ -282,13 +281,13 @@ func (p *fwprovider) Schema(ctx context.Context, req provider.SchemaRequest, res
 							ElementType: types.StringType,
 							Optional:    true,
 							Description: "Resource tag key prefixes to ignore across all resources. " +
-								"Can also be configured with the " + envvar.IgnoreTagsKeyPrefixes + " environment variable.",
+								"Can also be configured with the " + tftags.IgnoreTagsKeyPrefixesEnvVar + " environment variable.",
 						},
 						"keys": schema.SetAttribute{
 							ElementType: types.StringType,
 							Optional:    true,
 							Description: "Resource tag keys to ignore across all resources. " +
-								"Can also be configured with the " + envvar.IgnoreTagsKeys + " environment variable.",
+								"Can also be configured with the " + tftags.IgnoreTagsKeysEnvVar + " environment variable.",
 						},
 					},
 				},

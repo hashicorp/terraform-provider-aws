@@ -68,15 +68,6 @@ const (
 	AccAssumeRoleARN = "TF_ACC_ASSUME_ROLE_ARN"
 )
 
-// Custom environment variables used for provider configuration via environment.
-const (
-	// A list of tag keys to be ignored by the provider.
-	IgnoreTagsKeys = "TF_AWS_IGNORE_TAGS_KEYS"
-
-	// A list of tag key prefixes to be ignored by the provider.
-	IgnoreTagsKeyPrefixes = "TF_AWS_IGNORE_TAGS_KEY_PREFIXES"
-)
-
 // Custom environment variables used for assuming a role with resource sweepers
 const (
 	// The ARN of the IAM Role to assume
