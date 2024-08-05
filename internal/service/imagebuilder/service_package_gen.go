@@ -94,8 +94,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Image Recipes",
 		},
 		{
-			Factory:  DataSourceInfrastructureConfiguration,
+			Factory:  dataSourceInfrastructureConfiguration,
 			TypeName: "aws_imagebuilder_infrastructure_configuration",
+			Name:     "Infrastructure Configuration",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  DataSourceInfrastructureConfigurations,
