@@ -13,6 +13,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,21 +22,24 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_imagebuilder_container_recipe", name="Container Recipe")
 // @Tags(identifierAttribute="id")
-func ResourceContainerRecipe() *schema.Resource {
+func resourceContainerRecipe() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceContainerRecipeCreate,
 		ReadWithoutTimeout:   resourceContainerRecipeRead,
 		UpdateWithoutTimeout: resourceContainerRecipeUpdate,
 		DeleteWithoutTimeout: resourceContainerRecipeDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -282,6 +286,7 @@ func ResourceContainerRecipe() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
 		},
+
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
@@ -353,10 +358,6 @@ func resourceContainerRecipeCreate(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "creating Image Builder Container Recipe: %s", err)
 	}
 
-	if output == nil {
-		return sdkdiag.AppendErrorf(diags, "creating Image Builder Container Recipe: empty response")
-	}
-
 	d.SetId(aws.ToString(output.ContainerRecipeArn))
 
 	return append(diags, resourceContainerRecipeRead(ctx, d, meta)...)
@@ -366,53 +367,46 @@ func resourceContainerRecipeRead(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
-	input := &imagebuilder.GetContainerRecipeInput{
-		ContainerRecipeArn: aws.String(d.Id()),
-	}
+	containerRecipe, err := findContainerRecipeByARN(ctx, conn, d.Id())
 
-	output, err := conn.GetContainerRecipe(ctx, input)
-
-	if !d.IsNewResource() && errs.MessageContains(err, ResourceNotFoundException, "cannot be found") {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Image Builder Container Recipe (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting Image Builder Container Recipe (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Image Builder Container Recipe (%s): %s", d.Id(), err)
 	}
-
-	if output == nil || output.ContainerRecipe == nil {
-		return sdkdiag.AppendErrorf(diags, "getting Image Builder Container Recipe (%s): empty response", d.Id())
-	}
-
-	containerRecipe := output.ContainerRecipe
 
 	d.Set(names.AttrARN, containerRecipe.Arn)
-	d.Set("component", flattenComponentConfigurations(containerRecipe.Components))
+	if err := d.Set("component", flattenComponentConfigurations(containerRecipe.Components)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting component: %s", err)
+	}
 	d.Set("container_type", containerRecipe.ContainerType)
 	d.Set("date_created", containerRecipe.DateCreated)
 	d.Set(names.AttrDescription, containerRecipe.Description)
 	d.Set("dockerfile_template_data", containerRecipe.DockerfileTemplateData)
 	d.Set(names.AttrEncrypted, containerRecipe.Encrypted)
-
 	if containerRecipe.InstanceConfiguration != nil {
-		d.Set("instance_configuration", []interface{}{flattenInstanceConfiguration(containerRecipe.InstanceConfiguration)})
+		if err := d.Set("instance_configuration", []interface{}{flattenInstanceConfiguration(containerRecipe.InstanceConfiguration)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting instance_configuration: %s", err)
+		}
 	} else {
 		d.Set("instance_configuration", nil)
 	}
-
 	d.Set(names.AttrKMSKeyID, containerRecipe.KmsKeyId)
 	d.Set(names.AttrName, containerRecipe.Name)
 	d.Set(names.AttrOwner, containerRecipe.Owner)
 	d.Set("parent_image", containerRecipe.ParentImage)
 	d.Set("platform", containerRecipe.Platform)
-
-	setTagsOut(ctx, containerRecipe.Tags)
-
-	d.Set("target_repository", []interface{}{flattenTargetContainerRepository(containerRecipe.TargetRepository)})
+	if err := d.Set("target_repository", []interface{}{flattenTargetContainerRepository(containerRecipe.TargetRepository)}); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting target_repository: %s", err)
+	}
 	d.Set(names.AttrVersion, containerRecipe.Version)
 	d.Set("working_directory", containerRecipe.WorkingDirectory)
+
+	setTagsOut(ctx, containerRecipe.Tags)
 
 	return diags
 }
@@ -433,9 +427,10 @@ func resourceContainerRecipeDelete(ctx context.Context, d *schema.ResourceData, 
 		ContainerRecipeArn: aws.String(d.Id()),
 	}
 
+	log.Printf("[DEBUG] Deleting Image Builder Container Recipe: %s", d.Id())
 	_, err := conn.DeleteContainerRecipe(ctx, input)
 
-	if errs.MessageContains(err, ResourceNotFoundException, "cannot be found") {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -444,6 +439,31 @@ func resourceContainerRecipeDelete(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	return diags
+}
+
+func findContainerRecipeByARN(ctx context.Context, conn *imagebuilder.Client, arn string) (*awstypes.ContainerRecipe, error) {
+	input := &imagebuilder.GetContainerRecipeInput{
+		ContainerRecipeArn: aws.String(arn),
+	}
+
+	output, err := conn.GetContainerRecipe(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.ContainerRecipe == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.ContainerRecipe, nil
 }
 
 func expandInstanceConfiguration(tfMap map[string]interface{}) *awstypes.InstanceConfiguration {

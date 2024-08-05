@@ -6,8 +6,10 @@ package imagebuilder
 // Exports for use in tests only.
 var (
 	ResourceComponent       = resourceComponent
+	ResourceContainerRecipe = resourceContainerRecipe
 	ResourceLifecyclePolicy = newResourceLifecyclePolicy
 
 	FindComponentByARN       = findComponentByARN
+	FindContainerRecipeByARN = findContainerRecipeByARN
 	FindLifecyclePolicyByARN = findLifecyclePolicyByARN
 )
