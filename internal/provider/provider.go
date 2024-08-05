@@ -849,8 +849,7 @@ func expandDefaultTags(ctx context.Context, tfMap map[string]interface{}) *tftag
 	tags := make(map[string]interface{})
 	for _, ev := range os.Environ() {
 		k, v, _ := strings.Cut(ev, "=")
-		before, tk, ok := strings.Cut(k, tftags.DefaultTagsEnvVarPrefix)
-		if ok && before == "" {
+		if before, tk, ok := strings.Cut(k, tftags.DefaultTagsEnvVarPrefix); ok && before == "" {
 			tags[tk] = v
 		}
 	}
