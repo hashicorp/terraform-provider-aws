@@ -138,10 +138,7 @@ func (r *resourceEnvironmentProfile) Create(ctx context.Context, req resource.Cr
 		return
 	}
 
-	option := func(o *flex.AutoFlexOptions) {
-		o.AddIgnoredField("UserParameters")
-	}
-
+	option := flex.WithIgnoredFieldNames([]string{"UserParameters"})
 	in := &datazone.CreateEnvironmentProfileInput{}
 	in.EnvironmentBlueprintIdentifier = plan.EnvironmentBlueprintId.ValueStringPointer()
 	resp.Diagnostics.Append(flex.Expand(ctx, &plan, in)...)
@@ -194,9 +191,7 @@ func (r *resourceEnvironmentProfile) Read(ctx context.Context, req resource.Read
 		return
 	}
 
-	option := func(o *flex.AutoFlexOptions) {
-		o.AddIgnoredField("UserParameters")
-	}
+	option := flex.WithIgnoredFieldNames([]string{"UserParameters"})
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state, option)...)
 	state.EnvironmentBlueprintId = flex.StringToFramework(ctx, out.EnvironmentBlueprintId)
 	state.ProjectIdentifier = flex.StringToFramework(ctx, out.ProjectId)
@@ -231,11 +226,8 @@ func (r *resourceEnvironmentProfile) Update(ctx context.Context, req resource.Up
 			)
 			return
 		}
-		option := func(o *flex.AutoFlexOptions) {
-			o.AddIgnoredField("UserParameters")
-		}
+		option := flex.WithIgnoredFieldNames([]string{"UserParameters"})		
 		resp.Diagnostics.Append(flex.Flatten(ctx, out, &state, option)...)
-
 		if resp.Diagnostics.HasError() {
 			return
 		}
