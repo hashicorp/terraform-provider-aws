@@ -50,7 +50,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceContainerRecipes,
+			Factory:  dataSourceContainerRecipes,
 			TypeName: "aws_imagebuilder_container_recipes",
 			Name:     "Container Recipes",
 		},
