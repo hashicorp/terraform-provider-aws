@@ -97,9 +97,9 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `include_resource` - (Optional) Specifies the resources that the lifecycle policy applies to. Detailed below.
+* `include_resources` - (Optional) Specifies the resources that the lifecycle policy applies to. Detailed below.
 
-### include_resource
+### include_resources
 
 The following arguments are optional:
 
