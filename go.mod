@@ -229,7 +229,7 @@ require (
 	github.com/beevik/etree v1.4.1
 	github.com/cedar-policy/cedar-go v0.0.0-20240318205125-470d1fe984bb
 	github.com/davecgh/go-spew v1.1.1
-	github.com/dlclark/regexp2 v1.11.2
+	github.com/dlclark/regexp2 v1.11.4
 	github.com/gertd/go-pluralize v0.2.1
 	github.com/google/go-cmp v0.6.0
 	github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.23.0
