@@ -18,6 +18,10 @@ func SkipSweepError(err error) bool {
 		return dnsErr.IsNotFound
 	}
 
+	// Example (GovCloud): AccessDeniedException: Feature is not accessible
+	if tfawserr.ErrMessageContains(err, "AccessDeniedException", "Feature is not accessible") {
+		return true
+	}
 	// Example (GovCloud): AccessDeniedException: Unable to determine service/operation name to be authorized
 	if tfawserr.ErrMessageContains(err, "AccessDeniedException", "Unable to determine service/operation name to be authorized") {
 		return true
