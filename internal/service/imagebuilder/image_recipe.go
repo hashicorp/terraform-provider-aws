@@ -13,6 +13,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,18 +22,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_imagebuilder_image_recipe", name="Image Recipe")
 // @Tags(identifierAttribute="id")
-func ResourceImageRecipe() *schema.Resource {
+func resourceImageRecipe() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceImageRecipeCreate,
 		ReadWithoutTimeout:   resourceImageRecipeRead,
 		UpdateWithoutTimeout: resourceImageRecipeUpdate,
 		DeleteWithoutTimeout: resourceImageRecipeDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -298,10 +301,6 @@ func resourceImageRecipeCreate(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "creating Image Builder Image Recipe: %s", err)
 	}
 
-	if output == nil {
-		return sdkdiag.AppendErrorf(diags, "creating Image Builder Image Recipe: empty response")
-	}
-
 	d.SetId(aws.ToString(output.ImageRecipeArn))
 
 	return append(diags, resourceImageRecipeRead(ctx, d, meta)...)
@@ -311,47 +310,41 @@ func resourceImageRecipeRead(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
-	input := &imagebuilder.GetImageRecipeInput{
-		ImageRecipeArn: aws.String(d.Id()),
-	}
+	imageRecipe, err := findImageRecipeByARN(ctx, conn, d.Id())
 
-	output, err := conn.GetImageRecipe(ctx, input)
-
-	if !d.IsNewResource() && errs.MessageContains(err, ResourceNotFoundException, "cannot be found") {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Image Builder Image Recipe (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting Image Builder Image Recipe (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Image Builder Image Recipe (%s): %s", d.Id(), err)
 	}
-
-	if output == nil || output.ImageRecipe == nil {
-		return sdkdiag.AppendErrorf(diags, "getting Image Builder Image Recipe (%s): empty response", d.Id())
-	}
-
-	imageRecipe := output.ImageRecipe
 
 	d.Set(names.AttrARN, imageRecipe.Arn)
-	d.Set("block_device_mapping", flattenInstanceBlockDeviceMappings(imageRecipe.BlockDeviceMappings))
-	d.Set("component", flattenComponentConfigurations(imageRecipe.Components))
+	if err := d.Set("block_device_mapping", flattenInstanceBlockDeviceMappings(imageRecipe.BlockDeviceMappings)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting block_device_mapping: %s", err)
+	}
+	if err := d.Set("component", flattenComponentConfigurations(imageRecipe.Components)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting component: %s", err)
+	}
 	d.Set("date_created", imageRecipe.DateCreated)
 	d.Set(names.AttrDescription, imageRecipe.Description)
 	d.Set(names.AttrName, imageRecipe.Name)
 	d.Set(names.AttrOwner, imageRecipe.Owner)
 	d.Set("parent_image", imageRecipe.ParentImage)
 	d.Set("platform", imageRecipe.Platform)
-
-	setTagsOut(ctx, imageRecipe.Tags)
-
 	if imageRecipe.AdditionalInstanceConfiguration != nil {
-		d.Set("systems_manager_agent", []interface{}{flattenSystemsManagerAgent(imageRecipe.AdditionalInstanceConfiguration.SystemsManagerAgent)})
+		if err := d.Set("systems_manager_agent", []interface{}{flattenSystemsManagerAgent(imageRecipe.AdditionalInstanceConfiguration.SystemsManagerAgent)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting systems_manager_agent: %s", err)
+		}
 		d.Set("user_data_base64", imageRecipe.AdditionalInstanceConfiguration.UserDataOverride)
 	}
-
 	d.Set(names.AttrVersion, imageRecipe.Version)
 	d.Set("working_directory", imageRecipe.WorkingDirectory)
+
+	setTagsOut(ctx, imageRecipe.Tags)
 
 	return diags
 }
@@ -368,13 +361,12 @@ func resourceImageRecipeDelete(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
-	input := &imagebuilder.DeleteImageRecipeInput{
+	log.Printf("[DEBUG] Deleting Image Builder Image Recipe: %s", d.Id())
+	_, err := conn.DeleteImageRecipe(ctx, &imagebuilder.DeleteImageRecipeInput{
 		ImageRecipeArn: aws.String(d.Id()),
-	}
+	})
 
-	_, err := conn.DeleteImageRecipe(ctx, input)
-
-	if errs.MessageContains(err, ResourceNotFoundException, "cannot be found") {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -383,6 +375,31 @@ func resourceImageRecipeDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	return diags
+}
+
+func findImageRecipeByARN(ctx context.Context, conn *imagebuilder.Client, arn string) (*awstypes.ImageRecipe, error) {
+	input := &imagebuilder.GetImageRecipeInput{
+		ImageRecipeArn: aws.String(arn),
+	}
+
+	output, err := conn.GetImageRecipe(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.ImageRecipe == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.ImageRecipe, nil
 }
 
 func expandComponentConfiguration(tfMap map[string]interface{}) *awstypes.ComponentConfiguration {

@@ -10,6 +10,7 @@ var (
 	ResourceDistributionConfiguration = resourceDistributionConfiguration
 	ResourceImage                     = resourceImage
 	ResourceImagePipeline             = resourceImagePipeline
+	ResourceImageRecipe               = resourceImageRecipe
 	ResourceLifecyclePolicy           = newResourceLifecyclePolicy
 
 	FindComponentByARN                 = findComponentByARN
@@ -17,5 +18,6 @@ var (
 	FindDistributionConfigurationByARN = findDistributionConfigurationByARN
 	FindImageByARN                     = findImageByARN
 	FindImagePipelineByARN             = findImagePipelineByARN
+	FindImageRecipeByARN               = findImageRecipeByARN
 	FindLifecyclePolicyByARN           = findLifecyclePolicyByARN
 )

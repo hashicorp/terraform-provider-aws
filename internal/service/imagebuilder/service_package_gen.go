@@ -145,7 +145,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceImageRecipe,
+			Factory:  resourceImageRecipe,
 			TypeName: "aws_imagebuilder_image_recipe",
 			Name:     "Image Recipe",
 			Tags: &types.ServicePackageResourceTags{
