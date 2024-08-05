@@ -12,7 +12,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
-	"github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -74,8 +74,8 @@ func ResourcePrincipalPortfolioAssociation() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ForceNew:         true,
-				Default:          types.PrincipalTypeIam,
-				ValidateDiagFunc: enum.Validate[types.PrincipalType](),
+				Default:          awstypes.PrincipalTypeIam,
+				ValidateDiagFunc: enum.Validate[awstypes.PrincipalType](),
 			},
 		},
 	}
@@ -91,12 +91,12 @@ func resourcePrincipalPortfolioAssociationCreate(ctx context.Context, d *schema.
 		AcceptLanguage: aws.String(acceptLanguage),
 		PortfolioId:    aws.String(portfolioID),
 		PrincipalARN:   aws.String(principalARN),
-		PrincipalType:  aws.String(principalType),
+		PrincipalType:  awstypes.PrincipalType(principalType),
 	}
 
-	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidParametersException](ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
 		return conn.AssociatePrincipalWithPortfolio(ctx, input)
-	}, servicecatalog.ErrCodeInvalidParametersException, "profile does not exist")
+	}, "profile does not exist")
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Service Catalog Principal Portfolio Association (%s): %s", id, err)
@@ -157,13 +157,13 @@ func resourcePrincipalPortfolioAssociationDelete(ctx context.Context, d *schema.
 		PortfolioId:    aws.String(portfolioID),
 		PrincipalARN:   aws.String(principalARN),
 		AcceptLanguage: aws.String(acceptLanguage),
-		PrincipalType:  types.PrincipalType(principalType),
+		PrincipalType:  awstypes.PrincipalType(principalType),
 	}
 
 	log.Printf("[WARN] Deleting Service Catalog Principal Portfolio Association: %s", d.Id())
 	_, err = conn.DisassociatePrincipalFromPortfolio(ctx, input)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -198,54 +198,52 @@ func PrincipalPortfolioAssociationCreateResourceID(acceptLanguage, principalARN,
 	return strings.Join([]string{acceptLanguage, principalARN, portfolioID, principalType}, principalPortfolioAssociationResourceIDSeparator)
 }
 
-func findPrincipalForPortfolio(ctx context.Context, conn *servicecatalog.Client, input *servicecatalog.ListPrincipalsForPortfolioInput, filter tfslices.Predicate[*types.Principal]) (*servicecatalog.Principal, error) {
+func findPrincipalForPortfolio(ctx context.Context, conn *servicecatalog.Client, input *servicecatalog.ListPrincipalsForPortfolioInput, filter tfslices.Predicate[awstypes.Principal]) (*awstypes.Principal, error) {
 	output, err := findPrincipalsForPortfolio(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findPrincipalsForPortfolio(ctx context.Context, conn *servicecatalog.Client, input *servicecatalog.ListPrincipalsForPortfolioInput, filter tfslices.Predicate[*types.Principal]) ([]*servicecatalog.Principal, error) {
-	var output []*types.Principal
+func findPrincipalsForPortfolio(ctx context.Context, conn *servicecatalog.Client, input *servicecatalog.ListPrincipalsForPortfolioInput, filter tfslices.Predicate[awstypes.Principal]) ([]awstypes.Principal, error) {
+	var output []awstypes.Principal
 
-	err := conn.ListPrincipalsForPortfolioPages(ctx, input, func(page *servicecatalog.ListPrincipalsForPortfolioOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := servicecatalog.NewListPrincipalsForPortfolioPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
 		}
 
 		for _, v := range page.Principals {
-			if v != nil && filter(v) {
+			if v.PrincipalARN != nil && filter(v) {
 				output = append(output, v)
 			}
 		}
 
-		return !lastPage
-	})
-
-	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
 	}
 
 	return output, nil
 }
 
-func FindPrincipalPortfolioAssociation(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, principalARN, portfolioID, principalType string) (*servicecatalog.Principal, error) {
+func FindPrincipalPortfolioAssociation(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, principalARN, portfolioID, principalType string) (*awstypes.Principal, error) {
 	input := &servicecatalog.ListPrincipalsForPortfolioInput{
 		AcceptLanguage: aws.String(acceptLanguage),
 		PortfolioId:    aws.String(portfolioID),
 	}
-	filter := func(v *types.Principal) bool {
-		return aws.ToString(v.PrincipalARN) == principalARN && string(types.PrincipalType(v.PrincipalType)) == principalType
+	filter := func(v awstypes.Principal) bool {
+		return aws.ToString(v.PrincipalARN) == principalARN && string(v.PrincipalType) == principalType
 	}
 
 	return findPrincipalForPortfolio(ctx, conn, input, filter)
@@ -272,10 +270,11 @@ func resourcePrincipalPortfolioAssociationV0() *schema.Resource {
 				ForceNew: true,
 			},
 			"principal_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  types.PrincipalTypeIam,
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				Default:          awstypes.PrincipalTypeIam,
+				ValidateDiagFunc: enum.Validate[awstypes.PrincipalType](),
 			},
 		},
 	}
