@@ -87,7 +87,7 @@ func sweepComponents(region string) error {
 		}
 
 		for _, v := range page.ComponentVersionList {
-			r := ResourceComponent()
+			r := resourceComponent()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.Arn))
 

@@ -9,17 +9,14 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/imagebuilder"
-	"github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfimagebuilder "github.com/hashicorp/terraform-provider-aws/internal/service/imagebuilder"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -47,10 +44,10 @@ func TestAccImageBuilderComponent_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwner),
-					resource.TestCheckResourceAttr(resourceName, "platform", string(types.PlatformLinux)),
+					resource.TestCheckResourceAttr(resourceName, "platform", string(awstypes.PlatformLinux)),
 					resource.TestCheckResourceAttr(resourceName, "supported_os_versions.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.ComponentTypeBuild)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.ComponentTypeBuild)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1.0.0"),
 				),
 			},
@@ -187,7 +184,7 @@ func TestAccImageBuilderComponent_Platform_windows(t *testing.T) {
 				Config: testAccComponentConfig_platformWindows(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckComponentExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "platform", string(types.PlatformWindows)),
+					resource.TestCheckResourceAttr(resourceName, "platform", string(awstypes.PlatformWindows)),
 				),
 			},
 			{
@@ -310,49 +307,35 @@ func testAccCheckComponentDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			input := &imagebuilder.GetComponentInput{
-				ComponentBuildVersionArn: aws.String(rs.Primary.ID),
-			}
+			_, err := tfimagebuilder.FindComponentByARN(ctx, conn, rs.Primary.ID)
 
-			output, err := conn.GetComponent(ctx, input)
-
-			if errs.MessageContains(err, tfimagebuilder.ResourceNotFoundException, "cannot be found") {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
 			if err != nil {
-				return create.Error(names.ImageBuilder, create.ErrActionCheckingDestroyed, "tfimagebuilder", rs.Primary.ID, err)
+				return err
 			}
 
-			if output != nil {
-				return fmt.Errorf("Image Builder Component (%s) still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("Image Builder Component %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckComponentExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckComponentExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("resource not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderClient(ctx)
 
-		input := &imagebuilder.GetComponentInput{
-			ComponentBuildVersionArn: aws.String(rs.Primary.ID),
-		}
+		_, err := tfimagebuilder.FindComponentByARN(ctx, conn, rs.Primary.ID)
 
-		_, err := conn.GetComponent(ctx, input)
-
-		if err != nil {
-			return fmt.Errorf("error getting Image Builder Component (%s): %w", rs.Primary.ID, err)
-		}
-
-		return nil
+		return err
 	}
 }
 

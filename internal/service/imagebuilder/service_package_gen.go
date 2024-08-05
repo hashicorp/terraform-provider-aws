@@ -93,7 +93,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceComponent,
+			Factory:  resourceComponent,
 			TypeName: "aws_imagebuilder_component",
 			Name:     "Component",
 			Tags: &types.ServicePackageResourceTags{
