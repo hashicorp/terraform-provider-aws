@@ -448,6 +448,32 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 		},
 	}
 
+	subSlotValueElicitationSettingLNB := schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[SubSlotValueElicitationSettingData](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Blocks: map[string]schema.Block{
+				"prompt_specification":            promptSpecificationLNB,
+				"default_value_specification":     defaultValueSpecificationLNB,
+				"sample_utterance":                sampleUtteranceLNB,
+				"wait_and_continue_specification": waitAndContinueSpecificationLNB,
+			},
+		},
+	}
+
+	slotSpecificationsLNB := schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[SlotSpecificationsData](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"slot_type_id": schema.StringAttribute{
+					Required: true,
+				},
+			},
+			Blocks: map[string]schema.Block{
+				"value_elicitation_setting": subSlotValueElicitationSettingLNB,
+			},
+		},
+	}
+
 	subSlotSettingLNB := schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[SubSlotSettingData](ctx),
 		NestedObject: schema.NestedBlockObject{
@@ -455,6 +481,9 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 				"expression": schema.StringAttribute{
 					Optional: true,
 				},
+			},
+			Blocks: map[string]schema.Block{
+				"slot_specifications": slotSpecificationsLNB,
 			},
 		},
 	}
@@ -759,6 +788,24 @@ type resourceSlotData struct {
 	Timeouts                timeouts.Value                                               `tfsdk:"timeouts"`
 	SlotTypeID              types.String                                                 `tfsdk:"slot_type_id"`
 	ValueElicitationSetting fwtypes.ListNestedObjectValueOf[ValueElicitationSettingData] `tfsdk:"value_elicitation_setting"`
+	SubSlotSetting          fwtypes.ListNestedObjectValueOf[SubSlotSettingData]          `tfsdk:"sub_slot_setting"`
+}
+
+type SubSlotSettingData struct {
+	Expression        types.String                                            `tfsdk:"expression"`
+	SlotSpecification fwtypes.ListNestedObjectValueOf[SlotSpecificationsData] `tfsdk:"slot_specification"`
+}
+
+type SlotSpecificationsData struct {
+	SlotTypeID              types.String                                                        `tfsdk:"slot_type_id"`
+	ValueElicitationSetting fwtypes.ListNestedObjectValueOf[SubSlotValueElicitationSettingData] `tfsdk:"value_elicitation_setting"`
+}
+
+type SubSlotValueElicitationSettingData struct {
+	PromptSpecification          fwtypes.ListNestedObjectValueOf[PromptSpecification]              `tfsdk:"prompt_specification"`
+	DefaultValueSpecification    fwtypes.ListNestedObjectValueOf[DefaultValueSpecificationData]    `tfsdk:"default_value_specification"`
+	SampleUtterance              fwtypes.ListNestedObjectValueOf[SampleUtterance]                  `tfsdk:"sample_utterance"`
+	WaitAndContinueSpecification fwtypes.ListNestedObjectValueOf[WaitAndContinueSpecificationData] `tfsdk:"wait_and_continue_specification"`
 }
 
 type MultipleValuesSettingData struct {
