@@ -11,22 +11,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusHostedConnectionState(ctx context.Context, conn *directconnect.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindHostedConnectionByID(ctx, conn, id)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, string(output.ConnectionState), nil
-	}
-}
-
 func statusLagState(ctx context.Context, conn *directconnect.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindLagByID(ctx, conn, id)

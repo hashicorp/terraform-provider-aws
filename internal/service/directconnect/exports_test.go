@@ -12,6 +12,7 @@ var (
 	ResourceGateway                    = resourceGateway
 	ResourceGatewayAssociation         = resourceGatewayAssociation
 	ResourceGatewayAssociationProposal = resourceGatewayAssociationProposal
+	ResourceHostedConnection           = resourceHostedConnection
 
 	FindBGPPeerByThreePartKey          = findBGPPeerByThreePartKey
 	FindConnectionByID                 = findConnectionByID
@@ -19,6 +20,7 @@ var (
 	FindGatewayAssociationByID         = findGatewayAssociationByID
 	FindGatewayAssociationProposalByID = findGatewayAssociationProposalByID
 	FindGatewayByID                    = findGatewayByID
+	FindHostedConnectionByID           = findHostedConnectionByID
 	FindVirtualInterfaceByID           = findVirtualInterfaceByID
 	GatewayAssociationStateUpgradeV0   = gatewayAssociationStateUpgradeV0
 	ValidConnectionBandWidth           = validConnectionBandWidth

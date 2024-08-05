@@ -90,8 +90,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Gateway Association Proposal",
 		},
 		{
-			Factory:  ResourceHostedConnection,
+			Factory:  resourceHostedConnection,
 			TypeName: "aws_dx_hosted_connection",
+			Name:     "Hosted Connection",
 		},
 		{
 			Factory:  ResourceHostedPrivateVirtualInterface,

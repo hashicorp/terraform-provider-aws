@@ -5,7 +5,6 @@ package directconnect_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -22,13 +21,10 @@ import (
 
 func TestAccDirectConnectConnectionConfirmation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	env, err := testAccCheckHostedConnectionEnv()
-	if err != nil {
-		acctest.Skip(t, err.Error())
-	}
+	connectionID := acctest.SkipIfEnvVarNotSet(t, "TEST_AWS_DX_CONNECTION_ID")
+	ownerAccountID := acctest.SkipIfEnvVarNotSet(t, "TEST_AWS_DX_OWNER_ACCOUNT_ID")
 
 	var providers []*schema.Provider
-
 	connectionName := fmt.Sprintf("tf-dx-%s", sdkacctest.RandString(5))
 	resourceName := "aws_dx_connection_confirmation.test"
 	providerFunc := testAccConnectionConfirmationProvider(&providers, 0)
@@ -44,22 +40,18 @@ func TestAccDirectConnectConnectionConfirmation_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckHostedConnectionDestroy(ctx, altProviderFunc),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectionConfirmationConfig_basic(connectionName, env.ConnectionId, env.OwnerAccountId),
+				Config: testAccConnectionConfirmationConfig_basic(connectionName, connectionID, ownerAccountID),
 				Check:  testAccCheckConnectionConfirmationExists(ctx, resourceName, providerFunc),
 			},
 		},
 	})
 }
 
-func testAccCheckConnectionConfirmationExists(ctx context.Context, name string, providerFunc func() *schema.Provider) resource.TestCheckFunc {
+func testAccCheckConnectionConfirmationExists(ctx context.Context, n string, providerFunc func() *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
-
-		if rs.Primary.ID == "" {
-			return errors.New("No Direct Connect Connection ID is set")
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		provider := providerFunc()
@@ -79,16 +71,16 @@ func testAccCheckConnectionConfirmationExists(ctx context.Context, name string, 
 	}
 }
 
-func testAccConnectionConfirmationConfig_basic(name, connectionId, ownerAccountId string) string {
+func testAccConnectionConfirmationConfig_basic(name, connectionID, ownerAccountID string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAlternateAccountProvider(),
 		fmt.Sprintf(`
 resource "aws_dx_hosted_connection" "connection" {
   provider = "awsalternate"
 
-  name             = "%s"
-  connection_id    = "%s"
-  owner_account_id = "%s"
+  name             = %[1]q
+  connection_id    = %[2]q
+  owner_account_id = %[3]q
   bandwidth        = "100Mbps"
   vlan             = 4092
 }
@@ -96,7 +88,7 @@ resource "aws_dx_hosted_connection" "connection" {
 resource "aws_dx_connection_confirmation" "test" {
   connection_id = aws_dx_hosted_connection.connection.id
 }
-`, name, connectionId, ownerAccountId))
+`, name, connectionID, ownerAccountID))
 }
 
 func testAccConnectionConfirmationProvider(providers *[]*schema.Provider, index int) func() *schema.Provider {

@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
@@ -102,7 +103,10 @@ func deleteConnectionLAGAssociation(ctx context.Context, conn *directconnect.Cli
 		LagId:        aws.String(lagID),
 	}
 
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.DirectConnectClientException](ctx, connectionDisassociatedTimeout,
+	const (
+		timeout = 1 * time.Minute
+	)
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.DirectConnectClientException](ctx, timeout,
 		func() (interface{}, error) {
 			return conn.DisassociateConnectionFromLag(ctx, input)
 		}, "is in a transitioning state")
