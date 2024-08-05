@@ -8,19 +8,22 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/imagebuilder"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters"
 	namevaluesfiltersv2 "github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters/v2"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_imagebuilder_distribution_configurations")
-func DataSourceDistributionConfigurations() *schema.Resource {
+// @SDKDataSource("aws_imagebuilder_distribution_configurations", name="Distribution Configurations")
+func dataSourceDistributionConfigurations() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDistributionConfigurationsRead,
+
 		Schema: map[string]*schema.Schema{
 			names.AttrARNs: {
 				Type:     schema.TypeSet,
@@ -47,22 +50,36 @@ func dataSourceDistributionConfigurationsRead(ctx context.Context, d *schema.Res
 		input.Filters = namevaluesfiltersv2.New(v.(*schema.Set)).ImageBuilderFilters()
 	}
 
-	out, err := conn.ListDistributionConfigurations(ctx, input)
+	distributionConfigurations, err := findDistributionConfigurations(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Image Builder Distribution Configurations: %s", err)
 	}
 
-	var arns, nms []string
-
-	for _, r := range out.DistributionConfigurationSummaryList {
-		arns = append(arns, aws.ToString(r.Arn))
-		nms = append(nms, aws.ToString(r.Name))
-	}
-
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set(names.AttrARNs, arns)
-	d.Set(names.AttrNames, nms)
+	d.Set(names.AttrARNs, tfslices.ApplyToAll(distributionConfigurations, func(v awstypes.DistributionConfigurationSummary) string {
+		return aws.ToString(v.Arn)
+	}))
+	d.Set(names.AttrNames, tfslices.ApplyToAll(distributionConfigurations, func(v awstypes.DistributionConfigurationSummary) string {
+		return aws.ToString(v.Name)
+	}))
 
 	return diags
+}
+
+func findDistributionConfigurations(ctx context.Context, conn *imagebuilder.Client, input *imagebuilder.ListDistributionConfigurationsInput) ([]awstypes.DistributionConfigurationSummary, error) {
+	var output []awstypes.DistributionConfigurationSummary
+
+	pages := imagebuilder.NewListDistributionConfigurationsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.DistributionConfigurationSummaryList...)
+	}
+
+	return output, nil
 }

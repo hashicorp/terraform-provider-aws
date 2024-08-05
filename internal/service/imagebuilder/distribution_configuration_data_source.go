@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_imagebuilder_distribution_configuration")
+// @SDKDataSource("aws_imagebuilder_distribution_configuration", name="Distribution Configuration")
 // @Tags
 func dataSourceDistributionConfiguration() *schema.Resource {
 	return &schema.Resource{

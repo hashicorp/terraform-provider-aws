@@ -57,11 +57,13 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  dataSourceDistributionConfiguration,
 			TypeName: "aws_imagebuilder_distribution_configuration",
+			Name:     "Distribution Configuration",
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceDistributionConfigurations,
+			Factory:  dataSourceDistributionConfigurations,
 			TypeName: "aws_imagebuilder_distribution_configurations",
+			Name:     "Distribution Configurations",
 		},
 		{
 			Factory:  DataSourceImage,
