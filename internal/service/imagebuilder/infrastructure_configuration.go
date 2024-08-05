@@ -27,12 +27,13 @@ import (
 
 // @SDKResource("aws_imagebuilder_infrastructure_configuration", name="Infrastructure Configuration")
 // @Tags(identifierAttribute="id")
-func ResourceInfrastructureConfiguration() *schema.Resource {
+func resourceInfrastructureConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInfrastructureConfigurationCreate,
 		ReadWithoutTimeout:   resourceInfrastructureConfigurationRead,
 		UpdateWithoutTimeout: resourceInfrastructureConfigurationUpdate,
 		DeleteWithoutTimeout: resourceInfrastructureConfigurationDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -208,36 +209,24 @@ func resourceInfrastructureConfigurationCreate(ctx context.Context, d *schema.Re
 		input.SubnetId = aws.String(v.(string))
 	}
 
-	var output *imagebuilder.CreateInfrastructureConfigurationOutput
-	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
-		var err error
+	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
+		func() (interface{}, error) {
+			return conn.CreateInfrastructureConfiguration(ctx, input)
+		},
+		func(err error) (bool, error) {
+			if errs.Contains(err, "instance profile does not exist") {
+				return true, err
+			}
 
-		output, err = conn.CreateInfrastructureConfiguration(ctx, input)
-
-		if errs.Contains(err, "instance profile does not exist") {
-			return retry.RetryableError(err)
-		}
-
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		output, err = conn.CreateInfrastructureConfiguration(ctx, input)
-	}
+			return false, err
+		},
+	)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Image Builder Infrastructure Configuration: %s", err)
 	}
 
-	if output == nil {
-		return sdkdiag.AppendErrorf(diags, "creating Image Builder Infrastructure Configuration: empty response")
-	}
-
-	d.SetId(aws.ToString(output.InfrastructureConfigurationArn))
+	d.SetId(aws.ToString(outputRaw.(*imagebuilder.CreateInfrastructureConfigurationOutput).InfrastructureConfigurationArn))
 
 	return append(diags, resourceInfrastructureConfigurationRead(ctx, d, meta)...)
 }
@@ -246,46 +235,36 @@ func resourceInfrastructureConfigurationRead(ctx context.Context, d *schema.Reso
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
-	input := &imagebuilder.GetInfrastructureConfigurationInput{
-		InfrastructureConfigurationArn: aws.String(d.Id()),
-	}
+	infrastructureConfiguration, err := findInfrastructureConfigurationByARN(ctx, conn, d.Id())
 
-	output, err := conn.GetInfrastructureConfiguration(ctx, input)
-
-	if !d.IsNewResource() && errs.MessageContains(err, ResourceNotFoundException, "cannot be found") {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Image Builder Infrastructure Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting Image Builder Infrastructure Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Image Builder Infrastructure Configuration (%s): %s", d.Id(), err)
 	}
-
-	if output == nil || output.InfrastructureConfiguration == nil {
-		return sdkdiag.AppendErrorf(diags, "getting Image Builder Infrastructure Configuration (%s): empty response", d.Id())
-	}
-
-	infrastructureConfiguration := output.InfrastructureConfiguration
 
 	d.Set(names.AttrARN, infrastructureConfiguration.Arn)
 	d.Set("date_created", infrastructureConfiguration.DateCreated)
 	d.Set("date_updated", infrastructureConfiguration.DateUpdated)
 	d.Set(names.AttrDescription, infrastructureConfiguration.Description)
-
 	if infrastructureConfiguration.InstanceMetadataOptions != nil {
-		d.Set("instance_metadata_options", []interface{}{
-			flattenInstanceMetadataOptions(infrastructureConfiguration.InstanceMetadataOptions),
-		})
+		if err := d.Set("instance_metadata_options", []interface{}{flattenInstanceMetadataOptions(infrastructureConfiguration.InstanceMetadataOptions)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting instance_metadata_options: %s", err)
+		}
 	} else {
 		d.Set("instance_metadata_options", nil)
 	}
-
 	d.Set("instance_profile_name", infrastructureConfiguration.InstanceProfileName)
 	d.Set("instance_types", infrastructureConfiguration.InstanceTypes)
 	d.Set("key_pair", infrastructureConfiguration.KeyPair)
 	if infrastructureConfiguration.Logging != nil {
-		d.Set("logging", []interface{}{flattenLogging(infrastructureConfiguration.Logging)})
+		if err := d.Set("logging", []interface{}{flattenLogging(infrastructureConfiguration.Logging)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting logging: %s", err)
+		}
 	} else {
 		d.Set("logging", nil)
 	}
@@ -294,10 +273,9 @@ func resourceInfrastructureConfigurationRead(ctx context.Context, d *schema.Reso
 	d.Set(names.AttrSecurityGroupIDs, infrastructureConfiguration.SecurityGroupIds)
 	d.Set(names.AttrSNSTopicARN, infrastructureConfiguration.SnsTopicArn)
 	d.Set(names.AttrSubnetID, infrastructureConfiguration.SubnetId)
+	d.Set("terminate_instance_on_failure", infrastructureConfiguration.TerminateInstanceOnFailure)
 
 	setTagsOut(ctx, infrastructureConfiguration.Tags)
-
-	d.Set("terminate_instance_on_failure", infrastructureConfiguration.TerminateInstanceOnFailure)
 
 	return diags
 }
@@ -364,23 +342,18 @@ func resourceInfrastructureConfigurationUpdate(ctx context.Context, d *schema.Re
 			input.SubnetId = aws.String(v.(string))
 		}
 
-		err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
-			_, err := conn.UpdateInfrastructureConfiguration(ctx, input)
+		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
+			func() (interface{}, error) {
+				return conn.UpdateInfrastructureConfiguration(ctx, input)
+			},
+			func(err error) (bool, error) {
+				if errs.Contains(err, "instance profile does not exist") {
+					return true, err
+				}
 
-			if errs.Contains(err, "instance profile does not exist") {
-				return retry.RetryableError(err)
-			}
-
-			if err != nil {
-				return retry.NonRetryableError(err)
-			}
-
-			return nil
-		})
-
-		if tfresource.TimedOut(err) {
-			_, err = conn.UpdateInfrastructureConfiguration(ctx, input)
-		}
+				return false, err
+			},
+		)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Image Builder Infrastructure Configuration (%s): %s", d.Id(), err)
@@ -394,13 +367,12 @@ func resourceInfrastructureConfigurationDelete(ctx context.Context, d *schema.Re
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
-	input := &imagebuilder.DeleteInfrastructureConfigurationInput{
+	log.Printf("[DEBUG] Deleting Image Infrastructure Configuration: %s", d.Id())
+	_, err := conn.DeleteInfrastructureConfiguration(ctx, &imagebuilder.DeleteInfrastructureConfigurationInput{
 		InfrastructureConfigurationArn: aws.String(d.Id()),
-	}
+	})
 
-	_, err := conn.DeleteInfrastructureConfiguration(ctx, input)
-
-	if errs.MessageContains(err, ResourceNotFoundException, "cannot be found") {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -409,6 +381,31 @@ func resourceInfrastructureConfigurationDelete(ctx context.Context, d *schema.Re
 	}
 
 	return diags
+}
+
+func findInfrastructureConfigurationByARN(ctx context.Context, conn *imagebuilder.Client, arn string) (*awstypes.InfrastructureConfiguration, error) {
+	input := &imagebuilder.GetInfrastructureConfigurationInput{
+		InfrastructureConfigurationArn: aws.String(arn),
+	}
+
+	output, err := conn.GetInfrastructureConfiguration(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.InfrastructureConfiguration == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.InfrastructureConfiguration, nil
 }
 
 func expandInstanceMetadataOptions(tfMap map[string]interface{}) *awstypes.InstanceMetadataOptions {
