@@ -107,7 +107,7 @@ func (r *lifecyclePolicyResource) Schema(ctx context.Context, request resource.S
 									},
 								},
 								Blocks: map[string]schema.Block{
-									"include_resources": schema.ListNestedBlock{
+									"include_resource": schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[lifecyclePolicyDetailActionIncludeResourcesModel](ctx),
 										Validators: []validator.List{
 											listvalidator.SizeAtMost(1),
@@ -479,7 +479,7 @@ type lifecyclePolicyDetailModel struct {
 }
 
 type lifecyclePolicyDetailActionModel struct {
-	IncludeResources fwtypes.ListNestedObjectValueOf[lifecyclePolicyDetailActionIncludeResourcesModel] `tfsdk:"include_resources"`
+	IncludeResources fwtypes.ListNestedObjectValueOf[lifecyclePolicyDetailActionIncludeResourcesModel] `tfsdk:"include_resource"`
 	Type             fwtypes.StringEnum[awstypes.LifecyclePolicyDetailActionType]                      `tfsdk:"type"`
 }
 

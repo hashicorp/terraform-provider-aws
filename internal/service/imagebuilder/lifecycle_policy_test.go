@@ -80,8 +80,8 @@ func TestAccImageBuilderLifecyclePolicy_policyDetails(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "policy_detail.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.action.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.action.0.type", string(awstypes.LifecyclePolicyDetailActionTypeDisable)),
-					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.action.0.include_resources.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.action.0.include_resources.0.amis", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.action.0.include_resource.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.action.0.include_resource.0.amis", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.exclusion_rules.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.exclusion_rules.0.amis.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.exclusion_rules.0.amis.0.is_public", acctest.CtFalse),
@@ -109,9 +109,9 @@ func TestAccImageBuilderLifecyclePolicy_policyDetails(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "policy_detail.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.action.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.action.0.type", string(awstypes.LifecyclePolicyDetailActionTypeDelete)),
-					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.action.0.include_resources.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.action.0.include_resources.0.amis", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.action.0.include_resources.0.snapshots", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.action.0.include_resource.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.action.0.include_resource.0.amis", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.action.0.include_resource.0.snapshots", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.exclusion_rules.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.exclusion_rules.0.amis.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.exclusion_rules.0.amis.0.is_public", acctest.CtTrue),
@@ -375,7 +375,7 @@ resource "aws_imagebuilder_lifecycle_policy" "test" {
   policy_detail {
     action {
       type = "DISABLE"
-      include_resources {
+      include_resource {
         amis = true
       }
     }
@@ -422,7 +422,7 @@ resource "aws_imagebuilder_lifecycle_policy" "test" {
   policy_detail {
     action {
       type = "DELETE"
-      include_resources {
+      include_resource {
         amis      = true
         snapshots = true
       }
