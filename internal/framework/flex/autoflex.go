@@ -20,6 +20,7 @@ type AutoFlexCtxKey string
 
 const (
 	FieldNamePrefixRecurse AutoFlexCtxKey = "FIELD_NAME_PREFIX_RECURSE"
+	FieldNameSuffixRecurse AutoFlexCtxKey = "FIELD_NAME_SUFFIX_RECURSE"
 
 	MapBlockKey = "MapBlockKey"
 )
@@ -203,7 +204,7 @@ func findFieldFuzzy(ctx context.Context, fieldNameFrom string, valTo, valFrom re
 		}
 	}
 
-	// fourth precedence is using resource prefix
+	// fourth precedence is using field name prefix
 	if v := opts.fieldNamePrefix; v != "" {
 		v = strings.ReplaceAll(v, " ", "")
 		if ctx.Value(FieldNamePrefixRecurse) == nil {
@@ -213,6 +214,19 @@ func findFieldFuzzy(ctx context.Context, fieldNameFrom string, valTo, valFrom re
 				return findFieldFuzzy(ctx, strings.TrimPrefix(fieldNameFrom, v), valTo, valFrom, flexer)
 			}
 			return findFieldFuzzy(ctx, v+fieldNameFrom, valTo, valFrom, flexer)
+		}
+	}
+
+	// fifth precedence is using field name suffix
+	if v := opts.fieldNameSuffix; v != "" {
+		v = strings.ReplaceAll(v, " ", "")
+		if ctx.Value(FieldNameSuffixRecurse) == nil {
+			// so it will only recurse once
+			ctx = context.WithValue(ctx, FieldNameSuffixRecurse, true)
+			if strings.HasSuffix(fieldNameFrom, v) {
+				return findFieldFuzzy(ctx, strings.TrimSuffix(fieldNameFrom, v), valTo, valFrom, flexer)
+			}
+			return findFieldFuzzy(ctx, fieldNameFrom+v, valTo, valFrom, flexer)
 		}
 	}
 
