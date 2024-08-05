@@ -87,7 +87,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `exclusion_rule` - (Optional) Additional rules to specify resources that should be exempt from policy actions.
+* `exclusion_rules` - (Optional) Additional rules to specify resources that should be exempt from policy actions.
 
 ### action
 
@@ -119,7 +119,7 @@ The following arguments are optional:
 * `retain_at_least` - (Optional) For age-based filters, this is the number of resources to keep on hand after the lifecycle DELETE action is applied. Impacted resources are only deleted if you have more than this number of resources. If you have fewer resources than this number, the impacted resource is not deleted.
 * `unit` - (Optional) Defines the unit of time that the lifecycle policy uses to determine impacted resources. This is required for age-based rules. Valid values: `DAYS`, `WEEKS`, `MONTHS` or `YEARS`.
 
-### exclusion_rule
+### exclusion_rules
 
 The following arguments are optional:
 
