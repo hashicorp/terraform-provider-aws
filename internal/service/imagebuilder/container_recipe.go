@@ -423,12 +423,10 @@ func resourceContainerRecipeDelete(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
-	input := &imagebuilder.DeleteContainerRecipeInput{
-		ContainerRecipeArn: aws.String(d.Id()),
-	}
-
 	log.Printf("[DEBUG] Deleting Image Builder Container Recipe: %s", d.Id())
-	_, err := conn.DeleteContainerRecipe(ctx, input)
+	_, err := conn.DeleteContainerRecipe(ctx, &imagebuilder.DeleteContainerRecipeInput{
+		ContainerRecipeArn: aws.String(d.Id()),
+	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
