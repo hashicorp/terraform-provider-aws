@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/elbv2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -17,17 +17,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccELBV2TrustStoreRevocation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf elbv2.DescribeTrustStoreRevocation
+	var conf awstypes.DescribeTrustStoreRevocation
 	resourceName := "aws_lb_trust_store_revocation.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTrustStoreRevocationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -48,14 +49,14 @@ func TestAccELBV2TrustStoreRevocation_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckTrustStoreRevocationExists(ctx context.Context, n string, v *elbv2.DescribeTrustStoreRevocation) resource.TestCheckFunc {
+func testAccCheckTrustStoreRevocationExists(ctx context.Context, n string, v *awstypes.DescribeTrustStoreRevocation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Client(ctx)
 
 		trustStoreARN := rs.Primary.Attributes["trust_store_arn"]
 		revocationID, err := strconv.ParseInt(rs.Primary.Attributes["revocation_id"], 10, 64)
@@ -78,7 +79,7 @@ func testAccCheckTrustStoreRevocationExists(ctx context.Context, n string, v *el
 
 func testAccCheckTrustStoreRevocationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lb_trust_store_revocation" {

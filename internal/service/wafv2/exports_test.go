@@ -5,6 +5,19 @@ package wafv2
 
 // Exports for use in tests only.
 var (
-	ListRuleGroupsPages = listRuleGroupsPages
-	ListWebACLsPages    = listWebACLsPages
+	ResourceIPSet                      = resourceIPSet
+	ResourceRegexPatternSet            = resourceRegexPatternSet
+	ResourceRuleGroup                  = resourceRuleGroup
+	ResourceWebACL                     = resourceWebACL
+	ResourceWebACLAssociation          = resourceWebACLAssociation
+	ResourceWebACLLoggingConfiguration = resourceWebACLLoggingConfiguration
+
+	FindIPSetByThreePartKey           = findIPSetByThreePartKey
+	FindLoggingConfigurationByARN     = findLoggingConfigurationByARN
+	FindRegexPatternSetByThreePartKey = findRegexPatternSetByThreePartKey
+	FindRuleGroupByThreePartKey       = findRuleGroupByThreePartKey
+	FindWebACLByResourceARN           = findWebACLByResourceARN
+	FindWebACLByThreePartKey          = findWebACLByThreePartKey
+	ListRuleGroupsPages               = listRuleGroupsPages
+	ListWebACLsPages                  = listWebACLsPages
 )

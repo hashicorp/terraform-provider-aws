@@ -7,6 +7,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -20,7 +22,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/timestamp"
 )
 
@@ -30,6 +33,18 @@ var regionRegexp = regexache.MustCompile(`^[a-z]{2}(-[a-z]+)+-\d$`)
 
 // validates all listed in https://gist.github.com/shortjared/4c1e3fe52bdfa47522cfe5b41e5d6f22
 var servicePrincipalRegexp = regexache.MustCompile(`^([0-9a-z-]+\.){1,4}(amazonaws|amazon)\.com$`)
+
+func StringIsInt32(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+
+	_, err := strconv.ParseInt(value, 10, 32)
+	if err != nil {
+		errors = append(errors, fmt.Errorf("%q (%q) must be a 32-bit integer", k, v))
+		return
+	}
+
+	return
+}
 
 func Valid4ByteASN(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
@@ -130,11 +145,21 @@ func ValidARNCheck(f ...ARNCheckFunc) schema.SchemaValidateFunc {
 func ValidAccountID(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 
-	// http://docs.aws.amazon.com/lambda/latest/dg/API_AddPermission.html
-	pattern := `^\d{12}$`
-	if !regexache.MustCompile(pattern).MatchString(value) {
+	if !itypes.IsAWSAccountID(value) {
 		errors = append(errors, fmt.Errorf(
 			"%q doesn't look like AWS Account ID (exactly 12 digits): %q",
+			k, value))
+	}
+
+	return
+}
+
+func ValidBase64String(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+
+	if !itypes.IsBase64Encoded(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q (%q) must be base64-encoded",
 			k, value))
 	}
 
@@ -144,7 +169,7 @@ func ValidAccountID(v interface{}, k string) (ws []string, errors []error) {
 // ValidCIDRNetworkAddress ensures that the string value is a valid CIDR that
 // represents a network address - it adds an error otherwise
 func ValidCIDRNetworkAddress(v interface{}, k string) (ws []string, errors []error) {
-	if err := types.ValidateCIDRBlock(v.(string)); err != nil {
+	if err := itypes.ValidateCIDRBlock(v.(string)); err != nil {
 		errors = append(errors, err)
 		return
 	}
@@ -155,10 +180,14 @@ func ValidCIDRNetworkAddress(v interface{}, k string) (ws []string, errors []err
 func ValidIAMPolicyJSON(v interface{}, k string) (ws []string, errors []error) {
 	// IAM Policy documents need to be valid JSON, and pass legacy parsing
 	value := v.(string)
+	value = strings.TrimSpace(value)
 	if len(value) < 1 {
 		errors = append(errors, fmt.Errorf("%q is an empty string, which is not a valid JSON value", k))
-	} else if first := value[:1]; first != "{" {
-		switch value[:1] {
+		return //nolint:nakedret // Naked return due to legacy, non-idiomatic Go function, error handling
+	}
+
+	if first := value[:1]; first != "{" {
+		switch first {
 		case " ", "\t", "\r", "\n":
 			errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: leading space characters are not allowed", k))
 		case `"`:
@@ -183,14 +212,21 @@ func ValidIAMPolicyJSON(v interface{}, k string) (ws []string, errors []error) {
 			// Generic error for if we didn't find something more specific to say.
 			errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: not a JSON object", k))
 		}
-	} else if _, err := structure.NormalizeJsonString(v); err != nil {
+		return //nolint:nakedret // Naked return due to legacy, non-idiomatic Go function, error handling
+	}
+
+	if _, err := structure.NormalizeJsonString(v); err != nil {
 		errStr := err.Error()
 		if err, ok := errs.As[*json.SyntaxError](err); ok {
 			errStr = fmt.Sprintf("%s, at byte offset %d", errStr, err.Offset)
 		}
 		errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: %s", k, errStr))
-	} else if err := basevalidation.JSONNoDuplicateKeys(value); err != nil {
+		return //nolint:nakedret // Naked return due to legacy, non-idiomatic Go function, error handling
+	}
+
+	if err := basevalidation.JSONNoDuplicateKeys(value); err != nil {
 		errors = append(errors, fmt.Errorf("%q contains duplicate JSON keys: %s", k, err))
+		return //nolint:nakedret // Naked return due to legacy, non-idiomatic Go function, error handling
 	}
 
 	return //nolint:nakedret // Just a long function.
@@ -211,7 +247,7 @@ func ValidateIPv4CIDRBlock(cidr string) error {
 		return fmt.Errorf("%q is not a valid IPv4 CIDR block", cidr)
 	}
 
-	if !types.CIDRBlocksEqual(cidr, ipnet.String()) {
+	if !itypes.CIDRBlocksEqual(cidr, ipnet.String()) {
 		return fmt.Errorf("%q is not a valid IPv4 CIDR block; did you mean %q?", cidr, ipnet)
 	}
 
@@ -233,7 +269,7 @@ func ValidateIPv6CIDRBlock(cidr string) error {
 		return fmt.Errorf("%q is not a valid IPv6 CIDR block", cidr)
 	}
 
-	if !types.CIDRBlocksEqual(cidr, ipnet.String()) {
+	if !itypes.CIDRBlocksEqual(cidr, ipnet.String()) {
 		return fmt.Errorf("%q is not a valid IPv6 CIDR block; did you mean %q?", cidr, ipnet)
 	}
 
@@ -361,20 +397,9 @@ func ValidOnceAWeekWindowFormat(v interface{}, k string) (ws []string, errors []
 	return
 }
 
-func ValidRegionName(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-
-	if value == "" {
-		return ws, errors
-	}
-	if !regionRegexp.MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"%q region name is malformed(%q): %q",
-			k, regionRegexp, value))
-	}
-
-	return
-}
+var (
+	ValidRegionName = validation.StringMatch(regionRegexp, "must be a valid AWS Region Code")
+)
 
 func ValidStringIsJSONOrYAML(v interface{}, k string) (ws []string, errors []error) {
 	if looksLikeJSONString(v) {
@@ -495,6 +520,34 @@ func IsServicePrincipal(value string) (valid bool) {
 	return servicePrincipalRegexp.MatchString(value)
 }
 
+func MapKeyNoMatch(r *regexp.Regexp, message string) schema.SchemaValidateDiagFunc {
+	return func(v interface{}, path cty.Path) diag.Diagnostics {
+		var diags diag.Diagnostics
+		m := v.(map[string]interface{})
+		keys := tfmaps.Keys(m)
+
+		slices.Sort(keys)
+		for _, k := range keys {
+			if ok := r.MatchString(k); ok {
+				var detail string
+				if message != "" {
+					detail = fmt.Sprintf("Map key '%s' %s", k, message)
+				} else {
+					detail = fmt.Sprintf("Map key '%s' must not match regular expression '%s'", k, r)
+				}
+				diags = append(diags, diag.Diagnostic{
+					Severity:      diag.Error,
+					Summary:       "Bad map key",
+					Detail:        detail,
+					AttributePath: path,
+				})
+			}
+		}
+
+		return diags
+	}
+}
+
 func MapKeysAre(keyValidators ...schema.SchemaValidateDiagFunc) schema.SchemaValidateDiagFunc {
 	return func(v interface{}, path cty.Path) diag.Diagnostics {
 		var diags diag.Diagnostics
@@ -509,7 +562,25 @@ func MapKeysAre(keyValidators ...schema.SchemaValidateDiagFunc) schema.SchemaVal
 	}
 }
 
-func MapLenBetween(min, max int) schema.SchemaValidateDiagFunc {
+func MapSizeAtMost(max int) schema.SchemaValidateDiagFunc {
+	return func(v interface{}, path cty.Path) diag.Diagnostics {
+		var diags diag.Diagnostics
+		m := v.(map[string]interface{})
+
+		if l := len(m); l > max {
+			diags = append(diags, diag.Diagnostic{
+				Severity:      diag.Error,
+				Summary:       "Bad map size",
+				Detail:        fmt.Sprintf("Map must contain at most %d elements: length=%d", max, l),
+				AttributePath: path,
+			})
+		}
+
+		return diags
+	}
+}
+
+func MapSizeBetween(min, max int) schema.SchemaValidateDiagFunc {
 	return func(v interface{}, path cty.Path) diag.Diagnostics {
 		var diags diag.Diagnostics
 		m := v.(map[string]interface{})
@@ -517,7 +588,7 @@ func MapLenBetween(min, max int) schema.SchemaValidateDiagFunc {
 		if l := len(m); l < min || l > max {
 			diags = append(diags, diag.Diagnostic{
 				Severity:      diag.Error,
-				Summary:       "Bad map length",
+				Summary:       "Bad map size",
 				Detail:        fmt.Sprintf("Map must contain at least %d elements and at most %d elements: length=%d", min, max, l),
 				AttributePath: path,
 			})

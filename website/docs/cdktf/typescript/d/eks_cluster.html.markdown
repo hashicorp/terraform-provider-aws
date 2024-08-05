@@ -45,7 +45,7 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-* `name` - (Required) Name of the cluster. Must be between 1-100 characters in length. Must begin with an alphanumeric character, and must only contain alphanumeric characters, dashes and underscores (`^[0-9A-Za-z][A-Za-z0-9\-_]+$`).
+* `name` - (Required) Name of the cluster.
 
 ## Attribute Reference
 
@@ -53,6 +53,9 @@ This data source exports the following attributes in addition to the arguments a
 
 * `id` - Name of the cluster
 * `arn` - ARN of the cluster.
+* `accessConfig` - Configuration block for access config.
+    * `authenticationMode` - Values returned are `CONFIG_MAP`, `API` or `API_AND_CONFIG_MAP`
+    * `bootstrapClusterCreatorAdminPermissions` - Default to `true`.
 * `certificateAuthority` - Nested attribute containing `certificate-authority-data` for your cluster.
     * `data` - The base64 encoded certificate data required to communicate with your cluster. Add this to the `certificate-authority-data` section of the `kubeconfig` file for your cluster.
 * `clusterId` - The ID of your local Amazon EKS cluster on the AWS Outpost. This attribute isn't available for an AWS EKS cluster on AWS cloud.
@@ -75,6 +78,8 @@ This data source exports the following attributes in addition to the arguments a
 * `roleArn` - ARN of the IAM role that provides permissions for the Kubernetes control plane to make calls to AWS API operations on your behalf.
 * `status` - Status of the EKS cluster. One of `CREATING`, `ACTIVE`, `DELETING`, `FAILED`.
 * `tags` - Key-value map of resource tags.
+* `upgradePolicy` - (Optional) Configuration block for the support policy to use for the cluster.
+    * `supportType` - (Optional) Support type to use for the cluster.
 * `version` - Kubernetes server version for the cluster.
 * `vpcConfig` - Nested list containing VPC configuration for the cluster.
     * `clusterSecurityGroupId` - The cluster security group that was created by Amazon EKS for the cluster.
@@ -85,4 +90,4 @@ This data source exports the following attributes in addition to the arguments a
     * `subnetIds` – List of subnet IDs
     * `vpcId` – The VPC associated with your cluster.
 
-<!-- cache-key: cdktf-0.20.0 input-c6c973609d8849dfdbe288511dbb8b53a13192e5d23e4a6f41498b65a5c39508 -->
+<!-- cache-key: cdktf-0.20.1 input-2f858927be7bf4d84b730bd1c7bc1415840ed27358e0ce92b62ad60ac4d50047 -->

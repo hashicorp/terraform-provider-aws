@@ -10,14 +10,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/codeartifact"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/codeartifact"
+	"github.com/aws/aws-sdk-go-v2/service/codeartifact/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -27,22 +28,31 @@ import (
 
 // @SDKResource("aws_codeartifact_domain", name="Domain")
 // @Tags(identifierAttribute="arn")
-func ResourceDomain() *schema.Resource {
+func resourceDomain() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDomainCreate,
 		ReadWithoutTimeout:   resourceDomainRead,
 		DeleteWithoutTimeout: resourceDomainDelete,
 		UpdateWithoutTimeout: resourceDomainUpdate,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain": {
+			"asset_size_bytes": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrCreatedTime: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrDomain: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -54,20 +64,16 @@ func ResourceDomain() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"owner": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"created_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"asset_size_bytes": {
+			names.AttrOwner: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"repository_count": {
 				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"s3_bucket_arn": {
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
@@ -80,10 +86,11 @@ func ResourceDomain() *schema.Resource {
 
 func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeArtifactConn(ctx)
+	conn := meta.(*conns.AWSClient).CodeArtifactClient(ctx)
 
+	domain := d.Get(names.AttrDomain).(string)
 	input := &codeartifact.CreateDomainInput{
-		Domain: aws.String(d.Get("domain").(string)),
+		Domain: aws.String(domain),
 		Tags:   getTagsIn(ctx),
 	}
 
@@ -91,50 +98,48 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.EncryptionKey = aws.String(v.(string))
 	}
 
-	v, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 2*time.Minute, func() (any, error) {
-		return conn.CreateDomainWithContext(ctx, input)
-	}, "ValidationException", "KMS key not found")
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating CodeArtifact Domain: %s", err)
-	}
-	domain := v.(*codeartifact.CreateDomainOutput)
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*types.ValidationException](ctx, propagationTimeout, func() (any, error) {
+		return conn.CreateDomain(ctx, input)
+	}, "KMS key not found")
 
-	d.SetId(aws.StringValue(domain.Domain.Arn))
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating CodeArtifact Domain (%s): %s", domain, err)
+	}
+
+	d.SetId(aws.ToString(outputRaw.(*codeartifact.CreateDomainOutput).Domain.Arn))
 
 	return append(diags, resourceDomainRead(ctx, d, meta)...)
 }
 
 func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeArtifactConn(ctx)
+	conn := meta.(*conns.AWSClient).CodeArtifactClient(ctx)
 
-	domainOwner, domainName, err := DecodeDomainID(d.Id())
+	owner, domainName, err := parseDomainARN(d.Id())
 	if err != nil {
-		return create.AppendDiagError(diags, names.CodeArtifact, create.ErrActionReading, ResNameDomain, d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	sm, err := conn.DescribeDomainWithContext(ctx, &codeartifact.DescribeDomainInput{
-		Domain:      aws.String(domainName),
-		DomainOwner: aws.String(domainOwner),
-	})
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codeartifact.ErrCodeResourceNotFoundException) {
-		create.LogNotFoundRemoveState(names.CodeArtifact, create.ErrActionReading, ResNameDomain, d.Id())
+	domain, err := findDomainByTwoPartKey(ctx, conn, owner, domainName)
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] CodeArtifact Domain (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.CodeArtifact, create.ErrActionReading, ResNameDomain, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading CodeArtifact Domain (%s): %s", d.Id(), err)
 	}
 
-	arn := aws.StringValue(sm.Domain.Arn)
-	d.Set("domain", sm.Domain.Name)
-	d.Set("arn", arn)
-	d.Set("encryption_key", sm.Domain.EncryptionKey)
-	d.Set("owner", sm.Domain.Owner)
-	d.Set("asset_size_bytes", strconv.FormatInt(aws.Int64Value(sm.Domain.AssetSizeBytes), 10))
-	d.Set("repository_count", sm.Domain.RepositoryCount)
-	d.Set("created_time", sm.Domain.CreatedTime.Format(time.RFC3339))
+	d.Set(names.AttrARN, domain.Arn)
+	d.Set("asset_size_bytes", strconv.FormatInt(domain.AssetSizeBytes, 10))
+	d.Set(names.AttrCreatedTime, domain.CreatedTime.Format(time.RFC3339))
+	d.Set(names.AttrDomain, domain.Name)
+	d.Set("encryption_key", domain.EncryptionKey)
+	d.Set(names.AttrOwner, domain.Owner)
+	d.Set("repository_count", domain.RepositoryCount)
+	d.Set("s3_bucket_arn", domain.S3BucketArn)
 
 	return diags
 }
@@ -149,22 +154,22 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeArtifactConn(ctx)
-	log.Printf("[DEBUG] Deleting CodeArtifact Domain: %s", d.Id())
+	conn := meta.(*conns.AWSClient).CodeArtifactClient(ctx)
 
-	domainOwner, domainName, err := DecodeDomainID(d.Id())
+	owner, domainName, err := parseDomainARN(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting CodeArtifact Domain (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input := &codeartifact.DeleteDomainInput{
 		Domain:      aws.String(domainName),
-		DomainOwner: aws.String(domainOwner),
+		DomainOwner: aws.String(owner),
 	}
 
-	_, err = conn.DeleteDomainWithContext(ctx, input)
+	log.Printf("[DEBUG] Deleting CodeArtifact Domain: %s", d.Id())
+	_, err = conn.DeleteDomain(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, codeartifact.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -175,12 +180,38 @@ func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func DecodeDomainID(id string) (string, string, error) {
-	repoArn, err := arn.Parse(id)
+func parseDomainARN(v string) (string, string, error) {
+	// arn:${Partition}:codeartifact:${Region}:${Account}:domain/${DomainName}
+	arn, err := arn.Parse(v)
 	if err != nil {
 		return "", "", err
 	}
 
-	domainName := strings.TrimPrefix(repoArn.Resource, "domain/")
-	return repoArn.AccountID, domainName, nil
+	return arn.AccountID, strings.TrimPrefix(arn.Resource, "domain/"), nil
+}
+
+func findDomainByTwoPartKey(ctx context.Context, conn *codeartifact.Client, owner, domainName string) (*types.DomainDescription, error) {
+	input := &codeartifact.DescribeDomainInput{
+		Domain:      aws.String(domainName),
+		DomainOwner: aws.String(owner),
+	}
+
+	output, err := conn.DescribeDomain(ctx, input)
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Domain == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Domain, nil
 }

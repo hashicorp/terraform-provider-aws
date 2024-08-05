@@ -38,8 +38,10 @@ data "aws_secretsmanager_secret" "by-name" {
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the secret.
+* `created_date` - Created date of the secret in UTC.
 * `description` - Description of the secret.
 * `kms_key_id` - Key Management Service (KMS) Customer Master Key (CMK) associated with the secret.
 * `id` - ARN of the secret.
-* `tags` - Tags of the secret.
+* `last_changed_date` - Last updated date of the secret in UTC.
 * `policy` - Resource-based policy document that's attached to the secret.
+* `tags` - Tags of the secret.

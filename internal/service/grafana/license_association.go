@@ -8,19 +8,21 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/managedgrafana"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/grafana"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/grafana/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_grafana_license_association")
-func ResourceLicenseAssociation() *schema.Resource {
+// @SDKResource("aws_grafana_license_association", name="License Association")
+func resourceLicenseAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLicenseAssociationCreate,
 		ReadWithoutTimeout:   resourceLicenseAssociationRead,
@@ -45,10 +47,10 @@ func ResourceLicenseAssociation() *schema.Resource {
 				Computed: true,
 			},
 			"license_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(managedgrafana.LicenseType_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.LicenseType](),
 			},
 			"workspace_id": {
 				Type:     schema.TypeString,
@@ -61,21 +63,21 @@ func ResourceLicenseAssociation() *schema.Resource {
 
 func resourceLicenseAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GrafanaConn(ctx)
+	conn := meta.(*conns.AWSClient).GrafanaClient(ctx)
 
-	input := &managedgrafana.AssociateLicenseInput{
-		LicenseType: aws.String(d.Get("license_type").(string)),
-		WorkspaceId: aws.String(d.Get("workspace_id").(string)),
+	workspaceID := d.Get("workspace_id").(string)
+	input := &grafana.AssociateLicenseInput{
+		LicenseType: awstypes.LicenseType(d.Get("license_type").(string)),
+		WorkspaceId: aws.String(workspaceID),
 	}
 
-	log.Printf("[DEBUG] Creating Grafana License Association: %s", input)
-	output, err := conn.AssociateLicenseWithContext(ctx, input)
+	output, err := conn.AssociateLicense(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Grafana License Association: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Grafana License Association (%s): %s", workspaceID, err)
 	}
 
-	d.SetId(aws.StringValue(output.Workspace.Id))
+	d.SetId(aws.ToString(output.Workspace.Id))
 
 	if _, err := waitLicenseAssociationCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Grafana License Association (%s) create: %s", d.Id(), err)
@@ -86,9 +88,9 @@ func resourceLicenseAssociationCreate(ctx context.Context, d *schema.ResourceDat
 
 func resourceLicenseAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GrafanaConn(ctx)
+	conn := meta.(*conns.AWSClient).GrafanaClient(ctx)
 
-	workspace, err := FindLicensedWorkspaceByID(ctx, conn, d.Id())
+	workspace, err := findLicensedWorkspaceByID(ctx, conn, d.Id())
 
 	if tfresource.NotFound(err) && !d.IsNewResource() {
 		log.Printf("[WARN] Grafana License Association (%s) not found, removing from state", d.Id())
@@ -111,21 +113,22 @@ func resourceLicenseAssociationRead(ctx context.Context, d *schema.ResourceData,
 		d.Set("license_expiration", nil)
 	}
 	d.Set("license_type", workspace.LicenseType)
+	d.Set("workspace_id", d.Id())
 
 	return diags
 }
 
 func resourceLicenseAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GrafanaConn(ctx)
+	conn := meta.(*conns.AWSClient).GrafanaClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Grafana License Association: %s", d.Id())
-	_, err := conn.DisassociateLicenseWithContext(ctx, &managedgrafana.DisassociateLicenseInput{
-		LicenseType: aws.String(d.Get("license_type").(string)),
+	_, err := conn.DisassociateLicense(ctx, &grafana.DisassociateLicenseInput{
+		LicenseType: awstypes.LicenseType(d.Get("license_type").(string)),
 		WorkspaceId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, managedgrafana.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -138,4 +141,35 @@ func resourceLicenseAssociationDelete(ctx context.Context, d *schema.ResourceDat
 	}
 
 	return diags
+}
+
+func findLicensedWorkspaceByID(ctx context.Context, conn *grafana.Client, id string) (*awstypes.WorkspaceDescription, error) {
+	output, err := findWorkspaceByID(ctx, conn, id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output.LicenseType == "" {
+		return nil, &retry.NotFoundError{}
+	}
+
+	return output, nil
+}
+
+func waitLicenseAssociationCreated(ctx context.Context, conn *grafana.Client, id string, timeout time.Duration) (*awstypes.WorkspaceDescription, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.WorkspaceStatusUpgrading),
+		Target:  enum.Slice(awstypes.WorkspaceStatusActive),
+		Refresh: statusWorkspace(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.WorkspaceDescription); ok {
+		return output, err
+	}
+
+	return nil, err
 }

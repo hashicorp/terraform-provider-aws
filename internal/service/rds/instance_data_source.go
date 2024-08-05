@@ -25,19 +25,19 @@ func DataSourceInstance() *schema.Resource {
 		ReadWithoutTimeout: dataSourceInstanceRead,
 
 		Schema: map[string]*schema.Schema{
-			"address": {
+			names.AttrAddress: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"allocated_storage": {
+			names.AttrAllocatedStorage: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"auto_minor_version_upgrade": {
+			names.AttrAutoMinorVersionUpgrade: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -88,27 +88,27 @@ func DataSourceInstance() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"engine": {
+			names.AttrEngine: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"hosted_zone_id": {
+			names.AttrHostedZoneID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"iops": {
+			names.AttrIOPS: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -125,7 +125,7 @@ func DataSourceInstance() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"kms_key_id": {
+						names.AttrKMSKeyID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -165,7 +165,7 @@ func DataSourceInstance() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"port": {
+			names.AttrPort: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -173,11 +173,11 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"preferred_maintenance_window": {
+			names.AttrPreferredMaintenanceWindow: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"publicly_accessible": {
+			names.AttrPubliclyAccessible: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -185,11 +185,11 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"resource_id": {
+			names.AttrResourceID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"storage_encrypted": {
+			names.AttrStorageEncrypted: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -197,7 +197,7 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"storage_type": {
+			names.AttrStorageType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -253,9 +253,9 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	d.SetId(aws.StringValue(instance.DBInstanceIdentifier))
-	d.Set("allocated_storage", instance.AllocatedStorage)
-	d.Set("auto_minor_version_upgrade", instance.AutoMinorVersionUpgrade)
-	d.Set("availability_zone", instance.AvailabilityZone)
+	d.Set(names.AttrAllocatedStorage, instance.AllocatedStorage)
+	d.Set(names.AttrAutoMinorVersionUpgrade, instance.AutoMinorVersionUpgrade)
+	d.Set(names.AttrAvailabilityZone, instance.AvailabilityZone)
 	d.Set("backup_retention_period", instance.BackupRetentionPeriod)
 	d.Set("ca_cert_identifier", instance.CACertificateIdentifier)
 	d.Set("db_cluster_identifier", instance.DBClusterIdentifier)
@@ -273,10 +273,10 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 		d.Set("db_subnet_group", "")
 	}
 	d.Set("enabled_cloudwatch_logs_exports", aws.StringValueSlice(instance.EnabledCloudwatchLogsExports))
-	d.Set("engine", instance.Engine)
-	d.Set("engine_version", instance.EngineVersion)
-	d.Set("iops", instance.Iops)
-	d.Set("kms_key_id", instance.KmsKeyId)
+	d.Set(names.AttrEngine, instance.Engine)
+	d.Set(names.AttrEngineVersion, instance.EngineVersion)
+	d.Set(names.AttrIOPS, instance.Iops)
+	d.Set(names.AttrKMSKeyID, instance.KmsKeyId)
 	d.Set("license_model", instance.LicenseModel)
 	d.Set("master_username", instance.MasterUsername)
 	if instance.MasterUserSecret != nil {
@@ -294,13 +294,13 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	})
 	d.Set("option_group_memberships", optionGroupNames)
 	d.Set("preferred_backup_window", instance.PreferredBackupWindow)
-	d.Set("preferred_maintenance_window", instance.PreferredMaintenanceWindow)
-	d.Set("publicly_accessible", instance.PubliclyAccessible)
+	d.Set(names.AttrPreferredMaintenanceWindow, instance.PreferredMaintenanceWindow)
+	d.Set(names.AttrPubliclyAccessible, instance.PubliclyAccessible)
 	d.Set("replicate_source_db", instance.ReadReplicaSourceDBInstanceIdentifier)
-	d.Set("resource_id", instance.DbiResourceId)
-	d.Set("storage_encrypted", instance.StorageEncrypted)
+	d.Set(names.AttrResourceID, instance.DbiResourceId)
+	d.Set(names.AttrStorageEncrypted, instance.StorageEncrypted)
 	d.Set("storage_throughput", instance.StorageThroughput)
-	d.Set("storage_type", instance.StorageType)
+	d.Set(names.AttrStorageType, instance.StorageType)
 	d.Set("timezone", instance.Timezone)
 	vpcSecurityGroupIDs := tfslices.ApplyToAll(instance.VpcSecurityGroups, func(v *rds.VpcSecurityGroupMembership) string {
 		return aws.StringValue(v.VpcSecurityGroupId)
@@ -310,15 +310,15 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	// Per AWS SDK Go docs:
 	// The endpoint might not be shown for instances whose status is creating.
 	if dbEndpoint := instance.Endpoint; dbEndpoint != nil {
-		d.Set("address", dbEndpoint.Address)
-		d.Set("endpoint", fmt.Sprintf("%s:%d", aws.StringValue(dbEndpoint.Address), aws.Int64Value(dbEndpoint.Port)))
-		d.Set("hosted_zone_id", dbEndpoint.HostedZoneId)
-		d.Set("port", dbEndpoint.Port)
+		d.Set(names.AttrAddress, dbEndpoint.Address)
+		d.Set(names.AttrEndpoint, fmt.Sprintf("%s:%d", aws.StringValue(dbEndpoint.Address), aws.Int64Value(dbEndpoint.Port)))
+		d.Set(names.AttrHostedZoneID, dbEndpoint.HostedZoneId)
+		d.Set(names.AttrPort, dbEndpoint.Port)
 	} else {
-		d.Set("address", nil)
-		d.Set("endpoint", nil)
-		d.Set("hosted_zone_id", nil)
-		d.Set("port", nil)
+		d.Set(names.AttrAddress, nil)
+		d.Set(names.AttrEndpoint, nil)
+		d.Set(names.AttrHostedZoneID, nil)
+		d.Set(names.AttrPort, nil)
 	}
 
 	setTagsOut(ctx, instance.TagList)

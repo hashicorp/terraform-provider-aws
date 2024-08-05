@@ -7,7 +7,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/attr/xattr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -57,29 +57,25 @@ func TestRegexpTypeValueFromTerraform(t *testing.T) {
 	}
 }
 
-func TestRegexpTypeValidate(t *testing.T) {
+func TestRegexpValidateAttribute(t *testing.T) {
 	t.Parallel()
 
 	type testCase struct {
-		val         tftypes.Value
+		val         fwtypes.Regexp
 		expectError bool
 	}
 	tests := map[string]testCase{
-		"not a string": {
-			val:         tftypes.NewValue(tftypes.Bool, true),
-			expectError: true,
+		"unknown": {
+			val: fwtypes.RegexpUnknown(),
 		},
-		"unknown string": {
-			val: tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+		"null": {
+			val: fwtypes.RegexpNull(),
 		},
-		"null string": {
-			val: tftypes.NewValue(tftypes.String, nil),
+		"valid": {
+			val: fwtypes.RegexpValue(`\w+`),
 		},
-		"valid string": {
-			val: tftypes.NewValue(tftypes.String, `\w+`),
-		},
-		"invalid string": {
-			val:         tftypes.NewValue(tftypes.String, `(`),
+		"invalid": {
+			val:         fwtypes.RegexpValue(`(`),
 			expectError: true,
 		},
 	}
@@ -91,14 +87,12 @@ func TestRegexpTypeValidate(t *testing.T) {
 
 			ctx := context.Background()
 
-			diags := fwtypes.RegexpType.Validate(ctx, test.val, path.Root("test"))
+			req := xattr.ValidateAttributeRequest{}
+			resp := xattr.ValidateAttributeResponse{}
 
-			if !diags.HasError() && test.expectError {
-				t.Fatal("expected error, got no error")
-			}
-
-			if diags.HasError() && !test.expectError {
-				t.Fatalf("got unexpected error: %#v", diags)
+			test.val.ValidateAttribute(ctx, req, &resp)
+			if resp.Diagnostics.HasError() != test.expectError {
+				t.Errorf("resp.Diagnostics.HasError() = %t, want = %t", resp.Diagnostics.HasError(), test.expectError)
 			}
 		})
 	}

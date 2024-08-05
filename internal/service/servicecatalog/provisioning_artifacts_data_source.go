@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_servicecatalog_provisioning_artifacts")
@@ -44,11 +45,11 @@ func DataSourceProvisioningArtifacts() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						"created_time": {
+						names.AttrCreatedTime: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"description": {
+						names.AttrDescription: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -56,15 +57,15 @@ func DataSourceProvisioningArtifacts() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -96,7 +97,7 @@ func dataSourceProvisioningArtifactsRead(ctx context.Context, d *schema.Resource
 		return sdkdiag.AppendErrorf(diags, "setting provisioning_artifact_details: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func flattenProvisioningArtifactDetails(apiObjects []*servicecatalog.ProvisioningArtifactDetail) []interface{} {
@@ -127,22 +128,22 @@ func flattenProvisioningArtifactDetail(apiObject *servicecatalog.ProvisioningArt
 		tfMap["active"] = aws.BoolValue(apiObject.Active)
 	}
 	if apiObject.CreatedTime != nil {
-		tfMap["created_time"] = aws.TimeValue(apiObject.CreatedTime).String()
+		tfMap[names.AttrCreatedTime] = aws.TimeValue(apiObject.CreatedTime).String()
 	}
 	if apiObject.Description != nil {
-		tfMap["description"] = aws.StringValue(apiObject.Description)
+		tfMap[names.AttrDescription] = aws.StringValue(apiObject.Description)
 	}
 	if apiObject.Guidance != nil {
 		tfMap["guidance"] = aws.StringValue(apiObject.Guidance)
 	}
 	if apiObject.Id != nil {
-		tfMap["id"] = aws.StringValue(apiObject.Id)
+		tfMap[names.AttrID] = aws.StringValue(apiObject.Id)
 	}
 	if apiObject.Name != nil {
-		tfMap["name"] = aws.StringValue(apiObject.Name)
+		tfMap[names.AttrName] = aws.StringValue(apiObject.Name)
 	}
 	if apiObject.Type != nil {
-		tfMap["type"] = aws.StringValue(apiObject.Type)
+		tfMap[names.AttrType] = aws.StringValue(apiObject.Type)
 	}
 
 	return tfMap

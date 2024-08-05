@@ -16,26 +16,29 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_sqs_queue")
+// @Tags(identifierAttribute="url")
 func dataSourceQueue() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceQueueRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
-			"url": {
+			names.AttrTags: tftags.TagsSchemaComputed(),
+			names.AttrURL: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -44,44 +47,38 @@ func dataSourceQueue() *schema.Resource {
 }
 
 func dataSourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SQSClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	urlOutput, err := findQueueURLByName(ctx, conn, name)
 
 	if err != nil {
-		return diag.Errorf("reading SQS Queue (%s) URL: %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "reading SQS Queue (%s) URL: %s", name, err)
 	}
 
 	queueURL := aws.ToString(urlOutput)
 	attributesOutput, err := findQueueAttributeByTwoPartKey(ctx, conn, queueURL, types.QueueAttributeNameQueueArn)
 
 	if err != nil {
-		return diag.Errorf("reading SQS Queue (%s) ARN attribute: %s", queueURL, err)
+		return sdkdiag.AppendErrorf(diags, "reading SQS Queue (%s) ARN attribute: %s", queueURL, err)
 	}
 
 	d.SetId(queueURL)
-	d.Set("arn", attributesOutput)
-	d.Set("url", queueURL)
-
-	tags, err := listTags(ctx, conn, queueURL)
+	d.Set(names.AttrARN, attributesOutput)
+	d.Set(names.AttrURL, queueURL)
 
 	if errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
 		// Some partitions may not support tagging, giving error
 		log.Printf("[WARN] failed listing tags for SQS Queue (%s): %s", d.Id(), err)
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("listing tags for SQS Queue (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for SQS Queue (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	return nil
+	return diags
 }
 
 func findQueueURLByName(ctx context.Context, conn *sqs.Client, name string) (*string, error) {

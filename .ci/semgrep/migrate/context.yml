@@ -28,6 +28,11 @@ rules:
       - pattern-not: conn.Handlers.$X(...)
       - pattern-not: conn.Handlers.$X.$Y(...)
       - pattern-not: conn.Options()
+      - pattern-not: codestarconnections_sdkv2.$API()
+      - pattern-not: connectcases_sdkv2.$API()
+      - pattern-not: kafkaconnect_sdkv2.$API()
+      - pattern-not: mediaconnect_sdkv2.$API()
+      - pattern-not: pcaconnectorad_sdkv2.$API()
     severity: ERROR
   - id: context-todo
     languages: [go]

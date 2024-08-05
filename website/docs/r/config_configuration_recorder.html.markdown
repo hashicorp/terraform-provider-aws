@@ -62,6 +62,31 @@ resource "aws_config_configuration_recorder" "foo" {
 }
 ```
 
+### Periodic Recording
+
+```terraform
+resource "aws_config_configuration_recorder" "foo" {
+  name     = "example"
+  role_arn = aws_iam_role.r.arn
+
+  recording_group {
+    all_supported                 = false
+    include_global_resource_types = false
+    resource_types                = ["AWS::EC2::Instance", "AWS::EC2::NetworkInterface"]
+  }
+
+  recording_mode {
+    recording_frequency = "CONTINUOUS"
+
+    recording_mode_override {
+      description         = "Only record EC2 network interfaces daily"
+      resource_types      = ["AWS::EC2::NetworkInterface"]
+      recording_frequency = "DAILY"
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
@@ -69,6 +94,7 @@ This resource supports the following arguments:
 * `name` - (Optional) The name of the recorder. Defaults to `default`. Changing it recreates the resource.
 * `role_arn` - (Required) Amazon Resource Name (ARN) of the IAM role. Used to make read or write requests to the delivery channel and to describe the AWS resources associated with the account. See [AWS Docs](http://docs.aws.amazon.com/config/latest/developerguide/iamrole-permissions.html) for more details.
 * `recording_group` - (Optional) Recording group - see below.
+* `recording_mode` - (Optional) Recording mode - see below.
 
 ### recording_group Configuration Block
 
@@ -84,7 +110,18 @@ This resource supports the following arguments:
 
 #### recording_strategy Configuration Block
 
-* ` use_only` - (Optional) The recording strategy for the configuration recorder.See [relevant part of AWS Docs](https://docs.aws.amazon.com/config/latest/APIReference/API_RecordingStrategy.html)
+* ` use_only` - (Optional) The recording strategy for the configuration recorder. See [relevant part of AWS Docs](https://docs.aws.amazon.com/config/latest/APIReference/API_RecordingStrategy.html)
+
+### recording_mode Configuration Block
+
+* `recording_frequency` - (Required) Default reecording frequency. `CONTINUOUS` or `DAILY`.
+* `recording_mode_override` - (Optional) Recording mode overrides. Detailed below.
+
+#### recording_mode_override Configuration Block
+
+* `description` - (Optional) A description you provide of the override.
+* `resource_types` - (Required) A list that specifies the types of AWS resources for which the override applies to.  See [restrictions in the AWS Docs](https://docs.aws.amazon.com/config/latest/APIReference/API_RecordingModeOverride.html)
+* `recording_frequency` - (Required) The recording frequency for the resources in the override block. `CONTINUOUS` or `DAILY`.
 
 ## Attribute Reference
 

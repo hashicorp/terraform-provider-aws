@@ -10,6 +10,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/function"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -18,10 +19,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tffunction "github.com/hashicorp/terraform-provider-aws/internal/function"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+var _ provider.Provider = &fwprovider{}
+var _ provider.ProviderWithFunctions = &fwprovider{}
 
 // New returns a new, initialized Terraform Plugin Framework-style provider instance.
 // The provider instance is fully configured once the `Configure` method has been called.
@@ -148,6 +154,10 @@ func (p *fwprovider) Schema(ctx context.Context, req provider.SchemaRequest, res
 				Optional:    true,
 				Description: "session token. A session token is only required if you are\nusing temporary security credentials.",
 			},
+			"token_bucket_rate_limiter_capacity": schema.Int64Attribute{
+				Optional:    true,
+				Description: "The capacity of the AWS SDK's token bucket rate limiter.",
+			},
 			"use_dualstack_endpoint": schema.BoolAttribute{
 				Optional:    true,
 				Description: "Resolve an endpoint with DualStack capability",
@@ -254,7 +264,8 @@ func (p *fwprovider) Schema(ctx context.Context, req provider.SchemaRequest, res
 						"tags": schema.MapAttribute{
 							ElementType: types.StringType,
 							Optional:    true,
-							Description: "Resource tags to default across all resources",
+							Description: "Resource tags to default across all resources. " +
+								"Can also be configured with environment variables like `" + tftags.DefaultTagsEnvVarPrefix + "<tag_name>`.",
 						},
 					},
 				},
@@ -402,6 +413,7 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 				if meta != nil {
 					ctx = tftags.NewContext(ctx, meta.DefaultTagsConfig, meta.IgnoreTagsConfig)
 					ctx = meta.RegisterLogger(ctx)
+					ctx = flex.RegisterLogger(ctx)
 				}
 
 				return ctx
@@ -449,6 +461,19 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 	}
 
 	return resources
+}
+
+// Functions returns a slice of functions to instantiate each Function
+// implementation.
+//
+// The function type name is determined by the Function implementing
+// the Metadata method. All functions must have unique names.
+func (p *fwprovider) Functions(_ context.Context) []func() function.Function {
+	return []func() function.Function{
+		tffunction.NewARNBuildFunction,
+		tffunction.NewARNParseFunction,
+		tffunction.NewTrimIAMRolePathFunction,
+	}
 }
 
 func endpointsBlock() schema.SetNestedBlock {

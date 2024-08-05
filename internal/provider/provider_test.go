@@ -9,6 +9,11 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -32,6 +37,8 @@ func TestExpandEndpoints(t *testing.T) { //nolint:paralleltest
 	oldEnv := stashEnv()
 	defer popEnv(oldEnv)
 
+	var expectedDiags diag.Diagnostics
+
 	ctx := context.Background()
 	endpoints := make(map[string]interface{})
 	for _, serviceKey := range names.Aliases() {
@@ -39,9 +46,9 @@ func TestExpandEndpoints(t *testing.T) { //nolint:paralleltest
 	}
 	endpoints["sts"] = "https://sts.fake.test"
 
-	results, err := expandEndpoints(ctx, []interface{}{endpoints})
-	if err != nil {
-		t.Fatalf("Unexpected error: %s", err)
+	results, diags := expandEndpoints(ctx, []interface{}{endpoints})
+	if diff := cmp.Diff(diags, expectedDiags, cmp.Comparer(sdkdiag.Comparer)); diff != "" {
+		t.Errorf("unexpected diagnostics difference: %s", diff)
 	}
 
 	if len(results) != 1 {
@@ -59,6 +66,7 @@ func TestEndpointMultipleKeys(t *testing.T) { //nolint:paralleltest
 		endpoints        map[string]string
 		expectedService  string
 		expectedEndpoint string
+		expectedDiags    diag.Diagnostics
 	}{
 		{
 			endpoints: map[string]string{
@@ -81,6 +89,11 @@ func TestEndpointMultipleKeys(t *testing.T) { //nolint:paralleltest
 			},
 			expectedService:  names.Transcribe,
 			expectedEndpoint: "https://transcribe.fake.test",
+			expectedDiags: diag.Diagnostics{ConflictingEndpointsWarningDiag(
+				cty.GetAttrPath("endpoints").IndexInt(0),
+				"transcribe",
+				"transcribeservice",
+			)},
 		},
 	}
 
@@ -96,9 +109,9 @@ func TestEndpointMultipleKeys(t *testing.T) { //nolint:paralleltest
 			endpoints[k] = v
 		}
 
-		results, err := expandEndpoints(ctx, []interface{}{endpoints})
-		if err != nil {
-			t.Fatalf("Unexpected error: %s", err)
+		results, diags := expandEndpoints(ctx, []interface{}{endpoints})
+		if diff := cmp.Diff(diags, testcase.expectedDiags, cmp.Comparer(sdkdiag.Comparer)); diff != "" {
+			t.Errorf("unexpected diagnostics difference: %s", diff)
 		}
 
 		if a, e := len(results), 1; a != e {
@@ -118,7 +131,16 @@ func TestEndpointEnvVarPrecedence(t *testing.T) { //nolint:paralleltest
 		envvars          map[string]string
 		expectedService  string
 		expectedEndpoint string
+		expectedDiags    diag.Diagnostics
 	}{
+		{
+			endpoints: map[string]string{},
+			envvars: map[string]string{
+				"AWS_ENDPOINT_URL_STS": "https://sts.fake.test",
+			},
+			expectedService:  names.STS,
+			expectedEndpoint: "https://sts.fake.test",
+		},
 		{
 			endpoints: map[string]string{},
 			envvars: map[string]string{
@@ -126,6 +148,9 @@ func TestEndpointEnvVarPrecedence(t *testing.T) { //nolint:paralleltest
 			},
 			expectedService:  names.STS,
 			expectedEndpoint: "https://sts.fake.test",
+			expectedDiags: diag.Diagnostics{
+				DeprecatedEnvVarDiag("TF_AWS_STS_ENDPOINT", "AWS_ENDPOINT_URL_STS"),
+			},
 		},
 		{
 			endpoints: map[string]string{},
@@ -134,6 +159,9 @@ func TestEndpointEnvVarPrecedence(t *testing.T) { //nolint:paralleltest
 			},
 			expectedService:  names.STS,
 			expectedEndpoint: "https://sts-deprecated.fake.test",
+			expectedDiags: diag.Diagnostics{
+				DeprecatedEnvVarDiag("AWS_STS_ENDPOINT", "AWS_ENDPOINT_URL_STS"),
+			},
 		},
 		{
 			endpoints: map[string]string{},
@@ -143,6 +171,9 @@ func TestEndpointEnvVarPrecedence(t *testing.T) { //nolint:paralleltest
 			},
 			expectedService:  names.STS,
 			expectedEndpoint: "https://sts.fake.test",
+			expectedDiags: diag.Diagnostics{
+				DeprecatedEnvVarDiag("TF_AWS_STS_ENDPOINT", "AWS_ENDPOINT_URL_STS"),
+			},
 		},
 		{
 			endpoints: map[string]string{
@@ -172,9 +203,9 @@ func TestEndpointEnvVarPrecedence(t *testing.T) { //nolint:paralleltest
 			endpoints[k] = v
 		}
 
-		results, err := expandEndpoints(ctx, []interface{}{endpoints})
-		if err != nil {
-			t.Fatalf("Unexpected error: %s", err)
+		results, diags := expandEndpoints(ctx, []interface{}{endpoints})
+		if diff := cmp.Diff(diags, testcase.expectedDiags, cmp.Comparer(sdkdiag.Comparer)); diff != "" {
+			t.Errorf("unexpected diagnostics difference: %s", diff)
 		}
 
 		if a, e := len(results), 1; a != e {
@@ -183,6 +214,80 @@ func TestEndpointEnvVarPrecedence(t *testing.T) { //nolint:paralleltest
 
 		if v := results[testcase.expectedService]; v != testcase.expectedEndpoint {
 			t.Errorf("Expected endpoint[%s] to be %q, got %v", testcase.expectedService, testcase.expectedEndpoint, results)
+		}
+	}
+}
+
+func TestExpandDefaultTags(t *testing.T) { //nolint:paralleltest
+	ctx := context.Background()
+	testcases := []struct {
+		tags                  map[string]interface{}
+		envvars               map[string]string
+		expectedDefaultConfig *tftags.DefaultConfig
+	}{
+		{
+			tags:                  nil,
+			envvars:               map[string]string{},
+			expectedDefaultConfig: nil,
+		},
+		{
+			tags: nil,
+			envvars: map[string]string{
+				tftags.DefaultTagsEnvVarPrefix + "Owner": "my-team",
+			},
+			expectedDefaultConfig: &tftags.DefaultConfig{
+				Tags: tftags.New(ctx, map[string]string{
+					"Owner": "my-team",
+				}),
+			},
+		},
+		{
+			tags: map[string]interface{}{
+				"Owner": "my-team",
+			},
+			envvars: map[string]string{},
+			expectedDefaultConfig: &tftags.DefaultConfig{
+				Tags: tftags.New(ctx, map[string]string{
+					"Owner": "my-team",
+				}),
+			},
+		},
+		{
+			tags: map[string]interface{}{
+				"Application": "foobar",
+			},
+			envvars: map[string]string{
+				tftags.DefaultTagsEnvVarPrefix + "Application": "my-app",
+				tftags.DefaultTagsEnvVarPrefix + "Owner":       "my-team",
+			},
+			expectedDefaultConfig: &tftags.DefaultConfig{
+				Tags: tftags.New(ctx, map[string]string{
+					"Application": "foobar",
+					"Owner":       "my-team",
+				}),
+			},
+		},
+	}
+
+	for _, testcase := range testcases {
+		oldEnv := stashEnv()
+		defer popEnv(oldEnv)
+		for k, v := range testcase.envvars {
+			os.Setenv(k, v)
+		}
+
+		results := expandDefaultTags(ctx, map[string]interface{}{
+			"tags": testcase.tags,
+		})
+
+		if results == nil {
+			if testcase.expectedDefaultConfig == nil {
+				return
+			} else {
+				t.Errorf("Expected default tags config to be %v, got nil", testcase.expectedDefaultConfig)
+			}
+		} else if !testcase.expectedDefaultConfig.TagsEqual(results.Tags) {
+			t.Errorf("Expected default tags config to be %v, got %v", testcase.expectedDefaultConfig, results)
 		}
 	}
 }
@@ -197,11 +302,7 @@ func popEnv(env []string) {
 	os.Clearenv()
 
 	for _, e := range env {
-		p := strings.SplitN(e, "=", 2)
-		k, v := p[0], ""
-		if len(p) > 1 {
-			v = p[1]
-		}
+		k, v, _ := strings.Cut(e, "=")
 		os.Setenv(k, v)
 	}
 }

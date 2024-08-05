@@ -8,4 +8,11 @@ var (
 	ResourceBot        = newResourceBot
 	ResourceBotLocale  = newResourceBotLocale
 	ResourceBotVersion = newResourceBotVersion
+	ResourceIntent     = newResourceIntent
+	ResourceSlot       = newResourceSlot
+	ResourceSlotType   = newResourceSlotType
+
+	FindSlotByID = findSlotByID
+
+	IntentFlexOpt = intentFlexOpt
 )

@@ -52,7 +52,7 @@ This data source exports the following attributes in addition to the arguments a
 * `status` - Current status of the compute environment (for example, `CREATING` or `VALID`).
 * `statusReason` - Short, human-readable string to provide additional details about the current status of the compute environment.
 * `state` - State of the compute environment (for example, `ENABLED` or `DISABLED`). If the state is `ENABLED`, then the compute environment accepts jobs from a queue and can scale out automatically based on queues.
-* `update_policy` - Specifies the infrastructure update policy for the compute environment.
+* `updatePolicy` - Specifies the infrastructure update policy for the compute environment.
 * `tags` - Key-value map of resource tags
 
-<!-- cache-key: cdktf-0.20.0 input-662f0abcd8bd58088e6a4ff05cd0dbe7af2797ce5cfa7c0780df612f3a6771ee -->
+<!-- cache-key: cdktf-0.20.1 input-662f0abcd8bd58088e6a4ff05cd0dbe7af2797ce5cfa7c0780df612f3a6771ee -->

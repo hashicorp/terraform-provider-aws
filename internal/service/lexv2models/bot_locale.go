@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -59,7 +60,7 @@ func (r *resourceBotLocale) Metadata(_ context.Context, req resource.MetadataReq
 func (r *resourceBotLocale) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 			},
 			"bot_id": schema.StringAttribute{
@@ -80,7 +81,7 @@ func (r *resourceBotLocale) Schema(ctx context.Context, req resource.SchemaReque
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"id": schema.StringAttribute{
+			names.AttrID: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -89,7 +90,7 @@ func (r *resourceBotLocale) Schema(ctx context.Context, req resource.SchemaReque
 			"n_lu_intent_confidence_threshold": schema.Float64Attribute{
 				Required: true,
 			},
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -107,7 +108,7 @@ func (r *resourceBotLocale) Schema(ctx context.Context, req resource.SchemaReque
 						"voice_id": schema.StringAttribute{
 							Required: true,
 						},
-						"engine": schema.StringAttribute{
+						names.AttrEngine: schema.StringAttribute{
 							Optional: true,
 							Computed: true,
 							Validators: []validator.String{
@@ -120,7 +121,7 @@ func (r *resourceBotLocale) Schema(ctx context.Context, req resource.SchemaReque
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
@@ -342,8 +343,8 @@ func (r *resourceBotLocale) Delete(ctx context.Context, req resource.DeleteReque
 
 	_, err := conn.DeleteBotLocale(ctx, in)
 	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) ||
+			errs.IsAErrorMessageContains[*awstypes.PreconditionFailedException](err, "does not exist") {
 			return
 		}
 		resp.Diagnostics.AddError(
@@ -365,7 +366,7 @@ func (r *resourceBotLocale) Delete(ctx context.Context, req resource.DeleteReque
 }
 
 func (r *resourceBotLocale) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func waitBotLocaleCreated(ctx context.Context, conn *lexmodelsv2.Client, id string, timeout time.Duration) (*lexmodelsv2.DescribeBotLocaleOutput, error) {
@@ -374,6 +375,7 @@ func waitBotLocaleCreated(ctx context.Context, conn *lexmodelsv2.Client, id stri
 		Target:                    enum.Slice(awstypes.BotLocaleStatusBuilt, awstypes.BotLocaleStatusNotBuilt),
 		Refresh:                   statusBotLocale(ctx, conn, id),
 		Timeout:                   timeout,
+		MinTimeout:                5 * time.Second,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
@@ -448,8 +450,7 @@ func FindBotLocaleByID(ctx context.Context, conn *lexmodelsv2.Client, id string)
 
 	out, err := conn.DescribeBotLocale(ctx, in)
 	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
@@ -475,8 +476,8 @@ func flattenVoiceSettings(ctx context.Context, apiObject *awstypes.VoiceSettings
 	}
 
 	obj := map[string]attr.Value{
-		"voice_id": flex.StringValueToFramework(ctx, *apiObject.VoiceId),
-		"engine":   flex.StringValueToFramework(ctx, apiObject.Engine),
+		"voice_id":       flex.StringValueToFramework(ctx, *apiObject.VoiceId),
+		names.AttrEngine: flex.StringValueToFramework(ctx, apiObject.Engine),
 	}
 	objVal, d := types.ObjectValue(voiceSettingsAttrTypes, obj)
 	diags.Append(d...)
@@ -517,8 +518,8 @@ type voiceSettingsData struct {
 }
 
 var voiceSettingsAttrTypes = map[string]attr.Type{
-	"voice_id": types.StringType,
-	"engine":   types.StringType,
+	"voice_id":       types.StringType,
+	names.AttrEngine: types.StringType,
 }
 
 // refreshFromOutput writes state data from an AWS response object

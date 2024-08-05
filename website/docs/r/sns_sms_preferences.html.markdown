@@ -30,3 +30,7 @@ This resource supports the following arguments:
 ## Attribute Reference
 
 This resource exports no additional attributes.
+
+## Import
+
+You cannot import the SMS preferences.

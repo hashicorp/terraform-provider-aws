@@ -71,7 +71,7 @@ func (r *resourceCluster) Schema(ctx context.Context, _ resource.SchemaRequest, 
 				Required:  true,
 				Sensitive: true,
 			},
-			"arn": framework.ARNAttributeComputedOnly(),
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"auth_type": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -81,14 +81,14 @@ func (r *resourceCluster) Schema(ctx context.Context, _ resource.SchemaRequest, 
 					enum.FrameworkValidate[awstypes.Auth](),
 				},
 			},
-			"endpoint": schema.StringAttribute{
+			names.AttrEndpoint: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"id": framework.IDAttribute(),
-			"kms_key_id": schema.StringAttribute{
+			names.AttrID: framework.IDAttribute(),
+			names.AttrKMSKeyID: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -96,13 +96,13 @@ func (r *resourceCluster) Schema(ctx context.Context, _ resource.SchemaRequest, 
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"preferred_maintenance_window": schema.StringAttribute{
+			names.AttrPreferredMaintenanceWindow: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -118,7 +118,7 @@ func (r *resourceCluster) Schema(ctx context.Context, _ resource.SchemaRequest, 
 					int64validator.Between(1, 32),
 				},
 			},
-			"subnet_ids": schema.SetAttribute{
+			names.AttrSubnetIDs: schema.SetAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
 				Computed:    true,
@@ -128,7 +128,7 @@ func (r *resourceCluster) Schema(ctx context.Context, _ resource.SchemaRequest, 
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
-			"vpc_security_group_ids": schema.SetAttribute{
+			names.AttrVPCSecurityGroupIDs: schema.SetAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
 				Computed:    true,
@@ -142,7 +142,7 @@ func (r *resourceCluster) Schema(ctx context.Context, _ resource.SchemaRequest, 
 	if s.Blocks == nil {
 		s.Blocks = make(map[string]schema.Block)
 	}
-	s.Blocks["timeouts"] = timeouts.Block(ctx, timeouts.Opts{
+	s.Blocks[names.AttrTimeouts] = timeouts.Block(ctx, timeouts.Opts{
 		Create: true,
 		Update: true,
 		Delete: true,
@@ -335,7 +335,7 @@ func (r *resourceCluster) Delete(ctx context.Context, request resource.DeleteReq
 	}
 
 	tflog.Debug(ctx, "deleting DocDB Elastic Cluster", map[string]interface{}{
-		"id": state.ID.ValueString(),
+		names.AttrID: state.ID.ValueString(),
 	})
 
 	input := &docdbelastic.DeleteClusterInput{
@@ -369,7 +369,7 @@ func (r *resourceCluster) Delete(ctx context.Context, request resource.DeleteReq
 }
 
 func (r *resourceCluster) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), request, response)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
 }
 
 func (r *resourceCluster) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {

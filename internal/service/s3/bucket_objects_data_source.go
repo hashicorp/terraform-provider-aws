@@ -17,15 +17,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_s3_bucket_objects")
-func DataSourceBucketObjects() *schema.Resource {
+// @SDKDataSource("aws_s3_bucket_objects", name="Bucket Objects")
+func dataSourceBucketObjects() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceBucketObjectsRead,
 
 		Schema: map[string]*schema.Schema{
-			"bucket": {
+			names.AttrBucket: {
 				Deprecated: "Use the aws_s3_objects data source instead",
 				Type:       schema.TypeString,
 				Required:   true,
@@ -62,7 +63,7 @@ func DataSourceBucketObjects() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"prefix": {
+			names.AttrPrefix: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -80,7 +81,7 @@ func dataSourceBucketObjectsRead(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	bucket := d.Get("bucket").(string)
+	bucket := d.Get(names.AttrBucket).(string)
 	input := &s3.ListObjectsV2Input{
 		Bucket: aws.String(bucket),
 	}
@@ -101,7 +102,7 @@ func dataSourceBucketObjectsRead(ctx context.Context, d *schema.ResourceData, me
 		input.MaxKeys = aws.Int32(int32(maxKeys))
 	}
 
-	if s, ok := d.GetOk("prefix"); ok {
+	if s, ok := d.GetOk(names.AttrPrefix); ok {
 		input.Prefix = aws.String(s.(string))
 	}
 

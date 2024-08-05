@@ -20,7 +20,7 @@ func Values[T Valueser[T]]() []string {
 	return Slice(EnumValues[T]()...)
 }
 
-func Slice[T Valueser[T]](l ...T) []string {
+func Slice[T ~string](l ...T) []string {
 	return tfslices.ApplyToAll(l, func(v T) string {
 		return string(v)
 	})

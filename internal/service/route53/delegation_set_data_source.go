@@ -5,40 +5,37 @@ package route53
 
 import (
 	"context"
-	"fmt"
-	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_route53_delegation_set")
-func DataSourceDelegationSet() *schema.Resource {
+// @SDKDataSource("aws_route53_delegation_set", name="Reusable Delegation Set")
+func dataSourceDelegationSet() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDelegationSetRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
-			},
-			"id": {
-				Type:     schema.TypeString,
-				Required: true,
 			},
 			"caller_reference": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			names.AttrID: {
+				Type:     schema.TypeString,
+				Required: true,
+			},
 			"name_servers": {
 				Type:     schema.TypeList,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 		},
 	}
@@ -46,34 +43,24 @@ func DataSourceDelegationSet() *schema.Resource {
 
 func dataSourceDelegationSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
+	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
-	dSetID := d.Get("id").(string)
+	id := d.Get(names.AttrID).(string)
+	set, err := findDelegationSetByID(ctx, conn, id)
 
-	input := &route53.GetReusableDelegationSetInput{
-		Id: aws.String(dSetID),
-	}
-
-	log.Printf("[DEBUG] Reading Route53 delegation set: %s", input)
-
-	resp, err := conn.GetReusableDelegationSetWithContext(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting Route53 delegation set (%s): %s", dSetID, err)
+		return sdkdiag.AppendErrorf(diags, "reading Route53 Reusable Delegation Set (%s): %s", id, err)
 	}
 
-	d.SetId(dSetID)
-	d.Set("caller_reference", resp.DelegationSet.CallerReference)
-
-	if err := d.Set("name_servers", aws.StringValueSlice(resp.DelegationSet.NameServers)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting name_servers: %s", err)
-	}
-
+	d.SetId(id)
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "route53",
-		Resource:  fmt.Sprintf("delegationset/%s", d.Id()),
+		Resource:  "delegationset/" + d.Id(),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
+	d.Set("caller_reference", set.CallerReference)
+	d.Set("name_servers", set.NameServers)
 
 	return diags
 }

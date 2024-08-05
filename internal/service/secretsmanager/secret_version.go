@@ -5,38 +5,46 @@ package secretsmanager
 
 import (
 	"context"
-	"encoding/base64"
 	"fmt"
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/secretsmanager"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_secretsmanager_secret_version")
-func ResourceSecretVersion() *schema.Resource {
+const (
+	secretVersionStageCurrent  = "AWSCURRENT"
+	secretVersionStagePrevious = "AWSPREVIOUS"
+)
+
+// @SDKResource("aws_secretsmanager_secret_version", name="Secret Version")
+func resourceSecretVersion() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSecretVersionCreate,
 		ReadWithoutTimeout:   resourceSecretVersionRead,
 		UpdateWithoutTimeout: resourceSecretVersionUpdate,
 		DeleteWithoutTimeout: resourceSecretVersionDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -45,19 +53,20 @@ func ResourceSecretVersion() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"secret_string": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				Sensitive:     true,
-				ConflictsWith: []string{"secret_binary"},
-			},
 			"secret_binary": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
 				Sensitive:     true,
 				ConflictsWith: []string{"secret_string"},
+				ValidateFunc:  verify.ValidBase64String,
+			},
+			"secret_string": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				Sensitive:     true,
+				ConflictsWith: []string{"secret_binary"},
 			},
 			"version_id": {
 				Type:     schema.TypeString,
@@ -75,95 +84,60 @@ func ResourceSecretVersion() *schema.Resource {
 
 func resourceSecretVersionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
-	secretID := d.Get("secret_id").(string)
+	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
+	secretID := d.Get("secret_id").(string)
 	input := &secretsmanager.PutSecretValueInput{
 		ClientRequestToken: aws.String(id.UniqueId()), // Needed because we're handling our own retries
 		SecretId:           aws.String(secretID),
 	}
 
-	if v, ok := d.GetOk("secret_string"); ok {
+	if v, ok := d.GetOk("secret_binary"); ok {
+		var err error
+		input.SecretBinary, err = itypes.Base64Decode(v.(string))
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	} else if v, ok := d.GetOk("secret_string"); ok {
 		input.SecretString = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("secret_binary"); ok {
-		vs := []byte(v.(string))
-
-		if !verify.IsBase64Encoded(vs) {
-			return sdkdiag.AppendErrorf(diags, "expected base64 in secret_binary")
-		}
-
-		var err error
-		input.SecretBinary, err = base64.StdEncoding.DecodeString(v.(string))
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "decoding secret binary value: %s", err)
-		}
+	if v, ok := d.GetOk("version_stages"); ok && v.(*schema.Set).Len() > 0 {
+		input.VersionStages = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("version_stages"); ok {
-		input.VersionStages = flex.ExpandStringSet(v.(*schema.Set))
-	}
+	output, err := conn.PutSecretValue(ctx, input)
 
-	log.Printf("[DEBUG] Putting Secrets Manager Secret %q value", secretID)
-	output, err := conn.PutSecretValueWithContext(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "putting Secrets Manager Secret value: %s", err)
+		return sdkdiag.AppendErrorf(diags, "putting Secrets Manager Secret (%s) value: %s", secretID, err)
 	}
 
-	d.SetId(fmt.Sprintf("%s|%s", secretID, aws.StringValue(output.VersionId)))
+	versionID := aws.ToString(output.VersionId)
+	d.SetId(secretVersionCreateResourceID(secretID, versionID))
+
+	_, err = tfresource.RetryWhenNotFound(ctx, PropagationTimeout, func() (interface{}, error) {
+		return findSecretVersionByTwoPartKey(ctx, conn, secretID, versionID)
+	})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Secrets Manager Secret Version (%s) create: %s", d.Id(), err)
+	}
 
 	return append(diags, resourceSecretVersionRead(ctx, d, meta)...)
 }
 
 func resourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
+	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
-	secretID, versionID, err := DecodeSecretVersionID(d.Id())
+	secretID, versionID, err := secretVersionParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret Version (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &secretsmanager.GetSecretValueInput{
-		SecretId:  aws.String(secretID),
-		VersionId: aws.String(versionID),
-	}
+	output, err := findSecretVersionByTwoPartKey(ctx, conn, secretID, versionID)
 
-	var output *secretsmanager.GetSecretValueOutput
-
-	err = retry.RetryContext(ctx, PropagationTimeout, func() *retry.RetryError {
-		var err error
-
-		output, err = conn.GetSecretValueWithContext(ctx, input)
-
-		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) {
-			return retry.RetryableError(err)
-		}
-
-		if d.IsNewResource() && tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeInvalidRequestException, "You can’t perform this operation on the secret because it was deleted") {
-			return retry.RetryableError(err)
-		}
-
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		output, err = conn.GetSecretValueWithContext(ctx, input)
-	}
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) {
-		log.Printf("[WARN] Secrets Manager Secret Version (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
-	}
-
-	if !d.IsNewResource() && tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeInvalidRequestException, "You can’t perform this operation on the secret because it was deleted") {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Secrets Manager Secret Version (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -173,67 +147,97 @@ func resourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret Version (%s): %s", d.Id(), err)
 	}
 
-	if output == nil {
-		return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret Version (%s): empty response", d.Id())
-	}
-
+	d.Set(names.AttrARN, output.ARN)
+	d.Set("secret_binary", itypes.Base64EncodeOnce(output.SecretBinary))
 	d.Set("secret_id", secretID)
 	d.Set("secret_string", output.SecretString)
-	d.Set("secret_binary", verify.Base64Encode(output.SecretBinary))
 	d.Set("version_id", output.VersionId)
-	d.Set("arn", output.ARN)
-
-	if err := d.Set("version_stages", flex.FlattenStringList(output.VersionStages)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting version_stages: %s", err)
-	}
+	d.Set("version_stages", output.VersionStages)
 
 	return diags
 }
 
 func resourceSecretVersionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
+	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
-	secretID, versionID, err := DecodeSecretVersionID(d.Id())
+	secretID, versionID, err := secretVersionParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Secrets Manager Secret Version (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	o, n := d.GetChange("version_stages")
-	os := o.(*schema.Set)
-	ns := n.(*schema.Set)
-	stagesToAdd := ns.Difference(os).List()
-	stagesToRemove := os.Difference(ns).List()
+	os, ns := o.(*schema.Set), n.(*schema.Set)
+	add, del := flex.ExpandStringValueSet(ns.Difference(os)), flex.ExpandStringValueSet(os.Difference(ns))
 
-	for _, stage := range stagesToAdd {
-		input := &secretsmanager.UpdateSecretVersionStageInput{
+	var listedVersionIDs bool
+	for _, stage := range add {
+		inputU := &secretsmanager.UpdateSecretVersionStageInput{
 			MoveToVersionId: aws.String(versionID),
 			SecretId:        aws.String(secretID),
-			VersionStage:    aws.String(stage.(string)),
+			VersionStage:    aws.String(stage),
 		}
 
-		log.Printf("[DEBUG] Updating Secrets Manager Secret Version Stage: %s", input)
-		_, err := conn.UpdateSecretVersionStageWithContext(ctx, input)
+		if !listedVersionIDs {
+			if stage == secretVersionStageCurrent {
+				inputL := &secretsmanager.ListSecretVersionIdsInput{
+					SecretId: aws.String(secretID),
+				}
+				var versionStageCurrentVersionID string
+
+				paginator := secretsmanager.NewListSecretVersionIdsPaginator(conn, inputL)
+			listVersionIDs:
+				for paginator.HasMorePages() {
+					page, err := paginator.NextPage(ctx)
+
+					if err != nil {
+						return sdkdiag.AppendErrorf(diags, "listing Secrets Manager Secret (%s) version IDs: %s", secretID, err)
+					}
+
+					for _, version := range page.Versions {
+						for _, versionStage := range version.VersionStages {
+							if versionStage == secretVersionStageCurrent {
+								versionStageCurrentVersionID = aws.ToString(version.VersionId)
+								break listVersionIDs
+							}
+						}
+					}
+				}
+
+				inputU.RemoveFromVersionId = aws.String(versionStageCurrentVersionID)
+				listedVersionIDs = true
+			}
+		}
+
+		_, err := conn.UpdateSecretVersionStage(ctx, inputU)
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Secrets Manager Secret %q Version Stage %q: %s", secretID, stage.(string), err)
+			return sdkdiag.AppendErrorf(diags, "adding Secrets Manager Secret Version (%s) stage (%s): %s", d.Id(), stage, err)
 		}
 	}
 
-	for _, stage := range stagesToRemove {
+	for _, stage := range del {
 		// InvalidParameterException: You can only move staging label AWSCURRENT to a different secret version. It can’t be completely removed.
-		if stage.(string) == "AWSCURRENT" {
+		if stage == secretVersionStageCurrent {
 			log.Printf("[INFO] Skipping removal of AWSCURRENT staging label for secret %q version %q", secretID, versionID)
 			continue
 		}
+
+		// If we added AWSCURRENT to this version then any AWSPREVIOUS label will have been moved to another version.
+		if listedVersionIDs && stage == secretVersionStagePrevious {
+			continue
+		}
+
 		input := &secretsmanager.UpdateSecretVersionStageInput{
 			RemoveFromVersionId: aws.String(versionID),
 			SecretId:            aws.String(secretID),
-			VersionStage:        aws.String(stage.(string)),
+			VersionStage:        aws.String(stage),
 		}
-		log.Printf("[DEBUG] Updating Secrets Manager Secret Version Stage: %s", input)
-		_, err := conn.UpdateSecretVersionStageWithContext(ctx, input)
+
+		_, err := conn.UpdateSecretVersionStage(ctx, input)
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Secrets Manager Secret %q Version Stage %q: %s", secretID, stage.(string), err)
+			return sdkdiag.AppendErrorf(diags, "deleting Secrets Manager Secret Version (%s) stage (%s): %s", d.Id(), stage, err)
 		}
 	}
 
@@ -242,46 +246,110 @@ func resourceSecretVersionUpdate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceSecretVersionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
+	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
-	secretID, versionID, err := DecodeSecretVersionID(d.Id())
+	secretID, versionID, err := secretVersionParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Secrets Manager Secret Version (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if v, ok := d.GetOk("version_stages"); ok {
-		for _, stage := range v.(*schema.Set).List() {
+	if v, ok := d.GetOk("version_stages"); ok && v.(*schema.Set).Len() > 0 {
+		for _, stage := range flex.ExpandStringValueSet(v.(*schema.Set)) {
 			// InvalidParameterException: You can only move staging label AWSCURRENT to a different secret version. It can’t be completely removed.
-			if stage.(string) == "AWSCURRENT" {
+			if stage == secretVersionStageCurrent {
 				log.Printf("[WARN] Cannot remove AWSCURRENT staging label, which may leave the secret %q version %q active", secretID, versionID)
 				continue
 			}
+
 			input := &secretsmanager.UpdateSecretVersionStageInput{
 				RemoveFromVersionId: aws.String(versionID),
 				SecretId:            aws.String(secretID),
-				VersionStage:        aws.String(stage.(string)),
+				VersionStage:        aws.String(stage),
 			}
-			log.Printf("[DEBUG] Updating Secrets Manager Secret Version Stage: %s", input)
-			_, err := conn.UpdateSecretVersionStageWithContext(ctx, input)
+
+			log.Printf("[DEBUG] Deleting Secrets Manager Secret Version (%s) stage: %s", d.Id(), stage)
+			_, err := conn.UpdateSecretVersionStage(ctx, input)
+
+			if errs.IsA[*types.ResourceNotFoundException](err) ||
+				errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "because it was deleted") ||
+				errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "because it was marked for deletion") {
+				return diags
+			}
+
 			if err != nil {
-				if tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) {
-					return diags
-				}
-				if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeInvalidRequestException, "You can’t perform this operation on the secret because it was deleted") {
-					return diags
-				}
-				return sdkdiag.AppendErrorf(diags, "updating Secrets Manager Secret %q Version Stage %q: %s", secretID, stage.(string), err)
+				return sdkdiag.AppendErrorf(diags, "deleting Secrets Manager Secret Version (%s) stage (%s): %s", d.Id(), stage, err)
 			}
 		}
+	}
+
+	_, err = tfresource.RetryUntilNotFound(ctx, PropagationTimeout, func() (interface{}, error) {
+		output, err := findSecretVersionByTwoPartKey(ctx, conn, secretID, versionID)
+
+		if err != nil {
+			return nil, err
+		}
+
+		if len(output.VersionStages) == 0 || (len(output.VersionStages) == 1 && (output.VersionStages[0] == secretVersionStageCurrent || output.VersionStages[0] == secretVersionStagePrevious)) {
+			return nil, &retry.NotFoundError{}
+		}
+
+		return output, nil
+	})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Secrets Manager Secret Version (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func DecodeSecretVersionID(id string) (string, string, error) {
-	idParts := strings.Split(id, "|")
-	if len(idParts) != 2 {
-		return "", "", fmt.Errorf("expected ID in format SecretID|VersionID, received: %s", id)
+const secretVersionIDSeparator = "|"
+
+func secretVersionCreateResourceID(secretID, versionID string) string {
+	parts := []string{secretID, versionID}
+	id := strings.Join(parts, secretVersionIDSeparator)
+
+	return id
+}
+
+func secretVersionParseResourceID(id string) (string, string, error) {
+	parts := strings.SplitN(id, secretVersionIDSeparator, 2)
+
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", "", fmt.Errorf("unexpected format of ID (%[1]s), expected SecretID%[2]sVersionID", id, secretVersionIDSeparator)
 	}
-	return idParts[0], idParts[1], nil
+
+	return parts[0], parts[1], nil
+}
+
+func findSecretVersion(ctx context.Context, conn *secretsmanager.Client, input *secretsmanager.GetSecretValueInput) (*secretsmanager.GetSecretValueOutput, error) {
+	output, err := conn.GetSecretValue(ctx, input)
+
+	if errs.IsA[*types.ResourceNotFoundException](err) ||
+		errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "because it was deleted") ||
+		errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "because it was marked for deletion") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func findSecretVersionByTwoPartKey(ctx context.Context, conn *secretsmanager.Client, secretID, versionID string) (*secretsmanager.GetSecretValueOutput, error) {
+	input := &secretsmanager.GetSecretValueInput{
+		SecretId:  aws.String(secretID),
+		VersionId: aws.String(versionID),
+	}
+
+	return findSecretVersion(ctx, conn, input)
 }
