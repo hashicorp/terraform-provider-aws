@@ -383,7 +383,7 @@ func sweepLifecyclePolicies(region string) error {
 		}
 
 		for _, v := range page.LifecyclePolicySummaryList {
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceLifecyclePolicy, client, framework.NewAttribute(names.AttrARN, v.Arn)))
+			sweepResources = append(sweepResources, framework.NewSweepResource(newLifecyclePolicyResource, client, framework.NewAttribute(names.AttrARN, v.Arn)))
 		}
 	}
 

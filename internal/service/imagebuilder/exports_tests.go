@@ -12,7 +12,7 @@ var (
 	ResourceImagePipeline               = resourceImagePipeline
 	ResourceImageRecipe                 = resourceImageRecipe
 	ResourceInfrastructureConfiguration = resourceInfrastructureConfiguration
-	ResourceLifecyclePolicy             = newResourceLifecyclePolicy
+	ResourceLifecyclePolicy             = newLifecyclePolicyResource
 	ResourceWorkflow                    = resourceWorkflow
 
 	FindComponentByARN                   = findComponentByARN

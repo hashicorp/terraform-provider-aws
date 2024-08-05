@@ -41,7 +41,7 @@ resource "aws_imagebuilder_lifecycle_policy" "example" {
   description    = "Example description"
   execution_role = aws_iam_role.example.arn
   resource_type  = "AMI_IMAGE"
-  policy_details {
+  policy_detail {
     action {
       type = "DELETE"
     }
@@ -69,8 +69,8 @@ The following arguments are required:
 
 * `name` - (Required) The name of the lifecycle policy to create.
 * `resource_type` - (Required) The type of Image Builder resource that the lifecycle policy applies to. Valid values: `AMI_IMAGE` or `CONTAINER_IMAGE`.
-* `execution_role` - (Required) The name or Amazon Resource Name (ARN) for the IAM role you create that grants Image Builder access to run lifecycle actions. More information about this role can be found [`here`](https://docs.aws.amazon.com/imagebuilder/latest/userguide/image-lifecycle-prerequisites.html#image-lifecycle-prereq-role).
-* `policy_details` - (Required) Configuration block with policy details. Detailed below.
+* `execution_role` - (Required) The Amazon Resource Name (ARN) for the IAM role you create that grants Image Builder access to run lifecycle actions. More information about this role can be found [`here`](https://docs.aws.amazon.com/imagebuilder/latest/userguide/image-lifecycle-prerequisites.html#image-lifecycle-prereq-role).
+* `policy_detail` - (Required) Configuration block with policy details. Detailed below.
 * `resource_selection` - (Required) Selection criteria for the resources that the lifecycle policy applies to. Detailed below.
 
 The following arguments are optional:
@@ -78,7 +78,7 @@ The following arguments are optional:
 * `description` - (Optional) description for the lifecycle policy.
 * `tags` - (Optional) Key-value map of resource tags for the Image Builder Lifecycle Policy. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### policy_details
+### policy_detail
 
 The following arguments are required:
 
@@ -147,10 +147,10 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `recipes` - (Optional) A list of recipes that are used as selection criteria for the output images that the lifecycle policy applies to. Detailed below.
+* `recipe` - (Optional) A list of recipes that are used as selection criteria for the output images that the lifecycle policy applies to. Detailed below.
 * `tag_map` - (Optional) A list of tags that are used as selection criteria for the Image Builder image resources that the lifecycle policy applies to.
 
-### recipes
+### recipe
 
 The following arguments are required:
 
