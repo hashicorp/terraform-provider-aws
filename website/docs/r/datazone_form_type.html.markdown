@@ -113,7 +113,6 @@ The following arguments are optional:
 * `description` - (Optional) Description of form type. Must have a length of between 1 and 2048 characters.
 * `status` - (Optional) Status of form type. Must be "ENABLED" or "DISABLED" If status is set to "ENABLED" terraform cannot delete the resource until it is manually changed in the AWS console.
 
-
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
@@ -121,7 +120,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `created_at` - Creation time of the Form Type.
 * `created_by` - Creator of the Form Type.
 * `origin_domain_id` - Origin domain id of the Form Type.
-* `origin_project_id` - Origin project id of the Form Type. 
+* `origin_project_id` - Origin project id of the Form Type.
 * `owning_project_id` - Owning project id of the Form Type.
 * `revision` - Revision of the Form Type.
 
