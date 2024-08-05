@@ -14,6 +14,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,13 +22,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_imagebuilder_image", name="Image")
 // @Tags(identifierAttribute="id")
-func ResourceImage() *schema.Resource {
+func resourceImage() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceImageCreate,
 		ReadWithoutTimeout:   resourceImageRead,
@@ -322,14 +324,10 @@ func resourceImageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "creating Image Builder Image: %s", err)
 	}
 
-	if output == nil {
-		return sdkdiag.AppendErrorf(diags, "creating Image Builder Image: empty response")
-	}
-
 	d.SetId(aws.ToString(output.ImageBuildVersionArn))
 
 	if _, err := waitImageStatusAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Image Builder Image (%s) to become available: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Image Builder Image (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceImageRead(ctx, d, meta)...)
@@ -339,27 +337,17 @@ func resourceImageRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
-	input := &imagebuilder.GetImageInput{
-		ImageBuildVersionArn: aws.String(d.Id()),
-	}
+	image, err := findImageByARN(ctx, conn, d.Id())
 
-	output, err := conn.GetImage(ctx, input)
-
-	if !d.IsNewResource() && errs.MessageContains(err, ResourceNotFoundException, "cannot be found") {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Image Builder Image (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting Image Builder Image (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Image Builder Image (%s): %s", d.Id(), err)
 	}
-
-	if output == nil || output.Image == nil {
-		return sdkdiag.AppendErrorf(diags, "getting Image Builder Image (%s): empty response", d.Id())
-	}
-
-	image := output.Image
 
 	d.Set(names.AttrARN, image.Arn)
 	if image.ContainerRecipe != nil {
@@ -375,12 +363,16 @@ func resourceImageRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set("image_recipe_arn", image.ImageRecipe.Arn)
 	}
 	if image.ImageScanningConfiguration != nil {
-		d.Set("image_scanning_configuration", []interface{}{flattenImageScanningConfiguration(image.ImageScanningConfiguration)})
+		if err := d.Set("image_scanning_configuration", []interface{}{flattenImageScanningConfiguration(image.ImageScanningConfiguration)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting image_scanning_configuration: %s", err)
+		}
 	} else {
 		d.Set("image_scanning_configuration", nil)
 	}
 	if image.ImageTestsConfiguration != nil {
-		d.Set("image_tests_configuration", []interface{}{flattenImageTestsConfiguration(image.ImageTestsConfiguration)})
+		if err := d.Set("image_tests_configuration", []interface{}{flattenImageTestsConfiguration(image.ImageTestsConfiguration)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting image_tests_configuration: %s", err)
+		}
 	} else {
 		d.Set("image_tests_configuration", nil)
 	}
@@ -390,14 +382,18 @@ func resourceImageRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set(names.AttrName, image.Name)
 	d.Set("os_version", image.OsVersion)
 	if image.OutputResources != nil {
-		d.Set("output_resources", []interface{}{flattenOutputResources(image.OutputResources)})
+		if err := d.Set("output_resources", []interface{}{flattenOutputResources(image.OutputResources)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting output_resources: %s", err)
+		}
 	} else {
 		d.Set("output_resources", nil)
 	}
 	d.Set("platform", image.Platform)
 	d.Set(names.AttrVersion, image.Version)
 	if image.Workflows != nil {
-		d.Set("workflow", flattenWorkflowConfigurations(image.Workflows))
+		if err := d.Set("workflow", flattenWorkflowConfigurations(image.Workflows)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting workflow: %s", err)
+		}
 	} else {
 		d.Set("workflow", nil)
 	}
@@ -419,13 +415,12 @@ func resourceImageDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
-	input := &imagebuilder.DeleteImageInput{
+	log.Printf("[DEBUG] Deleting Image Builder Image: %s", d.Id())
+	_, err := conn.DeleteImage(ctx, &imagebuilder.DeleteImageInput{
 		ImageBuildVersionArn: aws.String(d.Id()),
-	}
+	})
 
-	_, err := conn.DeleteImage(ctx, input)
-
-	if errs.MessageContains(err, ResourceNotFoundException, "cannot be found") {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -434,6 +429,31 @@ func resourceImageDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	return diags
+}
+
+func findImageByARN(ctx context.Context, conn *imagebuilder.Client, arn string) (*awstypes.Image, error) {
+	input := &imagebuilder.GetImageInput{
+		ImageBuildVersionArn: aws.String(arn),
+	}
+
+	output, err := conn.GetImage(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Image == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Image, nil
 }
 
 func flattenOutputResources(apiObject *awstypes.OutputResources) map[string]interface{} {

@@ -8,10 +8,12 @@ var (
 	ResourceComponent                 = resourceComponent
 	ResourceContainerRecipe           = resourceContainerRecipe
 	ResourceDistributionConfiguration = resourceDistributionConfiguration
+	ResourceImage                     = resourceImage
 	ResourceLifecyclePolicy           = newResourceLifecyclePolicy
 
 	FindComponentByARN                 = findComponentByARN
 	FindContainerRecipeByARN           = findContainerRecipeByARN
 	FindDistributionConfigurationByARN = findDistributionConfigurationByARN
+	FindImageByARN                     = findImageByARN
 	FindLifecyclePolicyByARN           = findLifecyclePolicyByARN
 )
