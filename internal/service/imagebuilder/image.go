@@ -5,6 +5,7 @@ package imagebuilder
 
 import (
 	"context"
+	"errors"
 	"log"
 	"time"
 
@@ -449,11 +450,53 @@ func findImageByARN(ctx context.Context, conn *imagebuilder.Client, arn string) 
 		return nil, err
 	}
 
-	if output == nil || output.Image == nil {
+	if output == nil || output.Image == nil || output.Image.State == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output.Image, nil
+}
+
+func statusImage(ctx context.Context, conn *imagebuilder.Client, arn string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findImageByARN(ctx, conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, string(awstypes.ImageStatusPending), nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State.Status), nil
+	}
+}
+
+func waitImageStatusAvailable(ctx context.Context, conn *imagebuilder.Client, arn string, timeout time.Duration) (*awstypes.Image, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(
+			awstypes.ImageStatusBuilding,
+			awstypes.ImageStatusCreating,
+			awstypes.ImageStatusDistributing,
+			awstypes.ImageStatusIntegrating,
+			awstypes.ImageStatusPending,
+			awstypes.ImageStatusTesting,
+		),
+		Target:  enum.Slice(awstypes.ImageStatusAvailable),
+		Refresh: statusImage(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Image); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.State.Reason)))
+
+		return output, err
+	}
+
+	return nil, err
 }
 
 func flattenOutputResources(apiObject *awstypes.OutputResources) map[string]interface{} {
