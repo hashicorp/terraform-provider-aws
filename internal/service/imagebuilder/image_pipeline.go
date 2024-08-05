@@ -13,6 +13,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,18 +22,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_imagebuilder_image_pipeline", name="Image Pipeline")
 // @Tags(identifierAttribute="id")
-func ResourceImagePipeline() *schema.Resource {
+func resourceImagePipeline() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceImagePipelineCreate,
 		ReadWithoutTimeout:   resourceImagePipelineRead,
 		UpdateWithoutTimeout: resourceImagePipelineUpdate,
 		DeleteWithoutTimeout: resourceImagePipelineDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -311,10 +314,6 @@ func resourceImagePipelineCreate(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "creating Image Builder Image Pipeline: %s", err)
 	}
 
-	if output == nil {
-		return sdkdiag.AppendErrorf(diags, "creating Image Builder Image Pipeline: empty response")
-	}
-
 	d.SetId(aws.ToString(output.ImagePipelineArn))
 
 	return append(diags, resourceImagePipelineRead(ctx, d, meta)...)
@@ -324,27 +323,17 @@ func resourceImagePipelineRead(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
-	input := &imagebuilder.GetImagePipelineInput{
-		ImagePipelineArn: aws.String(d.Id()),
-	}
+	imagePipeline, err := findImagePipelineByARN(ctx, conn, d.Id())
 
-	output, err := conn.GetImagePipeline(ctx, input)
-
-	if !d.IsNewResource() && errs.MessageContains(err, ResourceNotFoundException, "cannot be found") {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Image Builder Image Pipeline (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting Image Builder Image Pipeline (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Image Builder Image Pipeline (%s): %s", d.Id(), err)
 	}
-
-	if output == nil || output.ImagePipeline == nil {
-		return sdkdiag.AppendErrorf(diags, "getting Image Builder Image Pipeline (%s): empty response", d.Id())
-	}
-
-	imagePipeline := output.ImagePipeline
 
 	d.Set(names.AttrARN, imagePipeline.Arn)
 	d.Set("container_recipe_arn", imagePipeline.ContainerRecipeArn)
@@ -358,12 +347,16 @@ func resourceImagePipelineRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("execution_role", imagePipeline.ExecutionRole)
 	d.Set("image_recipe_arn", imagePipeline.ImageRecipeArn)
 	if imagePipeline.ImageScanningConfiguration != nil {
-		d.Set("image_scanning_configuration", []interface{}{flattenImageScanningConfiguration(imagePipeline.ImageScanningConfiguration)})
+		if err := d.Set("image_scanning_configuration", []interface{}{flattenImageScanningConfiguration(imagePipeline.ImageScanningConfiguration)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting image scanning configuration: %s", err)
+		}
 	} else {
 		d.Set("image_scanning_configuration", nil)
 	}
 	if imagePipeline.ImageTestsConfiguration != nil {
-		d.Set("image_tests_configuration", []interface{}{flattenImageTestsConfiguration(imagePipeline.ImageTestsConfiguration)})
+		if err := d.Set("image_tests_configuration", []interface{}{flattenImageTestsConfiguration(imagePipeline.ImageTestsConfiguration)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting image tests configuration: %s", err)
+		}
 	} else {
 		d.Set("image_tests_configuration", nil)
 	}
@@ -371,12 +364,16 @@ func resourceImagePipelineRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set(names.AttrName, imagePipeline.Name)
 	d.Set("platform", imagePipeline.Platform)
 	if imagePipeline.Schedule != nil {
-		d.Set(names.AttrSchedule, []interface{}{flattenSchedule(imagePipeline.Schedule)})
+		if err := d.Set(names.AttrSchedule, []interface{}{flattenSchedule(imagePipeline.Schedule)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting schedule: %s", err)
+		}
 	} else {
 		d.Set(names.AttrSchedule, nil)
 	}
 	d.Set(names.AttrStatus, imagePipeline.Status)
-	d.Set("workflow", flattenWorkflowConfigurations(imagePipeline.Workflows))
+	if err := d.Set("workflow", flattenWorkflowConfigurations(imagePipeline.Workflows)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting workflow: %s", err)
+	}
 
 	setTagsOut(ctx, imagePipeline.Tags)
 
@@ -463,13 +460,12 @@ func resourceImagePipelineDelete(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
-	input := &imagebuilder.DeleteImagePipelineInput{
+	log.Printf("[DEBUG] Deleting Image Builder Image Pipeline: %s", d.Id())
+	_, err := conn.DeleteImagePipeline(ctx, &imagebuilder.DeleteImagePipelineInput{
 		ImagePipelineArn: aws.String(d.Id()),
-	}
+	})
 
-	_, err := conn.DeleteImagePipeline(ctx, input)
-
-	if errs.MessageContains(err, ResourceNotFoundException, "cannot be found") {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -478,6 +474,31 @@ func resourceImagePipelineDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	return diags
+}
+
+func findImagePipelineByARN(ctx context.Context, conn *imagebuilder.Client, arn string) (*awstypes.ImagePipeline, error) {
+	input := &imagebuilder.GetImagePipelineInput{
+		ImagePipelineArn: aws.String(arn),
+	}
+
+	output, err := conn.GetImagePipeline(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.ImagePipeline == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.ImagePipeline, nil
 }
 
 func expandImageScanningConfiguration(tfMap map[string]interface{}) *awstypes.ImageScanningConfiguration {

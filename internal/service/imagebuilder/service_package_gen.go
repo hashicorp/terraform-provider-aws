@@ -134,7 +134,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceImagePipeline,
+			Factory:  resourceImagePipeline,
 			TypeName: "aws_imagebuilder_image_pipeline",
 			Name:     "Image Pipeline",
 			Tags: &types.ServicePackageResourceTags{
