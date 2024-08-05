@@ -192,7 +192,7 @@ func ResourceImagePipeline() *schema.Resource {
 					},
 				},
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Default:          string(awstypes.PipelineStatusEnabled),
@@ -297,7 +297,7 @@ func resourceImagePipelineCreate(ctx context.Context, d *schema.ResourceData, me
 		input.Schedule = expandPipelineSchedule(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("status"); ok {
+	if v, ok := d.GetOk(names.AttrStatus); ok {
 		input.Status = awstypes.PipelineStatus(v.(string))
 	}
 
@@ -441,7 +441,7 @@ func resourceImagePipelineUpdate(ctx context.Context, d *schema.ResourceData, me
 			input.Schedule = expandPipelineSchedule(v.([]interface{})[0].(map[string]interface{}))
 		}
 
-		if v, ok := d.GetOk("status"); ok {
+		if v, ok := d.GetOk(names.AttrStatus); ok {
 			input.Status = awstypes.PipelineStatus(v.(string))
 		}
 
@@ -582,7 +582,7 @@ func flattenECRConfiguration(apiObject *awstypes.EcrConfiguration) map[string]in
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.RepositoryName; v != nil {
-		tfMap["repository_name"] = aws.ToString(v)
+		tfMap[names.AttrRepositoryName] = aws.ToString(v)
 	}
 
 	if v := apiObject.ContainerTags; v != nil {
@@ -620,7 +620,7 @@ func flattenSchedule(apiObject *awstypes.Schedule) map[string]interface{} {
 	tfMap["pipeline_execution_start_condition"] = string(apiObject.PipelineExecutionStartCondition)
 
 	if v := apiObject.ScheduleExpression; v != nil {
-		tfMap["schedule_expression"] = aws.ToString(v)
+		tfMap[names.AttrScheduleExpression] = aws.ToString(v)
 	}
 
 	if v := apiObject.Timezone; v != nil {

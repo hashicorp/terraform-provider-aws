@@ -196,7 +196,7 @@ func resourceInfrastructureConfigurationCreate(ctx context.Context, d *schema.Re
 		input.ResourceTags = Tags(tftags.New(ctx, v.(map[string]interface{})))
 	}
 
-	if v, ok := d.GetOk("security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(names.AttrSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
 		input.SecurityGroupIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
@@ -289,11 +289,11 @@ func resourceInfrastructureConfigurationRead(ctx context.Context, d *schema.Reso
 	} else {
 		d.Set("logging", nil)
 	}
-	d.Set("name", infrastructureConfiguration.Name)
-	d.Set("resource_tags", KeyValueTags(ctx, infrastructureConfiguration.ResourceTags).Map())
-	d.Set("security_group_ids", infrastructureConfiguration.SecurityGroupIds)
-	d.Set("sns_topic_arn", infrastructureConfiguration.SnsTopicArn)
-	d.Set("subnet_id", infrastructureConfiguration.SubnetId)
+	d.Set(names.AttrName, infrastructureConfiguration.Name)
+	d.Set(names.AttrResourceTags, KeyValueTags(ctx, infrastructureConfiguration.ResourceTags).Map())
+	d.Set(names.AttrSecurityGroupIDs, infrastructureConfiguration.SecurityGroupIds)
+	d.Set(names.AttrSNSTopicARN, infrastructureConfiguration.SnsTopicArn)
+	d.Set(names.AttrSubnetID, infrastructureConfiguration.SubnetId)
 
 	setTagsOut(ctx, infrastructureConfiguration.Tags)
 
@@ -352,7 +352,7 @@ func resourceInfrastructureConfigurationUpdate(ctx context.Context, d *schema.Re
 			input.ResourceTags = Tags(tftags.New(ctx, v.(map[string]interface{})))
 		}
 
-		if v, ok := d.GetOk("security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
+		if v, ok := d.GetOk(names.AttrSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
 			input.SecurityGroupIds = flex.ExpandStringValueSet(v.(*schema.Set))
 		}
 
@@ -501,11 +501,11 @@ func flattenS3Logs(apiObject *awstypes.S3Logs) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.S3BucketName; v != nil {
-		tfMap["s3_bucket_name"] = aws.ToString(v)
+		tfMap[names.AttrS3BucketName] = aws.ToString(v)
 	}
 
 	if v := apiObject.S3KeyPrefix; v != nil {
-		tfMap["s3_key_prefix"] = aws.ToString(v)
+		tfMap[names.AttrS3KeyPrefix] = aws.ToString(v)
 	}
 
 	return tfMap

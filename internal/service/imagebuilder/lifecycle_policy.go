@@ -55,8 +55,8 @@ func (r *resourceLifecyclePolicy) Metadata(_ context.Context, request resource.M
 func (r *resourceLifecyclePolicy) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
-			"description": schema.StringAttribute{
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -65,14 +65,14 @@ func (r *resourceLifecyclePolicy) Schema(ctx context.Context, req resource.Schem
 			"execution_role": schema.StringAttribute{
 				Required: true,
 			},
-			"id": framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			names.AttrID: framework.IDAttribute(),
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"resource_type": schema.StringAttribute{
+			names.AttrResourceType: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -82,7 +82,7 @@ func (r *resourceLifecyclePolicy) Schema(ctx context.Context, req resource.Schem
 					enum.FrameworkValidate[awstypes.LifecyclePolicyResourceType](),
 				},
 			},
-			"status": schema.StringAttribute{
+			names.AttrStatus: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -103,14 +103,14 @@ func (r *resourceLifecyclePolicy) Schema(ctx context.Context, req resource.Schem
 				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
-						"action": schema.ListNestedBlock{
+						names.AttrAction: schema.ListNestedBlock{
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
 								listvalidator.IsRequired(),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"type": schema.StringAttribute{
+									names.AttrType: schema.StringAttribute{
 										Required: true,
 										Validators: []validator.String{
 											enum.FrameworkValidate[awstypes.LifecyclePolicyDetailActionType](),
@@ -151,26 +151,26 @@ func (r *resourceLifecyclePolicy) Schema(ctx context.Context, req resource.Schem
 								},
 							},
 						},
-						"filter": schema.ListNestedBlock{
+						names.AttrFilter: schema.ListNestedBlock{
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
 								listvalidator.IsRequired(),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"type": schema.StringAttribute{
+									names.AttrType: schema.StringAttribute{
 										Required: true,
 										Validators: []validator.String{
 											enum.FrameworkValidate[awstypes.LifecyclePolicyDetailFilterType](),
 										},
 									},
-									"value": schema.Int64Attribute{
+									names.AttrValue: schema.Int64Attribute{
 										Required: true,
 									},
 									"retain_at_least": schema.Int64Attribute{
 										Optional: true,
 									},
-									"unit": schema.StringAttribute{
+									names.AttrUnit: schema.StringAttribute{
 										Optional: true,
 										Validators: []validator.String{
 											enum.FrameworkValidate[awstypes.LifecyclePolicyTimeUnit](),
@@ -220,13 +220,13 @@ func (r *resourceLifecyclePolicy) Schema(ctx context.Context, req resource.Schem
 													},
 													NestedObject: schema.NestedBlockObject{
 														Attributes: map[string]schema.Attribute{
-															"unit": schema.StringAttribute{
+															names.AttrUnit: schema.StringAttribute{
 																Required: true,
 																Validators: []validator.String{
 																	enum.FrameworkValidate[awstypes.LifecyclePolicyTimeUnit](),
 																},
 															},
-															"value": schema.Int64Attribute{
+															names.AttrValue: schema.Int64Attribute{
 																Required: true,
 															},
 														},
@@ -261,7 +261,7 @@ func (r *resourceLifecyclePolicy) Schema(ctx context.Context, req resource.Schem
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"name": schema.StringAttribute{
+									names.AttrName: schema.StringAttribute{
 										Required: true,
 									},
 									"semantic_version": schema.StringAttribute{
@@ -546,7 +546,7 @@ func (r *resourceLifecyclePolicy) Delete(ctx context.Context, req resource.Delet
 }
 
 func (r *resourceLifecyclePolicy) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func (r *resourceLifecyclePolicy) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
@@ -856,8 +856,8 @@ func flattenPolicyDetails(ctx context.Context, apiObject []awstypes.LifecyclePol
 		diags.Append(d...)
 
 		obj := map[string]attr.Value{
-			"action":          action,
-			"filter":          filter,
+			names.AttrAction:          action,
+			names.AttrFilter:          filter,
 			"exclusion_rules": exclusionRules,
 		}
 
@@ -886,7 +886,7 @@ func flattenDetailAction(ctx context.Context, apiObject *awstypes.LifecyclePolic
 
 	obj := map[string]attr.Value{
 		"include_resources": includeResources,
-		"type":              flex.StringValueToFramework(ctx, apiObject.Type),
+		names.AttrType:              flex.StringValueToFramework(ctx, apiObject.Type),
 	}
 
 	objVal, d := types.ObjectValue(resourceActionAttrTypes, obj)
@@ -930,10 +930,10 @@ func flattenDetailFilter(ctx context.Context, apiObject *awstypes.LifecyclePolic
 	}
 
 	obj := map[string]attr.Value{
-		"type":            flex.StringValueToFramework(ctx, apiObject.Type),
-		"value":           flex.Int32ToFramework(ctx, apiObject.Value),
+		names.AttrType:            flex.StringValueToFramework(ctx, apiObject.Type),
+		names.AttrValue:           flex.Int32ToFramework(ctx, apiObject.Value),
 		"retain_at_least": flex.Int32ToFramework(ctx, apiObject.RetainAtLeast),
-		"unit":            flex.StringValueToFramework(ctx, apiObject.Unit),
+		names.AttrUnit:            flex.StringValueToFramework(ctx, apiObject.Unit),
 	}
 
 	objVal, d := types.ObjectValue(resourceFilterAttrTypes, obj)
@@ -1007,8 +1007,8 @@ func flattenExclusionRulesAMISLastLaunched(ctx context.Context, apiObject *awsty
 	}
 
 	obj := map[string]attr.Value{
-		"unit":  flex.StringValueToFramework(ctx, apiObject.Unit),
-		"value": flex.Int32ToFramework(ctx, apiObject.Value),
+		names.AttrUnit:  flex.StringValueToFramework(ctx, apiObject.Unit),
+		names.AttrValue: flex.Int32ToFramework(ctx, apiObject.Value),
 	}
 
 	objVal, d := types.ObjectValue(resourceLastLaunchedAttrTypes, obj)
@@ -1057,7 +1057,7 @@ func flattenResourceSelectionRecipes(ctx context.Context, apiObject []awstypes.L
 
 	for _, recipe := range apiObject {
 		obj := map[string]attr.Value{
-			"name":             flex.StringToFramework(ctx, recipe.Name),
+			names.AttrName:             flex.StringToFramework(ctx, recipe.Name),
 			"semantic_version": flex.StringToFramework(ctx, recipe.SemanticVersion),
 		}
 
@@ -1140,13 +1140,13 @@ type resourceLastLaunchedData struct {
 }
 
 var resourcePolicyDetailAttrTypes = map[string]attr.Type{
-	"action":          types.ListType{ElemType: types.ObjectType{AttrTypes: resourceActionAttrTypes}},
-	"filter":          types.ListType{ElemType: types.ObjectType{AttrTypes: resourceFilterAttrTypes}},
+	names.AttrAction:          types.ListType{ElemType: types.ObjectType{AttrTypes: resourceActionAttrTypes}},
+	names.AttrFilter:          types.ListType{ElemType: types.ObjectType{AttrTypes: resourceFilterAttrTypes}},
 	"exclusion_rules": types.ListType{ElemType: types.ObjectType{AttrTypes: resourceExclusionRulesAttrTypes}},
 }
 
 var resourceActionAttrTypes = map[string]attr.Type{
-	"type":              types.StringType,
+	names.AttrType:              types.StringType,
 	"include_resources": types.ListType{ElemType: types.ObjectType{AttrTypes: resourceIncludeResourcesAttrTypes}},
 }
 
@@ -1157,10 +1157,10 @@ var resourceIncludeResourcesAttrTypes = map[string]attr.Type{
 }
 
 var resourceFilterAttrTypes = map[string]attr.Type{
-	"type":            types.StringType,
-	"value":           types.Int64Type,
+	names.AttrType:            types.StringType,
+	names.AttrValue:           types.Int64Type,
 	"retain_at_least": types.Int64Type,
-	"unit":            types.StringType,
+	names.AttrUnit:            types.StringType,
 }
 
 var resourceExclusionRulesAttrTypes = map[string]attr.Type{
@@ -1177,8 +1177,8 @@ var resourceAMISAttrTypes = map[string]attr.Type{
 }
 
 var resourceLastLaunchedAttrTypes = map[string]attr.Type{
-	"unit":  types.StringType,
-	"value": types.Int64Type,
+	names.AttrUnit:  types.StringType,
+	names.AttrValue: types.Int64Type,
 }
 
 var resourceResourceSelectionAttrTypes = map[string]attr.Type{
@@ -1187,6 +1187,6 @@ var resourceResourceSelectionAttrTypes = map[string]attr.Type{
 }
 
 var resourceRecipeAttrTypes = map[string]attr.Type{
-	"name":             types.StringType,
+	names.AttrName:             types.StringType,
 	"semantic_version": types.StringType,
 }

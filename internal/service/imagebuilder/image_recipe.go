@@ -105,7 +105,7 @@ func ResourceImageRecipe() *schema.Resource {
 										ForceNew:     true,
 										ValidateFunc: validation.IntBetween(1, 16000),
 									},
-									"volume_type": {
+									names.AttrVolumeType: {
 										Type:             schema.TypeString,
 										Optional:         true,
 										ForceNew:         true,
@@ -490,7 +490,7 @@ func expandEBSInstanceBlockDeviceSpecification(tfMap map[string]interface{}) *aw
 		apiObject.Encrypted = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["iops"].(int); ok && v != 0 {
+	if v, ok := tfMap[names.AttrIOPS].(int); ok && v != 0 {
 		apiObject.Iops = aws.Int32(int32(v))
 	}
 
@@ -502,15 +502,15 @@ func expandEBSInstanceBlockDeviceSpecification(tfMap map[string]interface{}) *aw
 		apiObject.SnapshotId = aws.String(v)
 	}
 
-	if v, ok := tfMap["throughput"].(int); ok && v != 0 {
+	if v, ok := tfMap[names.AttrThroughput].(int); ok && v != 0 {
 		apiObject.Throughput = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["volume_size"].(int); ok && v != 0 {
+	if v, ok := tfMap[names.AttrVolumeSize].(int); ok && v != 0 {
 		apiObject.VolumeSize = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["volume_type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrVolumeType].(string); ok && v != "" {
 		apiObject.VolumeType = awstypes.EbsVolumeType(v)
 	}
 
@@ -605,13 +605,13 @@ func flattenComponentParameter(apiObject awstypes.ComponentParameter) map[string
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.ToString(v)
+		tfMap[names.AttrName] = aws.ToString(v)
 	}
 
 	if v := apiObject.Value; v != nil {
 		// ImageBuilder API quirk
 		// Even though Value is a slice, only one element is accepted.
-		tfMap["value"] = aws.StringSlice(v)[0]
+		tfMap[names.AttrValue] = aws.StringSlice(v)[0]
 	}
 
 	return tfMap
@@ -639,34 +639,34 @@ func flattenEBSInstanceBlockDeviceSpecification(apiObject *awstypes.EbsInstanceB
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.DeleteOnTermination; v != nil {
-		tfMap["delete_on_termination"] = strconv.FormatBool(aws.ToBool(v))
+		tfMap[names.AttrDeleteOnTermination] = strconv.FormatBool(aws.ToBool(v))
 	}
 
 	if v := apiObject.Encrypted; v != nil {
-		tfMap["encrypted"] = strconv.FormatBool(aws.ToBool(v))
+		tfMap[names.AttrEncrypted] = strconv.FormatBool(aws.ToBool(v))
 	}
 
 	if v := apiObject.Iops; v != nil {
-		tfMap["iops"] = aws.ToInt32(v)
+		tfMap[names.AttrIOPS] = aws.ToInt32(v)
 	}
 
 	if v := apiObject.KmsKeyId; v != nil {
-		tfMap["kms_key_id"] = aws.ToString(v)
+		tfMap[names.AttrKMSKeyID] = aws.ToString(v)
 	}
 
 	if v := apiObject.SnapshotId; v != nil {
-		tfMap["snapshot_id"] = aws.ToString(v)
+		tfMap[names.AttrSnapshotID] = aws.ToString(v)
 	}
 
 	if v := apiObject.Throughput; v != nil {
-		tfMap["throughput"] = aws.ToInt32(v)
+		tfMap[names.AttrThroughput] = aws.ToInt32(v)
 	}
 
 	if v := apiObject.VolumeSize; v != nil {
-		tfMap["volume_size"] = aws.ToInt32(v)
+		tfMap[names.AttrVolumeSize] = aws.ToInt32(v)
 	}
 
-	tfMap["volume_type"] = apiObject.VolumeType
+	tfMap[names.AttrVolumeType] = apiObject.VolumeType
 
 	return tfMap
 }
@@ -675,7 +675,7 @@ func flattenInstanceBlockDeviceMapping(apiObject awstypes.InstanceBlockDeviceMap
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.DeviceName; v != nil {
-		tfMap["device_name"] = aws.ToString(v)
+		tfMap[names.AttrDeviceName] = aws.ToString(v)
 	}
 
 	if v := apiObject.Ebs; v != nil {
@@ -687,7 +687,7 @@ func flattenInstanceBlockDeviceMapping(apiObject awstypes.InstanceBlockDeviceMap
 	}
 
 	if v := apiObject.VirtualName; v != nil {
-		tfMap["virtual_name"] = aws.ToString(v)
+		tfMap[names.AttrVirtualName] = aws.ToString(v)
 	}
 
 	return tfMap

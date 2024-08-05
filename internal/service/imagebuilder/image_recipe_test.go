@@ -47,8 +47,8 @@ func TestAccImageBuilderImageRecipe_basic(t *testing.T) {
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwner),
 					acctest.CheckResourceAttrRegionalARNAccountID(resourceName, "parent_image", "imagebuilder", "aws", "image/amazon-linux-2-x86/x.x.x"),
 					resource.TestCheckResourceAttr(resourceName, "platform", string(awstypes.PlatformLinux)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "version", "1.0.0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1.0.0"),
 				),
 			},
 			{

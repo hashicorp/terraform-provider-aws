@@ -735,11 +735,11 @@ func flattenAMIDistributionConfiguration(apiObject *awstypes.AmiDistributionConf
 	}
 
 	if v := apiObject.Description; v != nil {
-		tfMap["description"] = aws.ToString(v)
+		tfMap[names.AttrDescription] = aws.ToString(v)
 	}
 
 	if v := apiObject.KmsKeyId; v != nil {
-		tfMap["kms_key_id"] = aws.ToString(v)
+		tfMap[names.AttrKMSKeyID] = aws.ToString(v)
 	}
 
 	if v := apiObject.LaunchPermission; v != nil {
@@ -747,7 +747,7 @@ func flattenAMIDistributionConfiguration(apiObject *awstypes.AmiDistributionConf
 	}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.ToString(v)
+		tfMap[names.AttrName] = aws.ToString(v)
 	}
 
 	if v := apiObject.TargetAccountIds; v != nil {
@@ -769,7 +769,7 @@ func flattenContainerDistributionConfiguration(apiObject *awstypes.ContainerDist
 	}
 
 	if v := apiObject.Description; v != nil {
-		tfMap["description"] = aws.ToString(v)
+		tfMap[names.AttrDescription] = aws.ToString(v)
 	}
 
 	if v := apiObject.TargetRepository; v != nil {
@@ -817,7 +817,7 @@ func flattenDistribution(apiObject awstypes.Distribution) map[string]interface{}
 	}
 
 	if v := apiObject.Region; v != nil {
-		tfMap["region"] = aws.ToString(v)
+		tfMap[names.AttrRegion] = aws.ToString(v)
 	}
 
 	return tfMap
@@ -871,7 +871,7 @@ func flattenTargetContainerRepository(apiObject *awstypes.TargetContainerReposit
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.RepositoryName; v != nil {
-		tfMap["repository_name"] = aws.ToString(v)
+		tfMap[names.AttrRepositoryName] = aws.ToString(v)
 	}
 
 	tfMap["service"] = string(apiObject.Service)
@@ -889,7 +889,7 @@ func flattenLaunchTemplateConfiguration(apiObject awstypes.LaunchTemplateConfigu
 	}
 
 	if v := apiObject.AccountId; v != nil {
-		tfMap["account_id"] = aws.ToString(v)
+		tfMap[names.AttrAccountID] = aws.ToString(v)
 	}
 
 	return tfMap
@@ -913,10 +913,10 @@ func flattenFastLaunchConfiguration(apiObject awstypes.FastLaunchConfiguration) 
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.AccountId; v != nil {
-		tfMap["account_id"] = aws.ToString(v)
+		tfMap[names.AttrAccountID] = aws.ToString(v)
 	}
 
-	tfMap["enabled"] = aws.Bool(apiObject.Enabled)
+	tfMap[names.AttrEnabled] = aws.Bool(apiObject.Enabled)
 
 	if v := apiObject.LaunchTemplate; v != nil {
 		tfMap[names.AttrLaunchTemplate] = []interface{}{flattenFastLaunchLaunchTemplateSpecification(v)}

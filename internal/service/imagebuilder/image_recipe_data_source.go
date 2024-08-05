@@ -181,7 +181,7 @@ func dataSourceImageRecipeRead(ctx context.Context, d *schema.ResourceData, meta
 	imageRecipe := output.ImageRecipe
 
 	d.SetId(aws.ToString(imageRecipe.Arn))
-	d.Set("arn", imageRecipe.Arn)
+	d.Set(names.AttrARN, imageRecipe.Arn)
 	d.Set("block_device_mapping", flattenInstanceBlockDeviceMappings(imageRecipe.BlockDeviceMappings))
 	d.Set("component", flattenComponentConfigurations(imageRecipe.Components))
 	d.Set("date_created", imageRecipe.DateCreated)

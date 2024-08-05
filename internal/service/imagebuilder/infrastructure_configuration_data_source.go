@@ -144,7 +144,7 @@ func dataSourceInfrastructureConfigurationRead(ctx context.Context, d *schema.Re
 	infrastructureConfiguration := output.InfrastructureConfiguration
 
 	d.SetId(aws.ToString(infrastructureConfiguration.Arn))
-	d.Set("arn", infrastructureConfiguration.Arn)
+	d.Set(names.AttrARN, infrastructureConfiguration.Arn)
 	d.Set("date_created", infrastructureConfiguration.DateCreated)
 	d.Set("date_updated", infrastructureConfiguration.DateUpdated)
 	d.Set(names.AttrDescription, infrastructureConfiguration.Description)
@@ -163,12 +163,12 @@ func dataSourceInfrastructureConfigurationRead(ctx context.Context, d *schema.Re
 	} else {
 		d.Set("logging", nil)
 	}
-	d.Set("name", infrastructureConfiguration.Name)
-	d.Set("resource_tags", KeyValueTags(ctx, infrastructureConfiguration.ResourceTags).Map())
-	d.Set("security_group_ids", infrastructureConfiguration.SecurityGroupIds)
-	d.Set("sns_topic_arn", infrastructureConfiguration.SnsTopicArn)
-	d.Set("subnet_id", infrastructureConfiguration.SubnetId)
-	d.Set("tags", KeyValueTags(ctx, infrastructureConfiguration.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
+	d.Set(names.AttrName, infrastructureConfiguration.Name)
+	d.Set(names.AttrResourceTags, KeyValueTags(ctx, infrastructureConfiguration.ResourceTags).Map())
+	d.Set(names.AttrSecurityGroupIDs, infrastructureConfiguration.SecurityGroupIds)
+	d.Set(names.AttrSNSTopicARN, infrastructureConfiguration.SnsTopicArn)
+	d.Set(names.AttrSubnetID, infrastructureConfiguration.SubnetId)
+	d.Set(names.AttrTags, KeyValueTags(ctx, infrastructureConfiguration.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
 	d.Set("terminate_instance_on_failure", infrastructureConfiguration.TerminateInstanceOnFailure)
 
 	return diags

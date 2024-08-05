@@ -35,7 +35,7 @@ func DataSourceImageRecipes() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"owner": {
+			names.AttrOwner: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.Ownership](),
@@ -50,11 +50,11 @@ func dataSourceImageRecipesRead(ctx context.Context, d *schema.ResourceData, met
 
 	input := &imagebuilder.ListImageRecipesInput{}
 
-	if v, ok := d.GetOk("owner"); ok {
+	if v, ok := d.GetOk(names.AttrOwner); ok {
 		input.Owner = awstypes.Ownership(v.(string))
 	}
 
-	if v, ok := d.GetOk("filter"); ok {
+	if v, ok := d.GetOk(names.AttrFilter); ok {
 		input.Filters = namevaluesfiltersv2.New(v.(*schema.Set)).ImageBuilderFilters()
 	}
 

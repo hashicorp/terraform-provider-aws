@@ -83,7 +83,7 @@ func ResourceWorkflow() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"type": {
+			names.AttrType: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
@@ -113,9 +113,9 @@ func resourceWorkflowCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	input := &imagebuilder.CreateWorkflowInput{
 		ClientToken:     aws.String(id.UniqueId()),
-		Name:            aws.String(d.Get("name").(string)),
-		SemanticVersion: aws.String(d.Get("version").(string)),
-		Type:            awstypes.WorkflowType(d.Get("type").(string)),
+		Name:            aws.String(d.Get(names.AttrName).(string)),
+		SemanticVersion: aws.String(d.Get(names.AttrVersion).(string)),
+		Type:            awstypes.WorkflowType(d.Get(names.AttrType).(string)),
 		Tags:            getTagsIn(ctx),
 	}
 

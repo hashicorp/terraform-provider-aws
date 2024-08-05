@@ -52,12 +52,12 @@ func TestAccImageBuilderImagePipeline_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.0.image_tests_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.0.timeout_minutes", "720"),
-					resource.TestCheckResourceAttrPair(resourceName, "infrastructure_configuration_arn", infrastructureConfigurationResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "infrastructure_configuration_arn", infrastructureConfigurationResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "platform", string(types.PlatformLinux)),
-					resource.TestCheckResourceAttr(resourceName, "schedule.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.PipelineStatusEnabled)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.PipelineStatusEnabled)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -468,7 +468,7 @@ func TestAccImageBuilderImagePipeline_Schedule_pipelineExecutionStartCondition(t
 				Config: testAccImagePipelineConfig_scheduleExecutionStartCondition(rName, string(types.PipelineExecutionStartConditionExpressionMatchAndDependencyUpdatesAvailable)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImagePipelineExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "schedule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.pipeline_execution_start_condition", string(types.PipelineExecutionStartConditionExpressionMatchAndDependencyUpdatesAvailable)),
 				),
 			},
@@ -482,7 +482,7 @@ func TestAccImageBuilderImagePipeline_Schedule_pipelineExecutionStartCondition(t
 				Config: testAccImagePipelineConfig_scheduleExecutionStartCondition(rName, string(types.PipelineExecutionStartConditionExpressionMatchOnly)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImagePipelineExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "schedule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.pipeline_execution_start_condition", string(types.PipelineExecutionStartConditionExpressionMatchOnly)),
 				),
 			},
@@ -581,7 +581,7 @@ func TestAccImageBuilderImagePipeline_status(t *testing.T) {
 				Config: testAccImagePipelineConfig_status(rName, string(types.PipelineStatusDisabled)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImagePipelineExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.PipelineStatusDisabled)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.PipelineStatusDisabled)),
 				),
 			},
 			{
@@ -593,7 +593,7 @@ func TestAccImageBuilderImagePipeline_status(t *testing.T) {
 				Config: testAccImagePipelineConfig_status(rName, string(types.PipelineStatusEnabled)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImagePipelineExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.PipelineStatusEnabled)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.PipelineStatusEnabled)),
 				),
 			},
 		},

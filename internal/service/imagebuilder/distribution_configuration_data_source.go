@@ -263,7 +263,7 @@ func dataSourceDistributionConfigurationRead(ctx context.Context, d *schema.Reso
 	distributionConfiguration := output.DistributionConfiguration
 
 	d.SetId(aws.ToString(distributionConfiguration.Arn))
-	d.Set("arn", distributionConfiguration.Arn)
+	d.Set(names.AttrARN, distributionConfiguration.Arn)
 	d.Set("date_created", distributionConfiguration.DateCreated)
 	d.Set("date_updated", distributionConfiguration.DateUpdated)
 	d.Set(names.AttrDescription, distributionConfiguration.Description)

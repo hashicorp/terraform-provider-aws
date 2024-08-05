@@ -171,7 +171,7 @@ func dataSourceImagePipelineRead(ctx context.Context, d *schema.ResourceData, me
 	imagePipeline := output.ImagePipeline
 
 	d.SetId(aws.ToString(imagePipeline.Arn))
-	d.Set("arn", imagePipeline.Arn)
+	d.Set(names.AttrARN, imagePipeline.Arn)
 	d.Set("container_recipe_arn", imagePipeline.ContainerRecipeArn)
 	d.Set("date_created", imagePipeline.DateCreated)
 	d.Set("date_last_run", imagePipeline.DateLastRun)

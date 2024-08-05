@@ -43,7 +43,7 @@ func dataSourceDistributionConfigurationsRead(ctx context.Context, d *schema.Res
 
 	input := &imagebuilder.ListDistributionConfigurationsInput{}
 
-	if v, ok := d.GetOk("filter"); ok {
+	if v, ok := d.GetOk(names.AttrFilter); ok {
 		input.Filters = namevaluesfiltersv2.New(v.(*schema.Set)).ImageBuilderFilters()
 	}
 
