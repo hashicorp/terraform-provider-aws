@@ -16,13 +16,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters"
 	namevaluesfiltersv2 "github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters/v2"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_imagebuilder_components", name="Components")
-func DataSourceComponents() *schema.Resource {
+func dataSourceComponents() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceComponentsRead,
+
 		Schema: map[string]*schema.Schema{
 			names.AttrARNs: {
 				Type:     schema.TypeSet,
@@ -50,30 +52,44 @@ func dataSourceComponentsRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	input := &imagebuilder.ListComponentsInput{}
 
-	if v, ok := d.GetOk(names.AttrOwner); ok {
-		input.Owner = awstypes.Ownership(v.(string))
-	}
-
 	if v, ok := d.GetOk(names.AttrFilter); ok {
 		input.Filters = namevaluesfiltersv2.New(v.(*schema.Set)).ImageBuilderFilters()
 	}
 
-	out, err := conn.ListComponents(ctx, input)
+	if v, ok := d.GetOk(names.AttrOwner); ok {
+		input.Owner = awstypes.Ownership(v.(string))
+	}
+
+	components, err := findComponents(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Image Builder Components: %s", err)
 	}
 
-	var arns, nms []string
-
-	for _, r := range out.ComponentVersionList {
-		arns = append(arns, aws.ToString(r.Arn))
-		nms = append(nms, aws.ToString(r.Name))
-	}
-
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set(names.AttrARNs, arns)
-	d.Set(names.AttrNames, nms)
+	d.Set(names.AttrARNs, tfslices.ApplyToAll(components, func(v awstypes.ComponentVersion) string {
+		return aws.ToString(v.Arn)
+	}))
+	d.Set(names.AttrNames, tfslices.ApplyToAll(components, func(v awstypes.ComponentVersion) string {
+		return aws.ToString(v.Name)
+	}))
 
 	return diags
+}
+
+func findComponents(ctx context.Context, conn *imagebuilder.Client, input *imagebuilder.ListComponentsInput) ([]awstypes.ComponentVersion, error) {
+	var output []awstypes.ComponentVersion
+
+	pages := imagebuilder.NewListComponentsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.ComponentVersionList...)
+	}
+
+	return output, nil
 }
