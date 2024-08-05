@@ -147,9 +147,9 @@ func TestAccImageBuilderLifecyclePolicy_resourceSelection(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLifecyclePolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "resource_selection.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "resource_selection.0.recipes.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "resource_selection.0.recipes.0.name", rName),
-					resource.TestCheckResourceAttr(resourceName, "resource_selection.0.recipes.0.semantic_version", "1.0.0"),
+					resource.TestCheckResourceAttr(resourceName, "resource_selection.0.recipe.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "resource_selection.0.recipe.0.name", rName),
+					resource.TestCheckResourceAttr(resourceName, "resource_selection.0.recipe.0.semantic_version", "1.0.0"),
 				),
 			},
 			{
@@ -162,9 +162,9 @@ func TestAccImageBuilderLifecyclePolicy_resourceSelection(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLifecyclePolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "resource_selection.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "resource_selection.0.recipes.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "resource_selection.0.recipes.0.name", rName),
-					resource.TestCheckResourceAttr(resourceName, "resource_selection.0.recipes.0.semantic_version", "2.0.0"),
+					resource.TestCheckResourceAttr(resourceName, "resource_selection.0.recipe.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "resource_selection.0.recipe.0.name", rName),
+					resource.TestCheckResourceAttr(resourceName, "resource_selection.0.recipe.0.semantic_version", "2.0.0"),
 				),
 			},
 		},
@@ -490,7 +490,7 @@ resource "aws_imagebuilder_lifecycle_policy" "test" {
     }
   }
   resource_selection {
-    recipes {
+    recipe {
       name             = aws_imagebuilder_image_recipe.test.name
       semantic_version = aws_imagebuilder_image_recipe.test.version
     }
@@ -533,7 +533,7 @@ resource "aws_imagebuilder_lifecycle_policy" "test" {
     }
   }
   resource_selection {
-    recipes {
+    recipe {
       name             = aws_imagebuilder_image_recipe.test.name
       semantic_version = aws_imagebuilder_image_recipe.test.version
     }

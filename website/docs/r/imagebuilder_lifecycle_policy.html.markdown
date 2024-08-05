@@ -147,7 +147,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `recipe` - (Optional) A list of recipes that are used as selection criteria for the output images that the lifecycle policy applies to. Detailed below.
+* `recipe` - (Optional) A list of recipe that are used as selection criteria for the output images that the lifecycle policy applies to. Detailed below.
 * `tag_map` - (Optional) A list of tags that are used as selection criteria for the Image Builder image resources that the lifecycle policy applies to.
 
 ### recipe
