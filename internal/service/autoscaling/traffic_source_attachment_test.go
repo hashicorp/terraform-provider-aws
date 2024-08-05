@@ -177,15 +177,9 @@ func testAccCheckTrafficSourceAttachmentExists(ctx context.Context, n string) re
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		asgName, trafficSourceType, trafficSourceID, err := tfautoscaling.TrafficSourceAttachmentParseResourceID(rs.Primary.ID)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingClient(ctx)
 
-		if err != nil {
-			return err
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn(ctx)
-
-		_, err = tfautoscaling.FindTrafficSourceAttachmentByThreePartKey(ctx, conn, asgName, trafficSourceType, trafficSourceID)
+		_, err := tfautoscaling.FindTrafficSourceAttachmentByThreePartKey(ctx, conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.Attributes["traffic_source.0.type"], rs.Primary.Attributes["traffic_source.0.identifier"])
 
 		return err
 	}
@@ -193,20 +187,14 @@ func testAccCheckTrafficSourceAttachmentExists(ctx context.Context, n string) re
 
 func testAccCheckTrafficSourceAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_autoscaling_traffic_source_attachment" {
 				continue
 			}
 
-			asgName, trafficSourceType, trafficSourceID, err := tfautoscaling.TrafficSourceAttachmentParseResourceID(rs.Primary.ID)
-
-			if err != nil {
-				return err
-			}
-
-			_, err = tfautoscaling.FindTrafficSourceAttachmentByThreePartKey(ctx, conn, asgName, trafficSourceType, trafficSourceID)
+			_, err := tfautoscaling.FindTrafficSourceAttachmentByThreePartKey(ctx, conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.Attributes["traffic_source.0.type"], rs.Primary.Attributes["traffic_source.0.identifier"])
 
 			if tfresource.NotFound(err) {
 				continue

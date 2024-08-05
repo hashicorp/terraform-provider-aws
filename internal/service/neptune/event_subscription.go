@@ -44,7 +44,7 @@ func ResourceEventSubscription() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -52,7 +52,7 @@ func ResourceEventSubscription() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"enabled": {
+			names.AttrEnabled: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
@@ -62,23 +62,23 @@ func ResourceEventSubscription() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc:  validEventSubscriptionName,
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validEventSubscriptionNamePrefix,
 			},
-			"sns_topic_arn": {
+			names.AttrSNSTopicARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -88,7 +88,7 @@ func ResourceEventSubscription() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"source_type": {
+			names.AttrSourceType: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -105,13 +105,13 @@ func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
 	name := create.NewNameGenerator(
-		create.WithConfiguredName(d.Get("name").(string)),
-		create.WithConfiguredPrefix(d.Get("name_prefix").(string)),
+		create.WithConfiguredName(d.Get(names.AttrName).(string)),
+		create.WithConfiguredPrefix(d.Get(names.AttrNamePrefix).(string)),
 		create.WithDefaultPrefix("tf-"),
 	).Generate()
 	input := &neptune.CreateEventSubscriptionInput{
-		Enabled:          aws.Bool(d.Get("enabled").(bool)),
-		SnsTopicArn:      aws.String(d.Get("sns_topic_arn").(string)),
+		Enabled:          aws.Bool(d.Get(names.AttrEnabled).(bool)),
+		SnsTopicArn:      aws.String(d.Get(names.AttrSNSTopicARN).(string)),
 		SubscriptionName: aws.String(name),
 		Tags:             getTagsIn(ctx),
 	}
@@ -124,7 +124,7 @@ func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 		input.SourceIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("source_type"); ok {
+	if v, ok := d.GetOk(names.AttrSourceType); ok {
 		input.SourceType = aws.String(v.(string))
 	}
 
@@ -159,15 +159,15 @@ func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "reading Neptune Event Subscription (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", output.EventSubscriptionArn)
+	d.Set(names.AttrARN, output.EventSubscriptionArn)
 	d.Set("customer_aws_id", output.CustomerAwsId)
-	d.Set("enabled", output.Enabled)
+	d.Set(names.AttrEnabled, output.Enabled)
 	d.Set("event_categories", aws.StringValueSlice(output.EventCategoriesList))
-	d.Set("name", output.CustSubscriptionId)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(output.CustSubscriptionId)))
-	d.Set("sns_topic_arn", output.SnsTopicArn)
+	d.Set(names.AttrName, output.CustSubscriptionId)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(output.CustSubscriptionId)))
+	d.Set(names.AttrSNSTopicARN, output.SnsTopicArn)
 	d.Set("source_ids", aws.StringValueSlice(output.SourceIdsList))
-	d.Set("source_type", output.SourceType)
+	d.Set(names.AttrSourceType, output.SourceType)
 
 	return diags
 }
@@ -176,26 +176,26 @@ func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all", "source_ids") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll, "source_ids") {
 		input := &neptune.ModifyEventSubscriptionInput{
 			SubscriptionName: aws.String(d.Id()),
 		}
 
-		if d.HasChange("enabled") {
-			input.Enabled = aws.Bool(d.Get("enabled").(bool))
+		if d.HasChange(names.AttrEnabled) {
+			input.Enabled = aws.Bool(d.Get(names.AttrEnabled).(bool))
 		}
 
 		if d.HasChange("event_categories") {
 			input.EventCategories = flex.ExpandStringSet(d.Get("event_categories").(*schema.Set))
-			input.SourceType = aws.String(d.Get("source_type").(string))
+			input.SourceType = aws.String(d.Get(names.AttrSourceType).(string))
 		}
 
-		if d.HasChange("sns_topic_arn") {
-			input.SnsTopicArn = aws.String(d.Get("sns_topic_arn").(string))
+		if d.HasChange(names.AttrSNSTopicARN) {
+			input.SnsTopicArn = aws.String(d.Get(names.AttrSNSTopicARN).(string))
 		}
 
-		if d.HasChange("source_type") {
-			input.SourceType = aws.String(d.Get("source_type").(string))
+		if d.HasChange(names.AttrSourceType) {
+			input.SourceType = aws.String(d.Get(names.AttrSourceType).(string))
 		}
 
 		_, err := conn.ModifyEventSubscriptionWithContext(ctx, input)

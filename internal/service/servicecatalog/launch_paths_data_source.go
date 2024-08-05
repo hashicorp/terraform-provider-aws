@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_servicecatalog_launch_paths")
@@ -46,11 +47,11 @@ func DataSourceLaunchPaths() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"description": {
+									names.AttrDescription: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"type": {
+									names.AttrType: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -61,11 +62,11 @@ func DataSourceLaunchPaths() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"tags": tftags.TagsSchemaComputed(),
+						names.AttrTags: tftags.TagsSchemaComputed(),
 					},
 				},
 			},
@@ -109,12 +110,12 @@ func flattenLaunchPathSummary(ctx context.Context, apiObject *types.LaunchPathSu
 	}
 
 	if apiObject.Name != nil {
-		tfMap["name"] = aws.ToString(apiObject.Name)
+		tfMap[names.AttrName] = aws.ToString(apiObject.Name)
 	}
 
 	tags := KeyValueTags(ctx, apiObject.Tags)
 
-	tfMap["tags"] = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()
+	tfMap[names.AttrTags] = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()
 
 	return tfMap
 }
@@ -145,11 +146,11 @@ func flattenConstraintSummary(apiObject *types.ConstraintSummary) map[string]int
 	tfMap := map[string]interface{}{}
 
 	if apiObject.Description != nil {
-		tfMap["description"] = aws.ToString(apiObject.Description)
+		tfMap[names.AttrDescription] = aws.ToString(apiObject.Description)
 	}
 
 	if apiObject.Type != nil {
-		tfMap["type"] = aws.ToString(apiObject.Type)
+		tfMap[names.AttrType] = aws.ToString(apiObject.Type)
 	}
 
 	return tfMap

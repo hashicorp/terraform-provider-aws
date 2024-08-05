@@ -13,7 +13,7 @@ Get a list of brokers that a client application can use to bootstrap.
 ## Example Usage
 
 ```terraform
-data "aws_msk_cluster" "example" {
+data "aws_msk_bootstrap_brokers" "example" {
   cluster_arn = aws_msk_cluster.example.arn
 }
 ```

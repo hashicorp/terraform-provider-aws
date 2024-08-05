@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_api_gateway_documentation_part: Add `documentation_part_id` attribute
+```
+
+```release-note:enhancement
+resource/aws_wafregional_web_acl_association: Add plan-time validation of `resource_arn`
+```
+
+```release-note:enhancement
+resource/aws_wafregional_web_acl_association: Add configurable timeouts
+```

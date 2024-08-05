@@ -7,13 +7,15 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/transfer"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/transfer"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/transfer/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -24,7 +26,7 @@ import (
 
 // @SDKResource("aws_transfer_profile", name="Profile")
 // @Tags(identifierAttribute="arn")
-func ResourceProfile() *schema.Resource {
+func resourceProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProfileCreate,
 		ReadWithoutTimeout:   resourceProfileRead,
@@ -36,7 +38,7 @@ func ResourceProfile() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -55,10 +57,10 @@ func ResourceProfile() *schema.Resource {
 				Computed: true,
 			},
 			"profile_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(transfer.ProfileType_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.ProfileType](),
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -70,34 +72,34 @@ func ResourceProfile() *schema.Resource {
 
 func resourceProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn(ctx)
+	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
 	input := &transfer.CreateProfileInput{
 		As2Id:       aws.String(d.Get("as2_id").(string)),
-		ProfileType: aws.String(d.Get("profile_type").(string)),
+		ProfileType: awstypes.ProfileType(d.Get("profile_type").(string)),
 		Tags:        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("certificate_ids"); ok && v.(*schema.Set).Len() > 0 {
-		input.CertificateIds = flex.ExpandStringSet(v.(*schema.Set))
+		input.CertificateIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	output, err := conn.CreateProfileWithContext(ctx, input)
+	output, err := conn.CreateProfile(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Transfer Profile: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.ProfileId))
+	d.SetId(aws.ToString(output.ProfileId))
 
 	return append(diags, resourceProfileRead(ctx, d, meta)...)
 }
 
 func resourceProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn(ctx)
+	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
-	output, err := FindProfileByID(ctx, conn, d.Id())
+	output, err := findProfileByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Transfer Profile (%s) not found, removing from state", d.Id())
@@ -109,11 +111,12 @@ func resourceProfileRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "reading Transfer Profile (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", output.Arn)
+	d.Set(names.AttrARN, output.Arn)
 	d.Set("as2_id", output.As2Id)
-	d.Set("certificate_ids", aws.StringValueSlice(output.CertificateIds))
+	d.Set("certificate_ids", output.CertificateIds)
 	d.Set("profile_id", output.ProfileId)
 	d.Set("profile_type", output.ProfileType)
+
 	setTagsOut(ctx, output.Tags)
 
 	return diags
@@ -121,18 +124,18 @@ func resourceProfileRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn(ctx)
+	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &transfer.UpdateProfileInput{
 			ProfileId: aws.String(d.Id()),
 		}
 
 		if d.HasChange("certificate_ids") {
-			input.CertificateIds = flex.ExpandStringSet(d.Get("certificate_ids").(*schema.Set))
+			input.CertificateIds = flex.ExpandStringValueSet(d.Get("certificate_ids").(*schema.Set))
 		}
 
-		_, err := conn.UpdateProfileWithContext(ctx, input)
+		_, err := conn.UpdateProfile(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Transfer Profile (%s): %s", d.Id(), err)
@@ -144,14 +147,14 @@ func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn(ctx)
+	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Transfer Profile: %s", d.Id())
-	_, err := conn.DeleteProfileWithContext(ctx, &transfer.DeleteProfileInput{
+	_, err := conn.DeleteProfile(ctx, &transfer.DeleteProfileInput{
 		ProfileId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, transfer.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -160,4 +163,29 @@ func resourceProfileDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	return diags
+}
+
+func findProfileByID(ctx context.Context, conn *transfer.Client, id string) (*awstypes.DescribedProfile, error) {
+	input := &transfer.DescribeProfileInput{
+		ProfileId: aws.String(id),
+	}
+
+	output, err := conn.DescribeProfile(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Profile == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Profile, nil
 }

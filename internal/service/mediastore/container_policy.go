@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_media_store_container_policy")
@@ -38,7 +39,7 @@ func ResourceContainerPolicy() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"policy": {
+			names.AttrPolicy: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateFunc:     verify.ValidIAMPolicyJSON,
@@ -57,7 +58,7 @@ func resourceContainerPolicyPut(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).MediaStoreClient(ctx)
 
 	name := d.Get("container_name").(string)
-	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "putting MediaStore Container Policy (%s): %s", name, err)
@@ -95,12 +96,12 @@ func resourceContainerPolicyRead(ctx context.Context, d *schema.ResourceData, me
 
 	d.Set("container_name", d.Id())
 
-	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.ToString(resp.Policy))
+	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), aws.ToString(resp.Policy))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading MediaStore Container Policy (%s): %s", d.Id(), err)
 	}
 
-	d.Set("policy", policyToSet)
+	d.Set(names.AttrPolicy, policyToSet)
 
 	return diags
 }

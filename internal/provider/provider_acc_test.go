@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -110,6 +111,32 @@ func TestAccProvider_DefaultTagsTags_multiple(t *testing.T) {
 	})
 }
 
+func TestAccProvider_DefaultTagsTags_envVars(t *testing.T) {
+	ctx := acctest.Context(t)
+	var p *schema.Provider
+
+	t.Setenv(tftags.DefaultTagsEnvVarPrefix+"test1", "envValue1")
+	t.Setenv(tftags.DefaultTagsEnvVarPrefix+"test2", "envValue2")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t),
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(ctx, t, &p),
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{ // nosemgrep:ci.test-config-funcs-correct-form
+				Config: acctest.ConfigDefaultTags_Tags1("test1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProviderDefaultTags_Tags(ctx, t, &p, map[string]string{
+						"test1": "value1",
+						"test2": "envValue2",
+					}),
+				),
+			},
+		},
+	})
+}
+
 func TestAccProvider_DefaultAndIgnoreTags_emptyBlocks(t *testing.T) {
 	ctx := acctest.Context(t)
 	var provider *schema.Provider
@@ -158,7 +185,7 @@ func TestAccProvider_endpoints(t *testing.T) {
 	})
 }
 
-func TestAccProvider_fipsEndpoint(t *testing.T) {
+func TestAccProvider_customEndpoint(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket.test"
@@ -170,7 +197,8 @@ func TestAccProvider_fipsEndpoint(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProviderConfig_fipsEndpoint(fmt.Sprintf("https://s3-fips.%s.%s", acctest.Region(), acctest.PartitionDNSSuffix()), rName),
+				// The fips endpoint is used here just because it's a valid endpoint that isn't the normal endpoint.
+				Config: testAccProviderConfig_customS3Endpoint(fmt.Sprintf("https://s3-fips.%s.%s", acctest.Region(), acctest.PartitionDNSSuffix()), rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "bucket", rName),
 				),
@@ -204,6 +232,48 @@ func TestAccProvider_unusualEndpoints(t *testing.T) {
 					testAccCheckUnusualEndpoints(ctx, &provider, unusual1),
 					testAccCheckUnusualEndpoints(ctx, &provider, unusual2),
 					testAccCheckUnusualEndpoints(ctx, &provider, unusual3),
+				),
+			},
+		},
+	})
+}
+
+func TestAccProvider_useFipsEndpointFlag(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProviderConfig_useFipsEndpointFlag(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "bucket", rName),
+				),
+			},
+		},
+	})
+}
+
+func TestAccProvider_overrideUseFipsEndpointFlagForOneService(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_appconfig_application.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProviderConfig_overridesUseFipsEndpointFlagForAppConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
 		},
@@ -970,7 +1040,7 @@ provider "aws" {
 `, endpoints))
 }
 
-func testAccProviderConfig_fipsEndpoint(endpoint, rName string) string {
+func testAccProviderConfig_customS3Endpoint(endpoint, rName string) string {
 	//lintignore:AT004
 	return acctest.ConfigCompose(testAccProviderConfig_base, fmt.Sprintf(`
 provider "aws" {
@@ -1001,6 +1071,37 @@ provider "aws" {
   }
 }
 `, unusual1.fieldName, unusual1.url, unusual2.fieldName, unusual2.url, unusual3.fieldName, unusual3.url))
+}
+
+func testAccProviderConfig_useFipsEndpointFlag(rName string) string {
+	//lintignore:AT004
+	return acctest.ConfigCompose(testAccProviderConfig_base, fmt.Sprintf(`
+provider "aws" {
+  use_fips_endpoint = true
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+`, rName))
+}
+
+func testAccProviderConfig_overridesUseFipsEndpointFlagForAppConfig(rName string) string {
+	appconfig_endpoint := fmt.Sprintf("https://appconfig.%s.%s", acctest.Region(), acctest.PartitionDNSSuffix())
+	//lintignore:AT004
+	return acctest.ConfigCompose(testAccProviderConfig_base, fmt.Sprintf(`
+provider "aws" {
+  use_fips_endpoint = true
+  endpoints {
+	appconfig = %[1]q
+  }
+}
+
+resource "aws_appconfig_application" "test" {
+  name = %[2]q
+}
+`, appconfig_endpoint, rName))
 }
 
 func testAccProviderConfig_ignoreTagsKeys0() string {

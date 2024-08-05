@@ -27,7 +27,8 @@ import (
 )
 
 // @SDKResource("aws_servicecatalog_product", name="Product")
-// @Tags(identifierAttribute="id")
+// @Tags
+// @Testing(skipEmptyTags=true, importIgnore="accept_language;provisioning_artifact_parameters.0.disable_template_validation")
 func ResourceProduct() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProductCreate,
@@ -53,15 +54,15 @@ func ResourceProduct() *schema.Resource {
 				Default:      AcceptLanguageEnglish,
 				ValidateFunc: validation.StringInSlice(AcceptLanguage_Values(), false),
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_time": {
+			names.AttrCreatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -75,11 +76,11 @@ func ResourceProduct() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"owner": {
+			names.AttrOwner: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -90,7 +91,7 @@ func ResourceProduct() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"description": {
+						names.AttrDescription: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -101,7 +102,7 @@ func ResourceProduct() *schema.Resource {
 							ForceNew: true,
 							Default:  false,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -124,7 +125,7 @@ func ResourceProduct() *schema.Resource {
 								"provisioning_artifact_parameters.0.template_physical_id",
 							},
 						},
-						"type": {
+						names.AttrType: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							ForceNew:         true,
@@ -133,7 +134,7 @@ func ResourceProduct() *schema.Resource {
 					},
 				},
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -154,7 +155,7 @@ func ResourceProduct() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"type": {
+			names.AttrType: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateDiagFunc: enum.Validate[types.ProductType](),
@@ -169,12 +170,12 @@ func resourceProductCreate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &servicecatalog.CreateProductInput{
 		IdempotencyToken: aws.String(id.UniqueId()),
 		Name:             aws.String(name),
-		Owner:            aws.String(d.Get("owner").(string)),
-		ProductType:      types.ProductType(d.Get("type").(string)),
+		Owner:            aws.String(d.Get(names.AttrOwner).(string)),
+		ProductType:      types.ProductType(d.Get(names.AttrType).(string)),
 		ProvisioningArtifactParameters: expandProvisioningArtifactParameters(
 			d.Get("provisioning_artifact_parameters").([]interface{})[0].(map[string]interface{}),
 		),
@@ -185,7 +186,7 @@ func resourceProductCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.AcceptLanguage = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -244,20 +245,20 @@ func resourceProductRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	pvs := output.ProductViewDetail.ProductViewSummary
 
-	d.Set("arn", output.ProductViewDetail.ProductARN)
+	d.Set(names.AttrARN, output.ProductViewDetail.ProductARN)
 	if output.ProductViewDetail.CreatedTime != nil {
-		d.Set("created_time", output.ProductViewDetail.CreatedTime.Format(time.RFC3339))
+		d.Set(names.AttrCreatedTime, output.ProductViewDetail.CreatedTime.Format(time.RFC3339))
 	}
-	d.Set("description", pvs.ShortDescription)
+	d.Set(names.AttrDescription, pvs.ShortDescription)
 	d.Set("distributor", pvs.Distributor)
 	d.Set("has_default_path", pvs.HasDefaultPath)
-	d.Set("name", pvs.Name)
-	d.Set("owner", pvs.Owner)
-	d.Set("status", output.ProductViewDetail.Status)
+	d.Set(names.AttrName, pvs.Name)
+	d.Set(names.AttrOwner, pvs.Owner)
+	d.Set(names.AttrStatus, output.ProductViewDetail.Status)
 	d.Set("support_description", pvs.SupportDescription)
 	d.Set("support_email", pvs.SupportEmail)
 	d.Set("support_url", pvs.SupportUrl)
-	d.Set("type", pvs.Type)
+	d.Set(names.AttrType, pvs.Type)
 
 	setTagsOut(ctx, output.Tags)
 
@@ -268,50 +269,62 @@ func resourceProductUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
-		input := &servicecatalog.UpdateProductInput{
-			Id: aws.String(d.Id()),
+	input := &servicecatalog.UpdateProductInput{
+		Id: aws.String(d.Id()),
+	}
+
+	if v, ok := d.GetOk("accept_language"); ok {
+		input.AcceptLanguage = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk(names.AttrDescription); ok {
+		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("distributor"); ok {
+		input.Distributor = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk(names.AttrName); ok {
+		input.Name = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk(names.AttrOwner); ok {
+		input.Owner = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("support_description"); ok {
+		input.SupportDescription = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("support_email"); ok {
+		input.SupportEmail = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("support_url"); ok {
+		input.SupportUrl = aws.String(v.(string))
+	}
+
+	if d.HasChange(names.AttrTagsAll) {
+		o, n := d.GetChange(names.AttrTagsAll)
+		oldTags := tftags.New(ctx, o)
+		newTags := tftags.New(ctx, n)
+
+		if removedTags := oldTags.Removed(newTags).IgnoreSystem(names.ServiceCatalog); len(removedTags) > 0 {
+			input.RemoveTags = aws.StringSlice(removedTags.Keys())
 		}
 
-		if v, ok := d.GetOk("accept_language"); ok {
-			input.AcceptLanguage = aws.String(v.(string))
+		if updatedTags := oldTags.Updated(newTags).IgnoreSystem(names.ServiceCatalog); len(updatedTags) > 0 {
+			input.AddTags = Tags(updatedTags)
 		}
+	}
 
-		if v, ok := d.GetOk("description"); ok {
-			input.Description = aws.String(v.(string))
-		}
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
+		return conn.UpdateProduct(ctx, input)
+	}, servicecatalog.ErrCodeInvalidParametersException, "profile does not exist")
 
-		if v, ok := d.GetOk("distributor"); ok {
-			input.Distributor = aws.String(v.(string))
-		}
-
-		if v, ok := d.GetOk("name"); ok {
-			input.Name = aws.String(v.(string))
-		}
-
-		if v, ok := d.GetOk("owner"); ok {
-			input.Owner = aws.String(v.(string))
-		}
-
-		if v, ok := d.GetOk("support_description"); ok {
-			input.SupportDescription = aws.String(v.(string))
-		}
-
-		if v, ok := d.GetOk("support_email"); ok {
-			input.SupportEmail = aws.String(v.(string))
-		}
-
-		if v, ok := d.GetOk("support_url"); ok {
-			input.SupportUrl = aws.String(v.(string))
-		}
-
-		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
-			return conn.UpdateProduct(ctx, input)
-		}, servicecatalog.ErrCodeInvalidParametersException, "profile does not exist")
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Service Catalog Product (%s): %s", d.Id(), err)
-		}
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating Service Catalog Product (%s): %s", d.Id(), err)
 	}
 
 	return append(diags, resourceProductRead(ctx, d, meta)...)
@@ -387,7 +400,7 @@ func expandProvisioningArtifactParameters(tfMap map[string]interface{}) *types.P
 
 	apiObject := &types.ProvisioningArtifactProperties{}
 
-	if v, ok := tfMap["description"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDescription].(string); ok && v != "" {
 		apiObject.Description = aws.String(v)
 	}
 
@@ -408,11 +421,11 @@ func expandProvisioningArtifactParameters(tfMap map[string]interface{}) *types.P
 
 	apiObject.Info = info
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		apiObject.Type = types.ProvisioningArtifactType(v)
 	}
 
@@ -425,10 +438,10 @@ func flattenProvisioningArtifactParameters(apiObject *servicecatalog.DescribePro
 	}
 
 	m := map[string]interface{}{
-		"description":                 aws.ToString(apiObject.ProvisioningArtifactDetail.Description),
+		names.AttrDescription:         aws.ToString(apiObject.ProvisioningArtifactDetail.Description),
 		"disable_template_validation": false, // set default because it cannot be read
-		"name":                        aws.ToString(apiObject.ProvisioningArtifactDetail.Name),
-		"type":                        types.ProvisioningArtifactType(apiObject.ProvisioningArtifactDetail.Type),
+		names.AttrName:                aws.ToString(apiObject.ProvisioningArtifactDetail.Name),
+		names.AttrType:                types.ProvisioningArtifactType(apiObject.ProvisioningArtifactDetail.Type),
 	}
 
 	if apiObject.Info != nil {

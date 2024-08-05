@@ -66,7 +66,7 @@ func ResourceDevice() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -90,7 +90,7 @@ func ResourceDevice() *schema.Resource {
 					},
 				},
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
@@ -100,13 +100,13 @@ func ResourceDevice() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"location": {
+			names.AttrLocation: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"address": {
+						names.AttrAddress: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(0, 256),
@@ -140,7 +140,7 @@ func ResourceDevice() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"type": {
+			names.AttrType: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
@@ -165,7 +165,7 @@ func resourceDeviceCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		Tags:            getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -173,7 +173,7 @@ func resourceDeviceCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.AWSLocation = expandAWSLocation(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("location"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrLocation); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Location = expandLocation(v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -189,7 +189,7 @@ func resourceDeviceCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.SiteId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("type"); ok {
+	if v, ok := d.GetOk(names.AttrType); ok {
 		input.Type = aws.String(v.(string))
 	}
 
@@ -231,7 +231,7 @@ func resourceDeviceRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading Network Manager Device (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", device.DeviceArn)
+	d.Set(names.AttrARN, device.DeviceArn)
 	if device.AWSLocation != nil {
 		if err := d.Set("aws_location", []interface{}{flattenAWSLocation(device.AWSLocation)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting aws_location: %s", err)
@@ -239,19 +239,19 @@ func resourceDeviceRead(ctx context.Context, d *schema.ResourceData, meta interf
 	} else {
 		d.Set("aws_location", nil)
 	}
-	d.Set("description", device.Description)
+	d.Set(names.AttrDescription, device.Description)
 	d.Set("global_network_id", device.GlobalNetworkId)
 	if device.Location != nil {
-		if err := d.Set("location", []interface{}{flattenLocation(device.Location)}); err != nil {
+		if err := d.Set(names.AttrLocation, []interface{}{flattenLocation(device.Location)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting location: %s", err)
 		}
 	} else {
-		d.Set("location", nil)
+		d.Set(names.AttrLocation, nil)
 	}
 	d.Set("model", device.Model)
 	d.Set("serial_number", device.SerialNumber)
 	d.Set("site_id", device.SiteId)
-	d.Set("type", device.Type)
+	d.Set(names.AttrType, device.Type)
 	d.Set("vendor", device.Vendor)
 
 	setTagsOut(ctx, device.Tags)
@@ -264,16 +264,16 @@ func resourceDeviceUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		globalNetworkID := d.Get("global_network_id").(string)
 		input := &networkmanager.UpdateDeviceInput{
-			Description:     aws.String(d.Get("description").(string)),
+			Description:     aws.String(d.Get(names.AttrDescription).(string)),
 			DeviceId:        aws.String(d.Id()),
 			GlobalNetworkId: aws.String(globalNetworkID),
 			Model:           aws.String(d.Get("model").(string)),
 			SerialNumber:    aws.String(d.Get("serial_number").(string)),
 			SiteId:          aws.String(d.Get("site_id").(string)),
-			Type:            aws.String(d.Get("type").(string)),
+			Type:            aws.String(d.Get(names.AttrType).(string)),
 			Vendor:          aws.String(d.Get("vendor").(string)),
 		}
 
@@ -281,7 +281,7 @@ func resourceDeviceUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			input.AWSLocation = expandAWSLocation(v.([]interface{})[0].(map[string]interface{}))
 		}
 
-		if v, ok := d.GetOk("location"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if v, ok := d.GetOk(names.AttrLocation); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			input.Location = expandLocation(v.([]interface{})[0].(map[string]interface{}))
 		}
 

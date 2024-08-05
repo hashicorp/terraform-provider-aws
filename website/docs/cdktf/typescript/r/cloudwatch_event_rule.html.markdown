@@ -68,6 +68,7 @@ This resource supports the following arguments:
 * `eventBusName` - (Optional) The name or ARN of the event bus to associate with this rule.
   If you omit this, the `default` event bus is used.
 * `eventPattern` - (Optional) The event pattern described a JSON object. At least one of `scheduleExpression` or `eventPattern` is required. See full documentation of [Events and Event Patterns in EventBridge](https://docs.aws.amazon.com/eventbridge/latest/userguide/eventbridge-and-event-patterns.html) for details. **Note**: The event pattern size is 2048 by default but it is adjustable up to 4096 characters by submitting a service quota increase request. See [Amazon EventBridge quotas](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-quota.html) for details.
+* `forceDestroy` - (Optional) Used to delete managed rules created by AWS. Defaults to `false`.
 * `description` - (Optional) The description of the rule.
 * `roleArn` - (Optional) The Amazon Resource Name (ARN) associated with the role that is used for target invocation.
 * `isEnabled` - (Optional, **Deprecated** Use `state` instead) Whether the rule should be enabled.
@@ -79,6 +80,8 @@ This resource supports the following arguments:
   To also enable the rule for events delivered by CloudTrail, set `state` to `ENABLED_WITH_ALL_CLOUDTRAIL_MANAGEMENT_EVENTS`.
   Defaults to `ENABLED`.
   Conflicts with `isEnabled`.
+
+  **NOTE:** The rule state  `ENABLED_WITH_ALL_CLOUDTRAIL_MANAGEMENT_EVENTS` cannot be used in conjunction with the `scheduleExpression` argument.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
@@ -121,4 +124,4 @@ Using `terraform import`, import EventBridge Rules using the `event_bus_name/rul
 % terraform import aws_cloudwatch_event_rule.console example-event-bus/capture-console-sign-in
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-5196dca74dee243e06bbc7c4837260a8d524816f38cf3c6be02db3a9a953596f -->
+<!-- cache-key: cdktf-0.20.1 input-1edad67baf5a07ed69fb4e4fec186b1cdb993c657170cf34c502b05f9a833823 -->

@@ -5,6 +5,7 @@ package servicecatalog
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -12,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
@@ -31,6 +31,7 @@ import (
 
 // @SDKResource("aws_servicecatalog_provisioned_product", name="Provisioned Product")
 // @Tags
+// @Testing(existsType="github.com/aws/aws-sdk-go/service/servicecatalog;servicecatalog.ProvisionedProductDetail",importIgnore="accept_language;ignore_errors;provisioning_artifact_name;provisioning_parameters;retain_physical_resources", skipEmptyTags=true, noRemoveTags=true)
 func ResourceProvisionedProduct() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProvisionedProductCreate,
@@ -56,7 +57,7 @@ func ResourceProvisionedProduct() *schema.Resource {
 				Default:      "en",
 				ValidateFunc: validation.StringInSlice(AcceptLanguage_Values(), false),
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -65,7 +66,7 @@ func ResourceProvisionedProduct() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"created_time": {
+			names.AttrCreatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -90,7 +91,7 @@ func ResourceProvisionedProduct() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -106,15 +107,15 @@ func ResourceProvisionedProduct() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"description": {
+						names.AttrDescription: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"key": {
+						names.AttrKey: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"value": {
+						names.AttrValue: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -175,7 +176,7 @@ func ResourceProvisionedProduct() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"key": {
+						names.AttrKey: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -183,7 +184,7 @@ func ResourceProvisionedProduct() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
-						"value": {
+						names.AttrValue: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -246,17 +247,17 @@ func ResourceProvisionedProduct() *schema.Resource {
 					},
 				},
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status_message": {
+			names.AttrStatusMessage: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"type": {
+			names.AttrType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -285,7 +286,7 @@ func resourceProvisionedProductCreate(ctx context.Context, d *schema.ResourceDat
 
 	input := &servicecatalog.ProvisionProductInput{
 		ProvisionToken:         aws.String(id.UniqueId()),
-		ProvisionedProductName: aws.String(d.Get("name").(string)),
+		ProvisionedProductName: aws.String(d.Get(names.AttrName).(string)),
 		Tags:                   getTagsIn(ctx),
 	}
 
@@ -416,25 +417,25 @@ func resourceProvisionedProductRead(ctx context.Context, d *schema.ResourceData,
 
 	detail := output.ProvisionedProductDetail
 
-	d.Set("arn", detail.Arn)
+	d.Set(names.AttrARN, detail.Arn)
 	d.Set("cloudwatch_dashboard_names", aws.StringSlice(flattenCloudWatchDashboards(output.CloudWatchDashboards)))
 
 	if detail.CreatedTime != nil {
-		d.Set("created_time", detail.CreatedTime.Format(time.RFC3339))
+		d.Set(names.AttrCreatedTime, detail.CreatedTime.Format(time.RFC3339))
 	} else {
-		d.Set("created_time", nil)
+		d.Set(names.AttrCreatedTime, nil)
 	}
 
 	d.Set("last_provisioning_record_id", detail.LastProvisioningRecordId)
 	d.Set("last_record_id", detail.LastRecordId)
 	d.Set("last_successful_provisioning_record_id", detail.LastSuccessfulProvisioningRecordId)
 	d.Set("launch_role_arn", detail.LaunchRoleArn)
-	d.Set("name", detail.Name)
+	d.Set(names.AttrName, detail.Name)
 	d.Set("product_id", detail.ProductId)
 	d.Set("provisioning_artifact_id", detail.ProvisioningArtifactId)
-	d.Set("status", detail.Status)
-	d.Set("status_message", detail.StatusMessage)
-	d.Set("type", detail.Type)
+	d.Set(names.AttrStatus, detail.Status)
+	d.Set(names.AttrStatusMessage, detail.StatusMessage)
+	d.Set(names.AttrType, detail.Type)
 
 	// Previously, we waited for the record to only return a target state of 'SUCCEEDED' or 'AVAILABLE'
 	// but this can interfere complete reads of this resource when an error occurs after initial creation
@@ -460,18 +461,18 @@ func resourceProvisionedProductRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "getting Service Catalog Provisioned Product (%s) Record (%s): empty response", d.Id(), aws.ToString(detail.LastProvisioningRecordId))
 	}
 
-	// To enable debugging of potential errors, log as a warning
+	// To enable debugging of potential v, log as a warning
 	// instead of exiting prematurely with an error, e.g.
-	// errors can be present after update to a new version failed and the stack
+	// v can be present after update to a new version failed and the stack
 	// rolled back to the current version.
-	if errors := recordOutput.RecordDetail.RecordErrors; len(errors) > 0 {
-		var errs *multierror.Error
+	if v := recordOutput.RecordDetail.RecordErrors; len(v) > 0 {
+		var errs []error
 
-		for _, err := range errors {
-			errs = multierror.Append(errs, fmt.Errorf("%s: %s", aws.ToString(err.Code), aws.ToString(err.Description)))
+		for _, err := range v {
+			errs = append(errs, fmt.Errorf("%s: %s", aws.ToString(err.Code), aws.ToString(err.Description)))
 		}
 
-		log.Printf("[WARN] Errors found when describing Service Catalog Provisioned Product (%s) Record (%s): %s", d.Id(), aws.ToString(detail.LastProvisioningRecordId), errs.ErrorOrNil())
+		log.Printf("[WARN] Errors found when describing Service Catalog Provisioned Product (%s) Record (%s): %s", d.Id(), aws.ToString(detail.LastProvisioningRecordId), errors.Join(errs...))
 	}
 
 	if err := d.Set("outputs", flattenRecordOutputs(recordOutput.RecordOutputs)); err != nil {
@@ -529,9 +530,9 @@ func resourceProvisionedProductUpdate(ctx context.Context, d *schema.ResourceDat
 		input.ProvisioningPreferences = expandUpdateProvisioningPreferences(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if d.HasChanges("tags", "tags_all") {
-		input.Tags = getTagsIn(ctx)
-	}
+	// Send tags each time the resource is updated. This is necessary to automatically apply tags
+	// to provisioned AWS objects during update if the tags don't change.
+	input.Tags = getTagsIn(ctx)
 
 	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *retry.RetryError {
 		_, err := conn.UpdateProvisionedProduct(ctx, input)
@@ -613,11 +614,11 @@ func expandProvisioningParameter(tfMap map[string]interface{}) *types.Provisioni
 
 	apiObject := &types.ProvisioningParameter{}
 
-	if v, ok := tfMap["key"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrKey].(string); ok && v != "" {
 		apiObject.Key = aws.String(v)
 	}
 
-	if v, ok := tfMap["value"].(string); ok {
+	if v, ok := tfMap[names.AttrValue].(string); ok {
 		apiObject.Value = aws.String(v)
 	}
 
@@ -691,7 +692,7 @@ func expandUpdateProvisioningParameter(tfMap map[string]interface{}) *types.Upda
 
 	apiObject := &types.UpdateProvisioningParameter{}
 
-	if v, ok := tfMap["key"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrKey].(string); ok && v != "" {
 		apiObject.Key = aws.String(v)
 	}
 
@@ -699,7 +700,7 @@ func expandUpdateProvisioningParameter(tfMap map[string]interface{}) *types.Upda
 		apiObject.UsePreviousValue = v
 	}
 
-	if v, ok := tfMap["value"].(string); ok {
+	if v, ok := tfMap[names.AttrValue].(string); ok {
 		apiObject.Value = aws.String(v)
 	}
 
@@ -799,15 +800,15 @@ func flattenRecordOutputs(apiObjects []*types.RecordOutput) []interface{} {
 		m := make(map[string]interface{})
 
 		if apiObject.Description != nil {
-			m["description"] = aws.ToString(apiObject.Description)
+			m[names.AttrDescription] = aws.ToString(apiObject.Description)
 		}
 
 		if apiObject.OutputKey != nil {
-			m["key"] = aws.ToString(apiObject.OutputKey)
+			m[names.AttrKey] = aws.ToString(apiObject.OutputKey)
 		}
 
 		if apiObject.OutputValue != nil {
-			m["value"] = aws.ToString(apiObject.OutputValue)
+			m[names.AttrValue] = aws.ToString(apiObject.OutputValue)
 		}
 
 		tfList = append(tfList, m)

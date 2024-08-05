@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_opensearch_package")
@@ -57,7 +58,7 @@ func ResourcePackage() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"s3_bucket_name": {
+						names.AttrS3BucketName: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
@@ -230,7 +231,7 @@ func expandPackageSource(v interface{}) *opensearchservice.PackageSource {
 	}
 
 	return &opensearchservice.PackageSource{
-		S3BucketName: aws.String(v.(map[string]interface{})["s3_bucket_name"].(string)),
+		S3BucketName: aws.String(v.(map[string]interface{})[names.AttrS3BucketName].(string)),
 		S3Key:        aws.String(v.(map[string]interface{})["s3_key"].(string)),
 	}
 }
