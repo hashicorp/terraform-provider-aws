@@ -16,13 +16,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters"
 	namevaluesfiltersv2 "github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters/v2"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_imagebuilder_image_recipes", name="Image Recipes")
-func DataSourceImageRecipes() *schema.Resource {
+func dataSourceImageRecipes() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceImageRecipesRead,
+
 		Schema: map[string]*schema.Schema{
 			names.AttrARNs: {
 				Type:     schema.TypeSet,
@@ -50,30 +52,44 @@ func dataSourceImageRecipesRead(ctx context.Context, d *schema.ResourceData, met
 
 	input := &imagebuilder.ListImageRecipesInput{}
 
-	if v, ok := d.GetOk(names.AttrOwner); ok {
-		input.Owner = awstypes.Ownership(v.(string))
-	}
-
 	if v, ok := d.GetOk(names.AttrFilter); ok {
 		input.Filters = namevaluesfiltersv2.New(v.(*schema.Set)).ImageBuilderFilters()
 	}
 
-	out, err := conn.ListImageRecipes(ctx, input)
+	if v, ok := d.GetOk(names.AttrOwner); ok {
+		input.Owner = awstypes.Ownership(v.(string))
+	}
+
+	imageRecipes, err := findImageRecipes(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Image Builder Image Recipes: %s", err)
 	}
 
-	var arns, nms []string
-
-	for _, r := range out.ImageRecipeSummaryList {
-		arns = append(arns, aws.ToString(r.Arn))
-		nms = append(nms, aws.ToString(r.Name))
-	}
-
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set(names.AttrARNs, arns)
-	d.Set(names.AttrNames, nms)
+	d.Set(names.AttrARNs, tfslices.ApplyToAll(imageRecipes, func(v awstypes.ImageRecipeSummary) string {
+		return aws.ToString(v.Arn)
+	}))
+	d.Set(names.AttrNames, tfslices.ApplyToAll(imageRecipes, func(v awstypes.ImageRecipeSummary) string {
+		return aws.ToString(v.Name)
+	}))
 
 	return diags
+}
+
+func findImageRecipes(ctx context.Context, conn *imagebuilder.Client, input *imagebuilder.ListImageRecipesInput) ([]awstypes.ImageRecipeSummary, error) {
+	var output []awstypes.ImageRecipeSummary
+
+	pages := imagebuilder.NewListImageRecipesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.ImageRecipeSummaryList...)
+	}
+
+	return output, nil
 }
