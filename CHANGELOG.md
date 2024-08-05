@@ -3,13 +3,20 @@
 FEATURES:
 
 * **New Resource:** `aws_ebs_snapshot_block_public_access` ([#38641](https://github.com/hashicorp/terraform-provider-aws/issues/38641))
+* **New Resource:** `aws_rds_integration` ([#35199](https://github.com/hashicorp/terraform-provider-aws/issues/35199))
 
 ENHANCEMENTS:
 
+* provider: Allow `default_tags` to be set by environment variables ([#33339](https://github.com/hashicorp/terraform-provider-aws/issues/33339))
 * resource/aws_lb_target_group: Add `target_health_state.unhealthy_draining_interval` argument ([#38654](https://github.com/hashicorp/terraform-provider-aws/issues/38654))
 
 BUG FIXES:
 
+* data-source/aws_ecr_repository_creation_template: Support `ROOT` as a valid value for `prefix` ([#38685](https://github.com/hashicorp/terraform-provider-aws/issues/38685))
+* resource/aws_ecr_repository_creation_template: Support `ROOT` as a valid value for `prefix` ([#38685](https://github.com/hashicorp/terraform-provider-aws/issues/38685))
+* resource/aws_lexv2models_bot: Handle `PreconditionFailedException` on delete for resources deleted out-of-band ([#38661](https://github.com/hashicorp/terraform-provider-aws/issues/38661))
+* resource/aws_lexv2models_bot_locale: Handle `PreconditionFailedException` on delete for resources deleted out-of-band ([#38661](https://github.com/hashicorp/terraform-provider-aws/issues/38661))
+* resource/aws_lexv2models_bot_version: Handle `PreconditionFailedException` on delete for resources deleted out-of-band ([#38661](https://github.com/hashicorp/terraform-provider-aws/issues/38661))
 * resource/aws_sfn_state_machine: Mark `revision_id` and `state_machine_version_arn` as Computed on update if `publish` is `true` ([#38657](https://github.com/hashicorp/terraform-provider-aws/issues/38657))
 
 ## 5.61.0 (August  1, 2024)
