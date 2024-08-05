@@ -38,14 +38,14 @@ func TestAccImageBuilderLifecyclePolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Used for setting lifecycle policies"),
 					resource.TestCheckResourceAttrSet(resourceName, "execution_role"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.action.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.action.0.type", string(awstypes.LifecyclePolicyDetailActionTypeDelete)),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.filter.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.filter.0.type", string(awstypes.LifecyclePolicyDetailFilterTypeAge)),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.filter.0.value", "6"),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.filter.0.retain_at_least", acctest.Ct10),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.filter.0.unit", string(awstypes.LifecyclePolicyTimeUnitYears)),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.action.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.action.0.type", string(awstypes.LifecyclePolicyDetailActionTypeDelete)),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.filter.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.filter.0.type", string(awstypes.LifecyclePolicyDetailFilterTypeAge)),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.filter.0.value", "6"),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.filter.0.retain_at_least", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.filter.0.unit", string(awstypes.LifecyclePolicyTimeUnitYears)),
 					resource.TestCheckResourceAttr(resourceName, "resource_selection.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "resource_selection.0.tag_map.%", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "resource_selection.0.tag_map.key1", acctest.CtValue1),
@@ -77,24 +77,24 @@ func TestAccImageBuilderLifecyclePolicy_policyDetails(t *testing.T) {
 				Config: testAccLifecyclePolicyConfig_policyDetails(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLifecyclePolicyExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.action.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.action.0.type", string(awstypes.LifecyclePolicyDetailActionTypeDisable)),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.action.0.include_resources.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.action.0.include_resources.0.amis", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.exclusion_rules.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.exclusion_rules.0.amis.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.exclusion_rules.0.amis.0.is_public", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.exclusion_rules.0.amis.0.last_launched.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.exclusion_rules.0.amis.0.last_launched.0.unit", string(awstypes.LifecyclePolicyTimeUnitDays)),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.exclusion_rules.0.amis.0.last_launched.0.value", "7"),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.exclusion_rules.0.amis.0.tag_map.%", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.exclusion_rules.0.amis.0.tag_map.key1", acctest.CtValue1),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.filter.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.filter.0.type", string(awstypes.LifecyclePolicyDetailFilterTypeAge)),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.filter.0.value", "6"),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.filter.0.retain_at_least", "5"),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.filter.0.unit", string(awstypes.LifecyclePolicyTimeUnitYears)),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.action.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.action.0.type", string(awstypes.LifecyclePolicyDetailActionTypeDisable)),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.action.0.include_resources.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.action.0.include_resources.0.amis", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.exclusion_rules.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.exclusion_rules.0.amis.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.exclusion_rules.0.amis.0.is_public", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.exclusion_rules.0.amis.0.last_launched.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.exclusion_rules.0.amis.0.last_launched.0.unit", string(awstypes.LifecyclePolicyTimeUnitDays)),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.exclusion_rules.0.amis.0.last_launched.0.value", "7"),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.exclusion_rules.0.amis.0.tag_map.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.exclusion_rules.0.amis.0.tag_map.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.filter.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.filter.0.type", string(awstypes.LifecyclePolicyDetailFilterTypeAge)),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.filter.0.value", "6"),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.filter.0.retain_at_least", "5"),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.filter.0.unit", string(awstypes.LifecyclePolicyTimeUnitYears)),
 				),
 			},
 			{
@@ -106,25 +106,25 @@ func TestAccImageBuilderLifecyclePolicy_policyDetails(t *testing.T) {
 				Config: testAccLifecyclePolicyConfig_policyDetailsUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLifecyclePolicyExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.action.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.action.0.type", string(awstypes.LifecyclePolicyDetailActionTypeDelete)),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.action.0.include_resources.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.action.0.include_resources.0.amis", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.action.0.include_resources.0.snapshots", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.exclusion_rules.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.exclusion_rules.0.amis.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.exclusion_rules.0.amis.0.is_public", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.exclusion_rules.0.amis.0.regions.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.exclusion_rules.0.amis.0.last_launched.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.exclusion_rules.0.amis.0.last_launched.0.unit", string(awstypes.LifecyclePolicyTimeUnitWeeks)),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.exclusion_rules.0.amis.0.last_launched.0.value", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.exclusion_rules.0.amis.0.tag_map.%", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.exclusion_rules.0.amis.0.tag_map.key1", acctest.CtValue1),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.exclusion_rules.0.amis.0.tag_map.key2", acctest.CtValue2),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.filter.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.filter.0.type", string(awstypes.LifecyclePolicyDetailFilterTypeCount)),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.filter.0.value", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.action.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.action.0.type", string(awstypes.LifecyclePolicyDetailActionTypeDelete)),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.action.0.include_resources.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.action.0.include_resources.0.amis", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.action.0.include_resources.0.snapshots", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.exclusion_rules.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.exclusion_rules.0.amis.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.exclusion_rules.0.amis.0.is_public", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.exclusion_rules.0.amis.0.regions.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.exclusion_rules.0.amis.0.last_launched.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.exclusion_rules.0.amis.0.last_launched.0.unit", string(awstypes.LifecyclePolicyTimeUnitWeeks)),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.exclusion_rules.0.amis.0.last_launched.0.value", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.exclusion_rules.0.amis.0.tag_map.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.exclusion_rules.0.amis.0.tag_map.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.exclusion_rules.0.amis.0.tag_map.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.filter.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.filter.0.type", string(awstypes.LifecyclePolicyDetailFilterTypeCount)),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.filter.0.value", acctest.Ct10),
 				),
 			},
 		},
@@ -340,7 +340,7 @@ resource "aws_imagebuilder_lifecycle_policy" "test" {
   description    = "Used for setting lifecycle policies"
   execution_role = aws_iam_role.test.arn
   resource_type  = "AMI_IMAGE"
-  policy_details {
+  policy_detail {
     action {
       type = "DELETE"
     }
@@ -372,7 +372,7 @@ resource "aws_imagebuilder_lifecycle_policy" "test" {
   description    = "Used for setting lifecycle policies"
   execution_role = aws_iam_role.test.arn
   resource_type  = "AMI_IMAGE"
-  policy_details {
+  policy_detail {
     action {
       type = "DISABLE"
       include_resources {
@@ -419,7 +419,7 @@ resource "aws_imagebuilder_lifecycle_policy" "test" {
   description    = "Used for setting lifecycle policies"
   execution_role = aws_iam_role.test.arn
   resource_type  = "AMI_IMAGE"
-  policy_details {
+  policy_detail {
     action {
       type = "DELETE"
       include_resources {
@@ -478,7 +478,7 @@ resource "aws_imagebuilder_lifecycle_policy" "test" {
   description    = "Used for setting lifecycle policies"
   execution_role = aws_iam_role.test.arn
   resource_type  = "AMI_IMAGE"
-  policy_details {
+  policy_detail {
     action {
       type = "DELETE"
     }
@@ -521,7 +521,7 @@ resource "aws_imagebuilder_lifecycle_policy" "test" {
   description    = "Used for setting lifecycle policies"
   execution_role = aws_iam_role.test.arn
   resource_type  = "AMI_IMAGE"
-  policy_details {
+  policy_detail {
     action {
       type = "DELETE"
     }
@@ -552,7 +552,7 @@ resource "aws_imagebuilder_lifecycle_policy" "test" {
   name           = %[1]q
   execution_role = aws_iam_role.test.arn
   resource_type  = "AMI_IMAGE"
-  policy_details {
+  policy_detail {
     action {
       type = "DELETE"
     }
@@ -585,7 +585,7 @@ resource "aws_imagebuilder_lifecycle_policy" "test" {
   name           = %[1]q
   execution_role = aws_iam_role.test.arn
   resource_type  = "AMI_IMAGE"
-  policy_details {
+  policy_detail {
     action {
       type = "DELETE"
     }
