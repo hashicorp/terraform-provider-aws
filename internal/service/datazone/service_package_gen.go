@@ -37,16 +37,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:    "Environment Blueprint Configuration",
 		},
 		{
+			Factory: newResourceFormType,
+			Name:    "Form Type",
+		},
+		{
 			Factory: newResourceGlossary,
 			Name:    "Glossary",
 		},
 		{
 			Factory: newResourceProject,
 			Name:    "Project",
-		},
-		{
-			Factory: newResourceFormType,
-			Name:    "Form Type",
 		},
 	}
 }
