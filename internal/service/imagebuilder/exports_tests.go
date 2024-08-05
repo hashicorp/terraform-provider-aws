@@ -13,6 +13,7 @@ var (
 	ResourceImageRecipe                 = resourceImageRecipe
 	ResourceInfrastructureConfiguration = resourceInfrastructureConfiguration
 	ResourceLifecyclePolicy             = newResourceLifecyclePolicy
+	ResourceWorkflow                    = resourceWorkflow
 
 	FindComponentByARN                   = findComponentByARN
 	FindContainerRecipeByARN             = findContainerRecipeByARN
@@ -22,4 +23,5 @@ var (
 	FindImageRecipeByARN                 = findImageRecipeByARN
 	FindInfrastructureConfigurationByARN = findInfrastructureConfigurationByARN
 	FindLifecyclePolicyByARN             = findLifecyclePolicyByARN
+	FindWorkflowByARN                    = findWorkflowByARN
 )

@@ -13,6 +13,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -20,18 +21,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_imagebuilder_workflow", name="Workflow")
 // @Tags(identifierAttribute="id")
-func ResourceWorkflow() *schema.Resource {
+func resourceWorkflow() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceWorkflowCreate,
 		ReadWithoutTimeout:   resourceWorkflowRead,
 		UpdateWithoutTimeout: resourceWorkflowUpdate,
 		DeleteWithoutTimeout: resourceWorkflowDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -111,9 +114,10 @@ func resourceWorkflowCreate(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
+	name := d.Get(names.AttrName).(string)
 	input := &imagebuilder.CreateWorkflowInput{
 		ClientToken:     aws.String(id.UniqueId()),
-		Name:            aws.String(d.Get(names.AttrName).(string)),
+		Name:            aws.String(name),
 		SemanticVersion: aws.String(d.Get(names.AttrVersion).(string)),
 		Type:            awstypes.WorkflowType(d.Get(names.AttrType).(string)),
 		Tags:            getTagsIn(ctx),
@@ -142,11 +146,7 @@ func resourceWorkflowCreate(ctx context.Context, d *schema.ResourceData, meta in
 	output, err := conn.CreateWorkflow(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Image Builder Workflow: %s", err)
-	}
-
-	if output == nil {
-		return sdkdiag.AppendErrorf(diags, "creating Image Builder Workflow: empty response")
+		return sdkdiag.AppendErrorf(diags, "creating Image Builder Workflow (%s): %s", name, err)
 	}
 
 	d.SetId(aws.ToString(output.WorkflowBuildVersionArn))
@@ -158,23 +158,17 @@ func resourceWorkflowRead(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
-	input := &imagebuilder.GetWorkflowInput{
-		WorkflowBuildVersionArn: aws.String(d.Id()),
-	}
+	workflow, err := findWorkflowByARN(ctx, conn, d.Id())
 
-	output, err := conn.GetWorkflow(ctx, input)
-
-	if !d.IsNewResource() && errs.MessageContains(err, ResourceNotFoundException, "cannot be found") {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Image Builder Workflow (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
-	if output == nil || output.Workflow == nil {
-		return sdkdiag.AppendErrorf(diags, "getting Image Builder Workflow (%s): empty response", d.Id())
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Image Builder Workflow (%s): %s", d.Id(), err)
 	}
-
-	workflow := output.Workflow
 
 	d.Set(names.AttrARN, workflow.Arn)
 	d.Set("change_description", workflow.ChangeDescription)
@@ -184,11 +178,10 @@ func resourceWorkflowRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set(names.AttrName, workflow.Name)
 	d.Set(names.AttrKMSKeyID, workflow.KmsKeyId)
 	d.Set(names.AttrOwner, workflow.Owner)
-
-	setTagsOut(ctx, workflow.Tags)
-
 	d.Set(names.AttrType, workflow.Type)
 	d.Set(names.AttrVersion, workflow.Version)
+
+	setTagsOut(ctx, workflow.Tags)
 
 	return diags
 }
@@ -205,13 +198,12 @@ func resourceWorkflowDelete(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
-	input := &imagebuilder.DeleteWorkflowInput{
+	log.Printf("[DEBUG] Deleting Image Builder Workflow: %s", d.Id())
+	_, err := conn.DeleteWorkflow(ctx, &imagebuilder.DeleteWorkflowInput{
 		WorkflowBuildVersionArn: aws.String(d.Id()),
-	}
+	})
 
-	_, err := conn.DeleteWorkflow(ctx, input)
-
-	if errs.MessageContains(err, ResourceNotFoundException, "cannot be found") {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -220,4 +212,29 @@ func resourceWorkflowDelete(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	return diags
+}
+
+func findWorkflowByARN(ctx context.Context, conn *imagebuilder.Client, arn string) (*awstypes.Workflow, error) {
+	input := &imagebuilder.GetWorkflowInput{
+		WorkflowBuildVersionArn: aws.String(arn),
+	}
+
+	output, err := conn.GetWorkflow(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Workflow == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Workflow, nil
 }
