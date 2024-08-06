@@ -191,7 +191,7 @@ func (r *resourceEnvironmentProfile) Read(ctx context.Context, req resource.Read
 		return
 	}
 
-	option := flex.WithIgnoredFieldNames([]string{"UserParameters"})
+	option := flex.WithIgnoredFieldNamesAppend("UserParameters")
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state, option)...)
 	state.EnvironmentBlueprintId = flex.StringToFramework(ctx, out.EnvironmentBlueprintId)
 	state.ProjectIdentifier = flex.StringToFramework(ctx, out.ProjectId)
