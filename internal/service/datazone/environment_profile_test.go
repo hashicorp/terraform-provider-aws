@@ -71,7 +71,6 @@ func TestAccDataZoneEnvironmentProfile_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateIdFunc:       testAccAuthorizerEnvProfImportStateIdFunc(resourceName),
-				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
 			},
 		},
 	})
