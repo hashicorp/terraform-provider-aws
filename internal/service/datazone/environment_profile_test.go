@@ -67,10 +67,10 @@ func TestAccDataZoneEnvironmentProfile_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateIdFunc:       testAccAuthorizerEnvProfImportStateIdFunc(resourceName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccAuthorizerEnvProfImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -123,11 +123,10 @@ func TestAccDataZoneEnvironmentProfile_update(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateIdFunc:       testAccAuthorizerEnvProfImportStateIdFunc(resourceName),
-				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccAuthorizerEnvProfImportStateIdFunc(resourceName),
 			},
 			{
 				Config: testAccEnvironmentProfileConfig_update(epName, dName, pName),
@@ -150,11 +149,10 @@ func TestAccDataZoneEnvironmentProfile_update(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateIdFunc:       testAccAuthorizerEnvProfImportStateIdFunc(resourceName),
-				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccAuthorizerEnvProfImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -251,7 +249,7 @@ func testAccAuthorizerEnvProfImportStateIdFunc(resourceName string) resource.Imp
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return strings.Join([]string{rs.Primary.Attributes["domain_identifier"], rs.Primary.ID, rs.Primary.Attributes["environment_blueprint_identifier"], rs.Primary.Attributes["project_identifier"]}, ","), nil
+		return strings.Join([]string{rs.Primary.Attributes["domain_identifier"], rs.Primary.ID}, ","), nil
 	}
 }
 

@@ -138,7 +138,6 @@ func (r *resourceEnvironmentProfile) Create(ctx context.Context, req resource.Cr
 		return
 	}
 
-	option := flex.WithIgnoredFieldNames([]string{"UserParameters"})
 	in := &datazone.CreateEnvironmentProfileInput{}
 	in.EnvironmentBlueprintIdentifier = plan.EnvironmentBlueprintId.ValueStringPointer()
 	resp.Diagnostics.Append(flex.Expand(ctx, &plan, in)...)
@@ -162,6 +161,7 @@ func (r *resourceEnvironmentProfile) Create(ctx context.Context, req resource.Cr
 		return
 	}
 
+	option := flex.WithIgnoredFieldNamesAppend("UserParameters")
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan, option)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -226,7 +226,7 @@ func (r *resourceEnvironmentProfile) Update(ctx context.Context, req resource.Up
 			)
 			return
 		}
-		option := flex.WithIgnoredFieldNames([]string{"UserParameters"})
+		option := flex.WithIgnoredFieldNamesAppend("UserParameters")
 		resp.Diagnostics.Append(flex.Flatten(ctx, out, &state, option)...)
 		if resp.Diagnostics.HasError() {
 			return
@@ -257,7 +257,7 @@ func (r *resourceEnvironmentProfile) Delete(ctx context.Context, req resource.De
 func (r *resourceEnvironmentProfile) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	parts := strings.Split(req.ID, ",")
 
-	if len(parts) != 4 {
+	if len(parts) != 2 {
 		resp.Diagnostics.AddError("Resource Import Invalid ID", fmt.Sprintf(`Unexpected format for import ID (%s), use: "DomainIdentifier,Id,EnvironmentBlueprint,Id,ProjectIdentifier"`, req.ID))
 	}
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("domain_identifier"), parts[0])...)
