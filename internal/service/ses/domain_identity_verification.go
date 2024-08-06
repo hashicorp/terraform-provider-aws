@@ -82,7 +82,7 @@ func resourceDomainIdentityVerificationCreate(ctx context.Context, d *schema.Res
 			return retry.NonRetryableError(fmt.Errorf("SES Domain Identity %s not found in AWS", domainName))
 		}
 
-		if string(att.VerificationStatus) != string(awstypes.VerificationStatusSuccess) {
+		if att.VerificationStatus != awstypes.VerificationStatusSuccess {
 			return retry.RetryableError(fmt.Errorf("Expected domain verification Success, but was in state %s", string(att.VerificationStatus)))
 		}
 
@@ -92,7 +92,7 @@ func resourceDomainIdentityVerificationCreate(ctx context.Context, d *schema.Res
 		var att *awstypes.IdentityVerificationAttributes
 		att, err = getIdentityVerificationAttributes(ctx, conn, domainName)
 
-		if att != nil && string(att.VerificationStatus) != string(awstypes.VerificationStatusSuccess) {
+		if att != nil && att.VerificationStatus != awstypes.VerificationStatusSuccess {
 			return sdkdiag.AppendErrorf(diags, "Expected domain verification Success, but was in state %s", string(att.VerificationStatus))
 		}
 	}
@@ -123,7 +123,7 @@ func resourceDomainIdentityVerificationRead(ctx context.Context, d *schema.Resou
 		return diags
 	}
 
-	if string(att.VerificationStatus) != string(awstypes.VerificationStatusSuccess) {
+	if att.VerificationStatus != awstypes.VerificationStatusSuccess {
 		log.Printf("[WARN] Expected domain verification Success, but was %s, tainting verification", string(att.VerificationStatus))
 		d.SetId("")
 		return diags
