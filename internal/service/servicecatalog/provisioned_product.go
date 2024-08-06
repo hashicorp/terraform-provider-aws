@@ -769,7 +769,6 @@ func flattenRecordOutputs(apiObjects []awstypes.RecordOutput) []interface{} {
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-
 		m := make(map[string]interface{})
 
 		if apiObject.Description != nil {

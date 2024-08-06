@@ -123,7 +123,6 @@ func sweepBudgetResourceAssociations(region string) error {
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
-
 			}
 		}
 	}

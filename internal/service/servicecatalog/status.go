@@ -31,11 +31,7 @@ func statusProduct(ctx context.Context, conn *servicecatalog.Client, acceptLangu
 			return nil, statusNotFound, err
 		}
 
-		if errs.IsA[*awstypes.ResourceInUseException](err) {
-			return nil, statusUnavailable, err
-		}
-
-		if errs.IsA[*awstypes.LimitExceededException](err) {
+		if errs.IsA[*awstypes.ResourceInUseException](err) || errs.IsA[*awstypes.LimitExceededException](err) {
 			return nil, statusUnavailable, err
 		}
 
@@ -330,7 +326,7 @@ func statusProvisionedProduct(ctx context.Context, conn *servicecatalog.Client, 
 		input := &servicecatalog.DescribeProvisionedProductInput{}
 
 		if acceptLanguage != "" {
-			input.AcceptLanguage = aws.String(string(acceptLanguage))
+			input.AcceptLanguage = aws.String(acceptLanguage)
 		}
 
 		// one or the other but not both
