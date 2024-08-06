@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -125,7 +124,6 @@ func (r *lifecyclePolicyResource) Schema(ctx context.Context, request resource.S
 												"amis": schema.BoolAttribute{
 													Optional: true,
 													Computed: true,
-													Default:  booldefault.StaticBool(false),
 													PlanModifiers: []planmodifier.Bool{
 														boolplanmodifier.UseStateForUnknown(),
 													},
@@ -133,7 +131,6 @@ func (r *lifecyclePolicyResource) Schema(ctx context.Context, request resource.S
 												"containers": schema.BoolAttribute{
 													Optional: true,
 													Computed: true,
-													Default:  booldefault.StaticBool(false),
 													PlanModifiers: []planmodifier.Bool{
 														boolplanmodifier.UseStateForUnknown(),
 													},
@@ -141,7 +138,6 @@ func (r *lifecyclePolicyResource) Schema(ctx context.Context, request resource.S
 												"snapshots": schema.BoolAttribute{
 													Optional: true,
 													Computed: true,
-													Default:  booldefault.StaticBool(false),
 													PlanModifiers: []planmodifier.Bool{
 														boolplanmodifier.UseStateForUnknown(),
 													},
@@ -333,6 +329,20 @@ func (r *lifecyclePolicyResource) Create(ctx context.Context, request resource.C
 	data.LifecyclePolicyARN = fwflex.StringToFramework(ctx, output.LifecyclePolicyArn)
 	data.setID()
 
+	// Read to retrieve computed arguments not part of the create response.
+	policy, err := findLifecyclePolicyByARN(ctx, conn, data.ID.ValueString())
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading Image Builder Lifecycle Policy (%s)", data.ID.ValueString()), err.Error())
+
+		return
+	}
+
+	response.Diagnostics.Append(fwflex.Flatten(ctx, policy, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
@@ -351,7 +361,7 @@ func (r *lifecyclePolicyResource) Read(ctx context.Context, request resource.Rea
 
 	conn := r.Meta().ImageBuilderClient(ctx)
 
-	output, err := findLifecyclePolicyByARN(ctx, conn, data.ID.ValueString())
+	policy, err := findLifecyclePolicyByARN(ctx, conn, data.ID.ValueString())
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -366,10 +376,10 @@ func (r *lifecyclePolicyResource) Read(ctx context.Context, request resource.Rea
 		return
 	}
 
-	setTagsOut(ctx, output.Tags)
+	setTagsOut(ctx, policy.Tags)
 
 	// Set attributes for import.
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, policy, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
