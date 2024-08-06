@@ -24,8 +24,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_servicecatalog_portfolio_share")
-func ResourcePortfolioShare() *schema.Resource {
+// @SDKResource("aws_servicecatalog_portfolio_share", name="Portfolio Share")
+func resourcePortfolioShare() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePortfolioShareCreate,
 		ReadWithoutTimeout:   resourcePortfolioShareRead,
