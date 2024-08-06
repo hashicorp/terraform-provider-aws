@@ -168,14 +168,14 @@ func TestFlatten(t *testing.T) {
 			},
 			Target: &TestFlexTF19{},
 			expectedDiags: diag.Diagnostics{
-				diagFlatteningMarshalSmithyDocument(reflect.TypeFor[*testJSONDocumentError](), marshallSmithyDocumentErr),
+				diagFlatteningMarshalSmithyDocument(reflect.TypeFor[*testJSONDocumentError](), errMarshallSmithyDocument),
 			},
 			expectedLogLines: []map[string]any{
 				infoFlattening(reflect.TypeFor[*TestFlexAWS19](), reflect.TypeFor[*TestFlexTF19]()),
 				infoConverting(reflect.TypeFor[TestFlexAWS19](), reflect.TypeFor[*TestFlexTF19]()),
 				traceMatchedFields("Field1", reflect.TypeFor[TestFlexAWS19](), "Field1", reflect.TypeFor[*TestFlexTF19]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[smithyjson.JSONStringer](), "Field1", reflect.TypeFor[types.String]()),
-				errorMarshallingJSONDocument("Field1", reflect.TypeFor[smithyjson.JSONStringer](), "Field1", reflect.TypeFor[types.String](), marshallSmithyDocumentErr),
+				errorMarshallingJSONDocument("Field1", reflect.TypeFor[smithyjson.JSONStringer](), "Field1", reflect.TypeFor[types.String](), errMarshallSmithyDocument),
 			},
 		},
 

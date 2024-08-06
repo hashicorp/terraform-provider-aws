@@ -364,16 +364,16 @@ var _ smithyjson.JSONStringer = &testJSONDocumentError{}
 type testJSONDocumentError struct{}
 
 func (m *testJSONDocumentError) UnmarshalSmithyDocument(v interface{}) error {
-	return unmarshallSmithyDocumentErr
+	return errUnmarshallSmithyDocument
 }
 
 func (m *testJSONDocumentError) MarshalSmithyDocument() ([]byte, error) {
-	return nil, marshallSmithyDocumentErr
+	return nil, errMarshallSmithyDocument
 }
 
 var (
-	unmarshallSmithyDocumentErr = errors.New("test marshal error")
-	marshallSmithyDocumentErr   = errors.New("test marshal error")
+	errUnmarshallSmithyDocument = errors.New("test unmarshal error")
+	errMarshallSmithyDocument   = errors.New("test marshal error")
 )
 
 type TestFlexAWS19 struct {
