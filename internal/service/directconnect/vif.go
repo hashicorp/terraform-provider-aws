@@ -186,3 +186,38 @@ func findVirtualInterfaces(ctx context.Context, conn *directconnect.Client, inpu
 
 	return tfslices.Filter(output.VirtualInterfaces, tfslices.PredicateValue(filter)), nil
 }
+
+func statusVirtualInterface(ctx context.Context, conn *directconnect.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findVirtualInterfaceByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.VirtualInterfaceState), nil
+	}
+}
+
+func waitVirtualInterfaceAvailable(ctx context.Context, conn *directconnect.Client, id string, pending, target []string, timeout time.Duration) (*awstypes.VirtualInterface, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    pending,
+		Target:     target,
+		Refresh:    statusVirtualInterface(ctx, conn, id),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.VirtualInterface); ok {
+		return output, err
+	}
+
+	return nil, err
+}

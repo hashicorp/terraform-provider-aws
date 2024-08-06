@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -20,16 +19,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_dx_hosted_private_virtual_interface")
-func ResourceHostedPrivateVirtualInterface() *schema.Resource {
+// @SDKResource("aws_dx_hosted_private_virtual_interface", name="Hosted Private Virtual Interface")
+func resourceHostedPrivateVirtualInterface() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceHostedPrivateVirtualInterfaceCreate,
 		ReadWithoutTimeout:   resourceHostedPrivateVirtualInterfaceRead,
 		DeleteWithoutTimeout: resourceHostedPrivateVirtualInterfaceDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceHostedPrivateVirtualInterfaceImport,
 		},
@@ -122,7 +124,7 @@ func resourceHostedPrivateVirtualInterfaceCreate(ctx context.Context, d *schema.
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
-	req := &directconnect.AllocatePrivateVirtualInterfaceInput{
+	input := &directconnect.AllocatePrivateVirtualInterfaceInput{
 		ConnectionId: aws.String(d.Get(names.AttrConnectionID).(string)),
 		NewPrivateVirtualInterfaceAllocation: &awstypes.NewPrivateVirtualInterfaceAllocation{
 			AddressFamily:        awstypes.AddressFamily(d.Get("address_family").(string)),
@@ -133,29 +135,33 @@ func resourceHostedPrivateVirtualInterfaceCreate(ctx context.Context, d *schema.
 		},
 		OwnerAccount: aws.String(d.Get(names.AttrOwnerAccountID).(string)),
 	}
+
 	if v, ok := d.GetOk("amazon_address"); ok {
-		req.NewPrivateVirtualInterfaceAllocation.AmazonAddress = aws.String(v.(string))
+		input.NewPrivateVirtualInterfaceAllocation.AmazonAddress = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("bgp_auth_key"); ok {
-		req.NewPrivateVirtualInterfaceAllocation.AuthKey = aws.String(v.(string))
+		input.NewPrivateVirtualInterfaceAllocation.AuthKey = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("customer_address"); ok {
-		req.NewPrivateVirtualInterfaceAllocation.CustomerAddress = aws.String(v.(string))
+		input.NewPrivateVirtualInterfaceAllocation.CustomerAddress = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("mtu"); ok {
-		req.NewPrivateVirtualInterfaceAllocation.Mtu = aws.Int32(int32(v.(int)))
+		input.NewPrivateVirtualInterfaceAllocation.Mtu = aws.Int32(int32(v.(int)))
 	}
 
-	log.Printf("[DEBUG] Creating Direct Connect hosted private virtual interface: %#v", req)
-	resp, err := conn.AllocatePrivateVirtualInterface(ctx, req)
+	output, err := conn.AllocatePrivateVirtualInterface(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Direct Connect hosted private virtual interface: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Direct Connect Hosted Private Virtual Interface: %s", err)
 	}
 
-	d.SetId(aws.ToString(resp.VirtualInterfaceId))
+	d.SetId(aws.ToString(output.VirtualInterfaceId))
 
-	if err := hostedPrivateVirtualInterfaceWaitUntilAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+	if _, err := waitHostedPrivateVirtualInterfaceAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Direct Connect Hosted Private Virtual Interface (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceHostedPrivateVirtualInterfaceRead(ctx, d, meta)...)
@@ -165,19 +171,21 @@ func resourceHostedPrivateVirtualInterfaceRead(ctx context.Context, d *schema.Re
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
-	vif, err := virtualInterfaceRead(ctx, d.Id(), conn)
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-	if vif == nil {
-		log.Printf("[WARN] Direct Connect hosted private virtual interface (%s) not found, removing from state", d.Id())
+	vif, err := findVirtualInterfaceByID(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Direct Connect Hosted Private Virtual Interface (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Direct Connect Hosted Private Virtual Interface (%s): %s", d.Id(), err)
+	}
+
 	d.Set("address_family", vif.AddressFamily)
 	d.Set("amazon_address", vif.AmazonAddress)
-	d.Set("amazon_side_asn", strconv.FormatInt(aws.ToInt64(vif.AmazonSideAsn), 10))
+	d.Set("amazon_side_asn", flex.Int64ToStringValue(vif.AmazonSideAsn))
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Region:    meta.(*conns.AWSClient).Region,
@@ -207,12 +215,10 @@ func resourceHostedPrivateVirtualInterfaceDelete(ctx context.Context, d *schema.
 func resourceHostedPrivateVirtualInterfaceImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
-	vif, err := virtualInterfaceRead(ctx, d.Id(), conn)
+	vif, err := findVirtualInterfaceByID(ctx, conn, d.Id())
+
 	if err != nil {
 		return nil, err
-	}
-	if vif == nil {
-		return nil, fmt.Errorf("virtual interface (%s) not found", d.Id())
 	}
 
 	if vifType := aws.ToString(vif.VirtualInterfaceType); vifType != "private" {
@@ -222,10 +228,13 @@ func resourceHostedPrivateVirtualInterfaceImport(ctx context.Context, d *schema.
 	return []*schema.ResourceData{d}, nil
 }
 
-func hostedPrivateVirtualInterfaceWaitUntilAvailable(ctx context.Context, conn *directconnect.Client, vifId string, timeout time.Duration) error {
-	return virtualInterfaceWaitUntilAvailable(ctx, conn,
-		vifId,
-		timeout,
+func waitHostedPrivateVirtualInterfaceAvailable(ctx context.Context, conn *directconnect.Client, id string, timeout time.Duration) (*awstypes.VirtualInterface, error) {
+	return waitVirtualInterfaceAvailable(
+		ctx,
+		conn,
+		id,
 		enum.Slice(awstypes.VirtualInterfaceStatePending),
-		enum.Slice(awstypes.VirtualInterfaceStateAvailable, awstypes.VirtualInterfaceStateConfirming, awstypes.VirtualInterfaceStateDown))
+		enum.Slice(awstypes.VirtualInterfaceStateAvailable, awstypes.VirtualInterfaceStateConfirming, awstypes.VirtualInterfaceStateDown),
+		timeout,
+	)
 }

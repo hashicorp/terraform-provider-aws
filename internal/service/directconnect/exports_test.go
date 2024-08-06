@@ -5,14 +5,15 @@ package directconnect
 
 // Exports for use in tests only.
 var (
-	ResourceBGPPeer                    = resourceBGPPeer
-	ResourceConnection                 = resourceConnection
-	ResourceConnectionAssociation      = resourceConnectionAssociation
-	ResourceConnectionConfirmation     = resourceConnectionConfirmation
-	ResourceGateway                    = resourceGateway
-	ResourceGatewayAssociation         = resourceGatewayAssociation
-	ResourceGatewayAssociationProposal = resourceGatewayAssociationProposal
-	ResourceHostedConnection           = resourceHostedConnection
+	ResourceBGPPeer                       = resourceBGPPeer
+	ResourceConnection                    = resourceConnection
+	ResourceConnectionAssociation         = resourceConnectionAssociation
+	ResourceConnectionConfirmation        = resourceConnectionConfirmation
+	ResourceGateway                       = resourceGateway
+	ResourceGatewayAssociation            = resourceGatewayAssociation
+	ResourceGatewayAssociationProposal    = resourceGatewayAssociationProposal
+	ResourceHostedConnection              = resourceHostedConnection
+	ResourceHostedPrivateVirtualInterface = resourceHostedPrivateVirtualInterface
 
 	FindBGPPeerByThreePartKey          = findBGPPeerByThreePartKey
 	FindConnectionByID                 = findConnectionByID
