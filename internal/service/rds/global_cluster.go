@@ -582,7 +582,8 @@ func globalClusterUpgradeMajorEngineVersion(ctx context.Context, conn *rds.Clien
 				return false, err // NOT retryable !! AND indicates this should be a minor version upgrade
 			}
 
-			return true, err
+			// Any other errors are retryable.
+			return err != nil, err
 		},
 	)
 
