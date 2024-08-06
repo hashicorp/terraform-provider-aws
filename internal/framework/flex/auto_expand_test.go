@@ -449,6 +449,22 @@ func TestExpand(t *testing.T) {
 				infoConvertingWithPath("Name", reflect.TypeFor[types.String](), "IntentName", reflect.TypeFor[*string]()),
 			},
 		},
+		"resource name suffix": {
+			Options: []AutoFlexOptionsFunc{WithFieldNameSuffix("Config")},
+			Source: &TestFlexTF22{
+				Policy: types.StringValue("foo"),
+			},
+			Target: &TestFlexAWS23{},
+			WantTarget: &TestFlexAWS23{
+				PolicyConfig: aws.String("foo"),
+			},
+			expectedLogLines: []map[string]any{
+				infoExpanding(reflect.TypeFor[*TestFlexTF22](), reflect.TypeFor[*TestFlexAWS23]()),
+				infoConverting(reflect.TypeFor[TestFlexTF22](), reflect.TypeFor[TestFlexAWS23]()),
+				traceMatchedFields("Policy", reflect.TypeFor[*TestFlexTF22](), "PolicyConfig", reflect.TypeFor[*TestFlexAWS23]()),
+				infoConvertingWithPath("Policy", reflect.TypeFor[types.String](), "PolicyConfig", reflect.TypeFor[*string]()),
+			},
+		},
 		"single ARN Source and single string Target": {
 			Source:     &TestFlexTF17{Field1: fwtypes.ARNValue(testARN)},
 			Target:     &TestFlexAWS01{},

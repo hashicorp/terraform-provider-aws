@@ -692,6 +692,22 @@ func TestFlatten(t *testing.T) {
 				infoConvertingWithPath("IntentName", reflect.TypeFor[*string](), "Name", reflect.TypeFor[types.String]()),
 			},
 		},
+		"resource name suffix": {
+			Options: []AutoFlexOptionsFunc{WithFieldNameSuffix("Config")},
+			Source: &TestFlexAWS23{
+				PolicyConfig: aws.String("foo"),
+			},
+			Target: &TestFlexTF22{},
+			WantTarget: &TestFlexTF22{
+				Policy: types.StringValue("foo"),
+			},
+			expectedLogLines: []map[string]any{
+				infoFlattening(reflect.TypeFor[*TestFlexAWS23](), reflect.TypeFor[*TestFlexTF22]()),
+				infoConverting(reflect.TypeFor[TestFlexAWS23](), reflect.TypeFor[TestFlexTF22]()),
+				traceMatchedFields("PolicyConfig", reflect.TypeFor[*TestFlexAWS23](), "Policy", reflect.TypeFor[*TestFlexTF22]()),
+				infoConvertingWithPath("PolicyConfig", reflect.TypeFor[*string](), "Policy", reflect.TypeFor[types.String]()),
+			},
+		},
 		"single string Source and single ARN Target": {
 			Source:     &TestFlexAWS01{Field1: testARN},
 			Target:     &TestFlexTF17{},
