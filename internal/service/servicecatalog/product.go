@@ -29,7 +29,7 @@ import (
 // @SDKResource("aws_servicecatalog_product", name="Product")
 // @Tags
 // @Testing(skipEmptyTags=true, importIgnore="accept_language;provisioning_artifact_parameters.0.disable_template_validation")
-func ResourceProduct() *schema.Resource {
+func resourceProduct() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProductCreate,
 		ReadWithoutTimeout:   resourceProductRead,

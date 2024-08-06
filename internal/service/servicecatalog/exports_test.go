@@ -9,6 +9,7 @@ var (
 	ResourceConstraint                    = resourceConstraint
 	ResourcePortfolio                     = resourcePortfolio
 	ResourcePortfolioShare                = resourcePortfolioShare
+	ResourceProduct                       = resourceProduct
 	ResourceProductPortfolioAssociation   = resourceProductPortfolioAssociation
 	ResourcePrincipalPortfolioAssociation = resourcePrincipalPortfolioAssociation
 
