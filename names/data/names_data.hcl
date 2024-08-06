@@ -8476,7 +8476,7 @@ service "ses" {
 
   sdk {
     id             = "SES"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
