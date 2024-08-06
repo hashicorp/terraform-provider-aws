@@ -21,6 +21,8 @@ func newDataSourceClusterParameterGroup(context.Context) (datasource.DataSourceW
 
 const (
 	DSNameClusterParameterGroup = "Cluster Parameter Group Data Source"
+
+	dbClusterParameterGroupPrefix = "DBClusterParameterGroup"
 )
 
 type dataSourceClusterParameterGroup struct {
@@ -71,11 +73,13 @@ func (d *dataSourceClusterParameterGroup) Read(ctx context.Context, request data
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data, fwflex.WithFieldNamePrefix("DBClusterParameterGroup"))...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data, fwflex.WithFieldNamePrefix(dbClusterParameterGroupPrefix))...)
 
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	data.Family = fwflex.StringToFramework(ctx, output.DBParameterGroupFamily)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
