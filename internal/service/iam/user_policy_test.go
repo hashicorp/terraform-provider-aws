@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -227,6 +228,35 @@ func TestAccIAMUserPolicy_policyOrder(t *testing.T) {
 	})
 }
 
+func TestAccIAMUserPolicy_PolicySize_exceeded(t *testing.T) {
+	ctx := acctest.Context(t)
+	//var userPolicy string
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	userResourceName := "aws_iam_user.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			// Create a policy exceeding the quota
+			{
+				Config:      testAccUserPolicyConfig_long_policy(rName, 2048),
+				ExpectError: regexache.MustCompile("Cannot exceed quota for PolicySize: 2048"),
+			},
+			// Create a valid policy just under the limit
+			{
+				Config: testAccUserPolicyConfig_long_policy(rName, 2048-1),
+				Check: resource.ComposeTestCheckFunc(
+					//testAccCheckUserPolicyExists(ctx, userResourceName, &userPolicy),
+					testAccCheckUserPolicyExpectedPolicies(ctx, userResourceName, 1),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckUserPolicyExists(ctx context.Context, n string, v *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -419,4 +449,31 @@ resource "aws_iam_user_policy" "test" {
 EOF
 }
 `, rName))
+}
+
+func testAccUserPolicyConfig_long_policy(rName string, size int) string {
+	consumedLength := 105
+	longSid := strings.Repeat("a", size-consumedLength)
+	return acctest.ConfigCompose(
+		testAccUserPolicyUserConfig_base(rName, "/"),
+		fmt.Sprintf(`
+resource "aws_iam_user_policy" "test" {
+  name = %[1]q
+  user = aws_iam_user.test.name
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": {
+    "Sid":   %[2]q,
+    "Effect": "Allow",
+    "Action": [
+      "ec2:Describe*"
+    ],
+    "Resource": "*"
+  }
+}
+EOF
+}
+`, rName, longSid))
 }

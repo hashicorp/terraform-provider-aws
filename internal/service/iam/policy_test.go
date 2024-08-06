@@ -6,6 +6,7 @@ package iam_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -79,6 +80,34 @@ func TestAccIAMPolicy_description(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccIAMPolicy_PolicySize_exceeded(t *testing.T) {
+	ctx := acctest.Context(t)
+	var out awstypes.Policy
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_iam_policy.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			// Create a policy exceeding the quota
+			{
+				Config:      testAccPolicyConfig_long_policy(rName, 6144),
+				ExpectError: regexache.MustCompile("Cannot exceed quota for PolicySize: 6144"),
+			},
+			// Create a valid policy just under the limit
+			{
+				Config: testAccPolicyConfig_long_policy(rName, 6144-1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, resourceName, &out),
+				),
 			},
 		},
 	})
@@ -623,4 +652,30 @@ resource "aws_iam_policy" "test" {
 EOF
 }
 `, rName)
+}
+
+func testAccPolicyConfig_long_policy(rName string, size int) string {
+	consumedLength := 107
+	longSid := strings.Repeat("a", size-consumedLength)
+	return fmt.Sprintf(`
+resource "aws_iam_policy" "test" {
+  name = %q
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": %[2]q,
+      "Action": [
+        "ec2:Describe*"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+`, rName, longSid)
 }
