@@ -120,6 +120,7 @@ const (
 	ServiceCatalogAppRegistryEndpointID  = "servicecatalog-appregistry"
 	ServiceDiscoveryEndpointID           = "servicediscovery"
 	ServiceQuotasEndpointID              = "servicequotas"
+	SESEndpointID                        = "email"
 	ShieldEndpointID                     = "shield"
 	TranscribeEndpointID                 = "transcribe"
 	TransferEndpointID                   = "transfer"

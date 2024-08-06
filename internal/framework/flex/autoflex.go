@@ -16,12 +16,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
-type AutoFlexCtxKey string
+type fieldNamePrefixCtxKey string
 
 const (
-	FieldNamePrefixRecurse AutoFlexCtxKey = "FIELD_NAME_PREFIX_RECURSE"
+	fieldNamePrefixRecurse fieldNamePrefixCtxKey = "FIELD_NAME_PREFIX_RECURSE"
+	fieldNameSuffixRecurse fieldNamePrefixCtxKey = "FIELD_NAME_SUFFIX_RECURSE"
 
-	MapBlockKey = "MapBlockKey"
+	mapBlockKeyFieldName = "MapBlockKey"
 )
 
 // Expand  = TF -->  AWS
@@ -120,9 +121,9 @@ func autoFlexConvertStruct(ctx context.Context, sourcePath path.Path, from any, 
 			})
 			continue
 		}
-		if fieldName == MapBlockKey {
+		if fieldName == mapBlockKeyFieldName {
 			tflog.SubsystemTrace(ctx, subsystemName, "Skipping map block key", map[string]any{
-				logAttrKeySourceFieldname: MapBlockKey,
+				logAttrKeySourceFieldname: mapBlockKeyFieldName,
 			})
 			continue
 		}
@@ -203,16 +204,29 @@ func findFieldFuzzy(ctx context.Context, fieldNameFrom string, valTo, valFrom re
 		}
 	}
 
-	// fourth precedence is using resource prefix
+	// fourth precedence is using field name prefix
 	if v := opts.fieldNamePrefix; v != "" {
 		v = strings.ReplaceAll(v, " ", "")
-		if ctx.Value(FieldNamePrefixRecurse) == nil {
+		if ctx.Value(fieldNamePrefixRecurse) == nil {
 			// so it will only recurse once
-			ctx = context.WithValue(ctx, FieldNamePrefixRecurse, true)
+			ctx = context.WithValue(ctx, fieldNamePrefixRecurse, true)
 			if strings.HasPrefix(fieldNameFrom, v) {
 				return findFieldFuzzy(ctx, strings.TrimPrefix(fieldNameFrom, v), valTo, valFrom, flexer)
 			}
 			return findFieldFuzzy(ctx, v+fieldNameFrom, valTo, valFrom, flexer)
+		}
+	}
+
+	// fifth precedence is using field name suffix
+	if v := opts.fieldNameSuffix; v != "" {
+		v = strings.ReplaceAll(v, " ", "")
+		if ctx.Value(fieldNameSuffixRecurse) == nil {
+			// so it will only recurse once
+			ctx = context.WithValue(ctx, fieldNameSuffixRecurse, true)
+			if strings.HasSuffix(fieldNameFrom, v) {
+				return findFieldFuzzy(ctx, strings.TrimSuffix(fieldNameFrom, v), valTo, valFrom, flexer)
+			}
+			return findFieldFuzzy(ctx, fieldNameFrom+v, valTo, valFrom, flexer)
 		}
 	}
 

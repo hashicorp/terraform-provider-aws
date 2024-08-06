@@ -99,7 +99,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/dataexchange v1.30.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/datapipeline v1.23.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/datasync v1.40.3 // indirect
-	github.com/aws/aws-sdk-go-v2/service/datazone v1.16.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/datazone v1.17.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dax v1.21.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/detective v1.29.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/devicefarm v1.25.2 // indirect
@@ -111,7 +111,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/drs v1.28.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.34.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.173.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ecr v1.31.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ecr v1.32.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.25.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.44.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/efs v1.31.3 // indirect
@@ -180,7 +180,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.10.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.41.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/networkmonitor v1.5.3 // indirect
-	github.com/aws/aws-sdk-go-v2/service/oam v1.13.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/oam v1.13.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.13.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.30.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/osis v1.12.3 // indirect

@@ -677,7 +677,9 @@ func TestFlatten(t *testing.T) {
 			},
 		},
 		"resource name prefix": {
-			Options: []AutoFlexOptionsFunc{WithFieldNamePrefix("Intent")},
+			Options: []AutoFlexOptionsFunc{
+				WithFieldNamePrefix("Intent"),
+			},
 			Source: &TestFlexAWS18{
 				IntentName: aws.String("Ovodoghen"),
 			},
@@ -690,6 +692,22 @@ func TestFlatten(t *testing.T) {
 				infoConverting(reflect.TypeFor[TestFlexAWS18](), reflect.TypeFor[TestFlexTF16]()),
 				traceMatchedFields("IntentName", reflect.TypeFor[*TestFlexAWS18](), "Name", reflect.TypeFor[*TestFlexTF16]()),
 				infoConvertingWithPath("IntentName", reflect.TypeFor[*string](), "Name", reflect.TypeFor[types.String]()),
+			},
+		},
+		"resource name suffix": {
+			Options: []AutoFlexOptionsFunc{WithFieldNameSuffix("Config")},
+			Source: &TestFlexAWS23{
+				PolicyConfig: aws.String("foo"),
+			},
+			Target: &TestFlexTF22{},
+			WantTarget: &TestFlexTF22{
+				Policy: types.StringValue("foo"),
+			},
+			expectedLogLines: []map[string]any{
+				infoFlattening(reflect.TypeFor[*TestFlexAWS23](), reflect.TypeFor[*TestFlexTF22]()),
+				infoConverting(reflect.TypeFor[TestFlexAWS23](), reflect.TypeFor[TestFlexTF22]()),
+				traceMatchedFields("PolicyConfig", reflect.TypeFor[*TestFlexAWS23](), "Policy", reflect.TypeFor[*TestFlexTF22]()),
+				infoConvertingWithPath("PolicyConfig", reflect.TypeFor[*string](), "Policy", reflect.TypeFor[types.String]()),
 			},
 		},
 		"single string Source and single ARN Target": {
@@ -2700,9 +2718,6 @@ func runAutoFlattenTestCases(t *testing.T, testCases autoFlexTestCases) {
 			t.Parallel()
 
 			ctx := context.Background()
-			if testCase.ContextFn != nil {
-				ctx = testCase.ContextFn(ctx)
-			}
 
 			var buf bytes.Buffer
 			ctx = tflogtest.RootLogger(ctx, &buf)

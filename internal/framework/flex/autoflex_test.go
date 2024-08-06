@@ -170,6 +170,14 @@ type TestFlexAWS18 struct {
 	IntentName *string
 }
 
+type TestFlexTF22 struct {
+	Policy types.String `tfsdk:"policy"`
+}
+
+type TestFlexAWS23 struct {
+	PolicyConfig *string
+}
+
 type TestFlexTimeTF01 struct {
 	CreationDateTime timetypes.RFC3339 `tfsdk:"creation_date_time"`
 }

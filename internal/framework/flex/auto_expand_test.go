@@ -434,7 +434,9 @@ func TestExpand(t *testing.T) {
 			},
 		},
 		"resource name prefix": {
-			Options: []AutoFlexOptionsFunc{WithFieldNamePrefix("Intent")},
+			Options: []AutoFlexOptionsFunc{
+				WithFieldNamePrefix("Intent"),
+			},
 			Source: &TestFlexTF16{
 				Name: types.StringValue("Ovodoghen"),
 			},
@@ -447,6 +449,22 @@ func TestExpand(t *testing.T) {
 				infoConverting(reflect.TypeFor[TestFlexTF16](), reflect.TypeFor[TestFlexAWS18]()),
 				traceMatchedFields("Name", reflect.TypeFor[*TestFlexTF16](), "IntentName", reflect.TypeFor[*TestFlexAWS18]()),
 				infoConvertingWithPath("Name", reflect.TypeFor[types.String](), "IntentName", reflect.TypeFor[*string]()),
+			},
+		},
+		"resource name suffix": {
+			Options: []AutoFlexOptionsFunc{WithFieldNameSuffix("Config")},
+			Source: &TestFlexTF22{
+				Policy: types.StringValue("foo"),
+			},
+			Target: &TestFlexAWS23{},
+			WantTarget: &TestFlexAWS23{
+				PolicyConfig: aws.String("foo"),
+			},
+			expectedLogLines: []map[string]any{
+				infoExpanding(reflect.TypeFor[*TestFlexTF22](), reflect.TypeFor[*TestFlexAWS23]()),
+				infoConverting(reflect.TypeFor[TestFlexTF22](), reflect.TypeFor[TestFlexAWS23]()),
+				traceMatchedFields("Policy", reflect.TypeFor[*TestFlexTF22](), "PolicyConfig", reflect.TypeFor[*TestFlexAWS23]()),
+				infoConvertingWithPath("Policy", reflect.TypeFor[types.String](), "PolicyConfig", reflect.TypeFor[*string]()),
 			},
 		},
 		"single ARN Source and single string Target": {
@@ -3587,9 +3605,7 @@ func TestExpandTypedExpander(t *testing.T) {
 }
 
 type autoFlexTestCase struct {
-	ContextFn func(context.Context) context.Context
-	Options   []AutoFlexOptionsFunc
-	// TestName         string
+	Options          []AutoFlexOptionsFunc
 	Source           any
 	Target           any
 	expectedDiags    diag.Diagnostics
@@ -3609,9 +3625,6 @@ func runAutoExpandTestCases(t *testing.T, testCases autoFlexTestCases) {
 			t.Parallel()
 
 			ctx := context.Background()
-			if testCase.ContextFn != nil {
-				ctx = testCase.ContextFn(ctx)
-			}
 
 			var buf bytes.Buffer
 			ctx = tflogtest.RootLogger(ctx, &buf)
