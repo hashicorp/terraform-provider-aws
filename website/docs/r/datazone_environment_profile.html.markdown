@@ -109,16 +109,16 @@ resource "aws_datazone_environment_profile" "test" {
 
 The following arguments are required:
 
-* `aws_account_id` - (Required) -  Id of the AWS account being used. 
-* `aws_account_region` - (Required) -  Desired region for environment profile. 
+* `aws_account_id` - (Required) -  Id of the AWS account being used.
+* `aws_account_region` - (Required) -  Desired region for environment profile.
 * `domain_identifier` - (Required) -  Domain Identifier for environment profile.
-* `name` - (Required) -  Name of the environment profile. 
-* `environment_blueprint_identifier` - (Required) -  ID of the blueprint which the environment will be created with. 
-* `project_identifier` - (Required) -  Project identifier for environment profile. 
+* `name` - (Required) -  Name of the environment profile.
+* `environment_blueprint_identifier` - (Required) -  ID of the blueprint which the environment will be created with.
+* `project_identifier` - (Required) -  Project identifier for environment profile.
 
 The following arguments are optional:
 
-* `description` - (Optional) Description of environment profile. 
+* `description` - (Optional) Description of environment profile.
 * `user_parameters` - (Optional) -  Array of user parameters of the environment profile with the following attributes:
     * `name` - (Required) -  Name of the environment profile parameter.
     * `value` - (Required) -  Value of the environment profile parameter.
