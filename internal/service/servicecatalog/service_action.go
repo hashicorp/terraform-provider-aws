@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
-	"github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -71,9 +71,9 @@ func ResourceServiceAction() *schema.Resource {
 						names.AttrType: {
 							Type:             schema.TypeString,
 							Optional:         true,
-							Default:          types.ServiceActionDefinitionTypeSsmAutomation,
+							Default:          awstypes.ServiceActionDefinitionTypeSsmAutomation,
 							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[types.ServiceActionDefinitionType](),
+							ValidateDiagFunc: enum.Validate[awstypes.ServiceActionDefinitionType](),
 						},
 						names.AttrVersion: { // ServiceActionDefinitionKeyVersion
 							Type:     schema.TypeString,
@@ -103,7 +103,7 @@ func resourceServiceActionCreate(ctx context.Context, d *schema.ResourceData, me
 		IdempotencyToken: aws.String(id.UniqueId()),
 		Name:             aws.String(d.Get(names.AttrName).(string)),
 		Definition:       expandServiceActionDefinition(d.Get("definition").([]interface{})[0].(map[string]interface{})),
-		DefinitionType:   types.ServiceActionDefinitionType(d.Get("definition.0.type").(string)),
+		DefinitionType:   awstypes.ServiceActionDefinitionType(d.Get("definition.0.type").(string)),
 	}
 
 	if v, ok := d.GetOk("accept_language"); ok {
@@ -174,7 +174,7 @@ func resourceServiceActionRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set(names.AttrName, sas.Name)
 
 	if output.Definition != nil {
-		d.Set("definition", []interface{}{flattenServiceActionDefinition(output.Definition, aws.ToString(sas.DefinitionType))})
+		d.Set("definition", []interface{}{flattenServiceActionDefinition(output.Definition, sas.DefinitionType)})
 	} else {
 		d.Set("definition", nil)
 	}
@@ -242,7 +242,7 @@ func resourceServiceActionDelete(ctx context.Context, d *schema.ResourceData, me
 	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *retry.RetryError {
 		_, err := conn.DeleteServiceAction(ctx, input)
 
-		if errs.IsA[*types.ResourceInUseException](err) {
+		if errs.IsA[*awstypes.ResourceInUseException](err) {
 			return retry.RetryableError(err)
 		}
 
@@ -257,7 +257,7 @@ func resourceServiceActionDelete(ctx context.Context, d *schema.ResourceData, me
 		_, err = conn.DeleteServiceAction(ctx, input)
 	}
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		log.Printf("[INFO] Attempted to delete Service Action (%s) but does not exist", d.Id())
 		return diags
 	}
@@ -273,53 +273,53 @@ func resourceServiceActionDelete(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func expandServiceActionDefinition(tfMap map[string]interface{}) map[string]*string {
+func expandServiceActionDefinition(tfMap map[string]interface{}) map[string]string {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := make(map[string]*string)
+	apiObject := make(map[string]string)
 
 	if v, ok := tfMap["assume_role"].(string); ok && v != "" {
-		apiObject[string(types.ServiceActionDefinitionKeyAssumeRole)] = aws.String(v)
+		apiObject[string(awstypes.ServiceActionDefinitionKeyAssumeRole)] = v
 	}
 
 	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
-		apiObject[string(types.ServiceActionDefinitionKeyName)] = aws.String(v)
+		apiObject[string(awstypes.ServiceActionDefinitionKeyName)] = v
 	}
 
 	if v, ok := tfMap[names.AttrParameters].(string); ok && v != "" {
-		apiObject[string(types.ServiceActionDefinitionKeyParameters)] = aws.String(v)
+		apiObject[string(awstypes.ServiceActionDefinitionKeyParameters)] = v
 	}
 
 	if v, ok := tfMap[names.AttrVersion].(string); ok && v != "" {
-		apiObject[string(types.ServiceActionDefinitionKeyVersion)] = aws.String(v)
+		apiObject[string(awstypes.ServiceActionDefinitionKeyVersion)] = v
 	}
 
 	return apiObject
 }
 
-func flattenServiceActionDefinition(apiObject map[string]*string, definitionType string) map[string]interface{} {
+func flattenServiceActionDefinition(apiObject map[string]string, definitionType awstypes.ServiceActionDefinitionType) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 
-	if v, ok := apiObject[string(types.ServiceActionDefinitionKeyAssumeRole)]; ok && v != nil {
-		tfMap["assume_role"] = aws.ToString(v)
+	if v, ok := apiObject[string(awstypes.ServiceActionDefinitionKeyAssumeRole)]; ok && v != "" {
+		tfMap["assume_role"] = v
 	}
 
-	if v, ok := apiObject[string(types.ServiceActionDefinitionKeyName)]; ok && v != nil {
-		tfMap[names.AttrName] = aws.ToString(v)
+	if v, ok := apiObject[string(awstypes.ServiceActionDefinitionKeyName)]; ok && v != "" {
+		tfMap[names.AttrName] = v
 	}
 
-	if v, ok := apiObject[string(types.ServiceActionDefinitionKeyParameters)]; ok && v != nil {
-		tfMap[names.AttrParameters] = aws.ToString(v)
+	if v, ok := apiObject[string(awstypes.ServiceActionDefinitionKeyParameters)]; ok && v != "" {
+		tfMap[names.AttrParameters] = v
 	}
 
-	if v, ok := apiObject[string(types.ServiceActionDefinitionKeyVersion)]; ok && v != nil {
-		tfMap[names.AttrVersion] = aws.ToString(v)
+	if v, ok := apiObject[string(awstypes.ServiceActionDefinitionKeyVersion)]; ok && v != "" {
+		tfMap[names.AttrVersion] = v
 	}
 
 	if definitionType != "" {
