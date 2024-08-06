@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/sdk"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -41,7 +42,7 @@ func RegisterSweepers() {
 		"aws_iam_role",
 	)
 
-	sweep.Register("aws_iam_openid_connect_provider", sweepOpenIDConnectProvider)
+	awsv1.Register("aws_iam_openid_connect_provider", sweepOpenIDConnectProvider)
 
 	resource.AddTestSweepers("aws_iam_policy", &resource.Sweeper{
 		Name: "aws_iam_policy",
@@ -86,11 +87,11 @@ func RegisterSweepers() {
 		F: sweepRoles,
 	})
 
-	sweep.Register("aws_iam_saml_provider", sweepSAMLProvider)
+	awsv1.Register("aws_iam_saml_provider", sweepSAMLProvider)
 
-	sweep.Register("aws_iam_service_specific_credential", sweepServiceSpecificCredentials)
+	awsv1.Register("aws_iam_service_specific_credential", sweepServiceSpecificCredentials)
 
-	sweep.Register("aws_iam_signing_certificate", sweepSigningCertificates)
+	awsv1.Register("aws_iam_signing_certificate", sweepSigningCertificates)
 
 	resource.AddTestSweepers("aws_iam_server_certificate", &resource.Sweeper{
 		Name: "aws_iam_server_certificate",
