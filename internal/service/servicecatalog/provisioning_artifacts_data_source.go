@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_servicecatalog_provisioning_artifacts")
-func DataSourceProvisioningArtifacts() *schema.Resource {
+// @SDKDataSource("aws_servicecatalog_provisioning_artifacts", name="Provisioning Artifacts")
+func dataSourceProvisioningArtifacts() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceProvisioningArtifactsRead,
 

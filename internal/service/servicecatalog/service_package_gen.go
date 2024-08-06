@@ -52,8 +52,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceProvisioningArtifacts,
+			Factory:  dataSourceProvisioningArtifacts,
 			TypeName: "aws_servicecatalog_provisioning_artifacts",
+			Name:     "Provisioning Artifacts",
 		},
 	}
 }
