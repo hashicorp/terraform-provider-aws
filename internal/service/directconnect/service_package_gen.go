@@ -100,9 +100,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Hosted Private Virtual Interface",
 		},
 		{
-			Factory:  ResourceHostedPrivateVirtualInterfaceAccepter,
+			Factory:  resourceHostedPrivateVirtualInterfaceAccepter,
 			TypeName: "aws_dx_hosted_private_virtual_interface_accepter",
-			Name:     "Hosted Private Virtual Interface",
+			Name:     "Hosted Private Virtual Interface Accepter",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
