@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_rds_cluster_parameter_group")
 func DataSourceClusterParameterGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceClusterParameterGroupRead,

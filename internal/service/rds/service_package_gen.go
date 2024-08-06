@@ -19,7 +19,12 @@ import (
 type servicePackage struct{}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{}
+	return []*types.ServicePackageFrameworkDataSource{
+		{
+			Factory: newDataSourceClusterParameterGroup,
+			Name:    "Cluster Parameter Group",
+		},
+	}
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
@@ -89,10 +94,6 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceCluster,
 			TypeName: "aws_rds_cluster",
-		},
-		{
-			Factory:  DataSourceClusterParameterGroup,
-			TypeName: "aws_rds_cluster_parameter_group",
 		},
 		{
 			Factory:  DataSourceClusters,
