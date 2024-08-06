@@ -86,8 +86,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Portfolio Share",
 		},
 		{
-			Factory:  ResourcePrincipalPortfolioAssociation,
+			Factory:  resourcePrincipalPortfolioAssociation,
 			TypeName: "aws_servicecatalog_principal_portfolio_association",
+			Name:     "Principal Portfolio Association",
 		},
 		{
 			Factory:  ResourceProduct,

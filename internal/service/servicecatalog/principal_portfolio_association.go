@@ -26,8 +26,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_servicecatalog_principal_portfolio_association")
-func ResourcePrincipalPortfolioAssociation() *schema.Resource {
+// @SDKResource("aws_servicecatalog_principal_portfolio_association", name="Principal Portfolio Association")
+func resourcePrincipalPortfolioAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePrincipalPortfolioAssociationCreate,
 		ReadWithoutTimeout:   resourcePrincipalPortfolioAssociationRead,

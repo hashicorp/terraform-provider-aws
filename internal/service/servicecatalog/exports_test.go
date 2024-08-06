@@ -5,10 +5,11 @@ package servicecatalog
 
 // Exports for use in tests only.
 var (
-	ResourceBudgetResourceAssociation = resourceBudgetResourceAssociation
-	ResourceConstraint                = resourceConstraint
-	ResourcePortfolio                 = resourcePortfolio
-	ResourcePortfolioShare            = resourcePortfolioShare
+	ResourceBudgetResourceAssociation     = resourceBudgetResourceAssociation
+	ResourceConstraint                    = resourceConstraint
+	ResourcePortfolio                     = resourcePortfolio
+	ResourcePortfolioShare                = resourcePortfolioShare
+	ResourcePrincipalPortfolioAssociation = resourcePrincipalPortfolioAssociation
 
 	BudgetResourceAssociationParseID    = budgetResourceAssociationParseID
 	ProductPortfolioAssociationParseID  = productPortfolioAssociationParseID
