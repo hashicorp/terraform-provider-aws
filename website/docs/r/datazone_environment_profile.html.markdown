@@ -146,5 +146,5 @@ import {
 Using `terraform import`, import DataZone Environment Profile using a comma-delimited string combining `domain_identifier` and `id`. For example:
 
 ```console
-% terraform import aws_datazone_environment_profile.example environment-domain-id-12345678,environment_profile-id-12345678
+% terraform import aws_datazone_environment_profile.example domain-id-12345678,environment_profile-id-12345678
 ```
