@@ -531,6 +531,8 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 	}
 }
 
+var slotFlexOpt = flex.WithFieldNamePrefix(ResNameSlot)
+
 func (r *resourceSlot) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().LexV2ModelsClient(ctx)
 
@@ -544,7 +546,7 @@ func (r *resourceSlot) Create(ctx context.Context, req resource.CreateRequest, r
 		SlotName: aws.String(plan.Name.ValueString()),
 	}
 
-	resp.Diagnostics.Append(flex.Expand(context.WithValue(ctx, flex.ResourcePrefix, ResNameSlot), &plan, in)...)
+	resp.Diagnostics.Append(flex.Expand(ctx, &plan, in, slotFlexOpt)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -583,7 +585,7 @@ func (r *resourceSlot) Create(ctx context.Context, req resource.CreateRequest, r
 
 	plan.ID = types.StringValue(id)
 
-	resp.Diagnostics.Append(flex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, ResNameSlot), out, &plan)...)
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan, slotFlexOpt)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -613,7 +615,7 @@ func (r *resourceSlot) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, ResNameSlot), out, &state)...)
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state, slotFlexOpt)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -634,7 +636,7 @@ func (r *resourceSlot) Update(ctx context.Context, req resource.UpdateRequest, r
 	if slotHasChanges(ctx, plan, state) {
 		input := &lexmodelsv2.UpdateSlotInput{}
 
-		resp.Diagnostics.Append(flex.Expand(context.WithValue(ctx, flex.ResourcePrefix, ResNameSlot), plan, input)...)
+		resp.Diagnostics.Append(flex.Expand(ctx, plan, input, slotFlexOpt)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -655,7 +657,7 @@ func (r *resourceSlot) Update(ctx context.Context, req resource.UpdateRequest, r
 			return
 		}
 
-		resp.Diagnostics.Append(flex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, ResNameSlot), input, &plan)...)
+		resp.Diagnostics.Append(flex.Flatten(ctx, input, &plan, slotFlexOpt)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}

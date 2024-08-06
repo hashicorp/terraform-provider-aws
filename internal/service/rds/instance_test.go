@@ -1077,6 +1077,37 @@ func TestAccRDSInstance_ReplicateSourceDB_basic(t *testing.T) {
 	})
 }
 
+func TestAccRDSInstance_ReplicateSourceDB_upgradeStorageConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance, sourceDbInstance rds.DBInstance
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	sourceResourceName := "aws_db_instance.source"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDB_upgradeStorageConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
+					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "upgrade_storage_config", acctest.CtTrue),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRDSInstance_ReplicateSourceDB_namePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -3911,6 +3942,40 @@ func TestAccRDSInstance_MSSQL_selfManagedDomain(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "domain_ou"),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_auth_secret_arn"),
 					resource.TestCheckResourceAttr(resourceName, "domain_dns_ips.#", acctest.Ct2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_MSSQL_selfManagedDomainSingleDomainDNSIP(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v rds.DBInstance
+	resourceName := "aws_db_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domain := acctest.RandomDomain().String()
+	domainOu := fmt.Sprintf("OU=AWS,DC=%s,DC=%s", strings.Split(domain, ".")[0], strings.Split(domain, ".")[1])
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_mssqlSelfManagedDomainSingleDomainDNSIP(rName, domain, domainOu),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "domain_fqdn"),
+					resource.TestCheckResourceAttrSet(resourceName, "domain_ou"),
+					resource.TestCheckResourceAttrSet(resourceName, "domain_auth_secret_arn"),
+					resource.TestCheckResourceAttr(resourceName, "domain_dns_ips.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "domain_dns_ips.0", "123.124.125.126"),
+					resource.TestCheckResourceAttr(resourceName, "domain_dns_ips.1", "123.124.125.126"),
 				),
 			},
 		},
@@ -8023,6 +8088,30 @@ resource "aws_secretsmanager_secret_version" "example-2" {
 `, rName, domain, domainOu))
 }
 
+func testAccInstanceConfig_mssqlSelfManagedDomainSingleDomainDNSIP(rName, domain, domainOu string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_baseMSSQLSelfManagedDomain(rName),
+		fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  allocated_storage       = 20
+  backup_retention_period = 0
+  db_subnet_group_name    = aws_db_subnet_group.test.name
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
+  identifier              = %[1]q
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  skip_final_snapshot     = true
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
+  vpc_security_group_ids  = [aws_security_group.test.id]
+  domain_fqdn             = %[2]q
+  domain_ou               = %[3]q
+  domain_auth_secret_arn  = aws_secretsmanager_secret_version.example.arn
+  domain_dns_ips          = ["123.124.125.126", "123.124.125.126"]
+}
+`, rName, domain, domainOu))
+}
+
 func testAccInstanceConfig_mssqlSelfManagedDomainSnapshotRestore(rName, domain, domainOu string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_baseMSSQLSelfManagedDomain(rName),
@@ -8686,6 +8775,34 @@ resource "aws_db_instance" "test" {
   identifier          = %[1]q
   instance_class      = aws_db_instance.source.instance_class
   skip_final_snapshot = true
+}
+`, rName))
+}
+
+func testAccInstanceConfig_ReplicateSourceDB_upgradeStorageConfig(rName string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMySQL(),
+		fmt.Sprintf(`
+resource "aws_db_instance" "source" {
+  allocated_storage       = 5
+  backup_retention_period = 1
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  identifier              = "%[1]s-source"
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
+  skip_final_snapshot     = true
+}
+
+resource "aws_db_instance" "test" {
+  identifier             = %[1]q
+  instance_class         = aws_db_instance.source.instance_class
+  replicate_source_db    = aws_db_instance.source.identifier
+  skip_final_snapshot    = true
+  upgrade_storage_config = true
+  timeouts {
+    update = "120m"
+  }
 }
 `, rName))
 }

@@ -355,7 +355,7 @@ service "appmesh" {
 
   sdk {
     id             = "App Mesh"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -4285,7 +4285,7 @@ service "guardduty" {
 
   sdk {
     id             = "GuardDuty"
-    client_version = [1, 2]
+    client_version = [2]
   }
 
   names {
@@ -7514,7 +7514,7 @@ service "resiliencehub" {
 
   sdk {
     id             = "resiliencehub"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -7522,8 +7522,8 @@ service "resiliencehub" {
     human_friendly      = "Resilience Hub"
   }
 
-  client {
-    go_v1_client_typename = "ResilienceHub"
+  endpoint_info {
+    endpoint_api_call        = "ListApps"
   }
 
   resource_prefix {
@@ -7533,7 +7533,6 @@ service "resiliencehub" {
   provider_package_correct = "resiliencehub"
   doc_prefix               = ["resiliencehub_"]
   brand                    = "AWS"
-  not_implemented          = true
 }
 
 service "resourceexplorer2" {
@@ -8988,7 +8987,7 @@ service "storagegateway" {
 
   sdk {
     id             = "Storage Gateway"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {

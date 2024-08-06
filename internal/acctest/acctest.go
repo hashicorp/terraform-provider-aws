@@ -24,7 +24,9 @@ import (
 	accounttypes "github.com/aws/aws-sdk-go-v2/service/account/types"
 	"github.com/aws/aws-sdk-go-v2/service/acmpca"
 	acmpcatypes "github.com/aws/aws-sdk-go-v2/service/acmpca/types"
+	"github.com/aws/aws-sdk-go-v2/service/cloudsearch"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
+	"github.com/aws/aws-sdk-go-v2/service/costexplorer"
 	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	dstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
@@ -771,6 +773,47 @@ func CheckResourceAttrJMESPair(nameFirst, keyFirst, jmesPath, nameSecond, keySec
 	}
 }
 
+func CheckResourceAttrJMESNotExists(name, key, jmesPath string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		is, err := PrimaryInstanceState(s, name)
+		if err != nil {
+			return err
+		}
+
+		attr, ok := is.Attributes[key]
+		if !ok {
+			return fmt.Errorf("%s: Attribute %q not set", name, key)
+		}
+
+		var jsonData any
+		err = json.Unmarshal([]byte(attr), &jsonData)
+		if err != nil {
+			return fmt.Errorf("%s: Expected attribute %q to be JSON: %w", name, key, err)
+		}
+
+		result, err := jmespath.Search(jmesPath, jsonData)
+		if err != nil {
+			return fmt.Errorf("invalid JMESPath %q: %w", jmesPath, err)
+		}
+
+		var v string
+		switch x := result.(type) {
+		case nil:
+			return nil
+		case string:
+			v = x
+		case float64:
+			v = strconv.FormatFloat(x, 'f', -1, 64)
+		case bool:
+			v = fmt.Sprint(x)
+		default:
+			return fmt.Errorf(`%[1]s: Attribute %[2]q, JMESPath %[3]q got "%#[4]v" (%[4]T), expected no attribute`, name, key, jmesPath, result)
+		}
+
+		return fmt.Errorf("%s: Attribute %q, JMESPath %q expected no attribute, got %#v", name, key, jmesPath, v)
+	}
+}
+
 // CheckResourceAttrContains ensures the Terraform state value contains the specified substr.
 func CheckResourceAttrContains(name, key, substr string) resource.TestCheckFunc {
 	return resource.TestCheckResourceAttrWith(name, key, func(value string) error {
@@ -1006,6 +1049,54 @@ func PreCheckCognitoIdentityProvider(ctx context.Context, t *testing.T) {
 
 	if err != nil {
 		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
+func PreCheckCECostAllocationTagPayerAccount(ctx context.Context, t *testing.T) {
+	t.Helper()
+
+	conn := Provider.Meta().(*conns.AWSClient).CEClient(ctx)
+
+	_, err := conn.ListCostAllocationTags(ctx, &costexplorer.ListCostAllocationTagsInput{})
+
+	if errs.MessageContains(err, "AccessDeniedException", "Linked account doesn't have access to") {
+		t.Skip("skipping tests; this AWS account must be a payer account")
+	}
+
+	if err != nil {
+		t.Fatalf("listing Cost Explorer Cost Allocation Tags: %s", err)
+	}
+}
+
+func PreCheckCECostCategoryPayerAccount(ctx context.Context, t *testing.T) {
+	t.Helper()
+
+	conn := Provider.Meta().(*conns.AWSClient).CEClient(ctx)
+
+	_, err := conn.ListCostCategoryDefinitions(ctx, &costexplorer.ListCostCategoryDefinitionsInput{})
+
+	if errs.MessageContains(err, "AccessDeniedException", "Linked account doesn't have access to") {
+		t.Skip("skipping tests; this AWS account must be a payer account")
+	}
+
+	if err != nil {
+		t.Fatalf("listing Cost Explorer Cost Categories: %s", err)
+	}
+}
+
+func PreCheckCloudSearchAccountAllowListed(ctx context.Context, t *testing.T) {
+	t.Helper()
+
+	conn := Provider.Meta().(*conns.AWSClient).CloudSearchClient(ctx)
+
+	_, err := conn.ListDomainNames(ctx, &cloudsearch.ListDomainNamesInput{})
+
+	if errs.MessageContains(err, "NotAuthorized", "New domain creation not supported on this account") {
+		t.Skip("skipping tests; this AWS account does not support new CloudSearch domain creation")
+	}
+
+	if err != nil {
+		t.Fatalf("listing CloudSearch Domain Names: %s", err)
 	}
 }
 

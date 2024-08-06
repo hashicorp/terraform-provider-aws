@@ -434,7 +434,7 @@ func sweepOptionGroups(region string) error {
 				continue
 			}
 
-			r := ResourceOptionGroup()
+			r := resourceOptionGroup()
 			d := r.Data(nil)
 			d.SetId(name)
 
@@ -668,7 +668,7 @@ func sweepInstanceAutomatedBackups(region string) error {
 
 		for _, v := range page.DBInstanceAutomatedBackups {
 			arn := aws.StringValue(v.DBInstanceAutomatedBackupsArn)
-			r := ResourceInstanceAutomatedBackupsReplication()
+			r := resourceInstanceAutomatedBackupsReplication()
 			d := r.Data(nil)
 			d.SetId(arn)
 			d.Set("source_db_instance_arn", v.DBInstanceArn)

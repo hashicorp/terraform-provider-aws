@@ -73,7 +73,7 @@ The `vector_ingestion_configuration` configuration block supports the following 
 
  The `chunking_configuration` configuration block supports the following arguments:
 
-* `chunking_strategy` - (Required, Forces new resource) Option for chunking your source data, either in fixed-sized chunks or as one chunk. Valid values: `FIX_SIZE`, `NONE`.
+* `chunking_strategy` - (Required, Forces new resource) Option for chunking your source data, either in fixed-sized chunks or as one chunk. Valid values: `FIXED_SIZE`, `NONE`.
 * `fixed_size_chunking_configuration` - (Optional, Forces new resource) Configurations for when you choose fixed-size chunking. If you set the chunking_strategy as `NONE`, exclude this field. See [`fixed_size_chunking_configuration`](#fixed_size_chunking_configuration-block) for details.
 
 ### `fixed_size_chunking_configuration` block
