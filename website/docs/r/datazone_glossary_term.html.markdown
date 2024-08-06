@@ -10,6 +10,7 @@ description: |-
 Terraform resource for managing an AWS DataZone Glossary Term.
 
 ## Example Usage
+
 ```terraform
 resource "aws_iam_role" "domain_execution_role" {
   name = "example_name"
@@ -86,7 +87,7 @@ resource "aws_datazone_glossary_term" "test" {
   status              = "ENABLED"
   term_relations {
     classifies = ["id of other glossary term"]
-	  is_a = ["id of other glossary term"]
+    is_a       = ["id of other glossary term"]
   }
 }
 ```
@@ -103,7 +104,7 @@ resource "aws_datazone_glossary_term" "test" {
   status              = "ENABLED"
   term_relations {
     classifies = ["id of other glossary term"]
-	  is_a       = ["id of other glossary term"]
+    is_a       = ["id of other glossary term"]
   }
 }
 ```
