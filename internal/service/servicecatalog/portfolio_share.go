@@ -10,7 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
-	"github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -91,7 +91,7 @@ func ResourcePortfolioShare() *schema.Resource {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.DescribePortfolioShareType](),
+				ValidateDiagFunc: enum.Validate[awstypes.DescribePortfolioShareType](),
 			},
 			"wait_for_acceptance": {
 				Type:     schema.TypeBool,
@@ -108,28 +108,28 @@ func resourcePortfolioShareCreate(ctx context.Context, d *schema.ResourceData, m
 
 	input := &servicecatalog.CreatePortfolioShareInput{
 		PortfolioId:     aws.String(d.Get("portfolio_id").(string)),
-		SharePrincipals: aws.Bool(d.Get("share_principals").(bool)),
+		SharePrincipals: d.Get("share_principals").(bool),
 		AcceptLanguage:  aws.String(d.Get("accept_language").(string)),
 	}
 
-	if v, ok := d.GetOk(names.AttrType); ok && v.(string) == string(types.DescribePortfolioShareTypeAccount) {
+	if v, ok := d.GetOk(names.AttrType); ok && v.(string) == string(awstypes.DescribePortfolioShareTypeAccount) {
 		input.AccountId = aws.String(d.Get("principal_id").(string))
 	} else {
-		orgNode := &types.OrganizationNode{}
+		orgNode := &awstypes.OrganizationNode{}
 		orgNode.Value = aws.String(d.Get("principal_id").(string))
 
-		if v.(string) == string(types.DescribePortfolioShareTypeOrganizationMemberAccount) {
+		if v.(string) == string(awstypes.DescribePortfolioShareTypeOrganizationMemberAccount) {
 			// portfolio_share type ORGANIZATION_MEMBER_ACCOUNT = org node type ACCOUNT
-			orgNode.Type = types.OrganizationNodeTypeAccount
+			orgNode.Type = awstypes.OrganizationNodeTypeAccount
 		} else {
-			orgNode.Type = types.OrganizationNodeType(d.Get(names.AttrType).(string))
+			orgNode.Type = awstypes.OrganizationNodeType(d.Get(names.AttrType).(string))
 		}
 
 		input.OrganizationNode = orgNode
 	}
 
 	if v, ok := d.GetOk("share_tag_options"); ok {
-		input.ShareTagOptions = aws.Bool(v.(bool))
+		input.ShareTagOptions = v.(bool)
 	}
 
 	var output *servicecatalog.CreatePortfolioShareOutput
@@ -237,17 +237,17 @@ func resourcePortfolioShareUpdate(ctx context.Context, d *schema.ResourceData, m
 		input.ShareTagOptions = aws.Bool(d.Get("share_tag_options").(bool))
 	}
 
-	if v, ok := d.GetOk(names.AttrType); ok && v.(string) == string(types.DescribePortfolioShareTypeAccount) {
+	if v, ok := d.GetOk(names.AttrType); ok && v.(string) == string(awstypes.DescribePortfolioShareTypeAccount) {
 		input.AccountId = aws.String(d.Get("principal_id").(string))
 	} else {
-		orgNode := &types.OrganizationNode{}
+		orgNode := &awstypes.OrganizationNode{}
 		orgNode.Value = aws.String(d.Get("principal_id").(string))
 
-		if v.(string) == string(types.DescribePortfolioShareTypeOrganizationMemberAccount) {
+		if v.(string) == string(awstypes.DescribePortfolioShareTypeOrganizationMemberAccount) {
 			// portfolio_share type ORGANIZATION_MEMBER_ACCOUNT = org node type ACCOUNT
-			orgNode.Type = types.OrganizationNodeTypeAccount
+			orgNode.Type = awstypes.OrganizationNodeTypeAccount
 		} else {
-			orgNode.Type = types.OrganizationNodeType(d.Get(names.AttrType).(string))
+			orgNode.Type = awstypes.OrganizationNodeType(d.Get(names.AttrType).(string))
 		}
 
 		input.OrganizationNode = orgNode
@@ -290,17 +290,17 @@ func resourcePortfolioShareDelete(ctx context.Context, d *schema.ResourceData, m
 		input.AcceptLanguage = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrType); ok && v.(string) == string(types.DescribePortfolioShareTypeAccount) {
+	if v, ok := d.GetOk(names.AttrType); ok && v.(string) == string(awstypes.DescribePortfolioShareTypeAccount) {
 		input.AccountId = aws.String(d.Get("principal_id").(string))
 	} else {
-		orgNode := &types.OrganizationNode{}
+		orgNode := &awstypes.OrganizationNode{}
 		orgNode.Value = aws.String(d.Get("principal_id").(string))
 
-		if v.(string) == string(types.DescribePortfolioShareTypeOrganizationMemberAccount) {
+		if v.(string) == string(awstypes.DescribePortfolioShareTypeOrganizationMemberAccount) {
 			// portfolio_share type ORGANIZATION_MEMBER_ACCOUNT = org node type ACCOUNT
-			orgNode.Type = types.OrganizationNodeTypeAccount
+			orgNode.Type = awstypes.OrganizationNodeTypeAccount
 		} else {
-			orgNode.Type = types.OrganizationNodeType(d.Get(names.AttrType).(string))
+			orgNode.Type = awstypes.OrganizationNodeType(d.Get(names.AttrType).(string))
 		}
 
 		input.OrganizationNode = orgNode
@@ -308,7 +308,7 @@ func resourcePortfolioShareDelete(ctx context.Context, d *schema.ResourceData, m
 
 	output, err := conn.DeletePortfolioShare(ctx, input)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
