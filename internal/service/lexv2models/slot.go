@@ -485,7 +485,7 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 		CustomType: fwtypes.NewListNestedObjectTypeOf[SubSlotSettingData](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"expression": schema.StringAttribute{
+				names.AttrExpression: schema.StringAttribute{
 					Optional: true,
 				},
 			},
