@@ -280,12 +280,14 @@ func (p *fwprovider) Schema(ctx context.Context, req provider.SchemaRequest, res
 						"key_prefixes": schema.SetAttribute{
 							ElementType: types.StringType,
 							Optional:    true,
-							Description: "Resource tag key prefixes to ignore across all resources.",
+							Description: "Resource tag key prefixes to ignore across all resources. " +
+								"Can also be configured with the " + tftags.IgnoreTagsKeyPrefixesEnvVar + " environment variable.",
 						},
 						"keys": schema.SetAttribute{
 							ElementType: types.StringType,
 							Optional:    true,
-							Description: "Resource tag keys to ignore across all resources.",
+							Description: "Resource tag keys to ignore across all resources. " +
+								"Can also be configured with the " + tftags.IgnoreTagsKeysEnvVar + " environment variable.",
 						},
 					},
 				},
