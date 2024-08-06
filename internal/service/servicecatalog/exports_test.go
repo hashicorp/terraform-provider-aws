@@ -15,6 +15,7 @@ var (
 	ResourceProvisioningArtifact          = resourceProvisioningArtifact
 	ResourcePrincipalPortfolioAssociation = resourcePrincipalPortfolioAssociation
 	ResourceServiceAction                 = resourceServiceAction
+	ResourceTagOptionResourceAssociation  = resourceTagOptionResourceAssociation
 
 	BudgetResourceAssociationParseID    = budgetResourceAssociationParseID
 	ProductPortfolioAssociationParseID  = productPortfolioAssociationParseID

@@ -124,8 +124,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_servicecatalog_tag_option",
 		},
 		{
-			Factory:  ResourceTagOptionResourceAssociation,
+			Factory:  resourceTagOptionResourceAssociation,
 			TypeName: "aws_servicecatalog_tag_option_resource_association",
+			Name:     "Tag Option Resource Association",
 		},
 	}
 }
