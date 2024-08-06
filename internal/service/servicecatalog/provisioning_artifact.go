@@ -10,7 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
-	"github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -72,8 +72,8 @@ func ResourceProvisioningArtifact() *schema.Resource {
 			"guidance": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				Default:          types.ProvisioningArtifactGuidanceDefault,
-				ValidateDiagFunc: enum.Validate[types.ProvisioningArtifactGuidance](),
+				Default:          awstypes.ProvisioningArtifactGuidanceDefault,
+				ValidateDiagFunc: enum.Validate[awstypes.ProvisioningArtifactGuidance](),
 			},
 			names.AttrName: {
 				Type:     schema.TypeString,
@@ -110,7 +110,7 @@ func ResourceProvisioningArtifact() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.ProvisioningArtifactType](),
+				ValidateDiagFunc: enum.Validate[awstypes.ProvisioningArtifactType](),
 			},
 		},
 	}
@@ -251,7 +251,7 @@ func resourceProvisioningArtifactUpdate(ctx context.Context, d *schema.ResourceD
 		}
 
 		if v, ok := d.GetOk("guidance"); ok {
-			input.Guidance = aws.String(v.(string))
+			input.Guidance = awstypes.ProvisioningArtifactGuidance(v.(string))
 		}
 
 		if v, ok := d.GetOk(names.AttrName); ok {
@@ -305,7 +305,7 @@ func resourceProvisioningArtifactDelete(ctx context.Context, d *schema.ResourceD
 
 	_, err = conn.DeleteProvisioningArtifact(ctx, input)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
