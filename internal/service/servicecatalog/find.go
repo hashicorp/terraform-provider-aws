@@ -16,11 +16,21 @@ import (
 )
 
 func findPortfolioShare(ctx context.Context, conn *servicecatalog.Client, portfolioID, shareType, principalID string) (*awstypes.PortfolioShareDetail, error) {
+	output, err := findPortfolioShares(ctx, conn, portfolioID, shareType, principalID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findPortfolioShares(ctx context.Context, conn *servicecatalog.Client, portfolioID, shareType, principalID string) ([]awstypes.PortfolioShareDetail, error) {
 	input := &servicecatalog.DescribePortfolioSharesInput{
 		PortfolioId: aws.String(portfolioID),
 		Type:        awstypes.DescribePortfolioShareType(shareType),
 	}
-	var result *awstypes.PortfolioShareDetail
+	var result []awstypes.PortfolioShareDetail
 
 	pages := servicecatalog.NewDescribePortfolioSharesPaginator(conn, input)
 	for pages.HasMorePages() {
@@ -39,19 +49,25 @@ func findPortfolioShare(ctx context.Context, conn *servicecatalog.Client, portfo
 
 		for _, detail := range page.PortfolioShareDetails {
 			if strings.Contains(principalID, aws.ToString(detail.PrincipalId)) {
-				result = &detail
+				result = append(result, detail)
 			}
 		}
-	}
-
-	if result == nil {
-		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return result, nil
 }
 
 func findProductPortfolioAssociation(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, portfolioID, productID string) (*awstypes.PortfolioDetail, error) {
+	output, err := findProductPortfolioAssociations(ctx, conn, acceptLanguage, portfolioID, productID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findProductPortfolioAssociations(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, portfolioID, productID string) ([]awstypes.PortfolioDetail, error) {
 	// seems odd that the sourcePortfolioID is not returned or searchable...
 	input := &servicecatalog.ListPortfoliosForProductInput{
 		ProductId: aws.String(productID),
@@ -61,7 +77,7 @@ func findProductPortfolioAssociation(ctx context.Context, conn *servicecatalog.C
 		input.AcceptLanguage = aws.String(acceptLanguage)
 	}
 
-	var result *awstypes.PortfolioDetail
+	var result []awstypes.PortfolioDetail
 
 	pages := servicecatalog.NewListPortfoliosForProductPaginator(conn, input)
 	for pages.HasMorePages() {
@@ -80,7 +96,7 @@ func findProductPortfolioAssociation(ctx context.Context, conn *servicecatalog.C
 
 		for _, detail := range page.PortfolioDetails {
 			if aws.ToString(detail.Id) == portfolioID {
-				result = &detail
+				result = append(result, detail)
 			}
 		}
 	}
@@ -89,11 +105,21 @@ func findProductPortfolioAssociation(ctx context.Context, conn *servicecatalog.C
 }
 
 func findBudgetResourceAssociation(ctx context.Context, conn *servicecatalog.Client, budgetName, resourceID string) (*awstypes.BudgetDetail, error) {
+	output, err := findBudgetResourceAssociations(ctx, conn, budgetName, resourceID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findBudgetResourceAssociations(ctx context.Context, conn *servicecatalog.Client, budgetName, resourceID string) ([]awstypes.BudgetDetail, error) {
 	input := &servicecatalog.ListBudgetsForResourceInput{
 		ResourceId: aws.String(resourceID),
 	}
 
-	var result *awstypes.BudgetDetail
+	var result []awstypes.BudgetDetail
 
 	pages := servicecatalog.NewListBudgetsForResourcePaginator(conn, input)
 	for pages.HasMorePages() {
@@ -112,7 +138,7 @@ func findBudgetResourceAssociation(ctx context.Context, conn *servicecatalog.Cli
 
 		for _, budget := range page.Budgets {
 			if aws.ToString(budget.BudgetName) == budgetName {
-				result = &budget
+				result = append(result, budget)
 			}
 		}
 	}
@@ -121,11 +147,21 @@ func findBudgetResourceAssociation(ctx context.Context, conn *servicecatalog.Cli
 }
 
 func findTagOptionResourceAssociation(ctx context.Context, conn *servicecatalog.Client, tagOptionID, resourceID string) (*awstypes.ResourceDetail, error) {
+	output, err := findTagOptionResourceAssociations(ctx, conn, tagOptionID, resourceID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findTagOptionResourceAssociations(ctx context.Context, conn *servicecatalog.Client, tagOptionID, resourceID string) ([]awstypes.ResourceDetail, error) {
 	input := &servicecatalog.ListResourcesForTagOptionInput{
 		TagOptionId: aws.String(tagOptionID),
 	}
 
-	var result *awstypes.ResourceDetail
+	var result []awstypes.ResourceDetail
 
 	pages := servicecatalog.NewListResourcesForTagOptionPaginator(conn, input)
 	for pages.HasMorePages() {
@@ -144,7 +180,7 @@ func findTagOptionResourceAssociation(ctx context.Context, conn *servicecatalog.
 
 		for _, detail := range page.ResourceDetails {
 			if aws.ToString(detail.Id) == resourceID {
-				result = &detail
+				result = append(result, detail)
 			}
 		}
 	}
