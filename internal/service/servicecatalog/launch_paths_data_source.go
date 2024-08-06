@@ -18,7 +18,7 @@ import (
 )
 
 // @SDKDataSource("aws_servicecatalog_launch_paths", name="Launch Paths")
-func DataSourceLaunchPaths() *schema.Resource {
+func dataSourceLaunchPaths() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLaunchPathsRead,
 
