@@ -184,8 +184,8 @@ github.com/aws/aws-sdk-go-v2/service/datapipeline v1.23.3 h1:kA26fZh30b6kOZZIkxr
 github.com/aws/aws-sdk-go-v2/service/datapipeline v1.23.3/go.mod h1:9Z4AiKwAlu2eXOPFEDfkLV/wTpI9o2FX09M4l6E4VE4=
 github.com/aws/aws-sdk-go-v2/service/datasync v1.40.3 h1:ZrKMl8jsL5YHurOLf0YVLb7JBYxGtqQQAknJ5g4MTz4=
 github.com/aws/aws-sdk-go-v2/service/datasync v1.40.3/go.mod h1:+ObRlRcKO/p38yJSkpVZKlCU3t9PqXMORXC+xTkb9NU=
-github.com/aws/aws-sdk-go-v2/service/datazone v1.16.0 h1:F5Q7eERYDK7vHRh3A2WI0xa3eYMQtflSYMCIegKrNe4=
-github.com/aws/aws-sdk-go-v2/service/datazone v1.16.0/go.mod h1:li7vb6Ip/zyT59298XmAhs+dtXR2GqHXQlIdgL3QycE=
+github.com/aws/aws-sdk-go-v2/service/datazone v1.17.0 h1:F6ppGLrOUyKo4ojn/QZXDWCVyWngvJDTtvQFhHoSdKU=
+github.com/aws/aws-sdk-go-v2/service/datazone v1.17.0/go.mod h1:li7vb6Ip/zyT59298XmAhs+dtXR2GqHXQlIdgL3QycE=
 github.com/aws/aws-sdk-go-v2/service/dax v1.21.4 h1:+SxL4MQSOIy2VF4MnUnAXArNg5CPUlHMwDH2QTrX/jw=
 github.com/aws/aws-sdk-go-v2/service/dax v1.21.4/go.mod h1:FNgKx9JXy9L0bThUl86EMV9gwUgqf2eexpitcne/AXc=
 github.com/aws/aws-sdk-go-v2/service/detective v1.29.3 h1:HimZr2FJaLzxinq9QypFY2gGM+40pMWPwxB+ZNTkfNI=
@@ -208,8 +208,8 @@ github.com/aws/aws-sdk-go-v2/service/dynamodb v1.34.4 h1:utG3S4T+X7nONPIpRoi1tVc
 github.com/aws/aws-sdk-go-v2/service/dynamodb v1.34.4/go.mod h1:q9vzW3Xr1KEXa8n4waHiFt1PrppNDlMymlYP+xpsFbY=
 github.com/aws/aws-sdk-go-v2/service/ec2 v1.173.0 h1:ta62lid9JkIpKZtZZXSj6rP2AqY5x1qYGq53ffxqD9Q=
 github.com/aws/aws-sdk-go-v2/service/ec2 v1.173.0/go.mod h1:o6QDjdVKpP5EF0dp/VlvqckzuSDATr1rLdHt3A5m0YY=
-github.com/aws/aws-sdk-go-v2/service/ecr v1.31.0 h1:vi/MwojjLGATEEUFn2GEdLiom7CFlB+qCIx4tDWqKfQ=
-github.com/aws/aws-sdk-go-v2/service/ecr v1.31.0/go.mod h1:RhaP7Wil0+uuuhiE4FzOOEFZwkmFAk1ZflXzK+O3ptU=
+github.com/aws/aws-sdk-go-v2/service/ecr v1.32.0 h1:lZoKOTEQUf5Oi9qVaZM/Hb0Z6SHIwwpDjbLFOVgB2t8=
+github.com/aws/aws-sdk-go-v2/service/ecr v1.32.0/go.mod h1:RhaP7Wil0+uuuhiE4FzOOEFZwkmFAk1ZflXzK+O3ptU=
 github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.25.3 h1:n2eqzO9VabUkd77b88Hos6OEtbGohB/TRrtXLTZi38Y=
 github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.25.3/go.mod h1:Oy3yHBGkKtTmsn6iJGEZxytzZQrEvoFRWldB4XmzlO4=
 github.com/aws/aws-sdk-go-v2/service/ecs v1.44.3 h1:JkVDQ9mfUSwMOGWIEmyB74mIznjKnHykJSq3uwusBBs=
@@ -346,8 +346,8 @@ github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.41.0 h1:mvbaX3/zHNXRHqHN
 github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.41.0/go.mod h1:Y9mINPJv+o9q8Ztr5/PRh2C1Iynik64IhPzwe2ERGqQ=
 github.com/aws/aws-sdk-go-v2/service/networkmonitor v1.5.3 h1:I+m+rITTdVA9BNJeuCzYgMQjqbUE10xcY0OqgBvFEFE=
 github.com/aws/aws-sdk-go-v2/service/networkmonitor v1.5.3/go.mod h1:R+4X5haYg3eRWYb99y+m1UhlVjFrHNlcfl3WES5e1oQ=
-github.com/aws/aws-sdk-go-v2/service/oam v1.13.3 h1:KCbGN36Q/qQ27mv+/4BSax0q6/KSAxh3K3R+gRhNHwg=
-github.com/aws/aws-sdk-go-v2/service/oam v1.13.3/go.mod h1:T/GYfs9EvCp1ke+82YQJZTTP0FlRETQnny3uPl1YTlY=
+github.com/aws/aws-sdk-go-v2/service/oam v1.13.4 h1:CavW3djyKbwEbD1h9LGLVdWir2SlzZaBxXZdDWj9YAA=
+github.com/aws/aws-sdk-go-v2/service/oam v1.13.4/go.mod h1:T/GYfs9EvCp1ke+82YQJZTTP0FlRETQnny3uPl1YTlY=
 github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.13.3 h1:xRRPnilDJCDohQ+J1dUH4UvzL6P+KPQ0NwO7cs0odfc=
 github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.13.3/go.mod h1:J9Ybe5zLnJG/PsLrdI80ihIW1MYSHMlQyVtdc1X9irQ=
 github.com/aws/aws-sdk-go-v2/service/organizations v1.30.2 h1:+tGF0JH2u4HwneqNFAKFHqENwfpBweKj67+LbwTKpqE=

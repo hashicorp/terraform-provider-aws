@@ -18,6 +18,7 @@ BUG FIXES:
 * resource/aws_lexv2models_bot: Handle `PreconditionFailedException` on delete for resources deleted out-of-band ([#38661](https://github.com/hashicorp/terraform-provider-aws/issues/38661))
 * resource/aws_lexv2models_bot_locale: Handle `PreconditionFailedException` on delete for resources deleted out-of-band ([#38661](https://github.com/hashicorp/terraform-provider-aws/issues/38661))
 * resource/aws_lexv2models_bot_version: Handle `PreconditionFailedException` on delete for resources deleted out-of-band ([#38661](https://github.com/hashicorp/terraform-provider-aws/issues/38661))
+* resource/aws_networkmanager_core_network: Fix `$.network-function-groups: null found, array expected` errors when creating resource with `create_base_policy` argument ([#38642](https://github.com/hashicorp/terraform-provider-aws/issues/38642))
 * resource/aws_sfn_state_machine: Mark `revision_id` and `state_machine_version_arn` as Computed on update if `publish` is `true` ([#38657](https://github.com/hashicorp/terraform-provider-aws/issues/38657))
 
 ## 5.61.0 (August  1, 2024)

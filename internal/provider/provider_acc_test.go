@@ -217,8 +217,7 @@ func TestAccProvider_unusualEndpoints(t *testing.T) {
 	ctx := acctest.Context(t)
 	var provider *schema.Provider
 	unusual1 := unusualEndpoint{"es", "elasticsearch", "http://notarealendpoint"}
-	unusual2 := unusualEndpoint{"databasemigration", "dms", "http://alsonotarealendpoint"}
-	unusual3 := unusualEndpoint{"lexmodelbuildingservice", "lexmodels", "http://kingofspain"}
+	unusual2 := unusualEndpoint{"lexmodelbuildingservice", "lexmodels", "http://kingofspain"}
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -227,11 +226,10 @@ func TestAccProvider_unusualEndpoints(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProviderConfig_unusualEndpoints(unusual1, unusual2, unusual3),
+				Config: testAccProviderConfig_unusualEndpoints(unusual1, unusual2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUnusualEndpoints(ctx, &provider, unusual1),
 					testAccCheckUnusualEndpoints(ctx, &provider, unusual2),
-					testAccCheckUnusualEndpoints(ctx, &provider, unusual3),
 				),
 			},
 		},
@@ -1144,7 +1142,7 @@ resource "aws_s3_bucket" "test" {
 `, endpoint, rName))
 }
 
-func testAccProviderConfig_unusualEndpoints(unusual1, unusual2, unusual3 unusualEndpoint) string {
+func testAccProviderConfig_unusualEndpoints(unusual1, unusual2 unusualEndpoint) string {
 	//lintignore:AT004
 	return acctest.ConfigCompose(testAccProviderConfig_base, fmt.Sprintf(`
 provider "aws" {
@@ -1155,10 +1153,9 @@ provider "aws" {
   endpoints {
     %[1]s = %[2]q
     %[3]s = %[4]q
-    %[5]s = %[6]q
   }
 }
-`, unusual1.fieldName, unusual1.url, unusual2.fieldName, unusual2.url, unusual3.fieldName, unusual3.url))
+`, unusual1.fieldName, unusual1.url, unusual2.fieldName, unusual2.url))
 }
 
 func testAccProviderConfig_useFipsEndpointFlag(rName string) string {
