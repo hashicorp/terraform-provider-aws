@@ -25,12 +25,14 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceConstraint,
+			Factory:  dataSourceConstraint,
 			TypeName: "aws_servicecatalog_constraint",
+			Name:     "Constraint",
 		},
 		{
-			Factory:  DataSourceLaunchPaths,
+			Factory:  dataSourceLaunchPaths,
 			TypeName: "aws_servicecatalog_launch_paths",
+			Name:     "Launch Paths",
 		},
 		{
 			Factory:  DataSourcePortfolio,
@@ -38,8 +40,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourcePortfolioConstraints,
+			Factory:  dataSourcePortfolioConstraints,
 			TypeName: "aws_servicecatalog_portfolio_constraints",
+			Name:     "Portfolio Constraints",
 		},
 		{
 			Factory:  DataSourceProduct,
@@ -56,16 +59,19 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceBudgetResourceAssociation,
+			Factory:  resourceBudgetResourceAssociation,
 			TypeName: "aws_servicecatalog_budget_resource_association",
+			Name:     "Budget Resource Association",
 		},
 		{
-			Factory:  ResourceConstraint,
+			Factory:  resourceConstraint,
 			TypeName: "aws_servicecatalog_constraint",
+			Name:     "Constraint",
 		},
 		{
-			Factory:  ResourceOrganizationsAccess,
+			Factory:  resourceOrganizationsAccess,
 			TypeName: "aws_servicecatalog_organizations_access",
+			Name:     "Organizations Access",
 		},
 		{
 			Factory:  ResourcePortfolio,

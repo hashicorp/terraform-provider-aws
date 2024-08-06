@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_servicecatalog_portfolio_constraints")
-func DataSourcePortfolioConstraints() *schema.Resource {
+// @SDKDataSource("aws_servicecatalog_portfolio_constraints", name="Portfolio Constraints")
+func dataSourcePortfolioConstraints() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePortfolioConstraintsRead,
 
