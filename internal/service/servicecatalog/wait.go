@@ -77,8 +77,8 @@ const (
 
 func waitProductReady(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, productID string, timeout time.Duration) (*servicecatalog.DescribeProductAsAdminOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{string(awstypes.StatusCreating), statusNotFound, statusUnavailable},
-		Target:                    []string{string(awstypes.StatusAvailable), statusCreated},
+		Pending:                   enum.Slice(awstypes.StatusCreating, statusNotFound, statusUnavailable),
+		Target:                    enum.Slice(awstypes.StatusAvailable, statusCreated),
 		Refresh:                   statusProduct(ctx, conn, acceptLanguage, productID),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: continuousTargetOccurrence,
@@ -97,7 +97,7 @@ func waitProductReady(ctx context.Context, conn *servicecatalog.Client, acceptLa
 
 func waitProductDeleted(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, productID string, timeout time.Duration) (*servicecatalog.DescribeProductAsAdminOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{string(awstypes.StatusCreating), string(awstypes.StatusAvailable), statusCreated, statusUnavailable},
+		Pending: enum.Slice(awstypes.StatusCreating, awstypes.StatusAvailable, statusCreated, statusUnavailable),
 		Target:  []string{statusNotFound},
 		Refresh: statusProduct(ctx, conn, acceptLanguage, productID),
 		Timeout: timeout,
@@ -151,14 +151,14 @@ func waitTagOptionDeleted(ctx context.Context, conn *servicecatalog.Client, id s
 }
 
 func waitPortfolioShareReady(ctx context.Context, conn *servicecatalog.Client, portfolioID, shareType, principalID string, acceptRequired bool, timeout time.Duration) (*awstypes.PortfolioShareDetail, error) {
-	targets := []string{string(awstypes.ShareStatusCompleted)}
+	targets := enum.Slice(awstypes.ShareStatusCompleted)
 
 	if !acceptRequired {
 		targets = append(targets, string(awstypes.ShareStatusInProgress))
 	}
 
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{string(awstypes.ShareStatusNotStarted), string(awstypes.ShareStatusInProgress), statusNotFound, statusUnavailable},
+		Pending: enum.Slice(awstypes.ShareStatusNotStarted, awstypes.ShareStatusInProgress, statusNotFound, statusUnavailable),
 		Target:  targets,
 		Refresh: statusPortfolioShare(ctx, conn, portfolioID, shareType, principalID),
 		Timeout: timeout,
@@ -174,14 +174,14 @@ func waitPortfolioShareReady(ctx context.Context, conn *servicecatalog.Client, p
 }
 
 func waitPortfolioShareCreatedWithToken(ctx context.Context, conn *servicecatalog.Client, token string, acceptRequired bool, timeout time.Duration) (*servicecatalog.DescribePortfolioShareStatusOutput, error) {
-	targets := []string{string(awstypes.ShareStatusCompleted)}
+	targets := enum.Slice(awstypes.ShareStatusCompleted)
 
 	if !acceptRequired {
 		targets = append(targets, string(awstypes.ShareStatusInProgress))
 	}
 
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{string(awstypes.ShareStatusNotStarted), string(awstypes.ShareStatusInProgress), statusNotFound, statusUnavailable},
+		Pending: enum.Slice(awstypes.ShareStatusNotStarted, awstypes.ShareStatusInProgress, statusNotFound, statusUnavailable),
 		Target:  targets,
 		Refresh: statusPortfolioShareWithToken(ctx, conn, token),
 		Timeout: timeout,
@@ -198,7 +198,7 @@ func waitPortfolioShareCreatedWithToken(ctx context.Context, conn *servicecatalo
 
 func waitPortfolioShareDeleted(ctx context.Context, conn *servicecatalog.Client, portfolioID, shareType, principalID string, timeout time.Duration) (*awstypes.PortfolioShareDetail, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{string(awstypes.ShareStatusNotStarted), string(awstypes.ShareStatusInProgress), string(awstypes.ShareStatusCompleted), statusUnavailable},
+		Pending: enum.Slice(awstypes.ShareStatusNotStarted, awstypes.ShareStatusInProgress, awstypes.ShareStatusCompleted, statusUnavailable),
 		Target:  []string{},
 		Refresh: statusPortfolioShare(ctx, conn, portfolioID, shareType, principalID),
 		Timeout: timeout,
@@ -215,7 +215,7 @@ func waitPortfolioShareDeleted(ctx context.Context, conn *servicecatalog.Client,
 
 func waitPortfolioShareDeletedWithToken(ctx context.Context, conn *servicecatalog.Client, token string, timeout time.Duration) (*servicecatalog.DescribePortfolioShareStatusOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{string(awstypes.ShareStatusNotStarted), string(awstypes.ShareStatusInProgress), statusNotFound, statusUnavailable},
+		Pending: enum.Slice(awstypes.ShareStatusNotStarted, awstypes.ShareStatusInProgress, statusNotFound, statusUnavailable),
 		Target:  enum.Slice(awstypes.ShareStatusCompleted),
 		Refresh: statusPortfolioShareWithToken(ctx, conn, token),
 		Timeout: timeout,
@@ -232,7 +232,7 @@ func waitPortfolioShareDeletedWithToken(ctx context.Context, conn *servicecatalo
 
 func waitOrganizationsAccessStable(ctx context.Context, conn *servicecatalog.Client, timeout time.Duration) (string, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{string(awstypes.AccessStatusUnderChange), statusNotFound, statusUnavailable},
+		Pending: enum.Slice(awstypes.AccessStatusUnderChange, statusNotFound, statusUnavailable),
 		Target:  enum.Slice(awstypes.AccessStatusEnabled, awstypes.AccessStatusDisabled),
 		Refresh: statusOrganizationsAccess(ctx, conn),
 		Timeout: timeout,
@@ -249,7 +249,7 @@ func waitOrganizationsAccessStable(ctx context.Context, conn *servicecatalog.Cli
 
 func waitConstraintReady(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, id string, timeout time.Duration) (*servicecatalog.DescribeConstraintOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{statusNotFound, string(awstypes.StatusCreating), statusUnavailable},
+		Pending:                   enum.Slice(statusNotFound, awstypes.StatusCreating, statusUnavailable),
 		Target:                    enum.Slice(awstypes.StatusAvailable),
 		Refresh:                   statusConstraint(ctx, conn, acceptLanguage, id),
 		Timeout:                   timeout,
@@ -409,8 +409,8 @@ func waitTagOptionResourceAssociationDeleted(ctx context.Context, conn *servicec
 
 func waitProvisioningArtifactReady(ctx context.Context, conn *servicecatalog.Client, id, productID string, timeout time.Duration) (*servicecatalog.DescribeProvisioningArtifactOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{string(awstypes.StatusCreating), statusNotFound, statusUnavailable},
-		Target:                    []string{string(awstypes.StatusAvailable), statusCreated},
+		Pending:                   enum.Slice(awstypes.StatusCreating, statusNotFound, statusUnavailable),
+		Target:                    enum.Slice(awstypes.StatusAvailable, statusCreated),
 		Refresh:                   statusProvisioningArtifact(ctx, conn, id, productID),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: continuousTargetOccurrence,
@@ -429,7 +429,7 @@ func waitProvisioningArtifactReady(ctx context.Context, conn *servicecatalog.Cli
 
 func waitProvisioningArtifactDeleted(ctx context.Context, conn *servicecatalog.Client, id, productID string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{string(awstypes.StatusCreating), string(awstypes.StatusAvailable), statusCreated, statusUnavailable},
+		Pending: enum.Slice(awstypes.StatusCreating, awstypes.StatusAvailable, statusCreated, statusUnavailable),
 		Target:  []string{statusNotFound},
 		Refresh: statusProvisioningArtifact(ctx, conn, id, productID),
 		Timeout: timeout,

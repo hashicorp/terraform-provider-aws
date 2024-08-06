@@ -231,7 +231,6 @@ func findPrincipalsForPortfolio(ctx context.Context, conn *servicecatalog.Client
 				output = append(output, v)
 			}
 		}
-
 	}
 
 	return output, nil
