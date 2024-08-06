@@ -7,7 +7,7 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -93,7 +93,7 @@ func dataSourcePortfolioConstraintsRead(ctx context.Context, d *schema.ResourceD
 	acceptLanguage := d.Get("accept_language").(string)
 
 	if acceptLanguage == "" {
-		acceptLanguage = AcceptLanguageEnglish
+		acceptLanguage = acceptLanguageEnglish
 	}
 
 	d.Set("accept_language", acceptLanguage)
@@ -109,7 +109,7 @@ func dataSourcePortfolioConstraintsRead(ctx context.Context, d *schema.ResourceD
 	return diags
 }
 
-func flattenConstraintDetail(apiObject *types.ConstraintDetail) map[string]interface{} {
+func flattenConstraintDetail(apiObject *awstypes.ConstraintDetail) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -143,7 +143,7 @@ func flattenConstraintDetail(apiObject *types.ConstraintDetail) map[string]inter
 	return tfMap
 }
 
-func flattenConstraintDetails(apiObjects []*types.ConstraintDetail) []interface{} {
+func flattenConstraintDetails(apiObjects []*awstypes.ConstraintDetail) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
