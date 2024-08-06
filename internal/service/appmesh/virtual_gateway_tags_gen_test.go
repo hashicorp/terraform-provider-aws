@@ -5,7 +5,7 @@ package appmesh_test
 import (
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/appmesh"
+	"github.com/aws/aws-sdk-go-v2/service/appmesh/types"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -45,7 +45,7 @@ func testAccAppMeshVirtualGateway_tagsSerial(t *testing.T) {
 
 func testAccAppMeshVirtualGateway_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v appmesh.VirtualGatewayData
+	var v types.VirtualGatewayData
 	resourceName := "aws_appmesh_virtual_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -220,7 +220,7 @@ func testAccAppMeshVirtualGateway_tags(t *testing.T) {
 
 func testAccAppMeshVirtualGateway_tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v appmesh.VirtualGatewayData
+	var v types.VirtualGatewayData
 	resourceName := "aws_appmesh_virtual_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -281,7 +281,7 @@ func testAccAppMeshVirtualGateway_tags_null(t *testing.T) {
 
 func testAccAppMeshVirtualGateway_tags_AddOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v appmesh.VirtualGatewayData
+	var v types.VirtualGatewayData
 	resourceName := "aws_appmesh_virtual_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -359,7 +359,7 @@ func testAccAppMeshVirtualGateway_tags_AddOnUpdate(t *testing.T) {
 
 func testAccAppMeshVirtualGateway_tags_EmptyTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v appmesh.VirtualGatewayData
+	var v types.VirtualGatewayData
 	resourceName := "aws_appmesh_virtual_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -446,7 +446,7 @@ func testAccAppMeshVirtualGateway_tags_EmptyTag_OnCreate(t *testing.T) {
 
 func testAccAppMeshVirtualGateway_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v appmesh.VirtualGatewayData
+	var v types.VirtualGatewayData
 	resourceName := "aws_appmesh_virtual_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -575,7 +575,7 @@ func testAccAppMeshVirtualGateway_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 
 func testAccAppMeshVirtualGateway_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v appmesh.VirtualGatewayData
+	var v types.VirtualGatewayData
 	resourceName := "aws_appmesh_virtual_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -659,7 +659,7 @@ func testAccAppMeshVirtualGateway_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 
 func testAccAppMeshVirtualGateway_tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v appmesh.VirtualGatewayData
+	var v types.VirtualGatewayData
 	resourceName := "aws_appmesh_virtual_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -844,7 +844,7 @@ func testAccAppMeshVirtualGateway_tags_DefaultTags_providerOnly(t *testing.T) {
 
 func testAccAppMeshVirtualGateway_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v appmesh.VirtualGatewayData
+	var v types.VirtualGatewayData
 	resourceName := "aws_appmesh_virtual_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1007,7 +1007,7 @@ func testAccAppMeshVirtualGateway_tags_DefaultTags_nonOverlapping(t *testing.T) 
 
 func testAccAppMeshVirtualGateway_tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v appmesh.VirtualGatewayData
+	var v types.VirtualGatewayData
 	resourceName := "aws_appmesh_virtual_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1186,7 +1186,7 @@ func testAccAppMeshVirtualGateway_tags_DefaultTags_overlapping(t *testing.T) {
 
 func testAccAppMeshVirtualGateway_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v appmesh.VirtualGatewayData
+	var v types.VirtualGatewayData
 	resourceName := "aws_appmesh_virtual_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1277,7 +1277,7 @@ func testAccAppMeshVirtualGateway_tags_DefaultTags_updateToProviderOnly(t *testi
 
 func testAccAppMeshVirtualGateway_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v appmesh.VirtualGatewayData
+	var v types.VirtualGatewayData
 	resourceName := "aws_appmesh_virtual_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1367,7 +1367,7 @@ func testAccAppMeshVirtualGateway_tags_DefaultTags_updateToResourceOnly(t *testi
 
 func testAccAppMeshVirtualGateway_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v appmesh.VirtualGatewayData
+	var v types.VirtualGatewayData
 	resourceName := "aws_appmesh_virtual_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1433,7 +1433,7 @@ func testAccAppMeshVirtualGateway_tags_DefaultTags_emptyResourceTag(t *testing.T
 
 func testAccAppMeshVirtualGateway_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v appmesh.VirtualGatewayData
+	var v types.VirtualGatewayData
 	resourceName := "aws_appmesh_virtual_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1491,7 +1491,7 @@ func testAccAppMeshVirtualGateway_tags_DefaultTags_emptyProviderOnlyTag(t *testi
 
 func testAccAppMeshVirtualGateway_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v appmesh.VirtualGatewayData
+	var v types.VirtualGatewayData
 	resourceName := "aws_appmesh_virtual_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1554,7 +1554,7 @@ func testAccAppMeshVirtualGateway_tags_DefaultTags_nullOverlappingResourceTag(t 
 
 func testAccAppMeshVirtualGateway_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v appmesh.VirtualGatewayData
+	var v types.VirtualGatewayData
 	resourceName := "aws_appmesh_virtual_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1617,7 +1617,7 @@ func testAccAppMeshVirtualGateway_tags_DefaultTags_nullNonOverlappingResourceTag
 
 func testAccAppMeshVirtualGateway_tags_ComputedTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v appmesh.VirtualGatewayData
+	var v types.VirtualGatewayData
 	resourceName := "aws_appmesh_virtual_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1672,7 +1672,7 @@ func testAccAppMeshVirtualGateway_tags_ComputedTag_OnCreate(t *testing.T) {
 
 func testAccAppMeshVirtualGateway_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v appmesh.VirtualGatewayData
+	var v types.VirtualGatewayData
 	resourceName := "aws_appmesh_virtual_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1763,7 +1763,7 @@ func testAccAppMeshVirtualGateway_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 
 func testAccAppMeshVirtualGateway_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v appmesh.VirtualGatewayData
+	var v types.VirtualGatewayData
 	resourceName := "aws_appmesh_virtual_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 

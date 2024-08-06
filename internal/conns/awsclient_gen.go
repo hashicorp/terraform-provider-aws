@@ -19,6 +19,7 @@ import (
 	applicationautoscaling_sdkv2 "github.com/aws/aws-sdk-go-v2/service/applicationautoscaling"
 	applicationinsights_sdkv2 "github.com/aws/aws-sdk-go-v2/service/applicationinsights"
 	applicationsignals_sdkv2 "github.com/aws/aws-sdk-go-v2/service/applicationsignals"
+	appmesh_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appmesh"
 	apprunner_sdkv2 "github.com/aws/aws-sdk-go-v2/service/apprunner"
 	appstream_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appstream"
 	appsync_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appsync"
@@ -167,6 +168,7 @@ import (
 	redshiftdata_sdkv2 "github.com/aws/aws-sdk-go-v2/service/redshiftdata"
 	redshiftserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/redshiftserverless"
 	rekognition_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rekognition"
+	resiliencehub_sdkv2 "github.com/aws/aws-sdk-go-v2/service/resiliencehub"
 	resourceexplorer2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
 	resourcegroups_sdkv2 "github.com/aws/aws-sdk-go-v2/service/resourcegroups"
 	resourcegroupstaggingapi_sdkv2 "github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi"
@@ -198,6 +200,7 @@ import (
 	ssmsap_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssmsap"
 	sso_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sso"
 	ssoadmin_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssoadmin"
+	storagegateway_sdkv2 "github.com/aws/aws-sdk-go-v2/service/storagegateway"
 	sts_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sts"
 	swf_sdkv2 "github.com/aws/aws-sdk-go-v2/service/swf"
 	synthetics_sdkv2 "github.com/aws/aws-sdk-go-v2/service/synthetics"
@@ -214,14 +217,12 @@ import (
 	workspaces_sdkv2 "github.com/aws/aws-sdk-go-v2/service/workspaces"
 	workspacesweb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/workspacesweb"
 	xray_sdkv2 "github.com/aws/aws-sdk-go-v2/service/xray"
-	appmesh_sdkv1 "github.com/aws/aws-sdk-go/service/appmesh"
 	batch_sdkv1 "github.com/aws/aws-sdk-go/service/batch"
 	connect_sdkv1 "github.com/aws/aws-sdk-go/service/connect"
 	directconnect_sdkv1 "github.com/aws/aws-sdk-go/service/directconnect"
 	elasticsearchservice_sdkv1 "github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	emr_sdkv1 "github.com/aws/aws-sdk-go/service/emr"
 	gamelift_sdkv1 "github.com/aws/aws-sdk-go/service/gamelift"
-	guardduty_sdkv1 "github.com/aws/aws-sdk-go/service/guardduty"
 	imagebuilder_sdkv1 "github.com/aws/aws-sdk-go/service/imagebuilder"
 	kinesisvideo_sdkv1 "github.com/aws/aws-sdk-go/service/kinesisvideo"
 	lexmodelbuildingservice_sdkv1 "github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
@@ -247,7 +248,6 @@ import (
 	servicecatalog_sdkv1 "github.com/aws/aws-sdk-go/service/servicecatalog"
 	ses_sdkv1 "github.com/aws/aws-sdk-go/service/ses"
 	simpledb_sdkv1 "github.com/aws/aws-sdk-go/service/simpledb"
-	storagegateway_sdkv1 "github.com/aws/aws-sdk-go/service/storagegateway"
 	worklink_sdkv1 "github.com/aws/aws-sdk-go/service/worklink"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -305,8 +305,8 @@ func (c *AWSClient) AppIntegrationsClient(ctx context.Context) *appintegrations_
 	return errs.Must(client[*appintegrations_sdkv2.Client](ctx, c, names.AppIntegrations, make(map[string]any)))
 }
 
-func (c *AWSClient) AppMeshConn(ctx context.Context) *appmesh_sdkv1.AppMesh {
-	return errs.Must(conn[*appmesh_sdkv1.AppMesh](ctx, c, names.AppMesh, make(map[string]any)))
+func (c *AWSClient) AppMeshClient(ctx context.Context) *appmesh_sdkv2.Client {
+	return errs.Must(client[*appmesh_sdkv2.Client](ctx, c, names.AppMesh, make(map[string]any)))
 }
 
 func (c *AWSClient) AppRunnerClient(ctx context.Context) *apprunner_sdkv2.Client {
@@ -705,10 +705,6 @@ func (c *AWSClient) GroundStationClient(ctx context.Context) *groundstation_sdkv
 	return errs.Must(client[*groundstation_sdkv2.Client](ctx, c, names.GroundStation, make(map[string]any)))
 }
 
-func (c *AWSClient) GuardDutyConn(ctx context.Context) *guardduty_sdkv1.GuardDuty {
-	return errs.Must(conn[*guardduty_sdkv1.GuardDuty](ctx, c, names.GuardDuty, make(map[string]any)))
-}
-
 func (c *AWSClient) GuardDutyClient(ctx context.Context) *guardduty_sdkv2.Client {
 	return errs.Must(client[*guardduty_sdkv2.Client](ctx, c, names.GuardDuty, make(map[string]any)))
 }
@@ -1009,6 +1005,10 @@ func (c *AWSClient) RekognitionClient(ctx context.Context) *rekognition_sdkv2.Cl
 	return errs.Must(client[*rekognition_sdkv2.Client](ctx, c, names.Rekognition, make(map[string]any)))
 }
 
+func (c *AWSClient) ResilienceHubClient(ctx context.Context) *resiliencehub_sdkv2.Client {
+	return errs.Must(client[*resiliencehub_sdkv2.Client](ctx, c, names.ResilienceHub, make(map[string]any)))
+}
+
 func (c *AWSClient) ResourceExplorer2Client(ctx context.Context) *resourceexplorer2_sdkv2.Client {
 	return errs.Must(client[*resourceexplorer2_sdkv2.Client](ctx, c, names.ResourceExplorer2, make(map[string]any)))
 }
@@ -1169,8 +1169,8 @@ func (c *AWSClient) SimpleDBConn(ctx context.Context) *simpledb_sdkv1.SimpleDB {
 	return errs.Must(conn[*simpledb_sdkv1.SimpleDB](ctx, c, names.SimpleDB, make(map[string]any)))
 }
 
-func (c *AWSClient) StorageGatewayConn(ctx context.Context) *storagegateway_sdkv1.StorageGateway {
-	return errs.Must(conn[*storagegateway_sdkv1.StorageGateway](ctx, c, names.StorageGateway, make(map[string]any)))
+func (c *AWSClient) StorageGatewayClient(ctx context.Context) *storagegateway_sdkv2.Client {
+	return errs.Must(client[*storagegateway_sdkv2.Client](ctx, c, names.StorageGateway, make(map[string]any)))
 }
 
 func (c *AWSClient) SyntheticsClient(ctx context.Context) *synthetics_sdkv2.Client {

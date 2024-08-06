@@ -11,4 +11,6 @@ var (
 	ResourceProject                           = newResourceProject
 	ResourceEnvironmentProfile                = newResourceEnvironmentProfile
 	FindEnvironmentProfileByID                = findEnvironmentProfileByID
+	ResourceGlossary                          = newResourceGlossary
+	FindGlossaryByID                          = findGlossaryByID
 )

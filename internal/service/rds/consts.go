@@ -16,20 +16,21 @@ const (
 )
 
 const (
-	clusterStatusAvailable                  = "available"
-	clusterStatusBackingUp                  = "backing-up"
-	clusterStatusConfiguringIAMDatabaseAuth = "configuring-iam-database-auth"
-	clusterStatusCreating                   = "creating"
-	clusterStatusDeleting                   = "deleting"
-	clusterStatusMigrating                  = "migrating"
-	clusterStatusModifying                  = "modifying"
-	clusterStatusPreparingDataMigration     = "preparing-data-migration"
-	clusterStatusPromoting                  = "promoting"
-	clusterStatusRebooting                  = "rebooting"
-	clusterStatusRenaming                   = "renaming"
-	clusterStatusResettingMasterCredentials = "resetting-master-credentials"
-	clusterStatusScalingCompute             = "scaling-compute"
-	clusterStatusUpgrading                  = "upgrading"
+	clusterStatusAvailable                     = "available"
+	clusterStatusBackingUp                     = "backing-up"
+	clusterStatusConfiguringEnhancedMonitoring = "configuring-enhanced-monitoring"
+	clusterStatusConfiguringIAMDatabaseAuth    = "configuring-iam-database-auth"
+	clusterStatusCreating                      = "creating"
+	clusterStatusDeleting                      = "deleting"
+	clusterStatusMigrating                     = "migrating"
+	clusterStatusModifying                     = "modifying"
+	clusterStatusPreparingDataMigration        = "preparing-data-migration"
+	clusterStatusPromoting                     = "promoting"
+	clusterStatusRebooting                     = "rebooting"
+	clusterStatusRenaming                      = "renaming"
+	clusterStatusResettingMasterCredentials    = "resetting-master-credentials"
+	clusterStatusScalingCompute                = "scaling-compute"
+	clusterStatusUpgrading                     = "upgrading"
 
 	// Non-standard status values.
 	clusterStatusAvailableWithPendingModifiedValues = "tf-available-with-pending-modified-values"
@@ -42,6 +43,12 @@ const (
 
 const (
 	clusterSnapshotAttributeNameRestore = "restore"
+)
+
+const (
+	clusterEndpointStatusAvailable = "available"
+	clusterEndpointStatusCreating  = "creating"
+	clusterEndpointStatusDeleting  = "deleting"
 )
 
 const (
@@ -134,8 +141,12 @@ const (
 )
 
 const (
-	DBSnapshotAvailable = "available"
-	DBSnapshotCreating  = "creating"
+	dbSnapshotAvailable = "available"
+	dbSnapshotCreating  = "creating"
+)
+
+const (
+	dbSnapshotAttributeNameRestore = "restore"
 )
 
 const (
@@ -310,7 +321,13 @@ const (
 )
 
 const (
-	ReservedInstanceStateActive         = "active"
-	ReservedInstanceStateRetired        = "retired"
-	ReservedInstanceStatePaymentPending = "payment-pending"
+	reservedInstanceStateActive         = "active"
+	reservedInstanceStateRetired        = "retired"
+	reservedInstanceStatePaymentPending = "payment-pending"
+)
+
+const (
+	parameterSourceEngineDefault = "engine-default"
+	parameterSourceSystem        = "system"
+	parameterSourceUser          = "user"
 )

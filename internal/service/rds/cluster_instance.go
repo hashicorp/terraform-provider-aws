@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -550,6 +551,96 @@ func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	return diags
+}
+
+func waitDBClusterInstanceCreated(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) (*rds.DBInstance, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{
+			InstanceStatusBackingUp,
+			InstanceStatusConfiguringEnhancedMonitoring,
+			InstanceStatusConfiguringIAMDatabaseAuth,
+			InstanceStatusConfiguringLogExports,
+			InstanceStatusCreating,
+			InstanceStatusMaintenance,
+			InstanceStatusModifying,
+			InstanceStatusRebooting,
+			InstanceStatusRenaming,
+			InstanceStatusResettingMasterCredentials,
+			InstanceStatusStarting,
+			InstanceStatusStorageOptimization,
+			InstanceStatusUpgrading,
+		},
+		Target:     []string{InstanceStatusAvailable},
+		Refresh:    statusDBInstanceSDKv1(ctx, conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*rds.DBInstance); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitDBClusterInstanceUpdated(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) (*rds.DBInstance, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{
+			InstanceStatusBackingUp,
+			InstanceStatusConfiguringEnhancedMonitoring,
+			InstanceStatusConfiguringIAMDatabaseAuth,
+			InstanceStatusConfiguringLogExports,
+			InstanceStatusCreating,
+			InstanceStatusMaintenance,
+			InstanceStatusModifying,
+			InstanceStatusRebooting,
+			InstanceStatusRenaming,
+			InstanceStatusResettingMasterCredentials,
+			InstanceStatusStarting,
+			InstanceStatusStorageOptimization,
+			InstanceStatusUpgrading,
+		},
+		Target:     []string{InstanceStatusAvailable},
+		Refresh:    statusDBInstanceSDKv1(ctx, conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*rds.DBInstance); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitDBClusterInstanceDeleted(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) (*rds.DBInstance, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{
+			InstanceStatusConfiguringLogExports,
+			InstanceStatusDeletePreCheck,
+			InstanceStatusDeleting,
+			InstanceStatusModifying,
+		},
+		Target:     []string{},
+		Refresh:    statusDBInstanceSDKv1(ctx, conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*rds.DBInstance); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
 func clusterSetResourceDataEngineVersionFromClusterInstance(d *schema.ResourceData, c *rds.DBInstance) {

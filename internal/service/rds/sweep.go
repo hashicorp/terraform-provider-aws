@@ -131,7 +131,7 @@ func sweepClusterParameterGroups(region string) error {
 				continue
 			}
 
-			r := ResourceClusterParameterGroup()
+			r := resourceClusterParameterGroup()
 			d := r.Data(nil)
 			d.SetId(name)
 
@@ -434,7 +434,7 @@ func sweepOptionGroups(region string) error {
 				continue
 			}
 
-			r := ResourceOptionGroup()
+			r := resourceOptionGroup()
 			d := r.Data(nil)
 			d.SetId(name)
 
@@ -484,7 +484,7 @@ func sweepParameterGroups(region string) error {
 				continue
 			}
 
-			r := ResourceParameterGroup()
+			r := resourceParameterGroup()
 			d := r.Data(nil)
 			d.SetId(name)
 
@@ -578,7 +578,7 @@ func sweepSnapshots(region string) error {
 				continue
 			}
 
-			r := ResourceSnapshot()
+			r := resourceSnapshot()
 			d := r.Data(nil)
 			d.SetId(id)
 
@@ -668,7 +668,7 @@ func sweepInstanceAutomatedBackups(region string) error {
 
 		for _, v := range page.DBInstanceAutomatedBackups {
 			arn := aws.StringValue(v.DBInstanceAutomatedBackupsArn)
-			r := ResourceInstanceAutomatedBackupsReplication()
+			r := resourceInstanceAutomatedBackupsReplication()
 			d := r.Data(nil)
 			d.SetId(arn)
 			d.Set("source_db_instance_arn", v.DBInstanceArn)
