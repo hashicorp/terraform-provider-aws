@@ -10,7 +10,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
-	"github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -207,7 +206,7 @@ func waitPortfolioShareDeleted(ctx context.Context, conn *servicecatalog.Client,
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*types.PortfolioShareDetail); ok {
+	if output, ok := outputRaw.(*awstypes.PortfolioShareDetail); ok {
 		return output, err
 	}
 
@@ -233,8 +232,8 @@ func waitPortfolioShareDeletedWithToken(ctx context.Context, conn *servicecatalo
 
 func waitOrganizationsAccessStable(ctx context.Context, conn *servicecatalog.Client, timeout time.Duration) (string, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{string(types.AccessStatusUnderChange), statusNotFound, statusUnavailable},
-		Target:  []string{string(types.AccessStatusEnabled), string(types.AccessStatusDisabled)},
+		Pending: []string{string(awstypes.AccessStatusUnderChange), statusNotFound, statusUnavailable},
+		Target:  enum.Slice(awstypes.AccessStatusEnabled, awstypes.AccessStatusDisabled),
 		Refresh: statusOrganizationsAccess(ctx, conn),
 		Timeout: timeout,
 	}
@@ -250,8 +249,8 @@ func waitOrganizationsAccessStable(ctx context.Context, conn *servicecatalog.Cli
 
 func waitConstraintReady(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, id string, timeout time.Duration) (*servicecatalog.DescribeConstraintOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{statusNotFound, string(types.StatusCreating), statusUnavailable},
-		Target:                    []string{string(types.StatusAvailable)},
+		Pending:                   []string{statusNotFound, string(awstypes.StatusCreating), statusUnavailable},
+		Target:                    enum.Slice(awstypes.StatusAvailable),
 		Refresh:                   statusConstraint(ctx, conn, acceptLanguage, id),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: continuousTargetOccurrence,
@@ -270,7 +269,7 @@ func waitConstraintReady(ctx context.Context, conn *servicecatalog.Client, accep
 
 func waitConstraintDeleted(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, id string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{string(types.StatusAvailable), string(types.StatusCreating)},
+		Pending: enum.Slice(awstypes.StatusAvailable, awstypes.StatusCreating),
 		Target:  []string{statusNotFound},
 		Refresh: statusConstraint(ctx, conn, acceptLanguage, id),
 		Timeout: timeout,
@@ -281,10 +280,10 @@ func waitConstraintDeleted(ctx context.Context, conn *servicecatalog.Client, acc
 	return err
 }
 
-func waitProductPortfolioAssociationReady(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, portfolioID, productID string, timeout time.Duration) (*types.PortfolioDetail, error) {
+func waitProductPortfolioAssociationReady(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, portfolioID, productID string, timeout time.Duration) (*awstypes.PortfolioDetail, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{statusNotFound, statusUnavailable},
-		Target:                    []string{string(types.StatusAvailable)},
+		Target:                    enum.Slice(awstypes.StatusAvailable),
 		Refresh:                   statusProductPortfolioAssociation(ctx, conn, acceptLanguage, portfolioID, productID),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: continuousTargetOccurrence,
@@ -294,7 +293,7 @@ func waitProductPortfolioAssociationReady(ctx context.Context, conn *servicecata
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*types.PortfolioDetail); ok {
+	if output, ok := outputRaw.(*awstypes.PortfolioDetail); ok {
 		return output, err
 	}
 
@@ -303,7 +302,7 @@ func waitProductPortfolioAssociationReady(ctx context.Context, conn *servicecata
 
 func waitProductPortfolioAssociationDeleted(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, portfolioID, productID string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{string(types.StatusAvailable)},
+		Pending: enum.Slice(awstypes.StatusAvailable),
 		Target:  []string{statusNotFound, statusUnavailable},
 		Refresh: statusProductPortfolioAssociation(ctx, conn, acceptLanguage, portfolioID, productID),
 		Timeout: timeout,
@@ -314,17 +313,17 @@ func waitProductPortfolioAssociationDeleted(ctx context.Context, conn *serviceca
 	return err
 }
 
-func waitServiceActionReady(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, id string, timeout time.Duration) (*types.ServiceActionDetail, error) {
+func waitServiceActionReady(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, id string, timeout time.Duration) (*awstypes.ServiceActionDetail, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{statusNotFound, statusUnavailable},
-		Target:  []string{string(types.StatusAvailable)},
+		Target:  enum.Slice(awstypes.StatusAvailable),
 		Refresh: statusServiceAction(ctx, conn, acceptLanguage, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*types.ServiceActionDetail); ok {
+	if output, ok := outputRaw.(*awstypes.ServiceActionDetail); ok {
 		return output, err
 	}
 
@@ -333,7 +332,7 @@ func waitServiceActionReady(ctx context.Context, conn *servicecatalog.Client, ac
 
 func waitServiceActionDeleted(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, id string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{string(types.StatusAvailable)},
+		Pending: enum.Slice(awstypes.StatusAvailable),
 		Target:  []string{statusNotFound, statusUnavailable},
 		Refresh: statusServiceAction(ctx, conn, acceptLanguage, id),
 		Timeout: timeout,
@@ -341,24 +340,24 @@ func waitServiceActionDeleted(ctx context.Context, conn *servicecatalog.Client, 
 
 	_, err := stateConf.WaitForStateContext(ctx)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil
 	}
 
 	return err
 }
 
-func waitBudgetResourceAssociationReady(ctx context.Context, conn *servicecatalog.Client, budgetName, resourceID string, timeout time.Duration) (*types.BudgetDetail, error) {
+func waitBudgetResourceAssociationReady(ctx context.Context, conn *servicecatalog.Client, budgetName, resourceID string, timeout time.Duration) (*awstypes.BudgetDetail, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{statusNotFound, statusUnavailable},
-		Target:  []string{string(types.StatusAvailable)},
+		Target:  enum.Slice(awstypes.StatusAvailable),
 		Refresh: statusBudgetResourceAssociation(ctx, conn, budgetName, resourceID),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*types.BudgetDetail); ok {
+	if output, ok := outputRaw.(*awstypes.BudgetDetail); ok {
 		return output, err
 	}
 
@@ -367,7 +366,7 @@ func waitBudgetResourceAssociationReady(ctx context.Context, conn *servicecatalo
 
 func waitBudgetResourceAssociationDeleted(ctx context.Context, conn *servicecatalog.Client, budgetName, resourceID string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{string(types.StatusAvailable)},
+		Pending: enum.Slice(awstypes.StatusAvailable),
 		Target:  []string{statusNotFound, statusUnavailable},
 		Refresh: statusBudgetResourceAssociation(ctx, conn, budgetName, resourceID),
 		Timeout: timeout,
@@ -378,17 +377,17 @@ func waitBudgetResourceAssociationDeleted(ctx context.Context, conn *servicecata
 	return err
 }
 
-func waitTagOptionResourceAssociationReady(ctx context.Context, conn *servicecatalog.Client, tagOptionID, resourceID string, timeout time.Duration) (*types.ResourceDetail, error) {
+func waitTagOptionResourceAssociationReady(ctx context.Context, conn *servicecatalog.Client, tagOptionID, resourceID string, timeout time.Duration) (*awstypes.ResourceDetail, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{statusNotFound, statusUnavailable},
-		Target:  []string{string(types.StatusAvailable)},
+		Target:  enum.Slice(awstypes.StatusAvailable),
 		Refresh: statusTagOptionResourceAssociation(ctx, conn, tagOptionID, resourceID),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*types.ResourceDetail); ok {
+	if output, ok := outputRaw.(*awstypes.ResourceDetail); ok {
 		return output, err
 	}
 
@@ -397,7 +396,7 @@ func waitTagOptionResourceAssociationReady(ctx context.Context, conn *servicecat
 
 func waitTagOptionResourceAssociationDeleted(ctx context.Context, conn *servicecatalog.Client, tagOptionID, resourceID string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{string(types.StatusAvailable)},
+		Pending: enum.Slice(awstypes.StatusAvailable),
 		Target:  []string{statusNotFound, statusUnavailable},
 		Refresh: statusTagOptionResourceAssociation(ctx, conn, tagOptionID, resourceID),
 		Timeout: timeout,
@@ -410,8 +409,8 @@ func waitTagOptionResourceAssociationDeleted(ctx context.Context, conn *servicec
 
 func waitProvisioningArtifactReady(ctx context.Context, conn *servicecatalog.Client, id, productID string, timeout time.Duration) (*servicecatalog.DescribeProvisioningArtifactOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{string(types.StatusCreating), statusNotFound, statusUnavailable},
-		Target:                    []string{string(types.StatusAvailable), statusCreated},
+		Pending:                   []string{string(awstypes.StatusCreating), statusNotFound, statusUnavailable},
+		Target:                    []string{string(awstypes.StatusAvailable), statusCreated},
 		Refresh:                   statusProvisioningArtifact(ctx, conn, id, productID),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: continuousTargetOccurrence,
@@ -430,7 +429,7 @@ func waitProvisioningArtifactReady(ctx context.Context, conn *servicecatalog.Cli
 
 func waitProvisioningArtifactDeleted(ctx context.Context, conn *servicecatalog.Client, id, productID string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{string(types.StatusCreating), string(types.StatusAvailable), statusCreated, statusUnavailable},
+		Pending: []string{string(awstypes.StatusCreating), string(awstypes.StatusAvailable), statusCreated, statusUnavailable},
 		Target:  []string{statusNotFound},
 		Refresh: statusProvisioningArtifact(ctx, conn, id, productID),
 		Timeout: timeout,
@@ -438,17 +437,17 @@ func waitProvisioningArtifactDeleted(ctx context.Context, conn *servicecatalog.C
 
 	_, err := stateConf.WaitForStateContext(ctx)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil
 	}
 
 	return err
 }
 
-func waitLaunchPathsReady(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, productID string, timeout time.Duration) ([]*types.LaunchPathSummary, error) {
+func waitLaunchPathsReady(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, productID string, timeout time.Duration) ([]*awstypes.LaunchPathSummary, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{statusNotFound},
-		Target:                    []string{string(types.StatusAvailable)},
+		Target:                    enum.Slice(awstypes.StatusAvailable),
 		Refresh:                   statusLaunchPaths(ctx, conn, acceptLanguage, productID),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: continuousTargetOccurrence,
@@ -458,7 +457,7 @@ func waitLaunchPathsReady(ctx context.Context, conn *servicecatalog.Client, acce
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.([]*types.LaunchPathSummary); ok {
+	if output, ok := outputRaw.([]*awstypes.LaunchPathSummary); ok {
 		return output, err
 	}
 
@@ -467,8 +466,8 @@ func waitLaunchPathsReady(ctx context.Context, conn *servicecatalog.Client, acce
 
 func waitProvisionedProductReady(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, id, name string, timeout time.Duration) (*servicecatalog.DescribeProvisionedProductOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{string(types.ProvisionedProductStatusUnderChange), string(types.ProvisionedProductStatusPlanInProgress)},
-		Target:                    []string{string(types.ProvisionedProductStatusAvailable)},
+		Pending:                   enum.Slice(awstypes.ProvisionedProductStatusUnderChange, awstypes.ProvisionedProductStatusPlanInProgress),
+		Target:                    enum.Slice(awstypes.ProvisionedProductStatusAvailable),
 		Refresh:                   statusProvisionedProduct(ctx, conn, acceptLanguage, id, name),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: continuousTargetOccurrence,
@@ -485,7 +484,7 @@ func waitProvisionedProductReady(ctx context.Context, conn *servicecatalog.Clien
 				// The statuses `ERROR` and `TAINTED` are equivalent: the application of the requested change has failed.
 				// The difference is that, in the case of `TAINTED`, there is a previous version to roll back to.
 				status := string(detail.Status)
-				if status == string(types.ProvisionedProductStatusError) || status == string(types.ProvisionedProductStatusTainted) {
+				if status == string(awstypes.ProvisionedProductStatusError) || status == string(awstypes.ProvisionedProductStatusTainted) {
 					return output, errors.New(aws.ToString(detail.StatusMessage))
 				}
 			}
@@ -498,7 +497,7 @@ func waitProvisionedProductReady(ctx context.Context, conn *servicecatalog.Clien
 
 func waitProvisionedProductTerminated(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, id, name string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{string(types.ProvisionedProductStatusAvailable), string(types.ProvisionedProductStatusUnderChange)},
+		Pending: enum.Slice(awstypes.ProvisionedProductStatusAvailable, awstypes.ProvisionedProductStatusUnderChange),
 		Target:  []string{},
 		Refresh: statusProvisionedProduct(ctx, conn, acceptLanguage, id, name),
 		Timeout: timeout,
@@ -509,17 +508,17 @@ func waitProvisionedProductTerminated(ctx context.Context, conn *servicecatalog.
 	return err
 }
 
-func waitPortfolioConstraintsReady(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, portfolioID, productID string, timeout time.Duration) ([]*types.ConstraintDetail, error) {
+func waitPortfolioConstraintsReady(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, portfolioID, productID string, timeout time.Duration) ([]*awstypes.ConstraintDetail, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{statusNotFound},
-		Target:  []string{string(types.StatusAvailable)},
+		Target:  enum.Slice(awstypes.StatusAvailable),
 		Refresh: statusPortfolioConstraints(ctx, conn, acceptLanguage, portfolioID, productID),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.([]*types.ConstraintDetail); ok {
+	if output, ok := outputRaw.([]*awstypes.ConstraintDetail); ok {
 		return output, err
 	}
 

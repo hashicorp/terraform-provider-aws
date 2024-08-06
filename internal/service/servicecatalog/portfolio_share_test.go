@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -46,7 +46,7 @@ func testAccPortfolioShare_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "portfolio_id", compareName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "share_principals", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "share_tag_options", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.DescribePortfolioShareTypeAccount)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.DescribePortfolioShareTypeAccount)),
 				),
 			},
 			{
@@ -67,7 +67,7 @@ func testAccPortfolioShare_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "portfolio_id", compareName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "share_principals", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "share_tag_options", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.DescribePortfolioShareTypeAccount)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.DescribePortfolioShareTypeAccount)),
 				),
 			},
 		},
@@ -142,7 +142,7 @@ func testAccPortfolioShare_organizationalUnit(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "principal_id", "aws_organizations_organizational_unit.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "portfolio_id", compareName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "share_tag_options", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.DescribePortfolioShareTypeOrganizationalUnit)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.DescribePortfolioShareTypeOrganizationalUnit)),
 				),
 			},
 			{

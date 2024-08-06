@@ -11,7 +11,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
-	"github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -57,12 +57,12 @@ func TestAccServiceCatalogProduct_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.0.disable_template_validation", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.0.name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "provisioning_artifact_parameters.0.template_url"),
-					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.0.type", string(types.ProvisioningArtifactTypeCloudFormationTemplate)),
+					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.0.type", string(awstypes.ProvisioningArtifactTypeCloudFormationTemplate)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, tfservicecatalog.StatusCreated),
 					resource.TestCheckResourceAttr(resourceName, "support_description", "supportbeskrivning"),
 					resource.TestCheckResourceAttr(resourceName, "support_email", acctest.DefaultEmailAddress),
 					resource.TestCheckResourceAttr(resourceName, "support_url", domain),
-					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.ProductTypeCloudFormationTemplate)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.ProductTypeCloudFormationTemplate)),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -173,7 +173,7 @@ func TestAccServiceCatalogProduct_physicalID(t *testing.T) {
 						"cloudformation",
 						regexache.MustCompile(fmt.Sprintf(`stack/%s/.*`, rName)),
 					),
-					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.0.type", string(types.ProvisioningArtifactTypeCloudFormationTemplate)),
+					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.0.type", string(awstypes.ProvisioningArtifactTypeCloudFormationTemplate)),
 				),
 			},
 			{
@@ -204,7 +204,7 @@ func testAccCheckProductDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			output, err := conn.DescribeProductAsAdmin(ctx, input)
 
-			if errs.IsA[*types.ResourceNotFoundException](err) {
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 				continue
 			}
 

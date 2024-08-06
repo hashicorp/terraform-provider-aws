@@ -10,7 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
-	"github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -44,12 +44,12 @@ func TestAccServiceCatalogProvisioningArtifact_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "active", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
 					resource.TestCheckResourceAttr(resourceName, "disable_template_validation", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "guidance", string(types.ProvisioningArtifactGuidanceDefault)),
+					resource.TestCheckResourceAttr(resourceName, "guidance", string(awstypes.ProvisioningArtifactGuidanceDefault)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("%s-2", rName)),
 					resource.TestCheckResourceAttrPair(resourceName, "product_id", "aws_servicecatalog_product.test", names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "provisioning_artifact_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "template_url"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.ProductTypeCloudFormationTemplate)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.ProductTypeCloudFormationTemplate)),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
 				),
 			},
@@ -112,7 +112,7 @@ func TestAccServiceCatalogProvisioningArtifact_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
 					resource.TestCheckResourceAttr(resourceName, "active", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
-					resource.TestCheckResourceAttr(resourceName, "guidance", string(types.ProvisioningArtifactGuidanceDefault)),
+					resource.TestCheckResourceAttr(resourceName, "guidance", string(awstypes.ProvisioningArtifactGuidanceDefault)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("%s-2", rName)),
 				),
 			},
@@ -122,7 +122,7 @@ func TestAccServiceCatalogProvisioningArtifact_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "accept_language", "jp"),
 					resource.TestCheckResourceAttr(resourceName, "active", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, fmt.Sprintf("%s-3", rName)),
-					resource.TestCheckResourceAttr(resourceName, "guidance", string(types.ProvisioningArtifactGuidanceDeprecated)),
+					resource.TestCheckResourceAttr(resourceName, "guidance", string(awstypes.ProvisioningArtifactGuidanceDeprecated)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("%s-3", rName)),
 				),
 			},
@@ -161,11 +161,11 @@ func TestAccServiceCatalogProvisioningArtifact_physicalID(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "active", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
 					resource.TestCheckResourceAttr(resourceName, "disable_template_validation", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "guidance", string(types.ProvisioningArtifactGuidanceDefault)),
+					resource.TestCheckResourceAttr(resourceName, "guidance", string(awstypes.ProvisioningArtifactGuidanceDefault)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("%s-2", rName)),
 					resource.TestCheckResourceAttrPair(resourceName, "product_id", "aws_servicecatalog_product.test", names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "template_physical_id"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.ProductTypeCloudFormationTemplate)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.ProductTypeCloudFormationTemplate)),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
 				),
 			},
@@ -205,7 +205,7 @@ func testAccCheckProvisioningArtifactDestroy(ctx context.Context) resource.TestC
 
 			output, err := conn.DescribeProvisioningArtifact(ctx, input)
 
-			if errs.IsA[*types.ResourceNotFoundException](err) {
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 				continue
 			}
 

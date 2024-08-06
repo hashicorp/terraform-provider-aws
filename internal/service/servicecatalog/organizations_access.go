@@ -8,7 +8,7 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
-	"github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -87,7 +87,7 @@ func resourceOrganizationsAccessRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "getting Service Catalog AWS Organizations Access (%s): empty response", d.Id())
 	}
 
-	if output == string(types.AccessStatusEnabled) {
+	if output == string(awstypes.AccessStatusEnabled) {
 		d.Set(names.AttrEnabled, true)
 		return diags
 	}
