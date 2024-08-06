@@ -10,13 +10,13 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
-	"github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
 func RegisterSweepers() {
@@ -95,99 +95,80 @@ func sweepBudgetResourceAssociations(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
-	input := &servicecatalog.ListPortfoliosInput{}
+	pages := servicecatalog.NewListPortfoliosPaginator(conn, &servicecatalog.ListPortfoliosInput{})
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-	err = conn.ListPortfoliosPages(ctx, input, func(page *servicecatalog.ListPortfoliosOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+		if err != nil {
+			errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Portfolio for %s: %w", region, err))
 		}
 
 		for _, port := range page.PortfolioDetails {
-			if port == nil {
-				continue
-			}
-
-			resInput := &servicecatalog.ListBudgetsForResourceInput{
+			input := &servicecatalog.ListBudgetsForResourceInput{
 				ResourceId: port.Id,
 			}
 
-			err = conn.ListBudgetsForResourcePages(ctx, resInput, func(page *servicecatalog.ListBudgetsForResourceOutput, lastPage bool) bool {
-				if page == nil {
-					return !lastPage
+			pages := servicecatalog.NewListBudgetsForResourcePaginator(conn, input)
+			for pages.HasMorePages() {
+				page, err := pages.NextPage(ctx)
+
+				if err != nil {
+					errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Portfolio Budget for %s: %w", region, err))
 				}
 
 				for _, budget := range page.Budgets {
-					if budget == nil {
-						continue
-					}
-
-					r := ResourceBudgetResourceAssociation()
+					r := resourceBudgetResourceAssociation()
 					d := r.Data(nil)
 					d.SetId(budgetResourceAssociationID(aws.ToString(budget.BudgetName), aws.ToString(port.Id)))
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
 
-				return !lastPage
-			})
+			}
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Budget Resource (Portfolio) Associations for %s: %w", region, err))
 	}
 
-	prodInput := &servicecatalog.SearchProductsAsAdminInput{}
+	pagesProducts := servicecatalog.NewSearchProductsAsAdminPaginator(conn, &servicecatalog.SearchProductsAsAdminInput{})
+	for pagesProducts.HasMorePages() {
+		page, err := pagesProducts.NextPage(ctx)
 
-	err = conn.SearchProductsAsAdminPages(ctx, prodInput, func(page *servicecatalog.SearchProductsAsAdminOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+		if err != nil {
+			errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Products for %s: %w", region, err))
 		}
 
 		for _, pvd := range page.ProductViewDetails {
-			if pvd == nil || pvd.ProductViewSummary == nil {
+			if pvd.ProductViewSummary == nil {
 				continue
 			}
 
-			resInput := &servicecatalog.ListBudgetsForResourceInput{
+			input := &servicecatalog.ListBudgetsForResourceInput{
 				ResourceId: pvd.ProductViewSummary.ProductId,
 			}
 
-			err = conn.ListBudgetsForResourcePages(ctx, resInput, func(page *servicecatalog.ListBudgetsForResourceOutput, lastPage bool) bool {
-				if page == nil {
-					return !lastPage
+			pages := servicecatalog.NewListBudgetsForResourcePaginator(conn, input)
+			for pages.HasMorePages() {
+				page, err := pages.NextPage(ctx)
+
+				if err != nil {
+					errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Budget Resource (Product) Associations for %s: %w", region, err))
 				}
 
 				for _, budget := range page.Budgets {
-					if budget == nil {
-						continue
-					}
-
-					r := ResourceBudgetResourceAssociation()
+					r := resourceBudgetResourceAssociation()
 					d := r.Data(nil)
 					d.SetId(budgetResourceAssociationID(aws.ToString(budget.BudgetName), aws.ToString(pvd.ProductViewSummary.ProductId)))
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
-
-				return !lastPage
-			})
+			}
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Budget Resource (Product) Associations for %s: %w", region, err))
 	}
 
 	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Service Catalog Budget Resource Associations for %s: %w", region, err))
 	}
 
-	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv2.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Service Catalog Budget Resource Associations sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -208,56 +189,43 @@ func sweepConstraints(region string) error {
 	var errs *multierror.Error
 
 	// no paginator or list operation for constraints directly, have to list portfolios and constraints of portfolios
+	pages := servicecatalog.NewListPortfoliosPaginator(conn, &servicecatalog.ListPortfoliosInput{})
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-	input := &servicecatalog.ListPortfoliosInput{}
-
-	err = conn.ListPortfoliosPages(ctx, input, func(page *servicecatalog.ListPortfoliosOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+		if err != nil {
+			errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Portfolios for %s: %w", region, err))
 		}
 
 		for _, detail := range page.PortfolioDetails {
-			if detail == nil {
-				continue
-			}
-
-			constraintInput := &servicecatalog.ListConstraintsForPortfolioInput{
+			input := &servicecatalog.ListConstraintsForPortfolioInput{
 				PortfolioId: detail.Id,
 			}
 
-			err = conn.ListConstraintsForPortfolioPages(ctx, constraintInput, func(page *servicecatalog.ListConstraintsForPortfolioOutput, lastPage bool) bool {
-				if page == nil {
-					return !lastPage
+			pages := servicecatalog.NewListConstraintsForPortfolioPaginator(conn, input)
+			for pages.HasMorePages() {
+				page, err := pages.NextPage(ctx)
+
+				if err != nil {
+					errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Constraints for %s: %w", region, err))
 				}
 
 				for _, detail := range page.ConstraintDetails {
-					if detail == nil {
-						continue
-					}
-
-					r := ResourceConstraint()
+					r := resourceConstraint()
 					d := r.Data(nil)
 					d.SetId(aws.ToString(detail.ConstraintId))
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
-
-				return !lastPage
-			})
+			}
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Constraints for %s: %w", region, err))
 	}
 
 	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Service Catalog Constraints for %s: %w", region, err))
 	}
 
-	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv2.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Service Catalog Constraints sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -277,60 +245,44 @@ func sweepPrincipalPortfolioAssociations(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
-	input := &servicecatalog.ListPortfoliosInput{}
+	pages := servicecatalog.NewListPortfoliosPaginator(conn, &servicecatalog.ListPortfoliosInput{})
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-	err = conn.ListPortfoliosPages(ctx, input, func(page *servicecatalog.ListPortfoliosOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+		if err != nil {
+			errs = multierror.Append(errs, fmt.Errorf("error listing Service Catalog Principal Portfolios for %s: %w", region, err))
 		}
 
 		for _, detail := range page.PortfolioDetails {
-			if detail == nil {
-				continue
-			}
-
-			pInput := &servicecatalog.ListPrincipalsForPortfolioInput{
+			input := &servicecatalog.ListPrincipalsForPortfolioInput{
 				PortfolioId: detail.Id,
 			}
 
-			err = conn.ListPrincipalsForPortfolioPages(ctx, pInput, func(page *servicecatalog.ListPrincipalsForPortfolioOutput, lastPage bool) bool {
-				if page == nil {
-					return !lastPage
+			pages := servicecatalog.NewListPrincipalsForPortfolioPaginator(conn, input)
+			for pages.HasMorePages() {
+				page, err := pages.NextPage(ctx)
+
+				if err != nil {
+					errs = multierror.Append(errs, fmt.Errorf("error listing Service Catalog Portfolios for Principals %s: %w", region, err))
+					continue
 				}
 
 				for _, principal := range page.Principals {
-					if principal == nil {
-						continue
-					}
-
-					r := ResourcePrincipalPortfolioAssociation()
+					r := resourcePrincipalPortfolioAssociation()
 					d := r.Data(nil)
-					d.SetId(PrincipalPortfolioAssociationCreateResourceID(AcceptLanguageEnglish, aws.ToString(principal.PrincipalARN), aws.ToString(detail.Id), aws.ToString(principal.PrincipalType)))
+					d.SetId(PrincipalPortfolioAssociationCreateResourceID(acceptLanguageEnglish, aws.ToString(principal.PrincipalARN), aws.ToString(detail.Id), string(principal.PrincipalType)))
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
-
-				return !lastPage
-			})
-
-			if err != nil {
-				errs = multierror.Append(errs, fmt.Errorf("error listing Service Catalog Portfolios for Principals %s: %w", region, err))
-				continue
 			}
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Principal Portfolio Associations for %s: %w", region, err))
 	}
 
 	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Service Catalog Principal Portfolio Associations for %s: %w", region, err))
 	}
 
-	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv2.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Service Catalog Principal Portfolio Associations sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -351,19 +303,15 @@ func sweepProductPortfolioAssociations(region string) error {
 	var errs *multierror.Error
 
 	// no paginator or list operation for associations directly, have to list products and associations of products
+	pages := servicecatalog.NewSearchProductsAsAdminPaginator(conn, &servicecatalog.SearchProductsAsAdminInput{})
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-	input := &servicecatalog.SearchProductsAsAdminInput{}
-
-	err = conn.SearchProductsAsAdminPages(ctx, input, func(page *servicecatalog.SearchProductsAsAdminOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+		if err != nil {
+			errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Products for %s: %w", region, err))
 		}
 
 		for _, detail := range page.ProductViewDetails {
-			if detail == nil {
-				continue
-			}
-
 			productARN, err := arn.Parse(aws.ToString(detail.ProductARN))
 
 			if err != nil {
@@ -372,7 +320,6 @@ func sweepProductPortfolioAssociations(region string) error {
 			}
 
 			// arn:aws:catalog:us-west-2:187416307283:product/prod-t5thhvquxw2x2
-
 			resourceParts := strings.SplitN(productARN.Resource, "/", 2)
 
 			if len(resourceParts) != 2 {
@@ -382,48 +329,35 @@ func sweepProductPortfolioAssociations(region string) error {
 
 			productID := resourceParts[1]
 
-			assocInput := &servicecatalog.ListPortfoliosForProductInput{
+			input := &servicecatalog.ListPortfoliosForProductInput{
 				ProductId: aws.String(productID),
 			}
 
-			err = conn.ListPortfoliosForProductPages(ctx, assocInput, func(page *servicecatalog.ListPortfoliosForProductOutput, lastPage bool) bool {
-				if page == nil {
-					return !lastPage
+			pages := servicecatalog.NewListPortfoliosForProductPaginator(conn, input)
+			for pages.HasMorePages() {
+				page, err := pages.NextPage(ctx)
+
+				if err != nil {
+					errs = multierror.Append(errs, fmt.Errorf("error listing Service Catalog Portfolios for Products %s: %w", region, err))
+					continue
 				}
 
 				for _, detail := range page.PortfolioDetails {
-					if detail == nil {
-						continue
-					}
-
-					r := ResourceProductPortfolioAssociation()
+					r := resourceProductPortfolioAssociation()
 					d := r.Data(nil)
-					d.SetId(productPortfolioAssociationCreateID(AcceptLanguageEnglish, aws.ToString(detail.Id), productID))
+					d.SetId(productPortfolioAssociationCreateID(acceptLanguageEnglish, aws.ToString(detail.Id), productID))
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
-
-				return !lastPage
-			})
-
-			if err != nil {
-				errs = multierror.Append(errs, fmt.Errorf("error listing Service Catalog Portfolios for Products %s: %w", region, err))
-				continue
 			}
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Product Portfolio Associations for %s: %w", region, err))
 	}
 
 	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Service Catalog Product Portfolio Associations for %s: %w", region, err))
 	}
 
-	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv2.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Service Catalog Product Portfolio Associations sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -443,39 +377,34 @@ func sweepProducts(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
-	input := &servicecatalog.SearchProductsAsAdminInput{}
+	pages := servicecatalog.NewSearchProductsAsAdminPaginator(conn, &servicecatalog.SearchProductsAsAdminInput{})
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-	err = conn.SearchProductsAsAdminPages(ctx, input, func(page *servicecatalog.SearchProductsAsAdminOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+		if err != nil {
+			errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Products for %s: %w", region, err))
 		}
 
 		for _, pvd := range page.ProductViewDetails {
-			if pvd == nil || pvd.ProductViewSummary == nil {
+			if pvd.ProductViewSummary == nil {
 				continue
 			}
 
 			id := aws.ToString(pvd.ProductViewSummary.ProductId)
 
-			r := ResourceProduct()
+			r := resourceProduct()
 			d := r.Data(nil)
 			d.SetId(id)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Products for %s: %w", region, err))
 	}
 
 	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Service Catalog Products for %s: %w", region, err))
 	}
 
-	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv2.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Service Catalog Products sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -496,42 +425,35 @@ func sweepProvisionedProducts(region string) error {
 	var errs *multierror.Error
 
 	input := &servicecatalog.SearchProvisionedProductsInput{
-		AccessLevelFilter: &types.AccessLevelFilter{
-			Key:   types.AccessLevelFilterKeyAccount,
+		AccessLevelFilter: &awstypes.AccessLevelFilter{
+			Key:   awstypes.AccessLevelFilterKeyAccount,
 			Value: aws.String("self"), // only supported value
 		},
 	}
 
-	err = conn.SearchProvisionedProductsPages(ctx, input, func(page *servicecatalog.SearchProvisionedProductsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := servicecatalog.NewSearchProvisionedProductsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Provisioned Products for %s: %w", region, err))
 		}
 
 		for _, detail := range page.ProvisionedProducts {
-			if detail == nil {
-				continue
-			}
-
-			r := ResourceProvisionedProduct()
+			r := resourceProvisionedProduct()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(detail.Id))
 			d.Set("ignore_errors", true)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Provisioned Products for %s: %w", region, err))
 	}
 
 	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Service Catalog Provisioned Products for %s: %w", region, err))
 	}
 
-	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv2.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Service Catalog Provisioned Products sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -551,66 +473,47 @@ func sweepProvisioningArtifacts(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
-	input := &servicecatalog.SearchProductsAsAdminInput{}
+	pages := servicecatalog.NewSearchProductsAsAdminPaginator(conn, &servicecatalog.SearchProductsAsAdminInput{})
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-	err = conn.SearchProductsAsAdminPages(ctx, input, func(page *servicecatalog.SearchProductsAsAdminOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+		if err != nil {
+			errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Products for %s: %w", region, err))
 		}
 
 		for _, pvd := range page.ProductViewDetails {
-			if pvd == nil || pvd.ProductViewSummary == nil || pvd.ProductViewSummary.ProductId == nil {
+			if pvd.ProductViewSummary == nil || pvd.ProductViewSummary.ProductId == nil {
 				continue
 			}
 
 			productID := aws.ToString(pvd.ProductViewSummary.ProductId)
-
-			artInput := &servicecatalog.ListProvisioningArtifactsInput{
+			input := &servicecatalog.ListProvisioningArtifactsInput{
 				ProductId: aws.String(productID),
 			}
 
 			// there's no paginator for ListProvisioningArtifacts
-			for {
-				output, err := conn.ListProvisioningArtifacts(ctx, artInput)
-
-				if err != nil {
-					errs = multierror.Append(errs, fmt.Errorf("error listing Service Catalog Provisioning Artifacts for product (%s): %w", productID, err))
-					break
-				}
-
-				for _, pad := range output.ProvisioningArtifactDetails {
-					r := ResourceProvisioningArtifact()
-					d := r.Data(nil)
-
-					d.SetId(provisioningArtifactID(aws.ToString(pad.Id), productID))
-
-					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-				}
-
-				/*
-					// Currently, the API has no token field on input (AWS oops)
-					if aws.ToString(output.NextPageToken) == "" {
-						break
-					}
-
-					artInput.NextPageToken = output.NextPageToken
-				*/
+			output, err := conn.ListProvisioningArtifacts(ctx, input)
+			if err != nil {
+				errs = multierror.Append(errs, fmt.Errorf("error listing Service Catalog Provisioning Artifacts for product (%s): %w", productID, err))
 				break
 			}
+
+			for _, pad := range output.ProvisioningArtifactDetails {
+				r := resourceProvisioningArtifact()
+				d := r.Data(nil)
+
+				d.SetId(provisioningArtifactID(aws.ToString(pad.Id), productID))
+
+				sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+			}
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Provisioning Artifacts for %s: %w", region, err))
 	}
 
 	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Service Catalog Provisioning Artifacts for %s: %w", region, err))
 	}
 
-	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv2.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Service Catalog Provisioning Artifacts sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -630,39 +533,30 @@ func sweepServiceActions(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
-	input := &servicecatalog.ListServiceActionsInput{}
+	pages := servicecatalog.NewListServiceActionsPaginator(conn, &servicecatalog.ListServiceActionsInput{})
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-	err = conn.ListServiceActionsPages(ctx, input, func(page *servicecatalog.ListServiceActionsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+		if err != nil {
+			errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Service Actions for %s: %w", region, err))
 		}
 
 		for _, sas := range page.ServiceActionSummaries {
-			if sas == nil {
-				continue
-			}
-
 			id := aws.ToString(sas.Id)
 
-			r := ResourceServiceAction()
+			r := resourceServiceAction()
 			d := r.Data(nil)
 			d.SetId(id)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Service Actions for %s: %w", region, err))
 	}
 
 	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Service Catalog Service Actions for %s: %w", region, err))
 	}
 
-	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv2.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Service Catalog Service Actions sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -680,66 +574,60 @@ func sweepTagOptionResourceAssociations(region string) error {
 
 	conn := client.ServiceCatalogClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
+	var sweeperErrs *multierror.Error
 
-	input := &servicecatalog.ListTagOptionsInput{}
+	pages := servicecatalog.NewListTagOptionsPaginator(conn, &servicecatalog.ListTagOptionsInput{})
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-	err = conn.ListTagOptionsPages(ctx, input, func(page *servicecatalog.ListTagOptionsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+		if errs.IsA[*awstypes.TagOptionNotMigratedException](err) {
+			log.Printf("[WARN] Skipping Service Catalog Tag Option Resource Associations sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error describing Service Catalog Tag Options for %s: %w", region, err))
 		}
 
 		for _, tag := range page.TagOptionDetails {
-			if tag == nil {
-				continue
-			}
-
-			resInput := &servicecatalog.ListResourcesForTagOptionInput{
+			input := &servicecatalog.ListResourcesForTagOptionInput{
 				TagOptionId: tag.Id,
 			}
 
-			err = conn.ListResourcesForTagOptionPages(ctx, resInput, func(page *servicecatalog.ListResourcesForTagOptionOutput, lastPage bool) bool {
-				if page == nil {
-					return !lastPage
+			pages := servicecatalog.NewListResourcesForTagOptionPaginator(conn, input)
+			for pages.HasMorePages() {
+				page, err := pages.NextPage(ctx)
+
+				if errs.IsA[*awstypes.TagOptionNotMigratedException](err) {
+					log.Printf("[WARN] Skipping Service Catalog Tag Option Resource Associations sweep for %s: %s", region, err)
+					return nil
+				}
+
+				if err != nil {
+					sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error describing Service Catalog Tag Option Resource Associations for %s: %w", region, err))
 				}
 
 				for _, resource := range page.ResourceDetails {
-					if resource == nil {
-						continue
-					}
-
-					r := ResourceTagOptionResourceAssociation()
+					r := resourceTagOptionResourceAssociation()
 					d := r.Data(nil)
 					d.SetId(aws.ToString(resource.Id))
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
-
-				return !lastPage
-			})
+			}
 		}
-
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeTagOptionNotMigratedException) {
-		log.Printf("[WARN] Skipping Service Catalog Tag Option Resource Associations sweep for %s: %s", region, err)
-		return nil
-	}
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Tag Option Resource Associations for %s: %w", region, err))
 	}
 
 	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping Service Catalog Tag Option Resource Associations for %s: %w", region, err))
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Service Catalog Tag Option Resource Associations for %s: %w", region, err))
 	}
 
-	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping Service Catalog Tag Option Resource Associations sweep for %s: %s", region, errs)
+	if awsv2.SkipSweepError(sweeperErrs.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping Service Catalog Tag Option Resource Associations sweep for %s: %s", region, sweeperErrs)
 		return nil
 	}
 
-	return errs.ErrorOrNil()
+	return sweeperErrs.ErrorOrNil()
 }
 
 func sweepTagOptions(region string) error {
@@ -752,48 +640,39 @@ func sweepTagOptions(region string) error {
 
 	conn := client.ServiceCatalogClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
+	var sweeperErrs *multierror.Error
 
-	input := &servicecatalog.ListTagOptionsInput{}
+	pages := servicecatalog.NewListTagOptionsPaginator(conn, &servicecatalog.ListTagOptionsInput{})
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-	err = conn.ListTagOptionsPages(ctx, input, func(page *servicecatalog.ListTagOptionsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+		if errs.IsA[*awstypes.TagOptionNotMigratedException](err) {
+			log.Printf("[WARN] Skipping Service Catalog Tag Options sweep for %s: %s", region, err)
+			return nil
+		}
+		if err != nil {
+			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error describing Service Catalog Tag Options for %s: %w", region, err))
 		}
 
 		for _, tod := range page.TagOptionDetails {
-			if tod == nil {
-				continue
-			}
-
 			id := aws.ToString(tod.Id)
 
-			r := ResourceTagOption()
+			r := resourceTagOption()
 			d := r.Data(nil)
 			d.SetId(id)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeTagOptionNotMigratedException) {
-		log.Printf("[WARN] Skipping Service Catalog Tag Options sweep for %s: %s", region, err)
-		return nil
-	}
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Tag Options for %s: %w", region, err))
 	}
 
 	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping Service Catalog Tag Options for %s: %w", region, err))
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Service Catalog Tag Options for %s: %w", region, err))
 	}
 
-	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping Service Catalog Tag Options sweep for %s: %s", region, errs)
+	if awsv2.SkipSweepError(sweeperErrs.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping Service Catalog Tag Options sweep for %s: %s", region, sweeperErrs)
 		return nil
 	}
 
-	return errs.ErrorOrNil()
+	return sweeperErrs.ErrorOrNil()
 }
