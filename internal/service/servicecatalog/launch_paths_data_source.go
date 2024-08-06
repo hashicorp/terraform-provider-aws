@@ -7,7 +7,7 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_servicecatalog_launch_paths")
+// @SDKDataSource("aws_servicecatalog_launch_paths", name="Launch Paths")
 func DataSourceLaunchPaths() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLaunchPathsRead,
@@ -94,7 +94,7 @@ func dataSourceLaunchPathsRead(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func flattenLaunchPathSummary(ctx context.Context, apiObject *types.LaunchPathSummary, ignoreTagsConfig *tftags.IgnoreConfig) map[string]interface{} {
+func flattenLaunchPathSummary(ctx context.Context, apiObject *awstypes.LaunchPathSummary, ignoreTagsConfig *tftags.IgnoreConfig) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -120,7 +120,7 @@ func flattenLaunchPathSummary(ctx context.Context, apiObject *types.LaunchPathSu
 	return tfMap
 }
 
-func flattenLaunchPathSummaries(ctx context.Context, apiObjects []*types.LaunchPathSummary, ignoreTagsConfig *tftags.IgnoreConfig) []interface{} {
+func flattenLaunchPathSummaries(ctx context.Context, apiObjects []*awstypes.LaunchPathSummary, ignoreTagsConfig *tftags.IgnoreConfig) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -138,11 +138,7 @@ func flattenLaunchPathSummaries(ctx context.Context, apiObjects []*types.LaunchP
 	return tfList
 }
 
-func flattenConstraintSummary(apiObject *types.ConstraintSummary) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
+func flattenConstraintSummary(apiObject awstypes.ConstraintSummary) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if apiObject.Description != nil {
@@ -156,7 +152,7 @@ func flattenConstraintSummary(apiObject *types.ConstraintSummary) map[string]int
 	return tfMap
 }
 
-func flattenConstraintSummaries(apiObjects []*types.ConstraintSummary) []interface{} {
+func flattenConstraintSummaries(apiObjects []awstypes.ConstraintSummary) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -164,10 +160,6 @@ func flattenConstraintSummaries(apiObjects []*types.ConstraintSummary) []interfa
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
 		tfList = append(tfList, flattenConstraintSummary(apiObject))
 	}
 
