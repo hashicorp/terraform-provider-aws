@@ -15,9 +15,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name=Cluster Parameter Group)
-func newDataSourceClusterParameterGroup(_ context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceClusterParameterGroup{}, nil
+// @FrameworkDataSource("aws_rds_cluster_parameter_group",name=Cluster Parameter Group)
+func newClusterParameterGroupDataSource(_ context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &clusterParameterGroupDataSource{}, nil
 }
 
 const (
@@ -26,15 +26,15 @@ const (
 	dbClusterParameterGroupPrefix = "DBClusterParameterGroup"
 )
 
-type dataSourceClusterParameterGroup struct {
+type clusterParameterGroupDataSource struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourceClusterParameterGroup) Metadata(_ context.Context, _ datasource.MetadataRequest, response *datasource.MetadataResponse) {
+func (d *clusterParameterGroupDataSource) Metadata(_ context.Context, _ datasource.MetadataRequest, response *datasource.MetadataResponse) {
 	response.TypeName = "aws_rds_cluster_parameter_group"
 }
 
-func (d *dataSourceClusterParameterGroup) Schema(_ context.Context, _ datasource.SchemaRequest, response *datasource.SchemaResponse) {
+func (d *clusterParameterGroupDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -51,7 +51,7 @@ func (d *dataSourceClusterParameterGroup) Schema(_ context.Context, _ datasource
 	}
 }
 
-func (d *dataSourceClusterParameterGroup) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+func (d *clusterParameterGroupDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
 	conn := d.Meta().RDSClient(ctx)
 	var data dataSourceClusterParameterGroupData
 

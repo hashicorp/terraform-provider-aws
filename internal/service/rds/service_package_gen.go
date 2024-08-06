@@ -21,7 +21,7 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourceClusterParameterGroup,
+			Factory: newClusterParameterGroupDataSource,
 			Name:    "Cluster Parameter Group",
 		},
 	}
