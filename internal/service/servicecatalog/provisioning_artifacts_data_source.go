@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
-	"github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -101,7 +101,7 @@ func dataSourceProvisioningArtifactsRead(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func flattenProvisioningArtifactDetails(apiObjects []*types.ProvisioningArtifactDetail) []interface{} {
+func flattenProvisioningArtifactDetails(apiObjects []awstypes.ProvisioningArtifactDetail) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -109,20 +109,13 @@ func flattenProvisioningArtifactDetails(apiObjects []*types.ProvisioningArtifact
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
 		tfList = append(tfList, flattenProvisioningArtifactDetail(apiObject))
 	}
 
 	return tfList
 }
 
-func flattenProvisioningArtifactDetail(apiObject *types.ProvisioningArtifactDetail) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
+func flattenProvisioningArtifactDetail(apiObject awstypes.ProvisioningArtifactDetail) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if apiObject.Active != nil {
