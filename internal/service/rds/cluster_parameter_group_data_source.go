@@ -16,7 +16,7 @@ import (
 )
 
 // @FrameworkDataSource(name=Cluster Parameter Group)
-func newDataSourceClusterParameterGroup(context.Context) (datasource.DataSourceWithConfigure, error) {
+func newDataSourceClusterParameterGroup(_ context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceClusterParameterGroup{}, nil
 }
 
@@ -30,16 +30,14 @@ type dataSourceClusterParameterGroup struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourceClusterParameterGroup) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
+func (d *dataSourceClusterParameterGroup) Metadata(_ context.Context, _ datasource.MetadataRequest, response *datasource.MetadataResponse) {
 	response.TypeName = "aws_rds_cluster_parameter_group"
 }
 
-func (d *dataSourceClusterParameterGroup) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+func (d *dataSourceClusterParameterGroup) Schema(_ context.Context, _ datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: schema.StringAttribute{
-				Computed: true,
-			},
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrDescription: schema.StringAttribute{
 				Computed: true,
 			},
