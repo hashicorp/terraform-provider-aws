@@ -308,8 +308,6 @@ func TestExpandIgnoreTags(t *testing.T) { //nolint:paralleltest
 			expectedIgnoreConfig: nil,
 		},
 		{
-			keys:        nil,
-			keyPrefixes: nil,
 			envvars: map[string]string{
 				tftags.IgnoreTagsKeysEnvVar:        "env1",
 				tftags.IgnoreTagsKeyPrefixesEnvVar: "env2",
@@ -320,8 +318,6 @@ func TestExpandIgnoreTags(t *testing.T) { //nolint:paralleltest
 			},
 		},
 		{
-			keys:        nil,
-			keyPrefixes: nil,
 			envvars: map[string]string{
 				tftags.IgnoreTagsKeysEnvVar:        "env1,env2",
 				tftags.IgnoreTagsKeyPrefixesEnvVar: "env3,env4",
@@ -329,6 +325,22 @@ func TestExpandIgnoreTags(t *testing.T) { //nolint:paralleltest
 			expectedIgnoreConfig: &tftags.IgnoreConfig{
 				Keys:        tftags.New(ctx, []interface{}{"env1", "env2"}),
 				KeyPrefixes: tftags.New(ctx, []interface{}{"env3", "env4"}),
+			},
+		},
+		{
+			envvars: map[string]string{
+				tftags.IgnoreTagsKeysEnvVar: "env1,env1",
+			},
+			expectedIgnoreConfig: &tftags.IgnoreConfig{
+				Keys: tftags.New(ctx, []interface{}{"env1"}),
+			},
+		},
+		{
+			envvars: map[string]string{
+				tftags.IgnoreTagsKeyPrefixesEnvVar: "env1,env1",
+			},
+			expectedIgnoreConfig: &tftags.IgnoreConfig{
+				KeyPrefixes: tftags.New(ctx, []interface{}{"env1"}),
 			},
 		},
 		{
@@ -350,6 +362,24 @@ func TestExpandIgnoreTags(t *testing.T) { //nolint:paralleltest
 			expectedIgnoreConfig: &tftags.IgnoreConfig{
 				Keys:        tftags.New(ctx, []interface{}{"env1", "env2", "config1", "config2"}),
 				KeyPrefixes: tftags.New(ctx, []interface{}{"env3", "env4", "config3", "config4"}),
+			},
+		},
+		{
+			keys: []interface{}{"example1", "example2"},
+			envvars: map[string]string{
+				tftags.IgnoreTagsKeysEnvVar: "example1,example3",
+			},
+			expectedIgnoreConfig: &tftags.IgnoreConfig{
+				Keys: tftags.New(ctx, []interface{}{"example1", "example2", "example3"}),
+			},
+		},
+		{
+			keyPrefixes: []interface{}{"example1", "example2"},
+			envvars: map[string]string{
+				tftags.IgnoreTagsKeyPrefixesEnvVar: "example1,example3",
+			},
+			expectedIgnoreConfig: &tftags.IgnoreConfig{
+				KeyPrefixes: tftags.New(ctx, []interface{}{"example1", "example2", "example3"}),
 			},
 		},
 	}

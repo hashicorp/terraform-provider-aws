@@ -897,14 +897,24 @@ func expandIgnoreTags(ctx context.Context, tfMap map[string]interface{}) *tftags
 		}
 	}
 
+	// To preseve behavior prior to supporting environment variables:
+	//
+	// - Return nil when no keys or prefixes are set
+	// - For a non-nil return, `keys` or `key_prefixes` should be
+	//   nil if empty (versus a zero-value `KeyValueTags` struct)
 	if len(keys) == 0 && len(keyPrefixes) == 0 {
 		return nil
 	}
 
-	return &tftags.IgnoreConfig{
-		Keys:        tftags.New(ctx, keys),
-		KeyPrefixes: tftags.New(ctx, keyPrefixes),
+	ignoreConfig := &tftags.IgnoreConfig{}
+	if len(keys) > 0 {
+		ignoreConfig.Keys = tftags.New(ctx, keys)
 	}
+	if len(keyPrefixes) > 0 {
+		ignoreConfig.KeyPrefixes = tftags.New(ctx, keyPrefixes)
+	}
+
+	return ignoreConfig
 }
 
 func expandEndpoints(_ context.Context, tfList []interface{}) (map[string]string, diag.Diagnostics) {
