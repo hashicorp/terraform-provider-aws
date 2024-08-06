@@ -433,7 +433,7 @@ resource "aws_lexv2models_slot" "test" {
     expression = "string"
     slot_specifications {
       map_block_key = "Initial"
-      slot_type_id = aws_lexv2models_slot_type.test.slot_type_id
+      slot_type_id  = aws_lexv2models_slot_type.test.slot_type_id
       value_elicitation_setting {
         prompt_specification {
           allow_interrupt            = true
@@ -488,23 +488,23 @@ resource "aws_lexv2models_slot" "test" {
             audio_and_dtmf_input_specification {
               start_timeout_ms = 4000
 
-            audio_specification {
-              end_timeout_ms = 640
-              max_length_ms  = 15000
+              audio_specification {
+                end_timeout_ms = 640
+                max_length_ms  = 15000
+              }
+
+              dtmf_specification {
+                deletion_character = "*"
+                end_character      = "#"
+                end_timeout_ms     = 5000
+                max_length         = 513
+              }
             }
 
-            dtmf_specification {
-              deletion_character = "*"
-              end_character      = "#"
-              end_timeout_ms     = 5000
-              max_length         = 513
+            text_input_specification {
+             start_timeout_ms = 30000
             }
           }
-
-          text_input_specification {
-            start_timeout_ms = 30000
-          }
-		}
         }
       }
     }
