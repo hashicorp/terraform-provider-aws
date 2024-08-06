@@ -224,7 +224,7 @@ func (r *resourceGlossaryTerm) Update(ctx context.Context, req resource.UpdateRe
 	}
 
 	if !plan.ShortDescription.Equal(state.ShortDescription) || !plan.LongDescription.Equal(state.LongDescription) || !plan.Name.Equal(state.Name) || !plan.Status.Equal(state.Status) ||
-		!plan.Name.Equal(state.Name) {
+		!plan.TermRelations.Equal(state.TermRelations) {
 		in := &datazone.UpdateGlossaryTermInput{}
 		resp.Diagnostics.Append(flex.Expand(ctx, &plan, in)...)
 		if resp.Diagnostics.HasError() {
@@ -263,9 +263,9 @@ func (r *resourceGlossaryTerm) Delete(ctx context.Context, req resource.DeleteRe
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
+	option := flex.WithIgnoredFieldNames([]string{"TermRelations"})
 	in := &datazone.UpdateGlossaryTermInput{}
-	resp.Diagnostics.Append(flex.Expand(ctx, &state, in)...)
+	resp.Diagnostics.Append(flex.Expand(ctx, &state, in, option)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
