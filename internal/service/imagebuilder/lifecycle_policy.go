@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -123,18 +124,24 @@ func (r *lifecyclePolicyResource) Schema(ctx context.Context, request resource.S
 											Attributes: map[string]schema.Attribute{
 												"amis": schema.BoolAttribute{
 													Optional: true,
+													Computed: true,
+													Default:  booldefault.StaticBool(false),
 													PlanModifiers: []planmodifier.Bool{
 														boolplanmodifier.UseStateForUnknown(),
 													},
 												},
 												"containers": schema.BoolAttribute{
 													Optional: true,
+													Computed: true,
+													Default:  booldefault.StaticBool(false),
 													PlanModifiers: []planmodifier.Bool{
 														boolplanmodifier.UseStateForUnknown(),
 													},
 												},
 												"snapshots": schema.BoolAttribute{
 													Optional: true,
+													Computed: true,
+													Default:  booldefault.StaticBool(false),
 													PlanModifiers: []planmodifier.Bool{
 														boolplanmodifier.UseStateForUnknown(),
 													},
