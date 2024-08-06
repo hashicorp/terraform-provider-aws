@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/internal/log"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -140,7 +141,7 @@ func Register(name string, f SweeperFn, dependencies ...string) {
 		Name: name,
 		F: func(region string) error {
 			ctx := Context(region)
-			ctx = logWithResourceType(ctx, name)
+			ctx = log.WithResourceType(ctx, name)
 
 			client, err := SharedRegionalSweepClient(ctx, region)
 			if err != nil {

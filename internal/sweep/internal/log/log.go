@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package sweep
+package log
 
 import (
 	"context"
@@ -20,7 +20,7 @@ const (
 	loggingKeyResourceType = "tf_resource_type"
 )
 
-func logger(ctx context.Context, loggerName, region string) context.Context {
+func Logger(ctx context.Context, loggerName, region string) context.Context {
 	ctx = tfsdklog.NewRootProviderLogger(ctx,
 		tfsdklog.WithLevel(hclog.Debug),
 		tfsdklog.WithLogName(loggerName),
@@ -31,6 +31,6 @@ func logger(ctx context.Context, loggerName, region string) context.Context {
 	return ctx
 }
 
-func logWithResourceType(ctx context.Context, resourceType string) context.Context {
+func WithResourceType(ctx context.Context, resourceType string) context.Context {
 	return tflog.SetField(ctx, loggingKeyResourceType, resourceType)
 }

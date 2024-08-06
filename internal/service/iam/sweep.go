@@ -37,7 +37,7 @@ func RegisterSweepers() {
 		},
 	})
 
-	sweep.Register("aws_iam_instance_profile", sweepInstanceProfile,
+	awsv2.Register("aws_iam_instance_profile", sweepInstanceProfile,
 		"aws_iam_role",
 	)
 
@@ -97,7 +97,7 @@ func RegisterSweepers() {
 		F:    sweepServerCertificates,
 	})
 
-	sweep.Register("aws_iam_service_linked_role", sweepServiceLinkedRoles)
+	awsv2.Register("aws_iam_service_linked_role", sweepServiceLinkedRoles)
 
 	resource.AddTestSweepers("aws_iam_user", &resource.Sweeper{
 		Name: "aws_iam_user",
@@ -110,7 +110,7 @@ func RegisterSweepers() {
 		},
 	})
 
-	sweep.Register("aws_iam_virtual_mfa_device", sweepVirtualMFADevice)
+	awsv2.Register("aws_iam_virtual_mfa_device", sweepVirtualMFADevice)
 }
 
 func sweepGroups(region string) error {
@@ -234,9 +234,8 @@ func sweepInstanceProfile(ctx context.Context, client *conns.AWSClient) ([]sweep
 	pages := iam.NewListInstanceProfilesPaginator(conn, &iam.ListInstanceProfilesInput{})
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping IAM Instance Profile sweep: %s", err)
-			return sweepResources, nil
+		if err != nil {
+			return nil, err
 		}
 
 		for _, instanceProfile := range page.InstanceProfiles {
@@ -556,11 +555,6 @@ func sweepServiceLinkedRoles(ctx context.Context, client *conns.AWSClient) ([]sw
 	pages := iam.NewListRolesPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping IAM Service Linked Role sweep: %s", err)
-			return sweepResources, nil
-		}
-
 		if err != nil {
 			return sweepResources, err
 		}
@@ -720,11 +714,6 @@ func sweepVirtualMFADevice(ctx context.Context, client *conns.AWSClient) ([]swee
 	pages := iam.NewListVirtualMFADevicesPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping IAM Virtual MFA Device sweep: %s", err)
-			return sweepResources, nil
-		}
-
 		if err != nil {
 			return nil, err
 		}
