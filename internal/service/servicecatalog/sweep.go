@@ -123,7 +123,7 @@ func sweepBudgetResourceAssociations(region string) error {
 
 					r := ResourceBudgetResourceAssociation()
 					d := r.Data(nil)
-					d.SetId(BudgetResourceAssociationID(aws.ToString(budget.BudgetName), aws.ToString(port.Id)))
+					d.SetId(budgetResourceAssociationID(aws.ToString(budget.BudgetName), aws.ToString(port.Id)))
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
@@ -167,7 +167,7 @@ func sweepBudgetResourceAssociations(region string) error {
 
 					r := ResourceBudgetResourceAssociation()
 					d := r.Data(nil)
-					d.SetId(BudgetResourceAssociationID(aws.ToString(budget.BudgetName), aws.ToString(pvd.ProductViewSummary.ProductId)))
+					d.SetId(budgetResourceAssociationID(aws.ToString(budget.BudgetName), aws.ToString(pvd.ProductViewSummary.ProductId)))
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
@@ -398,7 +398,7 @@ func sweepProductPortfolioAssociations(region string) error {
 
 					r := ResourceProductPortfolioAssociation()
 					d := r.Data(nil)
-					d.SetId(ProductPortfolioAssociationCreateID(AcceptLanguageEnglish, aws.ToString(detail.Id), productID))
+					d.SetId(productPortfolioAssociationCreateID(AcceptLanguageEnglish, aws.ToString(detail.Id), productID))
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
@@ -582,7 +582,7 @@ func sweepProvisioningArtifacts(region string) error {
 					r := ResourceProvisioningArtifact()
 					d := r.Data(nil)
 
-					d.SetId(ProvisioningArtifactID(aws.ToString(pad.Id), productID))
+					d.SetId(provisioningArtifactID(aws.ToString(pad.Id), productID))
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}

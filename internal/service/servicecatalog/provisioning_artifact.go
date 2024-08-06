@@ -167,7 +167,7 @@ func resourceProvisioningArtifactCreate(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "creating Service Catalog Provisioning Artifact: empty response")
 	}
 
-	d.SetId(ProvisioningArtifactID(aws.ToString(output.ProvisioningArtifactDetail.Id), d.Get("product_id").(string)))
+	d.SetId(provisioningArtifactID(aws.ToString(output.ProvisioningArtifactDetail.Id), d.Get("product_id").(string)))
 
 	// Active and Guidance are not fields of CreateProvisioningArtifact but are fields of UpdateProvisioningArtifact.
 	// In order to set these to non-default values, you must create and then update.
@@ -179,7 +179,7 @@ func resourceProvisioningArtifactRead(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-	artifactID, productID, err := ProvisioningArtifactParseID(d.Id())
+	artifactID, productID, err := provisioningArtifactParseID(d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "parsing Service Catalog Provisioning Artifact ID (%s): %s", d.Id(), err)
@@ -230,7 +230,7 @@ func resourceProvisioningArtifactUpdate(ctx context.Context, d *schema.ResourceD
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 	if d.HasChanges("accept_language", "active", names.AttrDescription, "guidance", names.AttrName, "product_id") {
-		artifactID, productID, err := ProvisioningArtifactParseID(d.Id())
+		artifactID, productID, err := provisioningArtifactParseID(d.Id())
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "parsing Service Catalog Provisioning Artifact ID (%s): %s", d.Id(), err)
@@ -288,7 +288,7 @@ func resourceProvisioningArtifactDelete(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-	artifactID, productID, err := ProvisioningArtifactParseID(d.Id())
+	artifactID, productID, err := provisioningArtifactParseID(d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "parsing Service Catalog Provisioning Artifact ID (%s): %s", d.Id(), err)

@@ -89,7 +89,7 @@ func resourceBudgetResourceAssociationCreate(ctx context.Context, d *schema.Reso
 		return sdkdiag.AppendErrorf(diags, "creating Service Catalog Budget Resource Association: empty response")
 	}
 
-	d.SetId(BudgetResourceAssociationID(d.Get("budget_name").(string), d.Get(names.AttrResourceID).(string)))
+	d.SetId(budgetResourceAssociationID(d.Get("budget_name").(string), d.Get(names.AttrResourceID).(string)))
 
 	return append(diags, resourceBudgetResourceAssociationRead(ctx, d, meta)...)
 }
@@ -98,7 +98,7 @@ func resourceBudgetResourceAssociationRead(ctx context.Context, d *schema.Resour
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-	budgetName, resourceID, err := BudgetResourceAssociationParseID(d.Id())
+	budgetName, resourceID, err := budgetResourceAssociationParseID(d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "could not parse ID (%s): %s", d.Id(), err)
@@ -130,7 +130,7 @@ func resourceBudgetResourceAssociationDelete(ctx context.Context, d *schema.Reso
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-	budgetName, resourceID, err := BudgetResourceAssociationParseID(d.Id())
+	budgetName, resourceID, err := budgetResourceAssociationParseID(d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "could not parse ID (%s): %s", d.Id(), err)

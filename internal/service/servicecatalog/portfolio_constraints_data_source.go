@@ -104,7 +104,7 @@ func dataSourcePortfolioConstraintsRead(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "setting details: %s", err)
 	}
 
-	d.SetId(PortfolioConstraintsID(d.Get("accept_language").(string), d.Get("portfolio_id").(string), d.Get("product_id").(string)))
+	d.SetId(portfolioConstraintsID(d.Get("accept_language").(string), d.Get("portfolio_id").(string), d.Get("product_id").(string)))
 
 	return diags
 }

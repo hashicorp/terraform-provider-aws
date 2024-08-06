@@ -6,4 +6,10 @@ package servicecatalog
 // Exports for use in tests only.
 var (
 	ResourceBudgetResourceAssociation = resourceBudgetResourceAssociation
+	ResourceConstraint                = resourceConstraint
+
+	BudgetResourceAssociationParseID    = budgetResourceAssociationParseID
+	ProductPortfolioAssociationParseID  = productPortfolioAssociationParseID
+	ProvisioningArtifactParseID         = provisioningArtifactParseID
+	TagOptionResourceAssociationParseID = tagOptionResourceAssociationParseID
 )

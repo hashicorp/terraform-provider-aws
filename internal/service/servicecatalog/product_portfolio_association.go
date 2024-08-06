@@ -109,7 +109,7 @@ func resourceProductPortfolioAssociationCreate(ctx context.Context, d *schema.Re
 		return sdkdiag.AppendErrorf(diags, "creating Service Catalog Product Portfolio Association: empty response")
 	}
 
-	d.SetId(ProductPortfolioAssociationCreateID(d.Get("accept_language").(string), d.Get("portfolio_id").(string), d.Get("product_id").(string)))
+	d.SetId(productPortfolioAssociationCreateID(d.Get("accept_language").(string), d.Get("portfolio_id").(string), d.Get("product_id").(string)))
 
 	return append(diags, resourceProductPortfolioAssociationRead(ctx, d, meta)...)
 }
@@ -118,7 +118,7 @@ func resourceProductPortfolioAssociationRead(ctx context.Context, d *schema.Reso
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-	acceptLanguage, portfolioID, productID, err := ProductPortfolioAssociationParseID(d.Id())
+	acceptLanguage, portfolioID, productID, err := productPortfolioAssociationParseID(d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "could not parse ID (%s): %s", d.Id(), err)
@@ -152,7 +152,7 @@ func resourceProductPortfolioAssociationDelete(ctx context.Context, d *schema.Re
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-	acceptLanguage, portfolioID, productID, err := ProductPortfolioAssociationParseID(d.Id())
+	acceptLanguage, portfolioID, productID, err := productPortfolioAssociationParseID(d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "could not parse ID (%s): %s", d.Id(), err)

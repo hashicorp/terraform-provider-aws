@@ -106,7 +106,7 @@ func resourceTagOptionResourceAssociationCreate(ctx context.Context, d *schema.R
 		return sdkdiag.AppendErrorf(diags, "creating Service Catalog Tag Option Resource Association: empty response")
 	}
 
-	d.SetId(TagOptionResourceAssociationID(d.Get("tag_option_id").(string), d.Get(names.AttrResourceID).(string)))
+	d.SetId(tagOptionResourceAssociationID(d.Get("tag_option_id").(string), d.Get(names.AttrResourceID).(string)))
 
 	return append(diags, resourceTagOptionResourceAssociationRead(ctx, d, meta)...)
 }
@@ -115,7 +115,7 @@ func resourceTagOptionResourceAssociationRead(ctx context.Context, d *schema.Res
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-	tagOptionID, resourceID, err := TagOptionResourceAssociationParseID(d.Id())
+	tagOptionID, resourceID, err := tagOptionResourceAssociationParseID(d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "could not parse ID (%s): %s", d.Id(), err)
@@ -154,7 +154,7 @@ func resourceTagOptionResourceAssociationDelete(ctx context.Context, d *schema.R
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-	tagOptionID, resourceID, err := TagOptionResourceAssociationParseID(d.Id())
+	tagOptionID, resourceID, err := tagOptionResourceAssociationParseID(d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "could not parse ID (%s): %s", d.Id(), err)

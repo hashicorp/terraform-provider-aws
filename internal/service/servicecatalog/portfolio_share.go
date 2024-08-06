@@ -161,7 +161,7 @@ func resourcePortfolioShareCreate(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "creating Service Catalog Portfolio Share: empty response")
 	}
 
-	d.SetId(PortfolioShareCreateResourceID(d.Get("portfolio_id").(string), d.Get(names.AttrType).(string), d.Get("principal_id").(string)))
+	d.SetId(portfolioShareCreateResourceID(d.Get("portfolio_id").(string), d.Get(names.AttrType).(string), d.Get("principal_id").(string)))
 
 	waitForAcceptance := false
 	if v, ok := d.GetOk("wait_for_acceptance"); ok {
@@ -186,7 +186,7 @@ func resourcePortfolioShareRead(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-	portfolioID, shareType, principalID, err := PortfolioShareParseResourceID(d.Id())
+	portfolioID, shareType, principalID, err := portfolioShareParseResourceID(d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "could not parse ID (%s): %s", d.Id(), err)
