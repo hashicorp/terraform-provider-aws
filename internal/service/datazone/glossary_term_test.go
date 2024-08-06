@@ -265,6 +265,8 @@ func testAccGlossaryTermConfig_basic(rName, gName, dName, pName string) string {
 	return acctest.ConfigCompose(testAccGlossaryConfig_basic(gName, "", dName, pName), fmt.Sprintf(`
 
 
+
+
 resource "aws_datazone_glossary_term" "second" {
   domain_identifier   = aws_datazone_domain.test.id
   glossary_identifier = aws_datazone_glossary.test.id
@@ -283,7 +285,7 @@ resource "aws_datazone_glossary_term" "test" {
   status              = "ENABLED"
   term_relations {
     classifies = ["${aws_datazone_glossary_term.second.id}"]
-	is_a = ["${aws_datazone_glossary_term.second.id}"]
+    is_a       = ["${aws_datazone_glossary_term.second.id}"]
   }
 }
 `, rName, gName))
@@ -299,7 +301,7 @@ resource "aws_datazone_glossary_term" "second" {
   short_description   = "short_desc"
   status              = "ENABLED"
 }
-  resource "aws_datazone_glossary_term" "third" {
+resource "aws_datazone_glossary_term" "third" {
   domain_identifier   = aws_datazone_domain.test.id
   glossary_identifier = aws_datazone_glossary.test.id
   long_description    = "long_description"
@@ -316,7 +318,7 @@ resource "aws_datazone_glossary_term" "test" {
   status              = "ENABLED"
   term_relations {
     classifies = ["${aws_datazone_glossary_term.third.id}"]
-	is_a = ["${aws_datazone_glossary_term.third.id}"]
+    is_a       = ["${aws_datazone_glossary_term.third.id}"]
   }
 }
 `, rName, gName, dName))
