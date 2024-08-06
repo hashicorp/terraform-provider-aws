@@ -115,8 +115,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Provisioning Artifact",
 		},
 		{
-			Factory:  ResourceServiceAction,
+			Factory:  resourceServiceAction,
 			TypeName: "aws_servicecatalog_service_action",
+			Name:     "Service Action",
 		},
 		{
 			Factory:  ResourceTagOption,

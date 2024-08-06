@@ -23,8 +23,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_servicecatalog_service_action")
-func ResourceServiceAction() *schema.Resource {
+// @SDKResource("aws_servicecatalog_service_action", name="Service Action")
+func resourceServiceAction() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServiceActionCreate,
 		ReadWithoutTimeout:   resourceServiceActionRead,
