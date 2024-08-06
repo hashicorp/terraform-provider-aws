@@ -45,6 +45,7 @@ func TestAccAthenaWorkGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "configuration.0.engine_version.0.effective_engine_version"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.engine_version.0.selected_engine_version", "AUTO"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.execution_role", ""),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.identity_center_configuration.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.publish_cloudwatch_metrics_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.requester_pays_enabled", acctest.CtFalse),
