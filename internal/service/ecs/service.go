@@ -655,6 +655,10 @@ func resourceService() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			names.AttrForceDelete: {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"force_new_deployment": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -1350,7 +1354,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept(names.AttrForceDelete, names.AttrTags, names.AttrTagsAll) {
 		cluster := d.Get("cluster").(string)
 		input := &ecs.UpdateServiceInput{
 			Cluster:            aws.String(cluster),
@@ -1543,8 +1547,10 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta int
 		return diags
 	}
 
+	forceDelete := d.Get(names.AttrForceDelete).(bool)
+
 	// Drain the ECS service.
-	if status != serviceStatusDraining && service.SchedulingStrategy != awstypes.SchedulingStrategyDaemon {
+	if status != serviceStatusDraining && service.SchedulingStrategy != awstypes.SchedulingStrategyDaemon && !forceDelete {
 		input := &ecs.UpdateServiceInput{
 			Cluster:      aws.String(cluster),
 			DesiredCount: aws.Int32(0),
@@ -1563,6 +1569,7 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta int
 		func() (interface{}, error) {
 			return conn.DeleteService(ctx, &ecs.DeleteServiceInput{
 				Cluster: aws.String(cluster),
+				Force:   aws.Bool(forceDelete),
 				Service: aws.String(d.Id()),
 			})
 		},
