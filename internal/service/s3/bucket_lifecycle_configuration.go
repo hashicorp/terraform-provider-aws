@@ -711,11 +711,11 @@ func expandLifecycleRuleFilterMemberAnd(ctx context.Context, m map[string]interf
 		Value: types.LifecycleRuleAndOperator{},
 	}
 
-	if v, null, _ := nullable.Int(m["object_size_greater_than"].(string)).ValueInt64(); !null {
+	if v, null, _ := nullable.Int(m["object_size_greater_than"].(string)).ValueInt64(); !null && v >= 0 {
 		result.Value.ObjectSizeGreaterThan = aws.Int64(v)
 	}
 
-	if v, null, _ := nullable.Int(m["object_size_less_than"].(string)).ValueInt64(); !null {
+	if v, null, _ := nullable.Int(m["object_size_less_than"].(string)).ValueInt64(); !null && v > 0 {
 		result.Value.ObjectSizeLessThan = aws.Int64(v)
 	}
 
