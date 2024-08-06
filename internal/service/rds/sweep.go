@@ -11,11 +11,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/go-multierror"
+
+	// "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+
+	// "github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -36,23 +38,25 @@ func RegisterSweepers() {
 		},
 	})
 
-	resource.AddTestSweepers("aws_rds_cluster", &resource.Sweeper{
-		Name: "aws_rds_cluster",
-		F:    sweepClusters,
-		Dependencies: []string{
-			"aws_db_instance",
-		},
-	})
+	// TODO
+	// resource.AddTestSweepers("aws_rds_cluster", &resource.Sweeper{
+	// 	Name: "aws_rds_cluster",
+	// 	F:    sweepClusters,
+	// 	Dependencies: []string{
+	// 		"aws_db_instance",
+	// 	},
+	// })
 
 	resource.AddTestSweepers("aws_db_event_subscription", &resource.Sweeper{
 		Name: "aws_db_event_subscription",
 		F:    sweepEventSubscriptions,
 	})
 
-	resource.AddTestSweepers("aws_rds_global_cluster", &resource.Sweeper{
-		Name: "aws_rds_global_cluster",
-		F:    sweepGlobalClusters,
-	})
+	// TODO
+	// resource.AddTestSweepers("aws_rds_global_cluster", &resource.Sweeper{
+	// 	Name: "aws_rds_global_cluster",
+	// 	F:    sweepGlobalClusters,
+	// })
 
 	resource.AddTestSweepers("aws_db_instance", &resource.Sweeper{
 		Name: "aws_db_instance",
@@ -209,70 +213,73 @@ func sweepClusterSnapshots(region string) error {
 	return nil
 }
 
-func sweepClusters(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.RDSConn(ctx)
+/*
+TODO
 
-	var sweeperErrs *multierror.Error
-	sweepResources := make([]sweep.Sweepable, 0)
-
-	input := &rds.DescribeDBClustersInput{}
-	err = conn.DescribeDBClustersPagesWithContext(ctx, input, func(page *rds.DescribeDBClustersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	func sweepClusters(region string) error {
+		ctx := sweep.Context(region)
+		client, err := sweep.SharedRegionalSweepClient(ctx, region)
+		if err != nil {
+			return fmt.Errorf("error getting client: %s", err)
 		}
+		conn := client.RDSConn(ctx)
 
-		for _, v := range page.DBClusters {
-			arn := aws.StringValue(v.DBClusterArn)
-			id := aws.StringValue(v.DBClusterIdentifier)
-			r := resourceCluster()
-			d := r.Data(nil)
-			d.SetId(id)
-			d.Set(names.AttrApplyImmediately, true)
-			d.Set(names.AttrARN, arn)
-			d.Set("delete_automated_backups", true)
-			d.Set(names.AttrDeletionProtection, false)
-			d.Set("skip_final_snapshot", true)
+		var sweeperErrs *multierror.Error
+		sweepResources := make([]sweep.Sweepable, 0)
 
-			if engineMode := aws.StringValue(v.EngineMode); engineMode == engineModeGlobal || engineMode == engineModeProvisioned {
-				globalCluster, err := FindGlobalClusterByDBClusterARN(ctx, conn, arn)
-				if err != nil {
-					if !tfresource.NotFound(err) {
-						sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("reading RDS Global Cluster information for DB Cluster (%s): %s", id, err))
-						continue
+		input := &rds.DescribeDBClustersInput{}
+		err = conn.DescribeDBClustersPagesWithContext(ctx, input, func(page *rds.DescribeDBClustersOutput, lastPage bool) bool {
+			if page == nil {
+				return !lastPage
+			}
+
+			for _, v := range page.DBClusters {
+				arn := aws.StringValue(v.DBClusterArn)
+				id := aws.StringValue(v.DBClusterIdentifier)
+				r := resourceCluster()
+				d := r.Data(nil)
+				d.SetId(id)
+				d.Set(names.AttrApplyImmediately, true)
+				d.Set(names.AttrARN, arn)
+				d.Set("delete_automated_backups", true)
+				d.Set(names.AttrDeletionProtection, false)
+				d.Set("skip_final_snapshot", true)
+
+				if engineMode := aws.StringValue(v.EngineMode); engineMode == engineModeGlobal || engineMode == engineModeProvisioned {
+					globalCluster, err := findGlobalClusterByDBClusterARN(ctx, conn, arn)
+					if err != nil {
+						if !tfresource.NotFound(err) {
+							sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("reading RDS Global Cluster information for DB Cluster (%s): %s", id, err))
+							continue
+						}
+					}
+
+					if globalCluster != nil && globalCluster.GlobalClusterIdentifier != nil {
+						d.Set("global_cluster_identifier", globalCluster.GlobalClusterIdentifier)
 					}
 				}
 
-				if globalCluster != nil && globalCluster.GlobalClusterIdentifier != nil {
-					d.Set("global_cluster_identifier", globalCluster.GlobalClusterIdentifier)
-				}
+				sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 			}
 
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+			return !lastPage
+		})
+		if awsv1.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping RDS Cluster sweep for %s: %s", region, err)
+			return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+		}
+		if err != nil {
+			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing RDS Clusters (%s): %w", region, err))
 		}
 
-		return !lastPage
-	})
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping RDS Cluster sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing RDS Clusters (%s): %w", region, err))
-	}
+		err = sweep.SweepOrchestrator(ctx, sweepResources)
+		if err != nil {
+			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping RDS Clusters (%s): %w", region, err))
+		}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping RDS Clusters (%s): %w", region, err))
+		return sweeperErrs.ErrorOrNil()
 	}
-
-	return sweeperErrs.ErrorOrNil()
-}
-
+*/
 func sweepEventSubscriptions(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
@@ -317,52 +324,55 @@ func sweepEventSubscriptions(region string) error {
 	return nil
 }
 
-func sweepGlobalClusters(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.RDSConn(ctx)
-	input := &rds.DescribeGlobalClustersInput{}
-	sweepResources := make([]sweep.Sweepable, 0)
+/*
+TODO
 
-	err = conn.DescribeGlobalClustersPagesWithContext(ctx, input, func(page *rds.DescribeGlobalClustersOutput, lastPage bool) bool {
-		if page == nil {
+	func sweepGlobalClusters(region string) error {
+		ctx := sweep.Context(region)
+		client, err := sweep.SharedRegionalSweepClient(ctx, region)
+		if err != nil {
+			return fmt.Errorf("error getting client: %s", err)
+		}
+		conn := client.RDSConn(ctx)
+		input := &rds.DescribeGlobalClustersInput{}
+		sweepResources := make([]sweep.Sweepable, 0)
+
+		err = conn.DescribeGlobalClustersPagesWithContext(ctx, input, func(page *rds.DescribeGlobalClustersOutput, lastPage bool) bool {
+			if page == nil {
+				return !lastPage
+			}
+
+			for _, v := range page.GlobalClusters {
+				r := resourceGlobalCluster()
+				d := r.Data(nil)
+				d.SetId(aws.StringValue(v.GlobalClusterIdentifier))
+				d.Set(names.AttrForceDestroy, true)
+				d.Set("global_cluster_members", flattenGlobalClusterMembers(v.GlobalClusterMembers))
+
+				sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+			}
+
 			return !lastPage
+		})
+
+		if awsv1.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping RDS Global Cluster sweep for %s: %s", region, err)
+			return nil
 		}
 
-		for _, v := range page.GlobalClusters {
-			r := ResourceGlobalCluster()
-			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.GlobalClusterIdentifier))
-			d.Set(names.AttrForceDestroy, true)
-			d.Set("global_cluster_members", flattenGlobalClusterMembers(v.GlobalClusterMembers))
-
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		if err != nil {
+			return fmt.Errorf("error listing RDS Global Clusters (%s): %w", region, err)
 		}
 
-		return !lastPage
-	})
+		err = sweep.SweepOrchestrator(ctx, sweepResources)
 
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping RDS Global Cluster sweep for %s: %s", region, err)
+		if err != nil {
+			return fmt.Errorf("error sweeping RDS Global Clusters (%s): %w", region, err)
+		}
+
 		return nil
 	}
-
-	if err != nil {
-		return fmt.Errorf("error listing RDS Global Clusters (%s): %w", region, err)
-	}
-
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping RDS Global Clusters (%s): %w", region, err)
-	}
-
-	return nil
-}
-
+*/
 func sweepInstances(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)

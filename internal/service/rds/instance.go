@@ -481,7 +481,7 @@ func ResourceInstance() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.StringInSlice(NetworkType_Values(), false),
+				ValidateFunc: validation.StringInSlice(networkType_Values(), false),
 			},
 			"option_group_name": {
 				Type:     schema.TypeString,

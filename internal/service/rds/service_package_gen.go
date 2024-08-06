@@ -269,8 +269,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceGlobalCluster,
+			Factory:  resourceGlobalCluster,
 			TypeName: "aws_rds_global_cluster",
+			Name:     "Global Cluster",
 		},
 		{
 			Factory:  resourceReservedInstance,

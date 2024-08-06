@@ -249,12 +249,12 @@ func waitDBClusterRoleAssociationDeleted(ctx context.Context, conn *rds.Client, 
 	return nil, err
 }
 
-// TODO Remove once aws_rds_cluster is migrated.
-func findDBClusterByIDV2(ctx context.Context, conn *rds.Client, id string) (*types.DBCluster, error) {
+// TODO Remove once aws_rds_cluster is migrated?
+func findDBClusterByIDV2(ctx context.Context, conn *rds.Client, id string, optFns ...func(*rds.Options)) (*types.DBCluster, error) {
 	input := &rds.DescribeDBClustersInput{
 		DBClusterIdentifier: aws.String(id),
 	}
-	output, err := findDBClusterV2(ctx, conn, input, tfslices.PredicateTrue[*types.DBCluster]())
+	output, err := findDBClusterV2(ctx, conn, input, tfslices.PredicateTrue[*types.DBCluster](), optFns...)
 
 	if err != nil {
 		return nil, err
@@ -276,8 +276,8 @@ func findDBClusterByIDV2(ctx context.Context, conn *rds.Client, id string) (*typ
 	return output, nil
 }
 
-func findDBClusterV2(ctx context.Context, conn *rds.Client, input *rds.DescribeDBClustersInput, filter tfslices.Predicate[*types.DBCluster]) (*types.DBCluster, error) {
-	output, err := findDBClustersV2(ctx, conn, input, filter)
+func findDBClusterV2(ctx context.Context, conn *rds.Client, input *rds.DescribeDBClustersInput, filter tfslices.Predicate[*types.DBCluster], optFns ...func(*rds.Options)) (*types.DBCluster, error) {
+	output, err := findDBClustersV2(ctx, conn, input, filter, optFns...)
 
 	if err != nil {
 		return nil, err
@@ -286,12 +286,12 @@ func findDBClusterV2(ctx context.Context, conn *rds.Client, input *rds.DescribeD
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findDBClustersV2(ctx context.Context, conn *rds.Client, input *rds.DescribeDBClustersInput, filter tfslices.Predicate[*types.DBCluster]) ([]types.DBCluster, error) {
+func findDBClustersV2(ctx context.Context, conn *rds.Client, input *rds.DescribeDBClustersInput, filter tfslices.Predicate[*types.DBCluster], optFns ...func(*rds.Options)) ([]types.DBCluster, error) {
 	var output []types.DBCluster
 
 	pages := rds.NewDescribeDBClustersPaginator(conn, input)
 	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
+		page, err := pages.NextPage(ctx, optFns...)
 
 		if errs.IsA[*types.DBClusterNotFoundFault](err) {
 			return nil, &retry.NotFoundError{

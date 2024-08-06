@@ -227,7 +227,7 @@ func resourceCluster() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.Any(
 					validation.StringMatch(regexache.MustCompile(fmt.Sprintf(`^%s.*$`, InstanceEngineCustomPrefix)), fmt.Sprintf("must begin with %s", InstanceEngineCustomPrefix)),
-					validation.StringInSlice(ClusterEngine_Values(), false),
+					validation.StringInSlice(clusterEngine_Values(), false),
 				),
 			},
 			"engine_lifecycle_support": {
@@ -346,7 +346,7 @@ func resourceCluster() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.StringInSlice(NetworkType_Values(), false),
+				ValidateFunc: validation.StringInSlice(networkType_Values(), false),
 			},
 			"performance_insights_enabled": {
 				Type:     schema.TypeBool,
@@ -415,7 +415,7 @@ func resourceCluster() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
-							ValidateFunc: validation.StringInSlice(RestoreType_Values(), false),
+							ValidateFunc: validation.StringInSlice(restoreType_Values(), false),
 						},
 						"source_cluster_identifier": {
 							Type:     schema.TypeString,
@@ -530,8 +530,8 @@ func resourceCluster() *schema.Resource {
 						"timeout_action": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Default:      TimeoutActionRollbackCapacityChange,
-							ValidateFunc: validation.StringInSlice(TimeoutAction_Values(), false),
+							Default:      timeoutActionRollbackCapacityChange,
+							ValidateFunc: validation.StringInSlice(timeoutAction_Values(), false),
 						},
 					},
 				},
@@ -1365,7 +1365,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("global_cluster_identifier", "")
 
 	if aws.StringValue(dbc.EngineMode) == engineModeGlobal || aws.StringValue(dbc.EngineMode) == engineModeProvisioned {
-		globalCluster, err := FindGlobalClusterByDBClusterARN(ctx, conn, aws.StringValue(dbc.DBClusterArn))
+		globalCluster, err := findGlobalClusterByDBClusterARN(ctx, meta.(*conns.AWSClient).RDSClient(ctx), aws.StringValue(dbc.DBClusterArn))
 
 		if err == nil {
 			d.Set("global_cluster_identifier", globalCluster.GlobalClusterIdentifier)

@@ -13,6 +13,7 @@ var (
 	ResourceClusterSnapshot                     = resourceClusterSnapshot
 	ResourceCustomDBEngineVersion               = resourceCustomDBEngineVersion
 	ResourceEventSubscription                   = resourceEventSubscription
+	ResourceGlobalCluster                       = resourceGlobalCluster
 	ResourceInstanceAutomatedBackupsReplication = resourceInstanceAutomatedBackupsReplication
 	ResourceInstanceRoleAssociation             = resourceInstanceRoleAssociation
 	ResourceIntegration                         = newIntegrationResource
@@ -27,6 +28,7 @@ var (
 	ResourceSnapshotCopy                        = resourceSnapshotCopy
 	ResourceSubnetGroup                         = resourceSubnetGroup
 
+	ClusterIDAndRegionFromARN                  = clusterIDAndRegionFromARN
 	FindCustomDBEngineVersionByTwoPartKey      = findCustomDBEngineVersionByTwoPartKey
 	FindDBClusterEndpointByID                  = findDBClusterEndpointByID
 	FindDBClusterParameterGroupByName          = findDBClusterParameterGroupByName
@@ -44,6 +46,7 @@ var (
 	FindDefaultCertificate                     = findDefaultCertificate
 	FindDefaultDBProxyTargetGroupByDBProxyName = findDefaultDBProxyTargetGroupByDBProxyName
 	FindEventSubscriptionByID                  = findEventSubscriptionByID
+	FindGlobalClusterByID                      = findGlobalClusterByID
 	FindIntegrationByARN                       = findIntegrationByARN
 	FindOptionGroupByName                      = findOptionGroupByName
 	FindReservedDBInstanceByID                 = findReservedDBInstanceByID
