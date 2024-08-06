@@ -109,11 +109,7 @@ func dataSourcePortfolioConstraintsRead(ctx context.Context, d *schema.ResourceD
 	return diags
 }
 
-func flattenConstraintDetail(apiObject *awstypes.ConstraintDetail) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
+func flattenConstraintDetail(apiObject awstypes.ConstraintDetail) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.ConstraintId; v != nil {
@@ -143,7 +139,7 @@ func flattenConstraintDetail(apiObject *awstypes.ConstraintDetail) map[string]in
 	return tfMap
 }
 
-func flattenConstraintDetails(apiObjects []*awstypes.ConstraintDetail) []interface{} {
+func flattenConstraintDetails(apiObjects []awstypes.ConstraintDetail) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -151,10 +147,6 @@ func flattenConstraintDetails(apiObjects []*awstypes.ConstraintDetail) []interfa
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
 		tfList = append(tfList, flattenConstraintDetail(apiObject))
 	}
 

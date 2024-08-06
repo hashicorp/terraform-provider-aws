@@ -94,11 +94,7 @@ func dataSourceLaunchPathsRead(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func flattenLaunchPathSummary(ctx context.Context, apiObject *awstypes.LaunchPathSummary, ignoreTagsConfig *tftags.IgnoreConfig) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
+func flattenLaunchPathSummary(ctx context.Context, apiObject awstypes.LaunchPathSummary, ignoreTagsConfig *tftags.IgnoreConfig) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if len(apiObject.ConstraintSummaries) > 0 {
@@ -120,7 +116,7 @@ func flattenLaunchPathSummary(ctx context.Context, apiObject *awstypes.LaunchPat
 	return tfMap
 }
 
-func flattenLaunchPathSummaries(ctx context.Context, apiObjects []*awstypes.LaunchPathSummary, ignoreTagsConfig *tftags.IgnoreConfig) []interface{} {
+func flattenLaunchPathSummaries(ctx context.Context, apiObjects []awstypes.LaunchPathSummary, ignoreTagsConfig *tftags.IgnoreConfig) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -128,10 +124,6 @@ func flattenLaunchPathSummaries(ctx context.Context, apiObjects []*awstypes.Laun
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
 		tfList = append(tfList, flattenLaunchPathSummary(ctx, apiObject, ignoreTagsConfig))
 	}
 

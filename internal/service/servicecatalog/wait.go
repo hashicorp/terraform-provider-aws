@@ -444,7 +444,7 @@ func waitProvisioningArtifactDeleted(ctx context.Context, conn *servicecatalog.C
 	return err
 }
 
-func waitLaunchPathsReady(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, productID string, timeout time.Duration) ([]*awstypes.LaunchPathSummary, error) {
+func waitLaunchPathsReady(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, productID string, timeout time.Duration) ([]awstypes.LaunchPathSummary, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{statusNotFound},
 		Target:                    enum.Slice(awstypes.StatusAvailable),
@@ -457,7 +457,7 @@ func waitLaunchPathsReady(ctx context.Context, conn *servicecatalog.Client, acce
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.([]*awstypes.LaunchPathSummary); ok {
+	if output, ok := outputRaw.([]awstypes.LaunchPathSummary); ok {
 		return output, err
 	}
 
@@ -508,7 +508,7 @@ func waitProvisionedProductTerminated(ctx context.Context, conn *servicecatalog.
 	return err
 }
 
-func waitPortfolioConstraintsReady(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, portfolioID, productID string, timeout time.Duration) ([]*awstypes.ConstraintDetail, error) {
+func waitPortfolioConstraintsReady(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, portfolioID, productID string, timeout time.Duration) ([]awstypes.ConstraintDetail, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{statusNotFound},
 		Target:  enum.Slice(awstypes.StatusAvailable),
@@ -518,7 +518,7 @@ func waitPortfolioConstraintsReady(ctx context.Context, conn *servicecatalog.Cli
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.([]*awstypes.ConstraintDetail); ok {
+	if output, ok := outputRaw.([]awstypes.ConstraintDetail); ok {
 		return output, err
 	}
 
