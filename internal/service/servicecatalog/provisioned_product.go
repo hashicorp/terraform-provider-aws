@@ -12,7 +12,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
-	"github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
@@ -31,7 +31,7 @@ import (
 
 // @SDKResource("aws_servicecatalog_provisioned_product", name="Provisioned Product")
 // @Tags
-// @Testing(existsType="github.com/aws/aws-sdk-go/service/servicecatalog;servicecatalog.ProvisionedProductDetail",importIgnore="accept_language;ignore_errors;provisioning_artifact_name;provisioning_parameters;retain_physical_resources", skipEmptyTags=true, noRemoveTags=true)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/servicecatalog/types;types.ProvisionedProductDetail",importIgnore="accept_language;ignore_errors;provisioning_artifact_name;provisioning_parameters;retain_physical_resources", skipEmptyTags=true, noRemoveTags=true)
 func ResourceProvisionedProduct() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProvisionedProductCreate,
@@ -295,7 +295,7 @@ func resourceProvisionedProductCreate(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if v, ok := d.GetOk("notification_arns"); ok && len(v.([]interface{})) > 0 {
-		input.NotificationArns = flex.ExpandToStringList(v.([]interface{}))
+		input.NotificationArns = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("path_id"); ok {
@@ -341,7 +341,7 @@ func resourceProvisionedProductCreate(ctx context.Context, d *schema.ResourceDat
 			return retry.RetryableError(err)
 		}
 
-		if errs.IsA[*types.ResourceNotFoundException](err) {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return retry.RetryableError(err)
 		}
 
@@ -418,7 +418,7 @@ func resourceProvisionedProductRead(ctx context.Context, d *schema.ResourceData,
 	detail := output.ProvisionedProductDetail
 
 	d.Set(names.AttrARN, detail.Arn)
-	d.Set("cloudwatch_dashboard_names", aws.StringSlice(flattenCloudWatchDashboards(output.CloudWatchDashboards)))
+	d.Set("cloudwatch_dashboard_names", flattenCloudWatchDashboards(output.CloudWatchDashboards))
 
 	if detail.CreatedTime != nil {
 		d.Set(names.AttrCreatedTime, detail.CreatedTime.Format(time.RFC3339))
@@ -577,16 +577,16 @@ func resourceProvisionedProductDelete(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if v, ok := d.GetOk("ignore_errors"); ok {
-		input.IgnoreErrors = aws.Bool(v.(bool))
+		input.IgnoreErrors = v.(bool)
 	}
 
 	if v, ok := d.GetOk("retain_physical_resources"); ok {
-		input.RetainPhysicalResources = aws.Bool(v.(bool))
+		input.RetainPhysicalResources = v.(bool)
 	}
 
 	_, err := conn.TerminateProvisionedProduct(ctx, input)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -596,7 +596,7 @@ func resourceProvisionedProductDelete(ctx context.Context, d *schema.ResourceDat
 
 	err = WaitProvisionedProductTerminated(ctx, conn, d.Get("accept_language").(string), d.Id(), "", d.Timeout(schema.TimeoutDelete))
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -607,12 +607,8 @@ func resourceProvisionedProductDelete(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func expandProvisioningParameter(tfMap map[string]interface{}) *types.ProvisioningParameter {
-	if tfMap == nil {
-		return nil
-	}
-
-	apiObject := &types.ProvisioningParameter{}
+func expandProvisioningParameter(tfMap map[string]interface{}) awstypes.ProvisioningParameter {
+	apiObject := awstypes.ProvisioningParameter{}
 
 	if v, ok := tfMap[names.AttrKey].(string); ok && v != "" {
 		apiObject.Key = aws.String(v)
@@ -625,12 +621,12 @@ func expandProvisioningParameter(tfMap map[string]interface{}) *types.Provisioni
 	return apiObject
 }
 
-func expandProvisioningParameters(tfList []interface{}) []*types.ProvisioningParameter {
+func expandProvisioningParameters(tfList []interface{}) []awstypes.ProvisioningParameter {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []*types.ProvisioningParameter
+	var apiObjects []awstypes.ProvisioningParameter
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -639,27 +635,21 @@ func expandProvisioningParameters(tfList []interface{}) []*types.ProvisioningPar
 			continue
 		}
 
-		apiObject := expandProvisioningParameter(tfMap)
-
-		if apiObject == nil {
-			continue
-		}
-
-		apiObjects = append(apiObjects, apiObject)
+		apiObjects = append(apiObjects, expandProvisioningParameter(tfMap))
 	}
 
 	return apiObjects
 }
 
-func expandProvisioningPreferences(tfMap map[string]interface{}) *types.ProvisioningPreferences {
+func expandProvisioningPreferences(tfMap map[string]interface{}) *awstypes.ProvisioningPreferences {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &types.ProvisioningPreferences{}
+	apiObject := &awstypes.ProvisioningPreferences{}
 
 	if v, ok := tfMap["accounts"].([]interface{}); ok && len(v) > 0 {
-		apiObject.StackSetAccounts = flex.ExpandToStringList(v)
+		apiObject.StackSetAccounts = flex.ExpandStringValueList(v)
 	}
 
 	if v, ok := tfMap["failure_tolerance_count"].(int); ok && v != 0 {
@@ -679,18 +669,14 @@ func expandProvisioningPreferences(tfMap map[string]interface{}) *types.Provisio
 	}
 
 	if v, ok := tfMap["regions"].([]interface{}); ok && len(v) > 0 {
-		apiObject.StackSetRegions = flex.ExpandToStringList(v)
+		apiObject.StackSetRegions = flex.ExpandStringValueList(v)
 	}
 
 	return apiObject
 }
 
-func expandUpdateProvisioningParameter(tfMap map[string]interface{}) *types.UpdateProvisioningParameter {
-	if tfMap == nil {
-		return nil
-	}
-
-	apiObject := &types.UpdateProvisioningParameter{}
+func expandUpdateProvisioningParameter(tfMap map[string]interface{}) awstypes.UpdateProvisioningParameter {
+	apiObject := awstypes.UpdateProvisioningParameter{}
 
 	if v, ok := tfMap[names.AttrKey].(string); ok && v != "" {
 		apiObject.Key = aws.String(v)
@@ -707,12 +693,12 @@ func expandUpdateProvisioningParameter(tfMap map[string]interface{}) *types.Upda
 	return apiObject
 }
 
-func expandUpdateProvisioningParameters(tfList []interface{}) []*types.UpdateProvisioningParameter {
+func expandUpdateProvisioningParameters(tfList []interface{}) []awstypes.UpdateProvisioningParameter {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []*types.UpdateProvisioningParameter
+	var apiObjects []awstypes.UpdateProvisioningParameter
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -721,27 +707,21 @@ func expandUpdateProvisioningParameters(tfList []interface{}) []*types.UpdatePro
 			continue
 		}
 
-		apiObject := expandUpdateProvisioningParameter(tfMap)
-
-		if apiObject == nil {
-			continue
-		}
-
-		apiObjects = append(apiObjects, apiObject)
+		apiObjects = append(apiObjects, expandUpdateProvisioningParameter(tfMap))
 	}
 
 	return apiObjects
 }
 
-func expandUpdateProvisioningPreferences(tfMap map[string]interface{}) *types.UpdateProvisioningPreferences {
+func expandUpdateProvisioningPreferences(tfMap map[string]interface{}) *awstypes.UpdateProvisioningPreferences {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &types.UpdateProvisioningPreferences{}
+	apiObject := &awstypes.UpdateProvisioningPreferences{}
 
 	if v, ok := tfMap["accounts"].([]interface{}); ok && len(v) > 0 {
-		apiObject.StackSetAccounts = flex.ExpandToStringList(v)
+		apiObject.StackSetAccounts = flex.ExpandStringValueList(v)
 	}
 
 	if v, ok := tfMap["failure_tolerance_count"].(int); ok && v != 0 {
@@ -761,13 +741,13 @@ func expandUpdateProvisioningPreferences(tfMap map[string]interface{}) *types.Up
 	}
 
 	if v, ok := tfMap["regions"].([]interface{}); ok && len(v) > 0 {
-		apiObject.StackSetRegions = flex.ExpandToStringList(v)
+		apiObject.StackSetRegions = flex.ExpandStringValueList(v)
 	}
 
 	return apiObject
 }
 
-func flattenCloudWatchDashboards(apiObjects []*types.CloudWatchDashboard) []*string {
+func flattenCloudWatchDashboards(apiObjects []awstypes.CloudWatchDashboard) []*string {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -775,17 +755,13 @@ func flattenCloudWatchDashboards(apiObjects []*types.CloudWatchDashboard) []*str
 	var tfList []*string
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
 		tfList = append(tfList, apiObject.Name)
 	}
 
 	return tfList
 }
 
-func flattenRecordOutputs(apiObjects []*types.RecordOutput) []interface{} {
+func flattenRecordOutputs(apiObjects []awstypes.RecordOutput) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -793,9 +769,6 @@ func flattenRecordOutputs(apiObjects []*types.RecordOutput) []interface{} {
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
 
 		m := make(map[string]interface{})
 
