@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -460,10 +461,16 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 		},
 	}
 
-	slotSpecificationsLNB := schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[SlotSpecificationsData](ctx),
+	slotSpecificationsLNB := schema.SetNestedBlock{
+		Validators: []validator.Set{
+			setvalidator.SizeAtMost(6),
+		},
+		CustomType: fwtypes.NewSetNestedObjectTypeOf[SlotSpecificationsData](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
+				"map_block_key": schema.StringAttribute{
+					Required: true,
+				},
 				"slot_type_id": schema.StringAttribute{
 					Required: true,
 				},
@@ -555,6 +562,7 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 			},
 			"slot_type_id": schema.StringAttribute{
 				Optional: true,
+				Computed: true,
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -792,13 +800,14 @@ type resourceSlotData struct {
 }
 
 type SubSlotSettingData struct {
-	Expression        types.String                                            `tfsdk:"expression"`
-	SlotSpecification fwtypes.ListNestedObjectValueOf[SlotSpecificationsData] `tfsdk:"slot_specification"`
+	Expression         types.String                                           `tfsdk:"expression"`
+	SlotSpecifications fwtypes.SetNestedObjectValueOf[SlotSpecificationsData] `tfsdk:"slot_specifications"`
 }
 
 type SlotSpecificationsData struct {
 	SlotTypeID              types.String                                                        `tfsdk:"slot_type_id"`
 	ValueElicitationSetting fwtypes.ListNestedObjectValueOf[SubSlotValueElicitationSettingData] `tfsdk:"value_elicitation_setting"`
+	MapBlockKey             types.String                                                        `tfsdk:"map_block_key"`
 }
 
 type SubSlotValueElicitationSettingData struct {

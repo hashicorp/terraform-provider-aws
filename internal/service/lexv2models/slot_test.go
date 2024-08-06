@@ -169,9 +169,9 @@ func TestAccLexV2ModelsSlot_SubSlotSetting(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
-					resource.TestCheckResourceAttr(resourceName, "sub_slot_setting.#", acctest.Ct2),
-					// resource.TestCheckResourceAttr(resourceName, "sub_slot_setting.0.expression", "string"),
-					// resource.TestCheckResourceAttr(resourceName, "sub_slot_setting.0.slot_specifications.#", "7"),
+					resource.TestCheckResourceAttr(resourceName, "sub_slot_setting.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "sub_slot_setting.0.expression", "string"),
+					resource.TestCheckResourceAttr(resourceName, "sub_slot_setting.0.slot_specifications.#", acctest.Ct1),
 				),
 			},
 		},
@@ -432,7 +432,8 @@ resource "aws_lexv2models_slot" "test" {
   sub_slot_setting {
     expression = "string"
     slot_specifications {
-      slot_type_id = aws_lexv2models_slot_type.test.id
+      map_block_key = "Initial"
+      slot_type_id = aws_lexv2models_slot_type.test.slot_type_id
       value_elicitation_setting {
         prompt_specification {
           allow_interrupt            = true
@@ -445,17 +446,65 @@ resource "aws_lexv2models_slot" "test" {
               }
             }
           }
-        }
-        default_value_specification {
-          default_value_list {
-            default_value = "default"
+          prompt_attempts_specification {
+            allow_interrupt = true
+            map_block_key   = "Initial"
+
+            allowed_input_types {
+              allow_audio_input = true
+              allow_dtmf_input  = true
+            }
+
+            audio_and_dtmf_input_specification {
+              start_timeout_ms = 4000
+
+              audio_specification {
+                end_timeout_ms = 640
+                max_length_ms  = 15000
+              }
+
+              dtmf_specification {
+                deletion_character = "*"
+                end_character      = "#"
+                end_timeout_ms     = 5000
+                max_length         = 513
+              }
+            }
+
+            text_input_specification {
+              start_timeout_ms = 30000
+            }
           }
-        }
-        sample_utterance {
-		  utterance = "blue"
-        }
-        wait_and_continue_specification {
-          active = true
+
+          prompt_attempts_specification {
+            allow_interrupt = true
+            map_block_key   = "Retry1"
+
+            allowed_input_types {
+              allow_audio_input = true
+              allow_dtmf_input  = true
+            }
+
+            audio_and_dtmf_input_specification {
+              start_timeout_ms = 4000
+
+            audio_specification {
+              end_timeout_ms = 640
+              max_length_ms  = 15000
+            }
+
+            dtmf_specification {
+              deletion_character = "*"
+              end_character      = "#"
+              end_timeout_ms     = 5000
+              max_length         = 513
+            }
+          }
+
+          text_input_specification {
+            start_timeout_ms = 30000
+          }
+		}
         }
       }
     }
