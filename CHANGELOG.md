@@ -9,7 +9,6 @@ ENHANCEMENTS:
 
 * provider: Allow `default_tags` to be set by environment variables ([#33339](https://github.com/hashicorp/terraform-provider-aws/issues/33339))
 * resource/aws_lb_target_group: Add `target_health_state.unhealthy_draining_interval` argument ([#38654](https://github.com/hashicorp/terraform-provider-aws/issues/38654))
-* resource/aws_athena_workgroup: Add `identity_center_configuration` configuration block to support Identity Center enabled Athena workgroups ([#35734](https://github.com/hashicorp/terraform-provider-aws/issues/35734))
 
 BUG FIXES:
 
