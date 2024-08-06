@@ -24,7 +24,7 @@ func TestAccImageBuilderLifecyclePolicy_basic(t *testing.T) {
 	resourceName := "aws_imagebuilder_lifecycle_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -67,7 +67,7 @@ func TestAccImageBuilderLifecyclePolicy_policyDetails(t *testing.T) {
 	resourceName := "aws_imagebuilder_lifecycle_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -136,7 +136,7 @@ func TestAccImageBuilderLifecyclePolicy_resourceSelection(t *testing.T) {
 	resourceName := "aws_imagebuilder_lifecycle_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
