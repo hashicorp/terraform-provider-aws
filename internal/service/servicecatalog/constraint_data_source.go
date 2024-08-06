@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_servicecatalog_constraint")
-func DataSourceConstraint() *schema.Resource {
+// @SDKDataSource("aws_servicecatalog_constraint", name="Constraint")
+func dataSourceConstraint() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceConstraintRead,
 
