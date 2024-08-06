@@ -86,7 +86,7 @@ func resourceProductPortfolioAssociationCreate(ctx context.Context, d *schema.Re
 
 		output, err = conn.AssociateProductWithPortfolio(ctx, input)
 
-		if errs.Contains(err, "profile does not exist") {
+		if errs.IsAErrorMessageContains[*awstypes.InvalidParametersException](err, "profile does not exist") {
 			return retry.RetryableError(err)
 		}
 

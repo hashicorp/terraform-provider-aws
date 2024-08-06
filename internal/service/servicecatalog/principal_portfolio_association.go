@@ -86,7 +86,7 @@ func resourcePrincipalPortfolioAssociationCreate(ctx context.Context, d *schema.
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 	acceptLanguage, principalARN, portfolioID, principalType := d.Get("accept_language").(string), d.Get("principal_arn").(string), d.Get("portfolio_id").(string), d.Get("principal_type").(string)
-	id := PrincipalPortfolioAssociationCreateResourceID(acceptLanguage, principalARN, portfolioID, principalType)
+	id := principalPortfolioAssociationCreateResourceID(acceptLanguage, principalARN, portfolioID, principalType)
 	input := &servicecatalog.AssociatePrincipalWithPortfolioInput{
 		AcceptLanguage: aws.String(acceptLanguage),
 		PortfolioId:    aws.String(portfolioID),
@@ -105,7 +105,7 @@ func resourcePrincipalPortfolioAssociationCreate(ctx context.Context, d *schema.
 	d.SetId(id)
 
 	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutRead), func() (interface{}, error) {
-		return FindPrincipalPortfolioAssociation(ctx, conn, acceptLanguage, principalARN, portfolioID, principalType)
+		return findPrincipalPortfolioAssociation(ctx, conn, acceptLanguage, principalARN, portfolioID, principalType)
 	})
 
 	if err != nil {
@@ -119,12 +119,12 @@ func resourcePrincipalPortfolioAssociationRead(ctx context.Context, d *schema.Re
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-	acceptLanguage, principalARN, portfolioID, principalType, err := PrincipalPortfolioAssociationParseResourceID(d.Id())
+	acceptLanguage, principalARN, portfolioID, principalType, err := principalPortfolioAssociationParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	output, err := FindPrincipalPortfolioAssociation(ctx, conn, acceptLanguage, principalARN, portfolioID, principalType)
+	output, err := findPrincipalPortfolioAssociation(ctx, conn, acceptLanguage, principalARN, portfolioID, principalType)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Service Catalog Principal Portfolio Association (%s) not found, removing from state", d.Id())
@@ -148,7 +148,7 @@ func resourcePrincipalPortfolioAssociationDelete(ctx context.Context, d *schema.
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-	acceptLanguage, principalARN, portfolioID, principalType, err := PrincipalPortfolioAssociationParseResourceID(d.Id())
+	acceptLanguage, principalARN, portfolioID, principalType, err := principalPortfolioAssociationParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -172,7 +172,7 @@ func resourcePrincipalPortfolioAssociationDelete(ctx context.Context, d *schema.
 	}
 
 	_, err = tfresource.RetryUntilNotFound(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
-		return FindPrincipalPortfolioAssociation(ctx, conn, acceptLanguage, principalARN, portfolioID, principalType)
+		return findPrincipalPortfolioAssociation(ctx, conn, acceptLanguage, principalARN, portfolioID, principalType)
 	})
 
 	if err != nil {
@@ -184,7 +184,7 @@ func resourcePrincipalPortfolioAssociationDelete(ctx context.Context, d *schema.
 
 const principalPortfolioAssociationResourceIDSeparator = ","
 
-func PrincipalPortfolioAssociationParseResourceID(id string) (string, string, string, string, error) {
+func principalPortfolioAssociationParseResourceID(id string) (string, string, string, string, error) {
 	parts := strings.SplitN(id, principalPortfolioAssociationResourceIDSeparator, 4)
 
 	if len(parts) != 4 || parts[0] == "" || parts[1] == "" || parts[2] == "" || parts[3] == "" {
@@ -194,7 +194,7 @@ func PrincipalPortfolioAssociationParseResourceID(id string) (string, string, st
 	return parts[0], parts[1], parts[2], parts[3], nil
 }
 
-func PrincipalPortfolioAssociationCreateResourceID(acceptLanguage, principalARN, portfolioID, principalType string) string {
+func principalPortfolioAssociationCreateResourceID(acceptLanguage, principalARN, portfolioID, principalType string) string {
 	return strings.Join([]string{acceptLanguage, principalARN, portfolioID, principalType}, principalPortfolioAssociationResourceIDSeparator)
 }
 
@@ -237,7 +237,7 @@ func findPrincipalsForPortfolio(ctx context.Context, conn *servicecatalog.Client
 	return output, nil
 }
 
-func FindPrincipalPortfolioAssociation(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, principalARN, portfolioID, principalType string) (*awstypes.Principal, error) {
+func findPrincipalPortfolioAssociation(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, principalARN, portfolioID, principalType string) (*awstypes.Principal, error) {
 	input := &servicecatalog.ListPrincipalsForPortfolioInput{
 		AcceptLanguage: aws.String(acceptLanguage),
 		PortfolioId:    aws.String(portfolioID),
@@ -286,9 +286,9 @@ func principalPortfolioAssociationUpgradeV0(_ context.Context, rawState map[stri
 	}
 
 	// Is resource ID in the correct format?
-	if _, _, _, _, err := PrincipalPortfolioAssociationParseResourceID(rawState[names.AttrID].(string)); err != nil {
+	if _, _, _, _, err := principalPortfolioAssociationParseResourceID(rawState[names.AttrID].(string)); err != nil {
 		acceptLanguage, principalARN, portfolioID, principalType := rawState["accept_language"].(string), rawState["principal_arn"].(string), rawState["portfolio_id"].(string), rawState["principal_type"].(string)
-		rawState[names.AttrID] = PrincipalPortfolioAssociationCreateResourceID(acceptLanguage, principalARN, portfolioID, principalType)
+		rawState[names.AttrID] = principalPortfolioAssociationCreateResourceID(acceptLanguage, principalARN, portfolioID, principalType)
 	}
 
 	return rawState, nil

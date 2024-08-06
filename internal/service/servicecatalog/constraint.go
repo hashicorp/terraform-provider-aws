@@ -113,7 +113,7 @@ func resourceConstraintCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 		output, err = conn.CreateConstraint(ctx, input)
 
-		if errs.Contains(err, "profile does not exist") {
+		if errs.IsAErrorMessageContains[*awstypes.InvalidParametersException](err, "profile does not exist") {
 			return retry.RetryableError(err)
 		}
 
@@ -210,7 +210,7 @@ func resourceConstraintUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *retry.RetryError {
 		_, err := conn.UpdateConstraint(ctx, input)
 
-		if errs.Contains(err, "profile does not exist") {
+		if errs.IsAErrorMessageContains[*awstypes.InvalidParametersException](err, "profile does not exist") {
 			return retry.RetryableError(err)
 		}
 

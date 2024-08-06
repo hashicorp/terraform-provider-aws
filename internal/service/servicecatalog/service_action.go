@@ -120,7 +120,7 @@ func resourceServiceActionCreate(ctx context.Context, d *schema.ResourceData, me
 
 		output, err = conn.CreateServiceAction(ctx, input)
 
-		if errs.Contains(err, "profile does not exist") {
+		if errs.IsAErrorMessageContains[*awstypes.InvalidParametersException](err, "profile does not exist") {
 			return retry.RetryableError(err)
 		}
 
@@ -154,7 +154,7 @@ func resourceServiceActionRead(ctx context.Context, d *schema.ResourceData, meta
 
 	output, err := waitServiceActionReady(ctx, conn, d.Get("accept_language").(string), d.Id(), d.Timeout(schema.TimeoutRead))
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		log.Printf("[WARN] Service Catalog Service Action (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -209,7 +209,7 @@ func resourceServiceActionUpdate(ctx context.Context, d *schema.ResourceData, me
 	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *retry.RetryError {
 		_, err := conn.UpdateServiceAction(ctx, input)
 
-		if errs.Contains(err, "profile does not exist") {
+		if errs.IsAErrorMessageContains[*awstypes.InvalidParametersException](err, "profile does not exist") {
 			return retry.RetryableError(err)
 		}
 

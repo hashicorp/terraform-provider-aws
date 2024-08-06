@@ -66,7 +66,7 @@ func resourceBudgetResourceAssociationCreate(ctx context.Context, d *schema.Reso
 
 		output, err = conn.AssociateBudgetWithResource(ctx, input)
 
-		if errs.Contains(err, "profile does not exist") {
+		if errs.IsAErrorMessageContains[*awstypes.InvalidParametersException](err, "profile does not exist") {
 			return retry.RetryableError(err)
 		}
 

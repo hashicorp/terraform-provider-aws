@@ -138,7 +138,7 @@ func resourcePortfolioShareCreate(ctx context.Context, d *schema.ResourceData, m
 
 		output, err = conn.CreatePortfolioShare(ctx, input)
 
-		if errs.Contains(err, "profile does not exist") {
+		if errs.IsAErrorMessageContains[*awstypes.InvalidParametersException](err, "profile does not exist") {
 			return retry.RetryableError(err)
 		}
 
@@ -256,7 +256,7 @@ func resourcePortfolioShareUpdate(ctx context.Context, d *schema.ResourceData, m
 	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *retry.RetryError {
 		_, err := conn.UpdatePortfolioShare(ctx, input)
 
-		if errs.Contains(err, "profile does not exist") {
+		if errs.IsAErrorMessageContains[*awstypes.InvalidParametersException](err, "profile does not exist") {
 			return retry.RetryableError(err)
 		}
 

@@ -229,7 +229,7 @@ func resourceProductRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	output, err := waitProductReady(ctx, conn, d.Get("accept_language").(string), d.Id(), d.Timeout(schema.TimeoutRead))
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		log.Printf("[WARN] Service Catalog Product (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -441,7 +441,7 @@ func flattenProvisioningArtifactParameters(apiObject *servicecatalog.DescribePro
 		names.AttrDescription:         aws.ToString(apiObject.ProvisioningArtifactDetail.Description),
 		"disable_template_validation": false, // set default because it cannot be read
 		names.AttrName:                aws.ToString(apiObject.ProvisioningArtifactDetail.Name),
-		names.AttrType:                awstypes.ProvisioningArtifactType(apiObject.ProvisioningArtifactDetail.Type),
+		names.AttrType:                apiObject.ProvisioningArtifactDetail.Type,
 	}
 
 	if apiObject.Info != nil {

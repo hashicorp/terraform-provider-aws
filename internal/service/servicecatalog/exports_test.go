@@ -18,12 +18,15 @@ var (
 	ResourceTagOption                     = resourceTagOption
 	ResourceTagOptionResourceAssociation  = resourceTagOptionResourceAssociation
 
-	FindPortfolioShare = findPortfolioShare
+	FindPortfolioByID                 = findPortfolioByID
+	FindPortfolioShare                = findPortfolioShare
+	FindPrincipalPortfolioAssociation = findPrincipalPortfolioAssociation
 
-	BudgetResourceAssociationParseID    = budgetResourceAssociationParseID
-	ProductPortfolioAssociationParseID  = productPortfolioAssociationParseID
-	ProvisioningArtifactParseID         = provisioningArtifactParseID
-	TagOptionResourceAssociationParseID = tagOptionResourceAssociationParseID
+	BudgetResourceAssociationParseID             = budgetResourceAssociationParseID
+	ProductPortfolioAssociationParseID           = productPortfolioAssociationParseID
+	ProvisioningArtifactParseID                  = provisioningArtifactParseID
+	PrincipalPortfolioAssociationParseResourceID = principalPortfolioAssociationParseResourceID
+	TagOptionResourceAssociationParseID          = tagOptionResourceAssociationParseID
 
 	AcceptLanguageEnglish = acceptLanguageEnglish
 	StatusCreated         = statusCreated

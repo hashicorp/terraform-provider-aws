@@ -270,7 +270,7 @@ func sweepPrincipalPortfolioAssociations(region string) error {
 				for _, principal := range page.Principals {
 					r := resourcePrincipalPortfolioAssociation()
 					d := r.Data(nil)
-					d.SetId(PrincipalPortfolioAssociationCreateResourceID(acceptLanguageEnglish, aws.ToString(principal.PrincipalARN), aws.ToString(detail.Id), string(principal.PrincipalType)))
+					d.SetId(principalPortfolioAssociationCreateResourceID(acceptLanguageEnglish, aws.ToString(principal.PrincipalARN), aws.ToString(detail.Id), string(principal.PrincipalType)))
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}

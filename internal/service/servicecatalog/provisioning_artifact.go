@@ -144,7 +144,7 @@ func resourceProvisioningArtifactCreate(ctx context.Context, d *schema.ResourceD
 
 		output, err = conn.CreateProvisioningArtifact(ctx, input)
 
-		if errs.Contains(err, "profile does not exist") {
+		if errs.IsAErrorMessageContains[*awstypes.InvalidParametersException](err, "profile does not exist") {
 			return retry.RetryableError(err)
 		}
 
@@ -187,7 +187,7 @@ func resourceProvisioningArtifactRead(ctx context.Context, d *schema.ResourceDat
 
 	output, err := waitProvisioningArtifactReady(ctx, conn, artifactID, productID, d.Timeout(schema.TimeoutRead))
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		log.Printf("[WARN] Service Catalog Provisioning Artifact (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -261,7 +261,7 @@ func resourceProvisioningArtifactUpdate(ctx context.Context, d *schema.ResourceD
 		err = retry.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *retry.RetryError {
 			_, err := conn.UpdateProvisioningArtifact(ctx, input)
 
-			if errs.Contains(err, "profile does not exist") {
+			if errs.IsAErrorMessageContains[*awstypes.InvalidParametersException](err, "profile does not exist") {
 				return retry.RetryableError(err)
 			}
 

@@ -12,8 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -72,7 +72,7 @@ func resourceOrganizationsAccessRead(ctx context.Context, d *schema.ResourceData
 
 	output, err := waitOrganizationsAccessStable(ctx, conn, d.Timeout(schema.TimeoutRead))
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		// theoretically this should not be possible
 		log.Printf("[WARN] Service Catalog Organizations Access (%s) not found, removing from state", d.Id())
 		d.SetId("")

@@ -337,7 +337,7 @@ func resourceProvisionedProductCreate(ctx context.Context, d *schema.ResourceDat
 
 		output, err = conn.ProvisionProduct(ctx, input)
 
-		if errs.Contains(err, "profile does not exist") {
+		if errs.IsAErrorMessageContains[*awstypes.InvalidParametersException](err, "profile does not exist") {
 			return retry.RetryableError(err)
 		}
 
@@ -401,7 +401,7 @@ func resourceProvisionedProductRead(ctx context.Context, d *schema.ResourceData,
 
 	output, err := conn.DescribeProvisionedProduct(ctx, input)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		log.Printf("[WARN] Service Catalog Provisioned Product (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -448,7 +448,7 @@ func resourceProvisionedProductRead(ctx context.Context, d *schema.ResourceData,
 
 	recordOutput, err := conn.DescribeRecord(ctx, recordInput)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		log.Printf("[WARN] Service Catalog Provisioned Product (%s) Record (%s) not found, unable to set tags", d.Id(), aws.ToString(detail.LastProvisioningRecordId))
 		return diags
 	}
@@ -537,7 +537,7 @@ func resourceProvisionedProductUpdate(ctx context.Context, d *schema.ResourceDat
 	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *retry.RetryError {
 		_, err := conn.UpdateProvisionedProduct(ctx, input)
 
-		if errs.Contains(err, "profile does not exist") {
+		if errs.IsAErrorMessageContains[*awstypes.InvalidParametersException](err, "profile does not exist") {
 			return retry.RetryableError(err)
 		}
 

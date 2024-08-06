@@ -113,7 +113,7 @@ func resourcePortfolioRead(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-	output, err := FindPortfolioByID(ctx, conn, d.Id())
+	output, err := findPortfolioByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Service Catalog Portfolio (%s) not found, removing from state", d.Id())
@@ -198,7 +198,7 @@ func resourcePortfolioDelete(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func FindPortfolioByID(ctx context.Context, conn *servicecatalog.Client, id string) (*servicecatalog.DescribePortfolioOutput, error) {
+func findPortfolioByID(ctx context.Context, conn *servicecatalog.Client, id string) (*servicecatalog.DescribePortfolioOutput, error) {
 	input := &servicecatalog.DescribePortfolioInput{
 		AcceptLanguage: aws.String(acceptLanguageEnglish),
 		Id:             aws.String(id),

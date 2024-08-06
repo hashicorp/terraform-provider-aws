@@ -76,7 +76,7 @@ func resourceTagOptionCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 		output, err = conn.CreateTagOption(ctx, input)
 
-		if errs.Contains(err, "profile does not exist") {
+		if errs.IsAErrorMessageContains[*awstypes.InvalidParametersException](err, "profile does not exist") {
 			return retry.RetryableError(err)
 		}
 
@@ -124,7 +124,7 @@ func resourceTagOptionRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	output, err := waitTagOptionReady(ctx, conn, d.Id(), d.Timeout(schema.TimeoutRead))
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		log.Printf("[WARN] Service Catalog Tag Option (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -168,7 +168,7 @@ func resourceTagOptionUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *retry.RetryError {
 		_, err := conn.UpdateTagOption(ctx, input)
 
-		if errs.Contains(err, "profile does not exist") {
+		if errs.IsAErrorMessageContains[*awstypes.InvalidParametersException](err, "profile does not exist") {
 			return retry.RetryableError(err)
 		}
 

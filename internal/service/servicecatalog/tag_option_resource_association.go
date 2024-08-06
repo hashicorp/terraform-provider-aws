@@ -83,7 +83,7 @@ func resourceTagOptionResourceAssociationCreate(ctx context.Context, d *schema.R
 
 		output, err = conn.AssociateTagOptionWithResource(ctx, input)
 
-		if errs.Contains(err, "profile does not exist") {
+		if errs.IsAErrorMessageContains[*awstypes.InvalidParametersException](err, "profile does not exist") {
 			return retry.RetryableError(err)
 		}
 
