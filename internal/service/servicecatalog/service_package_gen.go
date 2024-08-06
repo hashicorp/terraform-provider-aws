@@ -98,8 +98,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  ResourceProductPortfolioAssociation,
+			Factory:  resourceProductPortfolioAssociation,
 			TypeName: "aws_servicecatalog_product_portfolio_association",
+			Name:     "Product Portfolio Association",
 		},
 		{
 			Factory:  ResourceProvisionedProduct,
