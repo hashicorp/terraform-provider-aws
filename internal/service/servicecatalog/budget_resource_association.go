@@ -104,7 +104,7 @@ func resourceBudgetResourceAssociationRead(ctx context.Context, d *schema.Resour
 		return sdkdiag.AppendErrorf(diags, "could not parse ID (%s): %s", d.Id(), err)
 	}
 
-	output, err := WaitBudgetResourceAssociationReady(ctx, conn, budgetName, resourceID, d.Timeout(schema.TimeoutRead))
+	output, err := waitBudgetResourceAssociationReady(ctx, conn, budgetName, resourceID, d.Timeout(schema.TimeoutRead))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Service Catalog Budget Resource Association (%s) not found, removing from state", d.Id())
@@ -151,7 +151,7 @@ func resourceBudgetResourceAssociationDelete(ctx context.Context, d *schema.Reso
 		return sdkdiag.AppendErrorf(diags, "disassociating Service Catalog Budget from Resource (%s): %s", d.Id(), err)
 	}
 
-	err = WaitBudgetResourceAssociationDeleted(ctx, conn, budgetName, resourceID, d.Timeout(schema.TimeoutDelete))
+	err = waitBudgetResourceAssociationDeleted(ctx, conn, budgetName, resourceID, d.Timeout(schema.TimeoutDelete))
 
 	if err != nil && !tfresource.NotFound(err) {
 		return sdkdiag.AppendErrorf(diags, "waiting for Service Catalog Budget Resource Disassociation (%s): %s", d.Id(), err)

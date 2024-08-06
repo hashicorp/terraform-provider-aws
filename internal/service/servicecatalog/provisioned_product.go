@@ -370,7 +370,7 @@ func resourceProvisionedProductCreate(ctx context.Context, d *schema.ResourceDat
 
 	d.SetId(aws.ToString(output.RecordDetail.ProvisionedProductId))
 
-	if _, err := WaitProvisionedProductReady(ctx, conn, d.Get("accept_language").(string), d.Id(), "", d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitProvisionedProductReady(ctx, conn, d.Get("accept_language").(string), d.Id(), "", d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Service Catalog Provisioned Product (%s) create: %s", d.Id(), err)
 	}
 
@@ -556,7 +556,7 @@ func resourceProvisionedProductUpdate(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "updating Service Catalog Provisioned Product (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitProvisionedProductReady(ctx, conn, d.Get("accept_language").(string), d.Id(), "", d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if _, err := waitProvisionedProductReady(ctx, conn, d.Get("accept_language").(string), d.Id(), "", d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Service Catalog Provisioned Product (%s) update: %s", d.Id(), err)
 	}
 
@@ -594,7 +594,7 @@ func resourceProvisionedProductDelete(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "terminating Service Catalog Provisioned Product (%s): %s", d.Id(), err)
 	}
 
-	err = WaitProvisionedProductTerminated(ctx, conn, d.Get("accept_language").(string), d.Id(), "", d.Timeout(schema.TimeoutDelete))
+	err = waitProvisionedProductTerminated(ctx, conn, d.Get("accept_language").(string), d.Id(), "", d.Timeout(schema.TimeoutDelete))
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

@@ -18,10 +18,21 @@ var (
 	ResourceTagOption                     = resourceTagOption
 	ResourceTagOptionResourceAssociation  = resourceTagOptionResourceAssociation
 
+	FindPortfolioShare = findPortfolioShare
+
 	BudgetResourceAssociationParseID    = budgetResourceAssociationParseID
 	ProductPortfolioAssociationParseID  = productPortfolioAssociationParseID
 	ProvisioningArtifactParseID         = provisioningArtifactParseID
 	TagOptionResourceAssociationParseID = tagOptionResourceAssociationParseID
 
 	AcceptLanguageEnglish = acceptLanguageEnglish
+
+	WaitBudgetResourceAssociationDeleted    = waitBudgetResourceAssociationDeleted
+	WaitBudgetResourceAssociationReady      = waitBudgetResourceAssociationReady
+	WaitOrganizationsAccessStable           = waitOrganizationsAccessStable
+	WaitProductPortfolioAssociationDeleted  = waitProductPortfolioAssociationDeleted
+	WaitProductPortfolioAssociationReady    = waitProductPortfolioAssociationReady
+	WaitProvisionedProductReady             = waitProvisionedProductReady
+	WaitTagOptionResourceAssociationDeleted = waitTagOptionResourceAssociationDeleted
+	WaitTagOptionResourceAssociationReady   = waitTagOptionResourceAssociationReady
 )

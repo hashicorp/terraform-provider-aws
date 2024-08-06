@@ -149,7 +149,7 @@ func resourceConstraintRead(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-	output, err := WaitConstraintReady(ctx, conn, d.Get("accept_language").(string), d.Id(), d.Timeout(schema.TimeoutRead))
+	output, err := waitConstraintReady(ctx, conn, d.Get("accept_language").(string), d.Id(), d.Timeout(schema.TimeoutRead))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Service Catalog Constraint (%s) not found, removing from state", d.Id())
@@ -254,7 +254,7 @@ func resourceConstraintDelete(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "deleting Service Catalog Constraint (%s): %s", d.Id(), err)
 	}
 
-	err = WaitConstraintDeleted(ctx, conn, d.Get("accept_language").(string), d.Id(), d.Timeout(schema.TimeoutDelete))
+	err = waitConstraintDeleted(ctx, conn, d.Get("accept_language").(string), d.Id(), d.Timeout(schema.TimeoutDelete))
 
 	if err != nil && !tfresource.NotFound(err) {
 		return sdkdiag.AppendErrorf(diags, "waiting for Service Catalog Constraint (%s) to be deleted: %s", d.Id(), err)

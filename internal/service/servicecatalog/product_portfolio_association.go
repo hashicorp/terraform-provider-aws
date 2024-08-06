@@ -124,7 +124,7 @@ func resourceProductPortfolioAssociationRead(ctx context.Context, d *schema.Reso
 		return sdkdiag.AppendErrorf(diags, "could not parse ID (%s): %s", d.Id(), err)
 	}
 
-	output, err := WaitProductPortfolioAssociationReady(ctx, conn, acceptLanguage, portfolioID, productID, d.Timeout(schema.TimeoutRead))
+	output, err := waitProductPortfolioAssociationReady(ctx, conn, acceptLanguage, portfolioID, productID, d.Timeout(schema.TimeoutRead))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Service Catalog Product Portfolio Association (%s) not found, removing from state", d.Id())
@@ -177,7 +177,7 @@ func resourceProductPortfolioAssociationDelete(ctx context.Context, d *schema.Re
 		return sdkdiag.AppendErrorf(diags, "disassociating Service Catalog Product from Portfolio (%s): %s", d.Id(), err)
 	}
 
-	err = WaitProductPortfolioAssociationDeleted(ctx, conn, acceptLanguage, portfolioID, productID, d.Timeout(schema.TimeoutDelete))
+	err = waitProductPortfolioAssociationDeleted(ctx, conn, acceptLanguage, portfolioID, productID, d.Timeout(schema.TimeoutDelete))
 
 	if err != nil && !tfresource.NotFound(err) {
 		return sdkdiag.AppendErrorf(diags, "waiting for Service Catalog Product Portfolio Disassociation (%s): %s", d.Id(), err)

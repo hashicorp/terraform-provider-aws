@@ -79,7 +79,7 @@ func dataSourceLaunchPathsRead(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	summaries, err := WaitLaunchPathsReady(ctx, conn, d.Get("accept_language").(string), d.Get("product_id").(string), d.Timeout(schema.TimeoutRead))
+	summaries, err := waitLaunchPathsReady(ctx, conn, d.Get("accept_language").(string), d.Get("product_id").(string), d.Timeout(schema.TimeoutRead))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "describing Service Catalog Launch Paths: %s", err)

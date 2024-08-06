@@ -9,13 +9,13 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
-	"github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func StatusProduct(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, productID string) retry.StateRefreshFunc {
+func statusProduct(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, productID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &servicecatalog.DescribeProductAsAdminInput{
 			Id: aws.String(productID),
@@ -27,31 +27,31 @@ func StatusProduct(ctx context.Context, conn *servicecatalog.Client, acceptLangu
 
 		output, err := conn.DescribeProductAsAdmin(ctx, input)
 
-		if errs.IsA[*types.ResourceNotFoundException](err) {
-			return nil, StatusNotFound, err
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, statusNotFound, err
 		}
 
-		if errs.IsA[*types.ResourceInUseException](err) {
-			return nil, StatusUnavailable, err
+		if errs.IsA[*awstypes.ResourceInUseException](err) {
+			return nil, statusUnavailable, err
 		}
 
-		if errs.IsA[**types.LimitExceededException](err) {
-			return nil, StatusUnavailable, err
+		if errs.IsA[*awstypes.LimitExceededException](err) {
+			return nil, statusUnavailable, err
 		}
 
 		if err != nil {
-			return nil, string(types.StatusFailed), fmt.Errorf("describing product status: %w", err)
+			return nil, string(awstypes.StatusFailed), fmt.Errorf("describing product status: %w", err)
 		}
 
 		if output == nil || output.ProductViewDetail == nil {
-			return nil, StatusUnavailable, fmt.Errorf("describing product status: empty product view detail")
+			return nil, statusUnavailable, fmt.Errorf("describing product status: empty product view detail")
 		}
 
 		return output, string(output.ProductViewDetail.Status), err
 	}
 }
 
-func StatusTagOption(ctx context.Context, conn *servicecatalog.Client, id string) retry.StateRefreshFunc {
+func statusTagOption(ctx context.Context, conn *servicecatalog.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &servicecatalog.DescribeTagOptionInput{
 			Id: aws.String(id),
@@ -59,48 +59,48 @@ func StatusTagOption(ctx context.Context, conn *servicecatalog.Client, id string
 
 		output, err := conn.DescribeTagOption(ctx, input)
 
-		if errs.IsA[*types.ResourceNotFoundException](err) {
-			return nil, StatusNotFound, err
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, statusNotFound, err
 		}
 
 		if err != nil {
-			return nil, string(types.StatusFailed), fmt.Errorf("describing tag option: %w", err)
+			return nil, string(awstypes.StatusFailed), fmt.Errorf("describing tag option: %w", err)
 		}
 
 		if output == nil || output.TagOptionDetail == nil {
-			return nil, StatusUnavailable, fmt.Errorf("describing tag option: empty tag option detail")
+			return nil, statusUnavailable, fmt.Errorf("describing tag option: empty tag option detail")
 		}
 
-		return output.TagOptionDetail, string(types.StatusAvailable), err
+		return output.TagOptionDetail, string(awstypes.StatusAvailable), err
 	}
 }
 
-func StatusPortfolioShareWithToken(ctx context.Context, conn *servicecatalog.Client, token string) retry.StateRefreshFunc {
+func statusPortfolioShareWithToken(ctx context.Context, conn *servicecatalog.Client, token string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &servicecatalog.DescribePortfolioShareStatusInput{
 			PortfolioShareToken: aws.String(token),
 		}
 		output, err := conn.DescribePortfolioShareStatus(ctx, input)
 
-		if errs.IsA[*types.ResourceNotFoundException](err) {
-			return nil, StatusNotFound, err
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, statusNotFound, err
 		}
 
 		if err != nil {
-			return nil, string(types.ShareStatusError), fmt.Errorf("describing portfolio share status: %w", err)
+			return nil, string(awstypes.ShareStatusError), fmt.Errorf("describing portfolio share status: %w", err)
 		}
 
 		if output == nil {
-			return nil, StatusUnavailable, fmt.Errorf("describing portfolio share status: empty response")
+			return nil, statusUnavailable, fmt.Errorf("describing portfolio share status: empty response")
 		}
 
 		return output, string(output.Status), err
 	}
 }
 
-func StatusPortfolioShare(ctx context.Context, conn *servicecatalog.Client, portfolioID, shareType, principalID string) retry.StateRefreshFunc {
+func statusPortfolioShare(ctx context.Context, conn *servicecatalog.Client, portfolioID, shareType, principalID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindPortfolioShare(ctx, conn, portfolioID, shareType, principalID)
+		output, err := findPortfolioShare(ctx, conn, portfolioID, shareType, principalID)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -111,36 +111,36 @@ func StatusPortfolioShare(ctx context.Context, conn *servicecatalog.Client, port
 		}
 
 		if !output.Accepted {
-			return output, string(types.ShareStatusInProgress), nil
+			return output, string(awstypes.ShareStatusInProgress), nil
 		}
 
-		return output, string(types.ShareStatusCompleted), nil
+		return output, string(awstypes.ShareStatusCompleted), nil
 	}
 }
 
-func StatusOrganizationsAccess(ctx context.Context, conn *servicecatalog.Client) retry.StateRefreshFunc {
+func statusOrganizationsAccess(ctx context.Context, conn *servicecatalog.Client) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &servicecatalog.GetAWSOrganizationsAccessStatusInput{}
 
 		output, err := conn.GetAWSOrganizationsAccessStatus(ctx, input)
 
-		if errs.IsA[*types.ResourceNotFoundException](err) {
-			return nil, StatusNotFound, err
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, statusNotFound, err
 		}
 
 		if err != nil {
-			return nil, OrganizationAccessStatusError, fmt.Errorf("getting Organizations Access: %w", err)
+			return nil, organizationAccessStatusError, fmt.Errorf("getting Organizations Access: %w", err)
 		}
 
 		if output == nil {
-			return nil, StatusUnavailable, fmt.Errorf("getting Organizations Access: empty response")
+			return nil, statusUnavailable, fmt.Errorf("getting Organizations Access: empty response")
 		}
 
 		return output, string(output.AccessStatus), err
 	}
 }
 
-func StatusConstraint(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, id string) retry.StateRefreshFunc {
+func statusConstraint(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &servicecatalog.DescribeConstraintInput{
 			Id: aws.String(id),
@@ -152,18 +152,18 @@ func StatusConstraint(ctx context.Context, conn *servicecatalog.Client, acceptLa
 
 		output, err := conn.DescribeConstraint(ctx, input)
 
-		if errs.IsA[*types.ResourceNotFoundException](err) {
-			return nil, StatusNotFound, &retry.NotFoundError{
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, statusNotFound, &retry.NotFoundError{
 				Message: fmt.Sprintf("constraint not found (accept language %s, ID: %s): %s", acceptLanguage, id, err),
 			}
 		}
 
 		if err != nil {
-			return nil, string(types.StatusFailed), fmt.Errorf("describing constraint: %w", err)
+			return nil, string(awstypes.StatusFailed), fmt.Errorf("describing constraint: %w", err)
 		}
 
 		if output == nil || output.ConstraintDetail == nil {
-			return nil, StatusNotFound, &retry.NotFoundError{
+			return nil, statusNotFound, &retry.NotFoundError{
 				Message: fmt.Sprintf("describing constraint (accept language %s, ID: %s): empty response", acceptLanguage, id),
 			}
 		}
@@ -172,31 +172,31 @@ func StatusConstraint(ctx context.Context, conn *servicecatalog.Client, acceptLa
 	}
 }
 
-func StatusProductPortfolioAssociation(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, portfolioID, productID string) retry.StateRefreshFunc {
+func statusProductPortfolioAssociation(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, portfolioID, productID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindProductPortfolioAssociation(ctx, conn, acceptLanguage, portfolioID, productID)
+		output, err := findProductPortfolioAssociation(ctx, conn, acceptLanguage, portfolioID, productID)
 
-		if errs.IsA[*types.ResourceNotFoundException](err) {
-			return nil, StatusNotFound, &retry.NotFoundError{
-				Message: fmt.Sprintf("product portfolio association not found (%s): %s", ProductPortfolioAssociationCreateID(acceptLanguage, portfolioID, productID), err),
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, statusNotFound, &retry.NotFoundError{
+				Message: fmt.Sprintf("product portfolio association not found (%s): %s", productPortfolioAssociationCreateID(acceptLanguage, portfolioID, productID), err),
 			}
 		}
 
 		if err != nil {
-			return nil, string(types.StatusFailed), fmt.Errorf("describing product portfolio association: %w", err)
+			return nil, string(awstypes.StatusFailed), fmt.Errorf("describing product portfolio association: %w", err)
 		}
 
 		if output == nil {
-			return nil, StatusNotFound, &retry.NotFoundError{
-				Message: fmt.Sprintf("finding product portfolio association (%s): empty response", ProductPortfolioAssociationCreateID(acceptLanguage, portfolioID, productID)),
+			return nil, statusNotFound, &retry.NotFoundError{
+				Message: fmt.Sprintf("finding product portfolio association (%s): empty response", productPortfolioAssociationCreateID(acceptLanguage, portfolioID, productID)),
 			}
 		}
 
-		return output, string(types.StatusAvailable), err
+		return output, string(awstypes.StatusAvailable), err
 	}
 }
 
-func StatusServiceAction(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, id string) retry.StateRefreshFunc {
+func statusServiceAction(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &servicecatalog.DescribeServiceActionInput{
 			Id: aws.String(id),
@@ -208,71 +208,71 @@ func StatusServiceAction(ctx context.Context, conn *servicecatalog.Client, accep
 
 		output, err := conn.DescribeServiceAction(ctx, input)
 
-		if errs.IsA[*types.ResourceNotFoundException](err) {
-			return nil, StatusNotFound, err
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, statusNotFound, err
 		}
 
 		if err != nil {
-			return nil, string(types.StatusFailed), fmt.Errorf("describing Service Action: %w", err)
+			return nil, string(awstypes.StatusFailed), fmt.Errorf("describing Service Action: %w", err)
 		}
 
 		if output == nil || output.ServiceActionDetail == nil {
-			return nil, StatusUnavailable, fmt.Errorf("describing Service Action: empty Service Action Detail")
+			return nil, statusUnavailable, fmt.Errorf("describing Service Action: empty Service Action Detail")
 		}
 
-		return output.ServiceActionDetail, string(types.StatusAvailable), nil
+		return output.ServiceActionDetail, string(awstypes.StatusAvailable), nil
 	}
 }
 
-func StatusBudgetResourceAssociation(ctx context.Context, conn *servicecatalog.Client, budgetName, resourceID string) retry.StateRefreshFunc {
+func statusBudgetResourceAssociation(ctx context.Context, conn *servicecatalog.Client, budgetName, resourceID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindBudgetResourceAssociation(ctx, conn, budgetName, resourceID)
+		output, err := findBudgetResourceAssociation(ctx, conn, budgetName, resourceID)
 
-		if errs.IsA[*types.ResourceNotFoundException](err) {
-			return nil, StatusNotFound, &retry.NotFoundError{
-				Message: fmt.Sprintf("tag option resource association not found (%s): %s", BudgetResourceAssociationID(budgetName, resourceID), err),
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, statusNotFound, &retry.NotFoundError{
+				Message: fmt.Sprintf("tag option resource association not found (%s): %s", budgetResourceAssociationID(budgetName, resourceID), err),
 			}
 		}
 
 		if err != nil {
-			return nil, string(types.StatusFailed), fmt.Errorf("describing tag option resource association: %w", err)
+			return nil, string(awstypes.StatusFailed), fmt.Errorf("describing tag option resource association: %w", err)
 		}
 
 		if output == nil {
-			return nil, StatusNotFound, &retry.NotFoundError{
-				Message: fmt.Sprintf("finding tag option resource association (%s): empty response", BudgetResourceAssociationID(budgetName, resourceID)),
+			return nil, statusNotFound, &retry.NotFoundError{
+				Message: fmt.Sprintf("finding tag option resource association (%s): empty response", budgetResourceAssociationID(budgetName, resourceID)),
 			}
 		}
 
-		return output, string(types.StatusAvailable), err
+		return output, string(awstypes.StatusAvailable), err
 	}
 }
 
-func StatusTagOptionResourceAssociation(ctx context.Context, conn *servicecatalog.Client, tagOptionID, resourceID string) retry.StateRefreshFunc {
+func statusTagOptionResourceAssociation(ctx context.Context, conn *servicecatalog.Client, tagOptionID, resourceID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindTagOptionResourceAssociation(ctx, conn, tagOptionID, resourceID)
+		output, err := findTagOptionResourceAssociation(ctx, conn, tagOptionID, resourceID)
 
-		if errs.IsA[*types.ResourceNotFoundException](err) {
-			return nil, StatusNotFound, &retry.NotFoundError{
-				Message: fmt.Sprintf("tag option resource association not found (%s): %s", TagOptionResourceAssociationID(tagOptionID, resourceID), err),
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, statusNotFound, &retry.NotFoundError{
+				Message: fmt.Sprintf("tag option resource association not found (%s): %s", tagOptionResourceAssociationID(tagOptionID, resourceID), err),
 			}
 		}
 
 		if err != nil {
-			return nil, string(types.StatusFailed), fmt.Errorf("describing tag option resource association: %w", err)
+			return nil, string(awstypes.StatusFailed), fmt.Errorf("describing tag option resource association: %w", err)
 		}
 
 		if output == nil {
-			return nil, StatusNotFound, &retry.NotFoundError{
-				Message: fmt.Sprintf("finding tag option resource association (%s): empty response", TagOptionResourceAssociationID(tagOptionID, resourceID)),
+			return nil, statusNotFound, &retry.NotFoundError{
+				Message: fmt.Sprintf("finding tag option resource association (%s): empty response", tagOptionResourceAssociationID(tagOptionID, resourceID)),
 			}
 		}
 
-		return output, string(types.StatusAvailable), err
+		return output, string(awstypes.StatusAvailable), err
 	}
 }
 
-func StatusProvisioningArtifact(ctx context.Context, conn *servicecatalog.Client, id, productID string) retry.StateRefreshFunc {
+func statusProvisioningArtifact(ctx context.Context, conn *servicecatalog.Client, id, productID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &servicecatalog.DescribeProvisioningArtifactInput{
 			ProvisioningArtifactId: aws.String(id),
@@ -281,65 +281,56 @@ func StatusProvisioningArtifact(ctx context.Context, conn *servicecatalog.Client
 
 		output, err := conn.DescribeProvisioningArtifact(ctx, input)
 
-		if errs.IsA[*types.ResourceNotFoundException](err) {
-			return nil, StatusNotFound, err
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, statusNotFound, err
 		}
 
 		if err != nil {
-			return nil, string(types.StatusFailed), err
+			return nil, string(awstypes.StatusFailed), err
 		}
 
 		if output == nil || output.ProvisioningArtifactDetail == nil {
-			return nil, StatusUnavailable, err
+			return nil, statusUnavailable, err
 		}
 
 		return output, string(output.Status), err
 	}
 }
 
-func StatusLaunchPaths(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, productID string) retry.StateRefreshFunc {
+func statusLaunchPaths(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, productID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &servicecatalog.ListLaunchPathsInput{
 			AcceptLanguage: aws.String(acceptLanguage),
 			ProductId:      aws.String(productID),
 		}
 
-		var summaries []*types.LaunchPathSummary
+		var output []awstypes.LaunchPathSummary
 
-		err := conn.ListLaunchPathsPages(ctx, input, func(page *servicecatalog.ListLaunchPathsOutput, lastPage bool) bool {
-			if page == nil {
-				return !lastPage
+		pages := servicecatalog.NewListLaunchPathsPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx)
+
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+				return nil, statusNotFound, nil
 			}
 
-			for _, summary := range page.LaunchPathSummaries {
-				if summary == nil {
-					continue
-				}
-
-				summaries = append(summaries, summary)
+			if err != nil {
+				return nil, string(awstypes.StatusFailed), err
 			}
 
-			return !lastPage
-		})
-
-		if errs.IsA[*types.ResourceNotFoundException](err) {
-			return nil, StatusNotFound, nil
+			output = append(output, page.LaunchPathSummaries...)
 		}
 
-		if err != nil {
-			return nil, string(types.StatusFailed), err
-		}
-
-		return summaries, string(types.StatusAvailable), err
+		return output, string(awstypes.StatusAvailable), nil
 	}
 }
 
-func StatusProvisionedProduct(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, id, name string) retry.StateRefreshFunc {
+func statusProvisionedProduct(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, id, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &servicecatalog.DescribeProvisionedProductInput{}
 
 		if acceptLanguage != "" {
-			input.AcceptLanguage = aws.String(acceptLanguage)
+			input.AcceptLanguage = aws.String(string(acceptLanguage))
 		}
 
 		// one or the other but not both
@@ -351,7 +342,7 @@ func StatusProvisionedProduct(ctx context.Context, conn *servicecatalog.Client, 
 
 		output, err := conn.DescribeProvisionedProduct(ctx, input)
 
-		if errs.IsA[*types.ResourceNotFoundException](err) {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, "", nil
 		}
 
@@ -367,7 +358,7 @@ func StatusProvisionedProduct(ctx context.Context, conn *servicecatalog.Client, 
 	}
 }
 
-func StatusPortfolioConstraints(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, portfolioID, productID string) retry.StateRefreshFunc {
+func statusPortfolioConstraints(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, portfolioID, productID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &servicecatalog.ListConstraintsForPortfolioInput{
 			PortfolioId: aws.String(portfolioID),
@@ -381,32 +372,23 @@ func StatusPortfolioConstraints(ctx context.Context, conn *servicecatalog.Client
 			input.ProductId = aws.String(productID)
 		}
 
-		var output []*types.ConstraintDetail
+		var output []awstypes.ConstraintDetail
 
-		err := conn.ListConstraintsForPortfolioPages(ctx, input, func(page *servicecatalog.ListConstraintsForPortfolioOutput, lastPage bool) bool {
-			if page == nil {
-				return !lastPage
+		pages := servicecatalog.NewListConstraintsForPortfolioPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx)
+
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+				return nil, statusNotFound, nil
 			}
 
-			for _, deet := range page.ConstraintDetails {
-				if deet == nil {
-					continue
-				}
-
-				output = append(output, deet)
+			if err != nil {
+				return nil, string(awstypes.StatusFailed), err
 			}
 
-			return !lastPage
-		})
-
-		if errs.IsA[*types.ResourceNotFoundException](err) {
-			return nil, StatusNotFound, nil
+			output = append(output, page.ConstraintDetails...)
 		}
 
-		if err != nil {
-			return nil, string(types.StatusFailed), err
-		}
-
-		return output, string(types.StatusAvailable), err
+		return output, string(awstypes.StatusAvailable), nil
 	}
 }

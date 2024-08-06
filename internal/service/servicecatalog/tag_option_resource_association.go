@@ -121,7 +121,7 @@ func resourceTagOptionResourceAssociationRead(ctx context.Context, d *schema.Res
 		return sdkdiag.AppendErrorf(diags, "could not parse ID (%s): %s", d.Id(), err)
 	}
 
-	output, err := WaitTagOptionResourceAssociationReady(ctx, conn, tagOptionID, resourceID, d.Timeout(schema.TimeoutRead))
+	output, err := waitTagOptionResourceAssociationReady(ctx, conn, tagOptionID, resourceID, d.Timeout(schema.TimeoutRead))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Service Catalog Tag Option Resource Association (%s) not found, removing from state", d.Id())
@@ -175,7 +175,7 @@ func resourceTagOptionResourceAssociationDelete(ctx context.Context, d *schema.R
 		return sdkdiag.AppendErrorf(diags, "disassociating Service Catalog Tag Option from Resource (%s): %s", d.Id(), err)
 	}
 
-	err = WaitTagOptionResourceAssociationDeleted(ctx, conn, tagOptionID, resourceID, d.Timeout(schema.TimeoutDelete))
+	err = waitTagOptionResourceAssociationDeleted(ctx, conn, tagOptionID, resourceID, d.Timeout(schema.TimeoutDelete))
 
 	if err != nil && !tfresource.NotFound(err) {
 		return sdkdiag.AppendErrorf(diags, "waiting for Service Catalog Tag Option Resource Disassociation (%s): %s", d.Id(), err)

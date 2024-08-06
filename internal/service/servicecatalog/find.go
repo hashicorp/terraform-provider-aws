@@ -9,47 +9,39 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
-	"github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindPortfolioShare(ctx context.Context, conn *servicecatalog.Client, portfolioID, shareType, principalID string) (*types.PortfolioShareDetail, error) {
+func findPortfolioShare(ctx context.Context, conn *servicecatalog.Client, portfolioID, shareType, principalID string) (*awstypes.PortfolioShareDetail, error) {
 	input := &servicecatalog.DescribePortfolioSharesInput{
 		PortfolioId: aws.String(portfolioID),
-		Type:        types.DescribePortfolioShareType(shareType),
+		Type:        awstypes.DescribePortfolioShareType(shareType),
 	}
-	var result *types.PortfolioShareDetail
+	var result *awstypes.PortfolioShareDetail
 
-	err := conn.DescribePortfolioSharesPages(ctx, input, func(page *servicecatalog.DescribePortfolioSharesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
+	pages := servicecatalog.NewDescribePortfolioSharesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-		for _, deet := range page.PortfolioShareDetails {
-			if deet == nil {
-				continue
-			}
-
-			if strings.Contains(principalID, aws.ToString(deet.PrincipalId)) {
-				result = deet
-				return false
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
 			}
 		}
 
-		return !lastPage
-	})
-
-	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		if err != nil {
+			return nil, err
 		}
-	}
 
-	if err != nil {
-		return nil, err
+		for _, detail := range page.PortfolioShareDetails {
+			if strings.Contains(principalID, aws.ToString(detail.PrincipalId)) {
+				result = &detail
+			}
+		}
 	}
 
 	if result == nil {
@@ -59,7 +51,7 @@ func FindPortfolioShare(ctx context.Context, conn *servicecatalog.Client, portfo
 	return result, nil
 }
 
-func FindProductPortfolioAssociation(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, portfolioID, productID string) (*types.PortfolioDetail, error) {
+func findProductPortfolioAssociation(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, portfolioID, productID string) (*awstypes.PortfolioDetail, error) {
 	// seems odd that the sourcePortfolioID is not returned or searchable...
 	input := &servicecatalog.ListPortfoliosForProductInput{
 		ProductId: aws.String(productID),
@@ -69,86 +61,95 @@ func FindProductPortfolioAssociation(ctx context.Context, conn *servicecatalog.C
 		input.AcceptLanguage = aws.String(acceptLanguage)
 	}
 
-	var result *servicecatalog.PortfolioDetail
+	var result *awstypes.PortfolioDetail
 
-	err := conn.ListPortfoliosForProductPages(ctx, input, func(page *servicecatalog.ListPortfoliosForProductOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
+	pages := servicecatalog.NewListPortfoliosForProductPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-		for _, deet := range page.PortfolioDetails {
-			if deet == nil {
-				continue
-			}
-
-			if aws.ToString(deet.Id) == portfolioID {
-				result = deet
-				return false
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
 			}
 		}
 
-		return !lastPage
-	})
+		if err != nil {
+			return nil, err
+		}
 
-	return result, err
+		for _, detail := range page.PortfolioDetails {
+			if aws.ToString(detail.Id) == portfolioID {
+				result = &detail
+			}
+		}
+	}
+
+	return result, nil
 }
 
-func FindBudgetResourceAssociation(ctx context.Context, conn *servicecatalog.Client, budgetName, resourceID string) (*types.BudgetDetail, error) {
+func findBudgetResourceAssociation(ctx context.Context, conn *servicecatalog.Client, budgetName, resourceID string) (*awstypes.BudgetDetail, error) {
 	input := &servicecatalog.ListBudgetsForResourceInput{
 		ResourceId: aws.String(resourceID),
 	}
 
-	var result *types.BudgetDetail
+	var result *awstypes.BudgetDetail
 
-	err := conn.ListBudgetsForResourcePages(ctx, input, func(page *servicecatalog.ListBudgetsForResourceOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := servicecatalog.NewListBudgetsForResourcePaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
 		}
 
 		for _, budget := range page.Budgets {
-			if budget == nil {
-				continue
-			}
-
 			if aws.ToString(budget.BudgetName) == budgetName {
-				result = budget
-				return false
+				result = &budget
 			}
 		}
+	}
 
-		return !lastPage
-	})
-
-	return result, err
+	return result, nil
 }
 
-func FindTagOptionResourceAssociation(ctx context.Context, conn *servicecatalog.Client, tagOptionID, resourceID string) (*types.ResourceDetail, error) {
+func findTagOptionResourceAssociation(ctx context.Context, conn *servicecatalog.Client, tagOptionID, resourceID string) (*awstypes.ResourceDetail, error) {
 	input := &servicecatalog.ListResourcesForTagOptionInput{
 		TagOptionId: aws.String(tagOptionID),
 	}
 
-	var result *types.ResourceDetail
+	var result *awstypes.ResourceDetail
 
-	err := conn.ListResourcesForTagOptionPages(ctx, input, func(page *servicecatalog.ListResourcesForTagOptionOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
+	pages := servicecatalog.NewListResourcesForTagOptionPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-		for _, deet := range page.ResourceDetails {
-			if deet == nil {
-				continue
-			}
-
-			if aws.ToString(deet.Id) == resourceID {
-				result = deet
-				return false
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
 			}
 		}
 
-		return !lastPage
-	})
+		if err != nil {
+			return nil, err
+		}
 
-	return result, err
+		for _, detail := range page.ResourceDetails {
+			if aws.ToString(detail.Id) == resourceID {
+				result = &detail
+			}
+		}
+	}
+
+	return result, nil
 }
 
 func findProductByID(ctx context.Context, conn *servicecatalog.Client, productID string) (*servicecatalog.DescribeProductAsAdminOutput, error) {
@@ -158,7 +159,7 @@ func findProductByID(ctx context.Context, conn *servicecatalog.Client, productID
 
 	out, err := conn.DescribeProductAsAdmin(ctx, in)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,

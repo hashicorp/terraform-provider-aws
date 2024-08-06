@@ -122,7 +122,7 @@ func resourceTagOptionRead(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-	output, err := WaitTagOptionReady(ctx, conn, d.Id(), d.Timeout(schema.TimeoutRead))
+	output, err := waitTagOptionReady(ctx, conn, d.Id(), d.Timeout(schema.TimeoutRead))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Service Catalog Tag Option (%s) not found, removing from state", d.Id())
@@ -208,7 +208,7 @@ func resourceTagOptionDelete(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "deleting Service Catalog Tag Option (%s): %s", d.Id(), err)
 	}
 
-	if err := WaitTagOptionDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if err := waitTagOptionDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Service Catalog Tag Option (%s) to be deleted: %s", d.Id(), err)
 	}
 

@@ -80,7 +80,7 @@ func dataSourcePortfolioConstraintsRead(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-	output, err := WaitPortfolioConstraintsReady(ctx, conn, d.Get("accept_language").(string), d.Get("portfolio_id").(string), d.Get("product_id").(string), d.Timeout(schema.TimeoutRead))
+	output, err := waitPortfolioConstraintsReady(ctx, conn, d.Get("accept_language").(string), d.Get("portfolio_id").(string), d.Get("product_id").(string), d.Timeout(schema.TimeoutRead))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "describing Service Catalog Portfolio Constraints: %s", err)

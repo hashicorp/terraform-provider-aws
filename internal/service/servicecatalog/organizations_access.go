@@ -70,7 +70,7 @@ func resourceOrganizationsAccessRead(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-	output, err := WaitOrganizationsAccessStable(ctx, conn, d.Timeout(schema.TimeoutRead))
+	output, err := waitOrganizationsAccessStable(ctx, conn, d.Timeout(schema.TimeoutRead))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		// theoretically this should not be possible

@@ -170,11 +170,11 @@ func resourcePortfolioShareCreate(ctx context.Context, d *schema.ResourceData, m
 
 	// only get a token if organization node, otherwise check without token
 	if output.PortfolioShareToken != nil {
-		if _, err := WaitPortfolioShareCreatedWithToken(ctx, conn, aws.ToString(output.PortfolioShareToken), waitForAcceptance, d.Timeout(schema.TimeoutCreate)); err != nil {
+		if _, err := waitPortfolioShareCreatedWithToken(ctx, conn, aws.ToString(output.PortfolioShareToken), waitForAcceptance, d.Timeout(schema.TimeoutCreate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Service Catalog Portfolio Share (%s) to be ready: %s", d.Id(), err)
 		}
 	} else {
-		if _, err := WaitPortfolioShareReady(ctx, conn, d.Get("portfolio_id").(string), d.Get(names.AttrType).(string), d.Get("principal_id").(string), waitForAcceptance, d.Timeout(schema.TimeoutCreate)); err != nil {
+		if _, err := waitPortfolioShareReady(ctx, conn, d.Get("portfolio_id").(string), d.Get(names.AttrType).(string), d.Get("principal_id").(string), waitForAcceptance, d.Timeout(schema.TimeoutCreate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Service Catalog Portfolio Share (%s) to be ready: %s", d.Id(), err)
 		}
 	}
@@ -197,7 +197,7 @@ func resourcePortfolioShareRead(ctx context.Context, d *schema.ResourceData, met
 		waitForAcceptance = v.(bool)
 	}
 
-	output, err := WaitPortfolioShareReady(ctx, conn, portfolioID, shareType, principalID, waitForAcceptance, d.Timeout(schema.TimeoutRead))
+	output, err := waitPortfolioShareReady(ctx, conn, portfolioID, shareType, principalID, waitForAcceptance, d.Timeout(schema.TimeoutRead))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Service Catalog Portfolio Share (%s) not found, removing from state", d.Id())
@@ -318,11 +318,11 @@ func resourcePortfolioShareDelete(ctx context.Context, d *schema.ResourceData, m
 
 	// only get a token if organization node, otherwise check without token
 	if output.PortfolioShareToken != nil {
-		if _, err := WaitPortfolioShareDeletedWithToken(ctx, conn, aws.ToString(output.PortfolioShareToken), d.Timeout(schema.TimeoutDelete)); err != nil {
+		if _, err := waitPortfolioShareDeletedWithToken(ctx, conn, aws.ToString(output.PortfolioShareToken), d.Timeout(schema.TimeoutDelete)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Service Catalog Portfolio Share (%s) to be deleted: %s", d.Id(), err)
 		}
 	} else {
-		if _, err := WaitPortfolioShareDeleted(ctx, conn, d.Get("portfolio_id").(string), d.Get(names.AttrType).(string), d.Get("principal_id").(string), d.Timeout(schema.TimeoutDelete)); err != nil {
+		if _, err := waitPortfolioShareDeleted(ctx, conn, d.Get("portfolio_id").(string), d.Get(names.AttrType).(string), d.Get("principal_id").(string), d.Timeout(schema.TimeoutDelete)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Service Catalog Portfolio Share (%s) to be deleted: %s", d.Id(), err)
 		}
 	}

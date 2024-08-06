@@ -72,7 +72,7 @@ func dataSourceConstraintRead(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-	output, err := WaitConstraintReady(ctx, conn, d.Get("accept_language").(string), d.Get(names.AttrID).(string), d.Timeout(schema.TimeoutRead))
+	output, err := waitConstraintReady(ctx, conn, d.Get("accept_language").(string), d.Get(names.AttrID).(string), d.Timeout(schema.TimeoutRead))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "describing Service Catalog Constraint: %s", err)

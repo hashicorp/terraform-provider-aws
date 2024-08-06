@@ -185,7 +185,7 @@ func resourceProvisioningArtifactRead(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "parsing Service Catalog Provisioning Artifact ID (%s): %s", d.Id(), err)
 	}
 
-	output, err := WaitProvisioningArtifactReady(ctx, conn, artifactID, productID, d.Timeout(schema.TimeoutRead))
+	output, err := waitProvisioningArtifactReady(ctx, conn, artifactID, productID, d.Timeout(schema.TimeoutRead))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Service Catalog Provisioning Artifact (%s) not found, removing from state", d.Id())
@@ -313,7 +313,7 @@ func resourceProvisioningArtifactDelete(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "deleting Service Catalog Provisioning Artifact (%s): %s", d.Id(), err)
 	}
 
-	if err := WaitProvisioningArtifactDeleted(ctx, conn, artifactID, productID, d.Timeout(schema.TimeoutDelete)); err != nil {
+	if err := waitProvisioningArtifactDeleted(ctx, conn, artifactID, productID, d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Service Catalog Provisioning Artifact (%s) to be deleted: %s", d.Id(), err)
 	}
 
