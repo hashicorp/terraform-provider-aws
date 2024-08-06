@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -88,19 +88,11 @@ func testAccCheckOrganizationsAccessExists(ctx context.Context, resourceName str
 			return fmt.Errorf("error getting Service Catalog AWS Organizations Access (%s): empty response", rs.Primary.ID)
 		}
 
-<<<<<<< HEAD
-		if output != string(types.AccessStatusEnabled) && rs.Primary.Attributes["enabled"] == "true" {
+		if output != string(awstypes.AccessStatusEnabled) && rs.Primary.Attributes[names.AttrEnabled] == acctest.CtTrue {
 			return fmt.Errorf("error getting Service Catalog AWS Organizations Access (%s): wrong setting", rs.Primary.ID)
 		}
 
-		if output == string(types.AccessStatusEnabled) && rs.Primary.Attributes["enabled"] == "false" {
-=======
-		if output != servicecatalog.AccessStatusEnabled && rs.Primary.Attributes[names.AttrEnabled] == acctest.CtTrue {
-			return fmt.Errorf("error getting Service Catalog AWS Organizations Access (%s): wrong setting", rs.Primary.ID)
-		}
-
-		if output == servicecatalog.AccessStatusEnabled && rs.Primary.Attributes[names.AttrEnabled] == acctest.CtFalse {
->>>>>>> main
+		if output != string(awstypes.AccessStatusEnabled) && rs.Primary.Attributes[names.AttrEnabled] == acctest.CtFalse {
 			return fmt.Errorf("error getting Service Catalog AWS Organizations Access (%s): wrong setting", rs.Primary.ID)
 		}
 
