@@ -270,7 +270,7 @@ resource "aws_datazone_environment_blueprint_configuration" "test" {
   provisioning_role_arn    = aws_iam_role.domain_execution_role.arn
   enabled_regions          = [data.aws_region.test.name]
 }
-	`))
+`))
 }
 
 func testAccEnvironmentProfileConfig_basic(rName, domainName, projectName string) string {
