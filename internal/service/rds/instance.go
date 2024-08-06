@@ -260,7 +260,7 @@ func ResourceInstance() *schema.Resource {
 				ConflictsWith: []string{names.AttrDomain, "domain_iam_role_name"},
 			},
 			"domain_dns_ips": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				MinItems: 2,
 				MaxItems: 2,
@@ -665,6 +665,10 @@ func ResourceInstance() *schema.Resource {
 					"s3_import",
 				},
 			},
+			"upgrade_storage_config": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			names.AttrUsername: {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -866,6 +870,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if v, ok := d.GetOk(names.AttrStorageType); ok {
 			input.StorageType = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("upgrade_storage_config"); ok {
+			input.UpgradeStorageConfig = aws.Bool(v.(bool))
 		}
 
 		if v, ok := d.GetOk(names.AttrVPCSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
@@ -1201,8 +1209,8 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.DomainAuthSecretArn = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("domain_dns_ips"); ok && v.(*schema.Set).Len() > 0 {
-			input.DomainDnsIps = flex.ExpandStringSet(v.(*schema.Set))
+		if v, ok := d.GetOk("domain_dns_ips"); ok && len(v.([]interface{})) > 0 {
+			input.DomainDnsIps = flex.ExpandStringList(v.([]interface{}))
 		}
 
 		if v, ok := d.GetOk("domain_fqdn"); ok {
@@ -1466,8 +1474,8 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.DomainAuthSecretArn = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("domain_dns_ips"); ok && v.(*schema.Set).Len() > 0 {
-			input.DomainDnsIps = flex.ExpandStringSet(v.(*schema.Set))
+		if v, ok := d.GetOk("domain_dns_ips"); ok && len(v.([]interface{})) > 0 {
+			input.DomainDnsIps = flex.ExpandStringList(v.([]interface{}))
 		}
 
 		if v, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && v.(*schema.Set).Len() > 0 {
@@ -1647,8 +1655,8 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.DomainAuthSecretArn = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("domain_dns_ips"); ok && v.(*schema.Set).Len() > 0 {
-			input.DomainDnsIps = flex.ExpandStringSet(v.(*schema.Set))
+		if v, ok := d.GetOk("domain_dns_ips"); ok && len(v.([]interface{})) > 0 {
+			input.DomainDnsIps = flex.ExpandStringList(v.([]interface{}))
 		}
 
 		if v, ok := d.GetOk("domain_fqdn"); ok {
@@ -2393,8 +2401,8 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 	} else if d.HasChanges("domain_auth_secret_arn", "domain_dns_ips", "domain_fqdn", "domain_ou") {
 		needsModify = true
 		input.DomainAuthSecretArn = aws.String(d.Get("domain_auth_secret_arn").(string))
-		if v, ok := d.GetOk("domain_dns_ips"); ok && v.(*schema.Set).Len() > 0 {
-			input.DomainDnsIps = flex.ExpandStringValueSet(v.(*schema.Set))
+		if v, ok := d.GetOk("domain_dns_ips"); ok && len(v.([]interface{})) > 0 {
+			input.DomainDnsIps = flex.ExpandStringValueList(v.([]interface{}))
 		}
 		input.DomainFqdn = aws.String(d.Get("domain_fqdn").(string))
 		input.DomainOu = aws.String(d.Get("domain_ou").(string))
@@ -2726,7 +2734,7 @@ func findDBInstancesSDKv1(ctx context.Context, conn *rds.RDS, input *rds.Describ
 // findDBInstanceByIDSDKv2 in general should be called with a DbiResourceId of the form
 // "db-BE6UI2KLPQP3OVDYD74ZEV6NUM" rather than a DB identifier. However, in some cases only
 // the identifier is available, and can be used.
-func findDBInstanceByIDSDKv2(ctx context.Context, conn *rds_sdkv2.Client, id string) (*types.DBInstance, error) {
+func findDBInstanceByIDSDKv2(ctx context.Context, conn *rds_sdkv2.Client, id string, optFns ...func(*rds_sdkv2.Options)) (*types.DBInstance, error) {
 	input := &rds_sdkv2.DescribeDBInstancesInput{}
 
 	if regexache.MustCompile(`^db-[0-9A-Za-z]{2,255}$`).MatchString(id) {
@@ -2740,14 +2748,14 @@ func findDBInstanceByIDSDKv2(ctx context.Context, conn *rds_sdkv2.Client, id str
 		input.DBInstanceIdentifier = aws.String(id)
 	}
 
-	output, err := conn.DescribeDBInstances(ctx, input)
+	output, err := conn.DescribeDBInstances(ctx, input, optFns...)
 
 	// in case a DB has an *identifier* starting with "db-""
 	if regexache.MustCompile(`^db-[0-9A-Za-z]{2,255}$`).MatchString(id) && (output == nil || len(output.DBInstances) == 0) {
 		input = &rds_sdkv2.DescribeDBInstancesInput{
 			DBInstanceIdentifier: aws.String(id),
 		}
-		output, err = conn.DescribeDBInstances(ctx, input)
+		output, err = conn.DescribeDBInstances(ctx, input, optFns...)
 	}
 
 	if errs.IsA[*types.DBInstanceNotFoundFault](err) {

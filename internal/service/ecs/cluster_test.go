@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ecs"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,7 +21,7 @@ import (
 
 func TestAccECSCluster_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ecs.Cluster
+	var v awstypes.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_cluster.test"
 
@@ -60,7 +60,7 @@ func TestAccECSCluster_basic(t *testing.T) {
 
 func TestAccECSCluster_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ecs.Cluster
+	var v awstypes.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_cluster.test"
 
@@ -84,7 +84,7 @@ func TestAccECSCluster_disappears(t *testing.T) {
 
 func TestAccECSCluster_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ecs.Cluster
+	var v awstypes.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_cluster.test"
 
@@ -131,7 +131,7 @@ func TestAccECSCluster_tags(t *testing.T) {
 
 func TestAccECSCluster_serviceConnectDefaults(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ecs.Cluster
+	var v awstypes.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	ns := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha))
 	resourceName := "aws_ecs_cluster.test"
@@ -172,7 +172,7 @@ func TestAccECSCluster_serviceConnectDefaults(t *testing.T) {
 
 func TestAccECSCluster_containerInsights(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster1 ecs.Cluster
+	var cluster1 awstypes.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_cluster.test"
 
@@ -219,7 +219,7 @@ func TestAccECSCluster_containerInsights(t *testing.T) {
 
 func TestAccECSCluster_configuration(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster1 ecs.Cluster
+	var cluster1 awstypes.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_cluster.test"
 
@@ -267,7 +267,7 @@ func TestAccECSCluster_configuration(t *testing.T) {
 
 func TestAccECSCluster_managedStorageConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster1 ecs.Cluster
+	var cluster1 awstypes.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_cluster.test"
 
@@ -315,7 +315,7 @@ func TestAccECSCluster_managedStorageConfiguration(t *testing.T) {
 
 func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ecs_cluster" {
@@ -339,18 +339,14 @@ func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckClusterExists(ctx context.Context, n string, v *ecs.Cluster) resource.TestCheckFunc {
+func testAccCheckClusterExists(ctx context.Context, n string, v *awstypes.Cluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ECS Cluster ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSClient(ctx)
 
 		output, err := tfecs.FindClusterByNameOrARN(ctx, conn, rs.Primary.ID)
 

@@ -6,8 +6,9 @@ package ec2
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -56,7 +57,7 @@ func (d *securityGroupRulesDataSource) Read(ctx context.Context, request datasou
 		return
 	}
 
-	conn := d.Meta().EC2Conn(ctx)
+	conn := d.Meta().EC2Client(ctx)
 
 	input := &ec2.DescribeSecurityGroupRulesInput{
 		Filters: append(newCustomFilterListFramework(ctx, data.Filters), newTagFilterList(Tags(tftags.New(ctx, data.Tags)))...),
@@ -67,7 +68,7 @@ func (d *securityGroupRulesDataSource) Read(ctx context.Context, request datasou
 		input.Filters = nil
 	}
 
-	output, err := FindSecurityGroupRules(ctx, conn, input)
+	output, err := findSecurityGroupRules(ctx, conn, input)
 
 	if err != nil {
 		response.Diagnostics.AddError("reading Security Group Rules", err.Error())
@@ -76,8 +77,8 @@ func (d *securityGroupRulesDataSource) Read(ctx context.Context, request datasou
 	}
 
 	data.ID = types.StringValue(d.Meta().Region)
-	data.IDs = flex.FlattenFrameworkStringValueList(ctx, tfslices.ApplyToAll(output, func(v *ec2.SecurityGroupRule) string {
-		return aws.StringValue(v.SecurityGroupRuleId)
+	data.IDs = flex.FlattenFrameworkStringValueList(ctx, tfslices.ApplyToAll(output, func(v awstypes.SecurityGroupRule) string {
+		return aws.ToString(v.SecurityGroupRuleId)
 	}))
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)

@@ -66,10 +66,11 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"tags": {
-							Type:        schema.TypeMap,
-							Optional:    true,
-							Elem:        &schema.Schema{Type: schema.TypeString},
-							Description: "Resource tags to default across all resources",
+							Type:     schema.TypeMap,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							Description: "Resource tags to default across all resources. " +
+								"Can also be configured with environment variables like `" + tftags.DefaultTagsEnvVarPrefix + "<tag_name>`.",
 						},
 					},
 				},
@@ -113,16 +114,18 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"keys": {
-							Type:        schema.TypeSet,
-							Optional:    true,
-							Elem:        &schema.Schema{Type: schema.TypeString},
-							Description: "Resource tag keys to ignore across all resources.",
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							Description: "Resource tag keys to ignore across all resources. " +
+								"Can also be configured with the " + tftags.IgnoreTagsKeysEnvVar + " environment variable.",
 						},
 						"key_prefixes": {
-							Type:        schema.TypeSet,
-							Optional:    true,
-							Elem:        &schema.Schema{Type: schema.TypeString},
-							Description: "Resource tag key prefixes to ignore across all resources.",
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							Description: "Resource tag key prefixes to ignore across all resources. " +
+								"Can also be configured with the " + tftags.IgnoreTagsKeyPrefixesEnvVar + " environment variable.",
 						},
 					},
 				},
@@ -534,6 +537,8 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 
 	if v, ok := d.GetOk("default_tags"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		config.DefaultTagsConfig = expandDefaultTags(ctx, v.([]interface{})[0].(map[string]interface{}))
+	} else {
+		config.DefaultTagsConfig = expandDefaultTags(ctx, nil)
 	}
 
 	v := d.Get("endpoints")
@@ -565,6 +570,8 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 
 	if v, ok := d.GetOk("ignore_tags"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		config.IgnoreTagsConfig = expandIgnoreTags(ctx, v.([]interface{})[0].(map[string]interface{}))
+	} else {
+		config.IgnoreTagsConfig = expandIgnoreTags(ctx, nil)
 	}
 
 	if v, ok := d.GetOk("max_retries"); ok {
@@ -839,32 +846,72 @@ func expandAssumeRoleWithWebIdentity(_ context.Context, tfMap map[string]interfa
 }
 
 func expandDefaultTags(ctx context.Context, tfMap map[string]interface{}) *tftags.DefaultConfig {
-	if tfMap == nil {
-		return nil
+	tags := make(map[string]interface{})
+	for _, ev := range os.Environ() {
+		k, v, _ := strings.Cut(ev, "=")
+		if before, tk, ok := strings.Cut(k, tftags.DefaultTagsEnvVarPrefix); ok && before == "" {
+			tags[tk] = v
+		}
 	}
 
-	defaultConfig := &tftags.DefaultConfig{}
-
-	if v, ok := tfMap["tags"].(map[string]interface{}); ok {
-		defaultConfig.Tags = tftags.New(ctx, v)
+	if cfgTags, ok := tfMap["tags"].(map[string]interface{}); ok {
+		for k, v := range cfgTags {
+			tags[k] = v
+		}
 	}
 
-	return defaultConfig
+	if len(tags) > 0 {
+		return &tftags.DefaultConfig{
+			Tags: tftags.New(ctx, tags),
+		}
+	}
+
+	return nil
 }
 
 func expandIgnoreTags(ctx context.Context, tfMap map[string]interface{}) *tftags.IgnoreConfig {
-	if tfMap == nil {
+	var keys, keyPrefixes []interface{}
+
+	if tfMap != nil {
+		if v, ok := tfMap["keys"].(*schema.Set); ok {
+			keys = v.List()
+		}
+		if v, ok := tfMap["key_prefixes"].(*schema.Set); ok {
+			keyPrefixes = v.List()
+		}
+	}
+
+	if v := os.Getenv(tftags.IgnoreTagsKeysEnvVar); v != "" {
+		for _, k := range strings.Split(v, ",") {
+			if trimmed := strings.TrimSpace(k); trimmed != "" {
+				keys = append(keys, trimmed)
+			}
+		}
+	}
+
+	if v := os.Getenv(tftags.IgnoreTagsKeyPrefixesEnvVar); v != "" {
+		for _, kp := range strings.Split(v, ",") {
+			if trimmed := strings.TrimSpace(kp); trimmed != "" {
+				keyPrefixes = append(keyPrefixes, trimmed)
+			}
+		}
+	}
+
+	// To preseve behavior prior to supporting environment variables:
+	//
+	// - Return nil when no keys or prefixes are set
+	// - For a non-nil return, `keys` or `key_prefixes` should be
+	//   nil if empty (versus a zero-value `KeyValueTags` struct)
+	if len(keys) == 0 && len(keyPrefixes) == 0 {
 		return nil
 	}
 
 	ignoreConfig := &tftags.IgnoreConfig{}
-
-	if v, ok := tfMap["keys"].(*schema.Set); ok {
-		ignoreConfig.Keys = tftags.New(ctx, v.List())
+	if len(keys) > 0 {
+		ignoreConfig.Keys = tftags.New(ctx, keys)
 	}
-
-	if v, ok := tfMap["key_prefixes"].(*schema.Set); ok {
-		ignoreConfig.KeyPrefixes = tftags.New(ctx, v.List())
+	if len(keyPrefixes) > 0 {
+		ignoreConfig.KeyPrefixes = tftags.New(ctx, keyPrefixes)
 	}
 
 	return ignoreConfig

@@ -326,6 +326,52 @@ func testAccGraphQLAPI_AuthenticationType_lambda(t *testing.T) {
 	})
 }
 
+func testAccGraphQLAPI_enhancedMetricsConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	var api1 awstypes.GraphqlApi
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_appsync_graphql_api.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGraphQLAPIDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGraphQLAPIConfig_enhancedMetricsConfig(rName, "PER_DATA_SOURCE_METRICS", "ENABLED", "PER_RESOLVER_METRICS"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api1),
+					resource.TestCheckResourceAttr(resourceName, "enhanced_metrics_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "enhanced_metrics_config.0.data_source_level_metrics_behavior", "PER_DATA_SOURCE_METRICS"),
+					resource.TestCheckResourceAttr(resourceName, "enhanced_metrics_config.0.operation_level_metrics_config", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, "enhanced_metrics_config.0.resolver_level_metrics_behavior", "PER_RESOLVER_METRICS"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccGraphQLAPIConfig_enhancedMetricsConfig(rName, "FULL_REQUEST_DATA_SOURCE_METRICS", "DISABLED", "FULL_REQUEST_RESOLVER_METRICS"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api1),
+					resource.TestCheckResourceAttr(resourceName, "enhanced_metrics_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "enhanced_metrics_config.0.data_source_level_metrics_behavior", "FULL_REQUEST_DATA_SOURCE_METRICS"),
+					resource.TestCheckResourceAttr(resourceName, "enhanced_metrics_config.0.operation_level_metrics_config", "DISABLED"),
+					resource.TestCheckResourceAttr(resourceName, "enhanced_metrics_config.0.resolver_level_metrics_behavior", "FULL_REQUEST_RESOLVER_METRICS"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccGraphQLAPI_log(t *testing.T) {
 	ctx := acctest.Context(t)
 	var api1 awstypes.GraphqlApi
@@ -1374,6 +1420,20 @@ resource "aws_appsync_graphql_api" "test" {
   visibility          = %[2]q
 }
 `, rName, visibility)
+}
+
+func testAccGraphQLAPIConfig_enhancedMetricsConfig(rName, dataSourceLevelMetricsBehavior, operationLevelMetricsConfig, resolverLevelMetricsBehavior string) string {
+	return fmt.Sprintf(`
+resource "aws_appsync_graphql_api" "test" {
+  authentication_type = "API_KEY"
+  name                = %[1]q
+  enhanced_metrics_config {
+    data_source_level_metrics_behavior = %[2]q
+    operation_level_metrics_config     = %[3]q
+    resolver_level_metrics_behavior    = %[4]q
+  }
+}
+`, rName, dataSourceLevelMetricsBehavior, operationLevelMetricsConfig, resolverLevelMetricsBehavior)
 }
 
 func testAccGraphQLAPIConfig_logFieldLogLevel(rName, fieldLogLevel string) string {

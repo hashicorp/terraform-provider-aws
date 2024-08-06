@@ -124,7 +124,7 @@ func resourceTransitGatewayConnectPeerCreate(ctx context.Context, d *schema.Reso
 	input := &ec2.CreateTransitGatewayConnectPeerInput{
 		InsideCidrBlocks:           flex.ExpandStringValueSet(d.Get("inside_cidr_blocks").(*schema.Set)),
 		PeerAddress:                aws.String(d.Get("peer_address").(string)),
-		TagSpecifications:          getTagSpecificationsInV2(ctx, awstypes.ResourceTypeTransitGatewayConnectPeer),
+		TagSpecifications:          getTagSpecificationsIn(ctx, awstypes.ResourceTypeTransitGatewayConnectPeer),
 		TransitGatewayAttachmentId: aws.String(d.Get(names.AttrTransitGatewayAttachmentID).(string)),
 	}
 
@@ -196,7 +196,7 @@ func resourceTransitGatewayConnectPeerRead(ctx context.Context, d *schema.Resour
 	d.Set("transit_gateway_address", transitGatewayConnectPeer.ConnectPeerConfiguration.TransitGatewayAddress)
 	d.Set(names.AttrTransitGatewayAttachmentID, transitGatewayConnectPeer.TransitGatewayAttachmentId)
 
-	setTagsOutV2(ctx, transitGatewayConnectPeer.Tags)
+	setTagsOut(ctx, transitGatewayConnectPeer.Tags)
 
 	return diags
 }

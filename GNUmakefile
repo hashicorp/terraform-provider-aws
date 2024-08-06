@@ -106,7 +106,7 @@ awssdkpatch: prereq-go ## Install awssdkpatch
 
 awssdkpatch-apply: awssdkpatch-gen ## Apply a patch generated with awssdkpatch
 	@echo "Applying patch for $(PKG)..."
-	@gopatch -p awssdk.patch ./$(PKG_NAME)/...
+	@gopatch --skip-generated -p awssdk.patch ./$(PKG_NAME)/...
 
 awssdkpatch-gen: awssdkpatch ## Generate a patch file using awssdkpatch
 	@if [ "$(PKG)" = "" ]; then \

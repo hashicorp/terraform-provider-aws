@@ -125,7 +125,7 @@ func (v SmithyJSON[T]) ValueInterface() (T, diag.Diagnostics) {
 		return zero, diags
 	}
 
-	var data map[string]any
+	var data any
 	err := json.Unmarshal([]byte(v.ValueString()), &data)
 
 	if err != nil {

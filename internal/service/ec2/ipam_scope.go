@@ -88,7 +88,7 @@ func resourceIPAMScopeCreate(ctx context.Context, d *schema.ResourceData, meta i
 	input := &ec2.CreateIpamScopeInput{
 		ClientToken:       aws.String(id.UniqueId()),
 		IpamId:            aws.String(d.Get("ipam_id").(string)),
-		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeIpamScope),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeIpamScope),
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -135,7 +135,7 @@ func resourceIPAMScopeRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("is_default", scope.IsDefault)
 	d.Set("pool_count", scope.PoolCount)
 
-	setTagsOutV2(ctx, scope.Tags)
+	setTagsOut(ctx, scope.Tags)
 
 	return diags
 }
