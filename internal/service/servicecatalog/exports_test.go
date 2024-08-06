@@ -7,6 +7,7 @@ package servicecatalog
 var (
 	ResourceBudgetResourceAssociation = resourceBudgetResourceAssociation
 	ResourceConstraint                = resourceConstraint
+	ResourcePortfolio                 = resourcePortfolio
 	ResourcePortfolioShare            = resourcePortfolioShare
 
 	BudgetResourceAssociationParseID    = budgetResourceAssociationParseID
