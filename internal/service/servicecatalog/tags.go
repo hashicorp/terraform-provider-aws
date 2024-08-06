@@ -12,14 +12,14 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
-	"github.com/aws/aws-sdk-go/service/servicecatalog/servicecatalogiface"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // Custom Service Catalog tag service update functions using the same format as generated code.
 
-func productUpdateTags(ctx context.Context, conn servicecatalogiface.ServiceCatalogAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func productUpdateTags(ctx context.Context, conn servicecatalog.Client, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -28,7 +28,7 @@ func productUpdateTags(ctx context.Context, conn servicecatalogiface.ServiceCata
 	}
 
 	if removedTags := oldTags.Removed(newTags).IgnoreSystem(names.ServiceCatalog); len(removedTags) > 0 {
-		input.RemoveTags = aws.StringSlice(removedTags.Keys())
+		input.RemoveTags = removedTags.Keys()
 	}
 
 	if updatedTags := oldTags.Updated(newTags).IgnoreSystem(names.ServiceCatalog); len(updatedTags) > 0 {
@@ -44,7 +44,7 @@ func productUpdateTags(ctx context.Context, conn servicecatalogiface.ServiceCata
 	return nil
 }
 
-func recordKeyValueTags(ctx context.Context, tags []*servicecatalog.RecordTag) tftags.KeyValueTags {
+func recordKeyValueTags(ctx context.Context, tags []awstypes.RecordTag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
