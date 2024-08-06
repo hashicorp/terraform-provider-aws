@@ -129,9 +129,10 @@ func resourceOptionGroup() *schema.Resource {
 				ForceNew: true,
 				Default:  "Managed by Terraform",
 			},
-			"skip_destroy": {
+			names.AttrSkipDestroy: {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Default:  false,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -190,6 +191,8 @@ func resourceOptionGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "setting option: %s", err)
 	}
 	d.Set("option_group_description", option.OptionGroupDescription)
+	// Support in-place update of non-refreshable attribute.
+	d.Set(names.AttrSkipDestroy, d.Get(names.AttrSkipDestroy))
 
 	return diags
 }
@@ -246,7 +249,7 @@ func resourceOptionGroupDelete(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
-	if _, ok := d.GetOk("skip_destroy"); ok {
+	if _, ok := d.GetOk(names.AttrSkipDestroy); ok {
 		log.Printf("[DEBUG] Retaining RDS DB Option Group: %s", d.Id())
 		return diags
 	}

@@ -1045,7 +1045,7 @@ func TestAccRDSParameterGroup_caseParameters(t *testing.T) {
 	})
 }
 
-func TestAccCheckRDSParameterGroup_skipDestroy(t *testing.T) {
+func TestAccRDSParameterGroup_skipDestroy(t *testing.T) {
 	var v types.DBParameterGroup
 	ctx := acctest.Context(t)
 	resourceName := "aws_db_parameter_group.test"
@@ -1061,7 +1061,7 @@ func TestAccCheckRDSParameterGroup_skipDestroy(t *testing.T) {
 				Config: testAccParameterGroupConfig_skipDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, acctest.CtTrue),
 				),
 			},
 		},

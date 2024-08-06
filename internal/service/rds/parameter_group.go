@@ -99,9 +99,10 @@ func resourceParameterGroup() *schema.Resource {
 				},
 				Set: resourceParameterHash,
 			},
-			"skip_destroy": {
+			names.AttrSkipDestroy: {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Default:  false,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -229,6 +230,9 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "setting parameter: %s", err)
 	}
 
+	// Support in-place update of non-refreshable attribute.
+	d.Set(names.AttrSkipDestroy, d.Get(names.AttrSkipDestroy))
+
 	return diags
 }
 
@@ -309,7 +313,7 @@ func resourceParameterGroupDelete(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
-	if _, ok := d.GetOk("skip_destroy"); ok {
+	if _, ok := d.GetOk(names.AttrSkipDestroy); ok {
 		log.Printf("[DEBUG] Retaining RDS DB Parameter Group: %s", d.Id())
 		return diags
 	}

@@ -601,7 +601,7 @@ func TestAccRDSOptionGroup_badDiffs(t *testing.T) {
 	})
 }
 
-func TestAccCheckOptionGroup_skipDestroy(t *testing.T) {
+func TestAccRDSOptionGroup_skipDestroy(t *testing.T) {
 	var v types.OptionGroup
 	ctx := acctest.Context(t)
 	resourceName := "aws_db_option_group.test"
@@ -617,7 +617,7 @@ func TestAccCheckOptionGroup_skipDestroy(t *testing.T) {
 				Config: testAccOptionGroupConfig_skipDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, acctest.CtTrue),
 				),
 			},
 		},
