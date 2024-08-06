@@ -19,9 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_servicecatalog_portfolio")
+// @SDKDataSource("aws_servicecatalog_portfolio", name="Portfolio")
 // @Tags
-func DataSourcePortfolio() *schema.Resource {
+func dataSourcePortfolio() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePortfolioRead,
 

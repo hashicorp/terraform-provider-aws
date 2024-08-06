@@ -35,8 +35,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Launch Paths",
 		},
 		{
-			Factory:  DataSourcePortfolio,
+			Factory:  dataSourcePortfolio,
 			TypeName: "aws_servicecatalog_portfolio",
+			Name:     "Portfolio",
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
