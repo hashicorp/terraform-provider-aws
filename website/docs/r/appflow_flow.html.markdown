@@ -138,6 +138,7 @@ This resource supports the following arguments:
 * `source_flow_config` - (Required) The [Source Flow Config](#source-flow-config) that controls how Amazon AppFlow retrieves data from the source connector.
 * `task` - (Required) A [Task](#task) that Amazon AppFlow performs while transferring the data in the flow run.
 * `trigger_config` - (Required) A [Trigger](#trigger-config) that determine how and when the flow runs.
+* `flow_status` - (Optional) Sets the status of the flow for scheduled and event-triggered appflows. Valid values are 'Active' and 'Suspended'. If you omit the FlowStatus parameter, Amazon AppFlow creates the flow with a default status.
 * `description` - (Optional) Description of the flow you want to create.
 * `kms_arn` - (Optional) ARN (Amazon Resource Name) of the Key Management Service (KMS) key you provide for encryption. This is required if you do not want to use the Amazon AppFlow-managed KMS key. If you don't provide anything here, Amazon AppFlow uses the Amazon AppFlow-managed KMS key.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
