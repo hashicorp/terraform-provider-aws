@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_servicecatalog_organizations_access")
-func ResourceOrganizationsAccess() *schema.Resource {
+// @SDKResource("aws_servicecatalog_organizations_access", name="Organizations Access")
+func resourceOrganizationsAccess() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOrganizationsAccessCreate,
 		ReadWithoutTimeout:   resourceOrganizationsAccessRead,
