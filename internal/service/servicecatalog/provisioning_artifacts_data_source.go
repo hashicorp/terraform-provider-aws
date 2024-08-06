@@ -29,9 +29,9 @@ func DataSourceProvisioningArtifacts() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"accept_language": {
 				Type:         schema.TypeString,
-				Default:      AcceptLanguageEnglish,
+				Default:      acceptLanguageEnglish,
 				Optional:     true,
-				ValidateFunc: validation.StringInSlice(AcceptLanguage_Values(), false),
+				ValidateFunc: validation.StringInSlice(acceptLanguage_Values(), false),
 			},
 			"product_id": {
 				Type:     schema.TypeString,

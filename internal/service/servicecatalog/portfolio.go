@@ -84,7 +84,7 @@ func resourcePortfolioCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	name := d.Get(names.AttrName).(string)
 	input := &servicecatalog.CreatePortfolioInput{
-		AcceptLanguage:   aws.String(AcceptLanguageEnglish),
+		AcceptLanguage:   aws.String(acceptLanguageEnglish),
 		DisplayName:      aws.String(name),
 		IdempotencyToken: aws.String(id.UniqueId()),
 		Tags:             getTagsIn(ctx),
@@ -142,7 +142,7 @@ func resourcePortfolioUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 	input := &servicecatalog.UpdatePortfolioInput{
-		AcceptLanguage: aws.String(AcceptLanguageEnglish),
+		AcceptLanguage: aws.String(acceptLanguageEnglish),
 		Id:             aws.String(d.Id()),
 	}
 
@@ -200,7 +200,7 @@ func resourcePortfolioDelete(ctx context.Context, d *schema.ResourceData, meta i
 
 func FindPortfolioByID(ctx context.Context, conn *servicecatalog.Client, id string) (*servicecatalog.DescribePortfolioOutput, error) {
 	input := &servicecatalog.DescribePortfolioInput{
-		AcceptLanguage: aws.String(AcceptLanguageEnglish),
+		AcceptLanguage: aws.String(acceptLanguageEnglish),
 		Id:             aws.String(id),
 	}
 

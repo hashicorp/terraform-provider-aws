@@ -12,4 +12,6 @@ var (
 	ProductPortfolioAssociationParseID  = productPortfolioAssociationParseID
 	ProvisioningArtifactParseID         = provisioningArtifactParseID
 	TagOptionResourceAssociationParseID = tagOptionResourceAssociationParseID
+
+	AcceptLanguageEnglish = acceptLanguageEnglish
 )

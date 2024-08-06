@@ -45,8 +45,8 @@ func resourceConstraint() *schema.Resource {
 			"accept_language": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      AcceptLanguageEnglish,
-				ValidateFunc: validation.StringInSlice(AcceptLanguage_Values(), false),
+				Default:      acceptLanguageEnglish,
+				ValidateFunc: validation.StringInSlice(acceptLanguage_Values(), false),
 			},
 			names.AttrDescription: {
 				Type:     schema.TypeString,
@@ -81,7 +81,7 @@ func resourceConstraint() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(ConstraintType_Values(), false),
+				ValidateFunc: validation.StringInSlice(constraintType_Values(), false),
 			},
 		},
 	}
@@ -168,7 +168,7 @@ func resourceConstraintRead(ctx context.Context, d *schema.ResourceData, meta in
 	acceptLanguage := d.Get("accept_language").(string)
 
 	if acceptLanguage == "" {
-		acceptLanguage = AcceptLanguageEnglish
+		acceptLanguage = acceptLanguageEnglish
 	}
 
 	d.Set("accept_language", acceptLanguage)

@@ -54,8 +54,8 @@ func ResourceProvisionedProduct() *schema.Resource {
 			"accept_language": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      "en",
-				ValidateFunc: validation.StringInSlice(AcceptLanguage_Values(), false),
+				Default:      acceptLanguageEnglish,
+				ValidateFunc: validation.StringInSlice(acceptLanguage_Values(), false),
 			},
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -388,7 +388,7 @@ func resourceProvisionedProductRead(ctx context.Context, d *schema.ResourceData,
 	// They provide some overlapping information. Most of the unique information available from
 	// DescribeRecord is available in the data source aws_servicecatalog_record.
 
-	acceptLanguage := AcceptLanguageEnglish
+	acceptLanguage := acceptLanguageEnglish
 
 	if v, ok := d.GetOk("accept_language"); ok {
 		acceptLanguage = v.(string)
