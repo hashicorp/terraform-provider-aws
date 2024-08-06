@@ -28,20 +28,35 @@ resource "aws_controltower_control" "example" {
     for x in data.aws_organizations_organizational_units.example.children :
     x.arn if x.name == "Infrastructure"
   ][0]
+
+  parameters {
+    key   = "AllowedRegions"
+    value = jsonencode(["us-east-1"])
+  }
 }
 ```
 
 ## Argument Reference
 
-This resource supports the following arguments:
+This following arguments are required:
 
 * `control_identifier` - (Required) The ARN of the control. Only Strongly recommended and Elective controls are permitted, with the exception of the Region deny guardrail.
 * `target_identifier` - (Required) The ARN of the organizational unit.
+
+The following arguments are optional:
+
+* `parameters` - (Optional) Parameter values which are specified to configure the control when you enable it. See [Parameters](#parameters) for more details.
+
+### Parameters
+
+* `key` - (Required) The name of the parameter.
+* `value` - (Required) The value of the parameter.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `arn` - The ARN of the EnabledControl resource.
 * `id` - The ARN of the organizational unit.
 
 ## Import

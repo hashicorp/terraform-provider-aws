@@ -63,7 +63,7 @@ func (r *resourceSlotType) Schema(ctx context.Context, req resource.SchemaReques
 		CustomType: fwtypes.NewListNestedObjectTypeOf[SubSlotTypeComposition](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"name": schema.StringAttribute{
+				names.AttrName: schema.StringAttribute{
 					Required: true,
 				},
 				"slot_type_id": schema.StringAttribute{
@@ -88,10 +88,10 @@ func (r *resourceSlotType) Schema(ctx context.Context, req resource.SchemaReques
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"locale_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -105,7 +105,7 @@ func (r *resourceSlotType) Schema(ctx context.Context, req resource.SchemaReques
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 			},
 			"parent_slot_type_signature": schema.StringAttribute{
@@ -138,20 +138,20 @@ func (r *resourceSlotType) Schema(ctx context.Context, req resource.SchemaReques
 							CustomType: fwtypes.NewListNestedObjectTypeOf[GrammarSlotTypeSetting](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Blocks: map[string]schema.Block{
-									"source": schema.ListNestedBlock{
+									names.AttrSource: schema.ListNestedBlock{
 										Validators: []validator.List{
 											listvalidator.SizeAtMost(1),
 										},
 										CustomType: fwtypes.NewListNestedObjectTypeOf[Source](ctx),
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
-												"s3_bucket_name": schema.StringAttribute{
+												names.AttrS3BucketName: schema.StringAttribute{
 													Required: true,
 												},
 												"s3_object_key": schema.StringAttribute{
 													Required: true,
 												},
-												"kms_key_arn": schema.StringAttribute{
+												names.AttrKMSKeyARN: schema.StringAttribute{
 													Required: true,
 												},
 											},
@@ -174,7 +174,7 @@ func (r *resourceSlotType) Schema(ctx context.Context, req resource.SchemaReques
 							CustomType: fwtypes.NewListNestedObjectTypeOf[SlotTypeValue](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"value": schema.StringAttribute{
+									names.AttrValue: schema.StringAttribute{
 										Required: true,
 									},
 								},
@@ -183,7 +183,7 @@ func (r *resourceSlotType) Schema(ctx context.Context, req resource.SchemaReques
 						"synonyms": schema.ListNestedBlock{
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"value": schema.StringAttribute{
+									names.AttrValue: schema.StringAttribute{
 										Required: true,
 									},
 								},
@@ -233,7 +233,7 @@ func (r *resourceSlotType) Schema(ctx context.Context, req resource.SchemaReques
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
@@ -241,6 +241,8 @@ func (r *resourceSlotType) Schema(ctx context.Context, req resource.SchemaReques
 		},
 	}
 }
+
+var slotTypeFlexOpt = flex.WithFieldNamePrefix(ResNameSlotType)
 
 func (r *resourceSlotType) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().LexV2ModelsClient(ctx)
@@ -254,7 +256,7 @@ func (r *resourceSlotType) Create(ctx context.Context, req resource.CreateReques
 	in := &lexmodelsv2.CreateSlotTypeInput{
 		SlotTypeName: aws.String(plan.Name.ValueString()),
 	}
-	resp.Diagnostics.Append(flex.Expand(context.WithValue(ctx, flex.ResourcePrefix, ResNameSlotType), &plan, in)...)
+	resp.Diagnostics.Append(flex.Expand(ctx, &plan, in, slotTypeFlexOpt)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -292,7 +294,7 @@ func (r *resourceSlotType) Create(ctx context.Context, req resource.CreateReques
 
 	plan.ID = types.StringValue(id)
 
-	resp.Diagnostics.Append(flex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, ResNameSlotType), out, &plan)...)
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan, slotTypeFlexOpt)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -322,7 +324,7 @@ func (r *resourceSlotType) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, ResNameSlotType), out, &state)...)
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state, slotTypeFlexOpt)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -342,7 +344,7 @@ func (r *resourceSlotType) Update(ctx context.Context, req resource.UpdateReques
 	if slotTypeHasChanges(ctx, plan, state) {
 		input := &lexmodelsv2.UpdateSlotTypeInput{}
 
-		resp.Diagnostics.Append(flex.Expand(context.WithValue(ctx, flex.ResourcePrefix, ResNameSlotType), plan, input)...)
+		resp.Diagnostics.Append(flex.Expand(ctx, plan, input, slotTypeFlexOpt)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -363,7 +365,7 @@ func (r *resourceSlotType) Update(ctx context.Context, req resource.UpdateReques
 			return
 		}
 
-		resp.Diagnostics.Append(flex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, ResNameSlotType), input, &plan)...)
+		resp.Diagnostics.Append(flex.Flatten(ctx, input, &plan, slotTypeFlexOpt)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}

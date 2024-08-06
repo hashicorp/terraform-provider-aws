@@ -28,6 +28,9 @@ const (
 	ElasticbeanstalkTagKeyPrefix                = `elasticbeanstalk:`
 	NameTagKey                                  = `Name`
 	ServerlessApplicationRepositoryTagKeyPrefix = `serverlessrepo:`
+
+	// Environment variables prefixed with this string will be treated as default_tags.
+	DefaultTagsEnvVarPrefix = "TF_AWS_DEFAULT_TAGS_"
 )
 
 // DefaultConfig contains tags to default across all resources.
@@ -277,48 +280,6 @@ func (tags KeyValueTags) Keys() []string {
 
 	for k := range tags {
 		result = append(result, k)
-	}
-
-	return result
-}
-
-// ListofMap returns a list of flattened tags.
-// Compatible with setting Terraform state for strongly typed configuration blocks.
-func (tags KeyValueTags) ListofMap() []map[string]interface{} {
-	result := make([]map[string]interface{}, 0, len(tags))
-
-	for k, v := range tags {
-		m := map[string]interface{}{
-			"key":   k,
-			"value": "",
-		}
-
-		if v == nil {
-			result = append(result, m)
-			continue
-		}
-
-		if v.Value != nil {
-			m["value"] = *v.Value
-		}
-
-		for k, v := range v.AdditionalBoolFields {
-			m[ToSnakeCase(k)] = false
-
-			if v != nil {
-				m[ToSnakeCase(k)] = *v
-			}
-		}
-
-		for k, v := range v.AdditionalStringFields {
-			m[ToSnakeCase(k)] = ""
-
-			if v != nil {
-				m[ToSnakeCase(k)] = *v
-			}
-		}
-
-		result = append(result, m)
 	}
 
 	return result
@@ -668,7 +629,7 @@ type TagData struct {
 }
 
 func (td *TagData) ValueString() string {
-	if td.Value == nil {
+	if td == nil || td.Value == nil {
 		return ""
 	}
 

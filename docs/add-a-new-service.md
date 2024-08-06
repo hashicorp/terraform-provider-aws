@@ -5,11 +5,11 @@ AWS frequently launches new services, and Terraform support is frequently desire
 
 ## Perform Service Design
 
-Before adding a new service to the provider its a good idea to familiarize yourself with the primary workflows practitioners are likely to want to accomplish with the provider to ensure the provider design can solve for this. Its not always necessary to cover 100% of the AWS service offering to unblock most workflows.
+Before adding a new service to the provider it's a good idea to familiarize yourself with the primary workflows practitioners are likely to want to accomplish with the provider to ensure the provider design can solve this. It's not always necessary to cover 100% of the AWS service offering to unblock most workflows.
 
-You should have an idea of what resources and data sources should be added, their dependencies and relative importance in relation to the workflow. This should give you an idea of the order in which resources to be added. It's important to note that generally, we like to review and merge resources in isolation, and avoid combining multiple new resources in one Pull Request.
+You should have an idea of what resources and data sources should be added, their dependencies and relative importance concerning the workflow. This should give you an idea of the order in which resources are to be added. It's important to note that generally, we like to review and merge resources in isolation, and avoid combining multiple new resources in one Pull Request.
 
-Using the AWS API documentation as a reference, identify the various API's which correspond to the CRUD operations which consist of the management surface for that resource. These will be the set of API's called from the new resource. The API's model attributes will correspond to your resource schema.
+Using the AWS API documentation as a reference, identify the various APIs that correspond to the CRUD operations which consist of the management surface for that resource. These will be the set of APIs called from the new resource. The API's model attributes will correspond to your resource schema.
 
 From there begin to map out the list of resources you would like to implement, and note your plan on the GitHub issue relating to the service (or create one if one does not exist) for the community and maintainers to feedback.
 
@@ -19,20 +19,20 @@ Before new resources are submitted, please raise a separate pull request contain
 
 To add an AWS SDK for Go service client:
 
-1. Check the file `names/data/names_data.csv` for the service.
+1. Check the file `names/data/names_data.hcl` for the service.
 
-1. If the service is there and there is no value in the `NotImplmented` column, you are ready to implement the first [resource](./add-a-new-resource.md) or [data source](./add-a-new-datasource.md).
+1. If the service is there and the `not_implemented` attribute does not exist, you are ready to implement the first [resource](./add-a-new-resource.md) or [data source](./add-a-new-datasource.md).
 
-1. If the service is there and there is a value in the `NotImplemented` column, remove it and submit the client pull request as described below.
+1. If the service is there and the `not_implemented` attribute is true, remove it and submit the client pull request as described below.
 
 1. Otherwise, determine the service identifier using the rule described in [the Naming Guide](naming.md#service-identifier).
 
-1. In `names/data/names_data.csv`, add a new line with all the requested information for the service following the guidance in the [`names` README](https://github.com/hashicorp/terraform-provider-aws/blob/main/names/README.md).
+1. In `names/data/names_data.hcl`, add a new hcl block with all the requested information for the service following the guidance in the [`names` README](https://github.com/hashicorp/terraform-provider-aws/blob/main/names/README.md).
 
     !!! tip
-        Be very careful when adding or changing data in `names_data.csv`!
+        Be very careful when adding or changing data in `names_data.hcl`!
         The Provider and generators depend on the file being correct.
-        We strongly recommend using an editor with CSV support.
+        We strongly recommend using an editor with HCL support.
 
 Once the names data is ready, create a new service directory with the appropriate service name.
 
@@ -68,9 +68,9 @@ Once the service client has been added, implement the first [resource](./add-a-n
 
 ## Adding a Custom Service Client
 
-If an AWS service must be created in a non-standard way, for example the service API's endpoint must be accessed via a single AWS Region, then:
+If an AWS service must be created in a non-standard way, for example, the service API's endpoint must be accessed via a single AWS Region, then:
 
-1. Add an `x` in the **SkipClientGenerate** column for the service in [`names/data/names_data.csv`](https://github.com/hashicorp/terraform-provider-aws/blob/main/names/README.md)
+1. Make the `skip_client_generate` attribute `true` for the service in [`names/data/names_data.hcl`](https://github.com/hashicorp/terraform-provider-aws/blob/main/names/README.md)
 
 1. Run `make gen`
 
@@ -79,28 +79,36 @@ If an AWS service must be created in a non-standard way, for example the service
 === "AWS Go SDK V2 (Preferred)"
 
     ```go
-    package route53domains
-    
+    package costoptimizationhub
+
     import (
-    	"context"
-    
-    	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-    	route53domains_sdkv2 "github.com/aws/aws-sdk-go-v2/service/route53domains"
-    	endpoints_sdkv1 "github.com/aws/aws-sdk-go/aws/endpoints"
+        "context"
+
+        "github.com/aws/aws-sdk-go-v2/aws"
+        "github.com/aws/aws-sdk-go-v2/service/costoptimizationhub"
+        "github.com/hashicorp/terraform-provider-aws/names"
     )
-    
+
     // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-    func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*route53domains_sdkv2.Client, error) {
-    	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
-    
-    	return route53domains_sdkv2.NewFromConfig(cfg, func(o *route53domains_sdkv2.Options) {
-    		if endpoint := config["endpoint"].(string); endpoint != "" {
-    			o.BaseEndpoint = aws_sdkv2.String(endpoint)
-    		} else if config["partition"].(string) == endpoints_sdkv1.AwsPartitionID {
-    			// Route 53 Domains is only available in AWS Commercial us-east-1 Region.
-    			o.Region = endpoints_sdkv1.UsEast1RegionID
-    		}
-    	}), nil
+    func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*costoptimizationhub.Client, error) {
+        cfg := *(config["aws_sdkv2_config"].(*aws.Config))
+
+        return costoptimizationhub.NewFromConfig(cfg,
+            costoptimizationhub.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+            withBaseEndpoint(config[names.AttrEndpoint].(string)),
+            func(o *costoptimizationhub.Options) {
+                if config["partition"].(string) == names.StandardPartitionID {
+                    // Cost Optimization Hub endpoint is available only in us-east-1 Region.
+                    if cfg.Region != names.USEast1RegionID {
+                        tflog.Info(ctx, "overriding region", map[string]any{
+                            "original_region": cfg.Region,
+                            "override_region": names.USEast1RegionID,
+                        })
+                        o.Region = names.USEast1RegionID
+                    }
+                }
+            },
+        ), nil
     }
     ```
 
@@ -121,11 +129,27 @@ If an AWS service must be created in a non-standard way, for example the service
     // NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
     func (p *servicePackage) NewConn(ctx context.Context) (*globalaccelerator_sdkv1.GlobalAccelerator, error) {
         sess := p.config["session"].(*session_sdkv1.Session)
-        config := &aws_sdkv1.Config{Endpoint: aws_sdkv1.String(p.config["endpoint"].(string))}
+
+        cfg := aws.Config{}
+
+        if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
+            tflog.Debug(ctx, "setting endpoint", map[string]any{
+                "tf_aws.endpoint": endpoint,
+            })
+            cfg.Endpoint = aws.String(endpoint)
+        } else {
+            cfg.EndpointResolver = newEndpointResolverSDKv1(ctx)
+        }
     
         // Force "global" services to correct Regions.
-        if p.config["partition"].(string) == endpoints_sdkv1.AwsPartitionID {
-            config.Region = aws_sdkv1.String(endpoints_sdkv1.UsWest2RegionID)
+        if config["partition"].(string) == endpoints.AwsPartitionID {
+            if aws.StringValue(cfg.Region) != endpoints.UsWest2RegionID {
+                tflog.Info(ctx, "overriding region", map[string]any{
+                    "original_region": aws.StringValue(cfg.Region),
+                    "override_region": endpoints.UsWest2RegionID,
+                })
+                cfg.Region = aws.String(endpoints.UsWest2RegionID)
+            }
         }
     
         return globalaccelerator_sdkv1.New(sess.Copy(config)), nil
@@ -134,7 +158,7 @@ If an AWS service must be created in a non-standard way, for example the service
 
 ## Customizing a new Service Client
 
-If an AWS service must be customized after creation, for example retry handling must be changed, then:
+If an AWS service must be customized after creation, for example, retry handling must be changed, then:
 
 1. Add a file `internal/<service>/service_package.go` that contains an API client customization function, for example:
 
@@ -156,7 +180,7 @@ If an AWS service must be customized after creation, for example retry handling 
     func (p *servicePackage) CustomizeConn(ctx context.Context, conn *chime_sdkv1.Chime) (*chime_sdkv1.Chime, error) {
     	conn.Handlers.Retry.PushBack(func(r *request_sdkv1.Request) {
     		// When calling CreateVoiceConnector across multiple resources,
-    		// the API can randomly return a BadRequestException without explanation
+    		// the API can randomly return a BadRequestException without an explanation
     		if r.Operation.Name == "CreateVoiceConnector" {
     			if tfawserr.ErrMessageContains(r.Error, chime_sdkv1.ErrCodeBadRequestException, "Service received a bad request") {
     				r.Retryable = aws_sdkv1.Bool(true)

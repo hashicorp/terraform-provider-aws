@@ -5,13 +5,15 @@ package lakeformation
 
 import (
 	"testing"
+
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestValidPrincipal(t *testing.T) {
 	t.Parallel()
 
 	v := ""
-	_, errors := validPrincipal(v, "arn")
+	_, errors := validPrincipal(v, names.AttrARN)
 	if len(errors) == 0 {
 		t.Fatalf("%q should not be validated as a principal %d: %q", v, len(errors), errors)
 	}
@@ -31,7 +33,7 @@ func TestValidPrincipal(t *testing.T) {
 		"arn:aws:organizations::111122223333:ou/o-abcdefghijkl/ou-ab00-cdefgh",           // lintignore:AWSAT005          // ou
 	}
 	for _, v := range validNames {
-		_, errors := validPrincipal(v, "arn")
+		_, errors := validPrincipal(v, names.AttrARN)
 		if len(errors) != 0 {
 			t.Fatalf("%q should be a valid principal: %q", v, errors)
 		}
@@ -39,7 +41,7 @@ func TestValidPrincipal(t *testing.T) {
 
 	invalidNames := []string{
 		"IAM_NOT_ALLOWED_PRINCIPALS", // doesn't exist
-		"arn",
+		names.AttrARN,
 		"1234567890125", //not an account id
 		"arn:aws",
 		"arn:aws:logs",            //lintignore:AWSAT005
@@ -53,7 +55,7 @@ func TestValidPrincipal(t *testing.T) {
 		"arn:aws-us-gov:s3:::bucket/object",                                                // lintignore:AWSAT005          // not a user or role
 	}
 	for _, v := range invalidNames {
-		_, errors := validPrincipal(v, "arn")
+		_, errors := validPrincipal(v, names.AttrARN)
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid principal", v)
 		}

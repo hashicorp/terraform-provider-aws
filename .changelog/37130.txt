@@ -1,0 +1,4 @@
+
+```release-note:enhancement
+resource/aws_cloudwatch_event_target: Add `force_destroy` argument
+```

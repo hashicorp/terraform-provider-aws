@@ -24,8 +24,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -66,10 +66,11 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"tags": {
-							Type:        schema.TypeMap,
-							Optional:    true,
-							Elem:        &schema.Schema{Type: schema.TypeString},
-							Description: "Resource tags to default across all resources",
+							Type:     schema.TypeMap,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							Description: "Resource tags to default across all resources. " +
+								"Can also be configured with environment variables like `" + tftags.DefaultTagsEnvVarPrefix + "<tag_name>`.",
 						},
 					},
 				},
@@ -534,6 +535,8 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 
 	if v, ok := d.GetOk("default_tags"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		config.DefaultTagsConfig = expandDefaultTags(ctx, v.([]interface{})[0].(map[string]interface{}))
+	} else {
+		config.DefaultTagsConfig = expandDefaultTags(ctx, nil)
 	}
 
 	v := d.Get("endpoints")
@@ -579,7 +582,7 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		config.SharedConfigFiles = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
-	if v, null, _ := nullable.Bool(d.Get("skip_metadata_api_check").(string)).Value(); !null {
+	if v, null, _ := nullable.Bool(d.Get("skip_metadata_api_check").(string)).ValueBool(); !null {
 		if v {
 			config.EC2MetadataServiceEnableState = imds.ClientDisabled
 		} else {
@@ -839,17 +842,28 @@ func expandAssumeRoleWithWebIdentity(_ context.Context, tfMap map[string]interfa
 }
 
 func expandDefaultTags(ctx context.Context, tfMap map[string]interface{}) *tftags.DefaultConfig {
-	if tfMap == nil {
-		return nil
+	tags := make(map[string]interface{})
+	for _, ev := range os.Environ() {
+		k, v, _ := strings.Cut(ev, "=")
+		before, tk, ok := strings.Cut(k, tftags.DefaultTagsEnvVarPrefix)
+		if ok && before == "" {
+			tags[tk] = v
+		}
 	}
 
-	defaultConfig := &tftags.DefaultConfig{}
-
-	if v, ok := tfMap["tags"].(map[string]interface{}); ok {
-		defaultConfig.Tags = tftags.New(ctx, v)
+	if cfgTags, ok := tfMap["tags"].(map[string]interface{}); ok {
+		for k, v := range cfgTags {
+			tags[k] = v
+		}
 	}
 
-	return defaultConfig
+	if len(tags) > 0 {
+		return &tftags.DefaultConfig{
+			Tags: tftags.New(ctx, tags),
+		}
+	}
+
+	return nil
 }
 
 func expandIgnoreTags(ctx context.Context, tfMap map[string]interface{}) *tftags.IgnoreConfig {
@@ -941,13 +955,13 @@ func expandEndpoints(_ context.Context, tfList []interface{}) (map[string]string
 		}
 
 		// We only need to handle the services with custom envvars here before we hand off to `aws-sdk-go-base`
-		tfAwsEnvVar := names.TfAwsEnvVar(pkg)
+		tfAwsEnvVar := names.TFAWSEnvVar(pkg)
 		deprecatedEnvVar := names.DeprecatedEnvVar(pkg)
 		if tfAwsEnvVar == "" && deprecatedEnvVar == "" {
 			continue
 		}
 
-		awsEnvVar := names.AwsServiceEnvVar(pkg)
+		awsEnvVar := names.AWSServiceEnvVar(pkg)
 		if awsEnvVar != "" {
 			if v := os.Getenv(awsEnvVar); v != "" {
 				endpoints[pkg] = v

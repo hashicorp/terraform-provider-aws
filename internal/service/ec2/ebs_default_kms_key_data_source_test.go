@@ -29,5 +29,11 @@ func TestAccEC2EBSDefaultKMSKeyDataSource_basic(t *testing.T) {
 }
 
 const testAccEBSDefaultKMSKeyDataSourceConfig_basic = `
+resource "aws_kms_key" "test" {}
+
+resource "aws_ebs_default_kms_key" "test" {
+  key_arn = aws_kms_key.test.arn
+}
+
 data "aws_ebs_default_kms_key" "current" {}
 `

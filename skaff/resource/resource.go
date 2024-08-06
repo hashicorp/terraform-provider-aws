@@ -14,8 +14,8 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/skaff/convert"
 )
 
 //go:embed resource.tmpl
@@ -47,30 +47,6 @@ type TemplateData struct {
 	ProviderResourceName string
 }
 
-func ToSnakeCase(upper string, snakeName string) string {
-	if snakeName != "" {
-		return snakeName
-	}
-
-	re := regexache.MustCompile(`([a-z])([A-Z]{2,})`)
-	upper = re.ReplaceAllString(upper, `${1}_${2}`)
-
-	re2 := regexache.MustCompile(`([A-Z][a-z])`)
-	return strings.TrimPrefix(strings.ToLower(re2.ReplaceAllString(upper, `_$1`)), "_")
-}
-
-func HumanResName(upper string) string {
-	re := regexache.MustCompile(`([a-z])([A-Z]{2,})`)
-	upper = re.ReplaceAllString(upper, `${1} ${2}`)
-
-	re2 := regexache.MustCompile(`([A-Z][a-z])`)
-	return strings.TrimPrefix(re2.ReplaceAllString(upper, ` $1`), " ")
-}
-
-func ProviderResourceName(servicePackage, snakeName string) string {
-	return fmt.Sprintf("aws_%s_%s", servicePackage, snakeName)
-}
-
 func Create(resName, snakeName string, comments, force, v2, pluginFramework, tags bool) error {
 	wd, err := os.Getwd() // os.Getenv("GOPACKAGE") not available since this is not run with go generate
 	if err != nil {
@@ -91,7 +67,7 @@ func Create(resName, snakeName string, comments, force, v2, pluginFramework, tag
 		return fmt.Errorf("error checking: snake name should be all lower case with underscores, if needed (e.g., db_instance)")
 	}
 
-	snakeName = ToSnakeCase(resName, snakeName)
+	snakeName = convert.ToSnakeCase(resName, snakeName)
 
 	s, err := names.ProviderNameUpper(servicePackage)
 	if err != nil {
@@ -121,8 +97,8 @@ func Create(resName, snakeName string, comments, force, v2, pluginFramework, tag
 		AWSServiceName:       sn,
 		AWSGoSDKV2:           v2,
 		PluginFramework:      pluginFramework,
-		HumanResourceName:    HumanResName(resName),
-		ProviderResourceName: ProviderResourceName(servicePackage, snakeName),
+		HumanResourceName:    convert.ToHumanResName(resName),
+		ProviderResourceName: convert.ToProviderResourceName(servicePackage, snakeName),
 	}
 
 	tmpl := resourceTmpl

@@ -51,13 +51,13 @@ func TestAccLightsailInstance_basic(t *testing.T) {
 				Config: testAccInstanceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrSet(resourceName, "blueprint_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "bundle_id"),
-					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", acctest.Ct1),
 					resource.TestMatchResourceAttr(resourceName, "ipv6_addresses.0", regexache.MustCompile(`([0-9a-f]{1,4}:){7}[0-9a-f]{1,4}`)),
 					resource.TestCheckResourceAttrSet(resourceName, "key_pair_name"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestMatchResourceAttr(resourceName, "ram_size", regexache.MustCompile(`\d+(.\d+)?`)),
 				),
 			},
@@ -96,7 +96,7 @@ func TestAccLightsailInstance_name(t *testing.T) {
 				Config: testAccInstanceConfig_basic(rNameWithStartingDigit),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrSet(resourceName, "blueprint_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "bundle_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "key_pair_name"),
@@ -106,7 +106,7 @@ func TestAccLightsailInstance_name(t *testing.T) {
 				Config: testAccInstanceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrSet(resourceName, "blueprint_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "bundle_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "key_pair_name"),
@@ -116,7 +116,7 @@ func TestAccLightsailInstance_name(t *testing.T) {
 				Config: testAccInstanceConfig_basic(rNameWithUnderscore),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrSet(resourceName, "blueprint_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "bundle_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "key_pair_name"),
@@ -142,25 +142,106 @@ func TestAccLightsailInstance_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_tags1(rName),
+				Config: testAccInstanceConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrSet(resourceName, "blueprint_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "bundle_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "key_pair_name"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
-				Config: testAccInstanceConfig_tags2(rName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccInstanceConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrSet(resourceName, "blueprint_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "bundle_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "key_pair_name"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
+					resource.TestCheckResourceAttrSet(resourceName, "blueprint_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "bundle_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "key_pair_name"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLightsailInstance_keyOnlyTags(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lightsail_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_tags1(rName, acctest.CtKey1, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
+					resource.TestCheckResourceAttrSet(resourceName, "blueprint_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "bundle_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "key_pair_name"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccInstanceConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
+					resource.TestCheckResourceAttrSet(resourceName, "blueprint_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "bundle_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "key_pair_name"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, ""),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_tags1(rName, acctest.CtKey2, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
+					resource.TestCheckResourceAttrSet(resourceName, "blueprint_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "bundle_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "key_pair_name"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, ""),
 				),
 			},
 		},
@@ -186,7 +267,7 @@ func TestAccLightsailInstance_IPAddressType(t *testing.T) {
 				Config: testAccInstanceConfig_IPAddressType(rName, "ipv4"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "ipv4"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "ipv4"),
 				),
 			},
 			{
@@ -198,7 +279,7 @@ func TestAccLightsailInstance_IPAddressType(t *testing.T) {
 				Config: testAccInstanceConfig_IPAddressType(rName, "dualstack"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "dualstack"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "dualstack"),
 				),
 			},
 		},
@@ -228,15 +309,15 @@ func TestAccLightsailInstance_addOn(t *testing.T) {
 				Config: testAccInstanceConfig_addOn(rName, snapshotTime1, statusEnabled),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "add_on.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "add_on.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "add_on.*", map[string]string{
-						"type": "AutoSnapshot",
+						names.AttrType: "AutoSnapshot",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "add_on.*", map[string]string{
 						"snapshot_time": snapshotTime1,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "add_on.*", map[string]string{
-						"status": statusEnabled,
+						names.AttrStatus: statusEnabled,
 					}),
 				),
 			},
@@ -244,15 +325,15 @@ func TestAccLightsailInstance_addOn(t *testing.T) {
 				Config: testAccInstanceConfig_addOn(rName, snapshotTime2, statusEnabled),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "add_on.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "add_on.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "add_on.*", map[string]string{
-						"type": "AutoSnapshot",
+						names.AttrType: "AutoSnapshot",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "add_on.*", map[string]string{
 						"snapshot_time": snapshotTime2,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "add_on.*", map[string]string{
-						"status": statusEnabled,
+						names.AttrStatus: statusEnabled,
 					}),
 				),
 			},
@@ -260,15 +341,15 @@ func TestAccLightsailInstance_addOn(t *testing.T) {
 				Config: testAccInstanceConfig_addOn(rName, snapshotTime2, statusDisabled),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "add_on.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "add_on.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "add_on.*", map[string]string{
-						"type": "AutoSnapshot",
+						names.AttrType: "AutoSnapshot",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "add_on.*", map[string]string{
 						"snapshot_time": snapshotTime2,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "add_on.*", map[string]string{
-						"status": statusDisabled,
+						names.AttrStatus: statusDisabled,
 					}),
 				),
 			},
@@ -346,7 +427,7 @@ func testAccCheckInstanceExists(ctx context.Context, n string) resource.TestChec
 		}
 
 		if out == nil {
-			return fmt.Errorf("Instance (%s) not found", rs.Primary.Attributes["name"])
+			return fmt.Errorf("Instance (%s) not found", rs.Primary.Attributes[names.AttrName])
 		}
 
 		return nil
@@ -412,15 +493,15 @@ func testAccInstanceConfig_basic(rName string) string {
 		testAccInstanceConfigBase(),
 		fmt.Sprintf(`	
 resource "aws_lightsail_instance" "test" {
-  name              = "%s"
+  name              = %[1]q
   availability_zone = data.aws_availability_zones.available.names[0]
   blueprint_id      = "amazon_linux_2"
-  bundle_id         = "nano_1_0"
+  bundle_id         = "nano_3_0"
 }
 `, rName))
 }
 
-func testAccInstanceConfig_availabilityZone(rName string, availabilityZone string) string {
+func testAccInstanceConfig_availabilityZone(rName, availabilityZone string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfigBase(),
 		fmt.Sprintf(`	
@@ -428,47 +509,12 @@ resource "aws_lightsail_instance" "test" {
   name              = %[1]q
   availability_zone = %[2]q
   blueprint_id      = "amazon_linux_2"
-  bundle_id         = "nano_1_0"
+  bundle_id         = "nano_3_0"
 }
 `, rName, availabilityZone))
 }
 
-func testAccInstanceConfig_tags1(rName string) string {
-	return acctest.ConfigCompose(
-		testAccInstanceConfigBase(),
-		fmt.Sprintf(`
-resource "aws_lightsail_instance" "test" {
-  name              = "%s"
-  availability_zone = data.aws_availability_zones.available.names[0]
-  blueprint_id      = "amazon_linux_2"
-  bundle_id         = "nano_1_0"
-
-  tags = {
-    Name = "tf-test"
-  }
-}
-`, rName))
-}
-
-func testAccInstanceConfig_tags2(rName string) string {
-	return acctest.ConfigCompose(
-		testAccInstanceConfigBase(),
-		fmt.Sprintf(`
-resource "aws_lightsail_instance" "test" {
-  name              = "%s"
-  availability_zone = data.aws_availability_zones.available.names[0]
-  blueprint_id      = "amazon_linux_2"
-  bundle_id         = "nano_1_0"
-
-  tags = {
-    Name      = "tf-test",
-    ExtraName = "tf-test"
-  }
-}
-`, rName))
-}
-
-func testAccInstanceConfig_IPAddressType(rName string, rIPAddressType string) string {
+func testAccInstanceConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfigBase(),
 		fmt.Sprintf(`
@@ -476,13 +522,48 @@ resource "aws_lightsail_instance" "test" {
   name              = %[1]q
   availability_zone = data.aws_availability_zones.available.names[0]
   blueprint_id      = "amazon_linux_2"
-  bundle_id         = "nano_1_0"
+  bundle_id         = "nano_3_0"
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1))
+}
+
+func testAccInstanceConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfigBase(),
+		fmt.Sprintf(`
+resource "aws_lightsail_instance" "test" {
+  name              = %[1]q
+  availability_zone = data.aws_availability_zones.available.names[0]
+  blueprint_id      = "amazon_linux_2"
+  bundle_id         = "nano_3_0"
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccInstanceConfig_IPAddressType(rName, rIPAddressType string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfigBase(),
+		fmt.Sprintf(`
+resource "aws_lightsail_instance" "test" {
+  name              = %[1]q
+  availability_zone = data.aws_availability_zones.available.names[0]
+  blueprint_id      = "amazon_linux_2"
+  bundle_id         = "nano_3_0"
   ip_address_type   = %[2]q
 }
 `, rName, rIPAddressType))
 }
 
-func testAccInstanceConfig_addOn(rName string, snapshotTime string, status string) string {
+func testAccInstanceConfig_addOn(rName, snapshotTime, status string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfigBase(),
 		fmt.Sprintf(`
@@ -490,7 +571,7 @@ resource "aws_lightsail_instance" "test" {
   name              = %[1]q
   availability_zone = data.aws_availability_zones.available.names[0]
   blueprint_id      = "amazon_linux_2"
-  bundle_id         = "nano_1_0"
+  bundle_id         = "nano_3_0"
   add_on {
     type          = "AutoSnapshot"
     snapshot_time = %[2]q

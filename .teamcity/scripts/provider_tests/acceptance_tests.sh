@@ -43,13 +43,16 @@ TF_ACC=1 go test \
     ./internal/experimental/... \
     ./internal/flex/... \
     ./internal/framework/... \
+    ./internal/function/... \
     ./internal/generate/... \
     ./internal/json/... \
     ./internal/logging/... \
     ./internal/maps/... \
+    ./internal/namevaluesfilters/... \
     ./internal/provider/... \
     ./internal/retry/... \
     ./internal/sdkv2/... \
+    ./internal/semver/... \
     ./internal/slices/... \
     ./internal/sweep/... \
     ./internal/tags/... \

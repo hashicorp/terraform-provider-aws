@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -217,6 +218,80 @@ func TestEndpointEnvVarPrecedence(t *testing.T) { //nolint:paralleltest
 	}
 }
 
+func TestExpandDefaultTags(t *testing.T) { //nolint:paralleltest
+	ctx := context.Background()
+	testcases := []struct {
+		tags                  map[string]interface{}
+		envvars               map[string]string
+		expectedDefaultConfig *tftags.DefaultConfig
+	}{
+		{
+			tags:                  nil,
+			envvars:               map[string]string{},
+			expectedDefaultConfig: nil,
+		},
+		{
+			tags: nil,
+			envvars: map[string]string{
+				tftags.DefaultTagsEnvVarPrefix + "Owner": "my-team",
+			},
+			expectedDefaultConfig: &tftags.DefaultConfig{
+				Tags: tftags.New(ctx, map[string]string{
+					"Owner": "my-team",
+				}),
+			},
+		},
+		{
+			tags: map[string]interface{}{
+				"Owner": "my-team",
+			},
+			envvars: map[string]string{},
+			expectedDefaultConfig: &tftags.DefaultConfig{
+				Tags: tftags.New(ctx, map[string]string{
+					"Owner": "my-team",
+				}),
+			},
+		},
+		{
+			tags: map[string]interface{}{
+				"Application": "foobar",
+			},
+			envvars: map[string]string{
+				tftags.DefaultTagsEnvVarPrefix + "Application": "my-app",
+				tftags.DefaultTagsEnvVarPrefix + "Owner":       "my-team",
+			},
+			expectedDefaultConfig: &tftags.DefaultConfig{
+				Tags: tftags.New(ctx, map[string]string{
+					"Application": "foobar",
+					"Owner":       "my-team",
+				}),
+			},
+		},
+	}
+
+	for _, testcase := range testcases {
+		oldEnv := stashEnv()
+		defer popEnv(oldEnv)
+		for k, v := range testcase.envvars {
+			os.Setenv(k, v)
+		}
+
+		results := expandDefaultTags(ctx, map[string]interface{}{
+			"tags": testcase.tags,
+		})
+
+		if results == nil {
+			if testcase.expectedDefaultConfig == nil {
+				return
+			} else {
+				t.Errorf("Expected default tags config to be %v, got nil", testcase.expectedDefaultConfig)
+			}
+		} else if !testcase.expectedDefaultConfig.TagsEqual(results.Tags) {
+			t.Errorf("Expected default tags config to be %v, got %v", testcase.expectedDefaultConfig, results)
+		}
+	}
+}
+
 func stashEnv() []string {
 	env := os.Environ()
 	os.Clearenv()
@@ -227,11 +302,7 @@ func popEnv(env []string) {
 	os.Clearenv()
 
 	for _, e := range env {
-		p := strings.SplitN(e, "=", 2)
-		k, v := p[0], ""
-		if len(p) > 1 {
-			v = p[1]
-		}
+		k, v, _ := strings.Cut(e, "=")
 		os.Setenv(k, v)
 	}
 }

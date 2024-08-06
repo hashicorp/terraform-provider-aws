@@ -39,7 +39,7 @@ func ResourceLoadBalancerStickinessPolicy() *schema.Resource {
 				Type:     schema.TypeInt,
 				Required: true,
 			},
-			"enabled": {
+			names.AttrEnabled: {
 				Type:     schema.TypeBool,
 				Required: true,
 			},
@@ -62,14 +62,14 @@ func resourceLoadBalancerStickinessPolicyCreate(ctx context.Context, d *schema.R
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 	lbName := d.Get("lb_name").(string)
-	for _, v := range []string{"enabled", "cookie_duration"} {
+	for _, v := range []string{names.AttrEnabled, "cookie_duration"} {
 		in := lightsail.UpdateLoadBalancerAttributeInput{
 			LoadBalancerName: aws.String(lbName),
 		}
 
-		if v == "enabled" {
+		if v == names.AttrEnabled {
 			in.AttributeName = types.LoadBalancerAttributeNameSessionStickinessEnabled
-			in.AttributeValue = aws.String(fmt.Sprint(d.Get("enabled").(bool)))
+			in.AttributeValue = aws.String(fmt.Sprint(d.Get(names.AttrEnabled).(bool)))
 		}
 
 		if v == "cookie_duration" {
@@ -123,7 +123,7 @@ func resourceLoadBalancerStickinessPolicyRead(ctx context.Context, d *schema.Res
 	}
 
 	d.Set("cookie_duration", intValue)
-	d.Set("enabled", boolValue)
+	d.Set(names.AttrEnabled, boolValue)
 	d.Set("lb_name", d.Id())
 
 	return diags
@@ -134,11 +134,11 @@ func resourceLoadBalancerStickinessPolicyUpdate(ctx context.Context, d *schema.R
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 	lbName := d.Get("lb_name").(string)
-	if d.HasChange("enabled") {
+	if d.HasChange(names.AttrEnabled) {
 		in := lightsail.UpdateLoadBalancerAttributeInput{
 			LoadBalancerName: aws.String(lbName),
 			AttributeName:    types.LoadBalancerAttributeNameSessionStickinessEnabled,
-			AttributeValue:   aws.String(fmt.Sprint(d.Get("enabled").(bool))),
+			AttributeValue:   aws.String(fmt.Sprint(d.Get(names.AttrEnabled).(bool))),
 		}
 
 		out, err := conn.UpdateLoadBalancerAttribute(ctx, &in)

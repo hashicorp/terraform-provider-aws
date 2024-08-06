@@ -8,13 +8,11 @@ description: |-
 
 # Resource: aws_security_group_rule
 
-Provides a security group rule resource. Represents a single `ingress` or
-`egress` group rule, which can be added to external Security Groups.
+Provides a security group rule resource. Represents a single `ingress` or `egress` group rule, which can be added to external Security Groups.
 
-~> **NOTE on Security Groups and Security Group Rules:** Terraform currently provides a [Security Group resource](security_group.html) with `ingress` and `egress` rules defined in-line and a Security Group Rule resource which manages one or more `ingress` or
-`egress` rules. Both of these resource were added before AWS assigned a [security group rule unique ID](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/security-group-rules.html), and they do not work well in all scenarios using the`description` and `tags` attributes, which rely on the unique ID.
-The [`aws_vpc_security_group_egress_rule`](vpc_security_group_egress_rule.html) and [`aws_vpc_security_group_ingress_rule`](vpc_security_group_ingress_rule.html) resources have been added to address these limitations and should be used for all new security group rules.
-You should not use the `aws_vpc_security_group_egress_rule` and `aws_vpc_security_group_ingress_rule` resources in conjunction with an `aws_security_group` resource with in-line rules or with `aws_security_group_rule` resources defined for the same Security Group, as rule conflicts may occur and rules will be overwritten.
+~> **NOTE:** Avoid using the `aws_security_group_rule` resource, as it struggles with managing multiple CIDR blocks, and, due to the historical lack of unique IDs, tags and descriptions. To avoid these problems, use the current best practice of the [`aws_vpc_security_group_egress_rule`](vpc_security_group_egress_rule.html) and [`aws_vpc_security_group_ingress_rule`](vpc_security_group_ingress_rule.html) resources with one CIDR block per rule.
+
+!> **WARNING:** You should not use the `aws_security_group_rule` resource in conjunction with [`aws_vpc_security_group_egress_rule`](vpc_security_group_egress_rule.html) and [`aws_vpc_security_group_ingress_rule`](vpc_security_group_ingress_rule.html) resources or with an [`aws_security_group`](security_group.html) resource that has in-line rules. Doing so may cause rule conflicts, perpetual differences, and result in rules being overwritten.
 
 ~> **NOTE:** Setting `protocol = "all"` or `protocol = -1` with `from_port` and `to_port` will result in the EC2 API creating a security group rule with all ports open. This API behavior cannot be controlled by Terraform and may generate warnings in the future.
 

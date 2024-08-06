@@ -451,6 +451,7 @@ The following arguments are optional:
 * `engineVersion` - (Optional) Either `Elasticsearch_X.Y` or `OpenSearch_X.Y` to specify the engine version for the Amazon OpenSearch Service domain. For example, `OpenSearch_1.0` or `Elasticsearch_7.9`.
   See [Creating and managing Amazon OpenSearch Service domains](http://docs.aws.amazon.com/opensearch-service/latest/developerguide/createupdatedomains.html#createdomains).
   Defaults to the lastest version of OpenSearch.
+* `ipAddressType` - (Optional) The IP address type for the endpoint. Valid values are `ipv4` and `dualstack`.
 * `encryptAtRest` - (Optional) Configuration block for encrypt at rest options. Only available for [certain instance types](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/encryption-at-rest.html). Detailed below.
 * `logPublishingOptions` - (Optional) Configuration block for publishing slow and application logs to CloudWatch Logs. This block can be declared multiple times, for each log_type, within the same resource. Detailed below.
 * `nodeToNodeEncryption` - (Optional) Configuration block for node-to-node encryption options. Detailed below.
@@ -477,7 +478,10 @@ The following arguments are optional:
 
 * `desiredState` - (Required) Auto-Tune desired state for the domain. Valid values: `ENABLED` or `DISABLED`.
 * `maintenanceSchedule` - (Required if `rollbackOnDisable` is set to `DEFAULT_ROLLBACK`) Configuration block for Auto-Tune maintenance windows. Can be specified multiple times for each maintenance window. Detailed below.
+
+  **NOTE:** Maintenance windows are deprecated and have been replaced with [off-peak windows](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/off-peak.html). Consequently, `maintenanceSchedule` configuration blocks cannot be specified when `useOffPeakWindow` is set to `true`.
 * `rollbackOnDisable` - (Optional) Whether to roll back to default Auto-Tune settings when disabling Auto-Tune. Valid values: `DEFAULT_ROLLBACK` or `NO_ROLLBACK`.
+* `useOffPeakWindow` - (Optional) Whether to schedule Auto-Tune optimizations that require blue/green deployments during the domain's configured daily off-peak window. Defaults to `false`.
 
 #### maintenance_schedule
 
@@ -636,4 +640,4 @@ Using `terraform import`, import OpenSearch domains using the `domainName`. For 
 % terraform import aws_opensearch_domain.example domain_name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-3520506ca4451d8aad7f61d8126b34e79c301e9b261c5d51100a69086367a360 -->
+<!-- cache-key: cdktf-0.20.1 input-fb6a67b8cb2086dcb8e087eb26a4134f45d7fde8c6fcc49ed582319ea17d814e -->
