@@ -20,19 +20,22 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_dx_hosted_public_virtual_interface")
-func ResourceHostedPublicVirtualInterface() *schema.Resource {
+// @SDKResource("aws_dx_hosted_public_virtual_interface", name="Hosted Public Virtual Interface")
+func resourceHostedPublicVirtualInterface() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceHostedPublicVirtualInterfaceCreate,
 		ReadWithoutTimeout:   resourceHostedPublicVirtualInterfaceRead,
 		DeleteWithoutTimeout: resourceHostedPublicVirtualInterfaceDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceHostedPublicVirtualInterfaceImport,
 		},
+
 		CustomizeDiff: resourceHostedPublicVirtualInterfaceCustomizeDiff,
 
 		Schema: map[string]*schema.Schema{
@@ -119,7 +122,7 @@ func resourceHostedPublicVirtualInterfaceCreate(ctx context.Context, d *schema.R
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
-	req := &directconnect.AllocatePublicVirtualInterfaceInput{
+	input := &directconnect.AllocatePublicVirtualInterfaceInput{
 		ConnectionId: aws.String(d.Get(names.AttrConnectionID).(string)),
 		NewPublicVirtualInterfaceAllocation: &awstypes.NewPublicVirtualInterfaceAllocation{
 			AddressFamily:        awstypes.AddressFamily(d.Get("address_family").(string)),
@@ -129,28 +132,32 @@ func resourceHostedPublicVirtualInterfaceCreate(ctx context.Context, d *schema.R
 		},
 		OwnerAccount: aws.String(d.Get(names.AttrOwnerAccountID).(string)),
 	}
+
 	if v, ok := d.GetOk("amazon_address"); ok {
-		req.NewPublicVirtualInterfaceAllocation.AmazonAddress = aws.String(v.(string))
+		input.NewPublicVirtualInterfaceAllocation.AmazonAddress = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("bgp_auth_key"); ok {
-		req.NewPublicVirtualInterfaceAllocation.AuthKey = aws.String(v.(string))
+		input.NewPublicVirtualInterfaceAllocation.AuthKey = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("customer_address"); ok {
-		req.NewPublicVirtualInterfaceAllocation.CustomerAddress = aws.String(v.(string))
+		input.NewPublicVirtualInterfaceAllocation.CustomerAddress = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("route_filter_prefixes"); ok {
-		req.NewPublicVirtualInterfaceAllocation.RouteFilterPrefixes = expandRouteFilterPrefixes(v.(*schema.Set).List())
+		input.NewPublicVirtualInterfaceAllocation.RouteFilterPrefixes = expandRouteFilterPrefixes(v.(*schema.Set).List())
 	}
 
-	log.Printf("[DEBUG] Allocating Direct Connect hosted public virtual interface: %#v", req)
-	resp, err := conn.AllocatePublicVirtualInterface(ctx, req)
+	output, err := conn.AllocatePublicVirtualInterface(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "allocating Direct Connect hosted public virtual interface: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Direct Connect Hosted Public Virtual Interface: %s", err)
 	}
 
-	d.SetId(aws.ToString(resp.VirtualInterfaceId))
+	d.SetId(aws.ToString(output.VirtualInterfaceId))
 
-	if err := hostedPublicVirtualInterfaceWaitUntilAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitHostedPublicVirtualInterfaceAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
@@ -161,14 +168,16 @@ func resourceHostedPublicVirtualInterfaceRead(ctx context.Context, d *schema.Res
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
-	vif, err := virtualInterfaceRead(ctx, d.Id(), conn)
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-	if vif == nil {
-		log.Printf("[WARN] Direct Connect virtual interface (%s) not found, removing from state", d.Id())
+	vif, err := findVirtualInterfaceByID(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Direct Connect Hosted Public Virtual Interface (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Direct Connect Hosted Public Virtual Interface (%s): %s", d.Id(), err)
 	}
 
 	d.Set("address_family", vif.AddressFamily)
@@ -204,12 +213,10 @@ func resourceHostedPublicVirtualInterfaceDelete(ctx context.Context, d *schema.R
 func resourceHostedPublicVirtualInterfaceImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
-	vif, err := virtualInterfaceRead(ctx, d.Id(), conn)
+	vif, err := findVirtualInterfaceByID(ctx, conn, d.Id())
+
 	if err != nil {
 		return nil, err
-	}
-	if vif == nil {
-		return nil, fmt.Errorf("virtual interface (%s) not found", d.Id())
 	}
 
 	if vifType := aws.ToString(vif.VirtualInterfaceType); vifType != "public" {
@@ -235,10 +242,13 @@ func resourceHostedPublicVirtualInterfaceCustomizeDiff(_ context.Context, diff *
 	return nil
 }
 
-func hostedPublicVirtualInterfaceWaitUntilAvailable(ctx context.Context, conn *directconnect.Client, vifId string, timeout time.Duration) error {
-	return virtualInterfaceWaitUntilAvailable(ctx, conn,
-		vifId,
-		timeout,
+func waitHostedPublicVirtualInterfaceAvailable(ctx context.Context, conn *directconnect.Client, id string, timeout time.Duration) (*awstypes.VirtualInterface, error) {
+	return waitVirtualInterfaceAvailable(
+		ctx,
+		conn,
+		id,
 		enum.Slice(awstypes.VirtualInterfaceStatePending),
-		enum.Slice(awstypes.VirtualInterfaceStateAvailable, awstypes.VirtualInterfaceStateConfirming, awstypes.VirtualInterfaceStateDown, awstypes.VirtualInterfaceStateVerifying))
+		enum.Slice(awstypes.VirtualInterfaceStateAvailable, awstypes.VirtualInterfaceStateConfirming, awstypes.VirtualInterfaceStateDown, awstypes.VirtualInterfaceStateVerifying),
+		timeout,
+	)
 }

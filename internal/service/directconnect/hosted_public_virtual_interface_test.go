@@ -6,7 +6,6 @@ package directconnect_test
 import (
 	"context"
 	"fmt"
-	"os"
 	"strconv"
 	"testing"
 
@@ -22,11 +21,7 @@ import (
 
 func TestAccDirectConnectHostedPublicVirtualInterface_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	key := "DX_CONNECTION_ID"
-	connectionId := os.Getenv(key)
-	if connectionId == "" {
-		t.Skipf("Environment variable %s is not set", key)
-	}
+	connectionID := acctest.SkipIfEnvVarNotSet(t, "DX_CONNECTION_ID")
 
 	var vif awstypes.VirtualInterface
 	resourceName := "aws_dx_hosted_public_virtual_interface.test"
@@ -47,7 +42,7 @@ func TestAccDirectConnectHostedPublicVirtualInterface_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckHostedPublicVirtualInterfaceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccHostedPublicVirtualInterfaceConfig_basic(connectionId, rName, amazonAddress, customerAddress, bgpAsn, vlan),
+				Config: testAccHostedPublicVirtualInterfaceConfig_basic(connectionID, rName, amazonAddress, customerAddress, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHostedPublicVirtualInterfaceExists(ctx, resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
@@ -57,7 +52,7 @@ func TestAccDirectConnectHostedPublicVirtualInterface_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "aws_device"),
 					resource.TestCheckResourceAttr(resourceName, "bgp_asn", strconv.Itoa(bgpAsn)),
 					resource.TestCheckResourceAttrSet(resourceName, "bgp_auth_key"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrConnectionID, connectionId),
+					resource.TestCheckResourceAttr(resourceName, names.AttrConnectionID, connectionID),
 					resource.TestCheckResourceAttr(resourceName, "customer_address", customerAddress),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "route_filter_prefixes.#", acctest.Ct2),
@@ -70,9 +65,8 @@ func TestAccDirectConnectHostedPublicVirtualInterface_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(accepterResourceName, "virtual_interface_id", resourceName, names.AttrID),
 				),
 			},
-			// Test import.
 			{
-				Config:            testAccHostedPublicVirtualInterfaceConfig_basic(connectionId, rName, amazonAddress, customerAddress, bgpAsn, vlan),
+				Config:            testAccHostedPublicVirtualInterfaceConfig_basic(connectionID, rName, amazonAddress, customerAddress, bgpAsn, vlan),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -83,11 +77,7 @@ func TestAccDirectConnectHostedPublicVirtualInterface_basic(t *testing.T) {
 
 func TestAccDirectConnectHostedPublicVirtualInterface_accepterTags(t *testing.T) {
 	ctx := acctest.Context(t)
-	key := "DX_CONNECTION_ID"
-	connectionId := os.Getenv(key)
-	if connectionId == "" {
-		t.Skipf("Environment variable %s is not set", key)
-	}
+	connectionID := acctest.SkipIfEnvVarNotSet(t, "DX_CONNECTION_ID")
 
 	var vif awstypes.VirtualInterface
 	resourceName := "aws_dx_hosted_public_virtual_interface.test"
@@ -108,7 +98,7 @@ func TestAccDirectConnectHostedPublicVirtualInterface_accepterTags(t *testing.T)
 		CheckDestroy:             testAccCheckHostedPublicVirtualInterfaceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccHostedPublicVirtualInterfaceConfig_accepterTags(connectionId, rName, amazonAddress, customerAddress, bgpAsn, vlan),
+				Config: testAccHostedPublicVirtualInterfaceConfig_accepterTags(connectionID, rName, amazonAddress, customerAddress, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHostedPublicVirtualInterfaceExists(ctx, resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
@@ -118,7 +108,7 @@ func TestAccDirectConnectHostedPublicVirtualInterface_accepterTags(t *testing.T)
 					resource.TestCheckResourceAttrSet(resourceName, "aws_device"),
 					resource.TestCheckResourceAttr(resourceName, "bgp_asn", strconv.Itoa(bgpAsn)),
 					resource.TestCheckResourceAttrSet(resourceName, "bgp_auth_key"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrConnectionID, connectionId),
+					resource.TestCheckResourceAttr(resourceName, names.AttrConnectionID, connectionID),
 					resource.TestCheckResourceAttr(resourceName, "customer_address", customerAddress),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "route_filter_prefixes.#", acctest.Ct2),
@@ -135,7 +125,7 @@ func TestAccDirectConnectHostedPublicVirtualInterface_accepterTags(t *testing.T)
 				),
 			},
 			{
-				Config: testAccHostedPublicVirtualInterfaceConfig_accepterTagsUpdated(connectionId, rName, amazonAddress, customerAddress, bgpAsn, vlan),
+				Config: testAccHostedPublicVirtualInterfaceConfig_accepterTagsUpdated(connectionID, rName, amazonAddress, customerAddress, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHostedPublicVirtualInterfaceExists(ctx, resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
@@ -145,7 +135,7 @@ func TestAccDirectConnectHostedPublicVirtualInterface_accepterTags(t *testing.T)
 					resource.TestCheckResourceAttrSet(resourceName, "aws_device"),
 					resource.TestCheckResourceAttr(resourceName, "bgp_asn", strconv.Itoa(bgpAsn)),
 					resource.TestCheckResourceAttrSet(resourceName, "bgp_auth_key"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrConnectionID, connectionId),
+					resource.TestCheckResourceAttr(resourceName, names.AttrConnectionID, connectionID),
 					resource.TestCheckResourceAttr(resourceName, "customer_address", customerAddress),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "route_filter_prefixes.#", acctest.Ct2),
@@ -176,7 +166,7 @@ func testAccCheckHostedPublicVirtualInterfaceExists(ctx context.Context, name st
 }
 
 func testAccHostedPublicVirtualInterfaceConfig_base(cid, rName, amzAddr, custAddr string, bgpAsn, vlan int) string {
-	return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), fmt.Sprintf(`
 # Creator
 resource "aws_dx_hosted_public_virtual_interface" "test" {
   address_family   = "ipv4"
@@ -198,21 +188,21 @@ resource "aws_dx_hosted_public_virtual_interface" "test" {
 data "aws_caller_identity" "accepter" {
   provider = "awsalternate"
 }
-`, cid, rName, amzAddr, custAddr, bgpAsn, vlan)
+`, cid, rName, amzAddr, custAddr, bgpAsn, vlan))
 }
 
 func testAccHostedPublicVirtualInterfaceConfig_basic(cid, rName, amzAddr, custAddr string, bgpAsn, vlan int) string {
-	return testAccHostedPublicVirtualInterfaceConfig_base(cid, rName, amzAddr, custAddr, bgpAsn, vlan) + `
+	return acctest.ConfigCompose(testAccHostedPublicVirtualInterfaceConfig_base(cid, rName, amzAddr, custAddr, bgpAsn, vlan), `
 resource "aws_dx_hosted_public_virtual_interface_accepter" "test" {
   provider = "awsalternate"
 
   virtual_interface_id = aws_dx_hosted_public_virtual_interface.test.id
 }
-`
+`)
 }
 
 func testAccHostedPublicVirtualInterfaceConfig_accepterTags(cid, rName, amzAddr, custAddr string, bgpAsn, vlan int) string {
-	return testAccHostedPublicVirtualInterfaceConfig_base(cid, rName, amzAddr, custAddr, bgpAsn, vlan) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccHostedPublicVirtualInterfaceConfig_base(cid, rName, amzAddr, custAddr, bgpAsn, vlan), fmt.Sprintf(`
 resource "aws_dx_hosted_public_virtual_interface_accepter" "test" {
   provider = "awsalternate"
 
@@ -224,11 +214,11 @@ resource "aws_dx_hosted_public_virtual_interface_accepter" "test" {
     Key2 = "Value2a"
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccHostedPublicVirtualInterfaceConfig_accepterTagsUpdated(cid, rName, amzAddr, custAddr string, bgpAsn, vlan int) string {
-	return testAccHostedPublicVirtualInterfaceConfig_base(cid, rName, amzAddr, custAddr, bgpAsn, vlan) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccHostedPublicVirtualInterfaceConfig_base(cid, rName, amzAddr, custAddr, bgpAsn, vlan), fmt.Sprintf(`
 resource "aws_dx_hosted_public_virtual_interface_accepter" "test" {
   provider = "awsalternate"
 
@@ -240,5 +230,5 @@ resource "aws_dx_hosted_public_virtual_interface_accepter" "test" {
     Key3 = "Value3"
   }
 }
-`, rName)
+`, rName))
 }

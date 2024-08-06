@@ -15,6 +15,7 @@ var (
 	ResourceHostedConnection                      = resourceHostedConnection
 	ResourceHostedPrivateVirtualInterface         = resourceHostedPrivateVirtualInterface
 	ResourceHostedPrivateVirtualInterfaceAccepter = resourceHostedPrivateVirtualInterfaceAccepter
+	ResourceHostedPublicVirtualInterface          = resourceHostedPublicVirtualInterface
 
 	FindBGPPeerByThreePartKey          = findBGPPeerByThreePartKey
 	FindConnectionByID                 = findConnectionByID
