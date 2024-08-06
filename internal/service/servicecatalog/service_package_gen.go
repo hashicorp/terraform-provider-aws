@@ -46,8 +46,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Portfolio Constraints",
 		},
 		{
-			Factory:  DataSourceProduct,
+			Factory:  dataSourceProduct,
 			TypeName: "aws_servicecatalog_product",
+			Name:     "Product",
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{

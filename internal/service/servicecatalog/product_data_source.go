@@ -17,9 +17,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_servicecatalog_product")
+// @SDKDataSource("aws_servicecatalog_product", name="Product")
 // @Tags
-func DataSourceProduct() *schema.Resource {
+func dataSourceProduct() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceProductRead,
 
