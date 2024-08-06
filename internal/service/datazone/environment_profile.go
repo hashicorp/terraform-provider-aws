@@ -226,7 +226,7 @@ func (r *resourceEnvironmentProfile) Update(ctx context.Context, req resource.Up
 			)
 			return
 		}
-		option := flex.WithIgnoredFieldNames([]string{"UserParameters"})		
+		option := flex.WithIgnoredFieldNames([]string{"UserParameters"})
 		resp.Diagnostics.Append(flex.Flatten(ctx, out, &state, option)...)
 		if resp.Diagnostics.HasError() {
 			return
