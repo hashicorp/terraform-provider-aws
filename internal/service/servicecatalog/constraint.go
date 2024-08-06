@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
-	"github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -23,8 +23,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_servicecatalog_constraint")
-func ResourceConstraint() *schema.Resource {
+// @SDKResource("aws_servicecatalog_constraint", name="Constraint")
+func resourceConstraint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConstraintCreate,
 		ReadWithoutTimeout:   resourceConstraintRead,
@@ -117,7 +117,7 @@ func resourceConstraintCreate(ctx context.Context, d *schema.ResourceData, meta 
 			return retry.RetryableError(err)
 		}
 
-		if errs.IsA[*types.ResourceNotFoundException](err) {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return retry.RetryableError(err)
 		}
 
@@ -246,7 +246,7 @@ func resourceConstraintDelete(ctx context.Context, d *schema.ResourceData, meta 
 
 	_, err := conn.DeleteConstraint(ctx, input)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
