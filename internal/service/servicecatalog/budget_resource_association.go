@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
-	"github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -20,8 +20,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_servicecatalog_budget_resource_association")
-func ResourceBudgetResourceAssociation() *schema.Resource {
+// @SDKResource("aws_servicecatalog_budget_resource_association", name="Budget Resource Association")
+func resourceBudgetResourceAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBudgetResourceAssociationCreate,
 		ReadWithoutTimeout:   resourceBudgetResourceAssociationRead,
@@ -143,7 +143,7 @@ func resourceBudgetResourceAssociationDelete(ctx context.Context, d *schema.Reso
 
 	_, err = conn.DisassociateBudgetFromResource(ctx, input)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
