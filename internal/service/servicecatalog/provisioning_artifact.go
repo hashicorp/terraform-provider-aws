@@ -24,8 +24,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_servicecatalog_provisioning_artifact")
-func ResourceProvisioningArtifact() *schema.Resource {
+// @SDKResource("aws_servicecatalog_provisioning_artifact", name="Provisioning Artifact")
+func resourceProvisioningArtifact() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProvisioningArtifactCreate,
 		ReadWithoutTimeout:   resourceProvisioningArtifactRead,

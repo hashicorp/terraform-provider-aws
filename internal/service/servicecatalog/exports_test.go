@@ -12,6 +12,7 @@ var (
 	ResourceProduct                       = resourceProduct
 	ResourceProductPortfolioAssociation   = resourceProductPortfolioAssociation
 	ResourceProvisionedProduct            = resourceProvisionedProduct
+	ResourceProvisioningArtifact          = resourceProvisioningArtifact
 	ResourcePrincipalPortfolioAssociation = resourcePrincipalPortfolioAssociation
 
 	BudgetResourceAssociationParseID    = budgetResourceAssociationParseID
