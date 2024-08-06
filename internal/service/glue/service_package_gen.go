@@ -5,78 +5,183 @@ package glue
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	glue_sdkv2 "github.com/aws/aws-sdk-go-v2/service/glue"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-type servicePackage struct {
-	frameworkDataSourceFactories []func(context.Context) (datasource.DataSourceWithConfigure, error)
-	frameworkResourceFactories   []func(context.Context) (resource.ResourceWithConfigure, error)
-	sdkDataSourceFactories       []struct {
-		TypeName string
-		Factory  func() *schema.Resource
+type servicePackage struct{}
+
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
+	return []*types.ServicePackageFrameworkDataSource{}
+}
+
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
+	return []*types.ServicePackageFrameworkResource{}
+}
+
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
+	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  DataSourceCatalogTable,
+			TypeName: "aws_glue_catalog_table",
+		},
+		{
+			Factory:  DataSourceConnection,
+			TypeName: "aws_glue_connection",
+		},
+		{
+			Factory:  DataSourceDataCatalogEncryptionSettings,
+			TypeName: "aws_glue_data_catalog_encryption_settings",
+		},
+		{
+			Factory:  DataSourceScript,
+			TypeName: "aws_glue_script",
+		},
 	}
-	sdkResourceFactories []struct {
-		TypeName string
-		Factory  func() *schema.Resource
+}
+
+func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  ResourceCatalogDatabase,
+			TypeName: "aws_glue_catalog_database",
+			Name:     "Database",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory:  ResourceCatalogTable,
+			TypeName: "aws_glue_catalog_table",
+		},
+		{
+			Factory:  ResourceClassifier,
+			TypeName: "aws_glue_classifier",
+		},
+		{
+			Factory:  ResourceConnection,
+			TypeName: "aws_glue_connection",
+			Name:     "Connection",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory:  ResourceCrawler,
+			TypeName: "aws_glue_crawler",
+			Name:     "Crawler",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory:  ResourceDataCatalogEncryptionSettings,
+			TypeName: "aws_glue_data_catalog_encryption_settings",
+		},
+		{
+			Factory:  ResourceDataQualityRuleset,
+			TypeName: "aws_glue_data_quality_ruleset",
+			Name:     "Data Quality Ruleset",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory:  ResourceDevEndpoint,
+			TypeName: "aws_glue_dev_endpoint",
+			Name:     "Dev Endpoint",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory:  ResourceJob,
+			TypeName: "aws_glue_job",
+			Name:     "Job",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory:  ResourceMLTransform,
+			TypeName: "aws_glue_ml_transform",
+			Name:     "ML Transform",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory:  ResourcePartition,
+			TypeName: "aws_glue_partition",
+		},
+		{
+			Factory:  ResourcePartitionIndex,
+			TypeName: "aws_glue_partition_index",
+		},
+		{
+			Factory:  ResourceRegistry,
+			TypeName: "aws_glue_registry",
+			Name:     "Registry",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory:  ResourceResourcePolicy,
+			TypeName: "aws_glue_resource_policy",
+		},
+		{
+			Factory:  ResourceSchema,
+			TypeName: "aws_glue_schema",
+			Name:     "Schema",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory:  ResourceSecurityConfiguration,
+			TypeName: "aws_glue_security_configuration",
+		},
+		{
+			Factory:  ResourceTrigger,
+			TypeName: "aws_glue_trigger",
+			Name:     "Trigger",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory:  ResourceUserDefinedFunction,
+			TypeName: "aws_glue_user_defined_function",
+		},
+		{
+			Factory:  ResourceWorkflow,
+			TypeName: "aws_glue_workflow",
+			Name:     "Workflow",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
 	}
-}
-
-func (p *servicePackage) Configure(ctx context.Context, meta any) error {
-	return nil
-}
-
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return p.frameworkDataSourceFactories
-}
-
-func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.Context) (resource.ResourceWithConfigure, error) {
-	return p.frameworkResourceFactories
-}
-
-func (p *servicePackage) SDKDataSources(ctx context.Context) []struct {
-	TypeName string
-	Factory  func() *schema.Resource
-} {
-	return p.sdkDataSourceFactories
-}
-
-func (p *servicePackage) SDKResources(ctx context.Context) []struct {
-	TypeName string
-	Factory  func() *schema.Resource
-} {
-	return p.sdkResourceFactories
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "glue"
+	return names.Glue
 }
 
-func (p *servicePackage) registerFrameworkDataSourceFactory(factory func(context.Context) (datasource.DataSourceWithConfigure, error)) {
-	p.frameworkDataSourceFactories = append(p.frameworkDataSourceFactories, factory)
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*glue_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+
+	return glue_sdkv2.NewFromConfig(cfg,
+		glue_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+	), nil
 }
 
-func (p *servicePackage) registerFrameworkResourceFactory(factory func(context.Context) (resource.ResourceWithConfigure, error)) {
-	p.frameworkResourceFactories = append(p.frameworkResourceFactories, factory)
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
 }
-
-func (p *servicePackage) registerSDKDataSourceFactory(typeName string, factory func() *schema.Resource) {
-	p.sdkDataSourceFactories = append(p.sdkDataSourceFactories, struct {
-		TypeName string
-		Factory  func() *schema.Resource
-	}{TypeName: typeName, Factory: factory})
-}
-
-func (p *servicePackage) registerSDKResourceFactory(typeName string, factory func() *schema.Resource) {
-	p.sdkResourceFactories = append(p.sdkResourceFactories, struct {
-		TypeName string
-		Factory  func() *schema.Resource
-	}{TypeName: typeName, Factory: factory})
-}
-
-var (
-	_sp                                = &servicePackage{}
-	ServicePackage intf.ServicePackage = _sp
-)

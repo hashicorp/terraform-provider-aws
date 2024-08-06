@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package directconnect_test
 
 import (
@@ -5,15 +8,16 @@ import (
 	"encoding/hex"
 	"fmt"
 	"os"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccDirectConnectMacSecKey_withCkn(t *testing.T) {
+	ctx := acctest.Context(t)
 	// Requires an existing MACsec-capable DX connection set as environmental variable
 	key := "DX_CONNECTION_ID"
 	connectionId := os.Getenv(key)
@@ -25,16 +29,16 @@ func TestAccDirectConnectMacSecKey_withCkn(t *testing.T) {
 	cak := testAccDirecConnectMacSecGenerateHex()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMacSecConfig_withCkn(ckn, cak, connectionId),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "connection_id", connectionId),
-					resource.TestMatchResourceAttr(resourceName, "ckn", regexp.MustCompile(ckn)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrConnectionID, connectionId),
+					resource.TestMatchResourceAttr(resourceName, "ckn", regexache.MustCompile(ckn)),
 				),
 			},
 			{
@@ -49,6 +53,7 @@ func TestAccDirectConnectMacSecKey_withCkn(t *testing.T) {
 }
 
 func TestAccDirectConnectMacSecKey_withSecret(t *testing.T) {
+	ctx := acctest.Context(t)
 	// Requires an existing MACsec-capable DX connection set as environmental variable
 	dxKey := "DX_CONNECTION_ID"
 	connectionId := os.Getenv(dxKey)
@@ -65,15 +70,15 @@ func TestAccDirectConnectMacSecKey_withSecret(t *testing.T) {
 	resourceName := "aws_dx_macsec_key_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMacSecConfig_withSecret(secretArn, connectionId),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "connection_id", connectionId),
+					resource.TestCheckResourceAttr(resourceName, names.AttrConnectionID, connectionId),
 					resource.TestCheckResourceAttr(resourceName, "secret_arn", secretArn),
 				),
 			},

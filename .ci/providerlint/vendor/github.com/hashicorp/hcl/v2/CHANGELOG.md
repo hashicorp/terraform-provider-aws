@@ -1,5 +1,97 @@
 # HCL Changelog
 
+## v2.20.1 (March 26, 2024)
+
+### Bugs Fixed
+
+* Return `ExprSyntaxError` when an invalid namespaced function is encountered during parsing ([#668](https://github.com/hashicorp/hcl/pull/668))
+
+### Internal
+
+* Standardize on only two value dumping/diffing libraries ([#669](https://github.com/hashicorp/hcl/pull/669))
+
+## v2.20.0 (February 29, 2024)
+
+### Enhancements
+
+* Support for namespaced functions ([#639](https://github.com/hashicorp/hcl/pull/639))
+
+### Bugs Fixed
+
+* ext/dynblock: if `iterator` is invalid return this error instead of consequential errors ([#656](https://github.com/hashicorp/hcl/pull/656))
+
+## v2.19.0 (October 16, 2023)
+
+### Enhancements
+
+* ext/dynblock: `dynblock.Expand` now supports an optional hook for calling applications to check and potentially veto (by returning error diagnostics) particular `for_each` values. The behavior is unchanged for callers that don't set the new option. ([#634](https://github.com/hashicorp/hcl/pull/634))
+
+### Bugs Fixed
+
+* hclsyntax: Further fixes for treatment of "marked" values in the conditional expression, and better tracking of refined values into the conditional expression results, building on the fixes from v2.18.1. ([#633](https://github.com/hashicorp/hcl/pull/633))
+
+## v2.18.1 (October 5, 2023)
+
+### Bugs Fixed
+
+* hclsyntax: Conditional expressions will no longer panic when one or both of their results are "marked", as is the case for situations like how HashiCorp Terraform tracks its concept of "sensitive values". ([#630](https://github.com/hashicorp/hcl/pull/630))
+
+## v2.18.0 (August 30, 2023)
+
+### Enhancements
+
+* HCL now uses the tables from Unicode 15 when performing string normalization and character segmentation. HCL was previously using the Unicode 13 tables.
+
+    For calling applications where consistent Unicode support is important, consider also upgrading to Go 1.21 at the same time as adopting HCL v2.18.0 so that the standard library unicode tables (used for case folding, etc) will also be from Unicode 15.
+
+## v2.17.1 (August 30, 2023)
+
+### Enhancements
+
+* hclsyntax: When evaluating string templates that have a long known constant prefix, HCL will truncate the known prefix to avoid creating excessively-large refinements. String prefix refinements are intended primarily for relatively-short fixed prefixes, such as `https://` at the start of a URL known to use that scheme. ([#617](https://github.com/hashicorp/hcl/pull/617))
+* ext/tryfunc: The "try" and "can" functions now handle unknown values slightly more precisely, and so can return known values in more situations when given expressions referring to unknown symbols. ([#622](https://github.com/hashicorp/hcl/pull/622))
+
+### Bugs Fixed
+
+* ext/typeexpr: Will no longer try to refine unknown values of unknown type when dealing with a user-specified type constraint containing the `any` keyword, avoiding an incorrect panic at runtime. ([#625](https://github.com/hashicorp/hcl/pull/625))
+* ext/typeexpr: Now correctly handles attempts to declare the same object type attribute multiple times by returning an error. Previously this could potentially panic by creating an incoherent internal state. ([#624](https://github.com/hashicorp/hcl/pull/624))
+
+## v2.17.0 (May 31, 2023)
+
+### Enhancements
+
+* HCL now uses a newer version of the upstream `cty` library which has improved treatment of unknown values: it can now track additional optional information that reduces the range of an unknown value, which allows some operations against unknown values to return known or partially-known results. ([#590](https://github.com/hashicorp/hcl/pull/590))
+
+    **Note:** This change effectively passes on [`cty`'s notion of backward compatibility](https://github.com/zclconf/go-cty/blob/main/COMPATIBILITY.md) whereby unknown values can become "more known" in later releases. In particular, if your caller is using `cty.Value.RawEquals` in its tests against the results of operations with unknown values then you may see those tests begin failing after upgrading, due to the values now being more "refined".
+
+    If so, you should review the refinements with consideration to [the `cty` refinements docs](https://github.com/zclconf/go-cty/blob/7dcbae46a6f247e983efb1fa774d2bb68781a333/docs/refinements.md) and update your expected results to match only if the reported refinements seem correct for the given situation. The `RawEquals` method is intended only for making exact value comparisons in test cases, so main application code should not use it; use `Equals` instead for real logic, which will take refinements into account automatically.
+
+## v2.16.2 (March 9, 2023)
+
+### Bugs Fixed
+
+* ext/typeexpr: Verify type assumptions when applying default values, and ignore input values that do not match type assumptions. ([#594](https://github.com/hashicorp/hcl/pull/594))
+
+## v2.16.1 (February 13, 2023)
+
+### Bugs Fixed
+
+* hclsyntax: Report correct `Range.End` for `FunctionCall` with incomplete argument ([#588](https://github.com/hashicorp/hcl/pull/588))
+
+## v2.16.0 (January 30, 2023)
+
+### Enhancements
+
+* ext/typeexpr: Modify the `Defaults` functionality to implement additional flexibility. HCL will now upcast lists and sets into tuples, and maps into objects, when applying default values if the applied defaults cause the elements within a target collection to have differing types. Previously, this would have resulted in a panic, now HCL will return a modified overall type. ([#574](https://github.com/hashicorp/hcl/pull/574))
+
+    Users should return to the advice provided by v2.14.0, and apply the go-cty convert functionality *after* setting defaults on a given `cty.Value`, rather than before.
+* hclfmt: Avoid rewriting unchanged files. ([#576](https://github.com/hashicorp/hcl/pull/576))
+* hclsyntax: Simplify the AST for certain string expressions. ([#584](https://github.com/hashicorp/hcl/pull/584))
+
+### Bugs Fixed
+
+* hclwrite: Fix data race in `formatSpaces`. ([#511](https://github.com/hashicorp/hcl/pull/511))
+
 ## v2.15.0 (November 10, 2022)
 
 ### Bugs Fixed
@@ -101,7 +193,7 @@
 * hclsyntax: Mark objects with keys that are sensitive. ([#440](https://github.com/hashicorp/hcl/pull/440))
 
 ## v2.8.1 (December 17, 2020)
- 
+
 ### Bugs Fixed
 
 * hclsyntax: Fix panic when expanding marked function arguments. ([#429](https://github.com/hashicorp/hcl/pull/429))

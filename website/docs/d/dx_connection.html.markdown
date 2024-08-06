@@ -22,9 +22,9 @@ data "aws_dx_connection" "example" {
 
 * `name` - (Required) Name of the connection to retrieve.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the connection.
 * `aws_device` - Direct Connect endpoint on which the physical connection terminates.
@@ -32,6 +32,7 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - ID of the connection.
 * `location` - AWS Direct Connect location where the connection is located.
 * `owner_account_id` - ID of the AWS account that owns the connection.
+* `partner_name` - The name of the AWS Direct Connect service provider associated with the connection.
 * `provider_name` - Name of the service provider associated with the connection.
 * `tags` - Map of tags for the resource.
 * `vlan_id` - The VLAN ID.

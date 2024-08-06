@@ -1,7 +1,11 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshiftserverless
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -9,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/redshiftserverless"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -17,21 +22,30 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceWorkgroup() *schema.Resource {
+// @SDKResource("aws_redshiftserverless_workgroup", name="Workgroup")
+// @Tags(identifierAttribute="arn")
+func resourceWorkgroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceWorkgroupCreate,
 		ReadWithoutTimeout:   resourceWorkgroupRead,
 		UpdateWithoutTimeout: resourceWorkgroupUpdate,
 		DeleteWithoutTimeout: resourceWorkgroupDelete,
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(20 * time.Minute),
+			Update: schema.DefaultTimeout(20 * time.Minute),
+			Delete: schema.DefaultTimeout(20 * time.Minute),
+		},
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -41,15 +55,37 @@ func ResourceWorkgroup() *schema.Resource {
 				Computed: true,
 			},
 			"config_parameter": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"parameter_key": {
-							Type:         schema.TypeString,
-							ValidateFunc: validation.StringInSlice([]string{"datestyle", "enable_user_activity_logging", "query_group", "search_path", "max_query_execution_time"}, false),
-							Required:     true,
+							Type: schema.TypeString,
+							ValidateFunc: validation.StringInSlice([]string{
+								// https://docs.aws.amazon.com/redshift-serverless/latest/APIReference/API_CreateWorkgroup.html#redshiftserverless-CreateWorkgroup-request-configParameters
+								"auto_mv",
+								"datestyle",
+								"enable_case_sensitive_identifier", // "ValidationException: The parameter key enable_case_sensitivity_identifier isn't supported. Supported values: [[max_query_cpu_usage_percent, max_join_row_count, auto_mv, max_query_execution_time, max_query_queue_time, max_query_blocks_read, max_return_row_count, search_path, datestyle, max_query_cpu_time, max_io_skew, max_scan_row_count, query_group, enable_user_activity_logging, enable_case_sensitive_identifier, max_nested_loop_join_row_count, max_query_temp_blocks_to_disk, max_cpu_skew]]"
+								"enable_user_activity_logging",
+								"query_group",
+								"search_path",
+								// https://docs.aws.amazon.com/redshift/latest/dg/cm-c-wlm-query-monitoring-rules.html#cm-c-wlm-query-monitoring-metrics-serverless
+								"max_query_cpu_time",
+								"max_query_blocks_read",
+								"max_scan_row_count",
+								"max_query_execution_time",
+								"max_query_queue_time",
+								"max_query_cpu_usage_percent",
+								"max_query_temp_blocks_to_disk",
+								"max_join_row_count",
+								"max_nested_loop_join_row_count",
+								// default SSL parameters automatically added by AWS
+								// https://docs.aws.amazon.com/redshift/latest/mgmt/connecting-ssl-support.html
+								"require_ssl",
+								"use_fips_ssl",
+							}, false),
+							Required: true,
 						},
 						"parameter_value": {
 							Type:     schema.TypeString,
@@ -58,16 +94,16 @@ func ResourceWorkgroup() *schema.Resource {
 					},
 				},
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"address": {
+						names.AttrAddress: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"port": {
+						names.AttrPort: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
@@ -76,24 +112,16 @@ func ResourceWorkgroup() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"vpc_endpoint_id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"vpc_id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
 									"network_interface": {
 										Type:     schema.TypeList,
 										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"availability_zone": {
+												names.AttrAvailabilityZone: {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
-												"network_interface_id": {
+												names.AttrNetworkInterfaceID: {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
@@ -101,12 +129,20 @@ func ResourceWorkgroup() *schema.Resource {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
-												"subnet_id": {
+												names.AttrSubnetID: {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
 											},
 										},
+									},
+									names.AttrVPCEndpointID: {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									names.AttrVPCID: {
+										Type:     schema.TypeString,
+										Computed: true,
 									},
 								},
 							},
@@ -118,16 +154,25 @@ func ResourceWorkgroup() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
+			names.AttrMaxCapacity: {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
 			"namespace_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"publicly_accessible": {
+			names.AttrPort: {
+				Type:     schema.TypeInt,
+				Computed: true,
+				Optional: true,
+			},
+			names.AttrPubliclyAccessible: {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"security_group_ids": {
+			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -135,7 +180,7 @@ func ResourceWorkgroup() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"subnet_ids": {
+			names.AttrSubnetIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -152,8 +197,8 @@ func ResourceWorkgroup() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -162,51 +207,57 @@ func ResourceWorkgroup() *schema.Resource {
 
 func resourceWorkgroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
 
+	name := d.Get("workgroup_name").(string)
 	input := redshiftserverless.CreateWorkgroupInput{
 		NamespaceName: aws.String(d.Get("namespace_name").(string)),
-		WorkgroupName: aws.String(d.Get("workgroup_name").(string)),
+		Tags:          getTagsIn(ctx),
+		WorkgroupName: aws.String(name),
 	}
 
 	if v, ok := d.GetOk("base_capacity"); ok {
 		input.BaseCapacity = aws.Int64(int64(v.(int)))
 	}
 
-	if v, ok := d.GetOk("config_parameter"); ok && len(v.([]interface{})) > 0 {
-		input.ConfigParameters = expandConfigParameters(v.([]interface{}))
+	if v, ok := d.GetOk("config_parameter"); ok && v.(*schema.Set).Len() > 0 {
+		input.ConfigParameters = expandConfigParameters(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("enhanced_vpc_routing"); ok {
 		input.EnhancedVpcRouting = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk("publicly_accessible"); ok {
+	if v, ok := d.GetOk(names.AttrMaxCapacity); ok {
+		input.MaxCapacity = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk(names.AttrPort); ok {
+		input.Port = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk(names.AttrPubliclyAccessible); ok {
 		input.PubliclyAccessible = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk("security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(names.AttrSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
 		input.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("subnet_ids"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(names.AttrSubnetIDs); ok && v.(*schema.Set).Len() > 0 {
 		input.SubnetIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	input.Tags = Tags(tags.IgnoreAWS())
-
-	out, err := conn.CreateWorkgroupWithContext(ctx, &input)
+	output, err := conn.CreateWorkgroupWithContext(ctx, &input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Redshift Serverless Workgroup : %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Redshift Serverless Workgroup (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(out.Workgroup.WorkgroupName))
+	d.SetId(aws.StringValue(output.Workgroup.WorkgroupName))
 
-	if _, err := waitWorkgroupAvailable(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Redshift Serverless Workgroup (%s) to be created: %s", d.Id(), err)
+	if _, err := waitWorkgroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Redshift Serverless Workgroup (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceWorkgroupRead(ctx, d, meta)...)
@@ -214,11 +265,10 @@ func resourceWorkgroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceWorkgroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
 
 	out, err := FindWorkgroupByName(ctx, conn, d.Id())
+
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift Serverless Workgroup (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -230,95 +280,164 @@ func resourceWorkgroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	arn := aws.StringValue(out.WorkgroupArn)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("base_capacity", out.BaseCapacity)
-	d.Set("enhanced_vpc_routing", out.EnhancedVpcRouting)
-	d.Set("namespace_name", out.NamespaceName)
-	d.Set("publicly_accessible", out.PubliclyAccessible)
-	d.Set("security_group_ids", flex.FlattenStringSet(out.SecurityGroupIds))
-	d.Set("subnet_ids", flex.FlattenStringSet(out.SubnetIds))
-	d.Set("workgroup_id", out.WorkgroupId)
-	d.Set("workgroup_name", out.WorkgroupName)
 	if err := d.Set("config_parameter", flattenConfigParameters(out.ConfigParameters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting config_parameter: %s", err)
 	}
-
-	if err := d.Set("endpoint", []interface{}{flattenEndpoint(out.Endpoint)}); err != nil {
+	if err := d.Set(names.AttrEndpoint, []interface{}{flattenEndpoint(out.Endpoint)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoint: %s", err)
 	}
-
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, "UnknownOperationException") {
-			return diags
-		}
-
-		return sdkdiag.AppendErrorf(diags, "listing tags for edshift Serverless Workgroup (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	d.Set("enhanced_vpc_routing", out.EnhancedVpcRouting)
+	d.Set(names.AttrMaxCapacity, out.MaxCapacity)
+	d.Set("namespace_name", out.NamespaceName)
+	d.Set(names.AttrPort, flattenEndpoint(out.Endpoint)[names.AttrPort])
+	d.Set(names.AttrPubliclyAccessible, out.PubliclyAccessible)
+	d.Set(names.AttrSecurityGroupIDs, flex.FlattenStringSet(out.SecurityGroupIds))
+	d.Set(names.AttrSubnetIDs, flex.FlattenStringSet(out.SubnetIds))
+	d.Set("workgroup_id", out.WorkgroupId)
+	d.Set("workgroup_name", out.WorkgroupName)
 
 	return diags
 }
 
 func resourceWorkgroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
-		input := &redshiftserverless.UpdateWorkgroupInput{
-			WorkgroupName: aws.String(d.Id()),
+	checkCapacityChange := func(key string) (bool, int, int) {
+		o, n := d.GetChange(key)
+		oldCapacity, newCapacity := o.(int), n.(int)
+		hasCapacityChange := newCapacity != oldCapacity
+		return hasCapacityChange, oldCapacity, newCapacity
+	}
+
+	// You can't update multiple workgroup parameters in one request.
+	// This is particularly important when adjusting base_capacity and max_capacity due to their interdependencies:
+	// - base_capacity cannot be increased to a value greater than the current max_capacity.
+	// - max_capacity cannot be decreased to a value smaller than the current base_capacity.
+	// The value 0 of max_capacity in the state signifies "not set".
+	// Sending max_capacity value of -1 to AWS API removes max_capacity limit, but -1 cannot be used as max_capacity in the state,
+	// because AWS API never returns -1 as the value of unset max_capacity. There would be a diff on subsequent apply,
+	// resulting in errors due to the lack of AWS API idempotency.
+	// Some validations, such as increasing base_capacity beyond an unchanged max_capacity, are deferred to the AWS API.
+
+	hasBaseCapacityChange, _, newBaseCapacity := checkCapacityChange("base_capacity")
+	hasMaxCapacityChange, oldMaxCapacity, newMaxCapacity := checkCapacityChange(names.AttrMaxCapacity)
+
+	switch {
+	case hasMaxCapacityChange && newMaxCapacity == 0:
+		if err :=
+			updateWorkgroup(ctx, conn,
+				&redshiftserverless.UpdateWorkgroupInput{MaxCapacity: aws.Int64(-1), WorkgroupName: aws.String(d.Id())},
+				d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
-
-		if v, ok := d.GetOk("base_capacity"); ok {
-			input.BaseCapacity = aws.Int64(int64(v.(int)))
+	case hasBaseCapacityChange && hasMaxCapacityChange && (oldMaxCapacity == 0 || newBaseCapacity <= oldMaxCapacity):
+		if err :=
+			updateWorkgroup(ctx, conn,
+				&redshiftserverless.UpdateWorkgroupInput{BaseCapacity: aws.Int64(int64(newBaseCapacity)), WorkgroupName: aws.String(d.Id())},
+				d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
-
-		if v, ok := d.GetOk("config_parameter"); ok && len(v.([]interface{})) > 0 {
-			input.ConfigParameters = expandConfigParameters(v.([]interface{}))
+		if err :=
+			updateWorkgroup(ctx, conn,
+				&redshiftserverless.UpdateWorkgroupInput{MaxCapacity: aws.Int64(int64(newMaxCapacity)), WorkgroupName: aws.String(d.Id())},
+				d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
-
-		if v, ok := d.GetOk("enhanced_vpc_routing"); ok {
-			input.EnhancedVpcRouting = aws.Bool(v.(bool))
+	case hasBaseCapacityChange && hasMaxCapacityChange && newBaseCapacity > oldMaxCapacity:
+		if err :=
+			updateWorkgroup(ctx, conn,
+				&redshiftserverless.UpdateWorkgroupInput{MaxCapacity: aws.Int64(int64(newMaxCapacity)), WorkgroupName: aws.String(d.Id())},
+				d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
-
-		if v, ok := d.GetOk("publicly_accessible"); ok {
-			input.PubliclyAccessible = aws.Bool(v.(bool))
+		if err :=
+			updateWorkgroup(ctx, conn,
+				&redshiftserverless.UpdateWorkgroupInput{BaseCapacity: aws.Int64(int64(newBaseCapacity)), WorkgroupName: aws.String(d.Id())},
+				d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
-
-		if v, ok := d.GetOk("security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
-			input.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
+	case hasBaseCapacityChange:
+		if err :=
+			updateWorkgroup(ctx, conn,
+				&redshiftserverless.UpdateWorkgroupInput{BaseCapacity: aws.Int64(int64(newBaseCapacity)), WorkgroupName: aws.String(d.Id())},
+				d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
-
-		if v, ok := d.GetOk("subnet_ids"); ok && v.(*schema.Set).Len() > 0 {
-			input.SubnetIds = flex.ExpandStringSet(v.(*schema.Set))
-		}
-
-		_, err := conn.UpdateWorkgroupWithContext(ctx, input)
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Redshift Serverless Workgroup (%s): %s", d.Id(), err)
-		}
-
-		if _, err := waitWorkgroupAvailable(ctx, conn, d.Id()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for Redshift Serverless Workgroup (%s) to be updated: %s", d.Id(), err)
+	case hasMaxCapacityChange:
+		if err :=
+			updateWorkgroup(ctx, conn,
+				&redshiftserverless.UpdateWorkgroupInput{MaxCapacity: aws.Int64(int64(newMaxCapacity)), WorkgroupName: aws.String(d.Id())},
+				d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
+	if d.HasChange("config_parameter") {
+		input := &redshiftserverless.UpdateWorkgroupInput{
+			ConfigParameters: expandConfigParameters(d.Get("config_parameter").(*schema.Set).List()),
+			WorkgroupName:    aws.String(d.Id()),
+		}
 
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Redshift Serverless Workgroup (%s) tags: %s", d.Get("arn").(string), err)
+		if err := updateWorkgroup(ctx, conn, input, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
+	if d.HasChange("enhanced_vpc_routing") {
+		input := &redshiftserverless.UpdateWorkgroupInput{
+			EnhancedVpcRouting: aws.Bool(d.Get("enhanced_vpc_routing").(bool)),
+			WorkgroupName:      aws.String(d.Id()),
+		}
+
+		if err := updateWorkgroup(ctx, conn, input, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
+	if d.HasChange(names.AttrPort) {
+		input := &redshiftserverless.UpdateWorkgroupInput{
+			Port:          aws.Int64(int64(d.Get(names.AttrPort).(int))),
+			WorkgroupName: aws.String(d.Id()),
+		}
+
+		if err := updateWorkgroup(ctx, conn, input, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
+	if d.HasChange(names.AttrPubliclyAccessible) {
+		input := &redshiftserverless.UpdateWorkgroupInput{
+			PubliclyAccessible: aws.Bool(d.Get(names.AttrPubliclyAccessible).(bool)),
+			WorkgroupName:      aws.String(d.Id()),
+		}
+
+		if err := updateWorkgroup(ctx, conn, input, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
+	if d.HasChange(names.AttrSecurityGroupIDs) {
+		input := &redshiftserverless.UpdateWorkgroupInput{
+			SecurityGroupIds: flex.ExpandStringSet(d.Get(names.AttrSecurityGroupIDs).(*schema.Set)),
+			WorkgroupName:    aws.String(d.Id()),
+		}
+
+		if err := updateWorkgroup(ctx, conn, input, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
+	if d.HasChange(names.AttrSubnetIDs) {
+		input := &redshiftserverless.UpdateWorkgroupInput{
+			SubnetIds:     flex.ExpandStringSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
+			WorkgroupName: aws.String(d.Id()),
+		}
+
+		if err := updateWorkgroup(ctx, conn, input, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
@@ -327,8 +446,9 @@ func resourceWorkgroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceWorkgroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
 
+	log.Printf("[DEBUG] Deleting Redshift Serverless Workgroup: %s", d.Id())
 	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 10*time.Minute,
 		func() (interface{}, error) {
 			return conn.DeleteWorkgroupWithContext(ctx, &redshiftserverless.DeleteWorkgroupInput{
@@ -338,18 +458,109 @@ func resourceWorkgroupDelete(ctx context.Context, d *schema.ResourceData, meta i
 		// "ConflictException: There is an operation running on the workgroup. Try deleting the workgroup again later."
 		redshiftserverless.ErrCodeConflictException, "operation running")
 
+	if tfawserr.ErrCodeEquals(err, redshiftserverless.ErrCodeResourceNotFoundException) {
+		return diags
+	}
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, redshiftserverless.ErrCodeResourceNotFoundException) {
-			return diags
-		}
 		return sdkdiag.AppendErrorf(diags, "deleting Redshift Serverless Workgroup (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitWorkgroupDeleted(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Redshift Serverless Workgroup (%s): waiting for completion: %s", d.Id(), err)
+	if _, err := waitWorkgroupDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Redshift Serverless Workgroup (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
+}
+
+func updateWorkgroup(ctx context.Context, conn *redshiftserverless.RedshiftServerless, input *redshiftserverless.UpdateWorkgroupInput, timeout time.Duration) error {
+	name := aws.StringValue(input.WorkgroupName)
+	_, err := conn.UpdateWorkgroupWithContext(ctx, input)
+
+	if err != nil {
+		return fmt.Errorf("updating Redshift Serverless Workgroup (%s): %w", name, err)
+	}
+
+	if _, err := waitWorkgroupAvailable(ctx, conn, name, timeout); err != nil {
+		return fmt.Errorf("waiting for Redshift Serverless Workgroup (%s) update: %w", name, err)
+	}
+
+	return nil
+}
+
+func FindWorkgroupByName(ctx context.Context, conn *redshiftserverless.RedshiftServerless, name string) (*redshiftserverless.Workgroup, error) {
+	input := &redshiftserverless.GetWorkgroupInput{
+		WorkgroupName: aws.String(name),
+	}
+
+	output, err := conn.GetWorkgroupWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, redshiftserverless.ErrCodeResourceNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Workgroup, nil
+}
+
+func statusWorkgroup(ctx context.Context, conn *redshiftserverless.RedshiftServerless, name string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindWorkgroupByName(ctx, conn, name)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
+func waitWorkgroupAvailable(ctx context.Context, conn *redshiftserverless.RedshiftServerless, name string, wait time.Duration) (*redshiftserverless.Workgroup, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{redshiftserverless.WorkgroupStatusCreating, redshiftserverless.WorkgroupStatusModifying},
+		Target:  []string{redshiftserverless.WorkgroupStatusAvailable},
+		Refresh: statusWorkgroup(ctx, conn, name),
+		Timeout: wait,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*redshiftserverless.Workgroup); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitWorkgroupDeleted(ctx context.Context, conn *redshiftserverless.RedshiftServerless, name string, wait time.Duration) (*redshiftserverless.Workgroup, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{redshiftserverless.WorkgroupStatusAvailable, redshiftserverless.WorkgroupStatusModifying, redshiftserverless.WorkgroupStatusDeleting},
+		Target:  []string{},
+		Refresh: statusWorkgroup(ctx, conn, name),
+		Timeout: wait,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*redshiftserverless.Workgroup); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
 func expandConfigParameter(tfMap map[string]interface{}) *redshiftserverless.ConfigParameter {
@@ -438,11 +649,11 @@ func flattenEndpoint(apiObject *redshiftserverless.Endpoint) map[string]interfac
 
 	tfMap := map[string]interface{}{}
 	if v := apiObject.Address; v != nil {
-		tfMap["address"] = aws.StringValue(v)
+		tfMap[names.AttrAddress] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Port; v != nil {
-		tfMap["port"] = aws.Int64Value(v)
+		tfMap[names.AttrPort] = aws.Int64Value(v)
 	}
 
 	if v := apiObject.VpcEndpoints; v != nil {
@@ -478,11 +689,11 @@ func flattenVPCEndpoint(apiObject *redshiftserverless.VpcEndpoint) map[string]in
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.VpcEndpointId; v != nil {
-		tfMap["vpc_endpoint_id"] = aws.StringValue(v)
+		tfMap[names.AttrVPCEndpointID] = aws.StringValue(v)
 	}
 
 	if v := apiObject.VpcId; v != nil {
-		tfMap["vpc_id"] = aws.StringValue(v)
+		tfMap[names.AttrVPCID] = aws.StringValue(v)
 	}
 
 	if v := apiObject.NetworkInterfaces; v != nil {
@@ -517,11 +728,11 @@ func flattenNetworkInterface(apiObject *redshiftserverless.NetworkInterface) map
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.AvailabilityZone; v != nil {
-		tfMap["availability_zone"] = aws.StringValue(v)
+		tfMap[names.AttrAvailabilityZone] = aws.StringValue(v)
 	}
 
 	if v := apiObject.NetworkInterfaceId; v != nil {
-		tfMap["network_interface_id"] = aws.StringValue(v)
+		tfMap[names.AttrNetworkInterfaceID] = aws.StringValue(v)
 	}
 
 	if v := apiObject.PrivateIpAddress; v != nil {
@@ -529,7 +740,7 @@ func flattenNetworkInterface(apiObject *redshiftserverless.NetworkInterface) map
 	}
 
 	if v := apiObject.SubnetId; v != nil {
-		tfMap["subnet_id"] = aws.StringValue(v)
+		tfMap[names.AttrSubnetID] = aws.StringValue(v)
 	}
 	return tfMap
 }

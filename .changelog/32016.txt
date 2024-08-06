@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_eip: Fix `reading EC2 EIP (eipalloc-abcd1234): couldn't find resource` errors when reading new resource
+```

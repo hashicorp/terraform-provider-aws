@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
@@ -9,10 +12,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfilters"
+	"github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters"
+	namevaluesfiltersv1 "github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters/v1"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKDataSource("aws_rds_clusters")
 func DataSourceClusters() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceClustersRead,
@@ -28,7 +33,7 @@ func DataSourceClusters() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": namevaluesfilters.Schema(),
+			names.AttrFilter: namevaluesfilters.Schema(),
 		},
 	}
 }
@@ -38,12 +43,13 @@ const (
 )
 
 func dataSourceClustersRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RDSConn()
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	input := &rds.DescribeDBClustersInput{}
 
-	if v, ok := d.GetOk("filter"); ok {
-		input.Filters = namevaluesfilters.New(v.(*schema.Set)).RDSFilters()
+	if v, ok := d.GetOk(names.AttrFilter); ok {
+		input.Filters = namevaluesfiltersv1.New(v.(*schema.Set)).RDSFilters()
 	}
 
 	var clusterArns []string
@@ -65,14 +71,13 @@ func dataSourceClustersRead(ctx context.Context, d *schema.ResourceData, meta in
 
 		return !lastPage
 	})
-
 	if err != nil {
-		return create.DiagError(names.RDS, create.ErrActionReading, DSNameClusters, "", err)
+		return create.AppendDiagError(diags, names.RDS, create.ErrActionReading, DSNameClusters, "", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
 	d.Set("cluster_arns", clusterArns)
 	d.Set("cluster_identifiers", clusterIdentifiers)
 
-	return nil
+	return diags
 }

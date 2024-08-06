@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elb_test
 
 import (
@@ -5,14 +8,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/elb"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfelb "github.com/hashicorp/terraform-provider-aws/internal/service/elb"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccELBSSLNegotiationPolicy_basic(t *testing.T) {
@@ -23,8 +26,8 @@ func TestAccELBSSLNegotiationPolicy_basic(t *testing.T) {
 	resourceName := "aws_lb_ssl_negotiation_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elb.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLBSSLNegotiationPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -39,6 +42,41 @@ func TestAccELBSSLNegotiationPolicy_basic(t *testing.T) {
 	})
 }
 
+func TestAccELBSSLNegotiationPolicy_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
+	resourceName := "aws_lb_ssl_negotiation_policy.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLBSSLNegotiationPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLBSSLNegotiationPolicyConfig_update(rName, key, certificate, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLBSSLNegotiationPolicy(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "attribute.#", "7"),
+				),
+			},
+			{
+				Config: testAccLBSSLNegotiationPolicyConfig_update(rName, key, certificate, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLBSSLNegotiationPolicy(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "attribute.#", "7"),
+				),
+			},
+			{
+				Config:   testAccLBSSLNegotiationPolicyConfig_update(rName, key, certificate, 1),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
 func TestAccELBSSLNegotiationPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -47,8 +85,8 @@ func TestAccELBSSLNegotiationPolicy_disappears(t *testing.T) {
 	resourceName := "aws_lb_ssl_negotiation_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elb.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLBSSLNegotiationPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -66,7 +104,7 @@ func TestAccELBSSLNegotiationPolicy_disappears(t *testing.T) {
 
 func testAccCheckLBSSLNegotiationPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lb_ssl_negotiation_policy" {
@@ -74,7 +112,6 @@ func testAccCheckLBSSLNegotiationPolicyDestroy(ctx context.Context) resource.Tes
 			}
 
 			lbName, lbPort, policyName, err := tfelb.SSLNegotiationPolicyParseResourceID(rs.Primary.ID)
-
 			if err != nil {
 				return err
 			}
@@ -103,17 +140,12 @@ func testAccCheckLBSSLNegotiationPolicy(ctx context.Context, n string) resource.
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ELB Classic SSL Negotiation Policy ID is set")
-		}
-
 		lbName, lbPort, policyName, err := tfelb.SSLNegotiationPolicyParseResourceID(rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBClient(ctx)
 
 		_, err = tfelb.FindLoadBalancerListenerPolicyByThreePartKey(ctx, conn, lbName, lbPort, policyName)
 
@@ -127,6 +159,10 @@ resource "aws_iam_server_certificate" "test" {
   name             = %[1]q
   certificate_body = "%[2]s"
   private_key      = "%[3]s"
+
+  timeouts {
+    delete = "30m"
+  }
 }
 
 resource "aws_elb" "test" {
@@ -183,4 +219,77 @@ resource "aws_lb_ssl_negotiation_policy" "test" {
   }
 }
 `, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
+}
+
+func testAccLBSSLNegotiationPolicyConfig_update(rName, key, certificate string, certToUse int) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+resource "aws_iam_server_certificate" "test" {
+  count            = 2
+  name_prefix      = %[1]q
+  certificate_body = "%[2]s"
+  private_key      = "%[3]s"
+
+  timeouts {
+    delete = "30m"
+  }
+}
+
+resource "aws_elb" "test" {
+  name               = %[1]q
+  availability_zones = [data.aws_availability_zones.available.names[0]]
+
+  listener {
+    instance_port      = 8000
+    instance_protocol  = "https"
+    lb_port            = 443
+    lb_protocol        = "https"
+    ssl_certificate_id = aws_iam_server_certificate.test[%[4]d].arn
+  }
+}
+
+resource "aws_lb_ssl_negotiation_policy" "test" {
+  name          = %[1]q
+  load_balancer = aws_elb.test.id
+  lb_port       = 443
+
+  attribute {
+    name  = "Protocol-TLSv1"
+    value = "false"
+  }
+
+  attribute {
+    name  = "Protocol-TLSv1.1"
+    value = "false"
+  }
+
+  attribute {
+    name  = "Protocol-TLSv1.2"
+    value = "true"
+  }
+
+  attribute {
+    name  = "Server-Defined-Cipher-Order"
+    value = "true"
+  }
+
+  attribute {
+    name  = "ECDHE-RSA-AES128-GCM-SHA256"
+    value = "true"
+  }
+
+  attribute {
+    name  = "AES128-GCM-SHA256"
+    value = "true"
+  }
+
+  attribute {
+    name  = "EDH-RSA-DES-CBC3-SHA"
+    value = "false"
+  }
+
+  triggers = {
+    certificate_arn = aws_iam_server_certificate.test[%[4]d].arn,
+  }
+}
+`, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key), certToUse))
 }

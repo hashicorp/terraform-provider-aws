@@ -5,78 +5,149 @@ package wafregional
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	wafregional_sdkv2 "github.com/aws/aws-sdk-go-v2/service/wafregional"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-type servicePackage struct {
-	frameworkDataSourceFactories []func(context.Context) (datasource.DataSourceWithConfigure, error)
-	frameworkResourceFactories   []func(context.Context) (resource.ResourceWithConfigure, error)
-	sdkDataSourceFactories       []struct {
-		TypeName string
-		Factory  func() *schema.Resource
+type servicePackage struct{}
+
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
+	return []*types.ServicePackageFrameworkDataSource{}
+}
+
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
+	return []*types.ServicePackageFrameworkResource{}
+}
+
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
+	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  dataSourceIPSet,
+			TypeName: "aws_wafregional_ipset",
+			Name:     "IPSet",
+		},
+		{
+			Factory:  dataSourceRateBasedRule,
+			TypeName: "aws_wafregional_rate_based_rule",
+			Name:     "Rate Based Rule",
+		},
+		{
+			Factory:  dataSourceRule,
+			TypeName: "aws_wafregional_rule",
+			Name:     "Rule",
+		},
+		{
+			Factory:  dataSourceSubscribedRuleGroup,
+			TypeName: "aws_wafregional_subscribed_rule_group",
+			Name:     "Subscribed Rule Group",
+		},
+		{
+			Factory:  dataSourceWebACL,
+			TypeName: "aws_wafregional_web_acl",
+			Name:     "Web ACL",
+		},
 	}
-	sdkResourceFactories []struct {
-		TypeName string
-		Factory  func() *schema.Resource
+}
+
+func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  resourceByteMatchSet,
+			TypeName: "aws_wafregional_byte_match_set",
+			Name:     "Byte Match Set",
+		},
+		{
+			Factory:  resourceGeoMatchSet,
+			TypeName: "aws_wafregional_geo_match_set",
+			Name:     "Geo Match Set",
+		},
+		{
+			Factory:  resourceIPSet,
+			TypeName: "aws_wafregional_ipset",
+			Name:     "IPSet",
+		},
+		{
+			Factory:  resourceRateBasedRule,
+			TypeName: "aws_wafregional_rate_based_rule",
+			Name:     "Rate Based Rule",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory:  resourceRegexMatchSet,
+			TypeName: "aws_wafregional_regex_match_set",
+			Name:     "Regex Match Set",
+		},
+		{
+			Factory:  resourceRegexPatternSet,
+			TypeName: "aws_wafregional_regex_pattern_set",
+			Name:     "Regex Pattern Set",
+		},
+		{
+			Factory:  resourceRule,
+			TypeName: "aws_wafregional_rule",
+			Name:     "Rule",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory:  resourceRuleGroup,
+			TypeName: "aws_wafregional_rule_group",
+			Name:     "Rule Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory:  resourceSizeConstraintSet,
+			TypeName: "aws_wafregional_size_constraint_set",
+			Name:     "Size Constraint Set",
+		},
+		{
+			Factory:  resourceSQLInjectionMatchSet,
+			TypeName: "aws_wafregional_sql_injection_match_set",
+			Name:     "SQL Injection Match Set",
+		},
+		{
+			Factory:  resourceWebACL,
+			TypeName: "aws_wafregional_web_acl",
+			Name:     "Web ACL",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory:  resourceWebACLAssociation,
+			TypeName: "aws_wafregional_web_acl_association",
+			Name:     "Web ACL Association",
+		},
+		{
+			Factory:  resourceXSSMatchSet,
+			TypeName: "aws_wafregional_xss_match_set",
+			Name:     "XSS Match Set",
+		},
 	}
-}
-
-func (p *servicePackage) Configure(ctx context.Context, meta any) error {
-	return nil
-}
-
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return p.frameworkDataSourceFactories
-}
-
-func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.Context) (resource.ResourceWithConfigure, error) {
-	return p.frameworkResourceFactories
-}
-
-func (p *servicePackage) SDKDataSources(ctx context.Context) []struct {
-	TypeName string
-	Factory  func() *schema.Resource
-} {
-	return p.sdkDataSourceFactories
-}
-
-func (p *servicePackage) SDKResources(ctx context.Context) []struct {
-	TypeName string
-	Factory  func() *schema.Resource
-} {
-	return p.sdkResourceFactories
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "wafregional"
+	return names.WAFRegional
 }
 
-func (p *servicePackage) registerFrameworkDataSourceFactory(factory func(context.Context) (datasource.DataSourceWithConfigure, error)) {
-	p.frameworkDataSourceFactories = append(p.frameworkDataSourceFactories, factory)
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*wafregional_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+
+	return wafregional_sdkv2.NewFromConfig(cfg,
+		wafregional_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+	), nil
 }
 
-func (p *servicePackage) registerFrameworkResourceFactory(factory func(context.Context) (resource.ResourceWithConfigure, error)) {
-	p.frameworkResourceFactories = append(p.frameworkResourceFactories, factory)
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
 }
-
-func (p *servicePackage) registerSDKDataSourceFactory(typeName string, factory func() *schema.Resource) {
-	p.sdkDataSourceFactories = append(p.sdkDataSourceFactories, struct {
-		TypeName string
-		Factory  func() *schema.Resource
-	}{TypeName: typeName, Factory: factory})
-}
-
-func (p *servicePackage) registerSDKResourceFactory(typeName string, factory func() *schema.Resource) {
-	p.sdkResourceFactories = append(p.sdkResourceFactories, struct {
-		TypeName string
-		Factory  func() *schema.Resource
-	}{TypeName: typeName, Factory: factory})
-}
-
-var (
-	_sp                                = &servicePackage{}
-	ServicePackage intf.ServicePackage = _sp
-)

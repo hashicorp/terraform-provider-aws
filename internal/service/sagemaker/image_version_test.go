@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker_test
 
 import (
@@ -9,12 +12,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSageMakerImageVersion_basic(t *testing.T) {
@@ -29,8 +33,8 @@ func TestAccSageMakerImageVersion_basic(t *testing.T) {
 	baseImage := os.Getenv("SAGEMAKER_IMAGE_VERSION_BASE_IMAGE")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckImageVersionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -40,9 +44,9 @@ func TestAccSageMakerImageVersion_basic(t *testing.T) {
 					testAccCheckImageVersionExists(ctx, resourceName, &image),
 					resource.TestCheckResourceAttr(resourceName, "image_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "base_image", baseImage),
-					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct1),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "image_arn", "sagemaker", fmt.Sprintf("image/%s", rName)),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("image-version/%s/1", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("image-version/%s/1", rName)),
 					resource.TestCheckResourceAttrSet(resourceName, "container_image"),
 				),
 			},
@@ -67,8 +71,8 @@ func TestAccSageMakerImageVersion_disappears(t *testing.T) {
 	baseImage := os.Getenv("SAGEMAKER_IMAGE_VERSION_BASE_IMAGE")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckImageVersionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -96,8 +100,8 @@ func TestAccSageMakerImageVersion_Disappears_image(t *testing.T) {
 	baseImage := os.Getenv("SAGEMAKER_IMAGE_VERSION_BASE_IMAGE")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckImageVersionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -115,7 +119,7 @@ func TestAccSageMakerImageVersion_Disappears_image(t *testing.T) {
 
 func testAccCheckImageVersionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sagemaker_image_version" {
@@ -132,7 +136,7 @@ func testAccCheckImageVersionDestroy(ctx context.Context) resource.TestCheckFunc
 				return fmt.Errorf("reading SageMaker Image Version (%s): %w", rs.Primary.ID, err)
 			}
 
-			if aws.StringValue(imageVersion.ImageVersionArn) == rs.Primary.Attributes["arn"] {
+			if aws.StringValue(imageVersion.ImageVersionArn) == rs.Primary.Attributes[names.AttrARN] {
 				return fmt.Errorf("SageMaker Image Version %q still exists", rs.Primary.ID)
 			}
 		}
@@ -152,7 +156,7 @@ func testAccCheckImageVersionExists(ctx context.Context, n string, image *sagema
 			return fmt.Errorf("No sagmaker Image ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
 		resp, err := tfsagemaker.FindImageVersionByName(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err

@@ -5,78 +5,135 @@ package cognitoidp
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	cognitoidentityprovider_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-type servicePackage struct {
-	frameworkDataSourceFactories []func(context.Context) (datasource.DataSourceWithConfigure, error)
-	frameworkResourceFactories   []func(context.Context) (resource.ResourceWithConfigure, error)
-	sdkDataSourceFactories       []struct {
-		TypeName string
-		Factory  func() *schema.Resource
+type servicePackage struct{}
+
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
+	return []*types.ServicePackageFrameworkDataSource{
+		{
+			Factory: newUserGroupDataSource,
+			Name:    "User Group",
+		},
+		{
+			Factory: newUserGroupsDataSource,
+			Name:    "User Groups",
+		},
+		{
+			Factory: newUserPoolDataSource,
+			Name:    "User Pool",
+		},
 	}
-	sdkResourceFactories []struct {
-		TypeName string
-		Factory  func() *schema.Resource
+}
+
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
+	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory: newManagedUserPoolClientResource,
+			Name:    "Managed User Pool Client",
+		},
+		{
+			Factory: newUserPoolClientResource,
+			Name:    "User Pool Client",
+		},
 	}
 }
 
-func (p *servicePackage) Configure(ctx context.Context, meta any) error {
-	return nil
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
+	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  dataSourceUserPoolClient,
+			TypeName: "aws_cognito_user_pool_client",
+			Name:     "User Pool Client",
+		},
+		{
+			Factory:  dataSourceUserPoolClients,
+			TypeName: "aws_cognito_user_pool_clients",
+			Name:     "User Pool Clients",
+		},
+		{
+			Factory:  dataSourceUserPoolSigningCertificate,
+			TypeName: "aws_cognito_user_pool_signing_certificate",
+			Name:     "User Pool Signing Certificate",
+		},
+		{
+			Factory:  dataSourceUserPools,
+			TypeName: "aws_cognito_user_pools",
+			Name:     "User Pools",
+		},
+	}
 }
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return p.frameworkDataSourceFactories
-}
-
-func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.Context) (resource.ResourceWithConfigure, error) {
-	return p.frameworkResourceFactories
-}
-
-func (p *servicePackage) SDKDataSources(ctx context.Context) []struct {
-	TypeName string
-	Factory  func() *schema.Resource
-} {
-	return p.sdkDataSourceFactories
-}
-
-func (p *servicePackage) SDKResources(ctx context.Context) []struct {
-	TypeName string
-	Factory  func() *schema.Resource
-} {
-	return p.sdkResourceFactories
+func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  resourceIdentityProvider,
+			TypeName: "aws_cognito_identity_provider",
+			Name:     "Identity Provider",
+		},
+		{
+			Factory:  resourceResourceServer,
+			TypeName: "aws_cognito_resource_server",
+			Name:     "Resource Server",
+		},
+		{
+			Factory:  resourceRiskConfiguration,
+			TypeName: "aws_cognito_risk_configuration",
+			Name:     "Risk Configuration",
+		},
+		{
+			Factory:  resourceUser,
+			TypeName: "aws_cognito_user",
+			Name:     "User",
+		},
+		{
+			Factory:  resourceUserGroup,
+			TypeName: "aws_cognito_user_group",
+			Name:     "User Group",
+		},
+		{
+			Factory:  resourceUserInGroup,
+			TypeName: "aws_cognito_user_in_group",
+			Name:     "Group User",
+		},
+		{
+			Factory:  resourceUserPool,
+			TypeName: "aws_cognito_user_pool",
+			Name:     "User Pool",
+			Tags:     &types.ServicePackageResourceTags{},
+		},
+		{
+			Factory:  resourceUserPoolDomain,
+			TypeName: "aws_cognito_user_pool_domain",
+			Name:     "User Pool Domain",
+		},
+		{
+			Factory:  resourceUserPoolUICustomization,
+			TypeName: "aws_cognito_user_pool_ui_customization",
+			Name:     "User Pool UI Customization",
+		},
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "cognitoidp"
+	return names.CognitoIDP
 }
 
-func (p *servicePackage) registerFrameworkDataSourceFactory(factory func(context.Context) (datasource.DataSourceWithConfigure, error)) {
-	p.frameworkDataSourceFactories = append(p.frameworkDataSourceFactories, factory)
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*cognitoidentityprovider_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+
+	return cognitoidentityprovider_sdkv2.NewFromConfig(cfg,
+		cognitoidentityprovider_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+	), nil
 }
 
-func (p *servicePackage) registerFrameworkResourceFactory(factory func(context.Context) (resource.ResourceWithConfigure, error)) {
-	p.frameworkResourceFactories = append(p.frameworkResourceFactories, factory)
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
 }
-
-func (p *servicePackage) registerSDKDataSourceFactory(typeName string, factory func() *schema.Resource) {
-	p.sdkDataSourceFactories = append(p.sdkDataSourceFactories, struct {
-		TypeName string
-		Factory  func() *schema.Resource
-	}{TypeName: typeName, Factory: factory})
-}
-
-func (p *servicePackage) registerSDKResourceFactory(typeName string, factory func() *schema.Resource) {
-	p.sdkResourceFactories = append(p.sdkResourceFactories, struct {
-		TypeName string
-		Factory  func() *schema.Resource
-	}{TypeName: typeName, Factory: factory})
-}
-
-var (
-	_sp                                = &servicePackage{}
-	ServicePackage intf.ServicePackage = _sp
-)

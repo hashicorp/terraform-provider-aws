@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package medialive_test
 
 import (
@@ -7,9 +10,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -82,10 +85,10 @@ func testAccMultiplexProgram_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.MediaLiveEndpointID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMultiplexProgramDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -95,7 +98,7 @@ func testAccMultiplexProgram_basic(t *testing.T) {
 					testAccCheckMultiplexProgramExists(ctx, resourceName, &multiplexprogram),
 					resource.TestCheckResourceAttr(resourceName, "program_name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "multiplex_id"),
-					resource.TestCheckResourceAttr(resourceName, "multiplex_program_settings.0.program_number", "1"),
+					resource.TestCheckResourceAttr(resourceName, "multiplex_program_settings.0.program_number", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "multiplex_program_settings.0.preferred_channel_pipeline", "CURRENTLY_ACTIVE"),
 				),
 			},
@@ -121,10 +124,10 @@ func testAccMultiplexProgram_update(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.MediaLiveEndpointID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMultiplexProgramDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -134,7 +137,7 @@ func testAccMultiplexProgram_update(t *testing.T) {
 					testAccCheckMultiplexProgramExists(ctx, resourceName, &multiplexprogram),
 					resource.TestCheckResourceAttr(resourceName, "program_name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "multiplex_id"),
-					resource.TestCheckResourceAttr(resourceName, "multiplex_program_settings.0.program_number", "1"),
+					resource.TestCheckResourceAttr(resourceName, "multiplex_program_settings.0.program_number", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "multiplex_program_settings.0.preferred_channel_pipeline", "CURRENTLY_ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "multiplex_program_settings.0.video_settings.0.statmux_settings.0.minimum_bitrate", "100000"),
 				),
@@ -145,7 +148,7 @@ func testAccMultiplexProgram_update(t *testing.T) {
 					testAccCheckMultiplexProgramExists(ctx, resourceName, &multiplexprogram),
 					resource.TestCheckResourceAttr(resourceName, "program_name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "multiplex_id"),
-					resource.TestCheckResourceAttr(resourceName, "multiplex_program_settings.0.program_number", "1"),
+					resource.TestCheckResourceAttr(resourceName, "multiplex_program_settings.0.program_number", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "multiplex_program_settings.0.preferred_channel_pipeline", "CURRENTLY_ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "multiplex_program_settings.0.video_settings.0.statmux_settings.0.minimum_bitrate", "100001"),
 				),
@@ -166,10 +169,10 @@ func testAccMultiplexProgram_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.MediaLiveEndpointID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMultiplexProgramDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -177,7 +180,7 @@ func testAccMultiplexProgram_disappears(t *testing.T) {
 				Config: testAccMultiplexProgramConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiplexProgramExists(ctx, resourceName, &multiplexprogram),
-					acctest.CheckFrameworkResourceDisappears(acctest.Provider, tfmedialive.ResourceMultiplexProgram, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfmedialive.ResourceMultiplexProgram, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -187,7 +190,7 @@ func testAccMultiplexProgram_disappears(t *testing.T) {
 
 func testAccCheckMultiplexProgramDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_medialive_multiplex_program" {
@@ -228,7 +231,7 @@ func testAccCheckMultiplexProgramExists(ctx context.Context, name string, multip
 			return create.Error(names.MediaLive, create.ErrActionCheckingExistence, tfmedialive.ResNameMultiplexProgram, rs.Primary.ID, err)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient(ctx)
 
 		resp, err := tfmedialive.FindMultiplexProgramByID(ctx, conn, multiplexId, programName)
 

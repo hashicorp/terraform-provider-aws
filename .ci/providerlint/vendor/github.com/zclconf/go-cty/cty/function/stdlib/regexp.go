@@ -33,6 +33,7 @@ var RegexFunc = function.New(&function.Spec{
 		}
 		return retTy, err
 	},
+	RefineResult: refineNonNull,
 	Impl: func(args []cty.Value, retType cty.Type) (cty.Value, error) {
 		if retType == cty.DynamicPseudoType {
 			return cty.DynamicVal, nil
@@ -79,6 +80,7 @@ var RegexAllFunc = function.New(&function.Spec{
 		}
 		return cty.List(retTy), err
 	},
+	RefineResult: refineNonNull,
 	Impl: func(args []cty.Value, retType cty.Type) (cty.Value, error) {
 		ety := retType.ElementType()
 		if ety == cty.DynamicPseudoType {

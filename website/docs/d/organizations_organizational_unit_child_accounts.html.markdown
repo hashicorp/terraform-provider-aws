@@ -7,6 +7,7 @@ description: |-
 ---
 
 # Data Source: aws_organizations_organizational_unit_child_accounts
+
 Get all direct child accounts under a parent organizational unit. This only provides immediate children, not all children.
 
 ## Example Usage
@@ -23,7 +24,9 @@ data "aws_organizations_organizational_unit_child_accounts" "accounts" {
 
 * `parent_id` - (Required) The parent ID of the accounts.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `accounts` - List of child accounts, which have the following attributes:
     * `arn` - The Amazon Resource Name (ARN) of the account.

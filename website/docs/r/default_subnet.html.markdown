@@ -37,13 +37,13 @@ The arguments of an `aws_default_subnet` differ slightly from those of [`aws_sub
 * The `availability_zone_id`, `cidr_block` and `vpc_id` arguments become computed attributes
 * The default value for `map_public_ip_on_launch` is `true`
 
-The following additional arguments are supported:
+This resource supports the following additional arguments:
 
 * `force_destroy` - (Optional) Whether destroying the resource deletes the default subnet. Default: `false`
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `availability_zone_id` - The AZ ID of the subnet
 * `cidr_block` - The IPv4 CIDR block assigned to the subnet
@@ -51,8 +51,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Subnets can be imported using the `subnet id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import subnets using the subnet `id`. For example:
 
+```terraform
+import {
+  to = aws_default_subnet.public_subnet
+  id = "subnet-9d4a7b6c"
+}
 ```
-$ terraform import aws_default_subnet.public_subnet subnet-9d4a7b6c
+
+Using `terraform import`, import subnets using the subnet `id`. For example:
+
+```console
+% terraform import aws_default_subnet.public_subnet subnet-9d4a7b6c
 ```

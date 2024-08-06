@@ -51,7 +51,7 @@ resource "aws_sagemaker_notebook_instance" "ni" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the notebook instance (must be unique).
 * `role_arn` - (Required) The ARN of the IAM role to be used by the notebook instance which allows SageMaker to call other services on your behalf.
@@ -75,9 +75,9 @@ The following arguments are supported:
 
 * `minimum_instance_metadata_service_version` - (Optional) Indicates the minimum IMDS version that the notebook instance supports. When passed "1" is passed. This means that both IMDSv1 and IMDSv2 are supported. Valid values are `1` and `2`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the notebook instance.
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this notebook instance.
@@ -87,8 +87,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-SageMaker Notebook Instances can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker Notebook Instances using the `name`. For example:
 
+```terraform
+import {
+  to = aws_sagemaker_notebook_instance.test_notebook_instance
+  id = "my-notebook-instance"
+}
 ```
-$ terraform import aws_sagemaker_notebook_instance.test_notebook_instance my-notebook-instance
+
+Using `terraform import`, import SageMaker Notebook Instances using the `name`. For example:
+
+```console
+% terraform import aws_sagemaker_notebook_instance.test_notebook_instance my-notebook-instance
 ```

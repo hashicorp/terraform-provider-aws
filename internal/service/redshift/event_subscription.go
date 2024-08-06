@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift
 
 import (
@@ -19,9 +22,12 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceEventSubscription() *schema.Resource {
+// @SDKResource("aws_redshift_event_subscription", name="Event Subscription")
+// @Tags(identifierAttribute="arn")
+func resourceEventSubscription() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEventSubscriptionCreate,
 		ReadWithoutTimeout:   resourceEventSubscriptionRead,
@@ -39,7 +45,7 @@ func ResourceEventSubscription() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -47,7 +53,7 @@ func ResourceEventSubscription() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"enabled": {
+			names.AttrEnabled: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
@@ -58,7 +64,7 @@ func ResourceEventSubscription() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 					ValidateFunc: validation.StringInSlice([]string{
-						"configuration",
+						names.AttrConfiguration,
 						"management",
 						"monitoring",
 						"security",
@@ -66,7 +72,7 @@ func ResourceEventSubscription() *schema.Resource {
 					}, false),
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -80,7 +86,7 @@ func ResourceEventSubscription() *schema.Resource {
 					"INFO",
 				}, false),
 			},
-			"sns_topic_arn": {
+			names.AttrSNSTopicARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -90,23 +96,17 @@ func ResourceEventSubscription() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"source_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"cluster",
-					"cluster-parameter-group",
-					"cluster-security-group",
-					"cluster-snapshot",
-					"scheduled-action",
-				}, false),
+			names.AttrSourceType: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(redshift.SourceType_Values(), false),
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -115,15 +115,13 @@ func ResourceEventSubscription() *schema.Resource {
 
 func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	request := &redshift.CreateEventSubscriptionInput{
-		SubscriptionName: aws.String(d.Get("name").(string)),
-		SnsTopicArn:      aws.String(d.Get("sns_topic_arn").(string)),
-		Enabled:          aws.Bool(d.Get("enabled").(bool)),
-		Tags:             Tags(tags.IgnoreAWS()),
+		SubscriptionName: aws.String(d.Get(names.AttrName).(string)),
+		SnsTopicArn:      aws.String(d.Get(names.AttrSNSTopicARN).(string)),
+		Enabled:          aws.Bool(d.Get(names.AttrEnabled).(bool)),
+		Tags:             getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("event_categories"); ok && v.(*schema.Set).Len() > 0 {
@@ -138,7 +136,7 @@ func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 		request.Severity = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("source_type"); ok {
+	if v, ok := d.GetOk(names.AttrSourceType); ok {
 		request.SourceType = aws.String(v.(string))
 	}
 
@@ -146,7 +144,7 @@ func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 
 	output, err := conn.CreateEventSubscriptionWithContext(ctx, request)
 	if err != nil || output.EventSubscription == nil {
-		return sdkdiag.AppendErrorf(diags, "creating Redshift Event Subscription %s: %s", d.Get("name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating Redshift Event Subscription %s: %s", d.Get(names.AttrName).(string), err)
 	}
 
 	d.SetId(aws.StringValue(output.EventSubscription.CustSubscriptionId))
@@ -156,11 +154,9 @@ func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 
 func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	sub, err := FindEventSubscriptionByName(ctx, conn, d.Id())
+	sub, err := findEventSubscriptionByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift Event Subscription (%s) not found, removing from state", d.Id())
@@ -178,42 +174,33 @@ func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("eventsubscription:%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("customer_aws_id", sub.CustomerAwsId)
-	d.Set("enabled", sub.Enabled)
+	d.Set(names.AttrEnabled, sub.Enabled)
 	d.Set("event_categories", aws.StringValueSlice(sub.EventCategoriesList))
-	d.Set("name", sub.CustSubscriptionId)
+	d.Set(names.AttrName, sub.CustSubscriptionId)
 	d.Set("severity", sub.Severity)
-	d.Set("sns_topic_arn", sub.SnsTopicArn)
+	d.Set(names.AttrSNSTopicARN, sub.SnsTopicArn)
 	d.Set("source_ids", aws.StringValueSlice(sub.SourceIdsList))
-	d.Set("source_type", sub.SourceType)
-	d.Set("status", sub.Status)
+	d.Set(names.AttrSourceType, sub.SourceType)
+	d.Set(names.AttrStatus, sub.Status)
 
-	tags := KeyValueTags(sub.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	setTagsOut(ctx, sub.Tags)
 
 	return diags
 }
 
 func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		req := &redshift.ModifyEventSubscriptionInput{
 			SubscriptionName: aws.String(d.Id()),
-			SnsTopicArn:      aws.String(d.Get("sns_topic_arn").(string)),
-			Enabled:          aws.Bool(d.Get("enabled").(bool)),
+			SnsTopicArn:      aws.String(d.Get(names.AttrSNSTopicARN).(string)),
+			Enabled:          aws.Bool(d.Get(names.AttrEnabled).(bool)),
 			SourceIds:        flex.ExpandStringSet(d.Get("source_ids").(*schema.Set)),
-			SourceType:       aws.String(d.Get("source_type").(string)),
+			SourceType:       aws.String(d.Get(names.AttrSourceType).(string)),
 			Severity:         aws.String(d.Get("severity").(string)),
 			EventCategories:  flex.ExpandStringSet(d.Get("event_categories").(*schema.Set)),
 		}
@@ -225,20 +212,12 @@ func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Redshift Event Subscription (%s) tags: %s", d.Get("arn").(string), err)
-		}
-	}
-
-	return diags
+	return append(diags, resourceEventSubscriptionRead(ctx, d, meta)...)
 }
 
 func resourceEventSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 	deleteOpts := redshift.DeleteEventSubscriptionInput{
 		SubscriptionName: aws.String(d.Id()),
 	}

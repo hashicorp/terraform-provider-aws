@@ -1,0 +1,99 @@
+```release-note:enhancement
+resource/aws_cloudfront_public_key: Support import of `name_prefix` argument
+```
+
+```release-note:enhancement
+resource/aws_docdb_cluster: Support import of `cluster_identifier_prefix` argument
+```
+
+```release-note:enhancement
+resource/aws_docdb_cluster_instance: Support import of `identifier_prefix` argument
+```
+
+```release-note:enhancement
+resource/aws_docdb_cluster_parameter_group: Support import of `name_prefix` argument
+```
+
+```release-note:enhancement
+resource/aws_docdb_subnet_group: Support import of `name_prefix` argument
+```
+
+```release-note:enhancement
+resource/aws_elb: Support import of `name_prefix` argument
+```
+
+```release-note:enhancement
+resource/aws_alb: Support import of `name_prefix` argument
+```
+
+```release-note:enhancement
+resource/aws_lb: Support import of `name_prefix` argument
+```
+
+```release-note:enhancement
+resource/aws_alb_target_group: Support import of `name_prefix` argument
+```
+
+```release-note:enhancement
+resource/aws_lb_target_group: Support import of `name_prefix` argument
+```
+
+```release-note:enhancement
+resource/aws_emr_security_configuration: Support import of `name_prefix` argument
+```
+
+```release-note:enhancement
+resource/aws_iam_group_policy: Support import of `name_prefix` argument
+```
+
+```release-note:enhancement
+resource/aws_iam_role_policy: Support import of `name_prefix` argument
+```
+
+```release-note:enhancement
+resource/aws_iam_user_policy: Support import of `name_prefix` argument
+```
+
+```release-note:enhancement
+resource/aws_neptune_cluster: Support import of `cluster_identifier_prefix` argument
+```
+
+```release-note:enhancement
+resource/aws_neptune_cluster_instance: Support import of `identifier_prefix` argument
+```
+
+```release-note:enhancement
+resource/aws_neptune_cluster_parameter_group: Support import of `name_prefix` argument
+```
+
+```release-note:enhancement
+resource/aws_neptune_event_subscription: Support import of `name_prefix` argument
+```
+
+```release-note:enhancement
+resource/aws_pinpoint_app: Support import of `name_prefix` argument
+```
+
+```release-note:enhancement
+resource/aws_db_option_group: Support import of `name_prefix` argument
+```
+
+```release-note:enhancement
+resource/aws_rds_cluster: Support import of `cluster_identifier_prefix` argument
+```
+
+```release-note:enhancement
+resource/aws_rds_cluster_instance: Support import of `identifier_prefix` argument
+```
+
+```release-note:enhancement
+resource/aws_signer_signing_profile: Support import of `name_prefix` argument
+```
+
+```release-note:enhancement
+resource/aws_signer_signing_profile_permission: Support import of `statement_id_prefix` argument
+```
+
+```release-note:enhancement
+resource/aws_signer_signing_profile_permission: Add `signer:SignPayload` as a valid `action` value
+```

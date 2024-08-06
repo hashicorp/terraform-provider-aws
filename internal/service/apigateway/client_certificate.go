@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigateway
 
 import (
@@ -5,21 +8,26 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceClientCertificate() *schema.Resource {
+// @SDKResource("aws_api_gateway_client_certificate", name="Client Certificate")
+// @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigateway;apigateway.GetClientCertificateOutput", generator=false)
+func resourceClientCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClientCertificateCreate,
 		ReadWithoutTimeout:   resourceClientCertificateRead,
@@ -31,15 +39,15 @@ func ResourceClientCertificate() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_date": {
+			names.AttrCreatedDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -51,8 +59,8 @@ func ResourceClientCertificate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -61,38 +69,32 @@ func ResourceClientCertificate() *schema.Resource {
 
 func resourceClientCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	input := &apigateway.GenerateClientCertificateInput{}
+	input := &apigateway.GenerateClientCertificateInput{
+		Tags: getTagsIn(ctx),
+	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	output, err := conn.GenerateClientCertificateWithContext(ctx, input)
+	output, err := conn.GenerateClientCertificate(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating API Gateway Client Certificate: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.ClientCertificateId))
+	d.SetId(aws.ToString(output.ClientCertificateId))
 
 	return append(diags, resourceClientCertificateRead(ctx, d, meta)...)
 }
 
 func resourceClientCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	cert, err := FindClientCertificateByID(ctx, conn, d.Id())
+	cert, err := findClientCertificateByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] API Gateway Client Certificate (%s) not found, removing from state", d.Id())
@@ -110,54 +112,37 @@ func resourceClientCertificateRead(ctx context.Context, d *schema.ResourceData, 
 		Region:    meta.(*conns.AWSClient).Region,
 		Resource:  fmt.Sprintf("/clientcertificates/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
-	d.Set("created_date", cert.CreatedDate.String())
-	d.Set("description", cert.Description)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrCreatedDate, cert.CreatedDate.String())
+	d.Set(names.AttrDescription, cert.Description)
 	d.Set("expiration_date", cert.ExpirationDate.String())
 	d.Set("pem_encoded_certificate", cert.PemEncodedCertificate)
 
-	tags := KeyValueTags(cert.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	setTagsOut(ctx, cert.Tags)
 
 	return diags
 }
 
 func resourceClientCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &apigateway.UpdateClientCertificateInput{
 			ClientCertificateId: aws.String(d.Id()),
-			PatchOperations: []*apigateway.PatchOperation{
+			PatchOperations: []types.PatchOperation{
 				{
-					Op:    aws.String(apigateway.OpReplace),
+					Op:    types.OpReplace,
 					Path:  aws.String("/description"),
-					Value: aws.String(d.Get("description").(string)),
+					Value: aws.String(d.Get(names.AttrDescription).(string)),
 				},
 			},
 		}
 
-		_, err := conn.UpdateClientCertificateWithContext(ctx, input)
+		_, err := conn.UpdateClientCertificate(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating API Gateway Client Certificate (%s): %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
 		}
 	}
 
@@ -166,12 +151,16 @@ func resourceClientCertificateUpdate(ctx context.Context, d *schema.ResourceData
 
 func resourceClientCertificateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway Client Certificate: %s", d.Id())
-	_, err := conn.DeleteClientCertificateWithContext(ctx, &apigateway.DeleteClientCertificateInput{
+	_, err := conn.DeleteClientCertificate(ctx, &apigateway.DeleteClientCertificateInput{
 		ClientCertificateId: aws.String(d.Id()),
 	})
+
+	if errs.IsA[*types.NotFoundException](err) {
+		return diags
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting API Gateway Client Certificate (%s): %s", d.Id(), err)
@@ -180,15 +169,15 @@ func resourceClientCertificateDelete(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func FindClientCertificateByID(ctx context.Context, conn *apigateway.APIGateway, id string) (*apigateway.ClientCertificate, error) {
+func findClientCertificateByID(ctx context.Context, conn *apigateway.Client, id string) (*apigateway.GetClientCertificateOutput, error) {
 	input := &apigateway.GetClientCertificateInput{
 		ClientCertificateId: aws.String(id),
 	}
 
-	output, err := conn.GetClientCertificateWithContext(ctx, input)
+	output, err := conn.GetClientCertificate(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+	if errs.IsA[*types.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

@@ -1,257 +1,59 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
 	"context"
-	"regexp"
+	"reflect"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// FindGroupAttachedPolicy returns the AttachedPolicy corresponding to the specified group and policy ARN.
-func FindGroupAttachedPolicy(ctx context.Context, conn *iam.IAM, groupName string, policyARN string) (*iam.AttachedPolicy, error) {
-	input := &iam.ListAttachedGroupPoliciesInput{
-		GroupName: aws.String(groupName),
-	}
-
-	var result *iam.AttachedPolicy
-
-	err := conn.ListAttachedGroupPoliciesPagesWithContext(ctx, input, func(page *iam.ListAttachedGroupPoliciesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, attachedPolicy := range page.AttachedPolicies {
-			if attachedPolicy == nil {
-				continue
-			}
-
-			if aws.StringValue(attachedPolicy.PolicyArn) == policyARN {
-				result = attachedPolicy
-				return false
-			}
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
-}
-
-// FindUserAttachedPolicy returns the AttachedPolicy corresponding to the specified user and policy ARN.
-func FindUserAttachedPolicy(ctx context.Context, conn *iam.IAM, userName string, policyARN string) (*iam.AttachedPolicy, error) {
-	input := &iam.ListAttachedUserPoliciesInput{
-		UserName: aws.String(userName),
-	}
-
-	var result *iam.AttachedPolicy
-
-	err := conn.ListAttachedUserPoliciesPagesWithContext(ctx, input, func(page *iam.ListAttachedUserPoliciesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, attachedPolicy := range page.AttachedPolicies {
-			if attachedPolicy == nil {
-				continue
-			}
-
-			if aws.StringValue(attachedPolicy.PolicyArn) == policyARN {
-				result = attachedPolicy
-				return false
-			}
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
-}
-
-// FindPolicyByARN returns the Policy corresponding to the specified ARN.
-func FindPolicyByARN(ctx context.Context, conn *iam.IAM, arn string) (*iam.Policy, error) {
-	input := &iam.GetPolicyInput{
-		PolicyArn: aws.String(arn),
-	}
-
-	output, err := conn.GetPolicyWithContext(ctx, input)
-	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.Policy == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.Policy, nil
-}
-
-// FindPolicyByName returns the Policy corresponding to the name and/or path-prefix.
-func FindPolicyByName(ctx context.Context, conn *iam.IAM, name, pathPrefix string) (*iam.Policy, error) {
-	input := &iam.ListPoliciesInput{}
-	if pathPrefix != "" {
-		input.PathPrefix = aws.String(pathPrefix)
-	}
-
-	all, err := FindPolicies(ctx, conn, input)
-	if err != nil {
-		return nil, err
-	}
-
-	var results []*iam.Policy
-	for _, p := range all {
-		if name != "" && name != aws.StringValue(p.PolicyName) {
-			continue
-		}
-
-		results = append(results, p)
-	}
-
-	if len(results) == 0 || results[0] == nil {
-		return nil, tfresource.NewEmptyResultError(nil)
-	}
-	if l := len(results); l > 1 {
-		return nil, tfresource.NewTooManyResultsError(1, nil)
-	}
-
-	return results[0], nil
-}
-
-// FindPolicies returns the Policies matching the parameters in the iam.ListPoliciesInput.
-func FindPolicies(ctx context.Context, conn *iam.IAM, input *iam.ListPoliciesInput) ([]*iam.Policy, error) {
-	var results []*iam.Policy
-	err := conn.ListPoliciesPagesWithContext(ctx, input, func(page *iam.ListPoliciesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, p := range page.Policies {
-			if p == nil {
-				continue
-			}
-
-			results = append(results, p)
-		}
-
-		return !lastPage
-	})
-
-	return results, err
-}
-
-func FindUsers(ctx context.Context, conn *iam.IAM, nameRegex, pathPrefix string) ([]*iam.User, error) {
+func FindUsers(ctx context.Context, conn *iam.Client, nameRegex, pathPrefix string) ([]awstypes.User, error) {
 	input := &iam.ListUsersInput{}
 
 	if pathPrefix != "" {
 		input.PathPrefix = aws.String(pathPrefix)
 	}
 
-	var results []*iam.User
+	var results []awstypes.User
 
-	err := conn.ListUsersPagesWithContext(ctx, input, func(page *iam.ListUsersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := iam.NewListUsersPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
 		}
 
 		for _, user := range page.Users {
-			if user == nil {
-				continue
-			}
-
-			if nameRegex != "" && !regexp.MustCompile(nameRegex).MatchString(aws.StringValue(user.UserName)) {
+			if nameRegex != "" && !regexache.MustCompile(nameRegex).MatchString(aws.ToString(user.UserName)) {
 				continue
 			}
 
 			results = append(results, user)
 		}
+	}
 
-		return !lastPage
-	})
-
-	return results, err
+	return results, nil
 }
 
-func FindRoleByName(ctx context.Context, conn *iam.IAM, name string) (*iam.Role, error) {
-	input := &iam.GetRoleInput{
-		RoleName: aws.String(name),
-	}
-
-	output, err := conn.GetRoleWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.Role == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.Role, nil
-}
-
-func FindVirtualMFADevice(ctx context.Context, conn *iam.IAM, serialNum string) (*iam.VirtualMFADevice, error) {
-	input := &iam.ListVirtualMFADevicesInput{}
-
-	output, err := conn.ListVirtualMFADevicesWithContext(ctx, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if len(output.VirtualMFADevices) == 0 || output.VirtualMFADevices[0] == nil {
-		return nil, tfresource.NewEmptyResultError(output)
-	}
-
-	var device *iam.VirtualMFADevice
-
-	for _, dvs := range output.VirtualMFADevices {
-		if aws.StringValue(dvs.SerialNumber) == serialNum {
-			device = dvs
-			break
-		}
-	}
-
-	if device == nil {
-		return nil, tfresource.NewEmptyResultError(device)
-	}
-
-	return device, nil
-}
-
-func FindServiceSpecificCredential(ctx context.Context, conn *iam.IAM, serviceName, userName, credID string) (*iam.ServiceSpecificCredentialMetadata, error) {
+func FindServiceSpecificCredential(ctx context.Context, conn *iam.Client, serviceName, userName, credID string) (*awstypes.ServiceSpecificCredentialMetadata, error) {
 	input := &iam.ListServiceSpecificCredentialsInput{
 		ServiceName: aws.String(serviceName),
 		UserName:    aws.String(userName),
 	}
 
-	output, err := conn.ListServiceSpecificCredentialsWithContext(ctx, input)
+	output, err := conn.ListServiceSpecificCredentials(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-		return nil, &resource.NotFoundError{
+	if errs.IsA[*awstypes.NoSuchEntityException](err) {
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -261,37 +63,37 @@ func FindServiceSpecificCredential(ctx context.Context, conn *iam.IAM, serviceNa
 		return nil, err
 	}
 
-	if len(output.ServiceSpecificCredentials) == 0 || output.ServiceSpecificCredentials[0] == nil {
+	if len(output.ServiceSpecificCredentials) == 0 {
 		return nil, tfresource.NewEmptyResultError(output)
 	}
 
-	var cred *iam.ServiceSpecificCredentialMetadata
+	var cred awstypes.ServiceSpecificCredentialMetadata
 
 	for _, crd := range output.ServiceSpecificCredentials {
-		if aws.StringValue(crd.ServiceName) == serviceName &&
-			aws.StringValue(crd.UserName) == userName &&
-			aws.StringValue(crd.ServiceSpecificCredentialId) == credID {
+		if aws.ToString(crd.ServiceName) == serviceName &&
+			aws.ToString(crd.UserName) == userName &&
+			aws.ToString(crd.ServiceSpecificCredentialId) == credID {
 			cred = crd
 			break
 		}
 	}
 
-	if cred == nil {
+	if reflect.ValueOf(cred).IsZero() {
 		return nil, tfresource.NewEmptyResultError(cred)
 	}
 
-	return cred, nil
+	return &cred, nil
 }
 
-func FindSigningCertificate(ctx context.Context, conn *iam.IAM, userName, certId string) (*iam.SigningCertificate, error) {
+func FindSigningCertificate(ctx context.Context, conn *iam.Client, userName, certId string) (*awstypes.SigningCertificate, error) {
 	input := &iam.ListSigningCertificatesInput{
 		UserName: aws.String(userName),
 	}
 
-	output, err := conn.ListSigningCertificatesWithContext(ctx, input)
+	output, err := conn.ListSigningCertificates(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-		return nil, &resource.NotFoundError{
+	if errs.IsA[*awstypes.NoSuchEntityException](err) {
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -301,87 +103,23 @@ func FindSigningCertificate(ctx context.Context, conn *iam.IAM, userName, certId
 		return nil, err
 	}
 
-	if len(output.Certificates) == 0 || output.Certificates[0] == nil {
+	if len(output.Certificates) == 0 {
 		return nil, tfresource.NewEmptyResultError(output)
 	}
 
-	var cert *iam.SigningCertificate
+	var cert awstypes.SigningCertificate
 
 	for _, crt := range output.Certificates {
-		if aws.StringValue(crt.UserName) == userName &&
-			aws.StringValue(crt.CertificateId) == certId {
+		if aws.ToString(crt.UserName) == userName &&
+			aws.ToString(crt.CertificateId) == certId {
 			cert = crt
 			break
 		}
 	}
 
-	if cert == nil {
+	if reflect.ValueOf(cert).IsZero() {
 		return nil, tfresource.NewEmptyResultError(cert)
 	}
 
-	return cert, nil
-}
-
-func FindSAMLProviderByARN(ctx context.Context, conn *iam.IAM, arn string) (*iam.GetSAMLProviderOutput, error) {
-	input := &iam.GetSAMLProviderInput{
-		SAMLProviderArn: aws.String(arn),
-	}
-
-	output, err := conn.GetSAMLProviderWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output, nil
-}
-
-func FindAccessKey(ctx context.Context, conn *iam.IAM, username, id string) (*iam.AccessKeyMetadata, error) {
-	accessKeys, err := FindAccessKeys(ctx, conn, username)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, accessKey := range accessKeys {
-		if aws.StringValue(accessKey.AccessKeyId) == id {
-			return accessKey, nil
-		}
-	}
-
-	return nil, &resource.NotFoundError{}
-}
-
-func FindAccessKeys(ctx context.Context, conn *iam.IAM, username string) ([]*iam.AccessKeyMetadata, error) {
-	var accessKeys []*iam.AccessKeyMetadata
-	input := &iam.ListAccessKeysInput{
-		UserName: aws.String(username),
-	}
-	err := conn.ListAccessKeysPagesWithContext(ctx, input, func(page *iam.ListAccessKeysOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		accessKeys = append(accessKeys, page.AccessKeyMetadata...)
-
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-	return accessKeys, err
+	return &cert, nil
 }

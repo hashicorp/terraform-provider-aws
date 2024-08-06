@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package hclsyntax
 
 import (
@@ -6,7 +9,7 @@ import (
 	"strconv"
 	"unicode/utf8"
 
-	"github.com/apparentlymart/go-textseg/v13/textseg"
+	"github.com/apparentlymart/go-textseg/v15/textseg"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
 )
@@ -996,7 +999,7 @@ func (p *parser) parseExpressionTerm() (Expression, hcl.Diagnostics) {
 	case TokenIdent:
 		tok := p.Read() // eat identifier token
 
-		if p.Peek().Type == TokenOParen {
+		if p.Peek().Type == TokenOParen || p.Peek().Type == TokenDoubleColon {
 			return p.finishParsingFunctionCall(tok)
 		}
 
@@ -1142,16 +1145,76 @@ func (p *parser) numberLitValue(tok Token) (cty.Value, hcl.Diagnostics) {
 
 // finishParsingFunctionCall parses a function call assuming that the function
 // name was already read, and so the peeker should be pointing at the opening
-// parenthesis after the name.
+// parenthesis after the name, or at the double-colon after the initial
+// function scope name.
 func (p *parser) finishParsingFunctionCall(name Token) (Expression, hcl.Diagnostics) {
+	var diags hcl.Diagnostics
+
 	openTok := p.Read()
-	if openTok.Type != TokenOParen {
+	if openTok.Type != TokenOParen && openTok.Type != TokenDoubleColon {
 		// should never happen if callers behave
-		panic("finishParsingFunctionCall called with non-parenthesis as next token")
+		panic("finishParsingFunctionCall called with unsupported next token")
+	}
+
+	nameStr := string(name.Bytes)
+	nameEndPos := name.Range.End
+	for openTok.Type == TokenDoubleColon {
+		nextName := p.Read()
+		if nextName.Type != TokenIdent {
+			diag := hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  "Missing function name",
+				Detail:   "Function scope resolution symbol :: must be followed by a function name in this scope.",
+				Subject:  &nextName.Range,
+				Context:  hcl.RangeBetween(name.Range, nextName.Range).Ptr(),
+			}
+			diags = append(diags, &diag)
+			p.recoverOver(TokenOParen)
+			return &ExprSyntaxError{
+				ParseDiags:  hcl.Diagnostics{&diag},
+				Placeholder: cty.DynamicVal,
+				SrcRange:    hcl.RangeBetween(name.Range, nextName.Range),
+			}, diags
+		}
+
+		// Initial versions of HCLv2 didn't support function namespaces, and
+		// so for backward compatibility we just treat namespaced functions
+		// as weird names with "::" separators in them, saved as a string
+		// to keep the API unchanged. FunctionCallExpr also has some special
+		// handling of names containing :: when referring to a function that
+		// doesn't exist in EvalContext, to return better error messages
+		// when namespaces are used incorrectly.
+		nameStr = nameStr + "::" + string(nextName.Bytes)
+		nameEndPos = nextName.Range.End
+
+		openTok = p.Read()
+	}
+
+	nameRange := hcl.Range{
+		Filename: name.Range.Filename,
+		Start:    name.Range.Start,
+		End:      nameEndPos,
+	}
+
+	if openTok.Type != TokenOParen {
+		diag := hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "Missing open parenthesis",
+			Detail:   "Function selector must be followed by an open parenthesis to begin the function call.",
+			Subject:  &openTok.Range,
+			Context:  hcl.RangeBetween(name.Range, openTok.Range).Ptr(),
+		}
+
+		diags = append(diags, &diag)
+		p.recoverOver(TokenOParen)
+		return &ExprSyntaxError{
+			ParseDiags:  hcl.Diagnostics{&diag},
+			Placeholder: cty.DynamicVal,
+			SrcRange:    hcl.RangeBetween(name.Range, openTok.Range),
+		}, diags
 	}
 
 	var args []Expression
-	var diags hcl.Diagnostics
 	var expandFinal bool
 	var closeTok Token
 
@@ -1174,7 +1237,12 @@ Token:
 			// if there was a parse error in the argument then we've
 			// probably been left in a weird place in the token stream,
 			// so we'll bail out with a partial argument list.
-			p.recover(TokenCParen)
+			recoveredTok := p.recover(TokenCParen)
+
+			// record the recovered token, if one was found
+			if recoveredTok.Type == TokenCParen {
+				closeTok = recoveredTok
+			}
 			break Token
 		}
 
@@ -1210,7 +1278,7 @@ Token:
 				diags = append(diags, &hcl.Diagnostic{
 					Severity: hcl.DiagError,
 					Summary:  "Unterminated function call",
-					Detail:   "There is no closing parenthesis for this function call before the end of the file. This may be caused by incorrect parethesis nesting elsewhere in this file.",
+					Detail:   "There is no closing parenthesis for this function call before the end of the file. This may be caused by incorrect parenthesis nesting elsewhere in this file.",
 					Subject:  hcl.RangeBetween(name.Range, openTok.Range).Ptr(),
 				})
 			default:
@@ -1237,12 +1305,12 @@ Token:
 	p.PopIncludeNewlines()
 
 	return &FunctionCallExpr{
-		Name: string(name.Bytes),
+		Name: nameStr,
 		Args: args,
 
 		ExpandFinal: expandFinal,
 
-		NameRange:       name.Range,
+		NameRange:       nameRange,
 		OpenParenRange:  openTok.Range,
 		CloseParenRange: closeTok.Range,
 	}, diags

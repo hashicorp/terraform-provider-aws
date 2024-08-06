@@ -31,7 +31,7 @@ data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
 
 resource "aws_eip" "example" {
-  vpc = true
+  domain = "vpc"
 }
 
 resource "aws_shield_protection" "example" {
@@ -62,7 +62,7 @@ resource "aws_shield_protection_group" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `aggregation` - (Required) Defines how AWS Shield combines resource data for the group in order to detect, mitigate, and report events.
 * `members` - (Optional) The Amazon Resource Names (ARNs) of the resources to include in the protection group. You must set this when you set `pattern` to ARBITRARY and you must not set it for any other `pattern` setting.
@@ -71,17 +71,26 @@ The following arguments are supported:
 * `resource_type` - (Optional) The resource type to include in the protection group. You must set this when you set `pattern` to BY_RESOURCE_TYPE and you must not set it for any other `pattern` setting.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `protection_group_arn` - The ARN (Amazon Resource Name) of the protection group.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-Shield protection group resources can be imported by specifying their protection group id.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Shield protection group resources using their protection group id. For example:
 
+```terraform
+import {
+  to = aws_shield_protection_group.example
+  id = "example"
+}
 ```
-$ terraform import aws_shield_protection_group.example example
+
+Using `terraform import`, import Shield protection group resources using their protection group id. For example:
+
+```console
+% terraform import aws_shield_protection_group.example example
 ```

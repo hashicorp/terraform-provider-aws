@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package keyspaces
 
@@ -7,14 +7,14 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/keyspaces"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/keyspaces"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
-func init() {
+func RegisterSweepers() {
 	// No need to have separate sweeper for table as would be destroyed as part of keyspace
 	resource.AddTestSweepers("aws_keyspaces_keyspace", &resource.Sweeper{
 		Name: "aws_keyspaces_keyspace",
@@ -24,21 +24,29 @@ func init() {
 
 func sweepKeyspaces(region string) error { // nosemgrep:ci.keyspaces-in-func-name
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).KeyspacesConn()
+	conn := client.KeyspacesClient(ctx)
 	input := &keyspaces.ListKeyspacesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListKeyspacesPagesWithContext(ctx, input, func(page *keyspaces.ListKeyspacesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := keyspaces.NewListKeyspacesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Keyspaces Keyspace sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing Keyspaces Keyspaces (%s): %w", region, err)
 		}
 
 		for _, v := range page.Keyspaces {
-			id := aws.StringValue(v.KeyspaceName)
+			id := aws.ToString(v.KeyspaceName)
 
 			switch id {
 			case "system_schema", "system_schema_mcs", "system", "system_multiregion_info":
@@ -46,26 +54,15 @@ func sweepKeyspaces(region string) error { // nosemgrep:ci.keyspaces-in-func-nam
 				continue
 			}
 
-			r := ResourceKeyspace()
+			r := resourceKeyspace()
 			d := r.Data(nil)
 			d.SetId(id)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Keyspaces Keyspace sweep for %s: %s", region, err)
-		return nil
 	}
 
-	if err != nil {
-		return fmt.Errorf("error listing Keyspaces Keyspaces (%s): %w", region, err)
-	}
-
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Keyspaces Keyspaces (%s): %w", region, err)

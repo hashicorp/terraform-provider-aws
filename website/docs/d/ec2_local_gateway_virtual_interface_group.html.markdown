@@ -36,7 +36,7 @@ The `filter` configuration block supports the following arguments:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `local_gateway_virtual_interface_ids` - Set of EC2 Local Gateway Virtual Interface identifiers.
 

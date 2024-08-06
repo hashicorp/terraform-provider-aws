@@ -1,9 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package events
 
 import (
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestValidCustomEventBusSourceName(t *testing.T) {
@@ -111,9 +115,9 @@ func TestValidBusNameOrARN(t *testing.T) {
 		"arn:aws:events:us-east-1:123456789012:event-bus/default", // lintignore:AWSAT003,AWSAT005
 	}
 	for _, v := range validNames {
-		_, errors := validBusNameOrARN(v, "name")
+		_, errors := validBusNameOrARN(v, names.AttrName)
 		if len(errors) != 0 {
-			t.Fatalf("%q should be a valid CW event rule name: %q", v, errors)
+			t.Fatalf("%q should be a valid CW event bus name: %q", v, errors)
 		}
 	}
 
@@ -122,9 +126,9 @@ func TestValidBusNameOrARN(t *testing.T) {
 		"arn:aw:events:us-east-1:123456789012:event-bus/default", // lintignore:AWSAT003,AWSAT005
 	}
 	for _, v := range invalidNames {
-		_, errors := validBusNameOrARN(v, "name")
+		_, errors := validBusNameOrARN(v, names.AttrName)
 		if len(errors) == 0 {
-			t.Fatalf("%q should be an invalid CW event rule name", v)
+			t.Fatalf("%q should be an invalid CW event bus name", v)
 		}
 	}
 }
@@ -138,7 +142,7 @@ func TestValidRuleName(t *testing.T) {
 		"hello.World0125",
 	}
 	for _, v := range validNames {
-		_, errors := validateRuleName(v, "name")
+		_, errors := validateRuleName(v, names.AttrName)
 		if len(errors) != 0 {
 			t.Fatalf("%q should be a valid CW event rule name: %q", v, errors)
 		}
@@ -151,7 +155,7 @@ func TestValidRuleName(t *testing.T) {
 		"TooLooooooooooooooooooooooooooooooooooooooooooooooooooooooongName",
 	}
 	for _, v := range invalidNames {
-		_, errors := validateRuleName(v, "name")
+		_, errors := validateRuleName(v, names.AttrName)
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid CW event rule name", v)
 		}

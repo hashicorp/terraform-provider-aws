@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker
 
 import (
 	"context"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/private/protocol"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
@@ -19,8 +22,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_sagemaker_flow_definition", name="Flow Definition")
+// @Tags(identifierAttribute="arn")
 func ResourceFlowDefinition() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFlowDefinitionCreate,
@@ -33,7 +39,7 @@ func ResourceFlowDefinition() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -43,7 +49,7 @@ func ResourceFlowDefinition() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 63),
-					validation.StringMatch(regexp.MustCompile(`^[a-z0-9](-*[a-z0-9])*$`), "Valid characters are a-z, 0-9, and - (hyphen)."),
+					validation.StringMatch(regexache.MustCompile(`^[0-9a-z](-*[0-9a-z])*$`), "Valid characters are a-z, 0-9, and - (hyphen)."),
 				),
 			},
 			"human_loop_activation_config": {
@@ -159,7 +165,7 @@ func ResourceFlowDefinition() *schema.Resource {
 								Type: schema.TypeString,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 30),
-									validation.StringMatch(regexp.MustCompile(`^[A-Za-z0-9]+( [A-Za-z0-9]+)*$`), ""),
+									validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]+( [0-9A-Za-z]+)*$`), ""),
 								),
 							},
 						},
@@ -209,7 +215,7 @@ func ResourceFlowDefinition() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"kms_key_id": {
+						names.AttrKMSKeyID: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
@@ -220,21 +226,21 @@ func ResourceFlowDefinition() *schema.Resource {
 							ForceNew: true,
 							Required: true,
 							ValidateFunc: validation.All(
-								validation.StringMatch(regexp.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+								validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
 								validation.StringLenBetween(1, 512),
 							),
 						},
 					},
 				},
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -243,16 +249,15 @@ func ResourceFlowDefinition() *schema.Resource {
 
 func resourceFlowDefinitionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	name := d.Get("flow_definition_name").(string)
 	input := &sagemaker.CreateFlowDefinitionInput{
 		FlowDefinitionName: aws.String(name),
 		HumanLoopConfig:    expandFlowDefinitionHumanLoopConfig(d.Get("human_loop_config").([]interface{})),
-		RoleArn:            aws.String(d.Get("role_arn").(string)),
+		RoleArn:            aws.String(d.Get(names.AttrRoleARN).(string)),
 		OutputConfig:       expandFlowDefinitionOutputConfig(d.Get("output_config").([]interface{})),
+		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("human_loop_activation_config"); ok && (len(v.([]interface{})) > 0) {
@@ -265,10 +270,6 @@ func resourceFlowDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 
 	if v, ok := d.GetOk("human_loop_request_source"); ok && (len(v.([]interface{})) > 0) {
 		input.HumanLoopRequestSource = expandFlowDefinitionHumanLoopRequestSource(v.([]interface{}))
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	log.Printf("[DEBUG] Creating SageMaker Flow Definition: %s", input)
@@ -291,9 +292,7 @@ func resourceFlowDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceFlowDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	flowDefinition, err := FindFlowDefinitionByName(ctx, conn, d.Id())
 
@@ -308,8 +307,8 @@ func resourceFlowDefinitionRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	arn := aws.StringValue(flowDefinition.FlowDefinitionArn)
-	d.Set("arn", arn)
-	d.Set("role_arn", flowDefinition.RoleArn)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrRoleARN, flowDefinition.RoleArn)
 	d.Set("flow_definition_name", flowDefinition.FlowDefinitionName)
 
 	if err := d.Set("human_loop_activation_config", flattenFlowDefinitionHumanLoopActivationConfig(flowDefinition.HumanLoopActivationConfig)); err != nil {
@@ -328,44 +327,20 @@ func resourceFlowDefinitionRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "setting output_config: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for SageMaker Flow Definition (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
 func resourceFlowDefinitionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SageMaker Flow Definition (%s) tags: %s", d.Id(), err)
-		}
-	}
+	// Tags only.
 
 	return append(diags, resourceFlowDefinitionRead(ctx, d, meta)...)
 }
 
 func resourceFlowDefinitionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	log.Printf("[DEBUG] Deleting SageMaker Flow Definition: %s", d.Id())
 	_, err := conn.DeleteFlowDefinitionWithContext(ctx, &sagemaker.DeleteFlowDefinitionInput{
@@ -464,7 +439,7 @@ func expandFlowDefinitionOutputConfig(l []interface{}) *sagemaker.FlowDefinition
 		S3OutputPath: aws.String(m["s3_output_path"].(string)),
 	}
 
-	if v, ok := m["kms_key_id"].(string); ok && v != "" {
+	if v, ok := m[names.AttrKMSKeyID].(string); ok && v != "" {
 		config.KmsKeyId = aws.String(v)
 	}
 
@@ -477,8 +452,8 @@ func flattenFlowDefinitionOutputConfig(config *sagemaker.FlowDefinitionOutputCon
 	}
 
 	m := map[string]interface{}{
-		"kms_key_id":     aws.StringValue(config.KmsKeyId),
-		"s3_output_path": aws.StringValue(config.S3OutputPath),
+		names.AttrKMSKeyID: aws.StringValue(config.KmsKeyId),
+		"s3_output_path":   aws.StringValue(config.S3OutputPath),
 	}
 
 	return []map[string]interface{}{m}

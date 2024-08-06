@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ses
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ses"
@@ -16,8 +19,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_ses_configuration_set")
 func ResourceConfigurationSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfigurationSetCreate,
@@ -29,7 +34,7 @@ func ResourceConfigurationSet() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -62,7 +67,7 @@ func ResourceConfigurationSet() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -77,7 +82,7 @@ func ResourceConfigurationSet() *schema.Resource {
 						"custom_redirect_domain": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringDoesNotMatch(regexp.MustCompile(`\.$`), "cannot end with a period"),
+							ValidateFunc: validation.StringDoesNotMatch(regexache.MustCompile(`\.$`), "cannot end with a period"),
 						},
 					},
 				},
@@ -88,9 +93,9 @@ func ResourceConfigurationSet() *schema.Resource {
 
 func resourceConfigurationSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
-	configurationSetName := d.Get("name").(string)
+	configurationSetName := d.Get(names.AttrName).(string)
 
 	createOpts := &ses.CreateConfigurationSetInput{
 		ConfigurationSet: &ses.ConfigurationSet{
@@ -158,13 +163,15 @@ func resourceConfigurationSetCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	configSetInput := &ses.DescribeConfigurationSetInput{
 		ConfigurationSetName: aws.String(d.Id()),
 		ConfigurationSetAttributeNames: aws.StringSlice([]string{
 			ses.ConfigurationSetAttributeDeliveryOptions,
-			ses.ConfigurationSetAttributeReputationOptions}),
+			ses.ConfigurationSetAttributeReputationOptions,
+			ses.ConfigurationSetAttributeTrackingOptions,
+		}),
 	}
 
 	response, err := conn.DescribeConfigurationSetWithContext(ctx, configSetInput)
@@ -187,7 +194,7 @@ func resourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "setting tracking_options: %s", err)
 	}
 
-	d.Set("name", response.ConfigurationSet.Name)
+	d.Set(names.AttrName, response.ConfigurationSet.Name)
 
 	repOpts := response.ReputationOptions
 	if repOpts != nil {
@@ -203,14 +210,14 @@ func resourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData, m
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("configuration-set/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 
 	return diags
 }
 
 func resourceConfigurationSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	if d.HasChange("delivery_options") {
 		input := &ses.PutConfigurationSetDeliveryOptionsInput{
@@ -265,7 +272,7 @@ func resourceConfigurationSetUpdate(ctx context.Context, d *schema.ResourceData,
 
 func resourceConfigurationSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	log.Printf("[DEBUG] SES Delete Configuration Rule Set: %s", d.Id())
 	input := &ses.DeleteConfigurationSetInput{

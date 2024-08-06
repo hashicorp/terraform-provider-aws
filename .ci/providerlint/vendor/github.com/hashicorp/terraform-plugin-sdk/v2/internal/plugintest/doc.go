@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // Package plugintest contains utilities to help with writing tests for
 // Terraform plugins.
 //

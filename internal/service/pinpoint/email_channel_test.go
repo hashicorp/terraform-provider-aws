@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package pinpoint_test
 
 import (
@@ -8,12 +11,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/pinpoint"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfpinpoint "github.com/hashicorp/terraform-provider-aws/internal/service/pinpoint"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccPinpointEmailChannel_basic(t *testing.T) {
@@ -26,8 +30,8 @@ func TestAccPinpointEmailChannel_basic(t *testing.T) {
 	address2 := acctest.RandomEmailAddress(domain)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckApp(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, pinpoint.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEmailChannelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -35,11 +39,11 @@ func TestAccPinpointEmailChannel_basic(t *testing.T) {
 				Config: testAccEmailChannelConfig_fromAddress(domain, address1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailChannelExists(ctx, resourceName, &channel),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "from_address", address1),
 					resource.TestCheckResourceAttrSet(resourceName, "messages_per_second"),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "identity", "aws_ses_domain_identity.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "identity", "aws_ses_domain_identity.test", names.AttrARN),
 				),
 			},
 			{
@@ -51,7 +55,7 @@ func TestAccPinpointEmailChannel_basic(t *testing.T) {
 				Config: testAccEmailChannelConfig_fromAddress(domain, address2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailChannelExists(ctx, resourceName, &channel),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "from_address", address2),
 					resource.TestCheckResourceAttrSet(resourceName, "messages_per_second"),
 				),
@@ -70,8 +74,8 @@ func TestAccPinpointEmailChannel_set(t *testing.T) {
 	address := acctest.RandomEmailAddress(domain)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckApp(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, pinpoint.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEmailChannelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -79,7 +83,7 @@ func TestAccPinpointEmailChannel_set(t *testing.T) {
 				Config: testAccEmailChannelConfig_configurationSet(domain, address, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailChannelExists(ctx, resourceName, &channel),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration_set", "aws_ses_configuration_set.test", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration_set", "aws_ses_configuration_set.test", names.AttrName),
 				),
 			},
 			{
@@ -101,8 +105,8 @@ func TestAccPinpointEmailChannel_noRole(t *testing.T) {
 	address := acctest.RandomEmailAddress(domain)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckApp(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, pinpoint.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEmailChannelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -110,7 +114,7 @@ func TestAccPinpointEmailChannel_noRole(t *testing.T) {
 				Config: testAccEmailChannelConfig_noRole(domain, address, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailChannelExists(ctx, resourceName, &channel),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration_set", "aws_ses_configuration_set.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration_set", "aws_ses_configuration_set.test", names.AttrARN),
 				),
 			},
 			{
@@ -131,8 +135,8 @@ func TestAccPinpointEmailChannel_disappears(t *testing.T) {
 	address := acctest.RandomEmailAddress(domain)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckApp(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, pinpoint.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEmailChannelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -159,7 +163,7 @@ func testAccCheckEmailChannelExists(ctx context.Context, n string, channel *pinp
 			return fmt.Errorf("No Pinpoint Email Channel with that application ID exists")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn(ctx)
 
 		// Check if the app exists
 		params := &pinpoint.GetEmailChannelInput{
@@ -320,7 +324,7 @@ resource "aws_ses_domain_identity" "test" {
 
 func testAccCheckEmailChannelDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_pinpoint_email_channel" {

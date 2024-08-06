@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package emr
 
 import (
@@ -14,11 +17,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-func ResourceManagedScalingPolicy() *schema.Resource {
+// @SDKResource("aws_emr_managed_scaling_policy", name="Managed Scaling Policy")
+func resourceManagedScalingPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceManagedScalingPolicyCreate,
 		ReadWithoutTimeout:   resourceManagedScalingPolicyRead,
 		DeleteWithoutTimeout: resourceManagedScalingPolicyDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -70,7 +75,7 @@ func ResourceManagedScalingPolicy() *schema.Resource {
 
 func resourceManagedScalingPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn()
+	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	if l := d.Get("compute_limits").(*schema.Set).List(); len(l) > 0 && l[0] != nil {
 		cl := l[0].(map[string]interface{})
@@ -109,7 +114,7 @@ func resourceManagedScalingPolicyCreate(ctx context.Context, d *schema.ResourceD
 
 func resourceManagedScalingPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn()
+	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	input := &emr.GetManagedScalingPolicyInput{
 		ClusterId: aws.String(d.Id()),
@@ -149,7 +154,7 @@ func resourceManagedScalingPolicyRead(ctx context.Context, d *schema.ResourceDat
 
 func resourceManagedScalingPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn()
+	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	input := &emr.RemoveManagedScalingPolicyInput{
 		ClusterId: aws.String(d.Get("cluster_id").(string)),

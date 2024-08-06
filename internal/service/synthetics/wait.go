@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package synthetics
 
 import (
@@ -5,9 +8,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/synthetics"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/synthetics"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/synthetics/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -18,19 +23,19 @@ const (
 	canaryDeletedTimeout = 5 * time.Minute
 )
 
-func waitCanaryReady(ctx context.Context, conn *synthetics.Synthetics, name string) (*synthetics.Canary, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{synthetics.CanaryStateCreating, synthetics.CanaryStateUpdating},
-		Target:  []string{synthetics.CanaryStateReady},
+func waitCanaryReady(ctx context.Context, conn *synthetics.Client, name string) (*awstypes.Canary, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.CanaryStateUpdating, awstypes.CanaryStateCreating),
+		Target:  enum.Slice(awstypes.CanaryStateReady),
 		Refresh: statusCanaryState(ctx, conn, name),
 		Timeout: canaryCreatedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*synthetics.Canary); ok {
-		if status := output.Status; aws.StringValue(status.State) == synthetics.CanaryStateError {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(status.StateReasonCode), aws.StringValue(status.StateReason)))
+	if output, ok := outputRaw.(*awstypes.Canary); ok {
+		if status := output.Status; status.State == awstypes.CanaryStateError {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", status.StateReasonCode, aws.ToString(status.StateReason)))
 		}
 
 		return output, err
@@ -39,25 +44,24 @@ func waitCanaryReady(ctx context.Context, conn *synthetics.Synthetics, name stri
 	return nil, err
 }
 
-func waitCanaryStopped(ctx context.Context, conn *synthetics.Synthetics, name string) (*synthetics.Canary, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			synthetics.CanaryStateStopping,
-			synthetics.CanaryStateUpdating,
-			synthetics.CanaryStateRunning,
-			synthetics.CanaryStateReady,
-			synthetics.CanaryStateStarting,
-		},
-		Target:  []string{synthetics.CanaryStateStopped},
+func waitCanaryStopped(ctx context.Context, conn *synthetics.Client, name string) (*awstypes.Canary, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(
+			awstypes.CanaryStateStopping,
+			awstypes.CanaryStateUpdating,
+			awstypes.CanaryStateRunning,
+			awstypes.CanaryStateReady,
+			awstypes.CanaryStateStarting),
+		Target:  enum.Slice(awstypes.CanaryStateStopped),
 		Refresh: statusCanaryState(ctx, conn, name),
 		Timeout: canaryStoppedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*synthetics.Canary); ok {
-		if status := output.Status; aws.StringValue(status.State) == synthetics.CanaryStateError {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(status.StateReasonCode), aws.StringValue(status.StateReason)))
+	if output, ok := outputRaw.(*awstypes.Canary); ok {
+		if status := output.Status; status.State == awstypes.CanaryStateError {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", status.StateReasonCode, aws.ToString(status.StateReason)))
 		}
 
 		return output, err
@@ -66,24 +70,22 @@ func waitCanaryStopped(ctx context.Context, conn *synthetics.Synthetics, name st
 	return nil, err
 }
 
-func waitCanaryRunning(ctx context.Context, conn *synthetics.Synthetics, name string) (*synthetics.Canary, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			synthetics.CanaryStateStarting,
-			synthetics.CanaryStateUpdating,
-			synthetics.CanaryStateStarting,
-			synthetics.CanaryStateReady,
-		},
-		Target:  []string{synthetics.CanaryStateRunning},
+func waitCanaryRunning(ctx context.Context, conn *synthetics.Client, name string) (*awstypes.Canary, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(
+			awstypes.CanaryStateStarting,
+			awstypes.CanaryStateUpdating,
+			awstypes.CanaryStateReady),
+		Target:  enum.Slice(awstypes.CanaryStateRunning),
 		Refresh: statusCanaryState(ctx, conn, name),
 		Timeout: canaryRunningTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*synthetics.Canary); ok {
-		if status := output.Status; aws.StringValue(status.State) == synthetics.CanaryStateError {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(status.StateReasonCode), aws.StringValue(status.StateReason)))
+	if output, ok := outputRaw.(*awstypes.Canary); ok {
+		if status := output.Status; status.State == awstypes.CanaryStateError {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", status.StateReasonCode, aws.ToString(status.StateReason)))
 		}
 
 		return output, err
@@ -92,9 +94,9 @@ func waitCanaryRunning(ctx context.Context, conn *synthetics.Synthetics, name st
 	return nil, err
 }
 
-func waitCanaryDeleted(ctx context.Context, conn *synthetics.Synthetics, name string) (*synthetics.Canary, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{synthetics.CanaryStateDeleting, synthetics.CanaryStateStopped},
+func waitCanaryDeleted(ctx context.Context, conn *synthetics.Client, name string) (*awstypes.Canary, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.CanaryStateDeleting, awstypes.CanaryStateStopped),
 		Target:  []string{},
 		Refresh: statusCanaryState(ctx, conn, name),
 		Timeout: canaryDeletedTimeout,
@@ -102,9 +104,9 @@ func waitCanaryDeleted(ctx context.Context, conn *synthetics.Synthetics, name st
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*synthetics.Canary); ok {
-		if status := output.Status; aws.StringValue(status.State) == synthetics.CanaryStateError {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(status.StateReasonCode), aws.StringValue(status.StateReason)))
+	if output, ok := outputRaw.(*awstypes.Canary); ok {
+		if status := output.Status; status.State == awstypes.CanaryStateError {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", status.StateReasonCode, aws.ToString(status.StateReason)))
 		}
 
 		return output, err

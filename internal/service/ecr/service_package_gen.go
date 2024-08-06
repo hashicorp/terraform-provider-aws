@@ -5,78 +5,127 @@ package ecr
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	ecr_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ecr"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-type servicePackage struct {
-	frameworkDataSourceFactories []func(context.Context) (datasource.DataSourceWithConfigure, error)
-	frameworkResourceFactories   []func(context.Context) (resource.ResourceWithConfigure, error)
-	sdkDataSourceFactories       []struct {
-		TypeName string
-		Factory  func() *schema.Resource
+type servicePackage struct{}
+
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
+	return []*types.ServicePackageFrameworkDataSource{
+		{
+			Factory: newLifecyclePolicyDocumentDataSource,
+			Name:    "Lifecycle Policy Document",
+		},
+		{
+			Factory: newRepositoriesDataSource,
+			Name:    "Repositories",
+		},
 	}
-	sdkResourceFactories []struct {
-		TypeName string
-		Factory  func() *schema.Resource
+}
+
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
+	return []*types.ServicePackageFrameworkResource{}
+}
+
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
+	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  dataSourceAuthorizationToken,
+			TypeName: "aws_ecr_authorization_token",
+			Name:     "Authorization Token",
+		},
+		{
+			Factory:  dataSourceImage,
+			TypeName: "aws_ecr_image",
+			Name:     "Image",
+		},
+		{
+			Factory:  dataSourcePullThroughCacheRule,
+			TypeName: "aws_ecr_pull_through_cache_rule",
+			Name:     "Pull Through Cache Rule",
+		},
+		{
+			Factory:  dataSourceRepository,
+			TypeName: "aws_ecr_repository",
+			Name:     "Repository",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory:  dataSourceRepositoryCreationTemplate,
+			TypeName: "aws_ecr_repository_creation_template",
+			Name:     "Repository Creation Template",
+		},
 	}
 }
 
-func (p *servicePackage) Configure(ctx context.Context, meta any) error {
-	return nil
-}
-
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return p.frameworkDataSourceFactories
-}
-
-func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.Context) (resource.ResourceWithConfigure, error) {
-	return p.frameworkResourceFactories
-}
-
-func (p *servicePackage) SDKDataSources(ctx context.Context) []struct {
-	TypeName string
-	Factory  func() *schema.Resource
-} {
-	return p.sdkDataSourceFactories
-}
-
-func (p *servicePackage) SDKResources(ctx context.Context) []struct {
-	TypeName string
-	Factory  func() *schema.Resource
-} {
-	return p.sdkResourceFactories
+func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  resourceLifecyclePolicy,
+			TypeName: "aws_ecr_lifecycle_policy",
+			Name:     "Lifecycle Policy",
+		},
+		{
+			Factory:  resourcePullThroughCacheRule,
+			TypeName: "aws_ecr_pull_through_cache_rule",
+			Name:     "Pull Through Cache Rule",
+		},
+		{
+			Factory:  resourceRegistryPolicy,
+			TypeName: "aws_ecr_registry_policy",
+			Name:     "Registry Policy",
+		},
+		{
+			Factory:  resourceRegistryScanningConfiguration,
+			TypeName: "aws_ecr_registry_scanning_configuration",
+			Name:     "Registry Scanning Configuration",
+		},
+		{
+			Factory:  resourceReplicationConfiguration,
+			TypeName: "aws_ecr_replication_configuration",
+			Name:     "Replication Configuration",
+		},
+		{
+			Factory:  resourceRepository,
+			TypeName: "aws_ecr_repository",
+			Name:     "Repository",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory:  resourceRepositoryCreationTemplate,
+			TypeName: "aws_ecr_repository_creation_template",
+			Name:     "Repository Creation Template",
+		},
+		{
+			Factory:  resourceRepositoryPolicy,
+			TypeName: "aws_ecr_repository_policy",
+			Name:     "Repsitory Policy",
+		},
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "ecr"
+	return names.ECR
 }
 
-func (p *servicePackage) registerFrameworkDataSourceFactory(factory func(context.Context) (datasource.DataSourceWithConfigure, error)) {
-	p.frameworkDataSourceFactories = append(p.frameworkDataSourceFactories, factory)
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*ecr_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+
+	return ecr_sdkv2.NewFromConfig(cfg,
+		ecr_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+	), nil
 }
 
-func (p *servicePackage) registerFrameworkResourceFactory(factory func(context.Context) (resource.ResourceWithConfigure, error)) {
-	p.frameworkResourceFactories = append(p.frameworkResourceFactories, factory)
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
 }
-
-func (p *servicePackage) registerSDKDataSourceFactory(typeName string, factory func() *schema.Resource) {
-	p.sdkDataSourceFactories = append(p.sdkDataSourceFactories, struct {
-		TypeName string
-		Factory  func() *schema.Resource
-	}{TypeName: typeName, Factory: factory})
-}
-
-func (p *servicePackage) registerSDKResourceFactory(typeName string, factory func() *schema.Resource) {
-	p.sdkResourceFactories = append(p.sdkResourceFactories, struct {
-		TypeName string
-		Factory  func() *schema.Resource
-	}{TypeName: typeName, Factory: factory})
-}
-
-var (
-	_sp                                = &servicePackage{}
-	ServicePackage intf.ServicePackage = _sp
-)

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_instance: Replace an instance when an `instance_type` change also requires an architecture change, such as x86_64 to arm64
+```

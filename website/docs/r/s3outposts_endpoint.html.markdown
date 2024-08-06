@@ -22,15 +22,17 @@ resource "aws_s3outposts_endpoint" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `outpost_id` - (Required) Identifier of the Outpost to contain this endpoint.
 * `security_group_id` - (Required) Identifier of the EC2 Security Group.
 * `subnet_id` - (Required) Identifier of the EC2 Subnet.
+* `access_type` - (Optional) Type of access for the network connectivity. Valid values are `Private` or `CustomerOwnedIp`.
+* `customer_owned_ipv4_pool` - (Optional) The ID of a Customer Owned IP Pool. For more on customer owned IP addresses see the [User Guide](https://docs.aws.amazon.com/outposts/latest/userguide/local-rack.html#local-gateway-subnet).
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the endpoint.
 * `cidr_block` - VPC CIDR block of the endpoint.
@@ -41,8 +43,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-S3 Outposts Endpoints can be imported using Amazon Resource Name (ARN), EC2 Security Group identifier, and EC2 Subnet identifier, separated by commas (`,`) e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 Outposts Endpoints using Amazon Resource Name (ARN), EC2 Security Group identifier, and EC2 Subnet identifier, separated by commas (`,`). For example:
 
+```terraform
+import {
+  to = aws_s3outposts_endpoint.example
+  id = "arn:aws:s3-outposts:us-east-1:123456789012:outpost/op-12345678/endpoint/0123456789abcdef,sg-12345678,subnet-12345678"
+}
 ```
-$ terraform import aws_s3outposts_endpoint.example arn:aws:s3-outposts:us-east-1:123456789012:outpost/op-12345678/endpoint/0123456789abcdef,sg-12345678,subnet-12345678
+
+Using `terraform import`, import S3 Outposts Endpoints using Amazon Resource Name (ARN), EC2 Security Group identifier, and EC2 Subnet identifier, separated by commas (`,`). For example:
+
+```console
+% terraform import aws_s3outposts_endpoint.example arn:aws:s3-outposts:us-east-1:123456789012:outpost/op-12345678/endpoint/0123456789abcdef,sg-12345678,subnet-12345678
 ```

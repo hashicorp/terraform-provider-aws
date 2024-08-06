@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package servicecatalog
 
 import (
@@ -8,15 +11,18 @@ import (
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_servicecatalog_constraint")
 func ResourceConstraint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConstraintCreate,
@@ -41,16 +47,16 @@ func ResourceConstraint() *schema.Resource {
 				Default:      AcceptLanguageEnglish,
 				ValidateFunc: validation.StringInSlice(AcceptLanguage_Values(), false),
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"owner": {
+			names.AttrOwner: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"parameters": {
+			names.AttrParameters: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateFunc:     validation.StringIsJSON,
@@ -66,11 +72,11 @@ func ResourceConstraint() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"type": {
+			names.AttrType: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -82,40 +88,40 @@ func ResourceConstraint() *schema.Resource {
 
 func resourceConstraintCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	input := &servicecatalog.CreateConstraintInput{
-		IdempotencyToken: aws.String(resource.UniqueId()),
-		Parameters:       aws.String(d.Get("parameters").(string)),
+		IdempotencyToken: aws.String(id.UniqueId()),
+		Parameters:       aws.String(d.Get(names.AttrParameters).(string)),
 		PortfolioId:      aws.String(d.Get("portfolio_id").(string)),
 		ProductId:        aws.String(d.Get("product_id").(string)),
-		Type:             aws.String(d.Get("type").(string)),
+		Type:             aws.String(d.Get(names.AttrType).(string)),
 	}
 
 	if v, ok := d.GetOk("accept_language"); ok {
 		input.AcceptLanguage = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
 	var output *servicecatalog.CreateConstraintOutput
-	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
 		var err error
 
 		output, err = conn.CreateConstraintWithContext(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, servicecatalog.ErrCodeInvalidParametersException, "profile does not exist") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -140,7 +146,7 @@ func resourceConstraintCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceConstraintRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	output, err := WaitConstraintReady(ctx, conn, d.Get("accept_language").(string), d.Id(), d.Timeout(schema.TimeoutRead))
 
@@ -166,23 +172,23 @@ func resourceConstraintRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.Set("accept_language", acceptLanguage)
 
-	d.Set("parameters", output.ConstraintParameters)
-	d.Set("status", output.Status)
+	d.Set(names.AttrParameters, output.ConstraintParameters)
+	d.Set(names.AttrStatus, output.Status)
 
 	detail := output.ConstraintDetail
 
-	d.Set("description", detail.Description)
-	d.Set("owner", detail.Owner)
+	d.Set(names.AttrDescription, detail.Description)
+	d.Set(names.AttrOwner, detail.Owner)
 	d.Set("portfolio_id", detail.PortfolioId)
 	d.Set("product_id", detail.ProductId)
-	d.Set("type", detail.Type)
+	d.Set(names.AttrType, detail.Type)
 
 	return diags
 }
 
 func resourceConstraintUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	input := &servicecatalog.UpdateConstraintInput{
 		Id: aws.String(d.Id()),
@@ -192,23 +198,23 @@ func resourceConstraintUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		input.AcceptLanguage = aws.String(d.Get("accept_language").(string))
 	}
 
-	if d.HasChange("description") {
-		input.Description = aws.String(d.Get("description").(string))
+	if d.HasChange(names.AttrDescription) {
+		input.Description = aws.String(d.Get(names.AttrDescription).(string))
 	}
 
-	if d.HasChange("parameters") {
-		input.Parameters = aws.String(d.Get("parameters").(string))
+	if d.HasChange(names.AttrParameters) {
+		input.Parameters = aws.String(d.Get(names.AttrParameters).(string))
 	}
 
-	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
+	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *retry.RetryError {
 		_, err := conn.UpdateConstraintWithContext(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, servicecatalog.ErrCodeInvalidParametersException, "profile does not exist") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -227,7 +233,7 @@ func resourceConstraintUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceConstraintDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	input := &servicecatalog.DeleteConstraintInput{
 		Id: aws.String(d.Id()),

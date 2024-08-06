@@ -1,24 +1,25 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package logs
 
 import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func init() {
-	_sp.registerSDKResourceFactory("aws_cloudwatch_log_destination_policy", resourceDestinationPolicy)
-}
-
+// @SDKResource("aws_cloudwatch_log_destination_policy")
 func resourceDestinationPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDestinationPolicyPut,
@@ -27,7 +28,7 @@ func resourceDestinationPolicy() *schema.Resource {
 		DeleteWithoutTimeout: schema.NoopContext,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -55,7 +56,9 @@ func resourceDestinationPolicy() *schema.Resource {
 }
 
 func resourceDestinationPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	name := d.Get("destination_name").(string)
 	input := &cloudwatchlogs.PutDestinationPolicyInput{
@@ -67,36 +70,38 @@ func resourceDestinationPolicyPut(ctx context.Context, d *schema.ResourceData, m
 		input.ForceUpdate = aws.Bool(v.(bool))
 	}
 
-	_, err := conn.PutDestinationPolicyWithContext(ctx, input)
+	_, err := conn.PutDestinationPolicy(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("putting CloudWatch Logs Destination Policy (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "putting CloudWatch Logs Destination Policy (%s): %s", name, err)
 	}
 
 	if d.IsNewResource() {
 		d.SetId(name)
 	}
 
-	return resourceDestinationPolicyRead(ctx, d, meta)
+	return append(diags, resourceDestinationPolicyRead(ctx, d, meta)...)
 }
 
 func resourceDestinationPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn()
+	var diags diag.Diagnostics
 
-	destination, err := FindDestinationByName(ctx, conn, d.Id())
+	conn := meta.(*conns.AWSClient).LogsClient(ctx)
+
+	destination, err := findDestinationByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudWatch Logs Destination Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading CloudWatch Logs Destination Policy (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Logs Destination Policy (%s): %s", d.Id(), err)
 	}
 
 	d.Set("access_policy", destination.AccessPolicy)
 	d.Set("destination_name", destination.DestinationName)
 
-	return nil
+	return diags
 }

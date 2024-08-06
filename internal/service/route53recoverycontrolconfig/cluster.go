@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53recoverycontrolconfig
 
 import (
@@ -8,12 +11,14 @@ import (
 	r53rcc "github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_route53recoverycontrolconfig_cluster")
 func ResourceCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterCreate,
@@ -24,7 +29,7 @@ func ResourceCluster() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -33,23 +38,23 @@ func ResourceCluster() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"endpoint": {
+						names.AttrEndpoint: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"region": {
+						names.AttrRegion: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -59,11 +64,11 @@ func ResourceCluster() *schema.Resource {
 
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn()
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn(ctx)
 
 	input := &r53rcc.CreateClusterInput{
-		ClientToken: aws.String(resource.UniqueId()),
-		ClusterName: aws.String(d.Get("name").(string)),
+		ClientToken: aws.String(id.UniqueId()),
+		ClusterName: aws.String(d.Get(names.AttrName).(string)),
 	}
 
 	output, err := conn.CreateClusterWithContext(ctx, input)
@@ -88,7 +93,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn()
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn(ctx)
 
 	input := &r53rcc.DescribeClusterInput{
 		ClusterArn: aws.String(d.Id()),
@@ -111,9 +116,9 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	result := output.Cluster
-	d.Set("arn", result.ClusterArn)
-	d.Set("name", result.Name)
-	d.Set("status", result.Status)
+	d.Set(names.AttrARN, result.ClusterArn)
+	d.Set(names.AttrName, result.Name)
+	d.Set(names.AttrStatus, result.Status)
 
 	if err := d.Set("cluster_endpoints", flattenClusterEndpoints(result.ClusterEndpoints)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting cluster_endpoints: %s", err)
@@ -124,7 +129,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn()
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn(ctx)
 
 	log.Printf("[INFO] Deleting Route53 Recovery Control Config Cluster: %s", d.Id())
 	_, err := conn.DeleteClusterWithContext(ctx, &r53rcc.DeleteClusterInput{
@@ -178,11 +183,11 @@ func flattenClusterEndpoint(ce *r53rcc.ClusterEndpoint) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := ce.Endpoint; v != nil {
-		tfMap["endpoint"] = aws.StringValue(v)
+		tfMap[names.AttrEndpoint] = aws.StringValue(v)
 	}
 
 	if v := ce.Region; v != nil {
-		tfMap["region"] = aws.StringValue(v)
+		tfMap[names.AttrRegion] = aws.StringValue(v)
 	}
 
 	return tfMap

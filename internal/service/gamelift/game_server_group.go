@@ -1,18 +1,22 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package gamelift
 
-import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
+import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"context"
 	"fmt"
 	"log"
 	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
+	autoscalingtypes "github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/gamelift"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,6 +25,7 @@ import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -28,6 +33,8 @@ const (
 	gameServerGroupDeletedDefaultTimeout = 30 * time.Minute
 )
 
+// @SDKResource("aws_gamelift_game_server_group", name="Game Server Group")
+// @Tags(identifierAttribute="arn")
 func ResourceGameServerGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGameServerGroupCreate,
@@ -44,7 +51,7 @@ func ResourceGameServerGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -109,7 +116,7 @@ func ResourceGameServerGroup() *schema.Resource {
 				MaxItems: 20,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"instance_type": {
+						names.AttrInstanceType: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(gamelift.GameServerGroupInstanceType_Values(), false),
@@ -122,13 +129,13 @@ func ResourceGameServerGroup() *schema.Resource {
 					},
 				},
 			},
-			"launch_template": {
+			names.AttrLaunchTemplate: {
 				Type:     schema.TypeList,
 				Required: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": {
+						names.AttrID: {
 							Type:          schema.TypeString,
 							Optional:      true,
 							Computed:      true,
@@ -136,7 +143,7 @@ func ResourceGameServerGroup() *schema.Resource {
 							ConflictsWith: []string{"launch_template.0.name"},
 							ValidateFunc:  verify.ValidLaunchTemplateID,
 						},
-						"name": {
+						names.AttrName: {
 							Type:          schema.TypeString,
 							Optional:      true,
 							Computed:      true,
@@ -144,7 +151,7 @@ func ResourceGameServerGroup() *schema.Resource {
 							ConflictsWith: []string{"launch_template.0.id"},
 							ValidateFunc:  verify.ValidLaunchTemplateName,
 						},
-						"version": {
+						names.AttrVersion: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
@@ -165,13 +172,13 @@ func ResourceGameServerGroup() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.IntAtLeast(0),
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vpc_subnets": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -188,18 +195,16 @@ func ResourceGameServerGroup() *schema.Resource {
 
 func resourceGameServerGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GameLiftConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).GameLiftConn(ctx)
 
 	input := &gamelift.CreateGameServerGroupInput{
 		GameServerGroupName: aws.String(d.Get("game_server_group_name").(string)),
 		InstanceDefinitions: expandInstanceDefinitions(d.Get("instance_definition").(*schema.Set).List()),
-		LaunchTemplate:      expandLaunchTemplateSpecification(d.Get("launch_template").([]interface{})[0].(map[string]interface{})),
+		LaunchTemplate:      expandLaunchTemplateSpecification(d.Get(names.AttrLaunchTemplate).([]interface{})[0].(map[string]interface{})),
 		MaxSize:             aws.Int64(int64(d.Get("max_size").(int))),
 		MinSize:             aws.Int64(int64(d.Get("min_size").(int))),
-		RoleArn:             aws.String(d.Get("role_arn").(string)),
-		Tags:                Tags(tags.IgnoreAWS()),
+		RoleArn:             aws.String(d.Get(names.AttrRoleARN).(string)),
+		Tags:                getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("auto_scaling_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -220,16 +225,16 @@ func resourceGameServerGroupCreate(ctx context.Context, d *schema.ResourceData, 
 
 	log.Printf("[INFO] Creating GameLift Game Server Group: %s", input)
 	var out *gamelift.CreateGameServerGroupOutput
-	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		var err error
 		out, err = conn.CreateGameServerGroupWithContext(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, gamelift.ErrCodeInvalidRequestException, "GameLift is not authorized to perform") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -240,7 +245,7 @@ func resourceGameServerGroupCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating GameLift Game Server Group (%s): %s", d.Get("name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating GameLift Game Server Group (%s): %s", d.Get(names.AttrName).(string), err)
 	}
 
 	d.SetId(aws.StringValue(out.GameServerGroup.GameServerGroupName))
@@ -254,14 +259,11 @@ func resourceGameServerGroupCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceGameServerGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GameLiftConn()
-	autoscalingConn := meta.(*conns.AWSClient).AutoScalingConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).GameLiftConn(ctx)
+	autoscalingConn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
 	gameServerGroupName := d.Id()
 
-	log.Printf("[INFO] Describing GameLift Game Server Group: %s", gameServerGroupName)
 	gameServerGroup, err := FindGameServerGroupByName(ctx, conn, gameServerGroupName)
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] GameLift Game Server Group (%s) not found, removing from state", gameServerGroupName)
@@ -274,8 +276,8 @@ func resourceGameServerGroupRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	autoScalingGroupName := strings.Split(aws.StringValue(gameServerGroup.AutoScalingGroupArn), "/")[1]
-	autoScalingGroupOutput, err := autoscalingConn.DescribeAutoScalingGroupsWithContext(ctx, &autoscaling.DescribeAutoScalingGroupsInput{
-		AutoScalingGroupNames: []*string{aws.String(autoScalingGroupName)},
+	autoScalingGroupOutput, err := autoscalingConn.DescribeAutoScalingGroups(ctx, &autoscaling.DescribeAutoScalingGroupsInput{
+		AutoScalingGroupNames: []string{autoScalingGroupName},
 	})
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading GameLift Game Server Group (%s): reading AutoScaling Group: %s", gameServerGroupName, err)
@@ -285,9 +287,9 @@ func resourceGameServerGroupRead(ctx context.Context, d *schema.ResourceData, me
 	}
 	autoScalingGroup := autoScalingGroupOutput.AutoScalingGroups[0]
 
-	describePoliciesOutput, err := autoscalingConn.DescribePoliciesWithContext(ctx, &autoscaling.DescribePoliciesInput{
+	describePoliciesOutput, err := autoscalingConn.DescribePolicies(ctx, &autoscaling.DescribePoliciesInput{
 		AutoScalingGroupName: aws.String(autoScalingGroupName),
-		PolicyNames:          []*string{aws.String(gameServerGroupName)},
+		PolicyNames:          []string{gameServerGroupName},
 	})
 
 	if err != nil {
@@ -295,14 +297,14 @@ func resourceGameServerGroupRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	arn := aws.StringValue(gameServerGroup.GameServerGroupArn)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("auto_scaling_group_arn", gameServerGroup.AutoScalingGroupArn)
 	d.Set("balancing_strategy", gameServerGroup.BalancingStrategy)
 	d.Set("game_server_group_name", gameServerGroupName)
 	d.Set("game_server_protection_policy", gameServerGroup.GameServerProtectionPolicy)
 	d.Set("max_size", autoScalingGroup.MaxSize)
 	d.Set("min_size", autoScalingGroup.MinSize)
-	d.Set("role_arn", gameServerGroup.RoleArn)
+	d.Set(names.AttrRoleARN, gameServerGroup.RoleArn)
 
 	if len(describePoliciesOutput.ScalingPolicies) == 1 {
 		if err := d.Set("auto_scaling_policy", []interface{}{flattenGameServerGroupAutoScalingPolicy(describePoliciesOutput.ScalingPolicies[0])}); err != nil {
@@ -316,29 +318,8 @@ func resourceGameServerGroupRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "setting instance_definition: %s", err)
 	}
 
-	if err := d.Set("launch_template", flattenAutoScalingLaunchTemplateSpecification(autoScalingGroup.MixedInstancesPolicy.LaunchTemplate.LaunchTemplateSpecification)); err != nil {
+	if err := d.Set(names.AttrLaunchTemplate, flattenAutoScalingLaunchTemplateSpecification(autoScalingGroup.MixedInstancesPolicy.LaunchTemplate.LaunchTemplateSpecification)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting launch_template: %s", err)
-	}
-
-	tags, err := ListTags(ctx, conn, arn)
-
-	if tfawserr.ErrMessageContains(err, gamelift.ErrCodeInvalidRequestException, fmt.Sprintf("Resource %s is not in a taggable state", d.Id())) {
-		return diags
-	}
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Game Lift Game Server Group (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
 	return diags
@@ -346,15 +327,15 @@ func resourceGameServerGroupRead(ctx context.Context, d *schema.ResourceData, me
 
 func resourceGameServerGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GameLiftConn()
+	conn := meta.(*conns.AWSClient).GameLiftConn(ctx)
 
 	log.Printf("[INFO] Updating GameLift Game Server Group: %s", d.Id())
 
-	if d.HasChanges("balancing_strategy", "game_server_protection_policy", "instance_definition", "role_arn") {
+	if d.HasChanges("balancing_strategy", "game_server_protection_policy", "instance_definition", names.AttrRoleARN) {
 		input := gamelift.UpdateGameServerGroupInput{
 			GameServerGroupName: aws.String(d.Id()),
 			InstanceDefinitions: expandInstanceDefinitions(d.Get("instance_definition").(*schema.Set).List()),
-			RoleArn:             aws.String(d.Get("role_arn").(string)),
+			RoleArn:             aws.String(d.Get(names.AttrRoleARN).(string)),
 		}
 
 		if v, ok := d.GetOk("balancing_strategy"); ok {
@@ -371,34 +352,25 @@ func resourceGameServerGroupUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		arn := d.Get("arn").(string)
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Game Lift Game Server Group (%s) tags: %s", arn, err)
-		}
-	}
-
 	return append(diags, resourceGameServerGroupRead(ctx, d, meta)...)
 }
 
 func resourceGameServerGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GameLiftConn()
+	conn := meta.(*conns.AWSClient).GameLiftConn(ctx)
 
 	log.Printf("[INFO] Deleting GameLift Game Server Group: %s", d.Id())
 	input := &gamelift.DeleteGameServerGroupInput{
 		GameServerGroupName: aws.String(d.Id()),
 	}
-	err := resource.RetryContext(ctx, gameServerGroupDeletedDefaultTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, gameServerGroupDeletedDefaultTimeout, func() *retry.RetryError {
 		_, err := conn.DeleteGameServerGroupWithContext(ctx, input)
 		if err != nil {
 			msg := fmt.Sprintf("Cannot delete game server group %s: %s", d.Id(), err)
 			if tfawserr.ErrMessageContains(err, gamelift.ErrCodeInvalidRequestException, msg) {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
@@ -441,7 +413,7 @@ func expandInstanceDefinition(tfMap map[string]interface{}) *gamelift.InstanceDe
 	}
 
 	apiObject := &gamelift.InstanceDefinition{
-		InstanceType: aws.String(tfMap["instance_type"].(string)),
+		InstanceType: aws.String(tfMap[names.AttrInstanceType].(string)),
 	}
 
 	if v, ok := tfMap["weighted_capacity"].(string); ok && v != "" {
@@ -484,15 +456,15 @@ func expandLaunchTemplateSpecification(tfMap map[string]interface{}) *gamelift.L
 
 	apiObject := &gamelift.LaunchTemplateSpecification{}
 
-	if v, ok := tfMap["id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrID].(string); ok && v != "" {
 		apiObject.LaunchTemplateId = aws.String(v)
 	}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.LaunchTemplateName = aws.String(v)
 	}
 
-	if v, ok := tfMap["version"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrVersion].(string); ok && v != "" {
 		apiObject.Version = aws.String(v)
 	}
 
@@ -511,17 +483,13 @@ func expandTargetTrackingConfiguration(tfMap map[string]interface{}) *gamelift.T
 	return apiObject
 }
 
-func flattenGameServerGroupAutoScalingPolicy(apiObject *autoscaling.ScalingPolicy) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
+func flattenGameServerGroupAutoScalingPolicy(apiObject autoscalingtypes.ScalingPolicy) map[string]interface{} {
 	tfMap := map[string]interface{}{
 		"target_tracking_configuration": []interface{}{flattenTargetTrackingConfiguration(apiObject.TargetTrackingConfiguration)},
 	}
 
 	if v := apiObject.EstimatedInstanceWarmup; v != nil {
-		tfMap["estimated_instance_warmup"] = aws.Int64Value(v)
+		tfMap["estimated_instance_warmup"] = aws.Int32Value(v)
 	}
 
 	return tfMap
@@ -533,7 +501,7 @@ func flattenInstanceDefinition(apiObject *gamelift.InstanceDefinition) map[strin
 	}
 
 	tfMap := map[string]interface{}{
-		"instance_type": aws.StringValue(apiObject.InstanceType),
+		names.AttrInstanceType: aws.StringValue(apiObject.InstanceType),
 	}
 
 	if v := apiObject.WeightedCapacity; v != nil {
@@ -543,21 +511,21 @@ func flattenInstanceDefinition(apiObject *gamelift.InstanceDefinition) map[strin
 	return tfMap
 }
 
-func flattenAutoScalingLaunchTemplateSpecification(apiObject *autoscaling.LaunchTemplateSpecification) []map[string]interface{} {
+func flattenAutoScalingLaunchTemplateSpecification(apiObject *autoscalingtypes.LaunchTemplateSpecification) []map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{
-		"id":   aws.StringValue(apiObject.LaunchTemplateId),
-		"name": aws.StringValue(apiObject.LaunchTemplateName),
+		names.AttrID:   aws.StringValue(apiObject.LaunchTemplateId),
+		names.AttrName: aws.StringValue(apiObject.LaunchTemplateName),
 	}
 
 	// version is returned only if it was previously set
 	if apiObject.Version != nil {
-		tfMap["version"] = aws.StringValue(apiObject.Version)
+		tfMap[names.AttrVersion] = aws.StringValue(apiObject.Version)
 	} else {
-		tfMap["version"] = nil
+		tfMap[names.AttrVersion] = nil
 	}
 
 	return []map[string]interface{}{tfMap}
@@ -581,7 +549,7 @@ func flattenInstanceDefinitions(apiObjects []*gamelift.InstanceDefinition) []int
 	return tfList
 }
 
-func flattenTargetTrackingConfiguration(apiObject *autoscaling.TargetTrackingConfiguration) map[string]interface{} {
+func flattenTargetTrackingConfiguration(apiObject *autoscalingtypes.TargetTrackingConfiguration) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}

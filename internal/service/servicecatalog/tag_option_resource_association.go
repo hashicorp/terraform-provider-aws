@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package servicecatalog
 
 import (
@@ -9,13 +12,15 @@ import (
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_servicecatalog_tag_option_resource_association")
 func ResourceTagOptionResourceAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTagOptionResourceAssociationCreate,
@@ -32,7 +37,7 @@ func ResourceTagOptionResourceAssociation() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"resource_arn": {
+			names.AttrResourceARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -44,7 +49,7 @@ func ResourceTagOptionResourceAssociation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"resource_id": {
+			names.AttrResourceID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -64,25 +69,25 @@ func ResourceTagOptionResourceAssociation() *schema.Resource {
 
 func resourceTagOptionResourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	input := &servicecatalog.AssociateTagOptionWithResourceInput{
-		ResourceId:  aws.String(d.Get("resource_id").(string)),
+		ResourceId:  aws.String(d.Get(names.AttrResourceID).(string)),
 		TagOptionId: aws.String(d.Get("tag_option_id").(string)),
 	}
 
 	var output *servicecatalog.AssociateTagOptionWithResourceOutput
-	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
 		var err error
 
 		output, err = conn.AssociateTagOptionWithResourceWithContext(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, servicecatalog.ErrCodeInvalidParametersException, "profile does not exist") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -100,14 +105,14 @@ func resourceTagOptionResourceAssociationCreate(ctx context.Context, d *schema.R
 		return sdkdiag.AppendErrorf(diags, "creating Service Catalog Tag Option Resource Association: empty response")
 	}
 
-	d.SetId(TagOptionResourceAssociationID(d.Get("tag_option_id").(string), d.Get("resource_id").(string)))
+	d.SetId(TagOptionResourceAssociationID(d.Get("tag_option_id").(string), d.Get(names.AttrResourceID).(string)))
 
 	return append(diags, resourceTagOptionResourceAssociationRead(ctx, d, meta)...)
 }
 
 func resourceTagOptionResourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	tagOptionID, resourceID, err := TagOptionResourceAssociationParseID(d.Id())
 
@@ -135,9 +140,9 @@ func resourceTagOptionResourceAssociationRead(ctx context.Context, d *schema.Res
 		d.Set("resource_created_time", output.CreatedTime.Format(time.RFC3339))
 	}
 
-	d.Set("resource_arn", output.ARN)
+	d.Set(names.AttrResourceARN, output.ARN)
 	d.Set("resource_description", output.Description)
-	d.Set("resource_id", output.Id)
+	d.Set(names.AttrResourceID, output.Id)
 	d.Set("resource_name", output.Name)
 	d.Set("tag_option_id", tagOptionID)
 
@@ -146,7 +151,7 @@ func resourceTagOptionResourceAssociationRead(ctx context.Context, d *schema.Res
 
 func resourceTagOptionResourceAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	tagOptionID, resourceID, err := TagOptionResourceAssociationParseID(d.Id())
 

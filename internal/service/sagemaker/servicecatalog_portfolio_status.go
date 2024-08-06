@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker
 
 import (
@@ -9,8 +12,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_sagemaker_servicecatalog_portfolio_status")
 func ResourceServicecatalogPortfolioStatus() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServicecatalogPortfolioStatusPut,
@@ -22,7 +27,7 @@ func ResourceServicecatalogPortfolioStatus() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"status": {
+			names.AttrStatus: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(sagemaker.SagemakerServicecatalogStatus_Values(), false),
@@ -33,9 +38,9 @@ func ResourceServicecatalogPortfolioStatus() *schema.Resource {
 
 func resourceServicecatalogPortfolioStatusPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
-	status := d.Get("status").(string)
+	status := d.Get(names.AttrStatus).(string)
 	var err error
 	if status == sagemaker.SagemakerServicecatalogStatusEnabled {
 		_, err = conn.EnableSagemakerServicecatalogPortfolioWithContext(ctx, &sagemaker.EnableSagemakerServicecatalogPortfolioInput{})
@@ -54,14 +59,14 @@ func resourceServicecatalogPortfolioStatusPut(ctx context.Context, d *schema.Res
 
 func resourceServicecatalogPortfolioStatusRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	resp, err := conn.GetSagemakerServicecatalogPortfolioStatusWithContext(ctx, &sagemaker.GetSagemakerServicecatalogPortfolioStatusInput{})
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "Getting SageMaker Servicecatalog Portfolio Status: %s", err)
 	}
 
-	d.Set("status", resp.Status)
+	d.Set(names.AttrStatus, resp.Status)
 
 	return diags
 }

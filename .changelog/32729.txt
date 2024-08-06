@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_lambda_function: Add support for `python3.11` `runtime` value
+```
+
+```release-note:enhancement
+resource/aws_lambda_layer_version: Add support for `python3.11` `compatible_runtimes` value
+```

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift
 
 import (
@@ -9,13 +12,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceOrderableCluster() *schema.Resource {
+// @SDKDataSource("aws_redshift_orderable_cluster", name="Orderable Cluster Options")
+func dataSourceOrderableCluster() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceOrderableClusterRead,
+
 		Schema: map[string]*schema.Schema{
-			"availability_zones": {
+			names.AttrAvailabilityZones: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -46,7 +52,7 @@ func DataSourceOrderableCluster() *schema.Resource {
 
 func dataSourceOrderableClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	input := &redshift.DescribeOrderableClusterOptionsInput{}
 
@@ -126,7 +132,7 @@ func dataSourceOrderableClusterRead(ctx context.Context, d *schema.ResourceData,
 	for _, az := range orderableClusterOption.AvailabilityZones {
 		availabilityZones = append(availabilityZones, aws.StringValue(az.Name))
 	}
-	d.Set("availability_zones", availabilityZones)
+	d.Set(names.AttrAvailabilityZones, availabilityZones)
 
 	d.Set("cluster_type", orderableClusterOption.ClusterType)
 	d.Set("cluster_version", orderableClusterOption.ClusterVersion)

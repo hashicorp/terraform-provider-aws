@@ -5,78 +5,177 @@ package cloudfront
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	cloudfront_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudfront"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-type servicePackage struct {
-	frameworkDataSourceFactories []func(context.Context) (datasource.DataSourceWithConfigure, error)
-	frameworkResourceFactories   []func(context.Context) (resource.ResourceWithConfigure, error)
-	sdkDataSourceFactories       []struct {
-		TypeName string
-		Factory  func() *schema.Resource
-	}
-	sdkResourceFactories []struct {
-		TypeName string
-		Factory  func() *schema.Resource
+type servicePackage struct{}
+
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
+	return []*types.ServicePackageFrameworkDataSource{
+		{
+			Factory: newDataSourceOriginAccessControl,
+			Name:    "Origin Access Control",
+		},
 	}
 }
 
-func (p *servicePackage) Configure(ctx context.Context, meta any) error {
-	return nil
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
+	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory: newContinuousDeploymentPolicyResource,
+			Name:    "Continuous Deployment Policy",
+		},
+		{
+			Factory: newKeyValueStoreResource,
+			Name:    "Key Value Store",
+		},
+	}
 }
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return p.frameworkDataSourceFactories
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
+	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  dataSourceCachePolicy,
+			TypeName: "aws_cloudfront_cache_policy",
+			Name:     "Cache Policy",
+		},
+		{
+			Factory:  dataSourceDistribution,
+			TypeName: "aws_cloudfront_distribution",
+			Name:     "Distribution",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory:  dataSourceFunction,
+			TypeName: "aws_cloudfront_function",
+			Name:     "Function",
+		},
+		{
+			Factory:  dataSourceLogDeliveryCanonicalUserID,
+			TypeName: "aws_cloudfront_log_delivery_canonical_user_id",
+			Name:     "Log Delivery Canonical User ID",
+		},
+		{
+			Factory:  dataSourceOriginAccessIdentities,
+			TypeName: "aws_cloudfront_origin_access_identities",
+			Name:     "Origin Access Identities",
+		},
+		{
+			Factory:  dataSourceOriginAccessIdentity,
+			TypeName: "aws_cloudfront_origin_access_identity",
+			Name:     "Origin Access Identity",
+		},
+		{
+			Factory:  dataSourceOriginRequestPolicy,
+			TypeName: "aws_cloudfront_origin_request_policy",
+			Name:     "Origin Request Policy",
+		},
+		{
+			Factory:  dataSourceRealtimeLogConfig,
+			TypeName: "aws_cloudfront_realtime_log_config",
+			Name:     "Real-time Log Config",
+		},
+		{
+			Factory:  dataSourceResponseHeadersPolicy,
+			TypeName: "aws_cloudfront_response_headers_policy",
+			Name:     "Response Headers Policy",
+		},
+	}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.Context) (resource.ResourceWithConfigure, error) {
-	return p.frameworkResourceFactories
-}
-
-func (p *servicePackage) SDKDataSources(ctx context.Context) []struct {
-	TypeName string
-	Factory  func() *schema.Resource
-} {
-	return p.sdkDataSourceFactories
-}
-
-func (p *servicePackage) SDKResources(ctx context.Context) []struct {
-	TypeName string
-	Factory  func() *schema.Resource
-} {
-	return p.sdkResourceFactories
+func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  resourceCachePolicy,
+			TypeName: "aws_cloudfront_cache_policy",
+			Name:     "Cache Policy",
+		},
+		{
+			Factory:  resourceDistribution,
+			TypeName: "aws_cloudfront_distribution",
+			Name:     "Distribution",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory:  resourceFieldLevelEncryptionConfig,
+			TypeName: "aws_cloudfront_field_level_encryption_config",
+			Name:     "Field-level Encryption Config",
+		},
+		{
+			Factory:  resourceFieldLevelEncryptionProfile,
+			TypeName: "aws_cloudfront_field_level_encryption_profile",
+			Name:     "Field-level Encryption Profile",
+		},
+		{
+			Factory:  resourceFunction,
+			TypeName: "aws_cloudfront_function",
+			Name:     "Function",
+		},
+		{
+			Factory:  resourceKeyGroup,
+			TypeName: "aws_cloudfront_key_group",
+			Name:     "Key Group",
+		},
+		{
+			Factory:  resourceMonitoringSubscription,
+			TypeName: "aws_cloudfront_monitoring_subscription",
+			Name:     "Monitoring Subscription",
+		},
+		{
+			Factory:  resourceOriginAccessControl,
+			TypeName: "aws_cloudfront_origin_access_control",
+			Name:     "Origin Access Control",
+		},
+		{
+			Factory:  resourceOriginAccessIdentity,
+			TypeName: "aws_cloudfront_origin_access_identity",
+			Name:     "Origin Access Identity",
+		},
+		{
+			Factory:  resourceOriginRequestPolicy,
+			TypeName: "aws_cloudfront_origin_request_policy",
+			Name:     "Origin Request Policy",
+		},
+		{
+			Factory:  resourcePublicKey,
+			TypeName: "aws_cloudfront_public_key",
+			Name:     "Public Key",
+		},
+		{
+			Factory:  resourceRealtimeLogConfig,
+			TypeName: "aws_cloudfront_realtime_log_config",
+			Name:     "Real-time Log Config",
+		},
+		{
+			Factory:  resourceResponseHeadersPolicy,
+			TypeName: "aws_cloudfront_response_headers_policy",
+			Name:     "Response Headers Policy",
+		},
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "cloudfront"
+	return names.CloudFront
 }
 
-func (p *servicePackage) registerFrameworkDataSourceFactory(factory func(context.Context) (datasource.DataSourceWithConfigure, error)) {
-	p.frameworkDataSourceFactories = append(p.frameworkDataSourceFactories, factory)
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*cloudfront_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+
+	return cloudfront_sdkv2.NewFromConfig(cfg,
+		cloudfront_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+	), nil
 }
 
-func (p *servicePackage) registerFrameworkResourceFactory(factory func(context.Context) (resource.ResourceWithConfigure, error)) {
-	p.frameworkResourceFactories = append(p.frameworkResourceFactories, factory)
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
 }
-
-func (p *servicePackage) registerSDKDataSourceFactory(typeName string, factory func() *schema.Resource) {
-	p.sdkDataSourceFactories = append(p.sdkDataSourceFactories, struct {
-		TypeName string
-		Factory  func() *schema.Resource
-	}{TypeName: typeName, Factory: factory})
-}
-
-func (p *servicePackage) registerSDKResourceFactory(typeName string, factory func() *schema.Resource) {
-	p.sdkResourceFactories = append(p.sdkResourceFactories, struct {
-		TypeName string
-		Factory  func() *schema.Resource
-	}{TypeName: typeName, Factory: factory})
-}
-
-var (
-	_sp                                = &servicePackage{}
-	ServicePackage intf.ServicePackage = _sp
-)

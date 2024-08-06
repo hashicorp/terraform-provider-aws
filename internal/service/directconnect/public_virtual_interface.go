@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package directconnect
 
 import (
@@ -18,8 +21,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_dx_public_virtual_interface", name="Public Virtual Interface")
+// @Tags(identifierAttribute="arn")
 func ResourcePublicVirtualInterface() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePublicVirtualInterfaceCreate,
@@ -54,7 +60,7 @@ func ResourcePublicVirtualInterface() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -73,7 +79,7 @@ func ResourcePublicVirtualInterface() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"connection_id": {
+			names.AttrConnectionID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -84,7 +90,7 @@ func ResourcePublicVirtualInterface() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -96,8 +102,8 @@ func ResourcePublicVirtualInterface() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				MinItems: 1,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vlan": {
 				Type:         schema.TypeInt,
 				Required:     true,
@@ -115,16 +121,15 @@ func ResourcePublicVirtualInterface() *schema.Resource {
 
 func resourcePublicVirtualInterfaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	req := &directconnect.CreatePublicVirtualInterfaceInput{
-		ConnectionId: aws.String(d.Get("connection_id").(string)),
+		ConnectionId: aws.String(d.Get(names.AttrConnectionID).(string)),
 		NewPublicVirtualInterface: &directconnect.NewPublicVirtualInterface{
 			AddressFamily:        aws.String(d.Get("address_family").(string)),
 			Asn:                  aws.Int64(int64(d.Get("bgp_asn").(int))),
-			VirtualInterfaceName: aws.String(d.Get("name").(string)),
+			Tags:                 getTagsIn(ctx),
+			VirtualInterfaceName: aws.String(d.Get(names.AttrName).(string)),
 			Vlan:                 aws.Int64(int64(d.Get("vlan").(int))),
 		},
 	}
@@ -139,9 +144,6 @@ func resourcePublicVirtualInterfaceCreate(ctx context.Context, d *schema.Resourc
 	}
 	if v, ok := d.GetOk("route_filter_prefixes"); ok {
 		req.NewPublicVirtualInterface.RouteFilterPrefixes = expandRouteFilterPrefixes(v.(*schema.Set).List())
-	}
-	if len(tags) > 0 {
-		req.NewPublicVirtualInterface.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	log.Printf("[DEBUG] Creating Direct Connect public virtual interface: %s", req)
@@ -161,9 +163,7 @@ func resourcePublicVirtualInterfaceCreate(ctx context.Context, d *schema.Resourc
 
 func resourcePublicVirtualInterfaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	vif, err := virtualInterfaceRead(ctx, d.Id(), conn)
 	if err != nil {
@@ -185,34 +185,17 @@ func resourcePublicVirtualInterfaceRead(ctx context.Context, d *schema.ResourceD
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("dxvif/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("aws_device", vif.AwsDeviceV2)
 	d.Set("bgp_asn", vif.Asn)
 	d.Set("bgp_auth_key", vif.AuthKey)
 	d.Set("customer_address", vif.CustomerAddress)
-	d.Set("connection_id", vif.ConnectionId)
-	d.Set("name", vif.VirtualInterfaceName)
+	d.Set(names.AttrConnectionID, vif.ConnectionId)
+	d.Set(names.AttrName, vif.VirtualInterfaceName)
 	if err := d.Set("route_filter_prefixes", flattenRouteFilterPrefixes(vif.RouteFilterPrefixes)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting route_filter_prefixes: %s", err)
 	}
 	d.Set("vlan", vif.Vlan)
-
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Direct Connect public virtual interface (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
 
 	return diags
 }
@@ -233,7 +216,7 @@ func resourcePublicVirtualInterfaceDelete(ctx context.Context, d *schema.Resourc
 }
 
 func resourcePublicVirtualInterfaceImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	vif, err := virtualInterfaceRead(ctx, d.Id(), conn)
 	if err != nil {

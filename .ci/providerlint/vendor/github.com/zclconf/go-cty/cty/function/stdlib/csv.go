@@ -43,6 +43,7 @@ var CSVDecodeFunc = function.New(&function.Spec{
 		}
 		return cty.List(cty.Object(atys)), nil
 	},
+	RefineResult: refineNonNull,
 	Impl: func(args []cty.Value, retType cty.Type) (cty.Value, error) {
 		ety := retType.ElementType()
 		atys := ety.AttributeTypes()

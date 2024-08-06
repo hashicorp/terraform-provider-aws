@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package worklink
 
 import (
@@ -11,13 +14,15 @@ import (
 	"github.com/aws/aws-sdk-go/service/worklink"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_worklink_website_certificate_authority_association")
 func ResourceWebsiteCertificateAuthorityAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceWebsiteCertificateAuthorityAssociationCreate,
@@ -33,12 +38,12 @@ func ResourceWebsiteCertificateAuthorityAssociation() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"certificate": {
+			names.AttrCertificate: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"display_name": {
+			names.AttrDisplayName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -54,14 +59,14 @@ func ResourceWebsiteCertificateAuthorityAssociation() *schema.Resource {
 
 func resourceWebsiteCertificateAuthorityAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WorkLinkConn()
+	conn := meta.(*conns.AWSClient).WorkLinkConn(ctx)
 
 	input := &worklink.AssociateWebsiteCertificateAuthorityInput{
 		FleetArn:    aws.String(d.Get("fleet_arn").(string)),
-		Certificate: aws.String(d.Get("certificate").(string)),
+		Certificate: aws.String(d.Get(names.AttrCertificate).(string)),
 	}
 
-	if v, ok := d.GetOk("display_name"); ok {
+	if v, ok := d.GetOk(names.AttrDisplayName); ok {
 		input.DisplayName = aws.String(v.(string))
 	}
 
@@ -77,7 +82,7 @@ func resourceWebsiteCertificateAuthorityAssociationCreate(ctx context.Context, d
 
 func resourceWebsiteCertificateAuthorityAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WorkLinkConn()
+	conn := meta.(*conns.AWSClient).WorkLinkConn(ctx)
 
 	fleetArn, websiteCaID, err := DecodeWebsiteCertificateAuthorityAssociationResourceID(d.Id())
 	if err != nil {
@@ -101,15 +106,15 @@ func resourceWebsiteCertificateAuthorityAssociationRead(ctx context.Context, d *
 
 	d.Set("website_ca_id", websiteCaID)
 	d.Set("fleet_arn", fleetArn)
-	d.Set("certificate", resp.Certificate)
-	d.Set("display_name", resp.DisplayName)
+	d.Set(names.AttrCertificate, resp.Certificate)
+	d.Set(names.AttrDisplayName, resp.DisplayName)
 
 	return diags
 }
 
 func resourceWebsiteCertificateAuthorityAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WorkLinkConn()
+	conn := meta.(*conns.AWSClient).WorkLinkConn(ctx)
 
 	fleetArn, websiteCaID, err := DecodeWebsiteCertificateAuthorityAssociationResourceID(d.Id())
 	if err != nil {
@@ -128,7 +133,7 @@ func resourceWebsiteCertificateAuthorityAssociationDelete(ctx context.Context, d
 		return sdkdiag.AppendErrorf(diags, "deleting WorkLink Website Certificate Authority Association (%s): %s", d.Id(), err)
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"DELETING"},
 		Target:     []string{"DELETED"},
 		Refresh:    WebsiteCertificateAuthorityAssociationStateRefresh(ctx, conn, websiteCaID, fleetArn),
@@ -145,7 +150,7 @@ func resourceWebsiteCertificateAuthorityAssociationDelete(ctx context.Context, d
 	return diags
 }
 
-func WebsiteCertificateAuthorityAssociationStateRefresh(ctx context.Context, conn *worklink.WorkLink, websiteCaID, arn string) resource.StateRefreshFunc {
+func WebsiteCertificateAuthorityAssociationStateRefresh(ctx context.Context, conn *worklink.WorkLink, websiteCaID, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		emptyResp := &worklink.DescribeWebsiteCertificateAuthorityOutput{}
 

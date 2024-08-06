@@ -1,5 +1,5 @@
 ---
-subcategory: "DS (Directory Service)"
+subcategory: "Directory Service"
 layout: "aws"
 page_title: "AWS: aws_directory_service_radius_settings"
 description: |-
@@ -9,6 +9,7 @@ description: |-
 # Resource: aws_directory_service_radius_settings
 
 Manages a directory's multi-factor authentication (MFA) using a Remote Authentication Dial In User Service (RADIUS) server.
+
 ## Example Usage
 
 ```terraform
@@ -27,7 +28,7 @@ resource "aws_directory_service_radius_settings" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `authentication_protocol` - (Optional) The protocol specified for your RADIUS endpoints. Valid values: `PAP`, `CHAP`, `MS-CHAPv1`, `MS-CHAPv2`.
 * `directory_id` - (Required) The identifier of the directory for which you want to manager RADIUS settings.
@@ -39,9 +40,9 @@ The following arguments are supported:
 * `shared_secret` - (Required) Required for enabling RADIUS on the directory.
 * `use_same_username` - (Optional) Not currently used.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The directory identifier.
 
@@ -54,8 +55,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-RADIUS settings can be imported using the directory ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import RADIUS settings using the directory ID. For example:
 
+```terraform
+import {
+  to = aws_directory_service_radius_settings.example
+  id = "d-926724cf57"
+}
 ```
-$ terraform import aws_directory_service_radius_settings.example d-926724cf57
+
+Using `terraform import`, import RADIUS settings using the directory ID. For example:
+
+```console
+% terraform import aws_directory_service_radius_settings.example d-926724cf57
 ```

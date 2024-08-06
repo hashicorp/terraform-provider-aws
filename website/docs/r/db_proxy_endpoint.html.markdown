@@ -23,7 +23,7 @@ resource "aws_db_proxy_endpoint" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `db_proxy_endpoint_name` - (Required) The identifier for the proxy endpoint. An identifier must begin with a letter and must contain only ASCII letters, digits, and hyphens; it can't end with a hyphen or contain two consecutive hyphens.
 * `db_proxy_name` - (Required) The name of the DB proxy associated with the DB proxy endpoint that you create.
@@ -32,9 +32,9 @@ The following arguments are supported:
 * `target_role` - (Optional) Indicates whether the DB proxy endpoint can be used for read/write or read-only operations. The default is `READ_WRITE`. Valid values are `READ_WRITE` and `READ_ONLY`.
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the proxy and proxy endpoint separated by `/`, `DB-PROXY-NAME/DB-PROXY-ENDPOINT-NAME`.
 * `arn` - The Amazon Resource Name (ARN) for the proxy endpoint.
@@ -52,8 +52,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-DB proxy endpoints can be imported using the `DB-PROXY-NAME/DB-PROXY-ENDPOINT-NAME`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DB proxy endpoints using the `DB-PROXY-NAME/DB-PROXY-ENDPOINT-NAME`. For example:
 
+```terraform
+import {
+  to = aws_db_proxy_endpoint.example
+  id = "example/example"
+}
 ```
-$ terraform import aws_db_proxy_endpoint.example example/example
+
+Using `terraform import`, import DB proxy endpoints using the `DB-PROXY-NAME/DB-PROXY-ENDPOINT-NAME`. For example:
+
+```console
+% terraform import aws_db_proxy_endpoint.example example/example
 ```

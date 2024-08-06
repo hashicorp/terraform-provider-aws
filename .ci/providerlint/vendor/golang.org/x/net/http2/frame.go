@@ -662,6 +662,15 @@ func (f *Framer) WriteData(streamID uint32, endStream bool, data []byte) error {
 // It is the caller's responsibility not to violate the maximum frame size
 // and to not call other Write methods concurrently.
 func (f *Framer) WriteDataPadded(streamID uint32, endStream bool, data, pad []byte) error {
+	if err := f.startWriteDataPadded(streamID, endStream, data, pad); err != nil {
+		return err
+	}
+	return f.endWrite()
+}
+
+// startWriteDataPadded is WriteDataPadded, but only writes the frame to the Framer's internal buffer.
+// The caller should call endWrite to flush the frame to the underlying writer.
+func (f *Framer) startWriteDataPadded(streamID uint32, endStream bool, data, pad []byte) error {
 	if !validStreamID(streamID) && !f.AllowIllegalWrites {
 		return errStreamID
 	}
@@ -691,7 +700,7 @@ func (f *Framer) WriteDataPadded(streamID uint32, endStream bool, data, pad []by
 	}
 	f.wbuf = append(f.wbuf, data...)
 	f.wbuf = append(f.wbuf, pad...)
-	return f.endWrite()
+	return nil
 }
 
 // A SettingsFrame conveys configuration parameters that affect how
@@ -1501,13 +1510,12 @@ func (mh *MetaHeadersFrame) checkPseudos() error {
 }
 
 func (fr *Framer) maxHeaderStringLen() int {
-	v := fr.maxHeaderListSize()
-	if uint32(int(v)) == v {
-		return int(v)
+	v := int(fr.maxHeaderListSize())
+	if v < 0 {
+		// If maxHeaderListSize overflows an int, use no limit (0).
+		return 0
 	}
-	// They had a crazy big number for MaxHeaderBytes anyway,
-	// so give them unlimited header lengths:
-	return 0
+	return v
 }
 
 // readMetaFrame returns 0 or more CONTINUATION frames from fr and
@@ -1556,6 +1564,7 @@ func (fr *Framer) readMetaFrame(hf *HeadersFrame) (*MetaHeadersFrame, error) {
 		if size > remainSize {
 			hdec.SetEmitEnabled(false)
 			mh.Truncated = true
+			remainSize = 0
 			return
 		}
 		remainSize -= size
@@ -1568,6 +1577,36 @@ func (fr *Framer) readMetaFrame(hf *HeadersFrame) (*MetaHeadersFrame, error) {
 	var hc headersOrContinuation = hf
 	for {
 		frag := hc.HeaderBlockFragment()
+
+		// Avoid parsing large amounts of headers that we will then discard.
+		// If the sender exceeds the max header list size by too much,
+		// skip parsing the fragment and close the connection.
+		//
+		// "Too much" is either any CONTINUATION frame after we've already
+		// exceeded the max header list size (in which case remainSize is 0),
+		// or a frame whose encoded size is more than twice the remaining
+		// header list bytes we're willing to accept.
+		if int64(len(frag)) > int64(2*remainSize) {
+			if VerboseLogs {
+				log.Printf("http2: header list too large")
+			}
+			// It would be nice to send a RST_STREAM before sending the GOAWAY,
+			// but the structure of the server's frame writer makes this difficult.
+			return nil, ConnectionError(ErrCodeProtocol)
+		}
+
+		// Also close the connection after any CONTINUATION frame following an
+		// invalid header, since we stop tracking the size of the headers after
+		// an invalid one.
+		if invalid != nil {
+			if VerboseLogs {
+				log.Printf("http2: invalid header: %v", invalid)
+			}
+			// It would be nice to send a RST_STREAM before sending the GOAWAY,
+			// but the structure of the server's frame writer makes this difficult.
+			return nil, ConnectionError(ErrCodeProtocol)
+		}
+
 		if _, err := hdec.Write(frag); err != nil {
 			return nil, ConnectionError(ErrCodeCompression)
 		}

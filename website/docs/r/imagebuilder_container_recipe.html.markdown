@@ -65,6 +65,7 @@ The following attributes are optional:
 * `dockerfile_template_uri` - (Optional) The Amazon S3 URI for the Dockerfile that will be used to build the container image.
 * `instance_configuration` - (Optional) Configuration block used to configure an instance for building and testing container images. Detailed below.
 * `kms_key_id` - (Optional) The KMS key used to encrypt the container image.
+* `platform_override` - (Optional) Specifies the operating system platform when you use a custom base image.
 * `tags` - (Optional) Key-value map of resource tags for the container recipe. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `working_directory` - (Optional) The working directory to be used during build and test workflows.
 
@@ -118,9 +119,9 @@ The following arguments are optional:
 * `volume_size` - (Optional) Size of the volume, in GiB.
 * `volume_type` - (Optional) Type of the volume. For example, `gp2` or `io2`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - (Required) Amazon Resource Name (ARN) of the container recipe.
 * `date_created` - Date the container recipe was created.
@@ -131,8 +132,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_imagebuilder_container_recipe` resources can be imported by using the Amazon Resource Name (ARN), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_imagebuilder_container_recipe` resources using the Amazon Resource Name (ARN). For example:
 
+```terraform
+import {
+  to = aws_imagebuilder_container_recipe.example
+  id = "arn:aws:imagebuilder:us-east-1:123456789012:container-recipe/example/1.0.0"
+}
 ```
-$ terraform import aws_imagebuilder_container_recipe.example arn:aws:imagebuilder:us-east-1:123456789012:container-recipe/example/1.0.0
+
+Using `terraform import`, import `aws_imagebuilder_container_recipe` resources using the Amazon Resource Name (ARN). For example:
+
+```console
+% terraform import aws_imagebuilder_container_recipe.example arn:aws:imagebuilder:us-east-1:123456789012:container-recipe/example/1.0.0
 ```

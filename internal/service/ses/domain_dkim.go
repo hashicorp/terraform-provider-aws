@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ses
 
 import (
@@ -10,8 +13,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_ses_domain_dkim")
 func ResourceDomainDKIM() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDomainDKIMCreate,
@@ -22,7 +27,7 @@ func ResourceDomainDKIM() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"domain": {
+			names.AttrDomain: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -38,9 +43,9 @@ func ResourceDomainDKIM() *schema.Resource {
 
 func resourceDomainDKIMCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
-	domainName := d.Get("domain").(string)
+	domainName := d.Get(names.AttrDomain).(string)
 
 	createOpts := &ses.VerifyDomainDkimInput{
 		Domain: aws.String(domainName),
@@ -58,10 +63,10 @@ func resourceDomainDKIMCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceDomainDKIMRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	domainName := d.Id()
-	d.Set("domain", domainName)
+	d.Set(names.AttrDomain, domainName)
 
 	readOpts := &ses.GetIdentityDkimAttributesInput{
 		Identities: []*string{

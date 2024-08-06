@@ -1,12 +1,17 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package conns
 
 import (
+	"context"
 	"testing"
 )
 
 func TestAWSClientPartitionHostname(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 	t.Parallel()
 
+	ctx := context.TODO()
 	testCases := []struct {
 		Name      string
 		AWSClient *AWSClient
@@ -16,7 +21,7 @@ func TestAWSClientPartitionHostname(t *testing.T) { // nosemgrep:ci.aws-in-func-
 		{
 			Name: "AWS Commercial",
 			AWSClient: &AWSClient{
-				DNSSuffix: "amazonaws.com",
+				dnsSuffix: "amazonaws.com",
 			},
 			Prefix:   "test",
 			Expected: "test.amazonaws.com",
@@ -24,7 +29,7 @@ func TestAWSClientPartitionHostname(t *testing.T) { // nosemgrep:ci.aws-in-func-
 		{
 			Name: "AWS China",
 			AWSClient: &AWSClient{
-				DNSSuffix: "amazonaws.com.cn",
+				dnsSuffix: "amazonaws.com.cn",
 			},
 			Prefix:   "test",
 			Expected: "test.amazonaws.com.cn",
@@ -36,7 +41,7 @@ func TestAWSClientPartitionHostname(t *testing.T) { // nosemgrep:ci.aws-in-func-
 		t.Run(testCase.Name, func(t *testing.T) {
 			t.Parallel()
 
-			got := testCase.AWSClient.PartitionHostname(testCase.Prefix)
+			got := testCase.AWSClient.PartitionHostname(ctx, testCase.Prefix)
 
 			if got != testCase.Expected {
 				t.Errorf("got %s, expected %s", got, testCase.Expected)
@@ -48,6 +53,7 @@ func TestAWSClientPartitionHostname(t *testing.T) { // nosemgrep:ci.aws-in-func-
 func TestAWSClientRegionalHostname(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 	t.Parallel()
 
+	ctx := context.TODO()
 	testCases := []struct {
 		Name      string
 		AWSClient *AWSClient
@@ -57,7 +63,7 @@ func TestAWSClientRegionalHostname(t *testing.T) { // nosemgrep:ci.aws-in-func-n
 		{
 			Name: "AWS Commercial",
 			AWSClient: &AWSClient{
-				DNSSuffix: "amazonaws.com",
+				dnsSuffix: "amazonaws.com",
 				Region:    "us-west-2", //lintignore:AWSAT003
 			},
 			Prefix:   "test",
@@ -66,7 +72,7 @@ func TestAWSClientRegionalHostname(t *testing.T) { // nosemgrep:ci.aws-in-func-n
 		{
 			Name: "AWS China",
 			AWSClient: &AWSClient{
-				DNSSuffix: "amazonaws.com.cn",
+				dnsSuffix: "amazonaws.com.cn",
 				Region:    "cn-northwest-1", //lintignore:AWSAT003
 			},
 			Prefix:   "test",
@@ -79,7 +85,95 @@ func TestAWSClientRegionalHostname(t *testing.T) { // nosemgrep:ci.aws-in-func-n
 		t.Run(testCase.Name, func(t *testing.T) {
 			t.Parallel()
 
-			got := testCase.AWSClient.RegionalHostname(testCase.Prefix)
+			got := testCase.AWSClient.RegionalHostname(ctx, testCase.Prefix)
+
+			if got != testCase.Expected {
+				t.Errorf("got %s, expected %s", got, testCase.Expected)
+			}
+		})
+	}
+}
+
+func TestAWSClientEC2PrivateDNSNameForIP(t *testing.T) { // nosemgrep:ci.aws-in-func-name
+	t.Parallel()
+
+	ctx := context.TODO()
+	testCases := []struct {
+		Name      string
+		AWSClient *AWSClient
+		IP        string
+		Expected  string
+	}{
+		{
+			Name: "us-west-2",
+			AWSClient: &AWSClient{
+				dnsSuffix: "amazonaws.com",
+				Region:    "us-west-2", //lintignore:AWSAT003
+			},
+			IP:       "10.20.30.40",
+			Expected: "ip-10-20-30-40.us-west-2.compute.internal", //lintignore:AWSAT003
+		},
+		{
+			Name: "us-east-1",
+			AWSClient: &AWSClient{
+				dnsSuffix: "amazonaws.com",
+				Region:    "us-east-1", //lintignore:AWSAT003
+			},
+			IP:       "10.20.30.40",
+			Expected: "ip-10-20-30-40.ec2.internal",
+		},
+	}
+
+	for _, testCase := range testCases {
+		testCase := testCase
+		t.Run(testCase.Name, func(t *testing.T) {
+			t.Parallel()
+
+			got := testCase.AWSClient.EC2PrivateDNSNameForIP(ctx, testCase.IP)
+
+			if got != testCase.Expected {
+				t.Errorf("got %s, expected %s", got, testCase.Expected)
+			}
+		})
+	}
+}
+
+func TestAWSClientEC2PublicDNSNameForIP(t *testing.T) { // nosemgrep:ci.aws-in-func-name
+	t.Parallel()
+
+	ctx := context.TODO()
+	testCases := []struct {
+		Name      string
+		AWSClient *AWSClient
+		IP        string
+		Expected  string
+	}{
+		{
+			Name: "us-west-2",
+			AWSClient: &AWSClient{
+				dnsSuffix: "amazonaws.com",
+				Region:    "us-west-2", //lintignore:AWSAT003
+			},
+			IP:       "10.20.30.40",
+			Expected: "ec2-10-20-30-40.us-west-2.compute.amazonaws.com", //lintignore:AWSAT003
+		},
+		{
+			Name: "us-east-1",
+			AWSClient: &AWSClient{
+				dnsSuffix: "amazonaws.com",
+				Region:    "us-east-1", //lintignore:AWSAT003
+			},
+			IP:       "10.20.30.40",
+			Expected: "ec2-10-20-30-40.compute-1.amazonaws.com",
+		},
+	}
+
+	for _, testCase := range testCases {
+		testCase := testCase
+		t.Run(testCase.Name, func(t *testing.T) {
+			t.Parallel()
+
+			got := testCase.AWSClient.EC2PublicDNSNameForIP(ctx, testCase.IP)
 
 			if got != testCase.Expected {
 				t.Errorf("got %s, expected %s", got, testCase.Expected)

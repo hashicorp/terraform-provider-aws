@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker
 
 import (
@@ -8,13 +11,15 @@ import (
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_sagemaker_notebook_instance_lifecycle_configuration")
 func ResourceNotebookInstanceLifeCycleConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNotebookInstanceLifeCycleConfigurationCreate,
@@ -26,12 +31,12 @@ func ResourceNotebookInstanceLifeCycleConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -55,13 +60,13 @@ func ResourceNotebookInstanceLifeCycleConfiguration() *schema.Resource {
 
 func resourceNotebookInstanceLifeCycleConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	var name string
-	if v, ok := d.GetOk("name"); ok {
+	if v, ok := d.GetOk(names.AttrName); ok {
 		name = v.(string)
 	} else {
-		name = resource.UniqueId()
+		name = id.UniqueId()
 	}
 
 	createOpts := &sagemaker.CreateNotebookInstanceLifecycleConfigInput{
@@ -92,7 +97,7 @@ func resourceNotebookInstanceLifeCycleConfigurationCreate(ctx context.Context, d
 
 func resourceNotebookInstanceLifeCycleConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	request := &sagemaker.DescribeNotebookInstanceLifecycleConfigInput{
 		NotebookInstanceLifecycleConfigName: aws.String(d.Id()),
@@ -108,7 +113,7 @@ func resourceNotebookInstanceLifeCycleConfigurationRead(ctx context.Context, d *
 		return sdkdiag.AppendErrorf(diags, "reading SageMaker notebook instance lifecycle configuration %s: %s", d.Id(), err)
 	}
 
-	if err := d.Set("name", lifecycleConfig.NotebookInstanceLifecycleConfigName); err != nil {
+	if err := d.Set(names.AttrName, lifecycleConfig.NotebookInstanceLifecycleConfigName); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting name for SageMaker notebook instance lifecycle configuration (%s): %s", d.Id(), err)
 	}
 
@@ -124,7 +129,7 @@ func resourceNotebookInstanceLifeCycleConfigurationRead(ctx context.Context, d *
 		}
 	}
 
-	if err := d.Set("arn", lifecycleConfig.NotebookInstanceLifecycleConfigArn); err != nil {
+	if err := d.Set(names.AttrARN, lifecycleConfig.NotebookInstanceLifecycleConfigArn); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting arn for SageMaker notebook instance lifecycle configuration (%s): %s", d.Id(), err)
 	}
 
@@ -133,10 +138,10 @@ func resourceNotebookInstanceLifeCycleConfigurationRead(ctx context.Context, d *
 
 func resourceNotebookInstanceLifeCycleConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	updateOpts := &sagemaker.UpdateNotebookInstanceLifecycleConfigInput{
-		NotebookInstanceLifecycleConfigName: aws.String(d.Get("name").(string)),
+		NotebookInstanceLifecycleConfigName: aws.String(d.Get(names.AttrName).(string)),
 	}
 
 	if v, ok := d.GetOk("on_create"); ok {
@@ -158,7 +163,7 @@ func resourceNotebookInstanceLifeCycleConfigurationUpdate(ctx context.Context, d
 
 func resourceNotebookInstanceLifeCycleConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	deleteOpts := &sagemaker.DeleteNotebookInstanceLifecycleConfigInput{
 		NotebookInstanceLifecycleConfigName: aws.String(d.Id()),

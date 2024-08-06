@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package medialive_test
 
 import (
@@ -7,9 +10,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -30,11 +33,11 @@ func TestAccMediaLiveInput_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.MediaLiveEndpointID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccInputsPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInputDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -42,10 +45,10 @@ func TestAccMediaLiveInput_basic(t *testing.T) {
 				Config: testAccInputConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInputExists(ctx, resourceName, &input),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "input_class"),
-					resource.TestCheckResourceAttr(resourceName, "type", "UDP_PUSH"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "UDP_PUSH"),
 				),
 			},
 			{
@@ -70,11 +73,11 @@ func TestAccMediaLiveInput_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.MediaLiveEndpointID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccInputsPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInputDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -82,20 +85,20 @@ func TestAccMediaLiveInput_update(t *testing.T) {
 				Config: testAccInputConfig_basic(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInputExists(ctx, resourceName, &input),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName1),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 					resource.TestCheckResourceAttrSet(resourceName, "input_class"),
-					resource.TestCheckResourceAttr(resourceName, "type", "UDP_PUSH"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "UDP_PUSH"),
 				),
 			},
 			{
 				Config: testAccInputConfig_basic(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInputExists(ctx, resourceName, &input),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 					resource.TestCheckResourceAttrSet(resourceName, "input_class"),
-					resource.TestCheckResourceAttr(resourceName, "type", "UDP_PUSH"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "UDP_PUSH"),
 				),
 			},
 		},
@@ -114,37 +117,37 @@ func TestAccMediaLiveInput_updateTags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.MediaLiveEndpointID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccInputsPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInputDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInputConfig_tags1(rName, "key1", "value1"),
+				Config: testAccInputConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInputExists(ctx, resourceName, &input),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
-				Config: testAccInputConfig_tags2(rName, "key1", "value1", "key2", "value2"),
+				Config: testAccInputConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInputExists(ctx, resourceName, &input),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccInputConfig_tags1(rName, "key2", "value2"),
+				Config: testAccInputConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInputExists(ctx, resourceName, &input),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -163,11 +166,11 @@ func TestAccMediaLiveInput_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.MediaLiveEndpointID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccInputsPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInputDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -185,7 +188,7 @@ func TestAccMediaLiveInput_disappears(t *testing.T) {
 
 func testAccCheckInputDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_medialive_input" {
@@ -218,7 +221,7 @@ func testAccCheckInputExists(ctx context.Context, name string, input *medialive.
 			return create.Error(names.MediaLive, create.ErrActionCheckingExistence, tfmedialive.ResNameInput, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient(ctx)
 
 		resp, err := tfmedialive.FindInputByID(ctx, conn, rs.Primary.ID)
 
@@ -233,7 +236,7 @@ func testAccCheckInputExists(ctx context.Context, name string, input *medialive.
 }
 
 func testAccInputsPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient(ctx)
 
 	input := &medialive.ListInputsInput{}
 	_, err := conn.ListInputs(ctx, input)

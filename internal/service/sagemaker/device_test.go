@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker_test
 
 import (
@@ -7,13 +10,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSageMakerDevice_basic(t *testing.T) {
@@ -23,8 +27,8 @@ func TestAccSageMakerDevice_basic(t *testing.T) {
 	resourceName := "aws_sagemaker_device.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeviceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -33,8 +37,8 @@ func TestAccSageMakerDevice_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeviceExists(ctx, resourceName, &device),
 					resource.TestCheckResourceAttr(resourceName, "device_fleet_name", rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("device-fleet/%[1]s/device/%[1]s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "device.#", "1"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("device-fleet/%[1]s/device/%[1]s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "device.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "device.0.device_name", rName),
 				),
 			},
@@ -54,8 +58,8 @@ func TestAccSageMakerDevice_description(t *testing.T) {
 	resourceName := "aws_sagemaker_device.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeviceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -89,8 +93,8 @@ func TestAccSageMakerDevice_disappears(t *testing.T) {
 	resourceName := "aws_sagemaker_device.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeviceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -114,8 +118,8 @@ func TestAccSageMakerDevice_disappears_fleet(t *testing.T) {
 	resourceName := "aws_sagemaker_device.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeviceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -134,7 +138,7 @@ func TestAccSageMakerDevice_disappears_fleet(t *testing.T) {
 
 func testAccCheckDeviceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sagemaker_device" {
@@ -180,7 +184,7 @@ func testAccCheckDeviceExists(ctx context.Context, n string, device *sagemaker.D
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
 		resp, err := tfsagemaker.FindDeviceByName(ctx, conn, deviceFleetName, deviceName)
 		if err != nil {
 			return err
@@ -197,11 +201,6 @@ func testAccDeviceBaseConfig(rName string) string {
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 data "aws_partition" "current" {}

@@ -34,7 +34,7 @@ resource "aws_elastictranscoder_pipeline" "bar" {
 
 See ["Create Pipeline"](http://docs.aws.amazon.com/elastictranscoder/latest/developerguide/create-pipeline.html) in the AWS docs for reference.
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `aws_kms_key_arn` - (Optional) The AWS Key Management Service (AWS KMS) key that you want to use with this pipeline.
 * `content_config` - (Optional) The ContentConfig object specifies information about the Amazon S3 bucket in which you want Elastic Transcoder to save transcoded files and playlists. (documented below)
@@ -93,17 +93,26 @@ The `thumbnail_config_permissions` object supports the following:
 * `grantee` - The AWS user or group that you want to have access to thumbnail files.
 * `grantee_type` - Specify the type of value that appears in the `thumbnail_config_permissions.grantee` object. Valid values are `Canonical`, `Email` or `Group`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the Elastictranscoder pipeline.
 * `arn` - The ARN of the Elastictranscoder pipeline.
 
 ## Import
 
-Elastic Transcoder pipelines can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Elastic Transcoder pipelines using the `id`. For example:
 
+```terraform
+import {
+  to = aws_elastictranscoder_pipeline.basic_pipeline
+  id = "1407981661351-cttk8b"
+}
 ```
-$ terraform import aws_elastictranscoder_pipeline.basic_pipeline 1407981661351-cttk8b
+
+Using `terraform import`, import Elastic Transcoder pipelines using the `id`. For example:
+
+```console
+% terraform import aws_elastictranscoder_pipeline.basic_pipeline 1407981661351-cttk8b
 ```

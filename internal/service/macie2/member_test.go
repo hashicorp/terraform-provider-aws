@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package macie2_test
 
 import (
@@ -8,12 +11,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/macie2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
 	tfmacie2 "github.com/hashicorp/terraform-provider-aws/internal/service/macie2"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -33,12 +37,12 @@ func testAccMember_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckMemberDestroy(ctx),
-		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Macie2ServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemberConfig_basic(acctest.DefaultEmailAddress),
@@ -47,10 +51,10 @@ func testAccMember_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "relationship_status", macie2.RelationshipStatusCreated),
 					acctest.CheckResourceAttrAccountID(resourceName, "administrator_account_id"),
 					acctest.CheckResourceAttrAccountID(resourceName, "master_account_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceAlternate, "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAccountID, dataSourceAlternate, names.AttrAccountID),
 					acctest.CheckResourceAttrRFC3339(resourceName, "invited_at"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "updated_at"),
-					resource.TestCheckResourceAttr(resourceName, "status", macie2.MacieStatusEnabled),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, macie2.MacieStatusEnabled),
 				),
 			},
 			{
@@ -70,12 +74,12 @@ func testAccMember_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckMemberDestroy(ctx),
-		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Macie2ServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemberConfig_basic(acctest.DefaultEmailAddress),
@@ -97,27 +101,27 @@ func testAccMember_invitationDisableEmailNotification(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckInvitationAccepterDestroy(ctx),
-		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Macie2ServiceID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMemberConfig_inviteInvitationDisableEmailNotification(email, "true", true),
+				Config: testAccMemberConfig_inviteInvitationDisableEmailNotification(email, acctest.CtTrue, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(ctx, resourceName, &macie2Output),
 				),
 			},
 			{
-				Config: testAccMemberConfig_inviteInvitationDisableEmailNotification(email, "false", false),
+				Config: testAccMemberConfig_inviteInvitationDisableEmailNotification(email, acctest.CtFalse, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(ctx, resourceName, &macie2Output),
 				),
 			},
 			{
-				Config:            testAccMemberConfig_inviteInvitationDisableEmailNotification(email, "false", false),
+				Config:            testAccMemberConfig_inviteInvitationDisableEmailNotification(email, acctest.CtFalse, false),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -139,25 +143,25 @@ func testAccMember_invite(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckInvitationAccepterDestroy(ctx),
-		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Macie2ServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemberConfig_invite(email, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(ctx, resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "relationship_status", macie2.RelationshipStatusCreated),
-					resource.TestCheckResourceAttr(resourceName, "invite", "false"),
+					resource.TestCheckResourceAttr(resourceName, "invite", acctest.CtFalse),
 					acctest.CheckResourceAttrAccountID(resourceName, "administrator_account_id"),
 					acctest.CheckResourceAttrAccountID(resourceName, "master_account_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceAlternate, "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAccountID, dataSourceAlternate, names.AttrAccountID),
 					acctest.CheckResourceAttrRFC3339(resourceName, "invited_at"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "updated_at"),
-					resource.TestCheckResourceAttr(resourceName, "status", macie2.MacieStatusEnabled),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, macie2.MacieStatusEnabled),
 				),
 			},
 			{
@@ -165,13 +169,13 @@ func testAccMember_invite(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(ctx, resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "relationship_status", macie2.RelationshipStatusInvited),
-					resource.TestCheckResourceAttr(resourceName, "invite", "true"),
+					resource.TestCheckResourceAttr(resourceName, "invite", acctest.CtTrue),
 					acctest.CheckResourceAttrAccountID(resourceName, "administrator_account_id"),
 					acctest.CheckResourceAttrAccountID(resourceName, "master_account_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceAlternate, "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAccountID, dataSourceAlternate, names.AttrAccountID),
 					acctest.CheckResourceAttrRFC3339(resourceName, "invited_at"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "updated_at"),
-					resource.TestCheckResourceAttr(resourceName, "status", macie2.MacieStatusEnabled),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, macie2.MacieStatusEnabled),
 				),
 			},
 			{
@@ -194,25 +198,25 @@ func testAccMember_inviteRemoved(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckInvitationAccepterDestroy(ctx),
-		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Macie2ServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemberConfig_invite(email, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(ctx, resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "relationship_status", macie2.RelationshipStatusInvited),
-					resource.TestCheckResourceAttr(resourceName, "invite", "true"),
+					resource.TestCheckResourceAttr(resourceName, "invite", acctest.CtTrue),
 					acctest.CheckResourceAttrAccountID(resourceName, "administrator_account_id"),
 					acctest.CheckResourceAttrAccountID(resourceName, "master_account_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceAlternate, "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAccountID, dataSourceAlternate, names.AttrAccountID),
 					acctest.CheckResourceAttrRFC3339(resourceName, "invited_at"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "updated_at"),
-					resource.TestCheckResourceAttr(resourceName, "status", macie2.MacieStatusEnabled),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, macie2.MacieStatusEnabled),
 				),
 			},
 			{
@@ -220,13 +224,13 @@ func testAccMember_inviteRemoved(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(ctx, resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "relationship_status", macie2.RelationshipStatusRemoved),
-					resource.TestCheckResourceAttr(resourceName, "invite", "false"),
+					resource.TestCheckResourceAttr(resourceName, "invite", acctest.CtFalse),
 					acctest.CheckResourceAttrAccountID(resourceName, "administrator_account_id"),
 					acctest.CheckResourceAttrAccountID(resourceName, "master_account_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceAlternate, "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAccountID, dataSourceAlternate, names.AttrAccountID),
 					acctest.CheckResourceAttrRFC3339(resourceName, "invited_at"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "updated_at"),
-					resource.TestCheckResourceAttr(resourceName, "status", macie2.MacieStatusEnabled),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, macie2.MacieStatusEnabled),
 				),
 			},
 			{
@@ -249,25 +253,25 @@ func testAccMember_status(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckInvitationAccepterDestroy(ctx),
-		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Macie2ServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemberConfig_status(email, macie2.MacieStatusEnabled, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(ctx, resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "relationship_status", macie2.RelationshipStatusInvited),
-					resource.TestCheckResourceAttr(resourceName, "invite", "true"),
+					resource.TestCheckResourceAttr(resourceName, "invite", acctest.CtTrue),
 					acctest.CheckResourceAttrAccountID(resourceName, "administrator_account_id"),
 					acctest.CheckResourceAttrAccountID(resourceName, "master_account_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceAlternate, "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAccountID, dataSourceAlternate, names.AttrAccountID),
 					acctest.CheckResourceAttrRFC3339(resourceName, "invited_at"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "updated_at"),
-					resource.TestCheckResourceAttr(resourceName, "status", macie2.MacieStatusEnabled),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, macie2.MacieStatusEnabled),
 				),
 			},
 			{
@@ -275,13 +279,13 @@ func testAccMember_status(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(ctx, resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "relationship_status", macie2.RelationshipStatusPaused),
-					resource.TestCheckResourceAttr(resourceName, "invite", "true"),
+					resource.TestCheckResourceAttr(resourceName, "invite", acctest.CtTrue),
 					acctest.CheckResourceAttrAccountID(resourceName, "administrator_account_id"),
 					acctest.CheckResourceAttrAccountID(resourceName, "master_account_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceAlternate, "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAccountID, dataSourceAlternate, names.AttrAccountID),
 					acctest.CheckResourceAttrRFC3339(resourceName, "invited_at"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "updated_at"),
-					resource.TestCheckResourceAttr(resourceName, "status", macie2.MacieStatusPaused),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, macie2.MacieStatusPaused),
 				),
 			},
 			{
@@ -303,12 +307,12 @@ func testAccMember_withTags(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckMemberDestroy(ctx),
-		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Macie2ServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemberConfig_tags(acctest.DefaultEmailAddress),
@@ -316,13 +320,13 @@ func testAccMember_withTags(t *testing.T) {
 					testAccCheckMemberExists(ctx, resourceName, &macie2Output),
 					acctest.CheckResourceAttrRFC3339(resourceName, "invited_at"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "updated_at"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key", "value"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.Key", "value"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key", names.AttrValue),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.Key", names.AttrValue),
 					acctest.CheckResourceAttrAccountID(resourceName, "administrator_account_id"),
 					acctest.CheckResourceAttrAccountID(resourceName, "master_account_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceAlternate, "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAccountID, dataSourceAlternate, names.AttrAccountID),
 				),
 			},
 			{
@@ -341,7 +345,7 @@ func testAccCheckMemberExists(ctx context.Context, resourceName string, macie2Se
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn(ctx)
 		input := &macie2.GetMemberInput{Id: aws.String(rs.Primary.ID)}
 
 		resp, err := conn.GetMemberWithContext(ctx, input)
@@ -362,7 +366,7 @@ func testAccCheckMemberExists(ctx context.Context, resourceName string, macie2Se
 
 func testAccCheckMemberDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_macie2_member" {

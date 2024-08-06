@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package acctest
 
 import (
@@ -17,17 +20,15 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/request"
 	cleanhttp "github.com/hashicorp/go-cleanhttp"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	"gopkg.in/dnaeon/go-vcr.v3/cassette"
 	"gopkg.in/dnaeon/go-vcr.v3/recorder"
@@ -77,7 +78,9 @@ var (
 )
 
 // ProviderMeta returns the current provider's state (AKA "meta" or "conns.AWSClient").
-func ProviderMeta(t *testing.T) *conns.AWSClient {
+func ProviderMeta(_ context.Context, t *testing.T) *conns.AWSClient {
+	t.Helper()
+
 	providerMetas.Lock()
 	meta, ok := providerMetas[t.Name()]
 	defer providerMetas.Unlock()
@@ -105,12 +108,14 @@ func vcrMode() (recorder.Mode, error) {
 }
 
 // vcrEnabledProtoV5ProviderFactories returns ProtoV5ProviderFactories ready for use with VCR.
-func vcrEnabledProtoV5ProviderFactories(t *testing.T, input map[string]func() (tfprotov5.ProviderServer, error)) map[string]func() (tfprotov5.ProviderServer, error) {
+func vcrEnabledProtoV5ProviderFactories(ctx context.Context, t *testing.T, input map[string]func() (tfprotov5.ProviderServer, error)) map[string]func() (tfprotov5.ProviderServer, error) {
+	t.Helper()
+
 	output := make(map[string]func() (tfprotov5.ProviderServer, error), len(input))
 
 	for name := range input {
 		output[name] = func() (tfprotov5.ProviderServer, error) {
-			providerServerFactory, primary, err := provider.ProtoV5ProviderServerFactory(context.Background())
+			providerServerFactory, primary, err := provider.ProtoV5ProviderServerFactory(ctx)
 
 			if err != nil {
 				return nil, err
@@ -130,6 +135,8 @@ func vcrEnabledProtoV5ProviderFactories(t *testing.T, input map[string]func() (t
 // VCR requires a single HTTP client to handle all interactions.
 func vcrProviderConfigureContextFunc(provider *schema.Provider, configureContextFunc schema.ConfigureContextFunc, testName string) schema.ConfigureContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+		var diags diag.Diagnostics
+
 		providerMetas.Lock()
 		meta, ok := providerMetas[testName]
 		defer providerMetas.Unlock()
@@ -141,7 +148,7 @@ func vcrProviderConfigureContextFunc(provider *schema.Provider, configureContext
 		vcrMode, err := vcrMode()
 
 		if err != nil {
-			return nil, diag.FromErr(err)
+			return nil, sdkdiag.AppendFromErr(diags, err)
 		}
 
 		// Cribbed from aws-sdk-go-base.
@@ -165,7 +172,7 @@ func vcrProviderConfigureContextFunc(provider *schema.Provider, configureContext
 		})
 
 		if err != nil {
-			return nil, diag.FromErr(err)
+			return nil, sdkdiag.AppendFromErr(diags, err)
 		}
 
 		// Remove sensitive HTTP headers.
@@ -257,11 +264,11 @@ func vcrProviderConfigureContextFunc(provider *schema.Provider, configureContext
 		} else {
 			meta = new(conns.AWSClient)
 		}
-		meta.SetHTTPClient(httpClient)
+		meta.SetHTTPClient(ctx, httpClient)
 		provider.SetMeta(meta)
 
-		if v, diags := configureContextFunc(ctx, d); diags.HasError() {
-			return nil, diags
+		if v, ds := configureContextFunc(ctx, d); ds.HasError() {
+			return nil, append(diags, ds...)
 		} else {
 			meta = v.(*conns.AWSClient)
 		}
@@ -270,16 +277,16 @@ func vcrProviderConfigureContextFunc(provider *schema.Provider, configureContext
 		// TODO Need to loop through all API clients to do this.
 		// TODO Use []*client.Client?
 		// TODO AWS SDK for Go v2 API clients.
-		meta.LogsConn().Handlers.AfterRetry.PushFront(func(r *request.Request) {
-			// We have to use 'Contains' rather than 'errors.Is' because 'awserr.Error' doesn't implement 'Unwrap'.
-			if errs.Contains(r.Error, cassette.ErrInteractionNotFound.Error()) {
-				r.Retryable = aws.Bool(false)
-			}
-		})
+		// meta.LogsConn(ctx).Handlers.AfterRetry.PushFront(func(r *request.Request) {
+		// 	// We have to use 'Contains' rather than 'errors.Is' because 'awserr.Error' doesn't implement 'Unwrap'.
+		// 	if errs.Contains(r.Error, cassette.ErrInteractionNotFound.Error()) {
+		// 		r.Retryable = aws.Bool(false)
+		// 	}
+		// })
 
 		providerMetas[testName] = meta
 
-		return meta, nil
+		return meta, diags
 	}
 }
 
@@ -287,6 +294,8 @@ func vcrProviderConfigureContextFunc(provider *schema.Provider, configureContext
 // In RECORDING mode, generates a new seed and saves it to a file, using the seed for the source.
 // In REPLAYING mode, reads a seed from a file and creates a source from it.
 func vcrRandomnessSource(t *testing.T) (*randomnessSource, error) {
+	t.Helper()
+
 	testName := t.Name()
 
 	randomnessSources.Lock()
@@ -374,7 +383,9 @@ func writeSeedToFile(seed int64, fileName string) error {
 }
 
 // closeVCRRecorder closes the VCR recorder, saving the cassette and randomness seed.
-func closeVCRRecorder(t *testing.T) {
+func closeVCRRecorder(ctx context.Context, t *testing.T) {
+	t.Helper()
+
 	// Don't close the recorder if we're running because of a panic.
 	if p := recover(); p != nil {
 		panic(p)
@@ -387,7 +398,7 @@ func closeVCRRecorder(t *testing.T) {
 
 	if ok {
 		if !t.Failed() {
-			if v, ok := meta.HTTPClient().Transport.(*recorder.Recorder); ok {
+			if v, ok := meta.HTTPClient(ctx).Transport.(*recorder.Recorder); ok {
 				t.Log("stopping VCR recorder")
 				if err := v.Stop(); err != nil {
 					t.Error(err)
@@ -416,20 +427,24 @@ func closeVCRRecorder(t *testing.T) {
 }
 
 // ParallelTest wraps resource.ParallelTest, initializing VCR if enabled.
-func ParallelTest(t *testing.T, c resource.TestCase) {
+func ParallelTest(ctx context.Context, t *testing.T, c resource.TestCase) {
+	t.Helper()
+
 	if isVCREnabled() {
-		c.ProtoV5ProviderFactories = vcrEnabledProtoV5ProviderFactories(t, c.ProtoV5ProviderFactories)
-		defer closeVCRRecorder(t)
+		c.ProtoV5ProviderFactories = vcrEnabledProtoV5ProviderFactories(ctx, t, c.ProtoV5ProviderFactories)
+		defer closeVCRRecorder(ctx, t)
 	}
 
 	resource.ParallelTest(t, c)
 }
 
 // Test wraps resource.Test, initializing VCR if enabled.
-func Test(t *testing.T, c resource.TestCase) {
+func Test(ctx context.Context, t *testing.T, c resource.TestCase) {
+	t.Helper()
+
 	if isVCREnabled() {
-		c.ProtoV5ProviderFactories = vcrEnabledProtoV5ProviderFactories(t, c.ProtoV5ProviderFactories)
-		defer closeVCRRecorder(t)
+		c.ProtoV5ProviderFactories = vcrEnabledProtoV5ProviderFactories(ctx, t, c.ProtoV5ProviderFactories)
+		defer closeVCRRecorder(ctx, t)
 	}
 
 	resource.Test(t, c)
@@ -437,6 +452,8 @@ func Test(t *testing.T, c resource.TestCase) {
 
 // RandInt is a VCR-friendly replacement for acctest.RandInt.
 func RandInt(t *testing.T) int {
+	t.Helper()
+
 	if !isVCREnabled() {
 		return sdkacctest.RandInt()
 	}
@@ -452,5 +469,7 @@ func RandInt(t *testing.T) int {
 
 // RandomWithPrefix is a VCR-friendly replacement for acctest.RandomWithPrefix.
 func RandomWithPrefix(t *testing.T, prefix string) string {
+	t.Helper()
+
 	return fmt.Sprintf("%s-%d", prefix, RandInt(t))
 }

@@ -1,10 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package resource
 
 import (
 	"context"
 	"fmt"
 
-	"github.com/davecgh/go-spew/spew"
 	tfjson "github.com/hashicorp/terraform-json"
 	"github.com/mitchellh/go-testing-interface"
 
@@ -15,9 +17,6 @@ import (
 
 func testStepNewRefreshState(ctx context.Context, t testing.T, wd *plugintest.WorkingDir, step TestStep, providers *providerFactories) error {
 	t.Helper()
-
-	spewConf := spew.NewDefaultConfig()
-	spewConf.SortKeys = true
 
 	var err error
 	// Explicitly ensure prior state exists before refresh.

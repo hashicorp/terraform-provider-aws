@@ -14,9 +14,7 @@ Provides an AWS App Mesh virtual router resource.
 
 Because of backward incompatible API changes (read [here](https://github.com/awslabs/aws-app-mesh-examples/issues/92) and [here](https://github.com/awslabs/aws-app-mesh-examples/issues/94)), `aws_appmesh_virtual_router` resource definitions created with provider versions earlier than v2.3.0 will need to be modified:
 
-* Remove service `service_names` from the `spec` argument.
-AWS has created a `aws_appmesh_virtual_service` resource for each of service names.
-These resource can be imported using `terraform import`.
+* Remove service `service_names` from the `spec` argument. AWS has created a `aws_appmesh_virtual_service` resource for each service name. Import these resource using `terraform import`.
 
 * Add a `listener` configuration block to the `spec` argument.
 
@@ -42,7 +40,7 @@ resource "aws_appmesh_virtual_router" "serviceb" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Name to use for the virtual router. Must be between 1 and 255 characters in length.
 * `mesh_name` - (Required) Name of the service mesh in which to create the virtual router. Must be between 1 and 255 characters in length.
@@ -52,7 +50,7 @@ The following arguments are supported:
 
 The `spec` object supports the following:
 
-* `listener` - (Required) Listeners that the virtual router is expected to receive inbound traffic from.
+* `listener` - (Optional) Listeners that the virtual router is expected to receive inbound traffic from.
 Currently only one listener is supported per virtual router.
 
 The `listener` object supports the following:
@@ -64,9 +62,9 @@ The `port_mapping` object supports the following:
 * `port` - (Required) Port used for the port mapping.
 * `protocol` - (Required) Protocol used for the port mapping. Valid values are `http`,`http2`, `tcp` and `grpc`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the virtual router.
 * `arn` - ARN of the virtual router.
@@ -77,11 +75,19 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-App Mesh virtual routers can be imported using `mesh_name` together with the virtual router's `name`,
-e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import App Mesh virtual routers using `mesh_name` together with the virtual router's `name`. For example:
 
+```terraform
+import {
+  to = aws_appmesh_virtual_router.serviceb
+  id = "simpleapp/serviceB"
+}
 ```
-$ terraform import aws_appmesh_virtual_router.serviceb simpleapp/serviceB
+
+Using `terraform import`, import App Mesh virtual routers using `mesh_name` together with the virtual router's `name`. For example:
+
+```console
+% terraform import aws_appmesh_virtual_router.serviceb simpleapp/serviceB
 ```
 
 [1]: /docs/providers/aws/index.html
