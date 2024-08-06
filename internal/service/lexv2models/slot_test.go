@@ -502,7 +502,7 @@ resource "aws_lexv2models_slot" "test" {
             }
 
             text_input_specification {
-             start_timeout_ms = 30000
+              start_timeout_ms = 30000
             }
           }
         }
