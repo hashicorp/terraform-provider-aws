@@ -18,9 +18,13 @@ resource "aws_datazone_glossary_term" "test" {
   domain_identifier   = aws_datazone_domain.test.id
   glossary_identifier = aws_datazone_glossary.test.id
   long_description    = "long_description"
-  name                = "example_name"
+  name                = %[1]q
   short_description   = "short_desc"
   status              = "ENABLED"
+  term_relations {
+    classifies = ["id of other glossary term"]
+	  is_a = ["id of other glossary term"]
+  }
 }
 ```
 

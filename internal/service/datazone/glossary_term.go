@@ -9,14 +9,18 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/datazone"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/datazone/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -53,9 +57,15 @@ func (r *resourceGlossaryTerm) Schema(ctx context.Context, req resource.SchemaRe
 		Attributes: map[string]schema.Attribute{
 			"domain_identifier": schema.StringAttribute{
 				Optional: true,
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(regexache.MustCompile(`^dzd[-_][a-zA-Z0-9_-]{1,36}$`), "must conform to: ^dzd[-_][a-zA-Z0-9_-]{1,36}$ "),
+				},
 			},
 			"glossary_identifier": schema.StringAttribute{
 				Required: true,
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9_-]{1,36}$`), "must conform to: ^[a-zA-Z0-9_-]{1,36}$"),
+				},
 			},
 			names.AttrID: framework.IDAttribute(),
 			"long_description": schema.StringAttribute{
@@ -63,6 +73,9 @@ func (r *resourceGlossaryTerm) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			names.AttrName: schema.StringAttribute{
 				Required: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 256),
+				},
 			},
 			"short_description": schema.StringAttribute{
 				Optional: true,
@@ -89,17 +102,26 @@ func (r *resourceGlossaryTerm) Schema(ctx context.Context, req resource.SchemaRe
 		Blocks: map[string]schema.Block{
 			"term_relations": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[resourceTermRelationsData](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"classifies": schema.ListAttribute{
 							CustomType:  fwtypes.ListOfStringType,
 							ElementType: types.StringType,
 							Optional:    true,
+							Validators: []validator.List{
+								listvalidator.SizeBetween(1, 10),
+							},
 						},
 						"is_a": schema.ListAttribute{
 							CustomType:  fwtypes.ListOfStringType,
 							ElementType: types.StringType,
 							Optional:    true,
+							Validators: []validator.List{
+								listvalidator.SizeBetween(1, 10),
+							},
 						},
 					},
 				},
@@ -119,7 +141,6 @@ func (r *resourceGlossaryTerm) Create(ctx context.Context, req resource.CreateRe
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
 	in := &datazone.CreateGlossaryTermInput{}
 	resp.Diagnostics.Append(flex.Expand(ctx, &plan, in)...)
 	if resp.Diagnostics.HasError() {
@@ -166,7 +187,6 @@ func (r *resourceGlossaryTerm) Create(ctx context.Context, req resource.CreateRe
 
 func (r *resourceGlossaryTerm) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
-
 	var state resourceGlossaryTermData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
