@@ -1012,7 +1012,7 @@ func TestAccS3BucketLifecycleConfiguration_migrate_withChange(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/23884
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/23884, https://github.com/hashicorp/terraform-provider-aws/issues/38551
 func TestAccS3BucketLifecycleConfiguration_Update_filterWithAndToFilterWithPrefix(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1025,13 +1025,24 @@ func TestAccS3BucketLifecycleConfiguration_Update_filterWithAndToFilterWithPrefi
 		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketLifecycleConfigurationConfig_filterObjectSizeGreaterThanAndPrefix(rName, "prefix1"),
+				Config: testAccBucketLifecycleConfigurationConfig_filterObjectSizeGreaterThanAndPrefix(rName, "prefix1", 300),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.0.and.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.0.and.0.object_size_greater_than", "300"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.0.and.0.prefix", "prefix1"),
+				),
+			},
+			{
+				Config: testAccBucketLifecycleConfigurationConfig_filterObjectSizeGreaterThanAndPrefix(rName, "prefix1", 0),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.0.and.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.0.and.0.object_size_greater_than", "0"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.0.and.0.prefix", "prefix1"),
 				),
 			},
@@ -1677,7 +1688,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "test" {
 `, rName, date, sizeGreaterThan, sizeLessThan)
 }
 
-func testAccBucketLifecycleConfigurationConfig_filterObjectSizeGreaterThanAndPrefix(rName, prefix string) string {
+func testAccBucketLifecycleConfigurationConfig_filterObjectSizeGreaterThanAndPrefix(rName, prefix string, sizeGreaterThan int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -1695,14 +1706,14 @@ resource "aws_s3_bucket_lifecycle_configuration" "test" {
 
     filter {
       and {
-        object_size_greater_than = 300
+        object_size_greater_than = %[3]d
         prefix                   = %[2]q
       }
     }
 
     status = "Enabled"
   }
-}`, rName, prefix)
+}`, rName, prefix, sizeGreaterThan)
 }
 
 func testAccBucketLifecycleConfigurationConfig_filterPrefix(rName, prefix string) string {

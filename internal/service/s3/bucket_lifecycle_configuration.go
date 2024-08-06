@@ -120,14 +120,14 @@ func resourceBucketLifecycleConfiguration() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"object_size_greater_than": {
-													Type:         schema.TypeInt,
+													Type:         nullable.TypeNullableInt,
 													Optional:     true,
-													ValidateFunc: validation.IntAtLeast(0),
+													ValidateFunc: nullable.ValidateTypeStringNullableIntAtLeast(0),
 												},
 												"object_size_less_than": {
-													Type:         schema.TypeInt,
+													Type:         nullable.TypeNullableInt,
 													Optional:     true,
-													ValidateFunc: validation.IntAtLeast(1),
+													ValidateFunc: nullable.ValidateTypeStringNullableIntAtLeast(1),
 												},
 												names.AttrPrefix: {
 													Type:     schema.TypeString,
@@ -711,12 +711,12 @@ func expandLifecycleRuleFilterMemberAnd(ctx context.Context, m map[string]interf
 		Value: types.LifecycleRuleAndOperator{},
 	}
 
-	if v, ok := m["object_size_greater_than"].(int); ok && v > 0 {
-		result.Value.ObjectSizeGreaterThan = aws.Int64(int64(v))
+	if v, null, _ := nullable.Int(m["object_size_greater_than"].(string)).ValueInt64(); !null {
+		result.Value.ObjectSizeGreaterThan = aws.Int64(v)
 	}
 
-	if v, ok := m["object_size_less_than"].(int); ok && v > 0 {
-		result.Value.ObjectSizeLessThan = aws.Int64(int64(v))
+	if v, null, _ := nullable.Int(m["object_size_less_than"].(string)).ValueInt64(); !null {
+		result.Value.ObjectSizeLessThan = aws.Int64(v)
 	}
 
 	if v, ok := m[names.AttrPrefix].(string); ok {
@@ -959,9 +959,14 @@ func flattenLifecycleRuleFilterMemberAnd(ctx context.Context, andOp *types.Lifec
 		return []interface{}{}
 	}
 
-	m := map[string]interface{}{
-		"object_size_greater_than": andOp.Value.ObjectSizeGreaterThan,
-		"object_size_less_than":    andOp.Value.ObjectSizeLessThan,
+	m := map[string]interface{}{}
+
+	if andOp.Value.ObjectSizeGreaterThan != nil {
+		m["object_size_greater_than"] = strconv.FormatInt(*andOp.Value.ObjectSizeGreaterThan, 10)
+	}
+
+	if andOp.Value.ObjectSizeLessThan != nil {
+		m["object_size_less_than"] = strconv.FormatInt(*andOp.Value.ObjectSizeLessThan, 10)
 	}
 
 	if v := andOp.Value.Prefix; v != nil {
