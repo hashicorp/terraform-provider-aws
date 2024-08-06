@@ -109,7 +109,7 @@ resource "aws_datazone_environment_profile" "test" {
 
 The following arguments are required:
 
-* `aws_account_Id` - (Required) -  Id of the AWS account being used. Must follow regex of ^\d{12}$.
+* `aws_account_id` - (Required) -  Id of the AWS account being used. Must follow regex of ^\d{12}$.
 * `aws_account_region` - (Required) -  Desired region for environment profile. Must follow regex of ^[a-z]{2}-[a-z]{4,10}-\d$.
 * `domain_identifier` - (Required) -  Domain Identifier for environment profile.
 * `name` - (Required) -  Name of the environment profile. Must follow regex of ^[\w -]+$ and have the length between 1 and 64.
