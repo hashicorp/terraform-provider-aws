@@ -26,6 +26,7 @@ var (
 	TagOptionResourceAssociationParseID = tagOptionResourceAssociationParseID
 
 	AcceptLanguageEnglish = acceptLanguageEnglish
+	StatusCreated         = statusCreated
 
 	WaitBudgetResourceAssociationDeleted    = waitBudgetResourceAssociationDeleted
 	WaitBudgetResourceAssociationReady      = waitBudgetResourceAssociationReady
