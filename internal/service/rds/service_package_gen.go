@@ -228,8 +228,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceClusterActivityStream,
+			Factory:  resourceClusterActivityStream,
 			TypeName: "aws_rds_cluster_activity_stream",
+			Name:     "Cluster Activity Stream",
 		},
 		{
 			Factory:  resourceClusterEndpoint,

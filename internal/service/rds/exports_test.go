@@ -7,6 +7,7 @@ package rds
 var (
 	ResourceCertificate                         = resourceCertificate
 	ResourceCluster                             = resourceCluster
+	ResourceClusterActivityStream               = resourceClusterActivityStream
 	ResourceClusterEndpoint                     = resourceClusterEndpoint
 	ResourceClusterParameterGroup               = resourceClusterParameterGroup
 	ResourceClusterRoleAssociation              = resourceClusterRoleAssociation
@@ -34,6 +35,7 @@ var (
 	FindDBClusterParameterGroupByName          = findDBClusterParameterGroupByName
 	FindDBClusterRoleByTwoPartKey              = findDBClusterRoleByTwoPartKey
 	FindDBClusterSnapshotByID                  = findDBClusterSnapshotByID
+	FindDBClusterWithActivityStream            = findDBClusterWithActivityStream
 	FindDBInstanceAutomatedBackupByARN         = findDBInstanceAutomatedBackupByARN
 	FindDBInstanceByID                         = findDBInstanceByIDSDKv1
 	FindDBInstanceRoleByTwoPartKey             = findDBInstanceRoleByTwoPartKey
