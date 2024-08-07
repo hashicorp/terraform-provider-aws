@@ -46,7 +46,7 @@ type resourceFormType struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
 	framework.WithTimeouts
-	framework.WithNoOpUpdate[resourceFormTypeData]
+	framework.WithNoUpdate
 }
 
 func (r *resourceFormType) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
