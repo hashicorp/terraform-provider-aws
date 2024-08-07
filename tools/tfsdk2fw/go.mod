@@ -218,6 +218,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry v1.28.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/servicediscovery v1.31.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/servicequotas v1.23.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ses v1.25.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.32.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sfn v1.30.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/shield v1.27.3 // indirect
@@ -280,7 +281,7 @@ require (
 	github.com/hashicorp/logutils v1.0.0 // indirect
 	github.com/hashicorp/terraform-exec v0.21.0 // indirect
 	github.com/hashicorp/terraform-json v0.22.1 // indirect
-	github.com/hashicorp/terraform-plugin-framework v1.10.0 // indirect
+	github.com/hashicorp/terraform-plugin-framework v1.11.0 // indirect
 	github.com/hashicorp/terraform-plugin-framework-jsontypes v0.1.0 // indirect
 	github.com/hashicorp/terraform-plugin-framework-timeouts v0.4.1 // indirect
 	github.com/hashicorp/terraform-plugin-framework-timetypes v0.4.0 // indirect
