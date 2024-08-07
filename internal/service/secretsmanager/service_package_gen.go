@@ -15,7 +15,12 @@ import (
 type servicePackage struct{}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{}
+	return []*types.ServicePackageFrameworkDataSource{
+		{
+			Factory: newDataSourceSecretVersions,
+			Name:    "Secret Versions",
+		},
+	}
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
@@ -46,11 +51,6 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  dataSourceSecretVersion,
 			TypeName: "aws_secretsmanager_secret_version",
 			Name:     "Secret Version",
-		},
-		{
-			Factory:  dataSourceSecretVersions,
-			TypeName: "aws_secretsmanager_secret_versions",
-			Name:     "Secret Versions",
 		},
 		{
 			Factory:  dataSourceSecrets,
