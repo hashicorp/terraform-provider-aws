@@ -39,6 +39,29 @@ func TestAccDirectConnectConnectionAssociation_basic(t *testing.T) {
 	})
 }
 
+func TestAccDirectConnectConnectionAssociation_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_dx_connection_association.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConnectionAssociationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConnectionAssociationConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConnectionAssociationExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdirectconnect.ResourceConnectionAssociation(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccDirectConnectConnectionAssociation_lagOnConnection(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dx_connection_association.test"
