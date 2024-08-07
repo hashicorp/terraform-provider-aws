@@ -5,7 +5,6 @@ package directconnect
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
@@ -22,18 +21,6 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
-
-func virtualInterfaceRead(ctx context.Context, id string, conn *directconnect.Client) (*awstypes.VirtualInterface, error) {
-	resp, state, err := virtualInterfaceStateRefresh(ctx, conn, id)()
-	if err != nil {
-		return nil, fmt.Errorf("reading Direct Connect virtual interface (%s): %s", id, err)
-	}
-	if state == string(awstypes.VirtualInterfaceStateDeleted) {
-		return nil, nil
-	}
-
-	return resp.(*awstypes.VirtualInterface), nil
-}
 
 func virtualInterfaceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
@@ -90,46 +77,6 @@ func virtualInterfaceDelete(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	return diags
-}
-
-func virtualInterfaceStateRefresh(ctx context.Context, conn *directconnect.Client, vifId string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		resp, err := conn.DescribeVirtualInterfaces(ctx, &directconnect.DescribeVirtualInterfacesInput{
-			VirtualInterfaceId: aws.String(vifId),
-		})
-		if err != nil {
-			return nil, "", err
-		}
-
-		n := len(resp.VirtualInterfaces)
-		switch n {
-		case 0:
-			return "", string(awstypes.VirtualInterfaceStateDeleted), nil
-
-		case 1:
-			vif := resp.VirtualInterfaces[0]
-			return vif, string(vif.VirtualInterfaceState), nil
-
-		default:
-			return nil, "", fmt.Errorf("Found %d Direct Connect virtual interfaces for %s, expected 1", n, vifId)
-		}
-	}
-}
-
-func virtualInterfaceWaitUntilAvailable(ctx context.Context, conn *directconnect.Client, vifId string, timeout time.Duration, pending, target []string) error {
-	stateConf := &retry.StateChangeConf{
-		Pending:    pending,
-		Target:     target,
-		Refresh:    virtualInterfaceStateRefresh(ctx, conn, vifId),
-		Timeout:    timeout,
-		Delay:      10 * time.Second,
-		MinTimeout: 5 * time.Second,
-	}
-	if _, err := stateConf.WaitForStateContext(ctx); err != nil {
-		return fmt.Errorf("waiting for Direct Connect virtual interface (%s) to become available: %s", vifId, err)
-	}
-
-	return nil
 }
 
 func findVirtualInterfaceByID(ctx context.Context, conn *directconnect.Client, id string) (*awstypes.VirtualInterface, error) {
