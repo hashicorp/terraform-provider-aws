@@ -47,6 +47,9 @@ func (d *dataSourceSecretVersions) Schema(ctx context.Context, req datasource.Sc
 					stringvalidator.LengthBetween(20, 2048),
 				},
 			},
+			names.AttrName: schema.StringAttribute{
+				Computed: true,
+			},
 			"include_deprecated": schema.BoolAttribute{
 				Optional: true,
 			},
@@ -75,17 +78,23 @@ func (d *dataSourceSecretVersions) Read(ctx context.Context, req datasource.Read
 	})
 
 	var out secretsmanager.ListSecretVersionIdsOutput
+	commonFieldsSet := false
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
 		if err != nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.SecretsManager, create.ErrActionReading, DSNameSecretVersions, data.SecretID.String(), err),
+				create.ProblemStandardMessage(names.SecretsManager, create.ErrActionReading, DSNameSecretVersions, data.Arn.String(), err),
 				err.Error(),
 			)
 			return
 		}
 
 		if page != nil && len(page.Versions) > 0 {
+			if !commonFieldsSet {
+				out.ARN = page.ARN
+				out.Name = page.Name
+				commonFieldsSet = true
+			}
 			out.Versions = append(out.Versions, page.Versions...)
 		}
 	}
@@ -101,6 +110,7 @@ func (d *dataSourceSecretVersions) Read(ctx context.Context, req datasource.Read
 
 type dsSecretVersionsData struct {
 	Arn               types.String                                    `tfsdk:"arn"`
+	Name              types.String                                    `tfsdk:"name"`
 	IncludeDeprecated types.Bool                                      `tfsdk:"include_deprecated"`
 	SecretID          types.String                                    `tfsdk:"secret_id"`
 	Versions          fwtypes.ListNestedObjectValueOf[dsVersionsData] `tfsdk:"versions"`
