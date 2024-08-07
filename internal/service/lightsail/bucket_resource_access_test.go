@@ -42,7 +42,7 @@ func TestAccLightsailBucketResourceAccess_basic(t *testing.T) {
 				Config: testAccBucketResourceAccessConfig_basic(rName, bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketResourceAccessExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "bucket_name", bucketName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrBucketName, bucketName),
 					resource.TestCheckResourceAttr(resourceName, "resource_name", rName),
 				),
 			},
@@ -160,7 +160,7 @@ resource "aws_lightsail_instance" "test" {
   name              = %[1]q
   availability_zone = data.aws_availability_zones.available.names[0]
   blueprint_id      = "amazon_linux_2"
-  bundle_id         = "nano_1_0"
+  bundle_id         = "nano_3_0"
 }
 
 resource "aws_lightsail_bucket_resource_access" "test" {

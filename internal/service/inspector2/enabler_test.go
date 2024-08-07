@@ -11,7 +11,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/inspector2/types"
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -38,7 +37,7 @@ func testAccEnabler_basic(t *testing.T) {
 			acctest.PreCheckInspector2(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEnablerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -47,9 +46,9 @@ func testAccEnabler_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEnablerExists(ctx, resourceName, resourceTypes),
 					testAccCheckEnablerID(resourceName, resourceTypes),
-					resource.TestCheckResourceAttr(resourceName, "account_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.*", "data.aws_caller_identity.current", "account_id"),
-					resource.TestCheckResourceAttr(resourceName, "resource_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "account_ids.#", acctest.Ct1),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.*", "data.aws_caller_identity.current", names.AttrAccountID),
+					resource.TestCheckResourceAttr(resourceName, "resource_types.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "resource_types.*", string(types.ResourceScanTypeEcr)),
 				),
 			},
@@ -70,7 +69,7 @@ func testAccEnabler_accountID(t *testing.T) {
 			acctest.PreCheckInspector2(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEnablerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -79,9 +78,9 @@ func testAccEnabler_accountID(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEnablerExists(ctx, resourceName, resourceTypes),
 					testAccCheckEnablerID(resourceName, resourceTypes),
-					resource.TestCheckResourceAttr(resourceName, "account_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.0", "data.aws_caller_identity.current", "account_id"),
-					resource.TestCheckResourceAttr(resourceName, "resource_types.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "account_ids.#", acctest.Ct1),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.0", "data.aws_caller_identity.current", names.AttrAccountID),
+					resource.TestCheckResourceAttr(resourceName, "resource_types.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemAttr(resourceName, "resource_types.*", string(types.ResourceScanTypeEc2)),
 					resource.TestCheckTypeSetElemAttr(resourceName, "resource_types.*", string(types.ResourceScanTypeEcr)),
 				),
@@ -103,7 +102,7 @@ func testAccEnabler_disappears(t *testing.T) {
 			acctest.PreCheckInspector2(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEnablerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -134,7 +133,7 @@ func testAccEnabler_updateResourceTypes(t *testing.T) {
 			acctest.PreCheckInspector2(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEnablerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -143,9 +142,9 @@ func testAccEnabler_updateResourceTypes(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEnablerExists(ctx, resourceName, originalResourceTypes),
 					testAccCheckEnablerID(resourceName, originalResourceTypes),
-					resource.TestCheckResourceAttr(resourceName, "account_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.0", "data.aws_caller_identity.current", "account_id"),
-					resource.TestCheckResourceAttr(resourceName, "resource_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "account_ids.#", acctest.Ct1),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.0", "data.aws_caller_identity.current", names.AttrAccountID),
+					resource.TestCheckResourceAttr(resourceName, "resource_types.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "resource_types.*", string(types.ResourceScanTypeEc2)),
 				),
 			},
@@ -154,9 +153,9 @@ func testAccEnabler_updateResourceTypes(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEnablerExists(ctx, resourceName, update1ResourceTypes),
 					testAccCheckEnablerID(resourceName, update1ResourceTypes),
-					resource.TestCheckResourceAttr(resourceName, "account_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.0", "data.aws_caller_identity.current", "account_id"),
-					resource.TestCheckResourceAttr(resourceName, "resource_types.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "account_ids.#", acctest.Ct1),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.0", "data.aws_caller_identity.current", names.AttrAccountID),
+					resource.TestCheckResourceAttr(resourceName, "resource_types.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemAttr(resourceName, "resource_types.*", string(types.ResourceScanTypeEc2)),
 					resource.TestCheckTypeSetElemAttr(resourceName, "resource_types.*", string(types.ResourceScanTypeLambda)),
 				),
@@ -166,9 +165,9 @@ func testAccEnabler_updateResourceTypes(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEnablerExists(ctx, resourceName, update2ResourceTypes),
 					testAccCheckEnablerID(resourceName, update2ResourceTypes),
-					resource.TestCheckResourceAttr(resourceName, "account_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.0", "data.aws_caller_identity.current", "account_id"),
-					resource.TestCheckResourceAttr(resourceName, "resource_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "account_ids.#", acctest.Ct1),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.0", "data.aws_caller_identity.current", names.AttrAccountID),
+					resource.TestCheckResourceAttr(resourceName, "resource_types.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "resource_types.*", string(types.ResourceScanTypeLambda)),
 				),
 			},
@@ -190,7 +189,7 @@ func testAccEnabler_updateResourceTypes_disjoint(t *testing.T) {
 			acctest.PreCheckInspector2(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEnablerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -199,9 +198,9 @@ func testAccEnabler_updateResourceTypes_disjoint(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEnablerExists(ctx, resourceName, originalResourceTypes),
 					testAccCheckEnablerID(resourceName, originalResourceTypes),
-					resource.TestCheckResourceAttr(resourceName, "account_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.0", "data.aws_caller_identity.current", "account_id"),
-					resource.TestCheckResourceAttr(resourceName, "resource_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "account_ids.#", acctest.Ct1),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.0", "data.aws_caller_identity.current", names.AttrAccountID),
+					resource.TestCheckResourceAttr(resourceName, "resource_types.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "resource_types.*", string(types.ResourceScanTypeEc2)),
 				),
 			},
@@ -210,9 +209,9 @@ func testAccEnabler_updateResourceTypes_disjoint(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEnablerExists(ctx, resourceName, updatedResourceTypes),
 					testAccCheckEnablerID(resourceName, updatedResourceTypes),
-					resource.TestCheckResourceAttr(resourceName, "account_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.0", "data.aws_caller_identity.current", "account_id"),
-					resource.TestCheckResourceAttr(resourceName, "resource_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "account_ids.#", acctest.Ct1),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.0", "data.aws_caller_identity.current", names.AttrAccountID),
+					resource.TestCheckResourceAttr(resourceName, "resource_types.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "resource_types.*", string(types.ResourceScanTypeEcr)),
 				),
 			},
@@ -233,7 +232,7 @@ func testAccEnabler_lambda(t *testing.T) {
 			acctest.PreCheckInspector2(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEnablerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -242,9 +241,9 @@ func testAccEnabler_lambda(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEnablerExists(ctx, resourceName, resourceTypes),
 					testAccCheckEnablerID(resourceName, resourceTypes),
-					resource.TestCheckResourceAttr(resourceName, "account_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.*", "data.aws_caller_identity.current", "account_id"),
-					resource.TestCheckResourceAttr(resourceName, "resource_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "account_ids.#", acctest.Ct1),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.*", "data.aws_caller_identity.current", names.AttrAccountID),
+					resource.TestCheckResourceAttr(resourceName, "resource_types.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "resource_types.*", string(types.ResourceScanTypeLambda)),
 				),
 			},
@@ -268,7 +267,7 @@ func testAccEnabler_memberAccount_basic(t *testing.T) {
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 		CheckDestroy:             testAccCheckEnablerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -277,9 +276,9 @@ func testAccEnabler_memberAccount_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEnablerExists(ctx, resourceName, resourceTypes),
 					testAccCheckEnablerIDProvider(resourceName, resourceTypes, acctest.NamedProviderFunc(acctest.ProviderNameAlternate, providers)),
-					resource.TestCheckResourceAttr(resourceName, "account_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.*", "data.aws_caller_identity.member", "account_id"),
-					resource.TestCheckResourceAttr(resourceName, "resource_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "account_ids.#", acctest.Ct1),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.*", "data.aws_caller_identity.member", names.AttrAccountID),
+					resource.TestCheckResourceAttr(resourceName, "resource_types.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "resource_types.*", string(types.ResourceScanTypeEcr)),
 				),
 			},
@@ -303,7 +302,7 @@ func testAccEnabler_memberAccount_disappearsMemberAssociation(t *testing.T) {
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 		CheckDestroy:             testAccCheckEnablerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -336,7 +335,7 @@ func testAccEnabler_memberAccount_multiple(t *testing.T) {
 			acctest.PreCheckAlternateAccount(t)
 			acctest.PreCheckThirdAccount(t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamed(ctx, t, providers, acctest.ProviderName, acctest.ProviderNameAlternate, acctest.ProviderNameThird),
 		CheckDestroy:             testAccCheckEnablerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -348,10 +347,10 @@ func testAccEnabler_memberAccount_multiple(t *testing.T) {
 						acctest.NamedProviderFunc(acctest.ProviderNameAlternate, providers),
 						acctest.NamedProviderFunc(acctest.ProviderNameThird, providers),
 					),
-					resource.TestCheckResourceAttr(resourceName, "account_ids.#", "2"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.*", "data.aws_caller_identity.alternate", "account_id"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.*", "data.aws_caller_identity.third", "account_id"),
-					resource.TestCheckResourceAttr(resourceName, "resource_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "account_ids.#", acctest.Ct2),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.*", "data.aws_caller_identity.alternate", names.AttrAccountID),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.*", "data.aws_caller_identity.third", names.AttrAccountID),
+					resource.TestCheckResourceAttr(resourceName, "resource_types.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "resource_types.*", string(types.ResourceScanTypeEcr)),
 				),
 			},
@@ -376,7 +375,7 @@ func testAccEnabler_memberAccount_updateMemberAccounts(t *testing.T) {
 			acctest.PreCheckAlternateAccount(t)
 			acctest.PreCheckThirdAccount(t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamed(ctx, t, providers, acctest.ProviderName, acctest.ProviderNameAlternate, acctest.ProviderNameThird),
 		CheckDestroy:             testAccCheckEnablerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -387,9 +386,9 @@ func testAccEnabler_memberAccount_updateMemberAccounts(t *testing.T) {
 					testAccCheckEnablerIDProvider(resourceName, resourceTypes,
 						acctest.NamedProviderFunc(acctest.ProviderNameAlternate, providers),
 					),
-					resource.TestCheckResourceAttr(resourceName, "account_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.*", "data.aws_caller_identity.alternate", "account_id"),
-					resource.TestCheckResourceAttr(resourceName, "resource_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "account_ids.#", acctest.Ct1),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.*", "data.aws_caller_identity.alternate", names.AttrAccountID),
+					resource.TestCheckResourceAttr(resourceName, "resource_types.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "resource_types.*", string(types.ResourceScanTypeEcr)),
 				),
 			},
@@ -401,10 +400,10 @@ func testAccEnabler_memberAccount_updateMemberAccounts(t *testing.T) {
 						acctest.NamedProviderFunc(acctest.ProviderNameAlternate, providers),
 						acctest.NamedProviderFunc(acctest.ProviderNameThird, providers),
 					),
-					resource.TestCheckResourceAttr(resourceName, "account_ids.#", "2"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.*", "data.aws_caller_identity.alternate", "account_id"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.*", "data.aws_caller_identity.third", "account_id"),
-					resource.TestCheckResourceAttr(resourceName, "resource_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "account_ids.#", acctest.Ct2),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.*", "data.aws_caller_identity.alternate", names.AttrAccountID),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.*", "data.aws_caller_identity.third", names.AttrAccountID),
+					resource.TestCheckResourceAttr(resourceName, "resource_types.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "resource_types.*", string(types.ResourceScanTypeEcr)),
 				),
 			},
@@ -415,9 +414,9 @@ func testAccEnabler_memberAccount_updateMemberAccounts(t *testing.T) {
 					testAccCheckEnablerIDProvider(resourceName, resourceTypes,
 						acctest.NamedProviderFunc(acctest.ProviderNameThird, providers),
 					),
-					resource.TestCheckResourceAttr(resourceName, "account_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.*", "data.aws_caller_identity.third", "account_id"),
-					resource.TestCheckResourceAttr(resourceName, "resource_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "account_ids.#", acctest.Ct1),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.*", "data.aws_caller_identity.third", names.AttrAccountID),
+					resource.TestCheckResourceAttr(resourceName, "resource_types.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "resource_types.*", string(types.ResourceScanTypeEcr)),
 				),
 			},
@@ -444,7 +443,7 @@ func testAccEnabler_memberAccount_updateMemberAccountsAndScanTypes(t *testing.T)
 			acctest.PreCheckAlternateAccount(t)
 			acctest.PreCheckThirdAccount(t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamed(ctx, t, providers, acctest.ProviderName, acctest.ProviderNameAlternate, acctest.ProviderNameThird),
 		CheckDestroy:             testAccCheckEnablerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -455,9 +454,9 @@ func testAccEnabler_memberAccount_updateMemberAccountsAndScanTypes(t *testing.T)
 					testAccCheckEnablerIDProvider(resourceName, originalResourceTypes,
 						acctest.NamedProviderFunc(acctest.ProviderNameAlternate, providers),
 					),
-					resource.TestCheckResourceAttr(resourceName, "account_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.*", "data.aws_caller_identity.alternate", "account_id"),
-					resource.TestCheckResourceAttr(resourceName, "resource_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "account_ids.#", acctest.Ct1),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.*", "data.aws_caller_identity.alternate", names.AttrAccountID),
+					resource.TestCheckResourceAttr(resourceName, "resource_types.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "resource_types.*", string(types.ResourceScanTypeEc2)),
 				),
 			},
@@ -469,10 +468,10 @@ func testAccEnabler_memberAccount_updateMemberAccountsAndScanTypes(t *testing.T)
 						acctest.NamedProviderFunc(acctest.ProviderNameAlternate, providers),
 						acctest.NamedProviderFunc(acctest.ProviderNameThird, providers),
 					),
-					resource.TestCheckResourceAttr(resourceName, "account_ids.#", "2"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.*", "data.aws_caller_identity.alternate", "account_id"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.*", "data.aws_caller_identity.third", "account_id"),
-					resource.TestCheckResourceAttr(resourceName, "resource_types.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "account_ids.#", acctest.Ct2),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.*", "data.aws_caller_identity.alternate", names.AttrAccountID),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.*", "data.aws_caller_identity.third", names.AttrAccountID),
+					resource.TestCheckResourceAttr(resourceName, "resource_types.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemAttr(resourceName, "resource_types.*", string(types.ResourceScanTypeEc2)),
 					resource.TestCheckTypeSetElemAttr(resourceName, "resource_types.*", string(types.ResourceScanTypeLambda)),
 				),
@@ -484,9 +483,9 @@ func testAccEnabler_memberAccount_updateMemberAccountsAndScanTypes(t *testing.T)
 					testAccCheckEnablerIDProvider(resourceName, update2ResourceTypes,
 						acctest.NamedProviderFunc(acctest.ProviderNameThird, providers),
 					),
-					resource.TestCheckResourceAttr(resourceName, "account_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.*", "data.aws_caller_identity.third", "account_id"),
-					resource.TestCheckResourceAttr(resourceName, "resource_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "account_ids.#", acctest.Ct1),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.*", "data.aws_caller_identity.third", names.AttrAccountID),
+					resource.TestCheckResourceAttr(resourceName, "resource_types.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "resource_types.*", string(types.ResourceScanTypeLambda)),
 				),
 				// PlanOnly: true,
@@ -517,14 +516,19 @@ func testAccCheckEnablerDestroy(ctx context.Context) resource.TestCheckFunc {
 				return create.Error(names.Inspector2, create.ErrActionCheckingDestroyed, tfinspector2.ResNameEnabler, rs.Primary.ID, err)
 			}
 
+			var errs []error
 			for k, v := range st {
 				if v.Status != types.StatusDisabled {
-					err = multierror.Append(err,
+					errs = append(errs,
 						create.Error(names.Inspector2, create.ErrActionCheckingDestroyed, tfinspector2.ResNameEnabler, rs.Primary.ID,
 							fmt.Errorf("after destroy, expected DISABLED for account %s, got: %s", k, v),
 						),
 					)
 				}
+			}
+
+			if err := errors.Join(errs...); err != nil {
+				return err
 			}
 		}
 
@@ -556,15 +560,17 @@ func testAccCheckEnablerExists(ctx context.Context, name string, t []types.Resou
 			return create.Error(names.Inspector2, create.ErrActionCheckingExistence, tfinspector2.ResNameEnabler, name, err)
 		}
 
+		var errs []error
 		for k, s := range st {
 			if s.Status != types.StatusEnabled {
-				err = multierror.Append(err, create.Error(
+				errs = append(errs, create.Error(
 					names.Inspector2, create.ErrActionCheckingExistence, tfinspector2.ResNameEnabler, id,
 					fmt.Errorf("after create, expected ENABLED for account %s, got: %s", k, s.Status)),
 				)
 			}
 		}
-		return err
+
+		return errors.Join(errs...)
 	}
 }
 
@@ -579,7 +585,7 @@ func testAccCheckEnablerIDProvider(resourceName string, types []types.ResourceSc
 			return acctest.ProviderAccountID(f())
 		})
 		id := tfinspector2.EnablerID(accountIDs, types)
-		return resource.TestCheckResourceAttr(resourceName, "id", id)(s)
+		return resource.TestCheckResourceAttr(resourceName, names.AttrID, id)(s)
 	}
 }
 

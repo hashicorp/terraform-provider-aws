@@ -1,14 +1,14 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package ec2_test
+package ec2
 
 import (
 	"regexp"
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestInstanceProfileARNToName(t *testing.T) {
@@ -48,12 +48,12 @@ func TestInstanceProfileARNToName(t *testing.T) {
 		{
 			TestName:     "valid ARN",
 			InputARN:     "arn:aws:iam:us-east-1:123456789012:instance-profile/name", //lintignore:AWSAT003,AWSAT005
-			ExpectedName: "name",
+			ExpectedName: names.AttrName,
 		},
 		{
 			TestName:     "valid ARN with multiple parts",
 			InputARN:     "arn:aws:iam:us-east-1:123456789012:instance-profile/path/name", //lintignore:AWSAT003,AWSAT005
-			ExpectedName: "name",
+			ExpectedName: names.AttrName,
 		},
 	}
 
@@ -62,7 +62,7 @@ func TestInstanceProfileARNToName(t *testing.T) {
 		t.Run(testCase.TestName, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := tfec2.InstanceProfileARNToName(testCase.InputARN)
+			got, err := instanceProfileARNToName(testCase.InputARN)
 
 			if err == nil && testCase.ExpectedError != nil {
 				t.Fatalf("expected error %s, got no error", testCase.ExpectedError.String())

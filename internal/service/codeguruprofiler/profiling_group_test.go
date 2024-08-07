@@ -37,7 +37,7 @@ func TestAccCodeGuruProfilerProfilingGroup_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeGuruProfilerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeGuruProfilerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProfilingGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -45,10 +45,10 @@ func TestAccCodeGuruProfilerProfilingGroup_basic(t *testing.T) {
 				Config: testAccProfilingGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProfilingGroupExists(ctx, resourceName, &profilinggroup),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "compute_platform", "Default"),
-					resource.TestCheckResourceAttr(resourceName, "agent_orchestration_config.0.profiling_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "agent_orchestration_config.0.profiling_enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -75,7 +75,7 @@ func TestAccCodeGuruProfilerProfilingGroup_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeGuruProfilerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeGuruProfilerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProfilingGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -106,7 +106,7 @@ func TestAccCodeGuruProfilerProfilingGroup_update(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeGuruProfilerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeGuruProfilerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProfilingGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -114,20 +114,20 @@ func TestAccCodeGuruProfilerProfilingGroup_update(t *testing.T) {
 				Config: testAccProfilingGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProfilingGroupExists(ctx, resourceName, &profilinggroup),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "compute_platform", "Default"),
-					resource.TestCheckResourceAttr(resourceName, "agent_orchestration_config.0.profiling_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "agent_orchestration_config.0.profiling_enabled", acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccProfilingGroupConfig_update(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProfilingGroupExists(ctx, resourceName, &profilinggroup),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "compute_platform", "Default"),
-					resource.TestCheckResourceAttr(resourceName, "agent_orchestration_config.0.profiling_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "agent_orchestration_config.0.profiling_enabled", acctest.CtFalse),
 				),
 			},
 		},
@@ -149,33 +149,33 @@ func TestAccCodeGuruProfilerProfilingGroup_tags(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeGuruProfilerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeGuruProfilerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProfilingGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProfilingGroupConfig_tags1(rName, "key1", "value1"),
+				Config: testAccProfilingGroupConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProfilingGroupExists(ctx, resourceName, &profilinggroup),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
-				Config: testAccProfilingGroupConfig_tags2(rName, "key1", "value1", "key2", "value2"),
+				Config: testAccProfilingGroupConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProfilingGroupExists(ctx, resourceName, &profilinggroup),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccProfilingGroupConfig_tags1(rName, "key2", "value2"),
+				Config: testAccProfilingGroupConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProfilingGroupExists(ctx, resourceName, &profilinggroup),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},

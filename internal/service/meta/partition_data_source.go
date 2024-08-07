@@ -10,12 +10,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkDataSource
 func newDataSourcePartition(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourcePartition{}
-	d.SetMigratedFromPluginSDK(true)
 
 	return d, nil
 }
@@ -37,7 +37,7 @@ func (d *dataSourcePartition) Schema(ctx context.Context, req datasource.SchemaR
 			"dns_suffix": schema.StringAttribute{
 				Computed: true,
 			},
-			"id": schema.StringAttribute{
+			names.AttrID: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},
@@ -62,10 +62,10 @@ func (d *dataSourcePartition) Read(ctx context.Context, request datasource.ReadR
 		return
 	}
 
-	data.DNSSuffix = types.StringValue(d.Meta().DNSSuffix)
+	data.DNSSuffix = types.StringValue(d.Meta().DNSSuffix(ctx))
 	data.ID = types.StringValue(d.Meta().Partition)
 	data.Partition = types.StringValue(d.Meta().Partition)
-	data.ReverseDNSPrefix = types.StringValue(d.Meta().ReverseDNSPrefix)
+	data.ReverseDNSPrefix = types.StringValue(d.Meta().ReverseDNSPrefix(ctx))
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }

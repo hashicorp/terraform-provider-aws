@@ -28,7 +28,7 @@ func testAccVoiceConnectorLogging_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVoiceConnectorDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -36,8 +36,8 @@ func testAccVoiceConnectorLogging_basic(t *testing.T) {
 				Config: testAccVoiceConnectorLoggingConfig_basic(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorLoggingExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "enable_sip_logs", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enable_media_metric_logs", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_sip_logs", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "enable_media_metric_logs", acctest.CtTrue),
 				),
 			},
 			{
@@ -59,7 +59,7 @@ func testAccVoiceConnectorLogging_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVoiceConnectorDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -85,7 +85,7 @@ func testAccVoiceConnectorLogging_update(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVoiceConnectorDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -99,8 +99,8 @@ func testAccVoiceConnectorLogging_update(t *testing.T) {
 				Config: testAccVoiceConnectorLoggingConfig_updated(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorLoggingExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "enable_sip_logs", "false"),
-					resource.TestCheckResourceAttr(resourceName, "enable_media_metric_logs", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_sip_logs", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "enable_media_metric_logs", acctest.CtFalse),
 				),
 			},
 			{

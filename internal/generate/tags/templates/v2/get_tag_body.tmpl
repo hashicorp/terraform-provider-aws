@@ -10,14 +10,14 @@ func {{ .GetTagFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier{{
 {{- end }}
 	{{- if .ListTagsInFiltIDName }}
 	input := &{{ .AWSService  }}.{{ .ListTagsOp }}Input{
-		Filters: []*{{ .AWSService  }}.Filter{
+		Filters: []awstypes.Filter{
 			{
 				Name:   aws.String("{{ .ListTagsInFiltIDName }}"),
-				Values: []*string{aws.String(identifier)},
+				Values: []string{identifier},
 			},
 			{
-				Name:   aws.String("key"),
-				Values: []*string{aws.String(key)},
+				Name:   aws.String(names.AttrKey),
+				Values: []string{key},
 			},
 		},
 	}

@@ -4,6 +4,7 @@
 package rds
 
 const (
+	errCodeInvalidAction               = "InvalidAction"
 	errCodeInvalidParameterCombination = "InvalidParameterCombination"
 	errCodeInvalidParameterValue       = "InvalidParameterValue"
 	errCodeValidationError             = "ValidationError"

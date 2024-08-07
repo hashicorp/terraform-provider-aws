@@ -56,8 +56,8 @@ The following arguments are optional:
 
 The `access_endpoint` block supports the following arguments:
 
-* `endpoint_type` - (Required) Type of interface endpoint.
-* `vpce_id` - (Optional) Identifier (ID) of the VPC in which the interface endpoint is used.
+* `endpoint_type` - (Required) Type of interface endpoint. For valid values, refer to the [AWS documentation](https://docs.aws.amazon.com/appstream2/latest/APIReference/API_AccessEndpoint.html).
+* `vpce_id` - (Optional) Identifier (ID) of the interface VPC endpoint.
 
 ### `domain_join_info`
 
@@ -80,7 +80,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN of the appstream image builder.
 * `created_time` -  Date and time, in UTC and extended RFC 3339 format, when the image builder was created.
 * `id` - Name of the image builder.
-* `state` - State of the image builder. Can be: `PENDING`, `UPDATING_AGENT`, `RUNNING`, `STOPPING`, `STOPPED`, `REBOOTING`, `SNAPSHOTTING`, `DELETING`, `FAILED`, `UPDATING`, `PENDING_QUALIFICATION`
+* `state` - State of the image builder. For valid values, refer to the [AWS documentation](https://docs.aws.amazon.com/appstream2/latest/APIReference/API_ImageBuilder.html#AppStream2-Type-ImageBuilder-State).
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import

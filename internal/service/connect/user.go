@@ -36,7 +36,7 @@ func ResourceUser() *schema.Resource {
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -55,7 +55,7 @@ func ResourceUser() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"email": {
+						names.AttrEmail: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -72,19 +72,19 @@ func ResourceUser() *schema.Resource {
 					},
 				},
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
-			"password": {
+			names.AttrPassword: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Sensitive:    true,
@@ -152,8 +152,8 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
-	instanceID := d.Get("instance_id").(string)
-	name := d.Get("name").(string)
+	instanceID := d.Get(names.AttrInstanceID).(string)
+	name := d.Get(names.AttrName).(string)
 	input := &connect.CreateUserInput{
 		InstanceId:         aws.String(instanceID),
 		PhoneConfig:        expandPhoneConfig(d.Get("phone_config").([]interface{})),
@@ -175,7 +175,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		input.IdentityInfo = expandIdentityInfo(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("password"); ok {
+	if v, ok := d.GetOk(names.AttrPassword); ok {
 		input.Password = aws.String(v.(string))
 	}
 
@@ -226,11 +226,11 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 	user := resp.User
 
-	d.Set("arn", user.Arn)
+	d.Set(names.AttrARN, user.Arn)
 	d.Set("directory_user_id", user.DirectoryUserId)
 	d.Set("hierarchy_group_id", user.HierarchyGroupId)
-	d.Set("instance_id", instanceID)
-	d.Set("name", user.Username)
+	d.Set(names.AttrInstanceID, instanceID)
+	d.Set(names.AttrName, user.Username)
 	d.Set("routing_profile_id", user.RoutingProfileId)
 	d.Set("security_profile_ids", flex.FlattenStringSet(user.SecurityProfileIds))
 	d.Set("user_id", user.Id)
@@ -392,7 +392,7 @@ func expandIdentityInfo(identityInfo []interface{}) *connect.UserIdentityInfo {
 
 	result := &connect.UserIdentityInfo{}
 
-	if v, ok := tfMap["email"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrEmail].(string); ok && v != "" {
 		result.Email = aws.String(v)
 	}
 
@@ -444,7 +444,7 @@ func flattenIdentityInfo(identityInfo *connect.UserIdentityInfo) []interface{} {
 	values := map[string]interface{}{}
 
 	if v := identityInfo.Email; v != nil {
-		values["email"] = aws.StringValue(v)
+		values[names.AttrEmail] = aws.StringValue(v)
 	}
 
 	if v := identityInfo.FirstName; v != nil {

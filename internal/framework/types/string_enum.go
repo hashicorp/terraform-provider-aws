@@ -6,70 +6,19 @@ package types
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/attr/xattr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/defaults"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
-
-type customStringTypeWithValidator struct {
-	basetypes.StringType
-	validator validator.String
-}
-
-func (t customStringTypeWithValidator) Validate(ctx context.Context, in tftypes.Value, path path.Path) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	if in.IsNull() || !in.IsKnown() {
-		return diags
-	}
-
-	var value string
-	err := in.As(&value)
-	if err != nil {
-		diags.AddAttributeError(
-			path,
-			"Invalid Terraform Value",
-			"An unexpected error occurred while attempting to convert a Terraform value to a string. "+
-				"This generally is an issue with the provider schema implementation. "+
-				"Please contact the provider developers.\n\n"+
-				"Path: "+path.String()+"\n"+
-				"Error: "+err.Error(),
-		)
-		return diags
-	}
-
-	request := validator.StringRequest{
-		ConfigValue: types.StringValue(value),
-		Path:        path,
-	}
-	response := validator.StringResponse{}
-	t.validator.ValidateString(ctx, request, &response)
-	diags.Append(response.Diagnostics...)
-
-	return diags
-}
-
-type stringEnumTypeWithAttributeDefault[T enum.Valueser[T]] interface {
-	basetypes.StringTypable
-	AttributeDefault(T) defaults.String
-}
-
-type stringEnumType[T enum.Valueser[T]] struct {
-	customStringTypeWithValidator
-}
-
-func StringEnumType[T enum.Valueser[T]]() stringEnumTypeWithAttributeDefault[T] {
-	return stringEnumType[T]{customStringTypeWithValidator: customStringTypeWithValidator{validator: enum.FrameworkValidate[T]()}}
-}
 
 type dummyValueser string
 
@@ -78,10 +27,21 @@ func (dummyValueser) Values() []dummyValueser {
 }
 
 var (
-	_ xattr.TypeWithValidate   = (*stringEnumType[dummyValueser])(nil)
-	_ basetypes.StringTypable  = (*stringEnumType[dummyValueser])(nil)
-	_ basetypes.StringValuable = (*StringEnum[dummyValueser])(nil)
+	_ basetypes.StringTypable = (*stringEnumType[dummyValueser])(nil)
 )
+
+type stringEnumTypeWithAttributeDefault[T enum.Valueser[T]] interface {
+	basetypes.StringTypable
+	AttributeDefault(T) defaults.String
+}
+
+type stringEnumType[T enum.Valueser[T]] struct {
+	basetypes.StringType
+}
+
+func StringEnumType[T enum.Valueser[T]]() stringEnumTypeWithAttributeDefault[T] {
+	return stringEnumType[T]{}
+}
 
 func (t stringEnumType[T]) Equal(o attr.Type) bool {
 	other, ok := o.(stringEnumType[T])
@@ -95,6 +55,7 @@ func (t stringEnumType[T]) Equal(o attr.Type) bool {
 
 func (stringEnumType[T]) String() string {
 	var zero T
+	// The format of this returned value is used inside AutoFlEx.
 	return fmt.Sprintf("StringEnumType[%T]", zero)
 }
 
@@ -141,6 +102,15 @@ func (t stringEnumType[T]) AttributeDefault(defaultVal T) defaults.String {
 	return stringdefault.StaticString(string(defaultVal))
 }
 
+var (
+	_ basetypes.StringValuable    = (*StringEnum[dummyValueser])(nil)
+	_ xattr.ValidateableAttribute = (*StringEnum[dummyValueser])(nil)
+)
+
+type StringEnum[T enum.Valueser[T]] struct {
+	basetypes.StringValue
+}
+
 func StringEnumNull[T enum.Valueser[T]]() StringEnum[T] {
 	return StringEnum[T]{StringValue: basetypes.NewStringNull()}
 }
@@ -153,8 +123,8 @@ func StringEnumValue[T enum.Valueser[T]](value T) StringEnum[T] {
 	return StringEnum[T]{StringValue: basetypes.NewStringValue(string(value))}
 }
 
-type StringEnum[T enum.Valueser[T]] struct {
-	basetypes.StringValue
+func StringEnumValueToUpper[T enum.Valueser[T]](value T) StringEnum[T] {
+	return StringEnumValue(T(strings.ToUpper(string(value))))
 }
 
 func (v StringEnum[T]) Equal(o attr.Value) bool {
@@ -177,6 +147,31 @@ func (v StringEnum[T]) ValueEnum() T {
 
 // StringEnumValue is useful if you have a zero value StringEnum but need a
 // way to get a non-zero value such as when flattening.
+// It's called via reflection inside AutoFlEx.
 func (v StringEnum[T]) StringEnumValue(value string) StringEnum[T] {
 	return StringEnum[T]{StringValue: basetypes.NewStringValue(value)}
+}
+
+func (v StringEnum[T]) ValidateAttribute(ctx context.Context, req xattr.ValidateAttributeRequest, resp *xattr.ValidateAttributeResponse) {
+	if v.IsNull() || v.IsUnknown() {
+		return
+	}
+
+	vs := v.ValueString()
+	validValues := tfslices.AppendUnique(v.ValueEnum().Values(), "")
+
+	for _, enumVal := range validValues {
+		if vs == string(enumVal) {
+			return
+		}
+	}
+
+	resp.Diagnostics.AddAttributeError(
+		req.Path,
+		"Invalid String Enum Value",
+		"The provided value does not match any valid values.\n\n"+
+			"Path: "+req.Path.String()+"\n"+
+			"Given Value: "+vs+"\n"+
+			"Valid Values: "+fmt.Sprintf("%s", validValues),
+	)
 }

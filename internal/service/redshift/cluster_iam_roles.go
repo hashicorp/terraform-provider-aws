@@ -17,10 +17,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_redshift_cluster_iam_roles")
-func ResourceClusterIAMRoles() *schema.Resource {
+// @SDKResource("aws_redshift_cluster_iam_roles", name="Cluster IAM Roles")
+func resourceClusterIAMRoles() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterIAMRolesCreate,
 		ReadWithoutTimeout:   resourceClusterIAMRolesRead,
@@ -38,7 +39,7 @@ func ResourceClusterIAMRoles() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"cluster_identifier": {
+			names.AttrClusterIdentifier: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -66,7 +67,7 @@ func resourceClusterIAMRolesCreate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	clusterID := d.Get("cluster_identifier").(string)
+	clusterID := d.Get(names.AttrClusterIdentifier).(string)
 	input := &redshift.ModifyClusterIamRolesInput{
 		ClusterIdentifier: aws.String(clusterID),
 	}
@@ -99,7 +100,7 @@ func resourceClusterIAMRolesRead(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	rsc, err := FindClusterByID(ctx, conn, d.Id())
+	rsc, err := findClusterByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift Cluster IAM Roles (%s) not found, removing from state", d.Id())
@@ -117,7 +118,7 @@ func resourceClusterIAMRolesRead(ctx context.Context, d *schema.ResourceData, me
 		roleARNs = append(roleARNs, iamRole.IamRoleArn)
 	}
 
-	d.Set("cluster_identifier", rsc.ClusterIdentifier)
+	d.Set(names.AttrClusterIdentifier, rsc.ClusterIdentifier)
 	d.Set("default_iam_role_arn", rsc.DefaultIamRoleArn)
 	d.Set("iam_role_arns", aws.StringValueSlice(roleARNs))
 

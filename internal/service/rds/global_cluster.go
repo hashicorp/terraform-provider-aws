@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_rds_global_cluster")
@@ -43,29 +44,35 @@ func ResourceGlobalCluster() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"database_name": {
+			names.AttrDatabaseName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"deletion_protection": {
+			names.AttrDeletionProtection: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-			"engine": {
+			names.AttrEngine: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"source_db_cluster_identifier"},
-				ValidateFunc:  validation.StringInSlice(GlobalClusterEngine_Values(), false),
+				ValidateFunc:  validation.StringInSlice(globalClusterEngine_Values(), false),
 			},
-			"engine_version": {
+			"engine_lifecycle_support": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(engineLifecycleSupport_Values(), false),
+			},
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -74,7 +81,7 @@ func ResourceGlobalCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"force_destroy": {
+			names.AttrForceDestroy: {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -109,10 +116,10 @@ func ResourceGlobalCluster() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"engine"},
-				RequiredWith:  []string{"force_destroy"},
+				ConflictsWith: []string{names.AttrEngine},
+				RequiredWith:  []string{names.AttrForceDestroy},
 			},
-			"storage_encrypted": {
+			names.AttrStorageEncrypted: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
@@ -131,19 +138,23 @@ func resourceGlobalClusterCreate(ctx context.Context, d *schema.ResourceData, me
 		GlobalClusterIdentifier: aws.String(globalClusterID),
 	}
 
-	if v, ok := d.GetOk("database_name"); ok {
+	if v, ok := d.GetOk(names.AttrDatabaseName); ok {
 		input.DatabaseName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("deletion_protection"); ok {
+	if v, ok := d.GetOk(names.AttrDeletionProtection); ok {
 		input.DeletionProtection = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk("engine"); ok {
+	if v, ok := d.GetOk(names.AttrEngine); ok {
 		input.Engine = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("engine_version"); ok {
+	if v, ok := d.GetOk("engine_lifecycle_support"); ok {
+		input.EngineLifecycleSupport = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk(names.AttrEngineVersion); ok {
 		input.EngineVersion = aws.String(v.(string))
 	}
 
@@ -151,7 +162,7 @@ func resourceGlobalClusterCreate(ctx context.Context, d *schema.ResourceData, me
 		input.SourceDBClusterIdentifier = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("storage_encrypted"); ok {
+	if v, ok := d.GetOk(names.AttrStorageEncrypted); ok {
 		input.StorageEncrypted = aws.Bool(v.(bool))
 	}
 
@@ -159,7 +170,7 @@ func resourceGlobalClusterCreate(ctx context.Context, d *schema.ResourceData, me
 	// since we cannot have Engine default after adding SourceDBClusterIdentifier:
 	// InvalidParameterValue: When creating standalone global cluster, value for engineName should be specified
 	if input.Engine == nil && input.SourceDBClusterIdentifier == nil {
-		input.Engine = aws.String(GlobalClusterEngineAurora)
+		input.Engine = aws.String(globalClusterEngineAurora)
 	}
 
 	output, err := conn.CreateGlobalClusterWithContext(ctx, input)
@@ -193,18 +204,19 @@ func resourceGlobalClusterRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "reading RDS Global Cluster (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", globalCluster.GlobalClusterArn)
-	d.Set("database_name", globalCluster.DatabaseName)
-	d.Set("deletion_protection", globalCluster.DeletionProtection)
-	d.Set("engine", globalCluster.Engine)
+	d.Set(names.AttrARN, globalCluster.GlobalClusterArn)
+	d.Set(names.AttrDatabaseName, globalCluster.DatabaseName)
+	d.Set(names.AttrDeletionProtection, globalCluster.DeletionProtection)
+	d.Set(names.AttrEngine, globalCluster.Engine)
+	d.Set("engine_lifecycle_support", globalCluster.EngineLifecycleSupport)
 	d.Set("global_cluster_identifier", globalCluster.GlobalClusterIdentifier)
 	if err := d.Set("global_cluster_members", flattenGlobalClusterMembers(globalCluster.GlobalClusterMembers)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting global_cluster_members: %s", err)
 	}
 	d.Set("global_cluster_resource_id", globalCluster.GlobalClusterResourceId)
-	d.Set("storage_encrypted", globalCluster.StorageEncrypted)
+	d.Set(names.AttrStorageEncrypted, globalCluster.StorageEncrypted)
 
-	oldEngineVersion := d.Get("engine_version").(string)
+	oldEngineVersion := d.Get(names.AttrEngineVersion).(string)
 	newEngineVersion := aws.StringValue(globalCluster.EngineVersion)
 
 	// For example a configured engine_version of "5.6.10a" and a returned engine_version of "5.6.global_10a".
@@ -213,10 +225,10 @@ func resourceGlobalClusterRead(ctx context.Context, d *schema.ResourceData, meta
 		oldParts[0] == newParts[0] &&
 		oldParts[1] == newParts[1] &&
 		strings.HasSuffix(newParts[2], oldParts[2]) {
-		d.Set("engine_version", oldEngineVersion)
+		d.Set(names.AttrEngineVersion, oldEngineVersion)
 		d.Set("engine_version_actual", newEngineVersion)
 	} else {
-		d.Set("engine_version", newEngineVersion)
+		d.Set(names.AttrEngineVersion, newEngineVersion)
 		d.Set("engine_version_actual", newEngineVersion)
 	}
 
@@ -228,11 +240,11 @@ func resourceGlobalClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	input := &rds.ModifyGlobalClusterInput{
-		DeletionProtection:      aws.Bool(d.Get("deletion_protection").(bool)),
+		DeletionProtection:      aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
 		GlobalClusterIdentifier: aws.String(d.Id()),
 	}
 
-	if d.HasChange("engine_version") {
+	if d.HasChange(names.AttrEngineVersion) {
 		if err := globalClusterUpgradeEngineVersion(ctx, d, meta, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating RDS Global Cluster (%s): %s", d.Id(), err)
 		}
@@ -261,8 +273,8 @@ func resourceGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 	deadline := tfresource.NewDeadline(d.Timeout(schema.TimeoutDelete))
 
-	if d.Get("force_destroy").(bool) {
-		log.Printf("[DEBUG] Removing cluster members from  RDS Global Cluster: %s", d.Id())
+	if d.Get(names.AttrForceDestroy).(bool) {
+		log.Printf("[DEBUG] Removing cluster members from RDS Global Cluster: %s", d.Id())
 
 		// The writer cluster must be removed last
 		var writerARN string
@@ -541,6 +553,42 @@ func waitForGlobalClusterRemoval(ctx context.Context, conn *rds.RDS, dbClusterAR
 	return err
 }
 
+// globalClusterUpgradeEngineVersion upgrades the engine version of the RDS Global Cluster, accommodating
+// either a MAJOR or MINOR version upgrade. Given only the old and new versions, determining whether to
+// perform a MAJOR or MINOR upgrade is challenging. Instead of attempting to parse numerous combinations
+// of engines and versions, we initially attempt a major upgrade. If AWS returns an error indicating that
+// a minor version upgrade is supported ("InvalidParameterValue"/"only supports Major Version Upgrades"),
+// we infer that a minor upgrade will suffice. Therefore, it's crucial to recognize that this error serves
+// as more than just an error; it guides our decision between major and minor upgrades.
+
+// IMPORTANT: Altering the error handling in `globalClusterUpgradeMajorEngineVersion` can disrupt the
+// logic, including the handling of errors that signify the need for a minor version upgrade.
+func globalClusterUpgradeEngineVersion(ctx context.Context, d *schema.ResourceData, meta interface{}, timeout time.Duration) error {
+	log.Printf("[DEBUG] Upgrading RDS Global Cluster (%s) engine version: %s", d.Id(), d.Get(names.AttrEngineVersion))
+
+	err := globalClusterUpgradeMajorEngineVersion(ctx, meta, d.Id(), d.Get(names.AttrEngineVersion).(string), timeout)
+
+	if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "only supports Major Version Upgrades") {
+		err = globalClusterUpgradeMinorEngineVersion(ctx, meta, d.Get("global_cluster_members").(*schema.Set), d.Id(), d.Get(names.AttrEngineVersion).(string), timeout)
+
+		if err != nil {
+			return fmt.Errorf("while upgrading minor version of RDS Global Cluster (%s): %w", d.Id(), err)
+		}
+
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("while upgrading major version of RDS Global Cluster (%s): %w", d.Id(), err)
+	}
+
+	return nil
+}
+
+// globalClusterUpgradeMajorEngineVersion attempts a major version upgrade. If that fails, it returns an
+// error that is more than just an error but also indicates a minor version should be tried. It's IMPORTANT
+// to not handle this like any other error, such as, for example, retrying the error, since it indicates
+// another branch of logic. Please use caution when updating!!
 func globalClusterUpgradeMajorEngineVersion(ctx context.Context, meta interface{}, clusterID string, engineVersion string, timeout time.Duration) error {
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
@@ -550,9 +598,26 @@ func globalClusterUpgradeMajorEngineVersion(ctx context.Context, meta interface{
 		GlobalClusterIdentifier:  aws.String(clusterID),
 	}
 
-	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, timeout, func() (interface{}, error) {
-		return conn.ModifyGlobalClusterWithContext(ctx, input)
-	}, errCodeInvalidParameterValue, "only supports Major Version Upgrades")
+	err := retry.RetryContext(ctx, timeout, func() *retry.RetryError {
+		_, err := conn.ModifyGlobalClusterWithContext(ctx, input)
+		if err != nil {
+			if tfawserr.ErrCodeEquals(err, rds.ErrCodeGlobalClusterNotFoundFault) {
+				return retry.NonRetryableError(err)
+			}
+
+			if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "only supports Major Version Upgrades") {
+				return retry.NonRetryableError(err) // NOT retryable !! AND indicates this should be a minor version upgrade
+			}
+
+			return retry.RetryableError(err)
+		}
+
+		return nil
+	})
+
+	if tfresource.TimedOut(err) {
+		_, err = conn.ModifyGlobalClusterWithContext(ctx, input)
+	}
 
 	if err != nil {
 		return fmt.Errorf("while upgrading major version of RDS Global Cluster (%s): %w", clusterID, err)
@@ -573,18 +638,15 @@ func globalClusterUpgradeMajorEngineVersion(ctx context.Context, meta interface{
 
 		dbi, clusterRegion, err := ClusterIDRegionFromARN(arnID)
 		if err != nil {
-			return fmt.Errorf("while upgrading RDS Global Cluster Cluster minor engine version: %w", err)
+			return fmt.Errorf("while upgrading RDS Global Cluster Cluster major engine version: %w", err)
 		}
 
 		if dbi == "" {
 			continue
 		}
 
-		useConn := conn // clusters may not all be in the same region
-
-		if clusterRegion != meta.(*conns.AWSClient).Region {
-			useConn = rds.New(meta.(*conns.AWSClient).Session, aws.NewConfig().WithRegion(clusterRegion))
-		}
+		// Clusters may not all be in the same region.
+		useConn := meta.(*conns.AWSClient).RDSConnForRegion(ctx, clusterRegion)
 
 		if err := WaitForClusterUpdate(ctx, useConn, dbi, timeout); err != nil {
 			return fmt.Errorf("failed to update engine_version, waiting for RDS Global Cluster (%s) to update: %s", dbi, err)
@@ -594,35 +656,12 @@ func globalClusterUpgradeMajorEngineVersion(ctx context.Context, meta interface{
 	return err
 }
 
-func ClusterIDRegionFromARN(arnID string) (string, string, error) {
-	parsedARN, err := arn.Parse(arnID)
-	if err != nil {
-		return "", "", fmt.Errorf("could not parse ARN (%s): %w", arnID, err)
-	}
-
-	dbi := ""
-
-	if parsedARN.Resource != "" {
-		parts := strings.Split(parsedARN.Resource, ":")
-
-		if len(parts) < 2 {
-			return "", "", fmt.Errorf("could not get DB Cluster ID from parsing ARN (%s): %w", arnID, err)
-		}
-
-		if parsedARN.Service != rds.EndpointsID || parts[0] != "cluster" {
-			return "", "", fmt.Errorf("wrong ARN (%s) for a DB Cluster", arnID)
-		}
-
-		dbi = parts[1]
-	}
-
-	return dbi, parsedARN.Region, nil
-}
-
 func globalClusterUpgradeMinorEngineVersion(ctx context.Context, meta interface{}, clusterMembers *schema.Set, clusterID, engineVersion string, timeout time.Duration) error {
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	log.Printf("[INFO] Performing RDS Global Cluster (%s) minor version (%s) upgrade", clusterID, engineVersion)
+
+	leelooMultiPass := false // only one pass is needed
 
 	for _, clusterMemberRaw := range clusterMembers.List() {
 		clusterMember := clusterMemberRaw.(map[string]interface{})
@@ -644,10 +683,11 @@ func globalClusterUpgradeMinorEngineVersion(ctx context.Context, meta interface{
 			continue
 		}
 
-		useConn := conn
+		useConn := meta.(*conns.AWSClient).RDSConnForRegion(ctx, clusterRegion)
 
-		if clusterRegion != meta.(*conns.AWSClient).Region {
-			useConn = rds.New(meta.(*conns.AWSClient).Session, aws.NewConfig().WithRegion(clusterRegion))
+		// pre-wait for the cluster to be in a state where it can be updated
+		if err := WaitForClusterUpdate(ctx, useConn, dbi, timeout); err != nil {
+			return fmt.Errorf("failed to update engine_version, waiting for RDS Global Cluster Cluster (%s) to update: %s", dbi, err)
 		}
 
 		modInput := &rds.ModifyDBClusterInput{
@@ -685,6 +725,16 @@ func globalClusterUpgradeMinorEngineVersion(ctx context.Context, meta interface{
 			}
 		}
 
+		if tfawserr.ErrMessageContains(err, "InvalidGlobalClusterStateFault", "is upgrading") {
+			leelooMultiPass = true
+			continue
+		}
+
+		if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "upgrade global replicas first") {
+			leelooMultiPass = true
+			continue
+		}
+
 		if err != nil {
 			return fmt.Errorf("failed to update engine_version on RDS Global Cluster Cluster (%s): %s", dbi, err)
 		}
@@ -709,34 +759,38 @@ func globalClusterUpgradeMinorEngineVersion(ctx context.Context, meta interface{
 		return fmt.Errorf("after minor engine_version upgrade to RDS Global Cluster (%s): empty response", clusterID)
 	}
 
-	if aws.StringValue(globalCluster.EngineVersion) != engineVersion {
+	if leelooMultiPass || aws.StringValue(globalCluster.EngineVersion) != engineVersion {
 		log.Printf("[DEBUG] RDS Global Cluster (%s) upgrade did not take effect, trying again", clusterID)
+
 		return globalClusterUpgradeMinorEngineVersion(ctx, meta, clusterMembers, clusterID, engineVersion, timeout)
 	}
 
 	return nil
 }
 
-func globalClusterUpgradeEngineVersion(ctx context.Context, d *schema.ResourceData, meta interface{}, timeout time.Duration) error {
-	log.Printf("[DEBUG] Upgrading RDS Global Cluster (%s) engine version: %s", d.Id(), d.Get("engine_version"))
+func ClusterIDRegionFromARN(arnID string) (string, string, error) {
+	parsedARN, err := arn.Parse(arnID)
+	if err != nil {
+		return "", "", fmt.Errorf("could not parse ARN (%s): %w", arnID, err)
+	}
 
-	err := globalClusterUpgradeMajorEngineVersion(ctx, meta, d.Id(), d.Get("engine_version").(string), timeout)
+	dbi := ""
 
-	if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "only supports Major Version Upgrades") {
-		err = globalClusterUpgradeMinorEngineVersion(ctx, meta, d.Get("global_cluster_members").(*schema.Set), d.Id(), d.Get("engine_version").(string), timeout)
+	if parsedARN.Resource != "" {
+		parts := strings.Split(parsedARN.Resource, ":")
 
-		if err != nil {
-			return fmt.Errorf("while upgrading minor version of RDS Global Cluster (%s): %w", d.Id(), err)
+		if len(parts) < 2 {
+			return "", "", fmt.Errorf("could not get DB Cluster ID from parsing ARN (%s): %w", arnID, err)
 		}
 
-		return nil
+		if parsedARN.Service != rds.EndpointsID || parts[0] != "cluster" {
+			return "", "", fmt.Errorf("wrong ARN (%s) for a DB Cluster", arnID)
+		}
+
+		dbi = parts[1]
 	}
 
-	if err != nil {
-		return fmt.Errorf("while upgrading major version of RDS Global Cluster (%s): %w", d.Id(), err)
-	}
-
-	return nil
+	return dbi, parsedARN.Region, nil
 }
 
 var resourceClusterUpdatePendingStates = []string{

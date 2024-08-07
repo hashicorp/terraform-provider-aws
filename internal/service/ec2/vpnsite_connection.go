@@ -14,15 +14,17 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -32,7 +34,8 @@ import (
 
 // @SDKResource("aws_vpn_connection", name="VPN Connection")
 // @Tags(identifierAttribute="id")
-func ResourceVPNConnection() *schema.Resource {
+// @Testing(tagsTest=false)
+func resourceVPNConnection() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPNConnectionCreate,
 		ReadWithoutTimeout:   resourceVPNConnectionRead,
@@ -44,7 +47,7 @@ func ResourceVPNConnection() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -70,7 +73,7 @@ func ResourceVPNConnection() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				RequiredWith: []string{"transit_gateway_id"},
+				RequiredWith: []string{names.AttrTransitGatewayID},
 			},
 			"local_ipv4_network_cidr": {
 				Type:         schema.TypeString,
@@ -83,7 +86,6 @@ func ResourceVPNConnection() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.IsCIDRNetwork(0, 128),
-				RequiredWith: []string{"transit_gateway_id"},
 			},
 			"outside_ip_address_type": {
 				Type:         schema.TypeString,
@@ -102,7 +104,6 @@ func ResourceVPNConnection() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.IsCIDRNetwork(0, 128),
-				RequiredWith: []string{"transit_gateway_id"},
 			},
 			"routes": {
 				Type:     schema.TypeSet,
@@ -113,11 +114,11 @@ func ResourceVPNConnection() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"source": {
+						names.AttrSource: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"state": {
+						names.AttrState: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -132,11 +133,11 @@ func ResourceVPNConnection() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"transit_gateway_attachment_id": {
+			names.AttrTransitGatewayAttachmentID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"transit_gateway_id": {
+			names.AttrTransitGatewayID: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"vpn_gateway_id"},
@@ -146,11 +147,11 @@ func ResourceVPNConnection() *schema.Resource {
 				Optional: true,
 			},
 			"tunnel_inside_ip_version": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(ec2.TunnelInsideIpVersion_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.TunnelInsideIpVersion](),
 			},
 			"tunnel1_address": {
 				Type:     schema.TypeString,
@@ -215,7 +216,6 @@ func ResourceVPNConnection() *schema.Resource {
 				Computed:     true,
 				ForceNew:     true,
 				ValidateFunc: validVPNConnectionTunnelInsideIPv6CIDR(),
-				RequiredWith: []string{"transit_gateway_id"},
 			},
 			"tunnel1_log_options": {
 				Type:     schema.TypeList,
@@ -432,7 +432,6 @@ func ResourceVPNConnection() *schema.Resource {
 				Computed:     true,
 				ForceNew:     true,
 				ValidateFunc: validVPNConnectionTunnelInsideIPv6CIDR(),
-				RequiredWith: []string{"transit_gateway_id"},
 			},
 			"tunnel2_log_options": {
 				Type:     schema.TypeList,
@@ -586,7 +585,7 @@ func ResourceVPNConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"type": {
+			names.AttrType: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -601,7 +600,7 @@ func ResourceVPNConnection() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"certificate_arn": {
+						names.AttrCertificateARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -613,11 +612,11 @@ func ResourceVPNConnection() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"status": {
+						names.AttrStatus: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"status_message": {
+						names.AttrStatusMessage: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -627,7 +626,7 @@ func ResourceVPNConnection() *schema.Resource {
 			"vpn_gateway_id": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"transit_gateway_id"},
+				ConflictsWith: []string{names.AttrTransitGatewayID},
 			},
 		},
 
@@ -680,16 +679,16 @@ var (
 
 func resourceVPNConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.CreateVpnConnectionInput{
 		CustomerGatewayId: aws.String(d.Get("customer_gateway_id").(string)),
 		Options:           expandVPNConnectionOptionsSpecification(d),
-		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeVpnConnection),
-		Type:              aws.String(d.Get("type").(string)),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeVpnConnection),
+		Type:              aws.String(d.Get(names.AttrType).(string)),
 	}
 
-	if v, ok := d.GetOk("transit_gateway_id"); ok {
+	if v, ok := d.GetOk(names.AttrTransitGatewayID); ok {
 		input.TransitGatewayId = aws.String(v.(string))
 	}
 
@@ -697,15 +696,15 @@ func resourceVPNConnectionCreate(ctx context.Context, d *schema.ResourceData, me
 		input.VpnGatewayId = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateVpnConnectionWithContext(ctx, input)
+	output, err := conn.CreateVpnConnection(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 VPN Connection: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.VpnConnection.VpnConnectionId))
+	d.SetId(aws.ToString(output.VpnConnection.VpnConnectionId))
 
-	if _, err := WaitVPNConnectionCreated(ctx, conn, d.Id()); err != nil {
+	if _, err := waitVPNConnectionCreated(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 VPN Connection (%s) create: %s", d.Id(), err)
 	}
 
@@ -715,9 +714,9 @@ func resourceVPNConnectionCreate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceVPNConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	vpnConnection, err := FindVPNConnectionByID(ctx, conn, d.Id())
+	vpnConnection, err := findVPNConnectionByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 VPN Connection (%s) not found, removing from state", d.Id())
@@ -731,38 +730,38 @@ func resourceVPNConnectionRead(ctx context.Context, d *schema.ResourceData, meta
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   ec2.ServiceName,
+		Service:   names.EC2,
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("vpn-connection/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("core_network_arn", vpnConnection.CoreNetworkArn)
 	d.Set("core_network_attachment_arn", vpnConnection.CoreNetworkAttachmentArn)
 	d.Set("customer_gateway_id", vpnConnection.CustomerGatewayId)
-	d.Set("type", vpnConnection.Type)
+	d.Set(names.AttrType, vpnConnection.Type)
 	d.Set("vpn_gateway_id", vpnConnection.VpnGatewayId)
 
 	if v := vpnConnection.TransitGatewayId; v != nil {
 		input := &ec2.DescribeTransitGatewayAttachmentsInput{
-			Filters: BuildAttributeFilterList(map[string]string{
+			Filters: newAttributeFilterList(map[string]string{
 				"resource-id":        d.Id(),
-				"resource-type":      ec2.TransitGatewayAttachmentResourceTypeVpn,
-				"transit-gateway-id": aws.StringValue(v),
+				"resource-type":      string(awstypes.TransitGatewayAttachmentResourceTypeVpn),
+				"transit-gateway-id": aws.ToString(v),
 			}),
 		}
 
-		output, err := FindTransitGatewayAttachment(ctx, conn, input)
+		output, err := findTransitGatewayAttachment(ctx, conn, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading EC2 VPN Connection (%s) Transit Gateway Attachment: %s", d.Id(), err)
 		}
 
-		d.Set("transit_gateway_attachment_id", output.TransitGatewayAttachmentId)
-		d.Set("transit_gateway_id", v)
+		d.Set(names.AttrTransitGatewayAttachmentID, output.TransitGatewayAttachmentId)
+		d.Set(names.AttrTransitGatewayID, v)
 	} else {
-		d.Set("transit_gateway_attachment_id", nil)
-		d.Set("transit_gateway_id", nil)
+		d.Set(names.AttrTransitGatewayAttachmentID, nil)
+		d.Set(names.AttrTransitGatewayID, nil)
 	}
 
 	if err := d.Set("routes", flattenVPNStaticRoutes(vpnConnection.Routes)); err != nil {
@@ -807,8 +806,8 @@ func resourceVPNConnectionRead(ctx context.Context, d *schema.ResourceData, meta
 
 	d.Set("customer_gateway_configuration", vpnConnection.CustomerGatewayConfiguration)
 
-	tunnelInfo, err := CustomerGatewayConfigurationToTunnelInfo(
-		aws.StringValue(vpnConnection.CustomerGatewayConfiguration),
+	tunnelInfo, err := customerGatewayConfigurationToTunnelInfo(
+		aws.ToString(vpnConnection.CustomerGatewayConfiguration),
 		d.Get("tunnel1_preshared_key").(string), // Not currently available during import
 		d.Get("tunnel1_inside_cidr").(string),
 		d.Get("tunnel1_inside_ipv6_cidr").(string),
@@ -852,9 +851,9 @@ func resourceVPNConnectionRead(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceVPNConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	if d.HasChanges("customer_gateway_id", "transit_gateway_id", "vpn_gateway_id") {
+	if d.HasChanges("customer_gateway_id", names.AttrTransitGatewayID, "vpn_gateway_id") {
 		input := &ec2.ModifyVpnConnectionInput{
 			VpnConnectionId: aws.String(d.Id()),
 		}
@@ -863,7 +862,7 @@ func resourceVPNConnectionUpdate(ctx context.Context, d *schema.ResourceData, me
 			input.CustomerGatewayId = aws.String(d.Get("customer_gateway_id").(string))
 		}
 
-		if hasChange, v := d.HasChange("transit_gateway_id"), d.Get("transit_gateway_id").(string); hasChange && v != "" {
+		if hasChange, v := d.HasChange(names.AttrTransitGatewayID), d.Get(names.AttrTransitGatewayID).(string); hasChange && v != "" {
 			input.TransitGatewayId = aws.String(v)
 		}
 
@@ -871,13 +870,13 @@ func resourceVPNConnectionUpdate(ctx context.Context, d *schema.ResourceData, me
 			input.VpnGatewayId = aws.String(v)
 		}
 
-		_, err := conn.ModifyVpnConnectionWithContext(ctx, input)
+		_, err := conn.ModifyVpnConnection(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying EC2 VPN Connection (%s): %s", d.Id(), err)
 		}
 
-		if _, err := WaitVPNConnectionUpdated(ctx, conn, d.Id()); err != nil {
+		if _, err := waitVPNConnectionUpdated(ctx, conn, d.Id()); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for EC2 VPN Connection (%s) update: %s", d.Id(), err)
 		}
 	}
@@ -903,32 +902,32 @@ func resourceVPNConnectionUpdate(ctx context.Context, d *schema.ResourceData, me
 			input.RemoteIpv6NetworkCidr = aws.String(d.Get("remote_ipv6_network_cidr").(string))
 		}
 
-		_, err := conn.ModifyVpnConnectionOptionsWithContext(ctx, input)
+		_, err := conn.ModifyVpnConnectionOptions(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying EC2 VPN Connection (%s) connection options: %s", d.Id(), err)
 		}
 
-		if _, err := WaitVPNConnectionUpdated(ctx, conn, d.Id()); err != nil {
+		if _, err := waitVPNConnectionUpdated(ctx, conn, d.Id()); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for EC2 VPN Connection (%s) connection options update: %s", d.Id(), err)
 		}
 	}
 
 	for i, prefix := range []string{"tunnel1_", "tunnel2_"} {
-		if options, address := expandModifyVPNTunnelOptionsSpecification(d, prefix), d.Get(prefix+"address").(string); options != nil && address != "" {
+		if options, address := expandModifyVPNTunnelOptionsSpecification(d, prefix), d.Get(prefix+names.AttrAddress).(string); options != nil && address != "" {
 			input := &ec2.ModifyVpnTunnelOptionsInput{
 				TunnelOptions:             options,
 				VpnConnectionId:           aws.String(d.Id()),
 				VpnTunnelOutsideIpAddress: aws.String(address),
 			}
 
-			_, err := conn.ModifyVpnTunnelOptionsWithContext(ctx, input)
+			_, err := conn.ModifyVpnTunnelOptions(ctx, input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "modifying EC2 VPN Connection (%s) tunnel (%d) options: %s", d.Id(), i+1, err)
 			}
 
-			if _, err := WaitVPNConnectionUpdated(ctx, conn, d.Id()); err != nil {
+			if _, err := waitVPNConnectionUpdated(ctx, conn, d.Id()); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for EC2 VPN Connection (%s) tunnel (%d) options update: %s", d.Id(), i+1, err)
 			}
 		}
@@ -939,10 +938,10 @@ func resourceVPNConnectionUpdate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceVPNConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[INFO] Deleting EC2 VPN Connection: %s", d.Id())
-	_, err := conn.DeleteVpnConnectionWithContext(ctx, &ec2.DeleteVpnConnectionInput{
+	_, err := conn.DeleteVpnConnection(ctx, &ec2.DeleteVpnConnectionInput{
 		VpnConnectionId: aws.String(d.Id()),
 	})
 
@@ -954,15 +953,15 @@ func resourceVPNConnectionDelete(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "deleting EC2 VPN Connection (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitVPNConnectionDeleted(ctx, conn, d.Id()); err != nil {
+	if _, err := waitVPNConnectionDeleted(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 VPN Connection (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func expandVPNConnectionOptionsSpecification(d *schema.ResourceData) *ec2.VpnConnectionOptionsSpecification {
-	apiObject := &ec2.VpnConnectionOptionsSpecification{}
+func expandVPNConnectionOptionsSpecification(d *schema.ResourceData) *awstypes.VpnConnectionOptionsSpecification {
+	apiObject := &awstypes.VpnConnectionOptionsSpecification{}
 
 	if v, ok := d.GetOk("enable_acceleration"); ok {
 		apiObject.EnableAcceleration = aws.Bool(v.(bool))
@@ -972,7 +971,7 @@ func expandVPNConnectionOptionsSpecification(d *schema.ResourceData) *ec2.VpnCon
 		apiObject.OutsideIpAddressType = aws.String(v.(string))
 	}
 
-	if v := d.Get("tunnel_inside_ip_version").(string); v == ec2.TunnelInsideIpVersionIpv6 {
+	if v := d.Get("tunnel_inside_ip_version").(string); v == string(awstypes.TunnelInsideIpVersionIpv6) {
 		if v, ok := d.GetOk("local_ipv6_network_cidr"); ok {
 			apiObject.LocalIpv6NetworkCidr = aws.String(v.(string))
 		}
@@ -981,7 +980,7 @@ func expandVPNConnectionOptionsSpecification(d *schema.ResourceData) *ec2.VpnCon
 			apiObject.RemoteIpv6NetworkCidr = aws.String(v.(string))
 		}
 
-		apiObject.TunnelInsideIpVersion = aws.String(v)
+		apiObject.TunnelInsideIpVersion = awstypes.TunnelInsideIpVersion(v)
 	} else {
 		if v, ok := d.GetOk("local_ipv4_network_cidr"); ok {
 			apiObject.LocalIpv4NetworkCidr = aws.String(v.(string))
@@ -1000,7 +999,7 @@ func expandVPNConnectionOptionsSpecification(d *schema.ResourceData) *ec2.VpnCon
 		apiObject.TransportTransitGatewayAttachmentId = aws.String(v.(string))
 	}
 
-	apiObject.TunnelOptions = []*ec2.VpnTunnelOptionsSpecification{
+	apiObject.TunnelOptions = []awstypes.VpnTunnelOptionsSpecification{
 		expandVPNTunnelOptionsSpecification(d, "tunnel1_"),
 		expandVPNTunnelOptionsSpecification(d, "tunnel2_"),
 	}
@@ -1008,15 +1007,15 @@ func expandVPNConnectionOptionsSpecification(d *schema.ResourceData) *ec2.VpnCon
 	return apiObject
 }
 
-func expandVPNTunnelOptionsSpecification(d *schema.ResourceData, prefix string) *ec2.VpnTunnelOptionsSpecification {
-	apiObject := &ec2.VpnTunnelOptionsSpecification{}
+func expandVPNTunnelOptionsSpecification(d *schema.ResourceData, prefix string) awstypes.VpnTunnelOptionsSpecification {
+	apiObject := awstypes.VpnTunnelOptionsSpecification{}
 
 	if v, ok := d.GetOk(prefix + "dpd_timeout_action"); ok {
 		apiObject.DPDTimeoutAction = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk(prefix + "dpd_timeout_seconds"); ok {
-		apiObject.DPDTimeoutSeconds = aws.Int64(int64(v.(int)))
+		apiObject.DPDTimeoutSeconds = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk(prefix + "enable_tunnel_lifecycle_control"); ok {
@@ -1025,7 +1024,7 @@ func expandVPNTunnelOptionsSpecification(d *schema.ResourceData, prefix string) 
 
 	if v, ok := d.GetOk(prefix + "ike_versions"); ok {
 		for _, v := range v.(*schema.Set).List() {
-			apiObject.IKEVersions = append(apiObject.IKEVersions, &ec2.IKEVersionsRequestListValue{Value: aws.String(v.(string))})
+			apiObject.IKEVersions = append(apiObject.IKEVersions, awstypes.IKEVersionsRequestListValue{Value: aws.String(v.(string))})
 		}
 	}
 
@@ -1035,46 +1034,46 @@ func expandVPNTunnelOptionsSpecification(d *schema.ResourceData, prefix string) 
 
 	if v, ok := d.GetOk(prefix + "phase1_dh_group_numbers"); ok {
 		for _, v := range v.(*schema.Set).List() {
-			apiObject.Phase1DHGroupNumbers = append(apiObject.Phase1DHGroupNumbers, &ec2.Phase1DHGroupNumbersRequestListValue{Value: aws.Int64(int64(v.(int)))})
+			apiObject.Phase1DHGroupNumbers = append(apiObject.Phase1DHGroupNumbers, awstypes.Phase1DHGroupNumbersRequestListValue{Value: aws.Int32(int32(v.(int)))})
 		}
 	}
 
 	if v, ok := d.GetOk(prefix + "phase1_encryption_algorithms"); ok {
 		for _, v := range v.(*schema.Set).List() {
-			apiObject.Phase1EncryptionAlgorithms = append(apiObject.Phase1EncryptionAlgorithms, &ec2.Phase1EncryptionAlgorithmsRequestListValue{Value: aws.String(v.(string))})
+			apiObject.Phase1EncryptionAlgorithms = append(apiObject.Phase1EncryptionAlgorithms, awstypes.Phase1EncryptionAlgorithmsRequestListValue{Value: aws.String(v.(string))})
 		}
 	}
 
 	if v, ok := d.GetOk(prefix + "phase1_integrity_algorithms"); ok {
 		for _, v := range v.(*schema.Set).List() {
-			apiObject.Phase1IntegrityAlgorithms = append(apiObject.Phase1IntegrityAlgorithms, &ec2.Phase1IntegrityAlgorithmsRequestListValue{Value: aws.String(v.(string))})
+			apiObject.Phase1IntegrityAlgorithms = append(apiObject.Phase1IntegrityAlgorithms, awstypes.Phase1IntegrityAlgorithmsRequestListValue{Value: aws.String(v.(string))})
 		}
 	}
 
 	if v, ok := d.GetOk(prefix + "phase1_lifetime_seconds"); ok {
-		apiObject.Phase1LifetimeSeconds = aws.Int64(int64(v.(int)))
+		apiObject.Phase1LifetimeSeconds = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk(prefix + "phase2_dh_group_numbers"); ok {
 		for _, v := range v.(*schema.Set).List() {
-			apiObject.Phase2DHGroupNumbers = append(apiObject.Phase2DHGroupNumbers, &ec2.Phase2DHGroupNumbersRequestListValue{Value: aws.Int64(int64(v.(int)))})
+			apiObject.Phase2DHGroupNumbers = append(apiObject.Phase2DHGroupNumbers, awstypes.Phase2DHGroupNumbersRequestListValue{Value: aws.Int32(int32(v.(int)))})
 		}
 	}
 
 	if v, ok := d.GetOk(prefix + "phase2_encryption_algorithms"); ok {
 		for _, v := range v.(*schema.Set).List() {
-			apiObject.Phase2EncryptionAlgorithms = append(apiObject.Phase2EncryptionAlgorithms, &ec2.Phase2EncryptionAlgorithmsRequestListValue{Value: aws.String(v.(string))})
+			apiObject.Phase2EncryptionAlgorithms = append(apiObject.Phase2EncryptionAlgorithms, awstypes.Phase2EncryptionAlgorithmsRequestListValue{Value: aws.String(v.(string))})
 		}
 	}
 
 	if v, ok := d.GetOk(prefix + "phase2_integrity_algorithms"); ok {
 		for _, v := range v.(*schema.Set).List() {
-			apiObject.Phase2IntegrityAlgorithms = append(apiObject.Phase2IntegrityAlgorithms, &ec2.Phase2IntegrityAlgorithmsRequestListValue{Value: aws.String(v.(string))})
+			apiObject.Phase2IntegrityAlgorithms = append(apiObject.Phase2IntegrityAlgorithms, awstypes.Phase2IntegrityAlgorithmsRequestListValue{Value: aws.String(v.(string))})
 		}
 	}
 
 	if v, ok := d.GetOk(prefix + "phase2_lifetime_seconds"); ok {
-		apiObject.Phase2LifetimeSeconds = aws.Int64(int64(v.(int)))
+		apiObject.Phase2LifetimeSeconds = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk(prefix + "preshared_key"); ok {
@@ -1082,15 +1081,15 @@ func expandVPNTunnelOptionsSpecification(d *schema.ResourceData, prefix string) 
 	}
 
 	if v, ok := d.GetOk(prefix + "rekey_fuzz_percentage"); ok {
-		apiObject.RekeyFuzzPercentage = aws.Int64(int64(v.(int)))
+		apiObject.RekeyFuzzPercentage = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk(prefix + "rekey_margin_time_seconds"); ok {
-		apiObject.RekeyMarginTimeSeconds = aws.Int64(int64(v.(int)))
+		apiObject.RekeyMarginTimeSeconds = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk(prefix + "replay_window_size"); ok {
-		apiObject.ReplayWindowSize = aws.Int64(int64(v.(int)))
+		apiObject.ReplayWindowSize = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk(prefix + "startup_action"); ok {
@@ -1108,12 +1107,12 @@ func expandVPNTunnelOptionsSpecification(d *schema.ResourceData, prefix string) 
 	return apiObject
 }
 
-func expandVPNTunnelLogOptionsSpecification(tfMap map[string]interface{}) *ec2.VpnTunnelLogOptionsSpecification {
+func expandVPNTunnelLogOptionsSpecification(tfMap map[string]interface{}) *awstypes.VpnTunnelLogOptionsSpecification {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &ec2.VpnTunnelLogOptionsSpecification{}
+	apiObject := &awstypes.VpnTunnelLogOptionsSpecification{}
 
 	if v, ok := tfMap["cloudwatch_log_options"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.CloudWatchLogOptions = expandCloudWatchLogOptionsSpecification(v[0].(map[string]interface{}))
@@ -1122,19 +1121,19 @@ func expandVPNTunnelLogOptionsSpecification(tfMap map[string]interface{}) *ec2.V
 	return apiObject
 }
 
-func expandCloudWatchLogOptionsSpecification(tfMap map[string]interface{}) *ec2.CloudWatchLogOptionsSpecification {
+func expandCloudWatchLogOptionsSpecification(tfMap map[string]interface{}) *awstypes.CloudWatchLogOptionsSpecification {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &ec2.CloudWatchLogOptionsSpecification{}
+	apiObject := &awstypes.CloudWatchLogOptionsSpecification{}
 
 	if v, ok := tfMap["log_enabled"].(bool); ok {
 		apiObject.LogEnabled = aws.Bool(v)
 	}
 
 	// No ARN or format if not enabled.
-	if aws.BoolValue(apiObject.LogEnabled) {
+	if aws.ToBool(apiObject.LogEnabled) {
 		if v, ok := tfMap["log_group_arn"].(string); ok && v != "" {
 			apiObject.LogGroupArn = aws.String(v)
 		}
@@ -1147,8 +1146,8 @@ func expandCloudWatchLogOptionsSpecification(tfMap map[string]interface{}) *ec2.
 	return apiObject
 }
 
-func expandModifyVPNTunnelOptionsSpecification(d *schema.ResourceData, prefix string) *ec2.ModifyVpnTunnelOptionsSpecification {
-	apiObject := &ec2.ModifyVpnTunnelOptionsSpecification{}
+func expandModifyVPNTunnelOptionsSpecification(d *schema.ResourceData, prefix string) *awstypes.ModifyVpnTunnelOptionsSpecification {
+	apiObject := &awstypes.ModifyVpnTunnelOptionsSpecification{}
 	hasChange := false
 
 	if key := prefix + "dpd_timeout_action"; d.HasChange(key) {
@@ -1163,9 +1162,9 @@ func expandModifyVPNTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 
 	if key := prefix + "dpd_timeout_seconds"; d.HasChange(key) {
 		if v, ok := d.GetOk(key); ok {
-			apiObject.DPDTimeoutSeconds = aws.Int64(int64(v.(int)))
+			apiObject.DPDTimeoutSeconds = aws.Int32(int32(v.(int)))
 		} else {
-			apiObject.DPDTimeoutSeconds = aws.Int64(int64(defaultVPNTunnelOptionsDPDTimeoutSeconds))
+			apiObject.DPDTimeoutSeconds = aws.Int32(int32(defaultVPNTunnelOptionsDPDTimeoutSeconds))
 		}
 
 		hasChange = true
@@ -1184,11 +1183,11 @@ func expandModifyVPNTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 	if key := prefix + "ike_versions"; d.HasChange(key) {
 		if v, ok := d.GetOk(key); ok && v.(*schema.Set).Len() > 0 {
 			for _, v := range d.Get(key).(*schema.Set).List() {
-				apiObject.IKEVersions = append(apiObject.IKEVersions, &ec2.IKEVersionsRequestListValue{Value: aws.String(v.(string))})
+				apiObject.IKEVersions = append(apiObject.IKEVersions, awstypes.IKEVersionsRequestListValue{Value: aws.String(v.(string))})
 			}
 		} else {
 			for _, v := range defaultVPNTunnelOptionsIKEVersions {
-				apiObject.IKEVersions = append(apiObject.IKEVersions, &ec2.IKEVersionsRequestListValue{Value: aws.String(v)})
+				apiObject.IKEVersions = append(apiObject.IKEVersions, awstypes.IKEVersionsRequestListValue{Value: aws.String(v)})
 			}
 		}
 
@@ -1206,11 +1205,11 @@ func expandModifyVPNTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 	if key := prefix + "phase1_dh_group_numbers"; d.HasChange(key) {
 		if v, ok := d.GetOk(key); ok && v.(*schema.Set).Len() > 0 {
 			for _, v := range d.Get(key).(*schema.Set).List() {
-				apiObject.Phase1DHGroupNumbers = append(apiObject.Phase1DHGroupNumbers, &ec2.Phase1DHGroupNumbersRequestListValue{Value: aws.Int64(int64(v.(int)))})
+				apiObject.Phase1DHGroupNumbers = append(apiObject.Phase1DHGroupNumbers, awstypes.Phase1DHGroupNumbersRequestListValue{Value: aws.Int32(int32(v.(int)))})
 			}
 		} else {
 			for _, v := range defaultVPNTunnelOptionsPhase1DHGroupNumbers {
-				apiObject.Phase1DHGroupNumbers = append(apiObject.Phase1DHGroupNumbers, &ec2.Phase1DHGroupNumbersRequestListValue{Value: aws.Int64(int64(v))})
+				apiObject.Phase1DHGroupNumbers = append(apiObject.Phase1DHGroupNumbers, awstypes.Phase1DHGroupNumbersRequestListValue{Value: aws.Int32(int32(v))})
 			}
 		}
 
@@ -1220,11 +1219,11 @@ func expandModifyVPNTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 	if key := prefix + "phase1_encryption_algorithms"; d.HasChange(key) {
 		if v, ok := d.GetOk(key); ok && v.(*schema.Set).Len() > 0 {
 			for _, v := range d.Get(key).(*schema.Set).List() {
-				apiObject.Phase1EncryptionAlgorithms = append(apiObject.Phase1EncryptionAlgorithms, &ec2.Phase1EncryptionAlgorithmsRequestListValue{Value: aws.String(v.(string))})
+				apiObject.Phase1EncryptionAlgorithms = append(apiObject.Phase1EncryptionAlgorithms, awstypes.Phase1EncryptionAlgorithmsRequestListValue{Value: aws.String(v.(string))})
 			}
 		} else {
 			for _, v := range defaultVPNTunnelOptionsPhase1EncryptionAlgorithms {
-				apiObject.Phase1EncryptionAlgorithms = append(apiObject.Phase1EncryptionAlgorithms, &ec2.Phase1EncryptionAlgorithmsRequestListValue{Value: aws.String(v)})
+				apiObject.Phase1EncryptionAlgorithms = append(apiObject.Phase1EncryptionAlgorithms, awstypes.Phase1EncryptionAlgorithmsRequestListValue{Value: aws.String(v)})
 			}
 		}
 
@@ -1234,11 +1233,11 @@ func expandModifyVPNTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 	if key := prefix + "phase1_integrity_algorithms"; d.HasChange(key) {
 		if v, ok := d.GetOk(key); ok && v.(*schema.Set).Len() > 0 {
 			for _, v := range d.Get(key).(*schema.Set).List() {
-				apiObject.Phase1IntegrityAlgorithms = append(apiObject.Phase1IntegrityAlgorithms, &ec2.Phase1IntegrityAlgorithmsRequestListValue{Value: aws.String(v.(string))})
+				apiObject.Phase1IntegrityAlgorithms = append(apiObject.Phase1IntegrityAlgorithms, awstypes.Phase1IntegrityAlgorithmsRequestListValue{Value: aws.String(v.(string))})
 			}
 		} else {
 			for _, v := range defaultVPNTunnelOptionsPhase1IntegrityAlgorithms {
-				apiObject.Phase1IntegrityAlgorithms = append(apiObject.Phase1IntegrityAlgorithms, &ec2.Phase1IntegrityAlgorithmsRequestListValue{Value: aws.String(v)})
+				apiObject.Phase1IntegrityAlgorithms = append(apiObject.Phase1IntegrityAlgorithms, awstypes.Phase1IntegrityAlgorithmsRequestListValue{Value: aws.String(v)})
 			}
 		}
 
@@ -1247,9 +1246,9 @@ func expandModifyVPNTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 
 	if key := prefix + "phase1_lifetime_seconds"; d.HasChange(key) {
 		if v, ok := d.GetOk(key); ok {
-			apiObject.Phase1LifetimeSeconds = aws.Int64(int64(v.(int)))
+			apiObject.Phase1LifetimeSeconds = aws.Int32(int32(v.(int)))
 		} else {
-			apiObject.Phase1LifetimeSeconds = aws.Int64(int64(defaultVPNTunnelOptionsPhase1LifetimeSeconds))
+			apiObject.Phase1LifetimeSeconds = aws.Int32(int32(defaultVPNTunnelOptionsPhase1LifetimeSeconds))
 		}
 
 		hasChange = true
@@ -1258,11 +1257,11 @@ func expandModifyVPNTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 	if key := prefix + "phase2_dh_group_numbers"; d.HasChange(key) {
 		if v, ok := d.GetOk(key); ok && v.(*schema.Set).Len() > 0 {
 			for _, v := range d.Get(key).(*schema.Set).List() {
-				apiObject.Phase2DHGroupNumbers = append(apiObject.Phase2DHGroupNumbers, &ec2.Phase2DHGroupNumbersRequestListValue{Value: aws.Int64(int64(v.(int)))})
+				apiObject.Phase2DHGroupNumbers = append(apiObject.Phase2DHGroupNumbers, awstypes.Phase2DHGroupNumbersRequestListValue{Value: aws.Int32(int32(v.(int)))})
 			}
 		} else {
 			for _, v := range defaultVPNTunnelOptionsPhase2DHGroupNumbers {
-				apiObject.Phase2DHGroupNumbers = append(apiObject.Phase2DHGroupNumbers, &ec2.Phase2DHGroupNumbersRequestListValue{Value: aws.Int64(int64(v))})
+				apiObject.Phase2DHGroupNumbers = append(apiObject.Phase2DHGroupNumbers, awstypes.Phase2DHGroupNumbersRequestListValue{Value: aws.Int32(int32(v))})
 			}
 		}
 
@@ -1272,11 +1271,11 @@ func expandModifyVPNTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 	if key := prefix + "phase2_encryption_algorithms"; d.HasChange(key) {
 		if v, ok := d.GetOk(key); ok && v.(*schema.Set).Len() > 0 {
 			for _, v := range d.Get(key).(*schema.Set).List() {
-				apiObject.Phase2EncryptionAlgorithms = append(apiObject.Phase2EncryptionAlgorithms, &ec2.Phase2EncryptionAlgorithmsRequestListValue{Value: aws.String(v.(string))})
+				apiObject.Phase2EncryptionAlgorithms = append(apiObject.Phase2EncryptionAlgorithms, awstypes.Phase2EncryptionAlgorithmsRequestListValue{Value: aws.String(v.(string))})
 			}
 		} else {
 			for _, v := range defaultVPNTunnelOptionsPhase2EncryptionAlgorithms {
-				apiObject.Phase2EncryptionAlgorithms = append(apiObject.Phase2EncryptionAlgorithms, &ec2.Phase2EncryptionAlgorithmsRequestListValue{Value: aws.String(v)})
+				apiObject.Phase2EncryptionAlgorithms = append(apiObject.Phase2EncryptionAlgorithms, awstypes.Phase2EncryptionAlgorithmsRequestListValue{Value: aws.String(v)})
 			}
 		}
 
@@ -1286,11 +1285,11 @@ func expandModifyVPNTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 	if key := prefix + "phase2_integrity_algorithms"; d.HasChange(key) {
 		if v, ok := d.GetOk(key); ok && v.(*schema.Set).Len() > 0 {
 			for _, v := range d.Get(key).(*schema.Set).List() {
-				apiObject.Phase2IntegrityAlgorithms = append(apiObject.Phase2IntegrityAlgorithms, &ec2.Phase2IntegrityAlgorithmsRequestListValue{Value: aws.String(v.(string))})
+				apiObject.Phase2IntegrityAlgorithms = append(apiObject.Phase2IntegrityAlgorithms, awstypes.Phase2IntegrityAlgorithmsRequestListValue{Value: aws.String(v.(string))})
 			}
 		} else {
 			for _, v := range defaultVPNTunnelOptionsPhase2IntegrityAlgorithms {
-				apiObject.Phase2IntegrityAlgorithms = append(apiObject.Phase2IntegrityAlgorithms, &ec2.Phase2IntegrityAlgorithmsRequestListValue{Value: aws.String(v)})
+				apiObject.Phase2IntegrityAlgorithms = append(apiObject.Phase2IntegrityAlgorithms, awstypes.Phase2IntegrityAlgorithmsRequestListValue{Value: aws.String(v)})
 			}
 		}
 
@@ -1299,9 +1298,9 @@ func expandModifyVPNTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 
 	if key := prefix + "phase2_lifetime_seconds"; d.HasChange(key) {
 		if v, ok := d.GetOk(key); ok {
-			apiObject.Phase2LifetimeSeconds = aws.Int64(int64(v.(int)))
+			apiObject.Phase2LifetimeSeconds = aws.Int32(int32(v.(int)))
 		} else {
-			apiObject.Phase2LifetimeSeconds = aws.Int64(int64(defaultVPNTunnelOptionsPhase2LifetimeSeconds))
+			apiObject.Phase2LifetimeSeconds = aws.Int32(int32(defaultVPNTunnelOptionsPhase2LifetimeSeconds))
 		}
 
 		hasChange = true
@@ -1315,9 +1314,9 @@ func expandModifyVPNTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 
 	if key := prefix + "rekey_fuzz_percentage"; d.HasChange(key) {
 		if v, ok := d.GetOk(key); ok {
-			apiObject.RekeyFuzzPercentage = aws.Int64(int64(v.(int)))
+			apiObject.RekeyFuzzPercentage = aws.Int32(int32(v.(int)))
 		} else {
-			apiObject.RekeyFuzzPercentage = aws.Int64(int64(defaultVPNTunnelOptionsRekeyFuzzPercentage))
+			apiObject.RekeyFuzzPercentage = aws.Int32(int32(defaultVPNTunnelOptionsRekeyFuzzPercentage))
 		}
 
 		hasChange = true
@@ -1325,9 +1324,9 @@ func expandModifyVPNTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 
 	if key := prefix + "rekey_margin_time_seconds"; d.HasChange(key) {
 		if v, ok := d.GetOk(key); ok {
-			apiObject.RekeyMarginTimeSeconds = aws.Int64(int64(v.(int)))
+			apiObject.RekeyMarginTimeSeconds = aws.Int32(int32(v.(int)))
 		} else {
-			apiObject.RekeyMarginTimeSeconds = aws.Int64(int64(defaultVPNTunnelOptionsRekeyMarginTimeSeconds))
+			apiObject.RekeyMarginTimeSeconds = aws.Int32(int32(defaultVPNTunnelOptionsRekeyMarginTimeSeconds))
 		}
 
 		hasChange = true
@@ -1335,9 +1334,9 @@ func expandModifyVPNTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 
 	if key := prefix + "replay_window_size"; d.HasChange(key) {
 		if v, ok := d.GetOk(key); ok {
-			apiObject.ReplayWindowSize = aws.Int64(int64(v.(int)))
+			apiObject.ReplayWindowSize = aws.Int32(int32(v.(int)))
 		} else {
-			apiObject.ReplayWindowSize = aws.Int64(int64(defaultVPNTunnelOptionsReplayWindowSize))
+			apiObject.ReplayWindowSize = aws.Int32(int32(defaultVPNTunnelOptionsReplayWindowSize))
 		}
 
 		hasChange = true
@@ -1360,13 +1359,9 @@ func expandModifyVPNTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 	return apiObject
 }
 
-func flattenTunnelOption(d *schema.ResourceData, prefix string, apiObject *ec2.TunnelOption) error {
-	if apiObject == nil {
-		return nil
-	}
-
+func flattenTunnelOption(d *schema.ResourceData, prefix string, apiObject awstypes.TunnelOption) error {
 	var s []*string
-	var i []*int64
+	var i []*int32
 
 	d.Set(prefix+"dpd_timeout_action", apiObject.DpdTimeoutAction)
 	d.Set(prefix+"dpd_timeout_seconds", apiObject.DpdTimeoutSeconds)
@@ -1375,7 +1370,7 @@ func flattenTunnelOption(d *schema.ResourceData, prefix string, apiObject *ec2.T
 	for _, v := range apiObject.IkeVersions {
 		s = append(s, v.Value)
 	}
-	d.Set(prefix+"ike_versions", aws.StringValueSlice(s))
+	d.Set(prefix+"ike_versions", aws.ToStringSlice(s))
 	s = nil
 
 	if apiObject.LogOptions != nil {
@@ -1389,19 +1384,19 @@ func flattenTunnelOption(d *schema.ResourceData, prefix string, apiObject *ec2.T
 	for _, v := range apiObject.Phase1DHGroupNumbers {
 		i = append(i, v.Value)
 	}
-	d.Set(prefix+"phase1_dh_group_numbers", aws.Int64ValueSlice(i))
+	d.Set(prefix+"phase1_dh_group_numbers", aws.ToInt32Slice(i))
 	i = nil
 
 	for _, v := range apiObject.Phase1EncryptionAlgorithms {
 		s = append(s, v.Value)
 	}
-	d.Set(prefix+"phase1_encryption_algorithms", aws.StringValueSlice(s))
+	d.Set(prefix+"phase1_encryption_algorithms", aws.ToStringSlice(s))
 	s = nil
 
 	for _, v := range apiObject.Phase1IntegrityAlgorithms {
 		s = append(s, v.Value)
 	}
-	d.Set(prefix+"phase1_integrity_algorithms", aws.StringValueSlice(s))
+	d.Set(prefix+"phase1_integrity_algorithms", aws.ToStringSlice(s))
 	s = nil
 
 	d.Set(prefix+"phase1_lifetime_seconds", apiObject.Phase1LifetimeSeconds)
@@ -1409,18 +1404,18 @@ func flattenTunnelOption(d *schema.ResourceData, prefix string, apiObject *ec2.T
 	for _, v := range apiObject.Phase2DHGroupNumbers {
 		i = append(i, v.Value)
 	}
-	d.Set(prefix+"phase2_dh_group_numbers", aws.Int64ValueSlice(i))
+	d.Set(prefix+"phase2_dh_group_numbers", aws.ToInt32Slice(i))
 
 	for _, v := range apiObject.Phase2EncryptionAlgorithms {
 		s = append(s, v.Value)
 	}
-	d.Set(prefix+"phase2_encryption_algorithms", aws.StringValueSlice(s))
+	d.Set(prefix+"phase2_encryption_algorithms", aws.ToStringSlice(s))
 	s = nil
 
 	for _, v := range apiObject.Phase2IntegrityAlgorithms {
 		s = append(s, v.Value)
 	}
-	d.Set(prefix+"phase2_integrity_algorithms", aws.StringValueSlice(s))
+	d.Set(prefix+"phase2_integrity_algorithms", aws.ToStringSlice(s))
 
 	d.Set(prefix+"phase2_lifetime_seconds", apiObject.Phase2LifetimeSeconds)
 	d.Set(prefix+"rekey_fuzz_percentage", apiObject.RekeyFuzzPercentage)
@@ -1433,29 +1428,20 @@ func flattenTunnelOption(d *schema.ResourceData, prefix string, apiObject *ec2.T
 	return nil
 }
 
-func flattenVPNStaticRoute(apiObject *ec2.VpnStaticRoute) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
+func flattenVPNStaticRoute(apiObject awstypes.VpnStaticRoute) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.DestinationCidrBlock; v != nil {
-		tfMap["destination_cidr_block"] = aws.StringValue(v)
+		tfMap["destination_cidr_block"] = aws.ToString(v)
 	}
 
-	if v := apiObject.Source; v != nil {
-		tfMap["source"] = aws.StringValue(v)
-	}
-
-	if v := apiObject.State; v != nil {
-		tfMap["state"] = aws.StringValue(v)
-	}
+	tfMap[names.AttrSource] = apiObject.Source
+	tfMap[names.AttrState] = apiObject.State
 
 	return tfMap
 }
 
-func flattenVPNStaticRoutes(apiObjects []*ec2.VpnStaticRoute) []interface{} {
+func flattenVPNStaticRoutes(apiObjects []awstypes.VpnStaticRoute) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -1463,17 +1449,13 @@ func flattenVPNStaticRoutes(apiObjects []*ec2.VpnStaticRoute) []interface{} {
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
 		tfList = append(tfList, flattenVPNStaticRoute(apiObject))
 	}
 
 	return tfList
 }
 
-func flattenVPNTunnelLogOptions(apiObject *ec2.VpnTunnelLogOptions) map[string]interface{} {
+func flattenVPNTunnelLogOptions(apiObject *awstypes.VpnTunnelLogOptions) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1487,7 +1469,7 @@ func flattenVPNTunnelLogOptions(apiObject *ec2.VpnTunnelLogOptions) map[string]i
 	return tfMap
 }
 
-func flattenCloudWatchLogOptions(apiObject *ec2.CloudWatchLogOptions) map[string]interface{} {
+func flattenCloudWatchLogOptions(apiObject *awstypes.CloudWatchLogOptions) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1495,17 +1477,17 @@ func flattenCloudWatchLogOptions(apiObject *ec2.CloudWatchLogOptions) map[string
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.LogEnabled; v != nil {
-		enabled := aws.BoolValue(v)
+		enabled := aws.ToBool(v)
 		tfMap["log_enabled"] = enabled
 
 		// No ARN or format if not enabled.
 		if enabled {
 			if v := apiObject.LogGroupArn; v != nil {
-				tfMap["log_group_arn"] = aws.StringValue(v)
+				tfMap["log_group_arn"] = aws.ToString(v)
 			}
 
 			if v := apiObject.LogOutputFormat; v != nil {
-				tfMap["log_output_format"] = aws.StringValue(v)
+				tfMap["log_output_format"] = aws.ToString(v)
 			}
 		}
 	}
@@ -1513,41 +1495,35 @@ func flattenCloudWatchLogOptions(apiObject *ec2.CloudWatchLogOptions) map[string
 	return tfMap
 }
 
-func flattenVGWTelemetry(apiObject *ec2.VgwTelemetry) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
+func flattenVGWTelemetry(apiObject awstypes.VgwTelemetry) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.AcceptedRouteCount; v != nil {
-		tfMap["accepted_route_count"] = aws.Int64Value(v)
+		tfMap["accepted_route_count"] = aws.ToInt32(v)
 	}
 
 	if v := apiObject.CertificateArn; v != nil {
-		tfMap["certificate_arn"] = aws.StringValue(v)
+		tfMap[names.AttrCertificateARN] = aws.ToString(v)
 	}
 
 	if v := apiObject.LastStatusChange; v != nil {
-		tfMap["last_status_change"] = aws.TimeValue(v).Format(time.RFC3339)
+		tfMap["last_status_change"] = aws.ToTime(v).Format(time.RFC3339)
 	}
 
 	if v := apiObject.OutsideIpAddress; v != nil {
-		tfMap["outside_ip_address"] = aws.StringValue(v)
+		tfMap["outside_ip_address"] = aws.ToString(v)
 	}
 
-	if v := apiObject.Status; v != nil {
-		tfMap["status"] = aws.StringValue(v)
-	}
+	tfMap[names.AttrStatus] = apiObject.Status
 
 	if v := apiObject.StatusMessage; v != nil {
-		tfMap["status_message"] = aws.StringValue(v)
+		tfMap[names.AttrStatusMessage] = aws.ToString(v)
 	}
 
 	return tfMap
 }
 
-func flattenVGWTelemetries(apiObjects []*ec2.VgwTelemetry) []interface{} {
+func flattenVGWTelemetries(apiObjects []awstypes.VgwTelemetry) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -1555,21 +1531,17 @@ func flattenVGWTelemetries(apiObjects []*ec2.VgwTelemetry) []interface{} {
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
 		tfList = append(tfList, flattenVGWTelemetry(apiObject))
 	}
 
 	return tfList
 }
 
-type XmlVpnConnectionConfig struct {
-	Tunnels []XmlIpsecTunnel `xml:"ipsec_tunnel"`
+type xmlVpnConnectionConfig struct {
+	Tunnels []xmlIpsecTunnel `xml:"ipsec_tunnel"`
 }
 
-type XmlIpsecTunnel struct {
+type xmlIpsecTunnel struct {
 	BGPASN           string `xml:"vpn_gateway>bgp>asn"`
 	BGPHoldTime      int    `xml:"vpn_gateway>bgp>hold_time"`
 	CgwInsideAddress string `xml:"customer_gateway>tunnel_inside_address>ip_address"`
@@ -1578,7 +1550,7 @@ type XmlIpsecTunnel struct {
 	VgwInsideAddress string `xml:"vpn_gateway>tunnel_inside_address>ip_address"`
 }
 
-type TunnelInfo struct {
+type tunnelInfo struct {
 	Tunnel1Address          string
 	Tunnel1BGPASN           string
 	Tunnel1BGPHoldTime      int
@@ -1593,23 +1565,23 @@ type TunnelInfo struct {
 	Tunnel2VgwInsideAddress string
 }
 
-func (slice XmlVpnConnectionConfig) Len() int {
+func (slice xmlVpnConnectionConfig) Len() int {
 	return len(slice.Tunnels)
 }
 
-func (slice XmlVpnConnectionConfig) Less(i, j int) bool {
+func (slice xmlVpnConnectionConfig) Less(i, j int) bool {
 	return slice.Tunnels[i].OutsideAddress < slice.Tunnels[j].OutsideAddress
 }
 
-func (slice XmlVpnConnectionConfig) Swap(i, j int) {
+func (slice xmlVpnConnectionConfig) Swap(i, j int) {
 	slice.Tunnels[i], slice.Tunnels[j] = slice.Tunnels[j], slice.Tunnels[i]
 }
 
-// CustomerGatewayConfigurationToTunnelInfo converts the configuration information for the
-// VPN connection's customer gateway (in the native XML format) to a TunnelInfo structure.
+// customerGatewayConfigurationToTunnelInfo converts the configuration information for the
+// VPN connection's customer gateway (in the native XML format) to a tunnelInfo structure.
 // The tunnel1 parameters are optionally used to correctly order tunnel configurations.
-func CustomerGatewayConfigurationToTunnelInfo(xmlConfig string, tunnel1PreSharedKey string, tunnel1InsideCidr string, tunnel1InsideIpv6Cidr string) (*TunnelInfo, error) {
-	var vpnConfig XmlVpnConnectionConfig
+func customerGatewayConfigurationToTunnelInfo(xmlConfig string, tunnel1PreSharedKey string, tunnel1InsideCidr string, tunnel1InsideIpv6Cidr string) (*tunnelInfo, error) {
+	var vpnConfig xmlVpnConnectionConfig
 
 	if err := xml.Unmarshal([]byte(xmlConfig), &vpnConfig); err != nil {
 		return nil, err
@@ -1647,7 +1619,7 @@ func CustomerGatewayConfigurationToTunnelInfo(xmlConfig string, tunnel1PreShared
 		sort.Sort(vpnConfig)
 	}
 
-	tunnelInfo := &TunnelInfo{
+	tunnelInfo := &tunnelInfo{
 		Tunnel1Address:          vpnConfig.Tunnels[0].OutsideAddress,
 		Tunnel1BGPASN:           vpnConfig.Tunnels[0].BGPASN,
 		Tunnel1BGPHoldTime:      vpnConfig.Tunnels[0].BGPHoldTime,
@@ -1696,13 +1668,13 @@ func validVPNConnectionTunnelInsideCIDR() schema.SchemaValidateFunc {
 func validVPNConnectionTunnelInsideIPv6CIDR() schema.SchemaValidateFunc {
 	return validation.All(
 		validation.IsCIDRNetwork(126, 126),
-		validation.StringMatch(regexache.MustCompile(`^fd00:`), "must be within fd00::/8"),
+		validation.StringMatch(regexache.MustCompile(`^fd`), "must be within fd00::/8"),
 	)
 }
 
 // customizeDiffValidateOutsideIPAddressType validates that if provided `outside_ip_address_type` is `PrivateIpv4` then `transport_transit_gateway_attachment_id` must be provided
 func customizeDiffValidateOutsideIPAddressType(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-	if v, ok := diff.GetOk("outside_ip_address_type"); !ok || v.(string) == OutsideIPAddressTypePublicIPv4 {
+	if v, ok := diff.GetOk("outside_ip_address_type"); !ok || v.(string) == outsideIPAddressTypePublicIPv4 {
 		return nil
 	}
 

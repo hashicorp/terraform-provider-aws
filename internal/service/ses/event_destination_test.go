@@ -8,14 +8,16 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ses"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ses"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfses "github.com/hashicorp/terraform-provider-aws/internal/service/ses"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSESEventDestination_basic(t *testing.T) {
@@ -26,14 +28,14 @@ func TestAccSESEventDestination_basic(t *testing.T) {
 	cloudwatchDestinationResourceName := "aws_ses_event_destination.cloudwatch"
 	kinesisDestinationResourceName := "aws_ses_event_destination.kinesis"
 	snsDestinationResourceName := "aws_ses_event_destination.sns"
-	var v1, v2, v3 ses.EventDestination
+	var v1, v2, v3 awstypes.EventDestination
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEventDestinationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -43,12 +45,12 @@ func TestAccSESEventDestination_basic(t *testing.T) {
 					testAccCheckEventDestinationExists(ctx, cloudwatchDestinationResourceName, &v1),
 					testAccCheckEventDestinationExists(ctx, kinesisDestinationResourceName, &v2),
 					testAccCheckEventDestinationExists(ctx, snsDestinationResourceName, &v3),
-					acctest.CheckResourceAttrRegionalARN(cloudwatchDestinationResourceName, "arn", "ses", fmt.Sprintf("configuration-set/%s:event-destination/%s", rName1, rName1)),
-					acctest.CheckResourceAttrRegionalARN(kinesisDestinationResourceName, "arn", "ses", fmt.Sprintf("configuration-set/%s:event-destination/%s", rName1, rName2)),
-					acctest.CheckResourceAttrRegionalARN(snsDestinationResourceName, "arn", "ses", fmt.Sprintf("configuration-set/%s:event-destination/%s", rName1, rName3)),
-					resource.TestCheckResourceAttr(cloudwatchDestinationResourceName, "name", rName1),
-					resource.TestCheckResourceAttr(kinesisDestinationResourceName, "name", rName2),
-					resource.TestCheckResourceAttr(snsDestinationResourceName, "name", rName3),
+					acctest.CheckResourceAttrRegionalARN(cloudwatchDestinationResourceName, names.AttrARN, "ses", fmt.Sprintf("configuration-set/%s:event-destination/%s", rName1, rName1)),
+					acctest.CheckResourceAttrRegionalARN(kinesisDestinationResourceName, names.AttrARN, "ses", fmt.Sprintf("configuration-set/%s:event-destination/%s", rName1, rName2)),
+					acctest.CheckResourceAttrRegionalARN(snsDestinationResourceName, names.AttrARN, "ses", fmt.Sprintf("configuration-set/%s:event-destination/%s", rName1, rName3)),
+					resource.TestCheckResourceAttr(cloudwatchDestinationResourceName, names.AttrName, rName1),
+					resource.TestCheckResourceAttr(kinesisDestinationResourceName, names.AttrName, rName2),
+					resource.TestCheckResourceAttr(snsDestinationResourceName, names.AttrName, rName3),
 				),
 			},
 			{
@@ -81,14 +83,14 @@ func TestAccSESEventDestination_disappears(t *testing.T) {
 	cloudwatchDestinationResourceName := "aws_ses_event_destination.cloudwatch"
 	kinesisDestinationResourceName := "aws_ses_event_destination.kinesis"
 	snsDestinationResourceName := "aws_ses_event_destination.sns"
-	var v1, v2, v3 ses.EventDestination
+	var v1, v2, v3 awstypes.EventDestination
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEventDestinationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -110,21 +112,21 @@ func TestAccSESEventDestination_disappears(t *testing.T) {
 
 func testAccCheckEventDestinationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ses_configuration_set" {
 				continue
 			}
 
-			response, err := conn.ListConfigurationSetsWithContext(ctx, &ses.ListConfigurationSetsInput{})
+			response, err := conn.ListConfigurationSets(ctx, &ses.ListConfigurationSetsInput{})
 			if err != nil {
 				return err
 			}
 
 			found := false
 			for _, element := range response.ConfigurationSets {
-				if aws.StringValue(element.Name) == rs.Primary.ID {
+				if aws.ToString(element.Name) == rs.Primary.ID {
 					found = true
 				}
 			}
@@ -138,7 +140,7 @@ func testAccCheckEventDestinationDestroy(ctx context.Context) resource.TestCheck
 	}
 }
 
-func testAccCheckEventDestinationExists(ctx context.Context, n string, v *ses.EventDestination) resource.TestCheckFunc {
+func testAccCheckEventDestinationExists(ctx context.Context, n string, v *awstypes.EventDestination) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -149,10 +151,10 @@ func testAccCheckEventDestinationExists(ctx context.Context, n string, v *ses.Ev
 			return fmt.Errorf("SES event destination ID not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
 
-		response, err := conn.DescribeConfigurationSetWithContext(ctx, &ses.DescribeConfigurationSetInput{
-			ConfigurationSetAttributeNames: aws.StringSlice([]string{ses.ConfigurationSetAttributeEventDestinations}),
+		response, err := conn.DescribeConfigurationSet(ctx, &ses.DescribeConfigurationSetInput{
+			ConfigurationSetAttributeNames: []awstypes.ConfigurationSetAttribute{awstypes.ConfigurationSetAttributeEventDestinations},
 			ConfigurationSetName:           aws.String(rs.Primary.Attributes["configuration_set_name"]),
 		})
 		if err != nil {
@@ -160,8 +162,8 @@ func testAccCheckEventDestinationExists(ctx context.Context, n string, v *ses.Ev
 		}
 
 		for _, eventDestination := range response.EventDestinations {
-			if aws.StringValue(eventDestination.Name) == rs.Primary.ID {
-				*v = *eventDestination
+			if aws.ToString(eventDestination.Name) == rs.Primary.ID {
+				*v = eventDestination
 				return nil
 			}
 		}

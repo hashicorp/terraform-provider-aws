@@ -5,20 +5,23 @@ package transfer
 
 import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/aws/aws-sdk-go/service/transfer"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	multierror "github.com/hashicorp/go-multierror"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/transfer"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/transfer/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -30,7 +33,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 
 // @SDKResource("aws_transfer_server", name="Server")
 // @Tags(identifierAttribute="arn")
-func ResourceServer() *schema.Resource {
+func resourceServer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServerCreate,
 		ReadWithoutTimeout:   resourceServerRead,
@@ -54,11 +57,11 @@ func ResourceServer() *schema.Resource {
 		),
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"certificate": {
+			names.AttrCertificate: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
@@ -67,14 +70,14 @@ func ResourceServer() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"domain": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      transfer.DomainS3,
-				ValidateFunc: validation.StringInSlice(transfer.Domain_Values(), false),
+			names.AttrDomain: {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				Default:          awstypes.DomainS3,
+				ValidateDiagFunc: enum.Validate[awstypes.Domain](),
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -90,26 +93,26 @@ func ResourceServer() *schema.Resource {
 							Elem:          &schema.Schema{Type: schema.TypeString},
 							ConflictsWith: []string{"endpoint_details.0.vpc_endpoint_id"},
 						},
-						"security_group_ids": {
+						names.AttrSecurityGroupIDs: {
 							Type:          schema.TypeSet,
 							Optional:      true,
 							Computed:      true,
 							Elem:          &schema.Schema{Type: schema.TypeString},
 							ConflictsWith: []string{"endpoint_details.0.vpc_endpoint_id"},
 						},
-						"subnet_ids": {
+						names.AttrSubnetIDs: {
 							Type:          schema.TypeSet,
 							Optional:      true,
 							Elem:          &schema.Schema{Type: schema.TypeString},
 							ConflictsWith: []string{"endpoint_details.0.vpc_endpoint_id"},
 						},
-						"vpc_endpoint_id": {
+						names.AttrVPCEndpointID: {
 							Type:          schema.TypeString,
 							Optional:      true,
 							Computed:      true,
 							ConflictsWith: []string{"endpoint_details.0.address_allocation_ids", "endpoint_details.0.security_group_ids", "endpoint_details.0.subnet_ids", "endpoint_details.0.vpc_id"},
 						},
-						"vpc_id": {
+						names.AttrVPCID: {
 							Type:          schema.TypeString,
 							Optional:      true,
 							ValidateFunc:  validation.NoZeroValues,
@@ -118,13 +121,13 @@ func ResourceServer() *schema.Resource {
 					},
 				},
 			},
-			"endpoint_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      transfer.EndpointTypePublic,
-				ValidateFunc: validation.StringInSlice(transfer.EndpointType_Values(), false),
+			names.AttrEndpointType: {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.EndpointTypePublic,
+				ValidateDiagFunc: enum.Validate[awstypes.EndpointType](),
 			},
-			"force_destroy": {
+			names.AttrForceDestroy: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -145,11 +148,11 @@ func ResourceServer() *schema.Resource {
 				Computed: true,
 			},
 			"identity_provider_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      transfer.IdentityProviderTypeServiceManaged,
-				ValidateFunc: validation.StringInSlice(transfer.IdentityProviderType_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				Default:          awstypes.IdentityProviderTypeServiceManaged,
+				ValidateDiagFunc: enum.Validate[awstypes.IdentityProviderType](),
 			},
 			"invocation_role": {
 				Type:         schema.TypeString,
@@ -185,8 +188,8 @@ func ResourceServer() *schema.Resource {
 							Optional: true,
 							Computed: true,
 							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.StringInSlice(transfer.As2Transport_Values(), false),
+								Type:             schema.TypeString,
+								ValidateDiagFunc: enum.Validate[awstypes.As2Transport](),
 							},
 						},
 						"passive_ip": {
@@ -196,16 +199,16 @@ func ResourceServer() *schema.Resource {
 							ValidateFunc: validation.StringLenBetween(0, 15),
 						},
 						"set_stat_option": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.StringInSlice(transfer.SetStatOption_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.SetStatOption](),
 						},
 						"tls_session_resumption_mode": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.StringInSlice(transfer.TlsSessionResumptionMode_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.TlsSessionResumptionMode](),
 						},
 					},
 				},
@@ -217,15 +220,37 @@ func ResourceServer() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(transfer.Protocol_Values(), false),
+					Type:             schema.TypeString,
+					ValidateDiagFunc: enum.Validate[awstypes.Protocol](),
+				},
+			},
+			"s3_storage_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"directory_listing_optimization": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.DirectoryListingOptimization](),
+						},
+					},
 				},
 			},
 			"security_policy_name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      SecurityPolicyName2018_11,
-				ValidateFunc: validation.StringInSlice(SecurityPolicyName_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          securityPolicyName2018_11,
+				ValidateDiagFunc: enum.Validate[securityPolicyName](),
+			},
+			"sftp_authentication_methods": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.SftpAuthenticationMethods](),
 			},
 			"structured_log_destinations": {
 				Type: schema.TypeSet,
@@ -238,7 +263,7 @@ func ResourceServer() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"url": {
+			names.AttrURL: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -295,29 +320,29 @@ func ResourceServer() *schema.Resource {
 
 func resourceServerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn(ctx)
+	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
 	input := &transfer.CreateServerInput{
 		Tags: getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("certificate"); ok {
+	if v, ok := d.GetOk(names.AttrCertificate); ok {
 		input.Certificate = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("directory_id"); ok {
 		if input.IdentityProviderDetails == nil {
-			input.IdentityProviderDetails = &transfer.IdentityProviderDetails{}
+			input.IdentityProviderDetails = &awstypes.IdentityProviderDetails{}
 		}
 
 		input.IdentityProviderDetails.DirectoryId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("domain"); ok {
-		input.Domain = aws.String(v.(string))
+	if v, ok := d.GetOk(names.AttrDomain); ok {
+		input.Domain = awstypes.Domain(v.(string))
 	}
 
-	var addressAllocationIDs []*string
+	var addressAllocationIDs []string
 
 	if v, ok := d.GetOk("endpoint_details"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.EndpointDetails = expandEndpointDetails(v.([]interface{})[0].(map[string]interface{}))
@@ -328,13 +353,13 @@ func resourceServerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.EndpointDetails.AddressAllocationIds = nil
 	}
 
-	if v, ok := d.GetOk("endpoint_type"); ok {
-		input.EndpointType = aws.String(v.(string))
+	if v, ok := d.GetOk(names.AttrEndpointType); ok {
+		input.EndpointType = awstypes.EndpointType(v.(string))
 	}
 
 	if v, ok := d.GetOk("function"); ok {
 		if input.IdentityProviderDetails == nil {
-			input.IdentityProviderDetails = &transfer.IdentityProviderDetails{}
+			input.IdentityProviderDetails = &awstypes.IdentityProviderDetails{}
 		}
 
 		input.IdentityProviderDetails.Function = aws.String(v.(string))
@@ -345,15 +370,23 @@ func resourceServerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if v, ok := d.GetOk("identity_provider_type"); ok {
-		input.IdentityProviderType = aws.String(v.(string))
+		input.IdentityProviderType = awstypes.IdentityProviderType(v.(string))
 	}
 
 	if v, ok := d.GetOk("invocation_role"); ok {
 		if input.IdentityProviderDetails == nil {
-			input.IdentityProviderDetails = &transfer.IdentityProviderDetails{}
+			input.IdentityProviderDetails = &awstypes.IdentityProviderDetails{}
 		}
 
 		input.IdentityProviderDetails.InvocationRole = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("sftp_authentication_methods"); ok {
+		if input.IdentityProviderDetails == nil {
+			input.IdentityProviderDetails = &awstypes.IdentityProviderDetails{}
+		}
+
+		input.IdentityProviderDetails.SftpAuthenticationMethods = awstypes.SftpAuthenticationMethods(v.(string))
 	}
 
 	if v, ok := d.GetOk("logging_role"); ok {
@@ -373,7 +406,11 @@ func resourceServerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if v, ok := d.GetOk("protocols"); ok && v.(*schema.Set).Len() > 0 {
-		input.Protocols = flex.ExpandStringSet(v.(*schema.Set))
+		input.Protocols = flex.ExpandStringyValueSet[awstypes.Protocol](d.Get("protocols").(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("s3_storage_options"); ok && len(v.([]interface{})) > 0 {
+		input.S3StorageOptions = expandS3StorageOptions(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("security_policy_name"); ok {
@@ -381,12 +418,12 @@ func resourceServerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if v, ok := d.GetOk("structured_log_destinations"); ok && v.(*schema.Set).Len() > 0 {
-		input.StructuredLogDestinations = flex.ExpandStringSet(v.(*schema.Set))
+		input.StructuredLogDestinations = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("url"); ok {
+	if v, ok := d.GetOk(names.AttrURL); ok {
 		if input.IdentityProviderDetails == nil {
-			input.IdentityProviderDetails = &transfer.IdentityProviderDetails{}
+			input.IdentityProviderDetails = &awstypes.IdentityProviderDetails{}
 		}
 
 		input.IdentityProviderDetails.Url = aws.String(v.(string))
@@ -396,13 +433,13 @@ func resourceServerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.WorkflowDetails = expandWorkflowDetails(v.([]interface{}))
 	}
 
-	output, err := conn.CreateServerWithContext(ctx, input)
+	output, err := conn.CreateServer(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Transfer Server: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.ServerId))
+	d.SetId(aws.ToString(output.ServerId))
 
 	if _, err := waitServerCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Transfer Server (%s) create: %s", d.Id(), err)
@@ -415,7 +452,7 @@ func resourceServerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 
 		input := &transfer.UpdateServerInput{
-			EndpointDetails: &transfer.EndpointDetails{
+			EndpointDetails: &awstypes.EndpointDetails{
 				AddressAllocationIds: addressAllocationIDs,
 			},
 			ServerId: aws.String(d.Id()),
@@ -435,9 +472,9 @@ func resourceServerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceServerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn(ctx)
+	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
-	output, err := FindServerByID(ctx, conn, d.Id())
+	output, err := findServerByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Transfer Server (%s) not found, removing from state", d.Id())
@@ -449,22 +486,22 @@ func resourceServerRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading Transfer Server (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", output.Arn)
-	d.Set("certificate", output.Certificate)
+	d.Set(names.AttrARN, output.Arn)
+	d.Set(names.AttrCertificate, output.Certificate)
 	if output.IdentityProviderDetails != nil {
 		d.Set("directory_id", output.IdentityProviderDetails.DirectoryId)
 	} else {
 		d.Set("directory_id", "")
 	}
-	d.Set("domain", output.Domain)
-	d.Set("endpoint", meta.(*conns.AWSClient).RegionalHostname(fmt.Sprintf("%s.server.transfer", d.Id())))
+	d.Set(names.AttrDomain, output.Domain)
+	d.Set(names.AttrEndpoint, meta.(*conns.AWSClient).RegionalHostname(ctx, fmt.Sprintf("%s.server.transfer", d.Id())))
 	if output.EndpointDetails != nil {
 		securityGroupIDs := make([]*string, 0)
 
 		// Security Group IDs are not returned for VPC endpoints.
-		if aws.StringValue(output.EndpointType) == transfer.EndpointTypeVpc && len(output.EndpointDetails.SecurityGroupIds) == 0 {
-			vpcEndpointID := aws.StringValue(output.EndpointDetails.VpcEndpointId)
-			output, err := tfec2.FindVPCEndpointByID(ctx, meta.(*conns.AWSClient).EC2Conn(ctx), vpcEndpointID)
+		if output.EndpointType == awstypes.EndpointTypeVpc && len(output.EndpointDetails.SecurityGroupIds) == 0 {
+			vpcEndpointID := aws.ToString(output.EndpointDetails.VpcEndpointId)
+			output, err := tfec2.FindVPCEndpointByID(ctx, meta.(*conns.AWSClient).EC2Client(ctx), vpcEndpointID)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "reading Transfer Server (%s) VPC Endpoint (%s): %s", d.Id(), vpcEndpointID, err)
@@ -481,7 +518,7 @@ func resourceServerRead(ctx context.Context, d *schema.ResourceData, meta interf
 	} else {
 		d.Set("endpoint_details", nil)
 	}
-	d.Set("endpoint_type", output.EndpointType)
+	d.Set(names.AttrEndpointType, output.EndpointType)
 	if output.IdentityProviderDetails != nil {
 		d.Set("function", output.IdentityProviderDetails.Function)
 	} else {
@@ -494,19 +531,27 @@ func resourceServerRead(ctx context.Context, d *schema.ResourceData, meta interf
 	} else {
 		d.Set("invocation_role", "")
 	}
+	if output.IdentityProviderDetails != nil {
+		d.Set("sftp_authentication_methods", output.IdentityProviderDetails.SftpAuthenticationMethods)
+	} else {
+		d.Set("sftp_authentication_methods", "")
+	}
 	d.Set("logging_role", output.LoggingRole)
 	d.Set("post_authentication_login_banner", output.PostAuthenticationLoginBanner)
 	d.Set("pre_authentication_login_banner", output.PreAuthenticationLoginBanner)
 	if err := d.Set("protocol_details", flattenProtocolDetails(output.ProtocolDetails)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting protocol_details: %s", err)
 	}
-	d.Set("protocols", aws.StringValueSlice(output.Protocols))
+	d.Set("protocols", output.Protocols)
+	if err := d.Set("s3_storage_options", flattenS3StorageOptions(output.S3StorageOptions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting s3_storage_options: %s", err)
+	}
 	d.Set("security_policy_name", output.SecurityPolicyName)
-	d.Set("structured_log_destinations", aws.StringValueSlice(output.StructuredLogDestinations))
+	d.Set("structured_log_destinations", output.StructuredLogDestinations)
 	if output.IdentityProviderDetails != nil {
-		d.Set("url", output.IdentityProviderDetails.Url)
+		d.Set(names.AttrURL, output.IdentityProviderDetails.Url)
 	} else {
-		d.Set("url", "")
+		d.Set(names.AttrURL, "")
 	}
 	if err := d.Set("workflow_details", flattenWorkflowDetails(output.WorkflowDetails)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting workflow_details: %s", err)
@@ -519,20 +564,20 @@ func resourceServerRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceServerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn(ctx)
+	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		var newEndpointTypeVpc bool
 		var oldEndpointTypeVpc bool
 
-		old, new := d.GetChange("endpoint_type")
+		old, new := d.GetChange(names.AttrEndpointType)
 
-		if old, new := old.(string), new.(string); new == transfer.EndpointTypeVpc {
+		if old, new := old.(string), new.(string); new == string(awstypes.EndpointTypeVpc) {
 			newEndpointTypeVpc = true
 			oldEndpointTypeVpc = old == new
 		}
 
-		var addressAllocationIDs []*string
+		var addressAllocationIDs []string
 		var offlineUpdate bool
 		var removeAddressAllocationIDs bool
 
@@ -540,8 +585,8 @@ func resourceServerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			ServerId: aws.String(d.Id()),
 		}
 
-		if d.HasChange("certificate") {
-			input.Certificate = aws.String(d.Get("certificate").(string))
+		if d.HasChange(names.AttrCertificate) {
+			input.Certificate = aws.String(d.Get(names.AttrCertificate).(string))
 		}
 
 		if d.HasChange("endpoint_details") {
@@ -563,7 +608,7 @@ func resourceServerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 					// Update to 0 AddressAllocationIds.
 					if input.EndpointDetails.AddressAllocationIds == nil {
-						input.EndpointDetails.AddressAllocationIds = []*string{}
+						input.EndpointDetails.AddressAllocationIds = []string{}
 					}
 
 					// Prevent the following error: InvalidRequestException: AddressAllocationIds must be removed before SubnetIds can be modified
@@ -584,7 +629,7 @@ func resourceServerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 					// Update to 0 SubnetIds.
 					if input.EndpointDetails.SubnetIds == nil {
-						input.EndpointDetails.SubnetIds = []*string{}
+						input.EndpointDetails.SubnetIds = []string{}
 					}
 				}
 			}
@@ -592,7 +637,7 @@ func resourceServerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			// You can edit the SecurityGroupIds property in the UpdateServer API only if you are changing the EndpointType from PUBLIC or VPC_ENDPOINT to VPC.
 			// To change security groups associated with your server's VPC endpoint after creation, use the Amazon EC2 ModifyVpcEndpoint API.
 			if d.HasChange("endpoint_details.0.security_group_ids") && newEndpointTypeVpc && oldEndpointTypeVpc {
-				conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+				conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 				vpcEndpointID := d.Get("endpoint_details.0.vpc_endpoint_id").(string)
 				input := &ec2.ModifyVpcEndpointInput{
@@ -601,15 +646,15 @@ func resourceServerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 				old, new := d.GetChange("endpoint_details.0.security_group_ids")
 
-				if add := flex.ExpandStringSet(new.(*schema.Set).Difference(old.(*schema.Set))); len(add) > 0 {
+				if add := flex.ExpandStringValueSet(new.(*schema.Set).Difference(old.(*schema.Set))); len(add) > 0 {
 					input.AddSecurityGroupIds = add
 				}
 
-				if del := flex.ExpandStringSet(old.(*schema.Set).Difference(new.(*schema.Set))); len(del) > 0 {
+				if del := flex.ExpandStringValueSet(old.(*schema.Set).Difference(new.(*schema.Set))); len(del) > 0 {
 					input.RemoveSecurityGroupIds = del
 				}
 
-				_, err := conn.ModifyVpcEndpointWithContext(ctx, input)
+				_, err := conn.ModifyVpcEndpoint(ctx, input)
 
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "modifying Transfer Server (%s) VPC Endpoint (%s): %s", d.Id(), vpcEndpointID, err)
@@ -621,8 +666,8 @@ func resourceServerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			}
 		}
 
-		if d.HasChange("endpoint_type") {
-			input.EndpointType = aws.String(d.Get("endpoint_type").(string))
+		if d.HasChange(names.AttrEndpointType) {
+			input.EndpointType = awstypes.EndpointType(d.Get(names.AttrEndpointType).(string))
 
 			// Prevent the following error: InvalidRequestException: Server must be OFFLINE to change EndpointType
 			offlineUpdate = true
@@ -634,8 +679,8 @@ func resourceServerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			}
 		}
 
-		if d.HasChanges("directory_id", "function", "invocation_role", "url") {
-			identityProviderDetails := &transfer.IdentityProviderDetails{}
+		if d.HasChanges("directory_id", "function", "invocation_role", "sftp_authentication_methods", names.AttrURL) {
+			identityProviderDetails := &awstypes.IdentityProviderDetails{}
 
 			if attr, ok := d.GetOk("directory_id"); ok {
 				identityProviderDetails.DirectoryId = aws.String(attr.(string))
@@ -649,7 +694,11 @@ func resourceServerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 				identityProviderDetails.InvocationRole = aws.String(attr.(string))
 			}
 
-			if attr, ok := d.GetOk("url"); ok {
+			if attr, ok := d.GetOk("sftp_authentication_methods"); ok {
+				identityProviderDetails.SftpAuthenticationMethods = awstypes.SftpAuthenticationMethods(attr.(string))
+			}
+
+			if attr, ok := d.GetOk(names.AttrURL); ok {
 				identityProviderDetails.Url = aws.String(attr.(string))
 			}
 
@@ -673,7 +722,11 @@ func resourceServerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 
 		if d.HasChange("protocols") {
-			input.Protocols = flex.ExpandStringSet(d.Get("protocols").(*schema.Set))
+			input.Protocols = flex.ExpandStringyValueSet[awstypes.Protocol](d.Get("protocols").(*schema.Set))
+		}
+
+		if d.HasChange("s3_storage_options") {
+			input.S3StorageOptions = expandS3StorageOptions(d.Get("s3_storage_options").([]interface{}))
 		}
 
 		if d.HasChange("security_policy_name") {
@@ -683,7 +736,7 @@ func resourceServerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		// Per the docs it does not matter if this field has changed,
 		// if the update passes this as empty the structured logging will be turned off,
 		// so we need to always pass the new.
-		input.StructuredLogDestinations = flex.ExpandStringSet(d.Get("structured_log_destinations").(*schema.Set))
+		input.StructuredLogDestinations = flex.ExpandStringValueSet(d.Get("structured_log_destinations").(*schema.Set))
 
 		if d.HasChange("workflow_details") {
 			input.WorkflowDetails = expandWorkflowDetails(d.Get("workflow_details").([]interface{}))
@@ -697,8 +750,8 @@ func resourceServerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 		if removeAddressAllocationIDs {
 			input := &transfer.UpdateServerInput{
-				EndpointDetails: &transfer.EndpointDetails{
-					AddressAllocationIds: []*string{},
+				EndpointDetails: &awstypes.EndpointDetails{
+					AddressAllocationIds: []string{},
 				},
 				ServerId: aws.String(d.Id()),
 			}
@@ -714,7 +767,7 @@ func resourceServerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 		if len(addressAllocationIDs) > 0 {
 			input := &transfer.UpdateServerInput{
-				EndpointDetails: &transfer.EndpointDetails{
+				EndpointDetails: &awstypes.EndpointDetails{
 					AddressAllocationIds: addressAllocationIDs,
 				},
 				ServerId: aws.String(d.Id()),
@@ -737,53 +790,47 @@ func resourceServerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceServerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn(ctx)
+	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
-	if d.Get("force_destroy").(bool) && d.Get("identity_provider_type").(string) == transfer.IdentityProviderTypeServiceManaged {
+	if d.Get(names.AttrForceDestroy).(bool) && d.Get("identity_provider_type").(string) == string(awstypes.IdentityProviderTypeServiceManaged) {
 		input := &transfer.ListUsersInput{
 			ServerId: aws.String(d.Id()),
 		}
-		var errs *multierror.Error
+		var errs []error
 
-		err := conn.ListUsersPagesWithContext(ctx, input, func(page *transfer.ListUsersOutput, lastPage bool) bool {
-			if page == nil {
-				return !lastPage
+		pages := transfer.NewListUsersPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx)
+
+			if err != nil {
+				errs = append(errs, fmt.Errorf("listing Transfer Server (%s) Users: %w", d.Id(), err))
+				continue
 			}
 
 			for _, user := range page.Users {
-				err := userDelete(ctx, conn, d.Id(), aws.StringValue(user.UserName), d.Timeout(schema.TimeoutDelete))
+				err := userDelete(ctx, conn, d.Id(), aws.ToString(user.UserName), d.Timeout(schema.TimeoutDelete))
 
 				if err != nil {
-					errs = multierror.Append(errs, err)
-
+					errs = append(errs, err)
 					continue
 				}
 			}
-
-			return !lastPage
-		})
-
-		if err != nil {
-			errs = multierror.Append(errs, fmt.Errorf("listing Transfer Server (%s) Users: %w", d.Id(), err))
 		}
 
-		err = errs.ErrorOrNil()
-
-		if err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
+		if errs != nil {
+			return sdkdiag.AppendFromErr(diags, errors.Join(errs...))
 		}
 	}
 
 	log.Printf("[DEBUG] Deleting Transfer Server: (%s)", d.Id())
-	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 1*time.Minute,
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidRequestException](ctx, 1*time.Minute,
 		func() (interface{}, error) {
-			return conn.DeleteServerWithContext(ctx, &transfer.DeleteServerInput{
+			return conn.DeleteServer(ctx, &transfer.DeleteServerInput{
 				ServerId: aws.String(d.Id()),
 			})
-		},
-		transfer.ErrCodeInvalidRequestException, "Unable to delete VPC endpoint")
+		}, "Unable to delete VPC endpoint")
 
-	if tfawserr.ErrCodeEquals(err, transfer.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -798,37 +845,200 @@ func resourceServerDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func expandEndpointDetails(tfMap map[string]interface{}) *transfer.EndpointDetails {
+func stopServer(ctx context.Context, conn *transfer.Client, serverID string, timeout time.Duration) error {
+	input := &transfer.StopServerInput{
+		ServerId: aws.String(serverID),
+	}
+
+	if _, err := conn.StopServer(ctx, input); err != nil {
+		return fmt.Errorf("stopping Transfer Server (%s): %w", serverID, err)
+	}
+
+	if _, err := waitServerStopped(ctx, conn, serverID, timeout); err != nil {
+		return fmt.Errorf("waiting for Transfer Server (%s) stop: %w", serverID, err)
+	}
+
+	return nil
+}
+
+func startServer(ctx context.Context, conn *transfer.Client, serverID string, timeout time.Duration) error {
+	input := &transfer.StartServerInput{
+		ServerId: aws.String(serverID),
+	}
+
+	if _, err := conn.StartServer(ctx, input); err != nil {
+		return fmt.Errorf("starting Transfer Server (%s): %w", serverID, err)
+	}
+
+	if _, err := waitServerStarted(ctx, conn, serverID, timeout); err != nil {
+		return fmt.Errorf("waiting for Transfer Server (%s) start: %w", serverID, err)
+	}
+
+	return nil
+}
+
+func updateServer(ctx context.Context, conn *transfer.Client, input *transfer.UpdateServerInput) error {
+	// The Transfer API will return a state of ONLINE for a server before the
+	// underlying VPC Endpoint is available and attempting to update the server
+	// will return an error until that EC2 API process is complete:
+	//   ConflictException: VPC Endpoint state is not yet available
+	// To prevent accessing the EC2 API directly to check the VPC Endpoint
+	// state, which can require confusing IAM permissions and have other
+	// eventual consistency consideration, we retry only via the Transfer API.
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ConflictException](ctx, tfec2.VPCEndpointCreationTimeout, func() (interface{}, error) {
+		return conn.UpdateServer(ctx, input)
+	}, "VPC Endpoint state is not yet available")
+
+	if err != nil {
+		return fmt.Errorf("updating Transfer Server (%s): %w", aws.ToString(input.ServerId), err)
+	}
+
+	return nil
+}
+
+func findServerByID(ctx context.Context, conn *transfer.Client, id string) (*awstypes.DescribedServer, error) {
+	input := &transfer.DescribeServerInput{
+		ServerId: aws.String(id),
+	}
+
+	output, err := conn.DescribeServer(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Server == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Server, nil
+}
+
+func statusServer(ctx context.Context, conn *transfer.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findServerByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}
+
+func waitServerCreated(ctx context.Context, conn *transfer.Client, id string, timeout time.Duration) (*awstypes.DescribedServer, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.StateStarting),
+		Target:  enum.Slice(awstypes.StateOnline),
+		Refresh: statusServer(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.DescribedServer); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitServerDeleted(ctx context.Context, conn *transfer.Client, id string) (*awstypes.DescribedServer, error) {
+	const (
+		timeout = 10 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.StateOffline, awstypes.StateOnline, awstypes.StateStarting, awstypes.StateStopping, awstypes.StateStartFailed, awstypes.StateStopFailed),
+		Target:  []string{},
+		Refresh: statusServer(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.DescribedServer); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitServerStarted(ctx context.Context, conn *transfer.Client, id string, timeout time.Duration) (*awstypes.DescribedServer, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.StateStarting, awstypes.StateOffline, awstypes.StateStopping),
+		Target:  enum.Slice(awstypes.StateOnline),
+		Refresh: statusServer(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.DescribedServer); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitServerStopped(ctx context.Context, conn *transfer.Client, id string, timeout time.Duration) (*awstypes.DescribedServer, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.StateStarting, awstypes.StateOnline, awstypes.StateStopping),
+		Target:  enum.Slice(awstypes.StateOffline),
+		Refresh: statusServer(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.DescribedServer); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func expandEndpointDetails(tfMap map[string]interface{}) *awstypes.EndpointDetails {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &transfer.EndpointDetails{}
+	apiObject := &awstypes.EndpointDetails{}
 
 	if v, ok := tfMap["address_allocation_ids"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.AddressAllocationIds = flex.ExpandStringSet(v)
+		apiObject.AddressAllocationIds = flex.ExpandStringValueSet(v)
 	}
 
-	if v, ok := tfMap["security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.SecurityGroupIds = flex.ExpandStringSet(v)
+	if v, ok := tfMap[names.AttrSecurityGroupIDs].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.SecurityGroupIds = flex.ExpandStringValueSet(v)
 	}
 
-	if v, ok := tfMap["subnet_ids"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.SubnetIds = flex.ExpandStringSet(v)
+	if v, ok := tfMap[names.AttrSubnetIDs].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.SubnetIds = flex.ExpandStringValueSet(v)
 	}
 
-	if v, ok := tfMap["vpc_endpoint_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrVPCEndpointID].(string); ok && v != "" {
 		apiObject.VpcEndpointId = aws.String(v)
 	}
 
-	if v, ok := tfMap["vpc_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrVPCID].(string); ok && v != "" {
 		apiObject.VpcId = aws.String(v)
 	}
 
 	return apiObject
 }
 
-func flattenEndpointDetails(apiObject *transfer.EndpointDetails, securityGroupIDs []*string) map[string]interface{} {
+func flattenEndpointDetails(apiObject *awstypes.EndpointDetails, securityGroupIDs []*string) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -836,41 +1046,41 @@ func flattenEndpointDetails(apiObject *transfer.EndpointDetails, securityGroupID
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.AddressAllocationIds; v != nil {
-		tfMap["address_allocation_ids"] = aws.StringValueSlice(v)
+		tfMap["address_allocation_ids"] = v
 	}
 
 	if v := apiObject.SecurityGroupIds; len(v) > 0 {
-		tfMap["security_group_ids"] = aws.StringValueSlice(v)
+		tfMap[names.AttrSecurityGroupIDs] = v
 	} else if len(securityGroupIDs) > 0 {
-		tfMap["security_group_ids"] = aws.StringValueSlice(securityGroupIDs)
+		tfMap[names.AttrSecurityGroupIDs] = aws.ToStringSlice(securityGroupIDs)
 	}
 
 	if v := apiObject.SubnetIds; v != nil {
-		tfMap["subnet_ids"] = aws.StringValueSlice(v)
+		tfMap[names.AttrSubnetIDs] = v
 	}
 
 	if v := apiObject.VpcEndpointId; v != nil {
-		tfMap["vpc_endpoint_id"] = aws.StringValue(v)
+		tfMap[names.AttrVPCEndpointID] = aws.ToString(v)
 	}
 
 	if v := apiObject.VpcId; v != nil {
-		tfMap["vpc_id"] = aws.StringValue(v)
+		tfMap[names.AttrVPCID] = aws.ToString(v)
 	}
 
 	return tfMap
 }
 
-func expandProtocolDetails(m []interface{}) *transfer.ProtocolDetails {
-	if len(m) < 1 || m[0] == nil {
+func expandProtocolDetails(tfList []interface{}) *awstypes.ProtocolDetails {
+	if len(tfList) < 1 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := m[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]interface{})
 
-	apiObject := &transfer.ProtocolDetails{}
+	apiObject := &awstypes.ProtocolDetails{}
 
 	if v, ok := tfMap["as2_transports"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.As2Transports = flex.ExpandStringSet(v)
+		apiObject.As2Transports = flex.ExpandStringyValueSet[awstypes.As2Transport](v)
 	}
 
 	if v, ok := tfMap["passive_ip"].(string); ok && len(v) > 0 {
@@ -878,66 +1088,89 @@ func expandProtocolDetails(m []interface{}) *transfer.ProtocolDetails {
 	}
 
 	if v, ok := tfMap["set_stat_option"].(string); ok && len(v) > 0 {
-		apiObject.SetStatOption = aws.String(v)
+		apiObject.SetStatOption = awstypes.SetStatOption(v)
 	}
 
 	if v, ok := tfMap["tls_session_resumption_mode"].(string); ok && len(v) > 0 {
-		apiObject.TlsSessionResumptionMode = aws.String(v)
+		apiObject.TlsSessionResumptionMode = awstypes.TlsSessionResumptionMode(v)
 	}
 
 	return apiObject
 }
 
-func flattenProtocolDetails(apiObject *transfer.ProtocolDetails) []interface{} {
+func flattenProtocolDetails(apiObject *awstypes.ProtocolDetails) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]interface{}{
+		"set_stat_option":             apiObject.SetStatOption,
+		"tls_session_resumption_mode": apiObject.TlsSessionResumptionMode,
+	}
 
 	if v := apiObject.As2Transports; v != nil {
-		tfMap["as2_transports"] = aws.StringValueSlice(v)
+		tfMap["as2_transports"] = v
 	}
 
 	if v := apiObject.PassiveIp; v != nil {
-		tfMap["passive_ip"] = aws.StringValue(v)
-	}
-
-	if v := apiObject.SetStatOption; v != nil {
-		tfMap["set_stat_option"] = aws.StringValue(v)
-	}
-
-	if v := apiObject.TlsSessionResumptionMode; v != nil {
-		tfMap["tls_session_resumption_mode"] = aws.StringValue(v)
+		tfMap["passive_ip"] = aws.ToString(v)
 	}
 
 	return []interface{}{tfMap}
 }
 
-func expandWorkflowDetails(tfMap []interface{}) *transfer.WorkflowDetails {
-	apiObject := &transfer.WorkflowDetails{
-		OnPartialUpload: []*transfer.WorkflowDetail{},
-		OnUpload:        []*transfer.WorkflowDetail{},
+func expandS3StorageOptions(tfList []interface{}) *awstypes.S3StorageOptions {
+	if len(tfList) < 1 || tfList[0] == nil {
+		return nil
 	}
 
-	if len(tfMap) == 0 || tfMap[0] == nil {
+	tfMap := tfList[0].(map[string]interface{})
+
+	apiObject := &awstypes.S3StorageOptions{}
+
+	if v, ok := tfMap["directory_listing_optimization"].(string); ok && len(v) > 0 {
+		apiObject.DirectoryListingOptimization = awstypes.DirectoryListingOptimization(v)
+	}
+
+	return apiObject
+}
+
+func flattenS3StorageOptions(apiObject *awstypes.S3StorageOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"directory_listing_optimization": apiObject.DirectoryListingOptimization,
+	}
+
+	return []interface{}{tfMap}
+}
+
+func expandWorkflowDetails(tfList []interface{}) *awstypes.WorkflowDetails {
+	apiObject := &awstypes.WorkflowDetails{
+		OnPartialUpload: []awstypes.WorkflowDetail{},
+		OnUpload:        []awstypes.WorkflowDetail{},
+	}
+
+	if len(tfList) == 0 || tfList[0] == nil {
 		return apiObject
 	}
 
-	tfMapRaw := tfMap[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]interface{})
 
-	if v, ok := tfMapRaw["on_upload"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["on_upload"].([]interface{}); ok && len(v) > 0 {
 		apiObject.OnUpload = expandWorkflowDetail(v)
 	}
 
-	if v, ok := tfMapRaw["on_partial_upload"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["on_partial_upload"].([]interface{}); ok && len(v) > 0 {
 		apiObject.OnPartialUpload = expandWorkflowDetail(v)
 	}
 
 	return apiObject
 }
 
-func flattenWorkflowDetails(apiObject *transfer.WorkflowDetails) []interface{} {
+func flattenWorkflowDetails(apiObject *awstypes.WorkflowDetails) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -955,17 +1188,20 @@ func flattenWorkflowDetails(apiObject *transfer.WorkflowDetails) []interface{} {
 	return []interface{}{tfMap}
 }
 
-func expandWorkflowDetail(tfList []interface{}) []*transfer.WorkflowDetail {
+func expandWorkflowDetail(tfList []interface{}) []awstypes.WorkflowDetail {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []*transfer.WorkflowDetail
+	var apiObjects []awstypes.WorkflowDetail
 
 	for _, tfMapRaw := range tfList {
-		tfMap, _ := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+		if !ok {
+			continue
+		}
 
-		apiObject := &transfer.WorkflowDetail{}
+		apiObject := awstypes.WorkflowDetail{}
 
 		if v, ok := tfMap["execution_role"].(string); ok && v != "" {
 			apiObject.ExecutionRole = aws.String(v)
@@ -981,7 +1217,7 @@ func expandWorkflowDetail(tfList []interface{}) []*transfer.WorkflowDetail {
 	return apiObjects
 }
 
-func flattenWorkflowDetail(apiObjects []*transfer.WorkflowDetail) []interface{} {
+func flattenWorkflowDetail(apiObjects []awstypes.WorkflowDetail) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -989,72 +1225,54 @@ func flattenWorkflowDetail(apiObjects []*transfer.WorkflowDetail) []interface{} 
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
+		tfMap := map[string]interface{}{}
 
-		flattenedObject := map[string]interface{}{}
 		if v := apiObject.ExecutionRole; v != nil {
-			flattenedObject["execution_role"] = aws.StringValue(v)
+			tfMap["execution_role"] = aws.ToString(v)
 		}
 
 		if v := apiObject.WorkflowId; v != nil {
-			flattenedObject["workflow_id"] = aws.StringValue(v)
+			tfMap["workflow_id"] = aws.ToString(v)
 		}
 
-		tfList = append(tfList, flattenedObject)
+		tfList = append(tfList, tfMap)
 	}
 
 	return tfList
 }
 
-func stopServer(ctx context.Context, conn *transfer.Transfer, serverID string, timeout time.Duration) error {
-	input := &transfer.StopServerInput{
-		ServerId: aws.String(serverID),
+type securityPolicyName string
+
+const (
+	securityPolicyName2018_11             securityPolicyName = "TransferSecurityPolicy-2018-11"
+	securityPolicyName2020_06             securityPolicyName = "TransferSecurityPolicy-2020-06"
+	securityPolicyName2022_03             securityPolicyName = "TransferSecurityPolicy-2022-03"
+	securityPolicyName2023_05             securityPolicyName = "TransferSecurityPolicy-2023-05"
+	securityPolicyName2024_01             securityPolicyName = "TransferSecurityPolicy-2024-01"
+	securityPolicyNameFIPS_2020_06        securityPolicyName = "TransferSecurityPolicy-FIPS-2020-06"
+	securityPolicyNameFIPS_2023_05        securityPolicyName = "TransferSecurityPolicy-FIPS-2023-05"
+	securityPolicyNameFIPS_2024_01        securityPolicyName = "TransferSecurityPolicy-FIPS-2024-01"
+	securityPolicyNameFIPS_2024_05        securityPolicyName = "TransferSecurityPolicy-FIPS-2024-05"
+	securityPolicyNamePQ_SSH_2023_04      securityPolicyName = "TransferSecurityPolicy-PQ-SSH-Experimental-2023-04"
+	securityPolicyNamePQ_SSH_FIPS_2023_04 securityPolicyName = "TransferSecurityPolicy-PQ-SSH-FIPS-Experimental-2023-04"
+	securityPolicyNameRestricted_2018_11  securityPolicyName = "TransferSecurityPolicy-Restricted-2018-11"
+	securityPolicyNameRestricted_2020_06  securityPolicyName = "TransferSecurityPolicy-Restricted-2020-06"
+)
+
+func (securityPolicyName) Values() []securityPolicyName {
+	return []securityPolicyName{
+		securityPolicyName2018_11,
+		securityPolicyName2020_06,
+		securityPolicyName2022_03,
+		securityPolicyName2023_05,
+		securityPolicyName2024_01,
+		securityPolicyNameFIPS_2020_06,
+		securityPolicyNameFIPS_2023_05,
+		securityPolicyNameFIPS_2024_01,
+		securityPolicyNameFIPS_2024_05,
+		securityPolicyNamePQ_SSH_2023_04,
+		securityPolicyNamePQ_SSH_FIPS_2023_04,
+		securityPolicyNameRestricted_2018_11,
+		securityPolicyNameRestricted_2020_06,
 	}
-
-	if _, err := conn.StopServerWithContext(ctx, input); err != nil {
-		return fmt.Errorf("stopping Transfer Server (%s): %w", serverID, err)
-	}
-
-	if _, err := waitServerStopped(ctx, conn, serverID, timeout); err != nil {
-		return fmt.Errorf("waiting for Transfer Server (%s) stop: %w", serverID, err)
-	}
-
-	return nil
-}
-
-func startServer(ctx context.Context, conn *transfer.Transfer, serverID string, timeout time.Duration) error {
-	input := &transfer.StartServerInput{
-		ServerId: aws.String(serverID),
-	}
-
-	if _, err := conn.StartServerWithContext(ctx, input); err != nil {
-		return fmt.Errorf("starting Transfer Server (%s): %w", serverID, err)
-	}
-
-	if _, err := waitServerStarted(ctx, conn, serverID, timeout); err != nil {
-		return fmt.Errorf("waiting for Transfer Server (%s) start: %w", serverID, err)
-	}
-
-	return nil
-}
-
-func updateServer(ctx context.Context, conn *transfer.Transfer, input *transfer.UpdateServerInput) error {
-	// The Transfer API will return a state of ONLINE for a server before the
-	// underlying VPC Endpoint is available and attempting to update the server
-	// will return an error until that EC2 API process is complete:
-	//   ConflictException: VPC Endpoint state is not yet available
-	// To prevent accessing the EC2 API directly to check the VPC Endpoint
-	// state, which can require confusing IAM permissions and have other
-	// eventual consistency consideration, we retry only via the Transfer API.
-	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, tfec2.VPCEndpointCreationTimeout, func() (interface{}, error) {
-		return conn.UpdateServerWithContext(ctx, input)
-	}, transfer.ErrCodeConflictException, "VPC Endpoint state is not yet available")
-
-	if err != nil {
-		return fmt.Errorf("updating Transfer Server (%s): %w", aws.StringValue(input.ServerId), err)
-	}
-
-	return nil
 }

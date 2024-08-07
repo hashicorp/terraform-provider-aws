@@ -6,6 +6,7 @@ package networkmanager
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -14,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go/private/protocol"
 	"github.com/aws/aws-sdk-go/service/networkmanager"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -62,7 +62,7 @@ func ResourceCoreNetwork() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -102,11 +102,11 @@ func ResourceCoreNetwork() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
@@ -148,7 +148,7 @@ func ResourceCoreNetwork() *schema.Resource {
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -160,7 +160,7 @@ func ResourceCoreNetwork() *schema.Resource {
 					},
 				},
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -182,7 +182,7 @@ func resourceCoreNetworkCreate(ctx context.Context, d *schema.ResourceData, meta
 		Tags:            getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -243,13 +243,13 @@ func resourceCoreNetworkRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading Network Manager Core Network (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", coreNetwork.CoreNetworkArn)
+	d.Set(names.AttrARN, coreNetwork.CoreNetworkArn)
 	if coreNetwork.CreatedAt != nil {
-		d.Set("created_at", aws.TimeValue(coreNetwork.CreatedAt).Format(time.RFC3339))
+		d.Set(names.AttrCreatedAt, aws.TimeValue(coreNetwork.CreatedAt).Format(time.RFC3339))
 	} else {
-		d.Set("created_at", nil)
+		d.Set(names.AttrCreatedAt, nil)
 	}
-	d.Set("description", coreNetwork.Description)
+	d.Set(names.AttrDescription, coreNetwork.Description)
 	if err := d.Set("edges", flattenCoreNetworkEdges(coreNetwork.Edges)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting edges: %s", err)
 	}
@@ -257,7 +257,7 @@ func resourceCoreNetworkRead(ctx context.Context, d *schema.ResourceData, meta i
 	if err := d.Set("segments", flattenCoreNetworkSegments(coreNetwork.Segments)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting segments: %s", err)
 	}
-	d.Set("state", coreNetwork.State)
+	d.Set(names.AttrState, coreNetwork.State)
 
 	setTagsOut(ctx, coreNetwork.Tags)
 
@@ -269,10 +269,10 @@ func resourceCoreNetworkUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
-	if d.HasChange("description") {
+	if d.HasChange(names.AttrDescription) {
 		_, err := conn.UpdateCoreNetworkWithContext(ctx, &networkmanager.UpdateCoreNetworkInput{
 			CoreNetworkId: aws.String(d.Id()),
-			Description:   aws.String(d.Get("description").(string)),
+			Description:   aws.String(d.Get(names.AttrDescription).(string)),
 		})
 
 		if err != nil {
@@ -514,7 +514,7 @@ func flattenCoreNetworkSegment(apiObject *networkmanager.CoreNetworkSegment) map
 	}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.StringValue(v)
+		tfMap[names.AttrName] = aws.StringValue(v)
 	}
 
 	if v := apiObject.SharedSegments; v != nil {
@@ -607,14 +607,14 @@ func waitCoreNetworkPolicyCreated(ctx context.Context, conn *networkmanager.Netw
 	}
 
 	if output, ok := outputRaw.(*networkmanager.CoreNetworkPolicy); ok {
-		if state, errors := aws.StringValue(output.ChangeSetState), output.PolicyErrors; state == networkmanager.ChangeSetStateFailedGeneration && len(errors) > 0 {
-			var errs *multierror.Error
+		if state, v := aws.StringValue(output.ChangeSetState), output.PolicyErrors; state == networkmanager.ChangeSetStateFailedGeneration && len(v) > 0 {
+			var errs []error
 
-			for _, err := range errors {
-				errs = multierror.Append(errs, fmt.Errorf("%s: %s", aws.StringValue(err.ErrorCode), aws.StringValue(err.Message)))
+			for _, err := range v {
+				errs = append(errs, fmt.Errorf("%s: %s", aws.StringValue(err.ErrorCode), aws.StringValue(err.Message)))
 			}
 
-			tfresource.SetLastError(err, errs.ErrorOrNil())
+			tfresource.SetLastError(err, errors.Join(errs...))
 		}
 
 		return output, err
@@ -625,18 +625,18 @@ func waitCoreNetworkPolicyCreated(ctx context.Context, conn *networkmanager.Netw
 
 // buildCoreNetworkBasePolicyDocument returns a base policy document
 func buildCoreNetworkBasePolicyDocument(regions []interface{}) (string, error) {
-	edgeLocations := make([]*CoreNetworkEdgeLocation, len(regions))
+	edgeLocations := make([]*coreNetworkPolicyCoreNetworkEdgeLocation, len(regions))
 	for i, location := range regions {
-		edgeLocations[i] = &CoreNetworkEdgeLocation{Location: location.(string)}
+		edgeLocations[i] = &coreNetworkPolicyCoreNetworkEdgeLocation{Location: location.(string)}
 	}
 
-	basePolicy := &CoreNetworkPolicyDoc{
+	basePolicy := &coreNetworkPolicyDocument{
 		Version: "2021.12",
-		CoreNetworkConfiguration: &CoreNetworkPolicyCoreNetworkConfiguration{
-			AsnRanges:     CoreNetworkPolicyDecodeConfigStringList([]interface{}{"64512-65534"}),
+		CoreNetworkConfiguration: &coreNetworkPolicyCoreNetworkConfiguration{
+			AsnRanges:     coreNetworkPolicyExpandStringList([]interface{}{"64512-65534"}),
 			EdgeLocations: edgeLocations,
 		},
-		Segments: []*CoreNetworkPolicySegment{
+		Segments: []*coreNetworkPolicySegment{
 			{
 				Name:        "segment",
 				Description: "base-policy",

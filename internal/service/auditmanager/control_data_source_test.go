@@ -26,14 +26,14 @@ func TestAccAuditManagerControlDataSource_standard(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccControlDataSourceConfig_standard(name),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "name", name),
-					resource.TestCheckResourceAttr(dataSourceName, "control_mapping_sources.#", "3"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, name),
+					resource.TestCheckResourceAttr(dataSourceName, "control_mapping_sources.#", acctest.Ct3),
 				),
 			},
 		},
@@ -50,14 +50,14 @@ func TestAccAuditManagerControlDataSource_custom(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccControlDataSourceConfig_custom(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "name", rName),
-					resource.TestCheckResourceAttr(dataSourceName, "control_mapping_sources.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(dataSourceName, "control_mapping_sources.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(dataSourceName, "control_mapping_sources.0.source_name", rName),
 					resource.TestCheckResourceAttr(dataSourceName, "control_mapping_sources.0.source_set_up_option", string(types.SourceSetUpOptionProceduralControlsMapping)),
 					resource.TestCheckResourceAttr(dataSourceName, "control_mapping_sources.0.source_type", string(types.SourceTypeManual)),

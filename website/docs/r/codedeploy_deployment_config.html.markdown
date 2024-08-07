@@ -126,6 +126,7 @@ The `time_based_linear` block supports the following:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `arn` - The ARN of the deployment config.
 * `id` - The deployment group's config name.
 * `deployment_config_id` - The AWS Assigned deployment config id
 

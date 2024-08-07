@@ -24,7 +24,7 @@ func testAccFindingAggregator_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFindingAggregatorDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -46,7 +46,7 @@ func testAccFindingAggregator_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFindingAggregatorExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "linking_mode", "SPECIFIED_REGIONS"),
-					resource.TestCheckResourceAttr(resourceName, "specified_regions.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "specified_regions.#", acctest.Ct3),
 				),
 			},
 			{
@@ -54,7 +54,7 @@ func testAccFindingAggregator_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFindingAggregatorExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "linking_mode", "ALL_REGIONS_EXCEPT_SPECIFIED"),
-					resource.TestCheckResourceAttr(resourceName, "specified_regions.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "specified_regions.#", acctest.Ct2),
 				),
 			},
 		},
@@ -67,7 +67,7 @@ func testAccFindingAggregator_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFindingAggregatorDestroy(ctx),
 		Steps: []resource.TestStep{

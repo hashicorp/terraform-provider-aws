@@ -41,7 +41,7 @@ func sweepNotificationRules(region string) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error listingCodeStar Notification Rules (%s): %w", region, err)
+			return fmt.Errorf("error listing CodeStar Notification Rules (%s): %w", region, err)
 		}
 
 		for _, v := range page.NotificationRules {

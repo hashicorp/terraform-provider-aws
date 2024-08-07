@@ -7,88 +7,126 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudtrail"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/go-multierror"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cloudtrail"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func RegisterSweepers() {
 	resource.AddTestSweepers("aws_cloudtrail", &resource.Sweeper{
 		Name: "aws_cloudtrail",
-		F:    sweeps,
+		F:    sweepTrails,
+	})
+
+	resource.AddTestSweepers("aws_cloudtrail_event_data_store", &resource.Sweeper{
+		Name: "aws_cloudtrail_event_data_store",
+		F:    sweepEventDataStores,
 	})
 }
 
-func sweeps(region string) error {
+func sweepTrails(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.CloudTrailConn(ctx)
-	var sweeperErrs *multierror.Error
+	conn := client.CloudTrailClient(ctx)
+	input := &cloudtrail.ListTrailsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListTrailsPagesWithContext(ctx, &cloudtrail.ListTrailsInput{}, func(page *cloudtrail.ListTrailsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := cloudtrail.NewListTrailsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping CloudTrail Trail sweep for %s: %s", region, err)
+			return nil
 		}
 
-		for _, trail := range page.Trails {
-			name := aws.StringValue(trail.Name)
-
-			if name == "AWSMacieTrail-DO-NOT-EDIT" {
-				log.Printf("[INFO] Skipping AWSMacieTrail-DO-NOT-EDIT for Macie Classic, which is not automatically recreated by the service")
-				continue
-			}
-
-			output, err := conn.DescribeTrailsWithContext(ctx, &cloudtrail.DescribeTrailsInput{
-				TrailNameList: aws.StringSlice([]string{name}),
-			})
-			if err != nil {
-				sweeperErr := fmt.Errorf("error describing CloudTrail (%s): %w", name, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
-
-			if len(output.TrailList) == 0 {
-				log.Printf("[INFO] CloudTrail (%s) not found, skipping", name)
-				continue
-			}
-
-			if aws.BoolValue(output.TrailList[0].IsOrganizationTrail) {
-				log.Printf("[INFO] CloudTrail (%s) is an organization trail, skipping", name)
-				continue
-			}
-
-			log.Printf("[INFO] Deleting CloudTrail: %s", name)
-			_, err = conn.DeleteTrailWithContext(ctx, &cloudtrail.DeleteTrailInput{
-				Name: aws.String(name),
-			})
-			if tfawserr.ErrCodeEquals(err, cloudtrail.ErrCodeTrailNotFoundException) {
-				continue
-			}
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting CloudTrail (%s): %w", name, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
+		if err != nil {
+			return fmt.Errorf("error listing CloudTrail Trails (%s): %w", region, err)
 		}
 
-		return !lastPage
-	})
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping CloudTrail sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+		for _, v := range page.Trails {
+			arn := aws.ToString(v.TrailARN)
+
+			if name := aws.ToString(v.Name); name == "AWSMacieTrail-DO-NOT-EDIT" {
+				log.Printf("[INFO] Skipping CloudTrail Trail %s", arn)
+				continue
+			}
+
+			trail, err := findTrailByARN(ctx, conn, arn)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return fmt.Errorf("error reading CloudTrail Trail (%s): %w", arn, err)
+			}
+
+			if aws.ToBool(trail.IsOrganizationTrail) {
+				log.Printf("[INFO] Skipping CloudTrail Trail %s: IsOrganizationTrail", arn)
+				continue
+			}
+
+			r := resourceTrail()
+			d := r.Data(nil)
+			d.SetId(arn)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
 	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving CloudTrails: %w", err))
+		return fmt.Errorf("error sweeping CloudTrail Trails (%s): %w", region, err)
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	return nil
+}
+
+func sweepEventDataStores(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.CloudTrailClient(ctx)
+	input := &cloudtrail.ListEventDataStoresInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := cloudtrail.NewListEventDataStoresPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping CloudTrail Event Data Store sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing CloudTrail Event Data Stores (%s): %w", region, err)
+		}
+
+		for _, v := range page.EventDataStores {
+			r := resourceEventDataStore()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.EventDataStoreArn))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping CloudTrail Event Data Stores (%s): %w", region, err)
+	}
+
+	return nil
 }

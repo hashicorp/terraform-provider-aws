@@ -47,7 +47,7 @@ func main() {
 			continue
 		}
 
-		if l.NotImplemented() {
+		if l.NotImplemented() && !l.EndpointOnly() {
 			continue
 		}
 
