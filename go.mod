@@ -67,7 +67,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.27.3
 	github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.24.3
 	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.25.5
-	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.41.4
+	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.42.0
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.33.3
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.37.3
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.48.3
@@ -75,7 +75,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.16.4
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.26.3
 	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.40.3
-	github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.7.3
+	github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.8.0
 	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.39.3
 	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.40.3
 	github.com/aws/aws-sdk-go-v2/service/databrew v1.31.3
@@ -223,7 +223,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/wafregional v1.23.3
 	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.51.4
 	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.32.3
-	github.com/aws/aws-sdk-go-v2/service/workspaces v1.44.3
+	github.com/aws/aws-sdk-go-v2/service/workspaces v1.45.0
 	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.21.3
 	github.com/aws/aws-sdk-go-v2/service/xray v1.27.3
 	github.com/aws/smithy-go v1.20.3

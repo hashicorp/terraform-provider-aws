@@ -154,8 +154,8 @@ github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.24.3 h1:dOpVsTQ+KP
 github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.24.3/go.mod h1:jzetUSpzLqwmfFc8YWImGPkkrgNrQHR0AeDSPZBVVNY=
 github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.25.5 h1:iMKC49JNJGq0MLvdKU7DSuB5uZUg33bIfcasNZjoMh4=
 github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.25.5/go.mod h1:nEqtURWmhc/EXQ1yYIoEtvCqQYgl5yYKxdQU8taJnv0=
-github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.41.4 h1:jkvdmVYoVWVrAIjgt9aiR9e7GRK2DnxrMnvKjA5EJd0=
-github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.41.4/go.mod h1:aynIysFCBIq18wfN2GrIYAeofOnQKV3LtkjyrQKfaFY=
+github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.42.0 h1:avuVTcO5UlAqeRGgldWXHv9yvanZmC7Ss8vszi9Cc/c=
+github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.42.0/go.mod h1:aynIysFCBIq18wfN2GrIYAeofOnQKV3LtkjyrQKfaFY=
 github.com/aws/aws-sdk-go-v2/service/comprehend v1.33.3 h1:3ZaUAjyN1VEdvH8xVTu87GLDpzp/BDTb5WjqpHU8po8=
 github.com/aws/aws-sdk-go-v2/service/comprehend v1.33.3/go.mod h1:IKMf00PVvTyj1E/ey0MGDuI58VHdRiiMtAf/2+c74EE=
 github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.37.3 h1:0T+EzT9/cWUDqMmZ1Hvg7l7ZOso3satQ2T9trD8T6Ro=
@@ -170,8 +170,8 @@ github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.26.3 h1:t+h4OY
 github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.26.3/go.mod h1:mclb7wohFWSVV4EgpRd12YtX5SLAX++hKSWco/GqH8o=
 github.com/aws/aws-sdk-go-v2/service/costexplorer v1.40.3 h1:wzusAKyjqSBbOjulrFF2caN+D4ylnI14cTT8xTKm7Sw=
 github.com/aws/aws-sdk-go-v2/service/costexplorer v1.40.3/go.mod h1:qgL8c9hUSWedmBiyydYvQgmzKv04NJpgHgblzWMtDOg=
-github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.7.3 h1:+AiQwAYmhOXn0m+6B42XBR9UkDhSno0QjQl5XHCPg4k=
-github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.7.3/go.mod h1:Om/t/NhLjZu7rYMYBI1rWyGqEUfqSn/vk/k1/7pLEC8=
+github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.8.0 h1:hQTitbjy4kFXPyeySL+qvZSfSfoNx4+eicskadUhFKc=
+github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.8.0/go.mod h1:Om/t/NhLjZu7rYMYBI1rWyGqEUfqSn/vk/k1/7pLEC8=
 github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.39.3 h1:Aq+7pnVWk59dS2BMVSOEDWN0yProaw0XhaUsRGbH7MM=
 github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.39.3/go.mod h1:4duVgMu+RBKpiU+Hz4FjPedMLWNFVL4lhauBVYz8OZ4=
 github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.40.3 h1:HzdVJzMjEhQhLjUB1xGRMhs4zjaemPLUbdhhA4wfnMI=
@@ -422,6 +422,8 @@ github.com/aws/aws-sdk-go-v2/service/servicediscovery v1.31.3 h1:EthA93BNgTnk36F
 github.com/aws/aws-sdk-go-v2/service/servicediscovery v1.31.3/go.mod h1:4xh/h0pevPhBkA4b2iYosZaqrThccxFREQxiGuZpJlc=
 github.com/aws/aws-sdk-go-v2/service/servicequotas v1.23.3 h1:J6R7Mo3nDY9BmmG4V9EpQa70A0XOoCuWPYTpsmouM48=
 github.com/aws/aws-sdk-go-v2/service/servicequotas v1.23.3/go.mod h1:be52Ycqv581QoIOZzHfZFWlJLcGAI2M/ItUSlx7lLp0=
+github.com/aws/aws-sdk-go-v2/service/ses v1.25.2 h1:NMFHOa6j5/PcxXNy2JEwN5nT79YMiWE55uDW9w5LO5o=
+github.com/aws/aws-sdk-go-v2/service/ses v1.25.2/go.mod h1:cCXA/nP50r07dXq9qB0oM55YdYl6152Nd/2B+JrB9zo=
 github.com/aws/aws-sdk-go-v2/service/sesv2 v1.32.3 h1:DLJCsgYZoNIIIFnWd3MXyg9ehgnlihOKDEvOAkzGRMc=
 github.com/aws/aws-sdk-go-v2/service/sesv2 v1.32.3/go.mod h1:klyMXN+cNAndrESWMyT7LA8Ll0I6Nc03jxfSkeuU/Xg=
 github.com/aws/aws-sdk-go-v2/service/sfn v1.30.0 h1:FIprHGk9sztofQcgyHrIOh4QQo0rO1kjHmksxDrXMtg=
@@ -476,8 +478,8 @@ github.com/aws/aws-sdk-go-v2/service/wafv2 v1.51.4 h1:1khBA5uryBRJoCb4G2iR5RT06B
 github.com/aws/aws-sdk-go-v2/service/wafv2 v1.51.4/go.mod h1:QpFImaPGKNwa+MiZ+oo6LbV1PVQBapc0CnrAMRScoxM=
 github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.32.3 h1:BjPTq4qiR/Ywu3yf3DeGepCj5RB1c4rtEUmE62bmkus=
 github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.32.3/go.mod h1:jeL9apgA3x3fwH3ZkaDPIfYcXZUlmCXNrU4o+6oY4oM=
-github.com/aws/aws-sdk-go-v2/service/workspaces v1.44.3 h1:zWbhDgri3gGMLl0mdrXIT6ocQ6lg6vSxPKRPJxhrZG4=
-github.com/aws/aws-sdk-go-v2/service/workspaces v1.44.3/go.mod h1:YRGgDr23EJC+32pPpWnoVB2p4JP3u5xASobpmoOlhEo=
+github.com/aws/aws-sdk-go-v2/service/workspaces v1.45.0 h1:vW6spLrLDczxrkDfLEnQ/Bmpwim76hhp72knhEcGW/E=
+github.com/aws/aws-sdk-go-v2/service/workspaces v1.45.0/go.mod h1:YRGgDr23EJC+32pPpWnoVB2p4JP3u5xASobpmoOlhEo=
 github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.21.3 h1:fZVJVU+fgDbHDZpHv447C43ZM9E9QHbj7reT6tB19FA=
 github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.21.3/go.mod h1:CWln0RlRf0Cc4Csr4HkyXI6BkkIujyTeWuwTo3hijP0=
 github.com/aws/aws-sdk-go-v2/service/xray v1.27.3 h1:0jSgvovW7R95P8XJiGxYfrnxdryQyClvebJeYbUlecw=
