@@ -35,12 +35,14 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Gateway",
 		},
 		{
-			Factory:  DataSourceLocation,
+			Factory:  dataSourceLocation,
 			TypeName: "aws_dx_location",
+			Name:     "Location",
 		},
 		{
-			Factory:  DataSourceLocations,
+			Factory:  dataSourceLocations,
 			TypeName: "aws_dx_locations",
+			Name:     "Locations",
 		},
 		{
 			Factory:  DataSourceRouterConfiguration,
