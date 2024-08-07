@@ -153,12 +153,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_bedrock_guardrail.example
-  id = "guardrail-id-12345678"
+  id = "guardrail-id-12345678:DRAFT"
 }
 ```
 
 Using `terraform import`, import Amazon Bedrock Guardrail using the `example_id_arg`. For example:
 
 ```console
-% terraform import aws_bedrock_guardrail.example guardrail-id-12345678
+% terraform import aws_bedrock_guardrail.example guardrail-id-12345678:DRAFT
 ```
