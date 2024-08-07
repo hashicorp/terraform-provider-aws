@@ -22,21 +22,24 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_dx_public_virtual_interface", name="Public Virtual Interface")
 // @Tags(identifierAttribute="arn")
-func ResourcePublicVirtualInterface() *schema.Resource {
+func resourcePublicVirtualInterface() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePublicVirtualInterfaceCreate,
 		ReadWithoutTimeout:   resourcePublicVirtualInterfaceRead,
 		UpdateWithoutTimeout: resourcePublicVirtualInterfaceUpdate,
 		DeleteWithoutTimeout: resourcePublicVirtualInterfaceDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: resourcePublicVirtualInterfaceImport,
 		},
+
 		CustomizeDiff: customdiff.Sequence(
 			resourcePublicVirtualInterfaceCustomizeDiff,
 			verify.SetTagsDiff,
@@ -122,7 +125,7 @@ func resourcePublicVirtualInterfaceCreate(ctx context.Context, d *schema.Resourc
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
-	req := &directconnect.CreatePublicVirtualInterfaceInput{
+	input := &directconnect.CreatePublicVirtualInterfaceInput{
 		ConnectionId: aws.String(d.Get(names.AttrConnectionID).(string)),
 		NewPublicVirtualInterface: &awstypes.NewPublicVirtualInterface{
 			AddressFamily:        awstypes.AddressFamily(d.Get("address_family").(string)),
@@ -132,29 +135,33 @@ func resourcePublicVirtualInterfaceCreate(ctx context.Context, d *schema.Resourc
 			Vlan:                 int32(d.Get("vlan").(int)),
 		},
 	}
+
 	if v, ok := d.GetOk("amazon_address"); ok {
-		req.NewPublicVirtualInterface.AmazonAddress = aws.String(v.(string))
+		input.NewPublicVirtualInterface.AmazonAddress = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("bgp_auth_key"); ok {
-		req.NewPublicVirtualInterface.AuthKey = aws.String(v.(string))
+		input.NewPublicVirtualInterface.AuthKey = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("customer_address"); ok {
-		req.NewPublicVirtualInterface.CustomerAddress = aws.String(v.(string))
+		input.NewPublicVirtualInterface.CustomerAddress = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("route_filter_prefixes"); ok {
-		req.NewPublicVirtualInterface.RouteFilterPrefixes = expandRouteFilterPrefixes(v.(*schema.Set).List())
+		input.NewPublicVirtualInterface.RouteFilterPrefixes = expandRouteFilterPrefixes(v.(*schema.Set).List())
 	}
 
-	log.Printf("[DEBUG] Creating Direct Connect public virtual interface: %#v", req)
-	resp, err := conn.CreatePublicVirtualInterface(ctx, req)
+	output, err := conn.CreatePublicVirtualInterface(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Direct Connect public virtual interface: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Direct Connect Public Virtual Interface: %s", err)
 	}
 
-	d.SetId(aws.ToString(resp.VirtualInterfaceId))
+	d.SetId(aws.ToString(output.VirtualInterfaceId))
 
-	if err := publicVirtualInterfaceWaitUntilAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+	if _, err := waitPublicVirtualInterfaceAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Direct Connect Public Virtual Interface (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourcePublicVirtualInterfaceRead(ctx, d, meta)...)
@@ -164,14 +171,16 @@ func resourcePublicVirtualInterfaceRead(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
-	vif, err := virtualInterfaceRead(ctx, d.Id(), conn)
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-	if vif == nil {
-		log.Printf("[WARN] Direct Connect virtual interface (%s) not found, removing from state", d.Id())
+	vif, err := findVirtualInterfaceByID(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Direct Connect Public Virtual Interface (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Direct Connect Public Virtual Interface (%s): %s", d.Id(), err)
 	}
 
 	d.Set("address_family", vif.AddressFamily)
@@ -217,12 +226,10 @@ func resourcePublicVirtualInterfaceDelete(ctx context.Context, d *schema.Resourc
 func resourcePublicVirtualInterfaceImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
-	vif, err := virtualInterfaceRead(ctx, d.Id(), conn)
+	vif, err := findVirtualInterfaceByID(ctx, conn, d.Id())
+
 	if err != nil {
 		return nil, err
-	}
-	if vif == nil {
-		return nil, fmt.Errorf("virtual interface (%s) not found", d.Id())
 	}
 
 	if vifType := aws.ToString(vif.VirtualInterfaceType); vifType != "public" {
@@ -248,10 +255,13 @@ func resourcePublicVirtualInterfaceCustomizeDiff(_ context.Context, diff *schema
 	return nil
 }
 
-func publicVirtualInterfaceWaitUntilAvailable(ctx context.Context, conn *directconnect.Client, vifId string, timeout time.Duration) error {
-	return virtualInterfaceWaitUntilAvailable(ctx, conn,
-		vifId,
-		timeout,
+func waitPublicVirtualInterfaceAvailable(ctx context.Context, conn *directconnect.Client, id string, timeout time.Duration) (*awstypes.VirtualInterface, error) {
+	return waitVirtualInterfaceAvailable(
+		ctx,
+		conn,
+		id,
 		enum.Slice(awstypes.VirtualInterfaceStatePending),
-		enum.Slice(awstypes.VirtualInterfaceStateAvailable, awstypes.VirtualInterfaceStateDown, awstypes.VirtualInterfaceStateVerifying))
+		enum.Slice(awstypes.VirtualInterfaceStateAvailable, awstypes.VirtualInterfaceStateDown, awstypes.VirtualInterfaceStateVerifying),
+		timeout,
+	)
 }

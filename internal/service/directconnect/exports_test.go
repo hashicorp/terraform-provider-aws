@@ -22,6 +22,7 @@ var (
 	ResourceLag                                   = resourceLag
 	ResourceMacSecKeyAssociation                  = resourceMacSecKeyAssociation
 	ResourcePrivateVirtualInterface               = resourcePrivateVirtualInterface
+	ResourcePublicVirtualInterface                = resourcePublicVirtualInterface
 
 	FindBGPPeerByThreePartKey          = findBGPPeerByThreePartKey
 	FindConnectionByID                 = findConnectionByID
