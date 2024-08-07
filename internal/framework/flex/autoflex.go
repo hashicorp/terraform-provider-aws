@@ -35,31 +35,37 @@ type autoFlexer interface {
 }
 
 // autoFlexValues returns the underlying `reflect.Value`s of `from` and `to`.
-func autoFlexValues(_ context.Context, from, to any) (reflect.Value, reflect.Value, diag.Diagnostics) {
+func autoFlexValues(ctx context.Context, from, to any) (context.Context, reflect.Value, reflect.Value, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	valFrom, valTo := reflect.ValueOf(from), reflect.ValueOf(to)
-	if kind := valFrom.Kind(); kind == reflect.Ptr {
+	if kind := valFrom.Kind(); kind == reflect.Pointer {
 		valFrom = valFrom.Elem()
 	}
 
+	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourceType, fullTypeName(valueType(valFrom)))
+	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetType, fullTypeName(valueType(valTo)))
+
 	kind := valTo.Kind()
 	switch kind {
-	case reflect.Ptr:
+	case reflect.Pointer:
 		if valTo.IsNil() {
-			diags.AddError("AutoFlEx", "Target cannot be nil")
-			return reflect.Value{}, reflect.Value{}, diags
+			tflog.SubsystemError(ctx, subsystemName, "Target is nil")
+			diags.Append(diagConvertingTargetIsNil(valTo.Type()))
+			return ctx, reflect.Value{}, reflect.Value{}, diags
 		}
 		valTo = valTo.Elem()
-		return valFrom, valTo, diags
+		return ctx, valFrom, valTo, diags
 
 	case reflect.Invalid:
-		diags.AddError("AutoFlEx", "Target cannot be nil")
-		return reflect.Value{}, reflect.Value{}, diags
+		tflog.SubsystemError(ctx, subsystemName, "Target is nil")
+		diags.Append(diagConvertingTargetIsNil(nil))
+		return ctx, reflect.Value{}, reflect.Value{}, diags
 
 	default:
-		diags.AddError("AutoFlEx", fmt.Sprintf("target (%T): %s, want pointer", to, kind))
-		return reflect.Value{}, reflect.Value{}, diags
+		tflog.SubsystemError(ctx, subsystemName, "Target is not a pointer")
+		diags.Append(diagConvertingTargetIsNotPointer(valTo.Type()))
+		return ctx, reflect.Value{}, reflect.Value{}, diags
 	}
 }
 
@@ -72,11 +78,9 @@ func autoFlexConvertStruct(ctx context.Context, sourcePath path.Path, from any, 
 	var diags diag.Diagnostics
 
 	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourcePath, sourcePath.String())
-	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourceType, fullTypeName(reflect.TypeOf(from)))
 	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetPath, targetPath.String())
-	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetType, fullTypeName(reflect.TypeOf(to)))
 
-	valFrom, valTo, d := autoFlexValues(ctx, from, to)
+	ctx, valFrom, valTo, d := autoFlexValues(ctx, from, to)
 	diags.Append(d...)
 	if diags.HasError() {
 		return diags
@@ -95,7 +99,7 @@ func autoFlexConvertStruct(ctx context.Context, sourcePath path.Path, from any, 
 	}
 
 	if valTo.Kind() == reflect.Interface {
-		tflog.SubsystemInfo(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
+		tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
 			"from": valFrom.Type(),
 			"to":   valTo.Kind(),
 		})
@@ -152,8 +156,7 @@ func autoFlexConvertStruct(ctx context.Context, sourcePath path.Path, from any, 
 
 		diags.Append(flexer.convert(ctx, sourcePath.AtName(fieldName), valFrom.Field(i), targetPath.AtName(toFieldName), toFieldVal)...)
 		if diags.HasError() {
-			diags.AddError("AutoFlEx", fmt.Sprintf("convert (%s)", fieldName))
-			return diags
+			break
 		}
 	}
 
@@ -245,4 +248,31 @@ type valueWithElementsAs interface {
 
 	Elements() []attr.Value
 	ElementsAs(context.Context, any, bool) diag.Diagnostics
+}
+
+func diagConvertingTargetIsNil(targetType reflect.Type) diag.ErrorDiagnostic {
+	return diag.NewErrorDiagnostic(
+		"Incompatible Types",
+		"An unexpected error occurred while converting configuration. "+
+			"This is always an error in the provider. "+
+			"Please report the following to the provider developer:\n\n"+
+			fmt.Sprintf("Target of type %q is nil", fullTypeName(targetType)),
+	)
+}
+
+func diagConvertingTargetIsNotPointer(targetType reflect.Type) diag.ErrorDiagnostic {
+	return diag.NewErrorDiagnostic(
+		"Incompatible Types",
+		"An unexpected error occurred while converting configuration. "+
+			"This is always an error in the provider. "+
+			"Please report the following to the provider developer:\n\n"+
+			fmt.Sprintf("Target type %q is not a pointer", fullTypeName(targetType)),
+	)
+}
+
+func valueType(v reflect.Value) reflect.Type {
+	if v.Kind() == reflect.Invalid {
+		return nil
+	}
+	return v.Type()
 }
