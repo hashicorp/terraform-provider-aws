@@ -103,7 +103,7 @@ resource "aws_datazone_form_type" "test" {
 The following arguments are required:
 
 * `domain_id` - (Required) Identifier of the domain.
-* `name` - (Required) Name of the form type. Must be the name of the structure in smithy.
+* `name` - (Required) Name of the form type. Must be the name of the structure in smithy document.
 * `owning_project_identifier` - (Required) Identifier of project that owns the form type. Must follow regex of ^[a-zA-Z0-9_-]{1,36}.
 * `model` - (Required) Object of the model of the form type that contains the following attributes.
     * `smithy` - (Required) Smithy document that indicates the model of the API. Must be between the lengths 1 and 100,000 and be encoded as a smithy document.
