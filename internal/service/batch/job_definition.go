@@ -516,7 +516,7 @@ func needsJobDefUpdate(d *schema.ResourceDiff) bool {
 		}
 
 		var oeks, neks *batch.EksPodProperties
-		if len(o.([]interface{})) > 0 && 0.([]interface{})[0] != nil {
+		if len(o.([]interface{})) > 0 && o.([]interface{})[0] != nil {
 			oProps := o.([]interface{})[0].(map[string]interface{})
 			if opodProps, ok := oProps["pod_properties"].([]interface{}); ok && len(opodProps) > 0 {
 				oeks = expandEKSPodProperties(opodProps[0].(map[string]interface{}))
