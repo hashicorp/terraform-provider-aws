@@ -93,8 +93,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceClusters,
+			Factory:  dataSourceClusters,
 			TypeName: "aws_rds_clusters",
+			Name:     "Clusters",
 		},
 		{
 			Factory:  dataSourceEngineVersion,
