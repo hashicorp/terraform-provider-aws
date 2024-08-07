@@ -149,7 +149,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "MACSec Key Association",
 		},
 		{
-			Factory:  ResourcePrivateVirtualInterface,
+			Factory:  resourcePrivateVirtualInterface,
 			TypeName: "aws_dx_private_virtual_interface",
 			Name:     "Private Virtual Interface",
 			Tags: &types.ServicePackageResourceTags{

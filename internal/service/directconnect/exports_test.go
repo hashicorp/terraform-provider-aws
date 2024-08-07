@@ -21,6 +21,7 @@ var (
 	ResourceHostedTransitVirtualInterfaceAccepter = resourceHostedTransitVirtualInterfaceAccepter
 	ResourceLag                                   = resourceLag
 	ResourceMacSecKeyAssociation                  = resourceMacSecKeyAssociation
+	ResourcePrivateVirtualInterface               = resourcePrivateVirtualInterface
 
 	FindBGPPeerByThreePartKey          = findBGPPeerByThreePartKey
 	FindConnectionByID                 = findConnectionByID
