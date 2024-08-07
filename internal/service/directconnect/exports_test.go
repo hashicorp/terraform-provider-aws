@@ -20,6 +20,7 @@ var (
 	ResourceHostedTransitVirtualInterface         = resourceHostedTransitVirtualInterface
 	ResourceHostedTransitVirtualInterfaceAccepter = resourceHostedTransitVirtualInterfaceAccepter
 	ResourceLag                                   = resourceLag
+	ResourceMacSecKeyAssociation                  = resourceMacSecKeyAssociation
 
 	FindBGPPeerByThreePartKey          = findBGPPeerByThreePartKey
 	FindConnectionByID                 = findConnectionByID
@@ -29,6 +30,7 @@ var (
 	FindGatewayByID                    = findGatewayByID
 	FindHostedConnectionByID           = findHostedConnectionByID
 	FindLagByID                        = findLagByID
+	FindMacSecKeyByTwoPartKey          = findMacSecKeyByTwoPartKey
 	FindVirtualInterfaceByID           = findVirtualInterfaceByID
 	GatewayAssociationStateUpgradeV0   = gatewayAssociationStateUpgradeV0
 	ValidConnectionBandWidth           = validConnectionBandWidth

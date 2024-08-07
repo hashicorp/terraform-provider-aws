@@ -258,12 +258,12 @@ func testAccCheckLagDestroy(ctx context.Context) resource.TestCheckFunc {
 
 func testAccCheckLagExists(ctx context.Context, name string, v *awstypes.Lag) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectClient(ctx)
-
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
 		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectClient(ctx)
 
 		output, err := tfdirectconnect.FindLagByID(ctx, conn, rs.Primary.ID)
 

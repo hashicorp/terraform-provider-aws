@@ -88,8 +88,8 @@ func TestAccDirectConnectConnection_encryptionMode(t *testing.T) {
 
 	var connection awstypes.Connection
 	resourceName := "aws_dx_connection.test"
-	ckn := testAccDirecConnectMacSecGenerateHex()
-	cak := testAccDirecConnectMacSecGenerateHex()
+	ckn := testAccMacSecGenerateHex()
+	cak := testAccMacSecGenerateHex()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },

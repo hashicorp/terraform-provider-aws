@@ -12,42 +12,44 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_dx_macsec_key_association")
-func ResourceMacSecKeyAssociation() *schema.Resource {
+// @SDKResource("aws_dx_macsec_key_association", name="MACSec Key Association")
+func resourceMacSecKeyAssociation() *schema.Resource {
 	return &schema.Resource{
-		// MacSecKey resource only supports create (Associate), read (Describe) and delete (Disassociate)
-		CreateWithoutTimeout: resourceMacSecKeyCreate,
-		ReadWithoutTimeout:   resourceMacSecKeyRead,
-		DeleteWithoutTimeout: resourceMacSecKeyDelete,
+		CreateWithoutTimeout: resourceMacSecKeyAssociatioCreate,
+		ReadWithoutTimeout:   resourceMacSecKeyAssociationRead,
+		DeleteWithoutTimeout: resourceMacSecKeyAssociationDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
 			"cak": {
-				Type:     schema.TypeString,
-				Optional: true,
-				// CAK requires CKN
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
 				RequiredWith: []string{"ckn"},
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9A-Fa-f]{64}$`), "Must be 64-character hex code string"),
-				ForceNew:     true,
 			},
 			"ckn": {
 				Type:         schema.TypeString,
-				Computed:     true,
 				Optional:     true,
+				ForceNew:     true,
+				Computed:     true,
 				AtLeastOneOf: []string{"ckn", "secret_arn"},
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9A-Fa-f]{64}$`), "Must be 64-character hex code string"),
-				ForceNew:     true,
 			},
 			names.AttrConnectionID: {
 				Type:     schema.TypeString,
@@ -58,8 +60,9 @@ func ResourceMacSecKeyAssociation() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				AtLeastOneOf: []string{"ckn", "secret_arn"},
 				ForceNew:     true,
+				AtLeastOneOf: []string{"ckn", "secret_arn"},
+				ValidateFunc: verify.ValidARN,
 			},
 			"start_on": {
 				Type:     schema.TypeString,
@@ -73,108 +76,119 @@ func ResourceMacSecKeyAssociation() *schema.Resource {
 	}
 }
 
-func resourceMacSecKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMacSecKeyAssociatioCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
+	connectionID := d.Get(names.AttrConnectionID).(string)
 	input := &directconnect.AssociateMacSecKeyInput{
-		ConnectionId: aws.String(d.Get(names.AttrConnectionID).(string)),
+		ConnectionId: aws.String(connectionID),
 	}
 
-	if d.Get("ckn").(string) != "" {
+	if v, ok := d.GetOk("ckn"); ok {
 		input.Cak = aws.String(d.Get("cak").(string))
-		input.Ckn = aws.String(d.Get("ckn").(string))
+		input.Ckn = aws.String(v.(string))
 	}
 
-	if d.Get("secret_arn").(string) != "" {
-		input.SecretARN = aws.String(d.Get("secret_arn").(string))
+	if v, ok := d.GetOk("secret_arn"); ok {
+		input.SecretARN = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating MACSec secret key on Direct Connect Connection: %s", *input.ConnectionId)
 	output, err := conn.AssociateMacSecKey(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating MACSec secret key on Direct Connect Connection (%s): %s", *input.ConnectionId, err)
+		return sdkdiag.AppendErrorf(diags, "creating MACSec Key Association with Direct Connect Connection (%s): %s", connectionID, err)
 	}
 
-	secret_arn := MacSecKeyParseSecretARN(output)
-
-	// Create a composite ID based on connection ID and secret ARN
-	d.SetId(fmt.Sprintf("%s_%s", secret_arn, aws.ToString(output.ConnectionId)))
-
-	d.Set("secret_arn", secret_arn)
-
-	return append(diags, resourceMacSecKeyRead(ctx, d, meta)...)
-}
-
-func resourceMacSecKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
-
-	secretArn, connId, err := MacSecKeyParseID(d.Id())
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "unexpected format of ID (%s), expected secretArn_connectionId", d.Id())
-	}
-
-	connection, err := findConnectionByID(ctx, conn, connId)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Direct Connect Connection (%s): %s", d.Id(), err)
-	}
-
-	if connection.MacSecKeys == nil {
-		return sdkdiag.AppendErrorf(diags, "no MACSec keys found on Direct Connect Connection (%s)", d.Id())
-	}
-
-	for _, key := range connection.MacSecKeys {
-		if aws.ToString(key.SecretARN) == aws.ToString(&secretArn) {
-			d.Set("ckn", key.Ckn)
-			d.Set(names.AttrConnectionID, connId)
-			d.Set("secret_arn", key.SecretARN)
-			d.Set("start_on", key.StartOn)
-			d.Set(names.AttrState, key.State)
-		}
-	}
-
-	return diags
-}
-
-func resourceMacSecKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
-
-	input := &directconnect.DisassociateMacSecKeyInput{
-		ConnectionId: aws.String(d.Get(names.AttrConnectionID).(string)),
-		SecretARN:    aws.String(d.Get("secret_arn").(string)),
-	}
-
-	log.Printf("[DEBUG] Disassociating MACSec secret key on Direct Connect Connection: %s", *input.ConnectionId)
-	_, err := conn.DisassociateMacSecKey(ctx, input)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Unable to disassociate MACSec secret key on Direct Connect Connection (%s): %s", *input.ConnectionId, err)
-	}
-
-	return diags
-}
-
-// MacSecKeyParseSecretARN parses the secret ARN returned from a CMK or secret_arn
-func MacSecKeyParseSecretARN(output *directconnect.AssociateMacSecKeyOutput) string {
-	var result string
-
+	var secretARN string
 	for _, key := range output.MacSecKeys {
-		result = aws.ToString(key.SecretARN)
+		secretARN = aws.ToString(key.SecretARN)
 	}
 
-	return result
+	d.SetId(macSecKeyAssociationCreateResourceID(secretARN, connectionID))
+
+	return append(diags, resourceMacSecKeyAssociationRead(ctx, d, meta)...)
 }
 
-// MacSecKeyParseID parses the resource ID and returns the secret ARN and connection ID
-func MacSecKeyParseID(id string) (string, string, error) {
-	parts := strings.SplitN(id, "_", 2)
+func resourceMacSecKeyAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
-	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		return "", "", &retry.NotFoundError{}
+	secretARN, connectionID, err := macSecKeyAssociationParseResourceID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	return parts[0], parts[1], nil
+	key, err := findMacSecKeyByTwoPartKey(ctx, conn, connectionID, secretARN)
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Direct Connect MACSec Key Association (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Direct Connect MACSec Key Association (%s): %s", d.Id(), err)
+	}
+
+	d.Set("ckn", key.Ckn)
+	d.Set(names.AttrConnectionID, connectionID)
+	d.Set("secret_arn", key.SecretARN)
+	d.Set("start_on", key.StartOn)
+	d.Set(names.AttrState, key.State)
+
+	return diags
+}
+
+func resourceMacSecKeyAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
+
+	secretARN, connectionID, err := macSecKeyAssociationParseResourceID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	log.Printf("[DEBUG] Deleting Direct Connect MACSec Key Association: %s", d.Id())
+	_, err = conn.DisassociateMacSecKey(ctx, &directconnect.DisassociateMacSecKeyInput{
+		ConnectionId: aws.String(connectionID),
+		SecretARN:    aws.String(secretARN),
+	})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting MACSec Key Association (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+const macSecKeyAssociationResourceIDSeparator = "_"
+
+func macSecKeyAssociationCreateResourceID(secretARN, connectionID string) string {
+	parts := []string{secretARN, connectionID}
+	id := strings.Join(parts, macSecKeyAssociationResourceIDSeparator)
+
+	return id
+}
+
+func macSecKeyAssociationParseResourceID(id string) (string, string, error) {
+	parts := strings.SplitN(id, macSecKeyAssociationResourceIDSeparator, 2)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected secretArn%[2]sconnectionId", id, macSecKeyAssociationResourceIDSeparator)
+}
+
+func findMacSecKeyByTwoPartKey(ctx context.Context, conn *directconnect.Client, connectionID, secretARN string) (*awstypes.MacSecKey, error) {
+	output, err := findConnectionByID(ctx, conn, connectionID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(tfslices.Filter(output.MacSecKeys, func(v awstypes.MacSecKey) bool {
+		return aws.ToString(v.SecretARN) == secretARN
+	}))
 }

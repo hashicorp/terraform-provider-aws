@@ -144,8 +144,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceMacSecKeyAssociation,
+			Factory:  resourceMacSecKeyAssociation,
 			TypeName: "aws_dx_macsec_key_association",
+			Name:     "MACSec Key Association",
 		},
 		{
 			Factory:  ResourcePrivateVirtualInterface,
