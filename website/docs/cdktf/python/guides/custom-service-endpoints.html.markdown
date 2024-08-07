@@ -108,6 +108,7 @@ class MyConvertedCode(TerraformStack):
   <li><code>appflow</code></li>
   <li><code>appintegrations</code> (or <code>appintegrationsservice</code>)</li>
   <li><code>applicationinsights</code></li>
+  <li><code>applicationsignals</code></li>
   <li><code>appmesh</code></li>
   <li><code>apprunner</code></li>
   <li><code>appstream</code></li>
@@ -157,6 +158,7 @@ class MyConvertedCode(TerraformStack):
   <li><code>costoptimizationhub</code></li>
   <li><code>cur</code> (or <code>costandusagereportservice</code>)</li>
   <li><code>customerprofiles</code></li>
+  <li><code>databrew</code> (or <code>gluedatabrew</code>)</li>
   <li><code>dataexchange</code></li>
   <li><code>datapipeline</code></li>
   <li><code>datasync</code></li>
@@ -250,6 +252,7 @@ class MyConvertedCode(TerraformStack):
   <li><code>neptunegraph</code></li>
   <li><code>networkfirewall</code></li>
   <li><code>networkmanager</code></li>
+  <li><code>networkmonitor</code></li>
   <li><code>oam</code> (or <code>cloudwatchobservabilityaccessmanager</code>)</li>
   <li><code>opensearch</code> (or <code>opensearchservice</code>)</li>
   <li><code>opensearchserverless</code></li>
@@ -273,6 +276,7 @@ class MyConvertedCode(TerraformStack):
   <li><code>redshiftdata</code> (or <code>redshiftdataapiservice</code>)</li>
   <li><code>redshiftserverless</code></li>
   <li><code>rekognition</code></li>
+  <li><code>resiliencehub</code></li>
   <li><code>resourceexplorer2</code></li>
   <li><code>resourcegroups</code></li>
   <li><code>resourcegroupstaggingapi</code> (or <code>resourcegroupstagging</code>)</li>
@@ -429,4 +433,4 @@ class MyConvertedCode(TerraformStack):
         )
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-28568d63602252f93a7bf5c1c81b4800aae1f6e0c52b0a21222f9ee702daf47d -->
+<!-- cache-key: cdktf-0.20.1 input-694af91cfede44c08b7bcfc43909d45a468dabcd574457f24471cea30221c722 -->

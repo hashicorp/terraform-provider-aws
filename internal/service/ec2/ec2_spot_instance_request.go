@@ -181,7 +181,7 @@ func resourceSpotInstanceRequestCreate(ctx context.Context, d *schema.ResourceDa
 			NetworkInterfaces:   instanceOpts.NetworkInterfaces,
 		},
 		SpotPrice:         aws.String(d.Get("spot_price").(string)),
-		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeSpotInstancesRequest),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeSpotInstancesRequest),
 		Type:              awstypes.SpotInstanceType(d.Get("spot_type").(string)),
 	}
 
@@ -278,7 +278,7 @@ func resourceSpotInstanceRequestRead(ctx context.Context, d *schema.ResourceData
 	d.Set("launch_group", request.LaunchGroup)
 	d.Set("block_duration_minutes", request.BlockDurationMinutes)
 
-	setTagsOutV2(ctx, request.Tags)
+	setTagsOut(ctx, request.Tags)
 
 	d.Set("instance_interruption_behavior", request.InstanceInterruptionBehavior)
 	d.Set("valid_from", aws.ToTime(request.ValidFrom).Format(time.RFC3339))

@@ -13,15 +13,16 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -30,12 +31,12 @@ import (
 func TestAccDMSReplicationTask_basic(t *testing.T) {
 	t.Parallel()
 
-	for _, migrationType := range dms.MigrationTypeValue_Values() { //nolint:paralleltest // false positive
+	for _, migrationType := range enum.Values[awstypes.MigrationTypeValue]() { //nolint:paralleltest // false positive
 		t.Run(migrationType, func(t *testing.T) {
 			ctx := acctest.Context(t)
 			rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 			resourceName := "aws_dms_replication_task.test"
-			var v dms.ReplicationTask
+			var v awstypes.ReplicationTask
 
 			resource.ParallelTest(t, resource.TestCase{
 				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -79,7 +80,7 @@ func TestAccDMSReplicationTask_updateSettingsAndMappings(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_task.test"
-	var v dms.ReplicationTask
+	var v awstypes.ReplicationTask
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -185,7 +186,7 @@ func TestAccDMSReplicationTask_settings_EnableLogging(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_task.test"
-	var v dms.ReplicationTask
+	var v awstypes.ReplicationTask
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -202,7 +203,7 @@ func TestAccDMSReplicationTask_settings_EnableLogging(t *testing.T) {
 					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.LogComponents[?Id=='DATA_STRUCTURE'].Severity | [0]", "LOGGER_SEVERITY_DEFAULT"),
 					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.CloudWatchLogGroup", fmt.Sprintf("dms-tasks-%s", rName)),
 					func(s *terraform.State) error {
-						arn, err := arn.Parse(aws.StringValue(v.ReplicationTaskArn))
+						arn, err := arn.Parse(aws.ToString(v.ReplicationTaskArn))
 						if err != nil {
 							return err
 						}
@@ -230,7 +231,7 @@ func TestAccDMSReplicationTask_settings_EnableLogging(t *testing.T) {
 					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.LogComponents[?Id=='DATA_STRUCTURE'].Severity | [0]", "LOGGER_SEVERITY_DEFAULT"),
 					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.CloudWatchLogGroup", fmt.Sprintf("dms-tasks-%s", rName)),
 					func(s *terraform.State) error {
-						arn, err := arn.Parse(aws.StringValue(v.ReplicationTaskArn))
+						arn, err := arn.Parse(aws.ToString(v.ReplicationTaskArn))
 						if err != nil {
 							return err
 						}
@@ -263,7 +264,7 @@ func TestAccDMSReplicationTask_settings_EnableLogging(t *testing.T) {
 					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.LogComponents[?Id=='DATA_STRUCTURE'].Severity | [0]", "LOGGER_SEVERITY_DEFAULT"),
 					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.CloudWatchLogGroup", fmt.Sprintf("dms-tasks-%s", rName)),
 					func(s *terraform.State) error {
-						arn, err := arn.Parse(aws.StringValue(v.ReplicationTaskArn))
+						arn, err := arn.Parse(aws.ToString(v.ReplicationTaskArn))
 						if err != nil {
 							return err
 						}
@@ -321,7 +322,7 @@ func TestAccDMSReplicationTask_settings_LogComponents(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_task.test"
-	var v dms.ReplicationTask
+	var v awstypes.ReplicationTask
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -354,7 +355,7 @@ func TestAccDMSReplicationTask_settings_StreamBuffer(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_task.test"
-	var v dms.ReplicationTask
+	var v awstypes.ReplicationTask
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -385,7 +386,7 @@ func TestAccDMSReplicationTask_cdcStartPosition(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_task.test"
-	var v dms.ReplicationTask
+	var v awstypes.ReplicationTask
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -415,7 +416,7 @@ func TestAccDMSReplicationTask_resourceIdentifier(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_task.test"
-	var v dms.ReplicationTask
+	var v awstypes.ReplicationTask
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -448,7 +449,7 @@ func TestAccDMSReplicationTask_startReplicationTask(t *testing.T) {
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_task.test"
-	var v dms.ReplicationTask
+	var v awstypes.ReplicationTask
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -491,7 +492,7 @@ func TestAccDMSReplicationTask_s3ToRDS(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_task.test"
-	var v dms.ReplicationTask
+	var v awstypes.ReplicationTask
 
 	//https://github.com/hashicorp/terraform-provider-aws/issues/28277
 
@@ -521,7 +522,7 @@ func TestAccDMSReplicationTask_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_task.test"
-	var v dms.ReplicationTask
+	var v awstypes.ReplicationTask
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -545,7 +546,7 @@ func TestAccDMSReplicationTask_cdcStartTime_rfc3339_date(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_task.test"
-	var v dms.ReplicationTask
+	var v awstypes.ReplicationTask
 
 	currentTime := time.Now().UTC()
 	rfc3339Time := currentTime.Format(time.RFC3339)
@@ -578,7 +579,7 @@ func TestAccDMSReplicationTask_cdcStartTime_unix_timestamp(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_task.test"
-	var v dms.ReplicationTask
+	var v awstypes.ReplicationTask
 
 	currentTime := time.Now().UTC()
 	rfc3339Time := currentTime.Format(time.RFC3339)
@@ -615,7 +616,7 @@ func TestAccDMSReplicationTask_move(t *testing.T) {
 	resourceName := "aws_dms_replication_task.test"
 	instanceOne := "aws_dms_replication_instance.test"
 	instanceTwo := "aws_dms_replication_instance.test2"
-	var v dms.ReplicationTask
+	var v awstypes.ReplicationTask
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -645,14 +646,14 @@ func TestAccDMSReplicationTask_move(t *testing.T) {
 	})
 }
 
-func testAccCheckReplicationTaskExists(ctx context.Context, n string, v *dms.ReplicationTask) resource.TestCheckFunc {
+func testAccCheckReplicationTaskExists(ctx context.Context, n string, v *awstypes.ReplicationTask) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSClient(ctx)
 
 		output, err := tfdms.FindReplicationTaskByID(ctx, conn, rs.Primary.ID)
 
@@ -673,7 +674,7 @@ func testAccCheckReplicationTaskDestroy(ctx context.Context) resource.TestCheckF
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).DMSClient(ctx)
 
 			_, err := tfdms.FindReplicationTaskByID(ctx, conn, rs.Primary.ID)
 

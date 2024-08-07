@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -19,8 +19,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_security_groups")
-func DataSourceSecurityGroups() *schema.Resource {
+// @SDKDataSource("aws_security_groups", name="Security Groups")
+func dataSourceSecurityGroups() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSecurityGroupsRead,
 
@@ -53,7 +53,7 @@ func DataSourceSecurityGroups() *schema.Resource {
 func dataSourceSecurityGroupsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeSecurityGroupsInput{}
 
@@ -69,7 +69,7 @@ func dataSourceSecurityGroupsRead(ctx context.Context, d *schema.ResourceData, m
 		input.Filters = nil
 	}
 
-	output, err := FindSecurityGroups(ctx, conn, input)
+	output, err := findSecurityGroups(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Security Groups: %s", err)
@@ -80,14 +80,14 @@ func dataSourceSecurityGroupsRead(ctx context.Context, d *schema.ResourceData, m
 	for _, v := range output {
 		arn := arn.ARN{
 			Partition: meta.(*conns.AWSClient).Partition,
-			Service:   ec2.ServiceName,
+			Service:   names.EC2,
 			Region:    meta.(*conns.AWSClient).Region,
-			AccountID: aws.StringValue(v.OwnerId),
-			Resource:  fmt.Sprintf("security-group/%s", aws.StringValue(v.GroupId)),
+			AccountID: aws.ToString(v.OwnerId),
+			Resource:  fmt.Sprintf("security-group/%s", aws.ToString(v.GroupId)),
 		}.String()
 		arns = append(arns, arn)
-		securityGroupIDs = append(securityGroupIDs, aws.StringValue(v.GroupId))
-		vpcIDs = append(vpcIDs, aws.StringValue(v.VpcId))
+		securityGroupIDs = append(securityGroupIDs, aws.ToString(v.GroupId))
+		vpcIDs = append(vpcIDs, aws.ToString(v.VpcId))
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)

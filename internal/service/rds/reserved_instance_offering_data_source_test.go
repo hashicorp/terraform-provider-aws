@@ -18,7 +18,6 @@ func TestAccRDSInstanceOffering_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             nil,
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		Steps: []resource.TestStep{
 			{

@@ -355,7 +355,7 @@ service "appmesh" {
 
   sdk {
     id             = "App Mesh"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -697,7 +697,7 @@ service "appsync" {
 
   sdk {
     id             = "AppSync"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -707,6 +707,7 @@ service "appsync" {
 
   client {
     go_v1_client_typename = "AppSync"
+    skip_client_generate  = true
   }
 
   endpoint_info {
@@ -916,7 +917,6 @@ service "batch" {
 }
 
 service "bedrock" {
-
   sdk {
     id             = "Bedrock"
     client_version = [2]
@@ -924,11 +924,11 @@ service "bedrock" {
 
   names {
     provider_name_upper = "Bedrock"
-    human_friendly      = "Amazon Bedrock"
+    human_friendly      = "Bedrock"
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListFoundationModels"
+    endpoint_api_call = "ListFoundationModels"
   }
 
   resource_prefix {
@@ -937,11 +937,10 @@ service "bedrock" {
 
   provider_package_correct = "bedrock"
   doc_prefix               = ["bedrock_"]
-  brand                    = "AWS"
+  brand                    = "Amazon"
 }
 
 service "bedrockagent" {
-
   cli_v2_command {
     aws_cli_v2_command           = "bedrock-agent"
     aws_cli_v2_command_no_dashes = "bedrockagent"
@@ -954,11 +953,11 @@ service "bedrockagent" {
 
   names {
     provider_name_upper = "BedrockAgent"
-    human_friendly      = "Agents for Amazon Bedrock"
+    human_friendly      = "Bedrock Agents"
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListAgents"
+    endpoint_api_call = "ListAgents"
   }
 
   resource_prefix {
@@ -967,7 +966,7 @@ service "bedrockagent" {
 
   provider_package_correct = "bedrockagent"
   doc_prefix               = ["bedrockagent_"]
-  brand                    = "AWS"
+  brand                    = "Amazon"
 }
 
 service "bcmdataexports" {
@@ -1116,7 +1115,7 @@ service "chime" {
 
   sdk {
     id             = "Chime"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -1779,6 +1778,31 @@ service "logs" {
   brand                    = "AWS"
 }
 
+service "networkmonitor" {
+
+  sdk {
+    id             = "NetworkMonitor"
+    client_version = [2]
+  }
+
+  names {
+    provider_name_upper = "NetworkMonitor"
+    human_friendly      = "CloudWatch Network Monitor"
+  }
+
+  endpoint_info {
+    endpoint_api_call        = "ListMonitors"
+  }
+
+  resource_prefix {
+    correct = "aws_networkmonitor_"
+  }
+
+  provider_package_correct = "networkmonitor"
+  doc_prefix               = ["networkmonitor_"]
+  brand                    = "Amazon"
+}
+
 service "rum" {
 
   go_packages {
@@ -2164,7 +2188,7 @@ service "cognitoidp" {
 
   sdk {
     id             = "Cognito Identity Provider"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -2179,6 +2203,7 @@ service "cognitoidp" {
 
   endpoint_info {
     endpoint_api_call        = "ListUserPools"
+    endpoint_api_params      = "MaxResults: aws_sdkv2.Int32(1)"
   }
 
   resource_prefix {
@@ -2638,7 +2663,7 @@ service "dataexchange" {
 
   sdk {
     id             = "DataExchange"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -2667,7 +2692,7 @@ service "datapipeline" {
 
   sdk {
     id             = "Data Pipeline"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -2746,7 +2771,7 @@ service "detective" {
 
   sdk {
     id             = "Detective"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -2890,7 +2915,7 @@ service "dms" {
 
   sdk {
     id             = "Database Migration Service"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -3005,7 +3030,7 @@ service "ds" {
 
   sdk {
     id             = "Directory Service"
-    client_version = [1, 2]
+    client_version = [2]
   }
 
   names {
@@ -3228,16 +3253,12 @@ service "ecs" {
 
   sdk {
     id             = "ECS"
-    client_version = [1, 2]
+    client_version = [2]
   }
 
   names {
     provider_name_upper = "ECS"
     human_friendly      = "ECS (Elastic Container)"
-  }
-
-  client {
-    go_v1_client_typename = "ECS"
   }
 
   endpoint_info {
@@ -3257,16 +3278,12 @@ service "efs" {
 
   sdk {
     id             = "EFS"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
     provider_name_upper = "EFS"
     human_friendly      = "EFS (Elastic File System)"
-  }
-
-  client {
-    go_v1_client_typename = "EFS"
   }
 
   endpoint_info {
@@ -3369,16 +3386,12 @@ service "elastictranscoder" {
 
   sdk {
     id             = "Elastic Transcoder"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
     provider_name_upper = "ElasticTranscoder"
     human_friendly      = "Elastic Transcoder"
-  }
-
-  client {
-    go_v1_client_typename = "ElasticTranscoder"
   }
 
   endpoint_info {
@@ -3398,16 +3411,12 @@ service "elasticache" {
 
   sdk {
     id             = "ElastiCache"
-    client_version = [1, 2]
+    client_version = [2]
   }
 
   names {
     provider_name_upper = "ElastiCache"
     human_friendly      = "ElastiCache"
-  }
-
-  client {
-    go_v1_client_typename = "ElastiCache"
   }
 
   endpoint_info {
@@ -3473,7 +3482,7 @@ service "elbv2" {
 
   sdk {
     id             = "Elastic Load Balancing v2"
-    client_version = [1, 2]
+    client_version = [2]
   }
 
   names {
@@ -3508,7 +3517,7 @@ service "elb" {
 
   sdk {
     id             = "Elastic Load Balancing"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -3787,7 +3796,7 @@ service "emrcontainers" {
 
   sdk {
     id             = "EMR containers"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -4108,7 +4117,7 @@ service "fsx" {
 
   sdk {
     id             = "FSx"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -4196,7 +4205,7 @@ service "glue" {
 
   sdk {
     id             = "Glue"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -4223,14 +4232,9 @@ service "glue" {
 
 service "databrew" {
 
-  go_packages {
-    v1_package = "gluedatabrew"
-    v2_package = "databrew"
-  }
-
   sdk {
     id             = "DataBrew"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -4239,8 +4243,8 @@ service "databrew" {
     human_friendly      = "Glue DataBrew"
   }
 
-  client {
-    go_v1_client_typename = "GlueDataBrew"
+  endpoint_info {
+    endpoint_api_call = "ListProjects"
   }
 
   resource_prefix {
@@ -4250,7 +4254,6 @@ service "databrew" {
   provider_package_correct = "databrew"
   doc_prefix               = ["databrew_"]
   brand                    = "AWS"
-  not_implemented          = true
 }
 
 service "groundstation" {
@@ -4282,7 +4285,7 @@ service "guardduty" {
 
   sdk {
     id             = "GuardDuty"
-    client_version = [1, 2]
+    client_version = [2]
   }
 
   names {
@@ -4421,7 +4424,7 @@ service "inspector" {
 
   sdk {
     id             = "Inspector"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -4543,7 +4546,7 @@ service "iotanalytics" {
 
   sdk {
     id             = "IoTAnalytics"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -4635,7 +4638,7 @@ service "iotevents" {
 
   sdk {
     id             = "IoT Events"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -4721,7 +4724,7 @@ service "greengrass" {
 
   sdk {
     id             = "Greengrass"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -4943,7 +4946,7 @@ service "ivs" {
 
   sdk {
     id             = "ivs"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -5081,7 +5084,7 @@ service "kinesisanalytics" {
 
   sdk {
     id             = "Kinesis Analytics"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -5111,7 +5114,7 @@ service "kinesisanalyticsv2" {
 
   sdk {
     id             = "Kinesis Analytics V2"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -5863,7 +5866,7 @@ service "grafana" {
 
   sdk {
     id             = "grafana"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -5924,7 +5927,7 @@ service "kafkaconnect" {
 
   sdk {
     id             = "KafkaConnect"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -6123,16 +6126,16 @@ service "meta" {
   }
 
   client {
-    go_v1_client_typename = ""
+    skip_client_generate = true
   }
 
   resource_prefix {
-    actual  = "aws_(arn|billing_service_account|default_tags|ip_ranges|partition|regions?|service)$"
+    actual  = "aws_(arn|billing_service_account|default_tags|ip_ranges|partition|regions?|service|service_principal)$"
     correct = "aws_meta_"
   }
 
   provider_package_correct = "meta"
-  doc_prefix               = ["arn", "ip_ranges", "billing_service_account", "default_tags", "partition", "region", "service\\."]
+  doc_prefix               = ["arn", "ip_ranges", "billing_service_account", "default_tags", "partition", "region", "service\\.", "service_principal"]
   brand                    = ""
   exclude                  = true
   allowed_subcategory      = true
@@ -6439,7 +6442,7 @@ service "networkfirewall" {
 
   sdk {
     id             = "Network Firewall"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -7511,7 +7514,7 @@ service "resiliencehub" {
 
   sdk {
     id             = "resiliencehub"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -7519,8 +7522,8 @@ service "resiliencehub" {
     human_friendly      = "Resilience Hub"
   }
 
-  client {
-    go_v1_client_typename = "ResilienceHub"
+  endpoint_info {
+    endpoint_api_call        = "ListApps"
   }
 
   resource_prefix {
@@ -7530,7 +7533,6 @@ service "resiliencehub" {
   provider_package_correct = "resiliencehub"
   doc_prefix               = ["resiliencehub_"]
   brand                    = "AWS"
-  not_implemented          = true
 }
 
 service "resourceexplorer2" {
@@ -8349,7 +8351,7 @@ service "serverlessrepo" {
 
   sdk {
     id             = "ServerlessApplicationRepository"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -8474,7 +8476,7 @@ service "ses" {
 
   sdk {
     id             = "SES"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -8533,7 +8535,7 @@ service "sfn" {
 
   sdk {
     id             = "SFN"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -8985,7 +8987,7 @@ service "storagegateway" {
 
   sdk {
     id             = "Storage Gateway"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -9758,7 +9760,7 @@ service "iot" {
 
   sdk {
     id             = "IoT"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -9820,7 +9822,7 @@ service "ec2" {
 
   sdk {
     id             = "EC2"
-    client_version = [1, 2]
+    client_version = [2]
   }
 
   names {

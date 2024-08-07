@@ -250,10 +250,6 @@ func resourcePipeUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			Name:         aws.String(d.Id()),
 			RoleArn:      aws.String(d.Get(names.AttrRoleARN).(string)),
 			Target:       aws.String(d.Get(names.AttrTarget).(string)),
-			// Reset state in case it's a deletion, have to set the input to an empty string otherwise it doesn't get overwritten.
-			TargetParameters: &awstypes.PipeTargetParameters{
-				InputTemplate: aws.String(""),
-			},
 		}
 
 		if d.HasChange("enrichment") {
@@ -279,6 +275,10 @@ func resourcePipeUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 
 		if d.HasChange("target_parameters") {
+			// Reset state in case it's a deletion, have to set the input to an empty string otherwise it doesn't get overwritten.
+			input.TargetParameters = &awstypes.PipeTargetParameters{
+				InputTemplate: aws.String(""),
+			}
 			if v, ok := d.GetOk("target_parameters"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				input.TargetParameters = expandPipeTargetParameters(v.([]interface{})[0].(map[string]interface{}))
 			}
