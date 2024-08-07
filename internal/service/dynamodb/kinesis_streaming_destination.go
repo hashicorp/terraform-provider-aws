@@ -128,6 +128,10 @@ func resourceKinesisStreamingDestinationDelete(ctx context.Context, d *schema.Re
 		return diags
 	}
 
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "disabling DynamoDB Kinesis Streaming Destination (%s): %s", d.Id(), err)
+	}
+
 	log.Printf("[DEBUG] Deleting DynamoDB Kinesis Streaming Destination: %s", d.Id())
 	_, err = conn.DisableKinesisStreamingDestination(ctx, &dynamodb.DisableKinesisStreamingDestinationInput{
 		TableName: aws.String(tableName),

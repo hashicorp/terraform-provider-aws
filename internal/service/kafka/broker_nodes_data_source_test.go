@@ -29,9 +29,9 @@ func TestAccKafkaBrokerNodesDataSource_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "cluster_arn", resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "node_info_list.#", resourceName, "number_of_broker_nodes"),
-					resource.TestCheckResourceAttr(dataSourceName, "node_info_list.0.broker_id", acctest.CtOne),
-					resource.TestCheckResourceAttr(dataSourceName, "node_info_list.1.broker_id", "2"),
-					resource.TestCheckResourceAttr(dataSourceName, "node_info_list.2.broker_id", "3"),
+					resource.TestCheckResourceAttr(dataSourceName, "node_info_list.0.broker_id", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "node_info_list.1.broker_id", acctest.Ct2),
+					resource.TestCheckResourceAttr(dataSourceName, "node_info_list.2.broker_id", acctest.Ct3),
 				),
 			},
 		},

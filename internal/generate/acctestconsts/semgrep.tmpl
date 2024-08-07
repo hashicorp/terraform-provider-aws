@@ -3,12 +3,17 @@ rules:
 {{- range .Constants }}
   - id: literal-{{ .Constant }}-string-test-constant
     languages: [go]
-    message: Use the constant `acctest.Ct{{ .Constant }}` for the string literal "{{ .ConstantLower }}"
+    message: Use the constant `acctest.Ct{{ .Constant }}` for the string literal "{{ .Literal }}" in test files
     paths:
       include:
         - "internal/service/**/*_test.go"
-    patterns:
-      - pattern: '"{{ .ConstantLower }}"'
+    {{- if .AltLiteral }}
+    pattern-either:
+      - pattern: '"{{ .Literal }}"'
+      - pattern: '{{ .AltLiteral }}'
+    {{- else }}
+    pattern: '"{{ .Literal }}"'
+    {{- end }}
     severity: ERROR
     fix: "acctest.Ct{{ .Constant }}"
 {{- end }}

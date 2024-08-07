@@ -64,7 +64,7 @@ func DataSourceFaq() *schema.Resource {
 					"Starts with an alphanumeric character. Subsequently, can contain alphanumeric characters and hyphens. Fixed length of 36.",
 				),
 			},
-			"language_code": {
+			names.AttrLanguageCode: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -139,7 +139,7 @@ func dataSourceFaqRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("faq_id", resp.Id)
 	d.Set("file_format", resp.FileFormat)
 	d.Set("index_id", resp.IndexId)
-	d.Set("language_code", resp.LanguageCode)
+	d.Set(names.AttrLanguageCode, resp.LanguageCode)
 	d.Set(names.AttrName, resp.Name)
 	d.Set(names.AttrRoleARN, resp.RoleArn)
 	d.Set(names.AttrStatus, resp.Status)

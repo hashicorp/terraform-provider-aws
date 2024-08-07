@@ -38,7 +38,7 @@ func TestAccWAFRegionalGeoMatchSet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, names.AttrName, geoMatchSet),
 					resource.TestCheckResourceAttr(
-						resourceName, "geo_match_constraint.#", "2"),
+						resourceName, "geo_match_constraint.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "geo_match_constraint.*", map[string]string{
 						names.AttrType:  "Country",
 						names.AttrValue: "US",
@@ -78,7 +78,7 @@ func TestAccWAFRegionalGeoMatchSet_changeNameForceNew(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, names.AttrName, geoMatchSet),
 					resource.TestCheckResourceAttr(
-						resourceName, "geo_match_constraint.#", "2"),
+						resourceName, "geo_match_constraint.#", acctest.Ct2),
 				),
 			},
 			{
@@ -89,7 +89,7 @@ func TestAccWAFRegionalGeoMatchSet_changeNameForceNew(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, names.AttrName, geoMatchSetNewName),
 					resource.TestCheckResourceAttr(
-						resourceName, "geo_match_constraint.#", "2"),
+						resourceName, "geo_match_constraint.#", acctest.Ct2),
 				),
 			},
 			{
@@ -144,7 +144,7 @@ func TestAccWAFRegionalGeoMatchSet_changeConstraints(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, names.AttrName, setName),
 					resource.TestCheckResourceAttr(
-						resourceName, "geo_match_constraint.#", "2"),
+						resourceName, "geo_match_constraint.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "geo_match_constraint.*", map[string]string{
 						names.AttrType:  "Country",
 						names.AttrValue: "US",
@@ -162,7 +162,7 @@ func TestAccWAFRegionalGeoMatchSet_changeConstraints(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, names.AttrName, setName),
 					resource.TestCheckResourceAttr(
-						resourceName, "geo_match_constraint.#", "2"),
+						resourceName, "geo_match_constraint.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "geo_match_constraint.*", map[string]string{
 						names.AttrType:  "Country",
 						names.AttrValue: "RU",
@@ -201,7 +201,7 @@ func TestAccWAFRegionalGeoMatchSet_noConstraints(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, names.AttrName, setName),
 					resource.TestCheckResourceAttr(
-						resourceName, "geo_match_constraint.#", "0"),
+						resourceName, "geo_match_constraint.#", acctest.Ct0),
 				),
 			},
 			{

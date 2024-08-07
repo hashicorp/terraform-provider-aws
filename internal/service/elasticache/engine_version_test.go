@@ -44,7 +44,7 @@ func TestValidMemcachedVersionString(t *testing.T) {
 			valid:   false,
 		},
 		{
-			version: acctest.CtOne,
+			version: acctest.Ct1,
 			valid:   false,
 		},
 		{
@@ -879,7 +879,7 @@ func TestParamGroupNameRequiresMajorVersionUpgrade(t *testing.T) {
 
 			diff := &mockChangesDiffer{
 				values: map[string]mockDiff{
-					"parameter_group_name": {
+					names.AttrParameterGroupName: {
 						old:       testcase.paramOld,
 						new:       testcase.paramNew,
 						hasChange: testcase.paramHasChange,

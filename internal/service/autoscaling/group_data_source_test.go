@@ -46,7 +46,7 @@ func TestAccAutoScalingGroupDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "min_size", resourceName, "min_size"),
 					resource.TestCheckResourceAttrPair(datasourceName, "mixed_instances_policy.#", resourceName, "mixed_instances_policy.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
-					resource.TestCheckResourceAttr(datasourceName, "new_instances_protected_from_scale_in", "false"),
+					resource.TestCheckResourceAttr(datasourceName, "new_instances_protected_from_scale_in", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(datasourceName, "placement_group", resourceName, "placement_group"),
 					resource.TestCheckResourceAttrPair(datasourceName, "predicted_capacity", resourceName, "predicted_capacity"),
 					resource.TestCheckResourceAttrPair(datasourceName, "service_linked_role_arn", resourceName, "service_linked_role_arn"),
@@ -54,7 +54,7 @@ func TestAccAutoScalingGroupDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "suspended_processes.#", resourceName, "suspended_processes.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "tag.#", resourceName, "tag.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "target_group_arns.#", resourceName, "target_group_arns.#"),
-					resource.TestCheckResourceAttr(datasourceName, "termination_policies.#", acctest.CtOne), // Not set in resource.
+					resource.TestCheckResourceAttr(datasourceName, "termination_policies.#", acctest.Ct1), // Not set in resource.
 					resource.TestCheckResourceAttrPair(datasourceName, "traffic_source.#", resourceName, "traffic_source.#"),
 					resource.TestCheckResourceAttr(datasourceName, "vpc_zone_identifier", ""), // Not set in resource.
 					resource.TestCheckResourceAttrPair(datasourceName, "warm_pool.#", resourceName, "warm_pool.#"),
@@ -167,17 +167,17 @@ func TestAccAutoScalingGroupDataSource_tags(t *testing.T) {
 			{
 				Config: testAccGroupDataSourceConfig_tags(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceName, "tag.#", "2"),
+					resource.TestCheckResourceAttr(datasourceName, "tag.#", acctest.Ct2),
 					resource.TestCheckResourceAttrPair(datasourceName, "tag.#", resourceName, "tag.#"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "tag.*", map[string]string{
-						names.AttrKey:         "key1",
-						names.AttrValue:       "value1",
-						"propagate_at_launch": "true",
+						names.AttrKey:         acctest.CtKey1,
+						names.AttrValue:       acctest.CtValue1,
+						"propagate_at_launch": acctest.CtTrue,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "tag.*", map[string]string{
-						names.AttrKey:         "key2",
-						names.AttrValue:       "value2",
-						"propagate_at_launch": "false",
+						names.AttrKey:         acctest.CtKey2,
+						names.AttrValue:       acctest.CtValue2,
+						"propagate_at_launch": acctest.CtFalse,
 					}),
 				),
 			},

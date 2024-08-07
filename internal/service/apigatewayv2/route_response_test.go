@@ -39,7 +39,7 @@ func TestAccAPIGatewayV2RouteResponse_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteResponseExists(ctx, resourceName, &apiId, &routeId, &v),
 					resource.TestCheckResourceAttr(resourceName, "model_selection_expression", ""),
-					resource.TestCheckResourceAttr(resourceName, "response_models.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "response_models.%", acctest.Ct0),
 					resource.TestCheckResourceAttrPair(resourceName, "route_id", routeResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "route_response_key", "$default"),
 				),
@@ -100,7 +100,7 @@ func TestAccAPIGatewayV2RouteResponse_model(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteResponseExists(ctx, resourceName, &apiId, &routeId, &v),
 					resource.TestCheckResourceAttr(resourceName, "model_selection_expression", names.AttrAction),
-					resource.TestCheckResourceAttr(resourceName, "response_models.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "response_models.%", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "response_models.test", modelResourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, "route_id", routeResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "route_response_key", "$default"),

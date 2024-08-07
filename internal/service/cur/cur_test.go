@@ -16,8 +16,9 @@ func TestAccCUR_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"ReportDefinition": {
-			"basic":                 testAccReportDefinition_basic,
-			"disappears":            testAccReportDefinition_disappears,
+			acctest.CtBasic:         testAccReportDefinition_basic,
+			"tags":                  testAccReportDefinition_tags,
+			acctest.CtDisappears:    testAccReportDefinition_disappears,
 			"textOrCsv":             testAccReportDefinition_textOrCSV,
 			"parquet":               testAccReportDefinition_parquet,
 			"athena":                testAccReportDefinition_athena,

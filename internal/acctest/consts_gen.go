@@ -4,24 +4,43 @@
 
 package acctest
 
-import (
-	"fmt"
-)
-
 const (
-	CtOne = "1"
+	Ct0                     = "0"
+	Ct1                     = "1"
+	Ct10                    = "10"
+	Ct2                     = "2"
+	Ct3                     = "3"
+	Ct4                     = "4"
+	CtBasic                 = "basic"
+	CtCertificatePEM        = "certificate_pem"
+	CtDisappears            = "disappears"
+	CtFalse                 = "false"
+	CtFalseCaps             = "FALSE"
+	CtKey1                  = "key1"
+	CtKey2                  = "key2"
+	CtName                  = "name"
+	CtOverlapKey1           = "overlapkey1"
+	CtOverlapKey2           = "overlapkey2"
+	CtPrivateKeyPEM         = "private_key_pem"
+	CtProviderKey1          = "providerkey1"
+	CtProviderTags          = "provider_tags"
+	CtProviderValue1        = "providervalue1"
+	CtRName                 = "rName"
+	CtResourceKey1          = "resourcekey1"
+	CtResourceKey2          = "resourcekey2"
+	CtResourceOwner         = "resource_owner"
+	CtResourceTags          = "resource_tags"
+	CtResourceValue1        = "resourcevalue1"
+	CtResourceValue1Updated = "resourcevalue1updated"
+	CtResourceValue2        = "resourcevalue2"
+	CtRulePound             = "rule.#"
+	CtTagsAllPercent        = "tags_all.%"
+	CtTagsKey1              = "tags.key1"
+	CtTagsKey2              = "tags.key2"
+	CtTagsPercent           = "tags.%"
+	CtTrue                  = "true"
+	CtTrueCaps              = "TRUE"
+	CtValue1                = "value1"
+	CtValue1Updated         = "value1updated"
+	CtValue2                = "value2"
 )
-
-// ConstOrQuote returns the constant name for the given attribute if it exists.
-// Otherwise, it returns the attribute quoted. This is intended for use in
-// generated code and templates.
-func ConstOrQuote(constant string) string {
-	allConstants := map[string]string{
-		"1": "CtOne",
-	}
-
-	if v, ok := allConstants[constant]; ok {
-		return fmt.Sprintf("acctest.%s", v)
-	}
-	return fmt.Sprintf("%q", constant)
-}

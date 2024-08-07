@@ -8,9 +8,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -21,8 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_vpc_endpoint")
-func DataSourceVPCEndpoint() *schema.Resource {
+// @SDKDataSource("aws_vpc_endpoint", name="Endpoint")
+func dataSourceVPCEndpoint() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceVPCEndpointRead,
 
@@ -148,7 +149,7 @@ func DataSourceVPCEndpoint() *schema.Resource {
 
 func dataSourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeVpcEndpointsInput{
@@ -162,7 +163,7 @@ func dataSourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk(names.AttrID); ok {
-		input.VpcEndpointIds = aws.StringSlice([]string{v.(string)})
+		input.VpcEndpointIds = []string{v.(string)}
 	}
 
 	input.Filters = append(input.Filters, newTagFilterList(
@@ -176,22 +177,22 @@ func dataSourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta
 		input.Filters = nil
 	}
 
-	vpce, err := FindVPCEndpoint(ctx, conn, input)
+	vpce, err := findVPCEndpoint(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 VPC Endpoint", err))
 	}
 
-	d.SetId(aws.StringValue(vpce.VpcEndpointId))
+	d.SetId(aws.ToString(vpce.VpcEndpointId))
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   ec2.ServiceName,
+		Service:   names.EC2,
 		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: aws.StringValue(vpce.OwnerId),
+		AccountID: aws.ToString(vpce.OwnerId),
 		Resource:  fmt.Sprintf("vpc-endpoint/%s", d.Id()),
 	}.String()
-	serviceName := aws.StringValue(vpce.ServiceName)
+	serviceName := aws.ToString(vpce.ServiceName)
 
 	d.Set(names.AttrARN, arn)
 	if err := d.Set("dns_entry", flattenDNSEntries(vpce.DnsEntries)); err != nil {
@@ -205,35 +206,35 @@ func dataSourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta
 		d.Set("dns_options", nil)
 	}
 	d.Set(names.AttrIPAddressType, vpce.IpAddressType)
-	d.Set("network_interface_ids", aws.StringValueSlice(vpce.NetworkInterfaceIds))
+	d.Set("network_interface_ids", vpce.NetworkInterfaceIds)
 	d.Set(names.AttrOwnerID, vpce.OwnerId)
 	d.Set("private_dns_enabled", vpce.PrivateDnsEnabled)
 	d.Set("requester_managed", vpce.RequesterManaged)
-	d.Set("route_table_ids", aws.StringValueSlice(vpce.RouteTableIds))
+	d.Set("route_table_ids", vpce.RouteTableIds)
 	d.Set(names.AttrSecurityGroupIDs, flattenSecurityGroupIdentifiers(vpce.Groups))
 	d.Set(names.AttrServiceName, serviceName)
 	d.Set(names.AttrState, vpce.State)
-	d.Set(names.AttrSubnetIDs, aws.StringValueSlice(vpce.SubnetIds))
+	d.Set(names.AttrSubnetIDs, vpce.SubnetIds)
 	// VPC endpoints don't have types in GovCloud, so set type to default if empty
-	if v := aws.StringValue(vpce.VpcEndpointType); v == "" {
-		d.Set("vpc_endpoint_type", ec2.VpcEndpointTypeGateway)
+	if v := string(vpce.VpcEndpointType); v == "" {
+		d.Set("vpc_endpoint_type", awstypes.VpcEndpointTypeGateway)
 	} else {
 		d.Set("vpc_endpoint_type", v)
 	}
 	d.Set(names.AttrVPCID, vpce.VpcId)
 
-	if pl, err := FindPrefixListByName(ctx, conn, serviceName); err != nil {
+	if pl, err := findPrefixListByName(ctx, conn, serviceName); err != nil {
 		if tfresource.NotFound(err) {
 			d.Set("cidr_blocks", nil)
 		} else {
 			return sdkdiag.AppendErrorf(diags, "reading EC2 Prefix List (%s): %s", serviceName, err)
 		}
 	} else {
-		d.Set("cidr_blocks", aws.StringValueSlice(pl.Cidrs))
+		d.Set("cidr_blocks", pl.Cidrs)
 		d.Set("prefix_list_id", pl.PrefixListId)
 	}
 
-	policy, err := structure.NormalizeJsonString(aws.StringValue(vpce.PolicyDocument))
+	policy, err := structure.NormalizeJsonString(aws.ToString(vpce.PolicyDocument))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "policy contains invalid JSON: %s", err)
@@ -241,7 +242,7 @@ func dataSourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta
 
 	d.Set(names.AttrPolicy, policy)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, vpce.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, keyValueTags(ctx, vpce.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

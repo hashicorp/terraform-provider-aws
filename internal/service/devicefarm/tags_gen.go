@@ -5,9 +5,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/devicefarm"
-	"github.com/aws/aws-sdk-go/service/devicefarm/devicefarmiface"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/devicefarm"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/devicefarm/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
@@ -19,12 +19,12 @@ import (
 // listTags lists devicefarm service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func listTags(ctx context.Context, conn devicefarmiface.DeviceFarmAPI, identifier string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn *devicefarm.Client, identifier string, optFns ...func(*devicefarm.Options)) (tftags.KeyValueTags, error) {
 	input := &devicefarm.ListTagsForResourceInput{
 		ResourceARN: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForResourceWithContext(ctx, input)
+	output, err := conn.ListTagsForResource(ctx, input, optFns...)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
@@ -36,7 +36,7 @@ func listTags(ctx context.Context, conn devicefarmiface.DeviceFarmAPI, identifie
 // ListTags lists devicefarm service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := listTags(ctx, meta.(*conns.AWSClient).DeviceFarmConn(ctx), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).DeviceFarmClient(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -52,11 +52,11 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 // []*SERVICE.Tag handling
 
 // Tags returns devicefarm service tags.
-func Tags(tags tftags.KeyValueTags) []*devicefarm.Tag {
-	result := make([]*devicefarm.Tag, 0, len(tags))
+func Tags(tags tftags.KeyValueTags) []awstypes.Tag {
+	result := make([]awstypes.Tag, 0, len(tags))
 
 	for k, v := range tags.Map() {
-		tag := &devicefarm.Tag{
+		tag := awstypes.Tag{
 			Key:   aws.String(k),
 			Value: aws.String(v),
 		}
@@ -68,11 +68,11 @@ func Tags(tags tftags.KeyValueTags) []*devicefarm.Tag {
 }
 
 // KeyValueTags creates tftags.KeyValueTags from devicefarm service tags.
-func KeyValueTags(ctx context.Context, tags []*devicefarm.Tag) tftags.KeyValueTags {
+func KeyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		m[aws.ToString(tag.Key)] = tag.Value
 	}
 
 	return tftags.New(ctx, m)
@@ -80,7 +80,7 @@ func KeyValueTags(ctx context.Context, tags []*devicefarm.Tag) tftags.KeyValueTa
 
 // getTagsIn returns devicefarm service tags from Context.
 // nil is returned if there are no input tags.
-func getTagsIn(ctx context.Context) []*devicefarm.Tag {
+func getTagsIn(ctx context.Context) []awstypes.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -91,25 +91,25 @@ func getTagsIn(ctx context.Context) []*devicefarm.Tag {
 }
 
 // setTagsOut sets devicefarm service tags in Context.
-func setTagsOut(ctx context.Context, tags []*devicefarm.Tag) {
+func setTagsOut(ctx context.Context, tags []awstypes.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = option.Some(KeyValueTags(ctx, tags))
 	}
 }
 
 // createTags creates devicefarm service tags for new resources.
-func createTags(ctx context.Context, conn devicefarmiface.DeviceFarmAPI, identifier string, tags []*devicefarm.Tag) error {
+func createTags(ctx context.Context, conn *devicefarm.Client, identifier string, tags []awstypes.Tag, optFns ...func(*devicefarm.Options)) error {
 	if len(tags) == 0 {
 		return nil
 	}
 
-	return updateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
+	return updateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags), optFns...)
 }
 
 // updateTags updates devicefarm service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func updateTags(ctx context.Context, conn devicefarmiface.DeviceFarmAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn *devicefarm.Client, identifier string, oldTagsMap, newTagsMap any, optFns ...func(*devicefarm.Options)) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -120,10 +120,10 @@ func updateTags(ctx context.Context, conn devicefarmiface.DeviceFarmAPI, identif
 	if len(removedTags) > 0 {
 		input := &devicefarm.UntagResourceInput{
 			ResourceARN: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     removedTags.Keys(),
 		}
 
-		_, err := conn.UntagResourceWithContext(ctx, input)
+		_, err := conn.UntagResource(ctx, input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -138,7 +138,7 @@ func updateTags(ctx context.Context, conn devicefarmiface.DeviceFarmAPI, identif
 			Tags:        Tags(updatedTags),
 		}
 
-		_, err := conn.TagResourceWithContext(ctx, input)
+		_, err := conn.TagResource(ctx, input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
@@ -151,5 +151,5 @@ func updateTags(ctx context.Context, conn devicefarmiface.DeviceFarmAPI, identif
 // UpdateTags updates devicefarm service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return updateTags(ctx, meta.(*conns.AWSClient).DeviceFarmConn(ctx), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).DeviceFarmClient(ctx), identifier, oldTags, newTags)
 }

@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSecurityHub_serial(t *testing.T) {
@@ -15,84 +14,84 @@ func TestAccSecurityHub_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"Account": {
-			"basic":                       testAccAccount_basic,
-			"disappears":                  testAccAccount_disappears,
+			acctest.CtBasic:               testAccAccount_basic,
+			acctest.CtDisappears:          testAccAccount_disappears,
 			"EnableDefaultStandardsFalse": testAccAccount_enableDefaultStandardsFalse,
 			"MigrateV0":                   testAccAccount_migrateV0,
 			"Full":                        testAccAccount_full,
 			"RemoveControlFindingGeneratorDefaultValue": testAccAccount_removeControlFindingGeneratorDefaultValue,
 		},
 		"AutomationRule": {
-			"basic":         testAccAutomationRule_basic,
-			"full":          testAccAutomationRule_full,
-			"disappears":    testAccAutomationRule_disappears,
-			"stringFilters": testAccAutomationRule_stringFilters,
-			"numberFilters": testAccAutomationRule_numberFilters,
-			"dateFilters":   testAccAutomationRule_dateFilters,
-			"mapFilters":    testAccAutomationRule_mapFilters,
-			names.AttrTags:  testAccAutomationRule_tags,
+			acctest.CtBasic:      testAccAutomationRule_basic,
+			"full":               testAccAutomationRule_full,
+			acctest.CtDisappears: testAccAutomationRule_disappears,
+			"stringFilters":      testAccAutomationRule_stringFilters,
+			"numberFilters":      testAccAutomationRule_numberFilters,
+			"dateFilters":        testAccAutomationRule_dateFilters,
+			"mapFilters":         testAccAutomationRule_mapFilters,
+			"tags":               testAccAutomationRule_tags,
 		},
 		"ActionTarget": {
-			"basic":       testAccActionTarget_basic,
-			"disappears":  testAccActionTarget_disappears,
-			"Description": testAccActionTarget_Description,
-			"Name":        testAccActionTarget_Name,
+			acctest.CtBasic:      testAccActionTarget_basic,
+			acctest.CtDisappears: testAccActionTarget_disappears,
+			"Description":        testAccActionTarget_Description,
+			"Name":               testAccActionTarget_Name,
 		},
 		"ConfigurationPolicy": {
-			"basic":              testAccConfigurationPolicy_basic,
-			"disappears":         testAccConfigurationPolicy_disappears,
+			acctest.CtBasic:      testAccConfigurationPolicy_basic,
+			acctest.CtDisappears: testAccConfigurationPolicy_disappears,
 			"CustomParameters":   testAccConfigurationPolicy_controlCustomParameters,
 			"ControlIdentifiers": testAccConfigurationPolicy_specificControlIdentifiers,
 		},
 		"ConfigurationPolicyAssociation": {
-			"basic":      testAccConfigurationPolicyAssociation_basic,
-			"disappears": testAccConfigurationPolicyAssociation_disappears,
+			acctest.CtBasic:      testAccConfigurationPolicyAssociation_basic,
+			acctest.CtDisappears: testAccConfigurationPolicyAssociation_disappears,
 		},
 		"FindingAggregator": {
-			"basic":      testAccFindingAggregator_basic,
-			"disappears": testAccFindingAggregator_disappears,
+			acctest.CtBasic:      testAccFindingAggregator_basic,
+			acctest.CtDisappears: testAccFindingAggregator_disappears,
 		},
 		"Insight": {
-			"basic":            testAccInsight_basic,
-			"disappears":       testAccInsight_disappears,
-			"DateFilters":      testAccInsight_DateFilters,
-			"GroupByAttribute": testAccInsight_GroupByAttribute,
-			"IpFilters":        testAccInsight_IPFilters,
-			"KeywordFilters":   testAccInsight_KeywordFilters,
-			"MapFilters":       testAccInsight_MapFilters,
-			"MultipleFilters":  testAccInsight_MultipleFilters,
-			"Name":             testAccInsight_Name,
-			"NumberFilters":    testAccInsight_NumberFilters,
-			"WorkflowStatus":   testAccInsight_WorkflowStatus,
+			acctest.CtBasic:      testAccInsight_basic,
+			acctest.CtDisappears: testAccInsight_disappears,
+			"DateFilters":        testAccInsight_DateFilters,
+			"GroupByAttribute":   testAccInsight_GroupByAttribute,
+			"IpFilters":          testAccInsight_IPFilters,
+			"KeywordFilters":     testAccInsight_KeywordFilters,
+			"MapFilters":         testAccInsight_MapFilters,
+			"MultipleFilters":    testAccInsight_MultipleFilters,
+			"Name":               testAccInsight_Name,
+			"NumberFilters":      testAccInsight_NumberFilters,
+			"WorkflowStatus":     testAccInsight_WorkflowStatus,
 		},
 		"InviteAccepter": {
-			"basic": testAccInviteAccepter_basic,
+			acctest.CtBasic: testAccInviteAccepter_basic,
 		},
 		"Member": {
-			"basic":  testAccMember_basic,
-			"invite": testAccMember_invite,
+			acctest.CtBasic: testAccMember_basic,
+			"invite":        testAccMember_invite,
 		},
 		"OrganizationAdminAccount": {
-			"basic":       testAccOrganizationAdminAccount_basic,
-			"disappears":  testAccOrganizationAdminAccount_disappears,
-			"MultiRegion": testAccOrganizationAdminAccount_MultiRegion,
+			acctest.CtBasic:      testAccOrganizationAdminAccount_basic,
+			acctest.CtDisappears: testAccOrganizationAdminAccount_disappears,
+			"MultiRegion":        testAccOrganizationAdminAccount_MultiRegion,
 		},
 		"OrganizationConfiguration": {
-			"basic":                testAccOrganizationConfiguration_basic,
+			acctest.CtBasic:        testAccOrganizationConfiguration_basic,
 			"AutoEnableStandards":  testAccOrganizationConfiguration_autoEnableStandards,
 			"CentralConfiguration": testAccOrganizationConfiguration_centralConfiguration,
 		},
 		"ProductSubscription": {
-			"basic": testAccProductSubscription_basic,
+			acctest.CtBasic: testAccProductSubscription_basic,
 		},
 		"StandardsControl": {
-			"basic":                                 testAccStandardsControl_basic,
+			acctest.CtBasic:                         testAccStandardsControl_basic,
 			"DisabledControlStatus":                 testAccStandardsControl_disabledControlStatus,
 			"EnabledControlStatusAndDisabledReason": testAccStandardsControl_enabledControlStatusAndDisabledReason,
 		},
 		"StandardsSubscription": {
-			"basic":      testAccStandardsSubscription_basic,
-			"disappears": testAccStandardsSubscription_disappears,
+			acctest.CtBasic:      testAccStandardsSubscription_basic,
+			acctest.CtDisappears: testAccStandardsSubscription_disappears,
 		},
 	}
 

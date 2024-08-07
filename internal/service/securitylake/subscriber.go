@@ -150,8 +150,8 @@ func (r *subscriberResource) Schema(ctx context.Context, request resource.Schema
 										CustomType: fwtypes.NewListNestedObjectTypeOf[subscriberCustomLogSourceProviderModel](ctx),
 										ElementType: types.ObjectType{
 											AttrTypes: map[string]attr.Type{
-												"location":        types.StringType,
-												names.AttrRoleARN: types.StringType,
+												names.AttrLocation: types.StringType,
+												names.AttrRoleARN:  types.StringType,
 											},
 										},
 										PlanModifiers: []planmodifier.List{
@@ -180,7 +180,7 @@ func (r *subscriberResource) Schema(ctx context.Context, request resource.Schema
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"external_id": schema.StringAttribute{
+						names.AttrExternalID: schema.StringAttribute{
 							Required: true,
 						},
 						names.AttrPrincipal: schema.StringAttribute{
@@ -687,8 +687,8 @@ func flattenSubscriberCustomLogSourceProviderModel(ctx context.Context, apiObjec
 	}
 
 	obj := map[string]attr.Value{
-		"location":        fwflex.StringToFramework(ctx, apiObject.Location),
-		names.AttrRoleARN: fwflex.StringToFramework(ctx, apiObject.RoleArn),
+		names.AttrLocation: fwflex.StringToFramework(ctx, apiObject.Location),
+		names.AttrRoleARN:  fwflex.StringToFramework(ctx, apiObject.RoleArn),
 	}
 
 	objVal, d := types.ObjectValue(subscriberCustomLogSourceProviderModelAttrTypes, obj)
@@ -708,8 +708,8 @@ var (
 	}
 
 	subscriberCustomLogSourceProviderModelAttrTypes = map[string]attr.Type{
-		"location":        types.StringType,
-		names.AttrRoleARN: types.StringType,
+		names.AttrLocation: types.StringType,
+		names.AttrRoleARN:  types.StringType,
 	}
 
 	subscriberCustomLogSourceResourceModelAttrTypes = map[string]attr.Type{

@@ -36,6 +36,8 @@ import (
 
 // @SDKResource("aws_kms_external_key", name="External Key")
 // @Tags(identifierAttribute="id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/kms/types;awstypes;awstypes.KeyMetadata")
+// @Testing(importIgnore="deletion_window_in_days;bypass_policy_lockout_safety_check")
 func resourceExternalKey() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceExternalKeyCreate,
@@ -355,7 +357,7 @@ func resourceExternalKeyDelete(ctx context.Context, d *schema.ResourceData, meta
 
 func importExternalKeyMaterial(ctx context.Context, conn *kms.Client, resourceTypeName, keyID, keyMaterialBase64, validTo string) error {
 	// Wait for propagation since KMS is eventually consistent.
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.NotFoundException](ctx, kmsPropagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.NotFoundException](ctx, propagationTimeout, func() (interface{}, error) {
 		return conn.GetParametersForImport(ctx, &kms.GetParametersForImportInput{
 			KeyId:             aws.String(keyID),
 			WrappingAlgorithm: awstypes.AlgorithmSpecRsaesOaepSha256,
@@ -402,7 +404,7 @@ func importExternalKeyMaterial(ctx context.Context, conn *kms.Client, resourceTy
 	}
 
 	// Wait for propagation since KMS is eventually consistent.
-	_, err = tfresource.RetryWhenIsA[*awstypes.NotFoundException](ctx, kmsPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenIsA[*awstypes.NotFoundException](ctx, propagationTimeout, func() (interface{}, error) {
 		return conn.ImportKeyMaterial(ctx, input)
 	})
 

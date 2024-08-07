@@ -38,7 +38,7 @@ func TestAccSageMakerDevice_basic(t *testing.T) {
 					testAccCheckDeviceExists(ctx, resourceName, &device),
 					resource.TestCheckResourceAttr(resourceName, "device_fleet_name", rName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("device-fleet/%[1]s/device/%[1]s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "device.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "device.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "device.0.device_name", rName),
 				),
 			},

@@ -24,7 +24,8 @@ import (
 
 // @SDKResource("aws_verifiedaccess_group", name="Verified Access Group")
 // @Tags(identifierAttribute="id")
-func ResourceVerifiedAccessGroup() *schema.Resource {
+// @Testing(tagsTest=false)
+func resourceVerifiedAccessGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVerifiedAccessGroupCreate,
 		ReadWithoutTimeout:   resourceVerifiedAccessGroupRead,
@@ -49,7 +50,7 @@ func ResourceVerifiedAccessGroup() *schema.Resource {
 				Computed: true,
 				Optional: true,
 			},
-			"last_updated_time": {
+			names.AttrLastUpdatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -106,7 +107,7 @@ func resourceVerifiedAccessGroupCreate(ctx context.Context, d *schema.ResourceDa
 
 	input := &ec2.CreateVerifiedAccessGroupInput{
 		ClientToken:              aws.String(id.UniqueId()),
-		TagSpecifications:        getTagSpecificationsInV2(ctx, types.ResourceTypeVerifiedAccessGroup),
+		TagSpecifications:        getTagSpecificationsIn(ctx, types.ResourceTypeVerifiedAccessGroup),
 		VerifiedAccessInstanceId: aws.String(d.Get("verifiedaccess_instance_id").(string)),
 	}
 
@@ -137,7 +138,7 @@ func resourceVerifiedAccessGroupRead(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	group, err := FindVerifiedAccessGroupByID(ctx, conn, d.Id())
+	group, err := findVerifiedAccessGroupByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Verified Access Group (%s) not found, removing from state", d.Id())
@@ -152,7 +153,7 @@ func resourceVerifiedAccessGroupRead(ctx context.Context, d *schema.ResourceData
 	d.Set(names.AttrCreationTime, group.CreationTime)
 	d.Set("deletion_time", group.DeletionTime)
 	d.Set(names.AttrDescription, group.Description)
-	d.Set("last_updated_time", group.LastUpdatedTime)
+	d.Set(names.AttrLastUpdatedTime, group.LastUpdatedTime)
 	d.Set(names.AttrOwner, group.Owner)
 	if v := group.SseSpecification; v != nil {
 		if err := d.Set("sse_configuration", flattenVerifiedAccessSseSpecificationResponse(v)); err != nil {
@@ -165,9 +166,9 @@ func resourceVerifiedAccessGroupRead(ctx context.Context, d *schema.ResourceData
 	d.Set("verifiedaccess_group_id", group.VerifiedAccessGroupId)
 	d.Set("verifiedaccess_instance_id", group.VerifiedAccessInstanceId)
 
-	setTagsOutV2(ctx, group.Tags)
+	setTagsOut(ctx, group.Tags)
 
-	output, err := FindVerifiedAccessGroupPolicyByID(ctx, conn, d.Id())
+	output, err := findVerifiedAccessGroupPolicyByID(ctx, conn, d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Verified Access Group (%s) policy: %s", d.Id(), err)

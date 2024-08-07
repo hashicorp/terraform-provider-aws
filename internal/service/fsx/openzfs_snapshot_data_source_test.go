@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/fsx"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -23,7 +22,7 @@ func TestAccFSxOpenZFSSnapshotDataSource_basic(t *testing.T) {
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOpenZFSSnapshotDestroy(ctx),
@@ -35,7 +34,7 @@ func TestAccFSxOpenZFSSnapshotDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrCreationTime, resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(dataSourceName, "volume_id", resourceName, "volume_id"),
 				),
 			},
@@ -46,7 +45,7 @@ func TestAccFSxOpenZFSSnapshotDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrCreationTime, resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(dataSourceName, "volume_id", resourceName, "volume_id"),
 				),
 			},
@@ -57,7 +56,7 @@ func TestAccFSxOpenZFSSnapshotDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrCreationTime, resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(dataSourceName, "volume_id", resourceName, "volume_id"),
 				),
 			},
@@ -68,7 +67,7 @@ func TestAccFSxOpenZFSSnapshotDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrCreationTime, mostRecentResourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, mostRecentResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, mostRecentResourceName, names.AttrName),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", mostRecentResourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, mostRecentResourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(dataSourceName, "volume_id", mostRecentResourceName, "volume_id"),
 				),
 			},
@@ -81,6 +80,10 @@ func testAccOpenZFSSnapshotDataSourceConfig_basic(rName string) string {
 resource "aws_fsx_openzfs_snapshot" "test" {
   name      = %[1]q
   volume_id = aws_fsx_openzfs_file_system.test.root_volume_id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 data "aws_fsx_openzfs_snapshot" "test" {
@@ -94,6 +97,10 @@ func testAccOpenZFSSnapshotDataSourceConfig_filterFileSystemId(rName string) str
 resource "aws_fsx_openzfs_snapshot" "test" {
   name      = %[1]q
   volume_id = aws_fsx_openzfs_file_system.test.root_volume_id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 data "aws_fsx_openzfs_snapshot" "test" {
@@ -110,6 +117,10 @@ func testAccOpenZFSSnapshotDataSourceConfig_filterVolumeId(rName string) string 
 resource "aws_fsx_openzfs_snapshot" "test" {
   name      = %[1]q
   volume_id = aws_fsx_openzfs_file_system.test.root_volume_id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 data "aws_fsx_openzfs_snapshot" "test" {
@@ -126,12 +137,20 @@ func testAccOpenZFSSnapshotDataSourceConfig_mostRecent(rName, rName2 string) str
 resource "aws_fsx_openzfs_snapshot" "test" {
   name      = %[1]q
   volume_id = aws_fsx_openzfs_file_system.test.root_volume_id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_fsx_openzfs_snapshot" "latest" {
   # Ensure that this snapshot is created after the other.
   name      = %[2]q
   volume_id = aws_fsx_openzfs_snapshot.test.volume_id
+
+  tags = {
+    Name = %[2]q
+  }
 }
 
 data "aws_fsx_openzfs_snapshot" "test" {

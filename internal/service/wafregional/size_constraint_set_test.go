@@ -38,10 +38,10 @@ func TestAccWAFRegionalSizeConstraintSet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, names.AttrName, sizeConstraintSet),
 					resource.TestCheckResourceAttr(
-						resourceName, "size_constraints.#", acctest.CtOne),
+						resourceName, "size_constraints.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "size_constraints.*", map[string]string{
 						"comparison_operator": "EQ",
-						"field_to_match.#":    acctest.CtOne,
+						"field_to_match.#":    acctest.Ct1,
 						names.AttrSize:        "4096",
 						"text_transformation": "NONE",
 					}),
@@ -80,7 +80,7 @@ func TestAccWAFRegionalSizeConstraintSet_changeNameForceNew(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, names.AttrName, sizeConstraintSet),
 					resource.TestCheckResourceAttr(
-						resourceName, "size_constraints.#", acctest.CtOne),
+						resourceName, "size_constraints.#", acctest.Ct1),
 				),
 			},
 			{
@@ -90,7 +90,7 @@ func TestAccWAFRegionalSizeConstraintSet_changeNameForceNew(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, names.AttrName, sizeConstraintSetNewName),
 					resource.TestCheckResourceAttr(
-						resourceName, "size_constraints.#", acctest.CtOne),
+						resourceName, "size_constraints.#", acctest.Ct1),
 				),
 			},
 			{
@@ -145,10 +145,10 @@ func TestAccWAFRegionalSizeConstraintSet_changeConstraints(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, names.AttrName, setName),
 					resource.TestCheckResourceAttr(
-						resourceName, "size_constraints.#", acctest.CtOne),
+						resourceName, "size_constraints.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "size_constraints.*", map[string]string{
 						"comparison_operator": "EQ",
-						"field_to_match.#":    acctest.CtOne,
+						"field_to_match.#":    acctest.Ct1,
 						names.AttrSize:        "4096",
 						"text_transformation": "NONE",
 					}),
@@ -165,10 +165,10 @@ func TestAccWAFRegionalSizeConstraintSet_changeConstraints(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, names.AttrName, setName),
 					resource.TestCheckResourceAttr(
-						resourceName, "size_constraints.#", acctest.CtOne),
+						resourceName, "size_constraints.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "size_constraints.*", map[string]string{
 						"comparison_operator": "GE",
-						"field_to_match.#":    acctest.CtOne,
+						"field_to_match.#":    acctest.Ct1,
 						names.AttrSize:        "1024",
 						"text_transformation": "NONE",
 					}),
@@ -206,7 +206,7 @@ func TestAccWAFRegionalSizeConstraintSet_noConstraints(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, names.AttrName, setName),
 					resource.TestCheckResourceAttr(
-						resourceName, "size_constraints.#", "0"),
+						resourceName, "size_constraints.#", acctest.Ct0),
 				),
 			},
 			{

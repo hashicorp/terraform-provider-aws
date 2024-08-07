@@ -43,7 +43,7 @@ func resourceMethodResponse() *schema.Resource {
 				httpMethod := idParts[2]
 				statusCode := idParts[3]
 				d.Set("http_method", httpMethod)
-				d.Set("status_code", statusCode)
+				d.Set(names.AttrStatusCode, statusCode)
 				d.Set(names.AttrResourceID, resourceID)
 				d.Set("rest_api_id", restApiID)
 				d.SetId(fmt.Sprintf("agmr-%s-%s-%s-%s", restApiID, resourceID, httpMethod, statusCode))
@@ -78,7 +78,7 @@ func resourceMethodResponse() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"status_code": {
+			names.AttrStatusCode: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -94,7 +94,7 @@ func resourceMethodResponseCreate(ctx context.Context, d *schema.ResourceData, m
 		HttpMethod: aws.String(d.Get("http_method").(string)),
 		ResourceId: aws.String(d.Get(names.AttrResourceID).(string)),
 		RestApiId:  aws.String(d.Get("rest_api_id").(string)),
-		StatusCode: aws.String(d.Get("status_code").(string)),
+		StatusCode: aws.String(d.Get(names.AttrStatusCode).(string)),
 	}
 
 	if v, ok := d.GetOk("response_models"); ok && len(v.(map[string]interface{})) > 0 {
@@ -120,7 +120,7 @@ func resourceMethodResponseCreate(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "creating API Gateway Method Response: %s", err)
 	}
 
-	d.SetId(fmt.Sprintf("agmr-%s-%s-%s-%s", d.Get("rest_api_id").(string), d.Get(names.AttrResourceID).(string), d.Get("http_method").(string), d.Get("status_code").(string)))
+	d.SetId(fmt.Sprintf("agmr-%s-%s-%s-%s", d.Get("rest_api_id").(string), d.Get(names.AttrResourceID).(string), d.Get("http_method").(string), d.Get(names.AttrStatusCode).(string)))
 
 	return diags
 }
@@ -129,7 +129,7 @@ func resourceMethodResponseRead(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	methodResponse, err := findMethodResponseByFourPartKey(ctx, conn, d.Get("http_method").(string), d.Get(names.AttrResourceID).(string), d.Get("rest_api_id").(string), d.Get("status_code").(string))
+	methodResponse, err := findMethodResponseByFourPartKey(ctx, conn, d.Get("http_method").(string), d.Get(names.AttrResourceID).(string), d.Get("rest_api_id").(string), d.Get(names.AttrStatusCode).(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] API Gateway Method Response (%s) not found, removing from state", d.Id())
@@ -170,7 +170,7 @@ func resourceMethodResponseUpdate(ctx context.Context, d *schema.ResourceData, m
 		PatchOperations: operations,
 		ResourceId:      aws.String(d.Get(names.AttrResourceID).(string)),
 		RestApiId:       aws.String(d.Get("rest_api_id").(string)),
-		StatusCode:      aws.String(d.Get("status_code").(string)),
+		StatusCode:      aws.String(d.Get(names.AttrStatusCode).(string)),
 	}
 
 	_, err := conn.UpdateMethodResponse(ctx, input)
@@ -191,7 +191,7 @@ func resourceMethodResponseDelete(ctx context.Context, d *schema.ResourceData, m
 		HttpMethod: aws.String(d.Get("http_method").(string)),
 		ResourceId: aws.String(d.Get(names.AttrResourceID).(string)),
 		RestApiId:  aws.String(d.Get("rest_api_id").(string)),
-		StatusCode: aws.String(d.Get("status_code").(string)),
+		StatusCode: aws.String(d.Get(names.AttrStatusCode).(string)),
 	})
 
 	if errs.IsA[*types.NotFoundException](err) {

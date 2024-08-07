@@ -47,7 +47,7 @@ func resourceRepositoryAssociation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"association_id": {
+			names.AttrAssociationID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -310,7 +310,7 @@ func resourceRepositoryAssociationRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	d.Set(names.AttrARN, out.AssociationArn)
-	d.Set("association_id", out.AssociationId)
+	d.Set(names.AttrAssociationID, out.AssociationId)
 	d.Set("connection_arn", out.ConnectionArn)
 	if err := d.Set("kms_key_details", flattenKMSKeyDetails(out.KMSKeyDetails)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting kms_key_details: %s", err)

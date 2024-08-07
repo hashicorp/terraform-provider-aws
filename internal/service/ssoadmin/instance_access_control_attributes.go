@@ -72,7 +72,7 @@ func ResourceAccessControlAttributes() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status_reason": {
+			names.AttrStatusReason: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -124,7 +124,7 @@ func resourceAccessControlAttributesRead(ctx context.Context, d *schema.Resource
 		return sdkdiag.AppendErrorf(diags, "setting attribute: %s", err)
 	}
 	d.Set(names.AttrStatus, output.Status)
-	d.Set("status_reason", output.StatusReason)
+	d.Set(names.AttrStatusReason, output.StatusReason)
 
 	return diags
 }

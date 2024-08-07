@@ -97,7 +97,7 @@ func TestValidIdentityProvidersProviderName(t *testing.T) {
 	}
 
 	for _, s := range validValues {
-		_, errors := tfcognitoidentity.ValidIdentityProvidersProviderName(s, "provider_name")
+		_, errors := tfcognitoidentity.ValidIdentityProvidersProviderName(s, names.AttrProviderName)
 		if len(errors) > 0 {
 			t.Fatalf("%q should be a valid Cognito Identity Provider Name: %v", s, errors)
 		}
@@ -112,7 +112,7 @@ func TestValidIdentityProvidersProviderName(t *testing.T) {
 	}
 
 	for _, s := range invalidValues {
-		_, errors := tfcognitoidentity.ValidIdentityProvidersProviderName(s, "provider_name")
+		_, errors := tfcognitoidentity.ValidIdentityProvidersProviderName(s, names.AttrProviderName)
 		if len(errors) == 0 {
 			t.Fatalf("%q should not be a valid Cognito Identity Provider Name: %v", s, errors)
 		}
@@ -123,7 +123,7 @@ func TestValidProviderDeveloperName(t *testing.T) {
 	t.Parallel()
 
 	validValues := []string{
-		acctest.CtOne,
+		acctest.Ct1,
 		"foo",
 		"1.2",
 		"foo1-bar2-baz3",

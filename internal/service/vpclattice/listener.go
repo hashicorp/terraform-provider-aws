@@ -5,7 +5,6 @@ package vpclattice
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -20,16 +19,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @SDKResource("aws_vpclattice_listener", name="Listener")
 // @Tags(identifierAttribute="arn")
-func ResourceListener() *schema.Resource {
+func resourceListener() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceListenerCreate,
 		ReadWithoutTimeout:   resourceListenerRead,
@@ -65,7 +66,7 @@ func ResourceListener() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"default_action": {
+			names.AttrDefaultAction: {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				MinItems: 1,
@@ -78,7 +79,7 @@ func ResourceListener() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"status_code": {
+									names.AttrStatusCode: {
 										Type:     schema.TypeInt,
 										Required: true,
 									},
@@ -136,10 +137,10 @@ func ResourceListener() *schema.Resource {
 				ValidateFunc: validation.IsPortNumber,
 			},
 			names.AttrProtocol: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice([]string{"HTTP", "HTTPS"}, true),
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[types.ListenerProtocol](),
 			},
 			"service_arn": {
 				Type:         schema.TypeString,
@@ -166,11 +167,12 @@ const (
 )
 
 func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	in := &vpclattice.CreateListenerInput{
 		Name:          aws.String(d.Get(names.AttrName).(string)),
-		DefaultAction: expandDefaultAction(d.Get("default_action").([]interface{})),
+		DefaultAction: expandDefaultAction(d.Get(names.AttrDefaultAction).([]interface{})),
 		Protocol:      types.ListenerProtocol(d.Get(names.AttrProtocol).(string)),
 		Tags:          getTagsIn(ctx),
 	}
@@ -188,16 +190,13 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if in.ServiceIdentifier == nil {
-		return diag.Errorf("must specify either service_arn or service_identifier")
+		return sdkdiag.AppendErrorf(diags, "must specify either service_arn or service_identifier")
 	}
 
 	out, err := conn.CreateListener(ctx, in)
-	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameListener, d.Get(names.AttrName).(string), err)
-	}
 
-	if out == nil || out.Arn == nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameListener, d.Get(names.AttrName).(string), errors.New("empty output"))
+	if err != nil {
+		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionCreating, ResNameListener, d.Get(names.AttrName).(string), err)
 	}
 
 	// Id returned by GetListener does not contain required service name
@@ -212,26 +211,27 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.SetId(strings.Join(parts, "/"))
 
-	return resourceListenerRead(ctx, d, meta)
+	return append(diags, resourceListenerRead(ctx, d, meta)...)
 }
 
 func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	// GetListener requires the ID or Amazon Resource Name (ARN) of the service
 	serviceId := d.Get("service_identifier").(string)
 	listenerId := d.Get("listener_id").(string)
 
-	out, err := findListenerByIdAndServiceId(ctx, conn, listenerId, serviceId)
+	out, err := findListenerByTwoPartKey(ctx, conn, listenerId, serviceId)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] VPCLattice Listener (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionReading, ResNameListener, d.Id(), err)
+		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionReading, ResNameListener, d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, out.Arn)
@@ -244,14 +244,15 @@ func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("service_arn", out.ServiceArn)
 	d.Set("service_identifier", out.ServiceId)
 
-	if err := d.Set("default_action", flattenListenerRuleActions(out.DefaultAction)); err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionSetting, ResNameListener, d.Id(), err)
+	if err := d.Set(names.AttrDefaultAction, flattenListenerRuleActions(out.DefaultAction)); err != nil {
+		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionSetting, ResNameListener, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	serviceId := d.Get("service_identifier").(string)
@@ -264,60 +265,59 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		// Cannot edit listener name, protocol, or port after creation
-		if d.HasChanges("default_action") {
-			in.DefaultAction = expandDefaultAction(d.Get("default_action").([]interface{}))
+		if d.HasChanges(names.AttrDefaultAction) {
+			in.DefaultAction = expandDefaultAction(d.Get(names.AttrDefaultAction).([]interface{}))
 		}
 
 		log.Printf("[DEBUG] Updating VPC Lattice Listener (%s): %#v", d.Id(), in)
 		_, err := conn.UpdateListener(ctx, in)
 		if err != nil {
-			return create.DiagError(names.VPCLattice, create.ErrActionUpdating, ResNameListener, d.Id(), err)
+			return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionUpdating, ResNameListener, d.Id(), err)
 		}
 	}
 
-	return resourceListenerRead(ctx, d, meta)
+	return append(diags, resourceListenerRead(ctx, d, meta)...)
 }
 
 func resourceListenerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
-
-	log.Printf("[INFO] Deleting VPC Lattice Listener %s", d.Id())
 
 	serviceId := d.Get("service_identifier").(string)
 	listenerId := d.Get("listener_id").(string)
 
+	log.Printf("[INFO] Deleting VPCLattice Listener %s", d.Id())
 	_, err := conn.DeleteListener(ctx, &vpclattice.DeleteListenerInput{
 		ListenerIdentifier: aws.String(listenerId),
 		ServiceIdentifier:  aws.String(serviceId),
 	})
 
-	if err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return nil
-		}
-
-		return create.DiagError(names.VPCLattice, create.ErrActionDeleting, ResNameListener, d.Id(), err)
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return diags
 	}
 
-	return nil
+	if err != nil {
+		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionDeleting, ResNameListener, d.Id(), err)
+	}
+
+	return diags
 }
 
-func findListenerByIdAndServiceId(ctx context.Context, conn *vpclattice.Client, id string, serviceId string) (*vpclattice.GetListenerOutput, error) {
+func findListenerByTwoPartKey(ctx context.Context, conn *vpclattice.Client, listenerID, serviceID string) (*vpclattice.GetListenerOutput, error) {
 	in := &vpclattice.GetListenerInput{
-		ListenerIdentifier: aws.String(id),
-		ServiceIdentifier:  aws.String(serviceId),
+		ListenerIdentifier: aws.String(listenerID),
+		ServiceIdentifier:  aws.String(serviceID),
 	}
 	out, err := conn.GetListener(ctx, in)
-	if err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
 
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
@@ -351,7 +351,7 @@ func flattenFixedResponseAction(response *types.FixedResponseAction) []interface
 	tfMap := map[string]interface{}{}
 
 	if v := response.StatusCode; v != nil {
-		tfMap["status_code"] = aws.ToInt32(v)
+		tfMap[names.AttrStatusCode] = aws.ToInt32(v)
 	}
 
 	return []interface{}{tfMap}
@@ -449,7 +449,7 @@ func expandDefaultActionFixedResponseStatus(l []interface{}) *types.FixedRespons
 
 	fixedResponseAction := &types.FixedResponseAction{}
 
-	if v, ok := lRaw["status_code"].(int); ok {
+	if v, ok := lRaw[names.AttrStatusCode].(int); ok {
 		fixedResponseAction.StatusCode = aws.Int32(int32(v))
 	}
 

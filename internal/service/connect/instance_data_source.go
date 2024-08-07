@@ -78,7 +78,7 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"service_role": {
+			names.AttrServiceRole: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -145,7 +145,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("inbound_calls_enabled", matchedInstance.InboundCallsEnabled)
 	d.Set("instance_alias", matchedInstance.InstanceAlias)
 	d.Set("outbound_calls_enabled", matchedInstance.OutboundCallsEnabled)
-	d.Set("service_role", matchedInstance.ServiceRole)
+	d.Set(names.AttrServiceRole, matchedInstance.ServiceRole)
 	d.Set(names.AttrStatus, matchedInstance.InstanceStatus)
 
 	for att := range InstanceAttributeMapping() {

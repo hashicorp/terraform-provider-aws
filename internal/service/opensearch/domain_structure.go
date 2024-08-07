@@ -355,7 +355,7 @@ func expandLogPublishingOptions(m *schema.Set) map[string]*opensearchservice.Log
 	for _, vv := range m.List() {
 		lo := vv.(map[string]interface{})
 		options[lo["log_type"].(string)] = &opensearchservice.LogPublishingOption{
-			CloudWatchLogsLogGroupArn: aws.String(lo["cloudwatch_log_group_arn"].(string)),
+			CloudWatchLogsLogGroupArn: aws.String(lo[names.AttrCloudWatchLogGroupARN].(string)),
 			Enabled:                   aws.Bool(lo[names.AttrEnabled].(bool)),
 		}
 	}
@@ -372,7 +372,7 @@ func flattenLogPublishingOptions(o map[string]*opensearchservice.LogPublishingOp
 		}
 
 		if val.CloudWatchLogsLogGroupArn != nil {
-			mm["cloudwatch_log_group_arn"] = aws.StringValue(val.CloudWatchLogsLogGroupArn)
+			mm[names.AttrCloudWatchLogGroupARN] = aws.StringValue(val.CloudWatchLogsLogGroupArn)
 		}
 
 		m = append(m, mm)

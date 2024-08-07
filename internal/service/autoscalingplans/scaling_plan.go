@@ -137,7 +137,7 @@ func ResourceScalingPlan() *schema.Resource {
 							Default:  false,
 						},
 
-						"max_capacity": {
+						names.AttrMaxCapacity: {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
@@ -561,7 +561,7 @@ func expandScalingInstructions(vScalingInstructions *schema.Set) []awstypes.Scal
 		if v, ok := mScalingInstruction["disable_dynamic_scaling"].(bool); ok {
 			scalingInstruction.DisableDynamicScaling = aws.Bool(v)
 		}
-		if v, ok := mScalingInstruction["max_capacity"].(int); ok {
+		if v, ok := mScalingInstruction[names.AttrMaxCapacity].(int); ok {
 			scalingInstruction.MaxCapacity = aws.Int32(int32(v))
 		}
 		if v, ok := mScalingInstruction["min_capacity"].(int); ok {
@@ -731,7 +731,7 @@ func flattenScalingInstructions(scalingInstructions []awstypes.ScalingInstructio
 	for _, scalingInstruction := range scalingInstructions {
 		mScalingInstruction := map[string]interface{}{
 			"disable_dynamic_scaling":                  aws.ToBool(scalingInstruction.DisableDynamicScaling),
-			"max_capacity":                             int(aws.ToInt32(scalingInstruction.MaxCapacity)),
+			names.AttrMaxCapacity:                      int(aws.ToInt32(scalingInstruction.MaxCapacity)),
 			"min_capacity":                             int(aws.ToInt32(scalingInstruction.MinCapacity)),
 			"predictive_scaling_max_capacity_behavior": scalingInstruction.PredictiveScalingMaxCapacityBehavior,
 			"predictive_scaling_max_capacity_buffer":   int(aws.ToInt32(scalingInstruction.PredictiveScalingMaxCapacityBuffer)),

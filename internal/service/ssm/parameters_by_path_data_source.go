@@ -6,17 +6,19 @@ package ssm
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ssm"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ssm"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ssm_parameters_by_path")
-func DataSourceParametersByPath() *schema.Resource {
+// @SDKDataSource("aws_ssm_parameters_by_path", name="Parameters By Path")
+func dataSourceParametersByPath() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceParametersReadByPath,
 
@@ -62,7 +64,7 @@ func DataSourceParametersByPath() *schema.Resource {
 
 func dataSourceParametersReadByPath(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn(ctx)
+	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
 	path := d.Get(names.AttrPath).(string)
 	input := &ssm.GetParametersByPathInput{
@@ -70,36 +72,32 @@ func dataSourceParametersReadByPath(ctx context.Context, d *schema.ResourceData,
 		Recursive:      aws.Bool(d.Get("recursive").(bool)),
 		WithDecryption: aws.Bool(d.Get("with_decryption").(bool)),
 	}
+	var output []awstypes.Parameter
 
-	arns := make([]string, 0)
-	n := make([]string, 0)
-	types := make([]string, 0)
-	values := make([]string, 0)
+	pages := ssm.NewGetParametersByPathPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-	err := conn.GetParametersByPathPagesWithContext(ctx, input, func(page *ssm.GetParametersByPathOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading SSM Parameters by path (%s): %s", path, err)
 		}
 
-		for _, param := range page.Parameters {
-			arns = append(arns, aws.StringValue(param.ARN))
-			n = append(n, aws.StringValue(param.Name))
-			types = append(types, aws.StringValue(param.Type))
-			values = append(values, aws.StringValue(param.Value))
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting SSM parameters by path (%s): %s", path, err)
+		output = append(output, page.Parameters...)
 	}
 
 	d.SetId(path)
-	d.Set(names.AttrARNs, arns)
-	d.Set(names.AttrNames, n)
-	d.Set("types", types)
-	d.Set(names.AttrValues, values)
+	d.Set(names.AttrARNs, tfslices.ApplyToAll(output, func(v awstypes.Parameter) string {
+		return aws.ToString(v.ARN)
+	}))
+	d.Set(names.AttrNames, tfslices.ApplyToAll(output, func(v awstypes.Parameter) string {
+		return aws.ToString(v.Name)
+	}))
+	d.Set("types", tfslices.ApplyToAll(output, func(v awstypes.Parameter) awstypes.ParameterType {
+		return v.Type
+	}))
+	d.Set(names.AttrValues, tfslices.ApplyToAll(output, func(v awstypes.Parameter) string {
+		return aws.ToString(v.Value)
+	}))
 
 	return diags
 }

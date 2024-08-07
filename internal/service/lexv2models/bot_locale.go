@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -107,7 +108,7 @@ func (r *resourceBotLocale) Schema(ctx context.Context, req resource.SchemaReque
 						"voice_id": schema.StringAttribute{
 							Required: true,
 						},
-						"engine": schema.StringAttribute{
+						names.AttrEngine: schema.StringAttribute{
 							Optional: true,
 							Computed: true,
 							Validators: []validator.String{
@@ -342,8 +343,8 @@ func (r *resourceBotLocale) Delete(ctx context.Context, req resource.DeleteReque
 
 	_, err := conn.DeleteBotLocale(ctx, in)
 	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) ||
+			errs.IsAErrorMessageContains[*awstypes.PreconditionFailedException](err, "does not exist") {
 			return
 		}
 		resp.Diagnostics.AddError(
@@ -449,8 +450,7 @@ func FindBotLocaleByID(ctx context.Context, conn *lexmodelsv2.Client, id string)
 
 	out, err := conn.DescribeBotLocale(ctx, in)
 	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
@@ -476,8 +476,8 @@ func flattenVoiceSettings(ctx context.Context, apiObject *awstypes.VoiceSettings
 	}
 
 	obj := map[string]attr.Value{
-		"voice_id": flex.StringValueToFramework(ctx, *apiObject.VoiceId),
-		"engine":   flex.StringValueToFramework(ctx, apiObject.Engine),
+		"voice_id":       flex.StringValueToFramework(ctx, *apiObject.VoiceId),
+		names.AttrEngine: flex.StringValueToFramework(ctx, apiObject.Engine),
 	}
 	objVal, d := types.ObjectValue(voiceSettingsAttrTypes, obj)
 	diags.Append(d...)
@@ -518,8 +518,8 @@ type voiceSettingsData struct {
 }
 
 var voiceSettingsAttrTypes = map[string]attr.Type{
-	"voice_id": types.StringType,
-	"engine":   types.StringType,
+	"voice_id":       types.StringType,
+	names.AttrEngine: types.StringType,
 }
 
 // refreshFromOutput writes state data from an AWS response object

@@ -240,6 +240,18 @@ func ResourceJobDefinition() *schema.Resource {
 										Optional: true,
 										Default:  true,
 									},
+									"image_pull_secret": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												names.AttrName: {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+											},
+										},
+									},
 									"metadata": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -342,7 +354,7 @@ func ResourceJobDefinition() *schema.Resource {
 				},
 			},
 
-			"propagate_tags": {
+			names.AttrPropagateTags: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -504,14 +516,14 @@ func needsJobDefUpdate(d *schema.ResourceDiff) bool {
 		}
 
 		var oeks, neks *batch.EksPodProperties
-		if len(o.([]interface{})) > 0 {
+		if len(o.([]interface{})) > 0 && o.([]interface{})[0] != nil {
 			oProps := o.([]interface{})[0].(map[string]interface{})
 			if opodProps, ok := oProps["pod_properties"].([]interface{}); ok && len(opodProps) > 0 {
 				oeks = expandEKSPodProperties(opodProps[0].(map[string]interface{}))
 			}
 		}
 
-		if len(n.([]interface{})) > 0 {
+		if len(n.([]interface{})) > 0 && n.([]interface{})[0] != nil {
 			nProps := n.([]interface{})[0].(map[string]interface{})
 			if npodProps, ok := nProps["pod_properties"].([]interface{}); ok && len(npodProps) > 0 {
 				neks = expandEKSPodProperties(npodProps[0].(map[string]interface{}))
@@ -548,12 +560,12 @@ func needsJobDefUpdate(d *schema.ResourceDiff) bool {
 		}
 
 		var ors, nrs *batch.JobTimeout
-		if len(o.([]interface{})) > 0 {
+		if len(o.([]interface{})) > 0 && o.([]interface{})[0] != nil {
 			oProps := o.([]interface{})[0].(map[string]interface{})
 			ors = expandJobTimeout(oProps)
 		}
 
-		if len(n.([]interface{})) > 0 {
+		if len(n.([]interface{})) > 0 && n.([]interface{})[0] != nil {
 			nProps := n.([]interface{})[0].(map[string]interface{})
 			nrs = expandJobTimeout(nProps)
 		}
@@ -562,7 +574,7 @@ func needsJobDefUpdate(d *schema.ResourceDiff) bool {
 	}
 
 	if d.HasChanges(
-		"propagate_tags",
+		names.AttrPropagateTags,
 		names.AttrParameters,
 		"platform_capabilities",
 		"scheduling_priority",
@@ -582,7 +594,7 @@ func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, me
 	jobDefinitionType := d.Get(names.AttrType).(string)
 	input := &batch.RegisterJobDefinitionInput{
 		JobDefinitionName: aws.String(name),
-		PropagateTags:     aws.Bool(d.Get("propagate_tags").(bool)),
+		PropagateTags:     aws.Bool(d.Get(names.AttrPropagateTags).(bool)),
 		Tags:              getTagsIn(ctx),
 		Type:              aws.String(jobDefinitionType),
 	}
@@ -604,7 +616,7 @@ func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, me
 			}
 		}
 
-		if v, ok := d.GetOk("eks_properties"); ok && len(v.([]interface{})) > 0 {
+		if v, ok := d.GetOk("eks_properties"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			eksProps := v.([]interface{})[0].(map[string]interface{})
 			if podProps, ok := eksProps["pod_properties"].([]interface{}); ok && len(podProps) > 0 {
 				if aws.StringValue(input.Type) == batch.JobDefinitionTypeContainer {
@@ -717,7 +729,7 @@ func resourceJobDefinitionRead(ctx context.Context, d *schema.ResourceData, meta
 
 	d.Set(names.AttrParameters, aws.StringValueMap(jobDefinition.Parameters))
 	d.Set("platform_capabilities", aws.StringValueSlice(jobDefinition.PlatformCapabilities))
-	d.Set("propagate_tags", jobDefinition.PropagateTags)
+	d.Set(names.AttrPropagateTags, jobDefinition.PropagateTags)
 
 	if jobDefinition.RetryStrategy != nil {
 		if err := d.Set("retry_strategy", []interface{}{flattenRetryStrategy(jobDefinition.RetryStrategy)}); err != nil {
@@ -790,7 +802,7 @@ func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, me
 			input.NodeProperties = props
 		}
 
-		if v, ok := d.GetOk("propagate_tags"); ok {
+		if v, ok := d.GetOk(names.AttrPropagateTags); ok {
 			input.PropagateTags = aws.Bool(v.(bool))
 		}
 

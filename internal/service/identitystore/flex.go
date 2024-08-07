@@ -132,7 +132,7 @@ func expandAlternateIdentifier(tfMap map[string]interface{}) types.AlternateIden
 		return nil
 	}
 
-	if v, ok := tfMap["external_id"]; ok && len(v.([]interface{})) > 0 {
+	if v, ok := tfMap[names.AttrExternalID]; ok && len(v.([]interface{})) > 0 {
 		return &types.AlternateIdentifierMemberExternalId{
 			Value: *expandExternalId(v.([]interface{})[0].(map[string]interface{})),
 		}

@@ -165,12 +165,12 @@ func testAccLFTag_Values(t *testing.T) {
 		CheckDestroy:             testAccCheckLFTagsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:  testAccLFTagConfig_values(rName, []string{"value1", "value2"}),
+				Config:  testAccLFTagConfig_values(rName, []string{acctest.CtValue1, acctest.CtValue2}),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLFTagExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, rName),
-					resource.TestCheckResourceAttr(resourceName, "values.0", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "values.0", acctest.CtValue1),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrCatalogID),
 				),
 			},
@@ -181,11 +181,11 @@ func testAccLFTag_Values(t *testing.T) {
 			},
 			{
 				// Test an update that adds, removes and retains a tag value
-				Config: testAccLFTagConfig_values(rName, []string{"value1", "value3"}),
+				Config: testAccLFTagConfig_values(rName, []string{acctest.CtValue1, "value3"}),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLFTagExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, rName),
-					resource.TestCheckResourceAttr(resourceName, "values.0", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "values.0", acctest.CtValue1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "values.*", "value3"),
 					testAccCheckLFTagValuesLen(ctx, resourceName, 2),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrCatalogID),
@@ -215,7 +215,7 @@ func testAccLFTag_Values_overFifty(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLFTagExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, rName),
-					resource.TestCheckResourceAttr(resourceName, "values.0", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "values.0", acctest.CtValue1),
 					testAccCheckLFTagValuesLen(ctx, resourceName, len(generatedValues)),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrCatalogID),
 				),
@@ -225,7 +225,7 @@ func testAccLFTag_Values_overFifty(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLFTagExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, rName),
-					resource.TestCheckResourceAttr(resourceName, "values.0", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "values.0", acctest.CtValue1),
 					testAccCheckLFTagValuesLen(ctx, resourceName, len(generatedValues2)),
 					resource.TestCheckTypeSetElemAttr(resourceName, "values.*", "value59"),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrCatalogID),
@@ -236,7 +236,7 @@ func testAccLFTag_Values_overFifty(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLFTagExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, rName),
-					resource.TestCheckResourceAttr(resourceName, "values.0", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "values.0", acctest.CtValue1),
 					testAccCheckLFTagValuesLen(ctx, resourceName, len(generatedValues)-1),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrCatalogID),
 				),
