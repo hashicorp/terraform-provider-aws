@@ -16,6 +16,7 @@ var (
 	ResourceHostedPrivateVirtualInterface         = resourceHostedPrivateVirtualInterface
 	ResourceHostedPrivateVirtualInterfaceAccepter = resourceHostedPrivateVirtualInterfaceAccepter
 	ResourceHostedPublicVirtualInterface          = resourceHostedPublicVirtualInterface
+	ResourceHostedPublicVirtualInterfaceAccepter  = resourceHostedPublicVirtualInterfaceAccepter
 	ResourceHostedTransitVirtualInterface         = resourceHostedTransitVirtualInterface
 
 	FindBGPPeerByThreePartKey          = findBGPPeerByThreePartKey
