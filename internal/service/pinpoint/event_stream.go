@@ -73,7 +73,7 @@ func resourceEventStreamUpsert(ctx context.Context, d *schema.ResourceData, meta
 		return conn.PutEventStream(ctx, &req)
 	}, "make sure the IAM Role is configured correctly")
 
-	if tfresource.TimedOut(err) {
+	if tfresource.TimedOut(err) { // nosemgrep:ci.helper-schema-TimeoutError-check-doesnt-return-output
 		_, err = conn.PutEventStream(ctx, &req)
 	}
 
