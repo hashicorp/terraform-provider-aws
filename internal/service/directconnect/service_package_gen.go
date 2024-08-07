@@ -134,7 +134,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceLag,
+			Factory:  resourceLag,
 			TypeName: "aws_dx_lag",
 			Name:     "LAG",
 			Tags: &types.ServicePackageResourceTags{

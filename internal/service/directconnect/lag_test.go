@@ -265,17 +265,13 @@ func testAccCheckLagExists(ctx context.Context, name string, v *awstypes.Lag) re
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
-
-		lag, err := tfdirectconnect.FindLagByID(ctx, conn, rs.Primary.ID)
+		output, err := tfdirectconnect.FindLagByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		*v = *lag
+		*v = *output
 
 		return nil
 	}

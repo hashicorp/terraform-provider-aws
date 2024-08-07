@@ -9,44 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
-
-func FindLagByID(ctx context.Context, conn *directconnect.Client, id string) (*awstypes.Lag, error) {
-	input := &directconnect.DescribeLagsInput{
-		LagId: aws.String(id),
-	}
-
-	output, err := conn.DescribeLags(ctx, input)
-
-	if errs.IsAErrorMessageContains[*awstypes.DirectConnectClientException](err, "Could not find Lag with ID") {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	lag, err := tfresource.AssertSingleValueResult(output.Lags)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if lag.LagState == awstypes.LagStateDeleted {
-		return nil, &retry.NotFoundError{
-			Message:     string(lag.LagState),
-			LastRequest: input,
-		}
-	}
-
-	return lag, nil
-}
 
 func FindLocationByCode(ctx context.Context, conn *directconnect.Client, code string) (awstypes.Location, error) {
 	input := &directconnect.DescribeLocationsInput{}

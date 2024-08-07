@@ -423,7 +423,7 @@ func sweepLags(region string) error {
 	for _, lag := range output.Lags {
 		id := aws.ToString(lag.LagId)
 
-		r := ResourceLag()
+		r := resourceLag()
 		d := r.Data(nil)
 		d.SetId(id)
 
