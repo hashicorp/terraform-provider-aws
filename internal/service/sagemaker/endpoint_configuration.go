@@ -295,6 +295,12 @@ func ResourceEndpointConfiguration() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 						},
+						"inference_ami_version": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(sagemaker.ProductionVariantInferenceAmiVersion_Values(), false),
+						},
 						"initial_instance_count": {
 							Type:         schema.TypeInt,
 							Optional:     true,
@@ -432,6 +438,12 @@ func ResourceEndpointConfiguration() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 							ForceNew: true,
+						},
+						"inference_ami_version": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(sagemaker.ProductionVariantInferenceAmiVersion_Values(), false),
 						},
 						"initial_instance_count": {
 							Type:         schema.TypeInt,
@@ -697,6 +709,10 @@ func expandProductionVariants(configured []interface{}) []*sagemaker.ProductionV
 			l.EnableSSMAccess = aws.Bool(v)
 		}
 
+		if v, ok := data["inference_ami_version"].(string); ok && v != "" {
+			l.InferenceAmiVersion = aws.String(v)
+		}
+
 		containers = append(containers, l)
 	}
 
@@ -748,6 +764,10 @@ func flattenProductionVariants(list []*sagemaker.ProductionVariant) []map[string
 
 		if i.EnableSSMAccess != nil {
 			l["enable_ssm_access"] = aws.BoolValue(i.EnableSSMAccess)
+		}
+
+		if i.InferenceAmiVersion != nil {
+			l["inference_ami_version"] = aws.StringValue(i.InferenceAmiVersion)
 		}
 
 		result = append(result, l)

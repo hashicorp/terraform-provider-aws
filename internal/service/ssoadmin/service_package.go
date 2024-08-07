@@ -19,16 +19,16 @@ import (
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*ssoadmin.Client, error) {
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
-	return ssoadmin.NewFromConfig(cfg, func(o *ssoadmin.Options) {
-		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
-			o.BaseEndpoint = aws.String(endpoint)
-		}
-
-		o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), retry.IsErrorRetryableFunc(func(err error) aws.Ternary {
-			if errs.IsA[*types.ConflictException](err) || errs.IsA[*types.ThrottlingException](err) {
-				return aws.TrueTernary
-			}
-			return aws.UnknownTernary // Delegate to configured Retryer.
-		}))
-	}), nil
+	return ssoadmin.NewFromConfig(cfg,
+		ssoadmin.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+		func(o *ssoadmin.Options) {
+			o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), retry.IsErrorRetryableFunc(func(err error) aws.Ternary {
+				if errs.IsA[*types.ConflictException](err) || errs.IsA[*types.ThrottlingException](err) {
+					return aws.TrueTernary
+				}
+				return aws.UnknownTernary // Delegate to configured Retryer.
+			}))
+		},
+	), nil
 }

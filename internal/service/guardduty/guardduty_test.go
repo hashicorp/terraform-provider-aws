@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccGuardDuty_serial(t *testing.T) {
@@ -25,7 +24,7 @@ func TestAccGuardDuty_serial(t *testing.T) {
 			"datasources_kubernetes_audit_logs": testAccDetector_datasources_kubernetes_audit_logs,
 			"datasources_malware_protection":    testAccDetector_datasources_malware_protection,
 			"datasources_all":                   testAccDetector_datasources_all,
-			names.AttrTags:                      testAccDetector_tags,
+			"tags":                              testAccDetector_tags,
 			"datasource_basic":                  testAccDetectorDataSource_basic,
 			"datasource_id":                     testAccDetectorDataSource_ID,
 		},
@@ -35,10 +34,10 @@ func TestAccGuardDuty_serial(t *testing.T) {
 			"multiple":                 testAccDetectorFeature_multiple,
 		},
 		"Filter": {
-			acctest.CtBasic: testAccFilter_basic,
-			"update":        testAccFilter_update,
-			names.AttrTags:  testAccFilter_tags,
-			"disappears":    testAccFilter_disappears,
+			acctest.CtBasic:      testAccFilter_basic,
+			"update":             testAccFilter_update,
+			"tags":               testAccFilter_tags,
+			acctest.CtDisappears: testAccFilter_disappears,
 		},
 		"FindingIDs": {
 			"datasource_basic": testAccFindingIDsDataSource_basic,
@@ -48,7 +47,7 @@ func TestAccGuardDuty_serial(t *testing.T) {
 		},
 		"IPSet": {
 			acctest.CtBasic: testAccIPSet_basic,
-			names.AttrTags:  testAccIPSet_tags,
+			"tags":          testAccIPSet_tags,
 		},
 		"OrganizationAdminAccount": {
 			acctest.CtBasic: testAccOrganizationAdminAccount_basic,
@@ -67,7 +66,7 @@ func TestAccGuardDuty_serial(t *testing.T) {
 		},
 		"ThreatIntelSet": {
 			acctest.CtBasic: testAccThreatIntelSet_basic,
-			names.AttrTags:  testAccThreatIntelSet_tags,
+			"tags":          testAccThreatIntelSet_tags,
 		},
 		"Member": {
 			acctest.CtBasic:      testAccMember_basic,
@@ -76,8 +75,8 @@ func TestAccGuardDuty_serial(t *testing.T) {
 			"invitationMessage":  testAccMember_invitationMessage,
 		},
 		"PublishingDestination": {
-			acctest.CtBasic: testAccPublishingDestination_basic,
-			"disappears":    testAccPublishingDestination_disappears,
+			acctest.CtBasic:      testAccPublishingDestination_basic,
+			acctest.CtDisappears: testAccPublishingDestination_disappears,
 		},
 	}
 
@@ -104,7 +103,7 @@ func testAccMemberFromEnv(t *testing.T) (string, string) {
 
 // testAccPreCheckDetectorExists verifies the current account has a single active GuardDuty detector configured.
 func testAccPreCheckDetectorExists(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyClient(ctx)
 
 	_, err := tfguardduty.FindDetector(ctx, conn)
 
@@ -119,7 +118,7 @@ func testAccPreCheckDetectorExists(ctx context.Context, t *testing.T) {
 
 // testAccPreCheckDetectorNotExists verifies the current account has no active GuardDuty detector configured.
 func testAccPreCheckDetectorNotExists(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyClient(ctx)
 
 	_, err := tfguardduty.FindDetector(ctx, conn)
 

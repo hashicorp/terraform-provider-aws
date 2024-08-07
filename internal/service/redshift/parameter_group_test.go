@@ -42,7 +42,7 @@ func TestAccRedshiftParameterGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct3),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "require_ssl",
-						names.AttrValue: "true",
+						names.AttrValue: acctest.CtTrue,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "query_group",
@@ -50,7 +50,7 @@ func TestAccRedshiftParameterGroup_basic(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "enable_user_activity_logging",
-						names.AttrValue: "true",
+						names.AttrValue: acctest.CtTrue,
 					}),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
@@ -128,7 +128,7 @@ func TestAccRedshiftParameterGroup_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct3),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "require_ssl",
-						names.AttrValue: "true",
+						names.AttrValue: acctest.CtTrue,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "query_group",
@@ -136,7 +136,7 @@ func TestAccRedshiftParameterGroup_update(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "enable_user_activity_logging",
-						names.AttrValue: "true",
+						names.AttrValue: acctest.CtTrue,
 					}),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),

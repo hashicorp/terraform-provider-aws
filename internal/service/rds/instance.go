@@ -52,6 +52,8 @@ import (
 
 // @SDKResource("aws_db_instance", name="DB Instance")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go/service/rds;rds.DBInstance")
+// @Testing(importIgnore="apply_immediately;password")
 func ResourceInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceCreate,
@@ -88,7 +90,7 @@ func ResourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"allocated_storage": {
+			names.AttrAllocatedStorage: {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -114,7 +116,7 @@ func ResourceInstance() *schema.Resource {
 					return false
 				},
 			},
-			"allow_major_version_upgrade": {
+			names.AttrAllowMajorVersionUpgrade: {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -242,7 +244,7 @@ func ResourceInstance() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
-			"deletion_protection": {
+			names.AttrDeletionProtection: {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -258,7 +260,7 @@ func ResourceInstance() *schema.Resource {
 				ConflictsWith: []string{names.AttrDomain, "domain_iam_role_name"},
 			},
 			"domain_dns_ips": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				MinItems: 2,
 				MaxItems: 2,
@@ -296,7 +298,7 @@ func ResourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"engine": {
+			names.AttrEngine: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -305,6 +307,12 @@ func ResourceInstance() *schema.Resource {
 					value := v.(string)
 					return strings.ToLower(value)
 				},
+			},
+			"engine_lifecycle_support": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(engineLifecycleSupport_Values(), false),
 			},
 			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
@@ -315,7 +323,7 @@ func ResourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"final_snapshot_identifier": {
+			names.AttrFinalSnapshotIdentifier: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ValidateFunc: validation.All(
@@ -440,7 +448,7 @@ func ResourceInstance() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == "0" && new == fmt.Sprintf("%d", d.Get("allocated_storage").(int)) {
+					if old == "0" && new == fmt.Sprintf("%d", d.Get(names.AttrAllocatedStorage).(int)) {
 						return true
 					}
 					return false
@@ -480,7 +488,7 @@ func ResourceInstance() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"parameter_group_name": {
+			names.AttrParameterGroupName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -631,7 +639,7 @@ func ResourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"storage_encrypted": {
+			names.AttrStorageEncrypted: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				ForceNew: true,
@@ -657,6 +665,10 @@ func ResourceInstance() *schema.Resource {
 					"s3_import",
 				},
 			},
+			"upgrade_storage_config": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			names.AttrUsername: {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -679,7 +691,7 @@ func ResourceInstance() *schema.Resource {
 					return nil
 				}
 
-				engine := d.Get("engine").(string)
+				engine := d.Get(names.AttrEngine).(string)
 				if !slices.Contains(dbInstanceValidBlueGreenEngines(), engine) {
 					return fmt.Errorf(`"blue_green_update.enabled" cannot be set when "engine" is %q.`, engine)
 				}
@@ -749,13 +761,13 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			CopyTagsToSnapshot:         aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 			DBInstanceClass:            aws.String(d.Get("instance_class").(string)),
 			DBInstanceIdentifier:       aws.String(identifier),
-			DeletionProtection:         aws.Bool(d.Get("deletion_protection").(bool)),
+			DeletionProtection:         aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
 			PubliclyAccessible:         aws.Bool(d.Get(names.AttrPubliclyAccessible).(bool)),
 			SourceDBInstanceIdentifier: aws.String(sourceDBInstanceID),
 			Tags:                       getTagsIn(ctx),
 		}
 
-		if _, ok := d.GetOk("allocated_storage"); ok {
+		if _, ok := d.GetOk(names.AttrAllocatedStorage); ok {
 			// RDS doesn't allow modifying the storage of a replica within the first 6h of creation.
 			// allocated_storage is inherited from the primary so only the same value or no value is correct; a different value would fail the creation.
 			// A different value is possible, granted: the value is higher than the current, there has been 6h between
@@ -817,7 +829,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.OptionGroupName = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("parameter_group_name"); ok {
+		if v, ok := d.GetOk(names.AttrParameterGroupName); ok {
 			crossRegion := false
 			if arn.IsARN(sourceDBInstanceID) {
 				sourceARN, err := arn.Parse(sourceDBInstanceID)
@@ -860,24 +872,32 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.StorageType = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("upgrade_storage_config"); ok {
+			input.UpgradeStorageConfig = aws.Bool(v.(bool))
+		}
+
 		if v, ok := d.GetOk(names.AttrVPCSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
 			input.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
-		outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
-			func() (interface{}, error) {
-				return conn.CreateDBInstanceReadReplicaWithContext(ctx, input)
-			},
-			errCodeInvalidParameterValue, "ENHANCED_MONITORING")
+		output, err := dbInstanceCreateReadReplica(ctx, conn, input)
+
+		// Some engines (e.g. PostgreSQL) you cannot specify a custom parameter group for the read replica during creation.
+		// See https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_ReadRepl.html#USER_ReadRepl.XRgn.Cnsdr.
+		if input.DBParameterGroupName != nil && tfawserr.ErrMessageContains(err, "InvalidParameterCombination", "A parameter group can't be specified during Read Replica creation for the following DB engine") {
+			input.DBParameterGroupName = nil
+
+			output, err = dbInstanceCreateReadReplica(ctx, conn, input)
+		}
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating RDS DB Instance (read replica) (%s): %s", identifier, err)
 		}
 
-		output := outputRaw.(*rds.CreateDBInstanceReadReplicaOutput)
-
 		resourceID = aws.StringValue(output.DBInstance.DbiResourceId)
+		d.SetId(resourceID)
 
-		if v, ok := d.GetOk("allow_major_version_upgrade"); ok {
+		if v, ok := d.GetOk(names.AttrAllowMajorVersionUpgrade); ok {
 			// Having allowing_major_version_upgrade by itself should not trigger ModifyDBInstance
 			// "InvalidParameterCombination: No modifications were requested".
 			modifyDbInstanceInput.AllowMajorVersionUpgrade = aws.Bool(v.(bool))
@@ -927,7 +947,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 		}
 
-		if v, ok := d.GetOk("parameter_group_name"); ok {
+		if v, ok := d.GetOk(names.AttrParameterGroupName); ok {
 			if len(output.DBInstance.DBParameterGroups) > 0 {
 				if current, desired := aws.StringValue(output.DBInstance.DBParameterGroups[0].DBParameterGroupName), v.(string); current != desired {
 					modifyDbInstanceInput.DBParameterGroupName = aws.String(desired)
@@ -942,10 +962,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			requiresModifyDbInstance = true
 		}
 	} else if v, ok := d.GetOk("s3_import"); ok {
-		if _, ok := d.GetOk("allocated_storage"); !ok {
+		if _, ok := d.GetOk(names.AttrAllocatedStorage); !ok {
 			diags = sdkdiag.AppendErrorf(diags, `"allocated_storage": required field is not set`)
 		}
-		if _, ok := d.GetOk("engine"); !ok {
+		if _, ok := d.GetOk(names.AttrEngine); !ok {
 			diags = sdkdiag.AppendErrorf(diags, `"engine": required field is not set`)
 		}
 		if _, ok := d.GetOk(names.AttrUsername); !ok {
@@ -957,15 +977,15 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 		tfMap := v.([]interface{})[0].(map[string]interface{})
 		input := &rds.RestoreDBInstanceFromS3Input{
-			AllocatedStorage:        aws.Int64(int64(d.Get("allocated_storage").(int))),
+			AllocatedStorage:        aws.Int64(int64(d.Get(names.AttrAllocatedStorage).(int))),
 			AutoMinorVersionUpgrade: aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
 			BackupRetentionPeriod:   aws.Int64(int64(d.Get("backup_retention_period").(int))),
 			CopyTagsToSnapshot:      aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 			DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
 			DBInstanceIdentifier:    aws.String(identifier),
 			DBName:                  aws.String(d.Get("db_name").(string)),
-			DeletionProtection:      aws.Bool(d.Get("deletion_protection").(bool)),
-			Engine:                  aws.String(d.Get("engine").(string)),
+			DeletionProtection:      aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
+			Engine:                  aws.String(d.Get(names.AttrEngine).(string)),
 			EngineVersion:           aws.String(d.Get(names.AttrEngineVersion).(string)),
 			MasterUsername:          aws.String(d.Get(names.AttrUsername).(string)),
 			PubliclyAccessible:      aws.Bool(d.Get(names.AttrPubliclyAccessible).(bool)),
@@ -974,7 +994,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			S3Prefix:                aws.String(tfMap[names.AttrBucketPrefix].(string)),
 			SourceEngine:            aws.String(tfMap["source_engine"].(string)),
 			SourceEngineVersion:     aws.String(tfMap["source_engine_version"].(string)),
-			StorageEncrypted:        aws.Bool(d.Get("storage_encrypted").(bool)),
+			StorageEncrypted:        aws.Bool(d.Get(names.AttrStorageEncrypted).(bool)),
 			Tags:                    getTagsIn(ctx),
 		}
 
@@ -992,6 +1012,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if v, ok := d.GetOk("dedicated_log_volume"); ok {
 			input.DedicatedLogVolume = aws.Bool(v.(bool))
+		}
+
+		if v, ok := d.GetOk("engine_lifecycle_support"); ok {
+			input.EngineLifecycleSupport = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("iam_database_authentication_enabled"); ok {
@@ -1042,7 +1066,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.OptionGroupName = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("parameter_group_name"); ok {
+		if v, ok := d.GetOk(names.AttrParameterGroupName); ok {
 			input.DBParameterGroupName = aws.String(v.(string))
 		}
 
@@ -1104,10 +1128,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			return sdkdiag.AppendErrorf(diags, "creating RDS DB Instance (restore from S3) (%s): %s", identifier, err)
 		}
 
-		if outputRaw != nil {
-			output := outputRaw.(*rds.RestoreDBInstanceFromS3Output)
-			resourceID = aws.StringValue(output.DBInstance.DbiResourceId)
-		}
+		output := outputRaw.(*rds.RestoreDBInstanceFromS3Output)
+
+		resourceID = aws.StringValue(output.DBInstance.DbiResourceId)
+		d.SetId(resourceID)
 	} else if v, ok := d.GetOk("snapshot_identifier"); ok {
 		input := &rds.RestoreDBInstanceFromDBSnapshotInput{
 			AutoMinorVersionUpgrade: aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
@@ -1115,12 +1139,12 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
 			DBInstanceIdentifier:    aws.String(identifier),
 			DBSnapshotIdentifier:    aws.String(v.(string)),
-			DeletionProtection:      aws.Bool(d.Get("deletion_protection").(bool)),
+			DeletionProtection:      aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
 			PubliclyAccessible:      aws.Bool(d.Get(names.AttrPubliclyAccessible).(bool)),
 			Tags:                    getTagsIn(ctx),
 		}
 
-		engine := strings.ToLower(d.Get("engine").(string))
+		engine := strings.ToLower(d.Get(names.AttrEngine).(string))
 		if v, ok := d.GetOk("db_name"); ok {
 			// "Note: This parameter [DBName] doesn't apply to the MySQL, PostgreSQL, or MariaDB engines."
 			// https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_RestoreDBInstanceFromDBSnapshot.html
@@ -1132,12 +1156,12 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 		}
 
-		if v, ok := d.GetOk("allocated_storage"); ok {
+		if v, ok := d.GetOk(names.AttrAllocatedStorage); ok {
 			modifyDbInstanceInput.AllocatedStorage = aws.Int64(int64(v.(int)))
 			requiresModifyDbInstance = true
 		}
 
-		if v, ok := d.GetOk("allow_major_version_upgrade"); ok {
+		if v, ok := d.GetOk(names.AttrAllowMajorVersionUpgrade); ok {
 			modifyDbInstanceInput.AllowMajorVersionUpgrade = aws.Bool(v.(bool))
 			// Having allowing_major_version_upgrade by itself should not trigger ModifyDBInstance
 			// InvalidParameterCombination: No modifications were requested
@@ -1185,8 +1209,8 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.DomainAuthSecretArn = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("domain_dns_ips"); ok && v.(*schema.Set).Len() > 0 {
-			input.DomainDnsIps = flex.ExpandStringSet(v.(*schema.Set))
+		if v, ok := d.GetOk("domain_dns_ips"); ok && len(v.([]interface{})) > 0 {
+			input.DomainDnsIps = flex.ExpandStringList(v.([]interface{}))
 		}
 
 		if v, ok := d.GetOk("domain_fqdn"); ok {
@@ -1207,6 +1231,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if engine != "" {
 			input.Engine = aws.String(engine)
+		}
+
+		if v, ok := d.GetOk("engine_lifecycle_support"); ok {
+			input.EngineLifecycleSupport = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk(names.AttrEngineVersion); ok {
@@ -1280,7 +1308,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.OptionGroupName = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("parameter_group_name"); ok {
+		if v, ok := d.GetOk(names.AttrParameterGroupName); ok {
 			input.DBParameterGroupName = aws.String(v.(string))
 		}
 
@@ -1337,6 +1365,12 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			},
 		)
 
+		var output *rds.RestoreDBInstanceFromDBSnapshotOutput
+
+		if err == nil {
+			output = outputRaw.(*rds.RestoreDBInstanceFromDBSnapshotOutput)
+		}
+
 		// When using SQL Server engine with MultiAZ enabled, its not
 		// possible to immediately enable mirroring since
 		// BackupRetentionPeriod is not available as a parameter to
@@ -1349,24 +1383,22 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.MultiAZ = aws.Bool(false)
 			modifyDbInstanceInput.MultiAZ = aws.Bool(true)
 			requiresModifyDbInstance = true
-			_, err = conn.RestoreDBInstanceFromDBSnapshotWithContext(ctx, input)
+			output, err = conn.RestoreDBInstanceFromDBSnapshotWithContext(ctx, input)
 		}
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating RDS DB Instance (restore from snapshot) (%s): %s", identifier, err)
 		}
 
-		if outputRaw != nil {
-			output := outputRaw.(*rds.RestoreDBInstanceFromDBSnapshotOutput)
-			resourceID = aws.StringValue(output.DBInstance.DbiResourceId)
-		}
+		resourceID = aws.StringValue(output.DBInstance.DbiResourceId)
+		d.SetId(resourceID)
 	} else if v, ok := d.GetOk("restore_to_point_in_time"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		tfMap := v.([]interface{})[0].(map[string]interface{})
 		input := &rds.RestoreDBInstanceToPointInTimeInput{
 			AutoMinorVersionUpgrade:    aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
 			CopyTagsToSnapshot:         aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 			DBInstanceClass:            aws.String(d.Get("instance_class").(string)),
-			DeletionProtection:         aws.Bool(d.Get("deletion_protection").(bool)),
+			DeletionProtection:         aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
 			PubliclyAccessible:         aws.Bool(d.Get(names.AttrPubliclyAccessible).(bool)),
 			Tags:                       getTagsIn(ctx),
 			TargetDBInstanceIdentifier: aws.String(identifier),
@@ -1442,16 +1474,20 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.DomainAuthSecretArn = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("domain_dns_ips"); ok && v.(*schema.Set).Len() > 0 {
-			input.DomainDnsIps = flex.ExpandStringSet(v.(*schema.Set))
+		if v, ok := d.GetOk("domain_dns_ips"); ok && len(v.([]interface{})) > 0 {
+			input.DomainDnsIps = flex.ExpandStringList(v.([]interface{}))
 		}
 
 		if v, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && v.(*schema.Set).Len() > 0 {
 			input.EnableCloudwatchLogsExports = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
-		if v, ok := d.GetOk("engine"); ok {
+		if v, ok := d.GetOk(names.AttrEngine); ok {
 			input.Engine = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("engine_lifecycle_support"); ok {
+			input.EngineLifecycleSupport = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("iam_database_authentication_enabled"); ok {
@@ -1498,7 +1534,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.OptionGroupName = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("parameter_group_name"); ok {
+		if v, ok := d.GetOk(names.AttrParameterGroupName); ok {
 			input.DBParameterGroupName = aws.String(v.(string))
 		}
 
@@ -1539,19 +1575,20 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 				return false, err
 			},
 		)
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating RDS DB Instance (restore to point-in-time) (%s): %s", identifier, err)
 		}
 
-		if outputRaw != nil {
-			output := outputRaw.(*rds.RestoreDBInstanceToPointInTimeOutput)
-			resourceID = aws.StringValue(output.DBInstance.DbiResourceId)
-		}
+		output := outputRaw.(*rds.RestoreDBInstanceToPointInTimeOutput)
+
+		resourceID = aws.StringValue(output.DBInstance.DbiResourceId)
+		d.SetId(resourceID)
 	} else {
-		if _, ok := d.GetOk("allocated_storage"); !ok {
+		if _, ok := d.GetOk(names.AttrAllocatedStorage); !ok {
 			diags = sdkdiag.AppendErrorf(diags, `"allocated_storage": required field is not set`)
 		}
-		if _, ok := d.GetOk("engine"); !ok {
+		if _, ok := d.GetOk(names.AttrEngine); !ok {
 			diags = sdkdiag.AppendErrorf(diags, `"engine": required field is not set`)
 		}
 		if _, ok := d.GetOk(names.AttrUsername); !ok {
@@ -1562,19 +1599,19 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		input := &rds.CreateDBInstanceInput{
-			AllocatedStorage:        aws.Int64(int64(d.Get("allocated_storage").(int))),
+			AllocatedStorage:        aws.Int64(int64(d.Get(names.AttrAllocatedStorage).(int))),
 			AutoMinorVersionUpgrade: aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
 			BackupRetentionPeriod:   aws.Int64(int64(d.Get("backup_retention_period").(int))),
 			CopyTagsToSnapshot:      aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 			DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
 			DBInstanceIdentifier:    aws.String(identifier),
 			DBName:                  aws.String(d.Get("db_name").(string)),
-			DeletionProtection:      aws.Bool(d.Get("deletion_protection").(bool)),
-			Engine:                  aws.String(d.Get("engine").(string)),
+			DeletionProtection:      aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
+			Engine:                  aws.String(d.Get(names.AttrEngine).(string)),
 			EngineVersion:           aws.String(d.Get(names.AttrEngineVersion).(string)),
 			MasterUsername:          aws.String(d.Get(names.AttrUsername).(string)),
 			PubliclyAccessible:      aws.Bool(d.Get(names.AttrPubliclyAccessible).(bool)),
-			StorageEncrypted:        aws.Bool(d.Get("storage_encrypted").(bool)),
+			StorageEncrypted:        aws.Bool(d.Get(names.AttrStorageEncrypted).(bool)),
 			Tags:                    getTagsIn(ctx),
 		}
 
@@ -1618,8 +1655,8 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.DomainAuthSecretArn = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("domain_dns_ips"); ok && v.(*schema.Set).Len() > 0 {
-			input.DomainDnsIps = flex.ExpandStringSet(v.(*schema.Set))
+		if v, ok := d.GetOk("domain_dns_ips"); ok && len(v.([]interface{})) > 0 {
+			input.DomainDnsIps = flex.ExpandStringList(v.([]interface{}))
 		}
 
 		if v, ok := d.GetOk("domain_fqdn"); ok {
@@ -1636,6 +1673,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if v, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && v.(*schema.Set).Len() > 0 {
 			input.EnableCloudwatchLogsExports = flex.ExpandStringSet(v.(*schema.Set))
+		}
+
+		if v, ok := d.GetOk("engine_lifecycle_support"); ok {
+			input.EngineLifecycleSupport = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("iam_database_authentication_enabled"); ok {
@@ -1698,7 +1739,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.MasterUserPassword = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("parameter_group_name"); ok {
+		if v, ok := d.GetOk(names.AttrParameterGroupName); ok {
 			input.DBParameterGroupName = aws.String(v.(string))
 		}
 
@@ -1749,12 +1790,15 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 				return false, err
 			},
 		)
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating RDS DB Instance (%s): %s", identifier, err)
 		}
 
 		output := outputRaw.(*rds.CreateDBInstanceOutput)
+
 		resourceID = aws.StringValue(output.DBInstance.DbiResourceId)
+		d.SetId(resourceID)
 
 		// This is added here to avoid unnecessary modification when ca_cert_identifier is the default one
 		if v, ok := d.GetOk("ca_cert_identifier"); ok && v.(string) != aws.StringValue(output.DBInstance.CACertificateIdentifier) {
@@ -1773,7 +1817,9 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		resourceID = aws.StringValue(instance.DbiResourceId)
 	}
 
-	d.SetId(resourceID)
+	if d.Id() == "" {
+		d.SetId(resourceID)
+	}
 
 	if requiresModifyDbInstance {
 		modifyDbInstanceInput.DBInstanceIdentifier = aws.String(identifier)
@@ -1817,12 +1863,13 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		v, err = findDBInstanceByIDSDKv1(ctx, conn, d.Id())
 	} else {
 		v, err = findDBInstanceByIDSDKv1(ctx, conn, d.Id())
-		if tfresource.NotFound(err) {
+		if tfresource.NotFound(err) { // nosemgrep:ci.semgrep.errors.notfound-without-err-checks
+			// Retry with `identifier`
 			v, err = findDBInstanceByIDSDKv1(ctx, conn, d.Get(names.AttrIdentifier).(string))
-			if tfresource.NotFound(err) {
+			if tfresource.NotFound(err) { // nosemgrep:ci.semgrep.errors.notfound-without-err-checks
 				log.Printf("[WARN] RDS DB Instance (%s) not found, removing from state", d.Get(names.AttrIdentifier).(string))
 				d.SetId("")
-				return nil
+				return diags
 			}
 		}
 	}
@@ -1833,7 +1880,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.SetId(aws.StringValue(v.DbiResourceId))
 
-	d.Set("allocated_storage", v.AllocatedStorage)
+	d.Set(names.AttrAllocatedStorage, v.AllocatedStorage)
 	d.Set(names.AttrARN, v.DBInstanceArn)
 	d.Set(names.AttrAutoMinorVersionUpgrade, v.AutoMinorVersionUpgrade)
 	d.Set(names.AttrAvailabilityZone, v.AvailabilityZone)
@@ -1850,7 +1897,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Set("db_subnet_group_name", v.DBSubnetGroup.DBSubnetGroupName)
 	}
 	d.Set("dedicated_log_volume", v.DedicatedLogVolume)
-	d.Set("deletion_protection", v.DeletionProtection)
+	d.Set(names.AttrDeletionProtection, v.DeletionProtection)
 	if len(v.DomainMemberships) > 0 && v.DomainMemberships[0] != nil {
 		v := v.DomainMemberships[0]
 		d.Set(names.AttrDomain, v.Domain)
@@ -1868,7 +1915,8 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Set("domain_ou", nil)
 	}
 	d.Set("enabled_cloudwatch_logs_exports", aws.StringValueSlice(v.EnabledCloudwatchLogsExports))
-	d.Set("engine", v.Engine)
+	d.Set(names.AttrEngine, v.Engine)
+	d.Set("engine_lifecycle_support", v.EngineLifecycleSupport)
 	d.Set("iam_database_authentication_enabled", v.IAMDatabaseAuthenticationEnabled)
 	d.Set(names.AttrIdentifier, v.DBInstanceIdentifier)
 	d.Set("identifier_prefix", create.NamePrefixFromName(aws.StringValue(v.DBInstanceIdentifier)))
@@ -1911,7 +1959,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Set("option_group_name", v.OptionGroupMemberships[0].OptionGroupName)
 	}
 	if len(v.DBParameterGroups) > 0 && v.DBParameterGroups[0] != nil {
-		d.Set("parameter_group_name", v.DBParameterGroups[0].DBParameterGroupName)
+		d.Set(names.AttrParameterGroupName, v.DBParameterGroups[0].DBParameterGroupName)
 	}
 	d.Set("performance_insights_enabled", v.PerformanceInsightsEnabled)
 	d.Set("performance_insights_kms_key_id", v.PerformanceInsightsKMSKeyId)
@@ -1923,7 +1971,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("replicate_source_db", v.ReadReplicaSourceDBInstanceIdentifier)
 	d.Set(names.AttrResourceID, v.DbiResourceId)
 	d.Set(names.AttrStatus, v.DBInstanceStatus)
-	d.Set("storage_encrypted", v.StorageEncrypted)
+	d.Set(names.AttrStorageEncrypted, v.StorageEncrypted)
 	d.Set("storage_throughput", v.StorageThroughput)
 	d.Set(names.AttrStorageType, v.StorageType)
 	d.Set("timezone", v.Timezone)
@@ -1991,23 +2039,23 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	// Having allowing_major_version_upgrade by itself should not trigger ModifyDBInstance
 	// as it results in "InvalidParameterCombination: No modifications were requested".
 	if d.HasChangesExcept(
-		"allow_major_version_upgrade",
+		names.AttrAllowMajorVersionUpgrade,
 		"blue_green_update",
 		"delete_automated_backups",
-		"final_snapshot_identifier",
+		names.AttrFinalSnapshotIdentifier,
 		"replicate_source_db",
 		"skip_final_snapshot",
 		names.AttrTags, names.AttrTagsAll,
 	) {
 		if d.Get("blue_green_update.0.enabled").(bool) && d.HasChangesExcept(
-			"allow_major_version_upgrade",
+			names.AttrAllowMajorVersionUpgrade,
 			"blue_green_update",
 			"delete_automated_backups",
-			"final_snapshot_identifier",
+			names.AttrFinalSnapshotIdentifier,
 			"replicate_source_db",
 			"skip_final_snapshot",
 			names.AttrTags, names.AttrTagsAll,
-			"deletion_protection",
+			names.AttrDeletionProtection,
 			names.AttrPassword,
 		) {
 			orchestrator := newBlueGreenOrchestrator(conn)
@@ -2100,7 +2148,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): deleting Blue/Green Deployment source: %s", d.Get(names.AttrIdentifier).(string), err)
 			}
-			if d.Get("deletion_protection").(bool) {
+			if d.Get(names.AttrDeletionProtection).(bool) {
 				input := &rds_sdkv2.ModifyDBInstanceInput{
 					ApplyImmediately:     aws.Bool(true),
 					DBInstanceIdentifier: aws.String(sourceARN.Identifier),
@@ -2167,14 +2215,14 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 			if d.HasChange(names.AttrEngineVersion) {
 				input.EngineVersion = aws.String(d.Get(names.AttrEngineVersion).(string))
-				input.AllowMajorVersionUpgrade = aws.Bool(d.Get("allow_major_version_upgrade").(bool))
+				input.AllowMajorVersionUpgrade = aws.Bool(d.Get(names.AttrAllowMajorVersionUpgrade).(bool))
 				// if we were to make life easier for practitioners, we could loop through
 				// replicas at this point to update them first, prior to dbInstanceModify()
 				// for the source
 			}
 
-			if d.HasChange("parameter_group_name") {
-				input.DBParameterGroupName = aws.String(d.Get("parameter_group_name").(string))
+			if d.HasChange(names.AttrParameterGroupName) {
+				input.DBParameterGroupName = aws.String(d.Get(names.AttrParameterGroupName).(string))
 			}
 
 			err := dbInstanceModify(ctx, conn, d.Id(), input, deadline.Remaining())
@@ -2187,12 +2235,111 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceInstanceRead(ctx, d, meta)...)
 }
 
+func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
+
+	input := &rds.DeleteDBInstanceInput{
+		DBInstanceIdentifier:   aws.String(d.Get(names.AttrIdentifier).(string)),
+		DeleteAutomatedBackups: aws.Bool(d.Get("delete_automated_backups").(bool)),
+	}
+
+	if d.Get("skip_final_snapshot").(bool) {
+		input.SkipFinalSnapshot = aws.Bool(true)
+	} else {
+		input.SkipFinalSnapshot = aws.Bool(false)
+
+		if v, ok := d.GetOk(names.AttrFinalSnapshotIdentifier); ok {
+			input.FinalDBSnapshotIdentifier = aws.String(v.(string))
+		} else {
+			return sdkdiag.AppendErrorf(diags, "final_snapshot_identifier is required when skip_final_snapshot is false")
+		}
+	}
+
+	log.Printf("[DEBUG] Deleting RDS DB Instance: %s", d.Get(names.AttrIdentifier).(string))
+	_, err := conn.DeleteDBInstanceWithContext(ctx, input)
+
+	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterCombination, "disable deletion pro") {
+		if v, ok := d.GetOk(names.AttrDeletionProtection); (!ok || !v.(bool)) && d.Get(names.AttrApplyImmediately).(bool) {
+			_, ierr := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutUpdate),
+				func() (interface{}, error) {
+					return conn.ModifyDBInstanceWithContext(ctx, &rds.ModifyDBInstanceInput{
+						ApplyImmediately:     aws.Bool(true),
+						DBInstanceIdentifier: aws.String(d.Get(names.AttrIdentifier).(string)),
+						DeletionProtection:   aws.Bool(false),
+					})
+				},
+				func(err error) (bool, error) {
+					// Retry for IAM eventual consistency.
+					if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "IAM role ARN value is invalid or") {
+						return true, err
+					}
+
+					// "InvalidDBInstanceState: RDS is configuring Enhanced Monitoring or Performance Insights for this DB instance. Try your request later."
+					if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBInstanceStateFault, "your request later") {
+						return true, err
+					}
+
+					return false, err
+				},
+			)
+
+			if ierr != nil {
+				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Get(names.AttrIdentifier).(string), err)
+			}
+
+			if _, ierr := waitDBInstanceAvailableSDKv1(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); ierr != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Instance (%s) update: %s", d.Get(names.AttrIdentifier).(string), ierr)
+			}
+
+			_, err = conn.DeleteDBInstanceWithContext(ctx, input)
+		}
+	}
+
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceNotFoundFault) {
+		return diags
+	}
+
+	if err != nil && !tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBInstanceStateFault, "is already being deleted") {
+		return sdkdiag.AppendErrorf(diags, "deleting RDS DB Instance (%s): %s", d.Get(names.AttrIdentifier).(string), err)
+	}
+
+	if _, err := waitDBInstanceDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Instance (%s) delete: %s", d.Get(names.AttrIdentifier).(string), err)
+	}
+
+	return diags
+}
+
+func resourceInstanceImport(_ context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	// Neither skip_final_snapshot nor final_snapshot_identifier can be fetched
+	// from any API call, so we need to default skip_final_snapshot to true so
+	// that final_snapshot_identifier is not required.
+	d.Set("skip_final_snapshot", true)
+	d.Set("delete_automated_backups", true)
+	return []*schema.ResourceData{d}, nil
+}
+
+func dbInstanceCreateReadReplica(ctx context.Context, conn *rds.RDS, input *rds.CreateDBInstanceReadReplicaInput) (*rds.CreateDBInstanceReadReplicaOutput, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
+		func() (interface{}, error) {
+			return conn.CreateDBInstanceReadReplicaWithContext(ctx, input)
+		},
+		errCodeInvalidParameterValue, "ENHANCED_MONITORING")
+
+	if err != nil {
+		return nil, err
+	}
+
+	return outputRaw.(*rds.CreateDBInstanceReadReplicaOutput), nil
+}
+
 func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.ResourceData) bool {
 	needsModify := false
 
-	if d.HasChanges("allocated_storage", names.AttrIOPS) {
+	if d.HasChanges(names.AttrAllocatedStorage, names.AttrIOPS) {
 		needsModify = true
-		input.AllocatedStorage = aws.Int32(int32(d.Get("allocated_storage").(int)))
+		input.AllocatedStorage = aws.Int32(int32(d.Get(names.AttrAllocatedStorage).(int)))
 
 		// Send Iops if it has changed or not (StorageType == "gp3" and AllocatedStorage < threshold).
 		if d.HasChange(names.AttrIOPS) || !isStorageTypeGP3BelowAllocatedStorageThreshold(d) {
@@ -2240,11 +2387,11 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 		input.DedicatedLogVolume = aws.Bool(d.Get("dedicated_log_volume").(bool))
 	}
 
-	if d.HasChange("deletion_protection") {
+	if d.HasChange(names.AttrDeletionProtection) {
 		needsModify = true
 	}
 	// Always set this. Fixes TestAccRDSInstance_BlueGreenDeployment_updateWithDeletionProtection
-	input.DeletionProtection = aws.Bool(d.Get("deletion_protection").(bool))
+	input.DeletionProtection = aws.Bool(d.Get(names.AttrDeletionProtection).(bool))
 
 	// "InvalidParameterCombination: Specify the parameters for either AWS Managed Active Directory or self-managed Active Directory".
 	if d.HasChanges(names.AttrDomain, "domain_iam_role_name") {
@@ -2254,8 +2401,8 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 	} else if d.HasChanges("domain_auth_secret_arn", "domain_dns_ips", "domain_fqdn", "domain_ou") {
 		needsModify = true
 		input.DomainAuthSecretArn = aws.String(d.Get("domain_auth_secret_arn").(string))
-		if v, ok := d.GetOk("domain_dns_ips"); ok && v.(*schema.Set).Len() > 0 {
-			input.DomainDnsIps = flex.ExpandStringValueSet(v.(*schema.Set))
+		if v, ok := d.GetOk("domain_dns_ips"); ok && len(v.([]interface{})) > 0 {
+			input.DomainDnsIps = flex.ExpandStringValueList(v.([]interface{}))
 		}
 		input.DomainFqdn = aws.String(d.Get("domain_fqdn").(string))
 		input.DomainOu = aws.String(d.Get("domain_ou").(string))
@@ -2323,7 +2470,7 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 		// value when disabling autoscaling. This check ensures that value is set correctly
 		// if the update to the Terraform configuration was removing the argument completely.
 		if v == 0 {
-			v = d.Get("allocated_storage").(int)
+			v = d.Get(names.AttrAllocatedStorage).(int)
 		}
 
 		input.MaxAllocatedStorage = aws.Int32(int32(v))
@@ -2399,7 +2546,7 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 		}
 
 		if input.AllocatedStorage == nil {
-			input.AllocatedStorage = aws.Int32(int32(d.Get("allocated_storage").(int)))
+			input.AllocatedStorage = aws.Int32(int32(d.Get(names.AttrAllocatedStorage).(int)))
 		}
 	}
 
@@ -2454,98 +2601,13 @@ func dbInstanceModify(ctx context.Context, conn *rds_sdkv2.Client, resourceID st
 	return nil
 }
 
-func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn(ctx)
-
-	input := &rds.DeleteDBInstanceInput{
-		DBInstanceIdentifier:   aws.String(d.Get(names.AttrIdentifier).(string)),
-		DeleteAutomatedBackups: aws.Bool(d.Get("delete_automated_backups").(bool)),
-	}
-
-	if d.Get("skip_final_snapshot").(bool) {
-		input.SkipFinalSnapshot = aws.Bool(true)
-	} else {
-		input.SkipFinalSnapshot = aws.Bool(false)
-
-		if v, ok := d.GetOk("final_snapshot_identifier"); ok {
-			input.FinalDBSnapshotIdentifier = aws.String(v.(string))
-		} else {
-			return sdkdiag.AppendErrorf(diags, "final_snapshot_identifier is required when skip_final_snapshot is false")
-		}
-	}
-
-	log.Printf("[DEBUG] Deleting RDS DB Instance: %s", d.Get(names.AttrIdentifier).(string))
-	_, err := conn.DeleteDBInstanceWithContext(ctx, input)
-
-	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterCombination, "disable deletion pro") {
-		if v, ok := d.GetOk("deletion_protection"); (!ok || !v.(bool)) && d.Get(names.AttrApplyImmediately).(bool) {
-			_, ierr := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutUpdate),
-				func() (interface{}, error) {
-					return conn.ModifyDBInstanceWithContext(ctx, &rds.ModifyDBInstanceInput{
-						ApplyImmediately:     aws.Bool(true),
-						DBInstanceIdentifier: aws.String(d.Get(names.AttrIdentifier).(string)),
-						DeletionProtection:   aws.Bool(false),
-					})
-				},
-				func(err error) (bool, error) {
-					// Retry for IAM eventual consistency.
-					if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "IAM role ARN value is invalid or") {
-						return true, err
-					}
-
-					// "InvalidDBInstanceState: RDS is configuring Enhanced Monitoring or Performance Insights for this DB instance. Try your request later."
-					if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBInstanceStateFault, "your request later") {
-						return true, err
-					}
-
-					return false, err
-				},
-			)
-
-			if ierr != nil {
-				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Get(names.AttrIdentifier).(string), err)
-			}
-
-			if _, ierr := waitDBInstanceAvailableSDKv1(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); ierr != nil {
-				return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Instance (%s) update: %s", d.Get(names.AttrIdentifier).(string), ierr)
-			}
-
-			_, err = conn.DeleteDBInstanceWithContext(ctx, input)
-		}
-	}
-
-	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceNotFoundFault) {
-		return nil
-	}
-
-	if err != nil && !tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBInstanceStateFault, "is already being deleted") {
-		return sdkdiag.AppendErrorf(diags, "deleting RDS DB Instance (%s): %s", d.Get(names.AttrIdentifier).(string), err)
-	}
-
-	if _, err := waitDBInstanceDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Instance (%s) delete: %s", d.Get(names.AttrIdentifier).(string), err)
-	}
-
-	return nil
-}
-
-func resourceInstanceImport(_ context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	// Neither skip_final_snapshot nor final_snapshot_identifier can be fetched
-	// from any API call, so we need to default skip_final_snapshot to true so
-	// that final_snapshot_identifier is not required.
-	d.Set("skip_final_snapshot", true)
-	d.Set("delete_automated_backups", true)
-	return []*schema.ResourceData{d}, nil
-}
-
 // See https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Storage.html#gp3-storage.
 func isStorageTypeGP3BelowAllocatedStorageThreshold(d *schema.ResourceData) bool {
 	if storageType := d.Get(names.AttrStorageType).(string); storageType != storageTypeGP3 {
 		return false
 	}
 
-	switch allocatedStorage, engine := d.Get("allocated_storage").(int), d.Get("engine").(string); engine {
+	switch allocatedStorage, engine := d.Get(names.AttrAllocatedStorage).(int), d.Get(names.AttrEngine).(string); engine {
 	case InstanceEngineDB2Advanced, InstanceEngineDB2Standard:
 		return allocatedStorage < 100
 	case InstanceEngineMariaDB, InstanceEngineMySQL, InstanceEnginePostgres:
@@ -2672,7 +2734,7 @@ func findDBInstancesSDKv1(ctx context.Context, conn *rds.RDS, input *rds.Describ
 // findDBInstanceByIDSDKv2 in general should be called with a DbiResourceId of the form
 // "db-BE6UI2KLPQP3OVDYD74ZEV6NUM" rather than a DB identifier. However, in some cases only
 // the identifier is available, and can be used.
-func findDBInstanceByIDSDKv2(ctx context.Context, conn *rds_sdkv2.Client, id string) (*types.DBInstance, error) {
+func findDBInstanceByIDSDKv2(ctx context.Context, conn *rds_sdkv2.Client, id string, optFns ...func(*rds_sdkv2.Options)) (*types.DBInstance, error) {
 	input := &rds_sdkv2.DescribeDBInstancesInput{}
 
 	if regexache.MustCompile(`^db-[0-9A-Za-z]{2,255}$`).MatchString(id) {
@@ -2686,14 +2748,14 @@ func findDBInstanceByIDSDKv2(ctx context.Context, conn *rds_sdkv2.Client, id str
 		input.DBInstanceIdentifier = aws.String(id)
 	}
 
-	output, err := conn.DescribeDBInstances(ctx, input)
+	output, err := conn.DescribeDBInstances(ctx, input, optFns...)
 
 	// in case a DB has an *identifier* starting with "db-""
 	if regexache.MustCompile(`^db-[0-9A-Za-z]{2,255}$`).MatchString(id) && (output == nil || len(output.DBInstances) == 0) {
 		input = &rds_sdkv2.DescribeDBInstancesInput{
 			DBInstanceIdentifier: aws.String(id),
 		}
-		output, err = conn.DescribeDBInstances(ctx, input)
+		output, err = conn.DescribeDBInstances(ctx, input, optFns...)
 	}
 
 	if errs.IsA[*types.DBInstanceNotFoundFault](err) {

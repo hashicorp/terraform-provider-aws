@@ -38,7 +38,7 @@ func TestAccWorkLinkFleet_basic(t *testing.T) {
 				Config: testAccFleetConfig_basic(suffix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "optimize_for_end_user_location", "true"),
+					resource.TestCheckResourceAttr(resourceName, "optimize_for_end_user_location", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "company_code"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedTime),
 				),
@@ -101,14 +101,14 @@ func TestAccWorkLinkFleet_optimizeForEndUserLocation(t *testing.T) {
 				Config: testAccFleetConfig_optimizeForEndUserLocation(suffix, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "optimize_for_end_user_location", "false"),
+					resource.TestCheckResourceAttr(resourceName, "optimize_for_end_user_location", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccFleetConfig_optimizeForEndUserLocation(suffix, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "optimize_for_end_user_location", "true"),
+					resource.TestCheckResourceAttr(resourceName, "optimize_for_end_user_location", acctest.CtTrue),
 				),
 			},
 			{

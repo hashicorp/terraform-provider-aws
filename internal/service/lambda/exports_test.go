@@ -27,6 +27,7 @@ var (
 	FindLayerVersionPolicyByTwoPartKey           = findLayerVersionPolicyByTwoPartKey
 	FindPolicyStatementByTwoPartKey              = findPolicyStatementByTwoPartKey
 	FindProvisionedConcurrencyConfigByTwoPartKey = findProvisionedConcurrencyConfigByTwoPartKey
+	FindRuntimeManagementConfigByTwoPartKey      = findRuntimeManagementConfigByTwoPartKey
 	FunctionEventInvokeConfigParseResourceID     = functionEventInvokeConfigParseResourceID
 	GetFunctionNameFromARN                       = getFunctionNameFromARN
 	GetQualifierFromAliasOrVersionARN            = getQualifierFromAliasOrVersionARN

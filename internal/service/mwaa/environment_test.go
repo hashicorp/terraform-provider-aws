@@ -47,23 +47,25 @@ func TestAccMWAAEnvironment_basic(t *testing.T) {
 					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrExecutionRoleARN, "iam", "role/service-role/"+rName),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.dag_processing_logs.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.dag_processing_logs.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.dag_processing_logs.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.dag_processing_logs.0.log_level", "INFO"),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.scheduler_logs.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.scheduler_logs.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.scheduler_logs.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.scheduler_logs.0.log_level", "INFO"),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.task_logs.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "logging_configuration.0.task_logs.0.cloud_watch_log_group_arn"),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.task_logs.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.task_logs.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.task_logs.0.log_level", "INFO"),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.webserver_logs.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.webserver_logs.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.webserver_logs.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.webserver_logs.0.log_level", "INFO"),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.worker_logs.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.worker_logs.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.worker_logs.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.worker_logs.0.log_level", "INFO"),
 					resource.TestCheckResourceAttr(resourceName, "max_workers", acctest.Ct10),
 					resource.TestCheckResourceAttr(resourceName, "min_workers", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "max_webservers", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "min_webservers", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.security_group_ids.#", acctest.Ct1),
@@ -169,34 +171,34 @@ func TestAccMWAAEnvironment_log(t *testing.T) {
 		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentConfig_logging(rName, "true", string(awstypes.LoggingLevelCritical)),
+				Config: testAccEnvironmentConfig_logging(rName, acctest.CtTrue, string(awstypes.LoggingLevelCritical)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment1),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.Ct1),
 
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.dag_processing_logs.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "logging_configuration.0.dag_processing_logs.0.cloud_watch_log_group_arn"),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.dag_processing_logs.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.dag_processing_logs.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.dag_processing_logs.0.log_level", string(awstypes.LoggingLevelCritical)),
 
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.scheduler_logs.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "logging_configuration.0.scheduler_logs.0.cloud_watch_log_group_arn"),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.scheduler_logs.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.scheduler_logs.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.scheduler_logs.0.log_level", string(awstypes.LoggingLevelCritical)),
 
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.task_logs.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "logging_configuration.0.task_logs.0.cloud_watch_log_group_arn"),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.task_logs.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.task_logs.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.task_logs.0.log_level", string(awstypes.LoggingLevelCritical)),
 
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.webserver_logs.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "logging_configuration.0.webserver_logs.0.cloud_watch_log_group_arn"),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.webserver_logs.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.webserver_logs.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.webserver_logs.0.log_level", string(awstypes.LoggingLevelCritical)),
 
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.worker_logs.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "logging_configuration.0.worker_logs.0.cloud_watch_log_group_arn"),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.worker_logs.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.worker_logs.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.worker_logs.0.log_level", string(awstypes.LoggingLevelCritical)),
 				),
 			},
@@ -206,7 +208,7 @@ func TestAccMWAAEnvironment_log(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEnvironmentConfig_logging(rName, "false", string(awstypes.LoggingLevelInfo)),
+				Config: testAccEnvironmentConfig_logging(rName, acctest.CtFalse, string(awstypes.LoggingLevelInfo)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment2),
 					testAccCheckEnvironmentNotRecreated(&environment2, &environment1),
@@ -214,27 +216,27 @@ func TestAccMWAAEnvironment_log(t *testing.T) {
 
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.dag_processing_logs.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.dag_processing_logs.0.cloud_watch_log_group_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.dag_processing_logs.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.dag_processing_logs.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.dag_processing_logs.0.log_level", string(awstypes.LoggingLevelInfo)),
 
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.scheduler_logs.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.scheduler_logs.0.cloud_watch_log_group_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.scheduler_logs.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.scheduler_logs.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.scheduler_logs.0.log_level", string(awstypes.LoggingLevelInfo)),
 
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.task_logs.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.task_logs.0.cloud_watch_log_group_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.task_logs.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.task_logs.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.task_logs.0.log_level", string(awstypes.LoggingLevelInfo)),
 
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.webserver_logs.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.webserver_logs.0.cloud_watch_log_group_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.webserver_logs.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.webserver_logs.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.webserver_logs.0.log_level", string(awstypes.LoggingLevelInfo)),
 
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.worker_logs.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.worker_logs.0.cloud_watch_log_group_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.worker_logs.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.worker_logs.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.worker_logs.0.log_level", string(awstypes.LoggingLevelInfo)),
 				),
 			},
@@ -271,26 +273,28 @@ func TestAccMWAAEnvironment_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.dag_processing_logs.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "logging_configuration.0.dag_processing_logs.0.cloud_watch_log_group_arn"),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.dag_processing_logs.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.dag_processing_logs.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.dag_processing_logs.0.log_level", "INFO"),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.scheduler_logs.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "logging_configuration.0.scheduler_logs.0.cloud_watch_log_group_arn"),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.scheduler_logs.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.scheduler_logs.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.scheduler_logs.0.log_level", "WARNING"),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.task_logs.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "logging_configuration.0.task_logs.0.cloud_watch_log_group_arn"),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.task_logs.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.task_logs.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.task_logs.0.log_level", "ERROR"),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.webserver_logs.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "logging_configuration.0.webserver_logs.0.cloud_watch_log_group_arn"),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.webserver_logs.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.webserver_logs.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.webserver_logs.0.log_level", "CRITICAL"),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.worker_logs.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "logging_configuration.0.worker_logs.0.cloud_watch_log_group_arn"),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.worker_logs.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.worker_logs.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.worker_logs.0.log_level", "WARNING"),
 					resource.TestCheckResourceAttr(resourceName, "max_workers", "20"),
 					resource.TestCheckResourceAttr(resourceName, "min_workers", "15"),
+					resource.TestCheckResourceAttr(resourceName, "max_webservers", "5"),
+					resource.TestCheckResourceAttr(resourceName, "min_webservers", acctest.Ct4),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.security_group_ids.#", acctest.Ct1),
@@ -789,7 +793,11 @@ resource "aws_mwaa_environment" "test" {
 
   max_workers = 20
   min_workers = 15
-  name        = %[1]q
+
+  max_webservers = 5
+  min_webservers = 4
+
+  name = %[1]q
 
   network_configuration {
     security_group_ids = [aws_security_group.test.id]
@@ -861,6 +869,7 @@ resource "aws_s3_object" "startup_script" {
   key     = "startup.sh"
   content = "airflow db init"
 }
+
 
 `, rName))
 }

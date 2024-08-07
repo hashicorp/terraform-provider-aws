@@ -40,7 +40,7 @@ func TestAccLexModelsSlotType_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSlotTypeExists(ctx, rName, &v),
 					testAccCheckSlotTypeNotExists(ctx, testSlotTypeID, acctest.Ct1),
-					resource.TestCheckResourceAttr(rName, "create_version", "false"),
+					resource.TestCheckResourceAttr(rName, "create_version", acctest.CtFalse),
 					resource.TestCheckResourceAttr(rName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(rName, "enumeration_value.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(rName, "enumeration_value.*", map[string]string{

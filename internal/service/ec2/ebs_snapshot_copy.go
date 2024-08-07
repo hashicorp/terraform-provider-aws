@@ -22,9 +22,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ebs_snapshot_copy", name="EBS Snapshot")
+// @SDKResource("aws_ebs_snapshot_copy", name="EBS Snapshot Copy")
 // @Tags(identifierAttribute="id")
-func ResourceEBSSnapshotCopy() *schema.Resource {
+// @Testing(tagsTest=false)
+func resourceEBSSnapshotCopy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEBSSnapshotCopyCreate,
 		ReadWithoutTimeout:   resourceEBSSnapshotRead,
@@ -92,7 +93,7 @@ func ResourceEBSSnapshotCopy() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.StringInSlice(enum.Slice(append(awstypes.TargetStorageTier.Values(""), TargetStorageTierStandard)...), false),
+				ValidateFunc: validation.StringInSlice(enum.Slice(append(awstypes.TargetStorageTier.Values(""), targetStorageTierStandard)...), false),
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -119,7 +120,7 @@ func resourceEBSSnapshotCopyCreate(ctx context.Context, d *schema.ResourceData, 
 	input := &ec2.CopySnapshotInput{
 		SourceRegion:      aws.String(d.Get("source_region").(string)),
 		SourceSnapshotId:  aws.String(d.Get("source_snapshot_id").(string)),
-		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeSnapshot),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeSnapshot),
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {

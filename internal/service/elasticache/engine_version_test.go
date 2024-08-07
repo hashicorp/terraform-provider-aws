@@ -879,7 +879,7 @@ func TestParamGroupNameRequiresMajorVersionUpgrade(t *testing.T) {
 
 			diff := &mockChangesDiffer{
 				values: map[string]mockDiff{
-					"parameter_group_name": {
+					names.AttrParameterGroupName: {
 						old:       testcase.paramOld,
 						new:       testcase.paramNew,
 						hasChange: testcase.paramHasChange,

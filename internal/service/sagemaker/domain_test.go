@@ -312,6 +312,38 @@ func testAccDomain_modelRegisterSettings(t *testing.T) {
 	})
 }
 
+func testAccDomain_generativeAiSettings(t *testing.T) {
+	ctx := acctest.Context(t)
+	var domain sagemaker.DescribeDomainOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_domain.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_generativeAiSettings(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.0.generative_ai_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.canvas_app_settings.0.generative_ai_settings.0.amazon_bedrock_role_arn", "aws_iam_role.test", names.AttrARN),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retention_policy"},
+			},
+		},
+	})
+}
+
 func testAccDomain_kendraSettings(t *testing.T) {
 	ctx := acctest.Context(t)
 	var domain sagemaker.DescribeDomainOutput
@@ -590,6 +622,38 @@ func testAccDomain_rStudioServerProAppSettings(t *testing.T) {
 	})
 }
 
+func testAccDomain_rStudioServerProDomainSettings(t *testing.T) {
+	ctx := acctest.Context(t)
+	var domain sagemaker.DescribeDomainOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_domain.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_rStudioServerProDomainSettings(rName, "https://connect.domain.com", "https://package.domain.com"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "domain_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "domain_settings.0.r_studio_server_pro_domain_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "domain_settings.0.r_studio_server_pro_domain_settings.0.r_studio_connect_url", "https://connect.domain.com"),
+					resource.TestCheckResourceAttr(resourceName, "domain_settings.0.r_studio_server_pro_domain_settings.0.r_studio_package_manager_url", "https://package.domain.com"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retention_policy"},
+			},
+		},
+	})
+}
+
 func testAccDomain_kernelGatewayAppSettings(t *testing.T) {
 	ctx := acctest.Context(t)
 	var domain sagemaker.DescribeDomainOutput
@@ -642,6 +706,85 @@ func testAccDomain_codeEditorAppSettings(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.code_editor_app_settings.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.code_editor_app_settings.0.default_resource_spec.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.code_editor_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.micro"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retention_policy"},
+			},
+		},
+	})
+}
+
+func testAccDomain_codeEditorAppSettings_customImage(t *testing.T) {
+	ctx := acctest.Context(t)
+	if os.Getenv("SAGEMAKER_IMAGE_VERSION_BASE_IMAGE") == "" {
+		t.Skip("Environment variable SAGEMAKER_IMAGE_VERSION_BASE_IMAGE is not set")
+	}
+
+	var domain sagemaker.DescribeDomainOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_domain.test"
+	baseImage := os.Getenv("SAGEMAKER_IMAGE_VERSION_BASE_IMAGE")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_codeEditorAppSettingsCustomImage(rName, baseImage),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.code_editor_app_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.code_editor_app_settings.0.default_resource_spec.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.code_editor_app_settings.0.custom_image.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.code_editor_app_settings.0.custom_image.0.app_image_config_name", "aws_sagemaker_app_image_config.test", "app_image_config_name"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.code_editor_app_settings.0.custom_image.0.image_name", "aws_sagemaker_image.test", "image_name"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retention_policy"},
+			},
+		},
+	})
+}
+
+func testAccDomain_codeEditorAppSettings_defaultResourceSpecAndCustomImage(t *testing.T) {
+	ctx := acctest.Context(t)
+	if os.Getenv("SAGEMAKER_IMAGE_VERSION_BASE_IMAGE") == "" {
+		t.Skip("Environment variable SAGEMAKER_IMAGE_VERSION_BASE_IMAGE is not set")
+	}
+
+	var domain sagemaker.DescribeDomainOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_domain.test"
+	baseImage := os.Getenv("SAGEMAKER_IMAGE_VERSION_BASE_IMAGE")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_codeEditorAppSettingsDefaultResourceSpecAndCustomImage(rName, baseImage),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.code_editor_app_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.code_editor_app_settings.0.default_resource_spec.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.code_editor_app_settings.0.custom_image.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.code_editor_app_settings.0.default_resource_spec.0.sagemaker_image_version_arn", "aws_sagemaker_image_version.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.code_editor_app_settings.0.custom_image.0.app_image_config_name", "aws_sagemaker_app_image_config.test", "app_image_config_name"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.code_editor_app_settings.0.custom_image.0.image_name", "aws_sagemaker_image.test", "image_name"),
 				),
 			},
 			{
@@ -1464,6 +1607,31 @@ resource "aws_sagemaker_domain" "test" {
 `, rName))
 }
 
+func testAccDomainConfig_generativeAiSettings(rName string) string {
+	return acctest.ConfigCompose(testAccDomainConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_domain" "test" {
+  domain_name = %[1]q
+  auth_mode   = "IAM"
+  vpc_id      = aws_vpc.test.id
+  subnet_ids  = aws_subnet.test[*].id
+
+  default_user_settings {
+    execution_role = aws_iam_role.test.arn
+
+    canvas_app_settings {
+      generative_ai_settings {
+        amazon_bedrock_role_arn = aws_iam_role.test.arn
+      }
+    }
+  }
+
+  retention_policy {
+    home_efs_file_system = "Delete"
+  }
+}
+`, rName))
+}
+
 func testAccDomainConfig_kendraSettings(rName string) string {
 	return acctest.ConfigCompose(testAccDomainConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_domain" "test" {
@@ -1740,6 +1908,94 @@ resource "aws_sagemaker_domain" "test" {
 `, rName, state))
 }
 
+func testAccDomainConfig_rStudioServerProDomainSettings(rName, connectURL string, packageURL string) string {
+	return acctest.ConfigCompose(testAccDomainConfig_baseWithLicense(rName), fmt.Sprintf(`
+resource "aws_sagemaker_domain" "test" {
+  domain_name = %[1]q
+  auth_mode   = "IAM"
+  vpc_id      = aws_vpc.test.id
+  subnet_ids  = aws_subnet.test[*].id
+
+  domain_settings {
+
+    r_studio_server_pro_domain_settings {
+      r_studio_connect_url         = %[2]q
+      r_studio_package_manager_url = %[3]q
+      domain_execution_role_arn    = aws_iam_role.test.arn
+      default_resource_spec {
+        instance_type = "system"
+      }
+    }
+  }
+
+  default_user_settings {
+    execution_role = aws_iam_role.test.arn
+  }
+
+  retention_policy {
+    home_efs_file_system = "Delete"
+  }
+
+  # ignoring default image
+  # it would be too hard to create the logic to find the default Rstudio image: https://docs.aws.amazon.com/sagemaker/latest/dg/rstudio-version.html
+  # it changes for every region
+  lifecycle {
+    ignore_changes = [
+      domain_settings[0].r_studio_server_pro_domain_settings[0].default_resource_spec[0]
+    ]
+  }
+}
+`, rName, connectURL, packageURL))
+}
+
+func testAccDomainConfig_baseWithLicense(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  path               = "/"
+  assume_role_policy = data.aws_iam_policy_document.test.json
+  inline_policy {
+    name   = "GetLicense"
+    policy = data.aws_iam_policy_document.license.json
+  }
+}
+
+data "aws_iam_policy_document" "test" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["sagemaker.${data.aws_partition.current.dns_suffix}"]
+    }
+  }
+}
+
+# needed for RStudio
+data "aws_iam_policy_document" "license" {
+  statement {
+    sid    = "ReadLicense"
+    effect = "Allow"
+    actions = [
+      "license-manager:ExtendLicenseConsumption",
+      "license-manager:ListReceivedLicenses",
+      "license-manager:GetLicense",
+      "license-manager:CheckoutLicense",
+      "license-manager:CheckInLicense",
+    ]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  role       = aws_iam_role.test.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonSageMakerFullAccess"
+}
+`, rName))
+}
+
 func testAccDomainConfig_codeEditorAppSettings(rName string) string {
 	return acctest.ConfigCompose(testAccDomainConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_domain" "test" {
@@ -1763,6 +2019,95 @@ resource "aws_sagemaker_domain" "test" {
   }
 }
 `, rName))
+}
+
+func testAccDomainConfig_codeEditorAppSettingsCustomImage(rName, baseImage string) string {
+	return acctest.ConfigCompose(testAccDomainConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_image" "test" {
+  image_name = %[1]q
+  role_arn   = aws_iam_role.test.arn
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+
+resource "aws_sagemaker_app_image_config" "test" {
+  app_image_config_name = %[1]q
+}
+
+resource "aws_sagemaker_image_version" "test" {
+  image_name = aws_sagemaker_image.test.id
+  base_image = %[2]q
+}
+
+resource "aws_sagemaker_domain" "test" {
+  domain_name = %[1]q
+  auth_mode   = "IAM"
+  vpc_id      = aws_vpc.test.id
+  subnet_ids  = aws_subnet.test[*].id
+
+  default_user_settings {
+    execution_role = aws_iam_role.test.arn
+
+    code_editor_app_settings {
+      custom_image {
+        app_image_config_name = aws_sagemaker_app_image_config.test.app_image_config_name
+        image_name            = aws_sagemaker_image_version.test.image_name
+      }
+    }
+  }
+
+  retention_policy {
+    home_efs_file_system = "Delete"
+  }
+}
+`, rName, baseImage))
+}
+
+func testAccDomainConfig_codeEditorAppSettingsDefaultResourceSpecAndCustomImage(rName, baseImage string) string {
+	return acctest.ConfigCompose(testAccDomainConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_image" "test" {
+  image_name = %[1]q
+  role_arn   = aws_iam_role.test.arn
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+
+resource "aws_sagemaker_app_image_config" "test" {
+  app_image_config_name = %[1]q
+}
+
+resource "aws_sagemaker_image_version" "test" {
+  image_name = aws_sagemaker_image.test.id
+  base_image = %[2]q
+}
+
+resource "aws_sagemaker_domain" "test" {
+  domain_name = %[1]q
+  auth_mode   = "IAM"
+  vpc_id      = aws_vpc.test.id
+  subnet_ids  = aws_subnet.test[*].id
+
+  default_user_settings {
+    execution_role = aws_iam_role.test.arn
+
+    code_editor_app_settings {
+      default_resource_spec {
+        instance_type               = "ml.t3.micro"
+        sagemaker_image_version_arn = aws_sagemaker_image_version.test.arn
+      }
+
+      custom_image {
+        app_image_config_name = aws_sagemaker_app_image_config.test.app_image_config_name
+        image_name            = aws_sagemaker_image_version.test.image_name
+      }
+    }
+  }
+
+  retention_policy {
+    home_efs_file_system = "Delete"
+  }
+}
+`, rName, baseImage))
 }
 
 func testAccDomainConfig_kernelGatewayAppSettings(rName string) string {

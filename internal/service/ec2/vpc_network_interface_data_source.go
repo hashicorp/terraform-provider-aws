@@ -22,6 +22,7 @@ import (
 
 // @SDKDataSource("aws_network_interface", name="Network Interface")
 // @Tags
+// @Testing(tagsTest=false)
 func dataSourceNetworkInterface() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceNetworkInterfaceRead,
@@ -44,7 +45,7 @@ func dataSourceNetworkInterface() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"association_id": {
+						names.AttrAssociationID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -172,14 +173,14 @@ func dataSourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData,
 	input := &ec2.DescribeNetworkInterfacesInput{}
 
 	if v, ok := d.GetOk(names.AttrFilter); ok {
-		input.Filters = newCustomFilterListV2(v.(*schema.Set))
+		input.Filters = newCustomFilterList(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk(names.AttrID); ok {
 		input.NetworkInterfaceIds = []string{v.(string)}
 	}
 
-	eni, err := findNetworkInterfaceV2(ctx, conn, input)
+	eni, err := findNetworkInterface(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Network Interface", err))
@@ -224,7 +225,7 @@ func dataSourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData,
 	d.Set(names.AttrSubnetID, eni.SubnetId)
 	d.Set(names.AttrVPCID, eni.VpcId)
 
-	setTagsOutV2(ctx, eni.TagSet)
+	setTagsOut(ctx, eni.TagSet)
 
 	return diags
 }

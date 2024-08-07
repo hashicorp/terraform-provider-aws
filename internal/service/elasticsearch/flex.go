@@ -25,7 +25,7 @@ func expandCognitoOptions(c []interface{}) *elasticsearch.CognitoOptions {
 		options.Enabled = aws.Bool(cognitoEnabled.(bool))
 
 		if cognitoEnabled.(bool) {
-			if v, ok := m["user_pool_id"]; ok && v.(string) != "" {
+			if v, ok := m[names.AttrUserPoolID]; ok && v.(string) != "" {
 				options.UserPoolId = aws.String(v.(string))
 			}
 			if v, ok := m["identity_pool_id"]; ok && v.(string) != "" {
@@ -91,7 +91,7 @@ func expandEBSOptions(m map[string]interface{}) *elasticsearch.EBSOptions {
 			if v, ok := m[names.AttrIOPS]; ok && v.(int) > 0 && EBSVolumeTypePermitsIopsInput(volumeType) {
 				options.Iops = aws.Int64(int64(v.(int)))
 			}
-			if v, ok := m["throughput"]; ok && v.(int) > 0 && EBSVolumeTypePermitsThroughputInput(volumeType) {
+			if v, ok := m[names.AttrThroughput]; ok && v.(int) > 0 && EBSVolumeTypePermitsThroughputInput(volumeType) {
 				options.Throughput = aws.Int64(int64(v.(int)))
 			}
 		}
@@ -137,7 +137,7 @@ func flattenCognitoOptions(c *elasticsearch.CognitoOptions) []map[string]interfa
 
 	if aws.BoolValue(c.Enabled) {
 		m["identity_pool_id"] = aws.StringValue(c.IdentityPoolId)
-		m["user_pool_id"] = aws.StringValue(c.UserPoolId)
+		m[names.AttrUserPoolID] = aws.StringValue(c.UserPoolId)
 		m[names.AttrRoleARN] = aws.StringValue(c.RoleArn)
 	}
 
@@ -178,7 +178,7 @@ func flattenEBSOptions(o *elasticsearch.EBSOptions) []map[string]interface{} {
 			m[names.AttrIOPS] = aws.Int64Value(o.Iops)
 		}
 		if o.Throughput != nil {
-			m["throughput"] = aws.Int64Value(o.Throughput)
+			m[names.AttrThroughput] = aws.Int64Value(o.Throughput)
 		}
 		if o.VolumeSize != nil {
 			m[names.AttrVolumeSize] = aws.Int64Value(o.VolumeSize)

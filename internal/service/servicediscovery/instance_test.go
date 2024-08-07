@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/servicediscovery"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -28,7 +27,7 @@ func TestAccServiceDiscoveryInstance_private(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, servicediscovery.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.ServiceDiscoveryEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceDiscoveryServiceID),
@@ -74,7 +73,7 @@ func TestAccServiceDiscoveryInstance_public(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, servicediscovery.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.ServiceDiscoveryEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceDiscoveryServiceID),
@@ -120,7 +119,7 @@ func TestAccServiceDiscoveryInstance_http(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, servicediscovery.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.ServiceDiscoveryEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceDiscoveryServiceID),
@@ -162,13 +161,9 @@ func testAccCheckInstanceExists(ctx context.Context, n string) resource.TestChec
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Service Discovery Instance ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn(ctx)
-
-		_, err := tfservicediscovery.FindInstanceByServiceIDAndInstanceID(ctx, conn, rs.Primary.Attributes["service_id"], rs.Primary.Attributes[names.AttrInstanceID])
+		_, err := tfservicediscovery.FindInstanceByTwoPartKey(ctx, conn, rs.Primary.Attributes["service_id"], rs.Primary.Attributes[names.AttrInstanceID])
 
 		return err
 	}
@@ -187,14 +182,14 @@ func testAccInstanceImportStateIdFunc(resourceName string) resource.ImportStateI
 
 func testAccCheckInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_service_discovery_instance" {
 				continue
 			}
 
-			_, err := tfservicediscovery.FindInstanceByServiceIDAndInstanceID(ctx, conn, rs.Primary.Attributes["service_id"], rs.Primary.Attributes[names.AttrInstanceID])
+			_, err := tfservicediscovery.FindInstanceByTwoPartKey(ctx, conn, rs.Primary.Attributes["service_id"], rs.Primary.Attributes[names.AttrInstanceID])
 
 			if tfresource.NotFound(err) {
 				continue

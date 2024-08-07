@@ -14,15 +14,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 )
 
-//go:embed file.tmpl
-var tmpl string
+//go:embed consts.tmpl
+var constsTmpl string
+
+//go:embed constOrQuote.gtpl
+var constOrQuoteTmpl string
 
 //go:embed semgrep.tmpl
 var semgrepTmpl string
 
 type ConstantDatum struct {
-	Constant      string
-	ConstantLower string
+	Constant   string
+	Literal    string
+	AltLiteral string
 }
 
 type TemplateData struct {
@@ -31,9 +35,10 @@ type TemplateData struct {
 
 func main() {
 	const (
-		filename         = "../../../internal/acctest/consts_gen.go"
-		semgrepFilename  = "../../../.ci/.semgrep-test-constants.yml"
-		constantDataFile = "../../../internal/acctest/consts.csv"
+		constsFilename       = "../../../internal/acctest/consts_gen.go"
+		constOrQuoteFilename = "../../../internal/acctest/generate/const_or_quote_gen.go"
+		semgrepFilename      = "../../../.ci/.semgrep-test-constants.yml"
+		constantDataFile     = "../../../internal/acctest/consts.csv"
 	)
 	g := common.NewGenerator()
 
@@ -46,18 +51,33 @@ func main() {
 	td := TemplateData{}
 	td.Constants = constants
 
-	g.Infof("Generating %s", strings.TrimPrefix(filename, "../../../"))
+	// Constants file
+	g.Infof("Generating %s", strings.TrimPrefix(constsFilename, "../../../"))
 
-	d := g.NewGoFileDestination(filename)
+	d := g.NewGoFileDestination(constsFilename)
 
-	if err := d.WriteTemplate("constantlist", tmpl, td); err != nil {
-		g.Fatalf("generating file (%s): %s", filename, err)
+	if err := d.WriteTemplate("constantlist", constsTmpl, td); err != nil {
+		g.Fatalf("generating file (%s): %s", constsFilename, err)
 	}
 
 	if err := d.Write(); err != nil {
-		g.Fatalf("generating file (%s): %s", filename, err)
+		g.Fatalf("generating file (%s): %s", constsFilename, err)
 	}
 
+	// ConstOrQuote helper
+	g.Infof("Generating %s", strings.TrimPrefix(constOrQuoteFilename, "../../../"))
+
+	d = g.NewGoFileDestination(constOrQuoteFilename)
+
+	if err := d.WriteTemplate("constsOrQuote", constOrQuoteTmpl, td); err != nil {
+		g.Fatalf("generating file (%s): %s", constOrQuoteFilename, err)
+	}
+
+	if err := d.Write(); err != nil {
+		g.Fatalf("generating file (%s): %s", constOrQuoteFilename, err)
+	}
+
+	// Semgrep
 	g.Infof("Generating %s", strings.TrimPrefix(semgrepFilename, "../../../"))
 
 	d = g.NewUnformattedFileDestination(semgrepFilename)
@@ -85,10 +105,27 @@ func readConstants(filename string) ([]ConstantDatum, error) {
 			continue
 		}
 
-		constantList = append(constantList, ConstantDatum{
-			ConstantLower: row[0],
-			Constant:      row[1],
-		})
+		cd := ConstantDatum{
+			Literal:  row[0],
+			Constant: row[1],
+		}
+
+		switch cd.Literal {
+		case "0":
+			cd.AltLiteral = "acctest.CtZero"
+		case "1":
+			cd.AltLiteral = "acctest.CtOne"
+		case "2":
+			cd.AltLiteral = "acctest.CtTwo"
+		case "3":
+			cd.AltLiteral = "acctest.CtThree"
+		case "4":
+			cd.AltLiteral = "acctest.CtFour"
+		case "10":
+			cd.AltLiteral = "acctest.CtTen"
+		}
+
+		constantList = append(constantList, cd)
 	}
 
 	sort.SliceStable(constantList, func(i, j int) bool {

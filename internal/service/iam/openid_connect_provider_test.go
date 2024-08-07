@@ -118,6 +118,55 @@ func TestAccIAMOpenIDConnectProvider_clientIDListOrder(t *testing.T) {
 	})
 }
 
+func TestAccIAMOpenIDConnectProvider_clientIDModification(t *testing.T) {
+	ctx := acctest.Context(t)
+	rString := sdkacctest.RandString(5)
+	resourceName := "aws_iam_openid_connect_provider.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOpenIDConnectProviderDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOpenIDConnectProviderConfig_clientIDList_first(rString),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOpenIDConnectProviderExists(ctx, resourceName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccOpenIDConnectProviderConfig_clientIDList_add(rString),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOpenIDConnectProviderExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "client_id_list.#", acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, "client_id_list.0", "abc.testle.com"),
+					resource.TestCheckResourceAttr(resourceName, "client_id_list.3", "xyz.testle.com"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccOpenIDConnectProviderConfig_clientIDList_remove(rString),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOpenIDConnectProviderExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "client_id_list.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "client_id_list.0", "def.testle.com"),
+					resource.TestCheckResourceAttr(resourceName, "client_id_list.2", "xyz.testle.com"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckOpenIDConnectProviderDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
@@ -216,6 +265,39 @@ resource "aws_iam_openid_connect_provider" "test" {
     "def.testle.com",
     "ghi.testle.com",
     "abc.testle.com",
+  ]
+
+  thumbprint_list = ["oif8192f189fa2178f-testle.thumbprint.com"]
+}
+`, rName)
+}
+
+func testAccOpenIDConnectProviderConfig_clientIDList_add(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_openid_connect_provider" "test" {
+  url = "https://accounts.testle.com/%[1]s"
+
+  client_id_list = [
+    "abc.testle.com",
+    "def.testle.com",
+    "ghi.testle.com",
+    "xyz.testle.com",
+  ]
+
+  thumbprint_list = ["oif8192f189fa2178f-testle.thumbprint.com"]
+}
+`, rName)
+}
+
+func testAccOpenIDConnectProviderConfig_clientIDList_remove(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_openid_connect_provider" "test" {
+  url = "https://accounts.testle.com/%[1]s"
+
+  client_id_list = [
+    "def.testle.com",
+    "ghi.testle.com",
+    "xyz.testle.com",
   ]
 
   thumbprint_list = ["oif8192f189fa2178f-testle.thumbprint.com"]
