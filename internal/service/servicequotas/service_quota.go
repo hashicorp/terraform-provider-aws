@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/servicequotas"
 	"github.com/aws/aws-sdk-go-v2/service/servicequotas/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -219,8 +220,15 @@ func resourceServiceQuotaRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	serviceQuota, err := findServiceQuotaByID(ctx, conn, serviceCode, quotaCode)
-	if err != nil && !tfresource.NotFound(err) {
-		return sdkdiag.AppendErrorf(diags, "getting Service Quota for (%s/%s): %s", serviceCode, quotaCode, err)
+	if err != nil {
+		if tfresource.NotFound(err) {
+			tflog.Debug(ctx, "No quota value set", map[string]any{
+				"service_code": serviceCode,
+				"quota_code":   quotaCode,
+			})
+		} else {
+			return sdkdiag.AppendErrorf(diags, "getting Service Quota for (%s/%s): %s", serviceCode, quotaCode, err)
+		}
 	}
 
 	if err == nil {
