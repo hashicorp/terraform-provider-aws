@@ -55,42 +55,6 @@ func (r *resourceFormType) Metadata(_ context.Context, req resource.MetadataRequ
 func (r *resourceFormType) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrDescription: schema.StringAttribute{
-				Optional: true,
-				Validators: []validator.String{
-					stringvalidator.LengthBetween(1, 2048),
-				},
-			},
-			names.AttrName: schema.StringAttribute{
-				Required:   true,
-				Validators: []validator.String{},
-			},
-			"owning_project_identifier": schema.StringAttribute{
-				Required: true,
-				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9_-]{1,36}$`), "^[a-zA-Z0-9_-]{1,36}$"),
-				},
-			},
-			names.AttrStatus: schema.StringAttribute{
-				CustomType: fwtypes.StringEnumType[awstypes.FormTypeStatus](),
-				Optional:   true,
-				Computed:   true,
-			},
-			"domain_identifier": schema.StringAttribute{
-				Required: true,
-				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`^dzd[-_][a-zA-Z0-9_-]{1,36}$`), "^dzd[-_][a-zA-Z0-9_-]{1,36}$"),
-				},
-			},
-			"origin_domain_id": schema.StringAttribute{
-				Computed: true,
-			},
-			"origin_project_id": schema.StringAttribute{
-				Computed: true,
-			},
-			"revision": schema.StringAttribute{
-				Computed: true,
-			},
 			names.AttrCreatedAt: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
@@ -98,8 +62,44 @@ func (r *resourceFormType) Schema(ctx context.Context, req resource.SchemaReques
 			"created_by": schema.StringAttribute{
 				Computed: true,
 			},
+			names.AttrDescription: schema.StringAttribute{
+				Optional: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 2048),
+				},
+			},
+			"domain_identifier": schema.StringAttribute{
+				Required: true,
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(regexache.MustCompile(`^dzd[-_][a-zA-Z0-9_-]{1,36}$`), "^dzd[-_][a-zA-Z0-9_-]{1,36}$"),
+				},
+			},
 			"imports": schema.ListAttribute{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[importData](ctx),
+				Computed:   true,
+			},
+			names.AttrName: schema.StringAttribute{
+				Required:   true,
+				Validators: []validator.String{},
+			},
+			"origin_domain_id": schema.StringAttribute{
+				Computed: true,
+			},
+			"origin_project_id": schema.StringAttribute{
+				Computed: true,
+			},
+			"owning_project_identifier": schema.StringAttribute{
+				Required: true,
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9_-]{1,36}$`), "^[a-zA-Z0-9_-]{1,36}$"),
+				},
+			},
+			"revision": schema.StringAttribute{
+				Computed: true,
+			},
+			names.AttrStatus: schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.FormTypeStatus](),
+				Optional:   true,
 				Computed:   true,
 			},
 		},
@@ -211,9 +211,6 @@ func (r *resourceFormType) Read(ctx context.Context, req resource.ReadRequest, r
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceFormType) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-}
-
 func (r *resourceFormType) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
@@ -292,19 +289,19 @@ func (m modelData) Expand(ctx context.Context) (result any, diags diag.Diagnosti
 }
 
 type resourceFormTypeData struct {
-	Description             types.String                                `tfsdk:"description"`
-	Model                   fwtypes.ListNestedObjectValueOf[modelData]  `tfsdk:"model"`
-	Name                    types.String                                `tfsdk:"name"`
-	OwningProjectIdentifier types.String                                `tfsdk:"owning_project_identifier"`
-	Status                  fwtypes.StringEnum[awstypes.FormTypeStatus] `tfsdk:"status"`
-	Timeouts                timeouts.Value                              `tfsdk:"timeouts"`
-	DomainIdentifier        types.String                                `tfsdk:"domain_identifier"`
-	OriginDomainId          types.String                                `tfsdk:"origin_domain_id"`
-	OriginProjectId         types.String                                `tfsdk:"origin_project_id"`
-	Revision                types.String                                `tfsdk:"revision"`
 	CreatedAt               timetypes.RFC3339                           `tfsdk:"created_at"`
 	CreatedBy               types.String                                `tfsdk:"created_by"`
+	Description             types.String                                `tfsdk:"description"`
+	DomainIdentifier        types.String                                `tfsdk:"domain_identifier"`
 	Imports                 fwtypes.ListNestedObjectValueOf[importData] `tfsdk:"imports"`
+	Model                   fwtypes.ListNestedObjectValueOf[modelData]  `tfsdk:"model"`
+	Name                    types.String                                `tfsdk:"name"`
+	OriginDomainId          types.String                                `tfsdk:"origin_domain_id"`
+	OriginProjectId         types.String                                `tfsdk:"origin_project_id"`
+	OwningProjectIdentifier types.String                                `tfsdk:"owning_project_identifier"`
+	Revision                types.String                                `tfsdk:"revision"`
+	Status                  fwtypes.StringEnum[awstypes.FormTypeStatus] `tfsdk:"status"`
+	Timeouts                timeouts.Value                              `tfsdk:"timeouts"`
 }
 
 type modelData struct {
