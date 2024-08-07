@@ -1899,8 +1899,8 @@ resource "aws_batch_job_definition" "test" {
 func testAccJobDefinitionConfig_emptyRetryStrategy(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_batch_job_definition" "test" {
-  name                = %[1]q
-  type                = "container"
+  name = %[1]q
+  type = "container"
   container_properties = jsonencode({
     command = ["echo", "test"]
     image   = "busybox"
