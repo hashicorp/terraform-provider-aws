@@ -516,7 +516,7 @@ func waitGlobalClusterDeleted(ctx context.Context, conn *rds.Client, id string, 
 	return nil, err
 }
 
-func waitGlobalClusterMemberRemoved(ctx context.Context, conn *rds.Client, dbClusterARN string, timeout time.Duration) (*types.GlobalCluster, error) {
+func waitGlobalClusterMemberRemoved(ctx context.Context, conn *rds.Client, dbClusterARN string, timeout time.Duration) (*types.GlobalCluster, error) { //nolint:unparam
 	outputRaw, err := tfresource.RetryUntilNotFound(ctx, timeout, func() (interface{}, error) {
 		return findGlobalClusterByDBClusterARN(ctx, conn, dbClusterARN)
 	})
@@ -763,7 +763,7 @@ func statusDBClusterV2(ctx context.Context, conn *rds.Client, id string, optFns 
 	}
 }
 
-func waitGlobalClusterMemberUpdated(ctx context.Context, conn *rds.Client, id string, timeout time.Duration, optFns ...func(*rds.Options)) (*types.DBCluster, error) {
+func waitGlobalClusterMemberUpdated(ctx context.Context, conn *rds.Client, id string, timeout time.Duration, optFns ...func(*rds.Options)) (*types.DBCluster, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			clusterStatusBackingUp,
