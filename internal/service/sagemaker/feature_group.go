@@ -59,7 +59,6 @@ func ResourceFeatureGroup() *schema.Resource {
 			"feature_definition": {
 				Type:     schema.TypeList,
 				Required: true,
-				ForceNew: true,
 				MinItems: 1,
 				MaxItems: 2500,
 				Elem: &schema.Resource{
@@ -67,7 +66,6 @@ func ResourceFeatureGroup() *schema.Resource {
 						"feature_name": {
 							Type:     schema.TypeString,
 							Optional: true,
-							ForceNew: true,
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(1, 64),
 								validation.StringNotInSlice([]string{"is_deleted", "write_time", "api_invocation_time"}, false),
@@ -78,7 +76,6 @@ func ResourceFeatureGroup() *schema.Resource {
 						"feature_type": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ForceNew:     true,
 							ValidateFunc: validation.StringInSlice(sagemaker.FeatureType_Values(), false),
 						},
 					},
