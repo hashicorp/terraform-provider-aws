@@ -23,6 +23,7 @@ var (
 	ResourceMacSecKeyAssociation                  = resourceMacSecKeyAssociation
 	ResourcePrivateVirtualInterface               = resourcePrivateVirtualInterface
 	ResourcePublicVirtualInterface                = resourcePublicVirtualInterface
+	ResourceTransitVirtualInterface               = resourceTransitVirtualInterface
 
 	FindBGPPeerByThreePartKey          = findBGPPeerByThreePartKey
 	FindConnectionByID                 = findConnectionByID
