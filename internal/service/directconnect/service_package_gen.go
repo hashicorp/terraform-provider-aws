@@ -126,9 +126,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Hosted Transit Virtual Interface",
 		},
 		{
-			Factory:  ResourceHostedTransitVirtualInterfaceAccepter,
+			Factory:  resourceHostedTransitVirtualInterfaceAccepter,
 			TypeName: "aws_dx_hosted_transit_virtual_interface_accepter",
-			Name:     "Hosted Transit Virtual Interface",
+			Name:     "Hosted Transit Virtual Interface Accepter",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},

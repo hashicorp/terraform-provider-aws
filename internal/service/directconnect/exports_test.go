@@ -18,6 +18,7 @@ var (
 	ResourceHostedPublicVirtualInterface          = resourceHostedPublicVirtualInterface
 	ResourceHostedPublicVirtualInterfaceAccepter  = resourceHostedPublicVirtualInterfaceAccepter
 	ResourceHostedTransitVirtualInterface         = resourceHostedTransitVirtualInterface
+	ResourceHostedTransitVirtualInterfaceAccepter = resourceHostedTransitVirtualInterfaceAccepter
 
 	FindBGPPeerByThreePartKey          = findBGPPeerByThreePartKey
 	FindConnectionByID                 = findConnectionByID
