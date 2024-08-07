@@ -6,7 +6,7 @@ package memorydb
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -62,7 +62,7 @@ func DataSourceUser() *schema.Resource {
 func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
+	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	userName := d.Get(names.AttrUserName).(string)
@@ -73,15 +73,15 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("MemoryDB User", err))
 	}
 
-	d.SetId(aws.StringValue(user.Name))
+	d.SetId(aws.ToString(user.Name))
 
 	d.Set("access_string", user.AccessString)
 	d.Set(names.AttrARN, user.ARN)
 
 	if v := user.Authentication; v != nil {
 		authenticationMode := map[string]interface{}{
-			"password_count": aws.Int64Value(v.PasswordCount),
-			names.AttrType:   aws.StringValue(v.Type),
+			"password_count": aws.ToInt32(v.PasswordCount),
+			names.AttrType:   string(v.Type),
 		}
 
 		if err := d.Set("authentication_mode", []interface{}{authenticationMode}); err != nil {

@@ -10,15 +10,16 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/memorydb"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/memorydb"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/memorydb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -274,7 +275,7 @@ func endpointSchema() *schema.Schema {
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
+	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 
 	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &memorydb.CreateClusterInput{
@@ -282,8 +283,8 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		AutoMinorVersionUpgrade: aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
 		ClusterName:             aws.String(name),
 		NodeType:                aws.String(d.Get("node_type").(string)),
-		NumReplicasPerShard:     aws.Int64(int64(d.Get("num_replicas_per_shard").(int))),
-		NumShards:               aws.Int64(int64(d.Get("num_shards").(int))),
+		NumReplicasPerShard:     aws.Int32(int32(d.Get("num_replicas_per_shard").(int))),
+		NumShards:               aws.Int32(int32(d.Get("num_shards").(int))),
 		Tags:                    getTagsIn(ctx),
 		TLSEnabled:              aws.Bool(d.Get("tls_enabled").(bool)),
 	}
@@ -313,16 +314,16 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk(names.AttrPort); ok {
-		input.Port = aws.Int64(int64(v.(int)))
+		input.Port = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk(names.AttrSecurityGroupIDs); ok {
-		input.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
+		input.SecurityGroupIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("snapshot_arns"); ok && len(v.([]interface{})) > 0 {
 		v := v.([]interface{})
-		input.SnapshotArns = flex.ExpandStringList(v)
+		input.SnapshotArns = flex.ExpandStringValueList(v)
 		log.Printf("[DEBUG] Restoring MemoryDB Cluster (%s) from S3 snapshots %#v", name, v)
 	}
 
@@ -332,7 +333,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("snapshot_retention_limit"); ok {
-		input.SnapshotRetentionLimit = aws.Int64(int64(v.(int)))
+		input.SnapshotRetentionLimit = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("snapshot_window"); ok {
@@ -347,8 +348,8 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.SubnetGroupName = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating MemoryDB Cluster: %s", input)
-	_, err := conn.CreateClusterWithContext(ctx, input)
+	log.Printf("[DEBUG] Creating MemoryDB Cluster: %+v", input)
+	_, err := conn.CreateCluster(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating MemoryDB Cluster (%s): %s", name, err)
@@ -366,7 +367,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
+	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 
 	if d.HasChangesExcept("final_snapshot_name", names.AttrTags, names.AttrTagsAll) {
 		waitParameterGroupInSync := false
@@ -397,14 +398,14 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if d.HasChange("num_replicas_per_shard") {
-			input.ReplicaConfiguration = &memorydb.ReplicaConfigurationRequest{
-				ReplicaCount: aws.Int64(int64(d.Get("num_replicas_per_shard").(int))),
+			input.ReplicaConfiguration = &awstypes.ReplicaConfigurationRequest{
+				ReplicaCount: int32(d.Get("num_replicas_per_shard").(int)),
 			}
 		}
 
 		if d.HasChange("num_shards") {
-			input.ShardConfiguration = &memorydb.ShardConfigurationRequest{
-				ShardCount: aws.Int64(int64(d.Get("num_shards").(int))),
+			input.ShardConfiguration = &awstypes.ShardConfigurationRequest{
+				ShardCount: int32(d.Get("num_shards").(int)),
 			}
 		}
 
@@ -424,12 +425,12 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 				return sdkdiag.AppendErrorf(diags, "unable to update MemoryDB Cluster (%s): removing all security groups is not possible", d.Id())
 			}
 
-			input.SecurityGroupIds = flex.ExpandStringSet(v)
+			input.SecurityGroupIds = flex.ExpandStringValueSet(v)
 			waitSecurityGroupsActive = true
 		}
 
 		if d.HasChange("snapshot_retention_limit") {
-			input.SnapshotRetentionLimit = aws.Int64(int64(d.Get("snapshot_retention_limit").(int)))
+			input.SnapshotRetentionLimit = aws.Int32(int32(d.Get("snapshot_retention_limit").(int)))
 		}
 
 		if d.HasChange("snapshot_window") {
@@ -450,7 +451,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		log.Printf("[DEBUG] Updating MemoryDB Cluster (%s)", d.Id())
 
-		_, err := conn.UpdateClusterWithContext(ctx, input)
+		_, err := conn.UpdateCluster(ctx, input)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating MemoryDB Cluster (%s): %s", d.Id(), err)
 		}
@@ -478,7 +479,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
+	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 
 	cluster, err := FindClusterByName(ctx, conn, d.Id())
 
@@ -501,7 +502,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		d.Set(names.AttrPort, v.Port)
 	}
 
-	if v := aws.StringValue(cluster.DataTiering); v != "" {
+	if v := string(cluster.DataTiering); v != "" {
 		b, err := strconv.ParseBool(v)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading data_tiering for MemoryDB Cluster (%s): %s", d.Id(), err)
@@ -516,7 +517,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set(names.AttrKMSKeyARN, cluster.KmsKeyId) // KmsKeyId is actually an ARN here.
 	d.Set("maintenance_window", cluster.MaintenanceWindow)
 	d.Set(names.AttrName, cluster.Name)
-	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(cluster.Name)))
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(cluster.Name)))
 	d.Set("node_type", cluster.NodeType)
 
 	numReplicasPerShard, err := deriveClusterNumReplicasPerShard(cluster)
@@ -541,7 +542,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("snapshot_retention_limit", cluster.SnapshotRetentionLimit)
 	d.Set("snapshot_window", cluster.SnapshotWindow)
 
-	if aws.StringValue(cluster.SnsTopicStatus) == ClusterSNSTopicStatusActive {
+	if aws.ToString(cluster.SnsTopicStatus) == ClusterSNSTopicStatusActive {
 		d.Set(names.AttrSNSTopicARN, cluster.SnsTopicArn)
 	} else {
 		d.Set(names.AttrSNSTopicARN, "")
@@ -556,7 +557,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
+	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 
 	input := &memorydb.DeleteClusterInput{
 		ClusterName: aws.String(d.Id()),
@@ -567,9 +568,9 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	log.Printf("[DEBUG] Deleting MemoryDB Cluster: (%s)", d.Id())
-	_, err := conn.DeleteClusterWithContext(ctx, input)
+	_, err := conn.DeleteCluster(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, memorydb.ErrCodeClusterNotFoundFault) {
+	if errs.IsA[*awstypes.ClusterNotFoundFault](err) {
 		return diags
 	}
 
@@ -592,52 +593,44 @@ func nodeHash(v interface{}) int {
 	return create.StringHashcode(v.(map[string]interface{})[names.AttrName].(string))
 }
 
-func flattenEndpoint(endpoint *memorydb.Endpoint) []interface{} {
+func flattenEndpoint(endpoint *awstypes.Endpoint) []interface{} {
 	if endpoint == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{}
 
-	if v := aws.StringValue(endpoint.Address); v != "" {
+	if v := aws.ToString(endpoint.Address); v != "" {
 		m[names.AttrAddress] = v
 	}
 
-	if v := aws.Int64Value(endpoint.Port); v != 0 {
-		m[names.AttrPort] = v
+	if endpoint.Port != 0 {
+		m[names.AttrPort] = endpoint.Port
 	}
 
 	return []interface{}{m}
 }
 
-func flattenShards(shards []*memorydb.Shard) *schema.Set {
+func flattenShards(shards []awstypes.Shard) *schema.Set {
 	shardSet := schema.NewSet(shardHash, nil)
 
 	for _, shard := range shards {
-		if shard == nil {
-			continue
-		}
-
 		nodeSet := schema.NewSet(nodeHash, nil)
 
 		for _, node := range shard.Nodes {
-			if node == nil {
-				continue
-			}
-
 			nodeSet.Add(map[string]interface{}{
-				names.AttrAvailabilityZone: aws.StringValue(node.AvailabilityZone),
-				names.AttrCreateTime:       aws.TimeValue(node.CreateTime).Format(time.RFC3339),
+				names.AttrAvailabilityZone: aws.ToString(node.AvailabilityZone),
+				names.AttrCreateTime:       aws.ToTime(node.CreateTime).Format(time.RFC3339),
 				names.AttrEndpoint:         flattenEndpoint(node.Endpoint),
-				names.AttrName:             aws.StringValue(node.Name),
+				names.AttrName:             aws.ToString(node.Name),
 			})
 		}
 
 		shardSet.Add(map[string]interface{}{
-			names.AttrName: aws.StringValue(shard.Name),
-			"num_nodes":    int(aws.Int64Value(shard.NumberOfNodes)),
+			names.AttrName: aws.ToString(shard.Name),
+			"num_nodes":    int(aws.ToInt32(shard.NumberOfNodes)),
 			"nodes":        nodeSet,
-			"slots":        aws.StringValue(shard.Slots),
+			"slots":        aws.ToString(shard.Slots),
 		})
 	}
 
@@ -649,15 +642,15 @@ func flattenShards(shards []*memorydb.Shard) *schema.Set {
 // assume that it's the same as that of the largest shard.
 //
 // For the sake of caution, this search is limited to stable shards.
-func deriveClusterNumReplicasPerShard(cluster *memorydb.Cluster) (int, error) {
-	var maxNumberOfNodesPerShard int64
+func deriveClusterNumReplicasPerShard(cluster *awstypes.Cluster) (int, error) {
+	var maxNumberOfNodesPerShard int32
 
 	for _, shard := range cluster.Shards {
-		if aws.StringValue(shard.Status) != ClusterShardStatusAvailable {
+		if aws.ToString(shard.Status) != ClusterShardStatusAvailable {
 			continue
 		}
 
-		n := aws.Int64Value(shard.NumberOfNodes)
+		n := aws.ToInt32(shard.NumberOfNodes)
 		if n > maxNumberOfNodesPerShard {
 			maxNumberOfNodesPerShard = n
 		}
