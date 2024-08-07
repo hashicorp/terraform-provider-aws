@@ -22,7 +22,7 @@ import (
 )
 
 // @FrameworkResource(name="Default AutoScaling Configuration Version")
-func newResourceIndex(context.Context) (resource.ResourceWithConfigure, error) {
+func newResourceDefaultAutoScalingConfigurationVersion(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &defaultAutoScalingConfigurationVersionResource{}
 
 	return r, nil
