@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/YakDriver/regexache"
@@ -188,7 +189,6 @@ func resourceServiceQuotaRead(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).ServiceQuotasClient(ctx)
 
 	serviceCode, quotaCode, err := resourceServiceQuotaParseID(d.Id())
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Service Quota (%s): %s", d.Id(), err)
 	}
@@ -196,6 +196,11 @@ func resourceServiceQuotaRead(ctx context.Context, d *schema.ResourceData, meta 
 	// A Service Quota will always have a default value, but will only have a current value if it has been set.
 	// If it is not set, `GetServiceQuota` will return "NoSuchResourceException"
 	defaultQuota, err := findServiceQuotaDefaultByID(ctx, conn, serviceCode, quotaCode)
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Service Quota (%s) default value not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "getting Default Service Quota for (%s/%s): %s", serviceCode, quotaCode, err)
 	}
