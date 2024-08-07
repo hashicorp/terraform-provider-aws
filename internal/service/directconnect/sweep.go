@@ -135,7 +135,7 @@ func sweepGatewayAssociationProposals(region string) error {
 	})
 
 	if awsv2.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Direct Connect Gateway Association Proposal sweep for %s: %w", region, err)
+		log.Printf("[WARN] Skipping Direct Connect Gateway Association Proposal sweep for %s: %s", region, err)
 		return nil
 	}
 
@@ -212,12 +212,12 @@ func sweepGatewayAssociations(region string) error {
 	})
 
 	if awsv2.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Direct Connect Gateway Association sweep for %s: %w", region, err)
+		log.Printf("[WARN] Skipping Direct Connect Gateway Association sweep for %s: %s", region, err)
 		return nil
 	}
 
 	if err != nil {
-		fmt.Errorf("error listing Direct Connect Gateways (%s): %w", region, err)
+		return fmt.Errorf("error listing Direct Connect Gateways (%s): %w", region, err)
 	}
 
 	// Handle cross-account EC2 Transit Gateway associations.
@@ -352,7 +352,7 @@ func sweepGateways(region string) error {
 	})
 
 	if awsv2.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Direct Connect Gateway sweep for %s: %w", region, err)
+		log.Printf("[WARN] Skipping Direct Connect Gateway sweep for %s: %s", region, err)
 		return nil
 	}
 
