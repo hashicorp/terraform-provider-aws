@@ -746,23 +746,6 @@ func clusterIDAndRegionFromARN(clusterARN string) (string, string, error) {
 	return dbi, parsedARN.Region, nil
 }
 
-// TODO Remove once aws_rds_cluster is migrated?
-func statusDBClusterV2(ctx context.Context, conn *rds.Client, id string, optFns ...func(*rds.Options)) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := findDBClusterByIDV2(ctx, conn, id, optFns...)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.ToString(output.Status), nil
-	}
-}
-
 func waitGlobalClusterMemberUpdated(ctx context.Context, conn *rds.Client, id string, timeout time.Duration, optFns ...func(*rds.Options)) (*types.DBCluster, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
@@ -774,7 +757,7 @@ func waitGlobalClusterMemberUpdated(ctx context.Context, conn *rds.Client, id st
 			clusterStatusUpgrading,
 		},
 		Target:     []string{clusterStatusAvailable},
-		Refresh:    statusDBClusterV2(ctx, conn, id, optFns...),
+		Refresh:    statusDBCluster(ctx, conn, id, false, optFns...),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,

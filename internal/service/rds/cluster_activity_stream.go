@@ -144,7 +144,7 @@ func resourceClusterActivityStreamDelete(ctx context.Context, d *schema.Resource
 }
 
 func findDBClusterWithActivityStream(ctx context.Context, conn *rds.Client, arn string) (*types.DBCluster, error) {
-	output, err := findDBClusterByIDV2(ctx, conn, arn)
+	output, err := findDBClusterByID(ctx, conn, arn)
 
 	if err != nil {
 		return nil, err

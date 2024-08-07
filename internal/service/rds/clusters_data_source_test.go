@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -16,7 +16,7 @@ import (
 
 func TestAccRDSClustersDataSource_filter(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster rds.DBCluster
+	var dbCluster types.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_rds_clusters.test"
 	resourceName := "aws_rds_cluster.test"

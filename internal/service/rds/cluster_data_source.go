@@ -180,7 +180,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
 	dbClusterID := d.Get(names.AttrClusterIdentifier).(string)
-	dbc, err := findDBClusterByIDV2(ctx, conn, dbClusterID)
+	dbc, err := findDBClusterByID(ctx, conn, dbClusterID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading RDS Cluster (%s): %s", dbClusterID, err)

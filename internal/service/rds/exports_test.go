@@ -31,6 +31,7 @@ var (
 
 	ClusterIDAndRegionFromARN                  = clusterIDAndRegionFromARN
 	FindCustomDBEngineVersionByTwoPartKey      = findCustomDBEngineVersionByTwoPartKey
+	FindDBClusterByID                          = findDBClusterByID
 	FindDBClusterEndpointByID                  = findDBClusterEndpointByID
 	FindDBClusterParameterGroupByName          = findDBClusterParameterGroupByName
 	FindDBClusterRoleByTwoPartKey              = findDBClusterRoleByTwoPartKey
