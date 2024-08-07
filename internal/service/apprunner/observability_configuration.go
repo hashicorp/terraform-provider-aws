@@ -26,7 +26,6 @@ import (
 
 // @SDKResource("aws_apprunner_observability_configuration", name="Observability Configuration")
 // @Tags(identifierAttribute="arn")
-// @Testing(tagsTest=false)
 func resourceObservabilityConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceObservabilityConfigurationCreate,
