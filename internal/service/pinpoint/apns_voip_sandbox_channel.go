@@ -140,6 +140,10 @@ func resourceAPNSVoIPSandboxChannelRead(ctx context.Context, d *schema.ResourceD
 		return diags
 	}
 
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Pinpoint APNS VoIP Sandbox Channel (%s): %s", d.Id(), err)
+	}
+
 	d.Set(names.AttrApplicationID, output.ApplicationId)
 	d.Set("default_authentication_method", output.DefaultAuthenticationMethod)
 	d.Set(names.AttrEnabled, output.Enabled)

@@ -97,6 +97,10 @@ func resourceBaiduChannelRead(ctx context.Context, d *schema.ResourceData, meta 
 		return diags
 	}
 
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Pinpoint Baidu Channel (%s): %s", d.Id(), err)
+	}
+
 	d.Set(names.AttrApplicationID, output.ApplicationId)
 	d.Set(names.AttrEnabled, output.Enabled)
 	// ApiKey and SecretKey are never returned

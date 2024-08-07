@@ -109,6 +109,10 @@ func resourceSMSChannelRead(ctx context.Context, d *schema.ResourceData, meta in
 		return diags
 	}
 
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Pinpoint SMS Channel (%s): %s", d.Id(), err)
+	}
+
 	d.Set(names.AttrApplicationID, output.ApplicationId)
 	d.Set(names.AttrEnabled, output.Enabled)
 	d.Set("sender_id", output.SenderId)

@@ -100,6 +100,10 @@ func resourceEventStreamRead(ctx context.Context, d *schema.ResourceData, meta i
 		return diags
 	}
 
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Pinpoint Event Stream (%s): %s", d.Id(), err)
+	}
+
 	d.Set(names.AttrApplicationID, output.ApplicationId)
 	d.Set("destination_stream_arn", output.DestinationStreamArn)
 	d.Set(names.AttrRoleARN, output.RoleArn)

@@ -91,6 +91,10 @@ func resourceGCMChannelRead(ctx context.Context, d *schema.ResourceData, meta in
 		return diags
 	}
 
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Pinpoint GCM Channel (%s): %s", d.Id(), err)
+	}
+
 	d.Set(names.AttrApplicationID, output.ApplicationId)
 	d.Set(names.AttrEnabled, output.Enabled)
 	// api_key is never returned
