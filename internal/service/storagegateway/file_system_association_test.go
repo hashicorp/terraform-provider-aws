@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/storagegateway"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/storagegateway/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -23,7 +23,7 @@ import (
 
 func TestAccStorageGatewayFileSystemAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fileSystemAssociation storagegateway.FileSystemAssociationInfo
+	var fileSystemAssociation awstypes.FileSystemAssociationInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_file_system_association.test"
 	gatewayResourceName := "aws_storagegateway_gateway.test"
@@ -32,7 +32,7 @@ func TestAccStorageGatewayFileSystemAssociation_basic(t *testing.T) {
 	username := "Admin"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, storagegateway.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.StorageGateway) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFileSystemAssociationDestroy(ctx),
@@ -61,14 +61,14 @@ func TestAccStorageGatewayFileSystemAssociation_basic(t *testing.T) {
 
 func TestAccStorageGatewayFileSystemAssociation_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fileSystemAssociation storagegateway.FileSystemAssociationInfo
+	var fileSystemAssociation awstypes.FileSystemAssociationInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_file_system_association.test"
 	domainName := acctest.RandomDomainName()
 	username := "Admin"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, storagegateway.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.StorageGateway) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFileSystemAssociationDestroy(ctx),
@@ -113,14 +113,14 @@ func TestAccStorageGatewayFileSystemAssociation_tags(t *testing.T) {
 
 func TestAccStorageGatewayFileSystemAssociation_cacheAttributes(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fileSystemAssociation storagegateway.FileSystemAssociationInfo
+	var fileSystemAssociation awstypes.FileSystemAssociationInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_file_system_association.test"
 	domainName := acctest.RandomDomainName()
 	username := "Admin"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, storagegateway.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.StorageGateway) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFileSystemAssociationDestroy(ctx),
@@ -153,14 +153,14 @@ func TestAccStorageGatewayFileSystemAssociation_cacheAttributes(t *testing.T) {
 
 func TestAccStorageGatewayFileSystemAssociation_auditDestination(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fileSystemAssociation storagegateway.FileSystemAssociationInfo
+	var fileSystemAssociation awstypes.FileSystemAssociationInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_file_system_association.test"
 	domainName := acctest.RandomDomainName()
 	username := "Admin"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, storagegateway.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.StorageGateway) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFileSystemAssociationDestroy(ctx),
@@ -197,14 +197,14 @@ func TestAccStorageGatewayFileSystemAssociation_auditDestination(t *testing.T) {
 
 func TestAccStorageGatewayFileSystemAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fileSystemAssociation storagegateway.FileSystemAssociationInfo
+	var fileSystemAssociation awstypes.FileSystemAssociationInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_file_system_association.test"
 	domainName := acctest.RandomDomainName()
 	username := "Admin"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, storagegateway.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.StorageGateway) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFileSystemAssociationDestroy(ctx),
@@ -223,14 +223,14 @@ func TestAccStorageGatewayFileSystemAssociation_disappears(t *testing.T) {
 
 func TestAccStorageGatewayFileSystemAssociation_Disappears_storageGateway(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fileSystemAssociation storagegateway.FileSystemAssociationInfo
+	var fileSystemAssociation awstypes.FileSystemAssociationInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_file_system_association.test"
 	domainName := acctest.RandomDomainName()
 	username := "Admin"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, storagegateway.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.StorageGateway) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFileSystemAssociationDestroy(ctx),
@@ -251,14 +251,17 @@ func TestAccStorageGatewayFileSystemAssociation_Disappears_fsxFileSystem(t *test
 	t.Skip("A bug in the service API has been reported. Deleting the FSx file system before the association prevents association from being deleted.")
 	ctx := acctest.Context(t)
 
-	var fileSystemAssociation storagegateway.FileSystemAssociationInfo
+	var fileSystemAssociation awstypes.FileSystemAssociationInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_file_system_association.test"
 	domainName := acctest.RandomDomainName()
 	username := "Admin"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, storagegateway.EndpointsID) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.StorageGateway)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFileSystemAssociationDestroy(ctx),
@@ -277,7 +280,7 @@ func TestAccStorageGatewayFileSystemAssociation_Disappears_fsxFileSystem(t *test
 
 func testAccCheckFileSystemAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_storagegateway_file_system_association" {
@@ -301,14 +304,14 @@ func testAccCheckFileSystemAssociationDestroy(ctx context.Context) resource.Test
 	}
 }
 
-func testAccCheckFileSystemAssociationExists(ctx context.Context, resourceName string, v *storagegateway.FileSystemAssociationInfo) resource.TestCheckFunc {
+func testAccCheckFileSystemAssociationExists(ctx context.Context, n string, v *awstypes.FileSystemAssociationInfo) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayClient(ctx)
 
 		output, err := tfstoragegateway.FindFileSystemAssociationByARN(ctx, conn, rs.Primary.ID)
 

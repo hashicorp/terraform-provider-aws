@@ -12,7 +12,9 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -217,6 +219,193 @@ func TestEndpointEnvVarPrecedence(t *testing.T) { //nolint:paralleltest
 	}
 }
 
+func TestExpandDefaultTags(t *testing.T) { //nolint:paralleltest
+	ctx := context.Background()
+	testcases := []struct {
+		tags                  map[string]interface{}
+		envvars               map[string]string
+		expectedDefaultConfig *tftags.DefaultConfig
+	}{
+		{
+			tags:                  nil,
+			envvars:               map[string]string{},
+			expectedDefaultConfig: nil,
+		},
+		{
+			tags: nil,
+			envvars: map[string]string{
+				tftags.DefaultTagsEnvVarPrefix + "Owner": "my-team",
+			},
+			expectedDefaultConfig: &tftags.DefaultConfig{
+				Tags: tftags.New(ctx, map[string]string{
+					"Owner": "my-team",
+				}),
+			},
+		},
+		{
+			tags: map[string]interface{}{
+				"Owner": "my-team",
+			},
+			envvars: map[string]string{},
+			expectedDefaultConfig: &tftags.DefaultConfig{
+				Tags: tftags.New(ctx, map[string]string{
+					"Owner": "my-team",
+				}),
+			},
+		},
+		{
+			tags: map[string]interface{}{
+				"Application": "foobar",
+			},
+			envvars: map[string]string{
+				tftags.DefaultTagsEnvVarPrefix + "Application": "my-app",
+				tftags.DefaultTagsEnvVarPrefix + "Owner":       "my-team",
+			},
+			expectedDefaultConfig: &tftags.DefaultConfig{
+				Tags: tftags.New(ctx, map[string]string{
+					"Application": "foobar",
+					"Owner":       "my-team",
+				}),
+			},
+		},
+	}
+
+	for _, testcase := range testcases {
+		oldEnv := stashEnv()
+		defer popEnv(oldEnv)
+		for k, v := range testcase.envvars {
+			os.Setenv(k, v)
+		}
+
+		results := expandDefaultTags(ctx, map[string]interface{}{
+			"tags": testcase.tags,
+		})
+
+		if results == nil {
+			if testcase.expectedDefaultConfig == nil {
+				return
+			} else {
+				t.Errorf("Expected default tags config to be %v, got nil", testcase.expectedDefaultConfig)
+			}
+		} else if !testcase.expectedDefaultConfig.TagsEqual(results.Tags) {
+			t.Errorf("Expected default tags config to be %v, got %v", testcase.expectedDefaultConfig, results)
+		}
+	}
+}
+
+func TestExpandIgnoreTags(t *testing.T) { //nolint:paralleltest
+	ctx := context.Background()
+	testcases := []struct {
+		keys                 []interface{}
+		keyPrefixes          []interface{}
+		envvars              map[string]string
+		expectedIgnoreConfig *tftags.IgnoreConfig
+	}{
+		{
+			keys:                 nil,
+			keyPrefixes:          nil,
+			envvars:              map[string]string{},
+			expectedIgnoreConfig: nil,
+		},
+		{
+			envvars: map[string]string{
+				tftags.IgnoreTagsKeysEnvVar:        "env1",
+				tftags.IgnoreTagsKeyPrefixesEnvVar: "env2",
+			},
+			expectedIgnoreConfig: &tftags.IgnoreConfig{
+				Keys:        tftags.New(ctx, []interface{}{"env1"}),
+				KeyPrefixes: tftags.New(ctx, []interface{}{"env2"}),
+			},
+		},
+		{
+			envvars: map[string]string{
+				tftags.IgnoreTagsKeysEnvVar:        "env1,env2",
+				tftags.IgnoreTagsKeyPrefixesEnvVar: "env3,env4",
+			},
+			expectedIgnoreConfig: &tftags.IgnoreConfig{
+				Keys:        tftags.New(ctx, []interface{}{"env1", "env2"}),
+				KeyPrefixes: tftags.New(ctx, []interface{}{"env3", "env4"}),
+			},
+		},
+		{
+			envvars: map[string]string{
+				tftags.IgnoreTagsKeysEnvVar: "env1,env1",
+			},
+			expectedIgnoreConfig: &tftags.IgnoreConfig{
+				Keys: tftags.New(ctx, []interface{}{"env1"}),
+			},
+		},
+		{
+			envvars: map[string]string{
+				tftags.IgnoreTagsKeyPrefixesEnvVar: "env1,env1",
+			},
+			expectedIgnoreConfig: &tftags.IgnoreConfig{
+				KeyPrefixes: tftags.New(ctx, []interface{}{"env1"}),
+			},
+		},
+		{
+			keys:        []interface{}{"config1", "config2"},
+			keyPrefixes: []interface{}{"config3", "config4"},
+			envvars:     map[string]string{},
+			expectedIgnoreConfig: &tftags.IgnoreConfig{
+				Keys:        tftags.New(ctx, []interface{}{"config1", "config2"}),
+				KeyPrefixes: tftags.New(ctx, []interface{}{"config3", "config4"}),
+			},
+		},
+		{
+			keys:        []interface{}{"config1", "config2"},
+			keyPrefixes: []interface{}{"config3", "config4"},
+			envvars: map[string]string{
+				tftags.IgnoreTagsKeysEnvVar:        "env1,env2",
+				tftags.IgnoreTagsKeyPrefixesEnvVar: "env3,env4",
+			},
+			expectedIgnoreConfig: &tftags.IgnoreConfig{
+				Keys:        tftags.New(ctx, []interface{}{"env1", "env2", "config1", "config2"}),
+				KeyPrefixes: tftags.New(ctx, []interface{}{"env3", "env4", "config3", "config4"}),
+			},
+		},
+		{
+			keys: []interface{}{"example1", "example2"},
+			envvars: map[string]string{
+				tftags.IgnoreTagsKeysEnvVar: "example1,example3",
+			},
+			expectedIgnoreConfig: &tftags.IgnoreConfig{
+				Keys: tftags.New(ctx, []interface{}{"example1", "example2", "example3"}),
+			},
+		},
+		{
+			keyPrefixes: []interface{}{"example1", "example2"},
+			envvars: map[string]string{
+				tftags.IgnoreTagsKeyPrefixesEnvVar: "example1,example3",
+			},
+			expectedIgnoreConfig: &tftags.IgnoreConfig{
+				KeyPrefixes: tftags.New(ctx, []interface{}{"example1", "example2", "example3"}),
+			},
+		},
+	}
+
+	for _, testcase := range testcases {
+		oldEnv := stashEnv()
+		defer popEnv(oldEnv)
+		for k, v := range testcase.envvars {
+			os.Setenv(k, v)
+		}
+
+		results := expandIgnoreTags(ctx, map[string]interface{}{
+			"keys":         schema.NewSet(schema.HashString, testcase.keys),
+			"key_prefixes": schema.NewSet(schema.HashString, testcase.keyPrefixes),
+		})
+
+		if results == nil && testcase.expectedIgnoreConfig != nil {
+			t.Errorf("Expected ignore tags config to be %v, got nil", testcase.expectedIgnoreConfig)
+		}
+
+		if diff := cmp.Diff(testcase.expectedIgnoreConfig, results); diff != "" {
+			t.Errorf("Unexpected ignore_tags diff: %s", diff)
+		}
+	}
+}
+
 func stashEnv() []string {
 	env := os.Environ()
 	os.Clearenv()
@@ -227,11 +416,7 @@ func popEnv(env []string) {
 	os.Clearenv()
 
 	for _, e := range env {
-		p := strings.SplitN(e, "=", 2)
-		k, v := p[0], ""
-		if len(p) > 1 {
-			v = p[1]
-		}
+		k, v, _ := strings.Cut(e, "=")
 		os.Setenv(k, v)
 	}
 }

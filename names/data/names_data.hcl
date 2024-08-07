@@ -355,7 +355,7 @@ service "appmesh" {
 
   sdk {
     id             = "App Mesh"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -1115,7 +1115,7 @@ service "chime" {
 
   sdk {
     id             = "Chime"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -2663,7 +2663,7 @@ service "dataexchange" {
 
   sdk {
     id             = "DataExchange"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -2692,7 +2692,7 @@ service "datapipeline" {
 
   sdk {
     id             = "Data Pipeline"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -2771,7 +2771,7 @@ service "detective" {
 
   sdk {
     id             = "Detective"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -2915,7 +2915,7 @@ service "dms" {
 
   sdk {
     id             = "Database Migration Service"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -3253,16 +3253,12 @@ service "ecs" {
 
   sdk {
     id             = "ECS"
-    client_version = [1, 2]
+    client_version = [2]
   }
 
   names {
     provider_name_upper = "ECS"
     human_friendly      = "ECS (Elastic Container)"
-  }
-
-  client {
-    go_v1_client_typename = "ECS"
   }
 
   endpoint_info {
@@ -3390,16 +3386,12 @@ service "elastictranscoder" {
 
   sdk {
     id             = "Elastic Transcoder"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
     provider_name_upper = "ElasticTranscoder"
     human_friendly      = "Elastic Transcoder"
-  }
-
-  client {
-    go_v1_client_typename = "ElasticTranscoder"
   }
 
   endpoint_info {
@@ -3419,16 +3411,12 @@ service "elasticache" {
 
   sdk {
     id             = "ElastiCache"
-    client_version = [1, 2]
+    client_version = [2]
   }
 
   names {
     provider_name_upper = "ElastiCache"
     human_friendly      = "ElastiCache"
-  }
-
-  client {
-    go_v1_client_typename = "ElastiCache"
   }
 
   endpoint_info {
@@ -3494,7 +3482,7 @@ service "elbv2" {
 
   sdk {
     id             = "Elastic Load Balancing v2"
-    client_version = [1, 2]
+    client_version = [2]
   }
 
   names {
@@ -3808,7 +3796,7 @@ service "emrcontainers" {
 
   sdk {
     id             = "EMR containers"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -4129,7 +4117,7 @@ service "fsx" {
 
   sdk {
     id             = "FSx"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -4217,7 +4205,7 @@ service "glue" {
 
   sdk {
     id             = "Glue"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -4297,7 +4285,7 @@ service "guardduty" {
 
   sdk {
     id             = "GuardDuty"
-    client_version = [1, 2]
+    client_version = [2]
   }
 
   names {
@@ -4436,7 +4424,7 @@ service "inspector" {
 
   sdk {
     id             = "Inspector"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -4958,7 +4946,7 @@ service "ivs" {
 
   sdk {
     id             = "ivs"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -5096,7 +5084,7 @@ service "kinesisanalytics" {
 
   sdk {
     id             = "Kinesis Analytics"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -5126,7 +5114,7 @@ service "kinesisanalyticsv2" {
 
   sdk {
     id             = "Kinesis Analytics V2"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -6142,12 +6130,12 @@ service "meta" {
   }
 
   resource_prefix {
-    actual  = "aws_(arn|billing_service_account|default_tags|ip_ranges|partition|regions?|service)$"
+    actual  = "aws_(arn|billing_service_account|default_tags|ip_ranges|partition|regions?|service|service_principal)$"
     correct = "aws_meta_"
   }
 
   provider_package_correct = "meta"
-  doc_prefix               = ["arn", "ip_ranges", "billing_service_account", "default_tags", "partition", "region", "service\\."]
+  doc_prefix               = ["arn", "ip_ranges", "billing_service_account", "default_tags", "partition", "region", "service\\.", "service_principal"]
   brand                    = ""
   exclude                  = true
   allowed_subcategory      = true
@@ -7526,7 +7514,7 @@ service "resiliencehub" {
 
   sdk {
     id             = "resiliencehub"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -7534,8 +7522,8 @@ service "resiliencehub" {
     human_friendly      = "Resilience Hub"
   }
 
-  client {
-    go_v1_client_typename = "ResilienceHub"
+  endpoint_info {
+    endpoint_api_call        = "ListApps"
   }
 
   resource_prefix {
@@ -7545,7 +7533,6 @@ service "resiliencehub" {
   provider_package_correct = "resiliencehub"
   doc_prefix               = ["resiliencehub_"]
   brand                    = "AWS"
-  not_implemented          = true
 }
 
 service "resourceexplorer2" {
@@ -8364,7 +8351,7 @@ service "serverlessrepo" {
 
   sdk {
     id             = "ServerlessApplicationRepository"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -8489,7 +8476,7 @@ service "ses" {
 
   sdk {
     id             = "SES"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -9000,7 +8987,7 @@ service "storagegateway" {
 
   sdk {
     id             = "Storage Gateway"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -9835,7 +9822,7 @@ service "ec2" {
 
   sdk {
     id             = "EC2"
-    client_version = [1, 2]
+    client_version = [2]
   }
 
   names {

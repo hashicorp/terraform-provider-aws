@@ -16,14 +16,11 @@ jobs:
   labels:
     name: Labelers
     runs-on: ubuntu-latest
-    steps:
-      - name: Generate GitHub App Token
-        id: token
-        uses: actions/create-github-app-token@c8f55efbd427e7465d6da1106e7979bc8aaee856 # v1.10.1
-        with:
-          app-id: ${{ secrets.APP_ID }}
-          private-key: ${{ secrets.APP_PEM }}
+    permissions:
+      contents: read
+      pull-requests: write
 
+    steps:
       - name: Checkout
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         with:
@@ -34,13 +31,13 @@ jobs:
         uses: actions/labeler@8558fd74291d67161a8a78ce36a881fa63b766a9 # v5.0.0
         with:
           configuration-path: .github/labeler-pr-triage.yml
-          repo-token: ${{ steps.token.outputs.token }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Apply Size Labels
         if: contains(fromJSON('["opened", "edited"]'), github.event.action)
         uses: codelytv/pr-size-labeler@56f6f0fc35c7cc0f72963b8467729e1120cb4bed # v1.10.0
         with:
-          GITHUB_TOKEN: ${{ steps.token.outputs.token }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           xs_label: "size/XS"
           xs_max_size: "30"
           s_label: "size/S"
@@ -54,7 +51,6 @@ jobs:
 
       - name: "Community Check: Author"
         id: author
-        if: github.event.action == 'opened'
         uses: ./.github/actions/community_check
         with:
           user_login: ${{ github.event.pull_request.user.login }}
@@ -62,37 +58,38 @@ jobs:
           core_contributors: ${{ secrets.CORE_CONTRIBUTORS }}
           partners: ${{ secrets.PARTNERS }}
 
-      - name: Indicate That Triage is Required
+      - name: Add needs-triage to New Contributions
         if: |
           github.event.action == 'opened'
           && steps.author.outputs.maintainer == 'false'
         env:
-          GH_TOKEN: ${{ steps.token.outputs.token }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh pr edit "$ISSUE_URL" --add-label needs-triage
 
-      - name: Add prioritized to Maintainer Contributions
+      - name: Add prioritized to New Maintainer Contributions
         if: |
           github.event.action == 'opened'
           && steps.author.outputs.maintainer == 'true'
+          && !contains(github.event.pull_request.labels.*.name, 'prioritized')
         env:
-          GH_TOKEN: ${{ steps.token.outputs.token }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh pr edit "$ISSUE_URL" --add-label prioritized
 
       - name: Credit Core Contributor Contributions
         if: |
-          github.event.action == 'opened'
-          && steps.author.outputs.core_contributor == 'true'
+          steps.author.outputs.core_contributor == 'true'
+          && !contains(github.event.pull_request.labels.*.name, 'external-maintainer')
         env:
-          GH_TOKEN: ${{ steps.token.outputs.token }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh pr edit "$ISSUE_URL" --add-label external-maintainer
 
       - name: Credit Partner Contributions
         if: |
-          github.event.action == 'opened'
-          && steps.author.outputs.partner == 'true'
+          steps.author.outputs.partner == 'true'
+          && !contains(github.event.pull_request.labels.*.name, 'partner')
         env:
-          GH_TOKEN: ${{ steps.token.outputs.token }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh pr edit "$ISSUE_URL" --add-label partner
 
@@ -104,12 +101,10 @@ jobs:
           user_login: ${{ github.event.assignee.login }}
           maintainers: ${{ secrets.MAINTAINERS }}
 
-      - name: Add prioritized to Maintainer Assignments
-        if: |
-          github.event.action == 'assigned'
-          && steps.assignee.outputs.maintainer == 'true'
+      - name: Add prioritized When Assigned to a Maintainer
+        if: steps.assignee.outputs.maintainer == 'true'
         env:
-          GH_TOKEN: ${{ steps.token.outputs.token }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh pr edit "$ISSUE_URL" --add-label prioritized
 
@@ -118,7 +113,7 @@ jobs:
           github.event.action == 'closed'
           && (contains(github.event.pull_request.labels.*.name, 'needs-triage') || contains(github.event.pull_request.labels.*.name, 'waiting-response'))
         env:
-          GH_TOKEN: ${{ steps.token.outputs.token }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh pr edit "$ISSUE_URL" --remove-label needs-triage,waiting-response
 
   project:
@@ -134,7 +129,7 @@ jobs:
     steps:
       - name: Generate GitHub App Token
         id: token
-        uses: actions/create-github-app-token@c8f55efbd427e7465d6da1106e7979bc8aaee856 # v1.10.1
+        uses: actions/create-github-app-token@31c86eb3b33c9b601a1f60f98dcbfd1d70f379b4 # v1.10.3
         with:
           app-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PEM }}
@@ -146,7 +141,7 @@ jobs:
 
       - name: Community Check
         id: community_check
-        if: github.event.action == 'opened'
+        if: contains(fromJSON('["opened", "assigned"]'), github.event.action)
         uses: ./.github/actions/community_check
         with:
           user_login: ${{ github.event.action == 'assigned' && github.event.assignee.login || github.event.pull_request.user.login }}

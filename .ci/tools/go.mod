@@ -1,6 +1,6 @@
 module github.com/hashicorp/terraform-provider-aws/tools
 
-go 1.22.4
+go 1.22.5
 
 require (
 	github.com/YakDriver/tfproviderdocs v0.13.0
@@ -8,10 +8,10 @@ require (
 	github.com/golangci/golangci-lint v1.59.1
 	github.com/hashicorp/copywrite v0.19.0
 	github.com/hashicorp/go-changelog v0.0.0-20240306190400-974418b4aaa3
-	github.com/katbyte/terrafmt v0.5.3
+	github.com/katbyte/terrafmt v0.5.4
 	github.com/pavius/impi v0.0.3
 	github.com/rhysd/actionlint v1.7.1
-	github.com/terraform-linters/tflint v0.51.2
+	github.com/terraform-linters/tflint v0.52.0
 	github.com/uber-go/gopatch v0.4.0
 	mvdan.cc/gofumpt v0.6.0
 )
@@ -51,7 +51,7 @@ require (
 	github.com/asaskevich/govalidator v0.0.0-20200907205600-7a23bdc65eef // indirect
 	github.com/ashanbrown/forbidigo v1.6.0 // indirect
 	github.com/ashanbrown/makezero v1.1.1 // indirect
-	github.com/aws/aws-sdk-go v1.44.122 // indirect
+	github.com/aws/aws-sdk-go v1.55.5 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
@@ -268,7 +268,7 @@ require (
 	github.com/t-yuki/gocover-cobertura v0.0.0-20180217150009-aaee18c8195c // indirect
 	github.com/tdakkota/asciicheck v0.2.0 // indirect
 	github.com/terraform-linters/tflint-plugin-sdk v0.20.0 // indirect
-	github.com/terraform-linters/tflint-ruleset-terraform v0.7.0 // indirect
+	github.com/terraform-linters/tflint-ruleset-terraform v0.8.0 // indirect
 	github.com/tetafro/godot v1.4.16 // indirect
 	github.com/thanhpk/randstr v1.0.4 // indirect
 	github.com/thlib/go-timezone-local v0.0.0-20210907160436-ef149e42d28e // indirect

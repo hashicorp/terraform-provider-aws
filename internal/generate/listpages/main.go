@@ -81,6 +81,9 @@ func main() {
 	}
 
 	awsService := service.GoV1Package()
+	if *sdkVersion == sdkV2 {
+		awsService = service.GoV2Package()
+	}
 
 	functions := strings.Split(*listOps, ",")
 	sort.Strings(functions)
@@ -97,10 +100,8 @@ func main() {
 	}
 
 	sourcePackage := fmt.Sprintf("github.com/aws/aws-sdk-go/service/%[1]s", awsService)
-
 	if *sdkVersion == sdkV2 {
 		sourcePackage = fmt.Sprintf("github.com/aws/aws-sdk-go-v2/service/%[1]s", awsService)
-
 	}
 
 	g.parsePackage(sourcePackage)

@@ -69,7 +69,7 @@ This resource supports the following arguments:
 * `clusterIdentifier` - (Optional, Forces new resources) The cluster identifier. If omitted, Terraform will assign a random, unique identifier.
 * `dbSubnetGroupName` - (Optional) A DB subnet group to associate with this DB instance.
 * `dbClusterParameterGroupName` - (Optional) A cluster parameter group to associate with the cluster.
-* `deletionProtection` - (Optional) A value that indicates whether the DB cluster has deletion protection enabled. The database can't be deleted when deletion protection is enabled. By default, deletion protection is disabled.
+* `deletionProtection` - (Optional) A boolean value that indicates whether the DB cluster has deletion protection enabled. The database can't be deleted when deletion protection is enabled. Defaults to `false`.
 * `enabledCloudwatchLogsExports` - (Optional) List of log types to export to cloudwatch. If omitted, no logs will be exported.
    The following log types are supported: `audit`, `profiler`.
 * `engineVersion` - (Optional) The database engine version. Updating this argument results in an outage.
@@ -158,4 +158,4 @@ Using `terraform import`, import DocumentDB Clusters using the `clusterIdentifie
 % terraform import aws_docdb_cluster.docdb_cluster docdb-prod-cluster
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-663517f2c94d383c5c6340e7bc94780228f41033c4e27faf9243377cc8649901 -->
+<!-- cache-key: cdktf-0.20.1 input-904fc284b6c7a5652f0f5b0730354356928abca9165b63fc07d46db96fa506c9 -->

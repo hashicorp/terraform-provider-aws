@@ -892,7 +892,11 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "setting logs_config: %s", err)
 	}
 	d.Set(names.AttrName, project.Name)
-	d.Set("project_visibility", project.ProjectVisibility)
+	if v := project.ProjectVisibility; v != "" {
+		d.Set("project_visibility", project.ProjectVisibility)
+	} else {
+		d.Set("project_visibility", types.ProjectVisibilityTypePrivate)
+	}
 	d.Set("public_project_alias", project.PublicProjectAlias)
 	d.Set("resource_access_role", project.ResourceAccessRole)
 	d.Set("queued_timeout", project.QueuedTimeoutInMinutes)
@@ -978,7 +982,11 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if d.HasChange("concurrent_build_limit") {
-			input.ConcurrentBuildLimit = aws.Int32(int32(d.Get("concurrent_build_limit").(int)))
+			if v := int32(d.Get("concurrent_build_limit").(int)); v != 0 {
+				input.ConcurrentBuildLimit = aws.Int32(v)
+			} else {
+				input.ConcurrentBuildLimit = aws.Int32(-1)
+			}
 		}
 
 		if d.HasChange(names.AttrDescription) {
