@@ -516,14 +516,14 @@ func needsJobDefUpdate(d *schema.ResourceDiff) bool {
 		}
 
 		var oeks, neks *batch.EksPodProperties
-		if len(o.([]interface{})) > 0 {
+		if len(o.([]interface{})) > 0 && o.([]interface{})[0] != nil {
 			oProps := o.([]interface{})[0].(map[string]interface{})
 			if opodProps, ok := oProps["pod_properties"].([]interface{}); ok && len(opodProps) > 0 {
 				oeks = expandEKSPodProperties(opodProps[0].(map[string]interface{}))
 			}
 		}
 
-		if len(n.([]interface{})) > 0 {
+		if len(n.([]interface{})) > 0 && n.([]interface{})[0] != nil {
 			nProps := n.([]interface{})[0].(map[string]interface{})
 			if npodProps, ok := nProps["pod_properties"].([]interface{}); ok && len(npodProps) > 0 {
 				neks = expandEKSPodProperties(npodProps[0].(map[string]interface{}))
@@ -540,12 +540,12 @@ func needsJobDefUpdate(d *schema.ResourceDiff) bool {
 		}
 
 		var ors, nrs *batch.RetryStrategy
-		if len(o.([]interface{})) > 0 {
+		if len(o.([]interface{})) > 0 && o.([]interface{})[0] != nil {
 			oProps := o.([]interface{})[0].(map[string]interface{})
 			ors = expandRetryStrategy(oProps)
 		}
 
-		if len(n.([]interface{})) > 0 {
+		if len(n.([]interface{})) > 0 && n.([]interface{})[0] != nil {
 			nProps := n.([]interface{})[0].(map[string]interface{})
 			nrs = expandRetryStrategy(nProps)
 		}
@@ -560,12 +560,12 @@ func needsJobDefUpdate(d *schema.ResourceDiff) bool {
 		}
 
 		var ors, nrs *batch.JobTimeout
-		if len(o.([]interface{})) > 0 {
+		if len(o.([]interface{})) > 0 && o.([]interface{})[0] != nil {
 			oProps := o.([]interface{})[0].(map[string]interface{})
 			ors = expandJobTimeout(oProps)
 		}
 
-		if len(n.([]interface{})) > 0 {
+		if len(n.([]interface{})) > 0 && n.([]interface{})[0] != nil {
 			nProps := n.([]interface{})[0].(map[string]interface{})
 			nrs = expandJobTimeout(nProps)
 		}
@@ -616,7 +616,7 @@ func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, me
 			}
 		}
 
-		if v, ok := d.GetOk("eks_properties"); ok && len(v.([]interface{})) > 0 {
+		if v, ok := d.GetOk("eks_properties"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			eksProps := v.([]interface{})[0].(map[string]interface{})
 			if podProps, ok := eksProps["pod_properties"].([]interface{}); ok && len(podProps) > 0 {
 				if aws.StringValue(input.Type) == batch.JobDefinitionTypeContainer {
