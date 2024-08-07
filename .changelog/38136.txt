@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_opensearch_domain: Handle delayed domain status propagation, preventing a `ValidationException`.
+```
