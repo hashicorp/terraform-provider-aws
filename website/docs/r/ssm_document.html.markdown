@@ -66,6 +66,81 @@ DOC
 }
 ```
 
+### Configure SSM Preferences
+
+SSM preferences [are not exposed via an API](https://github.com/hashicorp/terraform-provider-aws/issues/6121) that can support it's own terraform resource. Instead, an SSM document called "SSM-SessionManagerRunShell" will configure these as needed.
+
+```
+resource "aws_ssm_document" "session_manager_prefs" {
+  name            = "SSM-SessionManagerRunShell"
+  document_type   = "Session"
+  document_format = "JSON"
+
+  content = jsonencode({
+    schemaVersion = "1.0"
+    description   = "Document to hold settings for Session Manager"
+    sessionType   = "Standard_Stream"
+    inputs = {
+      # comment out and configure as needed
+      #kmsKeyId                    = ""
+      #s3BucketName                = ""
+      #s3KeyPrefix                 = ""
+      #s3EncryptionEnabled         = ""
+      #cloudWatchLogGroupName      = ""
+      #cloudWatchEncryptionEnabled = ""
+      #cloudWatchStreamingEnabled  = ""
+      #idleSessionTimeout          = ""
+      #maxSessionDuration          = ""
+      #runAsEnabled                = ""
+      #shellProfile = {
+      #  linux   = ""
+      #  windows = ""
+      #}
+    }
+  })
+}
+```
+
+This document can be automatically created by editing the preferences through the UI and then cannot be deleted. If this happens, you must import the existing document where affected:
+
+```
+import {
+  to = aws_ssm_document.session_manager_prefs
+  id = "SSM-SessionManagerRunShell"
+}
+```
+
+#### SSM Preference Configurations
+
+**Cloudwatch logging:** You should attach the following policy to your EC2 instance role to allow the SSM agent to log SSM commands to cloudwatch:
+
+```
+locals {
+  ssm_log_arn=aws_cloudwatch_log_group.ssm_logs.arn
+}
+data "aws_iam_policy_document" "log_ssm" {
+  statement {
+    actions = [
+      "logs:CreateLogStream",
+      "logs:PutLogEvents"
+    ]
+    resources = [
+      "${local.ssm_log_arn}:*",
+      local.ssm_log_arn
+    ]
+  }
+  # this is curently required due to a bug in the SSM logging agent
+  statement {
+    actions = [
+      "logs:DescribeLogGroups"
+    ]
+    resources = [
+      "*"
+    ]
+  }
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
