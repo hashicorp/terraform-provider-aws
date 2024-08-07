@@ -36,6 +36,7 @@ resource "aws_iam_role" "domain_execution_role" {
       },
     ]
   })
+
   inline_policy {
     name = "example name"
     policy = jsonencode({
@@ -55,13 +56,16 @@ resource "aws_iam_role" "domain_execution_role" {
     })
   }
 }
+
 resource "aws_datazone_domain" "test" {
   name                  = "example name"
   domain_execution_role = aws_iam_role.domain_execution_role.arn
 }
+
 resource "aws_security_group" "test" {
   name = "example name"
 }
+
 resource "aws_datazone_project" "test" {
   domain_identifier   = aws_datazone_domain.test.id
   glossary_terms      = ["2N8w6XJCwZf"]
@@ -69,6 +73,7 @@ resource "aws_datazone_project" "test" {
   description         = "desc"
   skip_deletion_check = true
 }
+
 resource "aws_datazone_form_type" "test" {
   description               = "desc"
   name                      = "SageMakerModelFormType"
@@ -81,8 +86,10 @@ resource "aws_datazone_form_type" "test" {
 			@required
 			@amazon.datazone#searchable
 			modelName: String
+
 			@required
 			modelArn: String
+
 			@required
 			creationTime: String
 			}
