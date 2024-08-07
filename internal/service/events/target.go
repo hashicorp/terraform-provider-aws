@@ -398,7 +398,8 @@ func resourceTarget() *schema.Resource {
 						"maximum_event_age_in_seconds": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							ValidateFunc: validation.IntBetween(0, 86400),
+							Default:      86400,
+							ValidateFunc: validation.IntBetween(60, 86400),
 						},
 						"maximum_retry_attempts": {
 							Type:         schema.TypeInt,
