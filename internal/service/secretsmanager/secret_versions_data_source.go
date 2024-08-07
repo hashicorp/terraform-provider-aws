@@ -5,107 +5,110 @@ package secretsmanager
 
 import (
 	"context"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_secretsmanager_secret_versions", name="Secret Versions")
-func dataSourceSecretVersions() *schema.Resource {
-	return &schema.Resource{
-		ReadWithoutTimeout: dataSourceSecretVersionsRead,
+// @FrameworkDataSource(name="Secret Versions")
+func newDataSourceSecretVersions(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &dataSourceSecretVersions{}, nil
+}
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
+const (
+	DSNameSecretVersions = "Secret Versions Data Source"
+)
+
+type dataSourceSecretVersions struct {
+	framework.DataSourceWithConfigure
+}
+
+func (d *dataSourceSecretVersions) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
+	resp.TypeName = "aws_secretsmanager_secret_versions"
+}
+
+func (d *dataSourceSecretVersions) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			names.AttrARN: schema.StringAttribute{
 				Computed: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(20, 2048),
+				},
 			},
-			"include_deprecated": {
-				Type:     schema.TypeBool,
+			"include_deprecated": schema.BoolAttribute{
 				Optional: true,
 			},
-			"max_results": {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-			"secret_id": {
-				Type:     schema.TypeString,
+			"secret_id": schema.StringAttribute{
 				Required: true,
 			},
-			"versions": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"created_date": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"last_accessed_date": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"version_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-						"version_stages": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-					},
-				},
+			"versions": schema.ListAttribute{
+				Computed:   true,
+				CustomType: fwtypes.NewListNestedObjectTypeOf[dsVersionsData](ctx),
 			},
 		},
 	}
 }
 
-func dataSourceSecretVersionsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
+func (d *dataSourceSecretVersions) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	conn := d.Meta().SecretsManagerClient(ctx)
 
-	secretId := d.Get("secret_id").(string)
-
-	input := &secretsmanager.ListSecretVersionIdsInput{
-		SecretId: aws.String(secretId),
+	var data dsSecretVersionsData
+	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	if v, ok := d.GetOk("include_deprecated"); ok {
-		includeDeprecated := v.(bool)
-		input.IncludeDeprecated = aws.Bool(includeDeprecated)
-	}
-	if v, ok := d.GetOk("max_results"); ok {
-		maxResults := v.(int)
-		input.MaxResults = aws.Int32(int32(maxResults))
-	}
+	paginator := secretsmanager.NewListSecretVersionIdsPaginator(conn, &secretsmanager.ListSecretVersionIdsInput{
+		SecretId: aws.String(data.SecretID.ValueString()),
+	})
 
-	output, err := findSecretVersions(ctx, conn, input)
+	var out secretsmanager.ListSecretVersionIdsOutput
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.SecretsManager, create.ErrActionReading, DSNameSecretVersions, data.SecretID.String(), err),
+				err.Error(),
+			)
+			return
+		}
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret Versions (%s): %s", secretId, err)
-	}
-
-	d.SetId(secretId)
-	d.Set(names.AttrARN, output.ARN)
-	var versions []interface{}
-	for _, version := range output.Versions {
-		versions = append(versions, map[string]interface{}{
-			"created_date":       version.CreatedDate.Format(time.RFC3339),
-			"last_accessed_date": version.LastAccessedDate.Format(time.RFC3339),
-			"version_id":         version.VersionId,
-			"version_stages":     version.VersionStages,
-		})
+		if page != nil && len(page.Versions) > 0 {
+			out.Versions = append(out.Versions, page.Versions...)
+		}
 	}
 
-	d.Set("versions", versions)
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	return diags
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+
+}
+
+type dsSecretVersionsData struct {
+	Arn               types.String                                    `tfsdk:"arn"`
+	IncludeDeprecated types.Bool                                      `tfsdk:"include_deprecated"`
+	SecretID          types.String                                    `tfsdk:"secret_id"`
+	Versions          fwtypes.ListNestedObjectValueOf[dsVersionsData] `tfsdk:"versions"`
+}
+
+type dsVersionsData struct {
+	CreatedDate      timetypes.RFC3339                 `tfsdk:"created_time"`
+	LastAccessedDate types.String                      `tfsdk:"last_accessed_date"`
+	VersionID        types.String                      `tfsdk:"version_id"`
+	VersionStages    fwtypes.ListValueOf[types.String] `tfsdk:"version_stages"`
 }
