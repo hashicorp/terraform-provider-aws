@@ -137,6 +137,7 @@ import (
 	launchwizard_sdkv2 "github.com/aws/aws-sdk-go-v2/service/launchwizard"
 	lexmodelsv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lexmodelsv2"
 	lightsail_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lightsail"
+	location_sdkv2 "github.com/aws/aws-sdk-go-v2/service/location"
 	lookoutmetrics_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lookoutmetrics"
 	m2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/m2"
 	mediaconnect_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mediaconnect"
@@ -228,7 +229,6 @@ import (
 	kinesisvideo_sdkv1 "github.com/aws/aws-sdk-go/service/kinesisvideo"
 	lexmodelbuildingservice_sdkv1 "github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	licensemanager_sdkv1 "github.com/aws/aws-sdk-go/service/licensemanager"
-	locationservice_sdkv1 "github.com/aws/aws-sdk-go/service/locationservice"
 	macie2_sdkv1 "github.com/aws/aws-sdk-go/service/macie2"
 	memorydb_sdkv1 "github.com/aws/aws-sdk-go/service/memorydb"
 	neptune_sdkv1 "github.com/aws/aws-sdk-go/service/neptune"
@@ -821,8 +821,8 @@ func (c *AWSClient) LightsailClient(ctx context.Context) *lightsail_sdkv2.Client
 	return errs.Must(client[*lightsail_sdkv2.Client](ctx, c, names.Lightsail, make(map[string]any)))
 }
 
-func (c *AWSClient) LocationConn(ctx context.Context) *locationservice_sdkv1.LocationService {
-	return errs.Must(conn[*locationservice_sdkv1.LocationService](ctx, c, names.Location, make(map[string]any)))
+func (c *AWSClient) LocationClient(ctx context.Context) *location_sdkv2.Client {
+	return errs.Must(client[*location_sdkv2.Client](ctx, c, names.Location, make(map[string]any)))
 }
 
 func (c *AWSClient) LogsClient(ctx context.Context) *cloudwatchlogs_sdkv2.Client {
