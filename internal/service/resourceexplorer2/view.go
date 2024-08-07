@@ -75,6 +75,10 @@ func (r *resourceView) Schema(ctx context.Context, request resource.SchemaReques
 					stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9A-Za-z-]+$`), `can include letters, digits, and the dash (-) character`),
 				},
 			},
+			names.AttrScope: schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
@@ -220,6 +224,7 @@ func (r *resourceView) Read(ctx context.Context, request resource.ReadRequest, r
 
 	data.DefaultView = types.BoolValue(defaultViewARN == data.ViewARN.ValueString())
 
+	data.Scope = types.StringValue(aws.ToString(output.View.Scope))
 	setTagsOut(ctx, output.Tags)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
@@ -326,6 +331,7 @@ type viewResourceModel struct {
 	Filters            fwtypes.ListNestedObjectValueOf[searchFilterModel]     `tfsdk:"filters"`
 	ID                 types.String                                           `tfsdk:"id"`
 	IncludedProperties fwtypes.ListNestedObjectValueOf[includedPropertyModel] `tfsdk:"included_property"`
+	Scope              types.String                                           `tfsdk:"scope"`
 	ViewARN            types.String                                           `tfsdk:"arn"`
 	ViewName           types.String                                           `tfsdk:"name"`
 	Tags               types.Map                                              `tfsdk:"tags"`
