@@ -235,7 +235,7 @@ func testAccCheckDevicePoolDestroy(ctx context.Context) resource.TestCheckFunc {
 }
 
 func testAccDevicePoolConfig_basic(rName string) string {
-	return testAccProjectConfig_basic(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_basic(rName), fmt.Sprintf(`
 resource "aws_devicefarm_device_pool" "test" {
   name        = %[1]q
   project_arn = aws_devicefarm_project.test.arn
@@ -245,11 +245,11 @@ resource "aws_devicefarm_device_pool" "test" {
     value     = "\"AVAILABLE\""
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccDevicePoolConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return testAccProjectConfig_basic(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_basic(rName), fmt.Sprintf(`
 resource "aws_devicefarm_device_pool" "test" {
   name        = %[1]q
   project_arn = aws_devicefarm_project.test.arn
@@ -262,11 +262,11 @@ resource "aws_devicefarm_device_pool" "test" {
     %[2]q = %[3]q
   }
 }
-`, rName, tagKey1, tagValue1)
+`, rName, tagKey1, tagValue1))
 }
 
 func testAccDevicePoolConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccProjectConfig_basic(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_basic(rName), fmt.Sprintf(`
 resource "aws_devicefarm_device_pool" "test" {
   name        = %[1]q
   project_arn = aws_devicefarm_project.test.arn
@@ -280,5 +280,5 @@ resource "aws_devicefarm_device_pool" "test" {
     %[4]q = %[5]q
   }
 }
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
