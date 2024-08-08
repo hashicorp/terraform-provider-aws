@@ -340,7 +340,10 @@ func TestAccDirectConnectConnection_vlanIDMigration510(t *testing.T) {
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccConnectionConfig_basic(rName),
-				PlanOnly:                 true,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckConnectionExists(ctx, resourceName, &connection),
+					resource.TestCheckResourceAttr(resourceName, "vlan_id", acctest.Ct0),
+				),
 			},
 		},
 	})
