@@ -20,6 +20,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -84,9 +86,15 @@ func (r *resourceFormType) Schema(ctx context.Context, req resource.SchemaReques
 			},
 			"origin_domain_id": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"origin_project_id": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"owning_project_identifier": schema.StringAttribute{
 				Required: true,
@@ -172,8 +180,6 @@ func (r *resourceFormType) Create(ctx context.Context, req resource.CreateReques
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	plan.OriginDomainId = flex.StringToFrameworkLegacy(ctx, output.OriginDomainId)
-	plan.OriginProjectId = flex.StringToFrameworkLegacy(ctx, output.OriginProjectId)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -205,9 +211,6 @@ func (r *resourceFormType) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 	state.OwningProjectIdentifier = flex.StringToFramework(ctx, out.OwningProjectId)
-	state.OriginDomainId = flex.StringToFrameworkLegacy(ctx, out.OriginDomainId)
-	state.OriginProjectId = flex.StringToFrameworkLegacy(ctx, out.OriginProjectId)
-
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
