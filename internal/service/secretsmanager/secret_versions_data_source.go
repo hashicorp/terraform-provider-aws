@@ -105,7 +105,6 @@ func (d *dataSourceSecretVersions) Read(ctx context.Context, req datasource.Read
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
-
 }
 
 type dsSecretVersionsData struct {
