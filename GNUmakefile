@@ -1,3 +1,4 @@
+include datafy.mk
 SHELL := /bin/bash
 
 ACCTEST_PARALLELISM          ?= 20
