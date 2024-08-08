@@ -250,6 +250,9 @@ func (flattener autoFlattener) int(ctx context.Context, vFrom reflect.Value, isN
 
 	switch tTo := tTo.(type) {
 	case basetypes.Int64Typable:
+		//
+		// int32/int64 -> types.Int64.
+		//
 		int64Value := types.Int64Null()
 		if !isNullFrom {
 			int64Value = types.Int64Value(vFrom.Int())
@@ -260,9 +263,23 @@ func (flattener autoFlattener) int(ctx context.Context, vFrom reflect.Value, isN
 			return diags
 		}
 
+		vTo.Set(reflect.ValueOf(v))
+		return diags
+
+	case basetypes.Int32Typable:
 		//
-		// int32/int64 -> types.Int64.
+		// int32/int64 -> types.Int32.
 		//
+		int32Value := types.Int32Null()
+		if !isNullFrom {
+			int32Value = types.Int32Value(int32(vFrom.Int()))
+		}
+		v, d := tTo.ValueFromInt32(ctx, int32Value)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
 		vTo.Set(reflect.ValueOf(v))
 		return diags
 	}

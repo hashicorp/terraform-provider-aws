@@ -1440,6 +1440,54 @@ func TestFlattenInt64(t *testing.T) {
 	}
 }
 
+func TestFlattenInt32(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]autoFlexTestCases{
+		"int32 to Int32": {
+			"value": {
+				Source: awsSingleInt32Value{
+					Field1: 42,
+				},
+				Target: &tfSingleInt32Field{},
+				WantTarget: &tfSingleInt32Field{
+					Field1: types.Int32Value(42),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleInt32Value](), reflect.TypeFor[*tfSingleInt32Field]()),
+					infoConverting(reflect.TypeFor[awsSingleInt32Value](), reflect.TypeFor[*tfSingleInt32Field]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleInt32Value](), "Field1", reflect.TypeFor[*tfSingleInt32Field]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[int32](), "Field1", reflect.TypeFor[types.Int32]()),
+				},
+			},
+			"zero": {
+				Source: awsSingleInt32Value{
+					Field1: 0,
+				},
+				Target: &tfSingleInt32Field{},
+				WantTarget: &tfSingleInt32Field{
+					Field1: types.Int32Value(0),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleInt32Value](), reflect.TypeFor[*tfSingleInt32Field]()),
+					infoConverting(reflect.TypeFor[awsSingleInt32Value](), reflect.TypeFor[*tfSingleInt32Field]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleInt32Value](), "Field1", reflect.TypeFor[*tfSingleInt32Field]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[int32](), "Field1", reflect.TypeFor[types.Int32]()),
+				},
+			},
+		},
+	}
+
+	for testName, cases := range testCases {
+		cases := cases
+		t.Run(testName, func(t *testing.T) {
+			t.Parallel()
+
+			runAutoFlattenTestCases(t, cases)
+		})
+	}
+}
+
 func TestFlattenSimpleNestedBlockWithStringEnum(t *testing.T) {
 	t.Parallel()
 
