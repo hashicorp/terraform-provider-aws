@@ -114,7 +114,7 @@ func ResourceIntent() *schema.Resource {
 						},
 						"rejection_statement": {
 							Type:     schema.TypeList,
-							Required: true,
+							Optional: true,
 							MinItems: 1,
 							MaxItems: 1,
 							Elem:     statementResource,
