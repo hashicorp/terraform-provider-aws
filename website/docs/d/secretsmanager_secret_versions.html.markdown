@@ -53,12 +53,12 @@ If false, no deprecated secret versions are included in the response. If no valu
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the secret.
-* `id` - The secret id.
-* `versions` - A list of the versions of the secret. Attributes are specified below.
+* `id` - Secret id.
+* `versions` - List of the versions of the secret. Attributes are specified below.
 
 ### versions
 
-* `created_date` - The date and time this version of the secret was created.
-* `last_accessed_date` - The date that this version of the secret was last accessed. 
-* `version_id` - The unique version identifier of this version of the secret.
-* `version_stage` - The staging label attached to the version.
+* `created_date` - Date and time this version of the secret was created.
+* `last_accessed_date` - Date that this version of the secret was last accessed.
+* `version_id` - Unique version identifier of this version of the secret.
+* `version_stage` - Staging label attached to the version.
