@@ -800,14 +800,14 @@ resource "aws_storagegateway_gateway" "test" {
 }
 
 func testAccNFSFileShareConfig_required(rName string) string {
-	return testAccNFSFileShareConfig_baseS3(rName) + `
+	return acctest.ConfigCompose(testAccNFSFileShareConfig_baseS3(rName), `
 resource "aws_storagegateway_nfs_file_share" "test" {
   client_list  = ["0.0.0.0/0"]
   gateway_arn  = aws_storagegateway_gateway.test.arn
   location_arn = aws_s3_bucket.test.arn
   role_arn     = aws_iam_role.test.arn
 }
-`
+`)
 }
 
 func testAccNFSFileShareConfig_name(rName, fsName string) string {
@@ -912,7 +912,7 @@ resource "aws_storagegateway_nfs_file_share" "test" {
 }
 
 func testAccNFSFileShareConfig_kmsKeyARN(rName string) string {
-	return testAccNFSFileShareConfig_baseS3(rName) + `
+	return acctest.ConfigCompose(testAccNFSFileShareConfig_baseS3(rName), `
 resource "aws_kms_key" "test" {
   count = 2
 
@@ -928,11 +928,11 @@ resource "aws_storagegateway_nfs_file_share" "test" {
   location_arn  = aws_s3_bucket.test.arn
   role_arn      = aws_iam_role.test.arn
 }
-`
+`)
 }
 
 func testAccNFSFileShareConfig_kmsKeyARNUpdate(rName string) string {
-	return testAccNFSFileShareConfig_baseS3(rName) + `
+	return acctest.ConfigCompose(testAccNFSFileShareConfig_baseS3(rName), `
 resource "aws_kms_key" "test" {
   count = 2
 
@@ -948,7 +948,7 @@ resource "aws_storagegateway_nfs_file_share" "test" {
   location_arn  = aws_s3_bucket.test.arn
   role_arn      = aws_iam_role.test.arn
 }
-`
+`)
 }
 
 func testAccNFSFileShareConfig_defaults(rName, directoryMode, fileMode string, groupID, ownerID int) string {
@@ -1033,7 +1033,7 @@ resource "aws_storagegateway_nfs_file_share" "test" {
 }
 
 func testAccNFSFileShareConfig_notificationPolicy(rName string) string {
-	return testAccNFSFileShareConfig_baseS3(rName) + `
+	return acctest.ConfigCompose(testAccNFSFileShareConfig_baseS3(rName), `
 resource "aws_storagegateway_nfs_file_share" "test" {
   client_list         = ["0.0.0.0/0"]
   gateway_arn         = aws_storagegateway_gateway.test.arn
@@ -1041,7 +1041,7 @@ resource "aws_storagegateway_nfs_file_share" "test" {
   role_arn            = aws_iam_role.test.arn
   notification_policy = "{\"Upload\": {\"SettlingTimeInSeconds\": 60}}"
 }
-`
+`)
 }
 
 func testAccNFSFileShareConfig_audit(rName string) string {
