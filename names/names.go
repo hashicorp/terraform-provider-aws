@@ -81,7 +81,7 @@ const (
 	EventsEndpointID                     = "events"
 	EvidentlyEndpointID                  = "evidently"
 	FMSEndpointID                        = "fms"
-        FSxEndpointID                        = "fsx"
+	FSxEndpointID                        = "fsx"
 	GameLiftEndpointID                   = "gamelift"
 	GrafanaEndpointID                    = "grafana"
 	GlueEndpointID                       = "glue"
