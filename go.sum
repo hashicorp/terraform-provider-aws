@@ -66,8 +66,8 @@ github.com/aws/aws-sdk-go-v2/service/appfabric v1.9.3 h1:Vz7if7/byANRrsN9Z0VQm1Z
 github.com/aws/aws-sdk-go-v2/service/appfabric v1.9.3/go.mod h1:0ner/kMBkm2TcxNEtLglUXTZ+UDXuXnqDE+9FKUxOtM=
 github.com/aws/aws-sdk-go-v2/service/appflow v1.43.3 h1:zD7Md/MQTUfa83LgDmaKGHTLs3+mpl3LncfS5wUypSI=
 github.com/aws/aws-sdk-go-v2/service/appflow v1.43.3/go.mod h1:2b2pJQjTVLfBIzXs9TphXy1zJyRvNp34kbBgrnz4ByI=
-github.com/aws/aws-sdk-go-v2/service/appintegrations v1.27.3 h1:joEF6jGgq/6aHp4MEHidJyOfqWrwqJpjxHYfcocjNsU=
-github.com/aws/aws-sdk-go-v2/service/appintegrations v1.27.3/go.mod h1:7q06vKzUfBAZZrIfii6V8KC/+PmVNzNL2opqo9ivUMk=
+github.com/aws/aws-sdk-go-v2/service/appintegrations v1.28.0 h1:H0HrDBmDUWvdnm4nWkojlrtyc9NLJ5aA3h8RoashvJQ=
+github.com/aws/aws-sdk-go-v2/service/appintegrations v1.28.0/go.mod h1:7q06vKzUfBAZZrIfii6V8KC/+PmVNzNL2opqo9ivUMk=
 github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.31.0 h1:rAAYERh5azv3zFgoEczNyNmUqfckRyiTKsuk/rwzvDM=
 github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.31.0/go.mod h1:gNFF1rFmR0dVaBfehDuil+nuTqwzdJexrcvKaDY2JU8=
 github.com/aws/aws-sdk-go-v2/service/applicationinsights v1.26.3 h1:G7hP9np1L0ykj02CFQgkqdZERUmHCXdw8WmR5pW2pHM=
@@ -252,8 +252,8 @@ github.com/aws/aws-sdk-go-v2/service/glacier v1.24.3 h1:de8RU808VMx8km6t2wY3WDWi
 github.com/aws/aws-sdk-go-v2/service/glacier v1.24.3/go.mod h1:F/qjepwnxPHHUTK9ikZp14jLyrvB18kZ/22MmaPxtHE=
 github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.27.0 h1:nlm6tZX8gwsVktDKTQe3IOagNVK1+6CGf9IpdWM6x+E=
 github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.27.0/go.mod h1:ehkx8lBkJkZbdKYX2GyMFmdOAfcGs0mjcbaNXNiHAEE=
-github.com/aws/aws-sdk-go-v2/service/glue v1.91.0 h1:fJrpIIUxuWeyT22DgPN6GtNWwW28UDYsbm47AUJ4JcI=
-github.com/aws/aws-sdk-go-v2/service/glue v1.91.0/go.mod h1:FewbVAhRiTt+/8nKDBFTY68lTmtKlI6QMPKMB6aMboQ=
+github.com/aws/aws-sdk-go-v2/service/glue v1.92.0 h1:6Ah/jvbCgwjii/37TmzYlBNmcTMIgye72GaIVqvV0dM=
+github.com/aws/aws-sdk-go-v2/service/glue v1.92.0/go.mod h1:FewbVAhRiTt+/8nKDBFTY68lTmtKlI6QMPKMB6aMboQ=
 github.com/aws/aws-sdk-go-v2/service/grafana v1.24.3 h1:riHLAJSqo5zczCyMSo8XDA46X2aDpQvB46F0seKuNEM=
 github.com/aws/aws-sdk-go-v2/service/grafana v1.24.3/go.mod h1:2ipW9QX9MlePs99Dy8ohwfdW847hMJG6BU9jvixIpxE=
 github.com/aws/aws-sdk-go-v2/service/greengrass v1.25.3 h1:5KauP/IHPWGoHni4mt2Sjp0EtHMkdWtPP3v81qaHHyg=
@@ -338,8 +338,8 @@ github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.15.0 h1:1uii7pAgncfem27f3
 github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.15.0/go.mod h1:+R07/s3U8lJzEZDiwFxv/jmlSNbQjnoSqKaZEoqWt5Y=
 github.com/aws/aws-sdk-go-v2/service/mediastore v1.22.3 h1:WBVRvc0iIJdbdCkBjWRMVtUOMmAvOyN70x1KrBTOFm0=
 github.com/aws/aws-sdk-go-v2/service/mediastore v1.22.3/go.mod h1:plJWP1InGjEZiJvXfTlBqTBeMW8ddEZeIdYYFTYZMyE=
-github.com/aws/aws-sdk-go-v2/service/memorydb v1.21.3 h1:yE9YBx0CNCrd+oZ1qEnsAhQOj7n3zjHo8J1TdDvAoiQ=
-github.com/aws/aws-sdk-go-v2/service/memorydb v1.21.3/go.mod h1:y0n9wqlNiXxKkmb7FVBFrOd5jzpBnARZWMEXpAw3g3k=
+github.com/aws/aws-sdk-go-v2/service/memorydb v1.21.5 h1:dtXepT/IHcEQFwwCThi5ak/TXsojGsnvqlRrJmmGUl8=
+github.com/aws/aws-sdk-go-v2/service/memorydb v1.21.5/go.mod h1:y0n9wqlNiXxKkmb7FVBFrOd5jzpBnARZWMEXpAw3g3k=
 github.com/aws/aws-sdk-go-v2/service/mq v1.25.3 h1:SyRcb9GRPcoNKCuLnpj1qGIr/8stnVIf4DsuRhXIzEA=
 github.com/aws/aws-sdk-go-v2/service/mq v1.25.3/go.mod h1:Xu8nT/Yj64z5Gj1ebVB3drPEIBsPNDoFhx2xZDrdGlc=
 github.com/aws/aws-sdk-go-v2/service/mwaa v1.29.4 h1:lptYTP7Br5zll9USf2aKY1ZlN69vYAlZOSCv1Q+k1S4=
