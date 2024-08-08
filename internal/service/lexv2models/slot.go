@@ -453,8 +453,8 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 		CustomType: fwtypes.NewListNestedObjectTypeOf[SubSlotValueElicitationSettingData](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Blocks: map[string]schema.Block{
-				"prompt_specification":            promptSpecificationLNB,
 				"default_value_specification":     defaultValueSpecificationLNB,
+				"prompt_specification":            promptSpecificationLNB,
 				"sample_utterance":                sampleUtteranceLNB,
 				"wait_and_continue_specification": waitAndContinueSpecificationLNB,
 			},
@@ -490,7 +490,7 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 				},
 			},
 			Blocks: map[string]schema.Block{
-				"slot_specifications": slotSpecificationsLNB,
+				"slot_specification": slotSpecificationsLNB,
 			},
 		},
 	}
@@ -561,8 +561,8 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 				Required: true,
 			},
 			"slot_type_id": schema.StringAttribute{
-				Optional: true,
 				Computed: true,
+				Optional: true,
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -800,8 +800,8 @@ type resourceSlotData struct {
 }
 
 type SubSlotSettingData struct {
-	Expression         types.String                                           `tfsdk:"expression"`
-	SlotSpecifications fwtypes.SetNestedObjectValueOf[SlotSpecificationsData] `tfsdk:"slot_specifications"`
+	Expression        types.String                                           `tfsdk:"expression"`
+	SlotSpecification fwtypes.SetNestedObjectValueOf[SlotSpecificationsData] `tfsdk:"slot_specification"`
 }
 
 type SlotSpecificationsData struct {

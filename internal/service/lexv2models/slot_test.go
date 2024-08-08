@@ -108,7 +108,7 @@ func TestAccLexV2ModelsSlot_updateMultipleValuesSetting(t *testing.T) {
 	})
 }
 
-func TestAccLexV2ModelsSlot_ObfuscationSetting(t *testing.T) {
+func TestAccLexV2ModelsSlot_obfuscationSetting(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var slot lexmodelsv2.DescribeSlotOutput
@@ -143,7 +143,7 @@ func TestAccLexV2ModelsSlot_ObfuscationSetting(t *testing.T) {
 	})
 }
 
-func TestAccLexV2ModelsSlot_SubSlotSetting(t *testing.T) {
+func TestAccLexV2ModelsSlot_subSlotSetting(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var slot lexmodelsv2.DescribeSlotOutput
@@ -171,7 +171,7 @@ func TestAccLexV2ModelsSlot_SubSlotSetting(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
 					resource.TestCheckResourceAttr(resourceName, "sub_slot_setting.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "sub_slot_setting.0.expression", "string"),
-					resource.TestCheckResourceAttr(resourceName, "sub_slot_setting.0.slot_specifications.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "sub_slot_setting.0.slot_specification.#", acctest.Ct1),
 				),
 			},
 		},
@@ -431,7 +431,7 @@ resource "aws_lexv2models_slot" "test" {
 
   sub_slot_setting {
     expression = "string"
-    slot_specifications {
+    slot_specification {
       map_block_key = "Initial"
       slot_type_id  = aws_lexv2models_slot_type.test.slot_type_id
       value_elicitation_setting {
