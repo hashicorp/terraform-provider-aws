@@ -14,31 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindBuildByID(ctx context.Context, conn *gamelift.Client, id string) (*awstypes.Build, error) {
-	input := &gamelift.DescribeBuildInput{
-		BuildId: aws.String(id),
-	}
-
-	output, err := conn.DescribeBuild(ctx, input)
-
-	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.Build == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.Build, nil
-}
-
 func FindFleetByID(ctx context.Context, conn *gamelift.Client, id string) (*awstypes.FleetAttributes, error) {
 	input := &gamelift.DescribeFleetAttributesInput{
 		FleetIds: []string{id},

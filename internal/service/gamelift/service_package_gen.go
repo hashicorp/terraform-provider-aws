@@ -37,7 +37,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceBuild,
+			Factory:  resourceBuild,
 			TypeName: "aws_gamelift_build",
 			Name:     "Build",
 			Tags: &types.ServicePackageResourceTags{

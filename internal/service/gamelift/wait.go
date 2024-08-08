@@ -17,27 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
-const (
-	buildReadyTimeout = 1 * time.Minute
-)
-
-func waitBuildReady(ctx context.Context, conn *gamelift.Client, id string) (*awstypes.Build, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.BuildStatusInitialized),
-		Target:  enum.Slice(awstypes.BuildStatusReady),
-		Refresh: statusBuild(ctx, conn, id),
-		Timeout: buildReadyTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.Build); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
 func waitFleetActive(ctx context.Context, conn *gamelift.Client, id string, timeout time.Duration) (*awstypes.FleetAttributes, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(

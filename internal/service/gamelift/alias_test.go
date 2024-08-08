@@ -327,19 +327,16 @@ resource "aws_gamelift_alias" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccAliasConfig_allFields(aliasName, description,
-	fleetName, launchPath, params, bucketName, key, roleArn string) string {
-	return fmt.Sprintf(`
+func testAccAliasConfig_allFields(aliasName, description, fleetName, launchPath, params, bucketName, key, roleArn string) string {
+	return acctest.ConfigCompose(testAccFleetConfig_basic(fleetName, launchPath, params, bucketName, key, roleArn), fmt.Sprintf(`
 resource "aws_gamelift_alias" "test" {
-  name        = "%s"
-  description = "%s"
+  name        = %[1]q
+  description = %[2]q
 
   routing_strategy {
     fleet_id = aws_gamelift_fleet.test.id
     type     = "SIMPLE"
   }
 }
-%s
-`, aliasName, description,
-		testAccFleetConfig_basic(fleetName, launchPath, params, bucketName, key, roleArn))
+`, aliasName, description))
 }
