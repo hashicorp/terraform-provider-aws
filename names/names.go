@@ -112,7 +112,7 @@ const (
 	ResourceExplorer2EndpointID            = "resource-explorer-2"
 	RolesAnywhereEndpointID                = "rolesanywhere"
 	Route53DomainsEndpointID               = "route53domains"
-	Route53RecoveryControlConfigEndpointID = "route53recoverycontrolconfig"
+	Route53RecoveryControlConfigEndpointID = "route53-recovery-control-config"
 	ServiceCatalogEndpointID               = "servicecatalog"
 	SSMEndpointID                          = "ssm"
 	SSMIncidentsEndpointID                 = "ssm-incidents"
