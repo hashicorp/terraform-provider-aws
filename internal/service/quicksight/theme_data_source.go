@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -281,6 +282,7 @@ const (
 )
 
 func dataSourceThemeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId := meta.(*conns.AWSClient).AccountID
@@ -294,7 +296,7 @@ func dataSourceThemeRead(ctx context.Context, d *schema.ResourceData, meta inter
 	out, err := FindThemeByID(ctx, conn, id)
 
 	if err != nil {
-		return create.DiagError(names.QuickSight, create.ErrActionReading, ResNameTheme, d.Id(), err)
+		return create.AppendDiagError(diags, names.QuickSight, create.ErrActionReading, ResNameTheme, d.Id(), err)
 	}
 
 	d.SetId(id)
@@ -310,7 +312,7 @@ func dataSourceThemeRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("version_number", out.Version.VersionNumber)
 
 	if err := d.Set(names.AttrConfiguration, flattenThemeConfiguration(out.Version.Configuration)); err != nil {
-		return diag.Errorf("setting configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting configuration: %s", err)
 	}
 
 	permsResp, err := conn.DescribeThemePermissionsWithContext(ctx, &quicksight.DescribeThemePermissionsInput{
@@ -319,12 +321,12 @@ func dataSourceThemeRead(ctx context.Context, d *schema.ResourceData, meta inter
 	})
 
 	if err != nil {
-		return diag.Errorf("describing QuickSight Theme (%s) Permissions: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "describing QuickSight Theme (%s) Permissions: %s", d.Id(), err)
 	}
 
 	if err := d.Set(names.AttrPermissions, flattenPermissions(permsResp.Permissions)); err != nil {
-		return diag.Errorf("setting permissions: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting permissions: %s", err)
 	}
 
-	return nil
+	return diags
 }

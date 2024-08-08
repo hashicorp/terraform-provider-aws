@@ -7,8 +7,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/locationservice"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/location"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -63,15 +63,15 @@ func DataSourceMap() *schema.Resource {
 
 func dataSourceMapRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LocationConn(ctx)
+	conn := meta.(*conns.AWSClient).LocationClient(ctx)
 
-	input := &locationservice.DescribeMapInput{}
+	input := &location.DescribeMapInput{}
 
 	if v, ok := d.GetOk("map_name"); ok {
 		input.MapName = aws.String(v.(string))
 	}
 
-	output, err := conn.DescribeMapWithContext(ctx, input)
+	output, err := conn.DescribeMap(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "getting Location Service Map: %s", err)
@@ -81,7 +81,7 @@ func dataSourceMapRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "getting Location Service Map: empty response")
 	}
 
-	d.SetId(aws.StringValue(output.MapName))
+	d.SetId(aws.ToString(output.MapName))
 
 	if output.Configuration != nil {
 		d.Set(names.AttrConfiguration, []interface{}{flattenConfiguration(output.Configuration)})
@@ -89,11 +89,11 @@ func dataSourceMapRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set(names.AttrConfiguration, nil)
 	}
 
-	d.Set(names.AttrCreateTime, aws.TimeValue(output.CreateTime).Format(time.RFC3339))
+	d.Set(names.AttrCreateTime, aws.ToTime(output.CreateTime).Format(time.RFC3339))
 	d.Set(names.AttrDescription, output.Description)
 	d.Set("map_arn", output.MapArn)
 	d.Set("map_name", output.MapName)
-	d.Set("update_time", aws.TimeValue(output.UpdateTime).Format(time.RFC3339))
+	d.Set("update_time", aws.ToTime(output.UpdateTime).Format(time.RFC3339))
 	d.Set(names.AttrTags, KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(meta.(*conns.AWSClient).IgnoreTagsConfig).Map())
 
 	return diags

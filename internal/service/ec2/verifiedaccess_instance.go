@@ -25,7 +25,7 @@ import (
 // @SDKResource("aws_verifiedaccess_instance", name="Verified Access Instance")
 // @Tags(identifierAttribute="id")
 // @Testing(tagsTest=false)
-func ResourceVerifiedAccessInstance() *schema.Resource {
+func resourceVerifiedAccessInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVerifiedAccessInstanceCreate,
 		ReadWithoutTimeout:   resourceVerifiedAccessInstanceRead,
@@ -96,7 +96,7 @@ func resourceVerifiedAccessInstanceCreate(ctx context.Context, d *schema.Resourc
 
 	input := &ec2.CreateVerifiedAccessInstanceInput{
 		ClientToken:       aws.String(id.UniqueId()),
-		TagSpecifications: getTagSpecificationsInV2(ctx, types.ResourceTypeVerifiedAccessInstance),
+		TagSpecifications: getTagSpecificationsIn(ctx, types.ResourceTypeVerifiedAccessInstance),
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -122,7 +122,7 @@ func resourceVerifiedAccessInstanceRead(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	output, err := FindVerifiedAccessInstanceByID(ctx, conn, d.Id())
+	output, err := findVerifiedAccessInstanceByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Verified Access Instance (%s) not found, removing from state", d.Id())
@@ -147,7 +147,7 @@ func resourceVerifiedAccessInstanceRead(ctx context.Context, d *schema.ResourceD
 		d.Set("verified_access_trust_providers", nil)
 	}
 
-	setTagsOutV2(ctx, output.Tags)
+	setTagsOut(ctx, output.Tags)
 
 	return diags
 }

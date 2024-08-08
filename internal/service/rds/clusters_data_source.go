@@ -12,7 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfilters"
+	"github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters"
+	namevaluesfiltersv1 "github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters/v1"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -42,12 +43,13 @@ const (
 )
 
 func dataSourceClustersRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	input := &rds.DescribeDBClustersInput{}
 
 	if v, ok := d.GetOk(names.AttrFilter); ok {
-		input.Filters = namevaluesfilters.New(v.(*schema.Set)).RDSFilters()
+		input.Filters = namevaluesfiltersv1.New(v.(*schema.Set)).RDSFilters()
 	}
 
 	var clusterArns []string
@@ -70,12 +72,12 @@ func dataSourceClustersRead(ctx context.Context, d *schema.ResourceData, meta in
 		return !lastPage
 	})
 	if err != nil {
-		return create.DiagError(names.RDS, create.ErrActionReading, DSNameClusters, "", err)
+		return create.AppendDiagError(diags, names.RDS, create.ErrActionReading, DSNameClusters, "", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
 	d.Set("cluster_arns", clusterArns)
 	d.Set("cluster_identifiers", clusterIdentifiers)
 
-	return nil
+	return diags
 }

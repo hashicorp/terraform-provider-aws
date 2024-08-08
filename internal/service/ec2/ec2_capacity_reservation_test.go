@@ -10,8 +10,9 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -24,7 +25,7 @@ import (
 
 func TestAccEC2CapacityReservation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cr ec2.CapacityReservation
+	var cr awstypes.CapacityReservation
 	availabilityZonesDataSourceName := "data.aws_availability_zones.available"
 	resourceName := "aws_ec2_capacity_reservation.test"
 
@@ -66,7 +67,7 @@ func TestAccEC2CapacityReservation_basic(t *testing.T) {
 
 func TestAccEC2CapacityReservation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cr ec2.CapacityReservation
+	var cr awstypes.CapacityReservation
 	resourceName := "aws_ec2_capacity_reservation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -89,7 +90,7 @@ func TestAccEC2CapacityReservation_disappears(t *testing.T) {
 
 func TestAccEC2CapacityReservation_ebsOptimized(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cr ec2.CapacityReservation
+	var cr awstypes.CapacityReservation
 	resourceName := "aws_ec2_capacity_reservation.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -117,7 +118,7 @@ func TestAccEC2CapacityReservation_ebsOptimized(t *testing.T) {
 
 func TestAccEC2CapacityReservation_endDate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cr ec2.CapacityReservation
+	var cr awstypes.CapacityReservation
 	endDate1 := time.Now().UTC().Add(1 * time.Hour).Format(time.RFC3339)
 	endDate2 := time.Now().UTC().Add(2 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_ec2_capacity_reservation.test"
@@ -156,7 +157,7 @@ func TestAccEC2CapacityReservation_endDate(t *testing.T) {
 
 func TestAccEC2CapacityReservation_endDateType(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cr ec2.CapacityReservation
+	var cr awstypes.CapacityReservation
 	endDate := time.Now().UTC().Add(12 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_ec2_capacity_reservation.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -200,7 +201,7 @@ func TestAccEC2CapacityReservation_endDateType(t *testing.T) {
 
 func TestAccEC2CapacityReservation_ephemeralStorage(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cr ec2.CapacityReservation
+	var cr awstypes.CapacityReservation
 	resourceName := "aws_ec2_capacity_reservation.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -228,7 +229,7 @@ func TestAccEC2CapacityReservation_ephemeralStorage(t *testing.T) {
 
 func TestAccEC2CapacityReservation_instanceCount(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cr ec2.CapacityReservation
+	var cr awstypes.CapacityReservation
 	resourceName := "aws_ec2_capacity_reservation.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -263,7 +264,7 @@ func TestAccEC2CapacityReservation_instanceCount(t *testing.T) {
 
 func TestAccEC2CapacityReservation_instanceMatchCriteria(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cr ec2.CapacityReservation
+	var cr awstypes.CapacityReservation
 	resourceName := "aws_ec2_capacity_reservation.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -291,7 +292,7 @@ func TestAccEC2CapacityReservation_instanceMatchCriteria(t *testing.T) {
 
 func TestAccEC2CapacityReservation_instanceType(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cr ec2.CapacityReservation
+	var cr awstypes.CapacityReservation
 	resourceName := "aws_ec2_capacity_reservation.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -326,7 +327,7 @@ func TestAccEC2CapacityReservation_instanceType(t *testing.T) {
 
 func TestAccEC2CapacityReservation_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cr ec2.CapacityReservation
+	var cr awstypes.CapacityReservation
 	resourceName := "aws_ec2_capacity_reservation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -371,7 +372,7 @@ func TestAccEC2CapacityReservation_tags(t *testing.T) {
 
 func TestAccEC2CapacityReservation_tenancy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cr ec2.CapacityReservation
+	var cr awstypes.CapacityReservation
 	resourceName := "aws_ec2_capacity_reservation.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -397,7 +398,7 @@ func TestAccEC2CapacityReservation_tenancy(t *testing.T) {
 	})
 }
 
-func testAccCheckCapacityReservationExists(ctx context.Context, n string, v *ec2.CapacityReservation) resource.TestCheckFunc {
+func testAccCheckCapacityReservationExists(ctx context.Context, n string, v *awstypes.CapacityReservation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -408,7 +409,7 @@ func testAccCheckCapacityReservationExists(ctx context.Context, n string, v *ec2
 			return fmt.Errorf("No EC2 Capacity Reservation ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindCapacityReservationByID(ctx, conn, rs.Primary.ID)
 
@@ -424,7 +425,7 @@ func testAccCheckCapacityReservationExists(ctx context.Context, n string, v *ec2
 
 func testAccCheckCapacityReservationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ec2_capacity_reservation" {
@@ -449,13 +450,13 @@ func testAccCheckCapacityReservationDestroy(ctx context.Context) resource.TestCh
 }
 
 func testAccPreCheckCapacityReservation(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeCapacityReservationsInput{
-		MaxResults: aws.Int64(1),
+		MaxResults: aws.Int32(1),
 	}
 
-	_, err := conn.DescribeCapacityReservationsWithContext(ctx, input)
+	_, err := conn.DescribeCapacityReservations(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

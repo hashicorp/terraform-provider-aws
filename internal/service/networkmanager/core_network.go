@@ -625,18 +625,18 @@ func waitCoreNetworkPolicyCreated(ctx context.Context, conn *networkmanager.Netw
 
 // buildCoreNetworkBasePolicyDocument returns a base policy document
 func buildCoreNetworkBasePolicyDocument(regions []interface{}) (string, error) {
-	edgeLocations := make([]*CoreNetworkEdgeLocation, len(regions))
+	edgeLocations := make([]*coreNetworkPolicyCoreNetworkEdgeLocation, len(regions))
 	for i, location := range regions {
-		edgeLocations[i] = &CoreNetworkEdgeLocation{Location: location.(string)}
+		edgeLocations[i] = &coreNetworkPolicyCoreNetworkEdgeLocation{Location: location.(string)}
 	}
 
-	basePolicy := &CoreNetworkPolicyDoc{
+	basePolicy := &coreNetworkPolicyDocument{
 		Version: "2021.12",
-		CoreNetworkConfiguration: &CoreNetworkPolicyCoreNetworkConfiguration{
-			AsnRanges:     CoreNetworkPolicyDecodeConfigStringList([]interface{}{"64512-65534"}),
+		CoreNetworkConfiguration: &coreNetworkPolicyCoreNetworkConfiguration{
+			AsnRanges:     coreNetworkPolicyExpandStringList([]interface{}{"64512-65534"}),
 			EdgeLocations: edgeLocations,
 		},
-		Segments: []*CoreNetworkPolicySegment{
+		Segments: []*coreNetworkPolicySegment{
 			{
 				Name:        "segment",
 				Description: "base-policy",

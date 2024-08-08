@@ -106,7 +106,7 @@ awssdkpatch: prereq-go ## Install awssdkpatch
 
 awssdkpatch-apply: awssdkpatch-gen ## Apply a patch generated with awssdkpatch
 	@echo "Applying patch for $(PKG)..."
-	@gopatch -p awssdk.patch ./$(PKG_NAME)/...
+	@gopatch --skip-generated -p awssdk.patch ./$(PKG_NAME)/...
 
 awssdkpatch-gen: awssdkpatch ## Generate a patch file using awssdkpatch
 	@if [ "$(PKG)" = "" ]; then \
@@ -458,10 +458,11 @@ sanity: prereq-go ## Run sanity check (failures allowed)
 
 semgrep: semgrep-code-quality semgrep-naming semgrep-naming-cae semgrep-service-naming ## [CI] Run all CI Semgrep checks
 
-semgrep-all: semgrep-validate ## Run semgrep on all files
+semgrep-all: semgrep-test semgrep-validate ## Run semgrep on all files
 	@echo "make: Running Semgrep checks locally (must have semgrep installed)..."
 	@semgrep $(SEMGREP_ARGS) \
 		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
+		--exclude .ci/semgrep/**/*.go \
 		--config .ci/.semgrep.yml \
 		--config .ci/.semgrep-constants.yml \
 		--config .ci/.semgrep-test-constants.yml \
@@ -479,11 +480,12 @@ semgrep-all: semgrep-validate ## Run semgrep on all files
 		--config 'r/dgryski.semgrep-go.oddifsequence' \
 		--config 'r/dgryski.semgrep-go.oserrors'
 
-semgrep-code-quality: semgrep-validate ## [CI] Semgrep Checks / Code Quality Scan
+semgrep-code-quality: semgrep-test semgrep-validate ## [CI] Semgrep Checks / Code Quality Scan
 	@echo "make: Semgrep Checks / Code Quality Scan..."
 	@echo "make: Running Semgrep checks locally (must have semgrep installed)"
-	semgrep $(SEMGREP_ARGS) \
+	@semgrep $(SEMGREP_ARGS) \
 		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
+		--exclude .ci/semgrep/**/*.go \
 		--config .ci/.semgrep.yml \
 		--config .ci/.semgrep-constants.yml \
 		--config .ci/.semgrep-test-constants.yml \
@@ -512,6 +514,7 @@ semgrep-fix: semgrep-validate ## Fix Semgrep issues that have fixes
 	@echo "make: WARNING: This will not fix rules that don't have autofixes"
 	@semgrep $(SEMGREP_ARGS) --autofix \
 		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
+		--exclude .ci/semgrep/**/*.go \
 		--config .ci/.semgrep.yml \
 		--config .ci/.semgrep-constants.yml \
 		--config .ci/.semgrep-test-constants.yml \
@@ -542,6 +545,11 @@ semgrep-naming-cae: semgrep-validate ## [CI] Semgrep Checks / Naming Scan Caps/A
 	@semgrep $(SEMGREP_ARGS) \
 		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
 		--config .ci/.semgrep-caps-aws-ec2.yml
+
+semgrep-test: semgrep-validate ## Test Semgrep configuration files
+	@echo "make: Running Semgrep rule tests..."
+	@semgrep --quiet \
+		--test .ci/semgrep/
 
 semgrep-service-naming: semgrep-validate ## [CI] Semgrep Checks / Service Name Scan A-Z
 	@echo "make: Semgrep Checks / Service Name Scan A-Z..."
@@ -604,7 +612,7 @@ sweeper-unlinked: go-build ## [CI] Provider Checks / Sweeper Functions Not Linke
 		grep --count --extended-regexp 'internal/service/[a-zA-Z0-9]+\.sweep[a-zA-Z0-9]+$$'` ; \
 	echo "make: sweeper-unlinked: found $$count, expected 0" ; \
 	[ $$count -eq 0 ] || \
-        (echo "Expected `strings` to detect no sweeper function names in provider binary."; exit 1)
+		(echo "Expected `strings` to detect no sweeper function names in provider binary."; exit 1)
 
 t: prereq-go fmt-check ## Run acceptance tests (similar to testacc)
 	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
@@ -637,8 +645,8 @@ testacc: prereq-go fmt-check ## Run acceptance tests
 testacc-lint: ## [CI] Acceptance Test Linting / terrafmt
 	@echo "make: Acceptance Test Linting / terrafmt..."
 	@find $(SVC_DIR) -type f -name '*_test.go' \
-    	| sort -u \
-    	| xargs -I {} terrafmt diff --check --fmtcompat {}
+		| sort -u \
+		| xargs -I {} terrafmt diff --check --fmtcompat {}
 
 testacc-lint-fix: ## Fix acceptance test linter findings
 	@echo "make: Fixing Acceptance Test Linting / terrafmt..."

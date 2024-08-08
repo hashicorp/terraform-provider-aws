@@ -8,8 +8,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/elasticache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/elasticache"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +23,7 @@ import (
 
 func TestAccElastiCacheUser_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var user elasticache.User
+	var user awstypes.User
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_elasticache_user.test"
 
@@ -57,7 +58,7 @@ func TestAccElastiCacheUser_basic(t *testing.T) {
 
 func TestAccElastiCacheUser_password_auth_mode(t *testing.T) {
 	ctx := acctest.Context(t)
-	var user elasticache.User
+	var user awstypes.User
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_elasticache_user.test"
 
@@ -96,7 +97,7 @@ func TestAccElastiCacheUser_password_auth_mode(t *testing.T) {
 
 func TestAccElastiCacheUser_iam_auth_mode(t *testing.T) {
 	ctx := acctest.Context(t)
-	var user elasticache.User
+	var user awstypes.User
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_elasticache_user.test"
 
@@ -130,7 +131,7 @@ func TestAccElastiCacheUser_iam_auth_mode(t *testing.T) {
 
 func TestAccElastiCacheUser_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var user elasticache.User
+	var user awstypes.User
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_elasticache_user.test"
 
@@ -168,7 +169,7 @@ func TestAccElastiCacheUser_update(t *testing.T) {
 
 func TestAccElastiCacheUser_update_password_auth_mode(t *testing.T) {
 	ctx := acctest.Context(t)
-	var user elasticache.User
+	var user awstypes.User
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_elasticache_user.test"
 
@@ -232,7 +233,7 @@ func TestAccElastiCacheUser_update_password_auth_mode(t *testing.T) {
 
 func TestAccElastiCacheUser_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var user elasticache.User
+	var user awstypes.User
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_elasticache_user.test"
 
@@ -283,7 +284,7 @@ func TestAccElastiCacheUser_tags(t *testing.T) {
 
 func TestAccElastiCacheUser_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var user elasticache.User
+	var user awstypes.User
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_elasticache_user.test"
 
@@ -308,7 +309,7 @@ func TestAccElastiCacheUser_disappears(t *testing.T) {
 // https://github.com/hashicorp/terraform-provider-aws/issues/34002.
 func TestAccElastiCacheUser_oobModify(t *testing.T) {
 	ctx := acctest.Context(t)
-	var user elasticache.User
+	var user awstypes.User
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_elasticache_user.test"
 
@@ -349,7 +350,7 @@ func TestAccElastiCacheUser_oobModify(t *testing.T) {
 
 func testAccCheckUserDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_elasticache_user" {
@@ -373,7 +374,7 @@ func testAccCheckUserDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckUserExists(ctx context.Context, n string, v *elasticache.User) resource.TestCheckFunc {
+func testAccCheckUserExists(ctx context.Context, n string, v *awstypes.User) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -384,7 +385,7 @@ func testAccCheckUserExists(ctx context.Context, n string, v *elasticache.User) 
 			return fmt.Errorf("No ElastiCache User ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheClient(ctx)
 
 		output, err := tfelasticache.FindUserByID(ctx, conn, rs.Primary.ID)
 
@@ -398,11 +399,11 @@ func testAccCheckUserExists(ctx context.Context, n string, v *elasticache.User) 
 	}
 }
 
-func testAccCheckUserUpdateOOB(ctx context.Context, v *elasticache.User) resource.TestCheckFunc {
+func testAccCheckUserUpdateOOB(ctx context.Context, v *awstypes.User) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheClient(ctx)
 
-		_, err := conn.ModifyUserWithContext(ctx, &elasticache.ModifyUserInput{
+		_, err := conn.ModifyUser(ctx, &elasticache.ModifyUserInput{
 			AccessString: aws.String("on ~* +@all"),
 			UserId:       v.UserId,
 		})

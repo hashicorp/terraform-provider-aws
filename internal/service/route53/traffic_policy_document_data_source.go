@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -266,6 +267,7 @@ func dataSourceTrafficPolicyDocument() *schema.Resource {
 }
 
 func dataSourceTrafficPolicyDocumentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	trafficDoc := &route53TrafficPolicyDoc{}
 
 	if v, ok := d.GetOk(names.AttrEndpoint); ok {
@@ -289,7 +291,7 @@ func dataSourceTrafficPolicyDocumentRead(ctx context.Context, d *schema.Resource
 
 	jsonDoc, err := json.Marshal(trafficDoc)
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 	jsonString := string(jsonDoc)
 
@@ -297,7 +299,7 @@ func dataSourceTrafficPolicyDocumentRead(ctx context.Context, d *schema.Resource
 
 	d.SetId(strconv.Itoa(schema.HashString(jsonString)))
 
-	return nil
+	return diags
 }
 
 func expandDataTrafficPolicyEndpointDoc(tfMap map[string]interface{}) *trafficPolicyEndpoint {

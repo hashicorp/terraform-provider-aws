@@ -3056,6 +3056,9 @@ func testAccBucketConfig_ReplicationBase(bucketName string) string {
 		acctest.ConfigMultipleRegionProvider(2),
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
+data "aws_service_principal" "current" {
+  service_name = "s3"
+}
 
 resource "aws_iam_role" "role" {
   name = %[1]q
@@ -3067,7 +3070,7 @@ resource "aws_iam_role" "role" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "s3.${data.aws_partition.current.dns_suffix}"
+        "Service": "${data.aws_service_principal.current.name}"
       },
       "Effect": "Allow",
       "Sid": ""
@@ -3580,6 +3583,10 @@ resource "aws_s3_bucket" "source" {
 
 func testAccBucketConfig_replicationV2SameRegionNoTags(rName string) string {
 	return fmt.Sprintf(`
+data "aws_service_principal" "current" {
+  service_name = "s3"
+}
+
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -3590,7 +3597,7 @@ resource "aws_iam_role" "test" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "s3.amazonaws.com"
+        "Service": "${data.aws_service_principal.current.name}"
       },
       "Effect": "Allow",
       "Sid": ""

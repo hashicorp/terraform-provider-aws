@@ -131,7 +131,7 @@ func sweepClusterParameterGroups(region string) error {
 				continue
 			}
 
-			r := ResourceClusterParameterGroup()
+			r := resourceClusterParameterGroup()
 			d := r.Data(nil)
 			d.SetId(name)
 
@@ -181,7 +181,7 @@ func sweepClusterSnapshots(region string) error {
 		}
 
 		for _, v := range page.DBClusterSnapshots {
-			r := ResourceClusterSnapshot()
+			r := resourceClusterSnapshot()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.DBClusterSnapshotIdentifier))
 
@@ -229,7 +229,7 @@ func sweepClusters(region string) error {
 		for _, v := range page.DBClusters {
 			arn := aws.StringValue(v.DBClusterArn)
 			id := aws.StringValue(v.DBClusterIdentifier)
-			r := ResourceCluster()
+			r := resourceCluster()
 			d := r.Data(nil)
 			d.SetId(id)
 			d.Set(names.AttrApplyImmediately, true)
@@ -238,7 +238,7 @@ func sweepClusters(region string) error {
 			d.Set(names.AttrDeletionProtection, false)
 			d.Set("skip_final_snapshot", true)
 
-			if engineMode := aws.StringValue(v.EngineMode); engineMode == EngineModeGlobal || engineMode == EngineModeProvisioned {
+			if engineMode := aws.StringValue(v.EngineMode); engineMode == engineModeGlobal || engineMode == engineModeProvisioned {
 				globalCluster, err := FindGlobalClusterByDBClusterARN(ctx, conn, arn)
 				if err != nil {
 					if !tfresource.NotFound(err) {
@@ -434,7 +434,7 @@ func sweepOptionGroups(region string) error {
 				continue
 			}
 
-			r := ResourceOptionGroup()
+			r := resourceOptionGroup()
 			d := r.Data(nil)
 			d.SetId(name)
 
@@ -484,7 +484,7 @@ func sweepParameterGroups(region string) error {
 				continue
 			}
 
-			r := ResourceParameterGroup()
+			r := resourceParameterGroup()
 			d := r.Data(nil)
 			d.SetId(name)
 
@@ -578,7 +578,7 @@ func sweepSnapshots(region string) error {
 				continue
 			}
 
-			r := ResourceSnapshot()
+			r := resourceSnapshot()
 			d := r.Data(nil)
 			d.SetId(id)
 
@@ -668,7 +668,7 @@ func sweepInstanceAutomatedBackups(region string) error {
 
 		for _, v := range page.DBInstanceAutomatedBackups {
 			arn := aws.StringValue(v.DBInstanceAutomatedBackupsArn)
-			r := ResourceInstanceAutomatedBackupsReplication()
+			r := resourceInstanceAutomatedBackupsReplication()
 			d := r.Data(nil)
 			d.SetId(arn)
 			d.Set("source_db_instance_arn", v.DBInstanceArn)

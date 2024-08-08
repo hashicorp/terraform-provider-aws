@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -117,6 +118,7 @@ func ResourceRule() *schema.Resource {
 }
 
 func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	input := &route53resolver.CreateResolverRuleInput{
@@ -141,19 +143,20 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	output, err := conn.CreateResolverRuleWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Route53 Resolver Rule: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Route53 Resolver Rule: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.ResolverRule.Id))
 
 	if _, err := waitRuleCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for Route53 Resolver Rule (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Route53 Resolver Rule (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceRuleRead(ctx, d, meta)
+	return append(diags, resourceRuleRead(ctx, d, meta)...)
 }
 
 func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	rule, err := FindResolverRuleByID(ctx, conn, d.Id())
@@ -161,11 +164,11 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Route53 Resolver Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Route53 Resolver Rule (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Route53 Resolver Rule (%s): %s", d.Id(), err)
 	}
 
 	arn := aws.StringValue(rule.Arn)
@@ -179,13 +182,14 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("rule_type", rule.RuleType)
 	d.Set("share_status", rule.ShareStatus)
 	if err := d.Set("target_ip", flattenRuleTargetIPs(rule.TargetIps)); err != nil {
-		return diag.Errorf("setting target_ip: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting target_ip: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	if d.HasChanges(names.AttrName, "resolver_endpoint_id", "target_ip") {
@@ -209,18 +213,19 @@ func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		_, err := conn.UpdateResolverRuleWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating Route53 Resolver Rule (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Route53 Resolver Rule (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitRuleUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("waiting for Route53 Resolver Rule (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for Route53 Resolver Rule (%s) update: %s", d.Id(), err)
 		}
 	}
 
-	return resourceRuleRead(ctx, d, meta)
+	return append(diags, resourceRuleRead(ctx, d, meta)...)
 }
 
 func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Route53 Resolver Rule: %s", d.Id())
@@ -229,18 +234,18 @@ func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	})
 
 	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Route53 Resolver Rule (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Route53 Resolver Rule (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitRuleDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for Route53 Resolver Rule (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Route53 Resolver Rule (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceRuleCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {

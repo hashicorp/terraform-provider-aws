@@ -191,7 +191,7 @@ func dataSourceLaunchConfiguration() *schema.Resource {
 func dataSourceLaunchConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	autoscalingconn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
-	ec2conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	ec2conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	lc, err := findLaunchConfigurationByName(ctx, autoscalingconn, name)

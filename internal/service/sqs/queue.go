@@ -29,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
@@ -211,6 +212,7 @@ func resourceQueue() *schema.Resource {
 }
 
 func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SQSClient(ctx)
 
 	name := queueName(d)
@@ -221,7 +223,7 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	attributes, err := queueAttributeMap.ResourceDataToAPIAttributesCreate(d)
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input.Attributes = flex.ExpandStringyValueMap(attributes)
@@ -240,13 +242,13 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if err != nil {
-		return diag.Errorf("creating SQS Queue (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating SQS Queue (%s): %s", name, err)
 	}
 
 	d.SetId(aws.ToString(outputRaw.(*sqs.CreateQueueOutput).QueueUrl))
 
 	if err := waitQueueAttributesPropagated(ctx, conn, d.Id(), attributes); err != nil {
-		return diag.Errorf("waiting for SQS Queue (%s) attributes create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SQS Queue (%s) attributes create: %s", d.Id(), err)
 	}
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
@@ -255,18 +257,19 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		// If default tags only, continue. Otherwise, error.
 		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
-			return resourceQueueRead(ctx, d, meta)
+			return append(diags, resourceQueueRead(ctx, d, meta)...)
 		}
 
 		if err != nil {
-			return diag.Errorf("setting SQS Queue (%s) tags: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "setting SQS Queue (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	return resourceQueueRead(ctx, d, meta)
+	return append(diags, resourceQueueRead(ctx, d, meta)...)
 }
 
 func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SQSClient(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNotFound(ctx, queueReadTimeout, func() (interface{}, error) {
@@ -276,21 +279,21 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SQS Queue (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading SQS Queue (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SQS Queue (%s): %s", d.Id(), err)
 	}
 
 	name, err := queueNameFromURL(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	err = queueAttributeMap.APIAttributesToResourceData(outputRaw.(map[types.QueueAttributeName]string), d)
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	// Backwards compatibility: https://github.com/hashicorp/terraform-provider-aws/issues/19786.
@@ -306,16 +309,17 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 	d.Set(names.AttrURL, d.Id())
 
-	return nil
+	return diags
 }
 
 func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SQSClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		attributes, err := queueAttributeMap.ResourceDataToAPIAttributesUpdate(d)
 		if err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
 		input := &sqs.SetQueueAttributesInput{
@@ -326,18 +330,19 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		_, err = conn.SetQueueAttributes(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating SQS Queue (%s) attributes: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating SQS Queue (%s) attributes: %s", d.Id(), err)
 		}
 
 		if err := waitQueueAttributesPropagated(ctx, conn, d.Id(), attributes); err != nil {
-			return diag.Errorf("waiting for SQS Queue (%s) attributes update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for SQS Queue (%s) attributes update: %s", d.Id(), err)
 		}
 	}
 
-	return resourceQueueRead(ctx, d, meta)
+	return append(diags, resourceQueueRead(ctx, d, meta)...)
 }
 
 func resourceQueueDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SQSClient(ctx)
 
 	log.Printf("[DEBUG] Deleting SQS Queue: %s", d.Id())
@@ -346,18 +351,18 @@ func resourceQueueDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeQueueDoesNotExist) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting SQS Queue (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SQS Queue (%s): %s", d.Id(), err)
 	}
 
 	if err := waitQueueDeleted(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("waiting for SQS Queue (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SQS Queue (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceQueueCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {

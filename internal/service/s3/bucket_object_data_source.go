@@ -25,6 +25,7 @@ import (
 )
 
 // @SDKDataSource("aws_s3_bucket_object", name="Bucket Object")
+// @Tags(identifierAttribute="arn", resourceType="BucketObject")
 func dataSourceBucketObject() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceBucketObjectRead,
@@ -143,7 +144,6 @@ func dataSourceBucketObject() *schema.Resource {
 func dataSourceBucketObjectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	bucket := d.Get(names.AttrBucket).(string)
 	key := sdkv1CompatibleCleanKey(d.Get(names.AttrKey).(string))
@@ -233,16 +233,6 @@ func dataSourceBucketObjectRead(ctx context.Context, d *schema.ResourceData, met
 		}
 
 		d.Set("body", buf.String())
-	}
-
-	tags, err := objectListTags(ctx, conn, bucket, key)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for S3 Bucket (%s) Object (%s): %s", bucket, key, err)
-	}
-
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	return diags

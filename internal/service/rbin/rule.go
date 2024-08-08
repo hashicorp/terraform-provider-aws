@@ -159,6 +159,7 @@ const (
 )
 
 func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RBinClient(ctx)
 
 	in := &rbin.CreateRuleInput{
@@ -177,23 +178,24 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	out, err := conn.CreateRule(ctx, in)
 	if err != nil {
-		return create.DiagError(names.RBin, create.ErrActionCreating, ResNameRule, d.Get(names.AttrResourceType).(string), err)
+		return create.AppendDiagError(diags, names.RBin, create.ErrActionCreating, ResNameRule, d.Get(names.AttrResourceType).(string), err)
 	}
 
 	if out == nil || out.Identifier == nil {
-		return create.DiagError(names.RBin, create.ErrActionCreating, ResNameRule, d.Get(names.AttrResourceType).(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.RBin, create.ErrActionCreating, ResNameRule, d.Get(names.AttrResourceType).(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(out.Identifier))
 
 	if _, err := waitRuleCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.DiagError(names.RBin, create.ErrActionWaitingForCreation, ResNameRule, d.Id(), err)
+		return create.AppendDiagError(diags, names.RBin, create.ErrActionWaitingForCreation, ResNameRule, d.Id(), err)
 	}
 
-	return resourceRuleRead(ctx, d, meta)
+	return append(diags, resourceRuleRead(ctx, d, meta)...)
 }
 
 func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RBinClient(ctx)
 
 	out, err := findRuleByID(ctx, conn, d.Id())
@@ -201,11 +203,11 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] RBin Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.RBin, create.ErrActionReading, ResNameRule, d.Id(), err)
+		return create.AppendDiagError(diags, names.RBin, create.ErrActionReading, ResNameRule, d.Id(), err)
 	}
 
 	ruleArn := awsarn.ARN{
@@ -222,17 +224,18 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set(names.AttrStatus, string(out.Status))
 
 	if err := d.Set(names.AttrResourceTags, flattenResourceTags(out.ResourceTags)); err != nil {
-		return create.DiagError(names.RBin, create.ErrActionSetting, ResNameRule, d.Id(), err)
+		return create.AppendDiagError(diags, names.RBin, create.ErrActionSetting, ResNameRule, d.Id(), err)
 	}
 
 	if err := d.Set(names.AttrRetentionPeriod, flattenRetentionPeriod(out.RetentionPeriod)); err != nil {
-		return create.DiagError(names.RBin, create.ErrActionSetting, ResNameRule, d.Id(), err)
+		return create.AppendDiagError(diags, names.RBin, create.ErrActionSetting, ResNameRule, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RBinClient(ctx)
 
 	update := false
@@ -257,27 +260,27 @@ func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if !update {
-		return nil
+		return diags
 	}
 
 	log.Printf("[DEBUG] Updating RBin Rule (%s): %#v", d.Id(), in)
 	out, err := conn.UpdateRule(ctx, in)
 	if err != nil {
-		return create.DiagError(names.RBin, create.ErrActionUpdating, ResNameRule, d.Id(), err)
+		return create.AppendDiagError(diags, names.RBin, create.ErrActionUpdating, ResNameRule, d.Id(), err)
 	}
 
 	if _, err := waitRuleUpdated(ctx, conn, aws.ToString(out.Identifier), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return create.DiagError(names.RBin, create.ErrActionWaitingForUpdate, ResNameRule, d.Id(), err)
+		return create.AppendDiagError(diags, names.RBin, create.ErrActionWaitingForUpdate, ResNameRule, d.Id(), err)
 	}
 
-	return resourceRuleRead(ctx, d, meta)
+	return append(diags, resourceRuleRead(ctx, d, meta)...)
 }
 
 func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	log.Printf("[INFO] Deleting RBin Rule %s", d.Id())
-
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RBinClient(ctx)
 
+	log.Printf("[INFO] Deleting RBin Rule: %s", d.Id())
 	_, err := conn.DeleteRule(ctx, &rbin.DeleteRuleInput{
 		Identifier: aws.String(d.Id()),
 	})
@@ -285,17 +288,17 @@ func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	if err != nil {
 		var nfe *types.ResourceNotFoundException
 		if errors.As(err, &nfe) {
-			return nil
+			return diags
 		}
 
-		return create.DiagError(names.RBin, create.ErrActionDeleting, ResNameRule, d.Id(), err)
+		return create.AppendDiagError(diags, names.RBin, create.ErrActionDeleting, ResNameRule, d.Id(), err)
 	}
 
 	if _, err := waitRuleDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return create.DiagError(names.RBin, create.ErrActionWaitingForDeletion, ResNameRule, d.Id(), err)
+		return create.AppendDiagError(diags, names.RBin, create.ErrActionWaitingForDeletion, ResNameRule, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func waitRuleCreated(ctx context.Context, conn *rbin.Client, id string, timeout time.Duration) (*rbin.GetRuleOutput, error) {

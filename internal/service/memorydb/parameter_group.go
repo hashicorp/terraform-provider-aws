@@ -11,16 +11,18 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/memorydb"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/memorydb"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/memorydb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -100,7 +102,7 @@ func ResourceParameterGroup() *schema.Resource {
 func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
+	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 
 	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &memorydb.CreateParameterGroupInput{
@@ -110,8 +112,8 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 		Tags:               getTagsIn(ctx),
 	}
 
-	log.Printf("[DEBUG] Creating MemoryDB Parameter Group: %s", input)
-	output, err := conn.CreateParameterGroupWithContext(ctx, input)
+	log.Printf("[DEBUG] Creating MemoryDB Parameter Group: %+v", input)
+	output, err := conn.CreateParameterGroup(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating MemoryDB Parameter Group (%s): %s", name, err)
@@ -129,7 +131,7 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
+	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 
 	if d.HasChange(names.AttrParameter) {
 		o, n := d.GetChange(names.AttrParameter)
@@ -146,7 +148,7 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 			// Removing a parameter from state is equivalent to resetting it
 			// to its default state.
 
-			var paramsToReset []*memorydb.ParameterNameValue
+			var paramsToReset []*awstypes.ParameterNameValue
 			if len(toRemove) <= maxParams {
 				paramsToReset, toRemove = toRemove[:], nil
 			} else {
@@ -161,7 +163,7 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 		}
 
 		for len(toAdd) > 0 {
-			var paramsToModify []*memorydb.ParameterNameValue
+			var paramsToModify []*awstypes.ParameterNameValue
 			if len(toAdd) <= maxParams {
 				paramsToModify, toAdd = toAdd[:], nil
 			} else {
@@ -182,7 +184,7 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
+	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 
 	group, err := FindParameterGroupByName(ctx, conn, d.Id())
 
@@ -200,7 +202,7 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set(names.AttrDescription, group.Description)
 	d.Set(names.AttrFamily, group.Family)
 	d.Set(names.AttrName, group.Name)
-	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(group.Name)))
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(group.Name)))
 
 	userDefinedParameters := createUserDefinedParameterMap(d)
 
@@ -219,14 +221,14 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 func resourceParameterGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
+	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 
 	log.Printf("[DEBUG] Deleting MemoryDB Parameter Group: (%s)", d.Id())
-	_, err := conn.DeleteParameterGroupWithContext(ctx, &memorydb.DeleteParameterGroupInput{
+	_, err := conn.DeleteParameterGroup(ctx, &memorydb.DeleteParameterGroupInput{
 		ParameterGroupName: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, memorydb.ErrCodeParameterGroupNotFoundFault) {
+	if errs.IsA[*awstypes.ParameterGroupNotFoundFault](err) {
 		return diags
 	}
 
@@ -238,10 +240,10 @@ func resourceParameterGroupDelete(ctx context.Context, d *schema.ResourceData, m
 }
 
 // resetParameterGroupParameters resets the given parameters to their default values.
-func resetParameterGroupParameters(ctx context.Context, conn *memorydb.MemoryDB, name string, parameters []*memorydb.ParameterNameValue) error {
-	var parameterNames []*string
+func resetParameterGroupParameters(ctx context.Context, conn *memorydb.Client, name string, parameters []*awstypes.ParameterNameValue) error {
+	var parameterNames []string
 	for _, parameter := range parameters {
-		parameterNames = append(parameterNames, parameter.ParameterName)
+		parameterNames = append(parameterNames, *parameter.ParameterName)
 	}
 
 	input := memorydb.ResetParameterGroupInput{
@@ -250,9 +252,9 @@ func resetParameterGroupParameters(ctx context.Context, conn *memorydb.MemoryDB,
 	}
 
 	return retry.RetryContext(ctx, 30*time.Second, func() *retry.RetryError {
-		_, err := conn.ResetParameterGroupWithContext(ctx, &input)
+		_, err := conn.ResetParameterGroup(ctx, &input)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, memorydb.ErrCodeInvalidParameterGroupStateFault, " has pending changes") {
+			if errs.IsAErrorMessageContains[*awstypes.InvalidParameterGroupStateFault](err, " has pending changes") {
 				return retry.RetryableError(err)
 			}
 			return retry.NonRetryableError(err)
@@ -262,12 +264,12 @@ func resetParameterGroupParameters(ctx context.Context, conn *memorydb.MemoryDB,
 }
 
 // modifyParameterGroupParameters updates the given parameters.
-func modifyParameterGroupParameters(ctx context.Context, conn *memorydb.MemoryDB, name string, parameters []*memorydb.ParameterNameValue) error {
+func modifyParameterGroupParameters(ctx context.Context, conn *memorydb.Client, name string, parameters []*awstypes.ParameterNameValue) error {
 	input := memorydb.UpdateParameterGroupInput{
 		ParameterGroupName:  aws.String(name),
-		ParameterNameValues: parameters,
+		ParameterNameValues: tfslices.Values(parameters),
 	}
-	_, err := conn.UpdateParameterGroupWithContext(ctx, &input)
+	_, err := conn.UpdateParameterGroup(ctx, &input)
 	return err
 }
 
@@ -276,13 +278,13 @@ func modifyParameterGroupParameters(ctx context.Context, conn *memorydb.MemoryDB
 //
 // Parameters given in userDefined will be returned even if the value is equal
 // to the default.
-func listParameterGroupParameters(ctx context.Context, conn *memorydb.MemoryDB, family, name string, userDefined map[string]string) ([]*memorydb.Parameter, error) {
-	query := func(ctx context.Context, parameterGroupName string) ([]*memorydb.Parameter, error) {
+func listParameterGroupParameters(ctx context.Context, conn *memorydb.Client, family, name string, userDefined map[string]string) ([]awstypes.Parameter, error) {
+	query := func(ctx context.Context, parameterGroupName string) ([]awstypes.Parameter, error) {
 		input := memorydb.DescribeParametersInput{
 			ParameterGroupName: aws.String(parameterGroupName),
 		}
 
-		output, err := conn.DescribeParametersWithContext(ctx, &input)
+		output, err := conn.DescribeParameters(ctx, &input)
 		if err != nil {
 			return nil, err
 		}
@@ -302,7 +304,7 @@ func listParameterGroupParameters(ctx context.Context, conn *memorydb.MemoryDB, 
 
 	defaultValueByName := map[string]string{}
 	for _, defaultPV := range defaults {
-		defaultValueByName[aws.StringValue(defaultPV.Name)] = aws.StringValue(defaultPV.Value)
+		defaultValueByName[aws.ToString(defaultPV.Name)] = aws.ToString(defaultPV.Value)
 	}
 
 	current, err := query(ctx, name)
@@ -310,11 +312,11 @@ func listParameterGroupParameters(ctx context.Context, conn *memorydb.MemoryDB, 
 		return nil, err
 	}
 
-	var result []*memorydb.Parameter
+	var result []awstypes.Parameter
 
 	for _, parameter := range current {
-		name := aws.StringValue(parameter.Name)
-		currentValue := aws.StringValue(parameter.Value)
+		name := aws.ToString(parameter.Name)
+		currentValue := aws.ToString(parameter.Value)
 		defaultValue := defaultValueByName[name]
 		_, isUserDefined := userDefined[name]
 
@@ -337,7 +339,7 @@ func ParameterHash(v interface{}) int {
 }
 
 // ParameterChanges was copy-pasted from ElastiCache.
-func ParameterChanges(o, n interface{}) (remove, addOrUpdate []*memorydb.ParameterNameValue) {
+func ParameterChanges(o, n interface{}) (remove, addOrUpdate []*awstypes.ParameterNameValue) {
 	if o == nil {
 		o = new(schema.Set)
 	}
@@ -348,19 +350,19 @@ func ParameterChanges(o, n interface{}) (remove, addOrUpdate []*memorydb.Paramet
 	os := o.(*schema.Set)
 	ns := n.(*schema.Set)
 
-	om := make(map[string]*memorydb.ParameterNameValue, os.Len())
+	om := make(map[string]*awstypes.ParameterNameValue, os.Len())
 	for _, raw := range os.List() {
 		param := raw.(map[string]interface{})
 		om[param[names.AttrName].(string)] = expandParameterNameValue(param)
 	}
-	nm := make(map[string]*memorydb.ParameterNameValue, len(addOrUpdate))
+	nm := make(map[string]*awstypes.ParameterNameValue, len(addOrUpdate))
 	for _, raw := range ns.List() {
 		param := raw.(map[string]interface{})
 		nm[param[names.AttrName].(string)] = expandParameterNameValue(param)
 	}
 
 	// Remove: key is in old, but not in new
-	remove = make([]*memorydb.ParameterNameValue, 0, os.Len())
+	remove = make([]*awstypes.ParameterNameValue, 0, os.Len())
 	for k := range om {
 		if _, ok := nm[k]; !ok {
 			remove = append(remove, om[k])
@@ -368,10 +370,10 @@ func ParameterChanges(o, n interface{}) (remove, addOrUpdate []*memorydb.Paramet
 	}
 
 	// Add or Update: key is in new, but not in old or has changed value
-	addOrUpdate = make([]*memorydb.ParameterNameValue, 0, ns.Len())
+	addOrUpdate = make([]*awstypes.ParameterNameValue, 0, ns.Len())
 	for k, nv := range nm {
 		ov, ok := om[k]
-		if !ok || ok && (aws.StringValue(nv.ParameterValue) != aws.StringValue(ov.ParameterValue)) {
+		if !ok || ok && (aws.ToString(nv.ParameterValue) != aws.ToString(ov.ParameterValue)) {
 			addOrUpdate = append(addOrUpdate, nm[k])
 		}
 	}
@@ -379,21 +381,21 @@ func ParameterChanges(o, n interface{}) (remove, addOrUpdate []*memorydb.Paramet
 	return remove, addOrUpdate
 }
 
-func flattenParameters(list []*memorydb.Parameter) []map[string]interface{} {
+func flattenParameters(list []awstypes.Parameter) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(list))
 	for _, i := range list {
 		if i.Value != nil {
 			result = append(result, map[string]interface{}{
-				names.AttrName:  strings.ToLower(aws.StringValue(i.Name)),
-				names.AttrValue: aws.StringValue(i.Value),
+				names.AttrName:  strings.ToLower(aws.ToString(i.Name)),
+				names.AttrValue: aws.ToString(i.Value),
 			})
 		}
 	}
 	return result
 }
 
-func expandParameterNameValue(param map[string]interface{}) *memorydb.ParameterNameValue {
-	return &memorydb.ParameterNameValue{
+func expandParameterNameValue(param map[string]interface{}) *awstypes.ParameterNameValue {
+	return &awstypes.ParameterNameValue{
 		ParameterName:  aws.String(param[names.AttrName].(string)),
 		ParameterValue: aws.String(param[names.AttrValue].(string)),
 	}

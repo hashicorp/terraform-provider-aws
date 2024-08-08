@@ -251,6 +251,54 @@ func testAccWorkteam_notificationConfig(t *testing.T) {
 	})
 }
 
+func testAccWorkteam_workerAccessConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var workteam sagemaker.Workteam
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_workteam.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkteamDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkteamConfig_workerAccessConfiguration(rName, "Enabled"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkteamExists(ctx, resourceName, &workteam),
+					resource.TestCheckResourceAttr(resourceName, "workteam_name", rName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`workteam/.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
+					resource.TestCheckResourceAttr(resourceName, "worker_access_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "worker_access_configuration.0.s3_presign.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "worker_access_configuration.0.s3_presign.0.iam_policy_constraints.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "worker_access_configuration.0.s3_presign.0.iam_policy_constraints.0.source_ip", "Enabled"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"workforce_name"},
+			},
+			{
+				Config: testAccWorkteamConfig_workerAccessConfiguration(rName, "Disabled"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkteamExists(ctx, resourceName, &workteam),
+					resource.TestCheckResourceAttr(resourceName, "workteam_name", rName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`workteam/.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
+					resource.TestCheckResourceAttr(resourceName, "worker_access_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "worker_access_configuration.0.s3_presign.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "worker_access_configuration.0.s3_presign.0.iam_policy_constraints.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "worker_access_configuration.0.s3_presign.0.iam_policy_constraints.0.source_ip", "Disabled"),
+				),
+			},
+		},
+	})
+}
+
 func testAccWorkteam_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var workteam sagemaker.Workteam
@@ -503,6 +551,30 @@ resource "aws_sagemaker_workteam" "test" {
   }
 }
 `, rName))
+}
+
+func testAccWorkteamConfig_workerAccessConfiguration(rName, status string) string {
+	return acctest.ConfigCompose(testAccWorkteamOIDCBaseConfig(rName), fmt.Sprintf(`
+resource "aws_sagemaker_workteam" "test" {
+  workteam_name  = %[1]q
+  workforce_name = aws_sagemaker_workforce.test.id
+  description    = %[1]q
+
+  member_definition {
+    oidc_member_definition {
+      groups = [%[1]q]
+    }
+  }
+
+  worker_access_configuration {
+    s3_presign {
+      iam_policy_constraints {
+        source_ip = %[2]q
+      }
+    }
+  }
+}
+`, rName, status))
 }
 
 func testAccWorkteamConfig_tags1(rName, tagKey1, tagValue1 string) string {

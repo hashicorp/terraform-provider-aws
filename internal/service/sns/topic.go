@@ -273,7 +273,7 @@ func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	attributes, err := topicAttributeMap.ResourceDataToAPIAttributesCreate(d)
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	// The FifoTopic attribute must be passed in the call to CreateTopic.
@@ -337,7 +337,7 @@ func resourceTopicRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SNS Topic (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading SNS Topic (%s): %s", d.Id(), err)
@@ -345,12 +345,12 @@ func resourceTopicRead(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	err = topicAttributeMap.APIAttributesToResourceData(attributes, d)
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	arn, err := arn.Parse(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	name := arn.Resource
@@ -361,28 +361,30 @@ func resourceTopicRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		d.Set(names.AttrNamePrefix, create.NamePrefixFromName(name))
 	}
 
-	return nil
+	return diags
 }
 
 func resourceTopicUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		attributes, err := topicAttributeMap.ResourceDataToAPIAttributesUpdate(d)
 		if err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
 		err = putTopicAttributes(ctx, conn, d.Id(), attributes)
 		if err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
-	return resourceTopicRead(ctx, d, meta)
+	return append(diags, resourceTopicRead(ctx, d, meta)...)
 }
 
 func resourceTopicDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
 	log.Printf("[DEBUG] Deleting SNS Topic: %s", d.Id())
@@ -391,14 +393,14 @@ func resourceTopicDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	})
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting SNS Topic (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SNS Topic (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceTopicCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {

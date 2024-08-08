@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_cloudwatch_log_group")
+// @SDKDataSource("aws_cloudwatch_log_group", name="Log Group")
 // @Tags(identifierAttribute="arn")
 func dataSourceGroup() *schema.Resource {
 	return &schema.Resource{
