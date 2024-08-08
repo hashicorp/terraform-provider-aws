@@ -317,7 +317,7 @@ func findGatewayAssociationByGatewayIDAndVirtualGatewayID(ctx context.Context, c
 }
 
 func findNonDisassociatedGatewayAssociation(ctx context.Context, conn *directconnect.Client, input *directconnect.DescribeDirectConnectGatewayAssociationsInput, filter tfslices.Predicate[*awstypes.DirectConnectGatewayAssociation]) (*awstypes.DirectConnectGatewayAssociation, error) {
-	output, err := findGatewayAssociation(ctx, conn, input, tfslices.PredicateTrue[*awstypes.DirectConnectGatewayAssociation]())
+	output, err := findGatewayAssociation(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
