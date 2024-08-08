@@ -78,15 +78,7 @@ func ResourceCoreNetwork() *schema.Resource {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
-				ConflictsWith: []string{"base_policy_region", "base_policy_regions"},
-			},
-			"base_policy_region": {
-				Deprecated: "Use the base_policy_regions argument instead. " +
-					"This argument will be removed in the next major version of the provider.",
-				Type:          schema.TypeString,
-				Optional:      true,
-				ValidateFunc:  verify.ValidRegionName,
-				ConflictsWith: []string{"base_policy_document", "base_policy_regions"},
+				ConflictsWith: []string{"base_policy_regions"},
 			},
 			"base_policy_regions": {
 				Type:     schema.TypeSet,
@@ -95,7 +87,7 @@ func ResourceCoreNetwork() *schema.Resource {
 					Type:         schema.TypeString,
 					ValidateFunc: verify.ValidRegionName,
 				},
-				ConflictsWith: []string{"base_policy_document", "base_policy_region"},
+				ConflictsWith: []string{"base_policy_document"},
 			},
 			"create_base_policy": {
 				Type:     schema.TypeBool,
@@ -197,9 +189,7 @@ func resourceCoreNetworkCreate(ctx context.Context, d *schema.ResourceData, meta
 		} else {
 			// if user supplies a region or multiple regions use it in the base policy, otherwise use current region
 			regions := []interface{}{meta.(*conns.AWSClient).Region}
-			if v, ok := d.GetOk("base_policy_region"); ok {
-				regions = []interface{}{v.(string)}
-			} else if v, ok := d.GetOk("base_policy_regions"); ok && v.(*schema.Set).Len() > 0 {
+			if v, ok := d.GetOk("base_policy_regions"); ok && v.(*schema.Set).Len() > 0 {
 				regions = v.(*schema.Set).List()
 			}
 
@@ -288,9 +278,7 @@ func resourceCoreNetworkUpdate(ctx context.Context, d *schema.ResourceData, meta
 		if _, ok := d.GetOk("create_base_policy"); ok {
 			// if user supplies a region or multiple regions use it in the base policy, otherwise use current region
 			regions := []interface{}{meta.(*conns.AWSClient).Region}
-			if v, ok := d.GetOk("base_policy_region"); ok {
-				regions = []interface{}{v.(string)}
-			} else if v, ok := d.GetOk("base_policy_regions"); ok && v.(*schema.Set).Len() > 0 {
+			if v, ok := d.GetOk("base_policy_regions"); ok && v.(*schema.Set).Len() > 0 {
 				regions = v.(*schema.Set).List()
 			}
 
