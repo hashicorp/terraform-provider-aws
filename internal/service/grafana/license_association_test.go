@@ -99,8 +99,8 @@ func testAccLicenseAssociation_enterpriseToken(t *testing.T) {
 func testAccLicenseAssociationConfig_enterpriseToken(rName string, licenseType string, grafanaToken string) string {
 	return acctest.ConfigCompose(testAccWorkspaceConfig_authenticationProvider(rName, "SAML"), fmt.Sprintf(`
 resource "aws_grafana_license_association" "test" {
-  workspace_id = aws_grafana_workspace.test.id
-  license_type = %[1]q
+  workspace_id  = aws_grafana_workspace.test.id
+  license_type  = %[1]q
   grafana_token = %[2]q
 }
 `, licenseType, grafanaToken))

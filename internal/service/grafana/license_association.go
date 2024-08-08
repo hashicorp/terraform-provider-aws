@@ -74,9 +74,12 @@ func resourceLicenseAssociationCreate(ctx context.Context, d *schema.ResourceDat
 
 	workspaceID := d.Get("workspace_id").(string)
 	input := &grafana.AssociateLicenseInput{
-		GrafanaToken: aws.String(d.Get("grafana_token").(string)),
-		LicenseType:  awstypes.LicenseType(d.Get("license_type").(string)),
-		WorkspaceId:  aws.String(workspaceID),
+		LicenseType: awstypes.LicenseType(d.Get("license_type").(string)),
+		WorkspaceId: aws.String(workspaceID),
+	}
+
+	if v, ok := d.GetOk("grafana_token"); ok {
+		input.GrafanaToken = aws.String(v.(string))
 	}
 
 	output, err := conn.AssociateLicense(ctx, input)
@@ -115,6 +118,7 @@ func resourceLicenseAssociationRead(ctx context.Context, d *schema.ResourceData,
 	} else {
 		d.Set("free_trial_expiration", nil)
 	}
+	d.Set("grafana_token", workspace.GrafanaToken)
 	if workspace.LicenseExpiration != nil {
 		d.Set("license_expiration", workspace.LicenseExpiration.Format(time.RFC3339))
 	} else {
