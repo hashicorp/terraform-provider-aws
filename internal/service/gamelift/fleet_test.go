@@ -632,7 +632,6 @@ func TestAccGameLiftFleet_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &conf),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfgamelift.ResourceFleet(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfgamelift.ResourceFleet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -640,29 +639,22 @@ func TestAccGameLiftFleet_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckFleetExists(ctx context.Context, n string, res *awstypes.FleetAttributes) resource.TestCheckFunc {
+func testAccCheckFleetExists(ctx context.Context, n string, v *awstypes.FleetAttributes) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No GameLift Fleet ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftClient(ctx)
 
-		fleet, err := tfgamelift.FindFleetByID(ctx, conn, rs.Primary.ID)
+		output, err := tfgamelift.FindFleetByID(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		if aws.ToString(fleet.FleetId) != rs.Primary.ID {
-			return fmt.Errorf("GameLift Fleet not found")
-		}
-
-		*res = *fleet
+		*v = *output
 
 		return nil
 	}
@@ -683,7 +675,11 @@ func testAccCheckFleetDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			return nil
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("GameLift Fleet %s still exists", rs.Primary.ID)
 		}
 
 		return nil

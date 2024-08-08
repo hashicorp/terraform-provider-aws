@@ -14,27 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindFleetByID(ctx context.Context, conn *gamelift.Client, id string) (*awstypes.FleetAttributes, error) {
-	input := &gamelift.DescribeFleetAttributesInput{
-		FleetIds: []string{id},
-	}
-
-	output, err := conn.DescribeFleetAttributes(ctx, input)
-
-	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return tfresource.AssertSingleValueResult(output.FleetAttributes)
-}
-
 func FindGameServerGroupByName(ctx context.Context, conn *gamelift.Client, name string) (*awstypes.GameServerGroup, error) {
 	input := &gamelift.DescribeGameServerGroupInput{
 		GameServerGroupName: aws.String(name),

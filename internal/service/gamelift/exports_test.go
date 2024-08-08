@@ -7,8 +7,10 @@ package gamelift
 var (
 	ResourceAlias = resourceAlias
 	ResourceBuild = resourceBuild
+	ResourceFleet = resourceFleet
 
 	DiffPortSettings = diffPortSettings
 	FindAliasByID    = findAliasByID
 	FindBuildByID    = findBuildByID
+	FindFleetByID    = findFleetByID
 )
