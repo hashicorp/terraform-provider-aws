@@ -66,6 +66,13 @@ func TestAccNetworkMonitorMonitor_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckMonitorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
+				Config: testAccMonitorConfig_tags0(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMonitorExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+				),
+			},
+			{
 				Config: testAccMonitorConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMonitorExists(ctx, resourceName),
@@ -170,6 +177,17 @@ resource "aws_networkmonitor_monitor" "test" {
   monitor_name       = %[1]q
 }
 `, rName, aggregation)
+}
+
+func testAccMonitorConfig_tags0(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_networkmonitor_monitor" "test" {
+  aggregation_period = 30
+  monitor_name       = %[1]q
+
+  tags = {}
+}
+`, rName)
 }
 
 func testAccMonitorConfig_tags1(rName, tagKey1, tagValue1 string) string {
