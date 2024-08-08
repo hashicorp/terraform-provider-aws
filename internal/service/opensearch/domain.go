@@ -352,6 +352,10 @@ func ResourceDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"dashboard_endpoint_v2": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"domain_endpoint_options": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -388,6 +392,10 @@ func ResourceDomain() *schema.Resource {
 						},
 					},
 				},
+			},
+			"domain_endpoint_v2_hosted_zone_id": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"domain_id": {
 				Type:     schema.TypeString,
@@ -458,6 +466,10 @@ func ResourceDomain() *schema.Resource {
 				},
 			},
 			names.AttrEndpoint: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"endpoint_v2": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -859,6 +871,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	d.SetId(aws.StringValue(ds.ARN))
 	d.Set(names.AttrARN, ds.ARN)
+	d.Set("domain_endpoint_v2_hosted_zone_id", ds.DomainEndpointV2HostedZoneId)
 	d.Set("domain_id", ds.DomainId)
 	d.Set(names.AttrDomainName, ds.DomainName)
 	d.Set(names.AttrEngineVersion, ds.EngineVersion)
@@ -918,16 +931,27 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 		endpoints := flex.FlattenStringMap(ds.Endpoints)
 		d.Set(names.AttrEndpoint, endpoints["vpc"])
-		d.Set("dashboard_endpoint", getDashboardEndpoint(d))
-		d.Set("kibana_endpoint", getKibanaEndpoint(d))
+		d.Set("dashboard_endpoint", getDashboardEndpoint(d.Get(names.AttrEndpoint).(string)))
+		d.Set("kibana_endpoint", getKibanaEndpoint(d.Get(names.AttrEndpoint).(string)))
+		if endpoints["vpcv2"] != nil {
+			d.Set("endpoint_v2", endpoints["vpcv2"])
+			d.Set("dashboard_endpoint_v2", getDashboardEndpoint(d.Get("endpoint_v2").(string)))
+		}
 		if ds.Endpoint != nil {
 			return sdkdiag.AppendErrorf(diags, "%q: OpenSearch Domain in VPC expected to have null Endpoint value", d.Id())
+		}
+		if ds.EndpointV2 != nil {
+			return sdkdiag.AppendErrorf(diags, "%q: OpenSearch Domain in VPC expected to have null EndpointV2 value", d.Id())
 		}
 	} else {
 		if ds.Endpoint != nil {
 			d.Set(names.AttrEndpoint, ds.Endpoint)
-			d.Set("dashboard_endpoint", getDashboardEndpoint(d))
-			d.Set("kibana_endpoint", getKibanaEndpoint(d))
+			d.Set("dashboard_endpoint", getDashboardEndpoint(d.Get(names.AttrEndpoint).(string)))
+			d.Set("kibana_endpoint", getKibanaEndpoint(d.Get(names.AttrEndpoint).(string)))
+		}
+		if ds.EndpointV2 != nil {
+			d.Set("endpoint_v2", ds.EndpointV2)
+			d.Set("dashboard_endpoint_v2", getDashboardEndpoint(d.Get("endpoint_v2").(string)))
 		}
 		if ds.Endpoints != nil {
 			return sdkdiag.AppendErrorf(diags, "%q: OpenSearch Domain not in VPC expected to have null Endpoints value", d.Id())
@@ -1193,12 +1217,12 @@ func suppressEquivalentKMSKeyIDs(k, old, new string, d *schema.ResourceData) boo
 	return strings.Contains(old, new)
 }
 
-func getDashboardEndpoint(d *schema.ResourceData) string {
-	return d.Get(names.AttrEndpoint).(string) + "/_dashboards"
+func getDashboardEndpoint(endpoint string) string {
+	return endpoint + "/_dashboards"
 }
 
-func getKibanaEndpoint(d *schema.ResourceData) string {
-	return d.Get(names.AttrEndpoint).(string) + "/_plugin/kibana/"
+func getKibanaEndpoint(endpoint string) string {
+	return endpoint + "/_plugin/kibana/"
 }
 
 func suppressComputedDedicatedMaster(k, old, new string, d *schema.ResourceData) bool {
