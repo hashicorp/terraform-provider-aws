@@ -39,7 +39,7 @@ func TestAccDirectConnectLag_basic(t *testing.T) {
 					testAccCheckLagExists(ctx, resourceName, &lag),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "directconnect", regexache.MustCompile(`dxlag/.+`)),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrConnectionID),
-					resource.TestCheckResourceAttr(resourceName, "connections_bandwidth", "1Gbps"),
+					resource.TestCheckResourceAttr(resourceName, "connections_bandwidth", "10Gbps"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, "has_logical_redundancy"),
 					resource.TestCheckResourceAttrSet(resourceName, "jumbo_frame_capable"),
@@ -56,7 +56,7 @@ func TestAccDirectConnectLag_basic(t *testing.T) {
 					testAccCheckLagExists(ctx, resourceName, &lag),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "directconnect", regexache.MustCompile(`dxlag/.+`)),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrConnectionID),
-					resource.TestCheckResourceAttr(resourceName, "connections_bandwidth", "1Gbps"),
+					resource.TestCheckResourceAttr(resourceName, "connections_bandwidth", "10Gbps"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, "has_logical_redundancy"),
 					resource.TestCheckResourceAttrSet(resourceName, "jumbo_frame_capable"),
@@ -120,7 +120,7 @@ func TestAccDirectConnectLag_connectionID(t *testing.T) {
 					testAccCheckLagExists(ctx, resourceName, &lag),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "directconnect", regexache.MustCompile(`dxlag/.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrConnectionID, connectionResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "connections_bandwidth", "1Gbps"),
+					resource.TestCheckResourceAttr(resourceName, "connections_bandwidth", "10Gbps"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, "has_logical_redundancy"),
 					resource.TestCheckResourceAttrSet(resourceName, "jumbo_frame_capable"),
@@ -159,7 +159,7 @@ func TestAccDirectConnectLag_providerName(t *testing.T) {
 					testAccCheckLagExists(ctx, resourceName, &lag),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "directconnect", regexache.MustCompile(`dxlag/.+`)),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrConnectionID),
-					resource.TestCheckResourceAttr(resourceName, "connections_bandwidth", "1Gbps"),
+					resource.TestCheckResourceAttr(resourceName, "connections_bandwidth", "10Gbps"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, "has_logical_redundancy"),
 					resource.TestCheckResourceAttrSet(resourceName, "jumbo_frame_capable"),
@@ -283,7 +283,7 @@ data "aws_dx_locations" "test" {}
 
 resource "aws_dx_lag" "test" {
   name                  = %[1]q
-  connections_bandwidth = "1Gbps"
+  connections_bandwidth = "10Gbps"
   location              = tolist(data.aws_dx_locations.test.location_codes)[0]
 }
 `, rName)
@@ -302,7 +302,7 @@ resource "aws_dx_lag" "test" {
 
 resource "aws_dx_connection" "test" {
   name      = %[1]q
-  bandwidth = "1Gbps"
+  bandwidth = "10Gbps"
   location  = tolist(data.aws_dx_locations.test.location_codes)[1]
 }
 `, rName)
@@ -318,7 +318,7 @@ data "aws_dx_location" "test" {
 
 resource "aws_dx_lag" "test" {
   name                  = %[1]q
-  connections_bandwidth = "1Gbps"
+  connections_bandwidth = "10Gbps"
   location              = data.aws_dx_location.test.location_code
 
   provider_name = data.aws_dx_location.test.available_providers[0]
@@ -332,7 +332,7 @@ data "aws_dx_locations" "test" {}
 
 resource "aws_dx_lag" "test" {
   name                  = %[1]q
-  connections_bandwidth = "1Gbps"
+  connections_bandwidth = "10Gbps"
   location              = tolist(data.aws_dx_locations.test.location_codes)[0]
   force_destroy         = true
 
@@ -349,7 +349,7 @@ data "aws_dx_locations" "test" {}
 
 resource "aws_dx_lag" "test" {
   name                  = %[1]q
-  connections_bandwidth = "1Gbps"
+  connections_bandwidth = "10Gbps"
   location              = tolist(data.aws_dx_locations.test.location_codes)[0]
   force_destroy         = true
 
