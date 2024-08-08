@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -42,6 +43,12 @@ func resourceLicenseAssociation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"grafana_token": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsUUID,
+			},
 			"license_expiration": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -67,8 +74,9 @@ func resourceLicenseAssociationCreate(ctx context.Context, d *schema.ResourceDat
 
 	workspaceID := d.Get("workspace_id").(string)
 	input := &grafana.AssociateLicenseInput{
-		LicenseType: awstypes.LicenseType(d.Get("license_type").(string)),
-		WorkspaceId: aws.String(workspaceID),
+		GrafanaToken: aws.String(d.Get("grafana_token").(string)),
+		LicenseType:  awstypes.LicenseType(d.Get("license_type").(string)),
+		WorkspaceId:  aws.String(workspaceID),
 	}
 
 	output, err := conn.AssociateLicense(ctx, input)
