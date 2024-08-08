@@ -338,13 +338,24 @@ func (expander autoExpander) int32(ctx context.Context, vFrom basetypes.Int32Val
 		return diags
 	}
 
-	switch vTo.Kind() {
+	switch tTo := vTo.Type(); vTo.Kind() {
 	case reflect.Int32:
 		//
 		// types.Int32 -> int32.
 		//
 		vTo.SetInt(int64(v.ValueInt32()))
 		return diags
+
+	case reflect.Pointer:
+		switch tElem := tTo.Elem(); tElem.Kind() {
+		case reflect.Int32:
+			//
+			// types.Int32 -> *int32.
+			//
+			// to := int32(v.ValueInt32())
+			vTo.Set(reflect.ValueOf(v.ValueInt32Pointer()))
+			return diags
+		}
 	}
 
 	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]interface{}{

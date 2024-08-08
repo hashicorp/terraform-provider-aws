@@ -1107,6 +1107,40 @@ func TestExpandInt32(t *testing.T) {
 				},
 			},
 		},
+
+		"Int32 to *int32": {
+			"value": {
+				Source: tfSingleInt32Field{
+					Field1: types.Int32Value(42),
+				},
+				Target: &awsSingleInt32Pointer{},
+				WantTarget: &awsSingleInt32Pointer{
+					Field1: aws.Int32(42),
+				},
+				expectedLogLines: []map[string]any{
+					infoExpanding(reflect.TypeFor[tfSingleInt32Field](), reflect.TypeFor[*awsSingleInt32Pointer]()),
+					infoConverting(reflect.TypeFor[tfSingleInt32Field](), reflect.TypeFor[*awsSingleInt32Pointer]()),
+					traceMatchedFields("Field1", reflect.TypeFor[tfSingleInt32Field](), "Field1", reflect.TypeFor[*awsSingleInt32Pointer]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[types.Int32](), "Field1", reflect.TypeFor[*int32]()),
+				},
+			},
+			"null": {
+				Source: tfSingleInt32Field{
+					Field1: types.Int32Null(),
+				},
+				Target: &awsSingleInt32Pointer{},
+				WantTarget: &awsSingleInt32Pointer{
+					Field1: nil,
+				},
+				expectedLogLines: []map[string]any{
+					infoExpanding(reflect.TypeFor[tfSingleInt32Field](), reflect.TypeFor[*awsSingleInt32Pointer]()),
+					infoConverting(reflect.TypeFor[tfSingleInt32Field](), reflect.TypeFor[*awsSingleInt32Pointer]()),
+					traceMatchedFields("Field1", reflect.TypeFor[tfSingleInt32Field](), "Field1", reflect.TypeFor[*awsSingleInt32Pointer]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[types.Int32](), "Field1", reflect.TypeFor[*int32]()),
+					traceExpandingNullValue("Field1", reflect.TypeFor[types.Int32](), "Field1", reflect.TypeFor[*int32]()),
+				},
+			},
+		},
 	}
 
 	for testName, cases := range testCases {
