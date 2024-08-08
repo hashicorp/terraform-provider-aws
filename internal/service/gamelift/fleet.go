@@ -5,6 +5,7 @@ package gamelift
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"reflect"
@@ -23,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -246,6 +248,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GameLiftClient(ctx)
 
+	startTime := time.Now()
 	name := d.Get(names.AttrName).(string)
 	input := &gamelift.CreateFleetInput{
 		EC2InstanceType: awstypes.EC2InstanceType(d.Get("ec2_instance_type").(string)),
@@ -307,7 +310,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.SetId(aws.ToString(outputRaw.(*gamelift.CreateFleetOutput).FleetAttributes.FleetId))
 
-	if _, err := waitFleetActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitFleetActive(ctx, conn, d.Id(), startTime, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for GameLift Fleet (%s) create: %s", d.Id(), err)
 	}
 
@@ -425,6 +428,8 @@ func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GameLiftClient(ctx)
 
+	startTime := time.Now()
+
 	log.Printf("[INFO] Deleting GameLift Fleet: %s", d.Id())
 	// It can take ~ 1 hr as GameLift will keep retrying on errors like
 	// invalid launch path and remain in state when it can't be deleted :/
@@ -446,7 +451,7 @@ func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "deleting GameLift Fleet (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitFleetTerminated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waitFleetTerminated(ctx, conn, d.Id(), startTime, d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for GameLift Fleet (%s) delete: %s", d.Id(), err)
 	}
 
@@ -474,20 +479,57 @@ func findFleet(ctx context.Context, conn *gamelift.Client, input *gamelift.Descr
 func findFleets(ctx context.Context, conn *gamelift.Client, input *gamelift.DescribeFleetAttributesInput) ([]awstypes.FleetAttributes, error) {
 	var output []awstypes.FleetAttributes
 
-	err := describeFleetAttributesPages(ctx, conn, input, func(page *gamelift.DescribeFleetAttributesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := gamelift.NewDescribeFleetAttributesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.NotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
 		}
 
 		output = append(output, page.FleetAttributes...)
+	}
 
-		return !lastPage
-	})
+	return output, nil
+}
 
-	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+func findFleetFailuresByID(ctx context.Context, conn *gamelift.Client, id string) ([]awstypes.Event, error) {
+	input := &gamelift.DescribeFleetEventsInput{
+		FleetId: aws.String(id),
+	}
+
+	return findFleetEvents(ctx, conn, input, isFailureEvent)
+}
+
+func findFleetEvents(ctx context.Context, conn *gamelift.Client, input *gamelift.DescribeFleetEventsInput, filter tfslices.Predicate[*awstypes.Event]) ([]awstypes.Event, error) {
+	var output []awstypes.Event
+
+	pages := gamelift.NewDescribeFleetEventsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.NotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Events {
+			if filter(&v) {
+				output = append(output, v)
+			}
 		}
 	}
 
@@ -510,7 +552,7 @@ func statusFleet(ctx context.Context, conn *gamelift.Client, id string) retry.St
 	}
 }
 
-func waitFleetActive(ctx context.Context, conn *gamelift.Client, id string, timeout time.Duration) (*awstypes.FleetAttributes, error) {
+func waitFleetActive(ctx context.Context, conn *gamelift.Client, id string, startTime time.Time, timeout time.Duration) (*awstypes.FleetAttributes, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.FleetStatusActivating,
@@ -527,13 +569,17 @@ func waitFleetActive(ctx context.Context, conn *gamelift.Client, id string, time
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.FleetAttributes); ok {
+		if events, errFFF := findFleetFailuresByID(ctx, conn, id); errFFF == nil {
+			tfresource.SetLastError(err, fleetFailuresError(events, startTime))
+		}
+
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitFleetTerminated(ctx context.Context, conn *gamelift.Client, id string, timeout time.Duration) (*awstypes.FleetAttributes, error) {
+func waitFleetTerminated(ctx context.Context, conn *gamelift.Client, id string, startTime time.Time, timeout time.Duration) (*awstypes.FleetAttributes, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.FleetStatusActive,
@@ -548,52 +594,15 @@ func waitFleetTerminated(ctx context.Context, conn *gamelift.Client, id string, 
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if err != nil {
-		events, fErr := getFleetFailures(ctx, conn, id)
-		if fErr != nil {
-			log.Printf("[WARN] Failed to poll fleet failures: %s", fErr)
-		}
-		if len(events) > 0 {
-			return nil, fmt.Errorf("%s Recent failures:\n%+v", err, events)
-		}
-	}
-
 	if output, ok := outputRaw.(*awstypes.FleetAttributes); ok {
+		if events, errFFF := findFleetFailuresByID(ctx, conn, id); errFFF == nil {
+			tfresource.SetLastError(err, fleetFailuresError(events, startTime))
+		}
+
 		return output, err
 	}
 
 	return nil, err
-}
-
-func getFleetFailures(ctx context.Context, conn *gamelift.Client, id string) ([]awstypes.Event, error) {
-	var events []awstypes.Event
-	err := _getFleetFailures(ctx, conn, id, nil, &events)
-	return events, err
-}
-
-func _getFleetFailures(ctx context.Context, conn *gamelift.Client, id string, nextToken *string, events *[]awstypes.Event) error {
-	eOut, err := conn.DescribeFleetEvents(ctx, &gamelift.DescribeFleetEventsInput{
-		FleetId:   aws.String(id),
-		NextToken: nextToken,
-	})
-	if err != nil {
-		return err
-	}
-
-	for _, e := range eOut.Events {
-		if isFailureEvent(&e) {
-			*events = append(*events, e)
-		}
-	}
-
-	if eOut.NextToken != nil {
-		err := _getFleetFailures(ctx, conn, id, nextToken, events)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 func isFailureEvent(event *awstypes.Event) bool {
@@ -618,6 +627,16 @@ func isFailureEvent(event *awstypes.Event) bool {
 	}
 
 	return slices.Contains(failureCodes, event.EventCode)
+}
+
+func fleetFailuresError(events []awstypes.Event, startTime time.Time) error {
+	events = tfslices.Filter(events, func(v awstypes.Event) bool {
+		return startTime.Before(aws.ToTime(v.EventTime))
+	})
+	errs := tfslices.ApplyToAll(events, func(v awstypes.Event) error {
+		return fmt.Errorf("(%s) %s: %s", aws.ToString(v.EventId), v.EventCode, aws.ToString(v.Message))
+	})
+	return errors.Join(errs...)
 }
 
 func expandIPPermissions(tfSet *schema.Set) []awstypes.IpPermission {
