@@ -27,10 +27,12 @@ BUG FIXES:
 * resource/aws_batch_job_definition: Fix panic when checking `timeout` for job updates ([#38716](https://github.com/hashicorp/terraform-provider-aws/issues/38716))
 * resource/aws_ec2_capacity_block_reservation: Fix error during apply for missing `created_date` attribute ([#38689](https://github.com/hashicorp/terraform-provider-aws/issues/38689))
 * resource/aws_ecr_repository_creation_template: Support `ROOT` as a valid value for `prefix` ([#38685](https://github.com/hashicorp/terraform-provider-aws/issues/38685))
+* resource/aws_elbv2_trust_store_revocation: Fix to properly return errors during resource creation ([#38756](https://github.com/hashicorp/terraform-provider-aws/issues/38756))
 * resource/aws_lexv2models_bot: Handle `PreconditionFailedException` on delete for resources deleted out-of-band ([#38661](https://github.com/hashicorp/terraform-provider-aws/issues/38661))
 * resource/aws_lexv2models_bot_locale: Handle `PreconditionFailedException` on delete for resources deleted out-of-band ([#38661](https://github.com/hashicorp/terraform-provider-aws/issues/38661))
 * resource/aws_lexv2models_bot_version: Handle `PreconditionFailedException` on delete for resources deleted out-of-band ([#38661](https://github.com/hashicorp/terraform-provider-aws/issues/38661))
 * resource/aws_networkmanager_core_network: Fix `$.network-function-groups: null found, array expected` errors when creating resource with `create_base_policy` argument ([#38642](https://github.com/hashicorp/terraform-provider-aws/issues/38642))
+* resource/aws_quicksight_account_subscription: Fix panic when read returns nil account info ([#38752](https://github.com/hashicorp/terraform-provider-aws/issues/38752))
 * resource/aws_sfn_state_machine: Mark `revision_id` and `state_machine_version_arn` as Computed on update if `publish` is `true` ([#38657](https://github.com/hashicorp/terraform-provider-aws/issues/38657))
 
 ## 5.61.0 (August  1, 2024)
