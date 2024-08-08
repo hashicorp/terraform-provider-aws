@@ -5,5 +5,8 @@ package gamelift
 
 // Exports for use in tests only.
 var (
+	ResourceAlias = resourceAlias
+
 	DiffPortSettings = diffPortSettings
+	FindAliasByID    = findAliasByID
 )

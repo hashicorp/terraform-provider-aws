@@ -9,15 +9,13 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/gamelift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/gamelift/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	tfgamelift "github.com/hashicorp/terraform-provider-aws/internal/service/gamelift"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -178,8 +176,7 @@ func TestAccGameLiftAlias_fleetRouting(t *testing.T) {
 		CheckDestroy:             testAccCheckAliasDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAliasConfig_allFields(aliasName, description,
-					fleetName, launchPath, params, bucketName, key, roleArn),
+				Config: testAccAliasConfig_allFields(aliasName, description, fleetName, launchPath, params, bucketName, key, roleArn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(ctx, resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "gamelift", regexache.MustCompile(`alias/alias-.+`)),
@@ -224,7 +221,7 @@ func TestAccGameLiftAlias_disappears(t *testing.T) {
 				Config: testAccAliasConfig_basic(aliasName, description, message),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(ctx, resourceName, &conf),
-					testAccCheckAliasDisappears(ctx, &conf),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfgamelift.ResourceAlias(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -232,44 +229,22 @@ func TestAccGameLiftAlias_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAliasDisappears(ctx context.Context, res *awstypes.Alias) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftClient(ctx)
-
-		input := &gamelift.DeleteAliasInput{AliasId: res.AliasId}
-
-		_, err := conn.DeleteAlias(ctx, input)
-
-		return err
-	}
-}
-
-func testAccCheckAliasExists(ctx context.Context, n string, res *awstypes.Alias) resource.TestCheckFunc {
+func testAccCheckAliasExists(ctx context.Context, n string, v *awstypes.Alias) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No GameLift Alias ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftClient(ctx)
 
-		out, err := conn.DescribeAlias(ctx, &gamelift.DescribeAliasInput{
-			AliasId: aws.String(rs.Primary.ID),
-		})
+		output, err := tfgamelift.FindAliasByID(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
-		a := out.Alias
 
-		if *a.AliasId != rs.Primary.ID {
-			return fmt.Errorf("GameLift Alias not found")
-		}
-
-		*res = *a
+		*v = *output
 
 		return nil
 	}
@@ -284,18 +259,17 @@ func testAccCheckAliasDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := conn.DescribeAlias(ctx, &gamelift.DescribeAliasInput{
-				AliasId: aws.String(rs.Primary.ID),
-			})
-			if err == nil {
-				return fmt.Errorf("GameLift Alias still exists")
+			_, err := tfgamelift.FindAliasByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			if errs.IsA[*awstypes.NotFoundException](err) {
-				return nil
+			if err != nil {
+				return err
 			}
 
-			return err
+			return fmt.Errorf("GameLift Alias %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -305,11 +279,11 @@ func testAccCheckAliasDestroy(ctx context.Context) resource.TestCheckFunc {
 func testAccAliasConfig_basic(aliasName, description, message string) string {
 	return fmt.Sprintf(`
 resource "aws_gamelift_alias" "test" {
-  name        = "%s"
-  description = "%s"
+  name        = %[1]q
+  description = %[2]q
 
   routing_strategy {
-    message = "%s"
+    message = %[3]q
     type    = "TERMINAL"
   }
 }
