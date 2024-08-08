@@ -372,8 +372,8 @@ resource "aws_bedrock_guardrail" "test" {
   }
   contextual_grounding_policy_config {
     filters_config {
-      threshold  = 0.4
-      type       = "GROUNDING"
+      threshold = 0.4
+      type      = "GROUNDING"
     }
   }
   sensitive_information_policy_config {
@@ -432,7 +432,7 @@ resource "aws_bedrock_guardrail" "test" {
   blocked_input_messaging   = "test"
   blocked_outputs_messaging = "test"
   description               = "test"
-  kms_key_arn   			= aws_kms_key.test.arn
+  kms_key_arn               = aws_kms_key.test.arn
   content_policy_config {
     filters_config {
       input_strength  = "MEDIUM"
@@ -472,7 +472,7 @@ resource "aws_bedrock_guardrail" "test" {
   blocked_input_messaging   = "test"
   blocked_outputs_messaging = "test"
   description               = "test"
-  kms_key_arn   			= aws_kms_key.test.arn
+  kms_key_arn               = aws_kms_key.test.arn
   content_policy_config {
     filters_config {
       input_strength  = "MEDIUM"
@@ -495,7 +495,7 @@ resource "aws_bedrock_guardrail" "test" {
   }
   tags = {
     %[2]q = %[3]q
-	%[4]q = %[5]q
+    %[4]q = %[5]q
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
@@ -554,17 +554,12 @@ resource "aws_bedrock_guardrail" "test" {
 
 func testAccGuardrailConfig_wordConfig_only(rName string) string {
 	return acctest.ConfigCompose(testAccCustomModelConfig_base(rName), fmt.Sprintf(`
-resource "aws_kms_key" "test" {
-  description             = %[1]q
-  deletion_window_in_days = 7
-}
 
 resource "aws_bedrock_guardrail" "test" {
   name                      = %[1]q
   blocked_input_messaging   = "test"
   blocked_outputs_messaging = "test"
   description               = "test"
-  kms_key_arn   			= aws_kms_key.test.arn
   word_policy_config {
     managed_word_lists_config {
       type = "PROFANITY"

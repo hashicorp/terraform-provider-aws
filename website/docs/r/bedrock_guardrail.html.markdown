@@ -85,7 +85,7 @@ The following arguments are optional:
 * `kms_key_arn` (Optional) The KMS key with which the guardrail was encrypted at rest
 * `sensitive_information_policy_config` (Optional) Sensitive information policy config for a guardrail. See [Sensitive Information Policy Config](#sensitive-information-policy-config) for more information.
 * `tags` (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `topic_policy_config` (Optional) Topic policy config for a guardrail. See [Topic Policy Config](#topic-policyconfig) for more information.
+* `topic_policy_config` (Optional) Topic policy config for a guardrail. See [Topic Policy Config](#topic-policy-config) for more information.
 * `word_policy_config` (Optional) Word policy config for a guardrail. See [Word Policy Config](#word-policy-config) for more information.
 
 ### Content Policy Config
@@ -110,29 +110,45 @@ The `filters_config` configuration block supports the following arguments:
 * `threshold` - (Required) The threshold for this filter.
 * `type` - (Required) Type of contextual grounding filter.
 
+### Topic Policy Config
+
+* `topics_config` (Attributes List) List of topic configs in topic policy. See [Topics Config](#topics-config) for more information.
+
+#### Topics Config
+
+* `definition` (Required) Definition of topic in topic policy
+* `name` (Required) Name of topic in topic policy
+* `type` (Required) Type of topic in a policy
+* `examples` (Optional) List of text examples
+
 ### Sensitive Information Policy Config
 
 * `pii_entities_config` (Optional) List of entities. See [PII Entities Config](#pii-entities-config) for more information.
 * `regexes_config` (Optional) List of regex. See [Regexes Config](#regexes-config) for more information.
 
 #### PII Entities Config
+
 * `action` (Required) Options for sensitive information action.
 * `type` (Required) The currently supported PII entities
 
 #### Regexes Config
+
 * `action` (Required) Options for sensitive information action.
 * `name` (Required) The regex name.
 * `pattern` (Required) The regex pattern.
 * `description` (Optional) The regex description.
 
 ### Word Policy Config
+
 * `managed_word_lists_config` (Optional) A config for the list of managed words. See [Managed Word Lists Config](#managed-word-lists-config) for more information.
 * `words_config` (Optional) List of custom word configs. (see [Words Config](#words-config))
 
 #### Managed Word Lists Config
+
 * `type` (Required) Options for managed words.
 
 #### Words Config
+
 * `text` (Required) The custom word text.
 
 ## Attribute Reference
