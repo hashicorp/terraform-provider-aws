@@ -1076,7 +1076,7 @@ resource "aws_ssm_maintenance_window_task" "test" {
 }
 
 func testAccMaintenanceWindowTaskConfig_stepFunction(rName string) string {
-	return testAccMaintenanceWindowTaskBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccMaintenanceWindowTaskBaseConfig(rName), fmt.Sprintf(`
 resource "aws_sfn_activity" "test" {
   name = %[1]q
 }
@@ -1106,17 +1106,17 @@ resource "aws_ssm_maintenance_window_task" "test" {
     }
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccLambdaBasicConfig(funcName, policyName, roleName, sgName string) string {
-	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
+	return acctest.ConfigCompose(acctest.ConfigLambdaBase(policyName, roleName, sgName), fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
-  function_name = "%s"
+  function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
   runtime       = "nodejs16.x"
 }
-`, funcName)
+`, funcName))
 }
