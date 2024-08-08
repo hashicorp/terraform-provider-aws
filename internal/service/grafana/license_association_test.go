@@ -64,6 +64,8 @@ resource "aws_grafana_license_association" "test" {
 }
 
 func testAccLicenseAssociation_enterpriseToken(t *testing.T) {
+	acctest.Skip(t, "Grafana token is invalid")
+
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_grafana_license_association.test"
