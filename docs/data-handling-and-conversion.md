@@ -207,6 +207,8 @@ For example, to include `Tags`, call
 diags := flex.Expand(ctx, source, &target, flex.WithNoIgnoredFieldNames())
 ```
 
+AutoFlex is able to convert single-element lists from Terraform blocks into single struct or pointer values in AWS API structs.
+
 #### Overriding Default Behavior
 
 In some cases, flattening and expanding need conditional handling.
