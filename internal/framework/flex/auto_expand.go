@@ -317,11 +317,8 @@ func (expander autoExpander) float32(ctx context.Context, vFrom basetypes.Float3
 		}
 	}
 
-	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]interface{}{
-		"from": vFrom.Type(ctx),
-		"to":   vTo.Kind(),
-	})
-
+	tflog.SubsystemError(ctx, subsystemName, "Expanding incompatible types")
+	diags.Append(diagExpandingIncompatibleTypes(reflect.TypeOf(vFrom), vTo.Type()))
 	return diags
 }
 

@@ -1141,6 +1141,43 @@ func TestExpandFloat32(t *testing.T) {
 				},
 			},
 		},
+
+		// Float32 cannot be expanded to float64
+		"Float32 to float64": {
+			"value": {
+				Source: tfSingleFloat32Field{
+					Field1: types.Float32Value(42),
+				},
+				Target: &awsSingleFloat64Value{},
+				expectedDiags: diag.Diagnostics{
+					diagExpandingIncompatibleTypes(reflect.TypeFor[types.Float32](), reflect.TypeFor[float64]()),
+				},
+				expectedLogLines: []map[string]any{
+					infoExpanding(reflect.TypeFor[tfSingleFloat32Field](), reflect.TypeFor[*awsSingleFloat64Value]()),
+					infoConverting(reflect.TypeFor[tfSingleFloat32Field](), reflect.TypeFor[*awsSingleFloat64Value]()),
+					traceMatchedFields("Field1", reflect.TypeFor[tfSingleFloat32Field](), "Field1", reflect.TypeFor[*awsSingleFloat64Value]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[types.Float32](), "Field1", reflect.TypeFor[float64]()),
+					errorExpandingIncompatibleTypes("Field1", reflect.TypeFor[types.Float32](), "Field1", reflect.TypeFor[float64]()),
+				},
+			},
+			"null": {
+				// TODO: The test for a null value happens before type checking
+				Source: tfSingleFloat32Field{
+					Field1: types.Float32Null(),
+				},
+				Target: &awsSingleFloat64Value{},
+				WantTarget: &awsSingleFloat64Value{
+					Field1: 0,
+				},
+				expectedLogLines: []map[string]any{
+					infoExpanding(reflect.TypeFor[tfSingleFloat32Field](), reflect.TypeFor[*awsSingleFloat64Value]()),
+					infoConverting(reflect.TypeFor[tfSingleFloat32Field](), reflect.TypeFor[*awsSingleFloat64Value]()),
+					traceMatchedFields("Field1", reflect.TypeFor[tfSingleFloat32Field](), "Field1", reflect.TypeFor[*awsSingleFloat64Value]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[types.Float32](), "Field1", reflect.TypeFor[float64]()),
+					traceExpandingNullValue("Field1", reflect.TypeFor[types.Float32](), "Field1", reflect.TypeFor[float64]()),
+				},
+			},
+		},
 	}
 
 	for testName, cases := range testCases {
