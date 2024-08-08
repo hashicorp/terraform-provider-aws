@@ -356,10 +356,6 @@ type awsJSONStringer struct {
 	Field1 smithyjson.JSONStringer `json:"field1"`
 }
 
-type tfSingleStringField2 struct {
-	Field1 types.String `tfsdk:"field1"`
-}
-
 type tfJSONStringer struct {
 	Field1 fwtypes.SmithyJSON[smithyjson.JSONStringer] `tfsdk:"field1"`
 }

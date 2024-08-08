@@ -130,14 +130,14 @@ func TestFlatten(t *testing.T) {
 					},
 				},
 			},
-			Target: &tfSingleStringField2{},
-			WantTarget: &tfSingleStringField2{
+			Target: &tfSingleStringField{},
+			WantTarget: &tfSingleStringField{
 				Field1: types.StringValue(`{"test":"a"}`),
 			},
 			expectedLogLines: []map[string]any{
-				infoFlattening(reflect.TypeFor[*awsJSONStringer](), reflect.TypeFor[*tfSingleStringField2]()),
-				infoConverting(reflect.TypeFor[awsJSONStringer](), reflect.TypeFor[*tfSingleStringField2]()),
-				traceMatchedFields("Field1", reflect.TypeFor[awsJSONStringer](), "Field1", reflect.TypeFor[*tfSingleStringField2]()),
+				infoFlattening(reflect.TypeFor[*awsJSONStringer](), reflect.TypeFor[*tfSingleStringField]()),
+				infoConverting(reflect.TypeFor[awsJSONStringer](), reflect.TypeFor[*tfSingleStringField]()),
+				traceMatchedFields("Field1", reflect.TypeFor[awsJSONStringer](), "Field1", reflect.TypeFor[*tfSingleStringField]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[smithyjson.JSONStringer](), "Field1", reflect.TypeFor[types.String]()),
 			},
 		},
@@ -166,14 +166,14 @@ func TestFlatten(t *testing.T) {
 			Source: &awsJSONStringer{
 				Field1: &testJSONDocumentError{},
 			},
-			Target: &tfSingleStringField2{},
+			Target: &tfSingleStringField{},
 			expectedDiags: diag.Diagnostics{
 				diagFlatteningMarshalSmithyDocument(reflect.TypeFor[*testJSONDocumentError](), errMarshallSmithyDocument),
 			},
 			expectedLogLines: []map[string]any{
-				infoFlattening(reflect.TypeFor[*awsJSONStringer](), reflect.TypeFor[*tfSingleStringField2]()),
-				infoConverting(reflect.TypeFor[awsJSONStringer](), reflect.TypeFor[*tfSingleStringField2]()),
-				traceMatchedFields("Field1", reflect.TypeFor[awsJSONStringer](), "Field1", reflect.TypeFor[*tfSingleStringField2]()),
+				infoFlattening(reflect.TypeFor[*awsJSONStringer](), reflect.TypeFor[*tfSingleStringField]()),
+				infoConverting(reflect.TypeFor[awsJSONStringer](), reflect.TypeFor[*tfSingleStringField]()),
+				traceMatchedFields("Field1", reflect.TypeFor[awsJSONStringer](), "Field1", reflect.TypeFor[*tfSingleStringField]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[smithyjson.JSONStringer](), "Field1", reflect.TypeFor[types.String]()),
 				errorMarshallingJSONDocument("Field1", reflect.TypeFor[smithyjson.JSONStringer](), "Field1", reflect.TypeFor[types.String](), errMarshallSmithyDocument),
 			},
