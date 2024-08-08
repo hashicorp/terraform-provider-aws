@@ -13,7 +13,11 @@ ENHANCEMENTS:
 * data-source/aws_s3_object: Expand content types that can be read from S3 to include `application/x-sql` ([#38737](https://github.com/hashicorp/terraform-provider-aws/issues/38737))
 * provider: Allow `default_tags` to be set by environment variables ([#33339](https://github.com/hashicorp/terraform-provider-aws/issues/33339))
 * provider: Allow `ignore_tags.keys` and `ignore_tags.key_prefixes` to be set by environment variables ([#35264](https://github.com/hashicorp/terraform-provider-aws/issues/35264))
+* resource/aws_db_option_group: Add `skip_destroy` argument ([#29663](https://github.com/hashicorp/terraform-provider-aws/issues/29663))
+* resource/aws_db_parameter_group: Add `skip_destroy` argument ([#29663](https://github.com/hashicorp/terraform-provider-aws/issues/29663))
+* resource/aws_dx_macsec_key_association: Add plan-time validation of `secret_arn` ([#37213](https://github.com/hashicorp/terraform-provider-aws/issues/37213))
 * resource/aws_ecs_service: Add `force_delete` argument ([#38707](https://github.com/hashicorp/terraform-provider-aws/issues/38707))
+* resource/aws_grafana_license_association: Add `grafana_token` argument ([#38743](https://github.com/hashicorp/terraform-provider-aws/issues/38743))
 * resource/aws_lb_target_group: Add `target_health_state.unhealthy_draining_interval` argument ([#38654](https://github.com/hashicorp/terraform-provider-aws/issues/38654))
 * resource/aws_lexv2models_slot: Add `sub_slot_setting` attribute ([#38698](https://github.com/hashicorp/terraform-provider-aws/issues/38698))
 
