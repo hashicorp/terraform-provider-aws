@@ -324,12 +324,12 @@ resource "aws_lb_listener" "test" {
 }
 
 func testAccListenerCertificateConfig_basic(rName, key, certificate string) string {
-	return testAccListenerCertificateConfig_base(rName, key, certificate) + `
+	return acctest.ConfigCompose(testAccListenerCertificateConfig_base(rName, key, certificate), `
 resource "aws_lb_listener_certificate" "test" {
   certificate_arn = aws_iam_server_certificate.test.arn
   listener_arn    = aws_lb_listener.test.arn
 }
-`
+`)
 }
 
 func testAccListenerCertificateConfig_arnUnderscores(rName, key, certificate string) string {
