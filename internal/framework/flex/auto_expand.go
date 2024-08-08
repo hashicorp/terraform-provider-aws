@@ -358,11 +358,8 @@ func (expander autoExpander) int32(ctx context.Context, vFrom basetypes.Int32Val
 		}
 	}
 
-	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]interface{}{
-		"from": vFrom.Type(ctx),
-		"to":   vTo.Kind(),
-	})
-
+	tflog.SubsystemError(ctx, subsystemName, "Expanding incompatible types")
+	diags.Append(diagExpandingIncompatibleTypes(reflect.TypeOf(vFrom), vTo.Type()))
 	return diags
 }
 
@@ -1226,5 +1223,15 @@ func diagExpandingNoMapBlockKey(sourceType reflect.Type) diag.ErrorDiagnostic {
 			"This is always an error in the provider. "+
 			"Please report the following to the provider developer:\n\n"+
 			fmt.Sprintf("Source type %q does not contain field %q", fullTypeName(sourceType), mapBlockKeyFieldName),
+	)
+}
+
+func diagExpandingIncompatibleTypes(sourceType, targetType reflect.Type) diag.ErrorDiagnostic {
+	return diag.NewErrorDiagnostic(
+		"Incompatible Types",
+		"An unexpected error occurred while expanding configuration. "+
+			"This is always an error in the provider. "+
+			"Please report the following to the provider developer:\n\n"+
+			fmt.Sprintf("Source type %q cannot be expanded to target type %q.", fullTypeName(sourceType), fullTypeName(targetType)),
 	)
 }

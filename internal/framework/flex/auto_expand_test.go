@@ -1141,6 +1141,41 @@ func TestExpandInt32(t *testing.T) {
 				},
 			},
 		},
+
+		// Int32 cannot be expanded to int64
+		"Int32 to int64": {
+			"value": {
+				Source: tfSingleInt32Field{
+					Field1: types.Int32Value(42),
+				},
+				Target: &awsSingleInt64Value{},
+				expectedDiags: diag.Diagnostics{
+					diagExpandingIncompatibleTypes(reflect.TypeFor[types.Int32](), reflect.TypeFor[int64]()),
+				},
+				expectedLogLines: []map[string]any{
+					infoExpanding(reflect.TypeFor[tfSingleInt32Field](), reflect.TypeFor[*awsSingleInt64Value]()),
+					infoConverting(reflect.TypeFor[tfSingleInt32Field](), reflect.TypeFor[*awsSingleInt64Value]()),
+					traceMatchedFields("Field1", reflect.TypeFor[tfSingleInt32Field](), "Field1", reflect.TypeFor[*awsSingleInt64Value]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[types.Int32](), "Field1", reflect.TypeFor[int64]()),
+					errorIncompatibleTypes("Field1", reflect.TypeFor[types.Int32](), "Field1", reflect.TypeFor[int64]()),
+				},
+			},
+			"null": {
+				// TODO: The test for a null value happens before type checking
+				Source: tfSingleInt32Field{
+					Field1: types.Int32Null(),
+				},
+				Target:     &awsSingleInt64Value{},
+				WantTarget: &awsSingleInt64Value{},
+				expectedLogLines: []map[string]any{
+					infoExpanding(reflect.TypeFor[tfSingleInt32Field](), reflect.TypeFor[*awsSingleInt64Value]()),
+					infoConverting(reflect.TypeFor[tfSingleInt32Field](), reflect.TypeFor[*awsSingleInt64Value]()),
+					traceMatchedFields("Field1", reflect.TypeFor[tfSingleInt32Field](), "Field1", reflect.TypeFor[*awsSingleInt64Value]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[types.Int32](), "Field1", reflect.TypeFor[int64]()),
+					traceExpandingNullValue("Field1", reflect.TypeFor[types.Int32](), "Field1", reflect.TypeFor[int64]()),
+				},
+			},
+		},
 	}
 
 	for testName, cases := range testCases {
