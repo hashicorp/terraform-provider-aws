@@ -162,6 +162,18 @@ type awsSingleInt64Value struct {
 	Field1 int64
 }
 
+type awsSingleInt64Pointer struct {
+	Field1 *int64
+}
+
+type awsSingleInt32Value struct {
+	Field1 int32
+}
+
+type awsSingleInt32Pointer struct {
+	Field1 *int32
+}
+
 type awsNestedObjectPointer struct {
 	Field1 *awsSingleStringValue
 }
