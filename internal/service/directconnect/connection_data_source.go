@@ -7,19 +7,21 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/directconnect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_dx_connection")
-func DataSourceConnection() *schema.Resource {
+// @SDKDataSource("aws_dx_connection", name="Connection")
+func dataSourceConnection() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceConnectionRead,
 
@@ -67,43 +69,26 @@ func DataSourceConnection() *schema.Resource {
 
 func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	var connections []*directconnect.Connection
-	input := &directconnect.DescribeConnectionsInput{}
 	name := d.Get(names.AttrName).(string)
+	input := &directconnect.DescribeConnectionsInput{}
 
-	// DescribeConnections is not paginated.
-	output, err := conn.DescribeConnectionsWithContext(ctx, input)
+	connection, err := findConnection(ctx, conn, input, func(v *awstypes.Connection) bool {
+		return aws.ToString(v.ConnectionName) == name
+	})
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Direct Connect Connections: %s", err)
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("Direct Connect Connection", err))
 	}
 
-	for _, connection := range output.Connections {
-		if aws.StringValue(connection.ConnectionName) == name {
-			connections = append(connections, connection)
-		}
-	}
-
-	switch count := len(connections); count {
-	case 0:
-		return sdkdiag.AppendErrorf(diags, "no matching Direct Connect Connection found")
-	case 1:
-	default:
-		return sdkdiag.AppendErrorf(diags, "%d Direct Connect Connections matched; use additional constraints to reduce matches to a single Direct Connect Connection", count)
-	}
-
-	connection := connections[0]
-
-	d.SetId(aws.StringValue(connection.ConnectionId))
-
+	d.SetId(aws.ToString(connection.ConnectionId))
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    aws.StringValue(connection.Region),
+		Region:    aws.ToString(connection.Region),
 		Service:   "directconnect",
-		AccountID: aws.StringValue(connection.OwnerAccount),
+		AccountID: aws.ToString(connection.OwnerAccount),
 		Resource:  fmt.Sprintf("dxcon/%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, arn)

@@ -23,7 +23,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/appconfig v1.31.3
 	github.com/aws/aws-sdk-go-v2/service/appfabric v1.9.3
 	github.com/aws/aws-sdk-go-v2/service/appflow v1.43.3
-	github.com/aws/aws-sdk-go-v2/service/appintegrations v1.27.3
+	github.com/aws/aws-sdk-go-v2/service/appintegrations v1.28.0
 	github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.31.0
 	github.com/aws/aws-sdk-go-v2/service/applicationinsights v1.26.3
 	github.com/aws/aws-sdk-go-v2/service/applicationsignals v1.3.0
@@ -87,6 +87,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/detective v1.29.3
 	github.com/aws/aws-sdk-go-v2/service/devicefarm v1.25.2
 	github.com/aws/aws-sdk-go-v2/service/devopsguru v1.32.3
+	github.com/aws/aws-sdk-go-v2/service/directconnect v1.27.5
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.27.3
 	github.com/aws/aws-sdk-go-v2/service/dlm v1.26.3
 	github.com/aws/aws-sdk-go-v2/service/docdb v1.36.3
@@ -116,7 +117,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/fsx v1.47.2
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.24.3
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.27.0
-	github.com/aws/aws-sdk-go-v2/service/glue v1.91.0
+	github.com/aws/aws-sdk-go-v2/service/glue v1.92.0
 	github.com/aws/aws-sdk-go-v2/service/grafana v1.24.3
 	github.com/aws/aws-sdk-go-v2/service/greengrass v1.25.3
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.29.3
@@ -154,7 +155,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.32.3
 	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.15.0
 	github.com/aws/aws-sdk-go-v2/service/mediastore v1.22.3
-	github.com/aws/aws-sdk-go-v2/service/memorydb v1.21.3
+	github.com/aws/aws-sdk-go-v2/service/memorydb v1.21.5
 	github.com/aws/aws-sdk-go-v2/service/mq v1.25.3
 	github.com/aws/aws-sdk-go-v2/service/mwaa v1.29.4
 	github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.10.3

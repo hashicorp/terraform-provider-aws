@@ -79,6 +79,7 @@ import (
 	detective_sdkv2 "github.com/aws/aws-sdk-go-v2/service/detective"
 	devicefarm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/devicefarm"
 	devopsguru_sdkv2 "github.com/aws/aws-sdk-go-v2/service/devopsguru"
+	directconnect_sdkv2 "github.com/aws/aws-sdk-go-v2/service/directconnect"
 	directoryservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	dlm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/dlm"
 	docdb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/docdb"
@@ -222,7 +223,6 @@ import (
 	xray_sdkv2 "github.com/aws/aws-sdk-go-v2/service/xray"
 	batch_sdkv1 "github.com/aws/aws-sdk-go/service/batch"
 	connect_sdkv1 "github.com/aws/aws-sdk-go/service/connect"
-	directconnect_sdkv1 "github.com/aws/aws-sdk-go/service/directconnect"
 	elasticsearchservice_sdkv1 "github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	emr_sdkv1 "github.com/aws/aws-sdk-go/service/emr"
 	gamelift_sdkv1 "github.com/aws/aws-sdk-go/service/gamelift"
@@ -569,8 +569,8 @@ func (c *AWSClient) DeviceFarmClient(ctx context.Context) *devicefarm_sdkv2.Clie
 	return errs.Must(client[*devicefarm_sdkv2.Client](ctx, c, names.DeviceFarm, make(map[string]any)))
 }
 
-func (c *AWSClient) DirectConnectConn(ctx context.Context) *directconnect_sdkv1.DirectConnect {
-	return errs.Must(conn[*directconnect_sdkv1.DirectConnect](ctx, c, names.DirectConnect, make(map[string]any)))
+func (c *AWSClient) DirectConnectClient(ctx context.Context) *directconnect_sdkv2.Client {
+	return errs.Must(client[*directconnect_sdkv2.Client](ctx, c, names.DirectConnect, make(map[string]any)))
 }
 
 func (c *AWSClient) DocDBClient(ctx context.Context) *docdb_sdkv2.Client {
