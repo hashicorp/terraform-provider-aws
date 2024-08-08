@@ -297,13 +297,24 @@ func (expander autoExpander) float32(ctx context.Context, vFrom basetypes.Float3
 		return diags
 	}
 
-	switch /*tTo := vTo.Type();*/ vTo.Kind() {
+	switch tTo := vTo.Type(); vTo.Kind() {
 	case reflect.Float32:
 		//
-		// types.Float32/types.Float64 -> float32/float64.
+		// types.Float32 -> float32.
 		//
 		vTo.SetFloat(float64(v.ValueFloat32()))
 		return diags
+
+	case reflect.Pointer:
+		switch tElem := tTo.Elem(); tElem.Kind() {
+		case reflect.Float32:
+			//
+			// types.Float32 -> *float32.
+			//
+			to := float32(v.ValueFloat32())
+			vTo.Set(reflect.ValueOf(&to))
+			return diags
+		}
 	}
 
 	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]interface{}{

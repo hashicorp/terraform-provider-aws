@@ -1107,6 +1107,40 @@ func TestExpandFloat32(t *testing.T) {
 				},
 			},
 		},
+
+		"Float32 to *float32": {
+			"value": {
+				Source: tfSingleFloat32Field{
+					Field1: types.Float32Value(42),
+				},
+				Target: &awsSingleFloat32Pointer{},
+				WantTarget: &awsSingleFloat32Pointer{
+					Field1: aws.Float32(42),
+				},
+				expectedLogLines: []map[string]any{
+					infoExpanding(reflect.TypeFor[tfSingleFloat32Field](), reflect.TypeFor[*awsSingleFloat32Pointer]()),
+					infoConverting(reflect.TypeFor[tfSingleFloat32Field](), reflect.TypeFor[*awsSingleFloat32Pointer]()),
+					traceMatchedFields("Field1", reflect.TypeFor[tfSingleFloat32Field](), "Field1", reflect.TypeFor[*awsSingleFloat32Pointer]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[types.Float32](), "Field1", reflect.TypeFor[*float32]()),
+				},
+			},
+			"null": {
+				Source: tfSingleFloat32Field{
+					Field1: types.Float32Null(),
+				},
+				Target: &awsSingleFloat32Pointer{},
+				WantTarget: &awsSingleFloat32Pointer{
+					Field1: nil,
+				},
+				expectedLogLines: []map[string]any{
+					infoExpanding(reflect.TypeFor[tfSingleFloat32Field](), reflect.TypeFor[*awsSingleFloat32Pointer]()),
+					infoConverting(reflect.TypeFor[tfSingleFloat32Field](), reflect.TypeFor[*awsSingleFloat32Pointer]()),
+					traceMatchedFields("Field1", reflect.TypeFor[tfSingleFloat32Field](), "Field1", reflect.TypeFor[*awsSingleFloat32Pointer]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[types.Float32](), "Field1", reflect.TypeFor[*float32]()),
+					traceExpandingNullValue("Field1", reflect.TypeFor[types.Float32](), "Field1", reflect.TypeFor[*float32]()),
+				},
+			},
+		},
 	}
 
 	for testName, cases := range testCases {
