@@ -188,6 +188,7 @@ import (
 	securityhub_sdkv2 "github.com/aws/aws-sdk-go-v2/service/securityhub"
 	securitylake_sdkv2 "github.com/aws/aws-sdk-go-v2/service/securitylake"
 	serverlessapplicationrepository_sdkv2 "github.com/aws/aws-sdk-go-v2/service/serverlessapplicationrepository"
+	servicecatalog_sdkv2 "github.com/aws/aws-sdk-go-v2/service/servicecatalog"
 	servicecatalogappregistry_sdkv2 "github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry"
 	servicediscovery_sdkv2 "github.com/aws/aws-sdk-go-v2/service/servicediscovery"
 	servicequotas_sdkv2 "github.com/aws/aws-sdk-go-v2/service/servicequotas"
@@ -246,7 +247,6 @@ import (
 	route53resolver_sdkv1 "github.com/aws/aws-sdk-go/service/route53resolver"
 	s3outposts_sdkv1 "github.com/aws/aws-sdk-go/service/s3outposts"
 	sagemaker_sdkv1 "github.com/aws/aws-sdk-go/service/sagemaker"
-	servicecatalog_sdkv1 "github.com/aws/aws-sdk-go/service/servicecatalog"
 	simpledb_sdkv1 "github.com/aws/aws-sdk-go/service/simpledb"
 	worklink_sdkv1 "github.com/aws/aws-sdk-go/service/worklink"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -1141,8 +1141,8 @@ func (c *AWSClient) ServerlessRepoClient(ctx context.Context) *serverlessapplica
 	return errs.Must(client[*serverlessapplicationrepository_sdkv2.Client](ctx, c, names.ServerlessRepo, make(map[string]any)))
 }
 
-func (c *AWSClient) ServiceCatalogConn(ctx context.Context) *servicecatalog_sdkv1.ServiceCatalog {
-	return errs.Must(conn[*servicecatalog_sdkv1.ServiceCatalog](ctx, c, names.ServiceCatalog, make(map[string]any)))
+func (c *AWSClient) ServiceCatalogClient(ctx context.Context) *servicecatalog_sdkv2.Client {
+	return errs.Must(client[*servicecatalog_sdkv2.Client](ctx, c, names.ServiceCatalog, make(map[string]any)))
 }
 
 func (c *AWSClient) ServiceCatalogAppRegistryClient(ctx context.Context) *servicecatalogappregistry_sdkv2.Client {
