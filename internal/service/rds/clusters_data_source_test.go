@@ -11,6 +11,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -46,6 +47,7 @@ func testAccClustersDataSourceConfig_filter(rName string) string {
 resource "aws_rds_cluster" "test" {
   cluster_identifier  = %[1]q
   database_name       = "test"
+  engine              = %[2]q
   master_username     = "tfacctest"
   master_password     = "avoid-plaintext-passwords"
   skip_final_snapshot = true
@@ -54,6 +56,7 @@ resource "aws_rds_cluster" "test" {
 resource "aws_rds_cluster" "wrong" {
   cluster_identifier  = "wrong-%[1]s"
   database_name       = "test"
+  engine              = %[2]q
   master_username     = "tfacctest"
   master_password     = "avoid-plaintext-passwords"
   skip_final_snapshot = true
@@ -64,6 +67,8 @@ data "aws_rds_clusters" "test" {
     name   = "db-cluster-id"
     values = [aws_rds_cluster.test.cluster_identifier]
   }
+
+  depends_on = [aws_rds_cluster.wrong]
 }
-`, rName)
+`, rName, tfrds.ClusterEngineAuroraMySQL)
 }
