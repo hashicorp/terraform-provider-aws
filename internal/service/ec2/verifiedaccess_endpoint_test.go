@@ -242,6 +242,12 @@ func testAccVerifiedAccessEndpoint_policyDocument(t *testing.T, semaphore tfsync
 					resource.TestCheckResourceAttr(resourceName, "policy_document", policyDoc),
 				),
 			},
+			{
+				Config: testAccVerifiedAccessEndpointConfig_policyDelete(rName, acctest.TLSPEMEscapeNewlines(key), acctest.TLSPEMEscapeNewlines(certificate)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
+				),
+			},
 		},
 	})
 }
@@ -540,4 +546,8 @@ resource "aws_verifiedaccess_endpoint" "test" {
   verified_access_group_id = aws_verifiedaccess_group.test.id
 }
 `, rName, key, certificate, policyDocument))
+}
+
+func testAccVerifiedAccessEndpointConfig_policyDelete(rName, key, certificate string) string {
+	return acctest.ConfigCompose(testAccVerifiedAccessEndpointConfig_policyBase(rName, key, certificate))
 }
