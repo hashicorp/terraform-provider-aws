@@ -2269,85 +2269,85 @@ func TestExpandInterface(t *testing.T) {
 
 	ctx := context.Background()
 
-	var targetInterface testFlexAWSInterfaceInterface
+	var targetInterface awsInterfaceInterface
 
 	testCases := autoFlexTestCases{
 		"top level": {
-			Source: testFlexTFInterfaceFlexer{
+			Source: tfInterfaceFlexer{
 				Field1: types.StringValue("value1"),
 			},
 			Target: &targetInterface,
-			WantTarget: testFlexAWSInterfaceInterfacePtr(&testFlexAWSInterfaceInterfaceImpl{
+			WantTarget: testFlexAWSInterfaceInterfacePtr(&awsInterfaceInterfaceImpl{
 				AWSField: "value1",
 			}),
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[testFlexTFInterfaceFlexer](), reflect.TypeFor[*testFlexAWSInterfaceInterface]()),
-				infoConverting(reflect.TypeFor[testFlexTFInterfaceFlexer](), reflect.TypeFor[testFlexAWSInterfaceInterface]()),
-				infoSourceImplementsFlexExpander("", reflect.TypeFor[testFlexTFInterfaceFlexer](), "", reflect.TypeFor[testFlexAWSInterfaceInterface]()),
+				infoExpanding(reflect.TypeFor[tfInterfaceFlexer](), reflect.TypeFor[*awsInterfaceInterface]()),
+				infoConverting(reflect.TypeFor[tfInterfaceFlexer](), reflect.TypeFor[awsInterfaceInterface]()),
+				infoSourceImplementsFlexExpander("", reflect.TypeFor[tfInterfaceFlexer](), "", reflect.TypeFor[awsInterfaceInterface]()),
 				// StringValueFromFramework in testFlexTFInterfaceFlexer.Expand()
 				infoExpandingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[*string]()), // TODO: fix path
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
 		"top level return value does not implement target interface": {
-			Source: testFlexTFInterfaceIncompatibleExpander{
+			Source: tfInterfaceIncompatibleExpander{
 				Field1: types.StringValue("value1"),
 			},
 			Target: &targetInterface,
 			expectedDiags: diag.Diagnostics{
-				diagExpandedTypeDoesNotImplement(reflect.TypeFor[*testFlexAWSInterfaceIncompatibleImpl](), reflect.TypeFor[testFlexAWSInterfaceInterface]()),
+				diagExpandedTypeDoesNotImplement(reflect.TypeFor[*awsInterfaceIncompatibleImpl](), reflect.TypeFor[awsInterfaceInterface]()),
 			},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[testFlexTFInterfaceIncompatibleExpander](), reflect.TypeFor[*testFlexAWSInterfaceInterface]()),
-				infoConverting(reflect.TypeFor[testFlexTFInterfaceIncompatibleExpander](), reflect.TypeFor[testFlexAWSInterfaceInterface]()),
-				infoSourceImplementsFlexExpander("", reflect.TypeFor[testFlexTFInterfaceIncompatibleExpander](), "", reflect.TypeFor[testFlexAWSInterfaceInterface]()),
+				infoExpanding(reflect.TypeFor[tfInterfaceIncompatibleExpander](), reflect.TypeFor[*awsInterfaceInterface]()),
+				infoConverting(reflect.TypeFor[tfInterfaceIncompatibleExpander](), reflect.TypeFor[awsInterfaceInterface]()),
+				infoSourceImplementsFlexExpander("", reflect.TypeFor[tfInterfaceIncompatibleExpander](), "", reflect.TypeFor[awsInterfaceInterface]()),
 				// StringValueFromFramework in testFlexTFInterfaceFlexer.Expand()
 				infoExpandingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[*string]()), // TODO: fix path
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
 		"single list Source and single interface Target": {
-			Source: testFlexTFListNestedObject[testFlexTFInterfaceFlexer]{
-				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceFlexer{
+			Source: tfListNestedObject[tfInterfaceFlexer]{
+				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfInterfaceFlexer{
 					{
 						Field1: types.StringValue("value1"),
 					},
 				}),
 			},
-			Target: &testFlexAWSInterfaceSingle{},
-			WantTarget: &testFlexAWSInterfaceSingle{
-				Field1: &testFlexAWSInterfaceInterfaceImpl{
+			Target: &awsInterfaceSingle{},
+			WantTarget: &awsInterfaceSingle{
+				Field1: &awsInterfaceInterfaceImpl{
 					AWSField: "value1",
 				},
 			},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[testFlexTFListNestedObject[testFlexTFInterfaceFlexer]](), reflect.TypeFor[*testFlexAWSInterfaceSingle]()),
-				infoConverting(reflect.TypeFor[testFlexTFListNestedObject[testFlexTFInterfaceFlexer]](), reflect.TypeFor[*testFlexAWSInterfaceSingle]()),
-				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFListNestedObject[testFlexTFInterfaceFlexer]](), "Field1", reflect.TypeFor[*testFlexAWSInterfaceSingle]()),
-				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFInterfaceFlexer]](), "Field1", reflect.TypeFor[testFlexAWSInterfaceInterface]()),
-				infoSourceImplementsFlexExpander("Field1[0]", reflect.TypeFor[testFlexTFInterfaceFlexer](), "Field1", reflect.TypeFor[*testFlexAWSInterfaceInterface]()),
+				infoExpanding(reflect.TypeFor[tfListNestedObject[tfInterfaceFlexer]](), reflect.TypeFor[*awsInterfaceSingle]()),
+				infoConverting(reflect.TypeFor[tfListNestedObject[tfInterfaceFlexer]](), reflect.TypeFor[*awsInterfaceSingle]()),
+				traceMatchedFields("Field1", reflect.TypeFor[tfListNestedObject[tfInterfaceFlexer]](), "Field1", reflect.TypeFor[*awsInterfaceSingle]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfInterfaceFlexer]](), "Field1", reflect.TypeFor[awsInterfaceInterface]()),
+				infoSourceImplementsFlexExpander("Field1[0]", reflect.TypeFor[tfInterfaceFlexer](), "Field1", reflect.TypeFor[*awsInterfaceInterface]()),
 				// StringValueFromFramework in testFlexTFInterfaceFlexer.Expand()
 				infoExpandingWithPath("Field1[0]", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[*string]()), // TODO: fix path
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()),                // TODO: fix path
 			},
 		},
 		"single list non-Expander Source and single interface Target": {
-			Source: testFlexTFListNestedObject[tfSingleStringField]{
+			Source: tfListNestedObject[tfSingleStringField]{
 				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfSingleStringField{
 					{
 						Field1: types.StringValue("value1"),
 					},
 				}),
 			},
-			Target: &testFlexAWSInterfaceSingle{},
-			WantTarget: &testFlexAWSInterfaceSingle{
+			Target: &awsInterfaceSingle{},
+			WantTarget: &awsInterfaceSingle{
 				Field1: nil,
 			},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[testFlexTFListNestedObject[tfSingleStringField]](), reflect.TypeFor[*testFlexAWSInterfaceSingle]()),
-				infoConverting(reflect.TypeFor[testFlexTFListNestedObject[tfSingleStringField]](), reflect.TypeFor[*testFlexAWSInterfaceSingle]()),
-				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFListNestedObject[tfSingleStringField]](), "Field1", reflect.TypeFor[*testFlexAWSInterfaceSingle]()),
-				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfSingleStringField]](), "Field1", reflect.TypeFor[testFlexAWSInterfaceInterface]()),
+				infoExpanding(reflect.TypeFor[tfListNestedObject[tfSingleStringField]](), reflect.TypeFor[*awsInterfaceSingle]()),
+				infoConverting(reflect.TypeFor[tfListNestedObject[tfSingleStringField]](), reflect.TypeFor[*awsInterfaceSingle]()),
+				traceMatchedFields("Field1", reflect.TypeFor[tfListNestedObject[tfSingleStringField]](), "Field1", reflect.TypeFor[*awsInterfaceSingle]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfSingleStringField]](), "Field1", reflect.TypeFor[awsInterfaceInterface]()),
 				{
 					"@level":             "error",
 					"@module":            "provider.autoflex",
@@ -2357,54 +2357,54 @@ func TestExpandInterface(t *testing.T) {
 					logAttrKeySourcePath: "Field1[0]",
 					logAttrKeySourceType: fullTypeName(reflect.TypeFor[tfSingleStringField]()),
 					logAttrKeyTargetPath: "Field1",
-					logAttrKeyTargetType: fullTypeName(reflect.TypeFor[*testFlexAWSInterfaceInterface]()),
+					logAttrKeyTargetType: fullTypeName(reflect.TypeFor[*awsInterfaceInterface]()),
 				},
 			},
 		},
 		"single set Source and single interface Target": {
-			Source: testFlexTFSetNestedObject[testFlexTFInterfaceFlexer]{
-				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceFlexer{
+			Source: tfSetNestedObject[tfInterfaceFlexer]{
+				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []tfInterfaceFlexer{
 					{
 						Field1: types.StringValue("value1"),
 					},
 				}),
 			},
-			Target: &testFlexAWSInterfaceSingle{},
-			WantTarget: &testFlexAWSInterfaceSingle{
-				Field1: &testFlexAWSInterfaceInterfaceImpl{
+			Target: &awsInterfaceSingle{},
+			WantTarget: &awsInterfaceSingle{
+				Field1: &awsInterfaceInterfaceImpl{
 					AWSField: "value1",
 				},
 			},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[testFlexTFSetNestedObject[testFlexTFInterfaceFlexer]](), reflect.TypeFor[*testFlexAWSInterfaceSingle]()),
-				infoConverting(reflect.TypeFor[testFlexTFSetNestedObject[testFlexTFInterfaceFlexer]](), reflect.TypeFor[*testFlexAWSInterfaceSingle]()),
-				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFSetNestedObject[testFlexTFInterfaceFlexer]](), "Field1", reflect.TypeFor[*testFlexAWSInterfaceSingle]()),
-				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFInterfaceFlexer]](), "Field1", reflect.TypeFor[testFlexAWSInterfaceInterface]()),
-				infoSourceImplementsFlexExpander("Field1[0]", reflect.TypeFor[testFlexTFInterfaceFlexer](), "Field1", reflect.TypeFor[*testFlexAWSInterfaceInterface]()),
+				infoExpanding(reflect.TypeFor[tfSetNestedObject[tfInterfaceFlexer]](), reflect.TypeFor[*awsInterfaceSingle]()),
+				infoConverting(reflect.TypeFor[tfSetNestedObject[tfInterfaceFlexer]](), reflect.TypeFor[*awsInterfaceSingle]()),
+				traceMatchedFields("Field1", reflect.TypeFor[tfSetNestedObject[tfInterfaceFlexer]](), "Field1", reflect.TypeFor[*awsInterfaceSingle]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfInterfaceFlexer]](), "Field1", reflect.TypeFor[awsInterfaceInterface]()),
+				infoSourceImplementsFlexExpander("Field1[0]", reflect.TypeFor[tfInterfaceFlexer](), "Field1", reflect.TypeFor[*awsInterfaceInterface]()),
 				// StringValueFromFramework in testFlexTFInterfaceFlexer.Expand()
 				infoExpandingWithPath("Field1[0]", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
 		"empty list Source and empty interface Target": {
-			Source: testFlexTFListNestedObject[testFlexTFInterfaceFlexer]{
-				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceFlexer{}),
+			Source: tfListNestedObject[tfInterfaceFlexer]{
+				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfInterfaceFlexer{}),
 			},
-			Target: &testFlexAWSInterfaceSlice{},
-			WantTarget: &testFlexAWSInterfaceSlice{
-				Field1: []testFlexAWSInterfaceInterface{},
+			Target: &awsInterfaceSlice{},
+			WantTarget: &awsInterfaceSlice{
+				Field1: []awsInterfaceInterface{},
 			},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[testFlexTFListNestedObject[testFlexTFInterfaceFlexer]](), reflect.TypeFor[*testFlexAWSInterfaceSlice]()),
-				infoConverting(reflect.TypeFor[testFlexTFListNestedObject[testFlexTFInterfaceFlexer]](), reflect.TypeFor[*testFlexAWSInterfaceSlice]()),
-				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFListNestedObject[testFlexTFInterfaceFlexer]](), "Field1", reflect.TypeFor[*testFlexAWSInterfaceSlice]()),
-				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFInterfaceFlexer]](), "Field1", reflect.TypeFor[[]testFlexAWSInterfaceInterface]()),
-				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFInterfaceFlexer]](), 0, "Field1", reflect.TypeFor[[]testFlexAWSInterfaceInterface]()),
+				infoExpanding(reflect.TypeFor[tfListNestedObject[tfInterfaceFlexer]](), reflect.TypeFor[*awsInterfaceSlice]()),
+				infoConverting(reflect.TypeFor[tfListNestedObject[tfInterfaceFlexer]](), reflect.TypeFor[*awsInterfaceSlice]()),
+				traceMatchedFields("Field1", reflect.TypeFor[tfListNestedObject[tfInterfaceFlexer]](), "Field1", reflect.TypeFor[*awsInterfaceSlice]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfInterfaceFlexer]](), "Field1", reflect.TypeFor[[]awsInterfaceInterface]()),
+				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfInterfaceFlexer]](), 0, "Field1", reflect.TypeFor[[]awsInterfaceInterface]()),
 			},
 		},
 		"non-empty list Source and non-empty interface Target": {
-			Source: testFlexTFListNestedObject[testFlexTFInterfaceFlexer]{
-				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceFlexer{
+			Source: tfListNestedObject[tfInterfaceFlexer]{
+				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfInterfaceFlexer{
 					{
 						Field1: types.StringValue("value1"),
 					},
@@ -2413,52 +2413,52 @@ func TestExpandInterface(t *testing.T) {
 					},
 				}),
 			},
-			Target: &testFlexAWSInterfaceSlice{},
-			WantTarget: &testFlexAWSInterfaceSlice{
-				Field1: []testFlexAWSInterfaceInterface{
-					&testFlexAWSInterfaceInterfaceImpl{
+			Target: &awsInterfaceSlice{},
+			WantTarget: &awsInterfaceSlice{
+				Field1: []awsInterfaceInterface{
+					&awsInterfaceInterfaceImpl{
 						AWSField: "value1",
 					},
-					&testFlexAWSInterfaceInterfaceImpl{
+					&awsInterfaceInterfaceImpl{
 						AWSField: "value2",
 					},
 				},
 			},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[testFlexTFListNestedObject[testFlexTFInterfaceFlexer]](), reflect.TypeFor[*testFlexAWSInterfaceSlice]()),
-				infoConverting(reflect.TypeFor[testFlexTFListNestedObject[testFlexTFInterfaceFlexer]](), reflect.TypeFor[*testFlexAWSInterfaceSlice]()),
-				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFListNestedObject[testFlexTFInterfaceFlexer]](), "Field1", reflect.TypeFor[*testFlexAWSInterfaceSlice]()),
-				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFInterfaceFlexer]](), "Field1", reflect.TypeFor[[]testFlexAWSInterfaceInterface]()),
-				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFInterfaceFlexer]](), 2, "Field1", reflect.TypeFor[[]testFlexAWSInterfaceInterface]()),
-				infoSourceImplementsFlexExpander("Field1[0]", reflect.TypeFor[testFlexTFInterfaceFlexer](), "Field1[0]", reflect.TypeFor[*testFlexAWSInterfaceInterface]()),
+				infoExpanding(reflect.TypeFor[tfListNestedObject[tfInterfaceFlexer]](), reflect.TypeFor[*awsInterfaceSlice]()),
+				infoConverting(reflect.TypeFor[tfListNestedObject[tfInterfaceFlexer]](), reflect.TypeFor[*awsInterfaceSlice]()),
+				traceMatchedFields("Field1", reflect.TypeFor[tfListNestedObject[tfInterfaceFlexer]](), "Field1", reflect.TypeFor[*awsInterfaceSlice]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfInterfaceFlexer]](), "Field1", reflect.TypeFor[[]awsInterfaceInterface]()),
+				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfInterfaceFlexer]](), 2, "Field1", reflect.TypeFor[[]awsInterfaceInterface]()),
+				infoSourceImplementsFlexExpander("Field1[0]", reflect.TypeFor[tfInterfaceFlexer](), "Field1[0]", reflect.TypeFor[*awsInterfaceInterface]()),
 				// StringValueFromFramework in testFlexTFInterfaceFlexer.Expand()
 				infoExpandingWithPath("Field1[0]", reflect.TypeFor[types.String](), "Field1[0]", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
-				infoSourceImplementsFlexExpander("Field1[1]", reflect.TypeFor[testFlexTFInterfaceFlexer](), "Field1[1]", reflect.TypeFor[*testFlexAWSInterfaceInterface]()),
+				infoSourceImplementsFlexExpander("Field1[1]", reflect.TypeFor[tfInterfaceFlexer](), "Field1[1]", reflect.TypeFor[*awsInterfaceInterface]()),
 				// StringValueFromFramework in testFlexTFInterfaceFlexer.Expand()
 				infoExpandingWithPath("Field1[1]", reflect.TypeFor[types.String](), "Field1[1]", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
 		"empty set Source and empty interface Target": {
-			Source: testFlexTFSetNestedObject[testFlexTFInterfaceFlexer]{
-				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceFlexer{}),
+			Source: tfSetNestedObject[tfInterfaceFlexer]{
+				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []tfInterfaceFlexer{}),
 			},
-			Target: &testFlexAWSInterfaceSlice{},
-			WantTarget: &testFlexAWSInterfaceSlice{
-				Field1: []testFlexAWSInterfaceInterface{},
+			Target: &awsInterfaceSlice{},
+			WantTarget: &awsInterfaceSlice{
+				Field1: []awsInterfaceInterface{},
 			},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[testFlexTFSetNestedObject[testFlexTFInterfaceFlexer]](), reflect.TypeFor[*testFlexAWSInterfaceSlice]()),
-				infoConverting(reflect.TypeFor[testFlexTFSetNestedObject[testFlexTFInterfaceFlexer]](), reflect.TypeFor[*testFlexAWSInterfaceSlice]()),
-				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFSetNestedObject[testFlexTFInterfaceFlexer]](), "Field1", reflect.TypeFor[*testFlexAWSInterfaceSlice]()),
-				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFInterfaceFlexer]](), "Field1", reflect.TypeFor[[]testFlexAWSInterfaceInterface]()),
-				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFInterfaceFlexer]](), 0, "Field1", reflect.TypeFor[[]testFlexAWSInterfaceInterface]()),
+				infoExpanding(reflect.TypeFor[tfSetNestedObject[tfInterfaceFlexer]](), reflect.TypeFor[*awsInterfaceSlice]()),
+				infoConverting(reflect.TypeFor[tfSetNestedObject[tfInterfaceFlexer]](), reflect.TypeFor[*awsInterfaceSlice]()),
+				traceMatchedFields("Field1", reflect.TypeFor[tfSetNestedObject[tfInterfaceFlexer]](), "Field1", reflect.TypeFor[*awsInterfaceSlice]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfInterfaceFlexer]](), "Field1", reflect.TypeFor[[]awsInterfaceInterface]()),
+				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfInterfaceFlexer]](), 0, "Field1", reflect.TypeFor[[]awsInterfaceInterface]()),
 			},
 		},
 		"non-empty set Source and non-empty interface Target": {
-			Source: testFlexTFSetNestedObject[testFlexTFInterfaceFlexer]{
-				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceFlexer{
+			Source: tfSetNestedObject[tfInterfaceFlexer]{
+				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []tfInterfaceFlexer{
 					{
 						Field1: types.StringValue("value1"),
 					},
@@ -2467,51 +2467,51 @@ func TestExpandInterface(t *testing.T) {
 					},
 				}),
 			},
-			Target: &testFlexAWSInterfaceSlice{},
-			WantTarget: &testFlexAWSInterfaceSlice{
-				Field1: []testFlexAWSInterfaceInterface{
-					&testFlexAWSInterfaceInterfaceImpl{
+			Target: &awsInterfaceSlice{},
+			WantTarget: &awsInterfaceSlice{
+				Field1: []awsInterfaceInterface{
+					&awsInterfaceInterfaceImpl{
 						AWSField: "value1",
 					},
-					&testFlexAWSInterfaceInterfaceImpl{
+					&awsInterfaceInterfaceImpl{
 						AWSField: "value2",
 					},
 				},
 			},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[testFlexTFSetNestedObject[testFlexTFInterfaceFlexer]](), reflect.TypeFor[*testFlexAWSInterfaceSlice]()),
-				infoConverting(reflect.TypeFor[testFlexTFSetNestedObject[testFlexTFInterfaceFlexer]](), reflect.TypeFor[*testFlexAWSInterfaceSlice]()),
-				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFSetNestedObject[testFlexTFInterfaceFlexer]](), "Field1", reflect.TypeFor[*testFlexAWSInterfaceSlice]()),
-				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFInterfaceFlexer]](), "Field1", reflect.TypeFor[[]testFlexAWSInterfaceInterface]()),
-				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFInterfaceFlexer]](), 2, "Field1", reflect.TypeFor[[]testFlexAWSInterfaceInterface]()),
-				infoSourceImplementsFlexExpander("Field1[0]", reflect.TypeFor[testFlexTFInterfaceFlexer](), "Field1[0]", reflect.TypeFor[*testFlexAWSInterfaceInterface]()),
+				infoExpanding(reflect.TypeFor[tfSetNestedObject[tfInterfaceFlexer]](), reflect.TypeFor[*awsInterfaceSlice]()),
+				infoConverting(reflect.TypeFor[tfSetNestedObject[tfInterfaceFlexer]](), reflect.TypeFor[*awsInterfaceSlice]()),
+				traceMatchedFields("Field1", reflect.TypeFor[tfSetNestedObject[tfInterfaceFlexer]](), "Field1", reflect.TypeFor[*awsInterfaceSlice]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfInterfaceFlexer]](), "Field1", reflect.TypeFor[[]awsInterfaceInterface]()),
+				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfInterfaceFlexer]](), 2, "Field1", reflect.TypeFor[[]awsInterfaceInterface]()),
+				infoSourceImplementsFlexExpander("Field1[0]", reflect.TypeFor[tfInterfaceFlexer](), "Field1[0]", reflect.TypeFor[*awsInterfaceInterface]()),
 				// StringValueFromFramework in testFlexTFInterfaceFlexer.Expand()
 				infoExpandingWithPath("Field1[0]", reflect.TypeFor[types.String](), "Field1[0]", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
-				infoSourceImplementsFlexExpander("Field1[1]", reflect.TypeFor[testFlexTFInterfaceFlexer](), "Field1[1]", reflect.TypeFor[*testFlexAWSInterfaceInterface]()),
+				infoSourceImplementsFlexExpander("Field1[1]", reflect.TypeFor[tfInterfaceFlexer](), "Field1[1]", reflect.TypeFor[*awsInterfaceInterface]()),
 				// StringValueFromFramework in testFlexTFInterfaceFlexer.Expand()
 				infoExpandingWithPath("Field1[1]", reflect.TypeFor[types.String](), "Field1[1]", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
 		"object value Source and struct Target": {
-			Source: testFlexTFObjectValue[testFlexTFInterfaceFlexer]{
-				Field1: fwtypes.NewObjectValueOfMust(ctx, &testFlexTFInterfaceFlexer{
+			Source: tfObjectValue[tfInterfaceFlexer]{
+				Field1: fwtypes.NewObjectValueOfMust(ctx, &tfInterfaceFlexer{
 					Field1: types.StringValue("value1"),
 				}),
 			},
-			Target: &testFlexAWSInterfaceSingle{},
-			WantTarget: &testFlexAWSInterfaceSingle{
-				Field1: &testFlexAWSInterfaceInterfaceImpl{
+			Target: &awsInterfaceSingle{},
+			WantTarget: &awsInterfaceSingle{
+				Field1: &awsInterfaceInterfaceImpl{
 					AWSField: "value1",
 				},
 			},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[testFlexTFObjectValue[testFlexTFInterfaceFlexer]](), reflect.TypeFor[*testFlexAWSInterfaceSingle]()),
-				infoConverting(reflect.TypeFor[testFlexTFObjectValue[testFlexTFInterfaceFlexer]](), reflect.TypeFor[*testFlexAWSInterfaceSingle]()),
-				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFObjectValue[testFlexTFInterfaceFlexer]](), "Field1", reflect.TypeFor[*testFlexAWSInterfaceSingle]()),
-				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ObjectValueOf[testFlexTFInterfaceFlexer]](), "Field1", reflect.TypeFor[testFlexAWSInterfaceInterface]()),
-				infoSourceImplementsFlexExpander("Field1", reflect.TypeFor[testFlexTFInterfaceFlexer](), "Field1", reflect.TypeFor[*testFlexAWSInterfaceInterface]()),
+				infoExpanding(reflect.TypeFor[tfObjectValue[tfInterfaceFlexer]](), reflect.TypeFor[*awsInterfaceSingle]()),
+				infoConverting(reflect.TypeFor[tfObjectValue[tfInterfaceFlexer]](), reflect.TypeFor[*awsInterfaceSingle]()),
+				traceMatchedFields("Field1", reflect.TypeFor[tfObjectValue[tfInterfaceFlexer]](), "Field1", reflect.TypeFor[*awsInterfaceSingle]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ObjectValueOf[tfInterfaceFlexer]](), "Field1", reflect.TypeFor[awsInterfaceInterface]()),
+				infoSourceImplementsFlexExpander("Field1", reflect.TypeFor[tfInterfaceFlexer](), "Field1", reflect.TypeFor[*awsInterfaceInterface]()),
 				// StringValueFromFramework in testFlexTFInterfaceFlexer.Expand()
 				infoExpandingWithPath("Field1", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
@@ -2521,7 +2521,7 @@ func TestExpandInterface(t *testing.T) {
 	runAutoExpandTestCases(t, testCases)
 }
 
-func testFlexAWSInterfaceInterfacePtr(v testFlexAWSInterfaceInterface) *testFlexAWSInterfaceInterface { // nosemgrep:ci.aws-in-func-name
+func testFlexAWSInterfaceInterfacePtr(v awsInterfaceInterface) *awsInterfaceInterface { // nosemgrep:ci.aws-in-func-name
 	return &v
 }
 
@@ -2532,70 +2532,70 @@ func TestExpandExpander(t *testing.T) {
 
 	testCases := autoFlexTestCases{
 		"top level struct Target": {
-			Source: testFlexTFFlexer{
+			Source: tfFlexer{
 				Field1: types.StringValue("value1"),
 			},
-			Target: &testFlexAWSExpander{},
-			WantTarget: &testFlexAWSExpander{
+			Target: &awsExpander{},
+			WantTarget: &awsExpander{
 				AWSField: "value1",
 			},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[testFlexTFFlexer](), reflect.TypeFor[*testFlexAWSExpander]()),
-				infoConverting(reflect.TypeFor[testFlexTFFlexer](), reflect.TypeFor[*testFlexAWSExpander]()),
-				infoSourceImplementsFlexExpander("", reflect.TypeFor[testFlexTFFlexer](), "", reflect.TypeFor[*testFlexAWSExpander]()),
+				infoExpanding(reflect.TypeFor[tfFlexer](), reflect.TypeFor[*awsExpander]()),
+				infoConverting(reflect.TypeFor[tfFlexer](), reflect.TypeFor[*awsExpander]()),
+				infoSourceImplementsFlexExpander("", reflect.TypeFor[tfFlexer](), "", reflect.TypeFor[*awsExpander]()),
 				// StringValueFromFramework in testFlexTFFlexer.Expand()
 				infoExpandingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
 		"top level string Target": {
-			Source: testFlexTFExpanderToString{
+			Source: tfExpanderToString{
 				Field1: types.StringValue("value1"),
 			},
 			Target:     aws.String(""),
 			WantTarget: aws.String("value1"),
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[testFlexTFExpanderToString](), reflect.TypeFor[*string]()),
-				infoConverting(reflect.TypeFor[testFlexTFExpanderToString](), reflect.TypeFor[string]()),
-				infoSourceImplementsFlexExpander("", reflect.TypeFor[testFlexTFExpanderToString](), "", reflect.TypeFor[string]()),
+				infoExpanding(reflect.TypeFor[tfExpanderToString](), reflect.TypeFor[*string]()),
+				infoConverting(reflect.TypeFor[tfExpanderToString](), reflect.TypeFor[string]()),
+				infoSourceImplementsFlexExpander("", reflect.TypeFor[tfExpanderToString](), "", reflect.TypeFor[string]()),
 				// StringValueFromFramework in testFlexTFFlexer.Expand()
 				infoExpandingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
 		"top level incompatible struct Target": {
-			Source: testFlexTFFlexer{
+			Source: tfFlexer{
 				Field1: types.StringValue("value1"),
 			},
-			Target: &testFlexAWSExpanderIncompatible{},
+			Target: &awsExpanderIncompatible{},
 			expectedDiags: diag.Diagnostics{
-				diagCannotBeAssigned(reflect.TypeFor[testFlexAWSExpander](), reflect.TypeFor[testFlexAWSExpanderIncompatible]()),
+				diagCannotBeAssigned(reflect.TypeFor[awsExpander](), reflect.TypeFor[awsExpanderIncompatible]()),
 			},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[testFlexTFFlexer](), reflect.TypeFor[*testFlexAWSExpanderIncompatible]()),
-				infoConverting(reflect.TypeFor[testFlexTFFlexer](), reflect.TypeFor[*testFlexAWSExpanderIncompatible]()),
-				infoSourceImplementsFlexExpander("", reflect.TypeFor[testFlexTFFlexer](), "", reflect.TypeFor[*testFlexAWSExpanderIncompatible]()),
+				infoExpanding(reflect.TypeFor[tfFlexer](), reflect.TypeFor[*awsExpanderIncompatible]()),
+				infoConverting(reflect.TypeFor[tfFlexer](), reflect.TypeFor[*awsExpanderIncompatible]()),
+				infoSourceImplementsFlexExpander("", reflect.TypeFor[tfFlexer](), "", reflect.TypeFor[*awsExpanderIncompatible]()),
 				// StringValueFromFramework in testFlexTFFlexer.Expand()
 				infoExpandingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[*string]()), // TODO: fix path
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
 		"top level expands to nil": {
-			Source: testFlexTFExpanderToNil{
+			Source: tfExpanderToNil{
 				Field1: types.StringValue("value1"),
 			},
-			Target: &testFlexAWSExpander{},
+			Target: &awsExpander{},
 			expectedDiags: diag.Diagnostics{
-				diagExpandsToNil(reflect.TypeFor[testFlexTFExpanderToNil]()),
+				diagExpandsToNil(reflect.TypeFor[tfExpanderToNil]()),
 			},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[testFlexTFExpanderToNil](), reflect.TypeFor[*testFlexAWSExpander]()),
-				infoConverting(reflect.TypeFor[testFlexTFExpanderToNil](), reflect.TypeFor[*testFlexAWSExpander]()),
-				infoSourceImplementsFlexExpander("", reflect.TypeFor[testFlexTFExpanderToNil](), "", reflect.TypeFor[*testFlexAWSExpander]()),
+				infoExpanding(reflect.TypeFor[tfExpanderToNil](), reflect.TypeFor[*awsExpander]()),
+				infoConverting(reflect.TypeFor[tfExpanderToNil](), reflect.TypeFor[*awsExpander]()),
+				infoSourceImplementsFlexExpander("", reflect.TypeFor[tfExpanderToNil](), "", reflect.TypeFor[*awsExpander]()),
 			},
 		},
 		"top level incompatible non-struct Target": {
-			Source: testFlexTFExpanderToString{
+			Source: tfExpanderToString{
 				Field1: types.StringValue("value1"),
 			},
 			Target: aws.Int64(0),
@@ -2603,133 +2603,133 @@ func TestExpandExpander(t *testing.T) {
 				diagCannotBeAssigned(reflect.TypeFor[string](), reflect.TypeFor[int64]()),
 			},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[testFlexTFExpanderToString](), reflect.TypeFor[*int64]()),
-				infoConverting(reflect.TypeFor[testFlexTFExpanderToString](), reflect.TypeFor[int64]()),
-				infoSourceImplementsFlexExpander("", reflect.TypeFor[testFlexTFExpanderToString](), "", reflect.TypeFor[int64]()),
+				infoExpanding(reflect.TypeFor[tfExpanderToString](), reflect.TypeFor[*int64]()),
+				infoConverting(reflect.TypeFor[tfExpanderToString](), reflect.TypeFor[int64]()),
+				infoSourceImplementsFlexExpander("", reflect.TypeFor[tfExpanderToString](), "", reflect.TypeFor[int64]()),
 				// StringValueFromFramework in testFlexTFFlexer.Expand()
 				infoExpandingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
 		"single list Source and single struct Target": {
-			Source: testFlexTFExpanderListNestedObject{
-				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFFlexer{
+			Source: tfExpanderListNestedObject{
+				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfFlexer{
 					{
 						Field1: types.StringValue("value1"),
 					},
 				}),
 			},
-			Target: &testFlexAWSExpanderSingleStruct{},
-			WantTarget: &testFlexAWSExpanderSingleStruct{
-				Field1: testFlexAWSExpander{
+			Target: &awsExpanderSingleStruct{},
+			WantTarget: &awsExpanderSingleStruct{
+				Field1: awsExpander{
 					AWSField: "value1",
 				},
 			},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[testFlexTFExpanderListNestedObject](), reflect.TypeFor[*testFlexAWSExpanderSingleStruct]()),
-				infoConverting(reflect.TypeFor[testFlexTFExpanderListNestedObject](), reflect.TypeFor[*testFlexAWSExpanderSingleStruct]()),
-				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFExpanderListNestedObject](), "Field1", reflect.TypeFor[*testFlexAWSExpanderSingleStruct]()),
-				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFFlexer]](), "Field1", reflect.TypeFor[testFlexAWSExpander]()),
-				infoSourceImplementsFlexExpander("Field1[0]", reflect.TypeFor[testFlexTFFlexer](), "Field1", reflect.TypeFor[*testFlexAWSExpander]()),
+				infoExpanding(reflect.TypeFor[tfExpanderListNestedObject](), reflect.TypeFor[*awsExpanderSingleStruct]()),
+				infoConverting(reflect.TypeFor[tfExpanderListNestedObject](), reflect.TypeFor[*awsExpanderSingleStruct]()),
+				traceMatchedFields("Field1", reflect.TypeFor[tfExpanderListNestedObject](), "Field1", reflect.TypeFor[*awsExpanderSingleStruct]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfFlexer]](), "Field1", reflect.TypeFor[awsExpander]()),
+				infoSourceImplementsFlexExpander("Field1[0]", reflect.TypeFor[tfFlexer](), "Field1", reflect.TypeFor[*awsExpander]()),
 				// StringValueFromFramework in testFlexTFFlexer.Expand()
 				infoExpandingWithPath("Field1[0]", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
 		"single set Source and single struct Target": {
-			Source: testFlexTFExpanderSetNestedObject{
-				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFFlexer{
+			Source: tfExpanderSetNestedObject{
+				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []tfFlexer{
 					{
 						Field1: types.StringValue("value1"),
 					},
 				}),
 			},
-			Target: &testFlexAWSExpanderSingleStruct{},
-			WantTarget: &testFlexAWSExpanderSingleStruct{
-				Field1: testFlexAWSExpander{
+			Target: &awsExpanderSingleStruct{},
+			WantTarget: &awsExpanderSingleStruct{
+				Field1: awsExpander{
 					AWSField: "value1",
 				},
 			},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[testFlexTFExpanderSetNestedObject](), reflect.TypeFor[*testFlexAWSExpanderSingleStruct]()),
-				infoConverting(reflect.TypeFor[testFlexTFExpanderSetNestedObject](), reflect.TypeFor[*testFlexAWSExpanderSingleStruct]()),
-				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFExpanderSetNestedObject](), "Field1", reflect.TypeFor[*testFlexAWSExpanderSingleStruct]()),
-				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFFlexer]](), "Field1", reflect.TypeFor[testFlexAWSExpander]()),
-				infoSourceImplementsFlexExpander("Field1[0]", reflect.TypeFor[testFlexTFFlexer](), "Field1", reflect.TypeFor[*testFlexAWSExpander]()),
+				infoExpanding(reflect.TypeFor[tfExpanderSetNestedObject](), reflect.TypeFor[*awsExpanderSingleStruct]()),
+				infoConverting(reflect.TypeFor[tfExpanderSetNestedObject](), reflect.TypeFor[*awsExpanderSingleStruct]()),
+				traceMatchedFields("Field1", reflect.TypeFor[tfExpanderSetNestedObject](), "Field1", reflect.TypeFor[*awsExpanderSingleStruct]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfFlexer]](), "Field1", reflect.TypeFor[awsExpander]()),
+				infoSourceImplementsFlexExpander("Field1[0]", reflect.TypeFor[tfFlexer](), "Field1", reflect.TypeFor[*awsExpander]()),
 				// StringValueFromFramework in testFlexTFFlexer.Expand()
 				infoExpandingWithPath("Field1[0]", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
 		"single list Source and single *struct Target": {
-			Source: testFlexTFExpanderListNestedObject{
-				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFFlexer{
+			Source: tfExpanderListNestedObject{
+				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfFlexer{
 					{
 						Field1: types.StringValue("value1"),
 					},
 				}),
 			},
-			Target: &testFlexAWSExpanderSinglePtr{},
-			WantTarget: &testFlexAWSExpanderSinglePtr{
-				Field1: &testFlexAWSExpander{
+			Target: &awsExpanderSinglePtr{},
+			WantTarget: &awsExpanderSinglePtr{
+				Field1: &awsExpander{
 					AWSField: "value1",
 				},
 			},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[testFlexTFExpanderListNestedObject](), reflect.TypeFor[*testFlexAWSExpanderSinglePtr]()),
-				infoConverting(reflect.TypeFor[testFlexTFExpanderListNestedObject](), reflect.TypeFor[*testFlexAWSExpanderSinglePtr]()),
-				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFExpanderListNestedObject](), "Field1", reflect.TypeFor[*testFlexAWSExpanderSinglePtr]()),
-				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFFlexer]](), "Field1", reflect.TypeFor[*testFlexAWSExpander]()),
-				infoSourceImplementsFlexExpander("Field1[0]", reflect.TypeFor[testFlexTFFlexer](), "Field1", reflect.TypeFor[*testFlexAWSExpander]()),
+				infoExpanding(reflect.TypeFor[tfExpanderListNestedObject](), reflect.TypeFor[*awsExpanderSinglePtr]()),
+				infoConverting(reflect.TypeFor[tfExpanderListNestedObject](), reflect.TypeFor[*awsExpanderSinglePtr]()),
+				traceMatchedFields("Field1", reflect.TypeFor[tfExpanderListNestedObject](), "Field1", reflect.TypeFor[*awsExpanderSinglePtr]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfFlexer]](), "Field1", reflect.TypeFor[*awsExpander]()),
+				infoSourceImplementsFlexExpander("Field1[0]", reflect.TypeFor[tfFlexer](), "Field1", reflect.TypeFor[*awsExpander]()),
 				// StringValueFromFramework in testFlexTFFlexer.Expand()
 				infoExpandingWithPath("Field1[0]", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
 		"single set Source and single *struct Target": {
-			Source: testFlexTFExpanderSetNestedObject{
-				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFFlexer{
+			Source: tfExpanderSetNestedObject{
+				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []tfFlexer{
 					{
 						Field1: types.StringValue("value1"),
 					},
 				}),
 			},
-			Target: &testFlexAWSExpanderSinglePtr{},
-			WantTarget: &testFlexAWSExpanderSinglePtr{
-				Field1: &testFlexAWSExpander{
+			Target: &awsExpanderSinglePtr{},
+			WantTarget: &awsExpanderSinglePtr{
+				Field1: &awsExpander{
 					AWSField: "value1",
 				},
 			},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[testFlexTFExpanderSetNestedObject](), reflect.TypeFor[*testFlexAWSExpanderSinglePtr]()),
-				infoConverting(reflect.TypeFor[testFlexTFExpanderSetNestedObject](), reflect.TypeFor[*testFlexAWSExpanderSinglePtr]()),
-				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFExpanderSetNestedObject](), "Field1", reflect.TypeFor[*testFlexAWSExpanderSinglePtr]()),
-				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFFlexer]](), "Field1", reflect.TypeFor[*testFlexAWSExpander]()),
-				infoSourceImplementsFlexExpander("Field1[0]", reflect.TypeFor[testFlexTFFlexer](), "Field1", reflect.TypeFor[*testFlexAWSExpander]()),
+				infoExpanding(reflect.TypeFor[tfExpanderSetNestedObject](), reflect.TypeFor[*awsExpanderSinglePtr]()),
+				infoConverting(reflect.TypeFor[tfExpanderSetNestedObject](), reflect.TypeFor[*awsExpanderSinglePtr]()),
+				traceMatchedFields("Field1", reflect.TypeFor[tfExpanderSetNestedObject](), "Field1", reflect.TypeFor[*awsExpanderSinglePtr]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfFlexer]](), "Field1", reflect.TypeFor[*awsExpander]()),
+				infoSourceImplementsFlexExpander("Field1[0]", reflect.TypeFor[tfFlexer](), "Field1", reflect.TypeFor[*awsExpander]()),
 				// StringValueFromFramework in testFlexTFFlexer.Expand()
 				infoExpandingWithPath("Field1[0]", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
 		"empty list Source and empty struct Target": {
-			Source: testFlexTFExpanderListNestedObject{
-				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFFlexer{}),
+			Source: tfExpanderListNestedObject{
+				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfFlexer{}),
 			},
-			Target: &testFlexAWSExpanderStructSlice{},
-			WantTarget: &testFlexAWSExpanderStructSlice{
-				Field1: []testFlexAWSExpander{},
+			Target: &awsExpanderStructSlice{},
+			WantTarget: &awsExpanderStructSlice{
+				Field1: []awsExpander{},
 			},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[testFlexTFExpanderListNestedObject](), reflect.TypeFor[*testFlexAWSExpanderStructSlice]()),
-				infoConverting(reflect.TypeFor[testFlexTFExpanderListNestedObject](), reflect.TypeFor[*testFlexAWSExpanderStructSlice]()),
-				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFExpanderListNestedObject](), "Field1", reflect.TypeFor[*testFlexAWSExpanderStructSlice]()),
-				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFFlexer]](), "Field1", reflect.TypeFor[[]testFlexAWSExpander]()),
-				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFFlexer]](), 0, "Field1", reflect.TypeFor[[]testFlexAWSExpander]()),
+				infoExpanding(reflect.TypeFor[tfExpanderListNestedObject](), reflect.TypeFor[*awsExpanderStructSlice]()),
+				infoConverting(reflect.TypeFor[tfExpanderListNestedObject](), reflect.TypeFor[*awsExpanderStructSlice]()),
+				traceMatchedFields("Field1", reflect.TypeFor[tfExpanderListNestedObject](), "Field1", reflect.TypeFor[*awsExpanderStructSlice]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfFlexer]](), "Field1", reflect.TypeFor[[]awsExpander]()),
+				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfFlexer]](), 0, "Field1", reflect.TypeFor[[]awsExpander]()),
 			},
 		},
 		"non-empty list Source and non-empty struct Target": {
-			Source: testFlexTFExpanderListNestedObject{
-				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFFlexer{
+			Source: tfExpanderListNestedObject{
+				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfFlexer{
 					{
 						Field1: types.StringValue("value1"),
 					},
@@ -2738,9 +2738,9 @@ func TestExpandExpander(t *testing.T) {
 					},
 				}),
 			},
-			Target: &testFlexAWSExpanderStructSlice{},
-			WantTarget: &testFlexAWSExpanderStructSlice{
-				Field1: []testFlexAWSExpander{
+			Target: &awsExpanderStructSlice{},
+			WantTarget: &awsExpanderStructSlice{
+				Field1: []awsExpander{
 					{
 						AWSField: "value1",
 					},
@@ -2750,40 +2750,40 @@ func TestExpandExpander(t *testing.T) {
 				},
 			},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[testFlexTFExpanderListNestedObject](), reflect.TypeFor[*testFlexAWSExpanderStructSlice]()),
-				infoConverting(reflect.TypeFor[testFlexTFExpanderListNestedObject](), reflect.TypeFor[*testFlexAWSExpanderStructSlice]()),
-				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFExpanderListNestedObject](), "Field1", reflect.TypeFor[*testFlexAWSExpanderStructSlice]()),
-				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFFlexer]](), "Field1", reflect.TypeFor[[]testFlexAWSExpander]()),
-				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFFlexer]](), 2, "Field1", reflect.TypeFor[[]testFlexAWSExpander]()),
-				infoSourceImplementsFlexExpander("Field1[0]", reflect.TypeFor[testFlexTFFlexer](), "Field1[0]", reflect.TypeFor[*testFlexAWSExpander]()),
+				infoExpanding(reflect.TypeFor[tfExpanderListNestedObject](), reflect.TypeFor[*awsExpanderStructSlice]()),
+				infoConverting(reflect.TypeFor[tfExpanderListNestedObject](), reflect.TypeFor[*awsExpanderStructSlice]()),
+				traceMatchedFields("Field1", reflect.TypeFor[tfExpanderListNestedObject](), "Field1", reflect.TypeFor[*awsExpanderStructSlice]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfFlexer]](), "Field1", reflect.TypeFor[[]awsExpander]()),
+				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfFlexer]](), 2, "Field1", reflect.TypeFor[[]awsExpander]()),
+				infoSourceImplementsFlexExpander("Field1[0]", reflect.TypeFor[tfFlexer](), "Field1[0]", reflect.TypeFor[*awsExpander]()),
 				// StringValueFromFramework in testFlexTFFlexer.Expand()
 				infoExpandingWithPath("Field1[0]", reflect.TypeFor[types.String](), "Field1[0]", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
-				infoSourceImplementsFlexExpander("Field1[1]", reflect.TypeFor[testFlexTFFlexer](), "Field1[1]", reflect.TypeFor[*testFlexAWSExpander]()),
+				infoSourceImplementsFlexExpander("Field1[1]", reflect.TypeFor[tfFlexer](), "Field1[1]", reflect.TypeFor[*awsExpander]()),
 				// StringValueFromFramework in testFlexTFFlexer.Expand()
 				infoExpandingWithPath("Field1[1]", reflect.TypeFor[types.String](), "Field1[1]", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
 		"empty list Source and empty *struct Target": {
-			Source: testFlexTFExpanderListNestedObject{
-				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFFlexer{}),
+			Source: tfExpanderListNestedObject{
+				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfFlexer{}),
 			},
-			Target: &testFlexAWSExpanderPtrSlice{},
-			WantTarget: &testFlexAWSExpanderPtrSlice{
-				Field1: []*testFlexAWSExpander{},
+			Target: &awsExpanderPtrSlice{},
+			WantTarget: &awsExpanderPtrSlice{
+				Field1: []*awsExpander{},
 			},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[testFlexTFExpanderListNestedObject](), reflect.TypeFor[*testFlexAWSExpanderPtrSlice]()),
-				infoConverting(reflect.TypeFor[testFlexTFExpanderListNestedObject](), reflect.TypeFor[*testFlexAWSExpanderPtrSlice]()),
-				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFExpanderListNestedObject](), "Field1", reflect.TypeFor[*testFlexAWSExpanderPtrSlice]()),
-				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFFlexer]](), "Field1", reflect.TypeFor[[]*testFlexAWSExpander]()),
-				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFFlexer]](), 0, "Field1", reflect.TypeFor[[]*testFlexAWSExpander]()),
+				infoExpanding(reflect.TypeFor[tfExpanderListNestedObject](), reflect.TypeFor[*awsExpanderPtrSlice]()),
+				infoConverting(reflect.TypeFor[tfExpanderListNestedObject](), reflect.TypeFor[*awsExpanderPtrSlice]()),
+				traceMatchedFields("Field1", reflect.TypeFor[tfExpanderListNestedObject](), "Field1", reflect.TypeFor[*awsExpanderPtrSlice]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfFlexer]](), "Field1", reflect.TypeFor[[]*awsExpander]()),
+				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfFlexer]](), 0, "Field1", reflect.TypeFor[[]*awsExpander]()),
 			},
 		},
 		"non-empty list Source and non-empty *struct Target": {
-			Source: testFlexTFExpanderListNestedObject{
-				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFFlexer{
+			Source: tfExpanderListNestedObject{
+				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfFlexer{
 					{
 						Field1: types.StringValue("value1"),
 					},
@@ -2792,9 +2792,9 @@ func TestExpandExpander(t *testing.T) {
 					},
 				}),
 			},
-			Target: &testFlexAWSExpanderPtrSlice{},
-			WantTarget: &testFlexAWSExpanderPtrSlice{
-				Field1: []*testFlexAWSExpander{
+			Target: &awsExpanderPtrSlice{},
+			WantTarget: &awsExpanderPtrSlice{
+				Field1: []*awsExpander{
 					{
 						AWSField: "value1",
 					},
@@ -2804,40 +2804,40 @@ func TestExpandExpander(t *testing.T) {
 				},
 			},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[testFlexTFExpanderListNestedObject](), reflect.TypeFor[*testFlexAWSExpanderPtrSlice]()),
-				infoConverting(reflect.TypeFor[testFlexTFExpanderListNestedObject](), reflect.TypeFor[*testFlexAWSExpanderPtrSlice]()),
-				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFExpanderListNestedObject](), "Field1", reflect.TypeFor[*testFlexAWSExpanderPtrSlice]()),
-				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFFlexer]](), "Field1", reflect.TypeFor[[]*testFlexAWSExpander]()),
-				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFFlexer]](), 2, "Field1", reflect.TypeFor[[]*testFlexAWSExpander]()),
-				infoSourceImplementsFlexExpander("Field1[0]", reflect.TypeFor[testFlexTFFlexer](), "Field1[0]", reflect.TypeFor[*testFlexAWSExpander]()),
+				infoExpanding(reflect.TypeFor[tfExpanderListNestedObject](), reflect.TypeFor[*awsExpanderPtrSlice]()),
+				infoConverting(reflect.TypeFor[tfExpanderListNestedObject](), reflect.TypeFor[*awsExpanderPtrSlice]()),
+				traceMatchedFields("Field1", reflect.TypeFor[tfExpanderListNestedObject](), "Field1", reflect.TypeFor[*awsExpanderPtrSlice]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfFlexer]](), "Field1", reflect.TypeFor[[]*awsExpander]()),
+				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfFlexer]](), 2, "Field1", reflect.TypeFor[[]*awsExpander]()),
+				infoSourceImplementsFlexExpander("Field1[0]", reflect.TypeFor[tfFlexer](), "Field1[0]", reflect.TypeFor[*awsExpander]()),
 				// StringValueFromFramework in testFlexTFFlexer.Expand()
 				infoExpandingWithPath("Field1[0]", reflect.TypeFor[types.String](), "Field1[0]", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
-				infoSourceImplementsFlexExpander("Field1[1]", reflect.TypeFor[testFlexTFFlexer](), "Field1[1]", reflect.TypeFor[*testFlexAWSExpander]()),
+				infoSourceImplementsFlexExpander("Field1[1]", reflect.TypeFor[tfFlexer](), "Field1[1]", reflect.TypeFor[*awsExpander]()),
 				// StringValueFromFramework in testFlexTFFlexer.Expand()
 				infoExpandingWithPath("Field1[1]", reflect.TypeFor[types.String](), "Field1[1]", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
 		"empty set Source and empty struct Target": {
-			Source: testFlexTFExpanderSetNestedObject{
-				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFFlexer{}),
+			Source: tfExpanderSetNestedObject{
+				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []tfFlexer{}),
 			},
-			Target: &testFlexAWSExpanderStructSlice{},
-			WantTarget: &testFlexAWSExpanderStructSlice{
-				Field1: []testFlexAWSExpander{},
+			Target: &awsExpanderStructSlice{},
+			WantTarget: &awsExpanderStructSlice{
+				Field1: []awsExpander{},
 			},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[testFlexTFExpanderSetNestedObject](), reflect.TypeFor[*testFlexAWSExpanderStructSlice]()),
-				infoConverting(reflect.TypeFor[testFlexTFExpanderSetNestedObject](), reflect.TypeFor[*testFlexAWSExpanderStructSlice]()),
-				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFExpanderSetNestedObject](), "Field1", reflect.TypeFor[*testFlexAWSExpanderStructSlice]()),
-				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFFlexer]](), "Field1", reflect.TypeFor[[]testFlexAWSExpander]()),
-				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFFlexer]](), 0, "Field1", reflect.TypeFor[[]testFlexAWSExpander]()),
+				infoExpanding(reflect.TypeFor[tfExpanderSetNestedObject](), reflect.TypeFor[*awsExpanderStructSlice]()),
+				infoConverting(reflect.TypeFor[tfExpanderSetNestedObject](), reflect.TypeFor[*awsExpanderStructSlice]()),
+				traceMatchedFields("Field1", reflect.TypeFor[tfExpanderSetNestedObject](), "Field1", reflect.TypeFor[*awsExpanderStructSlice]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfFlexer]](), "Field1", reflect.TypeFor[[]awsExpander]()),
+				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfFlexer]](), 0, "Field1", reflect.TypeFor[[]awsExpander]()),
 			},
 		},
 		"non-empty set Source and non-empty struct Target": {
-			Source: testFlexTFExpanderSetNestedObject{
-				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFFlexer{
+			Source: tfExpanderSetNestedObject{
+				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []tfFlexer{
 					{
 						Field1: types.StringValue("value1"),
 					},
@@ -2846,9 +2846,9 @@ func TestExpandExpander(t *testing.T) {
 					},
 				}),
 			},
-			Target: &testFlexAWSExpanderStructSlice{},
-			WantTarget: &testFlexAWSExpanderStructSlice{
-				Field1: []testFlexAWSExpander{
+			Target: &awsExpanderStructSlice{},
+			WantTarget: &awsExpanderStructSlice{
+				Field1: []awsExpander{
 					{
 						AWSField: "value1",
 					},
@@ -2858,40 +2858,40 @@ func TestExpandExpander(t *testing.T) {
 				},
 			},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[testFlexTFExpanderSetNestedObject](), reflect.TypeFor[*testFlexAWSExpanderStructSlice]()),
-				infoConverting(reflect.TypeFor[testFlexTFExpanderSetNestedObject](), reflect.TypeFor[*testFlexAWSExpanderStructSlice]()),
-				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFExpanderSetNestedObject](), "Field1", reflect.TypeFor[*testFlexAWSExpanderStructSlice]()),
-				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFFlexer]](), "Field1", reflect.TypeFor[[]testFlexAWSExpander]()),
-				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFFlexer]](), 2, "Field1", reflect.TypeFor[[]testFlexAWSExpander]()),
-				infoSourceImplementsFlexExpander("Field1[0]", reflect.TypeFor[testFlexTFFlexer](), "Field1[0]", reflect.TypeFor[*testFlexAWSExpander]()),
+				infoExpanding(reflect.TypeFor[tfExpanderSetNestedObject](), reflect.TypeFor[*awsExpanderStructSlice]()),
+				infoConverting(reflect.TypeFor[tfExpanderSetNestedObject](), reflect.TypeFor[*awsExpanderStructSlice]()),
+				traceMatchedFields("Field1", reflect.TypeFor[tfExpanderSetNestedObject](), "Field1", reflect.TypeFor[*awsExpanderStructSlice]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfFlexer]](), "Field1", reflect.TypeFor[[]awsExpander]()),
+				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfFlexer]](), 2, "Field1", reflect.TypeFor[[]awsExpander]()),
+				infoSourceImplementsFlexExpander("Field1[0]", reflect.TypeFor[tfFlexer](), "Field1[0]", reflect.TypeFor[*awsExpander]()),
 				// StringValueFromFramework in testFlexTFFlexer.Expand()
 				infoExpandingWithPath("Field1[0]", reflect.TypeFor[types.String](), "Field1[0]", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
-				infoSourceImplementsFlexExpander("Field1[1]", reflect.TypeFor[testFlexTFFlexer](), "Field1[1]", reflect.TypeFor[*testFlexAWSExpander]()),
+				infoSourceImplementsFlexExpander("Field1[1]", reflect.TypeFor[tfFlexer](), "Field1[1]", reflect.TypeFor[*awsExpander]()),
 				// StringValueFromFramework in testFlexTFFlexer.Expand()
 				infoExpandingWithPath("Field1[1]", reflect.TypeFor[types.String](), "Field1[1]", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
 		"empty set Source and empty *struct Target": {
-			Source: testFlexTFExpanderSetNestedObject{
-				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFFlexer{}),
+			Source: tfExpanderSetNestedObject{
+				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []tfFlexer{}),
 			},
-			Target: &testFlexAWSExpanderPtrSlice{},
-			WantTarget: &testFlexAWSExpanderPtrSlice{
-				Field1: []*testFlexAWSExpander{},
+			Target: &awsExpanderPtrSlice{},
+			WantTarget: &awsExpanderPtrSlice{
+				Field1: []*awsExpander{},
 			},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[testFlexTFExpanderSetNestedObject](), reflect.TypeFor[*testFlexAWSExpanderPtrSlice]()),
-				infoConverting(reflect.TypeFor[testFlexTFExpanderSetNestedObject](), reflect.TypeFor[*testFlexAWSExpanderPtrSlice]()),
-				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFExpanderSetNestedObject](), "Field1", reflect.TypeFor[*testFlexAWSExpanderPtrSlice]()),
-				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFFlexer]](), "Field1", reflect.TypeFor[[]*testFlexAWSExpander]()),
-				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFFlexer]](), 0, "Field1", reflect.TypeFor[[]*testFlexAWSExpander]()),
+				infoExpanding(reflect.TypeFor[tfExpanderSetNestedObject](), reflect.TypeFor[*awsExpanderPtrSlice]()),
+				infoConverting(reflect.TypeFor[tfExpanderSetNestedObject](), reflect.TypeFor[*awsExpanderPtrSlice]()),
+				traceMatchedFields("Field1", reflect.TypeFor[tfExpanderSetNestedObject](), "Field1", reflect.TypeFor[*awsExpanderPtrSlice]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfFlexer]](), "Field1", reflect.TypeFor[[]*awsExpander]()),
+				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfFlexer]](), 0, "Field1", reflect.TypeFor[[]*awsExpander]()),
 			},
 		},
 		"non-empty set Source and non-empty *struct Target": {
-			Source: testFlexTFExpanderSetNestedObject{
-				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFFlexer{
+			Source: tfExpanderSetNestedObject{
+				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []tfFlexer{
 					{
 						Field1: types.StringValue("value1"),
 					},
@@ -2900,9 +2900,9 @@ func TestExpandExpander(t *testing.T) {
 					},
 				}),
 			},
-			Target: &testFlexAWSExpanderPtrSlice{},
-			WantTarget: &testFlexAWSExpanderPtrSlice{
-				Field1: []*testFlexAWSExpander{
+			Target: &awsExpanderPtrSlice{},
+			WantTarget: &awsExpanderPtrSlice{
+				Field1: []*awsExpander{
 					{
 						AWSField: "value1",
 					},
@@ -2912,62 +2912,62 @@ func TestExpandExpander(t *testing.T) {
 				},
 			},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[testFlexTFExpanderSetNestedObject](), reflect.TypeFor[*testFlexAWSExpanderPtrSlice]()),
-				infoConverting(reflect.TypeFor[testFlexTFExpanderSetNestedObject](), reflect.TypeFor[*testFlexAWSExpanderPtrSlice]()),
-				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFExpanderSetNestedObject](), "Field1", reflect.TypeFor[*testFlexAWSExpanderPtrSlice]()),
-				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFFlexer]](), "Field1", reflect.TypeFor[[]*testFlexAWSExpander]()),
-				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFFlexer]](), 2, "Field1", reflect.TypeFor[[]*testFlexAWSExpander]()),
-				infoSourceImplementsFlexExpander("Field1[0]", reflect.TypeFor[testFlexTFFlexer](), "Field1[0]", reflect.TypeFor[*testFlexAWSExpander]()),
+				infoExpanding(reflect.TypeFor[tfExpanderSetNestedObject](), reflect.TypeFor[*awsExpanderPtrSlice]()),
+				infoConverting(reflect.TypeFor[tfExpanderSetNestedObject](), reflect.TypeFor[*awsExpanderPtrSlice]()),
+				traceMatchedFields("Field1", reflect.TypeFor[tfExpanderSetNestedObject](), "Field1", reflect.TypeFor[*awsExpanderPtrSlice]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfFlexer]](), "Field1", reflect.TypeFor[[]*awsExpander]()),
+				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfFlexer]](), 2, "Field1", reflect.TypeFor[[]*awsExpander]()),
+				infoSourceImplementsFlexExpander("Field1[0]", reflect.TypeFor[tfFlexer](), "Field1[0]", reflect.TypeFor[*awsExpander]()),
 				// StringValueFromFramework in testFlexTFFlexer.Expand()
 				infoExpandingWithPath("Field1[0]", reflect.TypeFor[types.String](), "Field1[0]", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
-				infoSourceImplementsFlexExpander("Field1[1]", reflect.TypeFor[testFlexTFFlexer](), "Field1[1]", reflect.TypeFor[*testFlexAWSExpander]()),
+				infoSourceImplementsFlexExpander("Field1[1]", reflect.TypeFor[tfFlexer](), "Field1[1]", reflect.TypeFor[*awsExpander]()),
 				// StringValueFromFramework in testFlexTFFlexer.Expand()
 				infoExpandingWithPath("Field1[1]", reflect.TypeFor[types.String](), "Field1[1]", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
 		"object value Source and struct Target": {
-			Source: testFlexTFExpanderObjectValue{
-				Field1: fwtypes.NewObjectValueOfMust(ctx, &testFlexTFFlexer{
+			Source: tfExpanderObjectValue{
+				Field1: fwtypes.NewObjectValueOfMust(ctx, &tfFlexer{
 					Field1: types.StringValue("value1"),
 				}),
 			},
-			Target: &testFlexAWSExpanderSingleStruct{},
-			WantTarget: &testFlexAWSExpanderSingleStruct{
-				Field1: testFlexAWSExpander{
+			Target: &awsExpanderSingleStruct{},
+			WantTarget: &awsExpanderSingleStruct{
+				Field1: awsExpander{
 					AWSField: "value1",
 				},
 			},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[testFlexTFExpanderObjectValue](), reflect.TypeFor[*testFlexAWSExpanderSingleStruct]()),
-				infoConverting(reflect.TypeFor[testFlexTFExpanderObjectValue](), reflect.TypeFor[*testFlexAWSExpanderSingleStruct]()),
-				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFExpanderObjectValue](), "Field1", reflect.TypeFor[*testFlexAWSExpanderSingleStruct]()),
-				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ObjectValueOf[testFlexTFFlexer]](), "Field1", reflect.TypeFor[testFlexAWSExpander]()),
-				infoSourceImplementsFlexExpander("Field1", reflect.TypeFor[testFlexTFFlexer](), "Field1", reflect.TypeFor[*testFlexAWSExpander]()),
+				infoExpanding(reflect.TypeFor[tfExpanderObjectValue](), reflect.TypeFor[*awsExpanderSingleStruct]()),
+				infoConverting(reflect.TypeFor[tfExpanderObjectValue](), reflect.TypeFor[*awsExpanderSingleStruct]()),
+				traceMatchedFields("Field1", reflect.TypeFor[tfExpanderObjectValue](), "Field1", reflect.TypeFor[*awsExpanderSingleStruct]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ObjectValueOf[tfFlexer]](), "Field1", reflect.TypeFor[awsExpander]()),
+				infoSourceImplementsFlexExpander("Field1", reflect.TypeFor[tfFlexer](), "Field1", reflect.TypeFor[*awsExpander]()),
 				// StringValueFromFramework in testFlexTFFlexer.Expand()
 				infoExpandingWithPath("Field1", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
 		"object value Source and *struct Target": {
-			Source: testFlexTFExpanderObjectValue{
-				Field1: fwtypes.NewObjectValueOfMust(ctx, &testFlexTFFlexer{
+			Source: tfExpanderObjectValue{
+				Field1: fwtypes.NewObjectValueOfMust(ctx, &tfFlexer{
 					Field1: types.StringValue("value1"),
 				}),
 			},
-			Target: &testFlexAWSExpanderSinglePtr{},
-			WantTarget: &testFlexAWSExpanderSinglePtr{
-				Field1: &testFlexAWSExpander{
+			Target: &awsExpanderSinglePtr{},
+			WantTarget: &awsExpanderSinglePtr{
+				Field1: &awsExpander{
 					AWSField: "value1",
 				},
 			},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[testFlexTFExpanderObjectValue](), reflect.TypeFor[*testFlexAWSExpanderSinglePtr]()),
-				infoConverting(reflect.TypeFor[testFlexTFExpanderObjectValue](), reflect.TypeFor[*testFlexAWSExpanderSinglePtr]()),
-				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFExpanderObjectValue](), "Field1", reflect.TypeFor[*testFlexAWSExpanderSinglePtr]()),
-				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ObjectValueOf[testFlexTFFlexer]](), "Field1", reflect.TypeFor[*testFlexAWSExpander]()),
-				infoSourceImplementsFlexExpander("Field1", reflect.TypeFor[testFlexTFFlexer](), "Field1", reflect.TypeFor[*testFlexAWSExpander]()),
+				infoExpanding(reflect.TypeFor[tfExpanderObjectValue](), reflect.TypeFor[*awsExpanderSinglePtr]()),
+				infoConverting(reflect.TypeFor[tfExpanderObjectValue](), reflect.TypeFor[*awsExpanderSinglePtr]()),
+				traceMatchedFields("Field1", reflect.TypeFor[tfExpanderObjectValue](), "Field1", reflect.TypeFor[*awsExpanderSinglePtr]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ObjectValueOf[tfFlexer]](), "Field1", reflect.TypeFor[*awsExpander]()),
+				infoSourceImplementsFlexExpander("Field1", reflect.TypeFor[tfFlexer](), "Field1", reflect.TypeFor[*awsExpander]()),
 				// StringValueFromFramework in testFlexTFFlexer.Expand()
 				infoExpandingWithPath("Field1", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
@@ -2982,85 +2982,85 @@ func TestExpandInterfaceTypedExpander(t *testing.T) {
 
 	ctx := context.Background()
 
-	var targetInterface testFlexAWSInterfaceInterface
+	var targetInterface awsInterfaceInterface
 
 	testCases := autoFlexTestCases{
 		"top level": {
-			Source: testFlexTFInterfaceTypedExpander{
+			Source: tfInterfaceTypedExpander{
 				Field1: types.StringValue("value1"),
 			},
 			Target: &targetInterface,
-			WantTarget: testFlexAWSInterfaceInterfacePtr(&testFlexAWSInterfaceInterfaceImpl{
+			WantTarget: testFlexAWSInterfaceInterfacePtr(&awsInterfaceInterfaceImpl{
 				AWSField: "value1",
 			}),
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[testFlexTFInterfaceTypedExpander](), reflect.TypeFor[*testFlexAWSInterfaceInterface]()),
-				infoConverting(reflect.TypeFor[testFlexTFInterfaceTypedExpander](), reflect.TypeFor[testFlexAWSInterfaceInterface]()),
-				infoSourceImplementsFlexTypedExpander("", reflect.TypeFor[testFlexTFInterfaceTypedExpander](), "", reflect.TypeFor[testFlexAWSInterfaceInterface]()),
+				infoExpanding(reflect.TypeFor[tfInterfaceTypedExpander](), reflect.TypeFor[*awsInterfaceInterface]()),
+				infoConverting(reflect.TypeFor[tfInterfaceTypedExpander](), reflect.TypeFor[awsInterfaceInterface]()),
+				infoSourceImplementsFlexTypedExpander("", reflect.TypeFor[tfInterfaceTypedExpander](), "", reflect.TypeFor[awsInterfaceInterface]()),
 				// StringValueFromFramework in testFlexTFInterfaceTypedExpander.Expand()
 				infoExpandingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[*string]()), // TODO: fix path
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
 		"top level return value does not implement target interface": {
-			Source: testFlexTFInterfaceIncompatibleTypedExpander{
+			Source: tfInterfaceIncompatibleTypedExpander{
 				Field1: types.StringValue("value1"),
 			},
 			Target: &targetInterface,
 			expectedDiags: diag.Diagnostics{
-				diagExpandedTypeDoesNotImplement(reflect.TypeFor[*testFlexAWSInterfaceIncompatibleImpl](), reflect.TypeFor[testFlexAWSInterfaceInterface]()),
+				diagExpandedTypeDoesNotImplement(reflect.TypeFor[*awsInterfaceIncompatibleImpl](), reflect.TypeFor[awsInterfaceInterface]()),
 			},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[testFlexTFInterfaceIncompatibleTypedExpander](), reflect.TypeFor[*testFlexAWSInterfaceInterface]()),
-				infoConverting(reflect.TypeFor[testFlexTFInterfaceIncompatibleTypedExpander](), reflect.TypeFor[testFlexAWSInterfaceInterface]()),
-				infoSourceImplementsFlexTypedExpander("", reflect.TypeFor[testFlexTFInterfaceIncompatibleTypedExpander](), "", reflect.TypeFor[testFlexAWSInterfaceInterface]()),
+				infoExpanding(reflect.TypeFor[tfInterfaceIncompatibleTypedExpander](), reflect.TypeFor[*awsInterfaceInterface]()),
+				infoConverting(reflect.TypeFor[tfInterfaceIncompatibleTypedExpander](), reflect.TypeFor[awsInterfaceInterface]()),
+				infoSourceImplementsFlexTypedExpander("", reflect.TypeFor[tfInterfaceIncompatibleTypedExpander](), "", reflect.TypeFor[awsInterfaceInterface]()),
 				// StringValueFromFramework in testFlexTFInterfaceTypedExpander.Expand()
 				infoExpandingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[*string]()), // TODO: fix path
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
 		"single list Source and single interface Target": {
-			Source: testFlexTFListNestedObject[testFlexTFInterfaceTypedExpander]{
-				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceTypedExpander{
+			Source: tfListNestedObject[tfInterfaceTypedExpander]{
+				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfInterfaceTypedExpander{
 					{
 						Field1: types.StringValue("value1"),
 					},
 				}),
 			},
-			Target: &testFlexAWSInterfaceSingle{},
-			WantTarget: &testFlexAWSInterfaceSingle{
-				Field1: &testFlexAWSInterfaceInterfaceImpl{
+			Target: &awsInterfaceSingle{},
+			WantTarget: &awsInterfaceSingle{
+				Field1: &awsInterfaceInterfaceImpl{
 					AWSField: "value1",
 				},
 			},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[testFlexTFListNestedObject[testFlexTFInterfaceTypedExpander]](), reflect.TypeFor[*testFlexAWSInterfaceSingle]()),
-				infoConverting(reflect.TypeFor[testFlexTFListNestedObject[testFlexTFInterfaceTypedExpander]](), reflect.TypeFor[*testFlexAWSInterfaceSingle]()),
-				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFListNestedObject[testFlexTFInterfaceTypedExpander]](), "Field1", reflect.TypeFor[*testFlexAWSInterfaceSingle]()),
-				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFInterfaceTypedExpander]](), "Field1", reflect.TypeFor[testFlexAWSInterfaceInterface]()),
-				infoSourceImplementsFlexTypedExpander("Field1[0]", reflect.TypeFor[testFlexTFInterfaceTypedExpander](), "Field1", reflect.TypeFor[*testFlexAWSInterfaceInterface]()),
+				infoExpanding(reflect.TypeFor[tfListNestedObject[tfInterfaceTypedExpander]](), reflect.TypeFor[*awsInterfaceSingle]()),
+				infoConverting(reflect.TypeFor[tfListNestedObject[tfInterfaceTypedExpander]](), reflect.TypeFor[*awsInterfaceSingle]()),
+				traceMatchedFields("Field1", reflect.TypeFor[tfListNestedObject[tfInterfaceTypedExpander]](), "Field1", reflect.TypeFor[*awsInterfaceSingle]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfInterfaceTypedExpander]](), "Field1", reflect.TypeFor[awsInterfaceInterface]()),
+				infoSourceImplementsFlexTypedExpander("Field1[0]", reflect.TypeFor[tfInterfaceTypedExpander](), "Field1", reflect.TypeFor[*awsInterfaceInterface]()),
 				// StringValueFromFramework in testFlexTFInterfaceTypedExpander.Expand()
 				infoExpandingWithPath("Field1[0]", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[*string]()), // TODO: fix path
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()),                // TODO: fix path
 			},
 		},
 		"single list non-Expander Source and single interface Target": {
-			Source: testFlexTFListNestedObject[tfSingleStringField]{
+			Source: tfListNestedObject[tfSingleStringField]{
 				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfSingleStringField{
 					{
 						Field1: types.StringValue("value1"),
 					},
 				}),
 			},
-			Target: &testFlexAWSInterfaceSingle{},
-			WantTarget: &testFlexAWSInterfaceSingle{
+			Target: &awsInterfaceSingle{},
+			WantTarget: &awsInterfaceSingle{
 				Field1: nil,
 			},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[testFlexTFListNestedObject[tfSingleStringField]](), reflect.TypeFor[*testFlexAWSInterfaceSingle]()),
-				infoConverting(reflect.TypeFor[testFlexTFListNestedObject[tfSingleStringField]](), reflect.TypeFor[*testFlexAWSInterfaceSingle]()),
-				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFListNestedObject[tfSingleStringField]](), "Field1", reflect.TypeFor[*testFlexAWSInterfaceSingle]()),
-				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfSingleStringField]](), "Field1", reflect.TypeFor[testFlexAWSInterfaceInterface]()),
+				infoExpanding(reflect.TypeFor[tfListNestedObject[tfSingleStringField]](), reflect.TypeFor[*awsInterfaceSingle]()),
+				infoConverting(reflect.TypeFor[tfListNestedObject[tfSingleStringField]](), reflect.TypeFor[*awsInterfaceSingle]()),
+				traceMatchedFields("Field1", reflect.TypeFor[tfListNestedObject[tfSingleStringField]](), "Field1", reflect.TypeFor[*awsInterfaceSingle]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfSingleStringField]](), "Field1", reflect.TypeFor[awsInterfaceInterface]()),
 				{
 					"@level":             "error",
 					"@module":            "provider.autoflex",
@@ -3070,54 +3070,54 @@ func TestExpandInterfaceTypedExpander(t *testing.T) {
 					logAttrKeySourcePath: "Field1[0]",
 					logAttrKeySourceType: fullTypeName(reflect.TypeFor[tfSingleStringField]()),
 					logAttrKeyTargetPath: "Field1",
-					logAttrKeyTargetType: fullTypeName(reflect.TypeFor[*testFlexAWSInterfaceInterface]()),
+					logAttrKeyTargetType: fullTypeName(reflect.TypeFor[*awsInterfaceInterface]()),
 				},
 			},
 		},
 		"single set Source and single interface Target": {
-			Source: testFlexTFSetNestedObject[testFlexTFInterfaceTypedExpander]{
-				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceTypedExpander{
+			Source: tfSetNestedObject[tfInterfaceTypedExpander]{
+				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []tfInterfaceTypedExpander{
 					{
 						Field1: types.StringValue("value1"),
 					},
 				}),
 			},
-			Target: &testFlexAWSInterfaceSingle{},
-			WantTarget: &testFlexAWSInterfaceSingle{
-				Field1: &testFlexAWSInterfaceInterfaceImpl{
+			Target: &awsInterfaceSingle{},
+			WantTarget: &awsInterfaceSingle{
+				Field1: &awsInterfaceInterfaceImpl{
 					AWSField: "value1",
 				},
 			},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[testFlexTFSetNestedObject[testFlexTFInterfaceTypedExpander]](), reflect.TypeFor[*testFlexAWSInterfaceSingle]()),
-				infoConverting(reflect.TypeFor[testFlexTFSetNestedObject[testFlexTFInterfaceTypedExpander]](), reflect.TypeFor[*testFlexAWSInterfaceSingle]()),
-				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFSetNestedObject[testFlexTFInterfaceTypedExpander]](), "Field1", reflect.TypeFor[*testFlexAWSInterfaceSingle]()),
-				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFInterfaceTypedExpander]](), "Field1", reflect.TypeFor[testFlexAWSInterfaceInterface]()),
-				infoSourceImplementsFlexTypedExpander("Field1[0]", reflect.TypeFor[testFlexTFInterfaceTypedExpander](), "Field1", reflect.TypeFor[*testFlexAWSInterfaceInterface]()),
+				infoExpanding(reflect.TypeFor[tfSetNestedObject[tfInterfaceTypedExpander]](), reflect.TypeFor[*awsInterfaceSingle]()),
+				infoConverting(reflect.TypeFor[tfSetNestedObject[tfInterfaceTypedExpander]](), reflect.TypeFor[*awsInterfaceSingle]()),
+				traceMatchedFields("Field1", reflect.TypeFor[tfSetNestedObject[tfInterfaceTypedExpander]](), "Field1", reflect.TypeFor[*awsInterfaceSingle]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfInterfaceTypedExpander]](), "Field1", reflect.TypeFor[awsInterfaceInterface]()),
+				infoSourceImplementsFlexTypedExpander("Field1[0]", reflect.TypeFor[tfInterfaceTypedExpander](), "Field1", reflect.TypeFor[*awsInterfaceInterface]()),
 				// StringValueFromFramework in testFlexTFInterfaceTypedExpander.Expand()
 				infoExpandingWithPath("Field1[0]", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[*string]()), // TODO: fix path
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()),                // TODO: fix path
 			},
 		},
 		"empty list Source and empty interface Target": {
-			Source: testFlexTFListNestedObject[testFlexTFInterfaceTypedExpander]{
-				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceTypedExpander{}),
+			Source: tfListNestedObject[tfInterfaceTypedExpander]{
+				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfInterfaceTypedExpander{}),
 			},
-			Target: &testFlexAWSInterfaceSlice{},
-			WantTarget: &testFlexAWSInterfaceSlice{
-				Field1: []testFlexAWSInterfaceInterface{},
+			Target: &awsInterfaceSlice{},
+			WantTarget: &awsInterfaceSlice{
+				Field1: []awsInterfaceInterface{},
 			},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[testFlexTFListNestedObject[testFlexTFInterfaceTypedExpander]](), reflect.TypeFor[*testFlexAWSInterfaceSlice]()),
-				infoConverting(reflect.TypeFor[testFlexTFListNestedObject[testFlexTFInterfaceTypedExpander]](), reflect.TypeFor[*testFlexAWSInterfaceSlice]()),
-				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFListNestedObject[testFlexTFInterfaceTypedExpander]](), "Field1", reflect.TypeFor[*testFlexAWSInterfaceSlice]()),
-				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFInterfaceTypedExpander]](), "Field1", reflect.TypeFor[[]testFlexAWSInterfaceInterface]()),
-				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFInterfaceTypedExpander]](), 0, "Field1", reflect.TypeFor[[]testFlexAWSInterfaceInterface]()),
+				infoExpanding(reflect.TypeFor[tfListNestedObject[tfInterfaceTypedExpander]](), reflect.TypeFor[*awsInterfaceSlice]()),
+				infoConverting(reflect.TypeFor[tfListNestedObject[tfInterfaceTypedExpander]](), reflect.TypeFor[*awsInterfaceSlice]()),
+				traceMatchedFields("Field1", reflect.TypeFor[tfListNestedObject[tfInterfaceTypedExpander]](), "Field1", reflect.TypeFor[*awsInterfaceSlice]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfInterfaceTypedExpander]](), "Field1", reflect.TypeFor[[]awsInterfaceInterface]()),
+				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfInterfaceTypedExpander]](), 0, "Field1", reflect.TypeFor[[]awsInterfaceInterface]()),
 			},
 		},
 		"non-empty list Source and non-empty interface Target": {
-			Source: testFlexTFListNestedObject[testFlexTFInterfaceTypedExpander]{
-				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceTypedExpander{
+			Source: tfListNestedObject[tfInterfaceTypedExpander]{
+				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfInterfaceTypedExpander{
 					{
 						Field1: types.StringValue("value1"),
 					},
@@ -3126,52 +3126,52 @@ func TestExpandInterfaceTypedExpander(t *testing.T) {
 					},
 				}),
 			},
-			Target: &testFlexAWSInterfaceSlice{},
-			WantTarget: &testFlexAWSInterfaceSlice{
-				Field1: []testFlexAWSInterfaceInterface{
-					&testFlexAWSInterfaceInterfaceImpl{
+			Target: &awsInterfaceSlice{},
+			WantTarget: &awsInterfaceSlice{
+				Field1: []awsInterfaceInterface{
+					&awsInterfaceInterfaceImpl{
 						AWSField: "value1",
 					},
-					&testFlexAWSInterfaceInterfaceImpl{
+					&awsInterfaceInterfaceImpl{
 						AWSField: "value2",
 					},
 				},
 			},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[testFlexTFListNestedObject[testFlexTFInterfaceTypedExpander]](), reflect.TypeFor[*testFlexAWSInterfaceSlice]()),
-				infoConverting(reflect.TypeFor[testFlexTFListNestedObject[testFlexTFInterfaceTypedExpander]](), reflect.TypeFor[*testFlexAWSInterfaceSlice]()),
-				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFListNestedObject[testFlexTFInterfaceTypedExpander]](), "Field1", reflect.TypeFor[*testFlexAWSInterfaceSlice]()),
-				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFInterfaceTypedExpander]](), "Field1", reflect.TypeFor[[]testFlexAWSInterfaceInterface]()),
-				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFInterfaceTypedExpander]](), 2, "Field1", reflect.TypeFor[[]testFlexAWSInterfaceInterface]()),
-				infoSourceImplementsFlexTypedExpander("Field1[0]", reflect.TypeFor[testFlexTFInterfaceTypedExpander](), "Field1[0]", reflect.TypeFor[*testFlexAWSInterfaceInterface]()),
+				infoExpanding(reflect.TypeFor[tfListNestedObject[tfInterfaceTypedExpander]](), reflect.TypeFor[*awsInterfaceSlice]()),
+				infoConverting(reflect.TypeFor[tfListNestedObject[tfInterfaceTypedExpander]](), reflect.TypeFor[*awsInterfaceSlice]()),
+				traceMatchedFields("Field1", reflect.TypeFor[tfListNestedObject[tfInterfaceTypedExpander]](), "Field1", reflect.TypeFor[*awsInterfaceSlice]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfInterfaceTypedExpander]](), "Field1", reflect.TypeFor[[]awsInterfaceInterface]()),
+				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfInterfaceTypedExpander]](), 2, "Field1", reflect.TypeFor[[]awsInterfaceInterface]()),
+				infoSourceImplementsFlexTypedExpander("Field1[0]", reflect.TypeFor[tfInterfaceTypedExpander](), "Field1[0]", reflect.TypeFor[*awsInterfaceInterface]()),
 				// StringValueFromFramework in testFlexTFInterfaceTypedExpander.Expand()
 				infoExpandingWithPath("Field1[0]", reflect.TypeFor[types.String](), "Field1[0]", reflect.TypeFor[*string]()), // TODO: fix path
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()),                   // TODO: fix path
-				infoSourceImplementsFlexTypedExpander("Field1[1]", reflect.TypeFor[testFlexTFInterfaceTypedExpander](), "Field1[1]", reflect.TypeFor[*testFlexAWSInterfaceInterface]()),
+				infoSourceImplementsFlexTypedExpander("Field1[1]", reflect.TypeFor[tfInterfaceTypedExpander](), "Field1[1]", reflect.TypeFor[*awsInterfaceInterface]()),
 				// StringValueFromFramework in testFlexTFInterfaceTypedExpander.Expand()
 				infoExpandingWithPath("Field1[1]", reflect.TypeFor[types.String](), "Field1[1]", reflect.TypeFor[*string]()), // TODO: fix path
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()),                   // TODO: fix path
 			},
 		},
 		"empty set Source and empty interface Target": {
-			Source: testFlexTFSetNestedObject[testFlexTFInterfaceTypedExpander]{
-				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceTypedExpander{}),
+			Source: tfSetNestedObject[tfInterfaceTypedExpander]{
+				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []tfInterfaceTypedExpander{}),
 			},
-			Target: &testFlexAWSInterfaceSlice{},
-			WantTarget: &testFlexAWSInterfaceSlice{
-				Field1: []testFlexAWSInterfaceInterface{},
+			Target: &awsInterfaceSlice{},
+			WantTarget: &awsInterfaceSlice{
+				Field1: []awsInterfaceInterface{},
 			},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[testFlexTFSetNestedObject[testFlexTFInterfaceTypedExpander]](), reflect.TypeFor[*testFlexAWSInterfaceSlice]()),
-				infoConverting(reflect.TypeFor[testFlexTFSetNestedObject[testFlexTFInterfaceTypedExpander]](), reflect.TypeFor[*testFlexAWSInterfaceSlice]()),
-				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFSetNestedObject[testFlexTFInterfaceTypedExpander]](), "Field1", reflect.TypeFor[*testFlexAWSInterfaceSlice]()),
-				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFInterfaceTypedExpander]](), "Field1", reflect.TypeFor[[]testFlexAWSInterfaceInterface]()),
-				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFInterfaceTypedExpander]](), 0, "Field1", reflect.TypeFor[[]testFlexAWSInterfaceInterface]()),
+				infoExpanding(reflect.TypeFor[tfSetNestedObject[tfInterfaceTypedExpander]](), reflect.TypeFor[*awsInterfaceSlice]()),
+				infoConverting(reflect.TypeFor[tfSetNestedObject[tfInterfaceTypedExpander]](), reflect.TypeFor[*awsInterfaceSlice]()),
+				traceMatchedFields("Field1", reflect.TypeFor[tfSetNestedObject[tfInterfaceTypedExpander]](), "Field1", reflect.TypeFor[*awsInterfaceSlice]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfInterfaceTypedExpander]](), "Field1", reflect.TypeFor[[]awsInterfaceInterface]()),
+				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfInterfaceTypedExpander]](), 0, "Field1", reflect.TypeFor[[]awsInterfaceInterface]()),
 			},
 		},
 		"non-empty set Source and non-empty interface Target": {
-			Source: testFlexTFSetNestedObject[testFlexTFInterfaceTypedExpander]{
-				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceTypedExpander{
+			Source: tfSetNestedObject[tfInterfaceTypedExpander]{
+				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []tfInterfaceTypedExpander{
 					{
 						Field1: types.StringValue("value1"),
 					},
@@ -3180,51 +3180,51 @@ func TestExpandInterfaceTypedExpander(t *testing.T) {
 					},
 				}),
 			},
-			Target: &testFlexAWSInterfaceSlice{},
-			WantTarget: &testFlexAWSInterfaceSlice{
-				Field1: []testFlexAWSInterfaceInterface{
-					&testFlexAWSInterfaceInterfaceImpl{
+			Target: &awsInterfaceSlice{},
+			WantTarget: &awsInterfaceSlice{
+				Field1: []awsInterfaceInterface{
+					&awsInterfaceInterfaceImpl{
 						AWSField: "value1",
 					},
-					&testFlexAWSInterfaceInterfaceImpl{
+					&awsInterfaceInterfaceImpl{
 						AWSField: "value2",
 					},
 				},
 			},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[testFlexTFSetNestedObject[testFlexTFInterfaceTypedExpander]](), reflect.TypeFor[*testFlexAWSInterfaceSlice]()),
-				infoConverting(reflect.TypeFor[testFlexTFSetNestedObject[testFlexTFInterfaceTypedExpander]](), reflect.TypeFor[*testFlexAWSInterfaceSlice]()),
-				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFSetNestedObject[testFlexTFInterfaceTypedExpander]](), "Field1", reflect.TypeFor[*testFlexAWSInterfaceSlice]()),
-				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFInterfaceTypedExpander]](), "Field1", reflect.TypeFor[[]testFlexAWSInterfaceInterface]()),
-				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFInterfaceTypedExpander]](), 2, "Field1", reflect.TypeFor[[]testFlexAWSInterfaceInterface]()),
-				infoSourceImplementsFlexTypedExpander("Field1[0]", reflect.TypeFor[testFlexTFInterfaceTypedExpander](), "Field1[0]", reflect.TypeFor[*testFlexAWSInterfaceInterface]()),
+				infoExpanding(reflect.TypeFor[tfSetNestedObject[tfInterfaceTypedExpander]](), reflect.TypeFor[*awsInterfaceSlice]()),
+				infoConverting(reflect.TypeFor[tfSetNestedObject[tfInterfaceTypedExpander]](), reflect.TypeFor[*awsInterfaceSlice]()),
+				traceMatchedFields("Field1", reflect.TypeFor[tfSetNestedObject[tfInterfaceTypedExpander]](), "Field1", reflect.TypeFor[*awsInterfaceSlice]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfInterfaceTypedExpander]](), "Field1", reflect.TypeFor[[]awsInterfaceInterface]()),
+				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfInterfaceTypedExpander]](), 2, "Field1", reflect.TypeFor[[]awsInterfaceInterface]()),
+				infoSourceImplementsFlexTypedExpander("Field1[0]", reflect.TypeFor[tfInterfaceTypedExpander](), "Field1[0]", reflect.TypeFor[*awsInterfaceInterface]()),
 				// StringValueFromFramework in testFlexTFInterfaceTypedExpander.Expand()
 				infoExpandingWithPath("Field1[0]", reflect.TypeFor[types.String](), "Field1[0]", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
-				infoSourceImplementsFlexTypedExpander("Field1[1]", reflect.TypeFor[testFlexTFInterfaceTypedExpander](), "Field1[1]", reflect.TypeFor[*testFlexAWSInterfaceInterface]()),
+				infoSourceImplementsFlexTypedExpander("Field1[1]", reflect.TypeFor[tfInterfaceTypedExpander](), "Field1[1]", reflect.TypeFor[*awsInterfaceInterface]()),
 				// StringValueFromFramework in testFlexTFInterfaceTypedExpander.Expand()
 				infoExpandingWithPath("Field1[1]", reflect.TypeFor[types.String](), "Field1[1]", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
 		"object value Source and struct Target": {
-			Source: testFlexTFObjectValue[testFlexTFInterfaceTypedExpander]{
-				Field1: fwtypes.NewObjectValueOfMust(ctx, &testFlexTFInterfaceTypedExpander{
+			Source: tfObjectValue[tfInterfaceTypedExpander]{
+				Field1: fwtypes.NewObjectValueOfMust(ctx, &tfInterfaceTypedExpander{
 					Field1: types.StringValue("value1"),
 				}),
 			},
-			Target: &testFlexAWSInterfaceSingle{},
-			WantTarget: &testFlexAWSInterfaceSingle{
-				Field1: &testFlexAWSInterfaceInterfaceImpl{
+			Target: &awsInterfaceSingle{},
+			WantTarget: &awsInterfaceSingle{
+				Field1: &awsInterfaceInterfaceImpl{
 					AWSField: "value1",
 				},
 			},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[testFlexTFObjectValue[testFlexTFInterfaceTypedExpander]](), reflect.TypeFor[*testFlexAWSInterfaceSingle]()),
-				infoConverting(reflect.TypeFor[testFlexTFObjectValue[testFlexTFInterfaceTypedExpander]](), reflect.TypeFor[*testFlexAWSInterfaceSingle]()),
-				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFObjectValue[testFlexTFInterfaceTypedExpander]](), "Field1", reflect.TypeFor[*testFlexAWSInterfaceSingle]()),
-				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ObjectValueOf[testFlexTFInterfaceTypedExpander]](), "Field1", reflect.TypeFor[testFlexAWSInterfaceInterface]()),
-				infoSourceImplementsFlexTypedExpander("Field1", reflect.TypeFor[testFlexTFInterfaceTypedExpander](), "Field1", reflect.TypeFor[*testFlexAWSInterfaceInterface]()),
+				infoExpanding(reflect.TypeFor[tfObjectValue[tfInterfaceTypedExpander]](), reflect.TypeFor[*awsInterfaceSingle]()),
+				infoConverting(reflect.TypeFor[tfObjectValue[tfInterfaceTypedExpander]](), reflect.TypeFor[*awsInterfaceSingle]()),
+				traceMatchedFields("Field1", reflect.TypeFor[tfObjectValue[tfInterfaceTypedExpander]](), "Field1", reflect.TypeFor[*awsInterfaceSingle]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ObjectValueOf[tfInterfaceTypedExpander]](), "Field1", reflect.TypeFor[awsInterfaceInterface]()),
+				infoSourceImplementsFlexTypedExpander("Field1", reflect.TypeFor[tfInterfaceTypedExpander](), "Field1", reflect.TypeFor[*awsInterfaceInterface]()),
 				// StringValueFromFramework in testFlexTFInterfaceTypedExpander.Expand()
 				infoExpandingWithPath("Field1", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
@@ -3241,172 +3241,172 @@ func TestExpandTypedExpander(t *testing.T) {
 
 	testCases := autoFlexTestCases{
 		"top level struct Target": {
-			Source: testFlexTFTypedExpander{
+			Source: tfTypedExpander{
 				Field1: types.StringValue("value1"),
 			},
-			Target: &testFlexAWSExpander{},
-			WantTarget: &testFlexAWSExpander{
+			Target: &awsExpander{},
+			WantTarget: &awsExpander{
 				AWSField: "value1",
 			},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[testFlexTFTypedExpander](), reflect.TypeFor[*testFlexAWSExpander]()),
-				infoConverting(reflect.TypeFor[testFlexTFTypedExpander](), reflect.TypeFor[*testFlexAWSExpander]()),
-				infoSourceImplementsFlexTypedExpander("", reflect.TypeFor[testFlexTFTypedExpander](), "", reflect.TypeFor[*testFlexAWSExpander]()),
+				infoExpanding(reflect.TypeFor[tfTypedExpander](), reflect.TypeFor[*awsExpander]()),
+				infoConverting(reflect.TypeFor[tfTypedExpander](), reflect.TypeFor[*awsExpander]()),
+				infoSourceImplementsFlexTypedExpander("", reflect.TypeFor[tfTypedExpander](), "", reflect.TypeFor[*awsExpander]()),
 				// StringValueFromFramework in testFlexTFTypedExpander.Expand()
 				infoExpandingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
 		"top level incompatible struct Target": {
-			Source: testFlexTFTypedExpander{
+			Source: tfTypedExpander{
 				Field1: types.StringValue("value1"),
 			},
-			Target: &testFlexAWSExpanderIncompatible{},
+			Target: &awsExpanderIncompatible{},
 			expectedDiags: diag.Diagnostics{
-				diagCannotBeAssigned(reflect.TypeFor[testFlexAWSExpander](), reflect.TypeFor[testFlexAWSExpanderIncompatible]()),
+				diagCannotBeAssigned(reflect.TypeFor[awsExpander](), reflect.TypeFor[awsExpanderIncompatible]()),
 			},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[testFlexTFTypedExpander](), reflect.TypeFor[*testFlexAWSExpanderIncompatible]()),
-				infoConverting(reflect.TypeFor[testFlexTFTypedExpander](), reflect.TypeFor[*testFlexAWSExpanderIncompatible]()),
-				infoSourceImplementsFlexTypedExpander("", reflect.TypeFor[testFlexTFTypedExpander](), "", reflect.TypeFor[*testFlexAWSExpanderIncompatible]()),
+				infoExpanding(reflect.TypeFor[tfTypedExpander](), reflect.TypeFor[*awsExpanderIncompatible]()),
+				infoConverting(reflect.TypeFor[tfTypedExpander](), reflect.TypeFor[*awsExpanderIncompatible]()),
+				infoSourceImplementsFlexTypedExpander("", reflect.TypeFor[tfTypedExpander](), "", reflect.TypeFor[*awsExpanderIncompatible]()),
 				// StringValueFromFramework in testFlexTFTypedExpander.Expand()
 				infoExpandingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
 		"top level expands to nil": {
-			Source: testFlexTFTypedExpanderToNil{
+			Source: tfTypedExpanderToNil{
 				Field1: types.StringValue("value1"),
 			},
-			Target: &testFlexAWSExpander{},
+			Target: &awsExpander{},
 			expectedDiags: diag.Diagnostics{
-				diagExpandsToNil(reflect.TypeFor[testFlexTFTypedExpanderToNil]()),
+				diagExpandsToNil(reflect.TypeFor[tfTypedExpanderToNil]()),
 			},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[testFlexTFTypedExpanderToNil](), reflect.TypeFor[*testFlexAWSExpander]()),
-				infoConverting(reflect.TypeFor[testFlexTFTypedExpanderToNil](), reflect.TypeFor[*testFlexAWSExpander]()),
-				infoSourceImplementsFlexTypedExpander("", reflect.TypeFor[testFlexTFTypedExpanderToNil](), "", reflect.TypeFor[*testFlexAWSExpander]()),
+				infoExpanding(reflect.TypeFor[tfTypedExpanderToNil](), reflect.TypeFor[*awsExpander]()),
+				infoConverting(reflect.TypeFor[tfTypedExpanderToNil](), reflect.TypeFor[*awsExpander]()),
+				infoSourceImplementsFlexTypedExpander("", reflect.TypeFor[tfTypedExpanderToNil](), "", reflect.TypeFor[*awsExpander]()),
 			},
 		},
 		"single list Source and single struct Target": {
-			Source: testFlexTFTypedExpanderListNestedObject{
-				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFTypedExpander{
+			Source: tfTypedExpanderListNestedObject{
+				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfTypedExpander{
 					{
 						Field1: types.StringValue("value1"),
 					},
 				}),
 			},
-			Target: &testFlexAWSExpanderSingleStruct{},
-			WantTarget: &testFlexAWSExpanderSingleStruct{
-				Field1: testFlexAWSExpander{
+			Target: &awsExpanderSingleStruct{},
+			WantTarget: &awsExpanderSingleStruct{
+				Field1: awsExpander{
 					AWSField: "value1",
 				},
 			},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[testFlexTFTypedExpanderListNestedObject](), reflect.TypeFor[*testFlexAWSExpanderSingleStruct]()),
-				infoConverting(reflect.TypeFor[testFlexTFTypedExpanderListNestedObject](), reflect.TypeFor[*testFlexAWSExpanderSingleStruct]()),
-				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFTypedExpanderListNestedObject](), "Field1", reflect.TypeFor[*testFlexAWSExpanderSingleStruct]()),
-				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFTypedExpander]](), "Field1", reflect.TypeFor[testFlexAWSExpander]()),
-				infoSourceImplementsFlexTypedExpander("Field1[0]", reflect.TypeFor[testFlexTFTypedExpander](), "Field1", reflect.TypeFor[*testFlexAWSExpander]()),
+				infoExpanding(reflect.TypeFor[tfTypedExpanderListNestedObject](), reflect.TypeFor[*awsExpanderSingleStruct]()),
+				infoConverting(reflect.TypeFor[tfTypedExpanderListNestedObject](), reflect.TypeFor[*awsExpanderSingleStruct]()),
+				traceMatchedFields("Field1", reflect.TypeFor[tfTypedExpanderListNestedObject](), "Field1", reflect.TypeFor[*awsExpanderSingleStruct]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfTypedExpander]](), "Field1", reflect.TypeFor[awsExpander]()),
+				infoSourceImplementsFlexTypedExpander("Field1[0]", reflect.TypeFor[tfTypedExpander](), "Field1", reflect.TypeFor[*awsExpander]()),
 				// StringValueFromFramework in testFlexTFTypedExpander.Expand()
 				infoExpandingWithPath("Field1[0]", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
 		"single set Source and single struct Target": {
-			Source: testFlexTFSetNestedObject[testFlexTFTypedExpander]{
-				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFTypedExpander{
+			Source: tfSetNestedObject[tfTypedExpander]{
+				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []tfTypedExpander{
 					{
 						Field1: types.StringValue("value1"),
 					},
 				}),
 			},
-			Target: &testFlexAWSExpanderSingleStruct{},
-			WantTarget: &testFlexAWSExpanderSingleStruct{
-				Field1: testFlexAWSExpander{
+			Target: &awsExpanderSingleStruct{},
+			WantTarget: &awsExpanderSingleStruct{
+				Field1: awsExpander{
 					AWSField: "value1",
 				},
 			},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[testFlexTFSetNestedObject[testFlexTFTypedExpander]](), reflect.TypeFor[*testFlexAWSExpanderSingleStruct]()),
-				infoConverting(reflect.TypeFor[testFlexTFSetNestedObject[testFlexTFTypedExpander]](), reflect.TypeFor[*testFlexAWSExpanderSingleStruct]()),
-				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFSetNestedObject[testFlexTFTypedExpander]](), "Field1", reflect.TypeFor[*testFlexAWSExpanderSingleStruct]()),
-				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFTypedExpander]](), "Field1", reflect.TypeFor[testFlexAWSExpander]()),
-				infoSourceImplementsFlexTypedExpander("Field1[0]", reflect.TypeFor[testFlexTFTypedExpander](), "Field1", reflect.TypeFor[*testFlexAWSExpander]()),
+				infoExpanding(reflect.TypeFor[tfSetNestedObject[tfTypedExpander]](), reflect.TypeFor[*awsExpanderSingleStruct]()),
+				infoConverting(reflect.TypeFor[tfSetNestedObject[tfTypedExpander]](), reflect.TypeFor[*awsExpanderSingleStruct]()),
+				traceMatchedFields("Field1", reflect.TypeFor[tfSetNestedObject[tfTypedExpander]](), "Field1", reflect.TypeFor[*awsExpanderSingleStruct]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfTypedExpander]](), "Field1", reflect.TypeFor[awsExpander]()),
+				infoSourceImplementsFlexTypedExpander("Field1[0]", reflect.TypeFor[tfTypedExpander](), "Field1", reflect.TypeFor[*awsExpander]()),
 				// StringValueFromFramework in testFlexTFTypedExpander.Expand()
 				infoExpandingWithPath("Field1[0]", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
 		"single list Source and single *struct Target": {
-			Source: testFlexTFTypedExpanderListNestedObject{
-				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFTypedExpander{
+			Source: tfTypedExpanderListNestedObject{
+				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfTypedExpander{
 					{
 						Field1: types.StringValue("value1"),
 					},
 				}),
 			},
-			Target: &testFlexAWSExpanderSinglePtr{},
-			WantTarget: &testFlexAWSExpanderSinglePtr{
-				Field1: &testFlexAWSExpander{
+			Target: &awsExpanderSinglePtr{},
+			WantTarget: &awsExpanderSinglePtr{
+				Field1: &awsExpander{
 					AWSField: "value1",
 				},
 			},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[testFlexTFTypedExpanderListNestedObject](), reflect.TypeFor[*testFlexAWSExpanderSinglePtr]()),
-				infoConverting(reflect.TypeFor[testFlexTFTypedExpanderListNestedObject](), reflect.TypeFor[*testFlexAWSExpanderSinglePtr]()),
-				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFTypedExpanderListNestedObject](), "Field1", reflect.TypeFor[*testFlexAWSExpanderSinglePtr]()),
-				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFTypedExpander]](), "Field1", reflect.TypeFor[*testFlexAWSExpander]()),
-				infoSourceImplementsFlexTypedExpander("Field1[0]", reflect.TypeFor[testFlexTFTypedExpander](), "Field1", reflect.TypeFor[*testFlexAWSExpander]()),
+				infoExpanding(reflect.TypeFor[tfTypedExpanderListNestedObject](), reflect.TypeFor[*awsExpanderSinglePtr]()),
+				infoConverting(reflect.TypeFor[tfTypedExpanderListNestedObject](), reflect.TypeFor[*awsExpanderSinglePtr]()),
+				traceMatchedFields("Field1", reflect.TypeFor[tfTypedExpanderListNestedObject](), "Field1", reflect.TypeFor[*awsExpanderSinglePtr]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfTypedExpander]](), "Field1", reflect.TypeFor[*awsExpander]()),
+				infoSourceImplementsFlexTypedExpander("Field1[0]", reflect.TypeFor[tfTypedExpander](), "Field1", reflect.TypeFor[*awsExpander]()),
 				// StringValueFromFramework in testFlexTFTypedExpander.Expand()
 				infoExpandingWithPath("Field1[0]", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
 		"single set Source and single *struct Target": {
-			Source: testFlexTFTypedExpanderSetNestedObject{
-				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFTypedExpander{
+			Source: tfTypedExpanderSetNestedObject{
+				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []tfTypedExpander{
 					{
 						Field1: types.StringValue("value1"),
 					},
 				}),
 			},
-			Target: &testFlexAWSExpanderSinglePtr{},
-			WantTarget: &testFlexAWSExpanderSinglePtr{
-				Field1: &testFlexAWSExpander{
+			Target: &awsExpanderSinglePtr{},
+			WantTarget: &awsExpanderSinglePtr{
+				Field1: &awsExpander{
 					AWSField: "value1",
 				},
 			},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[testFlexTFTypedExpanderSetNestedObject](), reflect.TypeFor[*testFlexAWSExpanderSinglePtr]()),
-				infoConverting(reflect.TypeFor[testFlexTFTypedExpanderSetNestedObject](), reflect.TypeFor[*testFlexAWSExpanderSinglePtr]()),
-				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFTypedExpanderSetNestedObject](), "Field1", reflect.TypeFor[*testFlexAWSExpanderSinglePtr]()),
-				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFTypedExpander]](), "Field1", reflect.TypeFor[*testFlexAWSExpander]()),
-				infoSourceImplementsFlexTypedExpander("Field1[0]", reflect.TypeFor[testFlexTFTypedExpander](), "Field1", reflect.TypeFor[*testFlexAWSExpander]()),
+				infoExpanding(reflect.TypeFor[tfTypedExpanderSetNestedObject](), reflect.TypeFor[*awsExpanderSinglePtr]()),
+				infoConverting(reflect.TypeFor[tfTypedExpanderSetNestedObject](), reflect.TypeFor[*awsExpanderSinglePtr]()),
+				traceMatchedFields("Field1", reflect.TypeFor[tfTypedExpanderSetNestedObject](), "Field1", reflect.TypeFor[*awsExpanderSinglePtr]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfTypedExpander]](), "Field1", reflect.TypeFor[*awsExpander]()),
+				infoSourceImplementsFlexTypedExpander("Field1[0]", reflect.TypeFor[tfTypedExpander](), "Field1", reflect.TypeFor[*awsExpander]()),
 				// StringValueFromFramework in testFlexTFTypedExpander.Expand()
 				infoExpandingWithPath("Field1[0]", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
 		"empty list Source and empty struct Target": {
-			Source: testFlexTFTypedExpanderListNestedObject{
-				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFTypedExpander{}),
+			Source: tfTypedExpanderListNestedObject{
+				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfTypedExpander{}),
 			},
-			Target: &testFlexAWSExpanderStructSlice{},
-			WantTarget: &testFlexAWSExpanderStructSlice{
-				Field1: []testFlexAWSExpander{},
+			Target: &awsExpanderStructSlice{},
+			WantTarget: &awsExpanderStructSlice{
+				Field1: []awsExpander{},
 			},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[testFlexTFTypedExpanderListNestedObject](), reflect.TypeFor[*testFlexAWSExpanderStructSlice]()),
-				infoConverting(reflect.TypeFor[testFlexTFTypedExpanderListNestedObject](), reflect.TypeFor[*testFlexAWSExpanderStructSlice]()),
-				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFTypedExpanderListNestedObject](), "Field1", reflect.TypeFor[*testFlexAWSExpanderStructSlice]()),
-				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFTypedExpander]](), "Field1", reflect.TypeFor[[]testFlexAWSExpander]()),
-				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFTypedExpander]](), 0, "Field1", reflect.TypeFor[[]testFlexAWSExpander]()),
+				infoExpanding(reflect.TypeFor[tfTypedExpanderListNestedObject](), reflect.TypeFor[*awsExpanderStructSlice]()),
+				infoConverting(reflect.TypeFor[tfTypedExpanderListNestedObject](), reflect.TypeFor[*awsExpanderStructSlice]()),
+				traceMatchedFields("Field1", reflect.TypeFor[tfTypedExpanderListNestedObject](), "Field1", reflect.TypeFor[*awsExpanderStructSlice]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfTypedExpander]](), "Field1", reflect.TypeFor[[]awsExpander]()),
+				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfTypedExpander]](), 0, "Field1", reflect.TypeFor[[]awsExpander]()),
 			},
 		},
 		"non-empty list Source and non-empty struct Target": {
-			Source: testFlexTFTypedExpanderListNestedObject{
-				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFTypedExpander{
+			Source: tfTypedExpanderListNestedObject{
+				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfTypedExpander{
 					{
 						Field1: types.StringValue("value1"),
 					},
@@ -3415,9 +3415,9 @@ func TestExpandTypedExpander(t *testing.T) {
 					},
 				}),
 			},
-			Target: &testFlexAWSExpanderStructSlice{},
-			WantTarget: &testFlexAWSExpanderStructSlice{
-				Field1: []testFlexAWSExpander{
+			Target: &awsExpanderStructSlice{},
+			WantTarget: &awsExpanderStructSlice{
+				Field1: []awsExpander{
 					{
 						AWSField: "value1",
 					},
@@ -3427,40 +3427,40 @@ func TestExpandTypedExpander(t *testing.T) {
 				},
 			},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[testFlexTFTypedExpanderListNestedObject](), reflect.TypeFor[*testFlexAWSExpanderStructSlice]()),
-				infoConverting(reflect.TypeFor[testFlexTFTypedExpanderListNestedObject](), reflect.TypeFor[*testFlexAWSExpanderStructSlice]()),
-				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFTypedExpanderListNestedObject](), "Field1", reflect.TypeFor[*testFlexAWSExpanderStructSlice]()),
-				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFTypedExpander]](), "Field1", reflect.TypeFor[[]testFlexAWSExpander]()),
-				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFTypedExpander]](), 2, "Field1", reflect.TypeFor[[]testFlexAWSExpander]()),
-				infoSourceImplementsFlexTypedExpander("Field1[0]", reflect.TypeFor[testFlexTFTypedExpander](), "Field1[0]", reflect.TypeFor[*testFlexAWSExpander]()),
+				infoExpanding(reflect.TypeFor[tfTypedExpanderListNestedObject](), reflect.TypeFor[*awsExpanderStructSlice]()),
+				infoConverting(reflect.TypeFor[tfTypedExpanderListNestedObject](), reflect.TypeFor[*awsExpanderStructSlice]()),
+				traceMatchedFields("Field1", reflect.TypeFor[tfTypedExpanderListNestedObject](), "Field1", reflect.TypeFor[*awsExpanderStructSlice]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfTypedExpander]](), "Field1", reflect.TypeFor[[]awsExpander]()),
+				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfTypedExpander]](), 2, "Field1", reflect.TypeFor[[]awsExpander]()),
+				infoSourceImplementsFlexTypedExpander("Field1[0]", reflect.TypeFor[tfTypedExpander](), "Field1[0]", reflect.TypeFor[*awsExpander]()),
 				// StringValueFromFramework in testFlexTFTypedExpander.Expand()
 				infoExpandingWithPath("Field1[0]", reflect.TypeFor[types.String](), "Field1[0]", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
-				infoSourceImplementsFlexTypedExpander("Field1[1]", reflect.TypeFor[testFlexTFTypedExpander](), "Field1[1]", reflect.TypeFor[*testFlexAWSExpander]()),
+				infoSourceImplementsFlexTypedExpander("Field1[1]", reflect.TypeFor[tfTypedExpander](), "Field1[1]", reflect.TypeFor[*awsExpander]()),
 				// StringValueFromFramework in testFlexTFTypedExpander.Expand()
 				infoExpandingWithPath("Field1[1]", reflect.TypeFor[types.String](), "Field1[1]", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
 		"empty list Source and empty *struct Target": {
-			Source: testFlexTFTypedExpanderListNestedObject{
-				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFTypedExpander{}),
+			Source: tfTypedExpanderListNestedObject{
+				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfTypedExpander{}),
 			},
-			Target: &testFlexAWSExpanderPtrSlice{},
-			WantTarget: &testFlexAWSExpanderPtrSlice{
-				Field1: []*testFlexAWSExpander{},
+			Target: &awsExpanderPtrSlice{},
+			WantTarget: &awsExpanderPtrSlice{
+				Field1: []*awsExpander{},
 			},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[testFlexTFTypedExpanderListNestedObject](), reflect.TypeFor[*testFlexAWSExpanderPtrSlice]()),
-				infoConverting(reflect.TypeFor[testFlexTFTypedExpanderListNestedObject](), reflect.TypeFor[*testFlexAWSExpanderPtrSlice]()),
-				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFTypedExpanderListNestedObject](), "Field1", reflect.TypeFor[*testFlexAWSExpanderPtrSlice]()),
-				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFTypedExpander]](), "Field1", reflect.TypeFor[[]*testFlexAWSExpander]()),
-				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFTypedExpander]](), 0, "Field1", reflect.TypeFor[[]*testFlexAWSExpander]()),
+				infoExpanding(reflect.TypeFor[tfTypedExpanderListNestedObject](), reflect.TypeFor[*awsExpanderPtrSlice]()),
+				infoConverting(reflect.TypeFor[tfTypedExpanderListNestedObject](), reflect.TypeFor[*awsExpanderPtrSlice]()),
+				traceMatchedFields("Field1", reflect.TypeFor[tfTypedExpanderListNestedObject](), "Field1", reflect.TypeFor[*awsExpanderPtrSlice]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfTypedExpander]](), "Field1", reflect.TypeFor[[]*awsExpander]()),
+				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfTypedExpander]](), 0, "Field1", reflect.TypeFor[[]*awsExpander]()),
 			},
 		},
 		"non-empty list Source and non-empty *struct Target": {
-			Source: testFlexTFTypedExpanderListNestedObject{
-				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFTypedExpander{
+			Source: tfTypedExpanderListNestedObject{
+				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfTypedExpander{
 					{
 						Field1: types.StringValue("value1"),
 					},
@@ -3469,9 +3469,9 @@ func TestExpandTypedExpander(t *testing.T) {
 					},
 				}),
 			},
-			Target: &testFlexAWSExpanderPtrSlice{},
-			WantTarget: &testFlexAWSExpanderPtrSlice{
-				Field1: []*testFlexAWSExpander{
+			Target: &awsExpanderPtrSlice{},
+			WantTarget: &awsExpanderPtrSlice{
+				Field1: []*awsExpander{
 					{
 						AWSField: "value1",
 					},
@@ -3481,40 +3481,40 @@ func TestExpandTypedExpander(t *testing.T) {
 				},
 			},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[testFlexTFTypedExpanderListNestedObject](), reflect.TypeFor[*testFlexAWSExpanderPtrSlice]()),
-				infoConverting(reflect.TypeFor[testFlexTFTypedExpanderListNestedObject](), reflect.TypeFor[*testFlexAWSExpanderPtrSlice]()),
-				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFTypedExpanderListNestedObject](), "Field1", reflect.TypeFor[*testFlexAWSExpanderPtrSlice]()),
-				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFTypedExpander]](), "Field1", reflect.TypeFor[[]*testFlexAWSExpander]()),
-				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFTypedExpander]](), 2, "Field1", reflect.TypeFor[[]*testFlexAWSExpander]()),
-				infoSourceImplementsFlexTypedExpander("Field1[0]", reflect.TypeFor[testFlexTFTypedExpander](), "Field1[0]", reflect.TypeFor[*testFlexAWSExpander]()),
+				infoExpanding(reflect.TypeFor[tfTypedExpanderListNestedObject](), reflect.TypeFor[*awsExpanderPtrSlice]()),
+				infoConverting(reflect.TypeFor[tfTypedExpanderListNestedObject](), reflect.TypeFor[*awsExpanderPtrSlice]()),
+				traceMatchedFields("Field1", reflect.TypeFor[tfTypedExpanderListNestedObject](), "Field1", reflect.TypeFor[*awsExpanderPtrSlice]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfTypedExpander]](), "Field1", reflect.TypeFor[[]*awsExpander]()),
+				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfTypedExpander]](), 2, "Field1", reflect.TypeFor[[]*awsExpander]()),
+				infoSourceImplementsFlexTypedExpander("Field1[0]", reflect.TypeFor[tfTypedExpander](), "Field1[0]", reflect.TypeFor[*awsExpander]()),
 				// StringValueFromFramework in testFlexTFTypedExpander.Expand()
 				infoExpandingWithPath("Field1[0]", reflect.TypeFor[types.String](), "Field1[0]", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
-				infoSourceImplementsFlexTypedExpander("Field1[1]", reflect.TypeFor[testFlexTFTypedExpander](), "Field1[1]", reflect.TypeFor[*testFlexAWSExpander]()),
+				infoSourceImplementsFlexTypedExpander("Field1[1]", reflect.TypeFor[tfTypedExpander](), "Field1[1]", reflect.TypeFor[*awsExpander]()),
 				// StringValueFromFramework in testFlexTFTypedExpander.Expand()
 				infoExpandingWithPath("Field1[1]", reflect.TypeFor[types.String](), "Field1[1]", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
 		"empty set Source and empty struct Target": {
-			Source: testFlexTFTypedExpanderSetNestedObject{
-				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFTypedExpander{}),
+			Source: tfTypedExpanderSetNestedObject{
+				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []tfTypedExpander{}),
 			},
-			Target: &testFlexAWSExpanderStructSlice{},
-			WantTarget: &testFlexAWSExpanderStructSlice{
-				Field1: []testFlexAWSExpander{},
+			Target: &awsExpanderStructSlice{},
+			WantTarget: &awsExpanderStructSlice{
+				Field1: []awsExpander{},
 			},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[testFlexTFTypedExpanderSetNestedObject](), reflect.TypeFor[*testFlexAWSExpanderStructSlice]()),
-				infoConverting(reflect.TypeFor[testFlexTFTypedExpanderSetNestedObject](), reflect.TypeFor[*testFlexAWSExpanderStructSlice]()),
-				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFTypedExpanderSetNestedObject](), "Field1", reflect.TypeFor[*testFlexAWSExpanderStructSlice]()),
-				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFTypedExpander]](), "Field1", reflect.TypeFor[[]testFlexAWSExpander]()),
-				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFTypedExpander]](), 0, "Field1", reflect.TypeFor[[]testFlexAWSExpander]()),
+				infoExpanding(reflect.TypeFor[tfTypedExpanderSetNestedObject](), reflect.TypeFor[*awsExpanderStructSlice]()),
+				infoConverting(reflect.TypeFor[tfTypedExpanderSetNestedObject](), reflect.TypeFor[*awsExpanderStructSlice]()),
+				traceMatchedFields("Field1", reflect.TypeFor[tfTypedExpanderSetNestedObject](), "Field1", reflect.TypeFor[*awsExpanderStructSlice]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfTypedExpander]](), "Field1", reflect.TypeFor[[]awsExpander]()),
+				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfTypedExpander]](), 0, "Field1", reflect.TypeFor[[]awsExpander]()),
 			},
 		},
 		"non-empty set Source and non-empty struct Target": {
-			Source: testFlexTFTypedExpanderSetNestedObject{
-				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFTypedExpander{
+			Source: tfTypedExpanderSetNestedObject{
+				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []tfTypedExpander{
 					{
 						Field1: types.StringValue("value1"),
 					},
@@ -3523,9 +3523,9 @@ func TestExpandTypedExpander(t *testing.T) {
 					},
 				}),
 			},
-			Target: &testFlexAWSExpanderStructSlice{},
-			WantTarget: &testFlexAWSExpanderStructSlice{
-				Field1: []testFlexAWSExpander{
+			Target: &awsExpanderStructSlice{},
+			WantTarget: &awsExpanderStructSlice{
+				Field1: []awsExpander{
 					{
 						AWSField: "value1",
 					},
@@ -3535,40 +3535,40 @@ func TestExpandTypedExpander(t *testing.T) {
 				},
 			},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[testFlexTFTypedExpanderSetNestedObject](), reflect.TypeFor[*testFlexAWSExpanderStructSlice]()),
-				infoConverting(reflect.TypeFor[testFlexTFTypedExpanderSetNestedObject](), reflect.TypeFor[*testFlexAWSExpanderStructSlice]()),
-				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFTypedExpanderSetNestedObject](), "Field1", reflect.TypeFor[*testFlexAWSExpanderStructSlice]()),
-				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFTypedExpander]](), "Field1", reflect.TypeFor[[]testFlexAWSExpander]()),
-				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFTypedExpander]](), 2, "Field1", reflect.TypeFor[[]testFlexAWSExpander]()),
-				infoSourceImplementsFlexTypedExpander("Field1[0]", reflect.TypeFor[testFlexTFTypedExpander](), "Field1[0]", reflect.TypeFor[*testFlexAWSExpander]()),
+				infoExpanding(reflect.TypeFor[tfTypedExpanderSetNestedObject](), reflect.TypeFor[*awsExpanderStructSlice]()),
+				infoConverting(reflect.TypeFor[tfTypedExpanderSetNestedObject](), reflect.TypeFor[*awsExpanderStructSlice]()),
+				traceMatchedFields("Field1", reflect.TypeFor[tfTypedExpanderSetNestedObject](), "Field1", reflect.TypeFor[*awsExpanderStructSlice]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfTypedExpander]](), "Field1", reflect.TypeFor[[]awsExpander]()),
+				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfTypedExpander]](), 2, "Field1", reflect.TypeFor[[]awsExpander]()),
+				infoSourceImplementsFlexTypedExpander("Field1[0]", reflect.TypeFor[tfTypedExpander](), "Field1[0]", reflect.TypeFor[*awsExpander]()),
 				// StringValueFromFramework in testFlexTFTypedExpander.Expand()
 				infoExpandingWithPath("Field1[0]", reflect.TypeFor[types.String](), "Field1[0]", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
-				infoSourceImplementsFlexTypedExpander("Field1[1]", reflect.TypeFor[testFlexTFTypedExpander](), "Field1[1]", reflect.TypeFor[*testFlexAWSExpander]()),
+				infoSourceImplementsFlexTypedExpander("Field1[1]", reflect.TypeFor[tfTypedExpander](), "Field1[1]", reflect.TypeFor[*awsExpander]()),
 				// StringValueFromFramework in testFlexTFTypedExpander.Expand()
 				infoExpandingWithPath("Field1[1]", reflect.TypeFor[types.String](), "Field1[1]", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
 		"empty set Source and empty *struct Target": {
-			Source: testFlexTFTypedExpanderSetNestedObject{
-				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFTypedExpander{}),
+			Source: tfTypedExpanderSetNestedObject{
+				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []tfTypedExpander{}),
 			},
-			Target: &testFlexAWSExpanderPtrSlice{},
-			WantTarget: &testFlexAWSExpanderPtrSlice{
-				Field1: []*testFlexAWSExpander{},
+			Target: &awsExpanderPtrSlice{},
+			WantTarget: &awsExpanderPtrSlice{
+				Field1: []*awsExpander{},
 			},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[testFlexTFTypedExpanderSetNestedObject](), reflect.TypeFor[*testFlexAWSExpanderPtrSlice]()),
-				infoConverting(reflect.TypeFor[testFlexTFTypedExpanderSetNestedObject](), reflect.TypeFor[*testFlexAWSExpanderPtrSlice]()),
-				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFTypedExpanderSetNestedObject](), "Field1", reflect.TypeFor[*testFlexAWSExpanderPtrSlice]()),
-				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFTypedExpander]](), "Field1", reflect.TypeFor[[]*testFlexAWSExpander]()),
-				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFTypedExpander]](), 0, "Field1", reflect.TypeFor[[]*testFlexAWSExpander]()),
+				infoExpanding(reflect.TypeFor[tfTypedExpanderSetNestedObject](), reflect.TypeFor[*awsExpanderPtrSlice]()),
+				infoConverting(reflect.TypeFor[tfTypedExpanderSetNestedObject](), reflect.TypeFor[*awsExpanderPtrSlice]()),
+				traceMatchedFields("Field1", reflect.TypeFor[tfTypedExpanderSetNestedObject](), "Field1", reflect.TypeFor[*awsExpanderPtrSlice]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfTypedExpander]](), "Field1", reflect.TypeFor[[]*awsExpander]()),
+				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfTypedExpander]](), 0, "Field1", reflect.TypeFor[[]*awsExpander]()),
 			},
 		},
 		"non-empty set Source and non-empty *struct Target": {
-			Source: testFlexTFTypedExpanderSetNestedObject{
-				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFTypedExpander{
+			Source: tfTypedExpanderSetNestedObject{
+				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []tfTypedExpander{
 					{
 						Field1: types.StringValue("value1"),
 					},
@@ -3577,9 +3577,9 @@ func TestExpandTypedExpander(t *testing.T) {
 					},
 				}),
 			},
-			Target: &testFlexAWSExpanderPtrSlice{},
-			WantTarget: &testFlexAWSExpanderPtrSlice{
-				Field1: []*testFlexAWSExpander{
+			Target: &awsExpanderPtrSlice{},
+			WantTarget: &awsExpanderPtrSlice{
+				Field1: []*awsExpander{
 					{
 						AWSField: "value1",
 					},
@@ -3589,62 +3589,62 @@ func TestExpandTypedExpander(t *testing.T) {
 				},
 			},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[testFlexTFTypedExpanderSetNestedObject](), reflect.TypeFor[*testFlexAWSExpanderPtrSlice]()),
-				infoConverting(reflect.TypeFor[testFlexTFTypedExpanderSetNestedObject](), reflect.TypeFor[*testFlexAWSExpanderPtrSlice]()),
-				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFTypedExpanderSetNestedObject](), "Field1", reflect.TypeFor[*testFlexAWSExpanderPtrSlice]()),
-				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFTypedExpander]](), "Field1", reflect.TypeFor[[]*testFlexAWSExpander]()),
-				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFTypedExpander]](), 2, "Field1", reflect.TypeFor[[]*testFlexAWSExpander]()),
-				infoSourceImplementsFlexTypedExpander("Field1[0]", reflect.TypeFor[testFlexTFTypedExpander](), "Field1[0]", reflect.TypeFor[*testFlexAWSExpander]()),
+				infoExpanding(reflect.TypeFor[tfTypedExpanderSetNestedObject](), reflect.TypeFor[*awsExpanderPtrSlice]()),
+				infoConverting(reflect.TypeFor[tfTypedExpanderSetNestedObject](), reflect.TypeFor[*awsExpanderPtrSlice]()),
+				traceMatchedFields("Field1", reflect.TypeFor[tfTypedExpanderSetNestedObject](), "Field1", reflect.TypeFor[*awsExpanderPtrSlice]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfTypedExpander]](), "Field1", reflect.TypeFor[[]*awsExpander]()),
+				traceExpandingNestedObjectCollection("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfTypedExpander]](), 2, "Field1", reflect.TypeFor[[]*awsExpander]()),
+				infoSourceImplementsFlexTypedExpander("Field1[0]", reflect.TypeFor[tfTypedExpander](), "Field1[0]", reflect.TypeFor[*awsExpander]()),
 				// StringValueFromFramework in testFlexTFTypedExpander.Expand()
 				infoExpandingWithPath("Field1[0]", reflect.TypeFor[types.String](), "Field1[0]", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
-				infoSourceImplementsFlexTypedExpander("Field1[1]", reflect.TypeFor[testFlexTFTypedExpander](), "Field1[1]", reflect.TypeFor[*testFlexAWSExpander]()),
+				infoSourceImplementsFlexTypedExpander("Field1[1]", reflect.TypeFor[tfTypedExpander](), "Field1[1]", reflect.TypeFor[*awsExpander]()),
 				// StringValueFromFramework in testFlexTFTypedExpander.Expand()
 				infoExpandingWithPath("Field1[1]", reflect.TypeFor[types.String](), "Field1[1]", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
 		"object value Source and struct Target": {
-			Source: testFlexTFTypedExpanderObjectValue{
-				Field1: fwtypes.NewObjectValueOfMust(ctx, &testFlexTFTypedExpander{
+			Source: tfTypedExpanderObjectValue{
+				Field1: fwtypes.NewObjectValueOfMust(ctx, &tfTypedExpander{
 					Field1: types.StringValue("value1"),
 				}),
 			},
-			Target: &testFlexAWSExpanderSingleStruct{},
-			WantTarget: &testFlexAWSExpanderSingleStruct{
-				Field1: testFlexAWSExpander{
+			Target: &awsExpanderSingleStruct{},
+			WantTarget: &awsExpanderSingleStruct{
+				Field1: awsExpander{
 					AWSField: "value1",
 				},
 			},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[testFlexTFTypedExpanderObjectValue](), reflect.TypeFor[*testFlexAWSExpanderSingleStruct]()),
-				infoConverting(reflect.TypeFor[testFlexTFTypedExpanderObjectValue](), reflect.TypeFor[*testFlexAWSExpanderSingleStruct]()),
-				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFTypedExpanderObjectValue](), "Field1", reflect.TypeFor[*testFlexAWSExpanderSingleStruct]()),
-				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ObjectValueOf[testFlexTFTypedExpander]](), "Field1", reflect.TypeFor[testFlexAWSExpander]()),
-				infoSourceImplementsFlexTypedExpander("Field1", reflect.TypeFor[testFlexTFTypedExpander](), "Field1", reflect.TypeFor[*testFlexAWSExpander]()),
+				infoExpanding(reflect.TypeFor[tfTypedExpanderObjectValue](), reflect.TypeFor[*awsExpanderSingleStruct]()),
+				infoConverting(reflect.TypeFor[tfTypedExpanderObjectValue](), reflect.TypeFor[*awsExpanderSingleStruct]()),
+				traceMatchedFields("Field1", reflect.TypeFor[tfTypedExpanderObjectValue](), "Field1", reflect.TypeFor[*awsExpanderSingleStruct]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ObjectValueOf[tfTypedExpander]](), "Field1", reflect.TypeFor[awsExpander]()),
+				infoSourceImplementsFlexTypedExpander("Field1", reflect.TypeFor[tfTypedExpander](), "Field1", reflect.TypeFor[*awsExpander]()),
 				// StringValueFromFramework in testFlexTFTypedExpander.Expand()
 				infoExpandingWithPath("Field1", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
 			},
 		},
 		"object value Source and *struct Target": {
-			Source: testFlexTFTypedExpanderObjectValue{
-				Field1: fwtypes.NewObjectValueOfMust(ctx, &testFlexTFTypedExpander{
+			Source: tfTypedExpanderObjectValue{
+				Field1: fwtypes.NewObjectValueOfMust(ctx, &tfTypedExpander{
 					Field1: types.StringValue("value1"),
 				}),
 			},
-			Target: &testFlexAWSExpanderSinglePtr{},
-			WantTarget: &testFlexAWSExpanderSinglePtr{
-				Field1: &testFlexAWSExpander{
+			Target: &awsExpanderSinglePtr{},
+			WantTarget: &awsExpanderSinglePtr{
+				Field1: &awsExpander{
 					AWSField: "value1",
 				},
 			},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[testFlexTFTypedExpanderObjectValue](), reflect.TypeFor[*testFlexAWSExpanderSinglePtr]()),
-				infoConverting(reflect.TypeFor[testFlexTFTypedExpanderObjectValue](), reflect.TypeFor[*testFlexAWSExpanderSinglePtr]()),
-				traceMatchedFields("Field1", reflect.TypeFor[testFlexTFTypedExpanderObjectValue](), "Field1", reflect.TypeFor[*testFlexAWSExpanderSinglePtr]()),
-				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ObjectValueOf[testFlexTFTypedExpander]](), "Field1", reflect.TypeFor[*testFlexAWSExpander]()),
-				infoSourceImplementsFlexTypedExpander("Field1", reflect.TypeFor[testFlexTFTypedExpander](), "Field1", reflect.TypeFor[*testFlexAWSExpander]()),
+				infoExpanding(reflect.TypeFor[tfTypedExpanderObjectValue](), reflect.TypeFor[*awsExpanderSinglePtr]()),
+				infoConverting(reflect.TypeFor[tfTypedExpanderObjectValue](), reflect.TypeFor[*awsExpanderSinglePtr]()),
+				traceMatchedFields("Field1", reflect.TypeFor[tfTypedExpanderObjectValue](), "Field1", reflect.TypeFor[*awsExpanderSinglePtr]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.ObjectValueOf[tfTypedExpander]](), "Field1", reflect.TypeFor[*awsExpander]()),
+				infoSourceImplementsFlexTypedExpander("Field1", reflect.TypeFor[tfTypedExpander](), "Field1", reflect.TypeFor[*awsExpander]()),
 				// StringValueFromFramework in testFlexTFTypedExpander.Expand()
 				infoExpandingWithPath("Field1", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[*string]()),
 				infoConvertingWithPath("", reflect.TypeFor[types.String](), "", reflect.TypeFor[string]()), // TODO: fix path
