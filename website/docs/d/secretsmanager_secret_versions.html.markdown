@@ -47,7 +47,6 @@ output "example" {
 * `include_deprecated` - (Optional) If true, all deprecated secret versions are included in the response.
 If false, no deprecated secret versions are included in the response. If no value is specified, the default value is `false`.
 
-
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
