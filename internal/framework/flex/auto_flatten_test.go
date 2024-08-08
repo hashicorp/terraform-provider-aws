@@ -1560,6 +1560,57 @@ func TestFlattenInt32(t *testing.T) {
 				},
 			},
 		},
+
+		"*int64 to Int32": {
+			"value": {
+				Source: awsSingleInt64Pointer{
+					Field1: aws.Int64(42),
+				},
+				Target: &tfSingleInt32Field{},
+				expectedDiags: diag.Diagnostics{
+					diagFlatteningIncompatibleTypes(reflect.TypeFor[int64](), reflect.TypeFor[types.Int32]()), // FIXME: correct source type
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleInt64Pointer](), reflect.TypeFor[*tfSingleInt32Field]()),
+					infoConverting(reflect.TypeFor[awsSingleInt64Pointer](), reflect.TypeFor[*tfSingleInt32Field]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleInt64Pointer](), "Field1", reflect.TypeFor[*tfSingleInt32Field]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[*int64](), "Field1", reflect.TypeFor[types.Int32]()),
+					errorFlatteningIncompatibleTypes("Field1", reflect.TypeFor[*int64](), "Field1", reflect.TypeFor[types.Int32]()),
+				},
+			},
+			"zero": {
+				Source: awsSingleInt64Pointer{
+					Field1: aws.Int64(0),
+				},
+				Target: &tfSingleInt32Field{},
+				expectedDiags: diag.Diagnostics{
+					diagFlatteningIncompatibleTypes(reflect.TypeFor[int64](), reflect.TypeFor[types.Int32]()), // FIXME: correct source type
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleInt64Pointer](), reflect.TypeFor[*tfSingleInt32Field]()),
+					infoConverting(reflect.TypeFor[awsSingleInt64Pointer](), reflect.TypeFor[*tfSingleInt32Field]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleInt64Pointer](), "Field1", reflect.TypeFor[*tfSingleInt32Field]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[*int64](), "Field1", reflect.TypeFor[types.Int32]()),
+					errorFlatteningIncompatibleTypes("Field1", reflect.TypeFor[*int64](), "Field1", reflect.TypeFor[types.Int32]()),
+				},
+			},
+			"null": {
+				Source: awsSingleInt64Pointer{
+					Field1: nil,
+				},
+				Target: &tfSingleInt32Field{},
+				expectedDiags: diag.Diagnostics{
+					diagFlatteningIncompatibleTypes(nil, reflect.TypeFor[types.Int32]()), // FIXME: correct source type
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleInt64Pointer](), reflect.TypeFor[*tfSingleInt32Field]()),
+					infoConverting(reflect.TypeFor[awsSingleInt64Pointer](), reflect.TypeFor[*tfSingleInt32Field]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleInt64Pointer](), "Field1", reflect.TypeFor[*tfSingleInt32Field]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[*int64](), "Field1", reflect.TypeFor[types.Int32]()),
+					errorFlatteningIncompatibleTypes("Field1", reflect.TypeFor[*int64](), "Field1", reflect.TypeFor[types.Int32]()),
+				},
+			},
+		},
 	}
 
 	for testName, cases := range testCases {

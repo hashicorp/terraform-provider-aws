@@ -273,7 +273,7 @@ func (flattener autoFlattener) int64(ctx context.Context, vFrom reflect.Value, i
 	case basetypes.Int32Typable:
 		// Only returns an error when the target type is Int32Typeable to prevent breaking existing resources
 		tflog.SubsystemError(ctx, subsystemName, "Flattening incompatible types")
-		diags.Append(diagFlatteningIncompatibleTypes(vFrom.Type(), vTo.Type()))
+		diags.Append(diagFlatteningIncompatibleTypes(valueType(vFrom), vTo.Type()))
 		return diags
 	}
 
