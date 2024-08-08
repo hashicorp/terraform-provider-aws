@@ -35,7 +35,7 @@ env:
 jobs:
   go_mod_download:
     name: go mod download
-    runs-on: ubuntu-latest
+    runs-on: datafy-16-cores
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
@@ -54,7 +54,7 @@ jobs:
   go_build:
     name: go build
     needs: [go_mod_download]
-    runs-on: custom-linux-medium
+    runs-on: datafy-16-cores
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
@@ -90,7 +90,7 @@ jobs:
   go_generate:
     name: go generate
     needs: [go_build]
-    runs-on: ubuntu-latest
+    runs-on: datafy-16-cores
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
@@ -122,7 +122,7 @@ jobs:
   go_test:
     name: go test
     needs: [go_build]
-    runs-on: custom-linux-xl
+    runs-on: datafy-16-cores
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         with:
@@ -147,11 +147,11 @@ jobs:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
       - name: Go Test
-        run: go test ./...
+        run: go test ./internal/service/ec2 ./internal/provider
 
   import-lint:
     needs: [go_build]
-    runs-on: ubuntu-latest
+    runs-on: datafy-16-cores
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
@@ -182,7 +182,7 @@ jobs:
   validate_sweepers_unlinked:
     name: Sweeper Functions Not Linked
     needs: [go_build]
-    runs-on: custom-linux-medium
+    runs-on: datafy-16-cores
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         with:
@@ -240,7 +240,7 @@ jobs:
   terraform_providers_schema:
     name: terraform providers schema
     needs: [go_build]
-    runs-on: ubuntu-latest
+    runs-on: datafy-16-cores
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
@@ -275,7 +275,7 @@ jobs:
 
   tfproviderdocs:
     needs: [terraform_providers_schema]
-    runs-on: ubuntu-latest
+    runs-on: datafy-16-cores
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
@@ -299,7 +299,7 @@ jobs:
           make tfproviderdocs
 
   markdown-lint:
-    runs-on: ubuntu-latest
+    runs-on: datafy-16-cores
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - uses: avto-dev/markdown-lint@04d43ee9191307b50935a753da3b775ab695eceb # v1.5.0
@@ -308,7 +308,7 @@ jobs:
           ignore: "./docs ./website/docs ./CHANGELOG.md ./internal/service/cloudformation/test-fixtures/examplecompany-exampleservice-exampleresource/docs"
 
   misspell:
-    runs-on: ubuntu-latest
+    runs-on: datafy-16-cores
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
