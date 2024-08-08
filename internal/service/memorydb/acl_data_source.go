@@ -6,7 +6,7 @@ package memorydb
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -48,7 +48,7 @@ func DataSourceACL() *schema.Resource {
 func dataSourceACLRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
+	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get(names.AttrName).(string)
@@ -59,12 +59,12 @@ func dataSourceACLRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("MemoryDB ACL", err))
 	}
 
-	d.SetId(aws.StringValue(acl.Name))
+	d.SetId(aws.ToString(acl.Name))
 
 	d.Set(names.AttrARN, acl.ARN)
 	d.Set("minimum_engine_version", acl.MinimumEngineVersion)
 	d.Set(names.AttrName, acl.Name)
-	d.Set("user_names", flex.FlattenStringSet(acl.UserNames))
+	d.Set("user_names", flex.FlattenStringValueSet(acl.UserNames))
 
 	tags, err := listTags(ctx, conn, d.Get(names.AttrARN).(string))
 

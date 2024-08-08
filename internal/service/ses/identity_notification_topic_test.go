@@ -10,8 +10,8 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ses"
+	"github.com/aws/aws-sdk-go-v2/service/ses"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -64,7 +64,7 @@ func TestAccSESIdentityNotificationTopic_basic(t *testing.T) {
 
 func testAccCheckIdentityNotificationTopicDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ses_identity_notification_topic" {
@@ -73,17 +73,18 @@ func testAccCheckIdentityNotificationTopicDestroy(ctx context.Context) resource.
 
 			identity := rs.Primary.Attributes["identity"]
 			params := &ses.GetIdentityNotificationAttributesInput{
-				Identities: []*string{aws.String(identity)},
+				Identities: []string{identity},
 			}
 
 			log.Printf("[DEBUG] Testing SES Identity Notification Topic Destroy: %#v", params)
 
-			response, err := conn.GetIdentityNotificationAttributesWithContext(ctx, params)
+			response, err := conn.GetIdentityNotificationAttributes(ctx, params)
 			if err != nil {
 				return err
 			}
 
-			if response.NotificationAttributes[identity] != nil {
+			_, exists := response.NotificationAttributes[identity]
+			if exists {
 				return fmt.Errorf("SES Identity Notification Topic %s still exists. Failing!", identity)
 			}
 		}
@@ -104,20 +105,21 @@ func testAccCheckIdentityNotificationTopicExists(ctx context.Context, n string) 
 		}
 
 		identity := rs.Primary.Attributes["identity"]
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
 
 		params := &ses.GetIdentityNotificationAttributesInput{
-			Identities: []*string{aws.String(identity)},
+			Identities: []string{identity},
 		}
 
 		log.Printf("[DEBUG] Testing SES Identity Notification Topic Exists: %#v", params)
 
-		response, err := conn.GetIdentityNotificationAttributesWithContext(ctx, params)
+		response, err := conn.GetIdentityNotificationAttributes(ctx, params)
 		if err != nil {
 			return err
 		}
 
-		if response.NotificationAttributes[identity] == nil {
+		_, exists := response.NotificationAttributes[identity]
+		if !exists {
 			return fmt.Errorf("SES Identity Notification Topic %s not found in AWS", identity)
 		}
 
@@ -126,12 +128,12 @@ func testAccCheckIdentityNotificationTopicExists(ctx context.Context, n string) 
 
 		var headersIncluded bool
 		switch notificationType {
-		case ses.NotificationTypeBounce:
-			headersIncluded = aws.BoolValue(response.NotificationAttributes[identity].HeadersInBounceNotificationsEnabled)
-		case ses.NotificationTypeComplaint:
-			headersIncluded = aws.BoolValue(response.NotificationAttributes[identity].HeadersInComplaintNotificationsEnabled)
-		case ses.NotificationTypeDelivery:
-			headersIncluded = aws.BoolValue(response.NotificationAttributes[identity].HeadersInDeliveryNotificationsEnabled)
+		case string(awstypes.NotificationTypeBounce):
+			headersIncluded = response.NotificationAttributes[identity].HeadersInBounceNotificationsEnabled
+		case string(awstypes.NotificationTypeComplaint):
+			headersIncluded = response.NotificationAttributes[identity].HeadersInComplaintNotificationsEnabled
+		case string(awstypes.NotificationTypeDelivery):
+			headersIncluded = response.NotificationAttributes[identity].HeadersInDeliveryNotificationsEnabled
 		}
 
 		if headersIncluded != headersExpected {

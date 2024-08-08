@@ -242,6 +242,8 @@ func (r *resourceSlotType) Schema(ctx context.Context, req resource.SchemaReques
 	}
 }
 
+var slotTypeFlexOpt = flex.WithFieldNamePrefix(ResNameSlotType)
+
 func (r *resourceSlotType) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().LexV2ModelsClient(ctx)
 
@@ -254,7 +256,7 @@ func (r *resourceSlotType) Create(ctx context.Context, req resource.CreateReques
 	in := &lexmodelsv2.CreateSlotTypeInput{
 		SlotTypeName: aws.String(plan.Name.ValueString()),
 	}
-	resp.Diagnostics.Append(flex.Expand(context.WithValue(ctx, flex.ResourcePrefix, ResNameSlotType), &plan, in)...)
+	resp.Diagnostics.Append(flex.Expand(ctx, &plan, in, slotTypeFlexOpt)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -292,7 +294,7 @@ func (r *resourceSlotType) Create(ctx context.Context, req resource.CreateReques
 
 	plan.ID = types.StringValue(id)
 
-	resp.Diagnostics.Append(flex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, ResNameSlotType), out, &plan)...)
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan, slotTypeFlexOpt)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -322,7 +324,7 @@ func (r *resourceSlotType) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, ResNameSlotType), out, &state)...)
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state, slotTypeFlexOpt)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -342,7 +344,7 @@ func (r *resourceSlotType) Update(ctx context.Context, req resource.UpdateReques
 	if slotTypeHasChanges(ctx, plan, state) {
 		input := &lexmodelsv2.UpdateSlotTypeInput{}
 
-		resp.Diagnostics.Append(flex.Expand(context.WithValue(ctx, flex.ResourcePrefix, ResNameSlotType), plan, input)...)
+		resp.Diagnostics.Append(flex.Expand(ctx, plan, input, slotTypeFlexOpt)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -363,7 +365,7 @@ func (r *resourceSlotType) Update(ctx context.Context, req resource.UpdateReques
 			return
 		}
 
-		resp.Diagnostics.Append(flex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, ResNameSlotType), input, &plan)...)
+		resp.Diagnostics.Append(flex.Flatten(ctx, input, &plan, slotTypeFlexOpt)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}

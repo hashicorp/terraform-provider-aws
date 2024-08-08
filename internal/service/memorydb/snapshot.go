@@ -7,14 +7,15 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/memorydb"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/memorydb"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/memorydb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -151,7 +152,7 @@ func ResourceSnapshot() *schema.Resource {
 func resourceSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
+	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 
 	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &memorydb.CreateSnapshotInput{
@@ -164,8 +165,8 @@ func resourceSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating MemoryDB Snapshot: %s", input)
-	_, err := conn.CreateSnapshotWithContext(ctx, input)
+	log.Printf("[DEBUG] Creating MemoryDB Snapshot: %+v", input)
+	_, err := conn.CreateSnapshot(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating MemoryDB Snapshot (%s): %s", name, err)
@@ -188,7 +189,7 @@ func resourceSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta in
 func resourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
+	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 
 	snapshot, err := FindSnapshotByName(ctx, conn, d.Id())
 
@@ -209,7 +210,7 @@ func resourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set(names.AttrClusterName, snapshot.ClusterConfiguration.Name)
 	d.Set(names.AttrKMSKeyARN, snapshot.KmsKeyId)
 	d.Set(names.AttrName, snapshot.Name)
-	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(snapshot.Name)))
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(snapshot.Name)))
 	d.Set(names.AttrSource, snapshot.Source)
 
 	return diags
@@ -218,14 +219,14 @@ func resourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta inte
 func resourceSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
+	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 
 	log.Printf("[DEBUG] Deleting MemoryDB Snapshot: (%s)", d.Id())
-	_, err := conn.DeleteSnapshotWithContext(ctx, &memorydb.DeleteSnapshotInput{
+	_, err := conn.DeleteSnapshot(ctx, &memorydb.DeleteSnapshotInput{
 		SnapshotName: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, memorydb.ErrCodeSnapshotNotFoundFault) {
+	if errs.IsA[*awstypes.SnapshotNotFoundFault](err) {
 		return diags
 	}
 
@@ -240,25 +241,25 @@ func resourceSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func flattenClusterConfiguration(v *memorydb.ClusterConfiguration) []interface{} {
+func flattenClusterConfiguration(v *awstypes.ClusterConfiguration) []interface{} {
 	if v == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		names.AttrDescription:        aws.StringValue(v.Description),
-		names.AttrEngineVersion:      aws.StringValue(v.EngineVersion),
-		"maintenance_window":         aws.StringValue(v.MaintenanceWindow),
-		names.AttrName:               aws.StringValue(v.Name),
-		"node_type":                  aws.StringValue(v.NodeType),
-		"num_shards":                 aws.Int64Value(v.NumShards),
-		names.AttrParameterGroupName: aws.StringValue(v.ParameterGroupName),
-		names.AttrPort:               aws.Int64Value(v.Port),
-		"snapshot_retention_limit":   aws.Int64Value(v.SnapshotRetentionLimit),
-		"snapshot_window":            aws.StringValue(v.SnapshotWindow),
-		"subnet_group_name":          aws.StringValue(v.SubnetGroupName),
-		names.AttrTopicARN:           aws.StringValue(v.TopicArn),
-		names.AttrVPCID:              aws.StringValue(v.VpcId),
+		names.AttrDescription:        aws.ToString(v.Description),
+		names.AttrEngineVersion:      aws.ToString(v.EngineVersion),
+		"maintenance_window":         aws.ToString(v.MaintenanceWindow),
+		names.AttrName:               aws.ToString(v.Name),
+		"node_type":                  aws.ToString(v.NodeType),
+		"num_shards":                 aws.ToInt32(v.NumShards),
+		names.AttrParameterGroupName: aws.ToString(v.ParameterGroupName),
+		names.AttrPort:               aws.ToInt32(v.Port),
+		"snapshot_retention_limit":   aws.ToInt32(v.SnapshotRetentionLimit),
+		"snapshot_window":            aws.ToString(v.SnapshotWindow),
+		"subnet_group_name":          aws.ToString(v.SubnetGroupName),
+		names.AttrTopicARN:           aws.ToString(v.TopicArn),
+		names.AttrVPCID:              aws.ToString(v.VpcId),
 	}
 
 	return []interface{}{m}

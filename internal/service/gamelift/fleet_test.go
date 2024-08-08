@@ -11,6 +11,8 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/gamelift/types"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -27,8 +29,8 @@ func TestDiffPortSettings(t *testing.T) {
 	testCases := []struct {
 		Old           []interface{}
 		New           []interface{}
-		ExpectedAuths []*awstypes.IpPermission
-		ExpectedRevs  []*awstypes.IpPermission
+		ExpectedAuths []awstypes.IpPermission
+		ExpectedRevs  []awstypes.IpPermission
 	}{
 		{ // No change
 			Old: []interface{}{
@@ -47,8 +49,8 @@ func TestDiffPortSettings(t *testing.T) {
 					"to_port":          8443,
 				},
 			},
-			ExpectedAuths: []*awstypes.IpPermission{},
-			ExpectedRevs:  []*awstypes.IpPermission{},
+			ExpectedAuths: nil,
+			ExpectedRevs:  nil,
 		},
 		{ // Addition
 			Old: []interface{}{
@@ -73,7 +75,7 @@ func TestDiffPortSettings(t *testing.T) {
 					"to_port":          8888,
 				},
 			},
-			ExpectedAuths: []*awstypes.IpPermission{
+			ExpectedAuths: []awstypes.IpPermission{
 				{
 					FromPort: aws.Int32(8888),
 					IpRange:  aws.String("192.168.0.0/24"),
@@ -81,7 +83,7 @@ func TestDiffPortSettings(t *testing.T) {
 					ToPort:   aws.Int32(8888),
 				},
 			},
-			ExpectedRevs: []*awstypes.IpPermission{},
+			ExpectedRevs: nil,
 		},
 		{ // Removal
 			Old: []interface{}{
@@ -93,8 +95,8 @@ func TestDiffPortSettings(t *testing.T) {
 				},
 			},
 			New:           []interface{}{},
-			ExpectedAuths: []*awstypes.IpPermission{},
-			ExpectedRevs: []*awstypes.IpPermission{
+			ExpectedAuths: nil,
+			ExpectedRevs: []awstypes.IpPermission{
 				{
 					FromPort: aws.Int32(8443),
 					IpRange:  aws.String("192.168.0.0/24"),
@@ -120,7 +122,7 @@ func TestDiffPortSettings(t *testing.T) {
 					"to_port":          8443,
 				},
 			},
-			ExpectedAuths: []*awstypes.IpPermission{
+			ExpectedAuths: []awstypes.IpPermission{
 				{
 					FromPort: aws.Int32(8443),
 					IpRange:  aws.String("192.168.0.0/24"),
@@ -128,7 +130,7 @@ func TestDiffPortSettings(t *testing.T) {
 					ToPort:   aws.Int32(8443),
 				},
 			},
-			ExpectedRevs: []*awstypes.IpPermission{
+			ExpectedRevs: []awstypes.IpPermission{
 				{
 					FromPort: aws.Int32(8443),
 					IpRange:  aws.String("192.168.0.0/24"),
@@ -139,19 +141,19 @@ func TestDiffPortSettings(t *testing.T) {
 		},
 	}
 
+	ignoreExportedOpts := cmpopts.IgnoreUnexported(
+		awstypes.IpPermission{},
+	)
+
 	for _, tc := range testCases {
 		a, r := tfgamelift.DiffPortSettings(tc.Old, tc.New)
 
-		authsString := fmt.Sprintf("%+v", a)
-		expectedAuths := fmt.Sprintf("%+v", tc.ExpectedAuths)
-		if authsString != expectedAuths {
-			t.Fatalf("Expected authorizations: %+v\nGiven: %+v", tc.ExpectedAuths, a)
+		if diff := cmp.Diff(a, tc.ExpectedAuths, ignoreExportedOpts); diff != "" {
+			t.Errorf("unexpected ExpectedAuths diff (+wanted, -got): %s", diff)
 		}
 
-		revString := fmt.Sprintf("%+v", r)
-		expectedRevs := fmt.Sprintf("%+v", tc.ExpectedRevs)
-		if revString != expectedRevs {
-			t.Fatalf("Expected authorizations: %+v\nGiven: %+v", tc.ExpectedRevs, r)
+		if diff := cmp.Diff(r, tc.ExpectedRevs, ignoreExportedOpts); diff != "" {
+			t.Errorf("unexpected ExpectedRevs diff (+wanted, -got): %s", diff)
 		}
 	}
 }

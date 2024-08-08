@@ -227,7 +227,7 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 		ClientToken:       aws.String(id.UniqueId()),
 		PrivateDnsEnabled: aws.Bool(d.Get("private_dns_enabled").(bool)),
 		ServiceName:       aws.String(serviceName),
-		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeVpcEndpoint),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeVpcEndpoint),
 		VpcEndpointType:   awstypes.VpcEndpointType(d.Get("vpc_endpoint_type").(string)),
 		VpcId:             aws.String(d.Get(names.AttrVPCID).(string)),
 	}
@@ -298,8 +298,8 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
-	if tags := getTagsInV2(ctx); input.TagSpecifications == nil && len(tags) > 0 {
-		err := createTagsV2(ctx, conn, d.Id(), tags)
+	if tags := getTagsIn(ctx); input.TagSpecifications == nil && len(tags) > 0 {
+		err := createTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
 		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
@@ -402,7 +402,7 @@ func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.Set(names.AttrPolicy, policyToSet)
 
-	setTagsOutV2(ctx, vpce.Tags)
+	setTagsOut(ctx, vpce.Tags)
 
 	return diags
 }
@@ -496,7 +496,7 @@ func resourceVPCEndpointDelete(ctx context.Context, d *schema.ResourceData, meta
 	})
 
 	if err == nil && output != nil {
-		err = unsuccessfulItemsErrorV2(output.Unsuccessful)
+		err = unsuccessfulItemsError(output.Unsuccessful)
 	}
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointNotFound) {

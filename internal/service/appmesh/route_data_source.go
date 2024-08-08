@@ -7,7 +7,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -68,7 +68,7 @@ func dataSourceRoute() *schema.Resource {
 
 func dataSourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
+	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
 	routeName := d.Get(names.AttrName).(string)
 	route, err := findRouteByFourPartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), d.Get("virtual_router_name").(string), routeName)
@@ -77,13 +77,13 @@ func dataSourceRouteRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "reading App Mesh Route (%s): %s", routeName, err)
 	}
 
-	d.SetId(aws.StringValue(route.RouteName))
-	arn := aws.StringValue(route.Metadata.Arn)
+	d.SetId(aws.ToString(route.RouteName))
+	arn := aws.ToString(route.Metadata.Arn)
 	d.Set(names.AttrARN, arn)
 	d.Set(names.AttrCreatedDate, route.Metadata.CreatedAt.Format(time.RFC3339))
 	d.Set(names.AttrLastUpdatedDate, route.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("mesh_name", route.MeshName)
-	meshOwner := aws.StringValue(route.Metadata.MeshOwner)
+	meshOwner := aws.ToString(route.Metadata.MeshOwner)
 	d.Set("mesh_owner", meshOwner)
 	d.Set(names.AttrName, route.RouteName)
 	d.Set(names.AttrResourceOwner, route.Metadata.ResourceOwner)

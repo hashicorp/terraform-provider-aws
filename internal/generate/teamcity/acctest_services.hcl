@@ -235,6 +235,11 @@ service "synthetics" {
   parallelism = 10
 }
 
+service "timestreaminfluxdb" {
+  vpc_lock    = true
+  parallelism = 3
+}
+
 service "transfer" {
   vpc_lock = true
 }

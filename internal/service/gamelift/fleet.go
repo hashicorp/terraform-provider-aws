@@ -378,7 +378,7 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "reading for GameLift Fleet ec2 inbound permission (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("ec2_inbound_permission", flattenIPPermissions(slices.ToPointers(portConfig.InboundPermissions))); err != nil {
+	if err := d.Set("ec2_inbound_permission", flattenIPPermissions(portConfig.InboundPermissions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ec2_inbound_permission: %s", err)
 	}
 
@@ -407,12 +407,12 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if d.HasChange("ec2_inbound_permission") {
 		oldPerms, newPerms := d.GetChange("ec2_inbound_permission")
-		authorizations, revocations := DiffPortSettings(oldPerms.(*schema.Set).List(), newPerms.(*schema.Set).List())
+		authorizations, revocations := diffPortSettings(oldPerms.(*schema.Set).List(), newPerms.(*schema.Set).List())
 
 		_, err := conn.UpdateFleetPortSettings(ctx, &gamelift.UpdateFleetPortSettingsInput{
 			FleetId:                         aws.String(d.Id()),
-			InboundPermissionAuthorizations: slices.Values(authorizations),
-			InboundPermissionRevocations:    slices.Values(revocations),
+			InboundPermissionAuthorizations: authorizations,
+			InboundPermissionRevocations:    revocations,
 		})
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating for GameLift Fleet port settings (%s): %s", d.Id(), err)
@@ -492,18 +492,14 @@ func expandIPPermission(cfg map[string]interface{}) *awstypes.IpPermission {
 	}
 }
 
-func flattenIPPermissions(apiObjects []*awstypes.IpPermission) []interface{} {
+func flattenIPPermissions(apiObjects []awstypes.IpPermission) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
 	var tfList []interface{}
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
-		if v := flattenIPPermission(apiObject); len(v) > 0 {
+		if v := flattenIPPermission(&apiObject); len(v) > 0 {
 			tfList = append(tfList, v)
 		}
 	}
@@ -620,7 +616,7 @@ func flattenCertificateConfiguration(config *awstypes.CertificateConfiguration) 
 	return []interface{}{m}
 }
 
-func DiffPortSettings(oldPerms, newPerms []interface{}) (a []*awstypes.IpPermission, r []*awstypes.IpPermission) {
+func diffPortSettings(oldPerms, newPerms []interface{}) (a []awstypes.IpPermission, r []awstypes.IpPermission) {
 OUTER:
 	for i, op := range oldPerms {
 		oldPerm := op.(map[string]interface{})
@@ -637,13 +633,13 @@ OUTER:
 		}
 
 		// Add what's left for revocation
-		r = append(r, expandIPPermission(oldPerm))
+		r = append(r, *expandIPPermission(oldPerm))
 	}
 
 	for _, np := range newPerms {
 		newPerm := np.(map[string]interface{})
 		// Add what's left for authorization
-		a = append(a, expandIPPermission(newPerm))
+		a = append(a, *expandIPPermission(newPerm))
 	}
 	return
 }

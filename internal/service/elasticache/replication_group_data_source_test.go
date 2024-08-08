@@ -35,6 +35,7 @@ func TestAccElastiCacheReplicationGroupDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "auth_token_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "automatic_failover_enabled", resourceName, "automatic_failover_enabled"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "cluster_mode", resourceName, "cluster_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "multi_az_enabled", resourceName, "multi_az_enabled"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "member_clusters.#", resourceName, "member_clusters.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "node_type", resourceName, "node_type"),
@@ -143,7 +144,7 @@ func TestAccElastiCacheReplicationGroupDataSource_Engine_Redis_LogDeliveryConfig
 }
 
 func testAccReplicationGroupDataSourceConfig_basic(rName string) string {
-	return acctest.ConfigAvailableAZsNoOptIn() + fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id        = %[1]q
   description                 = "test description"
@@ -158,7 +159,7 @@ resource "aws_elasticache_replication_group" "test" {
 data "aws_elasticache_replication_group" "test" {
   replication_group_id = aws_elasticache_replication_group.test.replication_group_id
 }
-`, rName)
+`, rName))
 }
 
 func testAccReplicationGroupDataSourceConfig_clusterMode(rName string) string {
