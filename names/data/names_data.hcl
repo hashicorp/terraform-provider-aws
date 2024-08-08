@@ -2855,7 +2855,7 @@ service "directconnect" {
 
   sdk {
     id             = "Direct Connect"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {

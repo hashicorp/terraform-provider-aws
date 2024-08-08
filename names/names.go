@@ -68,6 +68,7 @@ const (
 	DetectiveEndpointID                  = "api.detective"
 	DeviceFarmEndpointID                 = "devicefarm"
 	DevOpsGuruEndpointID                 = "devops-guru"
+	DirectConnectEndpointID              = "directconnect"
 	DLMEndpointID                        = "dlm"
 	ECREndpointID                        = "api.ecr"
 	ECSEndpointID                        = "ecs"

@@ -10,40 +10,41 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/directconnect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_dx_transit_virtual_interface", name="Transit Virtual Interface")
 // @Tags(identifierAttribute="arn")
-func ResourceTransitVirtualInterface() *schema.Resource {
+func resourceTransitVirtualInterface() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTransitVirtualInterfaceCreate,
 		ReadWithoutTimeout:   resourceTransitVirtualInterfaceRead,
 		UpdateWithoutTimeout: resourceTransitVirtualInterfaceUpdate,
 		DeleteWithoutTimeout: resourceTransitVirtualInterfaceDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceTransitVirtualInterfaceImport,
 		},
 
 		Schema: map[string]*schema.Schema{
 			"address_family": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					directconnect.AddressFamilyIpv4,
-					directconnect.AddressFamilyIpv6,
-				}, false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.AddressFamily](),
 			},
 			"amazon_address": {
 				Type:     schema.TypeString,
@@ -131,41 +132,44 @@ func ResourceTransitVirtualInterface() *schema.Resource {
 
 func resourceTransitVirtualInterfaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
-	req := &directconnect.CreateTransitVirtualInterfaceInput{
+	input := &directconnect.CreateTransitVirtualInterfaceInput{
 		ConnectionId: aws.String(d.Get(names.AttrConnectionID).(string)),
-		NewTransitVirtualInterface: &directconnect.NewTransitVirtualInterface{
-			AddressFamily:          aws.String(d.Get("address_family").(string)),
-			Asn:                    aws.Int64(int64(d.Get("bgp_asn").(int))),
+		NewTransitVirtualInterface: &awstypes.NewTransitVirtualInterface{
+			AddressFamily:          awstypes.AddressFamily(d.Get("address_family").(string)),
+			Asn:                    int32(d.Get("bgp_asn").(int)),
 			DirectConnectGatewayId: aws.String(d.Get("dx_gateway_id").(string)),
 			EnableSiteLink:         aws.Bool(d.Get("sitelink_enabled").(bool)),
-			Mtu:                    aws.Int64(int64(d.Get("mtu").(int))),
+			Mtu:                    aws.Int32(int32(d.Get("mtu").(int))),
 			Tags:                   getTagsIn(ctx),
 			VirtualInterfaceName:   aws.String(d.Get(names.AttrName).(string)),
-			Vlan:                   aws.Int64(int64(d.Get("vlan").(int))),
+			Vlan:                   int32(d.Get("vlan").(int)),
 		},
 	}
+
 	if v, ok := d.GetOk("amazon_address"); ok {
-		req.NewTransitVirtualInterface.AmazonAddress = aws.String(v.(string))
+		input.NewTransitVirtualInterface.AmazonAddress = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("bgp_auth_key"); ok {
-		req.NewTransitVirtualInterface.AuthKey = aws.String(v.(string))
+		input.NewTransitVirtualInterface.AuthKey = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("customer_address"); ok {
-		req.NewTransitVirtualInterface.CustomerAddress = aws.String(v.(string))
+		input.NewTransitVirtualInterface.CustomerAddress = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating Direct Connect transit virtual interface: %s", req)
-	resp, err := conn.CreateTransitVirtualInterfaceWithContext(ctx, req)
+	output, err := conn.CreateTransitVirtualInterface(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Direct Connect transit virtual interface: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Direct Connect Transit Virtual Interface: %s", err)
 	}
 
-	d.SetId(aws.StringValue(resp.VirtualInterface.VirtualInterfaceId))
+	d.SetId(aws.ToString(output.VirtualInterface.VirtualInterfaceId))
 
-	if err := transitVirtualInterfaceWaitUntilAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+	if _, err := waitTransitVirtualInterfaceAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Direct Connect Transit Virtual Interface (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceTransitVirtualInterfaceRead(ctx, d, meta)...)
@@ -173,21 +177,23 @@ func resourceTransitVirtualInterfaceCreate(ctx context.Context, d *schema.Resour
 
 func resourceTransitVirtualInterfaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
-	vif, err := virtualInterfaceRead(ctx, d.Id(), conn)
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-	if vif == nil {
-		log.Printf("[WARN] Direct Connect transit virtual interface (%s) not found, removing from state", d.Id())
+	vif, err := findVirtualInterfaceByID(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Direct Connect Transit Virtual Interface (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Direct Connect Transit Virtual Interface (%s): %s", d.Id(), err)
+	}
+
 	d.Set("address_family", vif.AddressFamily)
 	d.Set("amazon_address", vif.AmazonAddress)
-	d.Set("amazon_side_asn", strconv.FormatInt(aws.Int64Value(vif.AmazonSideAsn), 10))
+	d.Set("amazon_side_asn", strconv.FormatInt(aws.ToInt64(vif.AmazonSideAsn), 10))
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Region:    meta.(*conns.AWSClient).Region,
@@ -219,8 +225,8 @@ func resourceTransitVirtualInterfaceUpdate(ctx context.Context, d *schema.Resour
 		return diags
 	}
 
-	if err := transitVirtualInterfaceWaitUntilAvailable(ctx, meta.(*conns.AWSClient).DirectConnectConn(ctx), d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+	if _, err := waitTransitVirtualInterfaceAvailable(ctx, meta.(*conns.AWSClient).DirectConnectClient(ctx), d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Direct Connect Transit Virtual Interface (%s) update: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceTransitVirtualInterfaceRead(ctx, d, meta)...)
@@ -231,32 +237,28 @@ func resourceTransitVirtualInterfaceDelete(ctx context.Context, d *schema.Resour
 }
 
 func resourceTransitVirtualInterfaceImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
-	vif, err := virtualInterfaceRead(ctx, d.Id(), conn)
+	vif, err := findVirtualInterfaceByID(ctx, conn, d.Id())
+
 	if err != nil {
 		return nil, err
 	}
-	if vif == nil {
-		return nil, fmt.Errorf("virtual interface (%s) not found", d.Id())
-	}
 
-	if vifType := aws.StringValue(vif.VirtualInterfaceType); vifType != "transit" {
+	if vifType := aws.ToString(vif.VirtualInterfaceType); vifType != "transit" {
 		return nil, fmt.Errorf("virtual interface (%s) has incorrect type: %s", d.Id(), vifType)
 	}
 
 	return []*schema.ResourceData{d}, nil
 }
 
-func transitVirtualInterfaceWaitUntilAvailable(ctx context.Context, conn *directconnect.DirectConnect, vifId string, timeout time.Duration) error {
-	return virtualInterfaceWaitUntilAvailable(ctx, conn,
-		vifId,
+func waitTransitVirtualInterfaceAvailable(ctx context.Context, conn *directconnect.Client, id string, timeout time.Duration) (*awstypes.VirtualInterface, error) {
+	return waitVirtualInterfaceAvailable(
+		ctx,
+		conn,
+		id,
+		enum.Slice(awstypes.VirtualInterfaceStatePending),
+		enum.Slice(awstypes.VirtualInterfaceStateAvailable, awstypes.VirtualInterfaceStateDown),
 		timeout,
-		[]string{
-			directconnect.VirtualInterfaceStatePending,
-		},
-		[]string{
-			directconnect.VirtualInterfaceStateAvailable,
-			directconnect.VirtualInterfaceStateDown,
-		})
+	)
 }
