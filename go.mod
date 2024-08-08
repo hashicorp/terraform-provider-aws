@@ -1,6 +1,6 @@
 module github.com/hashicorp/terraform-provider-aws
 
-go 1.22.5
+go 1.22.6
 
 require (
 	github.com/ProtonMail/go-crypto v1.1.0-alpha.5-proton
@@ -23,7 +23,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/appconfig v1.31.3
 	github.com/aws/aws-sdk-go-v2/service/appfabric v1.9.3
 	github.com/aws/aws-sdk-go-v2/service/appflow v1.43.3
-	github.com/aws/aws-sdk-go-v2/service/appintegrations v1.27.3
+	github.com/aws/aws-sdk-go-v2/service/appintegrations v1.28.0
 	github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.31.0
 	github.com/aws/aws-sdk-go-v2/service/applicationinsights v1.26.3
 	github.com/aws/aws-sdk-go-v2/service/applicationsignals v1.3.0
@@ -67,7 +67,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.27.3
 	github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.24.3
 	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.25.5
-	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.41.4
+	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.42.0
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.33.3
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.37.3
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.48.3
@@ -75,7 +75,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.16.4
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.26.3
 	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.40.3
-	github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.7.3
+	github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.8.0
 	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.39.3
 	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.40.3
 	github.com/aws/aws-sdk-go-v2/service/databrew v1.31.3
@@ -87,6 +87,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/detective v1.29.3
 	github.com/aws/aws-sdk-go-v2/service/devicefarm v1.25.2
 	github.com/aws/aws-sdk-go-v2/service/devopsguru v1.32.3
+	github.com/aws/aws-sdk-go-v2/service/directconnect v1.27.5
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.27.3
 	github.com/aws/aws-sdk-go-v2/service/dlm v1.26.3
 	github.com/aws/aws-sdk-go-v2/service/docdb v1.36.3
@@ -116,7 +117,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/fsx v1.47.2
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.24.3
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.27.0
-	github.com/aws/aws-sdk-go-v2/service/glue v1.91.0
+	github.com/aws/aws-sdk-go-v2/service/glue v1.92.0
 	github.com/aws/aws-sdk-go-v2/service/grafana v1.24.3
 	github.com/aws/aws-sdk-go-v2/service/greengrass v1.25.3
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.29.3
@@ -145,6 +146,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.6.3
 	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.46.0
 	github.com/aws/aws-sdk-go-v2/service/lightsail v1.40.3
+	github.com/aws/aws-sdk-go-v2/service/location v1.40.3
 	github.com/aws/aws-sdk-go-v2/service/lookoutmetrics v1.29.3
 	github.com/aws/aws-sdk-go-v2/service/m2 v1.15.3
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.32.0
@@ -153,6 +155,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.32.3
 	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.15.0
 	github.com/aws/aws-sdk-go-v2/service/mediastore v1.22.3
+	github.com/aws/aws-sdk-go-v2/service/memorydb v1.21.5
 	github.com/aws/aws-sdk-go-v2/service/mq v1.25.3
 	github.com/aws/aws-sdk-go-v2/service/mwaa v1.29.4
 	github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.10.3
@@ -193,6 +196,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/securityhub v1.51.3
 	github.com/aws/aws-sdk-go-v2/service/securitylake v1.16.3
 	github.com/aws/aws-sdk-go-v2/service/serverlessapplicationrepository v1.22.3
+	github.com/aws/aws-sdk-go-v2/service/servicecatalog v1.30.3
 	github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry v1.28.3
 	github.com/aws/aws-sdk-go-v2/service/servicediscovery v1.31.3
 	github.com/aws/aws-sdk-go-v2/service/servicequotas v1.23.3
@@ -223,7 +227,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/wafregional v1.23.3
 	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.51.4
 	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.32.3
-	github.com/aws/aws-sdk-go-v2/service/workspaces v1.44.3
+	github.com/aws/aws-sdk-go-v2/service/workspaces v1.45.0
 	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.21.3
 	github.com/aws/aws-sdk-go-v2/service/xray v1.27.3
 	github.com/aws/smithy-go v1.20.3
@@ -246,10 +250,10 @@ require (
 	github.com/hashicorp/go-version v1.7.0
 	github.com/hashicorp/hcl/v2 v2.21.0
 	github.com/hashicorp/terraform-json v0.22.1
-	github.com/hashicorp/terraform-plugin-framework v1.10.0
+	github.com/hashicorp/terraform-plugin-framework v1.11.0
 	github.com/hashicorp/terraform-plugin-framework-jsontypes v0.1.0
 	github.com/hashicorp/terraform-plugin-framework-timeouts v0.4.1
-	github.com/hashicorp/terraform-plugin-framework-timetypes v0.4.0
+	github.com/hashicorp/terraform-plugin-framework-timetypes v0.5.0
 	github.com/hashicorp/terraform-plugin-framework-validators v0.13.0
 	github.com/hashicorp/terraform-plugin-go v0.23.0
 	github.com/hashicorp/terraform-plugin-log v0.9.0
@@ -264,9 +268,9 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/pquerna/otp v1.4.0
 	github.com/shopspring/decimal v1.4.0
-	golang.org/x/crypto v0.25.0
-	golang.org/x/text v0.16.0
-	golang.org/x/tools v0.23.0
+	golang.org/x/crypto v0.26.0
+	golang.org/x/text v0.17.0
+	golang.org/x/tools v0.24.0
 	gopkg.in/dnaeon/go-vcr.v3 v3.2.1
 	gopkg.in/yaml.v2 v2.4.0
 	syreclabs.com/go/faker v1.2.3
@@ -289,7 +293,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.9.16 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.11.17 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.17.15 // indirect
-	github.com/aws/aws-sdk-go-v2/service/servicecatalog v1.30.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.26.4 // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
 	github.com/boombuler/barcode v1.0.1 // indirect
@@ -333,10 +336,10 @@ require (
 	go.opentelemetry.io/otel v1.27.0 // indirect
 	go.opentelemetry.io/otel/metric v1.27.0 // indirect
 	go.opentelemetry.io/otel/trace v1.27.0 // indirect
-	golang.org/x/mod v0.19.0 // indirect
-	golang.org/x/net v0.27.0 // indirect
-	golang.org/x/sync v0.7.0 // indirect
-	golang.org/x/sys v0.22.0 // indirect
+	golang.org/x/mod v0.20.0 // indirect
+	golang.org/x/net v0.28.0 // indirect
+	golang.org/x/sync v0.8.0 // indirect
+	golang.org/x/sys v0.23.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240227224415-6ceb2ff114de // indirect
 	google.golang.org/grpc v1.63.2 // indirect

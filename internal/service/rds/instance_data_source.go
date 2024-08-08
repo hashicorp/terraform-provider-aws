@@ -280,7 +280,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("license_model", instance.LicenseModel)
 	d.Set("master_username", instance.MasterUsername)
 	if instance.MasterUserSecret != nil {
-		if err := d.Set("master_user_secret", []interface{}{flattenManagedMasterUserSecret(instance.MasterUserSecret)}); err != nil {
+		if err := d.Set("master_user_secret", []interface{}{flattenManagedMasterUserSecretV1(instance.MasterUserSecret)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting master_user_secret: %s", err)
 		}
 	}

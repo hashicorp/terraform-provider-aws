@@ -7,7 +7,7 @@ import (
 	"context"
 	"strconv"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -167,7 +167,7 @@ func DataSourceCluster() *schema.Resource {
 func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
+	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get(names.AttrName).(string)
@@ -178,7 +178,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("MemoryDB Cluster", err))
 	}
 
-	d.SetId(aws.StringValue(cluster.Name))
+	d.SetId(aws.ToString(cluster.Name))
 
 	d.Set("acl_name", cluster.ACLName)
 	d.Set(names.AttrARN, cluster.ARN)
@@ -189,7 +189,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 		d.Set(names.AttrPort, v.Port)
 	}
 
-	if v := aws.StringValue(cluster.DataTiering); v != "" {
+	if v := string(cluster.DataTiering); v != "" {
 		b, err := strconv.ParseBool(v)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading data_tiering for MemoryDB Cluster (%s): %s", d.Id(), err)
@@ -228,7 +228,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("snapshot_retention_limit", cluster.SnapshotRetentionLimit)
 	d.Set("snapshot_window", cluster.SnapshotWindow)
 
-	if aws.StringValue(cluster.SnsTopicStatus) == ClusterSNSTopicStatusActive {
+	if aws.ToString(cluster.SnsTopicStatus) == ClusterSNSTopicStatusActive {
 		d.Set(names.AttrSNSTopicARN, cluster.SnsTopicArn)
 	} else {
 		d.Set(names.AttrSNSTopicARN, "")

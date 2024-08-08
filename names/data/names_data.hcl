@@ -2855,7 +2855,7 @@ service "directconnect" {
 
   sdk {
     id             = "Direct Connect"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -5616,7 +5616,7 @@ service "location" {
 
   sdk {
     id             = "Location"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -6083,7 +6083,7 @@ service "memorydb" {
 
   sdk {
     id             = "MemoryDB"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {

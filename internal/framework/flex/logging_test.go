@@ -385,6 +385,103 @@ func infoSourceImplementsFlexFlattener(sourcePath string, sourceType reflect.Typ
 	}
 }
 
+func errorSourceDoesNotImplementAttrValue(sourcePath string, sourceType reflect.Type, targetPath string, targetType reflect.Type) map[string]any {
+	return map[string]any{
+		"@level":             hclog.Error.String(),
+		"@module":            logModule,
+		"@message":           "Source does not implement attr.Value",
+		logAttrKeySourcePath: sourcePath,
+		logAttrKeySourceType: fullTypeName(sourceType),
+		logAttrKeyTargetPath: targetPath,
+		logAttrKeyTargetType: fullTypeName(targetType),
+	}
+}
+
+func errorSourceIsNil(sourcePath string, sourceType reflect.Type, targetPath string, targetType reflect.Type) map[string]any {
+	return map[string]any{
+		"@level":             hclog.Error.String(),
+		"@module":            logModule,
+		"@message":           "Source is nil",
+		logAttrKeySourcePath: sourcePath,
+		logAttrKeySourceType: fullTypeName(sourceType),
+		logAttrKeyTargetPath: targetPath,
+		logAttrKeyTargetType: fullTypeName(targetType),
+	}
+}
+
+func errorSourceHasNoMapBlockKey(sourcePath string, sourceType reflect.Type, targetPath string, targetType reflect.Type) map[string]any {
+	return map[string]any{
+		"@level":             hclog.Error.String(),
+		"@module":            logModule,
+		"@message":           "Source has no map block key",
+		logAttrKeySourcePath: sourcePath,
+		logAttrKeySourceType: fullTypeName(sourceType),
+		logAttrKeyTargetPath: targetPath,
+		logAttrKeyTargetType: fullTypeName(targetType),
+	}
+}
+
+func errorTargetDoesNotImplementAttrValue(sourcePath string, sourceType reflect.Type, targetPath string, targetType reflect.Type) map[string]any {
+	return map[string]any{
+		"@level":             hclog.Error.String(),
+		"@module":            logModule,
+		"@message":           "Target does not implement attr.Value",
+		logAttrKeySourcePath: sourcePath,
+		logAttrKeySourceType: fullTypeName(sourceType),
+		logAttrKeyTargetPath: targetPath,
+		logAttrKeyTargetType: fullTypeName(targetType),
+	}
+}
+
+func errorTargetIsNil(sourcePath string, sourceType reflect.Type, targetPath string, targetType reflect.Type) map[string]any {
+	return map[string]any{
+		"@level":             hclog.Error.String(),
+		"@module":            logModule,
+		"@message":           "Target is nil",
+		logAttrKeySourcePath: sourcePath,
+		logAttrKeySourceType: fullTypeName(sourceType),
+		logAttrKeyTargetPath: targetPath,
+		logAttrKeyTargetType: fullTypeName(targetType),
+	}
+}
+
+func errorTargetIsNotPointer(sourcePath string, sourceType reflect.Type, targetPath string, targetType reflect.Type) map[string]any {
+	return map[string]any{
+		"@level":             hclog.Error.String(),
+		"@module":            logModule,
+		"@message":           "Target is not a pointer",
+		logAttrKeySourcePath: sourcePath,
+		logAttrKeySourceType: fullTypeName(sourceType),
+		logAttrKeyTargetPath: targetPath,
+		logAttrKeyTargetType: fullTypeName(targetType),
+	}
+}
+
+func errorTargetHasNoMapBlockKey(sourcePath string, sourceType reflect.Type, targetPath string, targetType reflect.Type) map[string]any {
+	return map[string]any{
+		"@level":             hclog.Error.String(),
+		"@module":            logModule,
+		"@message":           "Target has no map block key",
+		logAttrKeySourcePath: sourcePath,
+		logAttrKeySourceType: fullTypeName(sourceType),
+		logAttrKeyTargetPath: targetPath,
+		logAttrKeyTargetType: fullTypeName(targetType),
+	}
+}
+
+func errorMarshallingJSONDocument(sourcePath string, sourceType reflect.Type, targetPath string, targetType reflect.Type, err error) map[string]any {
+	return map[string]any{
+		"@level":             hclog.Error.String(),
+		"@module":            logModule,
+		"@message":           "Marshalling JSON document",
+		logAttrKeySourcePath: sourcePath,
+		logAttrKeySourceType: fullTypeName(sourceType),
+		logAttrKeyTargetPath: targetPath,
+		logAttrKeyTargetType: fullTypeName(targetType),
+		logAttrKeyError:      err.Error(),
+	}
+}
+
 func infoLogLine(message string, sourceType, targetType reflect.Type) map[string]any {
 	return logInfo(message, map[string]any{
 		logAttrKeySourceType: fullTypeName(sourceType),

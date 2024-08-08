@@ -1145,7 +1145,7 @@ resource "aws_ecs_service" "test2" {
 }
 
 func testAccPolicyConfig_resourceIDForceNew1(rName string) string {
-	return testAccPolicyConfig_resourceIDForceNewBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccPolicyConfig_resourceIDForceNewBase(rName), fmt.Sprintf(`
 resource "aws_appautoscaling_target" "test" {
   max_capacity       = 4
   min_capacity       = 0
@@ -1190,11 +1190,11 @@ resource "aws_cloudwatch_metric_alarm" "test" {
     ClusterName = aws_ecs_cluster.test.name
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccPolicyConfig_resourceIDForceNew2(rName string) string {
-	return testAccPolicyConfig_resourceIDForceNewBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccPolicyConfig_resourceIDForceNewBase(rName), fmt.Sprintf(`
 resource "aws_appautoscaling_target" "test" {
   max_capacity       = 4
   min_capacity       = 0
@@ -1239,7 +1239,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
     ClusterName = aws_ecs_cluster.test.name
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccPolicyImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {

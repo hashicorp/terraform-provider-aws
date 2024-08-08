@@ -7,12 +7,14 @@ package rds
 var (
 	ResourceCertificate                         = resourceCertificate
 	ResourceCluster                             = resourceCluster
+	ResourceClusterActivityStream               = resourceClusterActivityStream
 	ResourceClusterEndpoint                     = resourceClusterEndpoint
 	ResourceClusterParameterGroup               = resourceClusterParameterGroup
 	ResourceClusterRoleAssociation              = resourceClusterRoleAssociation
 	ResourceClusterSnapshot                     = resourceClusterSnapshot
 	ResourceCustomDBEngineVersion               = resourceCustomDBEngineVersion
 	ResourceEventSubscription                   = resourceEventSubscription
+	ResourceGlobalCluster                       = resourceGlobalCluster
 	ResourceInstanceAutomatedBackupsReplication = resourceInstanceAutomatedBackupsReplication
 	ResourceInstanceRoleAssociation             = resourceInstanceRoleAssociation
 	ResourceIntegration                         = newIntegrationResource
@@ -27,11 +29,14 @@ var (
 	ResourceSnapshotCopy                        = resourceSnapshotCopy
 	ResourceSubnetGroup                         = resourceSubnetGroup
 
+	ClusterIDAndRegionFromARN                  = clusterIDAndRegionFromARN
 	FindCustomDBEngineVersionByTwoPartKey      = findCustomDBEngineVersionByTwoPartKey
+	FindDBClusterByID                          = findDBClusterByID
 	FindDBClusterEndpointByID                  = findDBClusterEndpointByID
 	FindDBClusterParameterGroupByName          = findDBClusterParameterGroupByName
 	FindDBClusterRoleByTwoPartKey              = findDBClusterRoleByTwoPartKey
 	FindDBClusterSnapshotByID                  = findDBClusterSnapshotByID
+	FindDBClusterWithActivityStream            = findDBClusterWithActivityStream
 	FindDBInstanceAutomatedBackupByARN         = findDBInstanceAutomatedBackupByARN
 	FindDBInstanceByID                         = findDBInstanceByIDSDKv1
 	FindDBInstanceRoleByTwoPartKey             = findDBInstanceRoleByTwoPartKey
@@ -44,6 +49,7 @@ var (
 	FindDefaultCertificate                     = findDefaultCertificate
 	FindDefaultDBProxyTargetGroupByDBProxyName = findDefaultDBProxyTargetGroupByDBProxyName
 	FindEventSubscriptionByID                  = findEventSubscriptionByID
+	FindGlobalClusterByID                      = findGlobalClusterByID
 	FindIntegrationByARN                       = findIntegrationByARN
 	FindOptionGroupByName                      = findOptionGroupByName
 	FindReservedDBInstanceByID                 = findReservedDBInstanceByID

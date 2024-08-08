@@ -79,6 +79,7 @@ import (
 	detective_sdkv2 "github.com/aws/aws-sdk-go-v2/service/detective"
 	devicefarm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/devicefarm"
 	devopsguru_sdkv2 "github.com/aws/aws-sdk-go-v2/service/devopsguru"
+	directconnect_sdkv2 "github.com/aws/aws-sdk-go-v2/service/directconnect"
 	directoryservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	dlm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/dlm"
 	docdb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/docdb"
@@ -137,6 +138,7 @@ import (
 	launchwizard_sdkv2 "github.com/aws/aws-sdk-go-v2/service/launchwizard"
 	lexmodelsv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lexmodelsv2"
 	lightsail_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lightsail"
+	location_sdkv2 "github.com/aws/aws-sdk-go-v2/service/location"
 	lookoutmetrics_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lookoutmetrics"
 	m2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/m2"
 	mediaconnect_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mediaconnect"
@@ -145,6 +147,7 @@ import (
 	mediapackage_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mediapackage"
 	mediapackagev2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mediapackagev2"
 	mediastore_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mediastore"
+	memorydb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/memorydb"
 	mq_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mq"
 	mwaa_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mwaa"
 	neptunegraph_sdkv2 "github.com/aws/aws-sdk-go-v2/service/neptunegraph"
@@ -221,7 +224,6 @@ import (
 	xray_sdkv2 "github.com/aws/aws-sdk-go-v2/service/xray"
 	batch_sdkv1 "github.com/aws/aws-sdk-go/service/batch"
 	connect_sdkv1 "github.com/aws/aws-sdk-go/service/connect"
-	directconnect_sdkv1 "github.com/aws/aws-sdk-go/service/directconnect"
 	elasticsearchservice_sdkv1 "github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	emr_sdkv1 "github.com/aws/aws-sdk-go/service/emr"
 	gamelift_sdkv1 "github.com/aws/aws-sdk-go/service/gamelift"
@@ -229,9 +231,7 @@ import (
 	kinesisvideo_sdkv1 "github.com/aws/aws-sdk-go/service/kinesisvideo"
 	lexmodelbuildingservice_sdkv1 "github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	licensemanager_sdkv1 "github.com/aws/aws-sdk-go/service/licensemanager"
-	locationservice_sdkv1 "github.com/aws/aws-sdk-go/service/locationservice"
 	macie2_sdkv1 "github.com/aws/aws-sdk-go/service/macie2"
-	memorydb_sdkv1 "github.com/aws/aws-sdk-go/service/memorydb"
 	neptune_sdkv1 "github.com/aws/aws-sdk-go/service/neptune"
 	networkmanager_sdkv1 "github.com/aws/aws-sdk-go/service/networkmanager"
 	opensearchservice_sdkv1 "github.com/aws/aws-sdk-go/service/opensearchservice"
@@ -569,8 +569,8 @@ func (c *AWSClient) DeviceFarmClient(ctx context.Context) *devicefarm_sdkv2.Clie
 	return errs.Must(client[*devicefarm_sdkv2.Client](ctx, c, names.DeviceFarm, make(map[string]any)))
 }
 
-func (c *AWSClient) DirectConnectConn(ctx context.Context) *directconnect_sdkv1.DirectConnect {
-	return errs.Must(conn[*directconnect_sdkv1.DirectConnect](ctx, c, names.DirectConnect, make(map[string]any)))
+func (c *AWSClient) DirectConnectClient(ctx context.Context) *directconnect_sdkv2.Client {
+	return errs.Must(client[*directconnect_sdkv2.Client](ctx, c, names.DirectConnect, make(map[string]any)))
 }
 
 func (c *AWSClient) DocDBClient(ctx context.Context) *docdb_sdkv2.Client {
@@ -821,8 +821,8 @@ func (c *AWSClient) LightsailClient(ctx context.Context) *lightsail_sdkv2.Client
 	return errs.Must(client[*lightsail_sdkv2.Client](ctx, c, names.Lightsail, make(map[string]any)))
 }
 
-func (c *AWSClient) LocationConn(ctx context.Context) *locationservice_sdkv1.LocationService {
-	return errs.Must(conn[*locationservice_sdkv1.LocationService](ctx, c, names.Location, make(map[string]any)))
+func (c *AWSClient) LocationClient(ctx context.Context) *location_sdkv2.Client {
+	return errs.Must(client[*location_sdkv2.Client](ctx, c, names.Location, make(map[string]any)))
 }
 
 func (c *AWSClient) LogsClient(ctx context.Context) *cloudwatchlogs_sdkv2.Client {
@@ -873,8 +873,8 @@ func (c *AWSClient) MediaStoreClient(ctx context.Context) *mediastore_sdkv2.Clie
 	return errs.Must(client[*mediastore_sdkv2.Client](ctx, c, names.MediaStore, make(map[string]any)))
 }
 
-func (c *AWSClient) MemoryDBConn(ctx context.Context) *memorydb_sdkv1.MemoryDB {
-	return errs.Must(conn[*memorydb_sdkv1.MemoryDB](ctx, c, names.MemoryDB, make(map[string]any)))
+func (c *AWSClient) MemoryDBClient(ctx context.Context) *memorydb_sdkv2.Client {
+	return errs.Must(client[*memorydb_sdkv2.Client](ctx, c, names.MemoryDB, make(map[string]any)))
 }
 
 func (c *AWSClient) NeptuneConn(ctx context.Context) *neptune_sdkv1.Neptune {
