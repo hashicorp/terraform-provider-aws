@@ -167,6 +167,10 @@ func (expander autoExpander) convert(ctx context.Context, sourcePath path.Path, 
 		diags.Append(expander.int64(ctx, vFrom, vTo)...)
 		return diags
 
+	case basetypes.Int32Valuable:
+		diags.Append(expander.int32(ctx, vFrom, vTo)...)
+		return diags
+
 	case basetypes.StringValuable:
 		diags.Append(expander.string(ctx, vFrom, vTo)...)
 		return diags
@@ -314,6 +318,33 @@ func (expander autoExpander) int64(ctx context.Context, vFrom basetypes.Int64Val
 			vTo.Set(reflect.ValueOf(v.ValueInt64Pointer()))
 			return diags
 		}
+	}
+
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]interface{}{
+		"from": vFrom.Type(ctx),
+		"to":   vTo.Kind(),
+	})
+
+	return diags
+}
+
+// int32 copies a Plugin Framework Int32(ish) value to a compatible AWS API value.
+func (expander autoExpander) int32(ctx context.Context, vFrom basetypes.Int32Valuable, vTo reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	v, d := vFrom.ToInt32Value(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	switch vTo.Kind() {
+	case reflect.Int32:
+		//
+		// types.Int32 -> int32.
+		//
+		vTo.SetInt(int64(v.ValueInt32()))
+		return diags
 	}
 
 	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]interface{}{

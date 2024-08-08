@@ -29,6 +29,10 @@ type tfSingleInt64Field struct {
 	Field1 types.Int64 `tfsdk:"field1"`
 }
 
+type tfSingleInt32Field struct {
+	Field1 types.Int32 `tfsdk:"field1"`
+}
+
 // All primitive types.
 type tfAllThePrimitiveFields struct {
 	Field1  types.String  `tfsdk:"field1"`
