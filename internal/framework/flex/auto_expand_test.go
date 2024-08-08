@@ -1070,6 +1070,55 @@ func TestExpandFloat64(t *testing.T) {
 	}
 }
 
+func TestExpandFloat32(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]autoFlexTestCases{
+		"Float32 to float32": {
+			"value": {
+				Source: tfSingleFloat32Field{
+					Field1: types.Float32Value(42),
+				},
+				Target: &awsSingleFloat32Value{},
+				WantTarget: &awsSingleFloat32Value{
+					Field1: 42,
+				},
+				expectedLogLines: []map[string]any{
+					infoExpanding(reflect.TypeFor[tfSingleFloat32Field](), reflect.TypeFor[*awsSingleFloat32Value]()),
+					infoConverting(reflect.TypeFor[tfSingleFloat32Field](), reflect.TypeFor[*awsSingleFloat32Value]()),
+					traceMatchedFields("Field1", reflect.TypeFor[tfSingleFloat32Field](), "Field1", reflect.TypeFor[*awsSingleFloat32Value]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[types.Float32](), "Field1", reflect.TypeFor[float32]()),
+				},
+			},
+			"null": {
+				Source: tfSingleFloat32Field{
+					Field1: types.Float32Null(),
+				},
+				Target: &awsSingleFloat32Value{},
+				WantTarget: &awsSingleFloat32Value{
+					Field1: 0,
+				},
+				expectedLogLines: []map[string]any{
+					infoExpanding(reflect.TypeFor[tfSingleFloat32Field](), reflect.TypeFor[*awsSingleFloat32Value]()),
+					infoConverting(reflect.TypeFor[tfSingleFloat32Field](), reflect.TypeFor[*awsSingleFloat32Value]()),
+					traceMatchedFields("Field1", reflect.TypeFor[tfSingleFloat32Field](), "Field1", reflect.TypeFor[*awsSingleFloat32Value]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[types.Float32](), "Field1", reflect.TypeFor[float32]()),
+					traceExpandingNullValue("Field1", reflect.TypeFor[types.Float32](), "Field1", reflect.TypeFor[float32]()),
+				},
+			},
+		},
+	}
+
+	for testName, cases := range testCases {
+		cases := cases
+		t.Run(testName, func(t *testing.T) {
+			t.Parallel()
+
+			runAutoExpandTestCases(t, cases)
+		})
+	}
+}
+
 func TestExpandInt64(t *testing.T) {
 	t.Parallel()
 
