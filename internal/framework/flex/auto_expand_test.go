@@ -332,7 +332,7 @@ func TestExpand(t *testing.T) {
 			},
 		},
 		"plural ordinary field names": {
-			Source: &tfListOfNestedObject2{
+			Source: &tfSingluarListOfNestedObjects{
 				Field: fwtypes.NewListNestedObjectValueOfPtrMust(context.Background(), &tfSingleStringField{
 					Field1: types.StringValue("a"),
 				}),
@@ -342,9 +342,9 @@ func TestExpand(t *testing.T) {
 				Fields: []awsSingleStringValue{{Field1: "a"}},
 			},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[*tfListOfNestedObject2](), reflect.TypeFor[*awsPluralSliceOfNestedObjectValues]()),
-				infoConverting(reflect.TypeFor[tfListOfNestedObject2](), reflect.TypeFor[*awsPluralSliceOfNestedObjectValues]()),
-				traceMatchedFields("Field", reflect.TypeFor[tfListOfNestedObject2](), "Fields", reflect.TypeFor[*awsPluralSliceOfNestedObjectValues]()),
+				infoExpanding(reflect.TypeFor[*tfSingluarListOfNestedObjects](), reflect.TypeFor[*awsPluralSliceOfNestedObjectValues]()),
+				infoConverting(reflect.TypeFor[tfSingluarListOfNestedObjects](), reflect.TypeFor[*awsPluralSliceOfNestedObjectValues]()),
+				traceMatchedFields("Field", reflect.TypeFor[tfSingluarListOfNestedObjects](), "Fields", reflect.TypeFor[*awsPluralSliceOfNestedObjectValues]()),
 				infoConvertingWithPath("Field", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfSingleStringField]](), "Fields", reflect.TypeFor[[]awsSingleStringValue]()),
 				traceExpandingNestedObjectCollection("Field", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfSingleStringField]](), 1, "Fields", reflect.TypeFor[[]awsSingleStringValue]()),
 				traceMatchedFieldsWithPath("Field[0]", "Field1", reflect.TypeFor[tfSingleStringField](), "Fields[0]", "Field1", reflect.TypeFor[*awsSingleStringValue]()),

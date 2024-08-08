@@ -565,16 +565,16 @@ func TestFlatten(t *testing.T) {
 			Source: &awsPluralSliceOfNestedObjectValues{
 				Fields: []awsSingleStringValue{{Field1: "a"}},
 			},
-			Target: &tfListOfNestedObject2{},
-			WantTarget: &tfListOfNestedObject2{
+			Target: &tfSingluarListOfNestedObjects{},
+			WantTarget: &tfSingluarListOfNestedObjects{
 				Field: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfSingleStringField{
 					Field1: types.StringValue("a"),
 				}),
 			},
 			expectedLogLines: []map[string]any{
-				infoFlattening(reflect.TypeFor[*awsPluralSliceOfNestedObjectValues](), reflect.TypeFor[*tfListOfNestedObject2]()),
-				infoConverting(reflect.TypeFor[awsPluralSliceOfNestedObjectValues](), reflect.TypeFor[*tfListOfNestedObject2]()),
-				traceMatchedFields("Fields", reflect.TypeFor[awsPluralSliceOfNestedObjectValues](), "Field", reflect.TypeFor[*tfListOfNestedObject2]()),
+				infoFlattening(reflect.TypeFor[*awsPluralSliceOfNestedObjectValues](), reflect.TypeFor[*tfSingluarListOfNestedObjects]()),
+				infoConverting(reflect.TypeFor[awsPluralSliceOfNestedObjectValues](), reflect.TypeFor[*tfSingluarListOfNestedObjects]()),
+				traceMatchedFields("Fields", reflect.TypeFor[awsPluralSliceOfNestedObjectValues](), "Field", reflect.TypeFor[*tfSingluarListOfNestedObjects]()),
 				infoConvertingWithPath("Fields", reflect.TypeFor[[]awsSingleStringValue](), "Field", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfSingleStringField]]()),
 				traceMatchedFieldsWithPath("Fields[0]", "Field1", reflect.TypeFor[awsSingleStringValue](), "Field[0]", "Field1", reflect.TypeFor[*tfSingleStringField]()),
 				infoConvertingWithPath("Fields[0].Field1", reflect.TypeFor[string](), "Field[0].Field1", reflect.TypeFor[types.String]()),

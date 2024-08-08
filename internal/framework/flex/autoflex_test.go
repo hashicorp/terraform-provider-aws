@@ -111,9 +111,13 @@ type awsComplexValue struct {
 	Field4 []awsSingleInt64Value
 }
 
-// tfListOfNestedObject2 testing for idiomatic singular on TF side but plural on AWS side
-type tfListOfNestedObject2 struct {
+// tfSingluarListOfNestedObjects testing for idiomatic singular on TF side but plural on AWS side
+type tfSingluarListOfNestedObjects struct {
 	Field fwtypes.ListNestedObjectValueOf[tfSingleStringField] `tfsdk:"field"`
+}
+
+type awsPluralSliceOfNestedObjectValues struct {
+	Fields []awsSingleStringValue
 }
 
 type tfSpecialPluralization struct {
@@ -168,10 +172,6 @@ type awsSliceOfNestedObjectPointers struct {
 
 type awsSliceOfNestedObjectValues struct {
 	Field1 []awsSingleStringValue
-}
-
-type awsPluralSliceOfNestedObjectValues struct {
-	Fields []awsSingleStringValue
 }
 
 // tfFieldNamePrefix has no prefix to test matching on prefix
