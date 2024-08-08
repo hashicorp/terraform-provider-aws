@@ -558,6 +558,7 @@ func (r *resourceDatasourceData) expandConfiguration() (document.Interface, diag
 }
 
 func (r *resourceDatasourceData) flattenFromGetDataSourceOutput(ctx context.Context, out *qbusiness.GetDataSourceOutput) diag.Diagnostics {
+	var diags diag.Diagnostics
 	r.ApplicationId = fwflex.StringValueToFramework(ctx, aws.ToString(out.ApplicationId))
 	r.DatasourceArn = fwflex.StringValueToFramework(ctx, aws.ToString(out.DataSourceArn))
 	r.DatasourceId = fwflex.StringValueToFramework(ctx, aws.ToString(out.DataSourceId))
@@ -576,7 +577,7 @@ func (r *resourceDatasourceData) flattenFromGetDataSourceOutput(ctx context.Cont
 		return d
 	}
 	r.setID()
-	return nil
+	return diags
 }
 
 func flattenInlineConfiguration(ctx context.Context, conf []awstypes.InlineDocumentEnrichmentConfiguration) ([]*resourceInlineDocumentEnrichmentConfigurationData, diag.Diagnostics) {
@@ -695,7 +696,7 @@ func (r *resourceDatasourceData) flattenDocumentEnrichmentConfiguration(ctx cont
 
 	if dec.InlineConfigurations.IsNull() && dec.PreExreactionHookConfiguration.IsNull() && dec.PostExtractionHookConfiguration.IsNull() {
 		r.DocumentEnrichmentConfiguration = fwtypes.NewListNestedObjectValueOfNull[resourceDocumentEnrichmentConfigurationData](ctx)
-		return nil
+		return diags
 	}
 
 	l, d := fwtypes.NewListNestedObjectValueOfPtr[resourceDocumentEnrichmentConfigurationData](ctx, &dec)
@@ -703,7 +704,7 @@ func (r *resourceDatasourceData) flattenDocumentEnrichmentConfiguration(ctx cont
 		return d
 	}
 	r.DocumentEnrichmentConfiguration = l
-	return nil
+	return diags
 }
 
 func (r *resourceDatasourceData) flattenConfiguration(conf document.Interface) diag.Diagnostics {
