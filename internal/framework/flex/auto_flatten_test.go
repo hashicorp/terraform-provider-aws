@@ -1524,6 +1524,42 @@ func TestFlattenInt32(t *testing.T) {
 				},
 			},
 		},
+
+		// int64 cannot be flattened to Int32
+		"int64 to Int32": {
+			"value": {
+				Source: awsSingleInt64Value{
+					Field1: 42,
+				},
+				Target: &tfSingleInt32Field{},
+				expectedDiags: diag.Diagnostics{
+					diagFlatteningIncompatibleTypes(reflect.TypeFor[int64](), reflect.TypeFor[types.Int32]()),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleInt64Value](), reflect.TypeFor[*tfSingleInt32Field]()),
+					infoConverting(reflect.TypeFor[awsSingleInt64Value](), reflect.TypeFor[*tfSingleInt32Field]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleInt64Value](), "Field1", reflect.TypeFor[*tfSingleInt32Field]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[int64](), "Field1", reflect.TypeFor[types.Int32]()),
+					errorFlatteningIncompatibleTypes("Field1", reflect.TypeFor[int64](), "Field1", reflect.TypeFor[types.Int32]()),
+				},
+			},
+			"zero": {
+				Source: awsSingleInt64Value{
+					Field1: 0,
+				},
+				Target: &tfSingleInt32Field{},
+				expectedDiags: diag.Diagnostics{
+					diagFlatteningIncompatibleTypes(reflect.TypeFor[int64](), reflect.TypeFor[types.Int32]()),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleInt64Value](), reflect.TypeFor[*tfSingleInt32Field]()),
+					infoConverting(reflect.TypeFor[awsSingleInt64Value](), reflect.TypeFor[*tfSingleInt32Field]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleInt64Value](), "Field1", reflect.TypeFor[*tfSingleInt32Field]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[int64](), "Field1", reflect.TypeFor[types.Int32]()),
+					errorFlatteningIncompatibleTypes("Field1", reflect.TypeFor[int64](), "Field1", reflect.TypeFor[types.Int32]()),
+				},
+			},
+		},
 	}
 
 	for testName, cases := range testCases {
