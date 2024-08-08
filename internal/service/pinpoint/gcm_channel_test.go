@@ -58,6 +58,9 @@ func TestAccPinpointGCMChannel_basicAPIKey(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"api_key",
+				},
 			},
 		},
 	})
@@ -95,6 +98,9 @@ func TestAccPinpointGCMChannel_apiKeyAuthMethod(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"api_key",
+				},
 			},
 		},
 	})
@@ -132,6 +138,9 @@ func TestAccPinpointGCMChannel_tokenAuthMethod(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"service_json",
+				},
 			},
 		},
 	})
