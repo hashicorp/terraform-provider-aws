@@ -5,7 +5,7 @@ package servicecatalog_test
 import (
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/servicecatalog"
+	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"

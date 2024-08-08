@@ -207,6 +207,10 @@ For example, to include `Tags`, call
 diags := flex.Expand(ctx, source, &target, flex.WithNoIgnoredFieldNames())
 ```
 
+AutoFlex is able to convert single-element lists from Terraform blocks into single struct or pointer values in AWS API structs.
+
+#### Overriding Default Behavior
+
 In some cases, flattening and expanding need conditional handling.
 One important case is new AWS API implementations where the input or output structs make use of [union types](https://smithy.io/2.0/spec/aggregate-types.html#union).
 The AWS implementation uses an interface as the common type, along with various concrete implementations.
@@ -369,6 +373,9 @@ func (m configuration) expandToUpdateConfiguration(ctx context.Context) (result 
 }
 ```
 
+#### Troubleshooting
+
+AutoFlex can output detailed logging as it flattens or expands a value.
 To turn on logging for AutoFlex, use the environment variable `TF_LOG_AWS_AUTOFLEX` to set the logging level.
 Valid values are `ERROR`, `WARN`, `INFO`, `DEBUG`, and `TRACE`.
 By default, AutoFlex logging is set to `ERROR`.
