@@ -1568,7 +1568,7 @@ func TestFlattenInt32(t *testing.T) {
 				},
 				Target: &tfSingleInt32Field{},
 				expectedDiags: diag.Diagnostics{
-					diagFlatteningIncompatibleTypes(reflect.TypeFor[int64](), reflect.TypeFor[types.Int32]()), // FIXME: correct source type
+					diagFlatteningIncompatibleTypes(reflect.TypeFor[*int64](), reflect.TypeFor[types.Int32]()),
 				},
 				expectedLogLines: []map[string]any{
 					infoFlattening(reflect.TypeFor[awsSingleInt64Pointer](), reflect.TypeFor[*tfSingleInt32Field]()),
@@ -1584,7 +1584,7 @@ func TestFlattenInt32(t *testing.T) {
 				},
 				Target: &tfSingleInt32Field{},
 				expectedDiags: diag.Diagnostics{
-					diagFlatteningIncompatibleTypes(reflect.TypeFor[int64](), reflect.TypeFor[types.Int32]()), // FIXME: correct source type
+					diagFlatteningIncompatibleTypes(reflect.TypeFor[*int64](), reflect.TypeFor[types.Int32]()),
 				},
 				expectedLogLines: []map[string]any{
 					infoFlattening(reflect.TypeFor[awsSingleInt64Pointer](), reflect.TypeFor[*tfSingleInt32Field]()),
@@ -1600,7 +1600,7 @@ func TestFlattenInt32(t *testing.T) {
 				},
 				Target: &tfSingleInt32Field{},
 				expectedDiags: diag.Diagnostics{
-					diagFlatteningIncompatibleTypes(nil, reflect.TypeFor[types.Int32]()), // FIXME: correct source type
+					diagFlatteningIncompatibleTypes(reflect.TypeFor[*int64](), reflect.TypeFor[types.Int32]()),
 				},
 				expectedLogLines: []map[string]any{
 					infoFlattening(reflect.TypeFor[awsSingleInt64Pointer](), reflect.TypeFor[*tfSingleInt32Field]()),
