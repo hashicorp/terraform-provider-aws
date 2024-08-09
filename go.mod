@@ -167,6 +167,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/osis v1.12.3
 	github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.12.3
 	github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.7.3
+	github.com/aws/aws-sdk-go-v2/service/pinpoint v1.32.3
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.14.3
 	github.com/aws/aws-sdk-go-v2/service/polly v1.42.3
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.30.3
@@ -187,6 +188,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/route53 v1.42.3
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.25.3
 	github.com/aws/aws-sdk-go-v2/service/route53profiles v1.2.3
+	github.com/aws/aws-sdk-go-v2/service/route53recoverycontrolconfig v1.23.3
 	github.com/aws/aws-sdk-go-v2/service/rum v1.19.3
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.58.3
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.46.3
@@ -293,8 +295,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.9.16 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.11.17 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.17.15 // indirect
-	github.com/aws/aws-sdk-go-v2/service/route53recoverycontrolconfig v1.23.3 // indirect
-	github.com/aws/aws-sdk-go-v2/service/pinpoint v1.32.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.26.4 // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
 	github.com/boombuler/barcode v1.0.1 // indirect
