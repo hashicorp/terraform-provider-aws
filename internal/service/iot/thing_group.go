@@ -291,7 +291,7 @@ func expandThingGroupProperties(tfMap map[string]interface{}) *awstypes.ThingGro
 
 	apiObject := &awstypes.ThingGroupProperties{}
 
-	if v, ok := tfMap["attribute_payload"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["attribute_payload"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.AttributePayload = expandAttributePayload(v[0].(map[string]interface{}))
 	}
 
