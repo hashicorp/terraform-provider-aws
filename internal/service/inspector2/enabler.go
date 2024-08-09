@@ -27,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -85,11 +86,7 @@ func ResourceEnabler() *schema.Resource {
 	}
 }
 
-type resourceGetter interface {
-	Get(key string) any
-}
-
-func getAccountIDs(d resourceGetter) []string {
+func getAccountIDs(d sdkv2.ResourceDiffer) []string {
 	return flex.ExpandStringValueSet(d.Get("account_ids").(*schema.Set))
 }
 
@@ -128,11 +125,7 @@ func resourceEnablerCreate(ctx context.Context, d *schema.ResourceData, meta int
 			return nil
 		}
 
-		var errs []error
-		for _, acct := range out.FailedAccounts {
-			errs = append(errs, newFailedAccountError(acct))
-		}
-		err = errors.Join(errs...)
+		err = errors.Join(tfslices.ApplyToAll(out.FailedAccounts, newFailedAccountError)...)
 
 		if tfslices.All(out.FailedAccounts, func(acct types.FailedAccount) bool {
 			switch acct.ErrorCode {
@@ -170,6 +163,11 @@ func resourceEnablerCreate(ctx context.Context, d *schema.ResourceData, meta int
 		resourceStatuses := acctStatus.ResourceStatuses
 		for _, resourceType := range typeEnable {
 			delete(resourceStatuses, resourceType)
+		}
+		for resourceType, typeStatus := range resourceStatuses {
+			if typeStatus == types.StatusDisabled {
+				delete(resourceStatuses, resourceType)
+			}
 		}
 		if len(resourceStatuses) > 0 {
 			disableAccountIDs = append(disableAccountIDs, acctID)
@@ -247,7 +245,8 @@ func resourceEnablerUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	typeEnable := flex.ExpandStringyValueSet[types.ResourceScanType](d.Get("resource_types").(*schema.Set))
 	var typeDisable []types.ResourceScanType
 	if d.HasChange("resource_types") {
-		for _, v := range types.ResourceScanType("").Values() {
+		o, _ := d.GetChange("resource_types")
+		for _, v := range flex.ExpandStringyValueSet[types.ResourceScanType](o.(*schema.Set)) {
 			if !slices.Contains(typeEnable, v) {
 				typeDisable = append(typeDisable, v)
 			}
@@ -350,9 +349,28 @@ func resourceEnablerDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 func disableAccounts(ctx context.Context, conn *inspector2.Client, d *schema.ResourceData, accountIDs []string) diag.Diagnostics {
 	var diags diag.Diagnostics
+
+	s, err := AccountStatuses(ctx, conn, accountIDs)
+	if err != nil {
+		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionReading, ResNameEnabler, d.Id(), err)
+	}
+
+	var resourceTypes []types.ResourceScanType
+	for _, st := range s {
+		for k, a := range st.ResourceStatuses {
+			if a != types.StatusDisabled && !slices.Contains(resourceTypes, k) {
+				resourceTypes = append(resourceTypes, k)
+			}
+		}
+	}
+
+	if len(resourceTypes) == 0 {
+		return diags
+	}
+
 	in := &inspector2.DisableInput{
 		AccountIds:    accountIDs,
-		ResourceTypes: types.ResourceScanType("").Values(),
+		ResourceTypes: resourceTypes,
 	}
 
 	out, err := conn.Disable(ctx, in)
