@@ -7834,7 +7834,7 @@ service "route53recoveryreadiness" {
 
   sdk {
     id             = "Route53 Recovery Readiness"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
