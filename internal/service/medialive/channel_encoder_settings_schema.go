@@ -5022,7 +5022,7 @@ func expandChannelEncoderSettingsCaptionDescriptionsDestinationSettings(tfList [
 		out.SmpteTtDestinationSettings = &types.SmpteTtDestinationSettings{} // only unexported fields
 	}
 	if v, ok := m["teletext_destination_settings"].([]interface{}); ok && len(v) > 0 {
-		out.TeletextDestinationSettings = &types.TeletextDestinationSettings{} // only unexported fields
+		out.TeletextDestinationSettings = expandsCaptionDescriptionsDestinationSettingsTeletextDestinationSettings(v)
 	}
 	if v, ok := m["ttml_destination_settings"].([]interface{}); ok && len(v) > 0 {
 		out.TtmlDestinationSettings = expandsCaptionDescriptionsDestinationSettingsTtmlDestinationSettings(v)
@@ -5183,6 +5183,16 @@ func expandsCaptionDescriptionsDestinationSettingsEbuTtDDestinationSettings(tfLi
 	if v, ok := m["style_control"].(string); ok && len(v) > 0 {
 		out.StyleControl = types.EbuTtDDestinationStyleControl(v)
 	}
+
+	return &out
+}
+
+func expandsCaptionDescriptionsDestinationSettingsTeletextDestinationSettings(tfList []interface{}) *types.TeletextDestinationSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	var out types.TeletextDestinationSettings
 
 	return &out
 }
@@ -6720,7 +6730,7 @@ func flattenCaptionDescriptionsCaptionDestinationSettings(in *types.CaptionDesti
 		"scte20_plus_embedded_destination_settings": []interface{}{}, // attribute has no exported fields
 		"scte27_destination_settings":               []interface{}{}, // attribute has no exported fields
 		"smpte_tt_destination_settings":             []interface{}{}, // attribute has no exported fields
-		"teletext_destination_settings":             []interface{}{}, // attribute has no exported fields
+		"teletext_destination_settings":             flattenCaptionDescriptionsCaptionDestinationSettingsTeletextDestinationSettings(in.TeletextDestinationSettings),
 		"ttml_destination_settings":                 flattenCaptionDescriptionsCaptionDestinationSettingsTtmlDestinationSettings(in.TtmlDestinationSettings),
 		"webvtt_destination_settings":               flattenCaptionDescriptionsCaptionDestinationSettingsWebvttDestinationSettings(in.WebvttDestinationSettings),
 	}
@@ -6795,6 +6805,16 @@ func flattenCaptionDescriptionsCaptionDestinationSettingsEbuTtDDestinationSettin
 		"font_family":      aws.ToString(in.FontFamily),
 		"style_control":    string(in.StyleControl),
 	}
+
+	return []interface{}{m}
+}
+
+func flattenCaptionDescriptionsCaptionDestinationSettingsTeletextDestinationSettings(in *types.TeletextDestinationSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
 
 	return []interface{}{m}
 }

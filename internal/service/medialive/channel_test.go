@@ -122,6 +122,11 @@ func TestAccMediaLiveChannel_captionDescriptions(t *testing.T) {
 						names.AttrName:          "test-caption-name",
 						"destination_settings.0.dvb_sub_destination_settings.0.font_resolution": "100",
 					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "encoder_settings.0.caption_descriptions.*", map[string]string{
+						"caption_selector_name": "test-caption-selector-teletext",
+						"name":                  "test-caption-name-teletext",
+						"destination_settings.0.teletext_destination_settings.0": "",
+					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "encoder_settings.0.video_descriptions.*", map[string]string{
 						names.AttrName: "test-video-name",
 					}),
@@ -1952,6 +1957,15 @@ resource "aws_medialive_channel" "test" {
         name = %[1]q
       }
 
+      caption_selector {
+        name = "test-caption-selector-teletext"
+        selector_settings {
+          teletext_source_settings {
+            page_number = "100"
+          }
+        }
+      }
+
       audio_selector {
         name = "test-audio-selector"
       }
@@ -1996,6 +2010,15 @@ resource "aws_medialive_channel" "test" {
       }
     }
 
+    caption_descriptions {
+      name                  = "test-caption-name-teletext"
+      caption_selector_name = "test-caption-selector-teletext"
+
+      destination_settings {
+        teletext_destination_settings {}
+      }
+    }
+
     output_groups {
       output_group_settings {
         archive_group_settings {
@@ -2009,7 +2032,7 @@ resource "aws_medialive_channel" "test" {
         output_name               = "test-output-name"
         video_description_name    = "test-video-name"
         audio_description_names   = ["test-audio-name"]
-        caption_description_names = ["test-caption-name"]
+        caption_description_names = ["test-caption-name", "test-caption-name-teletext"]
         output_settings {
           archive_output_settings {
             name_modifier = "_1"
