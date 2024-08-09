@@ -134,7 +134,6 @@ func ResourceClusterInstance() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
-				ForceNew:      true,
 				ConflictsWith: []string{"identifier_prefix"},
 				ValidateFunc:  validIdentifier,
 			},
@@ -461,6 +460,10 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 			input.DBParameterGroupName = aws.String(d.Get("db_parameter_group_name").(string))
 		}
 
+		if d.HasChange(names.AttrIdentifier) {
+			input.NewDBInstanceIdentifier = aws.String(d.Get(names.AttrIdentifier).(string))
+		}
+
 		if d.HasChange("instance_class") {
 			input.DBInstanceClass = aws.String(d.Get("instance_class").(string))
 		}
@@ -511,9 +514,11 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 			return sdkdiag.AppendErrorf(diags, "updating RDS Cluster Instance (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitDBClusterInstanceUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		output, err := waitDBClusterInstanceUpdated(ctx, conn, d.Get(names.AttrIdentifier).(string), d.Timeout(schema.TimeoutUpdate))
+		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster Instance (%s) update: %s", d.Id(), err)
 		}
+		d.SetId(aws.StringValue(output.DBInstanceIdentifier))
 	}
 
 	return append(diags, resourceClusterInstanceRead(ctx, d, meta)...)
