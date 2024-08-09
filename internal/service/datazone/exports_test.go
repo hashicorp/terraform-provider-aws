@@ -8,7 +8,11 @@ var (
 	ResourceDomain                            = newResourceDomain
 	ResourceEnvironmentBlueprintConfiguration = newResourceEnvironmentBlueprintConfiguration
 	IsResourceMissing                         = isResourceMissing
+	ResourceFormType                          = newResourceFormType
+	FindFormTypeByID                          = findFormTypeByID
 	ResourceProject                           = newResourceProject
 	ResourceGlossary                          = newResourceGlossary
 	FindGlossaryByID                          = findGlossaryByID
+	ResourceAssetType                         = newResourceAssetType
+	FindAssetTypeByID                         = findAssetTypeByID
 )
