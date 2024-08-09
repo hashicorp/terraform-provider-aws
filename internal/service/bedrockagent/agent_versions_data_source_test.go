@@ -16,7 +16,7 @@ import (
 func TestAccBedrockAgentVersionsDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	dataSourceName := "data.aws_bedrock_agent_versions.test"
+	dataSourceName := "data.aws_bedrockagent_agent_versions.test"
 	resourceName := "aws_bedrockagent_agent.test"
 
 	resource.ParallelTest(t, resource.TestCase{

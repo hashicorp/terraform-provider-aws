@@ -34,7 +34,7 @@ type dataSourceAgentVersions struct {
 }
 
 func (d *dataSourceAgentVersions) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_bedrock_agent_versions"
+	resp.TypeName = "aws_bedrockagent_agent_versions"
 }
 
 func (d *dataSourceAgentVersions) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
