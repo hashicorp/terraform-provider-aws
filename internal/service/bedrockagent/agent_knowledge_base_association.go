@@ -199,7 +199,7 @@ func (r *agentKnowledgeBaseAssociationResource) Update(ctx context.Context, requ
 
 		return
 	}
-	_, err = prepareAgent(ctx, conn, new.AgentID.ValueString(), r.CreateTimeout(ctx, new.Timeouts))
+	_, err = prepareAgent(ctx, conn, new.AgentID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
 	if err != nil {
 		response.Diagnostics.AddError("preparing Agent", err.Error())
 
