@@ -37,7 +37,6 @@ func newAgentKnowledgeBaseAssociationResource(context.Context) (resource.Resourc
 
 	r.SetDefaultCreateTimeout(5 * time.Minute)
 	r.SetDefaultUpdateTimeout(5 * time.Minute)
-	r.SetDefaultDeleteTimeout(5 * time.Minute)
 
 	return r, nil
 }
@@ -94,7 +93,6 @@ func (r *agentKnowledgeBaseAssociationResource) Schema(ctx context.Context, requ
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
-				Delete: true,
 			}),
 		},
 	}
