@@ -58,13 +58,13 @@ func (d *dataSourceAgentVersions) Schema(ctx context.Context, req datasource.Sch
 						"agent_version": schema.StringAttribute{
 							Computed: true,
 						},
-						"created_at": schema.StringAttribute{
+						names.AttrCreatedAt: schema.StringAttribute{
 							Computed: true,
 						},
 						"updated_at": schema.StringAttribute{
 							Computed: true,
 						},
-						"description": schema.StringAttribute{
+						names.AttrDescription: schema.StringAttribute{
 							Computed: true,
 						},
 					},
