@@ -4,11 +4,16 @@
 package ecs
 
 import (
+	"fmt"
 	"sort"
+	_ "unsafe"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	_ "github.com/aws/aws-sdk-go-v2/service/ecs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
+	smithyjson "github.com/aws/smithy-go/encoding/json"
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 func containerDefinitionsAreEquivalent(def1, def2 string, isAWSVPC bool) (bool, error) {
@@ -142,4 +147,34 @@ func (cd containerDefinitions) orderContainers() {
 	sort.Slice(cd, func(i, j int) bool {
 		return aws.ToString(cd[i].Name) < aws.ToString(cd[j].Name)
 	})
+}
+
+//go:linkname serializeContainerDefinitions github.com/aws/aws-sdk-go-v2/service/ecs.awsAwsjson11_serializeDocumentContainerDefinitions
+func serializeContainerDefinitions(v []awstypes.ContainerDefinition, value smithyjson.Value) error
+
+func flattenContainerDefinitions(apiObjects []awstypes.ContainerDefinition) (string, error) {
+	jsonEncoder := smithyjson.NewEncoder()
+	err := serializeContainerDefinitions(apiObjects, jsonEncoder.Value)
+
+	if err != nil {
+		return "", err
+	}
+
+	return jsonEncoder.String(), nil
+}
+
+func expandContainerDefinitions(tfString string) ([]awstypes.ContainerDefinition, error) {
+	var apiObjects []awstypes.ContainerDefinition
+
+	if err := tfjson.DecodeFromString(tfString, &apiObjects); err != nil {
+		return nil, err
+	}
+
+	for i, apiObject := range apiObjects {
+		if itypes.IsZero(&apiObject) {
+			return nil, fmt.Errorf("invalid container definition supplied at index (%d)", i)
+		}
+	}
+
+	return apiObjects, nil
 }
