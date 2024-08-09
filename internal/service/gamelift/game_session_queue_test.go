@@ -214,9 +214,6 @@ func testAccCheckGameSessionQueueExists(ctx context.Context, n string, v *awstyp
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No GameLift Game Session Queue ID is set")
-		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftClient(ctx)
 

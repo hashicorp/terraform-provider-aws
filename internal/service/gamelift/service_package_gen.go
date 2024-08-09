@@ -61,7 +61,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceGameSessionQueue,
+			Factory:  resourceGameSessionQueue,
 			TypeName: "aws_gamelift_game_session_queue",
 			Name:     "Game Session Queue",
 			Tags: &types.ServicePackageResourceTags{

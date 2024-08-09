@@ -5,14 +5,16 @@ package gamelift
 
 // Exports for use in tests only.
 var (
-	ResourceAlias           = resourceAlias
-	ResourceBuild           = resourceBuild
-	ResourceFleet           = resourceFleet
-	ResourceGameServerGroup = resourceGameServerGroup
+	ResourceAlias            = resourceAlias
+	ResourceBuild            = resourceBuild
+	ResourceFleet            = resourceFleet
+	ResourceGameServerGroup  = resourceGameServerGroup
+	ResourceGameSessionQueue = resourceGameSessionQueue
 
-	DiffPortSettings          = diffPortSettings
-	FindAliasByID             = findAliasByID
-	FindBuildByID             = findBuildByID
-	FindFleetByID             = findFleetByID
-	FindGameServerGroupByName = findGameServerGroupByName
+	DiffPortSettings           = diffPortSettings
+	FindAliasByID              = findAliasByID
+	FindBuildByID              = findBuildByID
+	FindFleetByID              = findFleetByID
+	FindGameServerGroupByName  = findGameServerGroupByName
+	FindGameSessionQueueByName = findGameSessionQueueByName
 )
