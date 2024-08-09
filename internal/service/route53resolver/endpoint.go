@@ -171,7 +171,7 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
-	ep, err := findResolverEndpointByID(ctx, conn, d.Id())
+	output, err := findResolverEndpointByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Route53 Resolver Endpoint (%s) not found, removing from state", d.Id())
@@ -183,13 +183,13 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading Route53 Resolver Endpoint (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, aws.ToString(ep.Arn))
-	d.Set("direction", ep.Direction)
-	d.Set("host_vpc_id", ep.HostVPCId)
-	d.Set(names.AttrName, ep.Name)
-	d.Set("protocols", flex.FlattenStringyValueSet[awstypes.Protocol](ep.Protocols))
-	d.Set("resolver_endpoint_type", ep.ResolverEndpointType)
-	d.Set(names.AttrSecurityGroupIDs, ep.SecurityGroupIds)
+	d.Set(names.AttrARN, output.Arn)
+	d.Set("direction", output.Direction)
+	d.Set("host_vpc_id", output.HostVPCId)
+	d.Set(names.AttrName, output.Name)
+	d.Set("protocols", flex.FlattenStringyValueSet[awstypes.Protocol](output.Protocols))
+	d.Set("resolver_endpoint_type", output.ResolverEndpointType)
+	d.Set(names.AttrSecurityGroupIDs, output.SecurityGroupIds)
 
 	ipAddresses, err := findResolverEndpointIPAddressesByID(ctx, conn, d.Id())
 

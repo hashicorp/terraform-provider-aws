@@ -118,7 +118,7 @@ func resourceFirewallDomainListRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "reading Route53 Resolver Firewall Domain List (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, aws.ToString(firewallDomainList.Arn))
+	d.Set(names.AttrARN, firewallDomainList.Arn)
 	d.Set(names.AttrName, firewallDomainList.Name)
 
 	input := &route53resolver.ListFirewallDomainsInput{

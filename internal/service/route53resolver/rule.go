@@ -173,7 +173,7 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return sdkdiag.AppendErrorf(diags, "reading Route53 Resolver Rule (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, aws.ToString(rule.Arn))
+	d.Set(names.AttrARN, rule.Arn)
 	// To be consistent with other AWS services that do not accept a trailing period,
 	// we remove the suffix from the Domain Name returned from the API
 	d.Set(names.AttrDomainName, trimTrailingPeriod(aws.ToString(rule.DomainName)))

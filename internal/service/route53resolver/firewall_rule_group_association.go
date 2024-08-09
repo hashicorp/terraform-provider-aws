@@ -126,7 +126,7 @@ func resourceFirewallRuleGroupAssociationRead(ctx context.Context, d *schema.Res
 		return sdkdiag.AppendErrorf(diags, "reading Route53 Resolver Firewall Rule Group Association (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, aws.ToString(ruleGroupAssociation.Arn))
+	d.Set(names.AttrARN, ruleGroupAssociation.Arn)
 	d.Set(names.AttrName, ruleGroupAssociation.Name)
 	d.Set("firewall_rule_group_id", ruleGroupAssociation.FirewallRuleGroupId)
 	d.Set("mutation_protection", ruleGroupAssociation.MutationProtection)

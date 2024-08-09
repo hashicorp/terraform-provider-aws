@@ -101,7 +101,7 @@ func resourceFirewallRuleGroupRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "reading Route53 Resolver Firewall Rule Group (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, aws.ToString(ruleGroup.Arn))
+	d.Set(names.AttrARN, ruleGroup.Arn)
 	d.Set(names.AttrName, ruleGroup.Name)
 	d.Set(names.AttrOwnerID, ruleGroup.OwnerId)
 	d.Set("share_status", ruleGroup.ShareStatus)
