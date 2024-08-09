@@ -10,6 +10,7 @@ var (
 	ResourceFleet            = resourceFleet
 	ResourceGameServerGroup  = resourceGameServerGroup
 	ResourceGameSessionQueue = resourceGameSessionQueue
+	ResourceScript           = resourceScript
 
 	DiffPortSettings           = diffPortSettings
 	FindAliasByID              = findAliasByID
@@ -17,4 +18,5 @@ var (
 	FindFleetByID              = findFleetByID
 	FindGameServerGroupByName  = findGameServerGroupByName
 	FindGameSessionQueueByName = findGameSessionQueueByName
+	FindScriptByID             = findScriptByID
 )

@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/gamelift/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -154,29 +153,22 @@ func TestAccGameLiftScript_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckScriptExists(ctx context.Context, n string, res *awstypes.Script) resource.TestCheckFunc {
+func testAccCheckScriptExists(ctx context.Context, n string, v *awstypes.Script) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No GameLift Script ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftClient(ctx)
 
-		script, err := tfgamelift.FindScriptByID(ctx, conn, rs.Primary.ID)
+		output, err := tfgamelift.FindScriptByID(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		if aws.ToString(script.ScriptId) != rs.Primary.ID {
-			return fmt.Errorf("GameLift Script not found")
-		}
-
-		*res = *script
+		*v = *output
 
 		return nil
 	}

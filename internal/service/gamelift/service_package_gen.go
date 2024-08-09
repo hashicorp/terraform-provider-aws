@@ -69,7 +69,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceScript,
+			Factory:  resourceScript,
 			TypeName: "aws_gamelift_script",
 			Name:     "Script",
 			Tags: &types.ServicePackageResourceTags{
