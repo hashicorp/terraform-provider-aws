@@ -113,7 +113,7 @@ func dataSourceQueryLogConfigRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set(names.AttrOwnerID, config.OwnerId)
 	d.Set("resolver_query_log_config_id", config.Id)
 
-	shareStatus := awstypes.ShareStatus(config.ShareStatus)
+	shareStatus := config.ShareStatus
 	d.Set("share_status", shareStatus)
 
 	if shareStatus != awstypes.ShareStatusSharedWithMe {

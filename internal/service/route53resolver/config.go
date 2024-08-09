@@ -126,7 +126,7 @@ func resourceConfigUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func findResolverConfigByID(ctx context.Context, conn *route53resolver.Client, id string) (*awstypes.ResolverConfig, error) {
 	input := &route53resolver.ListResolverConfigsInput{}
-	var output *awstypes.ResolverConfig
+	var output awstypes.ResolverConfig
 
 	// GetResolverConfig does not support query by ID.
 	pages := route53resolver.NewListResolverConfigsPaginator(conn, input)
@@ -144,19 +144,15 @@ func findResolverConfigByID(ctx context.Context, conn *route53resolver.Client, i
 			return nil, err
 		}
 
-		if output == nil {
-			return nil, tfresource.NewEmptyResultError(input)
-		}
-
 		for _, v := range page.ResolverConfigs {
 			if aws.ToString(v.Id) == id {
-				output = &v
+				output = v
 				break
 			}
 		}
 	}
 
-	return output, nil
+	return &output, nil
 }
 
 func statusAutodefinedReverse(ctx context.Context, conn *route53resolver.Client, id string) retry.StateRefreshFunc {

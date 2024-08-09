@@ -132,7 +132,7 @@ func dataSourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("resolver_endpoint_id", rule.ResolverEndpointId)
 	d.Set("resolver_rule_id", rule.Id)
 	d.Set("rule_type", rule.RuleType)
-	shareStatus := awstypes.ShareStatus(rule.ShareStatus)
+	shareStatus := rule.ShareStatus
 	d.Set("share_status", shareStatus)
 	// https://github.com/hashicorp/terraform-provider-aws/issues/10211
 	if shareStatus != awstypes.ShareStatusSharedWithMe {

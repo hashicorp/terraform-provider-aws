@@ -142,7 +142,7 @@ func resourceDNSSECConfigDelete(ctx context.Context, d *schema.ResourceData, met
 
 func findResolverDNSSECConfigByID(ctx context.Context, conn *route53resolver.Client, id string) (*awstypes.ResolverDnssecConfig, error) {
 	input := &route53resolver.ListResolverDnssecConfigsInput{}
-	var output *awstypes.ResolverDnssecConfig
+	var output awstypes.ResolverDnssecConfig
 
 	// GetResolverDnssecConfig does not support query by ID.
 	pages := route53resolver.NewListResolverDnssecConfigsPaginator(conn, input)
@@ -160,10 +160,6 @@ func findResolverDNSSECConfigByID(ctx context.Context, conn *route53resolver.Cli
 			return nil, err
 		}
 
-		if output == nil {
-			return nil, tfresource.NewEmptyResultError(input)
-		}
-
 		if validationStatus := output.ValidationStatus; validationStatus == awstypes.ResolverDNSSECValidationStatusDisabled {
 			return nil, &retry.NotFoundError{
 				Message:     string(validationStatus),
@@ -173,13 +169,13 @@ func findResolverDNSSECConfigByID(ctx context.Context, conn *route53resolver.Cli
 
 		for _, v := range page.ResolverDnssecConfigs {
 			if aws.ToString(v.Id) == id {
-				output = &v
+				output = v
 				break
 			}
 		}
 	}
 
-	return output, nil
+	return &output, nil
 }
 
 func statusDNSSECConfig(ctx context.Context, conn *route53resolver.Client, id string) retry.StateRefreshFunc {
