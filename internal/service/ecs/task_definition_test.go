@@ -1337,6 +1337,43 @@ func TestAccECSTaskDefinition_v5590ContainerDefinitionsRegression(t *testing.T) 
 	})
 }
 
+// https://github.com/hashicorp/terraform-provider-aws/issues/38782.
+func TestAccECSTaskDefinition_containerDefinitionDockerLabels(t *testing.T) {
+	ctx := acctest.Context(t)
+	var def awstypes.TaskDefinition
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_task_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTaskDefinitionConfig_containerDefinitionDockerLabels(rName, "alpine"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "length(@)", acctest.Ct1),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "keys([0].dockerLabels) | contains(@, 'PROMETHEUS_EXPORTER_JOB_NAME')", acctest.CtTrue),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].dockerLabels.PROMETHEUS_EXPORTER_JOB_NAME", "my-job"),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "keys([0].dockerLabels) | contains(@, 'PROMETHEUS_EXPORTER_PATH')", acctest.CtTrue),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].dockerLabels.PROMETHEUS_EXPORTER_PATH", "/prometheus"),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "keys([0].dockerLabels) | contains(@, 'PROMETHEUS_EXPORTER_PORT')", acctest.CtTrue),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].dockerLabels.PROMETHEUS_EXPORTER_PORT", "12345"),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "keys([0].dockerLabels) | contains(@, 'PROMETHEUS_TARGET')", acctest.CtTrue),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].dockerLabels.PROMETHEUS_TARGET", acctest.CtTrue),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "keys([0].dockerLabels) | contains(@, 'pROMETHEUS_EXPORTER_JOB_NAME')", acctest.CtFalse),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "keys([0].dockerLabels) | contains(@, 'pROMETHEUS_EXPORTER_PATH')", acctest.CtFalse),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "keys([0].dockerLabels) | contains(@, 'pROMETHEUS_EXPORTER_PORT')", acctest.CtFalse),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "keys([0].dockerLabels) | contains(@, 'pROMETHEUS_TARGET')", acctest.CtFalse),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].image", "alpine"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckTaskDefinitionProxyConfiguration(after *awstypes.TaskDefinition, containerName string, proxyType string,
 	ignoredUid string, ignoredGid string, appPorts string, proxyIngressPort string, proxyEgressPort string,
 	egressIgnoredPorts string, egressIgnoredIPs string) resource.TestCheckFunc {
@@ -3256,6 +3293,37 @@ resource "aws_ecs_task_definition" "test" {
           hostPort      = 80
         }
       ]
+    }
+  ])
+}
+`, rName, image)
+}
+
+func testAccTaskDefinitionConfig_containerDefinitionDockerLabels(rName, image string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_task_definition" "test" {
+  family = %[1]q
+  container_definitions = jsonencode([
+    {
+      name      = "first"
+      image     = %[2]q
+      cpu       = 10
+      memory    = 512
+      essential = true
+
+      portMappings = [
+        {
+          containerPort = 80
+          hostPort      = 80
+        }
+      ]
+
+      dockerLabels = {
+        "PROMETHEUS_TARGET"            = "true"
+        "PROMETHEUS_EXPORTER_PORT"     = "12345"
+        "PROMETHEUS_EXPORTER_PATH"     = "/prometheus"
+        "PROMETHEUS_EXPORTER_JOB_NAME" = "my-job"
+      }
     }
   ])
 }
