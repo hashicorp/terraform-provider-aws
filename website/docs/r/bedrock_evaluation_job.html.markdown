@@ -141,49 +141,6 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Evaluation Job. 
-* `creation_time` - Creation time of job.
-* `customer_encryption_key_id` - ARN of the customer managed key.
-* `evaluaton` - Creation time of job.
-* `failure_messages` - Array of strings that specifies why the job failed.
-* `description` - Description of job.
-* `name` - Name of job.
-* `type` - Type of job (Human or Automated).
-* `output_data_config` - Description of job.
-* `role_arn` - ARN of IAM service role used for job.
-* `status` - status of job.
-* `evaluation_config` -  (Required) Object that contains only one of the following objects to describe the evaluation config.
-    * `automated` -  (Required) Object that is used to specify and describe an automated evaluation job through the following attributes.
-        * `automated_evaluation_config` - (Required) Object that is used to specify and describe the automated evaluation job through the following attributes.
-            * `dataset_metric_configs` -  (Required) Array of EvaluationDatasetMetricConfig objects that specify the prompt datasets, task type and metric names through the following attributes. Array must have a length between 1 and 5.
-                * `metric_names` -  (Required) Array of names of the metrics used. Valid values are Builtin.Accuracy, Builtin.Robustness, and Builtin.Toxicity.
-                * `task_type` -  (Required) Task type that you want the model to carry out. Valid Values are Summarization , Classification, QuestionAndAnswer, Generation, and Custom.
-                * `dataset` -  (Required) Object that is used to specify and describe the prompt dataset through the following attributes.
-                  * `name` -  (Required) Name of built-in prompt datasets. Valid values are Builtin.Bold, Builtin.BoolQ, Builtin.NaturalQuestions, Builtin.Gigaword, Builtin.RealToxicityPrompts, Builtin.TriviaQa, Builtin.T-Rex, Builtin.WomensEcommerceClothingReviews and Builtin.Wikitext2.
-                  * `dataset_location` -  (Optional) Object that is used to specify and describe the location in Amazon S3 where the prompt dataset is saved through the following attributes.
-                    * `s3_uri` -  (Required) Amazon S3 URI where the prompt dataset is stored. It must have a Length of between 1 and 1024 and follow regex of ^s3://[a-z0-9][\.\-a-z0-9]{1,61}[a-z0-9](/.*)?$.
-    * `human` -  (Required) Object that is used to specify and describe a human evaluation job through the following attributes. This feature is not tested.
-        * `dataset_metric_configs` -  (Required) Array of EvaluationDatasetMetricConfig objects that specify the prompt datasets, task type and metric names through the following attributes. Array must have a length between 1 and 5.
-                * `metric_names` -  (Required) Array of names of the metrics used. Valid values are Builtin.Accuracy, Builtin.Robustness, and Builtin.Toxicity.
-                * `task_type` -  (Required) Task type that you want the model to carry out. Valid Values are Summarization , Classification, QuestionAndAnswer, Generation, and Custom.
-                * `dataset` -  (Required) Object that is used to specify and describe the prompt dataset through the following attributes.
-                  * `name` -  (Required) Name of built-in prompt datasets. Valid values are Builtin.Bold, Builtin.BoolQ, Builtin.NaturalQuestions, Builtin.Gigaword, Builtin.RealToxicityPrompts, Builtin.TriviaQa, Builtin.T-Rex, Builtin.WomensEcommerceClothingReviews and Builtin.Wikitext2.
-                  * `dataset_location` -  (Optional) Object that is used to specify and describe the location in Amazon S3 where the prompt dataset is saved through the following attributes.
-                    * `s3_uri` -  (Required) Amazon S3 URI where the prompt dataset is stored. It must have a Length of between 1 and 1024 and follow regex of ^s3://[a-z0-9][\.\-a-z0-9]{1,61}[a-z0-9](/.*)?$.
-        * `custom_metrics` -  (Optional) Array of HumanEvaluationCustomMetric objects with a minimum length of 1 and maximum of 10 items
-            * `name` -  (Required) Name of them metric that your human evaluatiors will see in the evaluation UI. It must have a length of betweeen 1 and 63 and follow regex of ^[0-9a-zA-Z-_.]+$.
-            * `rating_method` -  (Required) Rating method of how you want humans to evaluate your model. Valid values are ThumbsUpDown, IndividualLikertScale,ComparisonLikertScale, ComparisonChoice, and ComparisonRank.
-            * `description` -  (Optional) Description about method.
-        * `human_workflow_config` -  (Optional) SageMakerFlowDefinition object that names metrics and describes their evaluation.
-            * `name` -  (Required) Name of them metric that your human evaluatiors will see in the evaluation UI. It must have a length of betweeen 1 and 63 and follow regex of ^[0-9a-zA-Z-_.]+$.
-            * `rating_method` -  (Required) Rating method of how you want humans to evaluate your model. Valid values are ThumbsUpDown, IndividualLikertScale,ComparisonLikertScale, ComparisonChoice, and ComparisonRank.
-            * `description` -  (Optional) Description about method.
-* `inference_config` -  (Required) Object that describes the models you want to use in your model evaluation job.
-    * `models` - (Required) Array of model objects that define the models used in your model evaluation job through. Automated model evaluation jobs support only a single model. In a human-based model evaluation job, your annotator can compare the responses for up to two different models.
-        * `bedrock_model` (Required) Defines the model that is used through the following attributes.
-            * `inference_params` (Required) Bedrock model inference parameters.
-            * `model_identifier` (Required) ARN of the Bedrock model. Must follow the regex of ^arn:aws(-[^:]+)?:bedrock:[a-z0-9-]{1,20}:(([0-9]{12}:custom-model/[a-z0-9-]{1,63}[.]{1}[a-z0-9-]{1,63}(([:][a-z0-9-]{1,63}){0,2})?/[a-z0-9]{12})|(:foundation-model/([a-z0-9-]{1,63}[.]{1}[a-z0-9-]{1,63}([.]?[a-z0-9-]{1,63})([:][a-z0-9-]{1,63}){0,2})))|(([a-z0-9-]{1,63}[.]{1}[a-z0-9-]{1,63}([.]?[a-z0-9-]{1,63})([:][a-z0-9-]{1,63}){0,2}))|(([0-9a-zA-Z][_-]?)+)$.
-* `output_data_config` -  (Required) Object with the following attributes that defines wat Amazon S3 will have your results saved.
-    * `s3_uri` -  (Required) Amazon S3 URI where the results of model evaluation job are saved. It must have a Length of between 1 and 1024 and follow regex of ^s3://[a-z0-9][\.\-a-z0-9]{1,61}[a-z0-9](/.*)?$.
 
 ## Timeouts
 
@@ -193,16 +150,16 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Amazon Bedrock Evaluation Job using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Amazon Bedrock Evaluation Job using the `evaluation-job-arn`. For example:
 
 ```terraform
 import {
   to = aws_bedrock_evaluation_job.example
-  id = "evaluation_job-id-12345678"
+  id = "evaluation_job-arn-12345678"
 }
 ```
 
-Using `terraform import`, import Amazon Bedrock Evaluation Job using the `example_id_arg`. For example:
+Using `terraform import`, import Amazon Bedrock Evaluation Job using the `evaluation-job-arn`. For example:
 
 ```console
 % terraform import aws_bedrock_evaluation_job.example evaluation_job-id-12345678
