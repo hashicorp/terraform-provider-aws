@@ -8,6 +8,7 @@ BUG FIXES:
 
 * resource/aws_bedrockagent_agent_knowledge_base_association: Prepare agent when associating a knowledge base so it can be used ([#38799](https://github.com/hashicorp/terraform-provider-aws/issues/38799))
 * resource/aws_cloudwatch_event_connection: Fix various expander type assertions to prevent crashes ([#38800](https://github.com/hashicorp/terraform-provider-aws/issues/38800))
+* resource/aws_ecs_task_definition: Prevent lowercasing of the first character of JSON keys in `container_definitions.dockerLabels` ([#38804](https://github.com/hashicorp/terraform-provider-aws/issues/38804))
 * resource/aws_elasticache_replication_group: Fix crash when setting `replicas_per_node_group` if node groups are empty ([#38797](https://github.com/hashicorp/terraform-provider-aws/issues/38797))
 
 ## 5.62.0 (August  8, 2024)
