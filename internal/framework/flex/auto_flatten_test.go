@@ -1524,6 +1524,42 @@ func TestFlattenFloat32(t *testing.T) {
 				},
 			},
 		},
+
+		// float64 cannot be flattened to Float32
+		"float64 to Float32": {
+			"value": {
+				Source: awsSingleFloat64Value{
+					Field1: 42,
+				},
+				Target: &tfSingleFloat32Field{},
+				expectedDiags: diag.Diagnostics{
+					diagFlatteningIncompatibleTypes(reflect.TypeFor[float64](), reflect.TypeFor[types.Float32]()),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleFloat64Value](), reflect.TypeFor[*tfSingleFloat32Field]()),
+					infoConverting(reflect.TypeFor[awsSingleFloat64Value](), reflect.TypeFor[*tfSingleFloat32Field]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleFloat64Value](), "Field1", reflect.TypeFor[*tfSingleFloat32Field]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[float64](), "Field1", reflect.TypeFor[types.Float32]()),
+					errorFlatteningIncompatibleTypes("Field1", reflect.TypeFor[float64](), "Field1", reflect.TypeFor[types.Float32]()),
+				},
+			},
+			"zero": {
+				Source: awsSingleFloat64Value{
+					Field1: 0,
+				},
+				Target: &tfSingleFloat32Field{},
+				expectedDiags: diag.Diagnostics{
+					diagFlatteningIncompatibleTypes(reflect.TypeFor[float64](), reflect.TypeFor[types.Float32]()),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleFloat64Value](), reflect.TypeFor[*tfSingleFloat32Field]()),
+					infoConverting(reflect.TypeFor[awsSingleFloat64Value](), reflect.TypeFor[*tfSingleFloat32Field]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleFloat64Value](), "Field1", reflect.TypeFor[*tfSingleFloat32Field]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[float64](), "Field1", reflect.TypeFor[types.Float32]()),
+					errorFlatteningIncompatibleTypes("Field1", reflect.TypeFor[float64](), "Field1", reflect.TypeFor[types.Float32]()),
+				},
+			},
+		},
 	}
 
 	for testName, cases := range testCases {
