@@ -197,7 +197,7 @@ func resourceGameSessionQueueDelete(ctx context.Context, d *schema.ResourceData,
 		Name: aws.String(d.Id()),
 	})
 
-	if errs.IsA[*awstypes.NotFoundException](err) {
+	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "does not exist") {
 		return diags
 	}
 
