@@ -1,4 +1,9 @@
 ## 5.63.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* datasource/aws_ecr_image: Add image_tag_prefix argument for most_recent flow ([#38774](https://github.com/hashicorp/terraform-provider-aws/issues/38774))
+
 ## 5.62.0 (August  8, 2024)
 
 FEATURES:
