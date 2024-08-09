@@ -180,6 +180,7 @@ import (
 	route53_sdkv2 "github.com/aws/aws-sdk-go-v2/service/route53"
 	route53domains_sdkv2 "github.com/aws/aws-sdk-go-v2/service/route53domains"
 	route53profiles_sdkv2 "github.com/aws/aws-sdk-go-v2/service/route53profiles"
+	route53resolver_sdkv2 "github.com/aws/aws-sdk-go-v2/service/route53resolver"
 	rum_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rum"
 	s3_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3"
 	s3control_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3control"
@@ -244,7 +245,6 @@ import (
 	redshiftserverless_sdkv1 "github.com/aws/aws-sdk-go/service/redshiftserverless"
 	route53recoverycontrolconfig_sdkv1 "github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
 	route53recoveryreadiness_sdkv1 "github.com/aws/aws-sdk-go/service/route53recoveryreadiness"
-	route53resolver_sdkv1 "github.com/aws/aws-sdk-go/service/route53resolver"
 	s3outposts_sdkv1 "github.com/aws/aws-sdk-go/service/s3outposts"
 	sagemaker_sdkv1 "github.com/aws/aws-sdk-go/service/sagemaker"
 	simpledb_sdkv1 "github.com/aws/aws-sdk-go/service/simpledb"
@@ -1045,8 +1045,8 @@ func (c *AWSClient) Route53RecoveryReadinessConn(ctx context.Context) *route53re
 	return errs.Must(conn[*route53recoveryreadiness_sdkv1.Route53RecoveryReadiness](ctx, c, names.Route53RecoveryReadiness, make(map[string]any)))
 }
 
-func (c *AWSClient) Route53ResolverConn(ctx context.Context) *route53resolver_sdkv1.Route53Resolver {
-	return errs.Must(conn[*route53resolver_sdkv1.Route53Resolver](ctx, c, names.Route53Resolver, make(map[string]any)))
+func (c *AWSClient) Route53ResolverClient(ctx context.Context) *route53resolver_sdkv2.Client {
+	return errs.Must(client[*route53resolver_sdkv2.Client](ctx, c, names.Route53Resolver, make(map[string]any)))
 }
 
 func (c *AWSClient) S3Client(ctx context.Context) *s3_sdkv2.Client {
