@@ -41,7 +41,6 @@ func TestAccPinpointEmailChannel_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "from_address", address1),
 					resource.TestCheckResourceAttrSet(resourceName, "messages_per_second"),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "identity", "aws_ses_domain_identity.test", names.AttrARN),
 				),
 			},
@@ -211,7 +210,6 @@ resource "aws_pinpoint_email_channel" "test" {
   enabled        = "false"
   from_address   = %[2]q
   identity       = aws_ses_domain_identity.test.arn
-  role_arn       = aws_iam_role.test.arn
 }
 
 resource "aws_ses_domain_identity" "test" {
@@ -272,7 +270,6 @@ resource "aws_pinpoint_email_channel" "test" {
   enabled           = "false"
   from_address      = %[2]q
   identity          = aws_ses_domain_identity.test.arn
-  role_arn          = aws_iam_role.test.arn
   configuration_set = aws_ses_configuration_set.test.name
 }
 
