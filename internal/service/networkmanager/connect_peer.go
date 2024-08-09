@@ -383,22 +383,26 @@ func flattenPeerConfiguration(apiObject *networkmanager.ConnectPeerConfiguration
 
 	confMap := map[string]interface{}{}
 
-	if v := apiObject.BgpConfigurations; v != nil {
+	for _, v := range apiObject.BgpConfigurations {
 		bgpConfMap := map[string]interface{}{}
 
-		if a := v[0].CoreNetworkAddress; a != nil {
+		if a := v.CoreNetworkAddress; a != nil {
 			bgpConfMap["core_network_address"] = aws.StringValue(a)
 		}
-		if a := v[0].CoreNetworkAsn; a != nil {
+		if a := v.CoreNetworkAsn; a != nil {
 			bgpConfMap["core_network_asn"] = aws.Int64Value(a)
 		}
-		if a := v[0].PeerAddress; a != nil {
+		if a := v.PeerAddress; a != nil {
 			bgpConfMap["peer_address"] = aws.StringValue(a)
 		}
-		if a := v[0].PeerAsn; a != nil {
+		if a := v.PeerAsn; a != nil {
 			bgpConfMap["peer_asn"] = aws.Int64Value(a)
 		}
-		confMap["bgp_configurations"] = []interface{}{bgpConfMap}
+		var existing []interface{}
+		if c, ok := confMap["bgp_configurations"]; ok {
+			existing = c.([]interface{})
+		}
+		confMap["bgp_configurations"] = append(existing, bgpConfMap)
 	}
 	if v := apiObject.CoreNetworkAddress; v != nil {
 		confMap["core_network_address"] = aws.StringValue(v)

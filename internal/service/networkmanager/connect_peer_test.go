@@ -46,7 +46,7 @@ func TestAccNetworkManagerConnectPeer_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.inside_cidr_blocks.0", insideCidrBlocksv4),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.peer_address", peerAddress),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.protocol", "GRE"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.bgp_configurations.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.bgp_configurations.#", acctest.Ct2),
 					resource.TestCheckResourceAttrSet(resourceName, "connect_attachment_id"),
 					resource.TestCheckResourceAttr(resourceName, "inside_cidr_blocks.0", insideCidrBlocksv4),
 					resource.TestCheckResourceAttr(resourceName, "peer_address", peerAddress),
@@ -91,7 +91,7 @@ func TestAccNetworkManagerConnectPeer_noDependsOn(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.inside_cidr_blocks.0", insideCidrBlocksv4),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.peer_address", peerAddress),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.protocol", "GRE"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.bgp_configurations.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.bgp_configurations.#", acctest.Ct2),
 					resource.TestCheckResourceAttrSet(resourceName, "connect_attachment_id"),
 					resource.TestCheckResourceAttr(resourceName, "inside_cidr_blocks.0", insideCidrBlocksv4),
 					resource.TestCheckResourceAttr(resourceName, "peer_address", peerAddress),
@@ -116,7 +116,7 @@ func TestAccNetworkManagerConnectPeer_subnetARN(t *testing.T) {
 	resourceName := "aws_networkmanager_connect_peer.test"
 	subnetResourceName := "aws_subnet.test2"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	peerAddress := "1.1.1.1"
+	peerAddress := "10.0.2.100" // Must be an address inside the subnet CIDR range.
 	protocol := "NO_ENCAP"
 	asn := "65501"
 
@@ -134,7 +134,7 @@ func TestAccNetworkManagerConnectPeer_subnetARN(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.peer_address", peerAddress),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.protocol", "NO_ENCAP"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.bgp_configurations.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.bgp_configurations.#", acctest.Ct2),
 					resource.TestCheckResourceAttrSet(resourceName, "connect_attachment_id"),
 					resource.TestCheckResourceAttr(resourceName, "peer_address", peerAddress),
 					resource.TestCheckResourceAttr(resourceName, "edge_location", acctest.Region()),
