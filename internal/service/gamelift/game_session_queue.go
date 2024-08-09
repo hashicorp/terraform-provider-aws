@@ -297,8 +297,8 @@ func expandGameSessionQueueDestinations(tfList []interface{}) []awstypes.GameSes
 func expandGameSessionPlayerLatencyPolicies(tfList []interface{}) []awstypes.PlayerLatencyPolicy {
 	if len(tfList) < 1 {
 		return nil
-
 	}
+
 	var apiObjects []awstypes.PlayerLatencyPolicy
 
 	for _, tfMapRaw := range tfList {
