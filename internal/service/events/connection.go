@@ -476,376 +476,372 @@ func waitConnectionDeleted(ctx context.Context, conn *eventbridge.Client, name s
 	return nil, err
 }
 
-func expandCreateConnectionAuthRequestParameters(config []interface{}) *types.CreateConnectionAuthRequestParameters {
-	authParameters := &types.CreateConnectionAuthRequestParameters{}
+func expandCreateConnectionAuthRequestParameters(tfList []interface{}) *types.CreateConnectionAuthRequestParameters {
+	apiObject := &types.CreateConnectionAuthRequestParameters{}
 
-	for _, c := range config {
-		if c == nil {
+	for _, item := range tfList {
+		if item == nil {
 			continue
 		}
 
-		param := c.(map[string]interface{})
-		if v, ok := param["api_key"].([]interface{}); ok && len(v) > 0 {
-			authParameters.ApiKeyAuthParameters = expandCreateConnectionAPIKeyAuthRequestParameters(v)
+		tfMap := item.(map[string]interface{})
+		if v, ok := tfMap["api_key"].([]interface{}); ok && len(v) > 0 {
+			apiObject.ApiKeyAuthParameters = expandCreateConnectionAPIKeyAuthRequestParameters(v)
 		}
-		if v, ok := param["basic"].([]interface{}); ok && len(v) > 0 {
-			authParameters.BasicAuthParameters = expandCreateConnectionBasicAuthRequestParameters(v)
+		if v, ok := tfMap["basic"].([]interface{}); ok && len(v) > 0 {
+			apiObject.BasicAuthParameters = expandCreateConnectionBasicAuthRequestParameters(v)
 		}
-		if v, ok := param["oauth"].([]interface{}); ok && len(v) > 0 {
-			authParameters.OAuthParameters = expandCreateConnectionOAuthAuthRequestParameters(v)
+		if v, ok := tfMap["oauth"].([]interface{}); ok && len(v) > 0 {
+			apiObject.OAuthParameters = expandCreateConnectionOAuthAuthRequestParameters(v)
 		}
-		if v, ok := param["invocation_http_parameters"].([]interface{}); ok && len(v) > 0 {
-			authParameters.InvocationHttpParameters = expandConnectionHTTPParameters(v)
+		if v, ok := tfMap["invocation_http_parameters"].([]interface{}); ok && len(v) > 0 {
+			apiObject.InvocationHttpParameters = expandConnectionHTTPParameters(v)
 		}
 	}
 
-	return authParameters
+	return apiObject
 }
 
-func expandCreateConnectionAPIKeyAuthRequestParameters(config []interface{}) *types.CreateConnectionApiKeyAuthRequestParameters {
-	if len(config) == 0 {
+func expandCreateConnectionAPIKeyAuthRequestParameters(tfList []interface{}) *types.CreateConnectionApiKeyAuthRequestParameters {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	apiKeyAuthParameters := &types.CreateConnectionApiKeyAuthRequestParameters{}
-	for _, c := range config {
-		if c == nil {
+	apiObject := &types.CreateConnectionApiKeyAuthRequestParameters{}
+	for _, item := range tfList {
+		if item == nil {
 			continue
 		}
 
-		param := c.(map[string]interface{})
-		if v, ok := param[names.AttrKey].(string); ok && v != "" {
-			apiKeyAuthParameters.ApiKeyName = aws.String(v)
+		tfMap := item.(map[string]interface{})
+		if v, ok := tfMap[names.AttrKey].(string); ok && v != "" {
+			apiObject.ApiKeyName = aws.String(v)
 		}
-		if v, ok := param[names.AttrValue].(string); ok && v != "" {
-			apiKeyAuthParameters.ApiKeyValue = aws.String(v)
+		if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
+			apiObject.ApiKeyValue = aws.String(v)
 		}
 	}
 
-	return apiKeyAuthParameters
+	return apiObject
 }
 
-func expandCreateConnectionBasicAuthRequestParameters(config []interface{}) *types.CreateConnectionBasicAuthRequestParameters {
-	if len(config) == 0 {
+func expandCreateConnectionBasicAuthRequestParameters(tfList []interface{}) *types.CreateConnectionBasicAuthRequestParameters {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	basicAuthParameters := &types.CreateConnectionBasicAuthRequestParameters{}
-	for _, c := range config {
-		if c == nil {
+	apiObject := &types.CreateConnectionBasicAuthRequestParameters{}
+	for _, item := range tfList {
+		if item == nil {
 			continue
 		}
 
-		param := c.(map[string]interface{})
-		if v, ok := param[names.AttrUsername].(string); ok && v != "" {
-			basicAuthParameters.Username = aws.String(v)
+		tfMap := item.(map[string]interface{})
+		if v, ok := tfMap[names.AttrUsername].(string); ok && v != "" {
+			apiObject.Username = aws.String(v)
 		}
-		if v, ok := param[names.AttrPassword].(string); ok && v != "" {
-			basicAuthParameters.Password = aws.String(v)
+		if v, ok := tfMap[names.AttrPassword].(string); ok && v != "" {
+			apiObject.Password = aws.String(v)
 		}
 	}
 
-	return basicAuthParameters
+	return apiObject
 }
 
-func expandCreateConnectionOAuthAuthRequestParameters(config []interface{}) *types.CreateConnectionOAuthRequestParameters {
-	if len(config) == 0 {
+func expandCreateConnectionOAuthAuthRequestParameters(tfList []interface{}) *types.CreateConnectionOAuthRequestParameters {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	oAuthParameters := &types.CreateConnectionOAuthRequestParameters{}
-	for _, c := range config {
-		if c == nil {
+	apiObject := &types.CreateConnectionOAuthRequestParameters{}
+	for _, item := range tfList {
+		if item == nil {
 			continue
 		}
 
-		param := c.(map[string]interface{})
-		if v, ok := param["authorization_endpoint"].(string); ok && v != "" {
-			oAuthParameters.AuthorizationEndpoint = aws.String(v)
+		tfMap := item.(map[string]interface{})
+		if v, ok := tfMap["authorization_endpoint"].(string); ok && v != "" {
+			apiObject.AuthorizationEndpoint = aws.String(v)
 		}
-		if v, ok := param["http_method"].(string); ok && v != "" {
-			oAuthParameters.HttpMethod = types.ConnectionOAuthHttpMethod(v)
+		if v, ok := tfMap["http_method"].(string); ok && v != "" {
+			apiObject.HttpMethod = types.ConnectionOAuthHttpMethod(v)
 		}
-		if v, ok := param["oauth_http_parameters"].([]interface{}); ok && len(v) > 0 {
-			oAuthParameters.OAuthHttpParameters = expandConnectionHTTPParameters(v)
+		if v, ok := tfMap["oauth_http_parameters"].([]interface{}); ok && len(v) > 0 {
+			apiObject.OAuthHttpParameters = expandConnectionHTTPParameters(v)
 		}
-		if v, ok := param["client_parameters"].([]interface{}); ok && len(v) > 0 {
-			oAuthParameters.ClientParameters = expandCreateConnectionOAuthClientRequestParameters(v)
+		if v, ok := tfMap["client_parameters"].([]interface{}); ok && len(v) > 0 {
+			apiObject.ClientParameters = expandCreateConnectionOAuthClientRequestParameters(v)
 		}
 	}
 
-	return oAuthParameters
+	return apiObject
 }
 
-func expandCreateConnectionOAuthClientRequestParameters(config []interface{}) *types.CreateConnectionOAuthClientRequestParameters {
-	oAuthClientRequestParameters := &types.CreateConnectionOAuthClientRequestParameters{}
+func expandCreateConnectionOAuthClientRequestParameters(tfList []interface{}) *types.CreateConnectionOAuthClientRequestParameters {
+	apiObject := &types.CreateConnectionOAuthClientRequestParameters{}
 
-	for _, c := range config {
-		if c == nil {
+	for _, item := range tfList {
+		if item == nil {
 			continue
 		}
 
-		param := c.(map[string]interface{})
-		if v, ok := param[names.AttrClientID].(string); ok && v != "" {
-			oAuthClientRequestParameters.ClientID = aws.String(v)
+		tfMap := item.(map[string]interface{})
+		if v, ok := tfMap[names.AttrClientID].(string); ok && v != "" {
+			apiObject.ClientID = aws.String(v)
 		}
-		if v, ok := param[names.AttrClientSecret].(string); ok && v != "" {
-			oAuthClientRequestParameters.ClientSecret = aws.String(v)
+		if v, ok := tfMap[names.AttrClientSecret].(string); ok && v != "" {
+			apiObject.ClientSecret = aws.String(v)
 		}
 	}
 
-	return oAuthClientRequestParameters
+	return apiObject
 }
 
-func expandConnectionHTTPParameters(config []interface{}) *types.ConnectionHttpParameters {
-	if len(config) == 0 {
+func expandConnectionHTTPParameters(tfList []interface{}) *types.ConnectionHttpParameters {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	httpParameters := &types.ConnectionHttpParameters{}
-	for _, c := range config {
-		if c == nil {
+	apiObject := &types.ConnectionHttpParameters{}
+	for _, item := range tfList {
+		if item == nil {
 			continue
 		}
 
-		param := c.(map[string]interface{})
-		if v, ok := param["body"].([]interface{}); ok && len(v) > 0 {
-			httpParameters.BodyParameters = expandConnectionHTTPParametersBody(v)
+		tfMap := item.(map[string]interface{})
+		if v, ok := tfMap["body"].([]interface{}); ok && len(v) > 0 {
+			apiObject.BodyParameters = expandConnectionHTTPParametersBody(v)
 		}
-		if v, ok := param[names.AttrHeader].([]interface{}); ok && len(v) > 0 {
-			httpParameters.HeaderParameters = expandConnectionHTTPParametersHeader(v)
+		if v, ok := tfMap[names.AttrHeader].([]interface{}); ok && len(v) > 0 {
+			apiObject.HeaderParameters = expandConnectionHTTPParametersHeader(v)
 		}
-		if v, ok := param["query_string"].([]interface{}); ok && len(v) > 0 {
-			httpParameters.QueryStringParameters = expandConnectionHTTPParametersQueryString(v)
+		if v, ok := tfMap["query_string"].([]interface{}); ok && len(v) > 0 {
+			apiObject.QueryStringParameters = expandConnectionHTTPParametersQueryString(v)
 		}
 	}
 
-	return httpParameters
+	return apiObject
 }
 
-func expandConnectionHTTPParametersBody(config []interface{}) []types.ConnectionBodyParameter {
-	if len(config) == 0 {
+func expandConnectionHTTPParametersBody(tfList []interface{}) []types.ConnectionBodyParameter {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	var parameters []types.ConnectionBodyParameter
-	for _, c := range config {
-		if c == nil {
+	var apiObjects []types.ConnectionBodyParameter
+	for _, item := range tfList {
+		if item == nil {
 			continue
 		}
 
-		parameter := types.ConnectionBodyParameter{}
-		input := c.(map[string]interface{})
-		if v, ok := input[names.AttrKey].(string); ok && v != "" {
-			parameter.Key = aws.String(v)
+		apiObject := types.ConnectionBodyParameter{}
+		tfMap := item.(map[string]interface{})
+		if v, ok := tfMap[names.AttrKey].(string); ok && v != "" {
+			apiObject.Key = aws.String(v)
 		}
-		if v, ok := input[names.AttrValue].(string); ok && v != "" {
-			parameter.Value = aws.String(v)
+		if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
+			apiObject.Value = aws.String(v)
 		}
-		if v, ok := input["is_value_secret"].(bool); ok {
-			parameter.IsValueSecret = v
+		if v, ok := tfMap["is_value_secret"].(bool); ok {
+			apiObject.IsValueSecret = v
 		}
-		parameters = append(parameters, parameter)
+		apiObjects = append(apiObjects, apiObject)
 	}
 
-	return parameters
+	return apiObjects
 }
 
-func expandConnectionHTTPParametersHeader(config []interface{}) []types.ConnectionHeaderParameter {
-	if len(config) == 0 {
+func expandConnectionHTTPParametersHeader(tfList []interface{}) []types.ConnectionHeaderParameter {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	var parameters []types.ConnectionHeaderParameter
-	for _, c := range config {
-		if c == nil {
+	var apiObjects []types.ConnectionHeaderParameter
+	for _, item := range tfList {
+		if item == nil {
 			continue
 		}
 
-		parameter := types.ConnectionHeaderParameter{}
-		input := c.(map[string]interface{})
-		if v, ok := input[names.AttrKey].(string); ok && v != "" {
-			parameter.Key = aws.String(v)
+		apiObject := types.ConnectionHeaderParameter{}
+		tfMap := item.(map[string]interface{})
+		if v, ok := tfMap[names.AttrKey].(string); ok && v != "" {
+			apiObject.Key = aws.String(v)
 		}
-		if v, ok := input[names.AttrValue].(string); ok && v != "" {
-			parameter.Value = aws.String(v)
+		if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
+			apiObject.Value = aws.String(v)
 		}
-		if v, ok := input["is_value_secret"].(bool); ok {
-			parameter.IsValueSecret = v
+		if v, ok := tfMap["is_value_secret"].(bool); ok {
+			apiObject.IsValueSecret = v
 		}
-		parameters = append(parameters, parameter)
+		apiObjects = append(apiObjects, apiObject)
 	}
 
-	return parameters
+	return apiObjects
 }
 
-func expandConnectionHTTPParametersQueryString(config []interface{}) []types.ConnectionQueryStringParameter {
-	if len(config) == 0 {
+func expandConnectionHTTPParametersQueryString(tfList []interface{}) []types.ConnectionQueryStringParameter {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	var parameters []types.ConnectionQueryStringParameter
-	for _, c := range config {
-		if c == nil {
+	var apiObjects []types.ConnectionQueryStringParameter
+	for _, item := range tfList {
+		if item == nil {
 			continue
 		}
 
-		parameter := types.ConnectionQueryStringParameter{}
-		input := c.(map[string]interface{})
-		if v, ok := input[names.AttrKey].(string); ok && v != "" {
-			parameter.Key = aws.String(v)
+		apiObject := types.ConnectionQueryStringParameter{}
+		tfMap := item.(map[string]interface{})
+		if v, ok := tfMap[names.AttrKey].(string); ok && v != "" {
+			apiObject.Key = aws.String(v)
 		}
-		if v, ok := input[names.AttrValue].(string); ok && v != "" {
-			parameter.Value = aws.String(v)
+		if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
+			apiObject.Value = aws.String(v)
 		}
-		if v, ok := input["is_value_secret"].(bool); ok {
-			parameter.IsValueSecret = v
+		if v, ok := tfMap["is_value_secret"].(bool); ok {
+			apiObject.IsValueSecret = v
 		}
-		parameters = append(parameters, parameter)
+		apiObjects = append(apiObjects, apiObject)
 	}
 
-	return parameters
+	return apiObjects
 }
 
-func flattenConnectionAuthParameters(authParameters *types.ConnectionAuthResponseParameters, d *schema.ResourceData) []map[string]interface{} {
-	config := make(map[string]interface{})
+func flattenConnectionAuthParameters(apiObject *types.ConnectionAuthResponseParameters, d *schema.ResourceData) []map[string]interface{} {
+	tfMap := make(map[string]interface{})
 
-	if authParameters.ApiKeyAuthParameters != nil {
-		config["api_key"] = flattenConnectionAPIKeyAuthParameters(authParameters.ApiKeyAuthParameters, d)
+	if apiObject.ApiKeyAuthParameters != nil {
+		tfMap["api_key"] = flattenConnectionAPIKeyAuthParameters(apiObject.ApiKeyAuthParameters, d)
 	}
 
-	if authParameters.BasicAuthParameters != nil {
-		config["basic"] = flattenConnectionBasicAuthParameters(authParameters.BasicAuthParameters, d)
+	if apiObject.BasicAuthParameters != nil {
+		tfMap["basic"] = flattenConnectionBasicAuthParameters(apiObject.BasicAuthParameters, d)
 	}
 
-	if authParameters.OAuthParameters != nil {
-		config["oauth"] = flattenConnectionOAuthParameters(authParameters.OAuthParameters, d)
+	if apiObject.OAuthParameters != nil {
+		tfMap["oauth"] = flattenConnectionOAuthParameters(apiObject.OAuthParameters, d)
 	}
 
-	if authParameters.InvocationHttpParameters != nil {
-		config["invocation_http_parameters"] = flattenConnectionHTTPParameters(authParameters.InvocationHttpParameters, d, "auth_parameters.0.invocation_http_parameters")
+	if apiObject.InvocationHttpParameters != nil {
+		tfMap["invocation_http_parameters"] = flattenConnectionHTTPParameters(apiObject.InvocationHttpParameters, d, "auth_parameters.0.invocation_http_parameters")
 	}
 
-	result := []map[string]interface{}{config}
-	return result
+	return []map[string]interface{}{tfMap}
 }
 
-func flattenConnectionAPIKeyAuthParameters(apiKeyAuthParameters *types.ConnectionApiKeyAuthResponseParameters, d *schema.ResourceData) []map[string]interface{} {
-	if apiKeyAuthParameters == nil {
+func flattenConnectionAPIKeyAuthParameters(apiObject *types.ConnectionApiKeyAuthResponseParameters, d *schema.ResourceData) []map[string]interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
-	config := make(map[string]interface{})
-	if apiKeyAuthParameters.ApiKeyName != nil {
-		config[names.AttrKey] = aws.ToString(apiKeyAuthParameters.ApiKeyName)
+	tfMap := make(map[string]interface{})
+	if apiObject.ApiKeyName != nil {
+		tfMap[names.AttrKey] = aws.ToString(apiObject.ApiKeyName)
 	}
 
 	if v, ok := d.GetOk("auth_parameters.0.api_key.0.value"); ok {
-		config[names.AttrValue] = v.(string)
+		tfMap[names.AttrValue] = v.(string)
 	}
 
-	result := []map[string]interface{}{config}
-	return result
+	return []map[string]interface{}{tfMap}
 }
 
-func flattenConnectionBasicAuthParameters(basicAuthParameters *types.ConnectionBasicAuthResponseParameters, d *schema.ResourceData) []map[string]interface{} {
-	if basicAuthParameters == nil {
+func flattenConnectionBasicAuthParameters(apiObject *types.ConnectionBasicAuthResponseParameters, d *schema.ResourceData) []map[string]interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
-	config := make(map[string]interface{})
-	if basicAuthParameters.Username != nil {
-		config[names.AttrUsername] = aws.ToString(basicAuthParameters.Username)
+	tfMap := make(map[string]interface{})
+	if apiObject.Username != nil {
+		tfMap[names.AttrUsername] = aws.ToString(apiObject.Username)
 	}
 
 	if v, ok := d.GetOk("auth_parameters.0.basic.0.password"); ok {
-		config[names.AttrPassword] = v.(string)
+		tfMap[names.AttrPassword] = v.(string)
 	}
 
-	result := []map[string]interface{}{config}
-	return result
+	return []map[string]interface{}{tfMap}
 }
 
-func flattenConnectionOAuthParameters(oAuthParameters *types.ConnectionOAuthResponseParameters, d *schema.ResourceData) []map[string]interface{} {
-	if oAuthParameters == nil {
+func flattenConnectionOAuthParameters(apiObject *types.ConnectionOAuthResponseParameters, d *schema.ResourceData) []map[string]interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
-	config := make(map[string]interface{})
-	if oAuthParameters.AuthorizationEndpoint != nil {
-		config["authorization_endpoint"] = aws.ToString(oAuthParameters.AuthorizationEndpoint)
+	tfMap := make(map[string]interface{})
+	if apiObject.AuthorizationEndpoint != nil {
+		tfMap["authorization_endpoint"] = aws.ToString(apiObject.AuthorizationEndpoint)
 	}
-	config["http_method"] = oAuthParameters.HttpMethod
-	config["oauth_http_parameters"] = flattenConnectionHTTPParameters(oAuthParameters.OAuthHttpParameters, d, "auth_parameters.0.oauth.0.oauth_http_parameters")
-	config["client_parameters"] = flattenConnectionOAuthClientResponseParameters(oAuthParameters.ClientParameters, d)
+	tfMap["http_method"] = apiObject.HttpMethod
+	tfMap["oauth_http_parameters"] = flattenConnectionHTTPParameters(apiObject.OAuthHttpParameters, d, "auth_parameters.0.oauth.0.oauth_http_parameters")
+	tfMap["client_parameters"] = flattenConnectionOAuthClientResponseParameters(apiObject.ClientParameters, d)
 
-	result := []map[string]interface{}{config}
-	return result
+	return []map[string]interface{}{tfMap}
 }
 
-func flattenConnectionOAuthClientResponseParameters(oAuthClientRequestParameters *types.ConnectionOAuthClientResponseParameters, d *schema.ResourceData) []map[string]interface{} {
-	if oAuthClientRequestParameters == nil {
+func flattenConnectionOAuthClientResponseParameters(apiObject *types.ConnectionOAuthClientResponseParameters, d *schema.ResourceData) []map[string]interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
-	config := make(map[string]interface{})
-	if oAuthClientRequestParameters.ClientID != nil {
-		config[names.AttrClientID] = aws.ToString(oAuthClientRequestParameters.ClientID)
+	tfMap := make(map[string]interface{})
+	if apiObject.ClientID != nil {
+		tfMap[names.AttrClientID] = aws.ToString(apiObject.ClientID)
 	}
 
 	if v, ok := d.GetOk("auth_parameters.0.oauth.0.client_parameters.0.client_secret"); ok {
-		config[names.AttrClientSecret] = v.(string)
+		tfMap[names.AttrClientSecret] = v.(string)
 	}
 
-	result := []map[string]interface{}{config}
-	return result
+	return []map[string]interface{}{tfMap}
 }
 
-func flattenConnectionHTTPParameters(httpParameters *types.ConnectionHttpParameters, d *schema.ResourceData, path string) []map[string]interface{} {
-	if httpParameters == nil {
+func flattenConnectionHTTPParameters(apiObject *types.ConnectionHttpParameters, d *schema.ResourceData, path string) []map[string]interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
 	var bodyParameters []map[string]interface{}
-	for i, param := range httpParameters.BodyParameters {
-		config := make(map[string]interface{})
-		config["is_value_secret"] = param.IsValueSecret
-		config[names.AttrKey] = aws.ToString(param.Key)
+	for i, param := range apiObject.BodyParameters {
+		tfMap := make(map[string]interface{})
+		tfMap["is_value_secret"] = param.IsValueSecret
+		tfMap[names.AttrKey] = aws.ToString(param.Key)
 
 		if param.Value != nil {
-			config[names.AttrValue] = aws.ToString(param.Value)
+			tfMap[names.AttrValue] = aws.ToString(param.Value)
 		} else if v, ok := d.GetOk(fmt.Sprintf("%s.0.body.%d.value", path, i)); ok {
-			config[names.AttrValue] = v.(string)
+			tfMap[names.AttrValue] = v.(string)
 		}
-		bodyParameters = append(bodyParameters, config)
+
+		bodyParameters = append(bodyParameters, tfMap)
 	}
 
 	var headerParameters []map[string]interface{}
-	for i, param := range httpParameters.HeaderParameters {
-		config := make(map[string]interface{})
-		config["is_value_secret"] = param.IsValueSecret
-		config[names.AttrKey] = aws.ToString(param.Key)
+	for i, param := range apiObject.HeaderParameters {
+		tfMap := make(map[string]interface{})
+		tfMap["is_value_secret"] = param.IsValueSecret
+		tfMap[names.AttrKey] = aws.ToString(param.Key)
 
 		if param.Value != nil {
-			config[names.AttrValue] = aws.ToString(param.Value)
+			tfMap[names.AttrValue] = aws.ToString(param.Value)
 		} else if v, ok := d.GetOk(fmt.Sprintf("%s.0.header.%d.value", path, i)); ok {
-			config[names.AttrValue] = v.(string)
+			tfMap[names.AttrValue] = v.(string)
 		}
-		headerParameters = append(headerParameters, config)
+		headerParameters = append(headerParameters, tfMap)
 	}
 
 	var queryStringParameters []map[string]interface{}
-	for i, param := range httpParameters.QueryStringParameters {
-		config := make(map[string]interface{})
-		config["is_value_secret"] = param.IsValueSecret
-		config[names.AttrKey] = aws.ToString(param.Key)
+	for i, param := range apiObject.QueryStringParameters {
+		tfMap := make(map[string]interface{})
+		tfMap["is_value_secret"] = param.IsValueSecret
+		tfMap[names.AttrKey] = aws.ToString(param.Key)
 
 		if param.Value != nil {
-			config[names.AttrValue] = aws.ToString(param.Value)
+			tfMap[names.AttrValue] = aws.ToString(param.Value)
 		} else if v, ok := d.GetOk(fmt.Sprintf("%s.0.query_string.%d.value", path, i)); ok {
-			config[names.AttrValue] = v.(string)
+			tfMap[names.AttrValue] = v.(string)
 		}
-		queryStringParameters = append(queryStringParameters, config)
+		queryStringParameters = append(queryStringParameters, tfMap)
 	}
 
 	parameters := make(map[string]interface{})
@@ -853,127 +849,126 @@ func flattenConnectionHTTPParameters(httpParameters *types.ConnectionHttpParamet
 	parameters[names.AttrHeader] = headerParameters
 	parameters["query_string"] = queryStringParameters
 
-	result := []map[string]interface{}{parameters}
-	return result
+	return []map[string]interface{}{parameters}
 }
 
-func expandUpdateConnectionAuthRequestParameters(config []interface{}) *types.UpdateConnectionAuthRequestParameters {
-	authParameters := &types.UpdateConnectionAuthRequestParameters{}
+func expandUpdateConnectionAuthRequestParameters(tfList []interface{}) *types.UpdateConnectionAuthRequestParameters {
+	apiObject := &types.UpdateConnectionAuthRequestParameters{}
 
-	for _, c := range config {
-		if c == nil {
+	for _, item := range tfList {
+		if item == nil {
 			continue
 		}
 
-		param := c.(map[string]interface{})
-		if v, ok := param["api_key"].([]interface{}); ok && len(v) > 0 {
-			authParameters.ApiKeyAuthParameters = expandUpdateConnectionAPIKeyAuthRequestParameters(v)
+		tfMap := item.(map[string]interface{})
+		if v, ok := tfMap["api_key"].([]interface{}); ok && len(v) > 0 {
+			apiObject.ApiKeyAuthParameters = expandUpdateConnectionAPIKeyAuthRequestParameters(v)
 		}
-		if v, ok := param["basic"].([]interface{}); ok && len(v) > 0 {
-			authParameters.BasicAuthParameters = expandUpdateConnectionBasicAuthRequestParameters(v)
+		if v, ok := tfMap["basic"].([]interface{}); ok && len(v) > 0 {
+			apiObject.BasicAuthParameters = expandUpdateConnectionBasicAuthRequestParameters(v)
 		}
-		if v, ok := param["oauth"].([]interface{}); ok && len(v) > 0 {
-			authParameters.OAuthParameters = expandUpdateConnectionOAuthAuthRequestParameters(v)
+		if v, ok := tfMap["oauth"].([]interface{}); ok && len(v) > 0 {
+			apiObject.OAuthParameters = expandUpdateConnectionOAuthAuthRequestParameters(v)
 		}
-		if v, ok := param["invocation_http_parameters"].([]interface{}); ok && len(v) > 0 {
-			authParameters.InvocationHttpParameters = expandConnectionHTTPParameters(v)
+		if v, ok := tfMap["invocation_http_parameters"].([]interface{}); ok && len(v) > 0 {
+			apiObject.InvocationHttpParameters = expandConnectionHTTPParameters(v)
 		}
 	}
 
-	return authParameters
+	return apiObject
 }
 
-func expandUpdateConnectionAPIKeyAuthRequestParameters(config []interface{}) *types.UpdateConnectionApiKeyAuthRequestParameters {
-	if len(config) == 0 {
+func expandUpdateConnectionAPIKeyAuthRequestParameters(tfList []interface{}) *types.UpdateConnectionApiKeyAuthRequestParameters {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	apiKeyAuthParameters := &types.UpdateConnectionApiKeyAuthRequestParameters{}
-	for _, c := range config {
-		if c == nil {
+	apiObject := &types.UpdateConnectionApiKeyAuthRequestParameters{}
+	for _, item := range tfList {
+		if item == nil {
 			continue
 		}
 
-		param := c.(map[string]interface{})
-		if v, ok := param[names.AttrKey].(string); ok && v != "" {
-			apiKeyAuthParameters.ApiKeyName = aws.String(v)
+		tfMap := item.(map[string]interface{})
+		if v, ok := tfMap[names.AttrKey].(string); ok && v != "" {
+			apiObject.ApiKeyName = aws.String(v)
 		}
-		if v, ok := param[names.AttrValue].(string); ok && v != "" {
-			apiKeyAuthParameters.ApiKeyValue = aws.String(v)
+		if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
+			apiObject.ApiKeyValue = aws.String(v)
 		}
 	}
 
-	return apiKeyAuthParameters
+	return apiObject
 }
 
-func expandUpdateConnectionBasicAuthRequestParameters(config []interface{}) *types.UpdateConnectionBasicAuthRequestParameters {
-	if len(config) == 0 {
+func expandUpdateConnectionBasicAuthRequestParameters(tfList []interface{}) *types.UpdateConnectionBasicAuthRequestParameters {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	basicAuthParameters := &types.UpdateConnectionBasicAuthRequestParameters{}
-	for _, c := range config {
+	apiObject := &types.UpdateConnectionBasicAuthRequestParameters{}
+	for _, c := range tfList {
 		if c == nil {
 			continue
 		}
 
-		param := c.(map[string]interface{})
-		if v, ok := param[names.AttrUsername].(string); ok && v != "" {
-			basicAuthParameters.Username = aws.String(v)
+		tfMap := c.(map[string]interface{})
+		if v, ok := tfMap[names.AttrUsername].(string); ok && v != "" {
+			apiObject.Username = aws.String(v)
 		}
-		if v, ok := param[names.AttrPassword].(string); ok && v != "" {
-			basicAuthParameters.Password = aws.String(v)
+		if v, ok := tfMap[names.AttrPassword].(string); ok && v != "" {
+			apiObject.Password = aws.String(v)
 		}
 	}
 
-	return basicAuthParameters
+	return apiObject
 }
 
-func expandUpdateConnectionOAuthAuthRequestParameters(config []interface{}) *types.UpdateConnectionOAuthRequestParameters {
-	if len(config) == 0 {
+func expandUpdateConnectionOAuthAuthRequestParameters(tfList []interface{}) *types.UpdateConnectionOAuthRequestParameters {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	oAuthParameters := &types.UpdateConnectionOAuthRequestParameters{}
-	for _, c := range config {
+	apiObject := &types.UpdateConnectionOAuthRequestParameters{}
+	for _, c := range tfList {
 		if c == nil {
 			continue
 		}
 
-		param := c.(map[string]interface{})
-		if v, ok := param["authorization_endpoint"].(string); ok && v != "" {
-			oAuthParameters.AuthorizationEndpoint = aws.String(v)
+		tfMap := c.(map[string]interface{})
+		if v, ok := tfMap["authorization_endpoint"].(string); ok && v != "" {
+			apiObject.AuthorizationEndpoint = aws.String(v)
 		}
-		if v, ok := param["http_method"].(string); ok && v != "" {
-			oAuthParameters.HttpMethod = types.ConnectionOAuthHttpMethod(v)
+		if v, ok := tfMap["http_method"].(string); ok && v != "" {
+			apiObject.HttpMethod = types.ConnectionOAuthHttpMethod(v)
 		}
-		if v, ok := param["oauth_http_parameters"].([]interface{}); ok && len(v) > 0 {
-			oAuthParameters.OAuthHttpParameters = expandConnectionHTTPParameters(v)
+		if v, ok := tfMap["oauth_http_parameters"].([]interface{}); ok && len(v) > 0 {
+			apiObject.OAuthHttpParameters = expandConnectionHTTPParameters(v)
 		}
-		if v, ok := param["client_parameters"].([]interface{}); ok && len(v) > 0 {
-			oAuthParameters.ClientParameters = expandUpdateConnectionOAuthClientRequestParameters(v)
+		if v, ok := tfMap["client_parameters"].([]interface{}); ok && len(v) > 0 {
+			apiObject.ClientParameters = expandUpdateConnectionOAuthClientRequestParameters(v)
 		}
 	}
 
-	return oAuthParameters
+	return apiObject
 }
 
-func expandUpdateConnectionOAuthClientRequestParameters(config []interface{}) *types.UpdateConnectionOAuthClientRequestParameters {
-	oAuthClientRequestParameters := &types.UpdateConnectionOAuthClientRequestParameters{}
+func expandUpdateConnectionOAuthClientRequestParameters(tfList []interface{}) *types.UpdateConnectionOAuthClientRequestParameters {
+	apiObject := &types.UpdateConnectionOAuthClientRequestParameters{}
 
-	for _, c := range config {
-		if c == nil {
+	for _, item := range tfList {
+		if item == nil {
 			continue
 		}
 
-		param := c.(map[string]interface{})
-		if v, ok := param[names.AttrClientID].(string); ok && v != "" {
-			oAuthClientRequestParameters.ClientID = aws.String(v)
+		tfMap := item.(map[string]interface{})
+		if v, ok := tfMap[names.AttrClientID].(string); ok && v != "" {
+			apiObject.ClientID = aws.String(v)
 		}
-		if v, ok := param[names.AttrClientSecret].(string); ok && v != "" {
-			oAuthClientRequestParameters.ClientSecret = aws.String(v)
+		if v, ok := tfMap[names.AttrClientSecret].(string); ok && v != "" {
+			apiObject.ClientSecret = aws.String(v)
 		}
 	}
 
-	return oAuthClientRequestParameters
+	return apiObject
 }
