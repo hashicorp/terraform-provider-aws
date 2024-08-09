@@ -50,9 +50,8 @@ func resourceDNSSECConfig() *schema.Resource {
 				ForceNew: true,
 			},
 			"validation_status": {
-				Type:             schema.TypeString,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.ResolverDNSSECValidationStatus](),
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 		},
 	}
