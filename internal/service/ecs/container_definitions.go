@@ -6,10 +6,10 @@ package ecs
 import (
 	"fmt"
 	"sort"
-	_ "unsafe"
+	_ "unsafe" // Required for go:linkname
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	_ "github.com/aws/aws-sdk-go-v2/service/ecs"
+	_ "github.com/aws/aws-sdk-go-v2/service/ecs" // Required for go:linkname
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	smithyjson "github.com/aws/smithy-go/encoding/json"
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
