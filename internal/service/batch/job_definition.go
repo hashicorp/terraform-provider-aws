@@ -11,18 +11,16 @@ import (
 	"strings"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/batch"
-	"github.com/aws/aws-sdk-go-v2/service/batch/types"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
+	"github.com/aws/aws-sdk-go/service/batch"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -337,8 +335,8 @@ func ResourceJobDefinition() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[awstypes.PlatformCapability](),
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(batch.PlatformCapability_Values(), false),
 				},
 			},
 
@@ -373,7 +371,7 @@ func ResourceJobDefinition() *schema.Resource {
 										StateFunc: func(v interface{}) string {
 											return strings.ToLower(v.(string))
 										},
-										ValidateDiagFunc: enum.Validate[awstypes.RetryAction](),
+										ValidateFunc: validation.StringInSlice(batch.RetryAction_Values(), true),
 									},
 									"on_exit_code": {
 										Type:     schema.TypeString,
@@ -435,9 +433,9 @@ func ResourceJobDefinition() *schema.Resource {
 			},
 
 			"type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.JobDefinitionType](),
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice([]string{batch.JobDefinitionTypeContainer, batch.JobDefinitionTypeMultinode}, true),
 			},
 		},
 
@@ -447,18 +445,18 @@ func ResourceJobDefinition() *schema.Resource {
 
 func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BatchClient(ctx)
+	conn := meta.(*conns.AWSClient).BatchConn(ctx)
 
 	name := d.Get("name").(string)
-	jobDefinitionType := awstypes.JobDefinitionType(d.Get("type").(string))
+	jobDefinitionType := d.Get("type").(string)
 	input := &batch.RegisterJobDefinitionInput{
 		JobDefinitionName: aws.String(name),
 		PropagateTags:     aws.Bool(d.Get("propagate_tags").(bool)),
 		Tags:              getTagsIn(ctx),
-		Type:              jobDefinitionType,
+		Type:              aws.String(jobDefinitionType),
 	}
 
-	if jobDefinitionType == awstypes.JobDefinitionTypeContainer {
+	if jobDefinitionType == batch.JobDefinitionTypeContainer {
 		if v, ok := d.GetOk("node_properties"); ok && v != nil {
 			return sdkdiag.AppendErrorf(diags, "No `node_properties` can be specified when `type` is %q", jobDefinitionType)
 		}
@@ -469,7 +467,7 @@ func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, me
 				return sdkdiag.AppendErrorf(diags, "creating Batch Job Definition (%s): %s", name, err)
 			}
 
-			if input.Type == awstypes.JobDefinitionTypeContainer {
+			if aws.StringValue(input.Type) == batch.JobDefinitionTypeContainer {
 				removeEmptyEnvironmentVariables(&diags, props.Environment, cty.GetAttrPath("container_properties"))
 				input.ContainerProperties = props
 			}
@@ -478,9 +476,9 @@ func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, me
 		if v, ok := d.GetOk("eks_properties"); ok && len(v.([]interface{})) > 0 {
 			eksProps := v.([]interface{})[0].(map[string]interface{})
 			if podProps, ok := eksProps["pod_properties"].([]interface{}); ok && len(podProps) > 0 {
-				if input.Type == awstypes.JobDefinitionTypeContainer {
+				if aws.StringValue(input.Type) == batch.JobDefinitionTypeContainer {
 					props := expandEKSPodProperties(podProps[0].(map[string]interface{}))
-					input.EksProperties = &awstypes.EksProperties{
+					input.EksProperties = &batch.EksProperties{
 						PodProperties: props,
 					}
 				}
@@ -488,7 +486,7 @@ func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, me
 		}
 	}
 
-	if jobDefinitionType == awstypes.JobDefinitionTypeMultinode {
+	if jobDefinitionType == batch.JobDefinitionTypeMultinode {
 		if v, ok := d.GetOk("container_properties"); ok && v != nil {
 			return sdkdiag.AppendErrorf(diags, "No `container_properties` can be specified when `type` is %q", jobDefinitionType)
 		}
@@ -514,7 +512,7 @@ func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if v, ok := d.GetOk("platform_capabilities"); ok && v.(*schema.Set).Len() > 0 {
-		input.PlatformCapabilities = flex.ExpandStringyValueSet[awstypes.PlatformCapability](v.(*schema.Set))
+		input.PlatformCapabilities = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("retry_strategy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -522,27 +520,27 @@ func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if v, ok := d.GetOk("scheduling_priority"); ok {
-		input.SchedulingPriority = aws.Int32(int32(v.(int)))
+		input.SchedulingPriority = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("timeout"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Timeout = expandJobTimeout(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	output, err := conn.RegisterJobDefinition(ctx, input)
+	output, err := conn.RegisterJobDefinitionWithContext(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Batch Job Definition (%s): %s", name, err)
 	}
 
-	d.SetId(aws.ToString(output.JobDefinitionArn))
+	d.SetId(aws.StringValue(output.JobDefinitionArn))
 
 	return append(diags, resourceJobDefinitionRead(ctx, d, meta)...)
 }
 
 func resourceJobDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BatchClient(ctx)
+	conn := meta.(*conns.AWSClient).BatchConn(ctx)
 
 	jobDefinition, err := FindJobDefinitionByARN(ctx, conn, d.Id())
 
@@ -556,7 +554,7 @@ func resourceJobDefinitionRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "reading Batch Job Definition (%s): %s", d.Id(), err)
 	}
 
-	arn, revision := aws.ToString(jobDefinition.JobDefinitionArn), aws.ToInt32(jobDefinition.Revision)
+	arn, revision := aws.StringValue(jobDefinition.JobDefinitionArn), aws.Int64Value(jobDefinition.Revision)
 	d.Set("arn", arn)
 	d.Set("arn_prefix", strings.TrimSuffix(arn, fmt.Sprintf(":%d", revision)))
 
@@ -586,8 +584,8 @@ func resourceJobDefinitionRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "setting node_properties: %s", err)
 	}
 
-	d.Set("parameters", jobDefinition.Parameters)
-	d.Set("platform_capabilities", jobDefinition.PlatformCapabilities)
+	d.Set("parameters", aws.StringValueMap(jobDefinition.Parameters))
+	d.Set("platform_capabilities", aws.StringValueSlice(jobDefinition.PlatformCapabilities))
 	d.Set("propagate_tags", jobDefinition.PropagateTags)
 
 	if jobDefinition.RetryStrategy != nil {
@@ -618,13 +616,13 @@ func resourceJobDefinitionRead(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BatchClient(ctx)
+	conn := meta.(*conns.AWSClient).BatchConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		name := d.Get("name").(string)
 		input := &batch.RegisterJobDefinitionInput{
 			JobDefinitionName: aws.String(name),
-			Type:              awstypes.JobDefinitionType(d.Get("type").(string)),
+			Type:              aws.String(d.Get("type").(string)),
 		}
 
 		if v, ok := d.GetOk("container_properties"); ok {
@@ -633,7 +631,7 @@ func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, me
 				return sdkdiag.AppendErrorf(diags, "updating Batch Job Definition (%s): %s", name, err)
 			}
 
-			if input.Type == awstypes.JobDefinitionTypeContainer {
+			if aws.StringValue(input.Type) == batch.JobDefinitionTypeContainer {
 				removeEmptyEnvironmentVariables(&diags, props.Environment, cty.GetAttrPath("container_properties"))
 				input.ContainerProperties = props
 			}
@@ -643,7 +641,7 @@ func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, me
 			eksProps := v.([]interface{})[0].(map[string]interface{})
 			if podProps, ok := eksProps["pod_properties"].([]interface{}); ok && len(podProps) > 0 {
 				props := expandEKSPodProperties(podProps[0].(map[string]interface{}))
-				input.EksProperties = &awstypes.EksProperties{
+				input.EksProperties = &batch.EksProperties{
 					PodProperties: props,
 				}
 			}
@@ -670,11 +668,11 @@ func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, me
 		}
 
 		if v, ok := d.GetOk("platform_capabilities"); ok && v.(*schema.Set).Len() > 0 {
-			input.PlatformCapabilities = flex.ExpandStringyValueSet[awstypes.PlatformCapability](v.(*schema.Set))
+			input.PlatformCapabilities = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
 		if v, ok := d.GetOk("scheduling_priority"); ok {
-			input.SchedulingPriority = aws.Int32(int32(v.(int)))
+			input.SchedulingPriority = aws.Int64(int64(v.(int)))
 		}
 
 		if v, ok := d.GetOk("retry_strategy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -685,7 +683,7 @@ func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, me
 			input.Timeout = expandJobTimeout(v.([]interface{})[0].(map[string]interface{}))
 		}
 
-		jd, err := conn.RegisterJobDefinition(ctx, input)
+		jd, err := conn.RegisterJobDefinitionWithContext(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Batch Job Definition (%s): %s", name, err)
@@ -693,12 +691,12 @@ func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, me
 
 		// arn contains revision which is used in the Read call
 		currentARN := d.Get("arn").(string)
-		d.SetId(aws.ToString(jd.JobDefinitionArn))
+		d.SetId(aws.StringValue(jd.JobDefinitionArn))
 		d.Set("revision", jd.Revision)
 
 		if v := d.Get("deregister_on_new_revision"); v == true {
 			log.Printf("[DEBUG] Deleting Previous Batch Job Definition: %s", currentARN)
-			_, err := conn.DeregisterJobDefinition(ctx, &batch.DeregisterJobDefinitionInput{
+			_, err := conn.DeregisterJobDefinitionWithContext(ctx, &batch.DeregisterJobDefinitionInput{
 				JobDefinition: aws.String(currentARN),
 			})
 
@@ -713,7 +711,7 @@ func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceJobDefinitionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BatchClient(ctx)
+	conn := meta.(*conns.AWSClient).BatchConn(ctx)
 
 	name := d.Get("name").(string)
 	jds, err := ListActiveJobDefinitionByName(ctx, conn, name)
@@ -723,9 +721,9 @@ func resourceJobDefinitionDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	for i := range jds {
-		arn := aws.ToString(jds[i].JobDefinitionArn)
+		arn := aws.StringValue(jds[i].JobDefinitionArn)
 		log.Printf("[DEBUG] Deleting Batch Job Definition: %s", arn)
-		_, err := conn.DeregisterJobDefinition(ctx, &batch.DeregisterJobDefinitionInput{
+		_, err := conn.DeregisterJobDefinitionWithContext(ctx, &batch.DeregisterJobDefinitionInput{
 			JobDefinition: aws.String(arn),
 		})
 
@@ -737,35 +735,37 @@ func resourceJobDefinitionDelete(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func FindJobDefinitionByARN(ctx context.Context, conn *batch.Client, arn string) (*types.JobDefinition, error) {
+func FindJobDefinitionByARN(ctx context.Context, conn *batch.Batch, arn string) (*batch.JobDefinition, error) {
+	const (
+		jobDefinitionStatusInactive = "INACTIVE"
+	)
 	input := &batch.DescribeJobDefinitionsInput{
-		JobDefinitions: []string{arn},
+		JobDefinitions: aws.StringSlice([]string{arn}),
 	}
 
-	out, err := conn.DescribeJobDefinitions(ctx, input)
+	output, err := findJobDefinition(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if out == nil || len(out.JobDefinitions) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+	if status := aws.StringValue(output.Status); status == jobDefinitionStatusInactive {
+		return nil, &retry.NotFoundError{
+			Message:     status,
+			LastRequest: input,
+		}
 	}
 
-	if count := len(out.JobDefinitions); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return &out.JobDefinitions[0], nil
+	return output, nil
 }
 
-func ListActiveJobDefinitionByName(ctx context.Context, conn *batch.Client, name string) ([]awstypes.JobDefinition, error) {
+func ListActiveJobDefinitionByName(ctx context.Context, conn *batch.Batch, name string) ([]*batch.JobDefinition, error) {
 	input := &batch.DescribeJobDefinitionsInput{
 		JobDefinitionName: aws.String(name),
 		Status:            aws.String(jobDefinitionStatusActive),
 	}
 
-	output, err := conn.DescribeJobDefinitions(ctx, input)
+	output, err := conn.DescribeJobDefinitionsWithContext(ctx, input)
 
 	if err != nil {
 		return nil, err
@@ -774,14 +774,22 @@ func ListActiveJobDefinitionByName(ctx context.Context, conn *batch.Client, name
 	return output.JobDefinitions, nil
 }
 
-func findJobDefinition(ctx context.Context, conn *batch.Client, input *batch.DescribeJobDefinitionsInput) (*awstypes.JobDefinition, error) {
-	output, err := conn.DescribeJobDefinitions(ctx, input)
+func findJobDefinition(ctx context.Context, conn *batch.Batch, input *batch.DescribeJobDefinitionsInput) (*batch.JobDefinition, error) {
+	output, err := conn.DescribeJobDefinitionsWithContext(ctx, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return tfresource.AssertSingleValueResult(output.JobDefinitions)
+	if output == nil || len(output.JobDefinitions) == 0 || output.JobDefinitions[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.JobDefinitions); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output.JobDefinitions[0], nil
 }
 
 func validJobContainerProperties(v interface{}, k string) (ws []string, errors []error) {
@@ -793,8 +801,8 @@ func validJobContainerProperties(v interface{}, k string) (ws []string, errors [
 	return
 }
 
-func expandJobContainerProperties(rawProps string) (*awstypes.ContainerProperties, error) {
-	var props *awstypes.ContainerProperties
+func expandJobContainerProperties(rawProps string) (*batch.ContainerProperties, error) {
+	var props *batch.ContainerProperties
 
 	err := json.Unmarshal([]byte(rawProps), &props)
 	if err != nil {
@@ -805,7 +813,7 @@ func expandJobContainerProperties(rawProps string) (*awstypes.ContainerPropertie
 }
 
 // Convert batch.ContainerProperties object into its JSON representation
-func flattenContainerProperties(containerProperties *awstypes.ContainerProperties) (string, error) {
+func flattenContainerProperties(containerProperties *batch.ContainerProperties) (string, error) {
 	b, err := jsonutil.BuildJSON(containerProperties)
 
 	if err != nil {
@@ -824,8 +832,8 @@ func validJobNodeProperties(v interface{}, k string) (ws []string, errors []erro
 	return
 }
 
-func expandJobNodeProperties(rawProps string) (*awstypes.NodeProperties, error) {
-	var props *awstypes.NodeProperties
+func expandJobNodeProperties(rawProps string) (*batch.NodeProperties, error) {
+	var props *batch.NodeProperties
 
 	err := json.Unmarshal([]byte(rawProps), &props)
 	if err != nil {
@@ -836,7 +844,7 @@ func expandJobNodeProperties(rawProps string) (*awstypes.NodeProperties, error) 
 }
 
 // Convert batch.NodeProperties object into its JSON representation
-func flattenNodeProperties(nodeProperties *awstypes.NodeProperties) (string, error) {
+func flattenNodeProperties(nodeProperties *batch.NodeProperties) (string, error) {
 	b, err := jsonutil.BuildJSON(nodeProperties)
 
 	if err != nil {
@@ -846,24 +854,24 @@ func flattenNodeProperties(nodeProperties *awstypes.NodeProperties) (string, err
 	return string(b), nil
 }
 
-func expandJobDefinitionParameters(params map[string]interface{}) map[string]string {
-	var jobParams = make(map[string]string)
+func expandJobDefinitionParameters(params map[string]interface{}) map[string]*string {
+	var jobParams = make(map[string]*string)
 	for k, v := range params {
-		jobParams[k] = v.(string)
+		jobParams[k] = aws.String(v.(string))
 	}
 
 	return jobParams
 }
 
-func expandRetryStrategy(tfMap map[string]interface{}) *awstypes.RetryStrategy {
+func expandRetryStrategy(tfMap map[string]interface{}) *batch.RetryStrategy {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &awstypes.RetryStrategy{}
+	apiObject := &batch.RetryStrategy{}
 
 	if v, ok := tfMap["attempts"].(int); ok && v != 0 {
-		apiObject.Attempts = aws.Int32(int32(v))
+		apiObject.Attempts = aws.Int64(int64(v))
 	}
 
 	if v, ok := tfMap["evaluate_on_exit"].([]interface{}); ok && len(v) > 0 {
@@ -873,11 +881,15 @@ func expandRetryStrategy(tfMap map[string]interface{}) *awstypes.RetryStrategy {
 	return apiObject
 }
 
-func expandEvaluateOnExit(tfMap map[string]interface{}) awstypes.EvaluateOnExit {
-	apiObject := awstypes.EvaluateOnExit{}
+func expandEvaluateOnExit(tfMap map[string]interface{}) *batch.EvaluateOnExit {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &batch.EvaluateOnExit{}
 
 	if v, ok := tfMap["action"].(string); ok && v != "" {
-		apiObject.Action = awstypes.RetryAction(v)
+		apiObject.Action = aws.String(v)
 	}
 
 	if v, ok := tfMap["on_exit_code"].(string); ok && v != "" {
@@ -895,12 +907,12 @@ func expandEvaluateOnExit(tfMap map[string]interface{}) awstypes.EvaluateOnExit 
 	return apiObject
 }
 
-func expandEvaluateOnExits(tfList []interface{}) []awstypes.EvaluateOnExit {
+func expandEvaluateOnExits(tfList []interface{}) []*batch.EvaluateOnExit {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []awstypes.EvaluateOnExit
+	var apiObjects []*batch.EvaluateOnExit
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -911,13 +923,17 @@ func expandEvaluateOnExits(tfList []interface{}) []awstypes.EvaluateOnExit {
 
 		apiObject := expandEvaluateOnExit(tfMap)
 
+		if apiObject == nil {
+			continue
+		}
+
 		apiObjects = append(apiObjects, apiObject)
 	}
 
 	return apiObjects
 }
 
-func flattenRetryStrategy(apiObject *awstypes.RetryStrategy) map[string]interface{} {
+func flattenRetryStrategy(apiObject *batch.RetryStrategy) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -925,7 +941,7 @@ func flattenRetryStrategy(apiObject *awstypes.RetryStrategy) map[string]interfac
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Attempts; v != nil {
-		tfMap["attempts"] = aws.ToInt32(v)
+		tfMap["attempts"] = aws.Int64Value(v)
 	}
 
 	if v := apiObject.EvaluateOnExit; v != nil {
@@ -935,27 +951,33 @@ func flattenRetryStrategy(apiObject *awstypes.RetryStrategy) map[string]interfac
 	return tfMap
 }
 
-func flattenEvaluateOnExit(apiObject awstypes.EvaluateOnExit) map[string]interface{} {
+func flattenEvaluateOnExit(apiObject *batch.EvaluateOnExit) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
 	tfMap := map[string]interface{}{}
 
-	tfMap["action"] = string(apiObject.Action)
+	if v := apiObject.Action; v != nil {
+		tfMap["action"] = aws.StringValue(v)
+	}
 
 	if v := apiObject.OnExitCode; v != nil {
-		tfMap["on_exit_code"] = aws.ToString(v)
+		tfMap["on_exit_code"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.OnReason; v != nil {
-		tfMap["on_reason"] = aws.ToString(v)
+		tfMap["on_reason"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.OnStatusReason; v != nil {
-		tfMap["on_status_reason"] = aws.ToString(v)
+		tfMap["on_status_reason"] = aws.StringValue(v)
 	}
 
 	return tfMap
 }
 
-func flattenEvaluateOnExits(apiObjects []awstypes.EvaluateOnExit) []interface{} {
+func flattenEvaluateOnExits(apiObjects []*batch.EvaluateOnExit) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -963,27 +985,31 @@ func flattenEvaluateOnExits(apiObjects []awstypes.EvaluateOnExit) []interface{} 
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
 		tfList = append(tfList, flattenEvaluateOnExit(apiObject))
 	}
 
 	return tfList
 }
 
-func expandJobTimeout(tfMap map[string]interface{}) *awstypes.JobTimeout {
+func expandJobTimeout(tfMap map[string]interface{}) *batch.JobTimeout {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &awstypes.JobTimeout{}
+	apiObject := &batch.JobTimeout{}
 
 	if v, ok := tfMap["attempt_duration_seconds"].(int); ok && v != 0 {
-		apiObject.AttemptDurationSeconds = aws.Int32(int32(v))
+		apiObject.AttemptDurationSeconds = aws.Int64(int64(v))
 	}
 
 	return apiObject
 }
 
-func flattenJobTimeout(apiObject *awstypes.JobTimeout) map[string]interface{} {
+func flattenJobTimeout(apiObject *batch.JobTimeout) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -991,19 +1017,19 @@ func flattenJobTimeout(apiObject *awstypes.JobTimeout) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.AttemptDurationSeconds; v != nil {
-		tfMap["attempt_duration_seconds"] = aws.ToInt32(v)
+		tfMap["attempt_duration_seconds"] = aws.Int64Value(v)
 	}
 
 	return tfMap
 }
 
-func removeEmptyEnvironmentVariables(diags *diag.Diagnostics, environment []awstypes.KeyValuePair, attributePath cty.Path) {
+func removeEmptyEnvironmentVariables(diags *diag.Diagnostics, environment []*batch.KeyValuePair, attributePath cty.Path) {
 	for _, env := range environment {
-		if aws.ToString(env.Value) == "" {
+		if aws.StringValue(env.Value) == "" {
 			*diags = append(*diags, errs.NewAttributeWarningDiagnostic(
 				attributePath,
 				"Ignoring environment variable",
-				fmt.Sprintf("The environment variable %q has an empty value, which is ignored by the Batch service", aws.ToString(env.Name))),
+				fmt.Sprintf("The environment variable %q has an empty value, which is ignored by the Batch service", aws.StringValue(env.Name))),
 			)
 		}
 	}

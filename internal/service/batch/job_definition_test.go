@@ -8,11 +8,12 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/batch"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -24,7 +25,7 @@ import (
 
 func TestAccBatchJobDefinition_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var jd awstypes.JobDefinition
+	var jd batch.JobDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_job_definition.test"
 
@@ -78,7 +79,7 @@ func TestAccBatchJobDefinition_basic(t *testing.T) {
 
 func TestAccBatchJobDefinition_attributes(t *testing.T) {
 	ctx := acctest.Context(t)
-	var jd awstypes.JobDefinition
+	var jd batch.JobDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_job_definition.test"
 	resource.ParallelTest(t, resource.TestCase{
@@ -169,7 +170,7 @@ func TestAccBatchJobDefinition_attributes(t *testing.T) {
 
 func TestAccBatchJobDefinition_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var jd awstypes.JobDefinition
+	var jd batch.JobDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_job_definition.test"
 
@@ -193,7 +194,7 @@ func TestAccBatchJobDefinition_disappears(t *testing.T) {
 
 func TestAccBatchJobDefinition_PlatformCapabilities_ec2(t *testing.T) {
 	ctx := acctest.Context(t)
-	var jd awstypes.JobDefinition
+	var jd batch.JobDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_job_definition.test"
 
@@ -246,7 +247,7 @@ func TestAccBatchJobDefinition_PlatformCapabilities_ec2(t *testing.T) {
 
 func TestAccBatchJobDefinition_PlatformCapabilitiesFargate_containerPropertiesDefaults(t *testing.T) {
 	ctx := acctest.Context(t)
-	var jd awstypes.JobDefinition
+	var jd batch.JobDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_job_definition.test"
 
@@ -293,7 +294,7 @@ func TestAccBatchJobDefinition_PlatformCapabilitiesFargate_containerPropertiesDe
 
 func TestAccBatchJobDefinition_PlatformCapabilities_fargate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var jd awstypes.JobDefinition
+	var jd batch.JobDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_job_definition.test"
 
@@ -340,41 +341,41 @@ func TestAccBatchJobDefinition_PlatformCapabilities_fargate(t *testing.T) {
 
 func TestAccBatchJobDefinition_ContainerProperties_advanced(t *testing.T) {
 	ctx := acctest.Context(t)
-	var jd awstypes.JobDefinition
-	compare := awstypes.JobDefinition{
-		Parameters: map[string]string{
-			"param1": "val1",
-			"param2": "val2",
+	var jd batch.JobDefinition
+	compare := batch.JobDefinition{
+		Parameters: map[string]*string{
+			"param1": aws.String("val1"),
+			"param2": aws.String("val2"),
 		},
-		RetryStrategy: &awstypes.RetryStrategy{
-			Attempts: aws.Int32(1),
-			EvaluateOnExit: []awstypes.EvaluateOnExit{
-				{Action: awstypes.RetryActionRetry, OnStatusReason: aws.String("Host EC2*")},
-				{Action: awstypes.RetryActionExit, OnReason: aws.String("*")},
+		RetryStrategy: &batch.RetryStrategy{
+			Attempts: aws.Int64(1),
+			EvaluateOnExit: []*batch.EvaluateOnExit{
+				{Action: aws.String(strings.ToLower(batch.RetryActionRetry)), OnStatusReason: aws.String("Host EC2*")},
+				{Action: aws.String(strings.ToLower(batch.RetryActionExit)), OnReason: aws.String("*")},
 			},
 		},
-		Timeout: &awstypes.JobTimeout{
-			AttemptDurationSeconds: aws.Int32(60),
+		Timeout: &batch.JobTimeout{
+			AttemptDurationSeconds: aws.Int64(60),
 		},
-		ContainerProperties: &awstypes.ContainerProperties{
-			Command: []string{"ls", "-la"},
-			Environment: []awstypes.KeyValuePair{
+		ContainerProperties: &batch.ContainerProperties{
+			Command: []*string{aws.String("ls"), aws.String("-la")},
+			Environment: []*batch.KeyValuePair{
 				{Name: aws.String("VARNAME"), Value: aws.String("VARVAL")},
 			},
 			Image:  aws.String("busybox"),
-			Memory: aws.Int32(512),
-			MountPoints: []awstypes.MountPoint{
+			Memory: aws.Int64(512),
+			MountPoints: []*batch.MountPoint{
 				{ContainerPath: aws.String("/tmp"), ReadOnly: aws.Bool(false), SourceVolume: aws.String("tmp")},
 			},
-			ResourceRequirements: []awstypes.ResourceRequirement{},
-			Secrets:              []awstypes.Secret{},
-			Ulimits: []awstypes.Ulimit{
-				{HardLimit: aws.Int32(1024), Name: aws.String("nofile"), SoftLimit: aws.Int32(1024)},
+			ResourceRequirements: []*batch.ResourceRequirement{},
+			Secrets:              []*batch.Secret{},
+			Ulimits: []*batch.Ulimit{
+				{HardLimit: aws.Int64(1024), Name: aws.String("nofile"), SoftLimit: aws.Int64(1024)},
 			},
-			Vcpus: aws.Int32(1),
-			Volumes: []awstypes.Volume{
+			Vcpus: aws.Int64(1),
+			Volumes: []*batch.Volume{
 				{
-					Host: &awstypes.Host{SourcePath: aws.String("/tmp")},
+					Host: &batch.Host{SourcePath: aws.String("/tmp")},
 					Name: aws.String("tmp"),
 				},
 			},
@@ -418,7 +419,7 @@ func TestAccBatchJobDefinition_ContainerProperties_advanced(t *testing.T) {
 
 func TestAccBatchJobDefinition_propagateTags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var jd awstypes.JobDefinition
+	var jd batch.JobDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_job_definition.test"
 
@@ -462,7 +463,7 @@ func TestAccBatchJobDefinition_propagateTags(t *testing.T) {
 
 func TestAccBatchJobDefinition_ContainerProperties_EmptyField(t *testing.T) {
 	ctx := acctest.Context(t)
-	var jd awstypes.JobDefinition
+	var jd batch.JobDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_job_definition.test"
 
@@ -497,7 +498,7 @@ func TestAccBatchJobDefinition_ContainerProperties_EmptyField(t *testing.T) {
 
 func TestAccBatchJobDefinition_NodeProperties_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var jd awstypes.JobDefinition
+	var jd batch.JobDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_job_definition.test"
 
@@ -576,7 +577,7 @@ func TestAccBatchJobDefinition_NodeProperties_basic(t *testing.T) {
 
 func TestAccBatchJobDefinition_NodeProperties_advanced(t *testing.T) {
 	ctx := acctest.Context(t)
-	var jd awstypes.JobDefinition
+	var jd batch.JobDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_job_definition.test"
 
@@ -692,7 +693,7 @@ func TestAccBatchJobDefinition_NodeProperties_advanced(t *testing.T) {
 
 func TestAccBatchJobDefinition_EKSProperties_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var jd awstypes.JobDefinition
+	var jd batch.JobDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_job_definition.test"
 
@@ -725,7 +726,7 @@ func TestAccBatchJobDefinition_EKSProperties_basic(t *testing.T) {
 }
 func TestAccBatchJobDefinition_EKSProperties_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var jd awstypes.JobDefinition
+	var jd batch.JobDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_job_definition.test"
 
@@ -802,7 +803,7 @@ func TestAccBatchJobDefinition_createTypeMultiNodeWithContainerProperties(t *tes
 
 func TestAccBatchJobDefinition_schedulingPriority(t *testing.T) {
 	ctx := acctest.Context(t)
-	var jd awstypes.JobDefinition
+	var jd batch.JobDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_job_definition.test"
 
@@ -831,7 +832,7 @@ func TestAccBatchJobDefinition_schedulingPriority(t *testing.T) {
 	})
 }
 
-func testAccCheckJobDefinitionExists(ctx context.Context, n string, jd *awstypes.JobDefinition) resource.TestCheckFunc {
+func testAccCheckJobDefinitionExists(ctx context.Context, n string, jd *batch.JobDefinition) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -842,7 +843,7 @@ func testAccCheckJobDefinitionExists(ctx context.Context, n string, jd *awstypes
 			return fmt.Errorf("No Batch Job Queue ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn(ctx)
 
 		jobDefinition, err := tfbatch.FindJobDefinitionByARN(ctx, conn, rs.Primary.ID)
 
@@ -867,7 +868,7 @@ func testAccCheckJobDefinitionPreviousRegistered(ctx context.Context, n string) 
 			return fmt.Errorf("No Batch Job Queue ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn(ctx)
 
 		previousARN := parseJobDefinitionPreviousARN(rs.Primary.ID)
 
@@ -877,7 +878,7 @@ func testAccCheckJobDefinitionPreviousRegistered(ctx context.Context, n string) 
 			return err
 		}
 
-		if aws.ToString(jobDefinition.Status) != "ACTIVE" {
+		if aws.StringValue(jobDefinition.Status) != "ACTIVE" {
 			return fmt.Errorf("Batch Job Definition %s is a previous revision that is not ACTIVE", previousARN)
 		}
 
@@ -896,7 +897,7 @@ func testAccCheckJobDefinitionPreviousDeregistered(ctx context.Context, n string
 			return fmt.Errorf("No Batch Job Queue ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn(ctx)
 
 		previousARN := parseJobDefinitionPreviousARN(rs.Primary.ID)
 
@@ -928,21 +929,21 @@ func parseJobDefinitionPreviousARN(currentARN string) (previousARN string) {
 	return previousARN
 }
 
-func testAccCheckJobDefinitionAttributes(jd *awstypes.JobDefinition, compare *awstypes.JobDefinition) resource.TestCheckFunc {
+func testAccCheckJobDefinitionAttributes(jd *batch.JobDefinition, compare *batch.JobDefinition) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_batch_job_definition" {
 				continue
 			}
-			if aws.ToString(jd.JobDefinitionArn) != rs.Primary.Attributes["arn"] {
-				return fmt.Errorf("Bad Job Definition ARN\n\t expected: %s\n\tgot: %s\n", rs.Primary.Attributes["arn"], aws.ToString(jd.JobDefinitionArn))
+			if aws.StringValue(jd.JobDefinitionArn) != rs.Primary.Attributes["arn"] {
+				return fmt.Errorf("Bad Job Definition ARN\n\t expected: %s\n\tgot: %s\n", rs.Primary.Attributes["arn"], aws.StringValue(jd.JobDefinitionArn))
 			}
 			if compare != nil {
 				if compare.Parameters != nil && !reflect.DeepEqual(compare.Parameters, jd.Parameters) {
 					return fmt.Errorf("Bad Job Definition Params\n\t expected: %v\n\tgot: %v\n", compare.Parameters, jd.Parameters)
 				}
-				if compare.RetryStrategy != nil && aws.ToInt32(compare.RetryStrategy.Attempts) != aws.ToInt32(jd.RetryStrategy.Attempts) {
-					return fmt.Errorf("Bad Job Definition Retry Strategy\n\t expected: %d\n\tgot: %d\n", aws.ToInt32(compare.RetryStrategy.Attempts), aws.ToInt32(jd.RetryStrategy.Attempts))
+				if compare.RetryStrategy != nil && aws.Int64Value(compare.RetryStrategy.Attempts) != aws.Int64Value(jd.RetryStrategy.Attempts) {
+					return fmt.Errorf("Bad Job Definition Retry Strategy\n\t expected: %d\n\tgot: %d\n", aws.Int64Value(compare.RetryStrategy.Attempts), aws.Int64Value(jd.RetryStrategy.Attempts))
 				}
 				if compare.RetryStrategy != nil && !reflect.DeepEqual(compare.RetryStrategy.EvaluateOnExit, jd.RetryStrategy.EvaluateOnExit) {
 					return fmt.Errorf("Bad Job Definition Retry Strategy\n\t expected: %v\n\tgot: %v\n", compare.RetryStrategy.EvaluateOnExit, jd.RetryStrategy.EvaluateOnExit)
@@ -961,7 +962,7 @@ func testAccCheckJobDefinitionAttributes(jd *awstypes.JobDefinition, compare *aw
 
 func testAccCheckJobDefinitionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_batch_job_definition" {

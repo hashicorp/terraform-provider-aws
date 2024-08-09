@@ -4,8 +4,8 @@
 package batch
 
 import (
-	"github.com/aws/aws-sdk-go-v2/aws"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/batch"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
@@ -38,8 +38,8 @@ func DNSPolicy_Values() []string {
 	}
 }
 
-func expandEKSPodProperties(podPropsMap map[string]interface{}) *awstypes.EksPodProperties {
-	podProps := &awstypes.EksPodProperties{}
+func expandEKSPodProperties(podPropsMap map[string]interface{}) *batch.EksPodProperties {
+	podProps := &batch.EksPodProperties{}
 
 	if v, ok := podPropsMap["containers"]; ok {
 		containers := v.([]interface{})
@@ -55,8 +55,8 @@ func expandEKSPodProperties(podPropsMap map[string]interface{}) *awstypes.EksPod
 	}
 	if m, ok := podPropsMap["metadata"].([]interface{}); ok && len(m) > 0 {
 		if v, ok := m[0].(map[string]interface{})["labels"]; ok {
-			podProps.Metadata = &awstypes.EksMetadata{}
-			podProps.Metadata.Labels = flex.ExpandStringValueMap(v.(map[string]interface{}))
+			podProps.Metadata = &batch.EksMetadata{}
+			podProps.Metadata.Labels = flex.ExpandStringMap(v.(map[string]interface{}))
 		}
 	}
 	if v, ok := podPropsMap["service_account_name"].(string); ok && v != "" {
@@ -69,25 +69,25 @@ func expandEKSPodProperties(podPropsMap map[string]interface{}) *awstypes.EksPod
 	return podProps
 }
 
-func expandContainers(containers []interface{}) []awstypes.EksContainer {
-	var result []awstypes.EksContainer
+func expandContainers(containers []interface{}) []*batch.EksContainer {
+	var result []*batch.EksContainer
 
 	for _, v := range containers {
 		containerMap := v.(map[string]interface{})
-		container := awstypes.EksContainer{}
+		container := &batch.EksContainer{}
 
 		if v, ok := containerMap["args"]; ok {
-			container.Args = flex.ExpandStringValueList(v.([]interface{}))
+			container.Args = flex.ExpandStringList(v.([]interface{}))
 		}
 
 		if v, ok := containerMap["command"]; ok {
-			container.Command = flex.ExpandStringValueList(v.([]interface{}))
+			container.Command = flex.ExpandStringList(v.([]interface{}))
 		}
 
 		if v, ok := containerMap["env"].(*schema.Set); ok && v.Len() > 0 {
-			env := []awstypes.EksContainerEnvironmentVariable{}
+			env := []*batch.EksContainerEnvironmentVariable{}
 			for _, e := range v.List() {
-				environment := awstypes.EksContainerEnvironmentVariable{}
+				environment := &batch.EksContainerEnvironmentVariable{}
 				environ := e.(map[string]interface{})
 				if v, ok := environ["name"].(string); ok && v != "" {
 					environment.Name = aws.String(v)
@@ -111,19 +111,19 @@ func expandContainers(containers []interface{}) []awstypes.EksContainer {
 			container.Name = aws.String(v)
 		}
 		if r, ok := containerMap["resources"].([]interface{}); ok && len(r) > 0 {
-			resources := &awstypes.EksContainerResourceRequirements{}
+			resources := &batch.EksContainerResourceRequirements{}
 			res := r[0].(map[string]interface{})
 			if v, ok := res["limits"]; ok {
-				resources.Limits = flex.ExpandStringValueMap(v.(map[string]interface{}))
+				resources.Limits = flex.ExpandStringMap(v.(map[string]interface{}))
 			}
 			if v, ok := res["requests"]; ok {
-				resources.Requests = flex.ExpandStringValueMap(v.(map[string]interface{}))
+				resources.Requests = flex.ExpandStringMap(v.(map[string]interface{}))
 			}
 			container.Resources = resources
 		}
 
 		if s, ok := containerMap["security_context"].([]interface{}); ok && len(s) > 0 {
-			securityContext := &awstypes.EksContainerSecurityContext{}
+			securityContext := &batch.EksContainerSecurityContext{}
 			security := s[0].(map[string]interface{})
 			if v, ok := security["privileged"]; ok {
 				securityContext.Privileged = aws.Bool(v.(bool))
@@ -152,24 +152,24 @@ func expandContainers(containers []interface{}) []awstypes.EksContainer {
 	return result
 }
 
-func expandVolumes(volumes []interface{}) []awstypes.EksVolume {
-	var result []awstypes.EksVolume
+func expandVolumes(volumes []interface{}) []*batch.EksVolume {
+	var result []*batch.EksVolume
 	for _, v := range volumes {
-		volume := awstypes.EksVolume{}
+		volume := &batch.EksVolume{}
 		volumeMap := v.(map[string]interface{})
 		if v, ok := volumeMap["name"].(string); ok {
 			volume.Name = aws.String(v)
 		}
 		if e, ok := volumeMap["empty_dir"].([]interface{}); ok && len(e) > 0 {
 			if empty, ok := e[0].(map[string]interface{}); ok {
-				volume.EmptyDir = &awstypes.EksEmptyDir{
+				volume.EmptyDir = &batch.EksEmptyDir{
 					Medium:    aws.String(empty["medium"].(string)),
 					SizeLimit: aws.String(empty["size_limit"].(string)),
 				}
 			}
 		}
 		if h, ok := volumeMap["host_path"].([]interface{}); ok && len(h) > 0 {
-			volume.HostPath = &awstypes.EksHostPath{}
+			volume.HostPath = &batch.EksHostPath{}
 			if host, ok := h[0].(map[string]interface{}); ok {
 				if v, ok := host["path"]; ok {
 					volume.HostPath.Path = aws.String(v.(string))
@@ -177,7 +177,7 @@ func expandVolumes(volumes []interface{}) []awstypes.EksVolume {
 			}
 		}
 		if s, ok := volumeMap["secret"].([]interface{}); ok && len(s) > 0 {
-			volume.Secret = &awstypes.EksSecret{}
+			volume.Secret = &batch.EksSecret{}
 			if secret := s[0].(map[string]interface{}); ok {
 				if v, ok := secret["secret_name"]; ok {
 					volume.Secret.SecretName = aws.String(v.(string))
@@ -193,10 +193,10 @@ func expandVolumes(volumes []interface{}) []awstypes.EksVolume {
 	return result
 }
 
-func expandVolumeMounts(volumeMounts []interface{}) []awstypes.EksContainerVolumeMount {
-	var result []awstypes.EksContainerVolumeMount
+func expandVolumeMounts(volumeMounts []interface{}) []*batch.EksContainerVolumeMount {
+	var result []*batch.EksContainerVolumeMount
 	for _, v := range volumeMounts {
-		volumeMount := awstypes.EksContainerVolumeMount{}
+		volumeMount := &batch.EksContainerVolumeMount{}
 		volumeMountMap := v.(map[string]interface{})
 		if v, ok := volumeMountMap["name"]; ok {
 			volumeMount.Name = aws.String(v.(string))
@@ -213,7 +213,7 @@ func expandVolumeMounts(volumeMounts []interface{}) []awstypes.EksContainerVolum
 	return result
 }
 
-func flattenEKSProperties(eksProperties *awstypes.EksProperties) []interface{} {
+func flattenEKSProperties(eksProperties *batch.EksProperties) []interface{} {
 	var eksPropertiesList []interface{}
 	if eksProperties == nil {
 		return eksPropertiesList
@@ -227,30 +227,30 @@ func flattenEKSProperties(eksProperties *awstypes.EksProperties) []interface{} {
 	return eksPropertiesList
 }
 
-func flattenEKSPodProperties(podProperties *awstypes.EksPodProperties) (tfList []interface{}) {
+func flattenEKSPodProperties(podProperties *batch.EksPodProperties) (tfList []interface{}) {
 	tfMap := make(map[string]interface{}, 0)
 	if v := podProperties.Containers; v != nil {
 		tfMap["containers"] = flattenEKSContainers(v)
 	}
 
 	if v := podProperties.DnsPolicy; v != nil {
-		tfMap["dns_policy"] = aws.ToString(v)
+		tfMap["dns_policy"] = aws.StringValue(v)
 	}
 
 	if v := podProperties.HostNetwork; v != nil {
-		tfMap["host_network"] = aws.ToBool(v)
+		tfMap["host_network"] = aws.BoolValue(v)
 	}
 
 	if v := podProperties.Metadata; v != nil {
 		metaData := make([]map[string]interface{}, 0)
 		if v := v.Labels; v != nil {
-			metaData = append(metaData, map[string]interface{}{"labels": v})
+			metaData = append(metaData, map[string]interface{}{"labels": flex.FlattenStringMap(v)})
 		}
 		tfMap["metadata"] = metaData
 	}
 
 	if v := podProperties.ServiceAccountName; v != nil {
-		tfMap["service_account_name"] = aws.ToString(v)
+		tfMap["service_account_name"] = aws.StringValue(v)
 	}
 
 	if v := podProperties.Volumes; v != nil {
@@ -261,16 +261,16 @@ func flattenEKSPodProperties(podProperties *awstypes.EksPodProperties) (tfList [
 	return tfList
 }
 
-func flattenEKSContainers(containers []awstypes.EksContainer) (tfList []interface{}) {
+func flattenEKSContainers(containers []*batch.EksContainer) (tfList []interface{}) {
 	for _, container := range containers {
 		tfMap := map[string]interface{}{}
 
 		if v := container.Args; v != nil {
-			tfMap["args"] = flex.FlattenStringValueList(v)
+			tfMap["args"] = flex.FlattenStringList(v)
 		}
 
 		if v := container.Command; v != nil {
-			tfMap["command"] = flex.FlattenStringValueList(v)
+			tfMap["command"] = flex.FlattenStringList(v)
 		}
 
 		if v := container.Env; v != nil {
@@ -278,31 +278,31 @@ func flattenEKSContainers(containers []awstypes.EksContainer) (tfList []interfac
 		}
 
 		if v := container.Image; v != nil {
-			tfMap["image"] = aws.ToString(v)
+			tfMap["image"] = aws.StringValue(v)
 		}
 
 		if v := container.ImagePullPolicy; v != nil {
-			tfMap["image_pull_policy"] = aws.ToString(v)
+			tfMap["image_pull_policy"] = aws.StringValue(v)
 		}
 
 		if v := container.Name; v != nil {
-			tfMap["name"] = aws.ToString(v)
+			tfMap["name"] = aws.StringValue(v)
 		}
 
 		if v := container.Resources; v != nil {
 			tfMap["resources"] = []map[string]interface{}{{
-				"limits":   v.Limits,
-				"requests": v.Requests,
+				"limits":   flex.FlattenStringMap(v.Limits),
+				"requests": flex.FlattenStringMap(v.Requests),
 			}}
 		}
 
 		if v := container.SecurityContext; v != nil {
 			tfMap["security_context"] = []map[string]interface{}{{
-				"privileged":                 aws.ToBool(v.Privileged),
-				"run_as_user":                aws.ToInt64(v.RunAsUser),
-				"run_as_group":               aws.ToInt64(v.RunAsGroup),
-				"read_only_root_file_system": aws.ToBool(v.ReadOnlyRootFilesystem),
-				"run_as_non_root":            aws.ToBool(v.RunAsNonRoot),
+				"privileged":                 aws.BoolValue(v.Privileged),
+				"run_as_user":                aws.Int64Value(v.RunAsUser),
+				"run_as_group":               aws.Int64Value(v.RunAsGroup),
+				"read_only_root_file_system": aws.BoolValue(v.ReadOnlyRootFilesystem),
+				"run_as_non_root":            aws.BoolValue(v.RunAsNonRoot),
 			}}
 		}
 
@@ -315,16 +315,16 @@ func flattenEKSContainers(containers []awstypes.EksContainer) (tfList []interfac
 	return tfList
 }
 
-func flattenEKSContainerEnvironmentVariables(env []awstypes.EksContainerEnvironmentVariable) (tfList []interface{}) {
+func flattenEKSContainerEnvironmentVariables(env []*batch.EksContainerEnvironmentVariable) (tfList []interface{}) {
 	for _, e := range env {
 		tfMap := map[string]interface{}{}
 
 		if v := e.Name; v != nil {
-			tfMap["name"] = aws.ToString(v)
+			tfMap["name"] = aws.StringValue(v)
 		}
 
 		if v := e.Value; v != nil {
-			tfMap["value"] = aws.ToString(v)
+			tfMap["value"] = aws.StringValue(v)
 		}
 		tfList = append(tfList, tfMap)
 	}
@@ -332,20 +332,20 @@ func flattenEKSContainerEnvironmentVariables(env []awstypes.EksContainerEnvironm
 	return tfList
 }
 
-func flattenEKSContainerVolumeMounts(volumeMounts []awstypes.EksContainerVolumeMount) (tfList []interface{}) {
+func flattenEKSContainerVolumeMounts(volumeMounts []*batch.EksContainerVolumeMount) (tfList []interface{}) {
 	for _, v := range volumeMounts {
 		tfMap := map[string]interface{}{}
 
 		if v := v.Name; v != nil {
-			tfMap["name"] = aws.ToString(v)
+			tfMap["name"] = aws.StringValue(v)
 		}
 
 		if v := v.MountPath; v != nil {
-			tfMap["mount_path"] = aws.ToString(v)
+			tfMap["mount_path"] = aws.StringValue(v)
 		}
 
 		if v := v.ReadOnly; v != nil {
-			tfMap["read_only"] = aws.ToBool(v)
+			tfMap["read_only"] = aws.BoolValue(v)
 		}
 		tfList = append(tfList, tfMap)
 	}
@@ -353,31 +353,31 @@ func flattenEKSContainerVolumeMounts(volumeMounts []awstypes.EksContainerVolumeM
 	return tfList
 }
 
-func flattenEKSVolumes(volumes []awstypes.EksVolume) (tfList []interface{}) {
+func flattenEKSVolumes(volumes []*batch.EksVolume) (tfList []interface{}) {
 	for _, v := range volumes {
 		tfMap := map[string]interface{}{}
 
 		if v := v.Name; v != nil {
-			tfMap["name"] = aws.ToString(v)
+			tfMap["name"] = aws.StringValue(v)
 		}
 
 		if v := v.EmptyDir; v != nil {
 			tfMap["empty_dir"] = []map[string]interface{}{{
-				"medium":     aws.ToString(v.Medium),
-				"size_limit": aws.ToString(v.SizeLimit),
+				"medium":     aws.StringValue(v.Medium),
+				"size_limit": aws.StringValue(v.SizeLimit),
 			}}
 		}
 
 		if v := v.HostPath; v != nil {
 			tfMap["host_path"] = []map[string]interface{}{{
-				"path": aws.ToString(v.Path),
+				"path": aws.StringValue(v.Path),
 			}}
 		}
 
 		if v := v.Secret; v != nil {
 			tfMap["secret"] = []map[string]interface{}{{
-				"secret_name": aws.ToString(v.SecretName),
-				"optional":    aws.ToBool(v.Optional),
+				"secret_name": aws.StringValue(v.SecretName),
+				"optional":    aws.BoolValue(v.Optional),
 			}}
 		}
 		tfList = append(tfList, tfMap)
