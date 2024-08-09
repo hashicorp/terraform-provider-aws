@@ -217,6 +217,9 @@ func (flattener autoFlattener) float(ctx context.Context, vFrom reflect.Value, i
 
 	switch tTo := tTo.(type) {
 	case basetypes.Float64Typable:
+		//
+		// float32/float64 -> types.Float64.
+		//
 		float64Value := types.Float64Null()
 		if !isNullFrom {
 			switch from := vFrom.Interface().(type) {
@@ -233,9 +236,29 @@ func (flattener autoFlattener) float(ctx context.Context, vFrom reflect.Value, i
 			return diags
 		}
 
+		vTo.Set(reflect.ValueOf(v))
+		return diags
+
+	case basetypes.Float32Typable:
 		//
-		// float32/float64 -> types.Float64.
+		// float32/float64 -> types.Float32.
 		//
+		float32Value := types.Float32Null()
+		if !isNullFrom {
+			switch from := vFrom.Interface().(type) {
+			// Avoid loss of equivalence.
+			case float32:
+				float32Value = types.Float32Value(float32(decimal.NewFromFloat32(from).InexactFloat64()))
+			default:
+				float32Value = types.Float32Value(float32(vFrom.Float()))
+			}
+		}
+		v, d := tTo.ValueFromFloat32(ctx, float32Value)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
 		vTo.Set(reflect.ValueOf(v))
 		return diags
 	}
