@@ -159,6 +159,7 @@ import (
 	osis_sdkv2 "github.com/aws/aws-sdk-go-v2/service/osis"
 	paymentcryptography_sdkv2 "github.com/aws/aws-sdk-go-v2/service/paymentcryptography"
 	pcaconnectorad_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pcaconnectorad"
+	pinpoint_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pinpoint"
 	pipes_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pipes"
 	polly_sdkv2 "github.com/aws/aws-sdk-go-v2/service/polly"
 	pricing_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pricing"
@@ -238,7 +239,6 @@ import (
 	opensearchservice_sdkv1 "github.com/aws/aws-sdk-go/service/opensearchservice"
 	opsworks_sdkv1 "github.com/aws/aws-sdk-go/service/opsworks"
 	outposts_sdkv1 "github.com/aws/aws-sdk-go/service/outposts"
-	pinpoint_sdkv1 "github.com/aws/aws-sdk-go/service/pinpoint"
 	quicksight_sdkv1 "github.com/aws/aws-sdk-go/service/quicksight"
 	rds_sdkv1 "github.com/aws/aws-sdk-go/service/rds"
 	redshift_sdkv1 "github.com/aws/aws-sdk-go/service/redshift"
@@ -933,8 +933,8 @@ func (c *AWSClient) PaymentCryptographyClient(ctx context.Context) *paymentcrypt
 	return errs.Must(client[*paymentcryptography_sdkv2.Client](ctx, c, names.PaymentCryptography, make(map[string]any)))
 }
 
-func (c *AWSClient) PinpointConn(ctx context.Context) *pinpoint_sdkv1.Pinpoint {
-	return errs.Must(conn[*pinpoint_sdkv1.Pinpoint](ctx, c, names.Pinpoint, make(map[string]any)))
+func (c *AWSClient) PinpointClient(ctx context.Context) *pinpoint_sdkv2.Client {
+	return errs.Must(client[*pinpoint_sdkv2.Client](ctx, c, names.Pinpoint, make(map[string]any)))
 }
 
 func (c *AWSClient) PipesClient(ctx context.Context) *pipes_sdkv2.Client {
