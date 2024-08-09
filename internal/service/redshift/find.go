@@ -444,3 +444,32 @@ func findResourcePolicyByARN(ctx context.Context, conn *redshift.Redshift, arn s
 
 	return output.ResourcePolicy, nil
 }
+
+func findIDCApplicationByARN(ctx context.Context, conn *redshift.Redshift, arn string) (*redshift.RedshiftIdcApplication, error) {
+	input := &redshift.DescribeRedshiftIdcApplicationsInput{
+		RedshiftIdcApplicationArn: aws.String(arn),
+	}
+
+	output, err := conn.DescribeRedshiftIdcApplicationsWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, redshift.ErrCodeRedshiftIdcApplicationNotExistsFault) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.RedshiftIdcApplications) == 0 || output.RedshiftIdcApplications[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.RedshiftIdcApplications); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output.RedshiftIdcApplications[0], nil
+}
