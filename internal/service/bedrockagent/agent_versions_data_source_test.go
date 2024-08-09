@@ -22,7 +22,6 @@ func TestAccBedrockAgentVersionsDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			// acctest.PreCheckPartitionHasService(t, names.BedrockAgentEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -31,6 +30,10 @@ func TestAccBedrockAgentVersionsDataSource_basic(t *testing.T) {
 				Config: testAccAgentVersionsDataSourceConfig_basic(rName, "anthropic.claude-v2", "basic claude"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "agent_id", resourceName, "agent_id"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "agent_version_summaries.#"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "agent_version_summaries.0.%"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "agent_version_summaries.0.agent_name"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "agent_version_summaries.0.agent_version"),
 				),
 			},
 		},
@@ -49,8 +52,8 @@ resource "aws_bedrockagent_agent" "test" {
 }
 
 data "aws_bedrockagent_agent_versions" "test" {
-	depends_on = [aws_bedrockagent_agent.test]
-	agent_id = aws_bedrockagent_agent.test.agent_id
+  depends_on = [aws_bedrockagent_agent.test]
+  agent_id   = aws_bedrockagent_agent.test.agent_id
 }
 `, rName, model, desc))
 }
