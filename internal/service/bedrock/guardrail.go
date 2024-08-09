@@ -39,6 +39,7 @@ import (
 )
 
 // @FrameworkResource(name="Guardrail")
+// @Tags(identifierAttribute="arn")
 func newResourceGuardrail(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceGuardrail{}
 
