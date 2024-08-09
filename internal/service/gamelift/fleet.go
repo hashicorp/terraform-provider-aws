@@ -644,11 +644,11 @@ func expandIPPermissions(tfSet *schema.Set) []awstypes.IpPermission {
 		return nil
 	}
 
-	apiObjects := make([]awstypes.IpPermission, tfSet.Len())
+	apiObjects := make([]awstypes.IpPermission, 0)
 
-	for i, tfMapRaw := range tfSet.List() {
+	for _, tfMapRaw := range tfSet.List() {
 		tfMap := tfMapRaw.(map[string]interface{})
-		apiObjects[i] = *expandIPPermission(tfMap)
+		apiObjects = append(apiObjects, *expandIPPermission(tfMap))
 	}
 
 	return apiObjects
