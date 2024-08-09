@@ -24,27 +24,25 @@ import (
 
 func TestAccPinpointEmailTemplate_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var template pinpoint.GetEmailTemplateOutput
 	resourceName := "aws_pinpoint_email_template.test"
+	var template pinpoint.GetEmailTemplateOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			// testAccPreCheck(ctx, t)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEmailTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEmailTemplateConfig_resourceBasic(rName),
+				Config: testAccEmailTemplateConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailTemplateExists(ctx, resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "template_name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "email_template.#"),
 					resource.TestCheckResourceAttrSet(resourceName, "email_template.0.%"),
 					resource.TestCheckResourceAttrSet(resourceName, "email_template.0.subject"),
+					resource.TestCheckResourceAttr(resourceName, "email_template.0.subject", "testing"),
 				),
 			},
 			{
@@ -61,8 +59,8 @@ func TestAccPinpointEmailTemplate_basic(t *testing.T) {
 func TestAccPinpointEmailTemplate_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_pinpoint_email_template.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	var template pinpoint.GetEmailTemplateOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -71,41 +69,90 @@ func TestAccPinpointEmailTemplate_update(t *testing.T) {
 		CheckDestroy:             testAccCheckEmailTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEmailTemplateConfig_resourceBasic(rName),
+				Config: testAccEmailTemplateConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailTemplateExists(ctx, resourceName, &template),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "html", "html"),
-					resource.TestCheckResourceAttr(resourceName, "subject", "subject"),
-					resource.TestCheckResourceAttr(resourceName, "description", "description"),
-					resource.TestCheckResourceAttr(resourceName, "text", ""),
+					resource.TestCheckResourceAttr(resourceName, "template_name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "email_template.#"),
+					resource.TestCheckResourceAttrSet(resourceName, "email_template.0.%"),
+					resource.TestCheckResourceAttrSet(resourceName, "email_template.0.subject"),
+					resource.TestCheckResourceAttr(resourceName, "email_template.0.subject", "testing"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    testAccEmailtemplateImportStateIDFunc(resourceName),
+				ImportStateVerifyIdentifierAttribute: "template_name",
 			},
 			{
-				Config: testAccEmailTemplateConfig_resourceBasic2(rName),
+				Config: testAccEmailTemplateConfig_update(rName, "update"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailTemplateExists(ctx, resourceName, &template),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "html", "html"),
-					resource.TestCheckResourceAttr(resourceName, "subject", "subject"),
-					resource.TestCheckResourceAttr(resourceName, "description", "description"),
-					resource.TestCheckResourceAttr(resourceName, "text", "text"),
+					resource.TestCheckResourceAttr(resourceName, "template_name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "email_template.#"),
+					resource.TestCheckResourceAttrSet(resourceName, "email_template.0.%"),
+					resource.TestCheckResourceAttrSet(resourceName, "email_template.0.subject"),
+					resource.TestCheckResourceAttr(resourceName, "email_template.0.subject", "update"),
+				),
+			},
+			// {
+			// 	ResourceName:                         resourceName,
+			// 	ImportState:                          true,
+			// 	ImportStateIdFunc:                    testAccEmailtemplateImportStateIDFunc(resourceName),
+			// 	ImportStateVerifyIdentifierAttribute: "template_name",
+			// 	ImportStateVerify:                    true,
+			// },
+		},
+	})
+}
+
+func TestAccPinpointEmailTemplate_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_pinpoint_email_template.test"
+	var template pinpoint.GetEmailTemplateOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEmailTemplateDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEmailTemplateConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEmailTemplateExists(ctx, resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "template_name", rName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
-				Config: testAccEmailTemplateConfig_resourceBasic3(rName),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    testAccEmailtemplateImportStateIDFunc(resourceName),
+				ImportStateVerifyIdentifierAttribute: "template_name",
+			},
+			{
+				Config: testAccEmailTemplateConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailTemplateExists(ctx, resourceName, &template),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "html", "html update"),
-					resource.TestCheckResourceAttr(resourceName, "subject", "subject"),
-					resource.TestCheckResourceAttr(resourceName, "description", "description update"),
-					resource.TestCheckResourceAttr(resourceName, "text", ""),
+					resource.TestCheckResourceAttr(resourceName, "template_name", rName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+			{
+				Config: testAccEmailTemplateConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEmailTemplateExists(ctx, resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "template_name", rName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -167,7 +214,7 @@ func testAccEmailtemplateImportStateIDFunc(resourceName string) resource.ImportS
 	}
 }
 
-func testAccEmailTemplateConfig_resourceBasic(rName string) string {
+func testAccEmailTemplateConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_pinpoint_email_template" "test" {
   template_name        = %[1]q
@@ -183,25 +230,57 @@ resource "aws_pinpoint_email_template" "test" {
 `, rName)
 }
 
-func testAccEmailTemplateConfig_resourceBasic2(name string) string {
+func testAccEmailTemplateConfig_update(name, subject string) string {
 	return fmt.Sprintf(`
-resource "aws_pinpoint_email_template" "test" {
-  name        = "%s"
-  subject     = "subject"
-  html        = "html"
-  text        = "text"
-  description = "description"
-}
-`, name)
+	resource "aws_pinpoint_email_template" "test" {
+		template_name        = %[1]q
+		email_template {
+		  subject =  %[2]q
+		  text_part = "we are testing template text part"
+		  header {
+			name = "testingname"
+			value = "testingvalue"
+		  }
+		}
+	  }
+`, name, subject)
 }
 
-func testAccEmailTemplateConfig_resourceBasic3(name string) string {
+func testAccEmailTemplateConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
-resource "aws_pinpoint_email_template" "test" {
-  name        = "%s"
-  subject     = "subject"
-  html        = "html update"
-  description = "description update"
+	resource "aws_pinpoint_email_template" "test" {
+		template_name        = %[1]q
+		email_template {
+		  subject =  "testing"
+		  text_part = "we are testing template text part"
+		  header {
+			name = "testingname"
+			value = "testingvalue"
+		  }
+		}
+  tags = {
+    %[2]q = %[3]q
+  }
 }
-`, name)
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccEmailTemplateConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+	resource "aws_pinpoint_email_template" "test" {
+		template_name        = %[1]q
+		email_template {
+		  subject =  "testing"
+		  text_part = "we are testing template text part"
+		  header {
+			name = "testingname"
+			value = "testingvalue"
+		  }
+		}
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }

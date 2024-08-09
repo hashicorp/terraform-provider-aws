@@ -222,7 +222,7 @@ func (r *resourceEmailTemplate) Update(ctx context.Context, req resource.UpdateR
 			)
 			return
 		}
-		resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
+		resp.Diagnostics.Append(flex.Flatten(ctx, out, &state, flex.WithFieldNameSuffix("Request"))...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
