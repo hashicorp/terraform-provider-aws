@@ -1,4 +1,13 @@
 ## 5.63.0 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `aws_bedrockagent_agent_versions` ([#38792](https://github.com/hashicorp/terraform-provider-aws/issues/38792))
+
+BUG FIXES:
+
+* resource/aws_bedrockagent_agent_knowledge_base_association: Prepare agent when associating a knowledge base so it can be used ([#38799](https://github.com/hashicorp/terraform-provider-aws/issues/38799))
+
 ## 5.62.0 (August  8, 2024)
 
 FEATURES:
