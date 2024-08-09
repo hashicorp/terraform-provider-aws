@@ -5,42 +5,40 @@ package pinpoint_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
-	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/pinpoint"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/aws/aws-sdk-go-v2/service/pinpoint"
+	"github.com/aws/aws-sdk-go-v2/service/pinpoint/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	tfpinpoint "github.com/hashicorp/terraform-provider-aws/internal/service/pinpoint"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccPinpointEmailTemplate_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_pinpoint_email_template.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	var template pinpoint.EmailTemplateResponse
+	var template pinpoint.GetEmailTemplateOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, pinpoint.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEmailTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEmailTemplateConfig_resourceBasic1(rName),
+				Config: testAccEmailTemplateConfig_resourceBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailTemplateExists(ctx, resourceName, &template),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "html", "html"),
-					resource.TestCheckResourceAttr(resourceName, "subject", "subject"),
-					resource.TestCheckResourceAttr(resourceName, "description", "description"),
-					resource.TestCheckResourceAttr(resourceName, "text", ""),
+					resource.TestCheckResourceAttr(resourceName, "template_name", rName),
 				),
 			},
 			{
@@ -56,16 +54,16 @@ func TestAccPinpointEmailTemplate_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_pinpoint_email_template.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	var template pinpoint.EmailTemplateResponse
+	var template pinpoint.GetEmailTemplateOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, pinpoint.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEmailTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEmailTemplateConfig_resourceBasic1(rName),
+				Config: testAccEmailTemplateConfig_resourceBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailTemplateExists(ctx, resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -106,48 +104,25 @@ func TestAccPinpointEmailTemplate_update(t *testing.T) {
 	})
 }
 
-func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn(ctx)
-
-	input := &pinpoint.ListTemplatesInput{}
-
-	_, err := conn.ListTemplatesWithContext(ctx, input)
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %v", err)
-	}
-
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-}
-
-func testAccCheckEmailTemplateExists(ctx context.Context, pr string, template *pinpoint.EmailTemplateResponse) resource.TestCheckFunc {
+func testAccCheckEmailTemplateExists(ctx context.Context, name string, template *pinpoint.GetEmailTemplateOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn(ctx)
-		rs, ok := s.RootModule().Resources[pr]
+		rs, ok := s.RootModule().Resources[name]
 		if !ok {
-			return fmt.Errorf("Not found: %s", pr)
+			return create.Error(names.Pinpoint, create.ErrActionCheckingExistence, tfpinpoint.ResNameEmailTemplate, name, errors.New("not found"))
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Email Template ID is set")
+			return create.Error(names.Pinpoint, create.ErrActionCheckingExistence, tfpinpoint.ResNameEmailTemplate, name, errors.New("not set"))
 		}
 
-		input := &pinpoint.GetEmailTemplateInput{
-			TemplateName: aws.String(rs.Primary.ID),
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointClient(ctx)
 
-		templateOutput, err := conn.GetEmailTemplateWithContext(ctx, input)
+		out, err := tfpinpoint.FindEmailTemplateByName(ctx, conn, rs.Primary.ID)
 		if err != nil {
-			return err
+			return create.Error(names.Pinpoint, create.ErrActionCheckingExistence, tfpinpoint.ResNameEmailTemplate, rs.Primary.ID, err)
 		}
 
-		if templateOutput == nil || templateOutput.EmailTemplateResponse == nil {
-			return fmt.Errorf("Email Template (%s) not found", rs.Primary.ID)
-		}
-
-		*template = *templateOutput.EmailTemplateResponse
+		*template = *out
 
 		return nil
 	}
@@ -155,48 +130,39 @@ func testAccCheckEmailTemplateExists(ctx context.Context, pr string, template *p
 
 func testAccCheckEmailTemplateDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_pinpoint_email_template" {
 				continue
 			}
 
-			err := retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
-				input := pinpoint.GetEmailTemplateInput{
-					TemplateName: aws.String(rs.Primary.ID),
-				}
-
-				gto, err := conn.GetEmailTemplateWithContext(ctx, &input)
-				if err != nil {
-					if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
-						return nil
-					}
-					return retry.NonRetryableError(err)
-				}
-				if gto != nil {
-					return retry.RetryableError(fmt.Errorf("Template exists: %s", rs.Primary.ID))
-				}
-
+			_, err := tfpinpoint.FindEmailTemplateByName(ctx, conn, rs.Primary.ID)
+			if errs.IsA[*types.NotFoundException](err) {
 				return nil
-			})
-
+			}
 			if err != nil {
 				return err
 			}
+
+			return create.Error(names.Pinpoint, create.ErrActionCheckingDestroyed, tfpinpoint.ResNameEmailTemplate, rs.Primary.ID, errors.New("not destroyed"))
 		}
 
 		return nil
 	}
 }
 
-func testAccEmailTemplateConfig_resourceBasic1(name string) string {
+func testAccEmailTemplateConfig_resourceBasic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_pinpoint_email_template" "test" {
-  name        = "%s"
-  subject     = "subject"
-  html        = "html"
-  description = "description"
+  template_name        = "%s"
+  request {
+    suject = "testing"
+    header {
+      name = "testingname"
+      value = "testingvalue"
+    }
+  }
 }
 `, name)
 }
