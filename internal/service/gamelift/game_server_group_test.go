@@ -9,15 +9,14 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/gamelift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/gamelift/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	tfgamelift "github.com/hashicorp/terraform-provider-aws/internal/service/gamelift"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -593,13 +592,9 @@ func testAccCheckGameServerGroupDestroy(ctx context.Context) resource.TestCheckF
 				continue
 			}
 
-			input := gamelift.DescribeGameServerGroupInput{
-				GameServerGroupName: aws.String(rs.Primary.ID),
-			}
+			_, err := tfgamelift.FindGameServerGroupByName(ctx, conn, rs.Primary.ID)
 
-			output, err := conn.DescribeGameServerGroup(ctx, &input)
-
-			if errs.IsA[*awstypes.NotFoundException](err) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
@@ -607,43 +602,25 @@ func testAccCheckGameServerGroupDestroy(ctx context.Context) resource.TestCheckF
 				return err
 			}
 
-			if output != nil {
-				return fmt.Errorf("GameLift Game Server Group (%s) still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("GameLift Game Server Group %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckGameServerGroupExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckGameServerGroupExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("resource %s not found", resourceName)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("resource %s has not set its id", resourceName)
+			return fmt.Errorf("resource %s not found", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftClient(ctx)
 
-		input := gamelift.DescribeGameServerGroupInput{
-			GameServerGroupName: aws.String(rs.Primary.ID),
-		}
+		_, err := tfgamelift.FindGameServerGroupByName(ctx, conn, rs.Primary.ID)
 
-		output, err := conn.DescribeGameServerGroup(ctx, &input)
-
-		if err != nil {
-			return fmt.Errorf("error reading GameLift Game Server Group (%s): %w", rs.Primary.ID, err)
-		}
-
-		if output == nil {
-			return fmt.Errorf("GameLift Game Server Group (%s) not found", rs.Primary.ID)
-		}
-
-		return nil
+		return err
 	}
 }
 

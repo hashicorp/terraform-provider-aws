@@ -14,31 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindGameServerGroupByName(ctx context.Context, conn *gamelift.Client, name string) (*awstypes.GameServerGroup, error) {
-	input := &gamelift.DescribeGameServerGroupInput{
-		GameServerGroupName: aws.String(name),
-	}
-
-	output, err := conn.DescribeGameServerGroup(ctx, input)
-
-	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.GameServerGroup == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.GameServerGroup, nil
-}
-
 func FindScriptByID(ctx context.Context, conn *gamelift.Client, id string) (*awstypes.Script, error) {
 	input := &gamelift.DescribeScriptInput{
 		ScriptId: aws.String(id),

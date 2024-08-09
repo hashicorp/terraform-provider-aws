@@ -53,7 +53,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceGameServerGroup,
+			Factory:  resourceGameServerGroup,
 			TypeName: "aws_gamelift_game_server_group",
 			Name:     "Game Server Group",
 			Tags: &types.ServicePackageResourceTags{
