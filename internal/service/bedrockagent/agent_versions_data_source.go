@@ -43,9 +43,47 @@ func (d *dataSourceAgentVersions) Schema(ctx context.Context, req datasource.Sch
 			"agent_id": schema.StringAttribute{
 				Required: true,
 			},
-			"agent_version_summaries": schema.ListAttribute{
-				Computed:   true,
+		},
+		Blocks: map[string]schema.Block{
+			"agent_version_summaries": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[dsAgentVersionSummaries](ctx),
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"agent_name": schema.StringAttribute{
+							Computed: true,
+						},
+						"agent_status": schema.StringAttribute{
+							Computed: true,
+						},
+						"agent_version": schema.StringAttribute{
+							Computed: true,
+						},
+						"created_at": schema.StringAttribute{
+							Computed: true,
+						},
+						"updated_at": schema.StringAttribute{
+							Computed: true,
+						},
+						"description": schema.StringAttribute{
+							Computed: true,
+						},
+					},
+					Blocks: map[string]schema.Block{
+						"guardrail_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[guardrailConfigurationData](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"guardrail_identifier": schema.StringAttribute{
+										Computed: true,
+									},
+									"guardrail_version": schema.StringAttribute{
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 		},
 	}
