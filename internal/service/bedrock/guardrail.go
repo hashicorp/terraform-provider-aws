@@ -66,7 +66,7 @@ func (r *resourceGuardrail) Metadata(_ context.Context, req resource.MetadataReq
 func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"blocked_input_messaging": schema.StringAttribute{
 				Description: "Messaging for when violations are detected in text",
 				Required:    true,
@@ -89,7 +89,7 @@ func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaReque
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Description: "Description of the guardrail or its version",
 				Optional:    true,
 				Computed:    true,
@@ -100,8 +100,8 @@ func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaReque
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"id": framework.IDAttribute(),
-			"kms_key_arn": schema.StringAttribute{
+			names.AttrID: framework.IDAttribute(),
+			names.AttrKMSKeyARN: schema.StringAttribute{
 				Description: "The KMS key with which the guardrail was encrypted at rest",
 				Optional:    true,
 				Validators: []validator.String{
@@ -112,7 +112,7 @@ func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaReque
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Description: "Name of the guardrail",
 				Required:    true,
 				Validators: []validator.String{
@@ -120,7 +120,7 @@ func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaReque
 					stringvalidator.RegexMatches(regexp.MustCompile("^[0-9a-zA-Z-_]+$"), ""),
 				},
 			},
-			"status": schema.StringAttribute{
+			names.AttrStatus: schema.StringAttribute{
 				CustomType:  fwtypes.StringEnumType[awstypes.GuardrailStatus](),
 				Description: "Status of the guardrail",
 				Computed:    true,
@@ -175,7 +175,7 @@ func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaReque
 										},
 									},
 									// Property: Type
-									"type": schema.StringAttribute{
+									names.AttrType: schema.StringAttribute{
 										Description: "Type of filter in content policy",
 										Required:    true,
 										Validators: []validator.String{
@@ -215,7 +215,7 @@ func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaReque
 											float64validator.AtLeast(0.000000),
 										},
 									},
-									"type": schema.StringAttribute{
+									names.AttrType: schema.StringAttribute{
 										Description: "Type of contextual grounding filter",
 										Required:    true,
 										Validators: []validator.String{
@@ -244,7 +244,7 @@ func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaReque
 							Description: "List of entities.",
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"action": schema.StringAttribute{
+									names.AttrAction: schema.StringAttribute{
 										Description: "Options for sensitive information action.",
 										Required:    true,
 										Validators: []validator.String{
@@ -254,7 +254,7 @@ func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaReque
 											),
 										},
 									},
-									"type": schema.StringAttribute{
+									names.AttrType: schema.StringAttribute{
 										Description: "The currently supported PII entities",
 										Required:    true,
 										Validators: []validator.String{
@@ -301,7 +301,7 @@ func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaReque
 							Description: "List of regex.",
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"action": schema.StringAttribute{
+									names.AttrAction: schema.StringAttribute{
 										Description: "Options for sensitive information action.",
 										Required:    true,
 										Validators: []validator.String{
@@ -312,7 +312,7 @@ func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaReque
 										},
 									},
 									// Property: Description
-									"description": schema.StringAttribute{
+									names.AttrDescription: schema.StringAttribute{
 										Description: "The regex description.",
 										Optional:    true,
 										Computed:    true,
@@ -324,7 +324,7 @@ func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaReque
 										},
 									},
 									// Property: Name
-									"name": schema.StringAttribute{
+									names.AttrName: schema.StringAttribute{
 										Description: "The regex name.",
 										Required:    true,
 										Validators: []validator.String{
@@ -383,7 +383,7 @@ func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaReque
 											listplanmodifier.UseStateForUnknown(),
 										},
 									},
-									"name": schema.StringAttribute{
+									names.AttrName: schema.StringAttribute{
 										Description: "Name of topic in topic policy",
 										Required:    true,
 										Validators: []validator.String{
@@ -391,7 +391,7 @@ func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaReque
 											stringvalidator.RegexMatches(regexp.MustCompile("^[0-9a-zA-Z-_ !?.]+$"), ""),
 										},
 									},
-									"type": schema.StringAttribute{
+									names.AttrType: schema.StringAttribute{
 										Description: "Type of topic in a policy",
 										Required:    true,
 										Validators: []validator.String{
@@ -419,7 +419,7 @@ func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaReque
 							Description: "A config for the list of managed words.",
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"type": schema.StringAttribute{
+									names.AttrType: schema.StringAttribute{
 										Description: "Options for managed words.",
 										Required:    true,
 										Validators: []validator.String{
@@ -449,7 +449,7 @@ func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaReque
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
@@ -666,7 +666,7 @@ func (r *resourceGuardrail) ImportState(ctx context.Context, request resource.Im
 		return
 	}
 
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("id"), parts[0])...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), parts[0])...)
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrVersion), parts[1])...)
 }
 
