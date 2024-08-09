@@ -9,6 +9,8 @@ var (
 	ResourceEnvironmentBlueprintConfiguration = newResourceEnvironmentBlueprintConfiguration
 	IsResourceMissing                         = isResourceMissing
 	ResourceProject                           = newResourceProject
+	ResourceEnvironment                       = newResourceEnvironment
+	FindEnvironmentByID                       = findEnvironmentByID
 	ResourceGlossary                          = newResourceGlossary
 	FindGlossaryByID                          = findGlossaryByID
 )
