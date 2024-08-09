@@ -270,6 +270,37 @@ func TestAccS3BucketNotification_directoryBucket(t *testing.T) {
 	})
 }
 
+// NOTE: This test does not consider concurrent S3 bucket notification creations.
+func TestAccS3BucketNotification_preventCreateBucketNotificationWhenExists(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v s3.GetBucketNotificationConfigurationOutput
+
+	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_notification.test1"
+
+	initialConfig := acctest.ConfigCompose(testAccBucketConfig_basic(bucketName), testAccBucketNotificationConfig_basic("test1"))
+	testConfig := acctest.ConfigCompose(initialConfig, testAccBucketNotificationConfig_basic("test2"))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketNotificationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: initialConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketNotificationExists(ctx, resourceName, &v),
+				),
+			},
+			{
+				Config:      testConfig,
+				ExpectError: regexache.MustCompile(`already has bucket notification`),
+			},
+		},
+	})
+}
+
 func testAccCheckBucketNotificationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
@@ -784,4 +815,14 @@ resource "aws_s3_bucket_notification" "test" {
   eventbridge = true
 }
 `)
+}
+
+func testAccBucketNotificationConfig_basic(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket_notification" "%[1]q" {
+  bucket = aws_s3_bucket.test.id
+
+  eventbridge = true
+}
+`, rName)
 }
