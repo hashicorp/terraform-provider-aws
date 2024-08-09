@@ -510,9 +510,8 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	name := d.Get(names.AttrName).(string)
 	input, err := expandPutScalingPolicyInput(d)
-
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Auto Scaling Policy (%s): %s", name, err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	_, err = conn.PutScalingPolicy(ctx, input)
@@ -572,9 +571,8 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
 	input, err := expandPutScalingPolicyInput(d)
-
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Auto Scaling Policy (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	_, err = conn.PutScalingPolicy(ctx, input)

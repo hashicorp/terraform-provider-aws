@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -25,13 +24,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfio "github.com/hashicorp/terraform-provider-aws/internal/io"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	homedir "github.com/mitchellh/go-homedir"
 )
 
 const (
@@ -489,7 +488,7 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta in
 		conns.GlobalMutexKV.Lock(mutexKey)
 		defer conns.GlobalMutexKV.Unlock(mutexKey)
 
-		zipFile, err := readFileContents(v.(string))
+		zipFile, err := tfio.ReadFileContents(v.(string))
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading ZIP file (%s): %s", v, err)
@@ -951,7 +950,7 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			conns.GlobalMutexKV.Lock(mutexKey)
 			defer conns.GlobalMutexKV.Unlock(mutexKey)
 
-			zipFile, err := readFileContents(v.(string))
+			zipFile, err := tfio.ReadFileContents(v.(string))
 
 			if err != nil {
 				// As filename isn't set in resourceFunctionRead(), don't ovewrite the last known good value.
@@ -1381,20 +1380,6 @@ func needsFunctionConfigUpdate(d sdkv2.ResourceDiffer) bool {
 		d.HasChange("runtime") ||
 		d.HasChange(names.AttrEnvironment) ||
 		d.HasChange("ephemeral_storage")
-}
-
-func readFileContents(v string) ([]byte, error) {
-	filename, err := homedir.Expand(v)
-	if err != nil {
-		return nil, err
-	}
-
-	fileContent, err := os.ReadFile(filename)
-	if err != nil {
-		return nil, err
-	}
-
-	return fileContent, nil
 }
 
 // See https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-custom-integrations.html.
