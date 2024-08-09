@@ -135,7 +135,7 @@ func (d *jobDefinitionDataSource) Read(ctx context.Context, request datasource.R
 			JobDefinitions: []string{arn},
 		}
 
-		output, err := findJobDefinition(ctx, conn, input)
+		output, err := findJobDefinitionV2(ctx, conn, input)
 
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("reading Batch Job Definition (%s)", arn), err.Error())
@@ -155,7 +155,7 @@ func (d *jobDefinitionDataSource) Read(ctx context.Context, request datasource.R
 			Status:            aws.String(status),
 		}
 
-		output, err := findJobDefinitions(ctx, conn, input)
+		output, err := findJobDefinitionsV2(ctx, conn, input)
 
 		if len(output) == 0 {
 			err = tfresource.NewEmptyResultError(input)
@@ -211,8 +211,8 @@ func (d *jobDefinitionDataSource) ConfigValidators(context.Context) []resource.C
 	}
 }
 
-func findJobDefinition(ctx context.Context, conn *batch.Client, input *batch.DescribeJobDefinitionsInput) (*awstypes.JobDefinition, error) {
-	output, err := findJobDefinitions(ctx, conn, input)
+func findJobDefinitionV2(ctx context.Context, conn *batch.Client, input *batch.DescribeJobDefinitionsInput) (*awstypes.JobDefinition, error) {
+	output, err := findJobDefinitionsV2(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -221,7 +221,7 @@ func findJobDefinition(ctx context.Context, conn *batch.Client, input *batch.Des
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findJobDefinitions(ctx context.Context, conn *batch.Client, input *batch.DescribeJobDefinitionsInput) ([]awstypes.JobDefinition, error) {
+func findJobDefinitionsV2(ctx context.Context, conn *batch.Client, input *batch.DescribeJobDefinitionsInput) ([]awstypes.JobDefinition, error) {
 	var output []awstypes.JobDefinition
 
 	pages := batch.NewDescribeJobDefinitionsPaginator(conn, input)

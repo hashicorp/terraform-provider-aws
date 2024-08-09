@@ -13,6 +13,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/batch"
+	"github.com/aws/aws-sdk-go-v2/service/batch/types"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
 	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
 	"github.com/hashicorp/go-cty/cty"
@@ -736,7 +737,7 @@ func resourceJobDefinitionDelete(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func FindJobDefinitionByARN(ctx context.Context, conn *batch.Client, arn string) (*awstypes.JobDefinition, error) {
+func FindJobDefinitionByARN(ctx context.Context, conn *batch.Client, arn string) (*types.JobDefinition, error) {
 	input := &batch.DescribeJobDefinitionsInput{
 		JobDefinitions: []string{arn},
 	}
@@ -771,6 +772,16 @@ func ListActiveJobDefinitionByName(ctx context.Context, conn *batch.Client, name
 	}
 
 	return output.JobDefinitions, nil
+}
+
+func findJobDefinition(ctx context.Context, conn *batch.Client, input *batch.DescribeJobDefinitionsInput) (*awstypes.JobDefinition, error) {
+	output, err := conn.DescribeJobDefinitions(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output.JobDefinitions)
 }
 
 func validJobContainerProperties(v interface{}, k string) (ws []string, errors []error) {

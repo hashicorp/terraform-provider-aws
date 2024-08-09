@@ -528,11 +528,8 @@ func waitJobQueueUpdated(ctx context.Context, conn *batch.Client, id string, tim
 }
 
 func waitJobQueueDeleted(ctx context.Context, conn *batch.Client, id string, timeout time.Duration) (*awstypes.JobQueueDetail, error) {
-	pendingStates := enum.Slice(awstypes.JQStateDisabled)
-	pendingStates = append(pendingStates, enum.Slice(awstypes.JQStatusDeleting)...)
-
 	stateConf := &retry.StateChangeConf{
-		Pending:    pendingStates,
+		Pending:    []string{string(awstypes.JQStateDisabled), string(awstypes.JQStatusDeleting)},
 		Target:     enum.Slice(awstypes.JQStatusDeleted),
 		Refresh:    jobQueueRefreshStatusFunc(ctx, conn, id),
 		Timeout:    timeout,
