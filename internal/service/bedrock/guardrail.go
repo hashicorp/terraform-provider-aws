@@ -139,39 +139,16 @@ func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaReque
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"input_strength": schema.StringAttribute{
-										Required: true,
-										Validators: []validator.String{
-											stringvalidator.OneOf(
-												"NONE",
-												"LOW",
-												"MEDIUM",
-												"HIGH",
-											),
-										},
+										Required:   true,
+										CustomType: fwtypes.StringEnumType[awstypes.GuardrailFilterStrength](),
 									},
 									"output_strength": schema.StringAttribute{
-										Required: true,
-										Validators: []validator.String{
-											stringvalidator.OneOf(
-												"NONE",
-												"LOW",
-												"MEDIUM",
-												"HIGH",
-											),
-										},
+										Required:   true,
+										CustomType: fwtypes.StringEnumType[awstypes.GuardrailFilterStrength](),
 									},
 									names.AttrType: schema.StringAttribute{
-										Required: true,
-										Validators: []validator.String{
-											stringvalidator.OneOf(
-												"SEXUAL",
-												"VIOLENCE",
-												"HATE",
-												"INSULTS",
-												"MISCONDUCT",
-												"PROMPT_ATTACK",
-											),
-										},
+										Required:   true,
+										CustomType: fwtypes.StringEnumType[awstypes.GuardrailContentFilterType](),
 									},
 								},
 							},
@@ -193,7 +170,7 @@ func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaReque
 									"threshold": schema.Float64Attribute{
 										Required: true,
 										Validators: []validator.Float64{
-											float64validator.AtLeast(0.000000),
+											float64validator.AtLeast(filtersConfigThresholdMin),
 										},
 									},
 									names.AttrType: schema.StringAttribute{
@@ -218,51 +195,12 @@ func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaReque
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									names.AttrAction: schema.StringAttribute{
-										Required: true,
-										Validators: []validator.String{
-											stringvalidator.OneOf(
-												"BLOCK",
-												"ANONYMIZE",
-											),
-										},
+										Required:   true,
+										CustomType: fwtypes.StringEnumType[awstypes.GuardrailSensitiveInformationAction](),
 									},
 									names.AttrType: schema.StringAttribute{
-										Required: true,
-										Validators: []validator.String{
-											stringvalidator.OneOf(
-												"ADDRESS",
-												"AGE",
-												"AWS_ACCESS_KEY",
-												"AWS_SECRET_KEY",
-												"CA_HEALTH_NUMBER",
-												"CA_SOCIAL_INSURANCE_NUMBER",
-												"CREDIT_DEBIT_CARD_CVV",
-												"CREDIT_DEBIT_CARD_EXPIRY",
-												"CREDIT_DEBIT_CARD_NUMBER",
-												"DRIVER_ID",
-												"EMAIL",
-												"INTERNATIONAL_BANK_ACCOUNT_NUMBER",
-												"IP_ADDRESS",
-												"LICENSE_PLATE",
-												"MAC_ADDRESS",
-												"NAME",
-												"PASSWORD",
-												"PHONE",
-												"PIN",
-												"SWIFT_CODE",
-												"UK_NATIONAL_HEALTH_SERVICE_NUMBER",
-												"UK_NATIONAL_INSURANCE_NUMBER",
-												"UK_UNIQUE_TAXPAYER_REFERENCE_NUMBER",
-												"URL",
-												"USERNAME",
-												"US_BANK_ACCOUNT_NUMBER",
-												"US_BANK_ROUTING_NUMBER",
-												"US_INDIVIDUAL_TAX_IDENTIFICATION_NUMBER",
-												"US_PASSPORT_NUMBER",
-												"US_SOCIAL_SECURITY_NUMBER",
-												"VEHICLE_IDENTIFICATION_NUMBER",
-											),
-										},
+										Required:   true,
+										CustomType: fwtypes.StringEnumType[awstypes.GuardrailPiiEntityType](),
 									},
 								},
 							},
@@ -272,13 +210,8 @@ func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaReque
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									names.AttrAction: schema.StringAttribute{
-										Required: true,
-										Validators: []validator.String{
-											stringvalidator.OneOf(
-												"BLOCK",
-												"ANONYMIZE",
-											),
-										},
+										Required:   true,
+										CustomType: fwtypes.StringEnumType[awstypes.GuardrailSensitiveInformationAction](),
 									},
 									names.AttrDescription: schema.StringAttribute{
 										Optional: true,
@@ -350,12 +283,8 @@ func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaReque
 										},
 									},
 									names.AttrType: schema.StringAttribute{
-										Required: true,
-										Validators: []validator.String{
-											stringvalidator.OneOf(
-												"DENY",
-											),
-										},
+										Required:   true,
+										CustomType: fwtypes.StringEnumType[awstypes.GuardrailTopicType](),
 									},
 								},
 							},
@@ -375,12 +304,8 @@ func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaReque
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									names.AttrType: schema.StringAttribute{
-										Required: true,
-										Validators: []validator.String{
-											stringvalidator.OneOf(
-												"PROFANITY",
-											),
-										},
+										Required:   true,
+										CustomType: fwtypes.StringEnumType[awstypes.GuardrailManagedWordsType](),
 									},
 								},
 							},
@@ -415,6 +340,8 @@ var (
 
 	guardrailNameRegex    = regexache.MustCompile("^[0-9a-zA-Z-_]+$")
 	topicsConfigNameRegex = regexache.MustCompile("^[0-9a-zA-Z-_ !?.]+$")
+
+	filtersConfigThresholdMin = 0.000000
 )
 
 func (r *resourceGuardrail) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -750,9 +677,9 @@ type contentPolicyConfig struct {
 }
 
 type filtersConfig struct {
-	InputStrength  types.String                                                        `tfsdk:"input_strength"`
-	OutputStrength types.String                                                        `tfsdk:"output_strength"`
-	Type           fwtypes.StringEnum[awstypes.GuardrailContextualGroundingFilterType] `tfsdk:"type"`
+	InputStrength  fwtypes.StringEnum[awstypes.GuardrailFilterStrength]    `tfsdk:"input_strength"`
+	OutputStrength fwtypes.StringEnum[awstypes.GuardrailFilterStrength]    `tfsdk:"output_strength"`
+	Type           fwtypes.StringEnum[awstypes.GuardrailContentFilterType] `tfsdk:"type"`
 }
 
 type contextualGroundingPolicyConfig struct {
@@ -760,8 +687,8 @@ type contextualGroundingPolicyConfig struct {
 }
 
 type contextualGroundingFiltersConfig struct {
-	Threshold types.Float64 `tfsdk:"threshold"`
-	Type      types.String  `tfsdk:"type"`
+	Threshold types.Float64                                                       `tfsdk:"threshold"`
+	Type      fwtypes.StringEnum[awstypes.GuardrailContextualGroundingFilterType] `tfsdk:"type"`
 }
 
 type sensitiveInformationPolicyConfig struct {
@@ -770,15 +697,15 @@ type sensitiveInformationPolicyConfig struct {
 }
 
 type piiEntitiesConfig struct {
-	Action types.String `tfsdk:"action"`
-	Type   types.String `tfsdk:"type"`
+	Action fwtypes.StringEnum[awstypes.GuardrailSensitiveInformationAction] `tfsdk:"action"`
+	Type   fwtypes.StringEnum[awstypes.GuardrailPiiEntityType]              `tfsdk:"type"`
 }
 
 type regexesConfig struct {
-	Action      types.String `tfsdk:"action"`
-	Description types.String `tfsdk:"description"`
-	Name        types.String `tfsdk:"name"`
-	Pattern     types.String `tfsdk:"pattern"`
+	Action      fwtypes.StringEnum[awstypes.GuardrailSensitiveInformationAction] `tfsdk:"action"`
+	Description types.String                                                     `tfsdk:"description"`
+	Name        types.String                                                     `tfsdk:"name"`
+	Pattern     types.String                                                     `tfsdk:"pattern"`
 }
 
 type topicPolicyConfig struct {
@@ -786,10 +713,10 @@ type topicPolicyConfig struct {
 }
 
 type topicsConfig struct {
-	Definition types.String                      `tfsdk:"definition"`
-	Examples   fwtypes.ListValueOf[types.String] `tfsdk:"examples"`
-	Name       types.String                      `tfsdk:"name"`
-	Type       types.String                      `tfsdk:"type"`
+	Definition types.String                                    `tfsdk:"definition"`
+	Examples   fwtypes.ListValueOf[types.String]               `tfsdk:"examples"`
+	Name       types.String                                    `tfsdk:"name"`
+	Type       fwtypes.StringEnum[awstypes.GuardrailTopicType] `tfsdk:"type"`
 }
 
 type wordPolicyConfig struct {
@@ -798,7 +725,7 @@ type wordPolicyConfig struct {
 }
 
 type managedWordListsConfig struct {
-	Type types.String `tfsdk:"type"`
+	Type fwtypes.StringEnum[awstypes.GuardrailManagedWordsType] `tfsdk:"type"`
 }
 
 type wordsConfig struct {
