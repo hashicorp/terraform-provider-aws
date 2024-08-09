@@ -67,7 +67,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.27.3
 	github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.24.3
 	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.25.5
-	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.42.0
+	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.43.0
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.33.3
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.37.3
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.48.3
@@ -94,7 +94,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.11.3
 	github.com/aws/aws-sdk-go-v2/service/drs v1.28.3
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.34.4
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.173.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.174.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.32.0
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.25.3
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.44.3
@@ -117,7 +117,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/fsx v1.47.2
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.24.3
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.27.0
-	github.com/aws/aws-sdk-go-v2/service/glue v1.92.0
+	github.com/aws/aws-sdk-go-v2/service/glue v1.93.0
 	github.com/aws/aws-sdk-go-v2/service/grafana v1.24.3
 	github.com/aws/aws-sdk-go-v2/service/greengrass v1.25.3
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.29.3
