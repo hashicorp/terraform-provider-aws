@@ -54,7 +54,7 @@ func TestAccGameLiftGameSessionQueue_basic(t *testing.T) {
 	}
 	uTimeoutInSeconds := int64(600)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.GameLiftEndpointID)
@@ -123,7 +123,7 @@ func TestAccGameLiftGameSessionQueue_tags(t *testing.T) {
 	resourceName := "aws_gamelift_game_session_queue.test"
 	queueName := testAccGameSessionQueuePrefix + sdkacctest.RandString(8)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.GameLiftEndpointID)
@@ -185,7 +185,7 @@ func TestAccGameLiftGameSessionQueue_disappears(t *testing.T) {
 	}
 	timeoutInSeconds := int64(124)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.GameLiftEndpointID)
