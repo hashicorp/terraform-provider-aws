@@ -5,7 +5,8 @@ package batch
 
 // Exports for use in tests only.
 var (
-	ResourceJobQueue = newResourceJobQueue
+	ResourceComputeEnvironment = resourceComputeEnvironment
+	ResourceJobQueue           = newResourceJobQueue
 
 	ExpandEC2ConfigurationsUpdate           = expandEC2ConfigurationsUpdate
 	ExpandLaunchTemplateSpecificationUpdate = expandLaunchTemplateSpecificationUpdate
