@@ -52,7 +52,7 @@ resource "aws_bedrockagent_agent" "test" {
 }
 
 data "aws_bedrockagent_agent_versions" "test" {
-  agent_id   = aws_bedrockagent_agent.test.agent_id
+  agent_id = aws_bedrockagent_agent.test.agent_id
 }
 `, rName, model, desc))
 }
