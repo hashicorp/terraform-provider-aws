@@ -11,4 +11,6 @@ var (
 	ResourceProject                           = newResourceProject
 	ResourceGlossary                          = newResourceGlossary
 	FindGlossaryByID                          = findGlossaryByID
+	ResourceFormType                          = newResourceFormType
+	FindFormTypeByID                          = findFormTypeByID
 )
