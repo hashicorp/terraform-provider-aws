@@ -47,9 +47,10 @@ This resource supports the following arguments:
 * `r_studio_server_pro_app_settings` - (Optional) A collection of settings that configure user interaction with the RStudioServerPro app. See [RStudioServerProAppSettings](#r_studio_server_pro_app_settings) below.
 * `security_groups` - (Optional) A list of security group IDs that will be attached to the user.
 * `sharing_settings` - (Optional) The sharing settings. See [Sharing Settings](#sharing_settings) below.
-* `space_storage_settings` - (Optional) The storage settings for a private space. See [Space Storage Settings](#space_storage_settings) below.
+* `space_storage_settings` - (Optional) The st6orage settings for a private space. See [Space Storage Settings](#space_storage_settings) below.
 * `studio_web_portal` - (Optional) Whether the user can access Studio. If this value is set to `DISABLED`, the user cannot access Studio, even if that is the default experience for the domain. Valid values are `ENABLED` and `DISABLED`.
 * `tensor_board_app_settings` - (Optional) The TensorBoard app settings. See [TensorBoard App Settings](#tensor_board_app_settings) below.
+* `studio_web_portal_settings` - (Optional) The Studio Web Portal settings. See [`studio_web_portal_settings`](#studio_web_portal_settings) below.
 
 #### space_storage_settings
 
@@ -110,6 +111,11 @@ This resource supports the following arguments:
 
 * `access_status` - (Optional) Indicates whether the current user has access to the RStudioServerPro app. Valid values are `ENABLED` and `DISABLED`.
 * `user_group` - (Optional) The level of permissions that the user has within the RStudioServerPro app. This value defaults to `R_STUDIO_USER`. The `R_STUDIO_ADMIN` value allows the user access to the RStudio Administrative Dashboard. Valid values are `R_STUDIO_USER` and `R_STUDIO_ADMIN`.
+
+#### studio_web_portal_settings
+
+* `hidden_app_types` - (Optional) The Applications supported in Studio that are hidden from the Studio left navigation pane.
+* `hidden_ml_tools` - (Optional) The machine learning tools that are hidden from the Studio left navigation pane.
 
 ##### code_repository
 
