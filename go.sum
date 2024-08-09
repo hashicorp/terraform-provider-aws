@@ -250,6 +250,8 @@ github.com/aws/aws-sdk-go-v2/service/fms v1.35.3 h1:QeYAz3JhpkTxkS+fifDBfmgWFdSR
 github.com/aws/aws-sdk-go-v2/service/fms v1.35.3/go.mod h1:GXASgVouW5X/bmEgOoV/tkzJkp5ib7ZeA+YxMc5piqs=
 github.com/aws/aws-sdk-go-v2/service/fsx v1.47.2 h1:EDZ4UX4c8NJl5Zm2tj1OlbVdNA0wv2xNt55L6g38Va4=
 github.com/aws/aws-sdk-go-v2/service/fsx v1.47.2/go.mod h1:OKCxqzNOd8LpwsIgoWIhjTkDONHuv3uLoObiT/fbS4Q=
+github.com/aws/aws-sdk-go-v2/service/gamelift v1.33.3 h1:VPxT+CQtkd3KB2UHF851tDSUcfExpJCY/Jc/KuuZ1x0=
+github.com/aws/aws-sdk-go-v2/service/gamelift v1.33.3/go.mod h1:qwK24U3+b0JBk154r1NkgAJzMfV3qUVktUB2WrBtFwc=
 github.com/aws/aws-sdk-go-v2/service/glacier v1.24.3 h1:de8RU808VMx8km6t2wY3WDWigB6GqbNEcyVQRJFaIYs=
 github.com/aws/aws-sdk-go-v2/service/glacier v1.24.3/go.mod h1:F/qjepwnxPHHUTK9ikZp14jLyrvB18kZ/22MmaPxtHE=
 github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.27.0 h1:nlm6tZX8gwsVktDKTQe3IOagNVK1+6CGf9IpdWM6x+E=
@@ -406,6 +408,8 @@ github.com/aws/aws-sdk-go-v2/service/route53domains v1.25.3 h1:VGLIgiClxmwxBpGzH
 github.com/aws/aws-sdk-go-v2/service/route53domains v1.25.3/go.mod h1:Kgq5O7ZaDk0mTZmX6YCL+ZtZ1YcJHtGsVubp0OT77MA=
 github.com/aws/aws-sdk-go-v2/service/route53profiles v1.2.3 h1:N4f5sliNiWcp3abC+8YpcaVjXuaNJIlz/dBd+saimm0=
 github.com/aws/aws-sdk-go-v2/service/route53profiles v1.2.3/go.mod h1:r2B4BvTn3zSMK+BFHGl0q63B/nJMOk9/NukLZzqO8sY=
+github.com/aws/aws-sdk-go-v2/service/route53recoveryreadiness v1.19.3 h1:M6D+IRT6YdeL+qLIdy4u4zEoMOqq3lJnNUGt0cxEI04=
+github.com/aws/aws-sdk-go-v2/service/route53recoveryreadiness v1.19.3/go.mod h1:y4m7VlTWV77mBzMdAZWjudnobe0E77tKy5Z9+IQIku0=
 github.com/aws/aws-sdk-go-v2/service/route53resolver v1.30.3 h1:qbQ9OMsuBvjTfSiY8S7/mxezvSRtjyqcZcoBtPN4sqo=
 github.com/aws/aws-sdk-go-v2/service/route53resolver v1.30.3/go.mod h1:BQBJkxokRLgXiBgHDYichq3aNynMRSqXu26Z2Fd8bao=
 github.com/aws/aws-sdk-go-v2/service/rum v1.19.3 h1:DR+GYJRPL7eEZknnGdwm+lH686LmUBB/X2YVQDHLNY4=

@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -19,10 +18,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfio "github.com/hashicorp/terraform-provider-aws/internal/io"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"github.com/mitchellh/go-homedir"
 )
 
 const contactFlowModuleMutexKey = `aws_connect_contact_flow_module`
@@ -114,11 +113,13 @@ func resourceContactFlowModuleCreate(ctx context.Context, d *schema.ResourceData
 		// See https://github.com/hashicorp/terraform/issues/9364
 		conns.GlobalMutexKV.Lock(contactFlowModuleMutexKey)
 		defer conns.GlobalMutexKV.Unlock(contactFlowModuleMutexKey)
-		file, err := resourceContactFlowModuleLoadFileContent(filename)
+
+		file, err := tfio.ReadFileContents(filename)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "unable to load %q: %s", filename, err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
-		input.Content = aws.String(file)
+
+		input.Content = aws.String(string(file))
 	} else if v, ok := d.GetOk(names.AttrContent); ok {
 		input.Content = aws.String(v.(string))
 	}
@@ -219,11 +220,13 @@ func resourceContactFlowModuleUpdate(ctx context.Context, d *schema.ResourceData
 			// See https://github.com/hashicorp/terraform/issues/9364
 			conns.GlobalMutexKV.Lock(contactFlowModuleMutexKey)
 			defer conns.GlobalMutexKV.Unlock(contactFlowModuleMutexKey)
-			file, err := resourceContactFlowModuleLoadFileContent(filename)
+
+			file, err := tfio.ReadFileContents(filename)
 			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "unable to load %q: %s", filename, err)
+				return sdkdiag.AppendFromErr(diags, err)
 			}
-			updateContentInput.Content = aws.String(file)
+
+			updateContentInput.Content = aws.String(string(file))
 		} else if v, ok := d.GetOk(names.AttrContent); ok {
 			updateContentInput.Content = aws.String(v.(string))
 		}
@@ -268,16 +271,4 @@ func ContactFlowModuleParseID(id string) (string, string, error) {
 	}
 
 	return parts[0], parts[1], nil
-}
-
-func resourceContactFlowModuleLoadFileContent(filename string) (string, error) {
-	filename, err := homedir.Expand(filename)
-	if err != nil {
-		return "", err
-	}
-	fileContent, err := os.ReadFile(filename)
-	if err != nil {
-		return "", err
-	}
-	return string(fileContent), nil
 }
