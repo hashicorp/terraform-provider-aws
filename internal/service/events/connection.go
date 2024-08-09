@@ -478,7 +478,12 @@ func waitConnectionDeleted(ctx context.Context, conn *eventbridge.Client, name s
 
 func expandCreateConnectionAuthRequestParameters(config []interface{}) *types.CreateConnectionAuthRequestParameters {
 	authParameters := &types.CreateConnectionAuthRequestParameters{}
+
 	for _, c := range config {
+		if c == nil {
+			continue
+		}
+
 		param := c.(map[string]interface{})
 		if v, ok := param["api_key"].([]interface{}); ok && len(v) > 0 {
 			authParameters.ApiKeyAuthParameters = expandCreateConnectionAPIKeyAuthRequestParameters(v)
@@ -501,8 +506,13 @@ func expandCreateConnectionAPIKeyAuthRequestParameters(config []interface{}) *ty
 	if len(config) == 0 {
 		return nil
 	}
+
 	apiKeyAuthParameters := &types.CreateConnectionApiKeyAuthRequestParameters{}
 	for _, c := range config {
+		if c == nil {
+			continue
+		}
+
 		param := c.(map[string]interface{})
 		if v, ok := param[names.AttrKey].(string); ok && v != "" {
 			apiKeyAuthParameters.ApiKeyName = aws.String(v)
@@ -511,6 +521,7 @@ func expandCreateConnectionAPIKeyAuthRequestParameters(config []interface{}) *ty
 			apiKeyAuthParameters.ApiKeyValue = aws.String(v)
 		}
 	}
+
 	return apiKeyAuthParameters
 }
 
@@ -518,8 +529,13 @@ func expandCreateConnectionBasicAuthRequestParameters(config []interface{}) *typ
 	if len(config) == 0 {
 		return nil
 	}
+
 	basicAuthParameters := &types.CreateConnectionBasicAuthRequestParameters{}
 	for _, c := range config {
+		if c == nil {
+			continue
+		}
+
 		param := c.(map[string]interface{})
 		if v, ok := param[names.AttrUsername].(string); ok && v != "" {
 			basicAuthParameters.Username = aws.String(v)
@@ -528,6 +544,7 @@ func expandCreateConnectionBasicAuthRequestParameters(config []interface{}) *typ
 			basicAuthParameters.Password = aws.String(v)
 		}
 	}
+
 	return basicAuthParameters
 }
 
@@ -535,8 +552,13 @@ func expandCreateConnectionOAuthAuthRequestParameters(config []interface{}) *typ
 	if len(config) == 0 {
 		return nil
 	}
+
 	oAuthParameters := &types.CreateConnectionOAuthRequestParameters{}
 	for _, c := range config {
+		if c == nil {
+			continue
+		}
+
 		param := c.(map[string]interface{})
 		if v, ok := param["authorization_endpoint"].(string); ok && v != "" {
 			oAuthParameters.AuthorizationEndpoint = aws.String(v)
@@ -551,12 +573,18 @@ func expandCreateConnectionOAuthAuthRequestParameters(config []interface{}) *typ
 			oAuthParameters.ClientParameters = expandCreateConnectionOAuthClientRequestParameters(v)
 		}
 	}
+
 	return oAuthParameters
 }
 
 func expandCreateConnectionOAuthClientRequestParameters(config []interface{}) *types.CreateConnectionOAuthClientRequestParameters {
 	oAuthClientRequestParameters := &types.CreateConnectionOAuthClientRequestParameters{}
+
 	for _, c := range config {
+		if c == nil {
+			continue
+		}
+
 		param := c.(map[string]interface{})
 		if v, ok := param[names.AttrClientID].(string); ok && v != "" {
 			oAuthClientRequestParameters.ClientID = aws.String(v)
@@ -565,6 +593,7 @@ func expandCreateConnectionOAuthClientRequestParameters(config []interface{}) *t
 			oAuthClientRequestParameters.ClientSecret = aws.String(v)
 		}
 	}
+
 	return oAuthClientRequestParameters
 }
 
@@ -572,8 +601,13 @@ func expandConnectionHTTPParameters(config []interface{}) *types.ConnectionHttpP
 	if len(config) == 0 {
 		return nil
 	}
+
 	httpParameters := &types.ConnectionHttpParameters{}
 	for _, c := range config {
+		if c == nil {
+			continue
+		}
+
 		param := c.(map[string]interface{})
 		if v, ok := param["body"].([]interface{}); ok && len(v) > 0 {
 			httpParameters.BodyParameters = expandConnectionHTTPParametersBody(v)
@@ -585,6 +619,7 @@ func expandConnectionHTTPParameters(config []interface{}) *types.ConnectionHttpP
 			httpParameters.QueryStringParameters = expandConnectionHTTPParametersQueryString(v)
 		}
 	}
+
 	return httpParameters
 }
 
@@ -592,10 +627,14 @@ func expandConnectionHTTPParametersBody(config []interface{}) []types.Connection
 	if len(config) == 0 {
 		return nil
 	}
+
 	var parameters []types.ConnectionBodyParameter
 	for _, c := range config {
-		parameter := types.ConnectionBodyParameter{}
+		if c == nil {
+			continue
+		}
 
+		parameter := types.ConnectionBodyParameter{}
 		input := c.(map[string]interface{})
 		if v, ok := input[names.AttrKey].(string); ok && v != "" {
 			parameter.Key = aws.String(v)
@@ -608,6 +647,7 @@ func expandConnectionHTTPParametersBody(config []interface{}) []types.Connection
 		}
 		parameters = append(parameters, parameter)
 	}
+
 	return parameters
 }
 
@@ -615,10 +655,14 @@ func expandConnectionHTTPParametersHeader(config []interface{}) []types.Connecti
 	if len(config) == 0 {
 		return nil
 	}
+
 	var parameters []types.ConnectionHeaderParameter
 	for _, c := range config {
-		parameter := types.ConnectionHeaderParameter{}
+		if c == nil {
+			continue
+		}
 
+		parameter := types.ConnectionHeaderParameter{}
 		input := c.(map[string]interface{})
 		if v, ok := input[names.AttrKey].(string); ok && v != "" {
 			parameter.Key = aws.String(v)
@@ -631,6 +675,7 @@ func expandConnectionHTTPParametersHeader(config []interface{}) []types.Connecti
 		}
 		parameters = append(parameters, parameter)
 	}
+
 	return parameters
 }
 
@@ -638,10 +683,14 @@ func expandConnectionHTTPParametersQueryString(config []interface{}) []types.Con
 	if len(config) == 0 {
 		return nil
 	}
+
 	var parameters []types.ConnectionQueryStringParameter
 	for _, c := range config {
-		parameter := types.ConnectionQueryStringParameter{}
+		if c == nil {
+			continue
+		}
 
+		parameter := types.ConnectionQueryStringParameter{}
 		input := c.(map[string]interface{})
 		if v, ok := input[names.AttrKey].(string); ok && v != "" {
 			parameter.Key = aws.String(v)
@@ -654,6 +703,7 @@ func expandConnectionHTTPParametersQueryString(config []interface{}) []types.Con
 		}
 		parameters = append(parameters, parameter)
 	}
+
 	return parameters
 }
 
@@ -809,7 +859,12 @@ func flattenConnectionHTTPParameters(httpParameters *types.ConnectionHttpParamet
 
 func expandUpdateConnectionAuthRequestParameters(config []interface{}) *types.UpdateConnectionAuthRequestParameters {
 	authParameters := &types.UpdateConnectionAuthRequestParameters{}
+
 	for _, c := range config {
+		if c == nil {
+			continue
+		}
+
 		param := c.(map[string]interface{})
 		if v, ok := param["api_key"].([]interface{}); ok && len(v) > 0 {
 			authParameters.ApiKeyAuthParameters = expandUpdateConnectionAPIKeyAuthRequestParameters(v)
@@ -835,6 +890,10 @@ func expandUpdateConnectionAPIKeyAuthRequestParameters(config []interface{}) *ty
 
 	apiKeyAuthParameters := &types.UpdateConnectionApiKeyAuthRequestParameters{}
 	for _, c := range config {
+		if c == nil {
+			continue
+		}
+
 		param := c.(map[string]interface{})
 		if v, ok := param[names.AttrKey].(string); ok && v != "" {
 			apiKeyAuthParameters.ApiKeyName = aws.String(v)
@@ -843,6 +902,7 @@ func expandUpdateConnectionAPIKeyAuthRequestParameters(config []interface{}) *ty
 			apiKeyAuthParameters.ApiKeyValue = aws.String(v)
 		}
 	}
+
 	return apiKeyAuthParameters
 }
 
@@ -853,6 +913,10 @@ func expandUpdateConnectionBasicAuthRequestParameters(config []interface{}) *typ
 
 	basicAuthParameters := &types.UpdateConnectionBasicAuthRequestParameters{}
 	for _, c := range config {
+		if c == nil {
+			continue
+		}
+
 		param := c.(map[string]interface{})
 		if v, ok := param[names.AttrUsername].(string); ok && v != "" {
 			basicAuthParameters.Username = aws.String(v)
@@ -861,6 +925,7 @@ func expandUpdateConnectionBasicAuthRequestParameters(config []interface{}) *typ
 			basicAuthParameters.Password = aws.String(v)
 		}
 	}
+
 	return basicAuthParameters
 }
 
@@ -871,6 +936,10 @@ func expandUpdateConnectionOAuthAuthRequestParameters(config []interface{}) *typ
 
 	oAuthParameters := &types.UpdateConnectionOAuthRequestParameters{}
 	for _, c := range config {
+		if c == nil {
+			continue
+		}
+
 		param := c.(map[string]interface{})
 		if v, ok := param["authorization_endpoint"].(string); ok && v != "" {
 			oAuthParameters.AuthorizationEndpoint = aws.String(v)
@@ -885,12 +954,18 @@ func expandUpdateConnectionOAuthAuthRequestParameters(config []interface{}) *typ
 			oAuthParameters.ClientParameters = expandUpdateConnectionOAuthClientRequestParameters(v)
 		}
 	}
+
 	return oAuthParameters
 }
 
 func expandUpdateConnectionOAuthClientRequestParameters(config []interface{}) *types.UpdateConnectionOAuthClientRequestParameters {
 	oAuthClientRequestParameters := &types.UpdateConnectionOAuthClientRequestParameters{}
+
 	for _, c := range config {
+		if c == nil {
+			continue
+		}
+
 		param := c.(map[string]interface{})
 		if v, ok := param[names.AttrClientID].(string); ok && v != "" {
 			oAuthClientRequestParameters.ClientID = aws.String(v)
@@ -899,5 +974,6 @@ func expandUpdateConnectionOAuthClientRequestParameters(config []interface{}) *t
 			oAuthClientRequestParameters.ClientSecret = aws.String(v)
 		}
 	}
+
 	return oAuthClientRequestParameters
 }
