@@ -119,7 +119,7 @@ func TestAccBedrockGuardrail_kmsKey(t *testing.T) {
 	resourceName := "aws_bedrock_guardrail.test"
 	var guardrail bedrock.GetGuardrailOutput
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -153,7 +153,7 @@ func TestAccBedrockGuardrail_tags(t *testing.T) {
 	resourceName := "aws_bedrock_guardrail.test"
 	var guardrail bedrock.GetGuardrailOutput
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -191,7 +191,7 @@ func TestAccBedrockGuardrail_update(t *testing.T) {
 	resourceName := "aws_bedrock_guardrail.test"
 	var guardrail bedrock.GetGuardrailOutput
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
