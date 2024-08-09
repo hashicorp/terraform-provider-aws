@@ -53,6 +53,7 @@ import (
 // @Tags(identifierAttribute="evaluation_job_arn")
 func newResourceEvaluationJob(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceEvaluationJob{}
+	r.SetDefaultCreateTimeout(60 * time.Minute)
 	r.SetDefaultReadTimeout(60 * time.Minute)
 	return r, nil
 }
@@ -389,7 +390,8 @@ func (r *resourceEvaluationJob) Schema(ctx context.Context, req resource.SchemaR
 				},
 			},
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
-				Read: true,
+				Create: true,
+				Read:   true,
 			}),
 			"output_data_config": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[OutputDataConfig](ctx),
@@ -447,8 +449,25 @@ func (r *resourceEvaluationJob) Create(ctx context.Context, req resource.CreateR
 		)
 		return
 	}
-
 	plan.Arn = flex.StringToFramework(ctx, (outputRaw.JobArn))
+
+	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
+	outputRaws, err := tfresource.RetryWhenNotFound(ctx, createTimeout, func() (interface{}, error) {
+		return findEvaluationJobByID(ctx, conn, plan.CreationTime.ValueString())
+	})
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.DataZone, create.ErrActionCreating, ResNameEvaluationJob, plan.Name.String(), err),
+			err.Error(),
+		)
+	}
+
+	output := outputRaws.(*bedrock.GetEvaluationJobOutput)
+	resp.Diagnostics.Append(flex.Flatten(ctx, output, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 func (r *resourceEvaluationJob) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -738,6 +757,7 @@ func (l DatasetLocation) Expand(ctx context.Context) (result any, diags diag.Dia
 	return nil, diags
 }
 
+/*
 func flattenAutomated(ctx context.Context, cfg awstypes.EvaluationConfig) (*evaluationConfig, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	var evalCfg evaluationConfig
@@ -794,3 +814,4 @@ func flattenInference(ctx context.Context, cfg awstypes.EvaluationInferenceConfi
 	}
 	return &infCfg, diags
 }
+*/
