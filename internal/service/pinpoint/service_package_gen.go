@@ -5,10 +5,8 @@ package pinpoint
 import (
 	"context"
 
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	pinpoint_sdkv1 "github.com/aws/aws-sdk-go/service/pinpoint"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	pinpoint_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pinpoint"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -31,27 +29,32 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceADMChannel,
+			Factory:  resourceADMChannel,
 			TypeName: "aws_pinpoint_adm_channel",
+			Name:     "ADM Channel",
 		},
 		{
-			Factory:  ResourceAPNSChannel,
+			Factory:  resourceAPNSChannel,
 			TypeName: "aws_pinpoint_apns_channel",
+			Name:     "APNS Channel",
 		},
 		{
-			Factory:  ResourceAPNSSandboxChannel,
+			Factory:  resourceAPNSSandboxChannel,
 			TypeName: "aws_pinpoint_apns_sandbox_channel",
+			Name:     "APNS Sandbox Channel",
 		},
 		{
-			Factory:  ResourceAPNSVoIPChannel,
+			Factory:  resourceAPNSVoIPChannel,
 			TypeName: "aws_pinpoint_apns_voip_channel",
+			Name:     "APNS VoIP Channel",
 		},
 		{
-			Factory:  ResourceAPNSVoIPSandboxChannel,
+			Factory:  resourceAPNSVoIPSandboxChannel,
 			TypeName: "aws_pinpoint_apns_voip_sandbox_channel",
+			Name:     "APNS VoIP Sandbox Channel",
 		},
 		{
-			Factory:  ResourceApp,
+			Factory:  resourceApp,
 			TypeName: "aws_pinpoint_app",
 			Name:     "App",
 			Tags: &types.ServicePackageResourceTags{
@@ -59,24 +62,29 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceBaiduChannel,
+			Factory:  resourceBaiduChannel,
 			TypeName: "aws_pinpoint_baidu_channel",
+			Name:     "Baidu Channel",
 		},
 		{
-			Factory:  ResourceEmailChannel,
+			Factory:  resourceEmailChannel,
 			TypeName: "aws_pinpoint_email_channel",
+			Name:     "Email Channel",
 		},
 		{
-			Factory:  ResourceEventStream,
+			Factory:  resourceEventStream,
 			TypeName: "aws_pinpoint_event_stream",
+			Name:     "Event Stream",
 		},
 		{
-			Factory:  ResourceGCMChannel,
+			Factory:  resourceGCMChannel,
 			TypeName: "aws_pinpoint_gcm_channel",
+			Name:     "GCM Channel",
 		},
 		{
-			Factory:  ResourceSMSChannel,
+			Factory:  resourceSMSChannel,
 			TypeName: "aws_pinpoint_sms_channel",
+			Name:     "SMS Channel",
 		},
 	}
 }
@@ -85,22 +93,14 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.Pinpoint
 }
 
-// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*pinpoint_sdkv1.Pinpoint, error) {
-	sess := config[names.AttrSession].(*session_sdkv1.Session)
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*pinpoint_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
 
-	cfg := aws_sdkv1.Config{}
-
-	if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
-		tflog.Debug(ctx, "setting endpoint", map[string]any{
-			"tf_aws.endpoint": endpoint,
-		})
-		cfg.Endpoint = aws_sdkv1.String(endpoint)
-	} else {
-		cfg.EndpointResolver = newEndpointResolverSDKv1(ctx)
-	}
-
-	return pinpoint_sdkv1.New(sess.Copy(&cfg)), nil
+	return pinpoint_sdkv2.NewFromConfig(cfg,
+		pinpoint_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+	), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {
