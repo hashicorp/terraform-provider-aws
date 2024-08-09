@@ -11,4 +11,5 @@ var (
 	ResourceProject                           = newResourceProject
 	ResourceGlossary                          = newResourceGlossary
 	FindGlossaryByID                          = findGlossaryByID
+	ResourceUserProfile                       = newResourceUserProfile
 )
