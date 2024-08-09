@@ -35,8 +35,8 @@ func TestAccSNSTopicDataProtectionPolicy_basic(t *testing.T) {
 				Config: testAccTopicDataProtectionPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(ctx, "aws_sns_topic.test", &attributes),
-					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_sns_topic.test", "arn"),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(fmt.Sprintf("\"Sid\":\"%[1]s\"", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, "aws_sns_topic.test", names.AttrARN),
+					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(fmt.Sprintf("\"Sid\":\"%[1]s\"", rName))),
 				),
 			},
 			{

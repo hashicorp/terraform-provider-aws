@@ -34,16 +34,16 @@ func TestAccRedshiftPartner_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPartnerExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "partner_name", "Datacoral"),
-					resource.TestCheckResourceAttrPair(resourceName, "database_name", "aws_redshift_cluster.test", "database_name"),
-					resource.TestCheckResourceAttrPair(resourceName, "cluster_identifier", "aws_redshift_cluster.test", "id"),
-					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDatabaseName, "aws_redshift_cluster.test", names.AttrDatabaseName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrClusterIdentifier, "aws_redshift_cluster.test", names.AttrID),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"account_id", "cluster_identifier"},
+				ImportStateVerifyIgnore: []string{names.AttrAccountID, names.AttrClusterIdentifier},
 			},
 		},
 	})
@@ -103,7 +103,7 @@ func testAccCheckPartnerDestroy(ctx context.Context) resource.TestCheckFunc {
 			if rs.Type != "aws_redshift_partner" {
 				continue
 			}
-			_, err := tfredshift.FindPartnerById(ctx, conn, rs.Primary.ID)
+			_, err := tfredshift.FindPartnerByID(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -133,7 +133,7 @@ func testAccCheckPartnerExists(ctx context.Context, name string) resource.TestCh
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
 
-		_, err := tfredshift.FindPartnerById(ctx, conn, rs.Primary.ID)
+		_, err := tfredshift.FindPartnerByID(ctx, conn, rs.Primary.ID)
 
 		return err
 	}

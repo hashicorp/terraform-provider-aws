@@ -10,6 +10,8 @@ description: |-
 
 Terraform resource for managing an AWS Security Lake Data Lake.
 
+~> **NOTE:** The underlying `aws_securitylake_data_lake` must be configured before creating other Security Lake resources. Use a `depends_on` statement.
+
 ## Example Usage
 
 ```terraform

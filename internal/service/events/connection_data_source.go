@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_cloudwatch_event_connection", name="Connection)
@@ -18,7 +19,7 @@ func dataSourceConnection() *schema.Resource {
 		ReadWithoutTimeout: dataSourceConnectionRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -26,7 +27,7 @@ func dataSourceConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -43,7 +44,7 @@ func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	output, err := findConnectionByName(ctx, conn, name)
 
 	if err != nil {
@@ -51,9 +52,9 @@ func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.SetId(name)
-	d.Set("arn", output.ConnectionArn)
+	d.Set(names.AttrARN, output.ConnectionArn)
 	d.Set("authorization_type", output.AuthorizationType)
-	d.Set("name", output.Name)
+	d.Set(names.AttrName, output.Name)
 	d.Set("secret_arn", output.SecretArn)
 
 	return diags

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -50,7 +51,7 @@ func sweepExports(region string) error {
 
 			log.Printf("[INFO] Deleting AuditManager Assessment: %s", id)
 			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceExport, client,
-				framework.NewAttribute("id", id),
+				framework.NewAttribute(names.AttrID, id),
 			))
 		}
 	}

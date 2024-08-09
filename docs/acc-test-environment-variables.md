@@ -64,6 +64,11 @@ Environment variables (beyond standard AWS Go SDK ones) used by acceptance testi
 | `AWS_THIRD_SECRET_ACCESS_KEY` | AWS secret access key with access to a third AWS account for tests requiring multiple accounts. Requires `AWS_THIRD_ACCESS_KEY_ID`. Conflicts with `AWS_THIRD_PROFILE`. |
 | `AWS_THIRD_PROFILE` | AWS profile with access to a third AWS account for tests requiring multiple accounts. Conflicts with `AWS_THIRD_ACCESS_KEY_ID` and `AWS_THIRD_SECRET_ACCESS_KEY`. |
 | `AWS_THIRD_REGION` | Third AWS region for tests requiring multiple regions. Defaults to `us-east-2`. |
+| `CHATBOT_SLACK_CHANNEL_ID` | ID of the Slack channel. |
+| `CHATBOT_SLACK_TEAM_ID` | ID of the Slack workspace authorized with AWS Chatbot. |
+| `CHATBOT_TEAMS_CHANNEL_ID` | ID of the Microsoft Teams channel. |
+| `CHATBOT_TEAMS_TEAM_ID` | ID of the Microsoft Teams workspace authorized with AWS Chatbot. |
+| `CHATBOT_TEAMS_TENANT_ID` | ID of the Microsoft Teams tenant. |
 | `DX_CONNECTION_ID` | Identifier for Direct Connect Connection testing. |
 | `DX_VIRTUAL_INTERFACE_ID` | Identifier for Direct Connect Virtual Interface testing. |
 | `EC2_SECURITY_GROUP_RULES_PER_GROUP_LIMIT` | EC2 Quota for Rules per Security Group. Defaults to 50. **DEPRECATED:** Can be augmented or replaced with Service Quotas lookup. |

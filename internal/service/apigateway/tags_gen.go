@@ -15,6 +15,39 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// listTags lists apigateway service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func listTags(ctx context.Context, conn *apigateway.Client, identifier string, optFns ...func(*apigateway.Options)) (tftags.KeyValueTags, error) {
+	input := &apigateway.GetTagsInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.GetTags(ctx, input, optFns...)
+
+	if err != nil {
+		return tftags.New(ctx, nil), err
+	}
+
+	return KeyValueTags(ctx, output.Tags), nil
+}
+
+// ListTags lists apigateway service tags and set them in Context.
+// It is called from outside this package.
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).APIGatewayClient(ctx), identifier)
+
+	if err != nil {
+		return err
+	}
+
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = option.Some(tags)
+	}
+
+	return nil
+}
+
 // map[string]string handling
 
 // Tags returns apigateway service tags.

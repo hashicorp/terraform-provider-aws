@@ -6,16 +6,17 @@ package fsx
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_fsx_windows_file_system")
-func DataSourceWindowsFileSystem() *schema.Resource {
+// @SDKDataSource("aws_fsx_windows_file_system", name="Windows File System")
+func dataSourceWindowsFileSystem() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceWindowsFileSystemRead,
 
@@ -31,7 +32,7 @@ func DataSourceWindowsFileSystem() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -80,26 +81,26 @@ func DataSourceWindowsFileSystem() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"iops": {
+						names.AttrIOPS: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"mode": {
+						names.AttrMode: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			"dns_name": {
+			names.AttrDNSName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"id": {
+			names.AttrID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -110,7 +111,7 @@ func DataSourceWindowsFileSystem() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -122,7 +123,7 @@ func DataSourceWindowsFileSystem() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"security_group_ids": {
+			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -137,23 +138,23 @@ func DataSourceWindowsFileSystem() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"storage_type": {
+			names.AttrStorageType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"subnet_ids": {
+			names.AttrSubnetIDs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"throughput_capacity": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -167,13 +168,10 @@ func DataSourceWindowsFileSystem() *schema.Resource {
 
 func dataSourceWindowsFileSystemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
-	conn := meta.(*conns.AWSClient).FSxConn(ctx)
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-
-	id := d.Get("id").(string)
-	filesystem, err := FindWindowsFileSystemByID(ctx, conn, id)
+	id := d.Get(names.AttrID).(string)
+	filesystem, err := findWindowsFileSystemByID(ctx, conn, id)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading FSx for Windows File Server File System (%s): %s", id, err)
@@ -181,10 +179,10 @@ func dataSourceWindowsFileSystemRead(ctx context.Context, d *schema.ResourceData
 
 	windowsConfig := filesystem.WindowsConfiguration
 
-	d.SetId(aws.StringValue(filesystem.FileSystemId))
+	d.SetId(aws.ToString(filesystem.FileSystemId))
 	d.Set("active_directory_id", windowsConfig.ActiveDirectoryId)
-	d.Set("aliases", aws.StringValueSlice(expandAliasValues(windowsConfig.Aliases)))
-	d.Set("arn", filesystem.ResourceARN)
+	d.Set("aliases", expandAliasValues(windowsConfig.Aliases))
+	d.Set(names.AttrARN, filesystem.ResourceARN)
 	if err := d.Set("audit_log_configuration", flattenWindowsAuditLogConfiguration(windowsConfig.AuditLogConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting audit_log_configuration: %s", err)
 	}
@@ -195,26 +193,21 @@ func dataSourceWindowsFileSystemRead(ctx context.Context, d *schema.ResourceData
 	if err := d.Set("disk_iops_configuration", flattenWindowsDiskIopsConfiguration(windowsConfig.DiskIopsConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting disk_iops_configuration: %s", err)
 	}
-	d.Set("dns_name", filesystem.DNSName)
-	d.Set("id", filesystem.FileSystemId)
-	d.Set("kms_key_id", filesystem.KmsKeyId)
-	d.Set("network_interface_ids", aws.StringValueSlice(filesystem.NetworkInterfaceIds))
-	d.Set("owner_id", filesystem.OwnerId)
+	d.Set(names.AttrDNSName, filesystem.DNSName)
+	d.Set(names.AttrID, filesystem.FileSystemId)
+	d.Set(names.AttrKMSKeyID, filesystem.KmsKeyId)
+	d.Set("network_interface_ids", filesystem.NetworkInterfaceIds)
+	d.Set(names.AttrOwnerID, filesystem.OwnerId)
 	d.Set("preferred_file_server_ip", windowsConfig.PreferredFileServerIp)
 	d.Set("preferred_subnet_id", windowsConfig.PreferredSubnetId)
 	d.Set("storage_capacity", filesystem.StorageCapacity)
-	d.Set("storage_type", filesystem.StorageType)
-	d.Set("subnet_ids", aws.StringValueSlice(filesystem.SubnetIds))
+	d.Set(names.AttrStorageType, filesystem.StorageType)
+	d.Set(names.AttrSubnetIDs, filesystem.SubnetIds)
 	d.Set("throughput_capacity", windowsConfig.ThroughputCapacity)
-	d.Set("vpc_id", filesystem.VpcId)
+	d.Set(names.AttrVPCID, filesystem.VpcId)
 	d.Set("weekly_maintenance_start_time", windowsConfig.WeeklyMaintenanceStartTime)
 
-	tags := KeyValueTags(ctx, filesystem.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOut(ctx, filesystem.Tags)
 
 	return diags
 }

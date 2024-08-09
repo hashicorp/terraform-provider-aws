@@ -36,11 +36,11 @@ func ResourceFeatureGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -116,13 +116,13 @@ func ResourceFeatureGroup() *schema.Resource {
 										Computed: true,
 										ForceNew: true,
 									},
-									"database": {
+									names.AttrDatabase: {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
 										ForceNew: true,
 									},
-									"table_name": {
+									names.AttrTableName: {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
@@ -143,7 +143,7 @@ func ResourceFeatureGroup() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"kms_key_id": {
+									names.AttrKMSKeyID: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ForceNew:     true,
@@ -194,7 +194,7 @@ func ResourceFeatureGroup() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"kms_key_id": {
+									names.AttrKMSKeyID: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ForceNew:     true,
@@ -203,7 +203,7 @@ func ResourceFeatureGroup() *schema.Resource {
 								},
 							},
 						},
-						"storage_type": {
+						names.AttrStorageType: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
@@ -215,12 +215,12 @@ func ResourceFeatureGroup() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"unit": {
+									names.AttrUnit: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validation.StringInSlice(sagemaker.TtlDurationUnit_Values(), false),
 									},
-									"value": {
+									names.AttrValue: {
 										Type:     schema.TypeInt,
 										Optional: true,
 									},
@@ -240,7 +240,7 @@ func ResourceFeatureGroup() *schema.Resource {
 						"Must start and end with an alphanumeric character and Can only contains alphanumeric characters, hyphens, underscores. Spaces are not allowed."),
 				),
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -263,12 +263,12 @@ func resourceFeatureGroupCreate(ctx context.Context, d *schema.ResourceData, met
 		FeatureGroupName:            aws.String(name),
 		EventTimeFeatureName:        aws.String(d.Get("event_time_feature_name").(string)),
 		RecordIdentifierFeatureName: aws.String(d.Get("record_identifier_feature_name").(string)),
-		RoleArn:                     aws.String(d.Get("role_arn").(string)),
+		RoleArn:                     aws.String(d.Get(names.AttrRoleARN).(string)),
 		FeatureDefinitions:          expandFeatureGroupFeatureDefinition(d.Get("feature_definition").([]interface{})),
 		Tags:                        getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -331,10 +331,10 @@ func resourceFeatureGroupRead(ctx context.Context, d *schema.ResourceData, meta 
 	arn := aws.StringValue(output.FeatureGroupArn)
 	d.Set("feature_group_name", output.FeatureGroupName)
 	d.Set("event_time_feature_name", output.EventTimeFeatureName)
-	d.Set("description", output.Description)
+	d.Set(names.AttrDescription, output.Description)
 	d.Set("record_identifier_feature_name", output.RecordIdentifierFeatureName)
-	d.Set("role_arn", output.RoleArn)
-	d.Set("arn", arn)
+	d.Set(names.AttrRoleARN, output.RoleArn)
+	d.Set(names.AttrARN, arn)
 
 	if err := d.Set("feature_definition", flattenFeatureGroupFeatureDefinition(output.FeatureDefinitions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting feature_definition for SageMaker Feature Group (%s): %s", d.Id(), err)
@@ -355,7 +355,7 @@ func resourceFeatureGroupUpdate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &sagemaker.UpdateFeatureGroupInput{
 			FeatureGroupName: aws.String(d.Id()),
 		}
@@ -445,7 +445,7 @@ func expandFeatureGroupOnlineStoreConfig(l []interface{}) *sagemaker.OnlineStore
 		config.SecurityConfig = expandFeatureGroupOnlineStoreConfigSecurityConfig(v)
 	}
 
-	if v, ok := m["storage_type"].(string); ok && v != "" {
+	if v, ok := m[names.AttrStorageType].(string); ok && v != "" {
 		config.StorageType = aws.String(v)
 	}
 
@@ -470,7 +470,7 @@ func flattenFeatureGroupOnlineStoreConfig(config *sagemaker.OnlineStoreConfig) [
 	}
 
 	if config.StorageType != nil {
-		m["storage_type"] = aws.StringValue(config.StorageType)
+		m[names.AttrStorageType] = aws.StringValue(config.StorageType)
 	}
 
 	if config.TtlDuration != nil {
@@ -488,7 +488,7 @@ func expandFeatureGroupOnlineStoreConfigSecurityConfig(l []interface{}) *sagemak
 	m := l[0].(map[string]interface{})
 
 	config := &sagemaker.OnlineStoreSecurityConfig{
-		KmsKeyId: aws.String(m["kms_key_id"].(string)),
+		KmsKeyId: aws.String(m[names.AttrKMSKeyID].(string)),
 	}
 
 	return config
@@ -500,7 +500,7 @@ func flattenFeatureGroupOnlineStoreConfigSecurityConfig(config *sagemaker.Online
 	}
 
 	m := map[string]interface{}{
-		"kms_key_id": aws.StringValue(config.KmsKeyId),
+		names.AttrKMSKeyID: aws.StringValue(config.KmsKeyId),
 	}
 
 	return []map[string]interface{}{m}
@@ -514,8 +514,8 @@ func expandFeatureGroupOnlineStoreConfigTTLDuration(l []interface{}) *sagemaker.
 	m := l[0].(map[string]interface{})
 
 	config := &sagemaker.TtlDuration{
-		Unit:  aws.String(m["unit"].(string)),
-		Value: aws.Int64(int64(m["value"].(int))),
+		Unit:  aws.String(m[names.AttrUnit].(string)),
+		Value: aws.Int64(int64(m[names.AttrValue].(int))),
 	}
 
 	return config
@@ -527,8 +527,8 @@ func flattenFeatureGroupOnlineStoreConfigTTLDuration(config *sagemaker.TtlDurati
 	}
 
 	m := map[string]interface{}{
-		"unit":  aws.StringValue(config.Unit),
-		"value": aws.Int64Value(config.Value),
+		names.AttrUnit:  aws.StringValue(config.Unit),
+		names.AttrValue: aws.Int64Value(config.Value),
 	}
 
 	return []map[string]interface{}{m}
@@ -594,8 +594,8 @@ func expandFeatureGroupOfflineStoreConfigS3StorageConfig(l []interface{}) *sagem
 		S3Uri: aws.String(m["s3_uri"].(string)),
 	}
 
-	if v, ok := m["kms_key_id"].(string); ok && v != "" {
-		config.KmsKeyId = aws.String(m["kms_key_id"].(string))
+	if v, ok := m[names.AttrKMSKeyID].(string); ok && v != "" {
+		config.KmsKeyId = aws.String(m[names.AttrKMSKeyID].(string))
 	}
 
 	if v, ok := m["resolved_output_s3_uri"].(string); ok && v != "" {
@@ -615,7 +615,7 @@ func flattenFeatureGroupOfflineStoreConfigS3StorageConfig(config *sagemaker.S3St
 	}
 
 	if config.KmsKeyId != nil {
-		m["kms_key_id"] = aws.StringValue(config.KmsKeyId)
+		m[names.AttrKMSKeyID] = aws.StringValue(config.KmsKeyId)
 	}
 
 	if config.ResolvedOutputS3Uri != nil {
@@ -634,8 +634,8 @@ func expandFeatureGroupOfflineStoreConfigDataCatalogConfig(l []interface{}) *sag
 
 	config := &sagemaker.DataCatalogConfig{
 		Catalog:   aws.String(m["catalog"].(string)),
-		Database:  aws.String(m["database"].(string)),
-		TableName: aws.String(m["table_name"].(string)),
+		Database:  aws.String(m[names.AttrDatabase].(string)),
+		TableName: aws.String(m[names.AttrTableName].(string)),
 	}
 
 	return config
@@ -647,9 +647,9 @@ func flattenFeatureGroupOfflineStoreConfigDataCatalogConfig(config *sagemaker.Da
 	}
 
 	m := map[string]interface{}{
-		"catalog":    aws.StringValue(config.Catalog),
-		"database":   aws.StringValue(config.Database),
-		"table_name": aws.StringValue(config.TableName),
+		"catalog":           aws.StringValue(config.Catalog),
+		names.AttrDatabase:  aws.StringValue(config.Database),
+		names.AttrTableName: aws.StringValue(config.TableName),
 	}
 
 	return []map[string]interface{}{m}

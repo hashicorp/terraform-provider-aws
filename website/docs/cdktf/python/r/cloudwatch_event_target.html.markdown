@@ -557,6 +557,7 @@ The following arguments are optional:
 * `ecs_target` - (Optional) Parameters used when you are using the rule to invoke Amazon ECS Task. Documented below. A maximum of 1 are allowed.
 * `event_bus_name` - (Optional) The name or ARN of the event bus to associate with the rule.
   If you omit this, the `default` event bus is used.
+* `force_destroy` - (Optional) Used to delete managed rules created by AWS. Defaults to `false`.
 * `http_target` - (Optional) Parameters used when you are using the rule to invoke an API Gateway REST endpoint. Documented below. A maximum of 1 is allowed.
 * `input` - (Optional) Valid JSON text passed to the target. Conflicts with `input_path` and `input_transformer`.
 * `input_path` - (Optional) The value of the [JSONPath](http://goessner.net/articles/JsonPath/) that is used for extracting part of the matched event when passing it to the target. Conflicts with `input` and `input_transformer`.
@@ -700,4 +701,4 @@ Using `terraform import`, import EventBridge Targets using `event_bus_name/rule-
 % terraform import aws_cloudwatch_event_target.test-event-target rule-name/target-id
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-164c7e04d13a473ab9a0bbaa30d85030d052da19096a3497304d82fd1d72d513 -->
+<!-- cache-key: cdktf-0.20.1 input-acca2e4c4d9e32765a5d4c3e255d1c924fd19735df376f9c30498d94ce55e01e -->
