@@ -50,7 +50,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceSchedulingPolicy,
+			Factory:  dataSourceSchedulingPolicy,
 			TypeName: "aws_batch_scheduling_policy",
 			Name:     "Scheduling Policy",
 			Tags:     &types.ServicePackageResourceTags{},
