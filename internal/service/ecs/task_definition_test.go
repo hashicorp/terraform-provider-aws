@@ -1368,7 +1368,7 @@ func TestAccECSTaskDefinition_containerDefinitionEmptyPortMappings(t *testing.T)
 					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "length([0].portMappings)", acctest.Ct0),
 				),
 			},
-			// At v5.59.0 and v5.60.0, an empty port mapping was added.
+			// At v5.59.0 and v5.60.0, JSON keys were returned with leading capital letters.
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
@@ -1385,9 +1385,7 @@ func TestAccECSTaskDefinition_containerDefinitionEmptyPortMappings(t *testing.T)
 					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].Image", "jenkins"),
 					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].Memory", "512"),
 					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].Name", "first"),
-					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "length([0].PortMappings)", acctest.Ct1),
-					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].PortMappings[0].AppProtocol", ""),
-					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].PortMappings[0].Protocol", "tcp"),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "length([0].PortMappings)", acctest.Ct0),
 				),
 			},
 			// At v5.61.0, all empty values were removed.
@@ -1410,6 +1408,7 @@ func TestAccECSTaskDefinition_containerDefinitionEmptyPortMappings(t *testing.T)
 					acctest.CheckResourceAttrJMESNotExists(resourceName, "container_definitions", "[0].portMappings"),
 				),
 			},
+			// At v5.62.0, fidelity with v5.58 was restored.
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccTaskDefinitionConfig_containerDefinitionEmptyPortMappings(rName, "alpine"),
@@ -1421,7 +1420,7 @@ func TestAccECSTaskDefinition_containerDefinitionEmptyPortMappings(t *testing.T)
 					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].image", "alpine"),
 					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].memory", "512"),
 					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].name", "first"),
-					acctest.CheckResourceAttrJMESNotExists(resourceName, "container_definitions", "[0].portMappings"),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "length([0].portMappings)", acctest.Ct0),
 				),
 			},
 		},
