@@ -9,26 +9,30 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/directconnect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_dx_hosted_public_virtual_interface_accepter", name="Hosted Public Virtual Interface")
+// @SDKResource("aws_dx_hosted_public_virtual_interface_accepter", name="Hosted Public Virtual Interface Accepter")
 // @Tags(identifierAttribute="arn")
-func ResourceHostedPublicVirtualInterfaceAccepter() *schema.Resource {
+func resourceHostedPublicVirtualInterfaceAccepter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceHostedPublicVirtualInterfaceAccepterCreate,
 		ReadWithoutTimeout:   resourceHostedPublicVirtualInterfaceAccepterRead,
 		UpdateWithoutTimeout: resourceHostedPublicVirtualInterfaceAccepterUpdate,
-		DeleteWithoutTimeout: resourceHostedPublicVirtualInterfaceAccepterDelete,
+		DeleteWithoutTimeout: schema.NoopContext,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceHostedPublicVirtualInterfaceAccepterImport,
 		},
@@ -58,20 +62,20 @@ func ResourceHostedPublicVirtualInterfaceAccepter() *schema.Resource {
 
 func resourceHostedPublicVirtualInterfaceAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
-	vifId := d.Get("virtual_interface_id").(string)
-	req := &directconnect.ConfirmPublicVirtualInterfaceInput{
-		VirtualInterfaceId: aws.String(vifId),
+	vifID := d.Get("virtual_interface_id").(string)
+	input := &directconnect.ConfirmPublicVirtualInterfaceInput{
+		VirtualInterfaceId: aws.String(vifID),
 	}
 
-	log.Printf("[DEBUG] Accepting Direct Connect hosted public virtual interface: %s", req)
-	_, err := conn.ConfirmPublicVirtualInterfaceWithContext(ctx, req)
+	_, err := conn.ConfirmPublicVirtualInterface(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "accepting Direct Connect hosted public virtual interface: %s", err)
+		return sdkdiag.AppendErrorf(diags, "accepting Direct Connect Hosted Public Virtual Interface (%s): %s", vifID, err)
 	}
 
-	d.SetId(vifId)
+	d.SetId(vifID)
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Region:    meta.(*conns.AWSClient).Region,
@@ -81,12 +85,12 @@ func resourceHostedPublicVirtualInterfaceAccepterCreate(ctx context.Context, d *
 	}.String()
 	d.Set(names.AttrARN, arn)
 
-	if err := hostedPublicVirtualInterfaceAccepterWaitUntilAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+	if _, err := waitHostedPublicVirtualInterfaceAccepterAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Direct Connect Hosted Public Virtual Interface Accepter (%s) create: %s", d.Id(), err)
 	}
 
 	if err := createTags(ctx, conn, arn, getTagsIn(ctx)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting Direct Connect hosted public virtual interface (%s) tags: %s", arn, err)
+		return sdkdiag.AppendErrorf(diags, "setting Direct Connect Hosted Public Virtual Interface (%s) tags: %s", arn, err)
 	}
 
 	return append(diags, resourceHostedPublicVirtualInterfaceAccepterUpdate(ctx, d, meta)...)
@@ -94,22 +98,22 @@ func resourceHostedPublicVirtualInterfaceAccepterCreate(ctx context.Context, d *
 
 func resourceHostedPublicVirtualInterfaceAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
-	vif, err := virtualInterfaceRead(ctx, d.Id(), conn)
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-	if vif == nil {
-		log.Printf("[WARN] Direct Connect hosted public virtual interface (%s) not found, removing from state", d.Id())
+	vif, err := findVirtualInterfaceByID(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Direct Connect Hosted Public Virtual Interface (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
-	vifState := aws.StringValue(vif.VirtualInterfaceState)
-	if vifState != directconnect.VirtualInterfaceStateAvailable &&
-		vifState != directconnect.VirtualInterfaceStateDown &&
-		vifState != directconnect.VirtualInterfaceStateVerifying {
-		log.Printf("[WARN] Direct Connect hosted public virtual interface (%s) is '%s', removing from state", vifState, d.Id())
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Direct Connect Hosted Public Virtual Interface (%s): %s", d.Id(), err)
+	}
+
+	if state := vif.VirtualInterfaceState; state != awstypes.VirtualInterfaceStateAvailable && state != awstypes.VirtualInterfaceStateDown && state != awstypes.VirtualInterfaceStateVerifying {
+		log.Printf("[WARN] Direct Connect Hosted Public Virtual Interface (%s) is '%s', removing from state", d.Id(), state)
 		d.SetId("")
 		return diags
 	}
@@ -130,24 +134,16 @@ func resourceHostedPublicVirtualInterfaceAccepterUpdate(ctx context.Context, d *
 	return append(diags, resourceHostedPublicVirtualInterfaceAccepterRead(ctx, d, meta)...)
 }
 
-func resourceHostedPublicVirtualInterfaceAccepterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	log.Printf("[WARN] Will not delete Direct Connect virtual interface. Terraform will remove this resource from the state file, however resources may remain.")
-	return diags
-}
-
 func resourceHostedPublicVirtualInterfaceAccepterImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
-	vif, err := virtualInterfaceRead(ctx, d.Id(), conn)
+	vif, err := findVirtualInterfaceByID(ctx, conn, d.Id())
+
 	if err != nil {
 		return nil, err
 	}
-	if vif == nil {
-		return nil, fmt.Errorf("virtual interface (%s) not found", d.Id())
-	}
 
-	if vifType := aws.StringValue(vif.VirtualInterfaceType); vifType != "public" {
+	if vifType := aws.ToString(vif.VirtualInterfaceType); vifType != "public" {
 		return nil, fmt.Errorf("virtual interface (%s) has incorrect type: %s", d.Id(), vifType)
 	}
 
@@ -163,17 +159,13 @@ func resourceHostedPublicVirtualInterfaceAccepterImport(ctx context.Context, d *
 	return []*schema.ResourceData{d}, nil
 }
 
-func hostedPublicVirtualInterfaceAccepterWaitUntilAvailable(ctx context.Context, conn *directconnect.DirectConnect, vifId string, timeout time.Duration) error {
-	return virtualInterfaceWaitUntilAvailable(ctx, conn,
+func waitHostedPublicVirtualInterfaceAccepterAvailable(ctx context.Context, conn *directconnect.Client, vifId string, timeout time.Duration) (*awstypes.VirtualInterface, error) {
+	return waitVirtualInterfaceAvailable(
+		ctx,
+		conn,
 		vifId,
+		enum.Slice(awstypes.VirtualInterfaceStateConfirming, awstypes.VirtualInterfaceStatePending),
+		enum.Slice(awstypes.VirtualInterfaceStateAvailable, awstypes.VirtualInterfaceStateDown, awstypes.VirtualInterfaceStateVerifying),
 		timeout,
-		[]string{
-			directconnect.VirtualInterfaceStateConfirming,
-			directconnect.VirtualInterfaceStatePending,
-		},
-		[]string{
-			directconnect.VirtualInterfaceStateAvailable,
-			directconnect.VirtualInterfaceStateDown,
-			directconnect.VirtualInterfaceStateVerifying,
-		})
+	)
 }

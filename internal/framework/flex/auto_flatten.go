@@ -45,10 +45,6 @@ func Flatten(ctx context.Context, apiObject, tfObject any, optFns ...AutoFlexOpt
 	})
 
 	diags.Append(autoFlattenConvert(ctx, apiObject, tfObject, flattener)...)
-	if diags.HasError() {
-		diags.AddError("AutoFlEx", fmt.Sprintf("Flatten[%T, %T]", apiObject, tfObject))
-		return diags
-	}
 
 	return diags
 }
@@ -87,7 +83,7 @@ func autoFlattenConvert(ctx context.Context, from, to any, flexer autoFlexer) di
 	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourcePath, sourcePath.String())
 	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetPath, targetPath.String())
 
-	valFrom, valTo, d := autoFlexValues(ctx, from, to)
+	ctx, valFrom, valTo, d := autoFlexValues(ctx, from, to)
 	diags.Append(d...)
 	if diags.HasError() {
 		return diags
@@ -96,10 +92,7 @@ func autoFlattenConvert(ctx context.Context, from, to any, flexer autoFlexer) di
 	// Top-level struct to struct conversion.
 	if valFrom.IsValid() && valTo.IsValid() {
 		if typFrom, typTo := valFrom.Type(), valTo.Type(); typFrom.Kind() == reflect.Struct && typTo.Kind() == reflect.Struct {
-			tflog.SubsystemInfo(ctx, subsystemName, "Converting", map[string]any{
-				logAttrKeySourceType: fullTypeName(valFrom.Type()),
-				logAttrKeyTargetType: fullTypeName(valTo.Type()),
-			})
+			tflog.SubsystemInfo(ctx, subsystemName, "Converting")
 			diags.Append(autoFlexConvertStruct(ctx, sourcePath, from, targetPath, to, flexer)...)
 			return diags
 		}
@@ -117,24 +110,22 @@ func (flattener autoFlattener) convert(ctx context.Context, sourcePath path.Path
 	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourcePath, sourcePath.String())
 	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetPath, targetPath.String())
 
+	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourceType, fullTypeName(valueType(vFrom)))
+	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetType, fullTypeName(valueType(vTo)))
+
 	valTo, ok := vTo.Interface().(attr.Value)
 	if !ok {
-		// Check for `nil` (i.e. Kind == Invalid) here, because primitive types can be `nil`
+		// Check for `nil` (i.e. Kind == Invalid) here, because we allow primitive types to be `nil`
 		if vFrom.Kind() == reflect.Invalid {
-			diags.AddError("AutoFlEx", "Cannot flatten nil source")
+			tflog.SubsystemError(ctx, subsystemName, "Source is nil")
+			diags.Append(diagFlatteningSourceIsNil(valueType(vFrom)))
 			return diags
 		}
 
-		diags.AddError("AutoFlEx", fmt.Sprintf("does not implement attr.Value: %s", vTo.Kind()))
+		tflog.SubsystemError(ctx, subsystemName, "Target does not implement attr.Value")
+		diags.Append(diagFlatteningTargetDoesNotImplementAttrValue(reflect.TypeOf(vTo.Interface())))
 		return diags
 	}
-
-	if vFrom.Kind() == reflect.Invalid {
-		ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourceType, fullTypeName(nil))
-	} else {
-		ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourceType, fullTypeName(vFrom.Type()))
-	}
-	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetType, fullTypeName(vTo.Type()))
 
 	tflog.SubsystemInfo(ctx, subsystemName, "Converting")
 
@@ -156,8 +147,8 @@ func (flattener autoFlattener) convert(ctx context.Context, sourcePath path.Path
 		diags.Append(flattener.string(ctx, vFrom, false, tTo, vTo)...)
 		return diags
 
-	case reflect.Ptr:
-		diags.Append(flattener.ptr(ctx, sourcePath, vFrom, targetPath, tTo, vTo)...)
+	case reflect.Pointer:
+		diags.Append(flattener.pointer(ctx, sourcePath, vFrom, targetPath, tTo, vTo)...)
 		return diags
 
 	case reflect.Slice:
@@ -177,7 +168,7 @@ func (flattener autoFlattener) convert(ctx context.Context, sourcePath path.Path
 		return diags
 	}
 
-	tflog.SubsystemInfo(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
 		"from": vFrom.Kind(),
 		"to":   tTo,
 	})
@@ -208,7 +199,7 @@ func (flattener autoFlattener) bool(ctx context.Context, vFrom reflect.Value, is
 		return diags
 	}
 
-	tflog.SubsystemInfo(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
 		"from": vFrom.Kind(),
 		"to":   tTo,
 	})
@@ -245,7 +236,7 @@ func (flattener autoFlattener) float(ctx context.Context, vFrom reflect.Value, i
 		return diags
 	}
 
-	tflog.SubsystemInfo(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
 		"from": vFrom.Kind(),
 		"to":   tTo,
 	})
@@ -276,7 +267,7 @@ func (flattener autoFlattener) int(ctx context.Context, vFrom reflect.Value, isN
 		return diags
 	}
 
-	tflog.SubsystemInfo(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
 		"from": vFrom.Kind(),
 		"to":   tTo,
 	})
@@ -310,7 +301,7 @@ func (flattener autoFlattener) string(ctx context.Context, vFrom reflect.Value, 
 		return diags
 	}
 
-	tflog.SubsystemInfo(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
 		"from": vFrom.Kind(),
 		"to":   tTo,
 	})
@@ -348,7 +339,7 @@ func (flattener autoFlattener) time(ctx context.Context, vFrom reflect.Value, is
 		return diags
 	}
 
-	tflog.SubsystemInfo(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
 		"from": vFrom.Kind(),
 		"to":   vTo,
 	})
@@ -356,8 +347,8 @@ func (flattener autoFlattener) time(ctx context.Context, vFrom reflect.Value, is
 	return diags
 }
 
-// ptr copies an AWS API pointer value to a compatible Plugin Framework value.
-func (flattener autoFlattener) ptr(ctx context.Context, sourcePath path.Path, vFrom reflect.Value, targetPath path.Path, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+// pointer copies an AWS API pointer value to a compatible Plugin Framework value.
+func (flattener autoFlattener) pointer(ctx context.Context, sourcePath path.Path, vFrom reflect.Value, targetPath path.Path, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch vElem, isNilFrom := vFrom.Elem(), vFrom.IsNil(); vFrom.Type().Elem().Kind() {
@@ -382,7 +373,7 @@ func (flattener autoFlattener) ptr(ctx context.Context, sourcePath path.Path, vF
 		return diags
 	}
 
-	tflog.SubsystemInfo(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
 		"from": vFrom.Kind(),
 		"to":   tTo,
 	})
@@ -400,11 +391,16 @@ func (flattener autoFlattener) interface_(ctx context.Context, vFrom reflect.Val
 			//
 			// JSONStringer -> types.String-ish.
 			//
-			if vFrom.Type().Implements(reflect.TypeOf((*smithyjson.JSONStringer)(nil)).Elem()) {
-				doc := vFrom.Interface().(smithyjson.JSONStringer)
+			if doc, ok := vFrom.Interface().(smithyjson.JSONStringer); ok {
 				b, err := doc.MarshalSmithyDocument()
 				if err != nil {
-					diags.AddError("AutoFlEx", err.Error())
+					// An error here would be an upstream error in the AWS SDK, because errors in json.Marshal
+					// are caused by conditions such as cyclic structures
+					// See https://pkg.go.dev/encoding/json#Marshal
+					tflog.SubsystemError(ctx, subsystemName, "Marshalling JSON document", map[string]any{
+						logAttrKeyError: err.Error(),
+					})
+					diags.Append(diagFlatteningMarshalSmithyDocument(reflect.TypeOf(doc), err))
 					return diags
 				}
 				stringValue = types.StringValue(string(b))
@@ -427,7 +423,7 @@ func (flattener autoFlattener) interface_(ctx context.Context, vFrom reflect.Val
 		return diags
 	}
 
-	tflog.SubsystemInfo(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
 		"from": vFrom.Kind(),
 		"to":   tTo,
 	})
@@ -501,7 +497,7 @@ func (flattener autoFlattener) slice(ctx context.Context, sourcePath path.Path, 
 			return diags
 		}
 
-	case reflect.Ptr:
+	case reflect.Pointer:
 		switch tSliceElem.Elem().Kind() {
 		case reflect.Int32:
 			switch tTo := tTo.(type) {
@@ -583,7 +579,7 @@ func (flattener autoFlattener) slice(ctx context.Context, sourcePath path.Path, 
 		}
 	}
 
-	tflog.SubsystemInfo(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
 		"from": vFrom.Kind(),
 		"to":   tTo,
 	})
@@ -721,7 +717,7 @@ func (flattener autoFlattener) map_(ctx context.Context, sourcePath path.Path, v
 					vTo.Set(reflect.ValueOf(to))
 					return diags
 
-				case reflect.Ptr:
+				case reflect.Pointer:
 					from := vFrom.Interface().(map[string]map[string]*string)
 					tflog.SubsystemTrace(ctx, subsystemName, "Flattening map", map[string]any{
 						logAttrKeySourceSize: len(from),
@@ -764,7 +760,7 @@ func (flattener autoFlattener) map_(ctx context.Context, sourcePath path.Path, v
 				}
 			}
 
-		case reflect.Ptr:
+		case reflect.Pointer:
 			switch tMapElem.Elem().Kind() {
 			case reflect.Struct:
 				if tTo, ok := tTo.(fwtypes.NestedObjectCollectionType); ok {
@@ -826,7 +822,7 @@ func (flattener autoFlattener) map_(ctx context.Context, sourcePath path.Path, v
 		}
 	}
 
-	tflog.SubsystemInfo(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
 		"from": vFrom.Kind(),
 		"to":   tTo,
 	})
@@ -871,17 +867,21 @@ func (flattener autoFlattener) structMapToObjectList(ctx context.Context, source
 		}
 
 		fromInterface := vFrom.MapIndex(key).Interface()
-		if vFrom.MapIndex(key).Kind() == reflect.Ptr {
+		if vFrom.MapIndex(key).Kind() == reflect.Pointer {
 			fromInterface = vFrom.MapIndex(key).Elem().Interface()
+		}
+
+		ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourceType, fullTypeName(reflect.TypeOf(fromInterface)))
+
+		diags.Append(setMapBlockKey(ctx, target, key)...)
+		if diags.HasError() {
+			return diags
 		}
 
 		diags.Append(autoFlexConvertStruct(ctx, sourcePath, fromInterface, targetPath, target, flattener)...)
 		if diags.HasError() {
 			return diags
 		}
-
-		d = blockKeyMapSet(target, key)
-		diags.Append(d...)
 
 		t.Index(i).Set(reflect.ValueOf(target))
 		i++
@@ -967,7 +967,7 @@ func (flattener autoFlattener) interfaceToNestedObject(ctx context.Context, vFro
 
 		vTo.Set(reflect.ValueOf(val))
 
-		tflog.SubsystemInfo(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]any{
+		tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]any{
 			"from": vFrom.Kind(),
 			"to":   tTo,
 		})
@@ -1123,14 +1123,16 @@ func (flattener autoFlattener) sliceOfStructToNestedObjectCollection(ctx context
 	return diags
 }
 
-// blockKeyMapSet takes a struct and assigns the value of the `key`
-func blockKeyMapSet(to any, key reflect.Value) diag.Diagnostics {
+// setMapBlockKey takes a struct and assigns the value of the `key`
+func setMapBlockKey(ctx context.Context, to any, key reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	valTo := reflect.ValueOf(to)
-	if kind := valTo.Kind(); kind == reflect.Ptr {
+	if kind := valTo.Kind(); kind == reflect.Pointer {
 		valTo = valTo.Elem()
 	}
+
+	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetType, fullTypeName(valueType(valTo)))
 
 	if valTo.Kind() != reflect.Struct {
 		diags.AddError("AutoFlEx", fmt.Sprintf("wrong type (%T), expected struct", valTo))
@@ -1143,7 +1145,7 @@ func blockKeyMapSet(to any, key reflect.Value) diag.Diagnostics {
 			continue // Skip unexported fields.
 		}
 
-		if field.Name != MapBlockKey {
+		if field.Name != mapBlockKeyFieldName {
 			continue
 		}
 
@@ -1165,7 +1167,8 @@ func blockKeyMapSet(to any, key reflect.Value) diag.Diagnostics {
 		return diags
 	}
 
-	diags.AddError("AutoFlEx", fmt.Sprintf("unable to find map block key (%s)", MapBlockKey))
+	tflog.SubsystemError(ctx, subsystemName, "Target has no map block key")
+	diags.Append(diagFlatteningNoMapBlockKey(valTo.Type()))
 
 	return diags
 }
@@ -1216,7 +1219,7 @@ func flattenFlattener(ctx context.Context, fromVal reflect.Value, toFlattener Fl
 func flattenPrePopulate(ctx context.Context, toVal reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	if toVal.Kind() == reflect.Ptr {
+	if toVal.Kind() == reflect.Pointer {
 		toVal = toVal.Elem()
 	}
 
@@ -1258,4 +1261,44 @@ func flattenPrePopulate(ctx context.Context, toVal reflect.Value) diag.Diagnosti
 	}
 
 	return diags
+}
+
+func diagFlatteningSourceIsNil(sourceType reflect.Type) diag.ErrorDiagnostic {
+	return diag.NewErrorDiagnostic(
+		"Incompatible Types",
+		"An unexpected error occurred while flattening configuration. "+
+			"This is always an error in the provider. "+
+			"Please report the following to the provider developer:\n\n"+
+			fmt.Sprintf("Source of type %q is nil.", fullTypeName(sourceType)),
+	)
+}
+
+func diagFlatteningTargetDoesNotImplementAttrValue(targetType reflect.Type) diag.ErrorDiagnostic {
+	return diag.NewErrorDiagnostic(
+		"Incompatible Types",
+		"An unexpected error occurred while flattening configuration. "+
+			"This is always an error in the provider. "+
+			"Please report the following to the provider developer:\n\n"+
+			fmt.Sprintf("Target type %q does not implement attr.Value", fullTypeName(targetType)),
+	)
+}
+
+func diagFlatteningNoMapBlockKey(sourceType reflect.Type) diag.ErrorDiagnostic {
+	return diag.NewErrorDiagnostic(
+		"Incompatible Types",
+		"An unexpected error occurred while flattening configuration. "+
+			"This is always an error in the provider. "+
+			"Please report the following to the provider developer:\n\n"+
+			fmt.Sprintf("Target type %q does not contain field %q", fullTypeName(sourceType), mapBlockKeyFieldName),
+	)
+}
+
+func diagFlatteningMarshalSmithyDocument(sourceType reflect.Type, err error) diag.ErrorDiagnostic {
+	return diag.NewErrorDiagnostic(
+		"Incompatible Types",
+		"An unexpected error occurred while flattening configuration. "+
+			"This is always an error in the provider. "+
+			"Please report the following to the provider developer:\n\n"+
+			fmt.Sprintf("Marshalling JSON document of type %q failed: %s", fullTypeName(sourceType), err.Error()),
+	)
 }

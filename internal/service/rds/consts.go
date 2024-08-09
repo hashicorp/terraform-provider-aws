@@ -60,7 +60,7 @@ const (
 	storageTypeAuroraIOPT1 = "aurora-iopt1"
 )
 
-func StorageType_Values() []string {
+func storageType_Values() []string {
 	return []string{
 		storageTypeStandard,
 		storageTypeGP2,
@@ -126,11 +126,11 @@ const (
 )
 
 const (
-	GlobalClusterStatusAvailable = "available"
-	GlobalClusterStatusCreating  = "creating"
-	GlobalClusterStatusDeleting  = "deleting"
-	GlobalClusterStatusModifying = "modifying"
-	GlobalClusterStatusUpgrading = "upgrading"
+	globalClusterStatusAvailable = "available"
+	globalClusterStatusCreating  = "creating"
+	globalClusterStatusDeleting  = "deleting"
+	globalClusterStatusModifying = "modifying"
+	globalClusterStatusUpgrading = "upgrading"
 )
 
 const (
@@ -157,7 +157,7 @@ const (
 	ClusterEngineCustomPrefix     = "custom-"
 )
 
-func ClusterEngine_Values() []string {
+func clusterEngine_Values() []string {
 	return []string{
 		ClusterEngineAuroraMySQL,
 		ClusterEngineAuroraPostgreSQL,
@@ -166,7 +166,7 @@ func ClusterEngine_Values() []string {
 	}
 }
 
-func ClusterInstanceEngine_Values() []string {
+func clusterInstanceEngine_Values() []string {
 	return []string{
 		ClusterEngineAuroraMySQL,
 		ClusterEngineAuroraPostgreSQL,
@@ -265,38 +265,38 @@ func InstanceExportableLogType_Values() []string {
 }
 
 const (
-	NetworkTypeDual = "DUAL"
-	NetworkTypeIPv4 = "IPV4"
+	networkTypeDual = "DUAL"
+	networkTypeIPv4 = "IPV4"
 )
 
-func NetworkType_Values() []string {
+func networkType_Values() []string {
 	return []string{
-		NetworkTypeDual,
-		NetworkTypeIPv4,
+		networkTypeDual,
+		networkTypeIPv4,
 	}
 }
 
 const (
-	RestoreTypeCopyOnWrite = "copy-on-write"
-	RestoreTypeFullCopy    = "full-copy"
+	restoreTypeCopyOnWrite = "copy-on-write"
+	restoreTypeFullCopy    = "full-copy"
 )
 
-func RestoreType_Values() []string {
+func restoreType_Values() []string {
 	return []string{
-		RestoreTypeCopyOnWrite,
-		RestoreTypeFullCopy,
+		restoreTypeCopyOnWrite,
+		restoreTypeFullCopy,
 	}
 }
 
 const (
-	TimeoutActionForceApplyCapacityChange = "ForceApplyCapacityChange"
-	TimeoutActionRollbackCapacityChange   = "RollbackCapacityChange"
+	timeoutActionForceApplyCapacityChange = "ForceApplyCapacityChange"
+	timeoutActionRollbackCapacityChange   = "RollbackCapacityChange"
 )
 
-func TimeoutAction_Values() []string {
+func timeoutAction_Values() []string {
 	return []string{
-		TimeoutActionForceApplyCapacityChange,
-		TimeoutActionRollbackCapacityChange,
+		timeoutActionForceApplyCapacityChange,
+		timeoutActionRollbackCapacityChange,
 	}
 }
 
