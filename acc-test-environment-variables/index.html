@@ -1,0 +1,1349 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Contributor documentation and reference for the Terraform AWS Provider">
+      
+      
+      
+      
+        <link rel="prev" href="../prioritization/">
+      
+      
+        <link rel="next" href="../aws-go-sdk-versions/">
+      
+      <link rel="icon" href="../images/hashicorp-black.png">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.0.6">
+    
+    
+      
+        <title>Acceptance Test Environment Variables - Terraform AWS Provider - Contributor Guide</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.558e4712.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.2505c338.min.css">
+      
+      
+
+    
+    
+    
+      
+    
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="hashicorp" data-md-color-primary="black" data-md-color-accent="blue">
+  
+    
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#acceptance-testing-environment-variable-dictionary" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Terraform AWS Provider - Contributor Guide" class="md-header__button md-logo" aria-label="Terraform AWS Provider - Contributor Guide" data-md-component="logo">
+      
+  <img src="../images/hashicorp.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Terraform AWS Provider - Contributor Guide
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Acceptance Test Environment Variables
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/hashicorp/terraform-provider-aws" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    hashicorp/terraform-provider-aws
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Terraform AWS Provider - Contributor Guide" class="md-nav__button md-logo" aria-label="Terraform AWS Provider - Contributor Guide" data-md-component="logo">
+      
+  <img src="../images/hashicorp.png" alt="logo">
+
+    </a>
+    Terraform AWS Provider - Contributor Guide
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/hashicorp/terraform-provider-aws" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    hashicorp/terraform-provider-aws
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        Welcome
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_2" type="checkbox" id="__nav_2" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2" tabindex="0" aria-expanded="false">
+          Contribute
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Contribute" data-md-level="1">
+        <label class="md-nav__title" for="__nav_2">
+          <span class="md-nav__icon md-icon"></span>
+          Contribute
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development-environment/" class="md-nav__link">
+        Development Environment
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_2_2" type="checkbox" id="__nav_2_2" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2_2" tabindex="0" aria-expanded="false">
+          Contribution Guides
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Contribution Guides" data-md-level="2">
+        <label class="md-nav__title" for="__nav_2_2">
+          <span class="md-nav__icon md-icon"></span>
+          Contribution Guides
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-resource/" class="md-nav__link">
+        Resource
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-service/" class="md-nav__link">
+        Service
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-datasource/" class="md-nav__link">
+        Data source
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-function/" class="md-nav__link">
+        Function
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-region/" class="md-nav__link">
+        AWS Region
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-import-support/" class="md-nav__link">
+        Import Support
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../resource-filtering/" class="md-nav__link">
+        Resource Filtering
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../resource-name-generation/" class="md-nav__link">
+        Resource Name Generation
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../resource-tagging/" class="md-nav__link">
+        Resource Tagging
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../adding-a-tag-resource/" class="md-nav__link">
+        Tag Resource
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bugs-and-enhancements/" class="md-nav__link">
+        Bugs and Enhancements
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../documentation-changes/" class="md-nav__link">
+        Documentation Changes
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../running-and-writing-acceptance-tests/" class="md-nav__link">
+        Acceptance Tests
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../continuous-integration/" class="md-nav__link">
+        Continuous Integration
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../changelog-process/" class="md-nav__link">
+        Changelog Process
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../raising-a-pull-request/" class="md-nav__link">
+        Raising a Pull Request
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../prioritization/" class="md-nav__link">
+        How We Prioritize
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_3" type="checkbox" id="__nav_3" checked>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3" tabindex="0" aria-expanded="true">
+          Developer Reference
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Developer Reference" data-md-level="1">
+        <label class="md-nav__title" for="__nav_3">
+          <span class="md-nav__icon md-icon"></span>
+          Developer Reference
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        Acceptance Test Environment Variables
+      </a>
+      
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../aws-go-sdk-versions/" class="md-nav__link">
+        AWS SDK for Go Versions
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../aws-go-sdk-migrations/" class="md-nav__link">
+        AWS SDK for Go Migrations
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../aws-sdk-go-base/" class="md-nav__link">
+        AWS SDK Go Base
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../core-services/" class="md-nav__link">
+        Core Services
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data-handling-and-conversion/" class="md-nav__link">
+        Data Handling and Conversion
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../debugging/" class="md-nav__link">
+        Debugging
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dependency-updates/" class="md-nav__link">
+        Dependency Updates
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../design-decision-log/" class="md-nav__link">
+        Design Decision Log
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../error-handling/" class="md-nav__link">
+        Error Handling
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../makefile-cheat-sheet/" class="md-nav__link">
+        Makefile Cheat Sheet
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../naming/" class="md-nav__link">
+        Naming Standards
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../provider-design/" class="md-nav__link">
+        Provider Design
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../skaff/" class="md-nav__link">
+        Provider Scaffolding (skaff)
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../regular-expressions/" class="md-nav__link">
+        Regular Expressions
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../retries-and-waiters/" class="md-nav__link">
+        Retries and Waiters
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../terraform-plugin-development-packages/" class="md-nav__link">
+        Terraform Plugin Development Packages
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../terraform-plugin-migrations/" class="md-nav__link">
+        Terraform Plugin Migrations
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../issue-reporting-and-lifecycle/" class="md-nav__link">
+        Submit an Issue
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../faq/" class="md-nav__link">
+        FAQ
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+
+<h1 id="acceptance-testing-environment-variable-dictionary">Acceptance Testing Environment Variable Dictionary<a class="headerlink" href="#acceptance-testing-environment-variable-dictionary" title="Permanent link">#</a></h1>
+<p>Environment variables (beyond standard AWS Go SDK ones) used by acceptance testing. See also the <code>internal/acctest</code> package.</p>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ACM_CERTIFICATE_ROOT_DOMAIN</code></td>
+<td>Root domain name to use with ACM Certificate testing.</td>
+</tr>
+<tr>
+<td><code>ACM_CERTIFICATE_MULTIPLE_ISSUED_DOMAIN</code></td>
+<td>Domain name of ACM Certificate with multiple issued certificates. <strong>DEPRECATED:</strong> Should be replaced with <code>aws_acm_certificate</code> resource usage in tests.</td>
+</tr>
+<tr>
+<td><code>ACM_CERTIFICATE_MULTIPLE_ISSUED_MOST_RECENT_ARN</code></td>
+<td>Amazon Resource Name of most recent ACM Certificate with multiple issued certificates. <strong>DEPRECATED:</strong> Should be replaced with <code>aws_acm_certificate</code> resource usage in tests.</td>
+</tr>
+<tr>
+<td><code>ACM_CERTIFICATE_SINGLE_ISSUED_DOMAIN</code></td>
+<td>Domain name of ACM Certificate with a single issued certificate. <strong>DEPRECATED:</strong> Should be replaced with <code>aws_acm_certificate</code> resource usage in tests.</td>
+</tr>
+<tr>
+<td><code>ACM_CERTIFICATE_SINGLE_ISSUED_MOST_RECENT_ARN</code></td>
+<td>Amazon Resource Name of most recent ACM Certificate with a single issued certificate. <strong>DEPRECATED:</strong> Should be replaced with <code>aws_acm_certificate</code> resource usage in tests.</td>
+</tr>
+<tr>
+<td><code>ADM_CLIENT_ID</code></td>
+<td>Identifier for Amazon Device Manager Client in Pinpoint testing.</td>
+</tr>
+<tr>
+<td><code>AMPLIFY_DOMAIN_NAME</code></td>
+<td>Domain name to use for Amplify domain association testing.</td>
+</tr>
+<tr>
+<td><code>AMPLIFY_GITHUB_ACCESS_TOKEN</code></td>
+<td>GitHub access token used for AWS Amplify testing.</td>
+</tr>
+<tr>
+<td><code>AMPLIFY_GITHUB_REPOSITORY</code></td>
+<td>GitHub repository used for AWS Amplify testing.</td>
+</tr>
+<tr>
+<td><code>ADM_CLIENT_SECRET</code></td>
+<td>Secret for Amazon Device Manager Client in Pinpoint testing.</td>
+</tr>
+<tr>
+<td><code>APNS_BUNDLE_ID</code></td>
+<td>Identifier for Apple Push Notification Service Bundle in Pinpoint testing.</td>
+</tr>
+<tr>
+<td><code>APNS_CERTIFICATE</code></td>
+<td>Certificate (PEM format) for Apple Push Notification Service in Pinpoint testing.</td>
+</tr>
+<tr>
+<td><code>APNS_CERTIFICATE_PRIVATE_KEY</code></td>
+<td>Private key for Apple Push Notification Service in Pinpoint testing.</td>
+</tr>
+<tr>
+<td><code>APNS_SANDBOX_BUNDLE_ID</code></td>
+<td>Identifier for Sandbox Apple Push Notification Service Bundle in Pinpoint testing.</td>
+</tr>
+<tr>
+<td><code>APNS_SANDBOX_CERTIFICATE</code></td>
+<td>Certificate (PEM format) for Sandbox Apple Push Notification Service in Pinpoint testing.</td>
+</tr>
+<tr>
+<td><code>APNS_SANDBOX_CERTIFICATE_PRIVATE_KEY</code></td>
+<td>Private key for Sandbox Apple Push Notification Service in Pinpoint testing.</td>
+</tr>
+<tr>
+<td><code>APNS_SANDBOX_CREDENTIAL</code></td>
+<td>Credential contents for Sandbox Apple Push Notification Service in SNS Application Platform testing. Conflicts with <code>APNS_SANDBOX_CREDENTIAL_PATH</code>.</td>
+</tr>
+<tr>
+<td><code>APNS_SANDBOX_CREDENTIAL_PATH</code></td>
+<td>Path to credential for Sandbox Apple Push Notification Service in SNS Application Platform testing. Conflicts with <code>APNS_SANDBOX_CREDENTIAL</code>.</td>
+</tr>
+<tr>
+<td><code>APNS_SANDBOX_PRINCIPAL</code></td>
+<td>Principal contents for Sandbox Apple Push Notification Service in SNS Application Platform testing. Conflicts with <code>APNS_SANDBOX_PRINCIPAL_PATH</code>.</td>
+</tr>
+<tr>
+<td><code>APNS_SANDBOX_PRINCIPAL_PATH</code></td>
+<td>Path to the principal for Sandbox Apple Push Notification Service in SNS Application Platform testing. Conflicts with <code>APNS_SANDBOX_PRINCIPAL</code>.</td>
+</tr>
+<tr>
+<td><code>APNS_SANDBOX_TEAM_ID</code></td>
+<td>Identifier for Sandbox Apple Push Notification Service Team in Pinpoint testing.</td>
+</tr>
+<tr>
+<td><code>APNS_SANDBOX_TOKEN_KEY</code></td>
+<td>Token key file content (.p8 format) for Sandbox Apple Push Notification Service in Pinpoint testing.</td>
+</tr>
+<tr>
+<td><code>APNS_SANDBOX_TOKEN_KEY_ID</code></td>
+<td>Identifier for Sandbox Apple Push Notification Service Token Key in Pinpoint testing.</td>
+</tr>
+<tr>
+<td><code>APNS_TEAM_ID</code></td>
+<td>Identifier for Apple Push Notification Service Team in Pinpoint testing.</td>
+</tr>
+<tr>
+<td><code>APNS_TOKEN_KEY</code></td>
+<td>Token key file content (.p8 format) for Apple Push Notification Service in Pinpoint testing.</td>
+</tr>
+<tr>
+<td><code>APNS_TOKEN_KEY_ID</code></td>
+<td>Identifier for Apple Push Notification Service Token Key in Pinpoint testing.</td>
+</tr>
+<tr>
+<td><code>APNS_VOIP_BUNDLE_ID</code></td>
+<td>Identifier for VOIP Apple Push Notification Service Bundle in Pinpoint testing.</td>
+</tr>
+<tr>
+<td><code>APNS_VOIP_CERTIFICATE</code></td>
+<td>Certificate (PEM format) for VOIP Apple Push Notification Service in Pinpoint testing.</td>
+</tr>
+<tr>
+<td><code>APNS_VOIP_CERTIFICATE_PRIVATE_KEY</code></td>
+<td>Private key for VOIP Apple Push Notification Service in Pinpoint testing.</td>
+</tr>
+<tr>
+<td><code>APNS_VOIP_TEAM_ID</code></td>
+<td>Identifier for VOIP Apple Push Notification Service Team in Pinpoint testing.</td>
+</tr>
+<tr>
+<td><code>APNS_VOIP_TOKEN_KEY</code></td>
+<td>Token key file content (.p8 format) for VOIP Apple Push Notification Service in Pinpoint testing.</td>
+</tr>
+<tr>
+<td><code>APNS_VOIP_TOKEN_KEY_ID</code></td>
+<td>Identifier for VOIP Apple Push Notification Service Token Key in Pinpoint testing.</td>
+</tr>
+<tr>
+<td><code>APPRUNNER_CUSTOM_DOMAIN</code></td>
+<td>A custom domain endpoint (root domain, subdomain, or wildcard) for AppRunner Custom Domain Association testing.</td>
+</tr>
+<tr>
+<td><code>AUDITMANAGER_DEREGISTER_ACCOUNT_ON_DESTROY</code></td>
+<td>Flag to execute tests that will disable AuditManager in the account upon destruction.</td>
+</tr>
+<tr>
+<td><code>AUDITMANAGER_ORGANIZATION_ADMIN_ACCOUNT_ID</code></td>
+<td>Organization admin account identifier for use in AuditManager testing.</td>
+</tr>
+<tr>
+<td><code>AWS_ALTERNATE_ACCESS_KEY_ID</code></td>
+<td>AWS access key ID with access to a secondary AWS account for tests requiring multiple accounts. Requires <code>AWS_ALTERNATE_SECRET_ACCESS_KEY</code>. Conflicts with <code>AWS_ALTERNATE_PROFILE</code>.</td>
+</tr>
+<tr>
+<td><code>AWS_ALTERNATE_SECRET_ACCESS_KEY</code></td>
+<td>AWS secret access key with access to a secondary AWS account for tests requiring multiple accounts. Requires <code>AWS_ALTERNATE_ACCESS_KEY_ID</code>. Conflicts with <code>AWS_ALTERNATE_PROFILE</code>.</td>
+</tr>
+<tr>
+<td><code>AWS_ALTERNATE_PROFILE</code></td>
+<td>AWS profile with access to a secondary AWS account for tests requiring multiple accounts. Conflicts with <code>AWS_ALTERNATE_ACCESS_KEY_ID</code> and <code>AWS_ALTERNATE_SECRET_ACCESS_KEY</code>.</td>
+</tr>
+<tr>
+<td><code>AWS_ALTERNATE_REGION</code></td>
+<td>Secondary AWS region for tests requiring multiple regions. Defaults to <code>us-east-1</code>.</td>
+</tr>
+<tr>
+<td><code>AWS_API_GATEWAY_DOMAIN_NAME_CERTIFICATE_BODY</code></td>
+<td>Certificate body of publicly trusted certificate for API Gateway Domain Name testing.</td>
+</tr>
+<tr>
+<td><code>AWS_API_GATEWAY_DOMAIN_NAME_CERTIFICATE_CHAIN</code></td>
+<td>Certificate chain of publicly trusted certificate for API Gateway Domain Name testing.</td>
+</tr>
+<tr>
+<td><code>AWS_API_GATEWAY_DOMAIN_NAME_CERTIFICATE_PRIVATE_KEY</code></td>
+<td>Private key of publicly trusted certificate for API Gateway Domain Name testing.</td>
+</tr>
+<tr>
+<td><code>AWS_API_GATEWAY_DOMAIN_NAME_REGIONAL_CERTIFICATE_NAME_ENABLED</code></td>
+<td>Flag to enable API Gateway Domain Name regional certificate upload testing.</td>
+</tr>
+<tr>
+<td><code>AWS_CODEBUILD_BITBUCKET_SOURCE_LOCATION</code></td>
+<td>BitBucket source URL for CodeBuild testing. CodeBuild must have access to this repository via OAuth or Source Credentials. Defaults to <code>https://terraform@bitbucket.org/terraform/aws-test.git</code>.</td>
+</tr>
+<tr>
+<td><code>AWS_CODEBUILD_GITHUB_SOURCE_LOCATION</code></td>
+<td>GitHub source URL for CodeBuild testing. CodeBuild must have access to this repository via OAuth or Source Credentials. Defaults to <code>https://github.com/hashibot-test/aws-test.git</code>.</td>
+</tr>
+<tr>
+<td><code>AWS_DEFAULT_REGION</code></td>
+<td>Primary AWS region for tests. Defaults to <code>us-west-2</code>.</td>
+</tr>
+<tr>
+<td><code>AWS_DETECTIVE_MEMBER_EMAIL</code></td>
+<td>Email address for Detective Member testing. A valid email address associated with an AWS root account is required for tests to pass.</td>
+</tr>
+<tr>
+<td><code>AWS_EC2_CLIENT_VPN_LIMIT</code></td>
+<td>Concurrency limit for Client VPN acceptance tests. <a href="https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/limits.html">Default is 5</a> if not specified.</td>
+</tr>
+<tr>
+<td><code>AWS_EC2_EIP_PUBLIC_IPV4_POOL</code></td>
+<td>Identifier for EC2 Public IPv4 Pool for EC2 EIP testing.</td>
+</tr>
+<tr>
+<td><code>AWS_EC2_TRANSIT_GATEWAY_LIMIT</code></td>
+<td>Concurrency limit for Transit Gateway acceptance tests. <a href="https://docs.aws.amazon.com/vpc/latest/tgw/transit-gateway-quotas.html">Default is 5</a> if not specified.</td>
+</tr>
+<tr>
+<td><code>AWS_EC2_VERIFIED_ACCESS_INSTANCE_LIMIT</code></td>
+<td>Concurrency limit for Verified Access acceptance tests. <a href="https://docs.aws.amazon.com/verified-access/latest/ug/verified-access-quotas.html">Default is 5</a> if not specified.</td>
+</tr>
+<tr>
+<td><code>AWS_GUARDDUTY_MEMBER_ACCOUNT_ID</code></td>
+<td>Identifier of AWS Account for GuardDuty Member testing. <strong>DEPRECATED:</strong> Should be replaced with standard alternate account handling for tests.</td>
+</tr>
+<tr>
+<td><code>AWS_GUARDDUTY_MEMBER_EMAIL</code></td>
+<td>Email address for GuardDuty Member testing. <strong>DEPRECATED:</strong> It may be possible to use a placeholder email address instead.</td>
+</tr>
+<tr>
+<td><code>AWS_LAMBDA_IMAGE_LATEST_ID</code></td>
+<td>ECR repository image URI (tagged as <code>latest</code>) for Lambda container image acceptance tests.</td>
+</tr>
+<tr>
+<td><code>AWS_LAMBDA_IMAGE_V1_ID</code></td>
+<td>ECR repository image URI (tagged as <code>v1</code>) for Lambda container image acceptance tests.</td>
+</tr>
+<tr>
+<td><code>AWS_LAMBDA_IMAGE_V2_ID</code></td>
+<td>ECR repository image URI (tagged as <code>v2</code>) for Lambda container image acceptance tests.</td>
+</tr>
+<tr>
+<td><code>AWS_THIRD_ACCESS_KEY_ID</code></td>
+<td>AWS access key ID with access to a third AWS account for tests requiring multiple accounts. Requires <code>AWS_THIRD_SECRET_ACCESS_KEY</code>. Conflicts with <code>AWS_THIRD_PROFILE</code>.</td>
+</tr>
+<tr>
+<td><code>AWS_THIRD_SECRET_ACCESS_KEY</code></td>
+<td>AWS secret access key with access to a third AWS account for tests requiring multiple accounts. Requires <code>AWS_THIRD_ACCESS_KEY_ID</code>. Conflicts with <code>AWS_THIRD_PROFILE</code>.</td>
+</tr>
+<tr>
+<td><code>AWS_THIRD_PROFILE</code></td>
+<td>AWS profile with access to a third AWS account for tests requiring multiple accounts. Conflicts with <code>AWS_THIRD_ACCESS_KEY_ID</code> and <code>AWS_THIRD_SECRET_ACCESS_KEY</code>.</td>
+</tr>
+<tr>
+<td><code>AWS_THIRD_REGION</code></td>
+<td>Third AWS region for tests requiring multiple regions. Defaults to <code>us-east-2</code>.</td>
+</tr>
+<tr>
+<td><code>CHATBOT_SLACK_CHANNEL_ID</code></td>
+<td>ID of the Slack channel.</td>
+</tr>
+<tr>
+<td><code>CHATBOT_SLACK_TEAM_ID</code></td>
+<td>ID of the Slack workspace authorized with AWS Chatbot.</td>
+</tr>
+<tr>
+<td><code>CHATBOT_TEAMS_CHANNEL_ID</code></td>
+<td>ID of the Microsoft Teams channel.</td>
+</tr>
+<tr>
+<td><code>CHATBOT_TEAMS_TEAM_ID</code></td>
+<td>ID of the Microsoft Teams workspace authorized with AWS Chatbot.</td>
+</tr>
+<tr>
+<td><code>CHATBOT_TEAMS_TENANT_ID</code></td>
+<td>ID of the Microsoft Teams tenant.</td>
+</tr>
+<tr>
+<td><code>DX_CONNECTION_ID</code></td>
+<td>Identifier for Direct Connect Connection testing.</td>
+</tr>
+<tr>
+<td><code>DX_VIRTUAL_INTERFACE_ID</code></td>
+<td>Identifier for Direct Connect Virtual Interface testing.</td>
+</tr>
+<tr>
+<td><code>EC2_SECURITY_GROUP_RULES_PER_GROUP_LIMIT</code></td>
+<td>EC2 Quota for Rules per Security Group. Defaults to 50. <strong>DEPRECATED:</strong> Can be augmented or replaced with Service Quotas lookup.</td>
+</tr>
+<tr>
+<td><code>EVENT_BRIDGE_PARTNER_EVENT_BUS_NAME</code></td>
+<td>Amazon EventBridge partner event bus name.</td>
+</tr>
+<tr>
+<td><code>EVENT_BRIDGE_PARTNER_EVENT_SOURCE_NAME</code></td>
+<td>Amazon EventBridge partner event source name.</td>
+</tr>
+<tr>
+<td><code>FINSPACE_MANAGED_KX_LICENSE_ENABLED</code></td>
+<td>Enables tests requiring a license to provision managed KX resources.</td>
+</tr>
+<tr>
+<td><code>GCM_API_KEY</code></td>
+<td>API Key for Google Cloud Messaging in Pinpoint and SNS Platform Application testing.</td>
+</tr>
+<tr>
+<td><code>GITHUB_TOKEN</code></td>
+<td>GitHub token for CodePipeline testing.</td>
+</tr>
+<tr>
+<td><code>GLOBALACCERATOR_BYOIP_IPV4_ADDRESS</code></td>
+<td>IPv4 address from a BYOIP CIDR of AWS Account used for testing Global Accelerator's BYOIP accelerator.</td>
+</tr>
+<tr>
+<td><code>GRAFANA_SSO_GROUP_ID</code></td>
+<td>AWS SSO group ID for Grafana testing.</td>
+</tr>
+<tr>
+<td><code>GRAFANA_SSO_USER_ID</code></td>
+<td>AWS SSO user ID for Grafana testing.</td>
+</tr>
+<tr>
+<td><code>MACIE_MEMBER_ACCOUNT_ID</code></td>
+<td>Identifier of AWS Account for Macie Member testing. <strong>DEPRECATED:</strong> Should be replaced with standard alternate account handling for tests.</td>
+</tr>
+<tr>
+<td><code>QUICKSIGHT_NAMESPACE</code></td>
+<td>QuickSight namespace name for testing.</td>
+</tr>
+<tr>
+<td><code>QUICKSIGHT_ATHENA_TESTING_ENABLED</code></td>
+<td>Enable QuickSight tests dependent on Amazon Athena resources.</td>
+</tr>
+<tr>
+<td><code>ROUTE53DOMAINS_DOMAIN_NAME</code></td>
+<td>Registered domain for Route 53 Domains testing.</td>
+</tr>
+<tr>
+<td><code>RESOURCEEXPLORER_INDEX_TYPE</code></td>
+<td>Index Type for Resource Explorer 2 Search datasource testing.</td>
+</tr>
+<tr>
+<td><code>SAGEMAKER_IMAGE_VERSION_BASE_IMAGE</code></td>
+<td>SageMaker base image to use for tests.</td>
+</tr>
+<tr>
+<td><code>SERVICEQUOTAS_INCREASE_ON_CREATE_QUOTA_CODE</code></td>
+<td>Quota Code for Service Quotas testing (submits support case).</td>
+</tr>
+<tr>
+<td><code>SERVICEQUOTAS_INCREASE_ON_CREATE_SERVICE_CODE</code></td>
+<td>Service Code for Service Quotas testing (submits support case).</td>
+</tr>
+<tr>
+<td><code>SERVICEQUOTAS_INCREASE_ON_CREATE_VALUE</code></td>
+<td>Value of quota increase for Service Quotas testing (submits support case).</td>
+</tr>
+<tr>
+<td><code>SES_DOMAIN_IDENTITY_ROOT_DOMAIN</code></td>
+<td>Root domain name of publicly accessible and Route 53 configurable domain for SES Domain Identity testing.</td>
+</tr>
+<tr>
+<td><code>SES_DEDICATED_IP</code></td>
+<td>Dedicated IP address for testing IP assignment with a "Standard" (non-managed) SES dedicated IP pool.</td>
+</tr>
+<tr>
+<td><code>SWF_DOMAIN_TESTING_ENABLED</code></td>
+<td>Enables SWF Domain testing (API does not support deletions).</td>
+</tr>
+<tr>
+<td><code>TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN</code></td>
+<td>Email address for Organizations Account testing.</td>
+</tr>
+<tr>
+<td><code>TEST_AWS_SES_VERIFIED_EMAIL_ARN</code></td>
+<td>Verified SES Email Identity for use in Cognito User Pool testing.</td>
+</tr>
+<tr>
+<td><code>TF_ACC</code></td>
+<td>Enables Go tests containing <code>resource.Test()</code> and <code>resource.ParallelTest()</code>.</td>
+</tr>
+<tr>
+<td><code>TF_ACC_ASSUME_ROLE_ARN</code></td>
+<td>Amazon Resource Name of existing IAM Role to use for limited permissions acceptance testing.</td>
+</tr>
+<tr>
+<td><code>TF_AWS_LICENSE_MANAGER_GRANT_HOME_REGION</code></td>
+<td>Region where a License Manager license is imported.</td>
+</tr>
+<tr>
+<td><code>TF_AWS_LICENSE_MANAGER_GRANT_LICENSE_ARN</code></td>
+<td>ARN for a License Manager license imported into the current account.</td>
+</tr>
+<tr>
+<td><code>TF_AWS_LICENSE_MANAGER_GRANT_PRINCIPAL</code></td>
+<td>ARN of a principal to share the License Manager license with. Either a root user, Organization, or Organizational Unit.</td>
+</tr>
+<tr>
+<td><code>TF_TEST_CLOUDFRONT_RETAIN</code></td>
+<td>Flag to disable but dangle CloudFront Distributions during testing to reduce feedback time (must be manually destroyed afterwards)</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var tab,labels=set.querySelector(".tabbed-labels");for(tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      HashiCorp
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.instant", "content.tabs.link", "content.code.copy"], "search": "../assets/javascripts/workers/search.e5c33ebb.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.51d95adb.min.js"></script>
+      
+    
+  </body>
+</html>
