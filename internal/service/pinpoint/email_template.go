@@ -24,12 +24,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_pinpoint_email_template", name="Email Template")
-// @Tags(identifierAttribute="template_name")
+// @Tags(identifierAttribute="arn")
 func newResourceEmailTemplate(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceEmailTemplate{}
 
@@ -57,13 +58,16 @@ func (*resourceEmailTemplate) Metadata(_ context.Context, req resource.MetadataR
 func (r *resourceEmailTemplate) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"template_name": schema.StringAttribute{
 				Required: true,
 			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"request": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[requestData](ctx),
+			"email_template": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[emailTemplate](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtLeast(1),
 				},
@@ -81,14 +85,12 @@ func (r *resourceEmailTemplate) Schema(ctx context.Context, req resource.SchemaR
 						"subject": schema.StringAttribute{
 							Optional: true,
 						},
-						"template_description": schema.StringAttribute{
+						names.AttrDescription: schema.StringAttribute{
 							Optional: true,
 						},
 						"text_part": schema.StringAttribute{
 							Optional: true,
 						},
-						// names.AttrTags:    tftags.TagsAttribute(),
-						// names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 					},
 					Blocks: map[string]schema.Block{
 						"header": schema.ListNestedBlock{
@@ -120,37 +122,37 @@ func (r *resourceEmailTemplate) Create(ctx context.Context, req resource.CreateR
 		return
 	}
 
-	in := &pinpoint.CreateEmailTemplateInput{
-		// EmailTemplateRequest: awstypes.EmailTemplateRequest(d.Get("request")),
-	}
+	in := &pinpoint.CreateEmailTemplateInput{}
 
-	resp.Diagnostics.Append(flex.Expand(ctx, &plan, in)...)
+	resp.Diagnostics.Append(flex.Expand(ctx, &plan, in, flex.WithFieldNameSuffix("Request"))...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// in.EmailTemplateRequest.Tags = getTagsIn(ctx)
+	in.EmailTemplateRequest.Tags = getTagsIn(ctx)
 
 	out, err := conn.CreateEmailTemplate(ctx, in)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionCreating, ResNameEmailTemplate, plan.TemplateName.String(), err),
+			create.ProblemStandardMessage(names.Pinpoint, create.ErrActionCreating, ResNameEmailTemplate, plan.TemplateName.String(), err),
 			err.Error(),
 		)
 		return
 	}
 	if out == nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionCreating, ResNameEmailTemplate, plan.TemplateName.String(), nil),
+			create.ProblemStandardMessage(names.Pinpoint, create.ErrActionCreating, ResNameEmailTemplate, plan.TemplateName.String(), nil),
 			errors.New("empty output").Error(),
 		)
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	// resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
+	// if resp.Diagnostics.HasError() {
+	// 	return
+	// }
+
+	plan.Arn = flex.StringToFramework(ctx, out.CreateTemplateMessageBody.Arn)
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
@@ -171,15 +173,16 @@ func (r *resourceEmailTemplate) Read(ctx context.Context, req resource.ReadReque
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionSetting, ResNameEmailTemplate, state.TemplateName.String(), err),
+			create.ProblemStandardMessage(names.Pinpoint, create.ErrActionSetting, ResNameEmailTemplate, state.TemplateName.String(), err),
 			err.Error(),
 		)
 		return
 	}
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state, flex.WithFieldNameSuffix("Response"))...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	state.Arn = flex.StringToFramework(ctx, out.EmailTemplateResponse.Arn)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -281,20 +284,21 @@ func findEmailTemplateByName(ctx context.Context, conn *pinpoint.Client, name st
 }
 
 type emailTemplateData struct {
-	TemplateName         types.String                                 `tfsdk:"template_name"`
-	EmailTemplateRequest fwtypes.ListNestedObjectValueOf[requestData] `tfsdk:"request"`
+	TemplateName  types.String                                   `tfsdk:"template_name"`
+	EmailTemplate fwtypes.ListNestedObjectValueOf[emailTemplate] `tfsdk:"email_template"`
+	Arn           types.String                                   `tfsdk:"arn"`
+	Tags          types.Map                                      `tfsdk:"tags"`
+	TagsAll       types.Map                                      `tfsdk:"tags_all"`
 }
 
-type requestData struct {
+type emailTemplate struct {
 	DefaultSubstitutions types.String                                `tfsdk:"default_substitutions"`
 	Header               fwtypes.ListNestedObjectValueOf[headerData] `tfsdk:"header"`
 	HtmlPart             types.String                                `tfsdk:"html_part"`
 	RecommenderId        types.String                                `tfsdk:"recommender_id"`
 	Subject              types.String                                `tfsdk:"subject"`
-	TemplateDescription  types.String                                `tfsdk:"template_description"`
+	Description          types.String                                `tfsdk:"description"`
 	TextPart             types.String                                `tfsdk:"text_part"`
-	// Tags                 types.Map                                   `tfsdk:"tags"`
-	// TagsAll              types.Map                                   `tfsdk:"tags_all"`
 }
 
 type headerData struct {

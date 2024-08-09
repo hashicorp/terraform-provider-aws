@@ -45,9 +45,11 @@ func TestAccPinpointEmailTemplate_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccEmailtemplateImportStateIDFunc(resourceName),
+				ImportStateVerifyIdentifierAttribute: "template_name",
+				ImportStateVerify:                    true,
 			},
 		},
 	})
@@ -155,6 +157,17 @@ func testAccCheckEmailTemplateDestroy(ctx context.Context) resource.TestCheckFun
 	}
 }
 
+func testAccEmailtemplateImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return rs.Primary.Attributes["template_name"], nil
+	}
+}
+
 // func testAccPreCheck(ctx context.Context, t *testing.T) {
 // 	conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointClient(ctx)
 
@@ -172,7 +185,7 @@ func testAccEmailTemplateConfig_resourceBasic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_pinpoint_email_template" "test" {
   template_name        = %[1]q
-  request {
+  email_template {
     subject = "testing"
 	text_part = "we are testing template text part"
     header {
