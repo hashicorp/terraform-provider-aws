@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/pinpoint"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpoint/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -23,12 +24,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_pinpoint_email_template", name="Email Template")
+// @Tags(identifierAttribute="template_name")
 func newResourceEmailTemplate(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceEmailTemplate{}
 
@@ -45,7 +46,7 @@ const (
 
 type resourceEmailTemplate struct {
 	framework.ResourceWithConfigure
-	framework.WithImportByID
+	// framework.WithImportByID
 	framework.WithTimeouts
 }
 
@@ -86,8 +87,8 @@ func (r *resourceEmailTemplate) Schema(ctx context.Context, req resource.SchemaR
 						"text_part": schema.StringAttribute{
 							Optional: true,
 						},
-						names.AttrTags:    tftags.TagsAttribute(),
-						names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+						// names.AttrTags:    tftags.TagsAttribute(),
+						// names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 					},
 					Blocks: map[string]schema.Block{
 						"header": schema.ListNestedBlock{
@@ -119,14 +120,16 @@ func (r *resourceEmailTemplate) Create(ctx context.Context, req resource.CreateR
 		return
 	}
 
-	in := &pinpoint.CreateEmailTemplateInput{}
+	in := &pinpoint.CreateEmailTemplateInput{
+		// EmailTemplateRequest: awstypes.EmailTemplateRequest(d.Get("request")),
+	}
 
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
+	resp.Diagnostics.Append(flex.Expand(ctx, &plan, in)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	in.EmailTemplateRequest.Tags = getTagsIn(ctx)
+	// in.EmailTemplateRequest.Tags = getTagsIn(ctx)
 
 	out, err := conn.CreateEmailTemplate(ctx, in)
 	if err != nil {
@@ -250,6 +253,10 @@ func (r *resourceEmailTemplate) Delete(ctx context.Context, req resource.DeleteR
 	}
 }
 
+func (r *resourceEmailTemplate) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("template_name"), request, response)
+}
+
 func findEmailTemplateByName(ctx context.Context, conn *pinpoint.Client, name string) (*pinpoint.GetEmailTemplateOutput, error) {
 	in := &pinpoint.GetEmailTemplateInput{
 		TemplateName: aws.String(name),
@@ -274,20 +281,20 @@ func findEmailTemplateByName(ctx context.Context, conn *pinpoint.Client, name st
 }
 
 type emailTemplateData struct {
-	TemplateName types.String                                 `tfsdk:"template_name"`
-	Request      fwtypes.ListNestedObjectValueOf[requestData] `tfsdk:"request"`
+	TemplateName         types.String                                 `tfsdk:"template_name"`
+	EmailTemplateRequest fwtypes.ListNestedObjectValueOf[requestData] `tfsdk:"request"`
 }
 
 type requestData struct {
 	DefaultSubstitutions types.String                                `tfsdk:"default_substitutions"`
 	Header               fwtypes.ListNestedObjectValueOf[headerData] `tfsdk:"header"`
 	HtmlPart             types.String                                `tfsdk:"html_part"`
-	RecommenderId        types.String                                `tfsdk:"recommenderId"`
+	RecommenderId        types.String                                `tfsdk:"recommender_id"`
 	Subject              types.String                                `tfsdk:"subject"`
 	TemplateDescription  types.String                                `tfsdk:"template_description"`
 	TextPart             types.String                                `tfsdk:"text_part"`
-	Tags                 types.Map                                   `tfsdk:"tags"`
-	TagsAll              types.Map                                   `tfsdk:"tags_all"`
+	// Tags                 types.Map                                   `tfsdk:"tags"`
+	// TagsAll              types.Map                                   `tfsdk:"tags_all"`
 }
 
 type headerData struct {
