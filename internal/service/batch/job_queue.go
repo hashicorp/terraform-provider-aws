@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go/service/batch"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -133,6 +134,34 @@ func (r *resourceJobQueue) Schema(ctx context.Context, request resource.SchemaRe
 				},
 			},
 		},
+		"job_state_time_limit_action": schema.ListNestedBlock{
+			CustomType: fwtypes.NewListNestedObjectTypeOf[jobStateTimeLimitAction](ctx),
+			NestedObject: schema.NestedBlockObject{
+				Attributes: map[string]schema.Attribute{
+					"action": schema.StringAttribute{
+						Required: true,
+						Validators: []validator.String{
+							stringvalidator.OneOf(batch.JobStateTimeLimitActionsAction_Values()...),
+						},
+					},
+					"max_time_seconds": schema.Int64Attribute{
+						Required: true,
+						Validators: []validator.Int64{
+							int64validator.Between(600, 86400),
+						},
+					},
+					"reason": schema.StringAttribute{
+						Required: true,
+					},
+					"state": schema.StringAttribute{
+						Required: true,
+						Validators: []validator.String{
+							stringvalidator.OneOf(batch.JobStateTimeLimitActionsState_Values()...),
+						},
+					},
+				},
+			},
+		},
 	}
 
 	response.Schema = s
@@ -193,6 +222,11 @@ func (r *resourceJobQueue) Create(ctx context.Context, request resource.CreateRe
 	} else {
 		state.ComputeEnvironments = flex.FlattenFrameworkStringValueListLegacy(ctx, flattenComputeEnvironments(out.ComputeEnvironmentOrder))
 	}
+
+	if !data.JobStateTimeLimitAction.IsNull() {
+		flex.Flatten(ctx, out.JobStateTimeLimitActions, &data.JobStateTimeLimitAction)
+	}
+
 	response.Diagnostics.Append(state.refreshFromOutput(ctx, out)...)
 	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
 }
@@ -228,6 +262,11 @@ func (r *resourceJobQueue) Read(ctx context.Context, request resource.ReadReques
 	} else {
 		data.ComputeEnvironments = flex.FlattenFrameworkStringValueListLegacy(ctx, flattenComputeEnvironments(out.ComputeEnvironmentOrder))
 	}
+
+	if !data.JobStateTimeLimitAction.IsNull() {
+		flex.Flatten(ctx, out.JobStateTimeLimitActions, &data.JobStateTimeLimitAction)
+	}
+
 	response.Diagnostics.Append(data.refreshFromOutput(ctx, out)...)
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -257,6 +296,11 @@ func (r *resourceJobQueue) Update(ctx context.Context, request resource.UpdateRe
 			input.ComputeEnvironmentOrder = expandComputeEnvironments(ceo)
 			update = true
 		}
+	}
+
+	if !plan.JobStateTimeLimitAction.IsNull() && !plan.JobStateTimeLimitAction.Equal(state.JobStateTimeLimitAction) {
+		flex.Expand(ctx, plan.JobStateTimeLimitAction, &input.JobStateTimeLimitActions)
+		update = true
 	}
 
 	if !plan.Priority.Equal(state.Priority) {
@@ -393,6 +437,7 @@ type resourceJobQueueData struct {
 	JobQueueName            types.String                                             `tfsdk:"name"`
 	Priority                types.Int64                                              `tfsdk:"priority"`
 	SchedulingPolicyARN     fwtypes.ARN                                              `tfsdk:"scheduling_policy_arn"`
+	JobStateTimeLimitAction fwtypes.ListNestedObjectValueOf[jobStateTimeLimitAction] `tfsdk:"job_state_time_limit_action"`
 	State                   types.String                                             `tfsdk:"state"`
 	Tags                    types.Map                                                `tfsdk:"tags"`
 	TagsAll                 types.Map                                                `tfsdk:"tags_all"`
@@ -402,6 +447,13 @@ type resourceJobQueueData struct {
 type computeEnvironmentOrder struct {
 	ComputeEnvironment fwtypes.ARN `tfsdk:"compute_environment"`
 	Order              types.Int64 `tfsdk:"order"`
+}
+
+type jobStateTimeLimitAction struct {
+	Action         types.String `tfsdk:"action"`
+	MaxTimeSeconds types.Int64  `tfsdk:"max_time_seconds"`
+	Reason         types.String `tfsdk:"reason"`
+	State          types.String `tfsdk:"state"`
 }
 
 func (r *resourceJobQueueData) refreshFromOutput(ctx context.Context, out *batch.JobQueueDetail) diag.Diagnostics { //nolint:unparam

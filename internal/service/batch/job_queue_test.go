@@ -434,6 +434,99 @@ func testAccCheckJobQueueExists(ctx context.Context, n string, jq *batch.JobQueu
 	}
 }
 
+func TestAccBatchJobQueue_JobStateTimeLimitActionsMultiple(t *testing.T) {
+	ctx := acctest.Context(t)
+	var jobQueue1 batch.JobQueueDetail
+	resourceName := "aws_batch_job_queue.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckJobQueueDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: acctest.ConfigCompose(
+					testAccJobQueueConfig_Base(rName),
+					fmt.Sprintf(`
+resource "aws_batch_job_queue" "test" {
+  compute_environments = [aws_batch_compute_environment.test.arn]
+  name                 = %[1]q
+  priority             = 1
+  state                = "DISABLED"
+  job_state_time_limit_action {
+    action           = "CANCEL"
+    max_time_seconds = 600
+    reason           = "MISCONFIGURATION:JOB_RESOURCE_REQUIREMENT"
+    state            = "RUNNABLE"
+  }
+  job_state_time_limit_action {
+    action           = "CANCEL"
+    max_time_seconds = 605
+    reason           = "CAPACITY:INSUFFICIENT_INSTANCE_CAPACITY"
+    state            = "RUNNABLE"
+  }
+}
+`, rName)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
+					resource.TestCheckResourceAttr(resourceName, "job_state_time_limit_action.#", "2"),
+					resource.TestCheckResourceAttrPair(resourceName, "job_state_time_limit_action.0", "job_state_time_limit_action.action", "CANCEL"),
+					resource.TestCheckResourceAttrPair(resourceName, "job_state_time_limit_action.0", "job_state_time_limit_action.max_time_seconds", "600"),
+					resource.TestCheckResourceAttrPair(resourceName, "job_state_time_limit_action.0", "job_state_time_limit_action.reason", "MISCONFIGURATION:JOB_RESOURCE_REQUIREMENT"),
+					resource.TestCheckResourceAttrPair(resourceName, "job_state_time_limit_action.0", "job_state_time_limit_action.state", "RUNNABLE"),
+					resource.TestCheckResourceAttrPair(resourceName, "job_state_time_limit_action.1", "job_state_time_limit_action.action", "CANCEL"),
+					resource.TestCheckResourceAttrPair(resourceName, "job_state_time_limit_action.1", "job_state_time_limit_action.max_time_seconds", "605"),
+					resource.TestCheckResourceAttrPair(resourceName, "job_state_time_limit_action.1", "job_state_time_limit_action.reason", "CAPACITY:INSUFFICIENT_INSTANCE_CAPACITY"),
+					resource.TestCheckResourceAttrPair(resourceName, "job_state_time_limit_action.1", "job_state_time_limit_action.state", "RUNNABLE"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: acctest.ConfigCompose(
+					testAccJobQueueConfig_Base(rName),
+					fmt.Sprintf(`
+resource "aws_batch_job_queue" "test" {
+  compute_environments = [aws_batch_compute_environment.test.arn]
+  name                 = %[1]q
+  priority             = 1
+  state                = "DISABLED"
+  job_state_time_limit_action {
+    action           = "CANCEL"
+    max_time_seconds = 610
+    reason           = "MISCONFIGURATION:JOB_RESOURCE_REQUIREMENT"
+    state            = "RUNNABLE"
+  }
+  job_state_time_limit_action {
+    action           = "CANCEL"
+    max_time_seconds = 605
+    reason           = "MISCONFIGURATION:COMPUTE_ENVIRONMENT_MAX_RESOURCE"
+    state            = "RUNNABLE"
+  }
+}
+`, rName)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
+					resource.TestCheckResourceAttr(resourceName, "job_state_time_limit_action.#", "2"),
+					resource.TestCheckResourceAttrPair(resourceName, "job_state_time_limit_action.0", "job_state_time_limit_action.action", "CANCEL"),
+					resource.TestCheckResourceAttrPair(resourceName, "job_state_time_limit_action.0", "job_state_time_limit_action.max_time_seconds", "610"),
+					resource.TestCheckResourceAttrPair(resourceName, "job_state_time_limit_action.0", "job_state_time_limit_action.reason", "MISCONFIGURATION:JOB_RESOURCE_REQUIREMENT"),
+					resource.TestCheckResourceAttrPair(resourceName, "job_state_time_limit_action.0", "job_state_time_limit_action.state", "RUNNABLE"),
+					resource.TestCheckResourceAttrPair(resourceName, "job_state_time_limit_action.1", "job_state_time_limit_action.action", "CANCEL"),
+					resource.TestCheckResourceAttrPair(resourceName, "job_state_time_limit_action.1", "job_state_time_limit_action.max_time_seconds", "605"),
+					resource.TestCheckResourceAttrPair(resourceName, "job_state_time_limit_action.1", "job_state_time_limit_action.reason", "MISCONFIGURATION:COMPUTE_ENVIRONMENT_MAX_RESOURCE"),
+					resource.TestCheckResourceAttrPair(resourceName, "job_state_time_limit_action.1", "job_state_time_limit_action.state", "RUNNABLE"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckJobQueueDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
