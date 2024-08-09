@@ -4,21 +4,8 @@
 package bedrock
 
 import (
-	// TIP: ==== IMPORTS ====
-	// This is a common set of imports but not customized to your code since
-	// your code hasn't been written yet. Make sure you, your IDE, or
-	// goimports -w <file> fixes these imports.
-	//
-	// The provider linter wants your imports to be in two groups: first,
-	// standard library (i.e., "fmt" or "strings"), second, everything else.
-	//
-	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
-	// using the services/bedrock/types package. If so, you'll
-	// need to import types and reference the nested types, e.g., as
-	// awstypes.<Type Name>.
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -108,7 +95,7 @@ func (r *resourceEvaluationJob) Schema(ctx context.Context, req resource.SchemaR
 				},
 			},
 			//framework.ARNAttributeComputedOnly()
-			"role_arn": schema.StringAttribute{
+			names.AttrRoleARN: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 2048), // change to 0
@@ -190,7 +177,7 @@ func (r *resourceEvaluationJob) Schema(ctx context.Context, req resource.SchemaR
 													CustomType: fwtypes.NewListNestedObjectTypeOf[EvaluationDataset](ctx),
 													NestedObject: schema.NestedBlockObject{
 														Attributes: map[string]schema.Attribute{
-															"name": schema.StringAttribute{
+															names.AttrName: schema.StringAttribute{
 																Optional:   true,
 																Validators: []validator.String{
 																	//stringvalidator.LengthBetween(0, 63),
@@ -265,7 +252,7 @@ func (r *resourceEvaluationJob) Schema(ctx context.Context, req resource.SchemaR
 
 													NestedObject: schema.NestedBlockObject{
 														Attributes: map[string]schema.Attribute{
-															"name": schema.StringAttribute{
+															names.AttrName: schema.StringAttribute{
 																Required:   true,
 																Validators: []validator.String{
 																	//stringvalidator.LengthBetween(0, 63),
@@ -315,7 +302,7 @@ func (r *resourceEvaluationJob) Schema(ctx context.Context, req resource.SchemaR
 														stringvalidator.OneOf("ThumbsUpDown", "IndividualLikertScale", "ComparisonLikertScale", "ComparisonChoice", "ComparisonRank"),
 													},
 												},
-												"description": schema.StringAttribute{
+												names.AttrDescription: schema.StringAttribute{
 													Optional: true,
 													Validators: []validator.String{
 														stringvalidator.LengthBetween(1, 63),
@@ -336,7 +323,7 @@ func (r *resourceEvaluationJob) Schema(ctx context.Context, req resource.SchemaR
 														stringvalidator.RegexMatches(regexache.MustCompile("^arn:aws(-[^:]+)?:sagemaker:[a-z0-9-]{1,20}:[0-9]{12}:flow-definition/.*$"), " must conform to ^arn:aws(-[^:]+)?:sagemaker:[a-z0-9-]{1,20}:[0-9]{12}:flow-definition/.*$"),
 													},
 												},
-												"description": schema.StringAttribute{
+												names.AttrDescription: schema.StringAttribute{
 													Optional: true,
 													Validators: []validator.String{
 														stringvalidator.LengthBetween(1, 5000),
@@ -426,13 +413,7 @@ func (r *resourceEvaluationJob) Create(ctx context.Context, req resource.CreateR
 		return
 	}
 	in.JobName = plan.Name.ValueStringPointer()
-	fmt.Println(in.JobTags)
-	if !plan.Tags.IsNull() {
-		fmt.Println("tag expand")
-		//resp.Diagnostics.Append(flex.Expand(ctx, in.JobTags, &plan.Tags)...)
-	}
 	in.JobTags = getTagsIn(ctx)
-	fmt.Println(in.JobTags)
 	outputRaw, err := conn.CreateEvaluationJob(ctx, in)
 
 	if err != nil {
@@ -471,7 +452,6 @@ func (r *resourceEvaluationJob) Create(ctx context.Context, req resource.CreateR
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 func (r *resourceEvaluationJob) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	fmt.Println("read")
 	var state dataEvaluationJob
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -524,7 +504,7 @@ func (r *resourceEvaluationJob) Update(ctx context.Context, req resource.UpdateR
 }
 
 func (r *resourceEvaluationJob) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func (r *resourceEvaluationJob) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
@@ -608,7 +588,6 @@ type dataEvaluationJob struct {
 	FailureMessages         fwtypes.ListValueOf[types.String]                          `tfsdk:"failure_messages"`
 }
 
-// start of evaluation_config
 type evaluationConfig struct {
 	Automated fwtypes.ListNestedObjectValueOf[automated] `tfsdk:"automated"`
 	Human     fwtypes.ListNestedObjectValueOf[human]     `tfsdk:"human"`
@@ -630,15 +609,8 @@ type DatasetLocation struct {
 	S3Uri types.String `tfsdk:"s3_uri"`
 }
 
-// end of evaluation_config automated
-
-// start of inference_config
 type evaluationInferenceConfig struct {
 	Models fwtypes.SetNestedObjectValueOf[Models] `tfsdk:"models"`
-	/*
-		Array Members: Minimum number of 1 item. Maximum number of 2 items.
-		Required: No
-	*/
 }
 
 type Models struct {
@@ -651,13 +623,9 @@ type BedrockModel struct {
 	ModelIdentifiers types.String `tfsdk:"model_identifier"`
 }
 
-// end of evaluation_config
-
 type OutputDataConfig struct {
 	S3Uri types.String `tfsdk:"s3_uri"`
 }
-
-// human
 
 type human struct {
 	DatasetMetricConfigs fwtypes.SetNestedObjectValueOf[DatasetMetricConfigs] `tfsdk:"dataset_metric_configs"`
@@ -735,9 +703,7 @@ func (m Models) Expand(ctx context.Context) (result any, diags diag.Diagnostics)
 		return &r, diags
 
 	}
-
 	return nil, diags
-
 }
 
 func (l DatasetLocation) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
@@ -748,9 +714,7 @@ func (l DatasetLocation) Expand(ctx context.Context) (result any, diags diag.Dia
 		if diags.HasError() {
 			return nil, diags
 		}
-
 		var r awstypes.EvaluationDatasetLocationMemberS3Uri
-
 		r.Value = locationData.ValueString()
 		return &r, diags
 	}
