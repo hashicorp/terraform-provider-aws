@@ -49,7 +49,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `update` - (Default `5m`)
 * `delete` - (Default `5m`)
 
-
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Agents for Amazon Bedrock Agent Knowledge Base Association using the agent ID, the agent version, and the knowledge base ID separated by `,`. For example:
