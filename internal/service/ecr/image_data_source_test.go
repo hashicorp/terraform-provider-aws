@@ -18,6 +18,7 @@ func TestAccECRImageDataSource_basic(t *testing.T) {
 	resourceByTag := "data.aws_ecr_image.by_tag"
 	resourceByDigest := "data.aws_ecr_image.by_digest"
 	resourceByMostRecent := "data.aws_ecr_image.by_most_recent"
+	resourceByMostRecentWithPrefix := "data.aws_ecr_image.by_most_recent_with_prefix"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -38,6 +39,9 @@ func TestAccECRImageDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceByDigest, "image_uri"),
 					resource.TestCheckResourceAttrSet(resourceByMostRecent, "image_pushed_at"),
 					resource.TestCheckResourceAttrSet(resourceByMostRecent, "image_size_in_bytes"),
+					resource.TestCheckResourceAttrSet(resourceByMostRecentWithPrefix, "image_pushed_at"),
+					resource.TestCheckResourceAttrSet(resourceByMostRecentWithPrefix, "image_size_in_bytes"),
+					resource.TestCheckTypeSetElemAttr(resourceByMostRecentWithPrefix, "image_tags.*", "2022"),
 				),
 			},
 		},
@@ -62,6 +66,13 @@ data "aws_ecr_image" "by_most_recent" {
   registry_id     = data.aws_ecr_image.by_tag.registry_id
   repository_name = data.aws_ecr_image.by_tag.repository_name
   most_recent     = true
+}
+
+data "aws_ecr_image" "by_most_recent_with_prefix" {
+  registry_id      = data.aws_ecr_image.by_tag.registry_id
+  repository_name  = data.aws_ecr_image.by_tag.repository_name
+  most_recent      = true
+  image_tag_prefix = "2022"
 }
 `, reg, repo, tag)
 }

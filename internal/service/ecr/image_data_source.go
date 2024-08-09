@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"slices"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
@@ -18,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -56,6 +58,11 @@ func dataSourceImage() *schema.Resource {
 			"image_uri": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"image_tag_prefix": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"image_digest", "image_tag"},
 			},
 			names.AttrMostRecent: {
 				Type:          schema.TypeBool,
@@ -109,7 +116,11 @@ func dataSourceImageRead(ctx context.Context, d *schema.ResourceData, meta inter
 		input.RegistryId = aws.String(v.(string))
 	}
 
-	imageDetails, err := findImageDetails(ctx, conn, input)
+	var imageTagPrefix = ""
+	if v, ok := d.GetOk("image_tag_prefix"); ok {
+		imageTagPrefix = v.(string)
+	}
+	imageDetails, err := findImageDetails(ctx, conn, input, imageTagPrefix)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ECR Images: %s", err)
@@ -161,7 +172,7 @@ func dataSourceImageRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func findImageDetails(ctx context.Context, conn *ecr.Client, input *ecr.DescribeImagesInput) ([]types.ImageDetail, error) {
+func findImageDetails(ctx context.Context, conn *ecr.Client, input *ecr.DescribeImagesInput, imageTagPrefix string) ([]types.ImageDetail, error) {
 	var output []types.ImageDetail
 
 	pages := ecr.NewDescribeImagesPaginator(conn, input)
@@ -179,7 +190,16 @@ func findImageDetails(ctx context.Context, conn *ecr.Client, input *ecr.Describe
 			return nil, err
 		}
 
-		output = append(output, page.ImageDetails...)
+		var imageDetails = page.ImageDetails
+		if imageTagPrefix != "" {
+			imageDetails = tfslices.Filter(page.ImageDetails, func(v types.ImageDetail) bool {
+				return tfslices.Any(v.ImageTags, func(t string) bool {
+					return strings.HasPrefix(t, imageTagPrefix)
+				})
+			})
+		}
+
+		output = append(output, imageDetails...)
 	}
 
 	return output, nil

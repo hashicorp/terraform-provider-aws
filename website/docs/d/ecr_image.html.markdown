@@ -28,6 +28,7 @@ This data source supports the following arguments:
 * `image_digest` - (Optional) Sha256 digest of the image manifest. At least one of `image_digest`, `image_tag`, or `most_recent` must be specified.
 * `image_tag` - (Optional) Tag associated with this image. At least one of `image_digest`, `image_tag`, or `most_recent` must be specified.
 * `most_recent` - (Optional) Return the most recently pushed image. At least one of `image_digest`, `image_tag`, or `most_recent` must be specified.
+* `image_tag_prefix` - (Optional) Return only images with the given prefix. Only applicable when using `most_recent`. At least one of `image_digest`, `image_tag`, or `most_recent` must be specified.
 
 ## Attribute Reference
 
