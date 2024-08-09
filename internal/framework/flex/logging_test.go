@@ -482,6 +482,30 @@ func errorMarshallingJSONDocument(sourcePath string, sourceType reflect.Type, ta
 	}
 }
 
+func errorExpandingIncompatibleTypes(sourcePath string, sourceType reflect.Type, targetPath string, targetType reflect.Type) map[string]any {
+	return map[string]any{
+		"@level":             hclog.Error.String(),
+		"@module":            logModule,
+		"@message":           "Expanding incompatible types",
+		logAttrKeySourcePath: sourcePath,
+		logAttrKeySourceType: fullTypeName(sourceType),
+		logAttrKeyTargetPath: targetPath,
+		logAttrKeyTargetType: fullTypeName(targetType),
+	}
+}
+
+func errorFlatteningIncompatibleTypes(sourcePath string, sourceType reflect.Type, targetPath string, targetType reflect.Type) map[string]any {
+	return map[string]any{
+		"@level":             hclog.Error.String(),
+		"@module":            logModule,
+		"@message":           "Flattening incompatible types",
+		logAttrKeySourcePath: sourcePath,
+		logAttrKeySourceType: fullTypeName(sourceType),
+		logAttrKeyTargetPath: targetPath,
+		logAttrKeyTargetType: fullTypeName(targetType),
+	}
+}
+
 func infoLogLine(message string, sourceType, targetType reflect.Type) map[string]any {
 	return logInfo(message, map[string]any{
 		logAttrKeySourceType: fullTypeName(sourceType),
