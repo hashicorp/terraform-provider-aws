@@ -7,9 +7,11 @@ package batch
 var (
 	ResourceComputeEnvironment = resourceComputeEnvironment
 	ResourceJobQueue           = newResourceJobQueue
+	ResourceSchedulingPolicy   = resourceSchedulingPolicy
 
 	ExpandEC2ConfigurationsUpdate           = expandEC2ConfigurationsUpdate
 	ExpandLaunchTemplateSpecificationUpdate = expandLaunchTemplateSpecificationUpdate
 	FindComputeEnvironmentDetailByName      = findComputeEnvironmentDetailByName
 	FindJobQueueByName                      = findJobQueueByName
+	FindSchedulingPolicyByARN               = findSchedulingPolicyByARN
 )
