@@ -27,20 +27,24 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceCluster,
+			Factory:  resourceCluster,
 			TypeName: "aws_route53recoverycontrolconfig_cluster",
+			Name:     "Cluster",
 		},
 		{
-			Factory:  ResourceControlPanel,
+			Factory:  resourceControlPanel,
 			TypeName: "aws_route53recoverycontrolconfig_control_panel",
+			Name:     "Control Panel",
 		},
 		{
-			Factory:  ResourceRoutingControl,
+			Factory:  resourceRoutingControl,
 			TypeName: "aws_route53recoverycontrolconfig_routing_control",
+			Name:     "Routing Control",
 		},
 		{
-			Factory:  ResourceSafetyRule,
+			Factory:  resourceSafetyRule,
 			TypeName: "aws_route53recoverycontrolconfig_safety_rule",
+			Name:     "Safety Rule",
 		},
 	}
 }

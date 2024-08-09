@@ -7799,7 +7799,7 @@ service "route53recoverycontrolconfig" {
 
   sdk {
     id             = "Route53 Recovery Control Config"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
