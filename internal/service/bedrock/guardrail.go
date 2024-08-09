@@ -7,10 +7,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrock/types"
@@ -68,31 +68,27 @@ func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaReque
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"blocked_input_messaging": schema.StringAttribute{
-				Description: "Messaging for when violations are detected in text",
-				Required:    true,
+				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 500),
 				},
 			},
 			"blocked_outputs_messaging": schema.StringAttribute{
-				Description: "Messaging for when violations are detected in text",
-				Required:    true,
+				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 500),
 				},
 			},
 			names.AttrCreatedAt: schema.StringAttribute{
-				CustomType:  timetypes.RFC3339Type{},
-				Description: "Time Stamp",
-				Computed:    true,
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			names.AttrDescription: schema.StringAttribute{
-				Description: "Description of the guardrail or its version",
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(0, 200),
 				},
@@ -102,34 +98,29 @@ func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			names.AttrID: framework.IDAttribute(),
 			names.AttrKMSKeyARN: schema.StringAttribute{
-				Description: "The KMS key with which the guardrail was encrypted at rest",
-				Optional:    true,
+				Optional: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 2048),
-					stringvalidator.RegexMatches(regexp.MustCompile("^arn:aws(-[^:]+)?:kms:[a-zA-Z0-9-]*:[0-9]{12}:key/[a-zA-Z0-9-]{36}$"), ""),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			names.AttrName: schema.StringAttribute{
-				Description: "Name of the guardrail",
-				Required:    true,
+				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 50),
-					stringvalidator.RegexMatches(regexp.MustCompile("^[0-9a-zA-Z-_]+$"), ""),
+					stringvalidator.RegexMatches(guardrailNameRegex, ""),
 				},
 			},
 			names.AttrStatus: schema.StringAttribute{
-				CustomType:  fwtypes.StringEnumType[awstypes.GuardrailStatus](),
-				Description: "Status of the guardrail",
-				Computed:    true,
+				CustomType: fwtypes.StringEnumType[awstypes.GuardrailStatus](),
+				Computed:   true,
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			names.AttrVersion: schema.StringAttribute{
-				Description: "Guardrail version",
-				Computed:    true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -137,21 +128,18 @@ func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaReque
 		},
 		Blocks: map[string]schema.Block{
 			"content_policy_config": schema.ListNestedBlock{
-				CustomType:  fwtypes.NewListNestedObjectTypeOf[contentPolicyConfig](ctx),
-				Description: "Word policy config for a guardrail.",
+				CustomType: fwtypes.NewListNestedObjectTypeOf[contentPolicyConfig](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						"filters_config": schema.ListNestedBlock{
-							CustomType:  fwtypes.NewListNestedObjectTypeOf[filtersConfig](ctx),
-							Description: "List of content filter configs in content policy.",
+							CustomType: fwtypes.NewListNestedObjectTypeOf[filtersConfig](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"input_strength": schema.StringAttribute{
-										Description: "Strength for filters",
-										Required:    true,
+										Required: true,
 										Validators: []validator.String{
 											stringvalidator.OneOf(
 												"NONE",
@@ -161,10 +149,8 @@ func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaReque
 											),
 										},
 									},
-									// Property: OutputStrength
 									"output_strength": schema.StringAttribute{
-										Description: "Strength for filters",
-										Required:    true,
+										Required: true,
 										Validators: []validator.String{
 											stringvalidator.OneOf(
 												"NONE",
@@ -174,10 +160,8 @@ func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaReque
 											),
 										},
 									},
-									// Property: Type
 									names.AttrType: schema.StringAttribute{
-										Description: "Type of filter in content policy",
-										Required:    true,
+										Required: true,
 										Validators: []validator.String{
 											stringvalidator.OneOf(
 												"SEXUAL",
@@ -196,34 +180,25 @@ func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaReque
 				},
 			},
 			"contextual_grounding_policy_config": schema.ListNestedBlock{
-				CustomType:  fwtypes.NewListNestedObjectTypeOf[contextualGroundingPolicyConfig](ctx),
-				Description: "Contextual Grounding policy config for a guardrail.",
+				CustomType: fwtypes.NewListNestedObjectTypeOf[contextualGroundingPolicyConfig](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						"filters_config": schema.ListNestedBlock{
-							CustomType:  fwtypes.NewListNestedObjectTypeOf[contextualGroundingFiltersConfig](ctx),
-							Description: "List of contextual grounding filter configs.",
+							CustomType: fwtypes.NewListNestedObjectTypeOf[contextualGroundingFiltersConfig](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"threshold": schema.Float64Attribute{
-										Description: "The threshold for this filter.",
-										Required:    true,
+										Required: true,
 										Validators: []validator.Float64{
 											float64validator.AtLeast(0.000000),
 										},
 									},
 									names.AttrType: schema.StringAttribute{
-										Description: "Type of contextual grounding filter",
-										Required:    true,
-										Validators: []validator.String{
-											stringvalidator.OneOf(
-												"GROUNDING",
-												"RELEVANCE",
-											),
-										},
+										Required:   true,
+										CustomType: fwtypes.StringEnumType[awstypes.GuardrailContextualGroundingFilterType](),
 									},
 								},
 							},
@@ -232,21 +207,18 @@ func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaReque
 				},
 			},
 			"sensitive_information_policy_config": schema.ListNestedBlock{
-				CustomType:  fwtypes.NewListNestedObjectTypeOf[sensitiveInformationPolicyConfig](ctx),
-				Description: "Sensitive information policy config for a guardrail.",
+				CustomType: fwtypes.NewListNestedObjectTypeOf[sensitiveInformationPolicyConfig](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						"pii_entities_config": schema.ListNestedBlock{
-							CustomType:  fwtypes.NewListNestedObjectTypeOf[piiEntitiesConfig](ctx),
-							Description: "List of entities.",
+							CustomType: fwtypes.NewListNestedObjectTypeOf[piiEntitiesConfig](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									names.AttrAction: schema.StringAttribute{
-										Description: "Options for sensitive information action.",
-										Required:    true,
+										Required: true,
 										Validators: []validator.String{
 											stringvalidator.OneOf(
 												"BLOCK",
@@ -255,8 +227,7 @@ func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaReque
 										},
 									},
 									names.AttrType: schema.StringAttribute{
-										Description: "The currently supported PII entities",
-										Required:    true,
+										Required: true,
 										Validators: []validator.String{
 											stringvalidator.OneOf(
 												"ADDRESS",
@@ -297,13 +268,11 @@ func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaReque
 							},
 						},
 						"regexes_config": schema.ListNestedBlock{
-							CustomType:  fwtypes.NewListNestedObjectTypeOf[regexesConfig](ctx),
-							Description: "List of regex.",
+							CustomType: fwtypes.NewListNestedObjectTypeOf[regexesConfig](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									names.AttrAction: schema.StringAttribute{
-										Description: "Options for sensitive information action.",
-										Required:    true,
+										Required: true,
 										Validators: []validator.String{
 											stringvalidator.OneOf(
 												"BLOCK",
@@ -311,11 +280,9 @@ func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaReque
 											),
 										},
 									},
-									// Property: Description
 									names.AttrDescription: schema.StringAttribute{
-										Description: "The regex description.",
-										Optional:    true,
-										Computed:    true,
+										Optional: true,
+										Computed: true,
 										Validators: []validator.String{
 											stringvalidator.LengthBetween(1, 1000),
 										},
@@ -323,18 +290,14 @@ func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaReque
 											stringplanmodifier.UseStateForUnknown(),
 										},
 									},
-									// Property: Name
 									names.AttrName: schema.StringAttribute{
-										Description: "The regex name.",
-										Required:    true,
+										Required: true,
 										Validators: []validator.String{
 											stringvalidator.LengthBetween(1, 100),
 										},
 									},
-									// Property: Pattern
 									"pattern": schema.StringAttribute{
-										Description: "The regex pattern.",
-										Required:    true,
+										Required: true,
 										Validators: []validator.String{
 											stringvalidator.LengthAtLeast(1),
 										},
@@ -346,31 +309,27 @@ func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaReque
 				},
 			},
 			"topic_policy_config": schema.ListNestedBlock{
-				CustomType:  fwtypes.NewListNestedObjectTypeOf[topicPolicyConfig](ctx),
-				Description: "Topic policy config for a guardrail.",
+				CustomType: fwtypes.NewListNestedObjectTypeOf[topicPolicyConfig](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						"topics_config": schema.ListNestedBlock{
-							CustomType:  fwtypes.NewListNestedObjectTypeOf[topicsConfig](ctx),
-							Description: "List of topic configs in topic policy.",
+							CustomType: fwtypes.NewListNestedObjectTypeOf[topicsConfig](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtLeast(1),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"definition": schema.StringAttribute{
-										Description: "Definition of topic in topic policy",
-										Required:    true,
+										Required: true,
 										Validators: []validator.String{
 											stringvalidator.LengthBetween(1, 200),
 										},
 									},
 									"examples": schema.ListAttribute{
 										ElementType: types.StringType,
-										Description: "List of text examples",
 										Optional:    true,
 										Computed:    true,
 										Validators: []validator.List{
@@ -384,16 +343,14 @@ func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaReque
 										},
 									},
 									names.AttrName: schema.StringAttribute{
-										Description: "Name of topic in topic policy",
-										Required:    true,
+										Required: true,
 										Validators: []validator.String{
 											stringvalidator.LengthBetween(1, 100),
-											stringvalidator.RegexMatches(regexp.MustCompile("^[0-9a-zA-Z-_ !?.]+$"), ""),
+											stringvalidator.RegexMatches(topicsConfigNameRegex, ""),
 										},
 									},
 									names.AttrType: schema.StringAttribute{
-										Description: "Type of topic in a policy",
-										Required:    true,
+										Required: true,
 										Validators: []validator.String{
 											stringvalidator.OneOf(
 												"DENY",
@@ -407,21 +364,18 @@ func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaReque
 				},
 			},
 			"word_policy_config": schema.ListNestedBlock{
-				CustomType:  fwtypes.NewListNestedObjectTypeOf[wordPolicyConfig](ctx),
-				Description: "Word policy config for a guardrail.",
+				CustomType: fwtypes.NewListNestedObjectTypeOf[wordPolicyConfig](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						"managed_word_lists_config": schema.ListNestedBlock{
-							CustomType:  fwtypes.NewListNestedObjectTypeOf[managedWordListsConfig](ctx),
-							Description: "A config for the list of managed words.",
+							CustomType: fwtypes.NewListNestedObjectTypeOf[managedWordListsConfig](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									names.AttrType: schema.StringAttribute{
-										Description: "Options for managed words.",
-										Required:    true,
+										Required: true,
 										Validators: []validator.String{
 											stringvalidator.OneOf(
 												"PROFANITY",
@@ -432,13 +386,11 @@ func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaReque
 							},
 						},
 						"words_config": schema.ListNestedBlock{
-							CustomType:  fwtypes.NewListNestedObjectTypeOf[wordsConfig](ctx),
-							Description: "List of custom word configs.",
+							CustomType: fwtypes.NewListNestedObjectTypeOf[wordsConfig](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"text": schema.StringAttribute{
-										Description: "The custom word text.",
-										Required:    true,
+										Required: true,
 										Validators: []validator.String{
 											stringvalidator.LengthAtLeast(1),
 										},
@@ -458,7 +410,12 @@ func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaReque
 	}
 }
 
-var flexConfig = fwflex.WithFieldNameSuffix("Config")
+var (
+	flexConfig = fwflex.WithFieldNameSuffix("Config")
+
+	guardrailNameRegex    = regexache.MustCompile("^[0-9a-zA-Z-_]+$")
+	topicsConfigNameRegex = regexache.MustCompile("^[0-9a-zA-Z-_ !?.]+$")
+)
 
 func (r *resourceGuardrail) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().BedrockClient(ctx)
@@ -793,9 +750,9 @@ type contentPolicyConfig struct {
 }
 
 type filtersConfig struct {
-	InputStrength  types.String `tfsdk:"input_strength"`
-	OutputStrength types.String `tfsdk:"output_strength"`
-	Type           types.String `tfsdk:"type"`
+	InputStrength  types.String                                                        `tfsdk:"input_strength"`
+	OutputStrength types.String                                                        `tfsdk:"output_strength"`
+	Type           fwtypes.StringEnum[awstypes.GuardrailContextualGroundingFilterType] `tfsdk:"type"`
 }
 
 type contextualGroundingPolicyConfig struct {
