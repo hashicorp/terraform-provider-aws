@@ -149,6 +149,9 @@ func (cd containerDefinitions) orderContainers() {
 	})
 }
 
+// Dirty hack to avoid any backwards compatibility issues with the AWS SDK for Go v2 migration.
+// Reach down into the SDK and use the same serialization function that the SDK uses.
+//
 //go:linkname serializeContainerDefinitions github.com/aws/aws-sdk-go-v2/service/ecs.awsAwsjson11_serializeDocumentContainerDefinitions
 func serializeContainerDefinitions(v []awstypes.ContainerDefinition, value smithyjson.Value) error
 
