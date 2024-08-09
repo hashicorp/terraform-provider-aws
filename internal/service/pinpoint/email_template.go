@@ -189,46 +189,44 @@ func (r *resourceEmailTemplate) Read(ctx context.Context, req resource.ReadReque
 func (r *resourceEmailTemplate) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().PinpointClient(ctx)
 
-	var plan, state emailTemplateData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	var old, new emailTemplateData
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &old)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &new)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	if !plan.TemplateName.Equal(state.TemplateName) {
+	if !old.TemplateName.Equal(new.TemplateName) ||
+		!old.Arn.Equal(new.Arn) ||
+		!old.EmailTemplate.Equal(new.EmailTemplate) {
 		in := &pinpoint.UpdateEmailTemplateInput{
-			TemplateName: aws.String(plan.TemplateName.ValueString()),
+			// TemplateName: aws.String(old.TemplateName.ValueString()),
 		}
-		resp.Diagnostics.Append(flex.Expand(ctx, &plan, in)...)
+		resp.Diagnostics.Append(flex.Expand(ctx, &old, in, flex.WithFieldNameSuffix("Request"))...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
 
-		in.TemplateName = plan.TemplateName.ValueStringPointer()
-		out, err := conn.UpdateEmailTemplate(ctx, in)
+		in.TemplateName = old.TemplateName.ValueStringPointer()
 
+		_, err := conn.UpdateEmailTemplate(ctx, in)
 		if err != nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.DataZone, create.ErrActionUpdating, ResNameEmailTemplate, plan.TemplateName.String(), err),
+				create.ProblemStandardMessage(names.Pinpoint, create.ErrActionUpdating, ResNameEmailTemplate, new.TemplateName.String(), err),
 				err.Error(),
 			)
 			return
 		}
-		if out == nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.DataZone, create.ErrActionUpdating, ResNameEmailTemplate, plan.TemplateName.String(), nil),
-				errors.New("empty output from email template update").Error(),
-			)
-			return
-		}
-		resp.Diagnostics.Append(flex.Flatten(ctx, out, &state, flex.WithFieldNameSuffix("Request"))...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	output, err := findEmailTemplateByName(ctx, conn, old.TemplateName.ValueString())
+	if err != nil {
+		create.AddError(&resp.Diagnostics, names.Pinpoint, create.ErrActionWaitingForUpdate, ResNameEmailTemplate, old.TemplateName.ValueString(), err)
+		return
+	}
+
+	resp.Diagnostics.Append(flex.Flatten(ctx, output, &new, flex.WithFieldNameSuffix("Response"))...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &new)...)
 }
 
 func (r *resourceEmailTemplate) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
