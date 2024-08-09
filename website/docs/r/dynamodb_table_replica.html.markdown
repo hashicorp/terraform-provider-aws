@@ -29,13 +29,16 @@ provider "aws" {
   region = "us-east-2"
 }
 
-resource "aws_dynamodb_table" "example" {
-  provider         = aws.main
-  name             = "TestTable"
-  hash_key         = "BrodoBaggins"
-  billing_mode     = "PAY_PER_REQUEST"
-  stream_enabled   = true
-  stream_view_type = "NEW_AND_OLD_IMAGES"
+resource "aws_dynamodb_table_replica" "example" {
+  provider         = aws.replica
+  global_table_arn = aws_dynamodb_table.source.arn
+}
+
+resource "aws_dynamodb_table" "source" {
+  provider     = aws.source
+  name         = "TestTable"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "BrodoBaggins"
 
   attribute {
     name = "BrodoBaggins"
@@ -46,14 +49,101 @@ resource "aws_dynamodb_table" "example" {
     ignore_changes = [replica]
   }
 }
+```
+
+### Source Table with Auto Scaling
+
+~> **Note:** If the source table uses auto scaling, ensure that the auto scaling rules are applied before the replica is created by adding a `depends_on` which references the `aws_appautoscaling_policy` resources.
+
+```terraform
+provider "aws" {
+  alias  = "source"
+  region = "us-west-2"
+}
+
+provider "aws" {
+  alias  = "replica"
+  region = "us-east-2"
+}
 
 resource "aws_dynamodb_table_replica" "example" {
-  provider         = aws.alt
-  global_table_arn = aws_dynamodb_table.example.arn
+  provider         = aws.replica
+  global_table_arn = aws_dynamodb_table.source.arn
 
-  tags = {
-    Name = "IZPAWS"
-    Pozo = "Amargo"
+  depends_on = [
+    aws_appautoscaling_policy.source_read,
+    aws_appautoscaling_policy.source_write
+  ]
+}
+
+resource "aws_dynamodb_table" "source" {
+  provider     = aws.source
+  name         = "TestTable"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "BrodoBaggins"
+
+  attribute {
+    name = "BrodoBaggins"
+    type = "S"
+  }
+
+  lifecycle {
+    ignore_changes = [
+      replica,
+      read_capacity,
+      write_capacity,
+    ]
+  }
+}
+
+resource "aws_appautoscaling_target" "source_read" {
+  provider           = aws.source
+  max_capacity       = 735
+  min_capacity       = 28
+  resource_id        = "table/${aws_dynamodb_table.source.name}"
+  scalable_dimension = "dynamodb:table:ReadCapacityUnits"
+  service_namespace  = "dynamodb"
+}
+
+resource "aws_appautoscaling_policy" "source_read" {
+  provider           = aws.source
+  name               = "example-read"
+  policy_type        = "TargetTrackingScaling"
+  resource_id        = aws_appautoscaling_target.source_read.resource_id
+  scalable_dimension = aws_appautoscaling_target.source_read.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.source_read.service_namespace
+
+  target_tracking_scaling_policy_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "DynamoDBReadCapacityUtilization"
+    }
+    target_value = 50
+  }
+}
+
+resource "aws_appautoscaling_target" "source_write" {
+  provider     = aws.source
+  max_capacity = 900
+  min_capacity = 28
+
+  resource_id        = "table/${aws_dynamodb_table.source.name}"
+  scalable_dimension = "dynamodb:table:WriteCapacityUnits"
+  service_namespace  = "dynamodb"
+}
+
+resource "aws_appautoscaling_policy" "source_write" {
+  provider           = aws.source
+  name               = "example-write"
+  policy_type        = "TargetTrackingScaling"
+  resource_id        = aws_appautoscaling_target.source_write.resource_id
+  scalable_dimension = aws_appautoscaling_target.source_write.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.source_write.service_namespace
+
+  target_tracking_scaling_policy_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "DynamoDBWriteCapacityUtilization"
+    }
+    target_value = 50
   }
 }
 ```

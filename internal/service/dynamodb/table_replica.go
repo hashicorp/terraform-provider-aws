@@ -102,18 +102,18 @@ func resourceTableReplicaCreate(ctx context.Context, d *schema.ResourceData, met
 
 	replicaRegion := meta.(*conns.AWSClient).Region
 
-	mainRegion, err := regionFromARN(d.Get("global_table_arn").(string))
+	sourceRegion, err := regionFromARN(d.Get("global_table_arn").(string))
 	if err != nil {
 		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionCreating, resNameTableReplica, d.Get("global_table_arn").(string), err)
 	}
 
-	if mainRegion == replicaRegion {
+	if sourceRegion == replicaRegion {
 		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionCreating, resNameTableReplica, d.Get("global_table_arn").(string), errors.New("replica cannot be in same region as main table"))
 	}
 
 	// now main table region
 	optFn := func(o *dynamodb.Options) {
-		o.Region = mainRegion
+		o.Region = sourceRegion
 	}
 
 	var replicaInput = &awstypes.CreateReplicationGroupMemberAction{}
@@ -161,7 +161,16 @@ func resourceTableReplicaCreate(ctx context.Context, d *schema.ResourceData, met
 	if tfresource.TimedOut(err) {
 		_, err = conn.UpdateTable(ctx, input, optFn)
 	}
-
+	if tfawserr.ErrMessageContains(err, errCodeValidationException, "read capacity should") || tfawserr.ErrMessageContains(err, errCodeValidationException, "write capacity should") {
+		// We cannot tell if there is a pending auto scaling rule, so we cannot simply retry or else a table with billing_mode = "PROVISIONED" will also retry until the timeout.
+		return append(diags, errs.NewErrorDiagnostic(
+			"Incompatible Source Table Configuration",
+			"For a DynamoDB Table Replica, the source table must either have a billing mode of \"PAY_PER_REQUEST\" or the read and write capacities must be auto scaled. "+
+				"If you expect the read and write capacities to be auto scaled, make sure that the auto scaling policies are applied to the source table before creating the replica. "+
+				"To do this, add a \"depends_on\" argument which references the auto scaling policies.\n\n"+
+				fmt.Sprintf("Error: %s", err),
+		))
+	}
 	if err != nil {
 		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionCreating, resNameTableReplica, d.Get("global_table_arn").(string), err)
 	}
@@ -170,7 +179,7 @@ func resourceTableReplicaCreate(ctx context.Context, d *schema.ResourceData, met
 		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionWaitingForCreation, resNameTableReplica, d.Get("global_table_arn").(string), err)
 	}
 
-	d.SetId(tableReplicaCreateResourceID(tableName, mainRegion))
+	d.SetId(tableReplicaCreateResourceID(tableName, sourceRegion))
 
 	repARN, err := arnForNewRegion(d.Get("global_table_arn").(string), replicaRegion)
 	if err != nil {
@@ -194,7 +203,7 @@ func resourceTableReplicaRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	replicaRegion := meta.(*conns.AWSClient).Region
 
-	tableName, mainRegion, err := tableReplicaParseResourceID(d.Id())
+	tableName, sourceRegion, err := tableReplicaParseResourceID(d.Id())
 	if err != nil {
 		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionReading, resNameTableReplica, d.Id(), err)
 	}
@@ -202,19 +211,19 @@ func resourceTableReplicaRead(ctx context.Context, d *schema.ResourceData, meta 
 	globalTableARN := arn.ARN{
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    mainRegion,
+		Region:    sourceRegion,
 		Resource:  fmt.Sprintf("table/%s", tableName),
 		Service:   "dynamodb",
 	}.String()
 	d.Set("global_table_arn", globalTableARN)
 
-	if mainRegion == replicaRegion {
+	if sourceRegion == replicaRegion {
 		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionReading, resNameTableReplica, d.Id(), errors.New("replica cannot be in same region as main table"))
 	}
 
 	// now main table region
 	optFn := func(o *dynamodb.Options) {
-		o.Region = mainRegion
+		o.Region = sourceRegion
 	}
 
 	table, err := findTableByName(ctx, conn, tableName, optFn)
@@ -328,24 +337,24 @@ func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, met
 	diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
-	tableName, mainRegion, err := tableReplicaParseResourceID(d.Id())
+	tableName, sourceRegion, err := tableReplicaParseResourceID(d.Id())
 	if err != nil {
 		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTableReplica, d.Id(), err)
 	}
 
 	replicaRegion := meta.(*conns.AWSClient).Region
 
-	if mainRegion == replicaRegion {
+	if sourceRegion == replicaRegion {
 		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTableReplica, d.Id(), errors.New("replica cannot be in same region as main table"))
 	}
 
 	// now main table region
 	optFn := func(o *dynamodb.Options) {
-		o.Region = mainRegion
+		o.Region = sourceRegion
 	}
 
-	viaMainChanges := false
-	viaMainInput := &awstypes.UpdateReplicationGroupMemberAction{
+	hasSourceChanges := false
+	sourceInput := &awstypes.UpdateReplicationGroupMemberAction{
 		RegionName: aws.String(replicaRegion),
 	}
 
@@ -356,15 +365,15 @@ func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 
 		if d.Get(names.AttrKMSKeyARN).(string) != dk {
-			viaMainChanges = true
-			viaMainInput.KMSMasterKeyId = aws.String(d.Get(names.AttrKMSKeyARN).(string))
+			hasSourceChanges = true
+			sourceInput.KMSMasterKeyId = aws.String(d.Get(names.AttrKMSKeyARN).(string))
 		}
 	}
 
-	if viaMainChanges {
+	if hasSourceChanges {
 		input := &dynamodb.UpdateTableInput{
 			ReplicaUpdates: []awstypes.ReplicationGroupUpdate{{
-				Update: viaMainInput,
+				Update: sourceInput,
 			}},
 			TableName: aws.String(tableName),
 		}
@@ -390,7 +399,16 @@ func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, met
 		if tfresource.TimedOut(err) {
 			_, err = conn.UpdateTable(ctx, input, optFn)
 		}
-
+		if tfawserr.ErrMessageContains(err, errCodeValidationException, "read capacity should") || tfawserr.ErrMessageContains(err, errCodeValidationException, "write capacity should") {
+			// We cannot tell if there is a pending auto scaling rule, so we cannot simply retry or else a table with billing_mode = "PROVISIONED" will also retry until the timeout.
+			return append(diags, errs.NewErrorDiagnostic(
+				"Incompatible Source Table Configuration",
+				"For a DynamoDB Table Replica, the source table must either have a billing mode of \"PAY_PER_REQUEST\" or the read and write capacities must be auto scaled. "+
+					"If you expect the read and write capacities to be auto scaled, make sure that the auto scaling policies are applied to the source table before creating the replica. "+
+					"To do this, add a \"depends_on\" argument which references the auto scaling policies.\n\n"+
+					fmt.Sprintf("Error: %s", err),
+			))
+		}
 		if err != nil && !tfawserr.ErrMessageContains(err, errCodeValidationException, "no actions specified") {
 			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTableReplica, d.Id(), err)
 		}
@@ -429,7 +447,7 @@ func resourceTableReplicaDelete(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
-	tableName, mainRegion, err := tableReplicaParseResourceID(d.Id())
+	tableName, sourceRegion, err := tableReplicaParseResourceID(d.Id())
 	if err != nil {
 		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionDeleting, resNameTableReplica, d.Id(), err)
 	}
@@ -438,7 +456,7 @@ func resourceTableReplicaDelete(ctx context.Context, d *schema.ResourceData, met
 
 	// now main table region.
 	optFn := func(o *dynamodb.Options) {
-		o.Region = mainRegion
+		o.Region = sourceRegion
 	}
 
 	input := &dynamodb.UpdateTableInput{
@@ -491,8 +509,8 @@ func resourceTableReplicaDelete(ctx context.Context, d *schema.ResourceData, met
 
 const tableReplicaResourceIDSeparator = ":"
 
-func tableReplicaCreateResourceID(tableName, mainRegion string) string {
-	parts := []string{tableName, mainRegion}
+func tableReplicaCreateResourceID(tableName, sourceRegion string) string {
+	parts := []string{tableName, sourceRegion}
 	id := strings.Join(parts, tableReplicaResourceIDSeparator)
 
 	return id
