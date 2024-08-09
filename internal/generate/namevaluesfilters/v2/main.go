@@ -32,6 +32,7 @@ func main() {
 	sliceServiceNames := []string{
 		"rds",
 		"secretsmanager",
+		"route53resolver",
 	}
 	// Always sort to reduce any potential generation churn
 	sort.Strings(sliceServiceNames)
