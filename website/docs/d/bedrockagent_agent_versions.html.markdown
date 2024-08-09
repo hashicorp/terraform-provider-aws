@@ -16,8 +16,8 @@ Terraform data source for managing an AWS Amazon BedrockAgent Agent Versions.
 
 ```terraform
 data "aws_bedrockagent_agent_versions" "test" {
-	depends_on = [aws_bedrockagent_agent.test]
-	agent_id = aws_bedrockagent_agent.test.agent_id
+  depends_on = [aws_bedrockagent_agent.test]
+  agent_id   = aws_bedrockagent_agent.test.agent_id
 }
 ```
 
