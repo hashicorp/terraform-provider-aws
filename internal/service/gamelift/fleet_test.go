@@ -407,7 +407,7 @@ func TestAccGameLiftFleet_allFields(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "metric_groups.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "metric_groups.0", "TerraformAccTest"),
 					resource.TestCheckResourceAttr(resourceName, "new_game_session_protection_policy", "FullProtection"),
-					resource.TestCheckResourceAttr(resourceName, "operating_system", "WINDOWS_2012"),
+					resource.TestCheckResourceAttr(resourceName, "operating_system", "WINDOWS_2016"),
 					resource.TestCheckResourceAttr(resourceName, "resource_creation_limit_policy.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "resource_creation_limit_policy.0.new_game_sessions_per_creator", acctest.Ct4),
 					resource.TestCheckResourceAttr(resourceName, "resource_creation_limit_policy.0.policy_period_in_minutes", "25"),
@@ -458,7 +458,7 @@ func TestAccGameLiftFleet_allFields(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "metric_groups.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "metric_groups.0", "TerraformAccTest"),
 					resource.TestCheckResourceAttr(resourceName, "new_game_session_protection_policy", "FullProtection"),
-					resource.TestCheckResourceAttr(resourceName, "operating_system", "WINDOWS_2012"),
+					resource.TestCheckResourceAttr(resourceName, "operating_system", "WINDOWS_2016"),
 					resource.TestCheckResourceAttr(resourceName, "resource_creation_limit_policy.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "resource_creation_limit_policy.0.new_game_sessions_per_creator", acctest.Ct4),
 					resource.TestCheckResourceAttr(resourceName, "resource_creation_limit_policy.0.policy_period_in_minutes", "25"),
@@ -888,7 +888,7 @@ func testAccFleetBasicTemplate(rName, bucketName, key, roleArn string) string {
 	return fmt.Sprintf(`
 resource "aws_gamelift_build" "test" {
   name             = %[1]q
-  operating_system = "WINDOWS_2012"
+  operating_system = "WINDOWS_2016"
 
   storage_location {
     bucket   = %[2]q
