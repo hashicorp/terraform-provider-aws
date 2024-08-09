@@ -16,9 +16,11 @@ Provides a Q Business Plugin resource.
 resource "aws_qbusiness_plugin" "example" {
   application_id = aws_qbusiness_app.test.id
 
-  basic_auth_configuration {
-    role_arn   = aws_iam_role.test.arn
-    secret_arn = aws_secretsmanager_secret.test.arn
+  auth_configuration {
+    basic_auth_configuration {
+      role_arn   = aws_iam_role.test.arn
+      secret_arn = aws_secretsmanager_secret.test.arn
+    }
   }
 
   display_name = "Plugin"
@@ -33,13 +35,18 @@ resource "aws_qbusiness_plugin" "example" {
 This resource supports the following arguments:
 
 * `application_id` - (Required) Identifier of the Amazon Q application associated with the plugin.
-* `basic_auth_configuration` - (Optional) TInformation about the basic authentication credentials used to configure a plugin. Conflicts with `oauth2_client_credential_configuration`
+* `auth_configuration` - (Required) Authorization configuration
 * `display_name` - (Required) The name of the Amazon Q plugin.
-* `oauth2_client_credential_configuration` - (Optional) Information about the OAuth 2.0 authentication credential/token used to configure a plugin. Conflicts with `basic_auth_configuration`
 * `server_url` - (Required) Source URL used for plugin configuration.
 * `state` - (Required) State of plugin. Valid value are `ENABLED` and `DISABLED`
 * `type` - (Required) Type of plugin. Valid value are `SERVICE_NOW`, `SALESFORCE`, `JIRA`, `ZENDESK` and `CUSTOM`
 * `custom_plugin_configuration` - (Required if `type` is `CUSTOM`) Custom plugin configuration.
+
+
+`auth_configuration` supports the following:
+
+* `basic_auth_configuration` - (Optional) Information about the basic authentication credentials used to configure a plugin. Conflicts with `oauth2_client_credential_configuration`
+* `oauth2_client_credential_configuration` - (Optional) Information about the OAuth 2.0 authentication credential/token used to configure a plugin. Conflicts with `basic_auth_configuration`
 
 `basic_auth_configuration` supports the following:
 

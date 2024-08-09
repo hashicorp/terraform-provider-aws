@@ -143,8 +143,19 @@ func (r *resourcePlugin) Schema(ctx context.Context, req resource.SchemaRequest,
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"basic_auth_configuration":               authConfigurationSchema(ctx, "oauth2_client_credential_configuration"),
-			"oauth2_client_credential_configuration": authConfigurationSchema(ctx, "basic_auth_configuration"),
+			"auth_configuration": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[authConfigurationDetailsData](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+					listvalidator.SizeAtLeast(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Blocks: map[string]schema.Block{
+						"basic_auth_configuration":               authConfigurationSchema(ctx, "oauth2_client_credential_configuration"),
+						"oauth2_client_credential_configuration": authConfigurationSchema(ctx, "basic_auth_configuration"),
+					},
+				},
+			},
 			"custom_plugin_configuration": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[customPluginConfigurationData](ctx),
 				Validators: []validator.List{
@@ -168,41 +179,53 @@ func (r *resourcePlugin) Schema(ctx context.Context, req resource.SchemaRequest,
 								enum.FrameworkValidate[awstypes.APISchemaType](),
 							},
 						},
-						"payload": schema.StringAttribute{
-							Description: "The JSON or YAML-formatted payload defining the OpenAPI schema for a custom plugin.",
-							Optional:    true,
-							Validators: []validator.String{
-								stringvalidator.AtLeastOneOf(
-									path.MatchRelative().AtParent().AtName("s3"),
-									path.MatchRelative().AtParent().AtName("payload"),
-								),
-								stringvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("s3")),
-								stringvalidator.LengthAtLeast(1),
-							},
-						},
 					},
 					Blocks: map[string]schema.Block{
-						"s3": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[s3Data](ctx),
+						"api_schema": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[apiSchemaData](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
-								listvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("payload")),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									names.AttrBucket: schema.StringAttribute{
-										Description: "The name of the S3 bucket where the OpenAPI schema is stored.",
-										Required:    true,
+									"payload": schema.StringAttribute{
+										Description: "The JSON or YAML-formatted payload defining the OpenAPI schema for a custom plugin.",
+										Optional:    true,
 										Validators: []validator.String{
-											stringvalidator.LengthBetween(1, 63),
-											stringvalidator.RegexMatches(regexache.MustCompile(`^[a-z0-9][\.\-a-z0-9]{1,61}[a-z0-9]$`), "must be a valid bucket name"),
+											stringvalidator.AtLeastOneOf(
+												path.MatchRelative().AtParent().AtName("s3"),
+												path.MatchRelative().AtParent().AtName("payload"),
+											),
+											stringvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("s3")),
+											stringvalidator.LengthAtLeast(1),
 										},
 									},
-									names.AttrKey: schema.StringAttribute{
-										Description: "The key of the OpenAPI schema object in the S3 bucket.",
-										Required:    true,
-										Validators: []validator.String{
-											stringvalidator.LengthBetween(1, 1024),
+								},
+								Blocks: map[string]schema.Block{
+									"s3": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[s3Data](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+											listvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("payload")),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												names.AttrBucket: schema.StringAttribute{
+													Description: "The name of the S3 bucket where the OpenAPI schema is stored.",
+													Required:    true,
+													Validators: []validator.String{
+														stringvalidator.LengthBetween(1, 63),
+														stringvalidator.RegexMatches(regexache.MustCompile(`^[a-z0-9][\.\-a-z0-9]{1,61}[a-z0-9]$`), "must be a valid bucket name"),
+													},
+												},
+												names.AttrKey: schema.StringAttribute{
+													Description: "The key of the OpenAPI schema object in the S3 bucket.",
+													Required:    true,
+													Validators: []validator.String{
+														stringvalidator.LengthBetween(1, 1024),
+													},
+												},
+											},
 										},
 									},
 								},
@@ -222,7 +245,6 @@ func (r *resourcePlugin) Schema(ctx context.Context, req resource.SchemaRequest,
 
 func (r *resourcePlugin) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var data resourcePluginData
-	var diags diag.Diagnostics
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -236,15 +258,6 @@ func (r *resourcePlugin) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	if input.AuthConfiguration, diags = data.expandAuthConfiguration(ctx); diags.HasError() {
-		resp.Diagnostics.Append(diags...)
-		return
-	}
-
-	if input.CustomPluginConfiguration, diags = data.expandPluginConfiguration(ctx); diags.HasError() {
-		resp.Diagnostics.Append(diags...)
-		return
-	}
 	input.Tags = getTagsIn(ctx)
 	input.ClientToken = aws.String(id.UniqueId())
 
@@ -292,15 +305,11 @@ func (r *resourcePlugin) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	data.flattenAuthConfiguration(ctx, out.AuthConfiguration)
-	data.flattenPluginConfiguration(ctx, out.CustomPluginConfiguration)
-
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *resourcePlugin) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var old, new resourcePluginData
-	var diags diag.Diagnostics
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &new)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -311,29 +320,17 @@ func (r *resourcePlugin) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
-	if !old.BasicAuthConfiguration.Equal(new.BasicAuthConfiguration) ||
-		!old.OAuth2ClientCredentialConfiguration.Equal(new.OAuth2ClientCredentialConfiguration) ||
-		!old.PluginConfiguration.Equal(new.PluginConfiguration) ||
+	if !old.AuthConfiguration.Equal(new.AuthConfiguration) ||
+		!old.CustomPluginConfiguration.Equal(new.CustomPluginConfiguration) ||
 		!old.DisplayName.Equal(new.DisplayName) ||
 		!old.ServerURL.Equal(new.ServerURL) ||
 		!old.State.Equal(new.State) {
 		conn := r.Meta().QBusinessClient(ctx)
 
-		input := &qbusiness.UpdatePluginInput{
-			ApplicationId: new.ApplicationId.ValueStringPointer(),
-			PluginId:      new.PluginId.ValueStringPointer(),
-			DisplayName:   new.DisplayName.ValueStringPointer(),
-			ServerUrl:     new.ServerURL.ValueStringPointer(),
-			State:         awstypes.PluginState(new.State.ValueString()),
-		}
+		input := &qbusiness.UpdatePluginInput{}
 
-		if input.AuthConfiguration, diags = new.expandAuthConfiguration(ctx); diags.HasError() {
-			resp.Diagnostics.Append(diags...)
-			return
-		}
-
-		if input.CustomPluginConfiguration, diags = new.expandPluginConfiguration(ctx); diags.HasError() {
-			resp.Diagnostics.Append(diags...)
+		resp.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
+		if resp.Diagnostics.HasError() {
 			return
 		}
 
@@ -388,21 +385,30 @@ func (r *resourcePlugin) ModifyPlan(ctx context.Context, request resource.Modify
 }
 
 type resourcePluginData struct {
-	ApplicationId                       types.String                                                   `tfsdk:"application_id"`
-	BasicAuthConfiguration              fwtypes.ListNestedObjectValueOf[authConfigurationData]         `tfsdk:"basic_auth_configuration"`
-	DisplayName                         types.String                                                   `tfsdk:"display_name"`
-	ID                                  types.String                                                   `tfsdk:"id"`
-	OAuth2ClientCredentialConfiguration fwtypes.ListNestedObjectValueOf[authConfigurationData]         `tfsdk:"oauth2_client_credential_configuration"`
-	PluginArn                           types.String                                                   `tfsdk:"arn"`
-	PluginConfiguration                 fwtypes.ListNestedObjectValueOf[customPluginConfigurationData] `tfsdk:"custom_plugin_configuration"`
-	PluginId                            types.String                                                   `tfsdk:"plugin_id"`
-	Type                                fwtypes.StringEnum[awstypes.PluginType]                        `tfsdk:"type"`
-	ServerURL                           types.String                                                   `tfsdk:"server_url"`
-	State                               fwtypes.StringEnum[awstypes.PluginState]                       `tfsdk:"state"`
-	Tags                                types.Map                                                      `tfsdk:"tags"`
-	TagsAll                             types.Map                                                      `tfsdk:"tags_all"`
-	Timeouts                            timeouts.Value                                                 `tfsdk:"timeouts"`
+	ApplicationId             types.String                                                   `tfsdk:"application_id"`
+	AuthConfiguration         fwtypes.ListNestedObjectValueOf[authConfigurationDetailsData]  `tfsdk:"auth_configuration"`
+	DisplayName               types.String                                                   `tfsdk:"display_name"`
+	ID                        types.String                                                   `tfsdk:"id"`
+	PluginArn                 types.String                                                   `tfsdk:"arn"`
+	CustomPluginConfiguration fwtypes.ListNestedObjectValueOf[customPluginConfigurationData] `tfsdk:"custom_plugin_configuration"`
+	PluginId                  types.String                                                   `tfsdk:"plugin_id"`
+	Type                      fwtypes.StringEnum[awstypes.PluginType]                        `tfsdk:"type"`
+	ServerURL                 types.String                                                   `tfsdk:"server_url"`
+	State                     fwtypes.StringEnum[awstypes.PluginState]                       `tfsdk:"state"`
+	Tags                      types.Map                                                      `tfsdk:"tags"`
+	TagsAll                   types.Map                                                      `tfsdk:"tags_all"`
+	Timeouts                  timeouts.Value                                                 `tfsdk:"timeouts"`
 }
+
+type authConfigurationDetailsData struct {
+	BasicAuthConfiguration              fwtypes.ListNestedObjectValueOf[authConfigurationData] `tfsdk:"basic_auth_configuration"`
+	OAuth2ClientCredentialConfiguration fwtypes.ListNestedObjectValueOf[authConfigurationData] `tfsdk:"oauth2_client_credential_configuration"`
+}
+
+var (
+	_ fwflex.Expander  = authConfigurationDetailsData{}
+	_ fwflex.Flattener = &authConfigurationDetailsData{}
+)
 
 type authConfigurationData struct {
 	RoleArn   types.String `tfsdk:"role_arn"`
@@ -410,18 +416,27 @@ type authConfigurationData struct {
 }
 
 type customPluginConfigurationData struct {
-	Description   types.String                               `tfsdk:"description"`
-	ApiSchemaType fwtypes.StringEnum[awstypes.APISchemaType] `tfsdk:"api_schema_type"`
-	S3            fwtypes.ListNestedObjectValueOf[s3Data]    `tfsdk:"s3"`
-	Payload       types.String                               `tfsdk:"payload"`
+	Description   types.String                                   `tfsdk:"description"`
+	ApiSchemaType fwtypes.StringEnum[awstypes.APISchemaType]     `tfsdk:"api_schema_type"`
+	APISchema     fwtypes.ListNestedObjectValueOf[apiSchemaData] `tfsdk:"api_schema"`
 }
+
+type apiSchemaData struct {
+	Payload types.String                            `tfsdk:"payload"`
+	S3      fwtypes.ListNestedObjectValueOf[s3Data] `tfsdk:"s3"`
+}
+
+var (
+	_ fwflex.Expander  = apiSchemaData{}
+	_ fwflex.Flattener = &apiSchemaData{}
+)
 
 type s3Data struct {
 	Bucket types.String `tfsdk:"bucket"`
 	Key    types.String `tfsdk:"key"`
 }
 
-func (r *resourcePluginData) expandAuthConfiguration(ctx context.Context) (awstypes.PluginAuthConfiguration, diag.Diagnostics) {
+func (r authConfigurationDetailsData) Expand(ctx context.Context) (any, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if !r.BasicAuthConfiguration.IsNull() {
@@ -455,72 +470,47 @@ func (r *resourcePluginData) expandAuthConfiguration(ctx context.Context) (awsty
 	return &awstypes.PluginAuthConfigurationMemberNoAuthConfiguration{}, diags
 }
 
-func (r *resourcePluginData) flattenAuthConfiguration(ctx context.Context, authConf awstypes.PluginAuthConfiguration) {
-	switch v := authConf.(type) {
-	case *awstypes.PluginAuthConfigurationMemberBasicAuthConfiguration:
+func (r *authConfigurationDetailsData) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	switch t := v.(type) {
+	case awstypes.PluginAuthConfigurationMemberBasicAuthConfiguration:
 		r.BasicAuthConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &authConfigurationData{
-			RoleArn:   fwflex.StringToFramework(ctx, v.Value.RoleArn),
-			SecretArn: fwflex.StringToFramework(ctx, v.Value.SecretArn),
+			RoleArn:   fwflex.StringToFramework(ctx, t.Value.RoleArn),
+			SecretArn: fwflex.StringToFramework(ctx, t.Value.SecretArn),
 		})
-	case *awstypes.PluginAuthConfigurationMemberOAuth2ClientCredentialConfiguration:
+	case awstypes.PluginAuthConfigurationMemberOAuth2ClientCredentialConfiguration:
 		r.OAuth2ClientCredentialConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &authConfigurationData{
-			RoleArn:   fwflex.StringToFramework(ctx, v.Value.RoleArn),
-			SecretArn: fwflex.StringToFramework(ctx, v.Value.SecretArn),
+			RoleArn:   fwflex.StringToFramework(ctx, t.Value.RoleArn),
+			SecretArn: fwflex.StringToFramework(ctx, t.Value.SecretArn),
 		})
+	case awstypes.PluginAuthConfigurationMemberNoAuthConfiguration:
 	}
+	return diags
 }
 
-func (r *resourcePluginData) expandPluginConfiguration(ctx context.Context) (*awstypes.CustomPluginConfiguration, diag.Diagnostics) {
-	if r.PluginConfiguration.IsNull() {
-		return nil, nil
-	}
-	pluginConf, d := r.PluginConfiguration.ToPtr(ctx)
-	if d.HasError() {
-		return nil, d
-	}
-
-	schema, d := r.expandAPISchema(ctx, pluginConf)
-	if d.HasError() {
-		return nil, d
-	}
-
-	return &awstypes.CustomPluginConfiguration{
-		Description:   pluginConf.Description.ValueStringPointer(),
-		ApiSchemaType: awstypes.APISchemaType(pluginConf.ApiSchemaType.ValueString()),
-		ApiSchema:     schema,
-	}, nil
-}
-
-func (r *resourcePluginData) flattenPluginConfiguration(ctx context.Context, pluginConf *awstypes.CustomPluginConfiguration) {
-	if pluginConf == nil {
-		return
-	}
-
-	pc := customPluginConfigurationData{
-		Description:   fwflex.StringToFramework(ctx, pluginConf.Description),
-		ApiSchemaType: fwtypes.StringEnumValue[awstypes.APISchemaType](pluginConf.ApiSchemaType),
-	}
-	switch v := pluginConf.ApiSchema.(type) {
-	case *awstypes.APISchemaMemberPayload:
-		pc.Payload = fwflex.StringValueToFramework(ctx, v.Value)
-		pc.S3 = fwtypes.NewListNestedObjectValueOfNull[s3Data](ctx)
+func (r *apiSchemaData) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	switch t := v.(type) {
+	case awstypes.APISchemaMemberPayload:
+		r.Payload = fwflex.StringValueToFramework(ctx, t.Value)
+		r.S3 = fwtypes.NewListNestedObjectValueOfNull[s3Data](ctx)
 	case *awstypes.APISchemaMemberS3:
-		pc.S3 = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &s3Data{
-			Bucket: fwflex.StringToFramework(ctx, v.Value.Bucket),
-			Key:    fwflex.StringToFramework(ctx, v.Value.Key),
+		r.S3 = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &s3Data{
+			Bucket: fwflex.StringToFramework(ctx, t.Value.Bucket),
+			Key:    fwflex.StringToFramework(ctx, t.Value.Key),
 		})
 	}
-	r.PluginConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &pc)
+	return diags
 }
 
-func (r *resourcePluginData) expandAPISchema(ctx context.Context, pluginConf *customPluginConfigurationData) (awstypes.APISchema, diag.Diagnostics) {
-	if !pluginConf.Payload.IsNull() {
+func (r apiSchemaData) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	if !r.Payload.IsNull() {
 		return &awstypes.APISchemaMemberPayload{
-			Value: pluginConf.Payload.ValueString(),
+			Value: r.Payload.ValueString(),
 		}, nil
 	}
-	if !pluginConf.S3.IsNull() {
-		s3Conf, d := pluginConf.S3.ToPtr(ctx)
+	if !r.S3.IsNull() {
+		s3Conf, d := r.S3.ToPtr(ctx)
 		if d.HasError() {
 			return nil, d
 		}

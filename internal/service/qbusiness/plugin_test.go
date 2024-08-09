@@ -38,8 +38,8 @@ func TestAccQBusinessPlugin_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrApplicationID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "plugin_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "basic_auth_configuration.0.role_arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "basic_auth_configuration.0.secret_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "auth_configuration.0.basic_auth_configuration.0.role_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "auth_configuration.0.basic_auth_configuration.0.secret_arn"),
 				),
 			},
 			{
@@ -130,7 +130,6 @@ func TestAccQBusinessPlugin_customPlugin(t *testing.T) {
 				Config: testAccPluginConfig_customPlugin(rName, "ENABLED"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPluginExists(ctx, resourceName, &plugin),
-					resource.TestCheckResourceAttr(resourceName, "no_auth_configuration.%", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "CUSTOM"),
 				),
@@ -253,9 +252,11 @@ func testAccPluginConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccPluginConfig_base(rName), fmt.Sprintf(`
 resource "aws_qbusiness_plugin" "test" {
   application_id = aws_qbusiness_app.test.id
-  basic_auth_configuration {
-    role_arn   = aws_iam_role.test.arn
-    secret_arn = aws_secretsmanager_secret.test.arn
+  auth_configuration {
+    basic_auth_configuration {
+      role_arn   = aws_iam_role.test.arn
+      secret_arn = aws_secretsmanager_secret.test.arn
+    }
   }
   display_name = %[1]q
   server_url   = "https://yourinstance.service-now.com"
@@ -269,9 +270,11 @@ func testAccPluginConfig_tags(rName, tagKey1, tagValue1, tagKey2, tagValue2 stri
 	return acctest.ConfigCompose(testAccPluginConfig_base(rName), fmt.Sprintf(`
 resource "aws_qbusiness_plugin" "test" {
   application_id = aws_qbusiness_app.test.id
-  basic_auth_configuration {
-    role_arn   = aws_iam_role.test.arn
-    secret_arn = aws_secretsmanager_secret.test.arn
+  auth_configuration {
+    basic_auth_configuration {
+      role_arn   = aws_iam_role.test.arn
+      secret_arn = aws_secretsmanager_secret.test.arn
+    }
   }
   display_name = %[1]q
   server_url   = "https://yourinstance.service-now.com"
@@ -287,16 +290,19 @@ resource "aws_qbusiness_plugin" "test" {
 }
 
 func testAccPluginConfig_customPlugin(rName, state string) string {
-	return acctest.ConfigCompose(testAccAppConfig_basic(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccPluginConfig_base(rName), fmt.Sprintf(`
 resource "aws_qbusiness_plugin" "test" {
   application_id = aws_qbusiness_app.test.id
   display_name   = %[1]q
   state          = %[2]q
   type           = "CUSTOM"
+  auth_configuration {
+  }
   custom_plugin_configuration {
     api_schema_type = "OPEN_API_V3"
     description     = "Plugin description"
-    payload         = <<SCHEMA
+    api_schema {
+      payload = <<SCHEMA
 openapi: 3.0.0
 info:
   title: Sample API
@@ -317,6 +323,7 @@ paths:
                 items: 
                   type: string
 SCHEMA
+    }
   }
 }
 `, rName, state))
