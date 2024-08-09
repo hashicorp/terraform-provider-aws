@@ -83,12 +83,12 @@ This data source exports the following attributes in addition to the arguments a
 
 * `id` - ID of the launch template.
 
-This resource also exports a full set of attributes corresponding to the arguments of the [`awsLaunchTemplate`](/docs/providers/aws/r/launch_template.html) resource.
+This resource also exports a full set of attributes corresponding to the arguments of the [`aws_launch_template`](/docs/providers/aws/r/launch_template.html) resource.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `read` - (Default `20M`)
+- `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.18.0 input-ac085ab2a2118f2f53ba9bc1952c11c28381c52f43860ff26cbf46d376ef67e8 -->
+<!-- cache-key: cdktf-0.20.1 input-ac085ab2a2118f2f53ba9bc1952c11c28381c52f43860ff26cbf46d376ef67e8 -->

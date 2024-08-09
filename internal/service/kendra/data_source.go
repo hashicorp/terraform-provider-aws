@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -56,15 +57,15 @@ func ResourceDataSource() *schema.Resource {
 		},
 		CustomizeDiff: customdiff.All(
 			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-				if configuration, dataSourcetype := diff.Get("configuration").([]interface{}), diff.Get("type").(string); len(configuration) > 0 && dataSourcetype == string(types.DataSourceTypeCustom) {
+				if configuration, dataSourcetype := diff.Get(names.AttrConfiguration).([]interface{}), diff.Get(names.AttrType).(string); len(configuration) > 0 && dataSourcetype == string(types.DataSourceTypeCustom) {
 					return fmt.Errorf("configuration must not be set when type is %s", string(types.DataSourceTypeCustom))
 				}
 
-				if roleArn, dataSourcetype := diff.Get("role_arn").(string), diff.Get("type").(string); roleArn != "" && dataSourcetype == string(types.DataSourceTypeCustom) {
+				if roleArn, dataSourcetype := diff.Get(names.AttrRoleARN).(string), diff.Get(names.AttrType).(string); roleArn != "" && dataSourcetype == string(types.DataSourceTypeCustom) {
 					return fmt.Errorf("role_arn must not be set when type is %s", string(types.DataSourceTypeCustom))
 				}
 
-				if schedule, dataSourcetype := diff.Get("schedule").(string), diff.Get("type").(string); schedule != "" && dataSourcetype == string(types.DataSourceTypeCustom) {
+				if schedule, dataSourcetype := diff.Get(names.AttrSchedule).(string), diff.Get(names.AttrType).(string); schedule != "" && dataSourcetype == string(types.DataSourceTypeCustom) {
 					return fmt.Errorf("schedule must not be set when type is %s", string(types.DataSourceTypeCustom))
 				}
 
@@ -73,11 +74,11 @@ func ResourceDataSource() *schema.Resource {
 			verify.SetTagsDiff,
 		),
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"configuration": {
+			names.AttrConfiguration: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -103,13 +104,13 @@ func ResourceDataSource() *schema.Resource {
 											},
 										},
 									},
-									"bucket_name": {
+									names.AttrBucketName: {
 										Type:     schema.TypeString,
 										Required: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(3, 63),
 											validation.StringMatch(
-												regexache.MustCompile(`[a-z0-9][\.\-a-z0-9]{1,61}[a-z0-9]`),
+												regexache.MustCompile(`[0-9a-z][0-9a-z.-]{1,61}[0-9a-z]`),
 												"Must be a valid bucket name",
 											),
 										),
@@ -190,7 +191,7 @@ func ResourceDataSource() *schema.Resource {
 																Required:     true,
 																ValidateFunc: validation.StringLenBetween(1, 253),
 															},
-															"port": {
+															names.AttrPort: {
 																Type:         schema.TypeInt,
 																Required:     true,
 																ValidateFunc: validation.IntBetween(1, 65535),
@@ -241,7 +242,7 @@ func ResourceDataSource() *schema.Resource {
 													Required:     true,
 													ValidateFunc: validation.StringLenBetween(1, 253),
 												},
-												"port": {
+												names.AttrPort: {
 													Type:         schema.TypeInt,
 													Required:     true,
 													ValidateFunc: validation.IntBetween(1, 65535),
@@ -346,7 +347,7 @@ func ResourceDataSource() *schema.Resource {
 							MaxItems: 100,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"condition": func() *schema.Schema {
+									names.AttrCondition: func() *schema.Schema {
 										schema := documentAttributeConditionSchema()
 										return schema
 									}(),
@@ -354,7 +355,7 @@ func ResourceDataSource() *schema.Resource {
 										Type:     schema.TypeBool,
 										Optional: true,
 									},
-									"target": {
+									names.AttrTarget: {
 										Type:     schema.TypeList,
 										Optional: true,
 										MaxItems: 1,
@@ -366,7 +367,7 @@ func ResourceDataSource() *schema.Resource {
 													ValidateFunc: validation.All(
 														validation.StringLenBetween(1, 200),
 														validation.StringMatch(
-															regexache.MustCompile(`[a-zA-Z0-9_][a-zA-Z0-9_-]*`),
+															regexache.MustCompile(`[0-9A-Za-z_][0-9A-Za-z_-]*`),
 															"Starts with an alphanumeric character or underscore. Subsequently, can contain alphanumeric characters, underscores and hyphens.",
 														),
 													),
@@ -393,7 +394,7 @@ func ResourceDataSource() *schema.Resource {
 							schema := hookConfigurationSchema()
 							return schema
 						}(),
-						"role_arn": {
+						names.AttrRoleARN: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
@@ -401,7 +402,7 @@ func ResourceDataSource() *schema.Resource {
 					},
 				},
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -409,7 +410,7 @@ func ResourceDataSource() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1000),
@@ -423,47 +424,47 @@ func ResourceDataSource() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.StringMatch(
-					regexache.MustCompile(`[a-zA-Z0-9][a-zA-Z0-9-]{35}`),
+					regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z-]{35}`),
 					"Starts with an alphanumeric character. Subsequently, can contain alphanumeric characters and hyphens. Fixed length of 36.",
 				),
 			},
-			"language_code": {
+			names.AttrLanguageCode: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(2, 10),
 					validation.StringMatch(
-						regexache.MustCompile(`[a-zA-Z-]*`),
+						regexache.MustCompile(`[A-Za-z-]*`),
 						"Must have alphanumeric characters or hyphens.",
 					),
 				),
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 1000),
 					validation.StringMatch(
-						regexache.MustCompile(`[a-zA-Z0-9][a-zA-Z0-9_-]*`),
+						regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z_-]*`),
 						"Starts with an alphanumeric character. Subsequently, the name must consist of alphanumerics, hyphens or underscores.",
 					),
 				),
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"schedule": {
+			names.AttrSchedule: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"type": {
+			names.AttrType: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
@@ -496,13 +497,13 @@ func hookConfigurationSchema() *schema.Schema {
 					Required:     true,
 					ValidateFunc: verify.ValidARN,
 				},
-				"s3_bucket": {
+				names.AttrS3Bucket: {
 					Type:     schema.TypeString,
 					Required: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(3, 63),
 						validation.StringMatch(
-							regexache.MustCompile(`[a-z0-9][\.\-a-z0-9]{1,61}[a-z0-9]`),
+							regexache.MustCompile(`[0-9a-z][0-9a-z.-]{1,61}[0-9a-z]`),
 							"Must be a valid bucket name",
 						),
 					),
@@ -525,7 +526,7 @@ func documentAttributeConditionSchema() *schema.Schema {
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 200),
 						validation.StringMatch(
-							regexache.MustCompile(`[a-zA-Z0-9_][a-zA-Z0-9_-]*`),
+							regexache.MustCompile(`[0-9A-Za-z_][0-9A-Za-z_-]*`),
 							"Starts with an alphanumeric character or underscore. Subsequently, can contain alphanumeric characters, underscores and hyphens.",
 						),
 					),
@@ -591,18 +592,20 @@ func documentAttributeValueSchema() *schema.Schema {
 }
 
 func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &kendra.CreateDataSourceInput{
 		ClientToken: aws.String(id.UniqueId()),
 		IndexId:     aws.String(d.Get("index_id").(string)),
 		Name:        aws.String(name),
 		Tags:        getTagsIn(ctx),
-		Type:        types.DataSourceType(d.Get("type").(string)),
+		Type:        types.DataSourceType(d.Get(names.AttrType).(string)),
 	}
 
-	if v, ok := d.GetOk("configuration"); ok {
+	if v, ok := d.GetOk(names.AttrConfiguration); ok {
 		input.Configuration = expandDataSourceConfiguration(v.([]interface{}))
 	}
 
@@ -610,19 +613,19 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.CustomDocumentEnrichmentConfiguration = expandCustomDocumentEnrichmentConfiguration(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("language_code"); ok {
+	if v, ok := d.GetOk(names.AttrLanguageCode); ok {
 		input.LanguageCode = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("role_arn"); ok {
+	if v, ok := d.GetOk(names.AttrRoleARN); ok {
 		input.RoleArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("schedule"); ok {
+	if v, ok := d.GetOk(names.AttrSchedule); ok {
 		input.Schedule = aws.String(v.(string))
 	}
 
@@ -642,11 +645,11 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 	)
 
 	if err != nil {
-		return diag.Errorf("creating Kendra Data Source (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Kendra Data Source (%s): %s", name, err)
 	}
 
 	if outputRaw == nil {
-		return diag.Errorf("creating Kendra Data Source (%s): empty output", name)
+		return sdkdiag.AppendErrorf(diags, "creating Kendra Data Source (%s): empty output", name)
 	}
 
 	output := outputRaw.(*kendra.CreateDataSourceOutput)
@@ -657,18 +660,20 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 	d.SetId(fmt.Sprintf("%s/%s", id, indexId))
 
 	if _, err := waitDataSourceCreated(ctx, conn, id, indexId, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for Data Source (%s) creation: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Data Source (%s) creation: %s", d.Id(), err)
 	}
 
-	return resourceDataSourceRead(ctx, d, meta)
+	return append(diags, resourceDataSourceRead(ctx, d, meta)...)
 }
 
 func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	id, indexId, err := DataSourceParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	resp, err := FindDataSourceByID(ctx, conn, id, indexId)
@@ -676,11 +681,11 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta in
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Kendra Data Source (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("getting Kendra Data Source (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "getting Kendra Data Source (%s): %s", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -691,38 +696,40 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta in
 		Resource:  fmt.Sprintf("index/%s/data-source/%s", indexId, id),
 	}.String()
 
-	d.Set("arn", arn)
-	d.Set("created_at", aws.ToTime(resp.CreatedAt).Format(time.RFC3339))
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrCreatedAt, aws.ToTime(resp.CreatedAt).Format(time.RFC3339))
 	d.Set("data_source_id", resp.Id)
-	d.Set("description", resp.Description)
+	d.Set(names.AttrDescription, resp.Description)
 	d.Set("error_message", resp.ErrorMessage)
 	d.Set("index_id", resp.IndexId)
-	d.Set("language_code", resp.LanguageCode)
-	d.Set("name", resp.Name)
-	d.Set("role_arn", resp.RoleArn)
-	d.Set("schedule", resp.Schedule)
-	d.Set("status", resp.Status)
-	d.Set("type", resp.Type)
+	d.Set(names.AttrLanguageCode, resp.LanguageCode)
+	d.Set(names.AttrName, resp.Name)
+	d.Set(names.AttrRoleARN, resp.RoleArn)
+	d.Set(names.AttrSchedule, resp.Schedule)
+	d.Set(names.AttrStatus, resp.Status)
+	d.Set(names.AttrType, resp.Type)
 	d.Set("updated_at", aws.ToTime(resp.UpdatedAt).Format(time.RFC3339))
 
-	if err := d.Set("configuration", flattenDataSourceConfiguration(resp.Configuration)); err != nil {
-		return diag.FromErr(err)
+	if err := d.Set(names.AttrConfiguration, flattenDataSourceConfiguration(resp.Configuration)); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	if err := d.Set("custom_document_enrichment_configuration", flattenCustomDocumentEnrichmentConfiguration(resp.CustomDocumentEnrichmentConfiguration)); err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
-	if d.HasChanges("configuration", "custom_document_enrichment_configuration", "description", "language_code", "name", "role_arn", "schedule") {
+	if d.HasChanges(names.AttrConfiguration, "custom_document_enrichment_configuration", names.AttrDescription, names.AttrLanguageCode, names.AttrName, names.AttrRoleARN, names.AttrSchedule) {
 		id, indexId, err := DataSourceParseResourceID(d.Id())
 		if err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
 		input := &kendra.UpdateDataSourceInput{
@@ -730,32 +737,32 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			IndexId: aws.String(indexId),
 		}
 
-		if d.HasChange("configuration") {
-			input.Configuration = expandDataSourceConfiguration(d.Get("configuration").([]interface{}))
+		if d.HasChange(names.AttrConfiguration) {
+			input.Configuration = expandDataSourceConfiguration(d.Get(names.AttrConfiguration).([]interface{}))
 		}
 
 		if d.HasChange("custom_document_enrichment_configuration") {
 			input.CustomDocumentEnrichmentConfiguration = expandCustomDocumentEnrichmentConfiguration(d.Get("custom_document_enrichment_configuration").([]interface{}))
 		}
 
-		if d.HasChange("description") {
-			input.Description = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
-		if d.HasChange("language_code") {
-			input.LanguageCode = aws.String(d.Get("language_code").(string))
+		if d.HasChange(names.AttrLanguageCode) {
+			input.LanguageCode = aws.String(d.Get(names.AttrLanguageCode).(string))
 		}
 
-		if d.HasChange("name") {
-			input.Name = aws.String(d.Get("name").(string))
+		if d.HasChange(names.AttrName) {
+			input.Name = aws.String(d.Get(names.AttrName).(string))
 		}
 
-		if d.HasChange("role_arn") {
-			input.RoleArn = aws.String(d.Get("role_arn").(string))
+		if d.HasChange(names.AttrRoleARN) {
+			input.RoleArn = aws.String(d.Get(names.AttrRoleARN).(string))
 		}
 
-		if d.HasChange("schedule") {
-			input.Schedule = aws.String(d.Get("schedule").(string))
+		if d.HasChange(names.AttrSchedule) {
+			input.Schedule = aws.String(d.Get(names.AttrSchedule).(string))
 		}
 
 		log.Printf("[DEBUG] Updating Kendra Data Source (%s): %#v", d.Id(), input)
@@ -776,25 +783,27 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		)
 
 		if err != nil {
-			return diag.Errorf("updating Kendra Data Source(%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Kendra Data Source(%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitDataSourceUpdated(ctx, conn, id, indexId, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("waiting for Kendra Data Source (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for Kendra Data Source (%s) update: %s", d.Id(), err)
 		}
 	}
 
-	return resourceDataSourceRead(ctx, d, meta)
+	return append(diags, resourceDataSourceRead(ctx, d, meta)...)
 }
 
 func resourceDataSourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	log.Printf("[INFO] Deleting Kendra Data Source %s", d.Id())
 
 	id, indexId, err := DataSourceParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	_, err = conn.DeleteDataSource(ctx, &kendra.DeleteDataSourceInput{
@@ -804,18 +813,18 @@ func resourceDataSourceDelete(ctx context.Context, d *schema.ResourceData, meta 
 
 	var resourceNotFoundException *types.ResourceNotFoundException
 	if errors.As(err, &resourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Kendra Data Source (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Kendra Data Source (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitDataSourceDeleted(ctx, conn, id, indexId, d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for Kendra Data Source (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Kendra Data Source (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func waitDataSourceCreated(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeDataSourceOutput, error) {
@@ -932,7 +941,7 @@ func expandS3Configuration(tfList []interface{}) *types.S3DataSourceConfiguratio
 	}
 
 	result := &types.S3DataSourceConfiguration{
-		BucketName: aws.String(tfMap["bucket_name"].(string)),
+		BucketName: aws.String(tfMap[names.AttrBucketName].(string)),
 	}
 
 	if v, ok := tfMap["access_control_list_configuration"].([]interface{}); ok && len(v) > 0 {
@@ -1077,7 +1086,7 @@ func expandBasicAuthentication(tfList []interface{}) []types.BasicAuthentication
 		basicAuthenticationConfigExpanded := types.BasicAuthenticationConfiguration{
 			Credentials: aws.String(data["credentials"].(string)),
 			Host:        aws.String(data["host"].(string)),
-			Port:        aws.Int32(int32(data["port"].(int))),
+			Port:        aws.Int32(int32(data[names.AttrPort].(int))),
 		}
 
 		result = append(result, basicAuthenticationConfigExpanded)
@@ -1098,7 +1107,7 @@ func expandProxyConfiguration(tfList []interface{}) *types.ProxyConfiguration {
 
 	result := &types.ProxyConfiguration{
 		Host: aws.String(tfMap["host"].(string)),
-		Port: aws.Int32(int32(tfMap["port"].(int))),
+		Port: aws.Int32(int32(tfMap[names.AttrPort].(int))),
 	}
 
 	if v, ok := tfMap["credentials"].(string); ok && v != "" {
@@ -1194,7 +1203,7 @@ func expandCustomDocumentEnrichmentConfiguration(tfList []interface{}) *types.Cu
 		result.PreExtractionHookConfiguration = expandHookConfiguration(v)
 	}
 
-	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrRoleARN].(string); ok && v != "" {
 		result.RoleArn = aws.String(v)
 	}
 
@@ -1212,7 +1221,7 @@ func expandInlineCustomDocumentEnrichmentConfiguration(tfList []interface{}) []t
 		data := inlineConfig.(map[string]interface{})
 		inlineConfigExpanded := types.InlineCustomDocumentEnrichmentConfiguration{}
 
-		if v, ok := data["condition"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := data[names.AttrCondition].([]interface{}); ok && len(v) > 0 {
 			inlineConfigExpanded.Condition = expandDocumentAttributeCondition(v)
 		}
 
@@ -1220,7 +1229,7 @@ func expandInlineCustomDocumentEnrichmentConfiguration(tfList []interface{}) []t
 			inlineConfigExpanded.DocumentContentDeletion = v
 		}
 
-		if v, ok := data["target"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := data[names.AttrTarget].([]interface{}); ok && len(v) > 0 {
 			inlineConfigExpanded.Target = expandDocumentAttributeTarget(v)
 		}
 
@@ -1269,7 +1278,7 @@ func expandHookConfiguration(tfList []interface{}) *types.HookConfiguration {
 
 	result := &types.HookConfiguration{
 		LambdaArn: aws.String(tfMap["lambda_arn"].(string)),
-		S3Bucket:  aws.String(tfMap["s3_bucket"].(string)),
+		S3Bucket:  aws.String(tfMap[names.AttrS3Bucket].(string)),
 	}
 
 	if v, ok := tfMap["invocation_condition"].([]interface{}); ok && len(v) > 0 {
@@ -1357,7 +1366,7 @@ func flattenS3Configuration(apiObject *types.S3DataSourceConfiguration) []interf
 	}
 
 	m := map[string]interface{}{
-		"bucket_name": aws.ToString(apiObject.BucketName),
+		names.AttrBucketName: aws.ToString(apiObject.BucketName),
 	}
 
 	if v := apiObject.AccessControlListConfiguration; v != nil {
@@ -1472,9 +1481,9 @@ func flattenBasicAuthentication(basicAuthentications []types.BasicAuthentication
 
 	for _, basicAuthentication := range basicAuthentications {
 		m := map[string]interface{}{
-			"credentials": aws.ToString(basicAuthentication.Credentials),
-			"host":        aws.ToString(basicAuthentication.Host),
-			"port":        aws.ToInt32(basicAuthentication.Port),
+			"credentials":  aws.ToString(basicAuthentication.Credentials),
+			"host":         aws.ToString(basicAuthentication.Host),
+			names.AttrPort: aws.ToInt32(basicAuthentication.Port),
 		}
 
 		BasicAuthenticationList = append(BasicAuthenticationList, m)
@@ -1489,8 +1498,8 @@ func flattenProxyConfiguration(apiObject *types.ProxyConfiguration) []interface{
 	}
 
 	m := map[string]interface{}{
-		"host": aws.ToString(apiObject.Host),
-		"port": aws.ToInt32(apiObject.Port),
+		"host":         aws.ToString(apiObject.Host),
+		names.AttrPort: aws.ToInt32(apiObject.Port),
 	}
 
 	if v := apiObject.Credentials; v != nil {
@@ -1564,7 +1573,7 @@ func flattenCustomDocumentEnrichmentConfiguration(apiObject *types.CustomDocumen
 	}
 
 	if v := apiObject.RoleArn; v != nil {
-		m["role_arn"] = aws.ToString(v)
+		m[names.AttrRoleARN] = aws.ToString(v)
 	}
 
 	return []interface{}{m}
@@ -1579,11 +1588,11 @@ func flattenInlineConfigurations(inlineConfigurations []types.InlineCustomDocume
 		}
 
 		if v := inlineConfiguration.Condition; v != nil {
-			m["condition"] = flattenDocumentAttributeCondition(v)
+			m[names.AttrCondition] = flattenDocumentAttributeCondition(v)
 		}
 
 		if v := inlineConfiguration.Target; v != nil {
-			m["target"] = flattenDocumentAttributeTarget(v)
+			m[names.AttrTarget] = flattenDocumentAttributeTarget(v)
 		}
 
 		inlineConfigurationList = append(inlineConfigurationList, m)
@@ -1618,8 +1627,8 @@ func flattenHookConfiguration(apiObject *types.HookConfiguration) []interface{} 
 	}
 
 	m := map[string]interface{}{
-		"lambda_arn": aws.ToString(apiObject.LambdaArn),
-		"s3_bucket":  aws.ToString(apiObject.S3Bucket),
+		"lambda_arn":       aws.ToString(apiObject.LambdaArn),
+		names.AttrS3Bucket: aws.ToString(apiObject.S3Bucket),
 	}
 
 	if v := apiObject.InvocationCondition; v != nil {

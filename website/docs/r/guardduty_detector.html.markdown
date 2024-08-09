@@ -3,12 +3,12 @@ subcategory: "GuardDuty"
 layout: "aws"
 page_title: "AWS: aws_guardduty_detector"
 description: |-
-  Provides a resource to manage a GuardDuty detector
+  Provides a resource to manage an Amazon GuardDuty detector
 ---
 
 # Resource: aws_guardduty_detector
 
-Provides a resource to manage a GuardDuty detector.
+Provides a resource to manage an Amazon GuardDuty detector.
 
 ~> **NOTE:** Deleting this resource is equivalent to "disabling" GuardDuty for an AWS region, which removes all existing findings. You can set the `enable` attribute to `false` to instead "suspend" monitoring and feedback reporting while keeping existing data. See the [Suspending or Disabling Amazon GuardDuty documentation](https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_suspend-disable.html) for more information.
 
@@ -44,7 +44,7 @@ This resource supports the following arguments:
 
 * `enable` - (Optional) Enable monitoring and feedback reporting. Setting to `false` is equivalent to "suspending" GuardDuty. Defaults to `true`.
 * `finding_publishing_frequency` - (Optional) Specifies the frequency of notifications sent for subsequent finding occurrences. If the detector is a GuardDuty member account, the value is determined by the GuardDuty primary account and cannot be modified, otherwise defaults to `SIX_HOURS`. For standalone and GuardDuty primary accounts, it must be configured in Terraform to enable drift detection. Valid values for standalone and primary accounts: `FIFTEEN_MINUTES`, `ONE_HOUR`, `SIX_HOURS`. See [AWS Documentation](https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_findings_cloudwatch.html#guardduty_findings_cloudwatch_notification_frequency) for more information.
-* `datasources` - (Optional) Describes which data sources will be enabled for the detector. See [Data Sources](#data-sources) below for more details.
+* `datasources` - (Optional) Describes which data sources will be enabled for the detector. See [Data Sources](#data-sources) below for more details. [Deprecated](https://docs.aws.amazon.com/guardduty/latest/ug/guardduty-feature-object-api-changes-march2023.html) in favor of [`aws_guardduty_detector_feature` resources](guardduty_detector_feature.html).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Data Sources
@@ -57,6 +57,8 @@ The `datasources` block supports the following:
   See [Kubernetes](#kubernetes) and [Kubernetes Audit Logs](#kubernetes-audit-logs) below for more details.
 * `malware_protection` - (Optional) Configures [Malware Protection](https://docs.aws.amazon.com/guardduty/latest/ug/malware-protection.html).
   See [Malware Protection](#malware-protection), [Scan EC2 instance with findings](#scan-ec2-instance-with-findings) and [EBS volumes](#ebs-volumes) below for more details.
+
+The `datasources` block is deprecated since March 2023. Use the `features` block instead and [map each `datasources` block to the corresponding `features` block](https://docs.aws.amazon.com/guardduty/latest/ug/guardduty-feature-object-api-changes-march2023.html#guardduty-feature-enablement-datasource-relation).
 
 ### S3 Logs
 

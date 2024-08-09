@@ -9,20 +9,22 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/appstream"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/appstream"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/appstream/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAppStreamDirectoryConfig_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2 appstream.DirectoryConfig
+	var v1, v2 awstypes.DirectoryConfig
 	resourceName := "aws_appstream_directory_config.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domain := acctest.RandomDomainName()
@@ -36,17 +38,17 @@ func TestAccAppStreamDirectoryConfig_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDirectoryConfigDestroy(ctx),
-		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDirectoryConfigConfig_basic(rName, domain, rUserName, rPassword, orgUnitDN),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDirectoryConfigExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "directory_name", domain),
-					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
-					resource.TestCheckResourceAttr(resourceName, "organizational_unit_distinguished_names.#", "1"),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
+					resource.TestCheckResourceAttr(resourceName, "organizational_unit_distinguished_names.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "organizational_unit_distinguished_names.0", orgUnitDN),
-					resource.TestCheckResourceAttr(resourceName, "service_account_credentials.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "service_account_credentials.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "service_account_credentials.0.account_name", rUserName),
 					resource.TestCheckResourceAttr(resourceName, "service_account_credentials.0.account_password", rPassword),
 				),
@@ -57,10 +59,10 @@ func TestAccAppStreamDirectoryConfig_basic(t *testing.T) {
 					testAccCheckDirectoryConfigExists(ctx, resourceName, &v2),
 					testAccCheckDirectoryConfigNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "directory_name", domain),
-					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
-					resource.TestCheckResourceAttr(resourceName, "organizational_unit_distinguished_names.#", "1"),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
+					resource.TestCheckResourceAttr(resourceName, "organizational_unit_distinguished_names.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "organizational_unit_distinguished_names.0", orgUnitDN),
-					resource.TestCheckResourceAttr(resourceName, "service_account_credentials.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "service_account_credentials.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "service_account_credentials.0.account_name", rUserNameUpdated),
 					resource.TestCheckResourceAttr(resourceName, "service_account_credentials.0.account_password", rPasswordUpdated),
 				),
@@ -77,7 +79,7 @@ func TestAccAppStreamDirectoryConfig_basic(t *testing.T) {
 
 func TestAccAppStreamDirectoryConfig_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v appstream.DirectoryConfig
+	var v awstypes.DirectoryConfig
 	resourceName := "aws_appstream_directory_config.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domain := acctest.RandomDomainName()
@@ -89,7 +91,7 @@ func TestAccAppStreamDirectoryConfig_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDirectoryConfigDestroy(ctx),
-		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDirectoryConfigConfig_basic(rName, domain, rUserName, rPassword, orgUnitDN),
@@ -105,7 +107,7 @@ func TestAccAppStreamDirectoryConfig_disappears(t *testing.T) {
 
 func TestAccAppStreamDirectoryConfig_OrganizationalUnitDistinguishedNames(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2, v3 appstream.DirectoryConfig
+	var v1, v2, v3 awstypes.DirectoryConfig
 	resourceName := "aws_appstream_directory_config.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domain := acctest.RandomDomainName()
@@ -118,14 +120,14 @@ func TestAccAppStreamDirectoryConfig_OrganizationalUnitDistinguishedNames(t *tes
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDirectoryConfigDestroy(ctx),
-		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDirectoryConfigConfig_basic(rName, domain, rUserName, rPassword, orgUnitDN1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDirectoryConfigExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "directory_name", domain),
-					resource.TestCheckResourceAttr(resourceName, "organizational_unit_distinguished_names.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "organizational_unit_distinguished_names.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "organizational_unit_distinguished_names.0", orgUnitDN1),
 				),
 			},
@@ -134,7 +136,7 @@ func TestAccAppStreamDirectoryConfig_OrganizationalUnitDistinguishedNames(t *tes
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDirectoryConfigExists(ctx, resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "directory_name", domain),
-					resource.TestCheckResourceAttr(resourceName, "organizational_unit_distinguished_names.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "organizational_unit_distinguished_names.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "organizational_unit_distinguished_names.0", orgUnitDN1),
 					resource.TestCheckResourceAttr(resourceName, "organizational_unit_distinguished_names.1", orgUnitDN2),
 				),
@@ -144,7 +146,7 @@ func TestAccAppStreamDirectoryConfig_OrganizationalUnitDistinguishedNames(t *tes
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDirectoryConfigExists(ctx, resourceName, &v3),
 					resource.TestCheckResourceAttr(resourceName, "directory_name", domain),
-					resource.TestCheckResourceAttr(resourceName, "organizational_unit_distinguished_names.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "organizational_unit_distinguished_names.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "organizational_unit_distinguished_names.0", orgUnitDN2),
 				),
 			},
@@ -152,15 +154,15 @@ func TestAccAppStreamDirectoryConfig_OrganizationalUnitDistinguishedNames(t *tes
 	})
 }
 
-func testAccCheckDirectoryConfigExists(ctx context.Context, resourceName string, appStreamDirectoryConfig *appstream.DirectoryConfig) resource.TestCheckFunc {
+func testAccCheckDirectoryConfigExists(ctx context.Context, resourceName string, appStreamDirectoryConfig *awstypes.DirectoryConfig) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn(ctx)
-		resp, err := conn.DescribeDirectoryConfigsWithContext(ctx, &appstream.DescribeDirectoryConfigsInput{DirectoryNames: []*string{aws.String(rs.Primary.ID)}})
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamClient(ctx)
+		resp, err := conn.DescribeDirectoryConfigs(ctx, &appstream.DescribeDirectoryConfigsInput{DirectoryNames: []string{rs.Primary.ID}})
 
 		if err != nil {
 			return err
@@ -170,7 +172,7 @@ func testAccCheckDirectoryConfigExists(ctx context.Context, resourceName string,
 			return fmt.Errorf("AppStream Directory Config %q does not exist", rs.Primary.ID)
 		}
 
-		*appStreamDirectoryConfig = *resp.DirectoryConfigs[0]
+		*appStreamDirectoryConfig = resp.DirectoryConfigs[0]
 
 		return nil
 	}
@@ -178,16 +180,16 @@ func testAccCheckDirectoryConfigExists(ctx context.Context, resourceName string,
 
 func testAccCheckDirectoryConfigDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appstream_directory_config" {
 				continue
 			}
 
-			resp, err := conn.DescribeDirectoryConfigsWithContext(ctx, &appstream.DescribeDirectoryConfigsInput{DirectoryNames: []*string{aws.String(rs.Primary.ID)}})
+			resp, err := conn.DescribeDirectoryConfigs(ctx, &appstream.DescribeDirectoryConfigsInput{DirectoryNames: []string{rs.Primary.ID}})
 
-			if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 				continue
 			}
 
@@ -204,9 +206,9 @@ func testAccCheckDirectoryConfigDestroy(ctx context.Context) resource.TestCheckF
 	}
 }
 
-func testAccCheckDirectoryConfigNotRecreated(i, j *appstream.DirectoryConfig) resource.TestCheckFunc {
+func testAccCheckDirectoryConfigNotRecreated(i, j *awstypes.DirectoryConfig) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if !aws.TimeValue(i.CreatedTime).Equal(aws.TimeValue(j.CreatedTime)) {
+		if !aws.ToTime(i.CreatedTime).Equal(aws.ToTime(j.CreatedTime)) {
 			return fmt.Errorf("AppStream Directory Config recreated")
 		}
 

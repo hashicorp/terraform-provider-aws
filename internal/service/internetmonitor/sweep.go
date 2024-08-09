@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package internetmonitor
 
 import (
@@ -17,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_internetmonitor_monitor", &resource.Sweeper{
 		Name: "aws_internetmonitor_monitor",
 		F:    sweepMonitors,

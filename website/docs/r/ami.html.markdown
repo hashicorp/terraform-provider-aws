@@ -111,7 +111,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `image_owner_alias` - AWS account alias (for example, amazon, self) or the AWS account ID of the AMI owner.
 * `image_type` - Type of image.
 * `hypervisor` - Hypervisor type of the image.
-* `owner_id` - AWS account ID of the image owner.
 * `platform` - This value is set to windows for Windows AMIs; otherwise, it is blank.
 * `public` - Whether the image has public launch permissions.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).

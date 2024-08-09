@@ -43,6 +43,9 @@ class MyConvertedCode(TerraformStack):
                 )
                 ],
                 device_defender_indexing_mode="VIOLATIONS",
+                filter=IotIndexingConfigurationThingIndexingConfigurationFilter(
+                    named_shadow_names=["thing1shadow"]
+                ),
                 named_shadow_indexing_mode="ON",
                 thing_connectivity_indexing_mode="STATUS",
                 thing_indexing_mode="REGISTRY_AND_SHADOW"
@@ -71,6 +74,7 @@ The `thing_indexing_configuration` configuration block supports the following:
 * `device_defender_indexing_mode` - (Optional) Device Defender indexing mode. Valid values: `VIOLATIONS`, `OFF`. Default: `OFF`.
 * `managed_field` - (Optional) Contains fields that are indexed and whose types are already known by the Fleet Indexing service. See below.
 * `named_shadow_indexing_mode` - (Optional) [Named shadow](https://docs.aws.amazon.com/iot/latest/developerguide/iot-device-shadows.html) indexing mode. Valid values: `ON`, `OFF`. Default: `OFF`.
+* `filter` - (Optional) Required if `named_shadow_indexing_mode` is `ON`. Enables to add named shadows filtered by `filter` to fleet indexing configuration.
 * `thing_connectivity_indexing_mode` - (Optional) Thing connectivity indexing mode. Valid values: `STATUS`, `OFF`. Default: `OFF`.
 * `thing_indexing_mode` - (Required) Thing indexing mode. Valid values: `REGISTRY`, `REGISTRY_AND_SHADOW`, `OFF`.
 
@@ -81,8 +85,14 @@ The `custom_field` and `managed_field` configuration blocks supports the followi
 * `name` - (Optional) The name of the field.
 * `type` - (Optional) The data type of the field. Valid values: `Number`, `String`, `Boolean`.
 
+### filter
+
+The `filter` configuration block supports the following:
+
+* `named_shadow_names` - (Optional) List of shadow names that you select to index.
+
 ## Attribute Reference
 
 This resource exports no additional attributes.
 
-<!-- cache-key: cdktf-0.18.0 input-f7efbd9e6b20237c5f64b6bb401a63af7cf9384ee0544a5856bb5370e10c1f1e -->
+<!-- cache-key: cdktf-0.20.1 input-632e1d902ca26f482ec035558f74be20583a22a0dee9c8e8349d7c76ef519f71 -->

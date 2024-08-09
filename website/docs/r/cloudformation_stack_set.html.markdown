@@ -14,6 +14,8 @@ Manages a CloudFormation StackSet. StackSets allow CloudFormation templates to b
 
 ~> **NOTE:** All `NoEcho` template parameters must be ignored with the `lifecycle` configuration block `ignore_changes` argument.
 
+~> **NOTE:** When using a delegated administrator account, ensure that your IAM User or Role has the `organizations:ListDelegatedAdministrators` permission. Otherwise, you may get an error like `ValidationError: Account used is not a delegated administrator`.
+
 ## Example Usage
 
 ```terraform
@@ -143,8 +145,23 @@ import {
 }
 ```
 
+Import CloudFormation StackSets when acting a delegated administrator in a member account using the `name` and `call_as` values separated by a comma (`,`). For example:
+
+```terraform
+import {
+  to = aws_cloudformation_stack_set.example
+  id = "example,DELEGATED_ADMIN"
+}
+```
+
 Using `terraform import`, import CloudFormation StackSets using the `name`. For example:
 
 ```console
 % terraform import aws_cloudformation_stack_set.example example
+```
+
+Using `terraform import`, import CloudFormation StackSets when acting a delegated administrator in a member account using the `name` and `call_as` values separated by a comma (`,`). For example:
+
+```console
+% terraform import aws_cloudformation_stack_set.example example,DELEGATED_ADMIN
 ```

@@ -10,12 +10,12 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	multierror "github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -60,6 +60,7 @@ func SharedRegionalSweepClient(ctx context.Context, region string) (*conns.AWSCl
 	meta.ServicePackages = servicePackageMap
 
 	conf := &conns.Config{
+		MaxRetries:       5,
 		Region:           region,
 		SuppressDebugLog: true,
 	}
@@ -102,6 +103,10 @@ type Sweepable interface {
 }
 
 func SweepOrchestrator(ctx context.Context, sweepables []Sweepable, optFns ...tfresource.OptionsFunc) error {
+	if len(sweepables) == 0 {
+		tflog.Info(ctx, "No resources to sweep")
+	}
+
 	var g multierror.Group
 
 	for _, sweepable := range sweepables {
@@ -115,21 +120,12 @@ func SweepOrchestrator(ctx context.Context, sweepables []Sweepable, optFns ...tf
 	return g.Wait().ErrorOrNil()
 }
 
-// Deprecated: Usse awsv1.SkipSweepError
-//
-//nolint:stylecheck // It's not required for functions, so why for variables?
-var SkipSweepError = awsv1.SkipSweepError
-
 func Partition(region string) string {
-	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), region); ok {
-		return partition.ID()
-	}
-	return "aws"
+	return names.PartitionForRegion(region)
 }
 
 func PartitionDNSSuffix(region string) string {
-	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), region); ok {
-		return partition.DNSSuffix()
-	}
-	return "amazonaws.com"
+	return names.DNSSuffixForPartition(Partition(region))
 }
+
+type SweeperFn func(ctx context.Context, client *conns.AWSClient) ([]Sweepable, error)

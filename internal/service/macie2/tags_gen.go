@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 )
 
 // map[string]*string handling
@@ -36,6 +36,6 @@ func getTagsIn(ctx context.Context) map[string]*string {
 // setTagsOut sets macie2 service tags in Context.
 func setTagsOut(ctx context.Context, tags map[string]*string) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
+		inContext.TagsOut = option.Some(KeyValueTags(ctx, tags))
 	}
 }

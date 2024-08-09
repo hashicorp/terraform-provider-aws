@@ -33,20 +33,23 @@ class MyConvertedCode(TerraformStack):
             engine_version="OpenSearch_1.1"
         )
         main = DataAwsIamPolicyDocument(self, "main",
-            actions=["es:*"],
-            condition=[{
-                "test": "IpAddress",
-                "values": "127.0.0.1/32",
-                "variable": "aws:SourceIp"
-            }
-            ],
-            effect="Allow",
-            principals=[{
-                "identifiers": ["*"],
-                "type": "*"
-            }
-            ],
-            resources=["${" + example.arn + "}/*"]
+            statement=[DataAwsIamPolicyDocumentStatement(
+                actions=["es:*"],
+                condition=[DataAwsIamPolicyDocumentStatementCondition(
+                    test="IpAddress",
+                    values=["127.0.0.1/32"],
+                    variable="aws:SourceIp"
+                )
+                ],
+                effect="Allow",
+                principals=[DataAwsIamPolicyDocumentStatementPrincipals(
+                    identifiers=["*"],
+                    type="*"
+                )
+                ],
+                resources=["${" + example.arn + "}/*"]
+            )
+            ]
         )
         aws_opensearch_domain_policy_main = OpensearchDomainPolicy(self, "main_2",
             access_policies=Token.as_string(main.json),
@@ -74,4 +77,4 @@ This resource exports no additional attributes.
 * `update` - (Default `180m`)
 * `delete` - (Default `90m`)
 
-<!-- cache-key: cdktf-0.18.0 input-a328eddc117438efb16775e086884fddbd2aac0ed901d693d862f7b23e059951 -->
+<!-- cache-key: cdktf-0.20.1 input-cbfe389ed128278e78c309bf8bace7ca0adbb492e5276f6865e240b0cf869bef -->

@@ -61,10 +61,11 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `alternateIdentifier` (Optional) A unique identifier for a user or group that is not the primary identifier. Conflicts with `userId`. Detailed below.
+* `alternateIdentifier` (Optional) A unique identifier for a user or group that is not the primary identifier. Conflicts with `userId` and `filter`. Detailed below.
+* `filter` - (Optional, **Deprecated** use the `alternateIdentifier` attribute instead) Configuration block for filtering by a unique attribute of the user. Detailed below.
 * `userId` - (Optional) The identifier for a user in the Identity Store.
 
--> Exactly one of the above arguments must be provided.
+-> Exactly one of the above arguments must be provided. Passing both `filter` and `userId` is allowed for backwards compatibility.
 
 ### `alternateIdentifier` Configuration Block
 
@@ -82,11 +83,20 @@ The `externalId` configuration block supports the following arguments:
 * `id` - (Required) The identifier issued to this resource by an external identity provider.
 * `issuer` - (Required) The issuer for an external identifier.
 
+### `filter` Configuration Block
+
+~> The `filter` configuration block has been deprecated. Use `alternateIdentifier` instead.
+
+The following arguments are supported by the `filter` configuration block:
+
+* `attributePath` - (Required) Attribute path that is used to specify which attribute name to search. Currently, `UserName` is the only valid attribute path.
+* `attributeValue` - (Required) Value for an attribute.
+
 ### `uniqueAttribute` Configuration Block
 
 The `uniqueAttribute` configuration block supports the following arguments:
 
-* `attributePath` - (Required) Attribute path that is used to specify which attribute name to search. For example: `userName`. Refer to the [User data type](https://docs.aws.amazon.com/singlesignon/latest/IdentityStoreAPIReference/API_User.html).
+* `attributePath` - (Required) Attribute path that is used to specify which attribute name to search. For example: `UserName`. Refer to the [User data type](https://docs.aws.amazon.com/singlesignon/latest/IdentityStoreAPIReference/API_User.html).
 * `attributeValue` - (Required) Value for an attribute.
 
 ## Attribute Reference
@@ -131,4 +141,4 @@ This data source exports the following attributes in addition to the arguments a
 * `userName` - User's user name value.
 * `userType` - The user type.
 
-<!-- cache-key: cdktf-0.18.0 input-641f7d6a18672cff54879d954577486f4458b7fbe29c9986b7725a6704438e7d -->
+<!-- cache-key: cdktf-0.20.1 input-8c28f2f52361f5a36e7b173700680cb27d3254e1fd37a8faf2c90f48b32a9d09 -->

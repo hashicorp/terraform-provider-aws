@@ -9,13 +9,14 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/opensearchservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func expandAdvancedSecurityOptions(m []interface{}) *opensearchservice.AdvancedSecurityOptionsInput_ {
 	config := opensearchservice.AdvancedSecurityOptionsInput_{}
 	group := m[0].(map[string]interface{})
 
-	if advancedSecurityEnabled, ok := group["enabled"]; ok {
+	if advancedSecurityEnabled, ok := group[names.AttrEnabled]; ok {
 		config.Enabled = aws.Bool(advancedSecurityEnabled.(bool))
 
 		if advancedSecurityEnabled.(bool) {
@@ -64,8 +65,11 @@ func expandAutoTuneOptions(tfMap map[string]interface{}) *opensearchservice.Auto
 
 	options.DesiredState = autoTuneOptionsInput.DesiredState
 	options.MaintenanceSchedules = autoTuneOptionsInput.MaintenanceSchedules
+	options.UseOffPeakWindow = autoTuneOptionsInput.UseOffPeakWindow
 
-	options.RollbackOnDisable = aws.String(tfMap["rollback_on_disable"].(string))
+	if v, ok := tfMap["rollback_on_disable"].(string); ok && v != "" {
+		options.RollbackOnDisable = aws.String(v)
+	}
 
 	return options
 }
@@ -83,6 +87,8 @@ func expandAutoTuneOptionsInput(tfMap map[string]interface{}) *opensearchservice
 		options.MaintenanceSchedules = expandAutoTuneMaintenanceSchedules(v.List())
 	}
 
+	options.UseOffPeakWindow = aws.Bool(tfMap["use_off_peak_window"].(bool))
+
 	return options
 }
 
@@ -97,7 +103,7 @@ func expandAutoTuneMaintenanceSchedules(tfList []interface{}) []*opensearchservi
 		startAt, _ := time.Parse(time.RFC3339, tfMap["start_at"].(string))
 		autoTuneMaintenanceSchedule.StartAt = aws.Time(startAt)
 
-		if v, ok := tfMap["duration"].([]interface{}); ok {
+		if v, ok := tfMap[names.AttrDuration].([]interface{}); ok {
 			autoTuneMaintenanceSchedule.Duration = expandAutoTuneMaintenanceScheduleDuration(v[0].(map[string]interface{}))
 		}
 
@@ -111,8 +117,8 @@ func expandAutoTuneMaintenanceSchedules(tfList []interface{}) []*opensearchservi
 
 func expandAutoTuneMaintenanceScheduleDuration(tfMap map[string]interface{}) *opensearchservice.Duration {
 	autoTuneMaintenanceScheduleDuration := &opensearchservice.Duration{
-		Value: aws.Int64(int64(tfMap["value"].(int))),
-		Unit:  aws.String(tfMap["unit"].(string)),
+		Value: aws.Int64(int64(tfMap[names.AttrValue].(int))),
+		Unit:  aws.String(tfMap[names.AttrUnit].(string)),
 	}
 
 	return autoTuneMaintenanceScheduleDuration
@@ -130,7 +136,7 @@ func expandESSAMLOptions(data []interface{}) *opensearchservice.SAMLOptionsInput
 	options := opensearchservice.SAMLOptionsInput_{}
 	group := data[0].(map[string]interface{})
 
-	if SAMLEnabled, ok := group["enabled"]; ok {
+	if SAMLEnabled, ok := group[names.AttrEnabled]; ok {
 		options.Enabled = aws.Bool(SAMLEnabled.(bool))
 
 		if SAMLEnabled.(bool) {
@@ -180,7 +186,7 @@ func expandOffPeakWindowOptions(tfMap map[string]interface{}) *opensearchservice
 
 	apiObject := &opensearchservice.OffPeakWindowOptions{}
 
-	if v, ok := tfMap["enabled"].(bool); ok {
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
 		apiObject.Enabled = aws.Bool(v)
 	}
 
@@ -229,7 +235,7 @@ func flattenAdvancedSecurityOptions(advancedSecurityOptions *opensearchservice.A
 	}
 
 	m := map[string]interface{}{}
-	m["enabled"] = aws.BoolValue(advancedSecurityOptions.Enabled)
+	m[names.AttrEnabled] = aws.BoolValue(advancedSecurityOptions.Enabled)
 
 	if aws.BoolValue(advancedSecurityOptions.Enabled) && advancedSecurityOptions.AnonymousAuthEnabled != nil {
 		m["anonymous_auth_enabled"] = aws.BoolValue(advancedSecurityOptions.AnonymousAuthEnabled)
@@ -257,6 +263,8 @@ func flattenAutoTuneOptions(autoTuneOptions *opensearchservice.AutoTuneOptions) 
 
 	m["rollback_on_disable"] = aws.StringValue(autoTuneOptions.RollbackOnDisable)
 
+	m["use_off_peak_window"] = aws.BoolValue(autoTuneOptions.UseOffPeakWindow)
+
 	return m
 }
 
@@ -272,7 +280,7 @@ func flattenAutoTuneMaintenanceSchedules(autoTuneMaintenanceSchedules []*opensea
 
 		m["start_at"] = aws.TimeValue(autoTuneMaintenanceSchedule.StartAt).Format(time.RFC3339)
 
-		m["duration"] = []interface{}{flattenAutoTuneMaintenanceScheduleDuration(autoTuneMaintenanceSchedule.Duration)}
+		m[names.AttrDuration] = []interface{}{flattenAutoTuneMaintenanceScheduleDuration(autoTuneMaintenanceSchedule.Duration)}
 
 		m["cron_expression_for_recurrence"] = aws.StringValue(autoTuneMaintenanceSchedule.CronExpressionForRecurrence)
 
@@ -285,8 +293,8 @@ func flattenAutoTuneMaintenanceSchedules(autoTuneMaintenanceSchedules []*opensea
 func flattenAutoTuneMaintenanceScheduleDuration(autoTuneMaintenanceScheduleDuration *opensearchservice.Duration) map[string]interface{} {
 	m := map[string]interface{}{}
 
-	m["value"] = aws.Int64Value(autoTuneMaintenanceScheduleDuration.Value)
-	m["unit"] = aws.StringValue(autoTuneMaintenanceScheduleDuration.Unit)
+	m[names.AttrValue] = aws.Int64Value(autoTuneMaintenanceScheduleDuration.Value)
+	m[names.AttrUnit] = aws.StringValue(autoTuneMaintenanceScheduleDuration.Unit)
 
 	return m
 }
@@ -297,8 +305,8 @@ func flattenESSAMLOptions(d *schema.ResourceData, samlOptions *opensearchservice
 	}
 
 	m := map[string]interface{}{
-		"enabled": aws.BoolValue(samlOptions.Enabled),
-		"idp":     flattenESSAMLIdpOptions(samlOptions.Idp),
+		names.AttrEnabled: aws.BoolValue(samlOptions.Enabled),
+		"idp":             flattenESSAMLIdpOptions(samlOptions.Idp),
 	}
 
 	m["roles_key"] = aws.StringValue(samlOptions.RolesKey)
@@ -347,8 +355,8 @@ func expandLogPublishingOptions(m *schema.Set) map[string]*opensearchservice.Log
 	for _, vv := range m.List() {
 		lo := vv.(map[string]interface{})
 		options[lo["log_type"].(string)] = &opensearchservice.LogPublishingOption{
-			CloudWatchLogsLogGroupArn: aws.String(lo["cloudwatch_log_group_arn"].(string)),
-			Enabled:                   aws.Bool(lo["enabled"].(bool)),
+			CloudWatchLogsLogGroupArn: aws.String(lo[names.AttrCloudWatchLogGroupARN].(string)),
+			Enabled:                   aws.Bool(lo[names.AttrEnabled].(bool)),
 		}
 	}
 
@@ -359,12 +367,12 @@ func flattenLogPublishingOptions(o map[string]*opensearchservice.LogPublishingOp
 	m := make([]map[string]interface{}, 0)
 	for logType, val := range o {
 		mm := map[string]interface{}{
-			"log_type": logType,
-			"enabled":  aws.BoolValue(val.Enabled),
+			"log_type":        logType,
+			names.AttrEnabled: aws.BoolValue(val.Enabled),
 		}
 
 		if val.CloudWatchLogsLogGroupArn != nil {
-			mm["cloudwatch_log_group_arn"] = aws.StringValue(val.CloudWatchLogsLogGroupArn)
+			mm[names.AttrCloudWatchLogGroupARN] = aws.StringValue(val.CloudWatchLogsLogGroupArn)
 		}
 
 		m = append(m, mm)
@@ -380,7 +388,7 @@ func flattenOffPeakWindowOptions(apiObject *opensearchservice.OffPeakWindowOptio
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Enabled; v != nil {
-		tfMap["enabled"] = aws.BoolValue(v)
+		tfMap[names.AttrEnabled] = aws.BoolValue(v)
 	}
 
 	if v := apiObject.OffPeakWindow; v != nil {

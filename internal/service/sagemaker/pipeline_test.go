@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSageMakerPipeline_basic(t *testing.T) {
@@ -28,7 +29,7 @@ func TestAccSageMakerPipeline_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -38,10 +39,10 @@ func TestAccSageMakerPipeline_basic(t *testing.T) {
 					testAccCheckPipelineExists(ctx, resourceName, &pipeline),
 					resource.TestCheckResourceAttr(resourceName, "pipeline_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "pipeline_display_name", rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "sagemaker", regexache.MustCompile(`pipeline/.+`)),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "parallelism_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`pipeline/.+`)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "parallelism_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -55,10 +56,10 @@ func TestAccSageMakerPipeline_basic(t *testing.T) {
 					testAccCheckPipelineExists(ctx, resourceName, &pipeline),
 					resource.TestCheckResourceAttr(resourceName, "pipeline_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "pipeline_display_name", rNameUpdated),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "sagemaker", regexache.MustCompile(`pipeline/.+`)),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "parallelism_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`pipeline/.+`)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "parallelism_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 		},
@@ -73,7 +74,7 @@ func TestAccSageMakerPipeline_parallelism(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -82,8 +83,8 @@ func TestAccSageMakerPipeline_parallelism(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, &pipeline),
 					resource.TestCheckResourceAttr(resourceName, "pipeline_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "parallelism_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "parallelism_configuration.0.max_parallel_execution_steps", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parallelism_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "parallelism_configuration.0.max_parallel_execution_steps", acctest.Ct1),
 				),
 			},
 			{
@@ -103,16 +104,16 @@ func TestAccSageMakerPipeline_tags(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPipelinePipelineConfig_tags1(rName, "key1", "value1"),
+				Config: testAccPipelinePipelineConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, &pipeline),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -121,20 +122,20 @@ func TestAccSageMakerPipeline_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccPipelinePipelineConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccPipelinePipelineConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, &pipeline),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccPipelinePipelineConfig_tags1(rName, "key2", "value2"),
+				Config: testAccPipelinePipelineConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, &pipeline),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -149,7 +150,7 @@ func TestAccSageMakerPipeline_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{

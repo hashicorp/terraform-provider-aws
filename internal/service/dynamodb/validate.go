@@ -17,7 +17,7 @@ func validGlobalTableName(v interface{}, k string) (ws []string, errors []error)
 	if (len(value) > 255) || (len(value) < 3) {
 		errors = append(errors, fmt.Errorf("%s length must be between 3 and 255 characters: %q", k, value))
 	}
-	pattern := `^[a-zA-Z0-9_.-]+$`
+	pattern := `^[0-9A-Za-z_.-]+$`
 	if !regexache.MustCompile(pattern).MatchString(value) {
 		errors = append(errors, fmt.Errorf("%s must only include alphanumeric, underscore, period, or hyphen characters: %q", k, value))
 	}

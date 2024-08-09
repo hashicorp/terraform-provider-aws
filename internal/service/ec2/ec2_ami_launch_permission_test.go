@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -16,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEC2AMILaunchPermission_basic(t *testing.T) {
@@ -25,7 +25,7 @@ func TestAccEC2AMILaunchPermission_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAMILaunchPermissionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -33,7 +33,7 @@ func TestAccEC2AMILaunchPermission_basic(t *testing.T) {
 				Config: testAccAMILaunchPermissionConfig_accountID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAMILaunchPermissionExists(ctx, resourceName),
-					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, "group", ""),
 					resource.TestCheckResourceAttr(resourceName, "organization_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "organizational_unit_arn", ""),
@@ -56,7 +56,7 @@ func TestAccEC2AMILaunchPermission_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAMILaunchPermissionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -79,7 +79,7 @@ func TestAccEC2AMILaunchPermission_Disappears_ami(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAMILaunchPermissionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -102,15 +102,15 @@ func TestAccEC2AMILaunchPermission_group(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAMILaunchPermissionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAMILaunchPermissionConfig_group(rName),
+				Config: testAccAMILaunchPermissionConfig_group(rName, "unblocked"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAMILaunchPermissionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "account_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAccountID, ""),
 					resource.TestCheckResourceAttr(resourceName, "group", "all"),
 					resource.TestCheckResourceAttr(resourceName, "organization_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "organizational_unit_arn", ""),
@@ -121,6 +121,12 @@ func TestAccEC2AMILaunchPermission_group(t *testing.T) {
 				ImportState:       true,
 				ImportStateIdFunc: testAccAMILaunchPermissionImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAMILaunchPermissionConfig_group(rName, "block-new-sharing"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAMILaunchPermissionExists(ctx, resourceName),
+				),
 			},
 		},
 	})
@@ -133,7 +139,7 @@ func TestAccEC2AMILaunchPermission_organizationARN(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsEnabled(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAMILaunchPermissionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -141,7 +147,7 @@ func TestAccEC2AMILaunchPermission_organizationARN(t *testing.T) {
 				Config: testAccAMILaunchPermissionConfig_organizationARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAMILaunchPermissionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "account_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAccountID, ""),
 					resource.TestCheckResourceAttr(resourceName, "group", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "organization_arn"),
 					resource.TestCheckResourceAttr(resourceName, "organizational_unit_arn", ""),
@@ -164,7 +170,7 @@ func TestAccEC2AMILaunchPermission_organizationalUnitARN(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAMILaunchPermissionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -172,7 +178,7 @@ func TestAccEC2AMILaunchPermission_organizationalUnitARN(t *testing.T) {
 				Config: testAccAMILaunchPermissionConfig_organizationalUnitARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAMILaunchPermissionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "account_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAccountID, ""),
 					resource.TestCheckResourceAttr(resourceName, "group", ""),
 					resource.TestCheckResourceAttr(resourceName, "organization_arn", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "organizational_unit_arn"),
@@ -204,7 +210,7 @@ func testAccAMILaunchPermissionImportStateIdFunc(resourceName string) resource.I
 		} else if v := rs.Primary.Attributes["organizational_unit_arn"]; v != "" {
 			return fmt.Sprintf("%s/%s", v, imageID), nil
 		} else {
-			return fmt.Sprintf("%s/%s", rs.Primary.Attributes["account_id"], imageID), nil
+			return fmt.Sprintf("%s/%s", rs.Primary.Attributes[names.AttrAccountID], imageID), nil
 		}
 	}
 }
@@ -216,19 +222,9 @@ func testAccCheckAMILaunchPermissionExists(ctx context.Context, n string) resour
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No AMI Launch Permission ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		imageID, accountID, group, organizationARN, organizationalUnitARN, err := tfec2.AMILaunchPermissionParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
-
-		_, err = tfec2.FindImageLaunchPermission(ctx, conn, imageID, accountID, group, organizationARN, organizationalUnitARN)
+		_, err := tfec2.FindImageLaunchPermission(ctx, conn, rs.Primary.Attributes["image_id"], rs.Primary.Attributes[names.AttrAccountID], rs.Primary.Attributes["group"], rs.Primary.Attributes["organization_arn"], rs.Primary.Attributes["organizational_unit_arn"])
 
 		return err
 	}
@@ -236,20 +232,14 @@ func testAccCheckAMILaunchPermissionExists(ctx context.Context, n string) resour
 
 func testAccCheckAMILaunchPermissionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ami_launch_permission" {
 				continue
 			}
 
-			imageID, accountID, group, organizationARN, organizationalUnitARN, err := tfec2.AMILaunchPermissionParseResourceID(rs.Primary.ID)
-
-			if err != nil {
-				return err
-			}
-
-			_, err = tfec2.FindImageLaunchPermission(ctx, conn, imageID, accountID, group, organizationARN, organizationalUnitARN)
+			_, err := tfec2.FindImageLaunchPermission(ctx, conn, rs.Primary.Attributes["image_id"], rs.Primary.Attributes[names.AttrAccountID], rs.Primary.Attributes["group"], rs.Primary.Attributes["organization_arn"], rs.Primary.Attributes["organizational_unit_arn"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -267,7 +257,7 @@ func testAccCheckAMILaunchPermissionDestroy(ctx context.Context) resource.TestCh
 }
 
 func testAccAMILaunchPermissionConfig_accountID(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(), fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
 data "aws_region" "current" {}
@@ -275,7 +265,7 @@ data "aws_region" "current" {}
 resource "aws_ami_copy" "test" {
   description       = %[1]q
   name              = %[1]q
-  source_ami_id     = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  source_ami_id     = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   source_ami_region = data.aws_region.current.name
 }
 
@@ -286,27 +276,37 @@ resource "aws_ami_launch_permission" "test" {
 `, rName))
 }
 
-func testAccAMILaunchPermissionConfig_group(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
+func testAccAMILaunchPermissionConfig_imagePublicAccess(state string) string {
+	return fmt.Sprintf(`
+resource "aws_ec2_image_block_public_access" "test" {
+  state = %[1]q
+}
+`, state)
+}
+
+func testAccAMILaunchPermissionConfig_group(rName, state string) string {
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(), testAccAMILaunchPermissionConfig_imagePublicAccess(state), fmt.Sprintf(`
 data "aws_region" "current" {}
 
 resource "aws_ami_copy" "test" {
   description       = %[1]q
   name              = %[1]q
-  source_ami_id     = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  source_ami_id     = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   source_ami_region = data.aws_region.current.name
-  deprecation_time  = data.aws_ami.amzn-ami-minimal-hvm-ebs.deprecation_time
+  deprecation_time  = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.deprecation_time
+
+  depends_on = [aws_ec2_image_block_public_access.test]
 }
 
 resource "aws_ami_launch_permission" "test" {
   group    = "all"
   image_id = aws_ami_copy.test.id
 }
-`, rName))
+`, rName, state))
 }
 
 func testAccAMILaunchPermissionConfig_organizationARN(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(), fmt.Sprintf(`
 data "aws_organizations_organization" "current" {}
 
 data "aws_region" "current" {}
@@ -314,7 +314,7 @@ data "aws_region" "current" {}
 resource "aws_ami_copy" "test" {
   description       = %[1]q
   name              = %[1]q
-  source_ami_id     = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  source_ami_id     = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   source_ami_region = data.aws_region.current.name
 }
 
@@ -326,7 +326,7 @@ resource "aws_ami_launch_permission" "test" {
 }
 
 func testAccAMILaunchPermissionConfig_organizationalUnitARN(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(), fmt.Sprintf(`
 resource "aws_organizations_organization" "test" {}
 
 resource "aws_organizations_organizational_unit" "test" {
@@ -339,7 +339,7 @@ data "aws_region" "current" {}
 resource "aws_ami_copy" "test" {
   description       = %[1]q
   name              = %[1]q
-  source_ami_id     = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  source_ami_id     = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   source_ami_region = data.aws_region.current.name
 }
 

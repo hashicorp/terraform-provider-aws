@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -391,10 +392,6 @@ func TestValidIAMPolicyJSONString(t *testing.T) {
 			WantError: `"json" is an empty string, which is not a valid JSON value`,
 		},
 		{
-			Value:     `    {"xyz": "foo"}`,
-			WantError: `"json" contains an invalid JSON policy: leading space characters are not allowed`,
-		},
-		{
 			Value:     `"blub"`,
 			WantError: `"json" contains an invalid JSON policy: contains a JSON-encoded string, not a JSON-encoded object`,
 		},
@@ -409,6 +406,10 @@ func TestValidIAMPolicyJSONString(t *testing.T) {
 		{
 			Value:     `[{}]`,
 			WantError: `"json" contains an invalid JSON policy: contains a JSON array, not a JSON object`,
+		},
+		{
+			Value:     `{"a":"foo","a":"bar"}`,
+			WantError: `"json" contains duplicate JSON keys: duplicate key "a"`,
 		},
 	}
 	for _, test := range tests {
@@ -774,5 +775,172 @@ func TestValidServicePrincipal(t *testing.T) {
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid Service Principal", v)
 		}
+	}
+}
+
+func TestMapKeyNoMatch(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name    string
+		value   interface{}
+		wantErr bool
+	}{
+		{
+			name: "two invalid keys",
+			value: map[string]interface{}{
+				"Ka": "V1",
+				"K2": "V2",
+				"Kb": "V3",
+				"Kc": "V4",
+				"K5": "V5",
+			},
+			wantErr: true,
+		},
+		{
+			name: "ok",
+			value: map[string]interface{}{
+				"Ka": "V1",
+				"Kb": "V2",
+			},
+		},
+	}
+	f := MapKeyNoMatch(regexache.MustCompile(`^.*\d$`), "must not end with a digit")
+	for _, testCase := range testCases {
+		testCase := testCase
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			diags := f(testCase.value, cty.Path{})
+			if got, want := diags.HasError(), testCase.wantErr; got != want {
+				t.Errorf("got = %v, want = %v", got, want)
+			}
+		})
+	}
+}
+
+func TestMapSizeAtMost(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name    string
+		value   interface{}
+		wantErr bool
+	}{
+		{
+			name: "too long",
+			value: map[string]interface{}{
+				"K1": "V1",
+				"K2": "V2",
+				"K3": "V3",
+				"K4": "V4",
+				"K5": "V5",
+			},
+			wantErr: true,
+		},
+		{
+			name: "ok",
+			value: map[string]interface{}{
+				"K1": "V1",
+				"K2": "V2",
+			},
+		},
+	}
+	f := MapSizeAtMost(4)
+	for _, testCase := range testCases {
+		testCase := testCase
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			diags := f(testCase.value, cty.Path{})
+			if got, want := diags.HasError(), testCase.wantErr; got != want {
+				t.Errorf("got = %v, want = %v", got, want)
+			}
+		})
+	}
+}
+
+func TestMapSizeBetween(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name    string
+		value   interface{}
+		wantErr bool
+	}{
+		{
+			name: "too long",
+			value: map[string]interface{}{
+				"K1": "V1",
+				"K2": "V2",
+				"K3": "V3",
+				"K4": "V4",
+				"K5": "V5",
+			},
+			wantErr: true,
+		},
+		{
+			name: "too short",
+			value: map[string]interface{}{
+				"K1": "V1",
+			},
+			wantErr: true,
+		},
+		{
+			name: "ok",
+			value: map[string]interface{}{
+				"K1": "V1",
+				"K2": "V2",
+			},
+		},
+	}
+	f := MapSizeBetween(2, 4)
+	for _, testCase := range testCases {
+		testCase := testCase
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			diags := f(testCase.value, cty.Path{})
+			if got, want := diags.HasError(), testCase.wantErr; got != want {
+				t.Errorf("got = %v, want = %v", got, want)
+			}
+		})
+	}
+}
+
+func TestMapKeysAre(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name    string
+		value   interface{}
+		wantErr bool
+	}{
+		{
+			name: "ok",
+			value: map[string]interface{}{
+				"K1": "V1",
+				"K2": "V2",
+			},
+		},
+		{
+			name: "not ok",
+			value: map[string]interface{}{
+				"K3": "V3",
+			},
+			wantErr: true,
+		},
+	}
+	f := MapKeysAre(validation.ToDiagFunc(validation.StringInSlice([]string{"K1", "K2"}, false)))
+	for _, testCase := range testCases {
+		testCase := testCase
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			diags := f(testCase.value, cty.Path{})
+			if got, want := diags.HasError(), testCase.wantErr; got != want {
+				t.Errorf("got = %v, want = %v", got, want)
+			}
+		})
 	}
 }

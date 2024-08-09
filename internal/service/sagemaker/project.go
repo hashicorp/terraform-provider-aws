@@ -36,7 +36,7 @@ func ResourceProject() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -50,7 +50,7 @@ func ResourceProject() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 32),
-					validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,31}$`),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z]){0,31}$`),
 						"Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
 				),
 			},
@@ -85,11 +85,11 @@ func ResourceProject() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"key": {
+									names.AttrKey: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"value": {
+									names.AttrValue: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -155,7 +155,7 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 	arn := aws.StringValue(project.ProjectArn)
 	d.Set("project_name", project.ProjectName)
 	d.Set("project_id", project.ProjectId)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("project_description", project.ProjectDescription)
 
 	if err := d.Set("service_catalog_provisioning_details", flattenProjectServiceCatalogProvisioningDetails(project.ServiceCatalogProvisioningDetails)); err != nil {
@@ -169,7 +169,7 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
-	if d.HasChangesExcept("tags_all", "tags") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &sagemaker.UpdateProjectInput{
 			ProjectName: aws.String(d.Id()),
 		}
@@ -200,15 +200,17 @@ func resourceProjectDelete(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
-	input := &sagemaker.DeleteProjectInput{
+	log.Printf("[DEBUG] Deleting SageMaker Project: %s", d.Id())
+	_, err := conn.DeleteProjectWithContext(ctx, &sagemaker.DeleteProjectInput{
 		ProjectName: aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrMessageContains(err, "ValidationException", "does not exist") ||
+		tfawserr.ErrMessageContains(err, "ValidationException", "Cannot delete Project in DeleteCompleted status") {
+		return diags
 	}
 
-	if _, err := conn.DeleteProjectWithContext(ctx, input); err != nil {
-		if tfawserr.ErrMessageContains(err, "ValidationException", "does not exist") ||
-			tfawserr.ErrMessageContains(err, "ValidationException", "Cannot delete Project in DeleteCompleted status") {
-			return diags
-		}
+	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Project (%s): %s", d.Id(), err)
 	}
 
@@ -276,10 +278,10 @@ func expandProjectProvisioningParameters(l []interface{}) []*sagemaker.Provision
 		data := lRaw.(map[string]interface{})
 
 		scpd := &sagemaker.ProvisioningParameter{
-			Key: aws.String(data["key"].(string)),
+			Key: aws.String(data[names.AttrKey].(string)),
 		}
 
-		if v, ok := data["value"].(string); ok && v != "" {
+		if v, ok := data[names.AttrValue].(string); ok && v != "" {
 			scpd.Value = aws.String(v)
 		}
 
@@ -318,10 +320,10 @@ func flattenProjectProvisioningParameters(scpd []*sagemaker.ProvisioningParamete
 
 	for _, lRaw := range scpd {
 		param := make(map[string]interface{})
-		param["key"] = aws.StringValue(lRaw.Key)
+		param[names.AttrKey] = aws.StringValue(lRaw.Key)
 
 		if lRaw.Value != nil {
-			param["value"] = lRaw.Value
+			param[names.AttrValue] = lRaw.Value
 		}
 
 		params = append(params, param)

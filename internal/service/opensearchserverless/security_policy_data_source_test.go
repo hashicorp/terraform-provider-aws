@@ -24,19 +24,19 @@ func TestAccOpenSearchServerlessSecurityPolicyDataSource_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityPolicyDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "type", resourceName, "type"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "policy", resourceName, "policy"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrType, resourceName, names.AttrType),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrPolicy, resourceName, names.AttrPolicy),
 					resource.TestCheckResourceAttrPair(dataSourceName, "policy_version", resourceName, "policy_version"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "created_date"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrCreatedDate),
 					resource.TestCheckResourceAttrSet(dataSourceName, "last_modified_date"),
 				),
 			},

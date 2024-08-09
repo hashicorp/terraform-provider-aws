@@ -10,16 +10,17 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -27,8 +28,9 @@ import (
 )
 
 // @SDKResource("aws_iam_saml_provider", name="SAML Provider")
-// @Tags
-func ResourceSAMLProvider() *schema.Resource {
+// @Tags(identifierAttribute="id", resourceType="SAMLProvider")
+// @Testing(tagsTest=false)
+func resourceSAMLProvider() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSAMLProviderCreate,
 		ReadWithoutTimeout:   resourceSAMLProviderRead,
@@ -40,11 +42,11 @@ func ResourceSAMLProvider() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -68,143 +70,137 @@ func ResourceSAMLProvider() *schema.Resource {
 }
 
 func resourceSAMLProviderCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	var diags diag.Diagnostics
 
-	name := d.Get("name").(string)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
+
+	name := d.Get(names.AttrName).(string)
 	input := &iam.CreateSAMLProviderInput{
 		Name:                 aws.String(name),
 		SAMLMetadataDocument: aws.String(d.Get("saml_metadata_document").(string)),
 		Tags:                 getTagsIn(ctx),
 	}
 
-	output, err := conn.CreateSAMLProviderWithContext(ctx, input)
+	output, err := conn.CreateSAMLProvider(ctx, input)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
-	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
+	partition := meta.(*conns.AWSClient).Partition
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 		input.Tags = nil
 
-		output, err = conn.CreateSAMLProviderWithContext(ctx, input)
+		output, err = conn.CreateSAMLProvider(ctx, input)
 	}
 
 	if err != nil {
-		return diag.Errorf("creating IAM SAML Provider (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating IAM SAML Provider (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.SAMLProviderArn))
+	d.SetId(aws.ToString(output.SAMLProviderArn))
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
 	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		err := samlProviderCreateTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
-			return resourceSAMLProviderRead(ctx, d, meta)
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
+			return append(diags, resourceSAMLProviderRead(ctx, d, meta)...)
 		}
 
 		if err != nil {
-			return diag.Errorf("setting IAM SAML Provider (%s) tags: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "setting IAM SAML Provider (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	return resourceSAMLProviderRead(ctx, d, meta)
+	return append(diags, resourceSAMLProviderRead(ctx, d, meta)...)
 }
 
 func resourceSAMLProviderRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	var diags diag.Diagnostics
 
-	output, err := FindSAMLProviderByARN(ctx, conn, d.Id())
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
+
+	output, err := findSAMLProviderByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IAM SAML Provider %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading IAM SAML Provider (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading IAM SAML Provider (%s): %s", d.Id(), err)
 	}
 
 	name, err := nameFromSAMLProviderARN(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set("arn", d.Id())
-	d.Set("name", name)
+	d.Set(names.AttrARN, d.Id())
+	d.Set(names.AttrName, name)
 	d.Set("saml_metadata_document", output.SAMLMetadataDocument)
 	if output.ValidUntil != nil {
-		d.Set("valid_until", aws.TimeValue(output.ValidUntil).Format(time.RFC3339))
+		d.Set("valid_until", aws.ToTime(output.ValidUntil).Format(time.RFC3339))
 	} else {
 		d.Set("valid_until", nil)
 	}
 
 	setTagsOut(ctx, output.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceSAMLProviderUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	var diags diag.Diagnostics
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
+
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &iam.UpdateSAMLProviderInput{
 			SAMLProviderArn:      aws.String(d.Id()),
 			SAMLMetadataDocument: aws.String(d.Get("saml_metadata_document").(string)),
 		}
 
-		_, err := conn.UpdateSAMLProviderWithContext(ctx, input)
+		_, err := conn.UpdateSAMLProvider(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating IAM SAML Provider (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating IAM SAML Provider (%s): %s", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		err := samlProviderUpdateTags(ctx, conn, d.Id(), o, n)
-
-		// Some partitions (e.g. ISO) may not support tagging.
-		if errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
-			return resourceSAMLProviderRead(ctx, d, meta)
-		}
-
-		if err != nil {
-			return diag.Errorf("updating tags for IAM SAML Provider (%s): %s", d.Id(), err)
-		}
-	}
-
-	return resourceSAMLProviderRead(ctx, d, meta)
+	return append(diags, resourceSAMLProviderRead(ctx, d, meta)...)
 }
 
 func resourceSAMLProviderDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	log.Printf("[DEBUG] Deleting IAM SAML Provider: %s", d.Id())
-	_, err := conn.DeleteSAMLProviderWithContext(ctx, &iam.DeleteSAMLProviderInput{
+	_, err := conn.DeleteSAMLProvider(ctx, &iam.DeleteSAMLProviderInput{
 		SAMLProviderArn: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-		return nil
+	if errs.IsA[*awstypes.NoSuchEntityException](err) {
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting IAM SAML Provider (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting IAM SAML Provider (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func FindSAMLProviderByARN(ctx context.Context, conn *iam.IAM, arn string) (*iam.GetSAMLProviderOutput, error) {
+func findSAMLProviderByARN(ctx context.Context, conn *iam.Client, arn string) (*iam.GetSAMLProviderOutput, error) {
 	input := &iam.GetSAMLProviderInput{
 		SAMLProviderArn: aws.String(arn),
 	}
 
-	output, err := conn.GetSAMLProviderWithContext(ctx, input)
+	output, err := conn.GetSAMLProvider(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+	if errs.IsA[*awstypes.NoSuchEntityException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

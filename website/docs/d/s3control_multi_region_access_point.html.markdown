@@ -53,4 +53,5 @@ This data source exports the following attributes in addition to the arguments a
 ### regions
 
 * `bucket` - The name of the bucket.
+* `bucket_account_id` - The AWS account ID that owns the bucket.
 * `region` - The name of the region.

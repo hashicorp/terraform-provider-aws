@@ -453,7 +453,7 @@ resource "aws_cloudwatch_event_target" "example" {
 -> **Note:** In order to be able to have your AWS Lambda function or
    SNS topic invoked by an EventBridge rule, you must set up the right permissions
    using [`aws_lambda_permission`](/docs/providers/aws/r/lambda_permission.html)
-   or [`aws_sns_topic.policy`](/docs/providers/aws/r/sns_topic.html#policy).
+   or [`aws_sns_topic_policy`](/docs/providers/aws/r/sns_topic_policy.html).
    More info [here](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-use-resource-based.html).
 
 The following arguments are required:
@@ -468,6 +468,7 @@ The following arguments are optional:
 * `ecs_target` - (Optional) Parameters used when you are using the rule to invoke Amazon ECS Task. Documented below. A maximum of 1 are allowed.
 * `event_bus_name` - (Optional) The name or ARN of the event bus to associate with the rule.
   If you omit this, the `default` event bus is used.
+* `force_destroy` - (Optional) Used to delete managed rules created by AWS. Defaults to `false`.
 * `http_target` - (Optional) Parameters used when you are using the rule to invoke an API Gateway REST endpoint. Documented below. A maximum of 1 is allowed.
 * `input` - (Optional) Valid JSON text passed to the target. Conflicts with `input_path` and `input_transformer`.
 * `input_path` - (Optional) The value of the [JSONPath](http://goessner.net/articles/JsonPath/) that is used for extracting part of the matched event when passing it to the target. Conflicts with `input` and `input_transformer`.

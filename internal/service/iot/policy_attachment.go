@@ -7,29 +7,35 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iot"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iot"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iot/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_iot_policy_attachment")
-func ResourcePolicyAttachment() *schema.Resource {
+// @SDKResource("aws_iot_policy_attachment", nmw="Policy Attachment")
+func resourcePolicyAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePolicyAttachmentCreate,
 		ReadWithoutTimeout:   resourcePolicyAttachmentRead,
 		DeleteWithoutTimeout: resourcePolicyAttachmentDelete,
+
 		Schema: map[string]*schema.Schema{
-			"policy": {
+			names.AttrPolicy: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"target": {
+			names.AttrTarget: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -40,83 +46,46 @@ func ResourcePolicyAttachment() *schema.Resource {
 
 func resourcePolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn(ctx)
+	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
-	policyName := d.Get("policy").(string)
-	target := d.Get("target").(string)
-
-	_, err := conn.AttachPolicyWithContext(ctx, &iot.AttachPolicyInput{
+	policyName := d.Get(names.AttrPolicy).(string)
+	target := d.Get(names.AttrTarget).(string)
+	id := policyAttachmentCreateResourceID(policyName, target)
+	input := &iot.AttachPolicyInput{
 		PolicyName: aws.String(policyName),
 		Target:     aws.String(target),
-	})
+	}
+
+	_, err := conn.AttachPolicy(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "attaching policy %s to target %s: %s", policyName, target, err)
+		return sdkdiag.AppendErrorf(diags, "creating IoT Policy Attachment (%s): %s", id, err)
 	}
 
-	d.SetId(fmt.Sprintf("%s|%s", policyName, target))
+	d.SetId(id)
+
 	return append(diags, resourcePolicyAttachmentRead(ctx, d, meta)...)
-}
-
-func ListPolicyAttachmentPages(ctx context.Context, conn *iot.IoT, input *iot.ListAttachedPoliciesInput,
-	fn func(out *iot.ListAttachedPoliciesOutput, lastPage bool) bool) error {
-	for {
-		page, err := conn.ListAttachedPoliciesWithContext(ctx, input)
-		if err != nil {
-			return err
-		}
-		lastPage := page.NextMarker == nil
-
-		shouldContinue := fn(page, lastPage)
-		if !shouldContinue || lastPage {
-			break
-		}
-		input.Marker = page.NextMarker
-	}
-	return nil
-}
-
-func GetPolicyAttachment(ctx context.Context, conn *iot.IoT, target, policyName string) (*iot.Policy, error) {
-	var policy *iot.Policy
-
-	input := &iot.ListAttachedPoliciesInput{
-		PageSize:  aws.Int64(250),
-		Recursive: aws.Bool(false),
-		Target:    aws.String(target),
-	}
-
-	err := ListPolicyAttachmentPages(ctx, conn, input, func(out *iot.ListAttachedPoliciesOutput, lastPage bool) bool {
-		for _, att := range out.Policies {
-			if policyName == aws.StringValue(att.PolicyName) {
-				policy = att
-				return false
-			}
-		}
-		return true
-	})
-
-	return policy, err
 }
 
 func resourcePolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn(ctx)
+	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
-	policyName := d.Get("policy").(string)
-	target := d.Get("target").(string)
-
-	var policy *iot.Policy
-
-	policy, err := GetPolicyAttachment(ctx, conn, target, policyName)
-
+	policyName, target, err := policyAttachmentParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing policy attachments for target %s: %s", target, err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if policy == nil {
-		log.Printf("[WARN] IOT Policy Attachment (%s) not found, removing from state", d.Id())
+	_, err = findAttachedPolicyByTwoPartKey(ctx, conn, policyName, target)
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] IoT Policy Attachment (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading IoT Policy Attachment (%s): %s", d.Id(), err)
 	}
 
 	return diags
@@ -124,26 +93,89 @@ func resourcePolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, m
 
 func resourcePolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn(ctx)
+	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
-	policyName := d.Get("policy").(string)
-	target := d.Get("target").(string)
+	policyName, target, err := policyAttachmentParseResourceID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
 
-	_, err := conn.DetachPolicyWithContext(ctx, &iot.DetachPolicyInput{
+	log.Printf("[DEBUG] Deleting IoT Policy Attachment: %s", d.Id())
+	_, err = conn.DetachPolicy(ctx, &iot.DetachPolicyInput{
 		PolicyName: aws.String(policyName),
 		Target:     aws.String(target),
 	})
 
-	// DetachPolicy doesn't return an error if the policy doesn't exist,
-	// but it returns an error if the Target is not found.
-	if tfawserr.ErrMessageContains(err, iot.ErrCodeInvalidRequestException, "Invalid Target") {
-		log.Printf("[WARN] IOT target (%s) not found, removing attachment to policy (%s) from state", target, policyName)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "detaching policy %s from target %s: %s", policyName, target, err)
+		return sdkdiag.AppendErrorf(diags, "deleting IoT Policy Attachment (%s): %s", d.Id(), err)
 	}
 
 	return diags
+}
+
+func findAttachedPolicyByTwoPartKey(ctx context.Context, conn *iot.Client, policyName, target string) (*awstypes.Policy, error) {
+	input := &iot.ListAttachedPoliciesInput{
+		PageSize:  aws.Int32(250),
+		Recursive: false,
+		Target:    aws.String(target),
+	}
+
+	return findAttachedPolicy(ctx, conn, input)
+}
+
+func findAttachedPolicy(ctx context.Context, conn *iot.Client, input *iot.ListAttachedPoliciesInput) (*awstypes.Policy, error) {
+	output, err := findAttachedPolicies(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertFirstValueResult(output)
+}
+
+func findAttachedPolicies(ctx context.Context, conn *iot.Client, input *iot.ListAttachedPoliciesInput) ([]awstypes.Policy, error) {
+	var output []awstypes.Policy
+
+	pages := iot.NewListAttachedPoliciesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.Policies...)
+	}
+
+	return output, nil
+}
+
+const policyAttachmentResourceIDSeparator = "|"
+
+func policyAttachmentCreateResourceID(policyName, target string) string {
+	parts := []string{policyName, target}
+	id := strings.Join(parts, policyAttachmentResourceIDSeparator)
+
+	return id
+}
+
+func policyAttachmentParseResourceID(id string) (string, string, error) {
+	parts := strings.Split(id, policyAttachmentResourceIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected policy-name%[2]starget", id, policyAttachmentResourceIDSeparator)
 }

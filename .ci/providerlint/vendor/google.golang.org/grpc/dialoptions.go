@@ -46,6 +46,7 @@ func init() {
 	internal.WithBinaryLogger = withBinaryLogger
 	internal.JoinDialOptions = newJoinDialOption
 	internal.DisableGlobalDialOptions = newDisableGlobalDialOptions
+	internal.WithRecvBufferPool = withRecvBufferPool
 }
 
 // dialOptions configure a Dial call. dialOptions are set by the DialOption
@@ -63,12 +64,11 @@ type dialOptions struct {
 	block                       bool
 	returnLastError             bool
 	timeout                     time.Duration
-	scChan                      <-chan ServiceConfig
 	authority                   string
 	binaryLogger                binarylog.Logger
 	copts                       transport.ConnectOptions
 	callOptions                 []CallOption
-	channelzParentID            *channelz.Identifier
+	channelzParent              channelz.Identifier
 	disableServiceConfig        bool
 	disableRetry                bool
 	disableHealthCheck          bool
@@ -78,6 +78,8 @@ type dialOptions struct {
 	defaultServiceConfigRawJSON *string
 	resolvers                   []resolver.Builder
 	idleTimeout                 time.Duration
+	recvBufferPool              SharedBufferPool
+	defaultScheme               string
 }
 
 // DialOption configures how we set up the connection.
@@ -138,10 +140,22 @@ func newJoinDialOption(opts ...DialOption) DialOption {
 	return &joinDialOption{opts: opts}
 }
 
+// WithSharedWriteBuffer allows reusing per-connection transport write buffer.
+// If this option is set to true every connection will release the buffer after
+// flushing the data on the wire.
+//
+// # Experimental
+//
+// Notice: This API is EXPERIMENTAL and may be changed or removed in a
+// later release.
+func WithSharedWriteBuffer(val bool) DialOption {
+	return newFuncDialOption(func(o *dialOptions) {
+		o.copts.SharedWriteBuffer = val
+	})
+}
+
 // WithWriteBufferSize determines how much data can be batched before doing a
-// write on the wire. The corresponding memory allocation for this buffer will
-// be twice the size to keep syscalls low. The default value for this buffer is
-// 32KB.
+// write on the wire. The default value for this buffer is 32KB.
 //
 // Zero or negative values will disable the write buffer such that each write
 // will be on underlying connection. Note: A Send call may not directly
@@ -232,19 +246,6 @@ func WithCompressor(cp Compressor) DialOption {
 func WithDecompressor(dc Decompressor) DialOption {
 	return newFuncDialOption(func(o *dialOptions) {
 		o.dc = dc
-	})
-}
-
-// WithServiceConfig returns a DialOption which has a channel to read the
-// service configuration.
-//
-// Deprecated: service config should be received through name resolver or via
-// WithDefaultServiceConfig, as specified at
-// https://github.com/grpc/grpc/blob/master/doc/service_config.md.  Will be
-// removed in a future 1.x release.
-func WithServiceConfig(c <-chan ServiceConfig) DialOption {
-	return newFuncDialOption(func(o *dialOptions) {
-		o.scChan = c
 	})
 }
 
@@ -398,6 +399,17 @@ func WithTimeout(d time.Duration) DialOption {
 // connections. If FailOnNonTempDialError() is set to true, and an error is
 // returned by f, gRPC checks the error's Temporary() method to decide if it
 // should try to reconnect to the network address.
+//
+// Note: All supported releases of Go (as of December 2023) override the OS
+// defaults for TCP keepalive time and interval to 15s. To enable TCP keepalive
+// with OS defaults for keepalive time and interval, use a net.Dialer that sets
+// the KeepAlive field to a negative value, and sets the SO_KEEPALIVE socket
+// option to true from the Control field. For a concrete example of how to do
+// this, see internal.NetDialerWithTCPKeepalive().
+//
+// For more information, please see [issue 23459] in the Go github repo.
+//
+// [issue 23459]: https://github.com/golang/go/issues/23459
 func WithContextDialer(f func(context.Context, string) (net.Conn, error)) DialOption {
 	return newFuncDialOption(func(o *dialOptions) {
 		o.copts.Dialer = f
@@ -472,7 +484,7 @@ func FailOnNonTempDialError(f bool) DialOption {
 // the RPCs.
 func WithUserAgent(s string) DialOption {
 	return newFuncDialOption(func(o *dialOptions) {
-		o.copts.UserAgent = s
+		o.copts.UserAgent = s + " " + grpcUA
 	})
 }
 
@@ -542,9 +554,9 @@ func WithAuthority(a string) DialOption {
 //
 // Notice: This API is EXPERIMENTAL and may be changed or removed in a
 // later release.
-func WithChannelzParentID(id *channelz.Identifier) DialOption {
+func WithChannelzParentID(c channelz.Identifier) DialOption {
 	return newFuncDialOption(func(o *dialOptions) {
-		o.channelzParentID = id
+		o.channelzParent = c
 	})
 }
 
@@ -622,12 +634,17 @@ func withHealthCheckFunc(f internal.HealthChecker) DialOption {
 
 func defaultDialOptions() dialOptions {
 	return dialOptions{
-		healthCheckFunc: internal.HealthCheckFunc,
 		copts: transport.ConnectOptions{
-			WriteBufferSize: defaultWriteBufSize,
 			ReadBufferSize:  defaultReadBufSize,
+			WriteBufferSize: defaultWriteBufSize,
 			UseProxy:        true,
+			UserAgent:       grpcUA,
 		},
+		bs:              internalbackoff.DefaultExponential,
+		healthCheckFunc: internal.HealthCheckFunc,
+		idleTimeout:     30 * time.Minute,
+		recvBufferPool:  nopBufferPool{},
+		defaultScheme:   "dns",
 	}
 }
 
@@ -639,6 +656,14 @@ func defaultDialOptions() dialOptions {
 func withMinConnectDeadline(f func() time.Duration) DialOption {
 	return newFuncDialOption(func(o *dialOptions) {
 		o.minConnectTimeout = f
+	})
+}
+
+// withDefaultScheme is used to allow Dial to use "passthrough" as the default
+// name resolver, while NewClient uses "dns" otherwise.
+func withDefaultScheme(s string) DialOption {
+	return newFuncDialOption(func(o *dialOptions) {
+		o.defaultScheme = s
 	})
 }
 
@@ -664,8 +689,8 @@ func WithResolvers(rs ...resolver.Builder) DialOption {
 // channel will exit idle mode when the Connect() method is called or when an
 // RPC is initiated.
 //
-// By default this feature is disabled, which can also be explicitly configured
-// by passing zero to this function.
+// A default timeout of 30 minutes will be used if this dial option is not set
+// at dial time and idleness can be disabled by passing a timeout of zero.
 //
 // # Experimental
 //
@@ -674,5 +699,28 @@ func WithResolvers(rs ...resolver.Builder) DialOption {
 func WithIdleTimeout(d time.Duration) DialOption {
 	return newFuncDialOption(func(o *dialOptions) {
 		o.idleTimeout = d
+	})
+}
+
+// WithRecvBufferPool returns a DialOption that configures the ClientConn
+// to use the provided shared buffer pool for parsing incoming messages. Depending
+// on the application's workload, this could result in reduced memory allocation.
+//
+// If you are unsure about how to implement a memory pool but want to utilize one,
+// begin with grpc.NewSharedBufferPool.
+//
+// Note: The shared buffer pool feature will not be active if any of the following
+// options are used: WithStatsHandler, EnableTracing, or binary logging. In such
+// cases, the shared buffer pool will be ignored.
+//
+// Deprecated: use experimental.WithRecvBufferPool instead.  Will be deleted in
+// v1.60.0 or later.
+func WithRecvBufferPool(bufferPool SharedBufferPool) DialOption {
+	return withRecvBufferPool(bufferPool)
+}
+
+func withRecvBufferPool(bufferPool SharedBufferPool) DialOption {
+	return newFuncDialOption(func(o *dialOptions) {
+		o.recvBufferPool = bufferPool
 	})
 }

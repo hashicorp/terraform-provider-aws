@@ -65,9 +65,9 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-~> **Note:** Any modifications to the `awsDbOptionGroup` are set to happen immediately as we default to applying immediately.
+~> **Note:** Any modifications to the `aws_db_option_group` are set to happen immediately as we default to applying immediately.
 
-~> **WARNING:** You can perform a destroy on a `awsDbOptionGroup`, as long as it is not associated with any Amazon RDS resource. An option group can be associated with a DB instance, a manual DB snapshot, or an automated DB snapshot.
+~> **WARNING:** You can perform a destroy on a `aws_db_option_group`, as long as it is not associated with any Amazon RDS resource. An option group can be associated with a DB instance, a manual DB snapshot, or an automated DB snapshot.
 
 If you try to delete an option group that is associated with an Amazon RDS resource, an error similar to the following is returned:
 
@@ -79,62 +79,76 @@ More information about this can be found [here](https://docs.aws.amazon.com/Amaz
 
 This resource supports the following arguments:
 
-* `name` - (Optional, Forces new resource) The name of the option group. If omitted, Terraform will assign a random, unique name. Must be lowercase, to match as it is stored in AWS.
+* `name` - (Optional, Forces new resource) Name of the option group. If omitted, Terraform will assign a random, unique name. Must be lowercase, to match as it is stored in AWS.
 * `namePrefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`. Must be lowercase, to match as it is stored in AWS.
-* `optionGroupDescription` - (Optional) The description of the option group. Defaults to "Managed by Terraform".
+* `optionGroupDescription` - (Optional) Description of the option group. Defaults to "Managed by Terraform".
 * `engineName` - (Required) Specifies the name of the engine that this option group should be associated with.
 * `majorEngineVersion` - (Required) Specifies the major version of the engine that this option group should be associated with.
-* `option` - (Optional) A list of Options to apply.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `option` - (Optional) The options to apply. See [`option` Block](#option-block) below for more details.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-Option blocks support the following:
+### `option` Block
 
-* `optionName` - (Required) The Name of the Option (e.g., MEMCACHED).
-* `optionSettings` - (Optional) A list of option settings to apply.
-* `port` - (Optional) The Port number when connecting to the Option (e.g., 11211).
-* `version` - (Optional) The version of the option (e.g., 13.1.0.0).
-* `dbSecurityGroupMemberships` - (Optional) A list of DB Security Groups for which the option is enabled.
-* `vpcSecurityGroupMemberships` - (Optional) A list of VPC Security Groups for which the option is enabled.
+The `option` blocks support the following arguments:
 
-Option Settings blocks support the following:
+* `optionName` - (Required) Name of the option (e.g., MEMCACHED).
+* `optionSettings` - (Optional) The option settings to apply. See [`optionSettings` Block](#option_settings-block) below for more details.
+* `port` - (Optional) Port number when connecting to the option (e.g., 11211). Leaving out or removing `port` from your configuration does not remove or clear a port from the option in AWS. AWS may assign a default port. Not including `port` in your configuration means that the AWS provider will ignore a previously set value, a value set by AWS, and any port changes.
+* `version` - (Optional) Version of the option (e.g., 13.1.0.0). Leaving out or removing `version` from your configuration does not remove or clear a version from the option in AWS. AWS may assign a default version. Not including `version` in your configuration means that the AWS provider will ignore a previously set value, a value set by AWS, and any version changes.
+* `dbSecurityGroupMemberships` - (Optional) List of DB Security Groups for which the option is enabled.
+* `vpcSecurityGroupMemberships` - (Optional) List of VPC Security Groups for which the option is enabled.
 
-* `name` - (Optional) The Name of the setting.
-* `value` - (Optional) The Value of the setting.
+#### `optionSettings` Block
+
+The `optionSettings` blocks support the following arguments:
+
+* `name` - (Optional) Name of the setting.
+* `value` - (Optional) Value of the setting.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The db option group name.
-* `arn` - The ARN of the db option group.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `id` - DB option group name.
+* `arn` - ARN of the DB option group.
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `delete` - (Default `15M`)
+- `delete` - (Default `15m`)
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DB Option groups using the `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DB option groups using the `name`. For example:
 
 ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { DbOptionGroup } from "./.gen/providers/aws/db-option-group";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    DbOptionGroup.generateConfigForImport(
+      this,
+      "example",
+      "mysql-option-group"
+    );
   }
 }
 
 ```
 
-Using `terraform import`, import DB Option groups using the `name`. For example:
+Using `terraform import`, import DB option groups using the `name`. For example:
 
 ```console
 % terraform import aws_db_option_group.example mysql-option-group
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-e2653f20f77c2a6f4979ce5eb3a9c3c9dc22aa167c5aac46782e52fe6e4b9e98 -->
+<!-- cache-key: cdktf-0.20.1 input-f4f57d2a8743b4e406d5ddc4770491e90f783f3d60d46d4947114c831496d546 -->

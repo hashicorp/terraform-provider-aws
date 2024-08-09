@@ -51,7 +51,8 @@ resource "aws_acmpca_certificate_authority" "example" {
 
 ```terraform
 resource "aws_s3_bucket" "example" {
-  bucket = "example"
+  bucket        = "example"
+  force_destroy = true
 }
 
 data "aws_iam_policy_document" "acmpca_bucket_access" {
@@ -96,6 +97,7 @@ resource "aws_acmpca_certificate_authority" "example" {
       enabled            = true
       expiration_in_days = 7
       s3_bucket_name     = aws_s3_bucket.example.id
+      s3_object_acl      = "BUCKET_OWNER_FULL_CONTROL"
     }
   }
 

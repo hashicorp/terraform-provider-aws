@@ -7,25 +7,36 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 	"strings"
+	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudformation"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_cloudformation_stack_set_instance")
-func ResourceStackSetInstance() *schema.Resource {
+const (
+	stackSetInstanceResourceIDPartCount = 3
+)
+
+// @SDKResource("aws_cloudformation_stack_set_instance", name="Stack Set Instance")
+func resourceStackSetInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStackSetInstanceCreate,
 		ReadWithoutTimeout:   resourceStackSetInstanceRead,
@@ -33,17 +44,17 @@ func ResourceStackSetInstance() *schema.Resource {
 		DeleteWithoutTimeout: resourceStackSetInstanceDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: resourceStackSetInstanceImport,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(StackSetInstanceCreatedDefaultTimeout),
-			Update: schema.DefaultTimeout(StackSetInstanceUpdatedDefaultTimeout),
-			Delete: schema.DefaultTimeout(StackSetInstanceDeletedDefaultTimeout),
+			Create: schema.DefaultTimeout(30 * time.Minute),
+			Update: schema.DefaultTimeout(30 * time.Minute),
+			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
-			"account_id": {
+			names.AttrAccountID: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -52,10 +63,10 @@ func ResourceStackSetInstance() *schema.Resource {
 				ConflictsWith: []string{"deployment_targets"},
 			},
 			"call_as": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      cloudformation.CallAsSelf,
-				ValidateFunc: validation.StringInSlice(cloudformation.CallAs_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.CallAsSelf,
+				ValidateDiagFunc: enum.Validate[awstypes.CallAs](),
 			},
 			"deployment_targets": {
 				Type:     schema.TypeList,
@@ -65,17 +76,44 @@ func ResourceStackSetInstance() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"organizational_unit_ids": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							MinItems: 1,
+							Type:          schema.TypeSet,
+							Optional:      true,
+							ForceNew:      true,
+							MinItems:      1,
+							ConflictsWith: []string{names.AttrAccountID},
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
-								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^(ou-[a-z0-9]{4,32}-[a-z0-9]{8,32}|r-[a-z0-9]{4,32})$`), ""),
+								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^(ou-[0-9a-z]{4,32}-[0-9a-z]{8,32}|r-[0-9a-z]{4,32})$`), ""),
 							},
+						},
+						"account_filter_type": {
+							Type:          schema.TypeString,
+							Optional:      true,
+							ForceNew:      true,
+							ValidateFunc:  validation.StringInSlice(enum.Slice(awstypes.AccountFilterType.Values("")...), false),
+							ConflictsWith: []string{names.AttrAccountID},
+						},
+						"accounts": {
+							Type:          schema.TypeSet,
+							Optional:      true,
+							ForceNew:      true,
+							ConflictsWith: []string{names.AttrAccountID},
+							MinItems:      1,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: verify.ValidAccountID,
+							},
+						},
+						"accounts_url": {
+							Type:          schema.TypeString,
+							ForceNew:      true,
+							Optional:      true,
+							ConflictsWith: []string{names.AttrAccountID},
+							ValidateFunc:  validation.StringMatch(regexache.MustCompile(`(s3://|http(s?)://).+`), ""),
 						},
 					},
 				},
-				ConflictsWith: []string{"account_id"},
+				ConflictsWith: []string{names.AttrAccountID},
 			},
 			"operation_preferences": {
 				Type:     schema.TypeList,
@@ -107,10 +145,15 @@ func ResourceStackSetInstance() *schema.Resource {
 							ValidateFunc:  validation.IntBetween(1, 100),
 							ConflictsWith: []string{"operation_preferences.0.max_concurrent_count"},
 						},
+						"concurrency_mode": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.ConcurrencyMode](),
+						},
 						"region_concurrency_type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice(cloudformation.RegionConcurrencyType_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.RegionConcurrencyType](),
 						},
 						"region_order": {
 							Type:     schema.TypeList,
@@ -118,7 +161,7 @@ func ResourceStackSetInstance() *schema.Resource {
 							MinItems: 1,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
-								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9-]{1,128}$`), ""),
+								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]{1,128}$`), ""),
 							},
 						},
 					},
@@ -133,16 +176,16 @@ func ResourceStackSetInstance() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"retain_stack": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"region": {
+			names.AttrRegion: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
+			},
+			"retain_stack": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 			"stack_id": {
 				Type:     schema.TypeString,
@@ -155,7 +198,7 @@ func ResourceStackSetInstance() *schema.Resource {
 					"This will only be populated when `deployment_targets` is set.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"account_id": {
+						names.AttrAccountID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -180,27 +223,23 @@ func ResourceStackSetInstance() *schema.Resource {
 	}
 }
 
-var (
-	accountIDRegexp = regexache.MustCompile(`^\d{12}$`)
-)
-
 func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
+	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
 	region := meta.(*conns.AWSClient).Region
-	if v, ok := d.GetOk("region"); ok {
+	if v, ok := d.GetOk(names.AttrRegion); ok {
 		region = v.(string)
 	}
 
 	stackSetName := d.Get("stack_set_name").(string)
 	input := &cloudformation.CreateStackInstancesInput{
-		Regions:      aws.StringSlice([]string{region}),
+		Regions:      []string{region},
 		StackSetName: aws.String(stackSetName),
 	}
 
 	accountID := meta.(*conns.AWSClient).AccountID
-	if v, ok := d.GetOk("account_id"); ok {
+	if v, ok := d.GetOk(names.AttrAccountID); ok {
 		accountID = v.(string)
 	}
 	// accountOrOrgID will either be account_id or a slash-delimited list of
@@ -210,16 +249,16 @@ func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData,
 
 	if v, ok := d.GetOk("deployment_targets"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		dt := expandDeploymentTargets(v.([]interface{}))
-		accountOrOrgID = strings.Join(aws.StringValueSlice(dt.OrganizationalUnitIds), "/")
+		accountOrOrgID = strings.Join(dt.OrganizationalUnitIds, "/")
 		input.DeploymentTargets = dt
 	} else {
-		d.Set("account_id", accountID)
-		input.Accounts = aws.StringSlice([]string{accountID})
+		d.Set(names.AttrAccountID, accountID)
+		input.Accounts = []string{accountID}
 	}
 
 	callAs := d.Get("call_as").(string)
 	if v, ok := d.GetOk("call_as"); ok {
-		input.CallAs = aws.String(v.(string))
+		input.CallAs = awstypes.CallAs(v.(string))
 	}
 
 	if v, ok := d.GetOk("parameter_overrides"); ok {
@@ -230,23 +269,25 @@ func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData,
 		input.OperationPreferences = expandOperationPreferences(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	log.Printf("[DEBUG] Creating CloudFormation StackSet Instance: %s", input)
+	id := errs.Must(flex.FlattenResourceId([]string{stackSetName, accountOrOrgID, region}, stackSetInstanceResourceIDPartCount, false))
 	_, err := tfresource.RetryWhen(ctx, propagationTimeout,
 		func() (interface{}, error) {
-			input.OperationId = aws.String(id.UniqueId())
+			input.OperationId = aws.String(sdkid.UniqueId())
 
-			output, err := conn.CreateStackInstancesWithContext(ctx, input)
+			output, err := conn.CreateStackInstances(ctx, input)
 
 			if err != nil {
 				return nil, err
 			}
 
-			d.SetId(StackSetInstanceCreateResourceID(stackSetName, accountOrOrgID, region))
+			d.SetId(id)
 
-			operation, err := WaitStackSetOperationSucceeded(ctx, conn, stackSetName, aws.StringValue(output.OperationId), callAs, d.Timeout(schema.TimeoutCreate))
+			operation, err := waitStackSetOperationSucceeded(ctx, conn, stackSetName, aws.ToString(output.OperationId), callAs, d.Timeout(schema.TimeoutCreate))
+
 			if err != nil {
-				return nil, fmt.Errorf("waiting for completion: %w", err)
+				return nil, fmt.Errorf("waiting for create: %w", err)
 			}
+
 			return operation, nil
 		},
 		func(err error) (bool, error) {
@@ -284,7 +325,7 @@ func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData,
 				return true, err
 			}
 
-			return false, fmt.Errorf("waiting for CloudFormation StackSet Instance (%s) creation: %w", d.Id(), err)
+			return false, err
 		},
 	)
 
@@ -297,33 +338,34 @@ func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourceStackSetInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
+	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
-	stackSetName, accountOrOrgID, region, err := StackSetInstanceParseResourceID(d.Id())
+	parts, err := flex.ExpandResourceId(d.Id(), stackSetInstanceResourceIDPartCount, false)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading CloudFormation StackSet Instance (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
-	if accountOrOrgID == "" {
-		return sdkdiag.AppendErrorf(diags, "reading CloudFormation StackSet Instance (%s): account_id or organizational_unit_id section empty", d.Id())
-	}
-	d.Set("region", region)
+
+	stackSetName, accountOrOrgID, region := parts[0], parts[1], parts[2]
+	d.Set(names.AttrRegion, region)
 	d.Set("stack_set_name", stackSetName)
 
 	callAs := d.Get("call_as").(string)
 
-	if accountIDRegexp.MatchString(accountOrOrgID) {
+	if itypes.IsAWSAccountID(accountOrOrgID) {
 		// Stack instances deployed by account ID
-		stackInstance, err := FindStackInstanceByName(ctx, conn, stackSetName, accountOrOrgID, region, callAs)
+		stackInstance, err := findStackInstanceByFourPartKey(ctx, conn, stackSetName, accountOrOrgID, region, callAs)
+
 		if !d.IsNewResource() && tfresource.NotFound(err) {
 			log.Printf("[WARN] CloudFormation StackSet Instance (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return diags
 		}
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading CloudFormation StackSet Instance (%s): %s", d.Id(), err)
 		}
 
-		d.Set("account_id", stackInstance.Account)
+		d.Set(names.AttrAccountID, stackInstance.Account)
 		d.Set("organizational_unit_id", stackInstance.OrganizationalUnitId)
 		if err := d.Set("parameter_overrides", flattenAllParameters(stackInstance.ParameterOverrides)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting parameters: %s", err)
@@ -335,17 +377,18 @@ func resourceStackSetInstanceRead(ctx context.Context, d *schema.ResourceData, m
 		// Stack instances deployed by organizational unit ID
 		orgIDs := strings.Split(accountOrOrgID, "/")
 
-		summaries, err := FindStackInstanceSummariesByOrgIDs(ctx, conn, stackSetName, region, callAs, orgIDs)
+		summaries, err := findStackInstanceSummariesByFourPartKey(ctx, conn, stackSetName, region, callAs, orgIDs)
+
 		if !d.IsNewResource() && tfresource.NotFound(err) {
 			log.Printf("[WARN] CloudFormation StackSet Instance (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return diags
 		}
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "finding CloudFormation StackSet Instance (%s) Account: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "finding CloudFormation StackSet Instance (%s): %s", d.Id(), err)
 		}
 
-		d.Set("deployment_targets", flattenDeploymentTargetsFromSlice(orgIDs))
 		d.Set("stack_instance_summaries", flattenStackInstanceSummaries(summaries))
 	}
 
@@ -354,33 +397,26 @@ func resourceStackSetInstanceRead(ctx context.Context, d *schema.ResourceData, m
 
 func resourceStackSetInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
+	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
-	if d.HasChanges("deployment_targets", "parameter_overrides", "operation_preferences") {
-		stackSetName, accountOrOrgID, region, err := StackSetInstanceParseResourceID(d.Id())
-
+	if d.HasChanges("parameter_overrides", "operation_preferences") {
+		parts, err := flex.ExpandResourceId(d.Id(), stackSetInstanceResourceIDPartCount, false)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating CloudFormation StackSet Instance (%s): %s", d.Id(), err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
+		stackSetName, accountOrOrgID, region := parts[0], parts[1], parts[2]
 		input := &cloudformation.UpdateStackInstancesInput{
-			Accounts:           aws.StringSlice([]string{accountOrOrgID}),
-			OperationId:        aws.String(id.UniqueId()),
-			ParameterOverrides: []*cloudformation.Parameter{},
-			Regions:            aws.StringSlice([]string{region}),
+			Accounts:           []string{accountOrOrgID},
+			OperationId:        aws.String(sdkid.UniqueId()),
+			ParameterOverrides: []awstypes.Parameter{},
+			Regions:            []string{region},
 			StackSetName:       aws.String(stackSetName),
 		}
 
 		callAs := d.Get("call_as").(string)
 		if v, ok := d.GetOk("call_as"); ok {
-			input.CallAs = aws.String(v.(string))
-		}
-
-		if v, ok := d.GetOk("deployment_targets"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			dt := expandDeploymentTargets(v.([]interface{}))
-			// reset input Accounts as the API accepts only 1 of Accounts and DeploymentTargets
-			input.Accounts = nil
-			input.DeploymentTargets = dt
+			input.CallAs = awstypes.CallAs(v.(string))
 		}
 
 		if v, ok := d.GetOk("parameter_overrides"); ok {
@@ -391,15 +427,14 @@ func resourceStackSetInstanceUpdate(ctx context.Context, d *schema.ResourceData,
 			input.OperationPreferences = expandOperationPreferences(v.([]interface{})[0].(map[string]interface{}))
 		}
 
-		log.Printf("[DEBUG] Updating CloudFormation StackSet Instance: %s", input)
-		output, err := conn.UpdateStackInstancesWithContext(ctx, input)
+		output, err := conn.UpdateStackInstances(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating CloudFormation StackSet Instance (%s): %s", d.Id(), err)
 		}
 
-		if _, err := WaitStackSetOperationSucceeded(ctx, conn, stackSetName, aws.StringValue(output.OperationId), callAs, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating CloudFormation StackSet Instance (%s): waiting for completion: %s", d.Id(), err)
+		if _, err := waitStackSetOperationSucceeded(ctx, conn, stackSetName, aws.ToString(output.OperationId), callAs, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for CloudFormation StackSet Instance (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -408,25 +443,25 @@ func resourceStackSetInstanceUpdate(ctx context.Context, d *schema.ResourceData,
 
 func resourceStackSetInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
+	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
-	stackSetName, accountOrOrgID, region, err := StackSetInstanceParseResourceID(d.Id())
-
+	parts, err := flex.ExpandResourceId(d.Id(), stackSetInstanceResourceIDPartCount, false)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting CloudFormation StackSet Instance (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
+	stackSetName, accountOrOrgID, region := parts[0], parts[1], parts[2]
 	input := &cloudformation.DeleteStackInstancesInput{
-		Accounts:     aws.StringSlice([]string{accountOrOrgID}),
-		OperationId:  aws.String(id.UniqueId()),
-		Regions:      aws.StringSlice([]string{region}),
+		Accounts:     []string{accountOrOrgID},
+		OperationId:  aws.String(sdkid.UniqueId()),
+		Regions:      []string{region},
 		RetainStacks: aws.Bool(d.Get("retain_stack").(bool)),
 		StackSetName: aws.String(stackSetName),
 	}
 
 	callAs := d.Get("call_as").(string)
 	if v, ok := d.GetOk("call_as"); ok {
-		input.CallAs = aws.String(v.(string))
+		input.CallAs = awstypes.CallAs(v.(string))
 	}
 
 	if v, ok := d.GetOk("deployment_targets"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -438,9 +473,11 @@ func resourceStackSetInstanceDelete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	log.Printf("[DEBUG] Deleting CloudFormation StackSet Instance: %s", d.Id())
-	output, err := conn.DeleteStackInstancesWithContext(ctx, input)
+	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.OperationInProgressException](ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+		return conn.DeleteStackInstances(ctx, input)
+	})
 
-	if tfawserr.ErrCodeEquals(err, cloudformation.ErrCodeStackInstanceNotFoundException) || tfawserr.ErrCodeEquals(err, cloudformation.ErrCodeStackSetNotFoundException) {
+	if errs.IsA[*awstypes.StackInstanceNotFoundException](err) || errs.IsA[*awstypes.StackSetNotFoundException](err) {
 		return diags
 	}
 
@@ -448,14 +485,92 @@ func resourceStackSetInstanceDelete(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "deleting CloudFormation StackSet Instance (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitStackSetOperationSucceeded(ctx, conn, stackSetName, aws.StringValue(output.OperationId), callAs, d.Timeout(schema.TimeoutDelete)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting CloudFormation StackSet Instance (%s): waiting for completion: %s", d.Id(), err)
+	if _, err := waitStackSetOperationSucceeded(ctx, conn, stackSetName, aws.ToString(outputRaw.(*cloudformation.DeleteStackInstancesOutput).OperationId), callAs, d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for CloudFormation StackSet Instance (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func expandDeploymentTargets(tfList []interface{}) *cloudformation.DeploymentTargets {
+func resourceStackSetInstanceImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	switch parts := strings.Split(d.Id(), flex.ResourceIdSeparator); len(parts) {
+	case 3:
+	case 4:
+		d.SetId(strings.Join([]string{parts[0], parts[1], parts[2]}, flex.ResourceIdSeparator))
+		d.Set("call_as", parts[3])
+	default:
+		return []*schema.ResourceData{}, fmt.Errorf("unexpected format for import ID (%[1]s), use: STACKSETNAME%[2]sACCOUNTID%[2]sREGION or STACKSETNAME%[2]sACCOUNTID%[2]sREGION%[2]sCALLAS", d.Id(), flex.ResourceIdSeparator)
+	}
+
+	return []*schema.ResourceData{d}, nil
+}
+
+func findStackInstanceSummariesByFourPartKey(ctx context.Context, conn *cloudformation.Client, stackSetName, region, callAs string, orgIDs []string) ([]awstypes.StackInstanceSummary, error) {
+	input := &cloudformation.ListStackInstancesInput{
+		StackInstanceRegion: aws.String(region),
+		StackSetName:        aws.String(stackSetName),
+	}
+	if callAs != "" {
+		input.CallAs = awstypes.CallAs(callAs)
+	}
+	var output []awstypes.StackInstanceSummary
+
+	pages := cloudformation.NewListStackInstancesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.StackSetNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Summaries {
+			if slices.Contains(orgIDs, aws.ToString(v.OrganizationalUnitId)) {
+				output = append(output, v)
+			}
+		}
+	}
+
+	return output, nil
+}
+
+func findStackInstanceByFourPartKey(ctx context.Context, conn *cloudformation.Client, stackSetName, accountID, region, callAs string) (*awstypes.StackInstance, error) {
+	input := &cloudformation.DescribeStackInstanceInput{
+		StackInstanceAccount: aws.String(accountID),
+		StackInstanceRegion:  aws.String(region),
+		StackSetName:         aws.String(stackSetName),
+	}
+	if callAs != "" {
+		input.CallAs = awstypes.CallAs(callAs)
+	}
+
+	output, err := conn.DescribeStackInstance(ctx, input)
+
+	if errs.IsA[*awstypes.StackInstanceNotFoundException](err) || errs.IsA[*awstypes.StackSetNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.StackInstance == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.StackInstance, nil
+}
+
+func expandDeploymentTargets(tfList []interface{}) *awstypes.DeploymentTargets {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -465,31 +580,24 @@ func expandDeploymentTargets(tfList []interface{}) *cloudformation.DeploymentTar
 		return nil
 	}
 
-	dt := &cloudformation.DeploymentTargets{}
+	dt := &awstypes.DeploymentTargets{}
 	if v, ok := tfMap["organizational_unit_ids"].(*schema.Set); ok && v.Len() > 0 {
-		dt.OrganizationalUnitIds = flex.ExpandStringSet(v)
+		dt.OrganizationalUnitIds = flex.ExpandStringValueSet(v)
+	}
+	if v, ok := tfMap["account_filter_type"].(string); ok && len(v) > 0 {
+		dt.AccountFilterType = awstypes.AccountFilterType(v)
+	}
+	if v, ok := tfMap["accounts"].(*schema.Set); ok && v.Len() > 0 {
+		dt.Accounts = flex.ExpandStringValueSet(v)
+	}
+	if v, ok := tfMap["accounts_url"].(string); ok && len(v) > 0 {
+		dt.AccountsUrl = aws.String(v)
 	}
 
 	return dt
 }
 
-// flattenDeployment targets converts a list of organizational units (typically
-// parsed from the resource ID) into the Terraform representation of the
-// deployment_targets attribute.
-func flattenDeploymentTargetsFromSlice(orgIDs []string) []interface{} {
-	tfList := []interface{}{}
-	for _, ou := range orgIDs {
-		tfList = append(tfList, ou)
-	}
-
-	m := map[string]interface{}{
-		"organizational_unit_ids": tfList,
-	}
-
-	return []interface{}{m}
-}
-
-func flattenStackInstanceSummaries(apiObject []*cloudformation.StackInstanceSummary) []interface{} {
+func flattenStackInstanceSummaries(apiObject []awstypes.StackInstanceSummary) []interface{} {
 	if len(apiObject) == 0 {
 		return nil
 	}
@@ -497,7 +605,7 @@ func flattenStackInstanceSummaries(apiObject []*cloudformation.StackInstanceSumm
 	tfList := []interface{}{}
 	for _, obj := range apiObject {
 		m := map[string]interface{}{
-			"account_id":             obj.Account,
+			names.AttrAccountID:      obj.Account,
 			"organizational_unit_id": obj.OrganizationalUnitId,
 			"stack_id":               obj.StackId,
 		}

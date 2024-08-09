@@ -34,7 +34,7 @@ func ResourceModelPackageGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -44,7 +44,7 @@ func ResourceModelPackageGroup() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 63),
-					validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,62}$`),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z]){0,62}$`),
 						"Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
 				),
 			},
@@ -106,7 +106,7 @@ func resourceModelPackageGroupRead(ctx context.Context, d *schema.ResourceData, 
 
 	arn := aws.StringValue(mpg.ModelPackageGroupArn)
 	d.Set("model_package_group_name", mpg.ModelPackageGroupName)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("model_package_group_description", mpg.ModelPackageGroupDescription)
 
 	return diags

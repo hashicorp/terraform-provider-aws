@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccObservabilityAccessManagerSinksDataSource_basic(t *testing.T) {
+func testAccObservabilityAccessManagerSinksDataSource_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -29,13 +29,13 @@ func TestAccObservabilityAccessManagerSinksDataSource_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.ObservabilityAccessManagerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAccessManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAccessManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSinksDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "arns.#", acctest.Ct1),
 					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arns.0", "oam", regexache.MustCompile(`sink/+.`)),
 				),
 			},

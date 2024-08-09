@@ -126,7 +126,7 @@ func (lv *LatestVersion) Install(ctx context.Context) (string, error) {
 	if lv.ArmoredPublicKey != "" {
 		d.ArmoredPublicKey = lv.ArmoredPublicKey
 	}
-	zipFilePath, err := d.DownloadAndUnpack(ctx, pv, dstDir)
+	zipFilePath, err := d.DownloadAndUnpack(ctx, pv, dstDir, "")
 	if zipFilePath != "" {
 		lv.pathsToRemove = append(lv.pathsToRemove, zipFilePath)
 	}

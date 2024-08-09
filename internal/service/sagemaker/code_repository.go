@@ -34,7 +34,7 @@ func ResourceCodeRepository() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -45,7 +45,7 @@ func ResourceCodeRepository() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 63),
-					validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9])*$`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z])*$`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
 				),
 			},
 			"git_config": {
@@ -119,7 +119,7 @@ func resourceCodeRepositoryRead(ctx context.Context, d *schema.ResourceData, met
 
 	arn := aws.StringValue(codeRepository.CodeRepositoryArn)
 	d.Set("code_repository_name", codeRepository.CodeRepositoryName)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 
 	if err := d.Set("git_config", flattenCodeRepositoryGitConfig(codeRepository.GitConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting git_config for sagemaker code repository (%s): %s", d.Id(), err)

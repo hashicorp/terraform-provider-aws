@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/redshiftserverless"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -17,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfredshiftserverless "github.com/hashicorp/terraform-provider-aws/internal/service/redshiftserverless"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccRedshiftServerlessEndpointAccess_basic(t *testing.T) {
@@ -26,7 +26,7 @@ func TestAccRedshiftServerlessEndpointAccess_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, redshiftserverless.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEndpointAccessDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -34,11 +34,12 @@ func TestAccRedshiftServerlessEndpointAccess_basic(t *testing.T) {
 				Config: testAccEndpointAccessConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointAccessExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "redshift-serverless", regexache.MustCompile("managedvpcendpoint/.+$")),
-					resource.TestCheckResourceAttr(resourceName, "workgroup_name", rName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "redshift-serverless", regexache.MustCompile("managedvpcendpoint/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_name", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "port"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "owner_account", ""),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPort),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.0", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "workgroup_name", rName),
 				),
 			},
 			{
@@ -50,26 +51,27 @@ func TestAccRedshiftServerlessEndpointAccess_basic(t *testing.T) {
 				Config: testAccEndpointAccessConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointAccessExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "redshift-serverless", regexache.MustCompile("managedvpcendpoint/.+$")),
-					resource.TestCheckResourceAttr(resourceName, "workgroup_name", rName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "redshift-serverless", regexache.MustCompile("managedvpcendpoint/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_name", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "port"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test", "id"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_security_group_ids.*", "aws_security_group.test", "id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPort),
+					resource.TestCheckResourceAttr(resourceName, "owner_account", ""),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.0", names.AttrID),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_security_group_ids.*", "aws_security_group.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "workgroup_name", rName),
 				),
 			},
 		},
 	})
 }
 
-func TestAccRedshiftServerlessEndpointAccess_disappears_workgroup(t *testing.T) {
+func TestAccRedshiftServerlessEndpointAccess_Disappears_workgroup(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_redshiftserverless_endpoint_access.test"
 	rName := sdkacctest.RandStringFromCharSet(30, sdkacctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, redshiftserverless.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEndpointAccessDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -92,7 +94,7 @@ func TestAccRedshiftServerlessEndpointAccess_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, redshiftserverless.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEndpointAccessDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -126,22 +128,18 @@ func testAccCheckEndpointAccessDestroy(ctx context.Context) resource.TestCheckFu
 				return err
 			}
 
-			return fmt.Errorf("Redshift Serverless EndpointAccess %s still exists", rs.Primary.ID)
+			return fmt.Errorf("Redshift Serverless Endpoint Access %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckEndpointAccessExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckEndpointAccessExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("not found: %s", name)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("Redshift Serverless EndpointAccess ID is not set")
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessConn(ctx)
@@ -152,20 +150,8 @@ func testAccCheckEndpointAccessExists(ctx context.Context, name string) resource
 	}
 }
 
-func testAccEndpointAccessConfig_basic(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
-		fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-}
-
-resource "aws_subnet" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, 0)
-  vpc_id            = aws_vpc.test.id
-}
-
+func testAccEndpointAccessConfig_base(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_redshiftserverless_namespace" "test" {
   namespace_name = %[1]q
 }
@@ -174,47 +160,34 @@ resource "aws_redshiftserverless_workgroup" "test" {
   namespace_name = aws_redshiftserverless_namespace.test.namespace_name
   workgroup_name = %[1]q
 }
+`, rName))
+}
 
+func testAccEndpointAccessConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointAccessConfig_base(rName), fmt.Sprintf(`
 resource "aws_redshiftserverless_endpoint_access" "test" {
   workgroup_name = aws_redshiftserverless_workgroup.test.workgroup_name
   endpoint_name  = %[1]q
-  subnet_ids     = [aws_subnet.test.id]
+  subnet_ids     = [aws_subnet.test[0].id]
 }
 `, rName))
 }
 
 func testAccEndpointAccessConfig_updated(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
-		fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-}
-
+	return acctest.ConfigCompose(testAccEndpointAccessConfig_base(rName), fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name   = %[1]q
   vpc_id = aws_vpc.test.id
-}
 
-resource "aws_subnet" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, 0)
-  vpc_id            = aws_vpc.test.id
-}
-
-resource "aws_redshiftserverless_namespace" "test" {
-  namespace_name = %[1]q
-}
-
-resource "aws_redshiftserverless_workgroup" "test" {
-  namespace_name = aws_redshiftserverless_namespace.test.namespace_name
-  workgroup_name = %[1]q
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_redshiftserverless_endpoint_access" "test" {
   workgroup_name         = aws_redshiftserverless_workgroup.test.workgroup_name
   endpoint_name          = %[1]q
-  subnet_ids             = [aws_subnet.test.id]
+  subnet_ids             = [aws_subnet.test[0].id]
   vpc_security_group_ids = [aws_security_group.test.id]
 }
 `, rName))

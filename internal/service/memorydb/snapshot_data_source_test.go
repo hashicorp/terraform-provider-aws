@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/memorydb"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccMemoryDBSnapshotDataSource_basic(t *testing.T) {
@@ -21,13 +21,13 @@ func TestAccMemoryDBSnapshotDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, memorydb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MemoryDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSnapshotDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "cluster_configuration.0.description", resourceName, "cluster_configuration.0.description"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "cluster_configuration.0.engine_version", resourceName, "cluster_configuration.0.engine_version"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "cluster_configuration.0.maintenance_window", resourceName, "cluster_configuration.0.maintenance_window"),
@@ -40,12 +40,12 @@ func TestAccMemoryDBSnapshotDataSource_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "cluster_configuration.0.snapshot_window", resourceName, "cluster_configuration.0.snapshot_window"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "cluster_configuration.0.subnet_group_name", resourceName, "cluster_configuration.0.subnet_group_name"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "cluster_configuration.0.vpc_id", resourceName, "cluster_configuration.0.vpc_id"),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "cluster_name", resourceName, "cluster_name"),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "kms_key_arn", resourceName, "kms_key_arn"),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "name", resourceName, "name"),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "id", resourceName, "id"),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "source", resourceName, "source"),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "1"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, names.AttrClusterName, resourceName, names.AttrClusterName),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, names.AttrKMSKeyARN, resourceName, names.AttrKMSKeyARN),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, names.AttrSource, resourceName, names.AttrSource),
+					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.Test", "test"),
 				),
 			},

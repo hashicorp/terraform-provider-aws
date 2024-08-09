@@ -53,7 +53,7 @@ func (m *multiplexProgram) Metadata(_ context.Context, request resource.Metadata
 func (m *multiplexProgram) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"multiplex_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -92,10 +92,10 @@ func (m *multiplexProgram) Schema(ctx context.Context, req resource.SchemaReques
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"provider_name": schema.StringAttribute{
+									names.AttrProviderName: schema.StringAttribute{
 										Required: true,
 									},
-									"service_name": schema.StringAttribute{
+									names.AttrServiceName: schema.StringAttribute{
 										Required: true,
 									},
 								},
@@ -136,7 +136,7 @@ func (m *multiplexProgram) Schema(ctx context.Context, req resource.SchemaReques
 														int64planmodifier.UseStateForUnknown(),
 													},
 												},
-												"priority": schema.Int64Attribute{
+												names.AttrPriority: schema.Int64Attribute{
 													Optional: true,
 													Computed: true,
 													PlanModifiers: []planmodifier.Int64{
@@ -368,7 +368,7 @@ func (m *multiplexProgram) Delete(ctx context.Context, req resource.DeleteReques
 }
 
 func (m *multiplexProgram) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func FindMultiplexProgramByID(ctx context.Context, conn *medialive.Client, multiplexId, programName string) (*medialive.DescribeMultiplexProgramOutput, error) {
@@ -406,7 +406,7 @@ func (mps multiplexProgramSettingsObject) expand(ctx context.Context) (*mltypes.
 	data := mps[0]
 
 	l := &mltypes.MultiplexProgramSettings{
-		ProgramNumber:            int32(data.ProgramNumber.ValueInt64()),
+		ProgramNumber:            flex.Int32FromFramework(ctx, data.ProgramNumber),
 		PreferredChannelPipeline: mltypes.PreferredChannelPipeline(data.PreferredChannelPipeline.ValueString()),
 	}
 
@@ -458,35 +458,35 @@ func (sd serviceDescriptorObject) expand(ctx context.Context) *mltypes.Multiplex
 
 type videoSettingsObject []videoSettings
 
-func (vs videoSettingsObject) expand(_ context.Context) *mltypes.MultiplexVideoSettings {
+func (vs videoSettingsObject) expand(ctx context.Context) *mltypes.MultiplexVideoSettings {
 	if len(vs) == 0 {
 		return nil
 	}
 
 	return &mltypes.MultiplexVideoSettings{
-		ConstantBitrate: int32(vs[0].ConstantBitrate.ValueInt64()),
+		ConstantBitrate: flex.Int32FromFramework(ctx, vs[0].ConstantBitrate),
 	}
 }
 
 type statmuxSettingsObject []statmuxSettings
 
-func (sms statmuxSettingsObject) expand(_ context.Context) *mltypes.MultiplexStatmuxVideoSettings {
+func (sms statmuxSettingsObject) expand(ctx context.Context) *mltypes.MultiplexStatmuxVideoSettings {
 	if len(sms) == 0 {
 		return nil
 	}
 
 	return &mltypes.MultiplexStatmuxVideoSettings{
-		MaximumBitrate: int32(sms[0].MaximumBitrate.ValueInt64()),
-		MinimumBitrate: int32(sms[0].MinimumBitrate.ValueInt64()),
-		Priority:       int32(sms[0].Priority.ValueInt64()),
+		MaximumBitrate: flex.Int32FromFramework(ctx, sms[0].MaximumBitrate),
+		MinimumBitrate: flex.Int32FromFramework(ctx, sms[0].MinimumBitrate),
+		Priority:       flex.Int32FromFramework(ctx, sms[0].Priority),
 	}
 }
 
 var (
 	statmuxAttrs = map[string]attr.Type{
-		"minimum_bitrate": types.Int64Type,
-		"maximum_bitrate": types.Int64Type,
-		"priority":        types.Int64Type,
+		"minimum_bitrate":  types.Int64Type,
+		"maximum_bitrate":  types.Int64Type,
+		names.AttrPriority: types.Int64Type,
 	}
 
 	videoSettingsAttrs = map[string]attr.Type{
@@ -495,8 +495,8 @@ var (
 	}
 
 	serviceDescriptorAttrs = map[string]attr.Type{
-		"provider_name": types.StringType,
-		"service_name":  types.StringType,
+		names.AttrProviderName: types.StringType,
+		names.AttrServiceName:  types.StringType,
 	}
 
 	multiplexProgramSettingsAttrs = map[string]attr.Type{
@@ -515,7 +515,7 @@ func flattenMultiplexProgramSettings(ctx context.Context, mps *mltypes.Multiplex
 	}
 
 	attrs := map[string]attr.Value{}
-	attrs["program_number"] = types.Int64Value(int64(mps.ProgramNumber))
+	attrs["program_number"] = flex.Int32ToFramework(ctx, mps.ProgramNumber)
 	attrs["preferred_channel_pipeline"] = flex.StringValueToFrameworkLegacy(ctx, mps.PreferredChannelPipeline)
 	attrs["service_descriptor"] = flattenServiceDescriptor(ctx, mps.ServiceDescriptor)
 	attrs["video_settings"] = flattenVideoSettings(ctx, mps.VideoSettings)
@@ -533,15 +533,15 @@ func flattenServiceDescriptor(ctx context.Context, sd *mltypes.MultiplexProgramS
 	}
 
 	attrs := map[string]attr.Value{}
-	attrs["provider_name"] = flex.StringToFrameworkLegacy(ctx, sd.ProviderName)
-	attrs["service_name"] = flex.StringToFrameworkLegacy(ctx, sd.ServiceName)
+	attrs[names.AttrProviderName] = flex.StringToFrameworkLegacy(ctx, sd.ProviderName)
+	attrs[names.AttrServiceName] = flex.StringToFrameworkLegacy(ctx, sd.ServiceName)
 
 	vals := types.ObjectValueMust(serviceDescriptorAttrs, attrs)
 
 	return types.ListValueMust(elemType, []attr.Value{vals})
 }
 
-func flattenStatMuxSettings(_ context.Context, mps *mltypes.MultiplexStatmuxVideoSettings) types.List {
+func flattenStatMuxSettings(ctx context.Context, mps *mltypes.MultiplexStatmuxVideoSettings) types.List {
 	elemType := types.ObjectType{AttrTypes: statmuxAttrs}
 
 	if mps == nil {
@@ -549,9 +549,9 @@ func flattenStatMuxSettings(_ context.Context, mps *mltypes.MultiplexStatmuxVide
 	}
 
 	attrs := map[string]attr.Value{}
-	attrs["minimum_bitrate"] = types.Int64Value(int64(mps.MinimumBitrate))
-	attrs["maximum_bitrate"] = types.Int64Value(int64(mps.MaximumBitrate))
-	attrs["priority"] = types.Int64Value(int64(mps.Priority))
+	attrs["minimum_bitrate"] = flex.Int32ToFramework(ctx, mps.MinimumBitrate)
+	attrs["maximum_bitrate"] = flex.Int32ToFramework(ctx, mps.MaximumBitrate)
+	attrs[names.AttrPriority] = flex.Int32ToFramework(ctx, mps.Priority)
 
 	vals := types.ObjectValueMust(statmuxAttrs, attrs)
 
@@ -566,7 +566,7 @@ func flattenVideoSettings(ctx context.Context, mps *mltypes.MultiplexVideoSettin
 	}
 
 	attrs := map[string]attr.Value{}
-	attrs["constant_bitrate"] = types.Int64Value(int64(mps.ConstantBitrate))
+	attrs["constant_bitrate"] = flex.Int32ToFramework(ctx, mps.ConstantBitrate)
 	attrs["statmux_settings"] = flattenStatMuxSettings(ctx, mps.StatmuxSettings)
 
 	vals := types.ObjectValueMust(videoSettingsAttrs, attrs)

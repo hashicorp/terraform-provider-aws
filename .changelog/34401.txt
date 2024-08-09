@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_lambda_function: Add support for `nodejs20.x` and `provided.al2023` `runtime` values
+```
+
+```release-note:enhancement
+resource/aws_lambda_layer_version: Add support for `nodejs20.x` and `provided.al2023` `compatible_runtimes` values
+```

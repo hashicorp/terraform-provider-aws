@@ -47,11 +47,12 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - Amazon Resource Name (ARN) of the collection.
 * `collection_endpoint` - Collection-specific endpoint used to submit index, search, and data upload requests to an OpenSearch Serverless collection.
 * `created_date` - Date the Collection was created.
-* `dashboard_endpont` - Collection-specific endpoint used to access OpenSearch Dashboards.
+* `dashboard_endpoint` - Collection-specific endpoint used to access OpenSearch Dashboards.
 * `description` - Description of the collection.
 * `kms_key_arn` - The ARN of the Amazon Web Services KMS key used to encrypt the collection.
 * `last_modified_date` - Date the Collection was last modified.
+* `standby_replicas` - Indicates whether standby replicas should be used for a collection.
 * `tags` - A map of tags to assign to the collection.
 * `type` - Type of collection.
 
-<!-- cache-key: cdktf-0.18.0 input-32f2c5eb583f0b996531c4b35603603b4fd7214ff80d2345b49a98075eb1b50b -->
+<!-- cache-key: cdktf-0.20.1 input-79e6c503e86fe55805958b61d9a2c695b0a69c2339520c66ae6030c95e6cff54 -->

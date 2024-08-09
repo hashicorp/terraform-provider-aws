@@ -243,6 +243,7 @@ The following arguments are optional:
 * `filter_policy_scope` - (Optional) Whether the `filter_policy` applies to `MessageAttributes` (default) or `MessageBody`.
 * `raw_message_delivery` - (Optional) Whether to enable raw message delivery (the original message is directly passed, not wrapped in JSON with the original message in the message property). Default is `false`.
 * `redrive_policy` - (Optional) JSON String with the redrive policy that will be used in the subscription. Refer to the [SNS docs](https://docs.aws.amazon.com/sns/latest/dg/sns-dead-letter-queues.html#how-messages-moved-into-dead-letter-queue) for more details.
+* `replay_policy` - (Optional) JSON String with the archived message replay policy that will be used in the subscription. Refer to the [SNS docs](https://docs.aws.amazon.com/sns/latest/dg/message-archiving-and-replay-subscriber.html) for more details.
 
 ### Protocol support
 

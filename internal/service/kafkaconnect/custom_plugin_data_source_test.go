@@ -11,6 +11,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccKafkaConnectCustomPluginDataSource_basic(t *testing.T) {
@@ -21,18 +22,18 @@ func TestAccKafkaConnectCustomPluginDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, kafkaconnect.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
-		CheckDestroy:             nil,
+		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomPluginDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "description", dataSourceName, "description"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDescription, dataSourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(resourceName, "latest_revision", dataSourceName, "latest_revision"),
-					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
-					resource.TestCheckResourceAttrPair(resourceName, "state", dataSourceName, "state"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrState, dataSourceName, names.AttrState),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTags, dataSourceName, names.AttrTags),
 				),
 			},
 		},
@@ -50,6 +51,10 @@ resource "aws_mskconnect_custom_plugin" "test" {
       bucket_arn = aws_s3_bucket.test.arn
       file_key   = aws_s3_object.test.key
     }
+  }
+
+  tags = {
+    key1 = "value1"
   }
 }
 

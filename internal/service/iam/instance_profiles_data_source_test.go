@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/iam"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccIAMInstanceProfilesDataSource_basic(t *testing.T) {
@@ -21,18 +21,18 @@ func TestAccIAMInstanceProfilesDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceProfilesDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceName, "arns.#", "1"),
-					resource.TestCheckResourceAttr(datasourceName, "paths.#", "1"),
-					resource.TestCheckResourceAttr(datasourceName, "names.#", "1"),
-					resource.TestCheckResourceAttrPair(datasourceName, "arns.0", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(datasourceName, "paths.0", resourceName, "path"),
-					resource.TestCheckResourceAttrPair(datasourceName, "names.0", resourceName, "name"),
+					resource.TestCheckResourceAttr(datasourceName, "arns.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(datasourceName, "paths.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(datasourceName, "names.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(datasourceName, "arns.0", resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(datasourceName, "paths.0", resourceName, names.AttrPath),
+					resource.TestCheckResourceAttrPair(datasourceName, "names.0", resourceName, names.AttrName),
 				),
 			},
 		},

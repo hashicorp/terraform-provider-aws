@@ -11,19 +11,23 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsqs "github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(sqs.EndpointsID, testAccErrorCheckSkip)
+	acctest.RegisterServiceErrorCheckFunc(names.SQSServiceID, testAccErrorCheckSkip)
 }
 
 func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
@@ -32,15 +36,72 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	)
 }
 
+func TestQueueNameFromURL(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		Name              string
+		URL               string
+		ExpectedQueueName string
+		ExpectError       bool
+	}{
+		{
+			Name:        "empty URL",
+			ExpectError: true,
+		},
+		{
+			Name:        "invalid URL",
+			URL:         "---",
+			ExpectError: true,
+		},
+		{
+			Name:        "too few path parts",
+			URL:         "http://sqs.us-west-2.amazonaws.com", //lintignore:AWSAT003
+			ExpectError: true,
+		},
+		{
+			Name:        "too many path parts",
+			URL:         "http://sqs.us-west-2.amazonaws.com/123456789012/queueName/extra", //lintignore:AWSAT003
+			ExpectError: true,
+		},
+		{
+			Name:              "valid URL",
+			URL:               "http://sqs.us-west-2.amazonaws.com/123456789012/queueName", //lintignore:AWSAT003
+			ExpectedQueueName: "queueName",
+		},
+	}
+
+	for _, testCase := range testCases {
+		testCase := testCase
+		t.Run(testCase.Name, func(t *testing.T) {
+			t.Parallel()
+
+			got, err := tfsqs.QueueNameFromURL(testCase.URL)
+
+			if err != nil && !testCase.ExpectError {
+				t.Errorf("got unexpected error: %s", err)
+			}
+
+			if err == nil && testCase.ExpectError {
+				t.Errorf("expected error, but received none")
+			}
+
+			if got != testCase.ExpectedQueueName {
+				t.Errorf("got %s, expected %s", got, testCase.ExpectedQueueName)
+			}
+		})
+	}
+}
+
 func TestAccSQSQueue_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var queueAttributes map[string]string
+	var queueAttributes map[types.QueueAttributeName]string
 	resourceName := "aws_sqs_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sqs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SQSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckQueueDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -48,26 +109,29 @@ func TestAccSQSQueue_basic(t *testing.T) {
 				Config: testAccQueueConfig_name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "sqs", rName),
-					resource.TestCheckResourceAttr(resourceName, "content_based_deduplication", "false"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sqs", rName),
+					resource.TestCheckResourceAttr(resourceName, "content_based_deduplication", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "deduplication_scope", ""),
 					resource.TestCheckResourceAttr(resourceName, "delay_seconds", strconv.Itoa(tfsqs.DefaultQueueDelaySeconds)),
-					resource.TestCheckResourceAttr(resourceName, "fifo_queue", "false"),
+					resource.TestCheckResourceAttr(resourceName, "fifo_queue", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "fifo_throughput_limit", ""),
 					resource.TestCheckResourceAttr(resourceName, "kms_data_key_reuse_period_seconds", strconv.Itoa(tfsqs.DefaultQueueKMSDataKeyReusePeriodSeconds)),
 					resource.TestCheckResourceAttr(resourceName, "kms_master_key_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "max_message_size", strconv.Itoa(tfsqs.DefaultQueueMaximumMessageSize)),
 					resource.TestCheckResourceAttr(resourceName, "message_retention_seconds", strconv.Itoa(tfsqs.DefaultQueueMessageRetentionPeriod)),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
-					resource.TestCheckResourceAttr(resourceName, "policy", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPolicy, ""),
 					resource.TestCheckResourceAttr(resourceName, "receive_wait_time_seconds", strconv.Itoa(tfsqs.DefaultQueueReceiveMessageWaitTimeSeconds)),
 					resource.TestCheckResourceAttr(resourceName, "redrive_policy", ""),
 					resource.TestCheckResourceAttr(resourceName, "redrive_allow_policy", ""),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, "url", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrURL, resourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "visibility_timeout_seconds", strconv.Itoa(tfsqs.DefaultQueueVisibilityTimeout)),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -80,13 +144,13 @@ func TestAccSQSQueue_basic(t *testing.T) {
 
 func TestAccSQSQueue_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var queueAttributes map[string]string
+	var queueAttributes map[types.QueueAttributeName]string
 	resourceName := "aws_sqs_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sqs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SQSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckQueueDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -104,22 +168,22 @@ func TestAccSQSQueue_disappears(t *testing.T) {
 
 func TestAccSQSQueue_Name_generated(t *testing.T) {
 	ctx := acctest.Context(t)
-	var queueAttributes map[string]string
+	var queueAttributes map[types.QueueAttributeName]string
 	resourceName := "aws_sqs_queue.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ErrorCheck:               acctest.ErrorCheck(t, sqs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SQSServiceID),
 		CheckDestroy:             testAccCheckQueueDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccQueueConfig_nameGenerated,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
-					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
-					resource.TestCheckResourceAttr(resourceName, "fifo_queue", "false"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "terraform-"),
+					resource.TestCheckResourceAttr(resourceName, "fifo_queue", acctest.CtFalse),
 				),
 			},
 			{
@@ -133,22 +197,22 @@ func TestAccSQSQueue_Name_generated(t *testing.T) {
 
 func TestAccSQSQueue_NameGenerated_fifoQueue(t *testing.T) {
 	ctx := acctest.Context(t)
-	var queueAttributes map[string]string
+	var queueAttributes map[types.QueueAttributeName]string
 	resourceName := "aws_sqs_queue.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ErrorCheck:               acctest.ErrorCheck(t, sqs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SQSServiceID),
 		CheckDestroy:             testAccCheckQueueDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccQueueConfig_nameGeneratedFIFO,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
-					acctest.CheckResourceAttrNameWithSuffixGenerated(resourceName, "name", tfsqs.FIFOQueueNameSuffix),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
-					resource.TestCheckResourceAttr(resourceName, "fifo_queue", "true"),
+					acctest.CheckResourceAttrNameWithSuffixGenerated(resourceName, names.AttrName, tfsqs.FIFOQueueNameSuffix),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "terraform-"),
+					resource.TestCheckResourceAttr(resourceName, "fifo_queue", acctest.CtTrue),
 				),
 			},
 			{
@@ -162,12 +226,12 @@ func TestAccSQSQueue_NameGenerated_fifoQueue(t *testing.T) {
 
 func TestAccSQSQueue_namePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
-	var queueAttributes map[string]string
+	var queueAttributes map[types.QueueAttributeName]string
 	resourceName := "aws_sqs_queue.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sqs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SQSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckQueueDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -175,9 +239,9 @@ func TestAccSQSQueue_namePrefix(t *testing.T) {
 				Config: testAccQueueConfig_namePrefix("tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
-					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
-					resource.TestCheckResourceAttr(resourceName, "fifo_queue", "false"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, "fifo_queue", acctest.CtFalse),
 				),
 			},
 			{
@@ -191,12 +255,12 @@ func TestAccSQSQueue_namePrefix(t *testing.T) {
 
 func TestAccSQSQueue_NamePrefix_fifoQueue(t *testing.T) {
 	ctx := acctest.Context(t)
-	var queueAttributes map[string]string
+	var queueAttributes map[types.QueueAttributeName]string
 	resourceName := "aws_sqs_queue.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sqs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SQSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckQueueDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -204,61 +268,15 @@ func TestAccSQSQueue_NamePrefix_fifoQueue(t *testing.T) {
 				Config: testAccQueueConfig_namePrefixFIFO("tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
-					acctest.CheckResourceAttrNameWithSuffixFromPrefix(resourceName, "name", "tf-acc-test-prefix-", tfsqs.FIFOQueueNameSuffix),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
-					resource.TestCheckResourceAttr(resourceName, "fifo_queue", "true"),
+					acctest.CheckResourceAttrNameWithSuffixFromPrefix(resourceName, names.AttrName, "tf-acc-test-prefix-", tfsqs.FIFOQueueNameSuffix),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, "fifo_queue", acctest.CtTrue),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccSQSQueue_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var queueAttributes map[string]string
-	resourceName := "aws_sqs_queue.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sqs.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckQueueDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccQueueConfig_tags1(rName, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccQueueConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccQueueConfig_tags1(rName, "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
 			},
 		},
 	})
@@ -266,13 +284,13 @@ func TestAccSQSQueue_tags(t *testing.T) {
 
 func TestAccSQSQueue_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var queueAttributes map[string]string
+	var queueAttributes map[types.QueueAttributeName]string
 	resourceName := "aws_sqs_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sqs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SQSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckQueueDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -280,22 +298,21 @@ func TestAccSQSQueue_update(t *testing.T) {
 				Config: testAccQueueConfig_name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "sqs", rName),
-					resource.TestCheckResourceAttr(resourceName, "content_based_deduplication", "false"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sqs", rName),
+					resource.TestCheckResourceAttr(resourceName, "content_based_deduplication", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "deduplication_scope", ""),
 					resource.TestCheckResourceAttr(resourceName, "delay_seconds", strconv.Itoa(tfsqs.DefaultQueueDelaySeconds)),
-					resource.TestCheckResourceAttr(resourceName, "fifo_queue", "false"),
+					resource.TestCheckResourceAttr(resourceName, "fifo_queue", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "fifo_throughput_limit", ""),
 					resource.TestCheckResourceAttr(resourceName, "kms_data_key_reuse_period_seconds", strconv.Itoa(tfsqs.DefaultQueueKMSDataKeyReusePeriodSeconds)),
 					resource.TestCheckResourceAttr(resourceName, "kms_master_key_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "max_message_size", strconv.Itoa(tfsqs.DefaultQueueMaximumMessageSize)),
 					resource.TestCheckResourceAttr(resourceName, "message_retention_seconds", strconv.Itoa(tfsqs.DefaultQueueMessageRetentionPeriod)),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
-					resource.TestCheckResourceAttr(resourceName, "policy", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPolicy, ""),
 					resource.TestCheckResourceAttr(resourceName, "receive_wait_time_seconds", strconv.Itoa(tfsqs.DefaultQueueReceiveMessageWaitTimeSeconds)),
 					resource.TestCheckResourceAttr(resourceName, "redrive_policy", ""),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_timeout_seconds", strconv.Itoa(tfsqs.DefaultQueueVisibilityTimeout)),
 				),
 			},
@@ -303,22 +320,21 @@ func TestAccSQSQueue_update(t *testing.T) {
 				Config: testAccQueueConfig_updated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "sqs", rName),
-					resource.TestCheckResourceAttr(resourceName, "content_based_deduplication", "false"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sqs", rName),
+					resource.TestCheckResourceAttr(resourceName, "content_based_deduplication", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "deduplication_scope", ""),
 					resource.TestCheckResourceAttr(resourceName, "delay_seconds", "90"),
-					resource.TestCheckResourceAttr(resourceName, "fifo_queue", "false"),
+					resource.TestCheckResourceAttr(resourceName, "fifo_queue", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "fifo_throughput_limit", ""),
 					resource.TestCheckResourceAttr(resourceName, "kms_data_key_reuse_period_seconds", strconv.Itoa(tfsqs.DefaultQueueKMSDataKeyReusePeriodSeconds)),
 					resource.TestCheckResourceAttr(resourceName, "kms_master_key_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "max_message_size", "2048"),
 					resource.TestCheckResourceAttr(resourceName, "message_retention_seconds", "86400"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
-					resource.TestCheckResourceAttr(resourceName, "policy", ""),
-					resource.TestCheckResourceAttr(resourceName, "receive_wait_time_seconds", "10"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPolicy, ""),
+					resource.TestCheckResourceAttr(resourceName, "receive_wait_time_seconds", acctest.Ct10),
 					resource.TestCheckResourceAttr(resourceName, "redrive_policy", ""),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_timeout_seconds", "60"),
 				),
 			},
@@ -333,7 +349,7 @@ func TestAccSQSQueue_update(t *testing.T) {
 
 func TestAccSQSQueue_Policy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var queueAttributes map[string]string
+	var queueAttributes map[types.QueueAttributeName]string
 	resourceName := "aws_sqs_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -356,7 +372,7 @@ func TestAccSQSQueue_Policy_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sqs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SQSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckQueueDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -368,7 +384,7 @@ func TestAccSQSQueue_Policy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "delay_seconds", "90"),
 					resource.TestCheckResourceAttr(resourceName, "max_message_size", "2048"),
 					resource.TestCheckResourceAttr(resourceName, "message_retention_seconds", "86400"),
-					resource.TestCheckResourceAttr(resourceName, "receive_wait_time_seconds", "10"),
+					resource.TestCheckResourceAttr(resourceName, "receive_wait_time_seconds", acctest.Ct10),
 					resource.TestCheckResourceAttr(resourceName, "visibility_timeout_seconds", "60"),
 				),
 			},
@@ -383,7 +399,7 @@ func TestAccSQSQueue_Policy_basic(t *testing.T) {
 
 func TestAccSQSQueue_Policy_ignoreEquivalent(t *testing.T) {
 	ctx := acctest.Context(t)
-	var queueAttributes map[string]string
+	var queueAttributes map[types.QueueAttributeName]string
 	resourceName := "aws_sqs_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -410,7 +426,7 @@ func TestAccSQSQueue_Policy_ignoreEquivalent(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sqs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SQSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckQueueDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -422,7 +438,7 @@ func TestAccSQSQueue_Policy_ignoreEquivalent(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "delay_seconds", "90"),
 					resource.TestCheckResourceAttr(resourceName, "max_message_size", "2048"),
 					resource.TestCheckResourceAttr(resourceName, "message_retention_seconds", "86400"),
-					resource.TestCheckResourceAttr(resourceName, "receive_wait_time_seconds", "10"),
+					resource.TestCheckResourceAttr(resourceName, "receive_wait_time_seconds", acctest.Ct10),
 					resource.TestCheckResourceAttr(resourceName, "visibility_timeout_seconds", "60"),
 				),
 			},
@@ -436,13 +452,13 @@ func TestAccSQSQueue_Policy_ignoreEquivalent(t *testing.T) {
 
 func TestAccSQSQueue_recentlyDeleted(t *testing.T) {
 	ctx := acctest.Context(t)
-	var queueAttributes map[string]string
+	var queueAttributes map[types.QueueAttributeName]string
 	resourceName := "aws_sqs_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sqs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SQSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckQueueDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -466,13 +482,13 @@ func TestAccSQSQueue_recentlyDeleted(t *testing.T) {
 
 func TestAccSQSQueue_redrivePolicy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var queueAttributes map[string]string
+	var queueAttributes map[types.QueueAttributeName]string
 	resourceName := "aws_sqs_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sqs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SQSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckQueueDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -480,7 +496,7 @@ func TestAccSQSQueue_redrivePolicy(t *testing.T) {
 				Config: testAccQueueConfig_redrivePolicy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
-					resource.TestCheckResourceAttr(resourceName, "delay_seconds", "0"),
+					resource.TestCheckResourceAttr(resourceName, "delay_seconds", acctest.Ct0),
 					resource.TestCheckResourceAttrSet(resourceName, "redrive_policy"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_timeout_seconds", "300"),
 				),
@@ -496,13 +512,13 @@ func TestAccSQSQueue_redrivePolicy(t *testing.T) {
 
 func TestAccSQSQueue_redriveAllowPolicy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var queueAttributes map[string]string
+	var queueAttributes map[types.QueueAttributeName]string
 	resourceName := "aws_sqs_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sqs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SQSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckQueueDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -510,7 +526,7 @@ func TestAccSQSQueue_redriveAllowPolicy(t *testing.T) {
 				Config: testAccQueueConfig_redriveAllowPolicy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
-					resource.TestCheckResourceAttr(resourceName, "delay_seconds", "0"),
+					resource.TestCheckResourceAttr(resourceName, "delay_seconds", acctest.Ct0),
 					//resource.TestCheckResourceAttrSet(resourceName, "redrive_allow_policy"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_timeout_seconds", "300"),
 				),
@@ -526,13 +542,13 @@ func TestAccSQSQueue_redriveAllowPolicy(t *testing.T) {
 
 func TestAccSQSQueue_fifoQueue(t *testing.T) {
 	ctx := acctest.Context(t)
-	var queueAttributes map[string]string
+	var queueAttributes map[types.QueueAttributeName]string
 	resourceName := "aws_sqs_queue.test"
 	rName := fmt.Sprintf("%s.fifo", sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sqs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SQSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckQueueDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -541,7 +557,7 @@ func TestAccSQSQueue_fifoQueue(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
 					resource.TestCheckResourceAttr(resourceName, "deduplication_scope", "queue"),
-					resource.TestCheckResourceAttr(resourceName, "fifo_queue", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fifo_queue", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "fifo_throughput_limit", "perQueue"),
 				),
 			},
@@ -560,7 +576,7 @@ func TestAccSQSQueue_FIFOQueue_expectNameError(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sqs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SQSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckQueueDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -574,13 +590,13 @@ func TestAccSQSQueue_FIFOQueue_expectNameError(t *testing.T) {
 
 func TestAccSQSQueue_FIFOQueue_contentBasedDeduplication(t *testing.T) {
 	ctx := acctest.Context(t)
-	var queueAttributes map[string]string
+	var queueAttributes map[types.QueueAttributeName]string
 	resourceName := "aws_sqs_queue.test"
 	rName := fmt.Sprintf("%s.fifo", sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sqs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SQSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckQueueDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -588,8 +604,8 @@ func TestAccSQSQueue_FIFOQueue_contentBasedDeduplication(t *testing.T) {
 				Config: testAccQueueConfig_fifoContentBasedDeduplication(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
-					resource.TestCheckResourceAttr(resourceName, "content_based_deduplication", "true"),
-					resource.TestCheckResourceAttr(resourceName, "fifo_queue", "true"),
+					resource.TestCheckResourceAttr(resourceName, "content_based_deduplication", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "fifo_queue", acctest.CtTrue),
 				),
 			},
 			{
@@ -603,13 +619,13 @@ func TestAccSQSQueue_FIFOQueue_contentBasedDeduplication(t *testing.T) {
 
 func TestAccSQSQueue_FIFOQueue_highThroughputMode(t *testing.T) {
 	ctx := acctest.Context(t)
-	var queueAttributes map[string]string
+	var queueAttributes map[types.QueueAttributeName]string
 	resourceName := "aws_sqs_queue.test"
 	rName := fmt.Sprintf("%s.fifo", sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sqs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SQSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckQueueDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -618,7 +634,7 @@ func TestAccSQSQueue_FIFOQueue_highThroughputMode(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
 					resource.TestCheckResourceAttr(resourceName, "deduplication_scope", "queue"),
-					resource.TestCheckResourceAttr(resourceName, "fifo_queue", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fifo_queue", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "fifo_throughput_limit", "perQueue"),
 				),
 			},
@@ -632,7 +648,7 @@ func TestAccSQSQueue_FIFOQueue_highThroughputMode(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
 					resource.TestCheckResourceAttr(resourceName, "deduplication_scope", "messageGroup"),
-					resource.TestCheckResourceAttr(resourceName, "fifo_queue", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fifo_queue", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "fifo_throughput_limit", "perMessageGroupId"),
 				),
 			},
@@ -646,7 +662,7 @@ func TestAccSQSQueue_StandardQueue_expectContentBasedDeduplicationError(t *testi
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sqs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SQSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckQueueDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -660,13 +676,13 @@ func TestAccSQSQueue_StandardQueue_expectContentBasedDeduplicationError(t *testi
 
 func TestAccSQSQueue_encryption(t *testing.T) {
 	ctx := acctest.Context(t)
-	var queueAttributes map[string]string
+	var queueAttributes map[types.QueueAttributeName]string
 	resourceName := "aws_sqs_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sqs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SQSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckQueueDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -676,7 +692,7 @@ func TestAccSQSQueue_encryption(t *testing.T) {
 					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
 					resource.TestCheckResourceAttr(resourceName, "kms_data_key_reuse_period_seconds", "300"),
 					resource.TestCheckResourceAttr(resourceName, "kms_master_key_id", "alias/aws/sqs"),
-					resource.TestCheckResourceAttr(resourceName, "sqs_managed_sse_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "sqs_managed_sse_enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -690,16 +706,16 @@ func TestAccSQSQueue_encryption(t *testing.T) {
 					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
 					resource.TestCheckResourceAttr(resourceName, "kms_data_key_reuse_period_seconds", "3600"),
 					resource.TestCheckResourceAttr(resourceName, "kms_master_key_id", "alias/aws/sqs"),
-					resource.TestCheckResourceAttr(resourceName, "sqs_managed_sse_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "sqs_managed_sse_enabled", acctest.CtFalse),
 				),
 			},
 			{
-				Config: testAccQueueConfig_managedEncryption(rName, "true"),
+				Config: testAccQueueConfig_managedEncryption(rName, acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
 					resource.TestCheckResourceAttr(resourceName, "kms_data_key_reuse_period_seconds", strconv.Itoa(tfsqs.DefaultQueueKMSDataKeyReusePeriodSeconds)),
 					resource.TestCheckResourceAttr(resourceName, "kms_master_key_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "sqs_managed_sse_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "sqs_managed_sse_enabled", acctest.CtTrue),
 				),
 			},
 		},
@@ -708,13 +724,13 @@ func TestAccSQSQueue_encryption(t *testing.T) {
 
 func TestAccSQSQueue_managedEncryption(t *testing.T) {
 	ctx := acctest.Context(t)
-	var queueAttributes map[string]string
+	var queueAttributes map[types.QueueAttributeName]string
 	resourceName := "aws_sqs_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sqs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SQSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckQueueDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -722,7 +738,7 @@ func TestAccSQSQueue_managedEncryption(t *testing.T) {
 				Config: testAccQueueConfig_managedEncryption(rName, "null"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
-					resource.TestCheckResourceAttr(resourceName, "sqs_managed_sse_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "sqs_managed_sse_enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -731,17 +747,17 @@ func TestAccSQSQueue_managedEncryption(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccQueueConfig_managedEncryption(rName, "false"),
+				Config: testAccQueueConfig_managedEncryption(rName, acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
-					resource.TestCheckResourceAttr(resourceName, "sqs_managed_sse_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "sqs_managed_sse_enabled", acctest.CtFalse),
 				),
 			},
 			{
-				Config: testAccQueueConfig_managedEncryption(rName, "true"),
+				Config: testAccQueueConfig_managedEncryption(rName, acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
-					resource.TestCheckResourceAttr(resourceName, "sqs_managed_sse_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "sqs_managed_sse_enabled", acctest.CtTrue),
 				),
 			},
 		},
@@ -750,13 +766,13 @@ func TestAccSQSQueue_managedEncryption(t *testing.T) {
 
 func TestAccSQSQueue_zeroVisibilityTimeoutSeconds(t *testing.T) {
 	ctx := acctest.Context(t)
-	var queueAttributes map[string]string
+	var queueAttributes map[types.QueueAttributeName]string
 	resourceName := "aws_sqs_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sqs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SQSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckQueueDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -764,7 +780,7 @@ func TestAccSQSQueue_zeroVisibilityTimeoutSeconds(t *testing.T) {
 				Config: testAccQueueConfig_zeroVisibilityTimeoutSeconds(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
-					resource.TestCheckResourceAttr(resourceName, "visibility_timeout_seconds", "0"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_timeout_seconds", acctest.Ct0),
 				),
 			},
 			{
@@ -779,13 +795,13 @@ func TestAccSQSQueue_zeroVisibilityTimeoutSeconds(t *testing.T) {
 // https://github.com/hashicorp/terraform-provider-aws/issues/19786.
 func TestAccSQSQueue_defaultKMSDataKeyReusePeriodSeconds(t *testing.T) {
 	ctx := acctest.Context(t)
-	var queueAttributes map[string]string
+	var queueAttributes map[types.QueueAttributeName]string
 	resourceName := "aws_sqs_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sqs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SQSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckQueueDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -805,13 +821,13 @@ func TestAccSQSQueue_defaultKMSDataKeyReusePeriodSeconds(t *testing.T) {
 	})
 }
 
-func testAccCheckQueuePolicyAttribute(queueAttributes *map[string]string, rName, policyTemplate string) resource.TestCheckFunc {
+func testAccCheckQueuePolicyAttribute(queueAttributes *map[types.QueueAttributeName]string, rName, policyTemplate string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		expectedPolicy := fmt.Sprintf(policyTemplate, acctest.Partition(), acctest.Region(), acctest.AccountID(), rName)
 
 		var actualPolicyText string
 		for key, value := range *queueAttributes {
-			if key == sqs.QueueAttributeNamePolicy {
+			if key == types.QueueAttributeNamePolicy {
 				actualPolicyText = value
 				break
 			}
@@ -829,7 +845,7 @@ func testAccCheckQueuePolicyAttribute(queueAttributes *map[string]string, rName,
 	}
 }
 
-func testAccCheckQueueExists(ctx context.Context, resourceName string, v *map[string]string) resource.TestCheckFunc {
+func testAccCheckQueueExists(ctx context.Context, resourceName string, v *map[types.QueueAttributeName]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -840,7 +856,7 @@ func testAccCheckQueueExists(ctx context.Context, resourceName string, v *map[st
 			return fmt.Errorf("No SQS Queue URL is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SQSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SQSClient(ctx)
 
 		output, err := tfsqs.FindQueueAttributesByURL(ctx, conn, rs.Primary.ID)
 
@@ -856,7 +872,7 @@ func testAccCheckQueueExists(ctx context.Context, resourceName string, v *map[st
 
 func testAccCheckQueueDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SQSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SQSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sqs_queue" {
@@ -915,31 +931,6 @@ resource "aws_sqs_queue" "test" {
   fifo_queue  = true
 }
 `, prefix)
-}
-
-func testAccQueueConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_sqs_queue" "test" {
-  name = %[1]q
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccQueueConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_sqs_queue" "test" {
-  name = %[1]q
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccQueueConfig_updated(rName string) string {

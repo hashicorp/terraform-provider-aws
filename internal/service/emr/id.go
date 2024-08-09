@@ -10,7 +10,7 @@ import (
 	"github.com/YakDriver/regexache"
 )
 
-const IdentityIdPattern = `([0-9a-f]{10}-|)[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}`
+const IdentityIdPattern = `([0-9a-f]{10}-|)[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}`
 
 var IdentityIdPatternRegexp = regexache.MustCompile(IdentityIdPattern)
 

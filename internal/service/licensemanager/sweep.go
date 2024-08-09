@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package licensemanager
 
 import (
@@ -14,9 +11,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/licensemanager"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_licensemanager_license_configuration", &resource.Sweeper{
 		Name: "aws_licensemanager_license_configuration",
 		F:    sweepLicenseConfigurations,
@@ -49,7 +47,7 @@ func sweepLicenseConfigurations(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping License Manager License Configuration sweep for %s: %s", region, err)
 		return nil
 	}

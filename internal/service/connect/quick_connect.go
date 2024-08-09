@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -34,12 +35,12 @@ func ResourceQuickConnect() *schema.Resource {
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 		Schema: map[string]*schema.Schema{
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 250),
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -47,11 +48,11 @@ func ResourceQuickConnect() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 127),
@@ -139,10 +140,12 @@ func ResourceQuickConnect() *schema.Resource {
 }
 
 func resourceQuickConnectCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
-	instanceID := d.Get("instance_id").(string)
-	name := d.Get("name").(string)
+	instanceID := d.Get(names.AttrInstanceID).(string)
+	name := d.Get(names.AttrName).(string)
 	quickConnectConfig := expandQuickConnectConfig(d.Get("quick_connect_config").([]interface{}))
 	input := &connect.CreateQuickConnectInput{
 		QuickConnectConfig: quickConnectConfig,
@@ -151,7 +154,7 @@ func resourceQuickConnectCreate(ctx context.Context, d *schema.ResourceData, met
 		Tags:               getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -159,25 +162,27 @@ func resourceQuickConnectCreate(ctx context.Context, d *schema.ResourceData, met
 	output, err := conn.CreateQuickConnectWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Connect Quick Connect (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Connect Quick Connect (%s): %s", name, err)
 	}
 
 	if output == nil {
-		return diag.Errorf("creating Connect Quick Connect (%s): empty output", name)
+		return sdkdiag.AppendErrorf(diags, "creating Connect Quick Connect (%s): empty output", name)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(output.QuickConnectId)))
 
-	return resourceQuickConnectRead(ctx, d, meta)
+	return append(diags, resourceQuickConnectRead(ctx, d, meta)...)
 }
 
 func resourceQuickConnectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, quickConnectID, err := QuickConnectParseID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	resp, err := conn.DescribeQuickConnectWithContext(ctx, &connect.DescribeQuickConnectInput{
@@ -188,39 +193,41 @@ func resourceQuickConnectRead(ctx context.Context, d *schema.ResourceData, meta 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Connect Quick Connect (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("getting Connect Quick Connect (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "getting Connect Quick Connect (%s): %s", d.Id(), err)
 	}
 
 	if resp == nil || resp.QuickConnect == nil {
-		return diag.Errorf("getting Connect Quick Connect (%s): empty response", d.Id())
+		return sdkdiag.AppendErrorf(diags, "getting Connect Quick Connect (%s): empty response", d.Id())
 	}
 
 	if err := d.Set("quick_connect_config", flattenQuickConnectConfig(resp.QuickConnect.QuickConnectConfig)); err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set("instance_id", instanceID)
-	d.Set("description", resp.QuickConnect.Description)
-	d.Set("name", resp.QuickConnect.Name)
-	d.Set("arn", resp.QuickConnect.QuickConnectARN)
+	d.Set(names.AttrInstanceID, instanceID)
+	d.Set(names.AttrDescription, resp.QuickConnect.Description)
+	d.Set(names.AttrName, resp.QuickConnect.Name)
+	d.Set(names.AttrARN, resp.QuickConnect.QuickConnectARN)
 	d.Set("quick_connect_id", resp.QuickConnect.QuickConnectId)
 
 	setTagsOut(ctx, resp.QuickConnect.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceQuickConnectUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, quickConnectID, err := QuickConnectParseID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	// QuickConnect has 2 update APIs
@@ -234,13 +241,13 @@ func resourceQuickConnectUpdate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	// Either QuickConnectName or QuickConnectDescription must be specified. Both cannot be null or empty
-	if d.HasChanges("name", "description") {
-		inputNameDesc.Name = aws.String(d.Get("name").(string))
-		inputNameDesc.Description = aws.String(d.Get("description").(string))
+	if d.HasChanges(names.AttrName, names.AttrDescription) {
+		inputNameDesc.Name = aws.String(d.Get(names.AttrName).(string))
+		inputNameDesc.Description = aws.String(d.Get(names.AttrDescription).(string))
 		_, err = conn.UpdateQuickConnectNameWithContext(ctx, inputNameDesc)
 
 		if err != nil {
-			return diag.Errorf("updating QuickConnect Name (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating QuickConnect Name (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -256,20 +263,22 @@ func resourceQuickConnectUpdate(ctx context.Context, d *schema.ResourceData, met
 		inputConfig.QuickConnectConfig = quickConnectConfig
 		_, err = conn.UpdateQuickConnectConfigWithContext(ctx, inputConfig)
 		if err != nil {
-			return diag.Errorf("updating QuickConnect (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating QuickConnect (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceQuickConnectRead(ctx, d, meta)
+	return append(diags, resourceQuickConnectRead(ctx, d, meta)...)
 }
 
 func resourceQuickConnectDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, quickConnectID, err := QuickConnectParseID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	_, err = conn.DeleteQuickConnectWithContext(ctx, &connect.DeleteQuickConnectInput{
@@ -278,10 +287,10 @@ func resourceQuickConnectDelete(ctx context.Context, d *schema.ResourceData, met
 	})
 
 	if err != nil {
-		return diag.Errorf("deleting QuickConnect (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting QuickConnect (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandQuickConnectConfig(quickConnectConfig []interface{}) *connect.QuickConnectConfig {

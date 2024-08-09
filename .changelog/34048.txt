@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_dms_s3_endpoint: Don't send the default value of `false` for `add_trailing_padding_character`, maintaining compatibility with older ([pre-3.4.7](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_ReleaseNotes.html#CHAP_ReleaseNotes.DMS347)) DMS engine versions
+```

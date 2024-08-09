@@ -54,11 +54,12 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `repositoryName` - (Required) The name for the repository. This needs to be less than 100 characters.
-* `name` - (Required) The name of the trigger.
-* `destinationArn` - (Required) The ARN of the resource that is the target for a trigger. For example, the ARN of a topic in Amazon Simple Notification Service (SNS).
-* `customData` - (Optional) Any custom data associated with the trigger that will be included in the information sent to the target of the trigger.
-* `branches` - (Optional) The branches that will be included in the trigger configuration. If no branches are specified, the trigger will apply to all branches.
-* `events` - (Required) The repository events that will cause the trigger to run actions in another service, such as sending a notification through Amazon Simple Notification Service (SNS). If no events are specified, the trigger will run for all repository events. Event types include: `all`, `updateReference`, `createReference`, `deleteReference`.
+* `trigger` - (Required) The name of the trigger.
+    * `name` - (Required) The name of the trigger.
+    * `destinationArn` - (Required) The ARN of the resource that is the target for a trigger. For example, the ARN of a topic in Amazon Simple Notification Service (SNS).
+    * `events` - (Required) The repository events that will cause the trigger to run actions in another service, such as sending a notification through Amazon Simple Notification Service (SNS). If no events are specified, the trigger will run for all repository events. Event types include: `all`, `updateReference`, `createReference`, `deleteReference`.
+    * `customData` - (Optional) Any custom data associated with the trigger that will be included in the information sent to the target of the trigger.
+    * `branches` - (Optional) The branches that will be included in the trigger configuration. If no branches   are specified, the trigger will apply to all branches.
 
 ## Attribute Reference
 
@@ -66,4 +67,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `configurationId` - System-generated unique identifier.
 
-<!-- cache-key: cdktf-0.18.0 input-6fc445fde615a4a95723b535dcf09b6e0655d8096cedb2b5da2231587aee3f88 -->
+<!-- cache-key: cdktf-0.20.1 input-64d0507dd9a3e74264f53d83bdf059ff3d9ad3e20d558761501e6dbf7e913d3f -->

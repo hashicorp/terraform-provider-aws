@@ -8,15 +8,16 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aws/aws-sdk-go/service/costexplorer"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/costexplorer/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCETagsDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var output costexplorer.CostCategory
+	var output awstypes.CostCategory
 	resourceName := "aws_ce_cost_category.test"
 	dataSourceName := "data.aws_ce_tags.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -30,13 +31,13 @@ func TestAccCETagsDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ErrorCheck:               acctest.ErrorCheck(t, costexplorer.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CEServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTagsDataSourceConfig_basic(rName, startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCostCategoryExists(ctx, resourceName, &output),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "tags.#", acctest.Ct1),
 				),
 			},
 		},
@@ -45,7 +46,7 @@ func TestAccCETagsDataSource_basic(t *testing.T) {
 
 func TestAccCETagsDataSource_filter(t *testing.T) {
 	ctx := acctest.Context(t)
-	var output costexplorer.CostCategory
+	var output awstypes.CostCategory
 	resourceName := "aws_ce_cost_category.test"
 	dataSourceName := "data.aws_ce_tags.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -59,13 +60,13 @@ func TestAccCETagsDataSource_filter(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ErrorCheck:               acctest.ErrorCheck(t, costexplorer.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CEServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTagsDataSourceConfig_filter(rName, startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCostCategoryExists(ctx, resourceName, &output),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "tags.#", acctest.Ct1),
 				),
 			},
 		},

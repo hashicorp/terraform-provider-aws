@@ -10,18 +10,20 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/s3control"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/s3control"
+	"github.com/aws/aws-sdk-go-v2/service/s3control/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_s3control_multi_region_access_point")
@@ -41,18 +43,18 @@ func resourceMultiRegionAccessPoint() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"account_id": {
+			names.AttrAccountID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-			"alias": {
+			names.AttrAlias: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -64,7 +66,7 @@ func resourceMultiRegionAccessPoint() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -106,7 +108,7 @@ func resourceMultiRegionAccessPoint() *schema.Resource {
 								},
 							},
 						},
-						"region": {
+						names.AttrRegion: {
 							Type:     schema.TypeSet,
 							Required: true,
 							ForceNew: true,
@@ -114,11 +116,22 @@ func resourceMultiRegionAccessPoint() *schema.Resource {
 							MaxItems: 20,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"bucket": {
+									names.AttrBucket: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ForceNew:     true,
 										ValidateFunc: validation.StringLenBetween(3, 255),
+									},
+									"bucket_account_id": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										Computed:     true,
+										ForceNew:     true,
+										ValidateFunc: verify.ValidAccountID,
+									},
+									names.AttrRegion: {
+										Type:     schema.TypeString,
+										Computed: true,
 									},
 								},
 							},
@@ -126,11 +139,11 @@ func resourceMultiRegionAccessPoint() *schema.Resource {
 					},
 				},
 			},
-			"domain_name": {
+			names.AttrDomainName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -139,17 +152,13 @@ func resourceMultiRegionAccessPoint() *schema.Resource {
 }
 
 func resourceMultiRegionAccessPointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn, err := ConnForMRAP(ctx, meta.(*conns.AWSClient))
-
-	if err != nil {
-		return diag.FromErr(err)
-	}
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	accountID := meta.(*conns.AWSClient).AccountID
-	if v, ok := d.GetOk("account_id"); ok {
+	if v, ok := d.GetOk(names.AttrAccountID); ok {
 		accountID = v.(string)
 	}
-
 	input := &s3control.CreateMultiRegionAccessPointInput{
 		AccountId: aws.String(accountID),
 	}
@@ -158,133 +167,114 @@ func resourceMultiRegionAccessPointCreate(ctx context.Context, d *schema.Resourc
 		input.Details = expandCreateMultiRegionAccessPointInput_(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	resourceID := MultiRegionAccessPointCreateResourceID(accountID, aws.StringValue(input.Details.Name))
+	id := MultiRegionAccessPointCreateResourceID(accountID, aws.ToString(input.Details.Name))
 
-	output, err := conn.CreateMultiRegionAccessPointWithContext(ctx, input)
-
-	if err != nil {
-		return diag.Errorf("creating S3 Multi-Region Access Point (%s): %s", resourceID, err)
-	}
-
-	d.SetId(resourceID)
-
-	_, err = waitMultiRegionAccessPointRequestSucceeded(ctx, conn, accountID, aws.StringValue(output.RequestTokenARN), d.Timeout(schema.TimeoutCreate))
+	output, err := conn.CreateMultiRegionAccessPoint(ctx, input, func(o *s3control.Options) {
+		// All Multi-Region Access Point actions are routed to the US West (Oregon) Region.
+		o.Region = names.USWest2RegionID
+	})
 
 	if err != nil {
-		return diag.Errorf("waiting for Multi-Region Access Point (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "creating S3 Multi-Region Access Point (%s): %s", id, err)
 	}
 
-	return resourceMultiRegionAccessPointRead(ctx, d, meta)
+	d.SetId(id)
+
+	if _, err := waitMultiRegionAccessPointRequestSucceeded(ctx, conn, accountID, aws.ToString(output.RequestTokenARN), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for S3 Multi-Region Access Point (%s) create: %s", d.Id(), err)
+	}
+
+	return append(diags, resourceMultiRegionAccessPointRead(ctx, d, meta)...)
 }
 
 func resourceMultiRegionAccessPointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn, err := ConnForMRAP(ctx, meta.(*conns.AWSClient))
-
-	if err != nil {
-		return diag.FromErr(err)
-	}
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	accountID, name, err := MultiRegionAccessPointParseResourceID(d.Id())
-
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	accessPoint, err := FindMultiRegionAccessPointByTwoPartKey(ctx, conn, accountID, name)
+	accessPoint, err := findMultiRegionAccessPointByTwoPartKey(ctx, conn, accountID, name)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Multi-Region Access Point (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading S3 Multi-Region Access Point (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading S3 Multi-Region Access Point (%s): %s", d.Id(), err)
 	}
 
-	alias := aws.StringValue(accessPoint.Alias)
+	alias := aws.ToString(accessPoint.Alias)
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "s3",
 		AccountID: accountID,
 		Resource:  fmt.Sprintf("accesspoint/%s", alias),
 	}.String()
-	d.Set("account_id", accountID)
-	d.Set("alias", alias)
-	d.Set("arn", arn)
+	d.Set(names.AttrAccountID, accountID)
+	d.Set(names.AttrAlias, alias)
+	d.Set(names.AttrARN, arn)
 	if err := d.Set("details", []interface{}{flattenMultiRegionAccessPointReport(accessPoint)}); err != nil {
-		return diag.Errorf("setting details: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting details: %s", err)
 	}
 	// https://docs.aws.amazon.com/AmazonS3/latest/userguide//MultiRegionAccessPointRequests.html#MultiRegionAccessPointHostnames.
-	d.Set("domain_name", meta.(*conns.AWSClient).PartitionHostname(fmt.Sprintf("%s.accesspoint.s3-global", alias)))
-	d.Set("status", accessPoint.Status)
+	d.Set(names.AttrDomainName, meta.(*conns.AWSClient).PartitionHostname(ctx, alias+".accesspoint.s3-global"))
+	d.Set(names.AttrStatus, accessPoint.Status)
 
-	return nil
+	return diags
 }
 
 func resourceMultiRegionAccessPointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn, err := ConnForMRAP(ctx, meta.(*conns.AWSClient))
-
-	if err != nil {
-		return diag.FromErr(err)
-	}
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	accountID, name, err := MultiRegionAccessPointParseResourceID(d.Id())
-
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	input := &s3control.DeleteMultiRegionAccessPointInput{
+		AccountId: aws.String(accountID),
+		Details: &types.DeleteMultiRegionAccessPointInput{
+			Name: aws.String(name),
+		},
 	}
 
 	log.Printf("[DEBUG] Deleting S3 Multi-Region Access Point: %s", d.Id())
-	output, err := conn.DeleteMultiRegionAccessPointWithContext(ctx, &s3control.DeleteMultiRegionAccessPointInput{
-		AccountId: aws.String(accountID),
-		Details: &s3control.DeleteMultiRegionAccessPointInput_{
-			Name: aws.String(name),
-		},
+	output, err := conn.DeleteMultiRegionAccessPoint(ctx, input, func(o *s3control.Options) {
+		// All Multi-Region Access Point actions are routed to the US West (Oregon) Region.
+		o.Region = names.USWest2RegionID
 	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchMultiRegionAccessPoint) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting S3 Multi-Region Access Point (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting S3 Multi-Region Access Point (%s): %s", d.Id(), err)
 	}
 
-	_, err = waitMultiRegionAccessPointRequestSucceeded(ctx, conn, accountID, aws.StringValue(output.RequestTokenARN), d.Timeout(schema.TimeoutDelete))
-
-	if err != nil {
-		return diag.Errorf("waiting for S3 Multi-Region Access Point (%s) delete: %s", d.Id(), err)
+	if _, err := waitMultiRegionAccessPointRequestSucceeded(ctx, conn, accountID, aws.ToString(output.RequestTokenARN), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for S3 Multi-Region Access Point (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func ConnForMRAP(ctx context.Context, client *conns.AWSClient) (*s3control.S3Control, error) {
-	originalConn := client.S3ControlConn(ctx)
-	// All Multi-Region Access Point actions are routed to the US West (Oregon) Region.
-	region := endpoints.UsWest2RegionID
-
-	if originalConn.Config.Region != nil && aws.StringValue(originalConn.Config.Region) == region {
-		return originalConn, nil
-	}
-
-	sess, err := conns.NewSessionForRegion(&originalConn.Config, region, client.TerraformVersion)
-
-	if err != nil {
-		return nil, fmt.Errorf("creating AWS session: %w", err)
-	}
-
-	return s3control.New(sess), nil
-}
-
-func FindMultiRegionAccessPointByTwoPartKey(ctx context.Context, conn *s3control.S3Control, accountID string, name string) (*s3control.MultiRegionAccessPointReport, error) {
+func findMultiRegionAccessPointByTwoPartKey(ctx context.Context, conn *s3control.Client, accountID, name string) (*types.MultiRegionAccessPointReport, error) {
 	input := &s3control.GetMultiRegionAccessPointInput{
 		AccountId: aws.String(accountID),
 		Name:      aws.String(name),
 	}
 
-	output, err := conn.GetMultiRegionAccessPointWithContext(ctx, input)
+	output, err := conn.GetMultiRegionAccessPoint(ctx, input, func(o *s3control.Options) {
+		// All Multi-Region Access Point actions are routed to the US West (Oregon) Region.
+		o.Region = names.USWest2RegionID
+	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchMultiRegionAccessPoint) {
 		return nil, &retry.NotFoundError{
@@ -304,13 +294,16 @@ func FindMultiRegionAccessPointByTwoPartKey(ctx context.Context, conn *s3control
 	return output.AccessPoint, nil
 }
 
-func findMultiRegionAccessPointOperationByAccountIDAndTokenARN(ctx context.Context, conn *s3control.S3Control, accountID string, requestTokenARN string) (*s3control.AsyncOperation, error) {
+func findMultiRegionAccessPointOperationByTwoPartKey(ctx context.Context, conn *s3control.Client, accountID, requestTokenARN string) (*types.AsyncOperation, error) {
 	input := &s3control.DescribeMultiRegionAccessPointOperationInput{
 		AccountId:       aws.String(accountID),
 		RequestTokenARN: aws.String(requestTokenARN),
 	}
 
-	output, err := conn.DescribeMultiRegionAccessPointOperationWithContext(ctx, input)
+	output, err := conn.DescribeMultiRegionAccessPointOperation(ctx, input, func(o *s3control.Options) {
+		// All Multi-Region Access Point actions are routed to the US West (Oregon) Region.
+		o.Region = names.USWest2RegionID
+	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchAsyncRequest) {
 		return nil, &retry.NotFoundError{
@@ -330,9 +323,9 @@ func findMultiRegionAccessPointOperationByAccountIDAndTokenARN(ctx context.Conte
 	return output.AsyncOperation, nil
 }
 
-func statusMultiRegionAccessPointRequest(ctx context.Context, conn *s3control.S3Control, accountID string, requestTokenARN string) retry.StateRefreshFunc {
+func statusMultiRegionAccessPointRequest(ctx context.Context, conn *s3control.Client, accountID, requestTokenARN string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findMultiRegionAccessPointOperationByAccountIDAndTokenARN(ctx, conn, accountID, requestTokenARN)
+		output, err := findMultiRegionAccessPointOperationByTwoPartKey(ctx, conn, accountID, requestTokenARN)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -342,39 +335,29 @@ func statusMultiRegionAccessPointRequest(ctx context.Context, conn *s3control.S3
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.RequestStatus), nil
+		return output, aws.ToString(output.RequestStatus), nil
 	}
 }
 
-const (
-	// Minimum amount of times to verify change propagation
-	propagationContinuousTargetOccurence = 2
-
-	// Minimum amount of time to wait between S3control change polls
-	propagationMinTimeout = 5 * time.Second
-
-	// Maximum amount of time to wait for S3control changes to propagate
-	propagationTimeout = 1 * time.Minute
-
-	multiRegionAccessPointRequestSucceededMinTimeout = 5 * time.Second
-
-	multiRegionAccessPointRequestSucceededDelay = 15 * time.Second
-)
-
-func waitMultiRegionAccessPointRequestSucceeded(ctx context.Context, conn *s3control.S3Control, accountID string, requestTokenArn string, timeout time.Duration) (*s3control.AsyncOperation, error) { //nolint:unparam
+func waitMultiRegionAccessPointRequestSucceeded(ctx context.Context, conn *s3control.Client, accountID, requestTokenARN string, timeout time.Duration) (*types.AsyncOperation, error) { //nolint:unparam
+	const (
+		// AsyncOperation.RequestStatus values.
+		asyncOperationRequestStatusFailed    = "FAILED"
+		asyncOperationRequestStatusSucceeded = "SUCCEEDED"
+	)
 	stateConf := &retry.StateChangeConf{
-		Target:     []string{RequestStatusSucceeded},
+		Target:     []string{asyncOperationRequestStatusSucceeded},
 		Timeout:    timeout,
-		Refresh:    statusMultiRegionAccessPointRequest(ctx, conn, accountID, requestTokenArn),
-		MinTimeout: multiRegionAccessPointRequestSucceededMinTimeout,
-		Delay:      multiRegionAccessPointRequestSucceededDelay,
+		Refresh:    statusMultiRegionAccessPointRequest(ctx, conn, accountID, requestTokenARN),
+		MinTimeout: 5 * time.Second,
+		Delay:      15 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*s3control.AsyncOperation); ok {
-		if status, responseDetails := aws.StringValue(output.RequestStatus), output.ResponseDetails; status == RequestStatusFailed && responseDetails != nil && responseDetails.ErrorDetails != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(responseDetails.ErrorDetails.Code), aws.StringValue(responseDetails.ErrorDetails.Message)))
+	if output, ok := outputRaw.(*types.AsyncOperation); ok {
+		if status, responseDetails := aws.ToString(output.RequestStatus), output.ResponseDetails; status == asyncOperationRequestStatusFailed && responseDetails != nil && responseDetails.ErrorDetails != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(responseDetails.ErrorDetails.Code), aws.ToString(responseDetails.ErrorDetails.Message)))
 		}
 
 		return output, err
@@ -402,14 +385,14 @@ func MultiRegionAccessPointParseResourceID(id string) (string, string, error) {
 	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected account-id%[2]saccess-point-name", id, multiRegionAccessPointResourceIDSeparator)
 }
 
-func expandCreateMultiRegionAccessPointInput_(tfMap map[string]interface{}) *s3control.CreateMultiRegionAccessPointInput_ {
+func expandCreateMultiRegionAccessPointInput_(tfMap map[string]interface{}) *types.CreateMultiRegionAccessPointInput {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &s3control.CreateMultiRegionAccessPointInput_{}
+	apiObject := &types.CreateMultiRegionAccessPointInput{}
 
-	if v, ok := tfMap["name"].(string); ok {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
@@ -417,19 +400,19 @@ func expandCreateMultiRegionAccessPointInput_(tfMap map[string]interface{}) *s3c
 		apiObject.PublicAccessBlock = expandPublicAccessBlockConfiguration(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["region"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrRegion].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.Regions = expandRegions(v.List())
 	}
 
 	return apiObject
 }
 
-func expandPublicAccessBlockConfiguration(tfMap map[string]interface{}) *s3control.PublicAccessBlockConfiguration {
+func expandPublicAccessBlockConfiguration(tfMap map[string]interface{}) *types.PublicAccessBlockConfiguration {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &s3control.PublicAccessBlockConfiguration{}
+	apiObject := &types.PublicAccessBlockConfiguration{}
 
 	if v, ok := tfMap["block_public_acls"].(bool); ok {
 		apiObject.BlockPublicAcls = aws.Bool(v)
@@ -450,26 +433,30 @@ func expandPublicAccessBlockConfiguration(tfMap map[string]interface{}) *s3contr
 	return apiObject
 }
 
-func expandRegion(tfMap map[string]interface{}) *s3control.Region {
+func expandRegion(tfMap map[string]interface{}) *types.Region {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &s3control.Region{}
+	apiObject := &types.Region{}
 
-	if v, ok := tfMap["bucket"].(string); ok {
+	if v, ok := tfMap[names.AttrBucket].(string); ok && v != "" {
 		apiObject.Bucket = aws.String(v)
+	}
+
+	if v, ok := tfMap["bucket_account_id"].(string); ok && v != "" {
+		apiObject.BucketAccountId = aws.String(v)
 	}
 
 	return apiObject
 }
 
-func expandRegions(tfList []interface{}) []*s3control.Region {
+func expandRegions(tfList []interface{}) []types.Region {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []*s3control.Region
+	var apiObjects []types.Region
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -484,13 +471,13 @@ func expandRegions(tfList []interface{}) []*s3control.Region {
 			continue
 		}
 
-		apiObjects = append(apiObjects, apiObject)
+		apiObjects = append(apiObjects, *apiObject)
 	}
 
 	return apiObjects
 }
 
-func flattenMultiRegionAccessPointReport(apiObject *s3control.MultiRegionAccessPointReport) map[string]interface{} {
+func flattenMultiRegionAccessPointReport(apiObject *types.MultiRegionAccessPointReport) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -498,7 +485,7 @@ func flattenMultiRegionAccessPointReport(apiObject *s3control.MultiRegionAccessP
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.StringValue(v)
+		tfMap[names.AttrName] = aws.ToString(v)
 	}
 
 	if v := apiObject.PublicAccessBlock; v != nil {
@@ -506,13 +493,13 @@ func flattenMultiRegionAccessPointReport(apiObject *s3control.MultiRegionAccessP
 	}
 
 	if v := apiObject.Regions; v != nil {
-		tfMap["region"] = flattenRegionReports(v)
+		tfMap[names.AttrRegion] = flattenRegionReports(v)
 	}
 
 	return tfMap
 }
 
-func flattenPublicAccessBlockConfiguration(apiObject *s3control.PublicAccessBlockConfiguration) map[string]interface{} {
+func flattenPublicAccessBlockConfiguration(apiObject *types.PublicAccessBlockConfiguration) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -520,39 +507,43 @@ func flattenPublicAccessBlockConfiguration(apiObject *s3control.PublicAccessBloc
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.BlockPublicAcls; v != nil {
-		tfMap["block_public_acls"] = aws.BoolValue(v)
+		tfMap["block_public_acls"] = aws.ToBool(v)
 	}
 
 	if v := apiObject.BlockPublicPolicy; v != nil {
-		tfMap["block_public_policy"] = aws.BoolValue(v)
+		tfMap["block_public_policy"] = aws.ToBool(v)
 	}
 
 	if v := apiObject.IgnorePublicAcls; v != nil {
-		tfMap["ignore_public_acls"] = aws.BoolValue(v)
+		tfMap["ignore_public_acls"] = aws.ToBool(v)
 	}
 
 	if v := apiObject.RestrictPublicBuckets; v != nil {
-		tfMap["restrict_public_buckets"] = aws.BoolValue(v)
+		tfMap["restrict_public_buckets"] = aws.ToBool(v)
 	}
 
 	return tfMap
 }
 
-func flattenRegionReport(apiObject *s3control.RegionReport) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
+func flattenRegionReport(apiObject types.RegionReport) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Bucket; v != nil {
-		tfMap["bucket"] = aws.StringValue(v)
+		tfMap[names.AttrBucket] = aws.ToString(v)
+	}
+
+	if v := apiObject.BucketAccountId; v != nil {
+		tfMap["bucket_account_id"] = aws.ToString(v)
+	}
+
+	if v := apiObject.Region; v != nil {
+		tfMap[names.AttrRegion] = aws.ToString(v)
 	}
 
 	return tfMap
 }
 
-func flattenRegionReports(apiObjects []*s3control.RegionReport) []interface{} {
+func flattenRegionReports(apiObjects []types.RegionReport) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -560,10 +551,6 @@ func flattenRegionReports(apiObjects []*s3control.RegionReport) []interface{} {
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
 		tfList = append(tfList, flattenRegionReport(apiObject))
 	}
 

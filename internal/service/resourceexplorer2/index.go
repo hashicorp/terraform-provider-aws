@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
@@ -24,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -57,11 +57,9 @@ func (r *resourceIndex) Schema(ctx context.Context, request resource.SchemaReque
 			names.AttrID:      framework.IDAttribute(),
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
-			"type": schema.StringAttribute{
-				Required: true,
-				Validators: []validator.String{
-					enum.FrameworkValidate[awstypes.IndexType](),
-				},
+			names.AttrType: schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.IndexType](),
+				Required:   true,
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -75,7 +73,7 @@ func (r *resourceIndex) Schema(ctx context.Context, request resource.SchemaReque
 }
 
 func (r *resourceIndex) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	var data resourceIndexData
+	var data indexResourceModel
 
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 
@@ -108,7 +106,7 @@ func (r *resourceIndex) Create(ctx context.Context, request resource.CreateReque
 		return
 	}
 
-	if data.Type.ValueString() == string(awstypes.IndexTypeAggregator) {
+	if data.Type.ValueEnum() == awstypes.IndexTypeAggregator {
 		input := &resourceexplorer2.UpdateIndexTypeInput{
 			Arn:  flex.StringFromFramework(ctx, data.ID),
 			Type: awstypes.IndexTypeAggregator,
@@ -130,13 +128,13 @@ func (r *resourceIndex) Create(ctx context.Context, request resource.CreateReque
 	}
 
 	// Set values for unknowns.
-	data.Arn = types.StringValue(arn)
+	data.ARN = types.StringValue(arn)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 func (r *resourceIndex) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	var data resourceIndexData
+	var data indexResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 
@@ -173,7 +171,7 @@ func (r *resourceIndex) Read(ctx context.Context, request resource.ReadRequest, 
 }
 
 func (r *resourceIndex) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var old, new resourceIndexData
+	var old, new indexResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
 
@@ -191,8 +189,8 @@ func (r *resourceIndex) Update(ctx context.Context, request resource.UpdateReque
 		conn := r.Meta().ResourceExplorer2Client(ctx)
 
 		input := &resourceexplorer2.UpdateIndexTypeInput{
-			Arn:  flex.StringFromFramework(ctx, new.ID),
-			Type: awstypes.IndexType(new.Type.ValueString()),
+			Arn:  flex.StringFromFramework(ctx, new.ARN),
+			Type: new.Type.ValueEnum(),
 		}
 
 		_, err := conn.UpdateIndexType(ctx, input)
@@ -215,7 +213,7 @@ func (r *resourceIndex) Update(ctx context.Context, request resource.UpdateReque
 }
 
 func (r *resourceIndex) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	var data resourceIndexData
+	var data indexResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 
@@ -226,10 +224,10 @@ func (r *resourceIndex) Delete(ctx context.Context, request resource.DeleteReque
 	conn := r.Meta().ResourceExplorer2Client(ctx)
 
 	tflog.Debug(ctx, "deleting Resource Explorer Index", map[string]interface{}{
-		"id": data.ID.ValueString(),
+		names.AttrID: data.ID.ValueString(),
 	})
 	_, err := conn.DeleteIndex(ctx, &resourceexplorer2.DeleteIndexInput{
-		Arn: flex.StringFromFramework(ctx, data.ID),
+		Arn: flex.StringFromFramework(ctx, data.ARN),
 	})
 
 	if err != nil {
@@ -251,13 +249,13 @@ func (r *resourceIndex) ModifyPlan(ctx context.Context, request resource.ModifyP
 }
 
 // See https://docs.aws.amazon.com/resource-explorer/latest/apireference/API_Index.html.
-type resourceIndexData struct {
-	Arn      types.String   `tfsdk:"arn"`
-	ID       types.String   `tfsdk:"id"`
-	Tags     types.Map      `tfsdk:"tags"`
-	TagsAll  types.Map      `tfsdk:"tags_all"`
-	Timeouts timeouts.Value `tfsdk:"timeouts"`
-	Type     types.String   `tfsdk:"type"`
+type indexResourceModel struct {
+	ARN      types.String                           `tfsdk:"arn"`
+	ID       types.String                           `tfsdk:"id"`
+	Tags     types.Map                              `tfsdk:"tags"`
+	TagsAll  types.Map                              `tfsdk:"tags_all"`
+	Timeouts timeouts.Value                         `tfsdk:"timeouts"`
+	Type     fwtypes.StringEnum[awstypes.IndexType] `tfsdk:"type"`
 }
 
 func findIndex(ctx context.Context, conn *resourceexplorer2.Client) (*resourceexplorer2.GetIndexOutput, error) {

@@ -30,6 +30,32 @@ func encodeMapValue(e *Encoder, v reflect.Value) error {
 	return nil
 }
 
+func encodeMapStringBoolValue(e *Encoder, v reflect.Value) error {
+	if v.IsNil() {
+		return e.EncodeNil()
+	}
+
+	if err := e.EncodeMapLen(v.Len()); err != nil {
+		return err
+	}
+
+	m := v.Convert(mapStringBoolType).Interface().(map[string]bool)
+	if e.flags&sortMapKeysFlag != 0 {
+		return e.encodeSortedMapStringBool(m)
+	}
+
+	for mk, mv := range m {
+		if err := e.EncodeString(mk); err != nil {
+			return err
+		}
+		if err := e.EncodeBool(mv); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func encodeMapStringStringValue(e *Encoder, v reflect.Value) error {
 	if v.IsNil() {
 		return e.EncodeNil()
@@ -113,6 +139,26 @@ func (e *Encoder) EncodeMapSorted(m map[string]interface{}) error {
 	return nil
 }
 
+func (e *Encoder) encodeSortedMapStringBool(m map[string]bool) error {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	for _, k := range keys {
+		err := e.EncodeString(k)
+		if err != nil {
+			return err
+		}
+		if err = e.EncodeBool(m[k]); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (e *Encoder) encodeSortedMapStringString(m map[string]string) error {
 	keys := make([]string, 0, len(m))
 	for k := range m {
@@ -148,7 +194,7 @@ func encodeStructValue(e *Encoder, strct reflect.Value) error {
 	if e.flags&arrayEncodedStructsFlag != 0 || structFields.AsArray {
 		return encodeStructValueAsArray(e, strct, structFields.List)
 	}
-	fields := structFields.OmitEmpty(strct, e.flags&omitEmptyFlag != 0)
+	fields := structFields.OmitEmpty(e, strct)
 
 	if err := e.EncodeMapLen(len(fields)); err != nil {
 		return err

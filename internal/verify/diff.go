@@ -6,10 +6,8 @@ package verify
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -61,8 +59,8 @@ func SetTagsDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{
 		}
 
 		if len(allTags) == 0 {
-			if err := diff.SetNewComputed("tags_all"); err != nil {
-				return fmt.Errorf("setting tags_all to computed: %w", err)
+			if err := diff.SetNew("tags_all", allTags.Map()); err != nil {
+				return fmt.Errorf("setting new tags_all diff: %w", err)
 			}
 		}
 	} else if !diff.HasChange("tags") {
@@ -105,12 +103,6 @@ func SetTagsDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{
 	return nil
 }
 
-// SuppressEquivalentStringCaseInsensitive provides custom difference suppression
-// for strings that are equal under case-insensitivity.
-func SuppressEquivalentStringCaseInsensitive(k, old, new string, d *schema.ResourceData) bool {
-	return strings.EqualFold(old, new)
-}
-
 // SuppressEquivalentRoundedTime returns a difference suppression function that compares
 // two time value with the specified layout rounded to the specified duration.
 func SuppressEquivalentRoundedTime(layout string, d time.Duration) schema.SchemaDiffSuppressFunc {
@@ -131,31 +123,4 @@ func SuppressEquivalentRoundedTime(layout string, d time.Duration) schema.Schema
 //   - The operator's configuration omits the optional configuration block
 func SuppressMissingOptionalConfigurationBlock(k, old, new string, d *schema.ResourceData) bool {
 	return old == "1" && new == "0"
-}
-
-// DiffStringMaps returns the set of keys and values that must be created, the set of keys
-// and values that must be destroyed, and the set of keys and values that are unchanged.
-func DiffStringMaps(oldMap, newMap map[string]interface{}) (map[string]*string, map[string]*string, map[string]*string) {
-	// First, we're creating everything we have
-	add := map[string]*string{}
-	for k, v := range newMap {
-		add[k] = aws.String(v.(string))
-	}
-
-	// Build the maps of what to remove and what is unchanged
-	remove := map[string]*string{}
-	unchanged := map[string]*string{}
-	for k, v := range oldMap {
-		old, ok := add[k]
-		if !ok || aws.StringValue(old) != v.(string) {
-			// Delete it!
-			remove[k] = aws.String(v.(string))
-		} else if ok {
-			unchanged[k] = aws.String(v.(string))
-			// already present so remove from new
-			delete(add, k)
-		}
-	}
-
-	return add, remove, unchanged
 }

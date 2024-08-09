@@ -36,11 +36,11 @@ func ResourceFeatureGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -52,7 +52,7 @@ func ResourceFeatureGroup() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9]([-_]*[a-zA-Z0-9]){0,63}`),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]([-_]*[0-9A-Za-z]){0,63}`),
 						"Must start and end with an alphanumeric character and Can only contains alphanumeric characters, hyphens, underscores. Spaces are not allowed."),
 				),
 			},
@@ -67,16 +67,18 @@ func ResourceFeatureGroup() *schema.Resource {
 						"feature_name": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(1, 64),
 								validation.StringNotInSlice([]string{"is_deleted", "write_time", "api_invocation_time"}, false),
-								validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9]([-_]*[a-zA-Z0-9]){0,63}`),
+								validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]([-_]*[0-9A-Za-z]){0,63}`),
 									"Must start and end with an alphanumeric character and Can only contains alphanumeric characters, hyphens, underscores. Spaces are not allowed."),
 							),
 						},
 						"feature_type": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							ForceNew:     true,
 							ValidateFunc: validation.StringInSlice(sagemaker.FeatureType_Values(), false),
 						},
 					},
@@ -88,7 +90,7 @@ func ResourceFeatureGroup() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,63}`),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z]){0,63}`),
 						"Must start and end with an alphanumeric character and Can only contain alphanumeric character and hyphens. Spaces are not allowed."),
 				),
 			},
@@ -104,6 +106,7 @@ func ResourceFeatureGroup() *schema.Resource {
 							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
+							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -111,16 +114,19 @@ func ResourceFeatureGroup() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
+										ForceNew: true,
 									},
-									"database": {
+									names.AttrDatabase: {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
+										ForceNew: true,
 									},
-									"table_name": {
+									names.AttrTableName: {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
+										ForceNew: true,
 									},
 								},
 							},
@@ -128,21 +134,31 @@ func ResourceFeatureGroup() *schema.Resource {
 						"disable_glue_table_creation": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							ForceNew: true,
 						},
 						"s3_storage_config": {
 							Type:     schema.TypeList,
 							Required: true,
+							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"kms_key_id": {
+									names.AttrKMSKeyID: {
 										Type:         schema.TypeString,
 										Optional:     true,
+										ForceNew:     true,
 										ValidateFunc: verify.ValidARN,
+									},
+									"resolved_output_s3_uri": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+										ForceNew: true,
 									},
 									"s3_uri": {
 										Type:     schema.TypeString,
 										Required: true,
+										ForceNew: true,
 									},
 								},
 							},
@@ -150,6 +166,7 @@ func ResourceFeatureGroup() *schema.Resource {
 						"table_format": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							ForceNew:     true,
 							Default:      sagemaker.TableFormatGlue,
 							ValidateFunc: validation.StringInSlice(sagemaker.TableFormat_Values(), false),
 						},
@@ -167,18 +184,45 @@ func ResourceFeatureGroup() *schema.Resource {
 						"enable_online_store": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							ForceNew: true,
 							Default:  false,
 						},
 						"security_config": {
 							Type:     schema.TypeList,
 							Optional: true,
+							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"kms_key_id": {
+									names.AttrKMSKeyID: {
 										Type:         schema.TypeString,
 										Optional:     true,
+										ForceNew:     true,
 										ValidateFunc: verify.ValidARN,
+									},
+								},
+							},
+						},
+						names.AttrStorageType: {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(sagemaker.StorageType_Values(), false),
+						},
+						"ttl_duration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrUnit: {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice(sagemaker.TtlDurationUnit_Values(), false),
+									},
+									names.AttrValue: {
+										Type:     schema.TypeInt,
+										Optional: true,
 									},
 								},
 							},
@@ -192,11 +236,11 @@ func ResourceFeatureGroup() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9]([-_]*[a-zA-Z0-9]){0,63}`),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]([-_]*[0-9A-Za-z]){0,63}`),
 						"Must start and end with an alphanumeric character and Can only contains alphanumeric characters, hyphens, underscores. Spaces are not allowed."),
 				),
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -219,12 +263,12 @@ func resourceFeatureGroupCreate(ctx context.Context, d *schema.ResourceData, met
 		FeatureGroupName:            aws.String(name),
 		EventTimeFeatureName:        aws.String(d.Get("event_time_feature_name").(string)),
 		RecordIdentifierFeatureName: aws.String(d.Get("record_identifier_feature_name").(string)),
-		RoleArn:                     aws.String(d.Get("role_arn").(string)),
+		RoleArn:                     aws.String(d.Get(names.AttrRoleARN).(string)),
 		FeatureDefinitions:          expandFeatureGroupFeatureDefinition(d.Get("feature_definition").([]interface{})),
 		Tags:                        getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -287,10 +331,10 @@ func resourceFeatureGroupRead(ctx context.Context, d *schema.ResourceData, meta 
 	arn := aws.StringValue(output.FeatureGroupArn)
 	d.Set("feature_group_name", output.FeatureGroupName)
 	d.Set("event_time_feature_name", output.EventTimeFeatureName)
-	d.Set("description", output.Description)
+	d.Set(names.AttrDescription, output.Description)
 	d.Set("record_identifier_feature_name", output.RecordIdentifierFeatureName)
-	d.Set("role_arn", output.RoleArn)
-	d.Set("arn", arn)
+	d.Set(names.AttrRoleARN, output.RoleArn)
+	d.Set(names.AttrARN, arn)
 
 	if err := d.Set("feature_definition", flattenFeatureGroupFeatureDefinition(output.FeatureDefinitions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting feature_definition for SageMaker Feature Group (%s): %s", d.Id(), err)
@@ -309,8 +353,23 @@ func resourceFeatureGroupRead(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceFeatureGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
-	// Tags only.
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+		input := &sagemaker.UpdateFeatureGroupInput{
+			FeatureGroupName: aws.String(d.Id()),
+		}
+
+		if d.HasChange("online_store_config") {
+			input.OnlineStoreConfig = expandFeatureGroupOnlineStoreConfigUpdate(d.Get("online_store_config").([]interface{}))
+		}
+
+		_, err := conn.UpdateFeatureGroupWithContext(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker Feature Group (%s): %s", d.Id(), err)
+		}
+	}
 
 	return append(diags, resourceFeatureGroupRead(ctx, d, meta)...)
 }
@@ -386,6 +445,14 @@ func expandFeatureGroupOnlineStoreConfig(l []interface{}) *sagemaker.OnlineStore
 		config.SecurityConfig = expandFeatureGroupOnlineStoreConfigSecurityConfig(v)
 	}
 
+	if v, ok := m[names.AttrStorageType].(string); ok && v != "" {
+		config.StorageType = aws.String(v)
+	}
+
+	if v, ok := m["ttl_duration"].([]interface{}); ok && len(v) > 0 {
+		config.TtlDuration = expandFeatureGroupOnlineStoreConfigTTLDuration(v)
+	}
+
 	return config
 }
 
@@ -402,6 +469,14 @@ func flattenFeatureGroupOnlineStoreConfig(config *sagemaker.OnlineStoreConfig) [
 		m["security_config"] = flattenFeatureGroupOnlineStoreConfigSecurityConfig(config.SecurityConfig)
 	}
 
+	if config.StorageType != nil {
+		m[names.AttrStorageType] = aws.StringValue(config.StorageType)
+	}
+
+	if config.TtlDuration != nil {
+		m["ttl_duration"] = flattenFeatureGroupOnlineStoreConfigTTLDuration(config.TtlDuration)
+	}
+
 	return []map[string]interface{}{m}
 }
 
@@ -413,7 +488,7 @@ func expandFeatureGroupOnlineStoreConfigSecurityConfig(l []interface{}) *sagemak
 	m := l[0].(map[string]interface{})
 
 	config := &sagemaker.OnlineStoreSecurityConfig{
-		KmsKeyId: aws.String(m["kms_key_id"].(string)),
+		KmsKeyId: aws.String(m[names.AttrKMSKeyID].(string)),
 	}
 
 	return config
@@ -425,7 +500,35 @@ func flattenFeatureGroupOnlineStoreConfigSecurityConfig(config *sagemaker.Online
 	}
 
 	m := map[string]interface{}{
-		"kms_key_id": aws.StringValue(config.KmsKeyId),
+		names.AttrKMSKeyID: aws.StringValue(config.KmsKeyId),
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func expandFeatureGroupOnlineStoreConfigTTLDuration(l []interface{}) *sagemaker.TtlDuration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &sagemaker.TtlDuration{
+		Unit:  aws.String(m[names.AttrUnit].(string)),
+		Value: aws.Int64(int64(m[names.AttrValue].(int))),
+	}
+
+	return config
+}
+
+func flattenFeatureGroupOnlineStoreConfigTTLDuration(config *sagemaker.TtlDuration) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		names.AttrUnit:  aws.StringValue(config.Unit),
+		names.AttrValue: aws.Int64Value(config.Value),
 	}
 
 	return []map[string]interface{}{m}
@@ -491,8 +594,12 @@ func expandFeatureGroupOfflineStoreConfigS3StorageConfig(l []interface{}) *sagem
 		S3Uri: aws.String(m["s3_uri"].(string)),
 	}
 
-	if v, ok := m["kms_key_id"].(string); ok && v != "" {
-		config.KmsKeyId = aws.String(m["kms_key_id"].(string))
+	if v, ok := m[names.AttrKMSKeyID].(string); ok && v != "" {
+		config.KmsKeyId = aws.String(m[names.AttrKMSKeyID].(string))
+	}
+
+	if v, ok := m["resolved_output_s3_uri"].(string); ok && v != "" {
+		config.ResolvedOutputS3Uri = aws.String(m["resolved_output_s3_uri"].(string))
 	}
 
 	return config
@@ -508,7 +615,11 @@ func flattenFeatureGroupOfflineStoreConfigS3StorageConfig(config *sagemaker.S3St
 	}
 
 	if config.KmsKeyId != nil {
-		m["kms_key_id"] = aws.StringValue(config.KmsKeyId)
+		m[names.AttrKMSKeyID] = aws.StringValue(config.KmsKeyId)
+	}
+
+	if config.ResolvedOutputS3Uri != nil {
+		m["resolved_output_s3_uri"] = aws.StringValue(config.ResolvedOutputS3Uri)
 	}
 
 	return []map[string]interface{}{m}
@@ -523,8 +634,8 @@ func expandFeatureGroupOfflineStoreConfigDataCatalogConfig(l []interface{}) *sag
 
 	config := &sagemaker.DataCatalogConfig{
 		Catalog:   aws.String(m["catalog"].(string)),
-		Database:  aws.String(m["database"].(string)),
-		TableName: aws.String(m["table_name"].(string)),
+		Database:  aws.String(m[names.AttrDatabase].(string)),
+		TableName: aws.String(m[names.AttrTableName].(string)),
 	}
 
 	return config
@@ -536,10 +647,26 @@ func flattenFeatureGroupOfflineStoreConfigDataCatalogConfig(config *sagemaker.Da
 	}
 
 	m := map[string]interface{}{
-		"catalog":    aws.StringValue(config.Catalog),
-		"database":   aws.StringValue(config.Database),
-		"table_name": aws.StringValue(config.TableName),
+		"catalog":           aws.StringValue(config.Catalog),
+		names.AttrDatabase:  aws.StringValue(config.Database),
+		names.AttrTableName: aws.StringValue(config.TableName),
 	}
 
 	return []map[string]interface{}{m}
+}
+
+func expandFeatureGroupOnlineStoreConfigUpdate(l []interface{}) *sagemaker.OnlineStoreConfigUpdate {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &sagemaker.OnlineStoreConfigUpdate{}
+
+	if v, ok := m["ttl_duration"].([]interface{}); ok && len(v) > 0 {
+		config.TtlDuration = expandFeatureGroupOnlineStoreConfigTTLDuration(v)
+	}
+
+	return config
 }

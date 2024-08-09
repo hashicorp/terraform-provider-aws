@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func numericFormatConfigurationSchema() *schema.Schema {
@@ -30,7 +31,7 @@ func numericFormatConfigurationSchema() *schema.Schema {
 							"negative_value_configuration":    negativeValueConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NegativeValueConfiguration.html
 							"null_value_format_configuration": nullValueConfigurationSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NullValueFormatConfiguration.html
 							"number_scale":                    stringSchema(false, validation.StringInSlice(quicksight.NumberScale_Values(), false)),
-							"prefix":                          stringSchema(false, validation.StringLenBetween(1, 128)),
+							names.AttrPrefix:                  stringSchema(false, validation.StringLenBetween(1, 128)),
 							"separator_configuration":         separatorConfigurationSchema(),
 							"suffix":                          stringSchema(false, validation.StringLenBetween(1, 128)),
 							"symbol":                          stringSchema(false, validation.StringMatch(regexache.MustCompile(`[A-Z]{3}`), "must be a 3 character currency symbol")),
@@ -72,7 +73,7 @@ func numberDisplayFormatConfigurationSchema() *schema.Schema {
 				"negative_value_configuration":    negativeValueConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NegativeValueConfiguration.html
 				"null_value_format_configuration": nullValueConfigurationSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NullValueFormatConfiguration.html
 				"number_scale":                    stringSchema(false, validation.StringInSlice(quicksight.NumberScale_Values(), false)),
-				"prefix":                          stringSchema(false, validation.StringLenBetween(1, 128)),
+				names.AttrPrefix:                  stringSchema(false, validation.StringLenBetween(1, 128)),
 				"separator_configuration":         separatorConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericSeparatorConfiguration.html
 				"suffix":                          stringSchema(false, validation.StringLenBetween(1, 128)),
 			},
@@ -91,7 +92,7 @@ func percentageDisplayFormatConfigurationSchema() *schema.Schema {
 				"decimal_places_configuration":    decimalPlacesConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DecimalPlacesConfiguration.html
 				"negative_value_configuration":    negativeValueConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NegativeValueConfiguration.html
 				"null_value_format_configuration": nullValueConfigurationSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NullValueFormatConfiguration.html
-				"prefix":                          stringSchema(false, validation.StringLenBetween(1, 128)),
+				names.AttrPrefix:                  stringSchema(false, validation.StringLenBetween(1, 128)),
 				"separator_configuration":         separatorConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericSeparatorConfiguration.html
 				"suffix":                          stringSchema(false, validation.StringLenBetween(1, 128)),
 			},
@@ -227,7 +228,7 @@ func fontConfigurationSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"font_color":      stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[A-F0-9]{6}$`), "")),
+				"font_color":      stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
 				"font_decoration": stringSchema(false, validation.StringInSlice(quicksight.FontDecoration_Values(), false)),
 				"font_size": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontSize.html
 					Type:     schema.TypeList,
@@ -246,7 +247,7 @@ func fontConfigurationSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"name": stringSchema(false, validation.StringInSlice(quicksight.FontWeightName_Values(), false)),
+							names.AttrName: stringSchema(false, validation.StringInSlice(quicksight.FontWeightName_Values(), false)),
 						},
 					},
 				},
@@ -355,6 +356,12 @@ func expandNumericFormatConfiguration(tfList []interface{}) *quicksight.NumericF
 	if v, ok := tfMap["currency_display_format_configuration"].([]interface{}); ok && len(v) > 0 {
 		config.CurrencyDisplayFormatConfiguration = expandCurrencyDisplayFormatConfiguration(v)
 	}
+	if v, ok := tfMap["number_display_format_configuration"].([]interface{}); ok && len(v) > 0 {
+		config.NumberDisplayFormatConfiguration = expandNumberDisplayFormatConfiguration(v)
+	}
+	if v, ok := tfMap["percentage_display_format_configuration"].([]interface{}); ok && len(v) > 0 {
+		config.PercentageDisplayFormatConfiguration = expandPercentageDisplayFormatConfiguration(v)
+	}
 
 	return config
 }
@@ -383,7 +390,7 @@ func expandCurrencyDisplayFormatConfiguration(tfList []interface{}) *quicksight.
 	if v, ok := tfMap["number_scale"].(string); ok && v != "" {
 		config.NumberScale = aws.String(v)
 	}
-	if v, ok := tfMap["prefix"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrPrefix].(string); ok && v != "" {
 		config.Prefix = aws.String(v)
 	}
 	if v, ok := tfMap["separator_configuration"].([]interface{}); ok && len(v) > 0 {
@@ -609,7 +616,7 @@ func expandFontWeight(tfList []interface{}) *quicksight.FontWeight {
 
 	config := &quicksight.FontWeight{}
 
-	if v, ok := tfMap["name"].(string); ok {
+	if v, ok := tfMap[names.AttrName].(string); ok {
 		config.Name = aws.String(v)
 	}
 
@@ -650,13 +657,13 @@ func expandNumberDisplayFormatConfiguration(tfList []interface{}) *quicksight.Nu
 
 	config := &quicksight.NumberDisplayFormatConfiguration{}
 
-	if v, ok := tfMap["number_scale"].(string); ok {
+	if v, ok := tfMap["number_scale"].(string); ok && v != "" {
 		config.NumberScale = aws.String(v)
 	}
-	if v, ok := tfMap["prefix"].(string); ok {
+	if v, ok := tfMap[names.AttrPrefix].(string); ok && v != "" {
 		config.Prefix = aws.String(v)
 	}
-	if v, ok := tfMap["suffix"].(string); ok {
+	if v, ok := tfMap["suffix"].(string); ok && v != "" {
 		config.Suffix = aws.String(v)
 	}
 	if v, ok := tfMap["decimal_places_configuration"].([]interface{}); ok && len(v) > 0 {
@@ -687,10 +694,10 @@ func expandPercentageDisplayFormatConfiguration(tfList []interface{}) *quicksigh
 
 	config := &quicksight.PercentageDisplayFormatConfiguration{}
 
-	if v, ok := tfMap["prefix"].(string); ok {
+	if v, ok := tfMap[names.AttrPrefix].(string); ok && v != "" {
 		config.Prefix = aws.String(v)
 	}
-	if v, ok := tfMap["suffix"].(string); ok {
+	if v, ok := tfMap["suffix"].(string); ok && v != "" {
 		config.Suffix = aws.String(v)
 	}
 	if v, ok := tfMap["decimal_places_configuration"].([]interface{}); ok && len(v) > 0 {
@@ -798,7 +805,7 @@ func flattenCurrencyDisplayFormatConfiguration(apiObject *quicksight.CurrencyDis
 		tfMap["number_scale"] = aws.StringValue(apiObject.NumberScale)
 	}
 	if apiObject.Prefix != nil {
-		tfMap["prefix"] = aws.StringValue(apiObject.Prefix)
+		tfMap[names.AttrPrefix] = aws.StringValue(apiObject.Prefix)
 	}
 	if apiObject.SeparatorConfiguration != nil {
 		tfMap["separator_configuration"] = flattenNumericSeparatorConfiguration(apiObject.SeparatorConfiguration)
@@ -889,7 +896,7 @@ func flattenNumberDisplayFormatConfiguration(apiObject *quicksight.NumberDisplay
 		tfMap["number_scale"] = aws.StringValue(apiObject.NumberScale)
 	}
 	if apiObject.Prefix != nil {
-		tfMap["prefix"] = aws.StringValue(apiObject.Prefix)
+		tfMap[names.AttrPrefix] = aws.StringValue(apiObject.Prefix)
 	}
 	if apiObject.SeparatorConfiguration != nil {
 		tfMap["separator_configuration"] = flattenNumericSeparatorConfiguration(apiObject.SeparatorConfiguration)
@@ -917,7 +924,7 @@ func flattenPercentageDisplayFormatConfiguration(apiObject *quicksight.Percentag
 		tfMap["null_value_format_configuration"] = flattenNullValueFormatConfiguration(apiObject.NullValueFormatConfiguration)
 	}
 	if apiObject.Prefix != nil {
-		tfMap["prefix"] = aws.StringValue(apiObject.Prefix)
+		tfMap[names.AttrPrefix] = aws.StringValue(apiObject.Prefix)
 	}
 	if apiObject.SeparatorConfiguration != nil {
 		tfMap["separator_configuration"] = flattenNumericSeparatorConfiguration(apiObject.SeparatorConfiguration)
