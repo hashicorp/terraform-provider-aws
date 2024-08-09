@@ -3,36 +3,7 @@
 
 package bedrock_test
 
-// **PLEASE DELETE THIS AND ALL TIP COMMENTS BEFORE SUBMITTING A PR FOR REVIEW!**
-//
-// TIP: ==== INTRODUCTION ====
-// Thank you for trying the skaff tool!
-//
-// You have opted to include these helpful comments. They all include "TIP:"
-// to help you find and remove them when you're done with them.
-//
-// While some aspects of this file are customized to your input, the
-// scaffold tool does *not* look at the AWS API and ensure it has correct
-// function, structure, and variable names. It makes guesses based on
-// commonalities. You will need to make significant adjustments.
-//
-// In other words, as generated, this is a rough outline of the work you will
-// need to do. If something doesn't make sense for your situation, get rid of
-// it.
-
 import (
-	// TIP: ==== IMPORTS ====
-	// This is a common set of imports but not customized to your code since
-	// your code hasn't been written yet. Make sure you, your IDE, or
-	// goimports -w <file> fixes these imports.
-	//
-	// The provider linter wants your imports to be in two groups: first,
-	// standard library (i.e., "fmt" or "strings"), second, everything else.
-	//
-	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
-	// using the services/bedrock/types package. If so, you'll
-	// need to import types and reference the nested types, e.g., as
-	// types.<Type Name>.
 	"context"
 	"fmt"
 	"testing"
@@ -43,24 +14,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	// TIP: You will often need to import the package that this test file lives
-	// in. Since it is in the "test" context, it must import the package to use
-	// any normal context constants, variables, or functions.
 )
 
 func TestAccBedrockEvaluationJob_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	//var evaluationjob bedrock.DescribeEvaluationJobResponse
-	rName := name_regex(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrock_evaluation_job.test"
 	bName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	//bucketName := "aws_s3_bucket.test"
 	modelName := "aws_bedrock_foundation_model.test"
 	iamName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	bucketAccessName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -81,49 +45,39 @@ func TestAccBedrockEvaluationJob_basic(t *testing.T) {
 			{
 				Config: testAccEvaluationJobConfig_basic(iamName, rName, bName, bucketAccessName, modelAccessName, transferRoleName, sagemakerName, sagemakerCreate, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					//testAccCheckEvaluationJobExists(ctx, resourceName, &evaluationjob),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
-					//resource.TestCheckResourceAttrPair(resourceName, "customer_cencryption_key_id", ""),
-					// eval config
-					resource.TestCheckResourceAttr(resourceName, "evaluation_config.automated.dataset_metric_configs.metric_names.0", "Builtin.Accuracy"),
-					resource.TestCheckResourceAttr(resourceName, "evaluation_config.automated.dataset_metric_configs.task_type", "Question and Answer"),
-					resource.TestCheckResourceAttr(resourceName, "evaluation_config.automated.dataset_metric_configs.dataset.name", "Builtin.BoolQ"),
-					resource.TestCheckResourceAttrSet(resourceName, "evaluation_config.automated.dataset_metric_configs.dataset.dataset_location.s3_uri"),
-					// eval config end
-					// inf config
-					resource.TestCheckResourceAttrPair(resourceName, "inference_config.models.bedrock_model.inference_params", modelName, "inference_types_supported.0"),
-					resource.TestCheckResourceAttrPair(resourceName, "inference_config.models.bedrock_model.model_identifier", modelName, names.AttrID),
-					// inf config end
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
+					resource.TestCheckResourceAttr(resourceName, "evaluation_config.automated.dataset_metric_configs.0.metric_names.0", "Builtin.Accuracy"),
+					resource.TestCheckResourceAttr(resourceName, "evaluation_config.automated.dataset_metric_configs.0.task_type", "Question and Answer"),
+					resource.TestCheckResourceAttr(resourceName, "evaluation_config.automated.dataset_metric_configs.0.dataset.0.name", "Builtin.BoolQ"),
+					resource.TestCheckResourceAttrSet(resourceName, "evaluation_config.automated.dataset_metric_configs.0.dataset.0.dataset_location.s3_uri"),
+					resource.TestCheckResourceAttrPair(resourceName, "inference_config.models.0.bedrock_model.0.inference_params", modelName, "inference_types_supported.0"),
+					resource.TestCheckResourceAttrPair(resourceName, "inference_config.models.bedrock_model.0.model_identifier", modelName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "Summarization"),
 					resource.TestCheckResourceAttrSet(resourceName, "output_data_config.0.s3_uri"),
-					resource.TestCheckResourceAttrSet(resourceName, "role_arn"),
-					resource.TestCheckResourceAttr(resourceName, "description", "test"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
 			},
 		},
 	})
 }
 func TestAccBedrockEvaluationJob_encryption(t *testing.T) {
 	ctx := acctest.Context(t)
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	//var evaluationjob bedrock.DescribeEvaluationJobResponse
-	rName := name_regex(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrock_evaluation_job.test"
 	bName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	//bucketName := "aws_s3_bucket.test"
 	modelName := "aws_bedrock_foundation_model.test"
 	iamName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	bucketAccessName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -145,54 +99,31 @@ func TestAccBedrockEvaluationJob_encryption(t *testing.T) {
 			{
 				Config: testAccEvaluationJobConfig_encryption(iamName, rName, bName, bucketAccessName, modelAccessName, transferRoleName, sagemakerName, sagemakerCreate, keyName, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					//testAccCheckEvaluationJobExists(ctx, resourceName, &evaluationjob),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttrPair(resourceName, "customer_encryption_key_id", keyName, names.AttrID),
 					//resource.TestCheckResourceAttrPair(resourceName, "customer_cencryption_key_id", ""),
-					// eval config
-					resource.TestCheckResourceAttr(resourceName, "evaluation_config.automated.dataset_metric_configs.metric_names.0", "Builtin.Accuracy"),
-					resource.TestCheckResourceAttr(resourceName, "evaluation_config.automated.dataset_metric_configs.task_type", "Question and Answer"),
-					resource.TestCheckResourceAttr(resourceName, "evaluation_config.automated.dataset_metric_configs.dataset.name", "Builtin.BoolQ"),
-					resource.TestCheckResourceAttrSet(resourceName, "evaluation_config.automated.dataset_metric_configs.dataset.dataset_location.s3_uri"),
-					// eval config end
-					// inf config
-					resource.TestCheckResourceAttrPair(resourceName, "inference_config.models.bedrock_model.inference_params", modelName, "inference_types_supported.0"),
-					resource.TestCheckResourceAttrPair(resourceName, "inference_config.models.bedrock_model.model_identifier", modelName, names.AttrID),
-					// inf config end
+					resource.TestCheckResourceAttr(resourceName, "evaluation_config.0.automated.dataset_metric_configs.0.metric_names.0", "Builtin.Accuracy"),
+					resource.TestCheckResourceAttr(resourceName, "evaluation_config.0.automated.dataset_metric_configs.0.task_type", "Question and Answer"),
+					resource.TestCheckResourceAttr(resourceName, "evaluation_config.0.automated.dataset_metric_configs.dataset.name", "Builtin.BoolQ"),
+					resource.TestCheckResourceAttrSet(resourceName, "evaluation_config.0.automated.dataset_metric_configs.0.dataset.0.dataset_location.0.s3_uri"),
+					resource.TestCheckResourceAttrPair(resourceName, "inference_config.0.models.0.bedrock_model.0.inference_params", modelName, "inference_types_supported.0"),
+					resource.TestCheckResourceAttrPair(resourceName, "inference_config.0.models.0.bedrock_model.0.model_identifier", modelName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "Summarization"),
 					resource.TestCheckResourceAttrSet(resourceName, "output_data_config.0.s3_uri"),
-					resource.TestCheckResourceAttrSet(resourceName, "role_arn"),
-					resource.TestCheckResourceAttr(resourceName, "description", "test"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
 			},
 		},
 	})
-}
-
-func name_regex(in string) string {
-	return in
-	var out string
-	for index, char := range in {
-		if index == 1 {
-			out += "-"
-		} else if index == 2 {
-			out += "*"
-		} else {
-			out += string(char)
-		}
-	}
-	for len(in) < 61 {
-		in += "e"
-	}
-	return out
 }
 
 /*
@@ -279,6 +210,7 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 func testAccEvaluationJobConfig_base(iamName, bucketName, bucketAccessName, modelAccessName, transferRoleName, sagemakerName, sagemakerCreate string) string {
 	return fmt.Sprintf(`
 
+
 data "aws_caller_identity" "test" {}
 data "aws_region" "test" {}
 data "aws_partition" "test" {}
@@ -298,40 +230,32 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_object" "output" {
-	bucket = aws_s3_bucket.test.id
-	key = "data/dataset.jsonl"
-	source = "dataset.jsonl"	
+  bucket = aws_s3_bucket.test.id
+  key    = "data/dataset.jsonl"
+  source = "dataset.jsonl"
 }
 
 resource "aws_s3_object" "dataset" {
-	bucket = aws_s3_bucket.test.id
-	key = "data/dataset.jsonl"
-	source = "dataset.jsonl"	
+  bucket = aws_s3_bucket.test.id
+  key    = "data/dataset.jsonl"
+  source = "dataset.jsonl"
 }
-	resource "aws_iam_role" "test" {
+resource "aws_iam_role" "test" {
   name = %[1]q
 
   assume_role_policy = jsonencode(
-  {
-    "Version": "2012-10-17",
-    "Statement": [{
-        "Sid": "AllowBedrockToAssumeRole",
-        "Effect": "Allow",
-        "Principal": {
-            "Service": "bedrock.amazonaws.com"
+    {
+      "Version" : "2012-10-17",
+      "Statement" : [{
+        "Sid" : "AllowBedrockToAssumeRole",
+        "Effect" : "Allow",
+        "Principal" : {
+          "Service" : "bedrock.amazonaws.com"
         },
-        "Action": "sts:AssumeRole",
-        "Condition": {
-            "StringEquals": {
-        		"aws:SourceAccount": "${data.aws_caller_identity.test.user_id}"
-            },
-            "ArnEquals": {
-				"aws:SourceArn" : "arn:aws:bedrock:${data.aws_region.test.name}:${data.aws_caller_identity.test.user_id}:evaluation-job/*"
-            }
-        }
-    }]
-}
-)
+        "Action" : "sts:AssumeRole",
+      }]
+    }
+  )
 }
 
 
@@ -339,167 +263,173 @@ resource "aws_s3_object" "dataset" {
 resource "aws_iam_policy" "test" {
   name = %[1]q
   policy = jsonencode({
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Sid": "BedrockConsole",
-            "Effect": "Allow",
-            "Action": [
-               "bedrock:CreateEvaluationJob",
-               "bedrock:GetEvaluationJob",
-               "bedrock:ListEvaluationJobs",
-               "bedrock:StopEvaluationJob",
-               "bedrock:GetCustomModel",
-               "bedrock:ListCustomModels",
-               "bedrock:CreateProvisionedModelThroughput",
-               "bedrock:UpdateProvisionedModelThroughput",
-               "bedrock:GetProvisionedModelThroughput",
-               "bedrock:ListProvisionedModelThroughputs",
-               "bedrock:ListTagsForResource",
-               "bedrock:UntagResource",
-               "bedrock:TagResource"
-            ],
-            "Resource": "*"
-        },
-        {
-            "Sid": "AllowConsoleS3AccessForModelEvaluation",
-            "Effect": "Allow",
-            "Action": [
-              "s3:GetObject",
-              "s3:GetBucketCORS",
-              "s3:ListBucket",
-              "s3:ListBucketVersions",
-              "s3:GetBucketLocation"
-            ],
-            "Resource": "*"
-        }
+    "Version" : "2012-10-17",
+    "Statement" : [
+      {
+        "Sid" : "BedrockConsole",
+        "Effect" : "Allow",
+        "Action" : [
+          "bedrock:CreateEvaluationJob",
+          "bedrock:GetEvaluationJob",
+          "bedrock:ListEvaluationJobs",
+          "bedrock:StopEvaluationJob",
+          "bedrock:GetCustomModel",
+          "bedrock:ListCustomModels",
+          "bedrock:CreateProvisionedModelThroughput",
+          "bedrock:UpdateProvisionedModelThroughput",
+          "bedrock:GetProvisionedModelThroughput",
+          "bedrock:ListProvisionedModelThroughputs",
+          "bedrock:ListTagsForResource",
+          "bedrock:UntagResource",
+          "bedrock:TagResource"
+        ],
+        "Resource" : "*"
+      },
+      {
+        "Sid" : "AllowConsoleS3AccessForModelEvaluation",
+        "Effect" : "Allow",
+        "Action" : [
+          "s3:GetObject",
+          "s3:GetBucketCORS",
+          "s3:ListBucket",
+          "s3:ListBucketVersions",
+          "s3:GetBucketLocation"
+        ],
+        "Resource" : "*"
+      }
     ]
   })
 }
 resource "aws_iam_role_policy_attachment" "test" {
-	role = aws_iam_role.test.name
-	policy_arn = aws_iam_policy.test.arn
+  role       = aws_iam_role.test.name
+  policy_arn = aws_iam_policy.test.arn
 }
 
 resource "aws_iam_policy" "bucket_access" {
   name = %[3]q
 
   policy = jsonencode({
-"Version": "2012-10-17",
-    "Statement": [
-        {
-            "Sid": "AllowAccessToCustomDatasets",
-            "Effect": "Allow",
-            "Action": [
-                "s3:GetObject",
-                "s3:ListBucket"
-            ],
-            "Resource": [
-            "arn:aws:s3:::${aws_s3_bucket.test.bucket}",
-            "arn:aws:s3:::${aws_s3_bucket.test.bucket}/${aws_s3_object.dataset.key}",
-			"*"
-			]
-        },
-        {
-            "Sid": "AllowAccessToOutputBucket",
-            "Effect": "Allow",
-            "Action": [
-                "s3:GetObject",
-                "s3:ListBucket",
-                "s3:PutObject",
-                "s3:GetBucketLocation",
-                "s3:AbortMultipartUpload",
-                "s3:ListBucketMultipartUploads"
-            ],
-            "Resource": [
-            "arn:aws:s3:::${aws_s3_bucket.test.bucket}",
-			"arn:aws:s3:::${aws_s3_bucket.test.bucket}/${aws_s3_object.output.key}",
-			"*"            
-			]
-        }
+    "Version" : "2012-10-17",
+    "Statement" : [
+      {
+        "Sid" : "AllowAccessToCustomDatasets",
+        "Effect" : "Allow",
+        "Action" : [
+          "s3:GetObject",
+          "s3:ListBucket"
+        ],
+        "Resource" : [
+          "arn:aws:s3:::${aws_s3_bucket.test.bucket}",
+          "arn:aws:s3:::${aws_s3_bucket.test.bucket}/${aws_s3_object.dataset.key}",
+          "*"
+        ]
+      },
+      {
+        "Sid" : "AllowAccessToOutputBucket",
+        "Effect" : "Allow",
+        "Action" : [
+          "s3:GetObject",
+          "s3:ListBucket",
+          "s3:PutObject",
+          "s3:GetBucketLocation",
+          "s3:AbortMultipartUpload",
+          "s3:ListBucketMultipartUploads"
+        ],
+        "Resource" : [
+          "arn:aws:s3:::${aws_s3_bucket.test.bucket}",
+          "arn:aws:s3:::${aws_s3_bucket.test.bucket}/${aws_s3_object.output.key}",
+          "*"
+        ]
+      }
     ]
   })
 }
 resource "aws_iam_role_policy_attachment" "bucket_access" {
-	role = aws_iam_role.test.name
-	policy_arn = aws_iam_policy.bucket_access.arn
+  role       = aws_iam_role.test.name
+  policy_arn = aws_iam_policy.bucket_access.arn
 }
 
-  resource "aws_iam_policy" "model_access" {
+resource "aws_iam_policy" "model_access" {
   name = %[4]q
 
   policy = jsonencode({
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Sid": "AllowSpecificModels",
-            "Effect": "Allow",
-            "Action": [
-                "bedrock:InvokeModel",
-                "bedrock:InvokeModelWithResponseStream",
-				"bedrock:CreateModelInvocationJob"
-            ],
-            "Resource": [
-				"arn:aws:bedrock:${data.aws_region.test.name}::foundation-model/amazon.titan-text-lite-v1",
-				"*"
-            ]
-        }
+    "Version" : "2012-10-17",
+    "Statement" : [
+      {
+        "Sid" : "AllowSpecificModels",
+        "Effect" : "Allow",
+        "Action" : [
+          "bedrock:InvokeModel",
+          "bedrock:InvokeModelWithResponseStream",
+          "bedrock:CreateModelInvocationJob",
+          "bedrock:StopModelInvocationJob"
+        ],
+        "Resource" : [
+          "arn:aws:bedrock:${data.aws_region.test.name}::foundation-model/amazon.titan-text-lite-v1",
+          "*"
+        ]
+      }
     ]
   })
 }
 resource "aws_iam_role_policy_attachment" "model_access" {
-	role = aws_iam_role.test.name
-	policy_arn = aws_iam_policy.model_access.arn
+  role       = aws_iam_role.test.name
+  policy_arn = aws_iam_policy.model_access.arn
 }
 
 resource "aws_iam_policy" "pass" {
-name = %[5]q
+  name = %[5]q
 
-policy = jsonencode({
-    "Version": "2012-10-17",
-    "Statement": [{
-        "Effect": "Allow",
-        "Action": [
-            "iam:GetRole",
-            "iam:PassRole"
-        ],
-        "Resource": [
-		"arn:aws:iam::${data.aws_caller_identity.test.account_id}:role/bedrock-*",
-		"*"
-		]
+  policy = jsonencode({
+    "Version" : "2012-10-17",
+    "Statement" : [{
+      "Effect" : "Allow",
+      "Action" : [
+        "iam:GetRole",
+        "iam:PassRole"
+      ],
+      "Resource" : [
+        "arn:aws:iam::${data.aws_caller_identity.test.account_id}:role/bedrock-*",
+        "*"
+      ]
     }]
-})
+  })
 }
 resource "aws_iam_role_policy_attachment" "pass" {
-	role = aws_iam_role.test.name
-	policy_arn = aws_iam_policy.pass.arn
+  role       = aws_iam_role.test.name
+  policy_arn = aws_iam_policy.pass.arn
 }
 
 resource "aws_iam_policy" "sagemaker_create" {
-	name = %[7]q
-	policy = jsonencode ({
-	"Version": "2012-10-17",
-    "Statement": [
-        {
-            "Sid": "ManageHumanLoops",
-            "Effect": "Allow",
-            "Action": [
-                "sagemaker:StartHumanLoop",
-                "sagemaker:DescribeFlowDefinition",
-                "sagemaker:DescribeHumanLoop",
-                "sagemaker:StopHumanLoop",
-                "sagemaker:DeleteHumanLoop"
-            ],
-            "Resource": "*"
-        }
-    ]	
-})
+  name = %[7]q
+  policy = jsonencode({
+    "Version" : "2012-10-17",
+    "Statement" : [
+      {
+        "Sid" : "ManageHumanLoops",
+        "Effect" : "Allow",
+        "Action" : [
+          "sagemaker:StartHumanLoop",
+          "sagemaker:DescribeFlowDefinition",
+          "sagemaker:DescribeHumanLoop",
+          "sagemaker:StopHumanLoop",
+          "sagemaker:DeleteHumanLoop"
+        ],
+        "Resource" : "*"
+      }
+    ]
+  })
 }
 
 resource "aws_iam_role_policy_attachment" "sagemaker_create" {
-	role = aws_iam_role.test.name
-	policy_arn = aws_iam_policy.sagemaker_create.arn
+  role       = aws_iam_role.test.name
+  policy_arn = aws_iam_policy.sagemaker_create.arn
 }
+
+
+
+
+
 
 
 
@@ -512,26 +442,28 @@ func testAccEvaluationJobConfig_basic(iamName, jobName, bucketName, bucketAccess
 	return acctest.ConfigCompose(testAccEvaluationJobConfig_base(iamName, bucketName, bucketAccessName, modelAccessName, transferRoleName, sagemakerName, sagemakerCreate), fmt.Sprintf(`
 
 
+
+
 resource "aws_bedrock_evaluation_job" "test" {
 
   evaluation_config {
     automated {
-        dataset_metric_configs {
-          dataset {
-		    name = "Builtin.BoolQ"
-          }
-          metric_names = ["Builtin.Accuracy"]
-          task_type    = "QuestionAndAnswer"
+      dataset_metric_configs {
+        dataset {
+          name = "Builtin.BoolQ"
         }
+        metric_names = ["Builtin.Accuracy"]
+        task_type    = "QuestionAndAnswer"
+      }
     }
   }
 
   inference_config {
     models {
-      bedrock_model { 
+      bedrock_model {
         inference_params = tolist(data.aws_bedrock_foundation_model.test.inference_types_supported)[0]
         model_identifier = data.aws_bedrock_foundation_model.test.id
-		}
+      }
     }
   }
 
@@ -543,8 +475,8 @@ resource "aws_bedrock_evaluation_job" "test" {
   }
 
   tags = {
-	%[2]q = %[3]q
-	%[4]q = %[5]q
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 
   role_arn = aws_iam_role.test.arn
@@ -561,38 +493,38 @@ func testAccEvaluationJobConfig_encryptionbase(iamName, bucketName, bucketAccess
 		}
 				
 		resource "aws_iam_policy" "kms" {
-		name = %[1]q 
-		policy = jsonencode({
-		    "Version": "2012-10-17",
-			"Statement": [
-			{ 
-				"Sid": "CustomKMSKeyProvidedToBedrock",
-				"Effect": "Allow",
-				"Action": [
-					"kms:Decrypt",
-					"kms:GenerateDataKey"
-				],
-				"Resource": [
-				"arn:aws:kms:${data.aws_region.test.name}:${data.aws_caller_identity.test.account_id}:key/${aws_kms_key.test.id}"
-				],
-				"Condition": {
-					"StringEquals": {
-						"kms:ViaService": "s3.${data.aws_region.test.name}.amazonaws.com"
+			name = %[1]q 
+			policy = jsonencode({
+				"Version": "2012-10-17",
+				"Statement": [
+				{ 
+					"Sid": "CustomKMSKeyProvidedToBedrock",
+					"Effect": "Allow",
+					"Action": [
+						"kms:Decrypt",
+						"kms:GenerateDataKey"
+					],
+					"Resource": [
+					"arn:aws:kms:${data.aws_region.test.name}:${data.aws_caller_identity.test.account_id}:key/${aws_kms_key.test.id}"
+					],
+					"Condition": {
+						"StringEquals": {
+							"kms:ViaService": "s3.${data.aws_region.test.name}.amazonaws.com"
+						}
 					}
+				},
+				{ 
+					"Sid": "CustomKMSDescribeKeyProvidedToBedrock",
+					"Effect": "Allow",
+					"Action": [
+						"kms:DescribeKey"
+					],
+					"Resource": [
+					"arn:aws:kms:${data.aws_region.test.name}:${data.aws_caller_identity.test.account_id}:key/${aws_kms_key.test.id}"
+					]
 				}
-			},
-			{ 
-				"Sid": "CustomKMSDescribeKeyProvidedToBedrock",
-				"Effect": "Allow",
-				"Action": [
-					"kms:DescribeKey"
-				],
-				"Resource": [
-				"arn:aws:kms:${data.aws_region.test.name}:${data.aws_caller_identity.test.account_id}:key/${aws_kms_key.test.id}"
-				]
-			}
-		]
-	})
+			]
+		})
 	}
 	resource "aws_iam_role_policy_attachment" "kms" {
 		role = aws_iam_role.test.name
@@ -636,53 +568,52 @@ func testAccEvaluationJobConfig_encryptionbase(iamName, bucketName, bucketAccess
 			}
 		)	
 	}
-
-	
 	`, keyName))
-
 }
 
 func testAccEvaluationJobConfig_encryption(iamName, jobName, bucketName, bucketAccessName, modelAccessName, transferRoleName, sagemakerName, sagemakerCreate, keyName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(testAccEvaluationJobConfig_encryptionbase(iamName, bucketName, bucketAccessName, modelAccessName, transferRoleName, sagemakerName, sagemakerCreate, keyName), fmt.Sprintf(`
 
 
+
+
 resource "aws_bedrock_evaluation_job" "test" {
 
   evaluation_config {
     automated {
-        dataset_metric_configs {
-          dataset {
-		    name = "BoolQ"
-			dataset_location {
-				s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.dataset.key}"
-			}
+      dataset_metric_configs {
+        dataset {
+          name = "BoolQ"
+          dataset_location {
+            s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.dataset.key}"
           }
-          metric_names = ["Builtin.Accuracy"]
-          task_type    = "QuestionAndAnswer"
         }
+        metric_names = ["Builtin.Accuracy"]
+        task_type    = "QuestionAndAnswer"
+      }
     }
   }
 
   inference_config {
     models {
-      bedrock_model { 
+      bedrock_model {
         inference_params = tolist(data.aws_bedrock_foundation_model.test.inference_types_supported)[0]
         model_identifier = data.aws_bedrock_foundation_model.test.id
-		}
+      }
     }
   }
 
   customer_encryption_key_id = aws_kms_key.test.arn
-  description = "test"
-  name        = %[1]q
+  description                = "test"
+  name                       = %[1]q
 
   output_data_config {
     s3_uri = "s3://${aws_s3_bucket.test.bucket}/bedrock/evaluation_jobs"
   }
 
   tags = {
-	%[2]q = %[3]q
-	%[4]q = %[5]q
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 
   role_arn = aws_iam_role.test.arn
