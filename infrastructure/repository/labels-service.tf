@@ -63,6 +63,7 @@ variable "service_labels" {
     "codebuild",
     "codecatalyst",
     "codecommit",
+    "codeconnections",
     "codeguruprofiler",
     "codegurureviewer",
     "codepipeline",
