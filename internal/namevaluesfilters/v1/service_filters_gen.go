@@ -4,34 +4,11 @@ package v1
 
 import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/imagebuilder"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 )
 
 // []*SERVICE.Filter handling
-
-// ImageBuilderFilters returns imagebuilder service filters.
-func (filters NameValuesFilters) ImageBuilderFilters() []*imagebuilder.Filter {
-	m := filters.Map()
-
-	if len(m) == 0 {
-		return nil
-	}
-
-	result := make([]*imagebuilder.Filter, 0, len(m))
-
-	for k, v := range m {
-		filter := &imagebuilder.Filter{
-			Name:   aws.String(k),
-			Values: aws.StringSlice(v),
-		}
-
-		result = append(result, filter)
-	}
-
-	return result
-}
 
 // RDSFilters returns rds service filters.
 func (filters NameValuesFilters) RDSFilters() []*rds.Filter {

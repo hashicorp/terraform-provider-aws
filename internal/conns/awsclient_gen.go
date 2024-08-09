@@ -117,6 +117,7 @@ import (
 	healthlake_sdkv2 "github.com/aws/aws-sdk-go-v2/service/healthlake"
 	iam_sdkv2 "github.com/aws/aws-sdk-go-v2/service/iam"
 	identitystore_sdkv2 "github.com/aws/aws-sdk-go-v2/service/identitystore"
+	imagebuilder_sdkv2 "github.com/aws/aws-sdk-go-v2/service/imagebuilder"
 	inspector_sdkv2 "github.com/aws/aws-sdk-go-v2/service/inspector"
 	inspector2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/inspector2"
 	internetmonitor_sdkv2 "github.com/aws/aws-sdk-go-v2/service/internetmonitor"
@@ -228,7 +229,6 @@ import (
 	elasticsearchservice_sdkv1 "github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	emr_sdkv1 "github.com/aws/aws-sdk-go/service/emr"
 	gamelift_sdkv1 "github.com/aws/aws-sdk-go/service/gamelift"
-	imagebuilder_sdkv1 "github.com/aws/aws-sdk-go/service/imagebuilder"
 	kinesisvideo_sdkv1 "github.com/aws/aws-sdk-go/service/kinesisvideo"
 	lexmodelbuildingservice_sdkv1 "github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	licensemanager_sdkv1 "github.com/aws/aws-sdk-go/service/licensemanager"
@@ -729,8 +729,8 @@ func (c *AWSClient) IdentityStoreClient(ctx context.Context) *identitystore_sdkv
 	return errs.Must(client[*identitystore_sdkv2.Client](ctx, c, names.IdentityStore, make(map[string]any)))
 }
 
-func (c *AWSClient) ImageBuilderConn(ctx context.Context) *imagebuilder_sdkv1.Imagebuilder {
-	return errs.Must(conn[*imagebuilder_sdkv1.Imagebuilder](ctx, c, names.ImageBuilder, make(map[string]any)))
+func (c *AWSClient) ImageBuilderClient(ctx context.Context) *imagebuilder_sdkv2.Client {
+	return errs.Must(client[*imagebuilder_sdkv2.Client](ctx, c, names.ImageBuilder, make(map[string]any)))
 }
 
 func (c *AWSClient) InspectorClient(ctx context.Context) *inspector_sdkv2.Client {
