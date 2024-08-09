@@ -104,6 +104,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/detective v1.29.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/devicefarm v1.25.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/devopsguru v1.32.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/directconnect v1.27.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.27.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dlm v1.26.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/docdb v1.36.3 // indirect
@@ -188,6 +189,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/osis v1.12.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.12.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.7.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/pinpoint v1.32.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.14.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/polly v1.42.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.30.3 // indirect
@@ -208,6 +210,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/route53 v1.42.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.25.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/route53profiles v1.2.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/route53recoverycontrolconfig v1.23.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/rum v1.19.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.58.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.46.3 // indirect
@@ -217,6 +220,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/securityhub v1.51.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/securitylake v1.16.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/serverlessapplicationrepository v1.22.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/servicecatalog v1.30.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry v1.28.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/servicediscovery v1.31.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/servicequotas v1.23.3 // indirect

@@ -194,6 +194,8 @@ github.com/aws/aws-sdk-go-v2/service/devicefarm v1.25.2 h1:DSv0r8nKo8+ix2h5Rz/Zl
 github.com/aws/aws-sdk-go-v2/service/devicefarm v1.25.2/go.mod h1:7Ev/BlW5/zbURomHu/2Ay8l/HAgoQAbaSP2XlMUED9I=
 github.com/aws/aws-sdk-go-v2/service/devopsguru v1.32.3 h1:dVk+ogfz83rhZLaWSwSbgTQnxno+DIhZ3Q3KFdxTVmA=
 github.com/aws/aws-sdk-go-v2/service/devopsguru v1.32.3/go.mod h1:Rbgi0LKyAIyWHlqVtgU5wy39omdfHHvlGjrl+Vg41us=
+github.com/aws/aws-sdk-go-v2/service/directconnect v1.27.5 h1:waoTf1hh2njzovjQm35YI/NgzBJ6MFh38V1D06m3ZSw=
+github.com/aws/aws-sdk-go-v2/service/directconnect v1.27.5/go.mod h1:pPYhajQqE5gRnRVzTE6ptT0BCl603tkBc8YgLxsHMSo=
 github.com/aws/aws-sdk-go-v2/service/directoryservice v1.27.3 h1:Ua8NLsRNDm/HSotawG9MjeUEdo88uuTsEJ+EQB99G7c=
 github.com/aws/aws-sdk-go-v2/service/directoryservice v1.27.3/go.mod h1:DeGGGnrVVVNQlfMpAqmIiEndGTlDVbUIzNI4MbyyH68=
 github.com/aws/aws-sdk-go-v2/service/dlm v1.26.3 h1:LAZoBLsYn4eSTzJlfIu+v/+EHzqLqkPlIIc+y36HgEA=
@@ -362,6 +364,8 @@ github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.12.3 h1:9oQMCF4oLvWS
 github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.12.3/go.mod h1:NNyvgUO7XweCVxGTSnllS6XdsD/9Il6Kc63D/stKgiM=
 github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.7.3 h1:xKVSPlN0K1r9VBe6MaKHgUi3EvJotLE9s4etstJq0jw=
 github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.7.3/go.mod h1:4Lk91jzPQQKOzml7LHOR/zAE5FF4+mL0CPrArI8vnCY=
+github.com/aws/aws-sdk-go-v2/service/pinpoint v1.32.3 h1:uBukpBpEOhnT/iWfhiunEjbPTWXgurgLUr5NJlk7yJk=
+github.com/aws/aws-sdk-go-v2/service/pinpoint v1.32.3/go.mod h1:yv43WVYryFKJFbThuv8mHV3zGt4RfnzB/+Om7iwRyxs=
 github.com/aws/aws-sdk-go-v2/service/pipes v1.14.3 h1:fYZlFa1OvrgaFODrdf0KVDp4qCRHMZNr8S/F3aGNuno=
 github.com/aws/aws-sdk-go-v2/service/pipes v1.14.3/go.mod h1:S0g2KF8IpU6Ptn46eSywrS+w1PMUwrf/xWF8szcTZ2Q=
 github.com/aws/aws-sdk-go-v2/service/polly v1.42.3 h1:MuoVKFJr/TUimLdT6nvio+OehAPM7kILgNLF3rYcaP0=
@@ -402,6 +406,8 @@ github.com/aws/aws-sdk-go-v2/service/route53domains v1.25.3 h1:VGLIgiClxmwxBpGzH
 github.com/aws/aws-sdk-go-v2/service/route53domains v1.25.3/go.mod h1:Kgq5O7ZaDk0mTZmX6YCL+ZtZ1YcJHtGsVubp0OT77MA=
 github.com/aws/aws-sdk-go-v2/service/route53profiles v1.2.3 h1:N4f5sliNiWcp3abC+8YpcaVjXuaNJIlz/dBd+saimm0=
 github.com/aws/aws-sdk-go-v2/service/route53profiles v1.2.3/go.mod h1:r2B4BvTn3zSMK+BFHGl0q63B/nJMOk9/NukLZzqO8sY=
+github.com/aws/aws-sdk-go-v2/service/route53recoverycontrolconfig v1.23.3 h1:apYav6exfbLJ+kRGPa27GTrUuCS4ctI0mJEeiDxSeDE=
+github.com/aws/aws-sdk-go-v2/service/route53recoverycontrolconfig v1.23.3/go.mod h1:citOcziml/EM6I2ycb7XHuBw0whC8jVD2y+vU7wQD4k=
 github.com/aws/aws-sdk-go-v2/service/rum v1.19.3 h1:DR+GYJRPL7eEZknnGdwm+lH686LmUBB/X2YVQDHLNY4=
 github.com/aws/aws-sdk-go-v2/service/rum v1.19.3/go.mod h1:5jFxbuc05P/+BbJvVbBspMbzDR2IFU0LegQG3iUvj8g=
 github.com/aws/aws-sdk-go-v2/service/s3 v1.58.3 h1:hT8ZAZRIfqBqHbzKTII+CIiY8G2oC9OpLedkZ51DWl8=
@@ -420,6 +426,8 @@ github.com/aws/aws-sdk-go-v2/service/securitylake v1.16.3 h1:7isk2tSNmVbm2f8epPf
 github.com/aws/aws-sdk-go-v2/service/securitylake v1.16.3/go.mod h1:X5rHkguK4jCvFOM74tkme3oLUOaR++APKgwhNcIdOW0=
 github.com/aws/aws-sdk-go-v2/service/serverlessapplicationrepository v1.22.3 h1:E4NzUkgPrKmlbC9OxVUEQnTdPRg3MTTiDwmq5dJfH9U=
 github.com/aws/aws-sdk-go-v2/service/serverlessapplicationrepository v1.22.3/go.mod h1:/nzQOH+tOGrQVv5QbVN+88HoNYc15s8aKsJmOT9MPJI=
+github.com/aws/aws-sdk-go-v2/service/servicecatalog v1.30.3 h1:JwZUGB3DE7Wr+Cp4ak7dkgneOJ0FIjXAle1XqkZmQ1Y=
+github.com/aws/aws-sdk-go-v2/service/servicecatalog v1.30.3/go.mod h1:Wfm5srkIuPtidLcAWql6ibqifGEIg28EWK6A14Fei6A=
 github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry v1.28.3 h1:l19QC3al5lqQydnJRz1cpduAoL0YoEeSxI5Wb5NUEis=
 github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry v1.28.3/go.mod h1:0Em81iN4ZnER1M0XDirgcbsZK3jNghA0YlY2Xw2BDOQ=
 github.com/aws/aws-sdk-go-v2/service/servicediscovery v1.31.3 h1:EthA93BNgTnk36FoI9DCKtv4S0m63WzdGDYlBp/CvHQ=
