@@ -13,6 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -51,6 +53,9 @@ func (r *resourceCloudTrailOrganizationAdminAccount) Schema(ctx context.Context,
 				Required: true,
 				Validators: []validator.String{
 					fwvalidators.AWSAccountID(),
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			names.AttrEmail: schema.StringAttribute{
@@ -100,7 +105,7 @@ func (r *resourceCloudTrailOrganizationAdminAccount) Create(ctx context.Context,
 	}
 
 	state := plan
-	state.ID = flex.StringToFramework(ctx, plan.DelegatedAdminAccountID.ValueStringPointer())
+	state.ServicePrincipal = flex.StringToFramework(ctx, aws.String(cloudTrailServicePrincipal))
 
 	resp.Diagnostics.Append(flex.Flatten(ctx, readOutput, &state)...)
 
@@ -121,7 +126,7 @@ func (r *resourceCloudTrailOrganizationAdminAccount) Read(ctx context.Context, r
 		return
 	}
 
-	out, err := FindDelegatedAccountByAccountID(ctx, conn, state.ID.ValueString())
+	out, err := FindDelegatedAccountByAccountID(ctx, conn, state.DelegatedAdminAccountID.ValueString())
 
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
@@ -130,11 +135,13 @@ func (r *resourceCloudTrailOrganizationAdminAccount) Read(ctx context.Context, r
 
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.CloudTrail, create.ErrActionSetting, ResNameCloudTrailOrganizationAdminAccount, state.ID.String(), err),
+			create.ProblemStandardMessage(names.CloudTrail, create.ErrActionSetting, ResNameCloudTrailOrganizationAdminAccount, state.DelegatedAdminAccountID.String(), err),
 			err.Error(),
 		)
 		return
 	}
+
+	state.ServicePrincipal = flex.StringToFramework(ctx, aws.String(cloudTrailServicePrincipal))
 
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
 
@@ -155,7 +162,7 @@ func (r *resourceCloudTrailOrganizationAdminAccount) Delete(ctx context.Context,
 	}
 
 	_, err := conn.DeregisterOrganizationDelegatedAdmin(ctx, &cloudtrail.DeregisterOrganizationDelegatedAdminInput{
-		DelegatedAdminAccountId: aws.String(state.ID.ValueString()),
+		DelegatedAdminAccountId: aws.String(state.DelegatedAdminAccountID.ValueString()),
 	})
 	if err != nil {
 		var nfe *awstypes.ResourceNotFoundException
@@ -163,21 +170,20 @@ func (r *resourceCloudTrailOrganizationAdminAccount) Delete(ctx context.Context,
 			return
 		}
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.CloudTrail, create.ErrActionDeleting, ResNameCloudTrailOrganizationAdminAccount, state.ID.String(), nil),
+			create.ProblemStandardMessage(names.CloudTrail, create.ErrActionDeleting, ResNameCloudTrailOrganizationAdminAccount, state.DelegatedAdminAccountID.String(), nil),
 			err.Error(),
 		)
 	}
 }
 
-func (r *resourceCloudTrailOrganizationAdminAccount) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
+func (r *resourceCloudTrailOrganizationAdminAccount) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("delegated_admin_account_id"), request, response)
 }
 
 type resourceCloudTrailOrganizationAdminAccountData struct {
-	ARN                     types.String `tfsdk:"arn"`
+	Arn                     types.String `tfsdk:"arn"`
 	DelegatedAdminAccountID types.String `tfsdk:"delegated_admin_account_id"`
 	Email                   types.String `tfsdk:"email"`
-	ID                      types.String `tfsdk:"id"`
 	Name                    types.String `tfsdk:"name"`
 	ServicePrincipal        types.String `tfsdk:"service_principal"`
 }
