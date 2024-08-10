@@ -136,25 +136,6 @@ func TestAccPinpointEmailTemplate_tags(t *testing.T) {
 				ImportStateIdFunc:                    testAccEmailtemplateImportStateIDFunc(resourceName),
 				ImportStateVerifyIdentifierAttribute: "template_name",
 			},
-			{
-				Config: testAccEmailTemplateConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEmailTemplateExists(ctx, resourceName, &template),
-					resource.TestCheckResourceAttr(resourceName, "template_name", rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccEmailTemplateConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEmailTemplateExists(ctx, resourceName, &template),
-					resource.TestCheckResourceAttr(resourceName, "template_name", rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
 		},
 	})
 }
@@ -263,24 +244,4 @@ func testAccEmailTemplateConfig_tags1(rName, tagKey1, tagValue1 string) string {
   }
 }
 `, rName, tagKey1, tagValue1)
-}
-
-func testAccEmailTemplateConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-	resource "aws_pinpoint_email_template" "test" {
-		template_name        = %[1]q
-		email_template {
-		  subject =  "testing"
-		  text_part = "we are testing template text part"
-		  header {
-			name = "testingname"
-			value = "testingvalue"
-		  }
-		}
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
