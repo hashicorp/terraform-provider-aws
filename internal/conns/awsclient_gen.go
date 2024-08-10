@@ -185,6 +185,7 @@ import (
 	rum_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rum"
 	s3_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3"
 	s3control_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3control"
+	s3outposts_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3outposts"
 	scheduler_sdkv2 "github.com/aws/aws-sdk-go-v2/service/scheduler"
 	schemas_sdkv2 "github.com/aws/aws-sdk-go-v2/service/schemas"
 	secretsmanager_sdkv2 "github.com/aws/aws-sdk-go-v2/service/secretsmanager"
@@ -245,7 +246,6 @@ import (
 	redshiftserverless_sdkv1 "github.com/aws/aws-sdk-go/service/redshiftserverless"
 	route53recoverycontrolconfig_sdkv1 "github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
 	route53resolver_sdkv1 "github.com/aws/aws-sdk-go/service/route53resolver"
-	s3outposts_sdkv1 "github.com/aws/aws-sdk-go/service/s3outposts"
 	sagemaker_sdkv1 "github.com/aws/aws-sdk-go/service/sagemaker"
 	simpledb_sdkv1 "github.com/aws/aws-sdk-go/service/simpledb"
 	worklink_sdkv1 "github.com/aws/aws-sdk-go/service/worklink"
@@ -1057,8 +1057,8 @@ func (c *AWSClient) S3ControlClient(ctx context.Context) *s3control_sdkv2.Client
 	return errs.Must(client[*s3control_sdkv2.Client](ctx, c, names.S3Control, make(map[string]any)))
 }
 
-func (c *AWSClient) S3OutpostsConn(ctx context.Context) *s3outposts_sdkv1.S3Outposts {
-	return errs.Must(conn[*s3outposts_sdkv1.S3Outposts](ctx, c, names.S3Outposts, make(map[string]any)))
+func (c *AWSClient) S3OutpostsClient(ctx context.Context) *s3outposts_sdkv2.Client {
+	return errs.Must(client[*s3outposts_sdkv2.Client](ctx, c, names.S3Outposts, make(map[string]any)))
 }
 
 func (c *AWSClient) SESClient(ctx context.Context) *ses_sdkv2.Client {

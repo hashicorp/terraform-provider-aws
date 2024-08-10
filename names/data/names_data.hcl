@@ -7985,7 +7985,7 @@ service "s3outposts" {
 
   sdk {
     id             = "S3Outposts"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
