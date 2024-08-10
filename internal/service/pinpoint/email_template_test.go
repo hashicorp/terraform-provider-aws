@@ -198,7 +198,7 @@ func testAccEmailtemplateImportStateIDFunc(resourceName string) resource.ImportS
 func testAccEmailTemplateConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_pinpoint_email_template" "test" {
-  template_name        = %[1]q
+  template_name = %[1]q
   email_template {
     subject   = "testing"
 	text_part = "we are testing template text part"
@@ -214,7 +214,7 @@ resource "aws_pinpoint_email_template" "test" {
 func testAccEmailTemplateConfig_update(name, subject string) string {
 	return fmt.Sprintf(`
 resource "aws_pinpoint_email_template" "test" {
-  template_name        = %[1]q
+  template_name = %[1]q
   email_template {
     subject   =  %[2]q
     text_part = "we are testing template text part"
@@ -230,7 +230,7 @@ resource "aws_pinpoint_email_template" "test" {
 func testAccEmailTemplateConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_pinpoint_email_template" "test" {
-  template_name        = %[1]q
+  template_name = %[1]q
   email_template {
     subject   =  "testing"
     text_part = "we are testing template text part"
