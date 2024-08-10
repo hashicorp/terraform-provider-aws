@@ -216,7 +216,7 @@ func testAccEmailTemplateConfig_update(name, subject string) string {
 resource "aws_pinpoint_email_template" "test" {
   template_name = %[1]q
   email_template {
-    subject   =  %[2]q
+    subject   = %[2]q
     text_part = "we are testing template text part"
     header {
       name  = "testingname"
@@ -232,7 +232,7 @@ func testAccEmailTemplateConfig_tags1(rName, tagKey1, tagValue1 string) string {
 resource "aws_pinpoint_email_template" "test" {
   template_name = %[1]q
   email_template {
-    subject   =  "testing"
+    subject   = "testing"
     text_part = "we are testing template text part"
     header {
       name  = "testingname"
