@@ -200,10 +200,10 @@ func testAccEmailTemplateConfig_basic(rName string) string {
 resource "aws_pinpoint_email_template" "test" {
   template_name        = %[1]q
   email_template {
-    subject = "testing"
+    subject   = "testing"
 	text_part = "we are testing template text part"
     header {
-      name = "testingname"
+      name  = "testingname"
       value = "testingvalue"
     }
   }
@@ -213,32 +213,32 @@ resource "aws_pinpoint_email_template" "test" {
 
 func testAccEmailTemplateConfig_update(name, subject string) string {
 	return fmt.Sprintf(`
-	resource "aws_pinpoint_email_template" "test" {
-		template_name        = %[1]q
-		email_template {
-		  subject =  %[2]q
-		  text_part = "we are testing template text part"
-		  header {
-			name = "testingname"
-			value = "testingvalue"
-		  }
-		}
-	  }
+resource "aws_pinpoint_email_template" "test" {
+  template_name        = %[1]q
+  email_template {
+    subject   =  %[2]q
+    text_part = "we are testing template text part"
+    header {
+      name  = "testingname"
+      value = "testingvalue"
+    }
+  }
+}
 `, name, subject)
 }
 
 func testAccEmailTemplateConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
-	resource "aws_pinpoint_email_template" "test" {
-		template_name        = %[1]q
-		email_template {
-		  subject =  "testing"
-		  text_part = "we are testing template text part"
-		  header {
-			name = "testingname"
-			value = "testingvalue"
-		  }
-		}
+resource "aws_pinpoint_email_template" "test" {
+  template_name        = %[1]q
+  email_template {
+    subject   =  "testing"
+    text_part = "we are testing template text part"
+    header {
+      name  = "testingname"
+      value = "testingvalue"
+    }
+  }
   tags = {
     %[2]q = %[3]q
   }

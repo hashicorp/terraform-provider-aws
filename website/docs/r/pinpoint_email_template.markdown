@@ -14,9 +14,9 @@ Provides a Pinpoint Email Template resource
 
 ```terraform
 resource "aws_pinpoint_email_template" "test" {
-  template_name        = "testing"
+  template_name = "testing"
   email_template {
-    subject = "testing"
+  subject = "testing"
 	text_part = "we are testing template text part"
     header {
       name  = "testingname"
@@ -48,7 +48,6 @@ The following arguments are required:
 
 * `name` - Name of the message header. The header name can contain up to 126 characters.
 * `value` - Value of the message header. The header value can contain up to 870 characters, including the length of any rendered attributes. For example if you add the {CreationDate} attribute, it renders as YYYY-MM-DDTHH:MM:SS.SSSZ and is 24 characters in length.
-
 
 ## Attribute Reference
 

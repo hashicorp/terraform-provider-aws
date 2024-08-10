@@ -93,7 +93,7 @@ func (r *resourceEmailTemplate) Schema(ctx context.Context, req resource.SchemaR
 						},
 					},
 					Blocks: map[string]schema.Block{
-						"header": schema.ListNestedBlock{
+						names.AttrHeader: schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[headerData](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
