@@ -201,7 +201,7 @@ resource "aws_pinpoint_email_template" "test" {
   template_name = %[1]q
   email_template {
     subject   = "testing"
-	text_part = "we are testing template text part"
+    text_part = "we are testing template text part"
     header {
       name  = "testingname"
       value = "testingvalue"
