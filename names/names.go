@@ -82,6 +82,7 @@ const (
 	EvidentlyEndpointID                    = "evidently"
 	FMSEndpointID                          = "fms"
 	FSxEndpointID                          = "fsx"
+	GameLiftEndpointID                     = "gamelift"
 	GrafanaEndpointID                      = "grafana"
 	GlueEndpointID                         = "glue"
 	IVSEndpointID                          = "ivs"
