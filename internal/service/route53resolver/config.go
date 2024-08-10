@@ -94,7 +94,13 @@ func resourceConfigRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading Route53 Resolver Config (%s): %s", d.Id(), err)
 	}
 
-	d.Set("autodefined_reverse_flag", resolverConfig.AutodefinedReverse)
+	var autodefinedReverseFlag awstypes.AutodefinedReverseFlag
+	if resolverConfig.AutodefinedReverse == awstypes.ResolverAutodefinedReverseStatusEnabled {
+		autodefinedReverseFlag = awstypes.AutodefinedReverseFlagEnable
+	} else {
+		autodefinedReverseFlag = awstypes.AutodefinedReverseFlagDisable
+	}
+	d.Set("autodefined_reverse_flag", autodefinedReverseFlag)
 	d.Set(names.AttrOwnerID, resolverConfig.OwnerId)
 	d.Set(names.AttrResourceID, resolverConfig.ResourceId)
 
@@ -126,7 +132,6 @@ func resourceConfigUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func findResolverConfigByID(ctx context.Context, conn *route53resolver.Client, id string) (*awstypes.ResolverConfig, error) {
 	input := &route53resolver.ListResolverConfigsInput{}
-	var output awstypes.ResolverConfig
 
 	// GetResolverConfig does not support query by ID.
 	pages := route53resolver.NewListResolverConfigsPaginator(conn, input)
@@ -146,13 +151,12 @@ func findResolverConfigByID(ctx context.Context, conn *route53resolver.Client, i
 
 		for _, v := range page.ResolverConfigs {
 			if aws.ToString(v.Id) == id {
-				output = v
-				break
+				return &v, nil
 			}
 		}
 	}
 
-	return &output, nil
+	return nil, tfresource.NewEmptyResultError(input)
 }
 
 func statusAutodefinedReverse(ctx context.Context, conn *route53resolver.Client, id string) retry.StateRefreshFunc {

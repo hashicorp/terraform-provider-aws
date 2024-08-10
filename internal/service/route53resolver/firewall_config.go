@@ -137,7 +137,6 @@ func resourceFirewallConfigDelete(ctx context.Context, d *schema.ResourceData, m
 
 func findFirewallConfigByID(ctx context.Context, conn *route53resolver.Client, id string) (*awstypes.FirewallConfig, error) {
 	input := &route53resolver.ListFirewallConfigsInput{}
-	var output awstypes.FirewallConfig
 
 	// GetFirewallConfig does not support query by ID.
 	pages := route53resolver.NewListFirewallConfigsPaginator(conn, input)
@@ -150,15 +149,10 @@ func findFirewallConfigByID(ctx context.Context, conn *route53resolver.Client, i
 
 		for _, v := range page.FirewallConfigs {
 			if aws.ToString(v.Id) == id {
-				output = v
-				break
+				return &v, nil
 			}
 		}
 	}
 
-	if output.Id == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return &output, nil
+	return nil, tfresource.NewEmptyResultError(input)
 }
