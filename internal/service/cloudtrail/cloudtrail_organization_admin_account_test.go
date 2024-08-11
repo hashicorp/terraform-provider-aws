@@ -130,10 +130,10 @@ func testAccCheckOrganizationAdminAccountExists(ctx context.Context, n string, v
 }
 
 func testAccOrganizationAdminAccountConfig() string {
-	return fmt.Sprint(`
+	return `
 data "aws_organizations_organization" "test" {}
 
 resource "aws_cloudtrail_organization_admin_account" "test" {
   delegated_admin_account_id = data.aws_organizations_organization.test.non_master_accounts[0].id
-}`)
+}`
 }

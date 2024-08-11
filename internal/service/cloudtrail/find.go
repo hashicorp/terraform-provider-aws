@@ -16,7 +16,6 @@ const (
 )
 
 func FindDelegatedAccountByAccountID(ctx context.Context, conn *organizations.Client, accountID string) (*types.DelegatedAdministrator, error) {
-
 	account, err := tforganizations.FindDelegatedAdministratorByTwoPartKey(ctx, conn, accountID, ServicePrincipal)
 	if err != nil {
 		return nil, err
