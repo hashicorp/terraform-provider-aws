@@ -106,7 +106,7 @@ func (r *resourceCloudTrailOrganizationAdminAccount) Create(ctx context.Context,
 	}
 
 	state := plan
-	state.ServicePrincipal = flex.StringToFramework(ctx, aws.String(cloudTrailServicePrincipal))
+	state.ServicePrincipal = flex.StringToFramework(ctx, aws.String(ServicePrincipal))
 
 	resp.Diagnostics.Append(flex.Flatten(ctx, readOutput, &state)...)
 
@@ -143,7 +143,7 @@ func (r *resourceCloudTrailOrganizationAdminAccount) Read(ctx context.Context, r
 	}
 
 	state.DelegatedAdminAccountID = flex.StringValueToFramework(ctx, state.ID.ValueString())
-	state.ServicePrincipal = flex.StringValueToFramework(ctx, cloudTrailServicePrincipal)
+	state.ServicePrincipal = flex.StringValueToFramework(ctx, ServicePrincipal)
 
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
 
@@ -167,7 +167,7 @@ func (r *resourceCloudTrailOrganizationAdminAccount) Delete(ctx context.Context,
 		DelegatedAdminAccountId: aws.String(state.ID.ValueString()),
 	})
 	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
+		var nfe *awstypes.AccountNotRegisteredException
 		if errors.As(err, &nfe) {
 			return
 		}

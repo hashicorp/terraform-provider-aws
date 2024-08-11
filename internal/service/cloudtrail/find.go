@@ -12,12 +12,12 @@ import (
 )
 
 const (
-	cloudTrailServicePrincipal = "cloudtrail.amazonaws.com"
+	ServicePrincipal = "cloudtrail.amazonaws.com"
 )
 
 func FindDelegatedAccountByAccountID(ctx context.Context, conn *organizations.Client, accountID string) (*types.DelegatedAdministrator, error) {
 
-	account, err := tforganizations.FindDelegatedAdministratorByTwoPartKey(ctx, conn, accountID, cloudTrailServicePrincipal)
+	account, err := tforganizations.FindDelegatedAdministratorByTwoPartKey(ctx, conn, accountID, ServicePrincipal)
 	if err != nil {
 		return nil, err
 	}
