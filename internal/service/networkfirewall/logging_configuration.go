@@ -55,7 +55,7 @@ func resourceLoggingConfiguration() *schema.Resource {
 							// with 1 destination for FLOW logs and 1 for ALERT logs
 							Type:     schema.TypeSet,
 							Required: true,
-							MaxItems: 2,
+							MaxItems: 3,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"log_destination": {
@@ -205,7 +205,7 @@ func removeLoggingConfiguration(ctx context.Context, conn *networkfirewall.Clien
 			FirewallArn: aws.String(arn),
 		}
 
-		if i == 0 && len(loggingConfig.LogDestinationConfigs) == 2 {
+		if i == 0 && len(loggingConfig.LogDestinationConfigs) == 3 {
 			loggingConfig := &awstypes.LoggingConfiguration{
 				LogDestinationConfigs: []awstypes.LogDestinationConfig{logDestinationConfig},
 			}
