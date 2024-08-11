@@ -1837,6 +1837,7 @@ func testAccCheckComputeEnvironmentDestroy(ctx context.Context) resource.TestChe
 
 			return fmt.Errorf("Batch Compute Environment %s still exists", rs.Primary.ID)
 		}
+
 		return nil
 	}
 }

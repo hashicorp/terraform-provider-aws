@@ -132,6 +132,7 @@ func testAccCheckSchedulingPolicyDestroy(ctx context.Context) resource.TestCheck
 
 			return fmt.Errorf("Batch Scheduling Policy %s still exists", rs.Primary.ID)
 		}
+
 		return nil
 	}
 }

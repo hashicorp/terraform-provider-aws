@@ -6,12 +6,12 @@ package batch
 // Exports for use in tests only.
 var (
 	ResourceComputeEnvironment = resourceComputeEnvironment
-	ResourceJobQueue           = newResourceJobQueue
+	ResourceJobQueue           = newJobQueueResource
 	ResourceSchedulingPolicy   = resourceSchedulingPolicy
 
 	ExpandEC2ConfigurationsUpdate           = expandEC2ConfigurationsUpdate
 	ExpandLaunchTemplateSpecificationUpdate = expandLaunchTemplateSpecificationUpdate
 	FindComputeEnvironmentDetailByName      = findComputeEnvironmentDetailByName
-	FindJobQueueByName                      = findJobQueueByName
+	FindJobQueueByARN                       = findJobQueueByARN
 	FindSchedulingPolicyByARN               = findSchedulingPolicyByARN
 )

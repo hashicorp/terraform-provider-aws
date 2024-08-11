@@ -234,7 +234,7 @@ func sweepJobQueues(region string) error {
 		for _, v := range page.JobQueues {
 			id := aws.StringValue(v.JobQueueArn)
 
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceJobQueue, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newJobQueueResource, client,
 				framework.NewAttribute(names.AttrID, id),
 			))
 		}
