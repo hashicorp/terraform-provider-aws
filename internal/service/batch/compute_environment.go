@@ -84,7 +84,7 @@ func resourceComputeEnvironment() *schema.Resource {
 							Type:             schema.TypeString,
 							Optional:         true,
 							StateFunc:        sdkv2.ToUpperSchemaStateFunc,
-							ValidateDiagFunc: enum.Validate[awstypes.CRAllocationStrategy](),
+							ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.CRAllocationStrategy](),
 						},
 						"bid_percentage": {
 							Type:     schema.TypeInt,
@@ -194,7 +194,7 @@ func resourceComputeEnvironment() *schema.Resource {
 							Type:             schema.TypeString,
 							Required:         true,
 							StateFunc:        sdkv2.ToUpperSchemaStateFunc,
-							ValidateDiagFunc: enum.Validate[awstypes.CRType](),
+							ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.CRType](),
 						},
 					},
 				},
@@ -236,7 +236,7 @@ func resourceComputeEnvironment() *schema.Resource {
 				Optional:         true,
 				Default:          awstypes.CEStateEnabled,
 				StateFunc:        sdkv2.ToUpperSchemaStateFunc,
-				ValidateDiagFunc: enum.Validate[awstypes.CEState](),
+				ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.CEState](),
 			},
 			names.AttrStatus: {
 				Type:     schema.TypeString,
@@ -253,7 +253,7 @@ func resourceComputeEnvironment() *schema.Resource {
 				Required:         true,
 				ForceNew:         true,
 				StateFunc:        sdkv2.ToUpperSchemaStateFunc,
-				ValidateDiagFunc: enum.Validate[awstypes.CEType](),
+				ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.CEType](),
 			},
 			"update_policy": {
 				Type:     schema.TypeList,
