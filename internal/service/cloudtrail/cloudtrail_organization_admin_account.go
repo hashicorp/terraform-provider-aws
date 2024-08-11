@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudtrail"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudtrail/types"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -37,6 +36,7 @@ func newResourceCloudTrailOrganizationAdminAccount(_ context.Context) (resource.
 type resourceCloudTrailOrganizationAdminAccount struct {
 	framework.ResourceWithConfigure
 	framework.WithNoUpdate
+	framework.WithImportByID
 }
 
 func (r *resourceCloudTrailOrganizationAdminAccount) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
@@ -61,6 +61,7 @@ func (r *resourceCloudTrailOrganizationAdminAccount) Schema(ctx context.Context,
 			names.AttrEmail: schema.StringAttribute{
 				Computed: true,
 			},
+			names.AttrID: framework.IDAttribute(),
 			names.AttrName: schema.StringAttribute{
 				Computed: true,
 			},
@@ -126,7 +127,7 @@ func (r *resourceCloudTrailOrganizationAdminAccount) Read(ctx context.Context, r
 		return
 	}
 
-	out, err := FindDelegatedAccountByAccountID(ctx, conn, state.DelegatedAdminAccountID.ValueString())
+	out, err := FindDelegatedAccountByAccountID(ctx, conn, state.ID.ValueString())
 
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
@@ -135,13 +136,14 @@ func (r *resourceCloudTrailOrganizationAdminAccount) Read(ctx context.Context, r
 
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.CloudTrail, create.ErrActionSetting, ResNameCloudTrailOrganizationAdminAccount, state.DelegatedAdminAccountID.String(), err),
+			create.ProblemStandardMessage(names.CloudTrail, create.ErrActionSetting, ResNameCloudTrailOrganizationAdminAccount, state.ID.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
-	state.ServicePrincipal = flex.StringToFramework(ctx, aws.String(cloudTrailServicePrincipal))
+	state.DelegatedAdminAccountID = flex.StringValueToFramework(ctx, state.ID.ValueString())
+	state.ServicePrincipal = flex.StringValueToFramework(ctx, cloudTrailServicePrincipal)
 
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
 
@@ -162,7 +164,7 @@ func (r *resourceCloudTrailOrganizationAdminAccount) Delete(ctx context.Context,
 	}
 
 	_, err := conn.DeregisterOrganizationDelegatedAdmin(ctx, &cloudtrail.DeregisterOrganizationDelegatedAdminInput{
-		DelegatedAdminAccountId: aws.String(state.DelegatedAdminAccountID.ValueString()),
+		DelegatedAdminAccountId: aws.String(state.ID.ValueString()),
 	})
 	if err != nil {
 		var nfe *awstypes.ResourceNotFoundException
@@ -170,20 +172,17 @@ func (r *resourceCloudTrailOrganizationAdminAccount) Delete(ctx context.Context,
 			return
 		}
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.CloudTrail, create.ErrActionDeleting, ResNameCloudTrailOrganizationAdminAccount, state.DelegatedAdminAccountID.String(), nil),
+			create.ProblemStandardMessage(names.CloudTrail, create.ErrActionDeleting, ResNameCloudTrailOrganizationAdminAccount, state.ID.String(), nil),
 			err.Error(),
 		)
 	}
-}
-
-func (r *resourceCloudTrailOrganizationAdminAccount) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("delegated_admin_account_id"), request, response)
 }
 
 type resourceCloudTrailOrganizationAdminAccountData struct {
 	Arn                     types.String `tfsdk:"arn"`
 	DelegatedAdminAccountID types.String `tfsdk:"delegated_admin_account_id"`
 	Email                   types.String `tfsdk:"email"`
+	ID                      types.String `tfsdk:"id"`
 	Name                    types.String `tfsdk:"name"`
 	ServicePrincipal        types.String `tfsdk:"service_principal"`
 }
