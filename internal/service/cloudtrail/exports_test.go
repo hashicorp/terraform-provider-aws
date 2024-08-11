@@ -8,8 +8,8 @@ var (
 	ResourceEventDataStore = resourceEventDataStore
 	ResourceTrail          = resourceTrail
 
-	FindEventDataStoreByARN                    = findEventDataStoreByARN
-	FindTrailByARN                             = findTrailByARN
-	ServiceAccountPerRegionMap                 = serviceAccountPerRegionMap
-	ResourceCloudTrailOrganizationAdminAccount = newResourceCloudTrailOrganizationAdminAccount
+	FindEventDataStoreByARN          = findEventDataStoreByARN
+	FindTrailByARN                   = findTrailByARN
+	ServiceAccountPerRegionMap       = serviceAccountPerRegionMap
+	ResourceOrganizationAdminAccount = newResourceOrganizationAdminAccount
 )

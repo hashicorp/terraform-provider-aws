@@ -25,11 +25,11 @@ import (
 )
 
 const (
-	ResNameCloudTrailOrganizationAdminAccount = "CloudTrailOrganizationAdminAccount"
+	ResNameOrganizationAdminAccount = "CloudTrailOrganizationAdminAccount"
 )
 
 // @FrameworkResource("aws_cloudtrail_organization_admin_account", name="CloudTrail Organization Admin Account")
-func newResourceCloudTrailOrganizationAdminAccount(_ context.Context) (resource.ResourceWithConfigure, error) {
+func newResourceOrganizationAdminAccount(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceCloudTrailOrganizationAdminAccount{}, nil
 }
 
@@ -89,7 +89,7 @@ func (r *resourceCloudTrailOrganizationAdminAccount) Create(ctx context.Context,
 	_, err := cloudTrailConn.RegisterOrganizationDelegatedAdmin(ctx, input)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.CloudTrail, create.ErrActionCreating, ResNameCloudTrailOrganizationAdminAccount, plan.DelegatedAdminAccountID.String(), nil),
+			create.ProblemStandardMessage(names.CloudTrail, create.ErrActionCreating, ResNameOrganizationAdminAccount, plan.DelegatedAdminAccountID.String(), nil),
 			err.Error(),
 		)
 		return
@@ -99,7 +99,7 @@ func (r *resourceCloudTrailOrganizationAdminAccount) Create(ctx context.Context,
 	readOutput, err := FindDelegatedAccountByAccountID(ctx, organizationsConn, plan.DelegatedAdminAccountID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.CloudTrail, create.ErrActionCreating, ResNameCloudTrailOrganizationAdminAccount, plan.DelegatedAdminAccountID.String(), err),
+			create.ProblemStandardMessage(names.CloudTrail, create.ErrActionCreating, ResNameOrganizationAdminAccount, plan.DelegatedAdminAccountID.String(), err),
 			err.Error(),
 		)
 		return
@@ -136,7 +136,7 @@ func (r *resourceCloudTrailOrganizationAdminAccount) Read(ctx context.Context, r
 
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.CloudTrail, create.ErrActionSetting, ResNameCloudTrailOrganizationAdminAccount, state.ID.String(), err),
+			create.ProblemStandardMessage(names.CloudTrail, create.ErrActionSetting, ResNameOrganizationAdminAccount, state.ID.String(), err),
 			err.Error(),
 		)
 		return
@@ -172,7 +172,7 @@ func (r *resourceCloudTrailOrganizationAdminAccount) Delete(ctx context.Context,
 			return
 		}
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.CloudTrail, create.ErrActionDeleting, ResNameCloudTrailOrganizationAdminAccount, state.ID.String(), nil),
+			create.ProblemStandardMessage(names.CloudTrail, create.ErrActionDeleting, ResNameOrganizationAdminAccount, state.ID.String(), nil),
 			err.Error(),
 		)
 	}

@@ -36,12 +36,12 @@ func TestAccCloudTrailOrganizationAdminAccount_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCloudTrailOrganizationAdminAccountDestroy(ctx),
+		CheckDestroy:             testAccCheckOrganizationAdminAccountDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCloudTrailOrganizationAdminAccountConfig(),
+				Config: testAccOrganizationAdminAccountConfig(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCloudTrailOrganizationAdminAccountExists(ctx, resourceName, &organization),
+					testAccCheckOrganizationAdminAccountExists(ctx, resourceName, &organization),
 					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "organizations", regexache.MustCompile("account/.+")),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, organizationData, "non_master_accounts.0.id"),
 					resource.TestCheckResourceAttr(resourceName, "service_principal", cloudtrail.ServicePrincipal),
@@ -68,13 +68,13 @@ func TestAccCloudTrailOrganizationAdminAccount_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCloudTrailOrganizationAdminAccountDestroy(ctx),
+		CheckDestroy:             testAccCheckOrganizationAdminAccountDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCloudTrailOrganizationAdminAccountConfig(),
+				Config: testAccOrganizationAdminAccountConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudTrailOrganizationAdminAccountExists(ctx, resourceName, &organization),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, cloudtrail.ResourceCloudTrailOrganizationAdminAccount, resourceName),
+					testAccCheckOrganizationAdminAccountExists(ctx, resourceName, &organization),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, cloudtrail.ResourceOrganizationAdminAccount, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -82,7 +82,7 @@ func TestAccCloudTrailOrganizationAdminAccount_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckCloudTrailOrganizationAdminAccountDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckOrganizationAdminAccountDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsClient(ctx)
 
@@ -108,7 +108,7 @@ func testAccCheckCloudTrailOrganizationAdminAccountDestroy(ctx context.Context) 
 	}
 }
 
-func testAccCheckCloudTrailOrganizationAdminAccountExists(ctx context.Context, n string, v *organizationstypes.DelegatedAdministrator) resource.TestCheckFunc {
+func testAccCheckOrganizationAdminAccountExists(ctx context.Context, n string, v *organizationstypes.DelegatedAdministrator) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -129,7 +129,7 @@ func testAccCheckCloudTrailOrganizationAdminAccountExists(ctx context.Context, n
 	}
 }
 
-func testAccCloudTrailOrganizationAdminAccountConfig() string {
+func testAccOrganizationAdminAccountConfig() string {
 	return fmt.Sprint(`
 data "aws_organizations_organization" "test" {}
 
