@@ -21,6 +21,7 @@ import (
 	opsworks_sdkv1 "github.com/aws/aws-sdk-go/service/opsworks"
 	baselogging "github.com/hashicorp/aws-sdk-go-base/v2/logging"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-provider-aws/internal/datafy"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -47,6 +48,12 @@ type AWSClient struct {
 	s3UsePathStyle            bool   // From provider configuration.
 	s3USEast1RegionalEndpoint string // From provider configuration.
 	stsRegion                 string // From provider configuration.
+
+	datafyConfig *datafy.Config
+}
+
+func (c *AWSClient) DatafyClient(context.Context) *datafy.Client {
+	return datafy.NewDatafyClient(c.datafyConfig)
 }
 
 // CredentialsProvider returns the AWS SDK for Go v2 credentials provider.

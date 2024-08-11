@@ -37,6 +37,16 @@ func New(ctx context.Context) (*schema.Provider, error) {
 		// This schema must match exactly the Terraform Protocol v6 (Terraform Plugin Framework) provider's schema.
 		// Notably the attributes can have no Default values.
 		Schema: map[string]*schema.Schema{
+			"datafy_token": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Datafy token. Can also be configured using the `DATAFY_TOKEN` environment variable.",
+			},
+			"datafy_url": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Datafy Url. Can also be configured using the `DATAFY_URL` environment variable.",
+			},
 			"access_key": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -499,6 +509,19 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		TokenBucketRateLimiterCapacity: d.Get("token_bucket_rate_limiter_capacity").(int),
 		UseDualStackEndpoint:           d.Get("use_dualstack_endpoint").(bool),
 		UseFIPSEndpoint:                d.Get("use_fips_endpoint").(bool),
+	}
+
+	if v, ok := d.Get("datafy_token").(string); ok {
+		if v == "" {
+			v = os.Getenv("DATAFY_TOKEN")
+		}
+		config.DatafyToken = v
+	}
+	if v, ok := d.Get("datafy_url").(string); ok {
+		if v == "" {
+			v = os.Getenv("DATAFY_URL")
+		}
+		config.DatafyUrl = v
 	}
 
 	if v, ok := d.Get("retry_mode").(string); ok && v != "" {
