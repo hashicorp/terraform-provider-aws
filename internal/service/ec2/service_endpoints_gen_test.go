@@ -452,6 +452,10 @@ func testEndpointCase(t *testing.T, region string, testcase endpointTestCase, ca
 			"AWS account ID not found for provider",
 			"See https://registry.terraform.io/providers/hashicorp/aws/latest/docs#skip_requesting_account_id for implications.",
 		),
+		errs.NewWarningDiagnostic(
+			"Datafy Token was not found for provider",
+			"See https://registry.terraform.io/providers/datafy-io/datafyaws/latest/docs for implications.",
+		),
 	)
 
 	diags := p.Configure(ctx, terraformsdk.NewResourceConfigRaw(config))

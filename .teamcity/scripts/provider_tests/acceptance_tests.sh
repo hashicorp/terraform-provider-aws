@@ -37,6 +37,7 @@ TF_ACC=1 go test \
     ./internal/attrmap/... \
     ./internal/conns/... \
     ./internal/create/... \
+    ./internal/datafy/... \
     ./internal/enum/... \
     ./internal/envvar/... \
     ./internal/errs/... \
