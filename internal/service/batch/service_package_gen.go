@@ -69,7 +69,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceJobDefinition,
+			Factory:  resourceJobDefinition,
 			TypeName: "aws_batch_job_definition",
 			Name:     "Job Definition",
 			Tags: &types.ServicePackageResourceTags{

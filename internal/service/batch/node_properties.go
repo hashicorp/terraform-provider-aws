@@ -6,8 +6,10 @@ package batch
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"log"
 
+	"github.com/aws/aws-sdk-go-v2/service/batch"
 	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
 )
 
@@ -81,4 +83,26 @@ func EquivalentNodePropertiesJSON(str1, str2 string) (bool, error) {
 	}
 
 	return equal, nil
+}
+
+func expandJobNodeProperties(rawProps string) (*batch.NodeProperties, error) {
+	var props *batch.NodeProperties
+
+	err := json.Unmarshal([]byte(rawProps), &props)
+	if err != nil {
+		return nil, fmt.Errorf("decoding JSON: %s", err)
+	}
+
+	return props, nil
+}
+
+// Convert batch.NodeProperties object into its JSON representation
+func flattenNodeProperties(nodeProperties *batch.NodeProperties) (string, error) {
+	b, err := jsonutil.BuildJSON(nodeProperties)
+
+	if err != nil {
+		return "", err
+	}
+
+	return string(b), nil
 }

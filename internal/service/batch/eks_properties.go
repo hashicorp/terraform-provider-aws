@@ -4,38 +4,39 @@
 package batch
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/batch"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/batch"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
-	ImagePullPolicyAlways       = "Always"
-	ImagePullPolicyIfNotPresent = "IfNotPresent"
-	ImagePullPolicyNever        = "Never"
+	imagePullPolicyAlways       = "Always"
+	imagePullPolicyIfNotPresent = "IfNotPresent"
+	imagePullPolicyNever        = "Never"
 )
 
-func ImagePullPolicy_Values() []string {
+func imagePullPolicy_Values() []string {
 	return []string{
-		ImagePullPolicyAlways,
-		ImagePullPolicyIfNotPresent,
-		ImagePullPolicyNever,
+		imagePullPolicyAlways,
+		imagePullPolicyIfNotPresent,
+		imagePullPolicyNever,
 	}
 }
 
 const (
-	DNSPolicyDefault                 = "Default"
-	DNSPolicyClusterFirst            = "ClusterFirst"
-	DNSPolicyClusterFirstWithHostNet = "ClusterFirstWithHostNet"
+	dnsPolicyDefault                 = "Default"
+	dnsPolicyClusterFirst            = "ClusterFirst"
+	dnsPolicyClusterFirstWithHostNet = "ClusterFirstWithHostNet"
 )
 
-func DNSPolicy_Values() []string {
+func dnsPolicy_Values() []string {
 	return []string{
-		DNSPolicyDefault,
-		DNSPolicyClusterFirst,
-		DNSPolicyClusterFirstWithHostNet,
+		dnsPolicyDefault,
+		dnsPolicyClusterFirst,
+		dnsPolicyClusterFirstWithHostNet,
 	}
 }
 
@@ -299,7 +300,7 @@ func flattenImagePullSecrets(ipss []*batch.ImagePullSecret) (tfList []interface{
 	return tfList
 }
 
-func flattenEKSContainers(containers []*batch.EksContainer) (tfList []interface{}) {
+func flattenEKSContainers(containers []awstypes.EksContainer) (tfList []interface{}) {
 	for _, container := range containers {
 		tfMap := map[string]interface{}{}
 

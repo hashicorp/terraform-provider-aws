@@ -9,9 +9,11 @@ import (
 	"log"
 	"sort"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/batch"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
 	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
-	"github.com/aws/aws-sdk-go/service/batch"
+	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
@@ -156,4 +158,25 @@ func EquivalentContainerPropertiesJSON(str1, str2 string) (bool, error) {
 	}
 
 	return equal, nil
+}
+
+func expandJobContainerProperties(tfString string) (*awstypes.ContainerProperties, error) {
+	var apiObject *awstypes.ContainerProperties
+
+	if err := tfjson.DecodeFromString(tfString, apiObject); err != nil {
+		return nil, err
+	}
+
+	return apiObject, nil
+}
+
+// Convert batch.ContainerProperties object into its JSON representation
+func flattenContainerProperties(containerProperties *awstypes.ContainerProperties) (string, error) {
+	b, err := jsonutil.BuildJSON(containerProperties)
+
+	if err != nil {
+		return "", err
+	}
+
+	return string(b), nil
 }
