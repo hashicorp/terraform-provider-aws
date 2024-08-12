@@ -23,13 +23,13 @@ type nodeRangeProperty struct {
 	TargetNodes *string
 }
 
-func (np *nodeProperties) reduce() error {
+func (np *nodeProperties) reduce() {
 	// Deal with Environment objects which may be re-ordered in the API.
 	for _, node := range np.NodeRangeProperties {
 		node.Container.reduce()
 	}
 
-	return nil
+	return
 }
 
 func equivalentNodePropertiesJSON(str1, str2 string) (bool, error) {
@@ -79,7 +79,7 @@ func expandJobNodeProperties(tfString string) (*awstypes.NodeProperties, error) 
 // Dirty hack to avoid any backwards compatibility issues with the AWS SDK for Go v2 migration.
 // Reach down into the SDK and use the same serialization function that the SDK uses.
 //
-//go:linkname serializeContainerProperties github.com/aws/aws-sdk-go-v2/service/batch.awsRestjson1_serializeDocumentNodeProperties
+//go:linkname serializeNodeProperties github.com/aws/aws-sdk-go-v2/service/batch.awsRestjson1_serializeDocumentNodeProperties
 func serializeNodeProperties(v *awstypes.NodeProperties, value smithyjson.Value) error
 
 func flattenNodeProperties(apiObject *awstypes.NodeProperties) (string, error) {
