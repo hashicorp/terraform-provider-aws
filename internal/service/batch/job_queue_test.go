@@ -177,7 +177,9 @@ func TestAccBatchJobQueue_MigrateFromPluginSDK(t *testing.T) {
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccJobQueueConfig_state(rName, string(awstypes.JQStateEnabled)),
-				PlanOnly:                 true,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
+				),
 			},
 		},
 	})
