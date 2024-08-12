@@ -25,11 +25,6 @@ import (
 
 func TestAccBedrockGuardrail_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 
 	var guardrail bedrock.GetGuardrailOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -41,7 +36,7 @@ func TestAccBedrockGuardrail_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGuardrailDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -83,9 +78,6 @@ func TestAccBedrockGuardrail_basic(t *testing.T) {
 
 func TestAccBedrockGuardrail_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 
 	var guardrail bedrock.GetGuardrailOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -97,7 +89,7 @@ func TestAccBedrockGuardrail_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGuardrailDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -115,6 +107,7 @@ func TestAccBedrockGuardrail_disappears(t *testing.T) {
 
 func TestAccBedrockGuardrail_kmsKey(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrock_guardrail.test"
 	var guardrail bedrock.GetGuardrailOutput
@@ -125,7 +118,7 @@ func TestAccBedrockGuardrail_kmsKey(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGuardrailDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -149,6 +142,7 @@ func TestAccBedrockGuardrail_kmsKey(t *testing.T) {
 
 func TestAccBedrockGuardrail_tags(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrock_guardrail.test"
 	var guardrail bedrock.GetGuardrailOutput
@@ -159,7 +153,7 @@ func TestAccBedrockGuardrail_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGuardrailDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -197,7 +191,7 @@ func TestAccBedrockGuardrail_update(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGuardrailDestroy(ctx),
 		Steps: []resource.TestStep{
