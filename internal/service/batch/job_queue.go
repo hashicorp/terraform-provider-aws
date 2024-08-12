@@ -186,7 +186,7 @@ func (r *jobQueueResource) Read(ctx context.Context, request resource.ReadReques
 
 	conn := r.Meta().BatchClient(ctx)
 
-	jobQueue, err := findJobQueueByARN(ctx, conn, data.ID.ValueString())
+	jobQueue, err := findJobQueueByID(ctx, conn, data.ID.ValueString())
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -341,9 +341,9 @@ func (r *jobQueueResource) UpgradeState(ctx context.Context) map[int64]resource.
 	}
 }
 
-func findJobQueueByARN(ctx context.Context, conn *batch.Client, arn string) (*awstypes.JobQueueDetail, error) {
+func findJobQueueByID(ctx context.Context, conn *batch.Client, id string) (*awstypes.JobQueueDetail, error) {
 	input := &batch.DescribeJobQueuesInput{
-		JobQueues: []string{arn},
+		JobQueues: []string{id},
 	}
 
 	output, err := findJobQueue(ctx, conn, input)
@@ -389,9 +389,9 @@ func findJobQueues(ctx context.Context, conn *batch.Client, input *batch.Describ
 	return output, nil
 }
 
-func statusJobQueue(ctx context.Context, conn *batch.Client, arn string) retry.StateRefreshFunc {
+func statusJobQueue(ctx context.Context, conn *batch.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findJobQueueByARN(ctx, conn, arn)
+		output, err := findJobQueueByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -426,11 +426,11 @@ func waitJobQueueCreated(ctx context.Context, conn *batch.Client, id string, tim
 	return nil, err
 }
 
-func waitJobQueueUpdated(ctx context.Context, conn *batch.Client, arn string, timeout time.Duration) (*awstypes.JobQueueDetail, error) {
+func waitJobQueueUpdated(ctx context.Context, conn *batch.Client, id string, timeout time.Duration) (*awstypes.JobQueueDetail, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.JQStatusUpdating),
 		Target:     enum.Slice(awstypes.JQStatusValid),
-		Refresh:    statusJobQueue(ctx, conn, arn),
+		Refresh:    statusJobQueue(ctx, conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,

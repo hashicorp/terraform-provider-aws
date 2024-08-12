@@ -415,7 +415,7 @@ func testAccCheckJobQueueExists(ctx context.Context, n string, v *awstypes.JobQu
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchClient(ctx)
 
-		output, err := tfbatch.FindJobQueueByARN(ctx, conn, rs.Primary.ID)
+		output, err := tfbatch.FindJobQueueByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -436,7 +436,7 @@ func testAccCheckJobQueueDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			conn := acctest.Provider.Meta().(*conns.AWSClient).BatchClient(ctx)
 
-			_, err := tfbatch.FindJobQueueByARN(ctx, conn, rs.Primary.ID)
+			_, err := tfbatch.FindJobQueueByID(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue

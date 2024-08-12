@@ -12,6 +12,6 @@ var (
 	ExpandEC2ConfigurationsUpdate           = expandEC2ConfigurationsUpdate
 	ExpandLaunchTemplateSpecificationUpdate = expandLaunchTemplateSpecificationUpdate
 	FindComputeEnvironmentDetailByName      = findComputeEnvironmentDetailByName
-	FindJobQueueByARN                       = findJobQueueByARN
+	FindJobQueueByID                        = findJobQueueByID
 	FindSchedulingPolicyByARN               = findSchedulingPolicyByARN
 )

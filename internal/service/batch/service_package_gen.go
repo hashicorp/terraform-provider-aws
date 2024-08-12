@@ -44,7 +44,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceJobQueue,
+			Factory:  dataSourceJobQueue,
 			TypeName: "aws_batch_job_queue",
 			Name:     "Job Queue",
 			Tags:     &types.ServicePackageResourceTags{},
