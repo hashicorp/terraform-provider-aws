@@ -438,7 +438,7 @@ func resourceSpaceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.SetId(aws.ToString(out.SpaceArn))
 
-	if _, err := waitSpaceInService(ctx, conn, domainId, spaceName); err != nil {
+	if err := waitSpaceInService(ctx, conn, domainId, spaceName); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Space (%s) to create: %s", d.Id(), err)
 	}
 
@@ -515,7 +515,7 @@ func resourceSpaceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			return sdkdiag.AppendErrorf(diags, "updating SageMaker Space: %s", err)
 		}
 
-		if _, err := waitSpaceInService(ctx, conn, domainID, name); err != nil {
+		if err := waitSpaceInService(ctx, conn, domainID, name); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Space (%s) to update: %s", d.Id(), err)
 		}
 	}

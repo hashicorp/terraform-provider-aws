@@ -791,7 +791,7 @@ func resourceUserProfileCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	d.SetId(userProfileArn)
 
-	if _, err := waitUserProfileInService(ctx, conn, domainID, userProfileName); err != nil {
+	if err := waitUserProfileInService(ctx, conn, domainID, userProfileName); err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating SageMaker User Profile (%s): waiting for completion: %s", d.Id(), err)
 	}
 
@@ -853,7 +853,7 @@ func resourceUserProfileUpdate(ctx context.Context, d *schema.ResourceData, meta
 			return sdkdiag.AppendErrorf(diags, "updating SageMaker User Profile: %s", err)
 		}
 
-		if _, err := waitUserProfileInService(ctx, conn, domainID, userProfileName); err != nil {
+		if err := waitUserProfileInService(ctx, conn, domainID, userProfileName); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker User Profile (%s) to update: %s", d.Id(), err)
 		}
 	}

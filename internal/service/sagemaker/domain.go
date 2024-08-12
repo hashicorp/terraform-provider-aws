@@ -1084,7 +1084,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.SetId(domainID)
 
-	if _, err := waitDomainInService(ctx, conn, d.Id()); err != nil {
+	if err := waitDomainInService(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating SageMaker Domain (%s): waiting for completion: %s", d.Id(), err)
 	}
 
@@ -1164,7 +1164,7 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			return sdkdiag.AppendErrorf(diags, "updating SageMaker Domain: %s", err)
 		}
 
-		if _, err := waitDomainInService(ctx, conn, d.Id()); err != nil {
+		if err := waitDomainInService(ctx, conn, d.Id()); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Domain (%s) to update: %s", d.Id(), err)
 		}
 	}

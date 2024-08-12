@@ -266,7 +266,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.SetId(name)
 
-	if _, err := waitEndpointInService(ctx, conn, d.Id()); err != nil {
+	if err := waitEndpointInService(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Endpoint (%s) to be in service: %s", name, err)
 	}
 
@@ -319,7 +319,7 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			return sdkdiag.AppendErrorf(diags, "updating SageMaker Endpoint (%s): %s", d.Id(), err)
 		}
 
-		_, err := waitEndpointInService(ctx, conn, d.Id())
+		err := waitEndpointInService(ctx, conn, d.Id())
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Endpoint (%s) to be in service: %s", d.Id(), err)
 		}

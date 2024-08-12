@@ -228,7 +228,7 @@ func resourceNotebookInstanceCreate(ctx context.Context, d *schema.ResourceData,
 
 	d.SetId(name)
 
-	if _, err := waitNotebookInstanceInService(ctx, conn, d.Id()); err != nil {
+	if err := waitNotebookInstanceInService(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Notebook Instance (%s) create: %s", d.Id(), err)
 	}
 
@@ -356,7 +356,7 @@ func resourceNotebookInstanceUpdate(ctx context.Context, d *schema.ResourceData,
 			return sdkdiag.AppendErrorf(diags, "updating SageMaker Notebook Instance (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitNotebookInstanceStopped(ctx, conn, d.Id()); err != nil {
+		if err := waitNotebookInstanceStopped(ctx, conn, d.Id()); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Notebook Instance (%s) to stop: %s", d.Id(), err)
 		}
 
@@ -445,7 +445,7 @@ func startNotebookInstance(ctx context.Context, conn *sagemaker.Client, id strin
 			return retry.NonRetryableError(fmt.Errorf("starting: %s", err))
 		}
 
-		_, err = waitNotebookInstanceStarted(ctx, conn, id)
+		err = waitNotebookInstanceStarted(ctx, conn, id)
 		if err != nil {
 			return retry.RetryableError(fmt.Errorf("starting: waiting for completion: %s", err))
 		}
@@ -458,13 +458,13 @@ func startNotebookInstance(ctx context.Context, conn *sagemaker.Client, id strin
 			return fmt.Errorf("starting: %s", err)
 		}
 
-		_, err = waitNotebookInstanceStarted(ctx, conn, id)
+		err = waitNotebookInstanceStarted(ctx, conn, id)
 		if err != nil {
 			return fmt.Errorf("starting: waiting for completion: %s", err)
 		}
 	}
 
-	if _, err := waitNotebookInstanceInService(ctx, conn, id); err != nil {
+	if err := waitNotebookInstanceInService(ctx, conn, id); err != nil {
 		return fmt.Errorf("starting: waiting to be in service: %s", err)
 	}
 	return nil
@@ -492,7 +492,7 @@ func stopNotebookInstance(ctx context.Context, conn *sagemaker.Client, id string
 		return fmt.Errorf("stopping: %s", err)
 	}
 
-	if _, err := waitNotebookInstanceStopped(ctx, conn, id); err != nil {
+	if err := waitNotebookInstanceStopped(ctx, conn, id); err != nil {
 		return fmt.Errorf("stopping: waiting for completion: %s", err)
 	}
 

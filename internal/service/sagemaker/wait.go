@@ -71,7 +71,7 @@ func waitEndpointDeleted(ctx context.Context, conn *sagemaker.Client, name strin
 	return nil, err
 }
 
-func waitEndpointInService(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeEndpointOutput, error) {
+func waitEndpointInService(ctx context.Context, conn *sagemaker.Client, name string) error {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.EndpointStatusCreating, awstypes.EndpointStatusUpdating, awstypes.EndpointStatusSystemUpdating),
 		Target:  enum.Slice(awstypes.EndpointStatusInService),
@@ -86,13 +86,13 @@ func waitEndpointInService(ctx context.Context, conn *sagemaker.Client, name str
 			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
 		}
 
-		return output, err
+		return err
 	}
 
-	return nil, err
+	return err
 }
 
-func waitNotebookInstanceInService(ctx context.Context, conn *sagemaker.Client, notebookName string) (*sagemaker.DescribeNotebookInstanceOutput, error) {
+func waitNotebookInstanceInService(ctx context.Context, conn *sagemaker.Client, notebookName string) error {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(
 			notebookInstanceStatusNotFound,
@@ -112,13 +112,13 @@ func waitNotebookInstanceInService(ctx context.Context, conn *sagemaker.Client, 
 			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
 		}
 
-		return output, err
+		return err
 	}
 
-	return nil, err
+	return err
 }
 
-func waitNotebookInstanceStarted(ctx context.Context, conn *sagemaker.Client, notebookName string) (*sagemaker.DescribeNotebookInstanceOutput, error) {
+func waitNotebookInstanceStarted(ctx context.Context, conn *sagemaker.Client, notebookName string) error {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.NotebookInstanceStatusStopped),
 		Target:  enum.Slice(awstypes.NotebookInstanceStatusInService, awstypes.NotebookInstanceStatusPending),
@@ -133,13 +133,13 @@ func waitNotebookInstanceStarted(ctx context.Context, conn *sagemaker.Client, no
 			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
 		}
 
-		return output, err
+		return err
 	}
 
-	return nil, err
+	return err
 }
 
-func waitNotebookInstanceStopped(ctx context.Context, conn *sagemaker.Client, notebookName string) (*sagemaker.DescribeNotebookInstanceOutput, error) {
+func waitNotebookInstanceStopped(ctx context.Context, conn *sagemaker.Client, notebookName string) error {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.NotebookInstanceStatusUpdating, awstypes.NotebookInstanceStatusStopping),
 		Target:  enum.Slice(awstypes.NotebookInstanceStatusStopped),
@@ -154,10 +154,10 @@ func waitNotebookInstanceStopped(ctx context.Context, conn *sagemaker.Client, no
 			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
 		}
 
-		return output, err
+		return err
 	}
 
-	return nil, err
+	return err
 }
 
 func waitNotebookInstanceDeleted(ctx context.Context, conn *sagemaker.Client, notebookName string) (*sagemaker.DescribeNotebookInstanceOutput, error) {
@@ -215,7 +215,7 @@ func waitModelPackageGroupDeleted(ctx context.Context, conn *sagemaker.Client, n
 	return nil, err
 }
 
-func waitImageCreated(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeImageOutput, error) {
+func waitImageCreated(ctx context.Context, conn *sagemaker.Client, name string) error {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ImageStatusCreating, awstypes.ImageStatusUpdating),
 		Target:  enum.Slice(awstypes.ImageStatusCreated),
@@ -223,13 +223,9 @@ func waitImageCreated(ctx context.Context, conn *sagemaker.Client, name string) 
 		Timeout: imageCreatedTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	_, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*sagemaker.DescribeImageOutput); ok {
-		return output, err
-	}
-
-	return nil, err
+	return err
 }
 
 func waitImageDeleted(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeImageOutput, error) {
@@ -283,7 +279,7 @@ func waitImageVersionDeleted(ctx context.Context, conn *sagemaker.Client, name s
 	return nil, err
 }
 
-func waitDomainInService(ctx context.Context, conn *sagemaker.Client, domainID string) (*sagemaker.DescribeDomainOutput, error) {
+func waitDomainInService(ctx context.Context, conn *sagemaker.Client, domainID string) error {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DomainStatusPending, awstypes.DomainStatusUpdating),
 		Target:  enum.Slice(awstypes.DomainStatusInService),
@@ -298,10 +294,10 @@ func waitDomainInService(ctx context.Context, conn *sagemaker.Client, domainID s
 			tfresource.SetLastError(err, errors.New(reason))
 		}
 
-		return output, err
+		return err
 	}
 
-	return nil, err
+	return err
 }
 
 func waitDomainDeleted(ctx context.Context, conn *sagemaker.Client, domainID string) (*sagemaker.DescribeDomainOutput, error) {
@@ -367,7 +363,7 @@ func waitFeatureGroupDeleted(ctx context.Context, conn *sagemaker.Client, name s
 	return nil, err
 }
 
-func waitUserProfileInService(ctx context.Context, conn *sagemaker.Client, domainID, userProfileName string) (*sagemaker.DescribeUserProfileOutput, error) {
+func waitUserProfileInService(ctx context.Context, conn *sagemaker.Client, domainID, userProfileName string) error {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.UserProfileStatusPending, awstypes.UserProfileStatusUpdating),
 		Target:  enum.Slice(awstypes.UserProfileStatusInService),
@@ -382,10 +378,10 @@ func waitUserProfileInService(ctx context.Context, conn *sagemaker.Client, domai
 			tfresource.SetLastError(err, errors.New(reason))
 		}
 
-		return output, err
+		return err
 	}
 
-	return nil, err
+	return err
 }
 
 func waitUserProfileDeleted(ctx context.Context, conn *sagemaker.Client, domainID, userProfileName string) (*sagemaker.DescribeUserProfileOutput, error) {
@@ -556,7 +552,7 @@ func waitProjectUpdated(ctx context.Context, conn *sagemaker.Client, name string
 	return nil, err
 }
 
-func waitWorkforceActive(ctx context.Context, conn *sagemaker.Client, name string) (*awstypes.Workforce, error) {
+func waitWorkforceActive(ctx context.Context, conn *sagemaker.Client, name string) error {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.WorkforceStatusInitializing, awstypes.WorkforceStatusUpdating),
 		Target:  enum.Slice(awstypes.WorkforceStatusActive),
@@ -571,10 +567,10 @@ func waitWorkforceActive(ctx context.Context, conn *sagemaker.Client, name strin
 			tfresource.SetLastError(err, errors.New(reason))
 		}
 
-		return output, err
+		return err
 	}
 
-	return nil, err
+	return err
 }
 
 func waitWorkforceDeleted(ctx context.Context, conn *sagemaker.Client, name string) (*awstypes.Workforce, error) {
@@ -598,7 +594,7 @@ func waitWorkforceDeleted(ctx context.Context, conn *sagemaker.Client, name stri
 	return nil, err
 }
 
-func waitSpaceInService(ctx context.Context, conn *sagemaker.Client, domainId, name string) (*sagemaker.DescribeSpaceOutput, error) {
+func waitSpaceInService(ctx context.Context, conn *sagemaker.Client, domainId, name string) error {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.SpaceStatusPending, awstypes.SpaceStatusUpdating),
 		Target:  enum.Slice(awstypes.SpaceStatusInService),
@@ -613,10 +609,10 @@ func waitSpaceInService(ctx context.Context, conn *sagemaker.Client, domainId, n
 			tfresource.SetLastError(err, errors.New(reason))
 		}
 
-		return output, err
+		return err
 	}
 
-	return nil, err
+	return err
 }
 
 func waitSpaceDeleted(ctx context.Context, conn *sagemaker.Client, domainId, name string) (*sagemaker.DescribeSpaceOutput, error) {
@@ -640,7 +636,7 @@ func waitSpaceDeleted(ctx context.Context, conn *sagemaker.Client, domainId, nam
 	return nil, err
 }
 
-func waitMonitoringScheduleScheduled(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeMonitoringScheduleOutput, error) {
+func waitMonitoringScheduleScheduled(ctx context.Context, conn *sagemaker.Client, name string) error {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ScheduleStatusPending),
 		Target:  enum.Slice(awstypes.ScheduleStatusScheduled),
@@ -655,10 +651,10 @@ func waitMonitoringScheduleScheduled(ctx context.Context, conn *sagemaker.Client
 			tfresource.SetLastError(err, errors.New(reason))
 		}
 
-		return output, err
+		return err
 	}
 
-	return nil, err
+	return err
 }
 
 func waitMonitoringScheduleNotFound(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeMonitoringScheduleOutput, error) {

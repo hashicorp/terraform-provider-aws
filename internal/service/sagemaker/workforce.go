@@ -230,7 +230,7 @@ func resourceWorkforceCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.SetId(name)
 
-	if _, err := waitWorkforceActive(ctx, conn, name); err != nil {
+	if err := waitWorkforceActive(ctx, conn, name); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Workforce (%s) create: %s", d.Id(), err)
 	}
 
@@ -304,7 +304,7 @@ func resourceWorkforceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "updating SageMaker Workforce (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitWorkforceActive(ctx, conn, d.Id()); err != nil {
+	if err := waitWorkforceActive(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Workforce (%s) update: %s", d.Id(), err)
 	}
 

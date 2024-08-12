@@ -118,7 +118,7 @@ func resourceMonitoringScheduleCreate(ctx context.Context, d *schema.ResourceDat
 	}
 
 	d.SetId(name)
-	if _, err := waitMonitoringScheduleScheduled(ctx, conn, d.Id()); err != nil {
+	if err := waitMonitoringScheduleScheduled(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating SageMaker Monitoring Schedule (%s): waiting for completion: %s", d.Id(), err)
 	}
 
@@ -168,7 +168,7 @@ func resourceMonitoringScheduleUpdate(ctx context.Context, d *schema.ResourceDat
 		if _, err := conn.UpdateMonitoringSchedule(ctx, modifyOpts); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating SageMaker Monitoring Schedule (%s): %s", d.Id(), err)
 		}
-		if _, err := waitMonitoringScheduleScheduled(ctx, conn, d.Id()); err != nil {
+		if err := waitMonitoringScheduleScheduled(ctx, conn, d.Id()); err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating SageMaker Monitoring Schedule (%s): waiting for completion: %s", d.Id(), err)
 		}
 	}
