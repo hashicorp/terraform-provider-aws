@@ -30,6 +30,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -116,6 +117,9 @@ func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaReque
 			names.AttrStatus: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.GuardrailStatus](),
 				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
@@ -423,11 +427,11 @@ func (r *resourceGuardrail) Read(ctx context.Context, req resource.ReadRequest, 
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *resourceGuardrail) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-
 	conn := r.Meta().BedrockClient(ctx)
 
 	var plan, state resourceGuardrailData
@@ -447,7 +451,6 @@ func (r *resourceGuardrail) Update(ctx context.Context, req resource.UpdateReque
 		!plan.WordPolicy.Equal(state.WordPolicy) ||
 		!plan.Name.Equal(state.Name) ||
 		!plan.Description.Equal(state.Description) {
-
 		in := &bedrock.UpdateGuardrailInput{
 			GuardrailIdentifier: aws.String(plan.ID.ValueString()),
 		}
@@ -471,9 +474,18 @@ func (r *resourceGuardrail) Update(ctx context.Context, req resource.UpdateReque
 			)
 			return
 		}
-
 		plan.GuardrailArn = fwflex.StringToFramework(ctx, out.GuardrailArn)
 		plan.ID = fwflex.StringToFramework(ctx, out.GuardrailId)
+
+		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
+		if _, err := waitGuardrailUpdated(ctx, conn, plan.ID.ValueString(), state.Version.ValueString(), updateTimeout); err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.Bedrock, create.ErrActionWaitingForUpdate, ResNameGuardrail, plan.ID.String(), err),
+				err.Error(),
+			)
+			return
+		}
+
 		output, err := findGuardrailByID(ctx, conn, plan.ID.ValueString(), plan.Version.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddError(
@@ -483,22 +495,6 @@ func (r *resourceGuardrail) Update(ctx context.Context, req resource.UpdateReque
 			return
 		}
 		plan.Status = fwtypes.StringEnumValue(output.Status)
-	} else {
-		plan.Status = state.Status
-		plan.GuardrailArn = state.GuardrailArn
-		plan.ID = state.ID
-		plan.Version = state.Version
-		plan.CreatedAt = state.CreatedAt
-	}
-
-	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	_, err := waitGuardrailUpdated(ctx, conn, plan.ID.ValueString(), state.Version.ValueString(), updateTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Bedrock, create.ErrActionWaitingForUpdate, ResNameGuardrail, plan.ID.String(), err),
-			err.Error(),
-		)
-		return
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
@@ -516,12 +512,8 @@ func (r *resourceGuardrail) Delete(ctx context.Context, req resource.DeleteReque
 	in := &bedrock.DeleteGuardrailInput{
 		GuardrailIdentifier: aws.String(state.ID.ValueString()),
 	}
-
-	_, err := conn.DeleteGuardrail(ctx, in)
-
-	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
+	if _, err := conn.DeleteGuardrail(ctx, in); err != nil {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return
 		}
 		resp.Diagnostics.AddError(
@@ -532,8 +524,7 @@ func (r *resourceGuardrail) Delete(ctx context.Context, req resource.DeleteReque
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitGuardrailDeleted(ctx, conn, state.ID.ValueString(), state.Version.ValueString(), deleteTimeout)
-	if err != nil {
+	if _, err := waitGuardrailDeleted(ctx, conn, state.ID.ValueString(), state.Version.ValueString(), deleteTimeout); err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.Bedrock, create.ErrActionWaitingForDeletion, ResNameGuardrail, state.ID.String(), err),
 			err.Error(),
@@ -543,7 +534,6 @@ func (r *resourceGuardrail) Delete(ctx context.Context, req resource.DeleteReque
 }
 
 func (r *resourceGuardrail) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-
 	parts := strings.Split(request.ID, ":")
 	if len(parts) != 2 {
 		response.Diagnostics.AddError("Resource Import Invalid ID", fmt.Sprintf(`Unexpected format for import ID (%s), use: "GuardrailId:Version"`, request.ID))
@@ -633,8 +623,7 @@ func findGuardrailByID(ctx context.Context, conn *bedrock.Client, id string, ver
 
 	out, err := conn.GetGuardrail(ctx, in)
 	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
