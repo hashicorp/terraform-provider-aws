@@ -251,7 +251,7 @@ func testAccGuardrailImportStateIDFunc(resourceName string) resource.ImportState
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return fmt.Sprintf("%s,%s", rs.Primary.Attributes["guardrail_id"], rs.Primary.Attributes["version"]), nil
+		return fmt.Sprintf("%s,%s", rs.Primary.Attributes["guardrail_id"], rs.Primary.Attributes[names.AttrVersion]), nil
 	}
 }
 
@@ -265,7 +265,7 @@ func testAccCheckGuardrailDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			id := rs.Primary.Attributes["guardrail_id"]
-			version := rs.Primary.Attributes["version"]
+			version := rs.Primary.Attributes[names.AttrVersion]
 
 			_, err := tfbedrock.FindGuardrailByID(ctx, conn, id, version)
 			if errs.IsA[*types.ResourceNotFoundException](err) {
@@ -290,7 +290,7 @@ func testAccCheckGuardrailExists(ctx context.Context, name string, guardrail *be
 		}
 
 		id := rs.Primary.Attributes["guardrail_id"]
-		version := rs.Primary.Attributes["version"]
+		version := rs.Primary.Attributes[names.AttrVersion]
 		if id == "" {
 			return create.Error(names.Bedrock, create.ErrActionCheckingExistence, tfbedrock.ResNameGuardrail, name, errors.New("guardrail_id not set"))
 		}
