@@ -81,6 +81,10 @@ func expandJobNodeProperties(tfString string) (*awstypes.NodeProperties, error) 
 func serializeNodeProperties(v *awstypes.NodeProperties, value smithyjson.Value) error
 
 func flattenNodeProperties(apiObject *awstypes.NodeProperties) (string, error) {
+	if apiObject == nil {
+		return "", nil
+	}
+
 	jsonEncoder := smithyjson.NewEncoder()
 	err := serializeNodeProperties(apiObject, jsonEncoder.Value)
 

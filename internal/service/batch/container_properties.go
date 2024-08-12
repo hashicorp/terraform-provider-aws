@@ -156,6 +156,10 @@ func expandContainerProperties(tfString string) (*awstypes.ContainerProperties, 
 func serializeContainerProperties(v *awstypes.ContainerProperties, value smithyjson.Value) error
 
 func flattenContainerProperties(apiObject *awstypes.ContainerProperties) (string, error) {
+	if apiObject == nil {
+		return "", nil
+	}
+
 	jsonEncoder := smithyjson.NewEncoder()
 	err := serializeContainerProperties(apiObject, jsonEncoder.Value)
 
