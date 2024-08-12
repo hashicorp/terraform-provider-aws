@@ -202,12 +202,16 @@ func (r *jobQueueResource) Read(ctx context.Context, request resource.ReadReques
 	}
 
 	// Set attributes for import.
+	coeNullInState := data.ComputeEnvironmentOrder.IsNull()
 	response.Diagnostics.Append(fwflex.Flatten(ctx, jobQueue, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	data.ComputeEnvironments = flattenComputeEnvironments(ctx, jobQueue.ComputeEnvironmentOrder)
+	if coeNullInState {
+		data.ComputeEnvironmentOrder = fwtypes.NewListNestedObjectValueOfNull[computeEnvironmentOrderModel](ctx)
+	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -515,7 +519,7 @@ func flattenComputeEnvironments(ctx context.Context, apiObjects []awstypes.Compu
 		return aws.ToInt32(apiObjects[i].Order) < aws.ToInt32(apiObjects[j].Order)
 	})
 
-	return fwflex.FlattenFrameworkStringList(ctx, tfslices.ApplyToAll(apiObjects, func(v awstypes.ComputeEnvironmentOrder) *string {
+	return fwflex.FlattenFrameworkStringListLegacy(ctx, tfslices.ApplyToAll(apiObjects, func(v awstypes.ComputeEnvironmentOrder) *string {
 		return v.ComputeEnvironment
 	}))
 }

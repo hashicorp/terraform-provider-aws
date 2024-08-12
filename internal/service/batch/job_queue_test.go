@@ -489,7 +489,7 @@ func testAccCheckJobQueueComputeEnvironmentOrderUpdate(ctx context.Context, jobQ
 	}
 }
 
-func testAccJobQueueConfigBase(rName string) string {
+func testAccJobQueueConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -513,7 +513,7 @@ EOF
 
 resource "aws_iam_role_policy_attachment" "test" {
   role       = aws_iam_role.test.name
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSBatchServiceRole"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/BatchServiceRolePolicy"
 }
 
 resource "aws_iam_role" "ecs_instance_role" {
@@ -549,13 +549,17 @@ resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-batch-job-queue"
+    Name = %[1]q
   }
 }
 
 resource "aws_security_group" "test" {
   name   = %[1]q
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_subnet" "test" {
@@ -563,7 +567,7 @@ resource "aws_subnet" "test" {
   vpc_id     = aws_vpc.test.id
 
   tags = {
-    Name = "tf-acc-batch-job-queue"
+    Name = %[1]q
   }
 }
 
@@ -589,7 +593,7 @@ resource "aws_batch_compute_environment" "test" {
 
 func testAccJobQueueConfig_priority(rName string, priority int) string {
 	return acctest.ConfigCompose(
-		testAccJobQueueConfigBase(rName),
+		testAccJobQueueConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_batch_job_queue" "test" {
   compute_environments = [aws_batch_compute_environment.test.arn]
@@ -600,7 +604,7 @@ resource "aws_batch_job_queue" "test" {
 `, rName, priority))
 }
 
-func testAccJobQueueSchedulingPolicy(rName string, rName2 string) string {
+func testAccJobQueueConfig_baseSchedulingPolicy(rName string, rName2 string) string {
 	return fmt.Sprintf(`
 resource "aws_batch_scheduling_policy" "test1" {
   name = %[1]q
@@ -634,8 +638,8 @@ resource "aws_batch_scheduling_policy" "test2" {
 
 func testAccJobQueueConfig_schedulingPolicy(rName string, schedulingPolicyName1 string, schedulingPolicyName2 string, selectSchedulingPolicy string) string {
 	return acctest.ConfigCompose(
-		testAccJobQueueConfigBase(rName),
-		testAccJobQueueSchedulingPolicy(schedulingPolicyName1, schedulingPolicyName2),
+		testAccJobQueueConfig_base(rName),
+		testAccJobQueueConfig_baseSchedulingPolicy(schedulingPolicyName1, schedulingPolicyName2),
 		fmt.Sprintf(`
 locals {
   select_scheduling_policy = %[2]q
@@ -653,7 +657,7 @@ resource "aws_batch_job_queue" "test" {
 
 func testAccJobQueueConfig_state(rName string, state string) string {
 	return acctest.ConfigCompose(
-		testAccJobQueueConfigBase(rName),
+		testAccJobQueueConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_batch_job_queue" "test" {
   compute_environments = [aws_batch_compute_environment.test.arn]
@@ -667,7 +671,7 @@ resource "aws_batch_job_queue" "test" {
 
 func testAccJobQueueConfig_stateCEO(rName string, state string) string {
 	return acctest.ConfigCompose(
-		testAccJobQueueConfigBase(rName),
+		testAccJobQueueConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_batch_job_queue" "test" {
   compute_environment_order {
@@ -684,7 +688,7 @@ resource "aws_batch_job_queue" "test" {
 
 func testAccJobQueueConfig_ComputeEnvironments_multiple(rName string, state string) string {
 	return acctest.ConfigCompose(
-		testAccJobQueueConfigBase(rName),
+		testAccJobQueueConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_batch_job_queue" "test" {
   compute_environments = concat(
@@ -720,7 +724,7 @@ resource "aws_batch_compute_environment" "more" {
 
 func testAccJobQueueConfig_ComputeEnvironmentOrder_multiple(rName string, state string, o1 int, o2 int, o3 int) string {
 	return acctest.ConfigCompose(
-		testAccJobQueueConfigBase(rName),
+		testAccJobQueueConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_batch_job_queue" "test" {
   compute_environment_order {
@@ -767,7 +771,7 @@ resource "aws_batch_compute_environment" "more" {
 
 func testAccJobQueueConfig_ComputeEnvironments_multipleReorder(rName string, state string) string {
 	return acctest.ConfigCompose(
-		testAccJobQueueConfigBase(rName),
+		testAccJobQueueConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_batch_job_queue" "test" {
   compute_environments = [
