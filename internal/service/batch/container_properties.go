@@ -50,9 +50,9 @@ func (cp *containerProperties) reduce() {
 			cp.LinuxParameters.Devices = nil
 		}
 
-		for _, device := range cp.LinuxParameters.Devices {
+		for i, device := range cp.LinuxParameters.Devices {
 			if len(device.Permissions) == 0 {
-				device.Permissions = nil
+				cp.LinuxParameters.Devices[i].Permissions = nil
 			}
 		}
 
@@ -60,9 +60,9 @@ func (cp *containerProperties) reduce() {
 			cp.LinuxParameters.Tmpfs = nil
 		}
 
-		for _, tmpfs := range cp.LinuxParameters.Tmpfs {
+		for i, tmpfs := range cp.LinuxParameters.Tmpfs {
 			if len(tmpfs.MountOptions) == 0 {
-				tmpfs.MountOptions = nil
+				cp.LinuxParameters.Tmpfs[i].MountOptions = nil
 			}
 		}
 	}

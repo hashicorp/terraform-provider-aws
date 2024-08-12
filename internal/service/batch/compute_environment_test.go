@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/batch"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -79,9 +80,13 @@ func TestExpandEC2ConfigurationsUpdate(t *testing.T) {
 		},
 	}
 
+	ignoreExportedOpts := cmpopts.IgnoreUnexported(
+		awstypes.Ec2Configuration{},
+	)
+
 	for _, testCase := range testCases {
 		expanded := tfbatch.ExpandEC2ConfigurationsUpdate(testCase.flattened, "default")
-		if diff := cmp.Diff(expanded, testCase.expected); diff != "" {
+		if diff := cmp.Diff(expanded, testCase.expected, ignoreExportedOpts); diff != "" {
 			t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 		}
 	}
@@ -148,9 +153,13 @@ func TestExpandLaunchTemplateSpecificationUpdate(t *testing.T) {
 		},
 	}
 
+	ignoreExportedOpts := cmpopts.IgnoreUnexported(
+		awstypes.LaunchTemplateSpecification{},
+	)
+
 	for _, testCase := range testCases {
 		expanded := tfbatch.ExpandLaunchTemplateSpecificationUpdate(testCase.flattened)
-		if diff := cmp.Diff(expanded, testCase.expected); diff != "" {
+		if diff := cmp.Diff(expanded, testCase.expected, ignoreExportedOpts); diff != "" {
 			t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 		}
 	}
