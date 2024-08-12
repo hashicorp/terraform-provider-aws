@@ -189,7 +189,7 @@ func (r *resourceEnvironmentProfile) Read(ctx context.Context, req resource.Read
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionSetting, ResNameEnvironmentProfile, state.Id.String(), err),
+			create.ProblemStandardMessage(names.DataZone, create.ErrActionReading, ResNameEnvironmentProfile, state.Id.String(), err),
 			err.Error(),
 		)
 		return
@@ -232,7 +232,7 @@ func (r *resourceEnvironmentProfile) Update(ctx context.Context, req resource.Up
 		out, err := conn.UpdateEnvironmentProfile(ctx, in)
 		if err != nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.DataZone, create.ErrActionSetting, ResNameEnvironmentProfile, state.Id.ValueString(), err),
+				create.ProblemStandardMessage(names.DataZone, create.ErrActionUpdating, ResNameEnvironmentProfile, state.Id.ValueString(), err),
 				err.Error(),
 			)
 			return
@@ -264,7 +264,7 @@ func (r *resourceEnvironmentProfile) Delete(ctx context.Context, req resource.De
 
 	if err != nil && !errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionSetting, ResNameEnvironmentProfile, state.Id.ValueString(), err),
+			create.ProblemStandardMessage(names.DataZone, create.ErrActionDeleting, ResNameEnvironmentProfile, state.Id.ValueString(), err),
 			err.Error(),
 		)
 		return
