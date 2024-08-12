@@ -891,7 +891,7 @@ service "batch" {
 
   sdk {
     id             = "Batch"
-    client_version = [1, 2]
+    client_version = [2]
   }
 
   names {
@@ -4146,7 +4146,7 @@ service "gamelift" {
 
   sdk {
     id             = "GameLift"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -6936,7 +6936,7 @@ service "pinpoint" {
 
   sdk {
     id             = "Pinpoint"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -7799,7 +7799,7 @@ service "route53recoverycontrolconfig" {
 
   sdk {
     id             = "Route53 Recovery Control Config"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -7834,7 +7834,7 @@ service "route53recoveryreadiness" {
 
   sdk {
     id             = "Route53 Recovery Readiness"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -7985,7 +7985,7 @@ service "s3outposts" {
 
   sdk {
     id             = "S3Outposts"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {

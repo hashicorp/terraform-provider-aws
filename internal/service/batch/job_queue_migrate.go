@@ -6,15 +6,9 @@ package batch
 import (
 	"context"
 
-	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/batch"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -34,28 +28,15 @@ func jobQueueSchema0(ctx context.Context) schema.Schema {
 			names.AttrID: framework.IDAttribute(),
 			names.AttrName: schema.StringAttribute{
 				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9A-Za-z]{1}[0-9A-Za-z_-]{0,127}$`),
-						"must be up to 128 letters (uppercase and lowercase), numbers, underscores and dashes, and must start with an alphanumeric"),
-				},
 			},
 			names.AttrPriority: schema.Int64Attribute{
 				Required: true,
 			},
 			"scheduling_policy_arn": schema.StringAttribute{
 				Optional: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 			names.AttrState: schema.StringAttribute{
 				Required: true,
-				Validators: []validator.String{
-					stringvalidator.OneOfCaseInsensitive(batch.JQState_Values()...),
-				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
@@ -70,12 +51,12 @@ func jobQueueSchema0(ctx context.Context) schema.Schema {
 	}
 }
 
-func upgradeJobQueueResourceStateV0toV1(ctx context.Context, req resource.UpgradeStateRequest, resp *resource.UpgradeStateResponse) {
+func upgradeJobQueueResourceStateV0toV1(ctx context.Context, request resource.UpgradeStateRequest, response *resource.UpgradeStateResponse) {
 	type resourceJobQueueDataV0 struct {
-		ARN                 types.String   `tfsdk:"arn"`
 		ComputeEnvironments types.List     `tfsdk:"compute_environments"`
 		ID                  types.String   `tfsdk:"id"`
-		Name                types.String   `tfsdk:"name"`
+		JobQueueARN         types.String   `tfsdk:"arn"`
+		JobQueueName        types.String   `tfsdk:"name"`
 		Priority            types.Int64    `tfsdk:"priority"`
 		SchedulingPolicyARN types.String   `tfsdk:"scheduling_policy_arn"`
 		State               types.String   `tfsdk:"state"`
@@ -85,19 +66,19 @@ func upgradeJobQueueResourceStateV0toV1(ctx context.Context, req resource.Upgrad
 	}
 
 	var jobQueueDataV0 resourceJobQueueDataV0
-
-	resp.Diagnostics.Append(req.State.Get(ctx, &jobQueueDataV0)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(request.State.Get(ctx, &jobQueueDataV0)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 	ceo := fwtypes.NewListNestedObjectValueOfNull[computeEnvironmentOrder](ctx)
 	jobStateTimeLimitActions := fwtypes.NewListNestedObjectValueOfNull[jobStateTimeLimitAction](ctx)
 
-	jobQueueDataV2 := resourceJobQueueData{
+	jobQueueDataV1 := jobQueueResourceModel{
 		ComputeEnvironments:     jobQueueDataV0.ComputeEnvironments,
-		ComputeEnvironmentOrder: ceo,
+		ComputeEnvironmentOrder: fwtypes.NewListNestedObjectValueOfNull[computeEnvironmentOrderModel](ctx),
 		ID:                      jobQueueDataV0.ID,
-		JobQueueName:            jobQueueDataV0.Name,
+		JobQueueARN:             jobQueueDataV0.JobQueueARN,
+		JobQueueName:            jobQueueDataV0.JobQueueName,
 		Priority:                jobQueueDataV0.Priority,
 		State:                   jobQueueDataV0.State,
 		JobStateTimeLimitAction: jobStateTimeLimitActions,
@@ -107,9 +88,8 @@ func upgradeJobQueueResourceStateV0toV1(ctx context.Context, req resource.Upgrad
 	}
 
 	if jobQueueDataV0.SchedulingPolicyARN.ValueString() == "" {
-		jobQueueDataV2.SchedulingPolicyARN = fwtypes.ARNNull()
+		jobQueueDataV1.SchedulingPolicyARN = fwtypes.ARNNull()
 	}
 
-	diags := resp.State.Set(ctx, jobQueueDataV2)
-	resp.Diagnostics.Append(diags...)
+	response.Diagnostics.Append(response.State.Set(ctx, jobQueueDataV1)...)
 }

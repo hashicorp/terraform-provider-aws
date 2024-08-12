@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
 	"strings"
 	"time"
 
@@ -24,12 +23,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfio "github.com/hashicorp/terraform-provider-aws/internal/io"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"github.com/mitchellh/go-homedir"
 )
 
 // @SDKResource("aws_rds_custom_db_engine_version", name="Custom DB Engine Version")
@@ -197,13 +196,12 @@ func resourceCustomDBEngineVersionCreate(ctx context.Context, d *schema.Resource
 		conns.GlobalMutexKV.Lock(mutexKey)
 		defer conns.GlobalMutexKV.Unlock(mutexKey)
 
-		file, err := resourceCustomDBEngineVersionLoadFileContent(v.(string))
-
+		file, err := tfio.ReadFileContents(v.(string))
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 
-		input.Manifest = aws.String(file)
+		input.Manifest = aws.String(string(file))
 	} else if v, ok := d.GetOk("manifest"); ok {
 		input.Manifest = aws.String(v.(string))
 	}
@@ -223,11 +221,13 @@ func resourceCustomDBEngineVersionCreate(ctx context.Context, d *schema.Resource
 		// See https://github.com/hashicorp/terraform/issues/9364
 		conns.GlobalMutexKV.Lock(mutexKey)
 		defer conns.GlobalMutexKV.Unlock(mutexKey)
-		file, err := resourceCustomDBEngineVersionLoadFileContent(filename)
+
+		file, err := tfio.ReadFileContents(filename)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "unable to load %q: %s", filename, err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
-		input.Manifest = aws.String(file)
+
+		input.Manifest = aws.String(string(file))
 	} else if v, ok := d.GetOk("manifest"); ok {
 		input.Manifest = aws.String(v.(string))
 	}
@@ -500,16 +500,4 @@ func waitCustomDBEngineVersionDeleted(ctx context.Context, conn *rds.Client, eng
 	}
 
 	return nil, err
-}
-
-func resourceCustomDBEngineVersionLoadFileContent(filename string) (string, error) {
-	filename, err := homedir.Expand(filename)
-	if err != nil {
-		return "", err
-	}
-	fileContent, err := os.ReadFile(filename)
-	if err != nil {
-		return "", err
-	}
-	return string(fileContent), nil
 }
