@@ -336,13 +336,17 @@ func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaReque
 	}
 }
 
+const (
+	filtersConfigThresholdMin = 0.000000
+
+	guardrailIDParts = 2
+)
+
 var (
-	flexConfig = fwflex.WithFieldNameSuffix("Config")
+	flexOpt = fwflex.WithFieldNameSuffix("Config")
 
 	guardrailNameRegex    = regexache.MustCompile("^[0-9a-zA-Z-_]+$")
 	topicsConfigNameRegex = regexache.MustCompile("^[0-9a-zA-Z-_ !?.]+$")
-
-	filtersConfigThresholdMin = 0.000000
 )
 
 func (r *resourceGuardrail) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -355,7 +359,7 @@ func (r *resourceGuardrail) Create(ctx context.Context, req resource.CreateReque
 	}
 
 	in := &bedrock.CreateGuardrailInput{}
-	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, in, flexConfig)...)
+	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, in, flexOpt)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -419,7 +423,7 @@ func (r *resourceGuardrail) Read(ctx context.Context, req resource.ReadRequest, 
 		)
 		return
 	}
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &state, flexConfig)...)
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &state, flexOpt)...)
 	state.KmsKeyId = fwflex.StringToFramework(ctx, out.KmsKeyArn)
 	if resp.Diagnostics.HasError() {
 		return
@@ -451,7 +455,7 @@ func (r *resourceGuardrail) Update(ctx context.Context, req resource.UpdateReque
 		in := &bedrock.UpdateGuardrailInput{
 			GuardrailIdentifier: aws.String(plan.GuardrailID.ValueString()),
 		}
-		resp.Diagnostics.Append(fwflex.Expand(ctx, plan, in, flexConfig)...)
+		resp.Diagnostics.Append(fwflex.Expand(ctx, plan, in, flexOpt)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -531,7 +535,7 @@ func (r *resourceGuardrail) Delete(ctx context.Context, req resource.DeleteReque
 }
 
 func (r *resourceGuardrail) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	parts, err := intflex.ExpandResourceId(req.ID, 2, false)
+	parts, err := intflex.ExpandResourceId(req.ID, guardrailIDParts, false)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unexpected Import Identifier",
