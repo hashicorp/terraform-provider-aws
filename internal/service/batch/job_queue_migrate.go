@@ -61,8 +61,8 @@ func upgradeJobQueueResourceStateV0toV1(ctx context.Context, request resource.Up
 		Priority            types.Int64    `tfsdk:"priority"`
 		SchedulingPolicyARN types.String   `tfsdk:"scheduling_policy_arn"`
 		State               types.String   `tfsdk:"state"`
-		Tags                types.Map      `tfsdk:"tags"`
-		TagsAll             types.Map      `tfsdk:"tags_all"`
+		Tags                types.Map      `tfsdk:"tags"`     // nosemgrep:ci.semgrep.framework.model-tag-types
+		TagsAll             types.Map      `tfsdk:"tags_all"` // nosemgrep:ci.semgrep.framework.model-tag-types
 		Timeouts            timeouts.Value `tfsdk:"timeouts"`
 	}
 
