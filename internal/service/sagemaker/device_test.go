@@ -8,8 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -103,7 +102,6 @@ func TestAccSageMakerDevice_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeviceExists(ctx, resourceName, &device),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceDevice(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceDevice(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -138,7 +136,7 @@ func TestAccSageMakerDevice_disappears_fleet(t *testing.T) {
 
 func testAccCheckDeviceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sagemaker_device" {
@@ -150,7 +148,7 @@ func testAccCheckDeviceDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			device, err := tfsagemaker.FindDeviceByName(ctx, conn, deviceFleetName, deviceName)
+			_, err = tfsagemaker.FindDeviceByName(ctx, conn, deviceFleetName, deviceName)
 			if tfresource.NotFound(err) {
 				continue
 			}
@@ -159,9 +157,7 @@ func testAccCheckDeviceDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			if aws.StringValue(device.DeviceName) == deviceName && aws.StringValue(device.DeviceFleetName) == deviceFleetName {
-				return fmt.Errorf("SageMaker Device %q still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("SageMaker Device %q still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -184,7 +180,7 @@ func testAccCheckDeviceExists(ctx context.Context, n string, device *sagemaker.D
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
 		resp, err := tfsagemaker.FindDeviceByName(ctx, conn, deviceFleetName, deviceName)
 		if err != nil {
 			return err
