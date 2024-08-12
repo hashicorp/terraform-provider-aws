@@ -72,8 +72,8 @@ var (
 	PrebuiltECRImageIDByRegion_debugger            = prebuiltECRImageIDByRegion_debugger
 	PrebuiltECRImageIDByRegion_deepLearning        = prebuiltECRImageIDByRegion_deepLearning
 	PrebuiltECRImageIDByRegion_inferentiaNeo       = prebuiltECRImageIDByRegion_inferentiaNeo
-	PrebuiltECRImageIDByRegion_SageMakerBasePython = prebuiltECRImageIDByRegion_SageMakerBasePython
-	PrebuiltECRImageIDByRegion_SageMakerCustom     = prebuiltECRImageIDByRegion_SageMakerCustom
-	PrebuiltECRImageIDByRegion_SageMakerRL         = prebuiltECRImageIDByRegion_SageMakerRL
+	PrebuiltECRImageIDByRegion_SageMakerBasePython = prebuiltECRImageIDByRegion_SageMakerBasePython // nosemgrep:ci.sagemaker-in-var-name
+	PrebuiltECRImageIDByRegion_SageMakerCustom     = prebuiltECRImageIDByRegion_SageMakerCustom     // nosemgrep:ci.sagemaker-in-var-name
+	PrebuiltECRImageIDByRegion_SageMakerRL         = prebuiltECRImageIDByRegion_SageMakerRL         // nosemgrep:ci.sagemaker-in-var-name
 	PrebuiltECRImageIDByRegion_spark               = prebuiltECRImageIDByRegion_spark
 )
