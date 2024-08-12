@@ -620,7 +620,7 @@ func New(ctx context.Context, i interface{}) KeyValueTags {
 		return kvtm
 	case types.Map:
 		return New(ctx, flex.ExpandFrameworkStringMap(ctx, value))
-	case MapValue:
+	case Map:
 		return New(ctx, flex.ExpandFrameworkStringMap(ctx, value))
 	default:
 		return make(KeyValueTags)
@@ -812,7 +812,7 @@ func (tags KeyValueTags) ResolveDuplicatesFramework(ctx context.Context, default
 	// remove default config.
 	t := tags.RemoveDefaultConfig(defaultConfig)
 
-	var tagsAll MapValue
+	var tagsAll Map
 	diags.Append(resp.State.GetAttribute(ctx, path.Root("tags"), &tagsAll)...)
 
 	if diags.HasError() {

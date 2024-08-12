@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 )
 
-func newMapValueMust(elements map[string]attr.Value) MapValue {
+func newMapValueMust(elements map[string]attr.Value) Map {
 	return fwdiag.Must(NewMapValue(elements))
 }
 
@@ -20,7 +20,7 @@ func TestTagMapEquality(t *testing.T) {
 	t.Parallel()
 
 	type testCase struct {
-		val1, val2     MapValue
+		val1, val2     Map
 		equals         bool
 		semanticEquals bool
 	}

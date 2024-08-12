@@ -224,7 +224,7 @@ type jobDefinitionDataSourceModel struct {
 	Revision                   types.Int64                                          `tfsdk:"revision"`
 	SchedulingPriority         types.Int64                                          `tfsdk:"scheduling_priority"`
 	Status                     types.String                                         `tfsdk:"status"`
-	Tags                       tftags.MapValue                                      `tfsdk:"tags"`
+	Tags                       tftags.Map                                           `tfsdk:"tags"`
 	Timeout                    fwtypes.ListNestedObjectValueOf[jobTimeoutModel]     `tfsdk:"timeout"`
 	Type                       types.String                                         `tfsdk:"type"`
 }

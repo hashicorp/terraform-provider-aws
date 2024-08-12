@@ -62,7 +62,7 @@ func (t mapType) ValueFromMap(ctx context.Context, in basetypes.MapValue) (baset
 		return NewMapValueUnknown(), diags
 	}
 
-	return MapValue{MapValue: mapValue}, diags
+	return Map{MapValue: mapValue}, diags
 }
 
 func (t mapType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
@@ -86,18 +86,18 @@ func (t mapType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr
 }
 
 func (t mapType) ValueType(ctx context.Context) attr.Value {
-	return MapValue{}
+	return Map{}
 }
 
-func NewMapValueNull() MapValue {
-	return MapValue{basetypes.NewMapNull(basetypes.StringType{})}
+func NewMapValueNull() Map {
+	return Map{basetypes.NewMapNull(basetypes.StringType{})}
 }
 
-func NewMapValueUnknown() MapValue {
-	return MapValue{basetypes.NewMapUnknown(basetypes.StringType{})}
+func NewMapValueUnknown() Map {
+	return Map{basetypes.NewMapUnknown(basetypes.StringType{})}
 }
 
-func NewMapValue(elements map[string]attr.Value) (MapValue, diag.Diagnostics) {
+func NewMapValue(elements map[string]attr.Value) (Map, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	v, d := basetypes.NewMapValue(basetypes.StringType{}, elements)
@@ -109,21 +109,21 @@ func NewMapValue(elements map[string]attr.Value) (MapValue, diag.Diagnostics) {
 	return NewMapFromMapValue(v), diags
 }
 
-func NewMapFromMapValue(m basetypes.MapValue) MapValue {
-	return MapValue{MapValue: m}
+func NewMapFromMapValue(m basetypes.MapValue) Map {
+	return Map{MapValue: m}
 }
 
 var (
-	_ basetypes.MapValuable                   = (*MapValue)(nil)
-	_ basetypes.MapValuableWithSemanticEquals = (*MapValue)(nil)
+	_ basetypes.MapValuable                   = (*Map)(nil)
+	_ basetypes.MapValuableWithSemanticEquals = (*Map)(nil)
 )
 
-type MapValue struct {
+type Map struct {
 	basetypes.MapValue
 }
 
-func (v MapValue) Equal(o attr.Value) bool {
-	other, ok := o.(MapValue)
+func (v Map) Equal(o attr.Value) bool {
+	other, ok := o.(Map)
 	if !ok {
 		return false
 	}
@@ -137,14 +137,14 @@ func (v MapValue) Equal(o attr.Value) bool {
 	return v.MapValue.Equal(other.MapValue)
 }
 
-func (v MapValue) Type(ctx context.Context) attr.Type {
+func (v Map) Type(ctx context.Context) attr.Type {
 	return MapType
 }
 
-func (v MapValue) MapSemanticEquals(ctx context.Context, oValuable basetypes.MapValuable) (bool, diag.Diagnostics) {
+func (v Map) MapSemanticEquals(ctx context.Context, oValuable basetypes.MapValuable) (bool, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
-	o, ok := oValuable.(MapValue)
+	o, ok := oValuable.(Map)
 	if !ok {
 		return false, diags
 	}
@@ -183,12 +183,12 @@ func (v MapValue) MapSemanticEquals(ctx context.Context, oValuable basetypes.Map
 	return true, diags
 }
 
-func FlattenStringValueMap(ctx context.Context, v map[string]string) MapValue {
+func FlattenStringValueMap(ctx context.Context, v map[string]string) Map {
 	if len(v) == 0 {
 		return NewMapValueNull()
 	}
 
-	var output MapValue
+	var output Map
 	fwdiag.Must[any](nil, fwflex.Flatten(ctx, v, &output))
 
 	return output
