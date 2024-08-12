@@ -381,7 +381,7 @@ func TestAccNetworkFirewallLoggingConfiguration_S3LogDestination_prefix(t *testi
 					}),
 				),
 			},
-			
+
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -644,6 +644,62 @@ func TestAccNetworkFirewallLoggingConfiguration_updateToSingleFlowTypeLogDestina
 						"log_destination.logGroup": logGroupName,
 						"log_destination_type":     string(awstypes.LogDestinationTypeCloudwatchLogs),
 						"log_type":                 string(awstypes.LogTypeFlow),
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccNetworkFirewallLoggingConfiguration_updateToSingleTLSTypeLogDestination(t *testing.T) {
+	ctx := acctest.Context(t)
+	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	logGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_networkfirewall_logging_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLoggingConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLoggingConfigurationConfig_s3AndCloudWatch(bucketName, logGroupName, rName, string(awstypes.LogTypeAlert), string(awstypes.LogTypeTls)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLoggingConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination_config.#", acctest.Ct2),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
+						"log_destination.%":        acctest.Ct1,
+						"log_destination.logGroup": logGroupName,
+						"log_destination_type":     string(awstypes.LogDestinationTypeCloudwatchLogs),
+						"log_type":                 string(awstypes.LogTypeTls),
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
+						"log_destination.%":          acctest.Ct1,
+						"log_destination.bucketName": bucketName,
+						"log_destination_type":       string(awstypes.LogDestinationTypeS3),
+						"log_type":                   string(awstypes.LogTypeAlert),
+					}),
+				),
+			},
+			{
+				Config: testAccLoggingConfigurationConfig_cloudWatch(logGroupName, rName, string(awstypes.LogDestinationTypeCloudwatchLogs), string(awstypes.LogTypeTls)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLoggingConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination_config.#", acctest.Ct1),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
+						"log_destination.%":        acctest.Ct1,
+						"log_destination.logGroup": logGroupName,
+						"log_destination_type":     string(awstypes.LogDestinationTypeCloudwatchLogs),
+						"log_type":                 string(awstypes.LogTypeTls),
 					}),
 				),
 			},
