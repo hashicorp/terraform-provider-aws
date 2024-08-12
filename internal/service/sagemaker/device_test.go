@@ -20,6 +20,8 @@ import (
 )
 
 func TestAccSageMakerDevice_basic(t *testing.T) {
+	t.Skip("skipping tests; Amazon Sagemaker Edge has been deprecated on April 26th, 2024")
+
 	ctx := acctest.Context(t)
 	var device sagemaker.DescribeDeviceOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -51,6 +53,8 @@ func TestAccSageMakerDevice_basic(t *testing.T) {
 }
 
 func TestAccSageMakerDevice_description(t *testing.T) {
+	t.Skip("skipping tests; Amazon Sagemaker Edge has been deprecated on April 26th, 2024")
+
 	ctx := acctest.Context(t)
 	var device sagemaker.DescribeDeviceOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -86,6 +90,8 @@ func TestAccSageMakerDevice_description(t *testing.T) {
 }
 
 func TestAccSageMakerDevice_disappears(t *testing.T) {
+	t.Skip("skipping tests; Amazon Sagemaker Edge has been deprecated on April 26th, 2024")
+
 	ctx := acctest.Context(t)
 	var device sagemaker.DescribeDeviceOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -110,6 +116,8 @@ func TestAccSageMakerDevice_disappears(t *testing.T) {
 }
 
 func TestAccSageMakerDevice_disappears_fleet(t *testing.T) {
+	t.Skip("skipping tests; Amazon Sagemaker Edge has been deprecated on April 26th, 2024")
+
 	ctx := acctest.Context(t)
 	var device sagemaker.DescribeDeviceOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
