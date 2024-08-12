@@ -5,6 +5,7 @@ package sagemaker
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/YakDriver/regexache"
@@ -21,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -425,14 +425,18 @@ func expandFlowDefinitionHumanLoopActivationConditionsConfig(l []interface{}) (*
 	}
 
 	m := l[0].(map[string]interface{})
+	output := &awstypes.HumanLoopActivationConditionsConfig{}
 
-	var output awstypes.HumanLoopActivationConditionsConfig
-	err := tfjson.DecodeFromString(m["human_loop_activation_conditions"].(string), &output)
-	if err != nil {
-		return nil, err
+	if v, ok := m["human_loop_activation_conditions"]; ok && v.(string) != "" {
+		out, err := structure.NormalizeJsonString(v)
+		if err != nil {
+			return nil, fmt.Errorf("Human Loop Activation Conditions (%s) is invalid JSON: %w", out, err)
+		}
+
+		output.HumanLoopActivationConditions = aws.String(out)
 	}
 
-	return &output, nil
+	return output, nil
 }
 
 func flattenFlowDefinitionHumanLoopActivationConditionsConfig(config *awstypes.HumanLoopActivationConditionsConfig) []map[string]interface{} {
@@ -440,13 +444,8 @@ func flattenFlowDefinitionHumanLoopActivationConditionsConfig(config *awstypes.H
 		return []map[string]interface{}{}
 	}
 
-	v, err := tfjson.EncodeToString(config.HumanLoopActivationConditions)
-	if err != nil {
-		return []map[string]interface{}{}
-	}
-
 	m := map[string]interface{}{
-		"human_loop_activation_conditions": v,
+		"human_loop_activation_conditions": config.HumanLoopActivationConditions,
 	}
 
 	return []map[string]interface{}{m}
