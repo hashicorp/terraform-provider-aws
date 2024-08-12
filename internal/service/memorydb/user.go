@@ -26,7 +26,7 @@ import (
 
 // @SDKResource("aws_memorydb_user", name="User")
 // @Tags(identifierAttribute="arn")
-func ResourceUser() *schema.Resource {
+func resourceUser() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserCreate,
 		ReadWithoutTimeout:   resourceUserRead,
