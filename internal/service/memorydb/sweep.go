@@ -93,7 +93,7 @@ func sweepACLs(region string) error {
 				continue // The open-access ACL cannot be deleted.
 			}
 
-			r := ResourceACL()
+			r := resourceACL()
 			d := r.Data(nil)
 			d.SetId(id)
 
@@ -134,7 +134,7 @@ func sweepClusters(region string) error {
 		}
 
 		for _, v := range page.Clusters {
-			r := ResourceCluster()
+			r := resourceCluster()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.Name))
 
@@ -182,7 +182,7 @@ func sweepParameterGroups(region string) error {
 				continue // Default parameter groups cannot be deleted.
 			}
 
-			r := ResourceParameterGroup()
+			r := resourceParameterGroup()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.Name))
 
@@ -223,7 +223,7 @@ func sweepSnapshots(region string) error {
 		}
 
 		for _, v := range page.Snapshots {
-			r := ResourceSnapshot()
+			r := resourceSnapshot()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.Name))
 
@@ -271,7 +271,7 @@ func sweepSubnetGroups(region string) error {
 				continue // The default subnet group cannot be deleted.
 			}
 
-			r := ResourceSubnetGroup()
+			r := resourceSubnetGroup()
 			d := r.Data(nil)
 			d.SetId(id)
 
@@ -319,7 +319,7 @@ func sweepUsers(region string) error {
 				continue // The default user cannot be deleted.
 			}
 
-			r := ResourceUser()
+			r := resourceUser()
 			d := r.Data(nil)
 			d.SetId(id)
 
