@@ -8014,7 +8014,7 @@ service "sagemaker" {
 
   sdk {
     id             = "SageMaker"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
