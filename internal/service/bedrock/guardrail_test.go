@@ -66,11 +66,10 @@ func TestAccBedrockGuardrail_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportStateIdFunc:       testAccGuardrailImportStateIDFunc(ctx, resourceName),
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccGuardrailImportStateIDFunc(ctx, resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -130,11 +129,10 @@ func TestAccBedrockGuardrail_kmsKey(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportStateIdFunc:       testAccGuardrailImportStateIDFunc(ctx, resourceName),
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccGuardrailImportStateIDFunc(ctx, resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -254,15 +252,15 @@ func testAccGuardrailImportStateIDFunc(ctx context.Context, n string) resource.I
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockClient(ctx)
 
-		version := rs.Primary.Attributes[names.AttrVersion]
 		id := rs.Primary.ID
+		version := rs.Primary.Attributes[names.AttrVersion]
 		_, err := tfbedrock.FindGuardrailByID(ctx, conn, id, version)
 
 		if err != nil {
 			return "", err
 		}
 
-		return fmt.Sprintf("%s:%s", id, version), nil
+		return fmt.Sprintf("%s,%s", id, version), nil
 	}
 }
 
