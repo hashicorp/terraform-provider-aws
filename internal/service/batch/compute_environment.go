@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
@@ -533,6 +534,10 @@ func resourceComputeEnvironmentDelete(ctx context.Context, d *schema.ResourceDat
 		ComputeEnvironment: aws.String(d.Id()),
 		State:              awstypes.CEStateDisabled,
 	})
+
+	if errs.IsAErrorMessageContains[*awstypes.ClientException](err, "does not exist") {
+		return diags
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "disabling Batch Compute Environment (%s): %s", d.Id(), err)
