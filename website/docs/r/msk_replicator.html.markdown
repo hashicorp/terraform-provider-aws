@@ -50,6 +50,9 @@ resource "aws_msk_replicator" "test" {
 
     topic_replication {
       topics_to_replicate = [".*"]
+      starting_position {
+        type = "LATEST"
+      }
     }
 
     consumer_group_replication {
@@ -89,7 +92,6 @@ The following arguments are required:
 * `target_kafka_cluster_arn` - (Required) The ARN of the target Kafka cluster.
 * `target_compression_type` - (Required) The type of compression to use writing records to target Kafka cluster.
 * `topic_replication` - (Required) Configuration relating to topic replication.
-* `starting_position` - (Optional) Configuration for specifying the position in the topics to start replicating from.
 * `consumer_group_replication` - (Required) Configuration relating to consumer group replication.
 
 ### topic_replication Argument Reference
@@ -99,6 +101,7 @@ The following arguments are required:
 * `detect_and_copy_new_topics` - (Optional) Whether to periodically check for new topics and partitions.
 * `copy_access_control_lists_for_topics` - (Optional) Whether to periodically configure remote topic ACLs to match their corresponding upstream topics.
 * `copy_topic_configurations` - (Optional) Whether to periodically configure remote topics to match their corresponding upstream topics.
+* `starting_position` - (Optional) Configuration for specifying the position in the topics to start replicating from.
 
 ### consumer_group_replication Argument Reference
 
