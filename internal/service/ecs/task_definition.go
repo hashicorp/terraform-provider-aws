@@ -103,7 +103,8 @@ func resourceTaskDefinition() *schema.Resource {
 					equal, _ := containerDefinitionsAreEquivalent(old, new, isAWSVPC)
 					return equal
 				},
-				ValidateFunc: validTaskDefinitionContainerDefinitions,
+				DiffSuppressOnRefresh: true,
+				ValidateFunc:          validTaskDefinitionContainerDefinitions,
 			},
 			"cpu": {
 				Type:     schema.TypeString,

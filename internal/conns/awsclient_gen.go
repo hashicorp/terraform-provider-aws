@@ -227,7 +227,6 @@ import (
 	workspaces_sdkv2 "github.com/aws/aws-sdk-go-v2/service/workspaces"
 	workspacesweb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/workspacesweb"
 	xray_sdkv2 "github.com/aws/aws-sdk-go-v2/service/xray"
-	batch_sdkv1 "github.com/aws/aws-sdk-go/service/batch"
 	connect_sdkv1 "github.com/aws/aws-sdk-go/service/connect"
 	elasticsearchservice_sdkv1 "github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	emr_sdkv1 "github.com/aws/aws-sdk-go/service/emr"
@@ -351,10 +350,6 @@ func (c *AWSClient) BCMDataExportsClient(ctx context.Context) *bcmdataexports_sd
 
 func (c *AWSClient) BackupClient(ctx context.Context) *backup_sdkv2.Client {
 	return errs.Must(client[*backup_sdkv2.Client](ctx, c, names.Backup, make(map[string]any)))
-}
-
-func (c *AWSClient) BatchConn(ctx context.Context) *batch_sdkv1.Batch {
-	return errs.Must(conn[*batch_sdkv1.Batch](ctx, c, names.Batch, make(map[string]any)))
 }
 
 func (c *AWSClient) BatchClient(ctx context.Context) *batch_sdkv2.Client {
