@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -25,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -39,6 +39,8 @@ func newResourceEnvironmentProfile(_ context.Context) (resource.ResourceWithConf
 
 const (
 	ResNameEnvironmentProfile = "Environment Profile"
+
+	environmentProfileIDParts = 2
 )
 
 type resourceEnvironmentProfile struct {
@@ -256,8 +258,8 @@ func (r *resourceEnvironmentProfile) Delete(ctx context.Context, req resource.De
 	}
 
 	_, err := conn.DeleteEnvironmentProfile(ctx, &datazone.DeleteEnvironmentProfileInput{
-		DomainIdentifier: state.DomainIdentifier.ValueStringPointer(),
 		Identifier:       state.Id.ValueStringPointer(),
+		DomainIdentifier: state.DomainIdentifier.ValueStringPointer(),
 	})
 
 	if err != nil && !errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -270,14 +272,17 @@ func (r *resourceEnvironmentProfile) Delete(ctx context.Context, req resource.De
 }
 
 func (r *resourceEnvironmentProfile) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	parts := strings.Split(req.ID, ",")
-
-	if len(parts) != 2 {
-		resp.Diagnostics.AddError("Resource Import Invalid ID", fmt.Sprintf(`Unexpected format for import ID (%s), use: "DomainIdentifier,Id,EnvironmentBlueprint,Id,ProjectIdentifier"`, req.ID))
+	parts, err := intflex.ExpandResourceId(req.ID, environmentProfileIDParts, false)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Unexpected Import Identifier",
+			fmt.Sprintf("Expected import identifier with format: id,domain_identifier. Got: %q", req.ID),
+		)
+		return
 	}
 
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("domain_identifier"), parts[0])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), parts[1])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), parts[0])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("domain_identifier"), parts[1])...)
 }
 
 func findEnvironmentProfileByID(ctx context.Context, conn *datazone.Client, id string, domainID string) (*datazone.GetEnvironmentProfileOutput, error) {

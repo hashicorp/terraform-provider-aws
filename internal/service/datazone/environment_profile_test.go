@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/datazone"
@@ -249,12 +248,14 @@ func testAccAuthorizerEnvProfImportStateIdFunc(resourceName string) resource.Imp
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return strings.Join([]string{rs.Primary.Attributes["domain_identifier"], rs.Primary.ID}, ","), nil
+		return fmt.Sprintf("%s,%s", rs.Primary.ID, rs.Primary.Attributes["domain_identifier"]), nil
 	}
 }
 
 func testAccEnvironmentProfileConfig_base(domainName, projectName string) string {
-	return acctest.ConfigCompose(testAccProjectConfig_basic(projectName, domainName), (`
+	return acctest.ConfigCompose(
+		testAccProjectConfig_basic(projectName, domainName),
+		`
 data "aws_caller_identity" "test" {}
 data "aws_region" "test" {}
 
@@ -270,11 +271,13 @@ resource "aws_datazone_environment_blueprint_configuration" "test" {
   provisioning_role_arn    = aws_iam_role.domain_execution_role.arn
   enabled_regions          = [data.aws_region.test.name]
 }
-`))
+`)
 }
 
 func testAccEnvironmentProfileConfig_basic(rName, domainName, projectName string) string {
-	return acctest.ConfigCompose(testAccEnvironmentProfileConfig_base(domainName, projectName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccEnvironmentProfileConfig_base(domainName, projectName),
+		fmt.Sprintf(`
 resource "aws_datazone_environment_profile" "test" {
   aws_account_id                   = data.aws_caller_identity.test.account_id
   aws_account_region               = data.aws_region.test.name
@@ -287,13 +290,14 @@ resource "aws_datazone_environment_profile" "test" {
     name  = "consumerGlueDbName"
     value = "value"
   }
-
 }
 `, rName))
 }
 
 func testAccEnvironmentProfileConfig_update(rName, domainName, projectName string) string {
-	return acctest.ConfigCompose(testAccEnvironmentProfileConfig_base(domainName, projectName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccEnvironmentProfileConfig_base(domainName, projectName),
+		fmt.Sprintf(`
 resource "aws_datazone_environment_profile" "test" {
   aws_account_id                   = data.aws_caller_identity.test.account_id
   aws_account_region               = data.aws_region.test.name
@@ -311,7 +315,9 @@ resource "aws_datazone_environment_profile" "test" {
 }
 
 func testAccEnvironmentProfileConfig_basic_base(rName, domainName, projectName string) string {
-	return acctest.ConfigCompose(testAccEnvironmentProfileConfig_base(domainName, projectName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccEnvironmentProfileConfig_base(domainName, projectName),
+		fmt.Sprintf(`
 resource "aws_datazone_environment_profile" "test" {
   aws_account_id                   = data.aws_caller_identity.test.account_id
   aws_account_region               = data.aws_region.test.name
@@ -319,7 +325,6 @@ resource "aws_datazone_environment_profile" "test" {
   name                             = %[1]q
   project_identifier               = aws_datazone_project.test.id
   domain_identifier                = aws_datazone_domain.test.id
-
 }
 `, rName))
 }
