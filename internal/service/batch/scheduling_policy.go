@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -229,7 +230,7 @@ func expandFairsharePolicy(tfList []interface{}) *awstypes.FairsharePolicy {
 		tfMap := tfMapRaw.(map[string]interface{})
 		apiObject.ShareDistribution = append(apiObject.ShareDistribution, awstypes.ShareAttributes{
 			ShareIdentifier: aws.String(tfMap["share_identifier"].(string)),
-			WeightFactor:    aws.Float32(float32(tfMap["weight_factor"].(float64))),
+			WeightFactor:    flex.Float64ValueToFloat32(tfMap["weight_factor"].(float64)),
 		})
 	}
 
@@ -250,7 +251,7 @@ func flattenFairsharePolicy(apiObject *awstypes.FairsharePolicy) []interface{} {
 	for _, apiObject := range apiObject.ShareDistribution {
 		tfMap := map[string]interface{}{
 			"share_identifier": aws.ToString(apiObject.ShareIdentifier),
-			"weight_factor":    float64(aws.ToFloat32(apiObject.WeightFactor)),
+			"weight_factor":    flex.Float32ToFloat64Value(apiObject.WeightFactor),
 		}
 		tfList = append(tfList, tfMap)
 	}
