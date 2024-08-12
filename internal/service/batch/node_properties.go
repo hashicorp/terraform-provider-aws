@@ -53,7 +53,7 @@ func equivalentNodePropertiesJSON(str1, str2 string) (bool, error) {
 	}
 
 	var np2 nodeProperties
-	err = tfjson.DecodeFromString(str1, &np2)
+	err = tfjson.DecodeFromString(str2, &np2)
 	if err != nil {
 		return false, err
 	}
