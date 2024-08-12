@@ -46,7 +46,7 @@ plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), know
 {{- end }}
 {{- end }}
 
-{{ define "ImportBody" }}
+{{ define "CommonImportBody" -}}
 	ResourceName: resourceName,
 	ImportState:  true,
 {{ if gt (len .ImportStateID) 0 -}}
@@ -56,6 +56,10 @@ plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), know
 	ImportStateIdFunc: {{ .ImportStateIDFunc }}(resourceName),
 {{ end -}}
 	ImportStateVerify: true,
+{{- end }}
+
+{{ define "ImportBody" }}
+{{ template "CommonImportBody" . }}
 {{ if gt (len .ImportIgnore) 0 -}}
 	ImportStateVerifyIgnore: []string{
 	{{ range $i, $v := .ImportIgnore }}{{ $v }},{{ end }}
@@ -64,15 +68,7 @@ plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), know
 {{ end }}
 
 {{ define "ImportBodyIgnoreKey1" }}
-	ResourceName: resourceName,
-	ImportState:  true,
-{{ if gt (len .ImportStateID) 0 -}}
-	ImportStateId: {{ .ImportStateID }},
-{{ end -}}
-{{ if gt (len .ImportStateIDFunc) 0 -}}
-	ImportStateIdFunc: {{ .ImportStateIDFunc }}(resourceName),
-{{ end -}}
-	ImportStateVerify: true,
+{{ template "CommonImportBody" . }}
 {{ if or (eq .Implementation "framework") (gt (len .ImportIgnore) 0) -}}
 	ImportStateVerifyIgnore: []string{
 		{{- if eq .Implementation "framework" }}
@@ -86,15 +82,7 @@ plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), know
 {{ end }}
 
 {{ define "ImportBodyIgnoreResourceKey1" }}
-	ResourceName: resourceName,
-	ImportState:  true,
-{{ if gt (len .ImportStateID) 0 -}}
-	ImportStateId: {{ .ImportStateID }},
-{{ end -}}
-{{ if gt (len .ImportStateIDFunc) 0 -}}
-	ImportStateIdFunc: {{ .ImportStateIDFunc }}(resourceName),
-{{ end -}}
-	ImportStateVerify: true,
+{{ template "CommonImportBody" . }}
 {{ if or (eq .Implementation "framework") (gt (len .ImportIgnore) 0) -}}
 	ImportStateVerifyIgnore: []string{
 		{{- if eq .Implementation "framework" }}
