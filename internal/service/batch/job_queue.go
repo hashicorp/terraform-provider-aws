@@ -455,7 +455,7 @@ func waitJobQueueCreated(ctx context.Context, conn *batch.Client, id string, tim
 	return nil, err
 }
 
-func waitJobQueueUpdated(ctx context.Context, conn *batch.Client, id string, timeout time.Duration) (*awstypes.JobQueueDetail, error) {
+func waitJobQueueUpdated(ctx context.Context, conn *batch.Client, id string, timeout time.Duration) (*awstypes.JobQueueDetail, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.JQStatusUpdating),
 		Target:     enum.Slice(awstypes.JQStatusValid),
