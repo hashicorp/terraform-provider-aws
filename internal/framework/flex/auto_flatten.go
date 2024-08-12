@@ -83,6 +83,18 @@ func autoFlattenConvert(ctx context.Context, from, to any, flexer autoFlexer) di
 	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourcePath, sourcePath.String())
 	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetPath, targetPath.String())
 
+	if _, ok := to.(attr.Value); !ok {
+		vf := reflect.ValueOf(from)
+		if vf.Kind() == reflect.Invalid || vf.Kind() == reflect.Pointer && vf.IsNil() {
+			tflog.SubsystemError(ctx, subsystemName, "Source is nil", map[string]any{
+				logAttrKeySourceType: fullTypeName(reflect.TypeOf(from)),
+				logAttrKeyTargetType: fullTypeName(reflect.TypeOf(to)),
+			})
+			diags.Append(diagFlatteningSourceIsNil(reflect.TypeOf(from)))
+			return diags
+		}
+	}
+
 	ctx, valFrom, valTo, d := autoFlexValues(ctx, from, to)
 	diags.Append(d...)
 	if diags.HasError() {
@@ -97,6 +109,8 @@ func autoFlattenConvert(ctx context.Context, from, to any, flexer autoFlexer) di
 			return diags
 		}
 	}
+
+	valFrom = reflect.ValueOf(from)
 
 	// Anything else.
 	diags.Append(flexer.convert(ctx, sourcePath, valFrom, targetPath, valTo)...)
