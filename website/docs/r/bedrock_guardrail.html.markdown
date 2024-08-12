@@ -152,15 +152,15 @@ The `filters_config` configuration block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Guardrail.
 * `created_at` - Unix epoch timestamp in seconds for when the Guardrail was created.
-* `id` - ID of the Guardrail.
+* `guardrail_arn` - ARN of the Guardrail.
+* `guardrail_id` - ID of the Guardrail.
 * `status` - Status of the Bedrock Guardrail. One of `READY`, `FAILED`.
 * `version` - Version of the Guardrail.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Amazon Bedrock Guardrail using a comma-delimited string of `id` and `version`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Amazon Bedrock Guardrail using a comma-delimited string of `guardrail_id` and `version`. For example:
 
 ```terraform
 import {
@@ -169,7 +169,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Amazon Bedrock Guardrail using using a comma-delimited string of `id` and `version`. For example:
+Using `terraform import`, import Amazon Bedrock Guardrail using using a comma-delimited string of `guardrail_id` and `version`. For example:
 
 ```console
 % terraform import aws_bedrock_guardrail.example guardrail-id-12345678,DRAFT
