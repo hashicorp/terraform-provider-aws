@@ -24,9 +24,6 @@ import (
 
 func TestAccDataZoneEnvironmentProfile_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 
 	var environmentprofile datazone.GetEnvironmentProfileOutput
 	epName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -44,14 +41,13 @@ func TestAccDataZoneEnvironmentProfile_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DataZoneEndpointID)
-			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataZoneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEnvironmentProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentProfileConfig_basic_base(epName, dName, pName),
+				Config: testAccEnvironmentProfileConfig_basic(epName, dName, pName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentProfileExists(ctx, resourceName, &environmentprofile),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrAWSAccountID, callName, names.AttrAccountID),
@@ -66,10 +62,42 @@ func TestAccDataZoneEnvironmentProfile_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateIdFunc: testAccAuthorizerEnvProfImportStateIdFunc(resourceName),
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccAuthorizerEnvProfImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_parameters"},
+			},
+		},
+	})
+}
+
+func TestAccDataZoneEnvironmentProfile_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var environmentprofile datazone.GetEnvironmentProfileOutput
+	epName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	pName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resourceName := "aws_datazone_environment_profile.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.DataZoneEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataZoneServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEnvironmentProfileDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEnvironmentProfileConfig_basic(epName, dName, pName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEnvironmentProfileExists(ctx, resourceName, &environmentprofile),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdatazone.ResourceEnvironmentProfile, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -77,9 +105,6 @@ func TestAccDataZoneEnvironmentProfile_basic(t *testing.T) {
 
 func TestAccDataZoneEnvironmentProfile_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 
 	var environmentprofile datazone.GetEnvironmentProfileOutput
 	epName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -97,7 +122,6 @@ func TestAccDataZoneEnvironmentProfile_update(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DataZoneEndpointID)
-			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataZoneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -122,10 +146,11 @@ func TestAccDataZoneEnvironmentProfile_update(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateIdFunc: testAccAuthorizerEnvProfImportStateIdFunc(resourceName),
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccAuthorizerEnvProfImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_parameters"},
 			},
 			{
 				Config: testAccEnvironmentProfileConfig_update(epName, dName, pName),
@@ -148,45 +173,11 @@ func TestAccDataZoneEnvironmentProfile_update(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateIdFunc: testAccAuthorizerEnvProfImportStateIdFunc(resourceName),
-			},
-		},
-	})
-}
-
-func TestAccDataZoneEnvironmentProfile_disappears(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var environmentprofile datazone.GetEnvironmentProfileOutput
-	epName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	dName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	pName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resourceName := "aws_datazone_environment_profile.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.DataZoneEndpointID)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.DataZoneServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnvironmentProfileDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccEnvironmentProfileConfig_basic(epName, dName, pName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentProfileExists(ctx, resourceName, &environmentprofile),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdatazone.ResourceEnvironmentProfile, resourceName),
-				),
-				ExpectNonEmptyPlan: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccAuthorizerEnvProfImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_parameters"},
 			},
 		},
 	})
@@ -310,21 +301,6 @@ resource "aws_datazone_environment_profile" "test" {
     name  = "consumerGlueDbName"
     value = "value"
   }
-}
-`, rName))
-}
-
-func testAccEnvironmentProfileConfig_basic_base(rName, domainName, projectName string) string {
-	return acctest.ConfigCompose(
-		testAccEnvironmentProfileConfig_base(domainName, projectName),
-		fmt.Sprintf(`
-resource "aws_datazone_environment_profile" "test" {
-  aws_account_id                   = data.aws_caller_identity.test.account_id
-  aws_account_region               = data.aws_region.test.name
-  environment_blueprint_identifier = data.aws_datazone_environment_blueprint.test.id
-  name                             = %[1]q
-  project_identifier               = aws_datazone_project.test.id
-  domain_identifier                = aws_datazone_domain.test.id
 }
 `, rName))
 }
