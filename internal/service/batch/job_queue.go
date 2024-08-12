@@ -29,7 +29,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -134,13 +133,13 @@ func (r *jobQueueResource) Create(ctx context.Context, request resource.CreateRe
 	name := data.JobQueueName.ValueString()
 	input := &batch.CreateJobQueueInput{
 		JobQueueName: aws.String(name),
-		Priority:     flex.Int32FromFramework(ctx, data.Priority),
+		Priority:     fwflex.Int32FromFramework(ctx, data.Priority),
 		State:        awstypes.JQState(data.State.ValueString()),
 		Tags:         getTagsIn(ctx),
 	}
 
 	if !data.ComputeEnvironmentOrder.IsNull() {
-		response.Diagnostics.Append(flex.Expand(ctx, data.ComputeEnvironmentOrder, &input.ComputeEnvironmentOrder)...)
+		response.Diagnostics.Append(fwflex.Expand(ctx, data.ComputeEnvironmentOrder, &input.ComputeEnvironmentOrder)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -148,7 +147,7 @@ func (r *jobQueueResource) Create(ctx context.Context, request resource.CreateRe
 		input.ComputeEnvironmentOrder = expandComputeEnvironments(ctx, data.ComputeEnvironments)
 	}
 	if !data.SchedulingPolicyARN.IsNull() {
-		input.SchedulingPolicyArn = flex.StringFromFramework(ctx, data.SchedulingPolicyARN)
+		input.SchedulingPolicyArn = fwflex.StringFromFramework(ctx, data.SchedulingPolicyARN)
 	}
 
 	output, err := conn.CreateJobQueue(ctx, input)
@@ -205,18 +204,18 @@ func (r *jobQueueResource) Read(ctx context.Context, request resource.ReadReques
 
 	// Set attributes for import.
 	if !data.ComputeEnvironmentOrder.IsNull() {
-		response.Diagnostics.Append(flex.Flatten(ctx, jobQueue.ComputeEnvironmentOrder, &data.ComputeEnvironmentOrder)...)
+		response.Diagnostics.Append(fwflex.Flatten(ctx, jobQueue.ComputeEnvironmentOrder, &data.ComputeEnvironmentOrder)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
 	} else {
 		data.ComputeEnvironments = flattenComputeEnvironments(ctx, jobQueue.ComputeEnvironmentOrder)
 	}
-	data.JobQueueARN = flex.StringToFrameworkLegacy(ctx, jobQueue.JobQueueArn)
-	data.JobQueueName = flex.StringToFramework(ctx, jobQueue.JobQueueName)
-	data.Priority = flex.Int32ToFrameworkLegacy(ctx, jobQueue.Priority)
-	data.SchedulingPolicyARN = flex.StringToFrameworkARN(ctx, jobQueue.SchedulingPolicyArn)
-	data.State = flex.StringValueToFramework(ctx, jobQueue.State)
+	data.JobQueueARN = fwflex.StringToFrameworkLegacy(ctx, jobQueue.JobQueueArn)
+	data.JobQueueName = fwflex.StringToFramework(ctx, jobQueue.JobQueueName)
+	data.Priority = fwflex.Int32ToFrameworkLegacy(ctx, jobQueue.Priority)
+	data.SchedulingPolicyARN = fwflex.StringToFrameworkARN(ctx, jobQueue.SchedulingPolicyArn)
+	data.State = fwflex.StringValueToFramework(ctx, jobQueue.State)
 
 	setTagsOut(ctx, jobQueue.Tags)
 
@@ -238,11 +237,11 @@ func (r *jobQueueResource) Update(ctx context.Context, request resource.UpdateRe
 
 	var update bool
 	input := &batch.UpdateJobQueueInput{
-		JobQueue: flex.StringFromFramework(ctx, new.JobQueueName),
+		JobQueue: fwflex.StringFromFramework(ctx, new.JobQueueName),
 	}
 
 	if !new.ComputeEnvironmentOrder.IsNull() && !new.ComputeEnvironmentOrder.Equal(old.ComputeEnvironmentOrder) {
-		response.Diagnostics.Append(flex.Expand(ctx, new.ComputeEnvironmentOrder, &input.ComputeEnvironmentOrder)...)
+		response.Diagnostics.Append(fwflex.Expand(ctx, new.ComputeEnvironmentOrder, &input.ComputeEnvironmentOrder)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -254,7 +253,7 @@ func (r *jobQueueResource) Update(ctx context.Context, request resource.UpdateRe
 		}
 	}
 	if !new.Priority.Equal(old.Priority) {
-		input.Priority = flex.Int32FromFramework(ctx, new.Priority)
+		input.Priority = fwflex.Int32FromFramework(ctx, new.Priority)
 		update = true
 	}
 	if !new.State.Equal(old.State) {
@@ -262,12 +261,12 @@ func (r *jobQueueResource) Update(ctx context.Context, request resource.UpdateRe
 		update = true
 	}
 	if !old.SchedulingPolicyARN.IsNull() {
-		input.SchedulingPolicyArn = flex.StringFromFramework(ctx, old.SchedulingPolicyARN)
+		input.SchedulingPolicyArn = fwflex.StringFromFramework(ctx, old.SchedulingPolicyARN)
 		update = true
 	}
 	if !new.SchedulingPolicyARN.Equal(old.SchedulingPolicyARN) {
 		if !new.SchedulingPolicyARN.IsNull() || !old.SchedulingPolicyARN.IsUnknown() {
-			input.SchedulingPolicyArn = flex.StringFromFramework(ctx, new.SchedulingPolicyARN)
+			input.SchedulingPolicyArn = fwflex.StringFromFramework(ctx, new.SchedulingPolicyARN)
 			update = true
 		} else {
 			response.Diagnostics.AddError(
