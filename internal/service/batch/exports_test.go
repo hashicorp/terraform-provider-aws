@@ -10,6 +10,8 @@ var (
 	ResourceJobQueue           = newJobQueueResource
 	ResourceSchedulingPolicy   = resourceSchedulingPolicy
 
+	EquivalentContainerPropertiesJSON       = equivalentContainerPropertiesJSON
+	EquivalentNodePropertiesJSON            = equivalentNodePropertiesJSON
 	ExpandEC2ConfigurationsUpdate           = expandEC2ConfigurationsUpdate
 	ExpandLaunchTemplateSpecificationUpdate = expandLaunchTemplateSpecificationUpdate
 	FindComputeEnvironmentDetailByName      = findComputeEnvironmentDetailByName

@@ -4,13 +4,12 @@
 package batch
 
 import (
-	"bytes"
-	"encoding/json"
-	"fmt"
-	"log"
+	_ "unsafe" // Required for go:linkname
 
-	"github.com/aws/aws-sdk-go-v2/service/batch"
-	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
+	_ "github.com/aws/aws-sdk-go-v2/service/batch" // Required for go:linkname
+	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
+	smithyjson "github.com/aws/smithy-go/encoding/json"
+	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 )
 
 type nodeProperties struct {
@@ -25,19 +24,15 @@ type nodeRangeProperty struct {
 }
 
 func (np *nodeProperties) Reduce() error {
-	// Deal with Environment objects which may be re-ordered in the API
+	// Deal with Environment objects which may be re-ordered in the API.
 	for _, node := range np.NodeRangeProperties {
-		cp := node.Container
-		if err := cp.Reduce(); err != nil {
-			return err
-		}
+		node.Container.Reduce()
 	}
 
 	return nil
 }
 
-// EquivalentNodePropertiesJSON determines equality between two Batch NodeProperties JSON strings
-func EquivalentNodePropertiesJSON(str1, str2 string) (bool, error) {
+func equivalentNodePropertiesJSON(str1, str2 string) (bool, error) {
 	if str1 == "" {
 		str1 = "{}"
 	}
@@ -46,63 +41,54 @@ func EquivalentNodePropertiesJSON(str1, str2 string) (bool, error) {
 		str2 = "{}"
 	}
 
-	var np1, np2 nodeProperties
-
-	if err := json.Unmarshal([]byte(str1), &np1); err != nil {
+	var np1 nodeProperties
+	err := tfjson.DecodeFromString(str1, &np1)
+	if err != nil {
 		return false, err
 	}
-
-	if err := np1.Reduce(); err != nil {
-		return false, err
-	}
-
-	canonicalJson1, err := jsonutil.BuildJSON(np1)
-
+	np1.Reduce()
+	b1, err := tfjson.EncodeToBytes(np1)
 	if err != nil {
 		return false, err
 	}
 
-	if err := json.Unmarshal([]byte(str2), &np2); err != nil {
+	var np2 nodeProperties
+	err = tfjson.DecodeFromString(str1, &np2)
+	if err != nil {
 		return false, err
 	}
-
-	if err := np2.Reduce(); err != nil {
-		return false, err
-	}
-
-	canonicalJson2, err := jsonutil.BuildJSON(np2)
-
+	np2.Reduce()
+	b2, err := tfjson.EncodeToBytes(np2)
 	if err != nil {
 		return false, err
 	}
 
-	equal := bytes.Equal(canonicalJson1, canonicalJson2)
-
-	if !equal {
-		log.Printf("[DEBUG] Canonical Batch Node Properties JSON are not equal.\nFirst: %s\nSecond: %s\n", canonicalJson1, canonicalJson2)
-	}
-
-	return equal, nil
+	return tfjson.EqualBytes(b1, b2), nil
 }
 
-func expandJobNodeProperties(rawProps string) (*batch.NodeProperties, error) {
-	var props *batch.NodeProperties
+func expandJobNodeProperties(tfString string) (*awstypes.NodeProperties, error) {
+	apiObject := &awstypes.NodeProperties{}
 
-	err := json.Unmarshal([]byte(rawProps), &props)
-	if err != nil {
-		return nil, fmt.Errorf("decoding JSON: %s", err)
+	if err := tfjson.DecodeFromString(tfString, apiObject); err != nil {
+		return nil, err
 	}
 
-	return props, nil
+	return apiObject, nil
 }
 
-// Convert batch.NodeProperties object into its JSON representation
-func flattenNodeProperties(nodeProperties *batch.NodeProperties) (string, error) {
-	b, err := jsonutil.BuildJSON(nodeProperties)
+// Dirty hack to avoid any backwards compatibility issues with the AWS SDK for Go v2 migration.
+// Reach down into the SDK and use the same serialization function that the SDK uses.
+//
+//go:linkname serializeContainerProperties github.com/aws/aws-sdk-go-v2/service/batch.awsRestjson1_serializeDocumentNodeProperties
+func serializeNodeProperties(v *awstypes.NodeProperties, value smithyjson.Value) error
+
+func flattenNodeProperties(apiObject *awstypes.NodeProperties) (string, error) {
+	jsonEncoder := smithyjson.NewEncoder()
+	err := serializeNodeProperties(apiObject, jsonEncoder.Value)
 
 	if err != nil {
 		return "", err
 	}
 
-	return string(b), nil
+	return jsonEncoder.String(), nil
 }

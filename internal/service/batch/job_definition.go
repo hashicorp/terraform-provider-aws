@@ -65,8 +65,7 @@ func resourceJobDefinition() *schema.Resource {
 					return json
 				},
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					equal, _ := EquivalentContainerPropertiesJSON(old, new)
-
+					equal, _ := equivalentContainerPropertiesJSON(old, new)
 					return equal
 				},
 				DiffSuppressOnRefresh: true,
@@ -329,7 +328,7 @@ func resourceJobDefinition() *schema.Resource {
 					return json
 				},
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					equal, _ := EquivalentNodePropertiesJSON(old, new)
+					equal, _ := equivalentNodePropertiesJSON(old, new)
 					return equal
 				},
 				DiffSuppressOnRefresh: true,
@@ -469,7 +468,7 @@ func needsJobDefUpdate(d *schema.ResourceDiff) bool {
 	if d.HasChange("container_properties") {
 		o, n := d.GetChange("container_properties")
 
-		equivalent, err := EquivalentContainerPropertiesJSON(o.(string), n.(string))
+		equivalent, err := equivalentContainerPropertiesJSON(o.(string), n.(string))
 		if err != nil {
 			return false
 		}
@@ -482,7 +481,7 @@ func needsJobDefUpdate(d *schema.ResourceDiff) bool {
 	if d.HasChange("node_properties") {
 		o, n := d.GetChange("node_properties")
 
-		equivalent, err := EquivalentNodePropertiesJSON(o.(string), n.(string))
+		equivalent, err := equivalentNodePropertiesJSON(o.(string), n.(string))
 		if err != nil {
 			return false
 		}
@@ -592,7 +591,7 @@ func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, me
 		}
 
 		if v, ok := d.GetOk("container_properties"); ok {
-			props, err := expandJobContainerProperties(v.(string))
+			props, err := expandContainerProperties(v.(string))
 			if err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
@@ -741,7 +740,7 @@ func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, me
 		}
 
 		if v, ok := d.GetOk("container_properties"); ok {
-			props, err := expandJobContainerProperties(v.(string))
+			props, err := expandContainerProperties(v.(string))
 			if err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
@@ -911,7 +910,7 @@ func findJobDefinitions(ctx context.Context, conn *batch.Client, input *batch.De
 
 func validJobContainerProperties(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-	_, err := expandJobContainerProperties(value)
+	_, err := expandContainerProperties(value)
 	if err != nil {
 		errors = append(errors, fmt.Errorf("AWS Batch Job container_properties is invalid: %s", err))
 	}
@@ -1090,4 +1089,446 @@ func removeEmptyEnvironmentVariables(diags *diag.Diagnostics, environment []awst
 			)
 		}
 	}
+}
+
+func expandEKSPodProperties(tfMap map[string]interface{}) *awstypes.EksPodProperties {
+	apiObject := &awstypes.EksPodProperties{}
+
+	if v, ok := tfMap["containers"]; ok {
+		apiObject.Containers = expandContainers(v.([]interface{}))
+	}
+
+	if v, ok := tfMap["dns_policy"].(string); ok && v != "" {
+		apiObject.DnsPolicy = aws.String(v)
+	}
+
+	if v, ok := tfMap["host_network"]; ok {
+		apiObject.HostNetwork = aws.Bool(v.(bool))
+	}
+
+	if v, ok := tfMap["image_pull_secret"]; ok {
+		apiObject.ImagePullSecrets = expandImagePullSecrets(v.([]interface{}))
+	}
+
+	if v, ok := tfMap["metadata"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := v[0].(map[string]interface{})["labels"]; ok {
+			apiObject.Metadata = &awstypes.EksMetadata{
+				Labels: flex.ExpandStringValueMap(v.(map[string]interface{})),
+			}
+		}
+	}
+
+	if v, ok := tfMap["service_account_name"].(string); ok && v != "" {
+		apiObject.ServiceAccountName = aws.String(v)
+	}
+
+	if v, ok := tfMap["volumes"]; ok {
+		apiObject.Volumes = expandVolumes(v.([]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandContainers(tfList []interface{}) []awstypes.EksContainer {
+	var apiObjects []awstypes.EksContainer
+
+	for _, tfMapRaw := range tfList {
+		tfMap := tfMapRaw.(map[string]interface{})
+		apiObject := awstypes.EksContainer{}
+
+		if v, ok := tfMap["args"]; ok {
+			apiObject.Args = flex.ExpandStringValueList(v.([]interface{}))
+		}
+
+		if v, ok := tfMap["command"]; ok {
+			apiObject.Command = flex.ExpandStringValueList(v.([]interface{}))
+		}
+
+		if v, ok := tfMap["env"].(*schema.Set); ok && v.Len() > 0 {
+			apiObjects := []awstypes.EksContainerEnvironmentVariable{}
+
+			for _, tfMapRaw := range v.List() {
+				apiObject := awstypes.EksContainerEnvironmentVariable{}
+				tfMap := tfMapRaw.(map[string]interface{})
+
+				if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
+					apiObject.Name = aws.String(v)
+				}
+
+				if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
+					apiObject.Value = aws.String(v)
+				}
+
+				apiObjects = append(apiObjects, apiObject)
+			}
+
+			apiObject.Env = apiObjects
+		}
+
+		if v, ok := tfMap["image"]; ok {
+			apiObject.Image = aws.String(v.(string))
+		}
+
+		if v, ok := tfMap["image_pull_policy"].(string); ok && v != "" {
+			apiObject.ImagePullPolicy = aws.String(v)
+		}
+
+		if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
+			apiObject.Name = aws.String(v)
+		}
+
+		if v, ok := tfMap[names.AttrResources].([]interface{}); ok && len(v) > 0 {
+			resources := &awstypes.EksContainerResourceRequirements{}
+			tfMap := v[0].(map[string]interface{})
+
+			if v, ok := tfMap["limits"]; ok {
+				resources.Limits = flex.ExpandStringValueMap(v.(map[string]interface{}))
+			}
+
+			if v, ok := tfMap["requests"]; ok {
+				resources.Requests = flex.ExpandStringValueMap(v.(map[string]interface{}))
+			}
+
+			apiObject.Resources = resources
+		}
+
+		if v, ok := tfMap["security_context"].([]interface{}); ok && len(v) > 0 {
+			securityContext := &awstypes.EksContainerSecurityContext{}
+			tfMap := v[0].(map[string]interface{})
+
+			if v, ok := tfMap["privileged"]; ok {
+				securityContext.Privileged = aws.Bool(v.(bool))
+			}
+
+			if v, ok := tfMap["read_only_root_file_system"]; ok {
+				securityContext.ReadOnlyRootFilesystem = aws.Bool(v.(bool))
+			}
+
+			if v, ok := tfMap["run_as_group"]; ok {
+				securityContext.RunAsGroup = aws.Int64(int64(v.(int)))
+			}
+
+			if v, ok := tfMap["run_as_non_root"]; ok {
+				securityContext.RunAsNonRoot = aws.Bool(v.(bool))
+			}
+
+			if v, ok := tfMap["run_as_user"]; ok {
+				securityContext.RunAsUser = aws.Int64(int64(v.(int)))
+			}
+
+			apiObject.SecurityContext = securityContext
+		}
+
+		if v, ok := tfMap["volume_mounts"]; ok {
+			apiObject.VolumeMounts = expandVolumeMounts(v.([]interface{}))
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandImagePullSecrets(tfList []interface{}) []awstypes.ImagePullSecret {
+	var apiObjects []awstypes.ImagePullSecret
+
+	for _, tfMapRaw := range tfList {
+		apiObject := awstypes.ImagePullSecret{}
+		tfMap := tfMapRaw.(map[string]interface{})
+
+		if v, ok := tfMap[names.AttrName].(string); ok {
+			apiObject.Name = aws.String(v)
+			apiObjects = append(apiObjects, apiObject) // move out of "if" when more fields are added
+		}
+	}
+
+	return apiObjects
+}
+
+func expandVolumes(tfList []interface{}) []awstypes.EksVolume {
+	var apiObjects []awstypes.EksVolume
+
+	for _, tfMapRaw := range tfList {
+		apiObject := awstypes.EksVolume{}
+		tfMap := tfMapRaw.(map[string]interface{})
+
+		if v, ok := tfMap["empty_dir"].([]interface{}); ok && len(v) > 0 {
+			if v, ok := v[0].(map[string]interface{}); ok {
+				apiObject.EmptyDir = &awstypes.EksEmptyDir{
+					Medium:    aws.String(v["medium"].(string)),
+					SizeLimit: aws.String(v["size_limit"].(string)),
+				}
+			}
+		}
+
+		if v, ok := tfMap[names.AttrName].(string); ok {
+			apiObject.Name = aws.String(v)
+		}
+
+		if v, ok := tfMap["host_path"].([]interface{}); ok && len(v) > 0 {
+			apiObject.HostPath = &awstypes.EksHostPath{}
+
+			if v, ok := v[0].(map[string]interface{}); ok {
+				if v, ok := v[names.AttrPath]; ok {
+					apiObject.HostPath.Path = aws.String(v.(string))
+				}
+			}
+		}
+
+		if v, ok := tfMap["secret"].([]interface{}); ok && len(v) > 0 {
+			apiObject.Secret = &awstypes.EksSecret{}
+
+			if v := v[0].(map[string]interface{}); ok {
+				if v, ok := v["optional"]; ok {
+					apiObject.Secret.Optional = aws.Bool(v.(bool))
+				}
+
+				if v, ok := v["secret_name"]; ok {
+					apiObject.Secret.SecretName = aws.String(v.(string))
+				}
+			}
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandVolumeMounts(tfList []interface{}) []awstypes.EksContainerVolumeMount {
+	var apiObjects []awstypes.EksContainerVolumeMount
+
+	for _, tfMapRaw := range tfList {
+		apiObject := awstypes.EksContainerVolumeMount{}
+		tfMap := tfMapRaw.(map[string]interface{})
+
+		if v, ok := tfMap["mount_path"]; ok {
+			apiObject.MountPath = aws.String(v.(string))
+		}
+
+		if v, ok := tfMap[names.AttrName]; ok {
+			apiObject.Name = aws.String(v.(string))
+		}
+
+		if v, ok := tfMap["read_only"]; ok {
+			apiObject.ReadOnly = aws.Bool(v.(bool))
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func flattenEKSProperties(apiObject *awstypes.EksProperties) []interface{} {
+	var tfList []interface{}
+
+	if apiObject == nil {
+		return tfList
+	}
+
+	if v := apiObject.PodProperties; v != nil {
+		tfList = append(tfList, map[string]interface{}{
+			"pod_properties": flattenEKSPodProperties(apiObject.PodProperties),
+		})
+	}
+
+	return tfList
+}
+
+func flattenEKSPodProperties(apiObject *awstypes.EksPodProperties) []interface{} {
+	var tfList []interface{}
+	tfMap := make(map[string]interface{}, 0)
+
+	if v := apiObject.Containers; v != nil {
+		tfMap["containers"] = flattenEKSContainers(v)
+	}
+
+	if v := apiObject.DnsPolicy; v != nil {
+		tfMap["dns_policy"] = aws.ToString(v)
+	}
+
+	if v := apiObject.HostNetwork; v != nil {
+		tfMap["host_network"] = aws.ToBool(v)
+	}
+
+	if v := apiObject.ImagePullSecrets; v != nil {
+		tfMap["image_pull_secret"] = flattenImagePullSecrets(v)
+	}
+
+	if v := apiObject.Metadata; v != nil {
+		metadata := make([]map[string]interface{}, 0)
+
+		if v := v.Labels; v != nil {
+			metadata = append(metadata, map[string]interface{}{
+				"labels": v,
+			})
+		}
+
+		tfMap["metadata"] = metadata
+	}
+
+	if v := apiObject.ServiceAccountName; v != nil {
+		tfMap["service_account_name"] = aws.ToString(v)
+	}
+
+	if v := apiObject.Volumes; v != nil {
+		tfMap["volumes"] = flattenEKSVolumes(v)
+	}
+
+	tfList = append(tfList, tfMap)
+
+	return tfList
+}
+
+func flattenImagePullSecrets(apiObjects []awstypes.ImagePullSecret) []interface{} {
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]interface{}{}
+
+		if v := apiObject.Name; v != nil {
+			tfMap[names.AttrName] = aws.ToString(v)
+			tfList = append(tfList, tfMap) // move out of "if" when more fields are added
+		}
+	}
+
+	return tfList
+}
+
+func flattenEKSContainers(apiObjects []awstypes.EksContainer) []interface{} {
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]interface{}{}
+
+		if v := apiObject.Args; v != nil {
+			tfMap["args"] = v
+		}
+
+		if v := apiObject.Command; v != nil {
+			tfMap["command"] = v
+		}
+
+		if v := apiObject.Env; v != nil {
+			tfMap["env"] = flattenEKSContainerEnvironmentVariables(v)
+		}
+
+		if v := apiObject.Image; v != nil {
+			tfMap["image"] = aws.ToString(v)
+		}
+
+		if v := apiObject.ImagePullPolicy; v != nil {
+			tfMap["image_pull_policy"] = aws.ToString(v)
+		}
+
+		if v := apiObject.Name; v != nil {
+			tfMap[names.AttrName] = aws.ToString(v)
+		}
+
+		if v := apiObject.Resources; v != nil {
+			tfMap[names.AttrResources] = []map[string]interface{}{{
+				"limits":   v.Limits,
+				"requests": v.Requests,
+			}}
+		}
+
+		if v := apiObject.SecurityContext; v != nil {
+			tfMap["security_context"] = []map[string]interface{}{{
+				"privileged":                 aws.ToBool(v.Privileged),
+				"read_only_root_file_system": aws.ToBool(v.ReadOnlyRootFilesystem),
+				"run_as_group":               aws.ToInt64(v.RunAsGroup),
+				"run_as_non_root":            aws.ToBool(v.RunAsNonRoot),
+				"run_as_user":                aws.ToInt64(v.RunAsUser),
+			}}
+		}
+
+		if v := apiObject.VolumeMounts; v != nil {
+			tfMap["volume_mounts"] = flattenEKSContainerVolumeMounts(v)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenEKSContainerEnvironmentVariables(apiObjects []awstypes.EksContainerEnvironmentVariable) []interface{} {
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]interface{}{}
+
+		if v := apiObject.Name; v != nil {
+			tfMap[names.AttrName] = aws.ToString(v)
+		}
+
+		if v := apiObject.Value; v != nil {
+			tfMap[names.AttrValue] = aws.ToString(v)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenEKSContainerVolumeMounts(apiObjects []awstypes.EksContainerVolumeMount) []interface{} {
+	var tfList []interface{}
+
+	for _, v := range apiObjects {
+		tfMap := map[string]interface{}{}
+
+		if v := v.MountPath; v != nil {
+			tfMap["mount_path"] = aws.ToString(v)
+		}
+
+		if v := v.Name; v != nil {
+			tfMap[names.AttrName] = aws.ToString(v)
+		}
+
+		if v := v.ReadOnly; v != nil {
+			tfMap["read_only"] = aws.ToBool(v)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenEKSVolumes(apiObjects []awstypes.EksVolume) []interface{} {
+	var tfList []interface{}
+
+	for _, v := range apiObjects {
+		tfMap := map[string]interface{}{}
+
+		if v := v.EmptyDir; v != nil {
+			tfMap["empty_dir"] = []map[string]interface{}{{
+				"medium":     aws.ToString(v.Medium),
+				"size_limit": aws.ToString(v.SizeLimit),
+			}}
+		}
+
+		if v := v.HostPath; v != nil {
+			tfMap["host_path"] = []map[string]interface{}{{
+				names.AttrPath: aws.ToString(v.Path),
+			}}
+		}
+
+		if v := v.Name; v != nil {
+			tfMap[names.AttrName] = aws.ToString(v)
+		}
+
+		if v := v.Secret; v != nil {
+			tfMap["secret"] = []map[string]interface{}{{
+				"optional":    aws.ToBool(v.Optional),
+				"secret_name": aws.ToString(v.SecretName),
+			}}
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
 }
