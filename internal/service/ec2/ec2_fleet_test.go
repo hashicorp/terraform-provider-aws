@@ -2935,10 +2935,13 @@ func TestAccEC2Fleet_TargetCapacitySpecification_totalTargetCapacity(t *testing.
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"terminate_instances"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"fulfilled_capacity",
+					"terminate_instances",
+				},
 			},
 			{
 				Config: testAccFleetConfig_targetCapacitySpecificationTotalTargetCapacity(rName, 2),
@@ -2975,10 +2978,13 @@ func TestAccEC2Fleet_TargetCapacitySpecification_targetCapacityUnitType(t *testi
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"terminate_instances"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"fulfilled_capacity",
+					"terminate_instances",
+				},
 			},
 		},
 	})

@@ -54,15 +54,22 @@ func expandEKSPodProperties(podPropsMap map[string]interface{}) *batch.EksPodPro
 	if v, ok := podPropsMap["host_network"]; ok {
 		podProps.HostNetwork = aws.Bool(v.(bool))
 	}
+
+	if v, ok := podPropsMap["image_pull_secret"]; ok {
+		podProps.ImagePullSecrets = expandImagePullSecrets(v.([]interface{}))
+	}
+
 	if m, ok := podPropsMap["metadata"].([]interface{}); ok && len(m) > 0 {
 		if v, ok := m[0].(map[string]interface{})["labels"]; ok {
 			podProps.Metadata = &batch.EksMetadata{}
 			podProps.Metadata.Labels = flex.ExpandStringMap(v.(map[string]interface{}))
 		}
 	}
+
 	if v, ok := podPropsMap["service_account_name"].(string); ok && v != "" {
 		podProps.ServiceAccountName = aws.String(v)
 	}
+
 	if v, ok := podPropsMap["volumes"]; ok {
 		podProps.Volumes = expandVolumes(v.([]interface{}))
 	}
@@ -148,6 +155,19 @@ func expandContainers(containers []interface{}) []*batch.EksContainer {
 		}
 
 		result = append(result, container)
+	}
+
+	return result
+}
+
+func expandImagePullSecrets(ipss []interface{}) (result []*batch.ImagePullSecret) {
+	for _, v := range ipss {
+		ips := &batch.ImagePullSecret{}
+		m := v.(map[string]interface{})
+		if v, ok := m[names.AttrName].(string); ok {
+			ips.Name = aws.String(v)
+			result = append(result, ips) // move out of "if" when more fields are added
+		}
 	}
 
 	return result
@@ -242,6 +262,10 @@ func flattenEKSPodProperties(podProperties *batch.EksPodProperties) (tfList []in
 		tfMap["host_network"] = aws.BoolValue(v)
 	}
 
+	if v := podProperties.ImagePullSecrets; v != nil {
+		tfMap["image_pull_secret"] = flattenImagePullSecrets(v)
+	}
+
 	if v := podProperties.Metadata; v != nil {
 		metaData := make([]map[string]interface{}, 0)
 		if v := v.Labels; v != nil {
@@ -259,6 +283,19 @@ func flattenEKSPodProperties(podProperties *batch.EksPodProperties) (tfList []in
 	}
 
 	tfList = append(tfList, tfMap)
+	return tfList
+}
+
+func flattenImagePullSecrets(ipss []*batch.ImagePullSecret) (tfList []interface{}) {
+	for _, ips := range ipss {
+		tfMap := map[string]interface{}{}
+
+		if v := ips.Name; v != nil {
+			tfMap[names.AttrName] = aws.StringValue(v)
+			tfList = append(tfList, tfMap) // move out of "if" when more fields are added
+		}
+	}
+
 	return tfList
 }
 

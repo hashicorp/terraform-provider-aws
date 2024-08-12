@@ -328,3 +328,87 @@ func TestIndexOf(t *testing.T) {
 		})
 	}
 }
+
+func TestRange(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		start, stop, step int
+		expected          []int
+	}
+	tests := map[string]testCase{
+		"0 step": {
+			start:    0,
+			stop:     10,
+			step:     0,
+			expected: nil,
+		},
+		"start == stop": {
+			start:    0,
+			stop:     0,
+			step:     1,
+			expected: nil,
+		},
+		"start == 0, step == 1": {
+			start:    0,
+			stop:     10,
+			step:     1,
+			expected: []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
+		},
+		"start == 1, step == 1": {
+			start:    1,
+			stop:     11,
+			step:     1,
+			expected: []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
+		},
+		"start == 0, step == 5": {
+			start:    0,
+			stop:     30,
+			step:     5,
+			expected: []int{0, 5, 10, 15, 20, 25},
+		},
+		"start == 0, step == 11": {
+			start:    0,
+			stop:     30,
+			step:     11,
+			expected: []int{0, 11, 22},
+		},
+		"start == 0, step == -1": {
+			start:    0,
+			stop:     -10,
+			step:     -1,
+			expected: []int{0, -1, -2, -3, -4, -5, -6, -7, -8, -9},
+		},
+		"start == 0, stop = 5, step == -1": {
+			start:    0,
+			stop:     5,
+			step:     -1,
+			expected: nil,
+		},
+		"start == 0, stop = -5, step == 1": {
+			start:    0,
+			stop:     -5,
+			step:     1,
+			expected: nil,
+		},
+		"start == 1, step == -5": {
+			start:    1,
+			stop:     -30,
+			step:     -5,
+			expected: []int{1, -4, -9, -14, -19, -24, -29},
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := Range(test.start, test.stop, test.step)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}

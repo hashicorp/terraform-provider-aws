@@ -31,7 +31,7 @@ var hostedZoneIDPerRegionMap = map[string]string{
 	endpoints.EuWest3RegionID:      "Z087117439MBKHYM69QS6",
 }
 
-// @FrameworkDataSource(name="Hosted Zone ID")
+// @FrameworkDataSource("aws_apprunner_hosted_zone_id", name="Hosted Zone ID")
 func newHostedZoneIDDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &hostedZoneIDDataSource{}, nil
 }

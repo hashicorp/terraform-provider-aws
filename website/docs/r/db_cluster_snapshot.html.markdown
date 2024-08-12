@@ -25,6 +25,7 @@ This resource supports the following arguments:
 
 * `db_cluster_identifier` - (Required) The DB Cluster Identifier from which to take the snapshot.
 * `db_cluster_snapshot_identifier` - (Required) The Identifier for the snapshot.
+* `shared_accounts` - (Optional) List of AWS Account ids to share snapshot with, use `all` to make snaphot public.
 * `tags` - (Optional) A map of tags to assign to the DB cluster. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
@@ -39,6 +40,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `kms_key_id` - If storage_encrypted is true, the AWS KMS key identifier for the encrypted DB cluster snapshot.
 * `license_model` - License model information for the restored DB cluster.
 * `port` - Port that the DB cluster was listening on at the time of the snapshot.
+
 * `source_db_cluster_snapshot_identifier` - DB Cluster Snapshot ARN that the DB Cluster Snapshot was copied from. It only has value in case of cross customer or cross region copy.
 * `storage_encrypted` - Whether the DB cluster snapshot is encrypted.
 * `status` - The status of this DB Cluster Snapshot.

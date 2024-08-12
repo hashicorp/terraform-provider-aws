@@ -272,6 +272,22 @@ func resourceCluster() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"upgrade_policy": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"support_type": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[types.SupportType](),
+						},
+					},
+				},
+			},
 			names.AttrVersion: {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -357,6 +373,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.OutpostConfig = expandOutpostConfigRequest(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("upgrade_policy"); ok {
+		input.UpgradePolicy = expandUpgradePolicy(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk(names.AttrVersion); ok {
 		input.Version = aws.String(v.(string))
 	}
@@ -424,6 +444,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	// bootstrap_cluster_creator_admin_permissions isn't returned from the AWS API.
+	// See https://github.com/aws/containers-roadmap/issues/185#issuecomment-1863025784.
 	var bootstrapClusterCreatorAdminPermissions *bool
 	if v, ok := d.GetOk("access_config"); ok {
 		if apiObject := expandCreateAccessConfigRequest(v.([]interface{})); apiObject != nil {
@@ -463,6 +484,9 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("platform_version", cluster.PlatformVersion)
 	d.Set(names.AttrRoleARN, cluster.RoleArn)
 	d.Set(names.AttrStatus, cluster.Status)
+	if err := d.Set("upgrade_policy", flattenUpgradePolicy(cluster.UpgradePolicy)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting upgrade_policy: %s", err)
+	}
 	d.Set(names.AttrVersion, cluster.Version)
 	if err := d.Set(names.AttrVPCConfig, flattenVPCConfigResponse(cluster.ResourcesVpcConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)
@@ -560,6 +584,25 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if _, err := waitClusterUpdateSuccessful(ctx, conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for EKS Cluster (%s) logging update (%s): %s", d.Id(), updateID, err)
+		}
+	}
+
+	if d.HasChange("upgrade_policy") {
+		input := &eks.UpdateClusterConfigInput{
+			Name:          aws.String(d.Id()),
+			UpgradePolicy: expandUpgradePolicy(d.Get("upgrade_policy").([]interface{})),
+		}
+
+		output, err := conn.UpdateClusterConfig(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating EKS Cluster (%s) upgrade policy: %s", d.Id(), err)
+		}
+
+		updateID := aws.ToString(output.Update.Id)
+
+		if _, err := waitClusterUpdateSuccessful(ctx, conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for EKS Cluster (%s) upgrade policy update (%s): %s", d.Id(), updateID, err)
 		}
 	}
 
@@ -1021,6 +1064,25 @@ func expandLogging(vEnabledLogTypes *schema.Set) *types.Logging {
 	}
 }
 
+func expandUpgradePolicy(tfList []interface{}) *types.UpgradePolicyRequest {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	upgradePolicyRequest := &types.UpgradePolicyRequest{}
+
+	if v, ok := tfMap["support_type"].(string); ok && v != "" {
+		upgradePolicyRequest.SupportType = types.SupportType(v)
+	}
+
+	return upgradePolicyRequest
+}
+
 func flattenCertificate(certificate *types.Certificate) []map[string]interface{} {
 	if certificate == nil {
 		return []map[string]interface{}{}
@@ -1068,6 +1130,9 @@ func flattenAccessConfigResponse(apiObject *types.AccessConfigResponse, bootstra
 
 	if bootstrapClusterCreatorAdminPermissions != nil {
 		tfMap["bootstrap_cluster_creator_admin_permissions"] = aws.ToBool(bootstrapClusterCreatorAdminPermissions)
+	} else {
+		// Setting default value to true for backward compatibility.
+		tfMap["bootstrap_cluster_creator_admin_permissions"] = true
 	}
 
 	return []interface{}{tfMap}
@@ -1174,6 +1239,18 @@ func flattenControlPlanePlacementResponse(apiObject *types.ControlPlanePlacement
 
 	tfMap := map[string]interface{}{
 		names.AttrGroupName: aws.ToString(apiObject.GroupName),
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenUpgradePolicy(apiObject *types.UpgradePolicyResponse) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"support_type": apiObject.SupportType,
 	}
 
 	return []interface{}{tfMap}

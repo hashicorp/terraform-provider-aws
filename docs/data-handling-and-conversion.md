@@ -9,7 +9,11 @@ At the bottom of this documentation is a [Glossary section](#glossary), which ma
 
 Before getting into highly specific documentation about the Terraform AWS Provider handling of data, it may be helpful to briefly highlight how Terraform Plugins (Terraform Providers in this case) interact with Terraform CLI and the Terraform State in general and where this documentation fits into the whole process.
 
-There are two primary data flows that are typically handled by resources within a Terraform Provider. Data is either being converted from a planned new Terraform State into making a remote system request or a remote system response is being converted into an applied new Terraform State. The semantics of how the data of the planned new Terraform State is surfaced to the resource implementation is determined by where a resource is in its lifecycle and is mainly handled by Terraform CLI. This concept can be explored further in the [Terraform Resource Instance Change Lifecycle documentation](https://github.com/hashicorp/terraform/blob/main/docs/resource-instance-change-lifecycle.md), with the caveat that some additional behaviors occur within the Terraform Plugin SDK as well (if the Terraform Plugin uses that implementation detail).
+There are two primary data flows that are typically handled by resources within a Terraform Provider.
+Data is either converted from a planned new Terraform State into making a remote system request, referred to as "Expanding",
+or a remote system response is converted into an applied new Terraform State, referred to as "Flattening".
+The semantics of how the data of the planned new Terraform State is surfaced to the resource implementation is determined by where a resource is in its lifecycle and is mainly handled by Terraform CLI.
+This concept can be explored further in the [Terraform Resource Instance Change Lifecycle documentation](https://github.com/hashicorp/terraform/blob/main/docs/resource-instance-change-lifecycle.md), with the caveat that some additional behaviors occur within the Terraform Plugin SDK as well (if the Terraform Plugin uses that implementation detail).
 
 As a generic walkthrough, the following data handling occurs when creating a Terraform Resource:
 
@@ -47,7 +51,7 @@ Typically these types of drift detection issues can be discovered by implementin
 Perhaps the most distinct difference between [Terraform Plugin Framework](https://developer.hashicorp.com/terraform/plugin/framework) and [Terraform Plugin SDKv2](https://developer.hashicorp.com/terraform/plugin/sdkv2) is data handling.
 With Terraform Plugin Framework state data is strongly typed, while Plugin SDK V2 based resources represent state data generically (each attribute is an `interface{}`) and types must be asserted at runtime.
 Strongly typed data eliminates an entire class of runtime bugs and crashes, but does require compile type declarations and a slightly different approach to reading and writing data.
-The sections below contain examples for both plugin libraries, but Terraform Plugin Framework should be preferred whenever possible.
+The sections below contain examples for both plugin libraries, but Terraform Plugin Framework is **required for all net-new resources**.
 
 ## Data Conversions in the Terraform AWS Provider
 
@@ -56,7 +60,7 @@ To expand on the data handling that occurs specifically within the Terraform AWS
 === "Terraform Plugin Framework (Preferred)"
     - The `Create` method of a resource is invoked with `resource.CreateRequest` containing the planned new state data (`req.Plan`) and an AWS API client (stored in the `Meta()` method of the resource struct).
         - Before reaching this point, the `Plan` data was already translated from the Terraform Plugin Protocol data types by the Terraform Plugin Framework so values can be read by invoking `req.Plan.Get(ctx, &plan)`, where `plan` is an instance of the struct representing the resources data.
-    - An AWS Go SDK operation input type (e.g., `*ec2.CreateVpcInput`) is initialized
+    - An AWS Go SDK operation input type (e.g., `ec2.CreateVpcInput`) is initialized
     - For each necessary field to configure in the operation input type, the data is read from the `plan` struct and converted into the AWS Go SDK type for the field (e.g., `*string`)
     - The AWS Go SDK operation is invoked and the output type (e.g., `*ec2.CreateVpcOutput`) is initialized
     - For each necessary Attribute, Block, or resource identifier to be saved in the state, the data is read from the AWS Go SDK type for the field (`*string`), if necessary converted into the equivalent Plugin Framework compatible type, and saved into a mutated data struct
@@ -65,7 +69,7 @@ To expand on the data handling that occurs specifically within the Terraform AWS
 === "Terraform Plugin SDK V2"
     - The `CreateWithoutTimeout` function of a `schema.Resource` is invoked with `*schema.ResourceData` containing the planned new state data (conventionally named `d`) and an AWS API client (conventionally named `meta`).
         - Before reaching this point, the `ResourceData` was already translated from the Terraform Plugin Protocol data types by the Terraform Plugin SDK so values can be read by invoking `d.Get()` and `d.GetOk()` receiver methods with Attribute and Block names from the `Schema` of the `schema.Resource`.
-    - An AWS Go SDK operation input type (e.g., `*ec2.CreateVpcInput`) is initialized
+    - An AWS Go SDK operation input type (e.g., `ec2.CreateVpcInput`) is initialized
     - For each necessary field to configure in the operation input type, the data is read from the `ResourceData` (e.g., `d.Get()`, `d.GetOk()`) and converted into the AWS Go SDK type for the field (e.g., `*string`)
     - The AWS Go SDK operation is invoked and the output type (e.g., `*ec2.CreateVpcOutput`) is initialized
     - For each necessary Attribute, Block, or resource identifier to be saved in the state, the data is read from the AWS Go SDK type for the field (`*string`), if necessary converted into a `ResourceData` compatible type, and saved into a mutated `ResourceData` (e.g., `d.Set()`, `d.SetId()`)
@@ -152,17 +156,11 @@ The maintainers can provide guidance on appropriate solutions for cases not ment
     These will always be handled with the `Plan` and `State` fields from the request and response pointers passed in as arguments the the CRUD methods on the resource struct.
     Values are read from and written to the underlying data structure during CRUD operations, and finally written to state in the response object with a call like `resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)`.
 
-    By convention in the codebase, each level of Block handling beyond root attributes should be separated into "expand" functions that convert Terraform Plugin SDK data into the equivalent AWS Go SDK type (typically named `expand{Service}{Type}`) and "flatten" functions that convert an AWS Go SDK type into the equivalent Terraform Plugin SDK data (typically named `flatten{Service}{Type}`).
-    The [Recommended Implementations section](#recommended-implementations) will go into those details.
-
 === "Terraform Plugin SDK V2"
     All Attributes and Blocks at the top level of `schema.Resource` `Schema` are considered "root" attributes.
     These will always be handled with receiver methods on `ResourceData`, such as reading with `d.Get()`, `d.GetOk()`, etc. and writing with `d.Set()`.
     Any nested Attributes and Blocks inside those root Blocks will then be handled with standard Go types according to the table in the [Type Mapping section](#type-mapping).
 
-    By convention in the codebase, each level of Block handling beyond root attributes should be separated into "expand" functions that convert Terraform Plugin SDK data into the equivalent AWS Go SDK type (typically named `expand{Service}{Type}`) and "flatten" functions that convert an AWS Go SDK type into the equivalent Terraform Plugin SDK data (typically named `flatten{Service}{Type}`).
-    The [Recommended Implementations section](#recommended-implementations) will go into those details.
-    
     !!! warning
         While it is possible in certain type scenarios to deeply read and write ResourceData information for a Block Attribute, this practice is discouraged in preference of only handling root Attributes and Blocks.
 
@@ -175,7 +173,216 @@ Given the complexities around conversions between AWS and Terraform Plugin type 
     However this is meant to represent the preferred implementations today.
     These will continue to evolve as this codebase and the Terraform Plugin ecosystem changes.
 
-### Where to Define Flex Functions
+When using the Terraform Plugin Framework, there are two approaches for flattening and expanding Terraform data.
+The preferred is AutoFlex, which automatically converts between provider and AWS API structures by analyzing type information.
+Alternatively, provider developers can define flattening and expanding functions manually.
+
+When using the Terraform Plugin SDK v2, flattening and expanding functions must be defined manually.
+
+### AutoFlex for Terraform Plugin Framework (Preferred)
+
+AutoFlex provides two entry-point functions, `Flatten` and `Expand` defined in the package `github.com/hashicorp/terraform-provider-aws/internal/framework/flex`.
+Without configuration, these two functions should be able to convert most provider and AWS API structures.
+
+AutoFlex uses field names to map between the source and target structures:
+
+1. An exact, case-sensitive match
+1. An exact, case-insensitive match
+1. Comparing plural and singular field names
+1. Adding a field name prefix set using the AutoFlex options function `flex.WithFieldNamePrefix`, e.g. Lex v2 Intents in `internal/service/lexv2models/intent.go`
+
+By default, AutoFlex ignores fields with the name `Tags`, as AWS resource tags are [handled separately](./resource-tagging.md).
+Additional fields can be ignored and the `Tags` field can be included by passing optional `flex.AutoFlexOptionsFunc`s to `Flatten` or `Expand`.
+For example, to add an additional ignored field, use
+
+```go
+diags := flex.Expand(ctx, source, &target, flex.WithIgnoredFieldNamesAppend("OtherField"))
+```
+
+This will ignore both `Tags` and `OtherField`.
+To empty the list of ignored fields, use `flex.WithNoIgoredFieldNames`.
+For example, to include `Tags`, call
+
+```go
+diags := flex.Expand(ctx, source, &target, flex.WithNoIgnoredFieldNames())
+```
+
+AutoFlex is able to convert single-element lists from Terraform blocks into single struct or pointer values in AWS API structs.
+
+#### Overriding Default Behavior
+
+In some cases, flattening and expanding need conditional handling.
+One important case is new AWS API implementations where the input or output structs make use of [union types](https://smithy.io/2.0/spec/aggregate-types.html#union).
+The AWS implementation uses an interface as the common type, along with various concrete implementations.
+Because the Terraform schema does not support union types (see https://github.com/hashicorp/terraform/issues/32587 for discussion), the provider defines nested schemas for each type with a restriction to allow only one.
+
+To override flattening behavior, implement the interface `flex.Flattener` on the model.
+The function should have a pointer receiver, as it will modify the struct in-place.
+From the Mainframe Modernization (M2) environment (`internal/service/m2/environment.go`):
+
+```go
+type storageConfigurationModel struct {
+	EFS fwtypes.ListNestedObjectValueOf[efsStorageConfigurationModel] `tfsdk:"efs"`
+	FSX fwtypes.ListNestedObjectValueOf[fsxStorageConfigurationModel] `tfsdk:"fsx"`
+}
+
+func (m *storageConfigurationModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+	switch t := v.(type) {
+	case awstypes.StorageConfigurationMemberEfs:
+		var model efsStorageConfigurationModel
+		d := fwflex.Flatten(ctx, t.Value, &model)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.EFS = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+
+		return diags
+
+	case awstypes.StorageConfigurationMemberFsx:
+		var model fsxStorageConfigurationModel
+		d := fwflex.Flatten(ctx, t.Value, &model)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.FSX = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+
+		return diags
+
+	default:
+		return diags
+	}
+}
+```
+
+To override expanding behavior, implement the interface `flex.Expander` on the model.
+As the function should not modify the struct in-place, it should not have a pointer receiver.
+From the Mainframe Modernization (M2) environment (`internal/service/m2/environment.go`):
+
+```go
+type storageConfigurationModel struct {
+	EFS fwtypes.ListNestedObjectValueOf[efsStorageConfigurationModel] `tfsdk:"efs"`
+	FSX fwtypes.ListNestedObjectValueOf[fsxStorageConfigurationModel] `tfsdk:"fsx"`
+}
+
+func (m storageConfigurationModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+	switch {
+	case !m.EFS.IsNull():
+		efsStorageConfigurationData, d := m.EFS.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.StorageConfigurationMemberEfs
+		diags.Append(fwflex.Expand(ctx, efsStorageConfigurationData, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &r, diags
+
+	case !m.FSX.IsNull():
+		fsxStorageConfigurationData, d := m.FSX.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.StorageConfigurationMemberFsx
+		diags.Append(fwflex.Expand(ctx, fsxStorageConfigurationData, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &r, diags
+	}
+
+	return nil, diags
+}
+```
+
+In some cases, the result types for expanding will be different when creating or updating a resource.
+For example, for the Verified Permissions identity source, the create operation takes a `Configuration` struct while the update operation takes an `UpdateConfiguration`, even though the contents are identical.
+In this case, implement the interface `flex.TypedExpander` on the model.
+From the Verified Permissions identity source (`internal/service/verifiedpermissions/identity_source.go`):
+
+```go
+type configuration struct {
+	CognitoUserPoolConfiguration fwtypes.ListNestedObjectValueOf[cognitoUserPoolConfiguration] `tfsdk:"cognito_user_pool_configuration"`
+	OpenIDConnectConfiguration   fwtypes.ListNestedObjectValueOf[openIDConnectConfiguration]   `tfsdk:"open_id_connect_configuration"`
+}
+
+
+func (m configuration) ExpandTo(ctx context.Context, targetType reflect.Type) (result any, diags diag.Diagnostics) {
+	switch targetType {
+	case reflect.TypeFor[awstypes.Configuration]():
+		return m.expandToConfiguration(ctx)
+
+	case reflect.TypeFor[awstypes.UpdateConfiguration]():
+		return m.expandToUpdateConfiguration(ctx)
+	}
+	return nil, diags
+}
+
+func (m configuration) expandToConfiguration(ctx context.Context) (result awstypes.Configuration, diags diag.Diagnostics) {
+	switch {
+	case !m.CognitoUserPoolConfiguration.IsNull():
+		var result awstypes.ConfigurationMemberCognitoUserPoolConfiguration
+		diags.Append(flex.Expand(ctx, m.CognitoUserPoolConfiguration, &result.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &result, diags
+
+	case !m.OpenIDConnectConfiguration.IsNull():
+		var result awstypes.ConfigurationMemberOpenIdConnectConfiguration
+		diags.Append(flex.Expand(ctx, m.OpenIDConnectConfiguration, &result.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &result, diags
+	}
+
+	return nil, diags
+}
+
+func (m configuration) expandToUpdateConfiguration(ctx context.Context) (result awstypes.UpdateConfiguration, diags diag.Diagnostics) {
+	switch {
+	case !m.CognitoUserPoolConfiguration.IsNull():
+		var result awstypes.UpdateConfigurationMemberCognitoUserPoolConfiguration
+		diags.Append(flex.Expand(ctx, m.CognitoUserPoolConfiguration, &result.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &result, diags
+
+	case !m.OpenIDConnectConfiguration.IsNull():
+		var result awstypes.UpdateConfigurationMemberOpenIdConnectConfiguration
+		diags.Append(flex.Expand(ctx, m.OpenIDConnectConfiguration, &result.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &result, diags
+	}
+
+	return nil, diags
+}
+```
+
+#### Troubleshooting
+
+AutoFlex can output detailed logging as it flattens or expands a value.
+To turn on logging for AutoFlex, use the environment variable `TF_LOG_AWS_AUTOFLEX` to set the logging level.
+Valid values are `ERROR`, `WARN`, `INFO`, `DEBUG`, and `TRACE`.
+By default, AutoFlex logging is set to `ERROR`.
+
+### Manually Defined Flattening and Expanding Functions
+
+By convention in the codebase, each level of Block handling beyond root attributes should be separated into "expand" functions that convert Terraform Plugin SDK data into the equivalent AWS Go SDK type (typically named `expand{Service}{Type}`) and "flatten" functions that convert an AWS Go SDK type into the equivalent Terraform Plugin SDK data (typically named `flatten{Service}{Type}`).
 
 Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possible. This table provides guidance on the preferred place to define flex functions based on usage.
 

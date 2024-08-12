@@ -2132,7 +2132,7 @@ func readInstanceFleetConfig(data map[string]interface{}, InstanceFleetType stri
 		config.InstanceTypeConfigs = expandInstanceTypeConfigs(v.List())
 	}
 
-	if v, ok := data["launch_specifications"].([]interface{}); ok && len(v) == 1 {
+	if v, ok := data["launch_specifications"].([]interface{}); ok && len(v) == 1 && v[0] != nil {
 		config.LaunchSpecifications = expandLaunchSpecification(v[0].(map[string]interface{}))
 	}
 

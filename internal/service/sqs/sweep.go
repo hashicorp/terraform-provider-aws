@@ -9,10 +9,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
 func RegisterSweepers() {
-	sweep.Register("aws_sqs_queue", sweepQueues,
+	awsv1.Register("aws_sqs_queue", sweepQueues,
 		"aws_autoscaling_group",
 		"aws_cloudwatch_event_rule",
 		"aws_elastic_beanstalk_environment",

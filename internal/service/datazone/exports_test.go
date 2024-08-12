@@ -8,4 +8,7 @@ var (
 	ResourceDomain                            = newResourceDomain
 	ResourceEnvironmentBlueprintConfiguration = newResourceEnvironmentBlueprintConfiguration
 	IsResourceMissing                         = isResourceMissing
+	ResourceProject                           = newResourceProject
+	ResourceGlossary                          = newResourceGlossary
+	FindGlossaryByID                          = findGlossaryByID
 )

@@ -52,6 +52,14 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  dataSourceRepository,
 			TypeName: "aws_ecr_repository",
 			Name:     "Repository",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory:  dataSourceRepositoryCreationTemplate,
+			TypeName: "aws_ecr_repository_creation_template",
+			Name:     "Repository Creation Template",
 		},
 	}
 }
@@ -90,6 +98,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+		},
+		{
+			Factory:  resourceRepositoryCreationTemplate,
+			TypeName: "aws_ecr_repository_creation_template",
+			Name:     "Repository Creation Template",
 		},
 		{
 			Factory:  resourceRepositoryPolicy,

@@ -10,12 +10,13 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,12 +25,12 @@ import (
 func TestAccDMSReplicationConfig_basic(t *testing.T) {
 	t.Parallel()
 
-	for _, migrationType := range dms.MigrationTypeValue_Values() { //nolint:paralleltest // false positive
+	for _, migrationType := range enum.Values[awstypes.MigrationTypeValue]() { //nolint:paralleltest // false positive
 		t.Run(migrationType, func(t *testing.T) {
 			ctx := acctest.Context(t)
 			rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 			resourceName := "aws_dms_replication_config.test"
-			var v dms.ReplicationConfig
+			var v awstypes.ReplicationConfig
 
 			resource.ParallelTest(t, resource.TestCase{
 				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -82,7 +83,7 @@ func TestAccDMSReplicationConfig_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_config.test"
-	var v dms.ReplicationConfig
+	var v awstypes.ReplicationConfig
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -106,7 +107,7 @@ func TestAccDMSReplicationConfig_settings_EnableLogging(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_config.test"
-	var v dms.ReplicationConfig
+	var v awstypes.ReplicationConfig
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -199,7 +200,7 @@ func TestAccDMSReplicationConfig_settings_LogComponents(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_config.test"
-	var v dms.ReplicationConfig
+	var v awstypes.ReplicationConfig
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -232,7 +233,7 @@ func TestAccDMSReplicationConfig_settings_StreamBuffer(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_config.test"
-	var v dms.ReplicationConfig
+	var v awstypes.ReplicationConfig
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -263,7 +264,7 @@ func TestAccDMSReplicationConfig_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_config.test"
-	var v dms.ReplicationConfig
+	var v awstypes.ReplicationConfig
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -304,7 +305,7 @@ func TestAccDMSReplicationConfig_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_config.test"
-	var v dms.ReplicationConfig
+	var v awstypes.ReplicationConfig
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -341,7 +342,7 @@ func TestAccDMSReplicationConfig_startReplication(t *testing.T) {
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_config.test"
-	var v dms.ReplicationConfig
+	var v awstypes.ReplicationConfig
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -373,14 +374,14 @@ func TestAccDMSReplicationConfig_startReplication(t *testing.T) {
 	})
 }
 
-func testAccCheckReplicationConfigExists(ctx context.Context, n string, v *dms.ReplicationConfig) resource.TestCheckFunc {
+func testAccCheckReplicationConfigExists(ctx context.Context, n string, v *awstypes.ReplicationConfig) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSClient(ctx)
 
 		output, err := tfdms.FindReplicationConfigByARN(ctx, conn, rs.Primary.ID)
 
@@ -401,7 +402,7 @@ func testAccCheckReplicationConfigDestroy(ctx context.Context) resource.TestChec
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).DMSClient(ctx)
 
 			_, err := tfdms.FindReplicationConfigByARN(ctx, conn, rs.Primary.ID)
 

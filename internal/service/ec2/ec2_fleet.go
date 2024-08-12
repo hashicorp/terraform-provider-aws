@@ -491,8 +491,8 @@ func resourceFleet() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
-							Default:      FleetOnDemandAllocationStrategyLowestPrice,
-							ValidateFunc: validation.StringInSlice(FleetOnDemandAllocationStrategy_Values(), false),
+							Default:      fleetOnDemandAllocationStrategyLowestPrice,
+							ValidateFunc: validation.StringInSlice(fleetOnDemandAllocationStrategy_Values(), false),
 						},
 						"capacity_reservation_options": {
 							Type:     schema.TypeList,
@@ -544,8 +544,8 @@ func resourceFleet() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
-							Default:      SpotAllocationStrategyLowestPrice,
-							ValidateFunc: validation.StringInSlice(SpotAllocationStrategy_Values(), false),
+							Default:      spotAllocationStrategyLowestPrice,
+							ValidateFunc: validation.StringInSlice(spotAllocationStrategy_Values(), false),
 						},
 						"instance_interruption_behavior": {
 							Type:             schema.TypeString,
@@ -721,7 +721,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		ClientToken:                 aws.String(id.UniqueId()),
 		LaunchTemplateConfigs:       expandFleetLaunchTemplateConfigRequests(d.Get("launch_template_config").([]interface{})),
 		TargetCapacitySpecification: expandTargetCapacitySpecificationRequest(d.Get("target_capacity_specification").([]interface{})[0].(map[string]interface{})),
-		TagSpecifications:           getTagSpecificationsInV2(ctx, awstypes.ResourceTypeFleet),
+		TagSpecifications:           getTagSpecificationsIn(ctx, awstypes.ResourceTypeFleet),
 		Type:                        fleetType,
 	}
 
@@ -858,7 +858,7 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set("valid_until", aws.ToTime(fleet.ValidUntil).Format(time.RFC3339))
 	}
 
-	setTagsOutV2(ctx, fleet.Tags)
+	setTagsOut(ctx, fleet.Tags)
 
 	return diags
 }
@@ -1137,7 +1137,7 @@ func expandSpotOptionsRequest(tfMap map[string]interface{}) *awstypes.SpotOption
 		apiObject.AllocationStrategy = awstypes.SpotAllocationStrategy(v)
 
 		// InvalidFleetConfig: InstancePoolsToUseCount option is only available with the lowestPrice allocation strategy.
-		if v == SpotAllocationStrategyLowestPrice {
+		if v == spotAllocationStrategyLowestPrice {
 			if v, ok := tfMap["instance_pools_to_use_count"].(int); ok {
 				apiObject.InstancePoolsToUseCount = aws.Int32(int32(v))
 			}

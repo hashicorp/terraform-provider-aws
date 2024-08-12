@@ -158,6 +158,7 @@ class MyConvertedCode(TerraformStack):
   <li><code>costoptimizationhub</code></li>
   <li><code>cur</code> (or <code>costandusagereportservice</code>)</li>
   <li><code>customerprofiles</code></li>
+  <li><code>databrew</code> (or <code>gluedatabrew</code>)</li>
   <li><code>dataexchange</code></li>
   <li><code>datapipeline</code></li>
   <li><code>datasync</code></li>
@@ -275,6 +276,7 @@ class MyConvertedCode(TerraformStack):
   <li><code>redshiftdata</code> (or <code>redshiftdataapiservice</code>)</li>
   <li><code>redshiftserverless</code></li>
   <li><code>rekognition</code></li>
+  <li><code>resiliencehub</code></li>
   <li><code>resourceexplorer2</code></li>
   <li><code>resourcegroups</code></li>
   <li><code>resourcegroupstaggingapi</code> (or <code>resourcegroupstagging</code>)</li>
@@ -431,4 +433,4 @@ class MyConvertedCode(TerraformStack):
         )
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-c1a3202c783f1e92cd7bef9ba339a8fec2fc2f89a5069c66142e4bd6b27029fe -->
+<!-- cache-key: cdktf-0.20.1 input-694af91cfede44c08b7bcfc43909d45a468dabcd574457f24471cea30221c722 -->

@@ -114,6 +114,7 @@ This resource supports the following arguments:
 * `buildType` - (Optional) The type of build this webhook will trigger. Valid values for this parameter are: `BUILD`, `BUILD_BATCH`.
 * `branchFilter` - (Optional) A regular expression used to determine which branches get built. Default is all branches are built. We recommend using `filterGroup` over `branchFilter`.
 * `filterGroup` - (Optional) Information about the webhook's trigger. Filter group blocks are documented below.
+* `scopeConfiguration` - (Optional) Scope configuration for global or organization webhooks. Scope configuration blocks are documented below.
 
 `filterGroup` supports the following:
 
@@ -124,6 +125,12 @@ This resource supports the following arguments:
 * `type` - (Required) The webhook filter group's type. Valid values for this parameter are: `EVENT`, `BASE_REF`, `HEAD_REF`, `ACTOR_ACCOUNT_ID`, `FILE_PATH`, `COMMIT_MESSAGE`, `WORKFLOW_NAME`, `TAG_NAME`, `RELEASE_NAME`. At least one filter group must specify `EVENT` as its type.
 * `pattern` - (Required) For a filter that uses `EVENT` type, a comma-separated string that specifies one event: `PUSH`, `PULL_REQUEST_CREATED`, `PULL_REQUEST_UPDATED`, `PULL_REQUEST_REOPENED`. `PULL_REQUEST_MERGED`, `WORKFLOW_JOB_QUEUED` works with GitHub & GitHub Enterprise only. For a filter that uses any of the other filter types, a regular expression.
 * `excludeMatchedPattern` - (Optional) If set to `true`, the specified filter does *not* trigger a build. Defaults to `false`.
+
+`scopeConfiguration` supports the following:
+
+* `name` - (Required) The name of either the enterprise or organization.
+* `scope` - (Required) The type of scope for a GitHub webhook. Valid values for this parameter are: `GITHUB_ORGANIZATION`, `GITHUB_GLOBAL`.
+* `domain` - (Optional) The domain of the GitHub Enterprise organization. Required if your project's source type is GITHUB_ENTERPRISE.
 
 ## Attribute Reference
 
@@ -164,4 +171,4 @@ Using `terraform import`, import CodeBuild Webhooks using the CodeBuild Project 
 % terraform import aws_codebuild_webhook.example MyProjectName
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-54f3007a7908f9ecc2b55152a3ff638707ee66edfcee0737e569d4c1a675e3e3 -->
+<!-- cache-key: cdktf-0.20.1 input-432d1ea096e6232d42498a811a93eca8108a300142e9529e8a5318d11213e2a4 -->

@@ -28,10 +28,11 @@ func TestAccEFSAccessPointDataSource_basic(t *testing.T) {
 				Config: testAccAccessPointDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrOwnerID, resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrTags, resourceName, names.AttrTags),
 					resource.TestCheckResourceAttrPair(dataSourceName, "posix_user", resourceName, "posix_user"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "root_directory", resourceName, "root_directory"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "tags.#", resourceName, "tags.#"),
 				),
 			},
 		},
@@ -50,6 +51,10 @@ resource "aws_efs_file_system" "test" {
 
 resource "aws_efs_access_point" "test" {
   file_system_id = aws_efs_file_system.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 data "aws_efs_access_point" "test" {
