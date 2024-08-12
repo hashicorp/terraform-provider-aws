@@ -51,18 +51,18 @@ func TestFlatten(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				infoFlattening(nil, reflect.TypeFor[*emptyStruct]()),
-				errorSourceIsNil("", nil, "", reflect.TypeFor[emptyStruct]()),
+				errorSourceIsNil("", nil, "", reflect.TypeFor[*emptyStruct]()),
 			},
 		},
 		"typed nil Source": {
 			Source: typedNilSource,
 			Target: &emptyStruct{},
 			expectedDiags: diag.Diagnostics{
-				diagFlatteningSourceIsNil(nil), // FIXME: Should give the actual type
+				diagFlatteningSourceIsNil(reflect.TypeFor[*emptyStruct]()),
 			},
 			expectedLogLines: []map[string]any{
 				infoFlattening(reflect.TypeFor[*emptyStruct](), reflect.TypeFor[*emptyStruct]()),
-				errorSourceIsNil("", nil, "", reflect.TypeFor[emptyStruct]()), // FIXME: Should give the actual type
+				errorSourceIsNil("", reflect.TypeFor[*emptyStruct](), "", reflect.TypeFor[*emptyStruct]()),
 			},
 		},
 		"nil Target": {
@@ -1619,6 +1619,162 @@ func TestFlattenInt32(t *testing.T) {
 			t.Parallel()
 
 			runAutoFlattenTestCases(t, cases)
+		})
+	}
+}
+
+func TestFlattenTopLevelStringPtr(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		source           *string
+		expectedValue    types.String
+		expectedDiags    diag.Diagnostics
+		expectedLogLines []map[string]any
+	}{
+		"value": {
+			source:        aws.String("value"),
+			expectedValue: types.StringValue("value"),
+			expectedDiags: diag.Diagnostics{},
+			expectedLogLines: []map[string]any{
+				infoFlattening(reflect.TypeFor[*string](), reflect.TypeFor[*types.String]()),
+				infoConverting(reflect.TypeFor[*string](), reflect.TypeFor[types.String]()),
+			},
+		},
+
+		"empty": {
+			source:        aws.String(""),
+			expectedValue: types.StringValue(""),
+			expectedDiags: diag.Diagnostics{},
+			expectedLogLines: []map[string]any{
+				infoFlattening(reflect.TypeFor[*string](), reflect.TypeFor[*types.String]()),
+				infoConverting(reflect.TypeFor[*string](), reflect.TypeFor[types.String]()),
+			},
+		},
+
+		"nil": {
+			source:        nil,
+			expectedValue: types.StringNull(),
+			expectedDiags: diag.Diagnostics{},
+			expectedLogLines: []map[string]any{
+				infoFlattening(reflect.TypeFor[*string](), reflect.TypeFor[*types.String]()),
+				infoConverting(reflect.TypeFor[*string](), reflect.TypeFor[types.String]()),
+			},
+		},
+	}
+
+	for testName, testCase := range testCases {
+		testCase := testCase
+
+		t.Run(testName, func(t *testing.T) {
+			t.Parallel()
+
+			ctx := context.Background()
+
+			var buf bytes.Buffer
+			ctx = tflogtest.RootLogger(ctx, &buf)
+
+			ctx = registerTestingLogger(ctx)
+
+			var target types.String
+			diags := Flatten(ctx, testCase.source, &target)
+
+			if diff := cmp.Diff(diags, testCase.expectedDiags); diff != "" {
+				t.Errorf("unexpected diagnostics difference: %s", diff)
+			}
+
+			lines, err := tflogtest.MultilineJSONDecode(&buf)
+			if err != nil {
+				t.Fatalf("Flatten: decoding log lines: %s", err)
+			}
+			if diff := cmp.Diff(lines, testCase.expectedLogLines); diff != "" {
+				t.Errorf("unexpected log lines diff (+wanted, -got): %s", diff)
+			}
+
+			if !diags.HasError() {
+				less := func(a, b any) bool { return fmt.Sprintf("%+v", a) < fmt.Sprintf("%+v", b) }
+				if diff := cmp.Diff(target, testCase.expectedValue, cmpopts.SortSlices(less)); diff != "" {
+					t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+				}
+			}
+		})
+	}
+}
+
+func TestFlattenTopLevelInt64Ptr(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		source           *int64
+		expectedValue    types.Int64
+		expectedDiags    diag.Diagnostics
+		expectedLogLines []map[string]any
+	}{
+		"value": {
+			source:        aws.Int64(42),
+			expectedValue: types.Int64Value(42),
+			expectedDiags: diag.Diagnostics{},
+			expectedLogLines: []map[string]any{
+				infoFlattening(reflect.TypeFor[*int64](), reflect.TypeFor[*types.Int64]()),
+				infoConverting(reflect.TypeFor[*int64](), reflect.TypeFor[types.Int64]()),
+			},
+		},
+
+		"empty": {
+			source:        aws.Int64(0),
+			expectedValue: types.Int64Value(0),
+			expectedDiags: diag.Diagnostics{},
+			expectedLogLines: []map[string]any{
+				infoFlattening(reflect.TypeFor[*int64](), reflect.TypeFor[*types.Int64]()),
+				infoConverting(reflect.TypeFor[*int64](), reflect.TypeFor[types.Int64]()),
+			},
+		},
+
+		"nil": {
+			source:        nil,
+			expectedValue: types.Int64Null(),
+			expectedDiags: diag.Diagnostics{},
+			expectedLogLines: []map[string]any{
+				infoFlattening(reflect.TypeFor[*int64](), reflect.TypeFor[*types.Int64]()),
+				infoConverting(reflect.TypeFor[*int64](), reflect.TypeFor[types.Int64]()),
+			},
+		},
+	}
+
+	for testName, testCase := range testCases {
+		testCase := testCase
+
+		t.Run(testName, func(t *testing.T) {
+			t.Parallel()
+
+			ctx := context.Background()
+
+			var buf bytes.Buffer
+			ctx = tflogtest.RootLogger(ctx, &buf)
+
+			ctx = registerTestingLogger(ctx)
+
+			var target types.Int64
+			diags := Flatten(ctx, testCase.source, &target)
+
+			if diff := cmp.Diff(diags, testCase.expectedDiags); diff != "" {
+				t.Errorf("unexpected diagnostics difference: %s", diff)
+			}
+
+			lines, err := tflogtest.MultilineJSONDecode(&buf)
+			if err != nil {
+				t.Fatalf("Flatten: decoding log lines: %s", err)
+			}
+			if diff := cmp.Diff(lines, testCase.expectedLogLines); diff != "" {
+				t.Errorf("unexpected log lines diff (+wanted, -got): %s", diff)
+			}
+
+			if !diags.HasError() {
+				less := func(a, b any) bool { return fmt.Sprintf("%+v", a) < fmt.Sprintf("%+v", b) }
+				if diff := cmp.Diff(target, testCase.expectedValue, cmpopts.SortSlices(less)); diff != "" {
+					t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+				}
+			}
 		})
 	}
 }
