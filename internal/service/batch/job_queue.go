@@ -29,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -68,7 +69,6 @@ func (r *jobQueueResource) Schema(ctx context.Context, request resource.SchemaRe
 			"compute_environments": schema.ListAttribute{
 				ElementType:        fwtypes.ARNType,
 				Optional:           true,
-				Computed:           true,
 				DeprecationMessage: "This parameter will be replaced by `compute_environment_order`.",
 			},
 			names.AttrID: framework.IDAttribute(),
@@ -132,18 +132,24 @@ func (r *jobQueueResource) Create(ctx context.Context, request resource.CreateRe
 	conn := r.Meta().BatchClient(ctx)
 
 	name := data.JobQueueName.ValueString()
-	input := &batch.CreateJobQueueInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
-	if response.Diagnostics.HasError() {
-		return
+	input := &batch.CreateJobQueueInput{
+		JobQueueName: aws.String(name),
+		Priority:     flex.Int32FromFramework(ctx, data.Priority),
+		State:        awstypes.JQState(data.State.ValueString()),
+		Tags:         getTagsIn(ctx),
 	}
 
-	if data.ComputeEnvironmentOrder.IsNull() {
+	if !data.ComputeEnvironmentOrder.IsNull() {
+		response.Diagnostics.Append(flex.Expand(ctx, data.ComputeEnvironmentOrder, &input.ComputeEnvironmentOrder)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+	} else {
 		input.ComputeEnvironmentOrder = expandComputeEnvironments(ctx, data.ComputeEnvironments)
 	}
-
-	// Additional fields.
-	input.Tags = getTagsIn(ctx)
+	if !data.SchedulingPolicyARN.IsNull() {
+		input.SchedulingPolicyArn = flex.StringFromFramework(ctx, data.SchedulingPolicyARN)
+	}
 
 	output, err := conn.CreateJobQueue(ctx, input)
 
@@ -157,16 +163,12 @@ func (r *jobQueueResource) Create(ctx context.Context, request resource.CreateRe
 	data.JobQueueARN = fwflex.StringToFramework(ctx, output.JobQueueArn)
 	data.setID()
 
-	jobQueue, err := waitJobQueueCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
-
-	if err != nil {
+	if _, err := waitJobQueueCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
 		response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID) // Set 'id' so as to taint the resource.
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for Batch Job Queue (%s) create", data.ID.ValueString()), err.Error())
 
 		return
 	}
-
-	data.ComputeEnvironments = flattenComputeEnvironments(ctx, jobQueue.ComputeEnvironmentOrder)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -202,16 +204,21 @@ func (r *jobQueueResource) Read(ctx context.Context, request resource.ReadReques
 	}
 
 	// Set attributes for import.
-	coeNullInState := data.ComputeEnvironmentOrder.IsNull()
-	response.Diagnostics.Append(fwflex.Flatten(ctx, jobQueue, &data)...)
-	if response.Diagnostics.HasError() {
-		return
+	if !data.ComputeEnvironmentOrder.IsNull() {
+		response.Diagnostics.Append(flex.Flatten(ctx, jobQueue.ComputeEnvironmentOrder, &data.ComputeEnvironmentOrder)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+	} else {
+		data.ComputeEnvironments = flattenComputeEnvironments(ctx, jobQueue.ComputeEnvironmentOrder)
 	}
+	data.JobQueueARN = flex.StringToFrameworkLegacy(ctx, jobQueue.JobQueueArn)
+	data.JobQueueName = flex.StringToFramework(ctx, jobQueue.JobQueueName)
+	data.Priority = flex.Int32ToFrameworkLegacy(ctx, jobQueue.Priority)
+	data.SchedulingPolicyARN = flex.StringToFrameworkARN(ctx, jobQueue.SchedulingPolicyArn)
+	data.State = flex.StringValueToFramework(ctx, jobQueue.State)
 
-	data.ComputeEnvironments = flattenComputeEnvironments(ctx, jobQueue.ComputeEnvironmentOrder)
-	if coeNullInState {
-		data.ComputeEnvironmentOrder = fwtypes.NewListNestedObjectValueOfNull[computeEnvironmentOrderModel](ctx)
-	}
+	setTagsOut(ctx, jobQueue.Tags)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -229,25 +236,49 @@ func (r *jobQueueResource) Update(ctx context.Context, request resource.UpdateRe
 
 	conn := r.Meta().BatchClient(ctx)
 
-	if !new.ComputeEnvironmentOrder.Equal(old.ComputeEnvironmentOrder) ||
-		!new.ComputeEnvironments.Equal(old.ComputeEnvironments) ||
-		!new.Priority.Equal(old.Priority) ||
-		!new.SchedulingPolicyARN.Equal(old.SchedulingPolicyARN) ||
-		!new.State.Equal(old.State) {
-		if new.SchedulingPolicyARN.IsNull() {
+	var update bool
+	input := &batch.UpdateJobQueueInput{
+		JobQueue: flex.StringFromFramework(ctx, new.JobQueueName),
+	}
+
+	if !new.ComputeEnvironmentOrder.IsNull() && !new.ComputeEnvironmentOrder.Equal(old.ComputeEnvironmentOrder) {
+		response.Diagnostics.Append(flex.Expand(ctx, new.ComputeEnvironmentOrder, &input.ComputeEnvironmentOrder)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		update = true
+	} else {
+		if !new.ComputeEnvironments.Equal(old.ComputeEnvironments) {
+			input.ComputeEnvironmentOrder = expandComputeEnvironments(ctx, new.ComputeEnvironments)
+			update = true
+		}
+	}
+	if !new.Priority.Equal(old.Priority) {
+		input.Priority = flex.Int32FromFramework(ctx, new.Priority)
+		update = true
+	}
+	if !new.State.Equal(old.State) {
+		input.State = awstypes.JQState(new.State.ValueString())
+		update = true
+	}
+	if !old.SchedulingPolicyARN.IsNull() {
+		input.SchedulingPolicyArn = flex.StringFromFramework(ctx, old.SchedulingPolicyARN)
+		update = true
+	}
+	if !new.SchedulingPolicyARN.Equal(old.SchedulingPolicyARN) {
+		if !new.SchedulingPolicyARN.IsNull() || !old.SchedulingPolicyARN.IsUnknown() {
+			input.SchedulingPolicyArn = flex.StringFromFramework(ctx, new.SchedulingPolicyARN)
+			update = true
+		} else {
 			response.Diagnostics.AddError(
 				"cannot remove the fair share scheduling policy",
 				"cannot remove scheduling policy",
 			)
 			return
 		}
+	}
 
-		input := &batch.UpdateJobQueueInput{}
-		response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-
+	if update {
 		_, err := conn.UpdateJobQueue(ctx, input)
 
 		if err != nil {
@@ -256,17 +287,11 @@ func (r *jobQueueResource) Update(ctx context.Context, request resource.UpdateRe
 			return
 		}
 
-		jobQueue, err := waitJobQueueUpdated(ctx, conn, new.ID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
-
-		if err != nil {
+		if _, err := waitJobQueueUpdated(ctx, conn, new.ID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("waiting for Batch Job Queue (%s) update", new.ID.ValueString()), err.Error())
 
 			return
 		}
-
-		new.ComputeEnvironments = flattenComputeEnvironments(ctx, jobQueue.ComputeEnvironmentOrder)
-	} else {
-		new.ComputeEnvironments = old.ComputeEnvironments
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
