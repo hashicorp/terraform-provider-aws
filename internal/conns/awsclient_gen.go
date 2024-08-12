@@ -186,11 +186,8 @@ import (
 	rum_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rum"
 	s3_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3"
 	s3control_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3control"
-<<<<<<< HEAD
-	sagemaker_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sagemaker"
-=======
 	s3outposts_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3outposts"
->>>>>>> main
+	sagemaker_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	scheduler_sdkv2 "github.com/aws/aws-sdk-go-v2/service/scheduler"
 	schemas_sdkv2 "github.com/aws/aws-sdk-go-v2/service/schemas"
 	secretsmanager_sdkv2 "github.com/aws/aws-sdk-go-v2/service/secretsmanager"
@@ -249,11 +246,6 @@ import (
 	redshift_sdkv1 "github.com/aws/aws-sdk-go/service/redshift"
 	redshiftserverless_sdkv1 "github.com/aws/aws-sdk-go/service/redshiftserverless"
 	route53resolver_sdkv1 "github.com/aws/aws-sdk-go/service/route53resolver"
-<<<<<<< HEAD
-	s3outposts_sdkv1 "github.com/aws/aws-sdk-go/service/s3outposts"
-=======
-	sagemaker_sdkv1 "github.com/aws/aws-sdk-go/service/sagemaker"
->>>>>>> main
 	simpledb_sdkv1 "github.com/aws/aws-sdk-go/service/simpledb"
 	worklink_sdkv1 "github.com/aws/aws-sdk-go/service/worklink"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
