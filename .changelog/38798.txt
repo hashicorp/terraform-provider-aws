@@ -1,4 +1,4 @@
 ```release-note:bug
-resource/aws_networkmanager_connect_peer: Return all BGP configurations
+resource/aws_networkmanager_connect_peer: Set all `configuration.bgp_configurations` on Read
 ```
 
