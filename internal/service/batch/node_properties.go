@@ -23,10 +23,10 @@ type nodeRangeProperty struct {
 	TargetNodes *string
 }
 
-func (np *nodeProperties) Reduce() error {
+func (np *nodeProperties) reduce() error {
 	// Deal with Environment objects which may be re-ordered in the API.
 	for _, node := range np.NodeRangeProperties {
-		node.Container.Reduce()
+		node.Container.reduce()
 	}
 
 	return nil
@@ -46,7 +46,7 @@ func equivalentNodePropertiesJSON(str1, str2 string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	np1.Reduce()
+	np1.reduce()
 	b1, err := tfjson.EncodeToBytes(np1)
 	if err != nil {
 		return false, err
@@ -57,7 +57,7 @@ func equivalentNodePropertiesJSON(str1, str2 string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	np2.Reduce()
+	np2.reduce()
 	b2, err := tfjson.EncodeToBytes(np2)
 	if err != nil {
 		return false, err

@@ -17,7 +17,7 @@ import (
 
 type containerProperties awstypes.ContainerProperties
 
-func (cp *containerProperties) Reduce() {
+func (cp *containerProperties) reduce() {
 	// Deal with Environment objects which may be re-ordered in the API.
 	sort.Slice(cp.Environment, func(i, j int) bool {
 		return aws.ToString(cp.Environment[i].Name) < aws.ToString(cp.Environment[j].Name)
@@ -119,7 +119,7 @@ func equivalentContainerPropertiesJSON(str1, str2 string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	cp1.Reduce()
+	cp1.reduce()
 	b1, err := tfjson.EncodeToBytes(cp1)
 	if err != nil {
 		return false, err
@@ -130,7 +130,7 @@ func equivalentContainerPropertiesJSON(str1, str2 string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	cp2.Reduce()
+	cp2.reduce()
 	b2, err := tfjson.EncodeToBytes(cp2)
 	if err != nil {
 		return false, err
