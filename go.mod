@@ -31,7 +31,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/apprunner v1.30.3
 	github.com/aws/aws-sdk-go-v2/service/appstream v1.37.0
 	github.com/aws/aws-sdk-go-v2/service/appsync v1.35.0
-	github.com/aws/aws-sdk-go-v2/service/athena v1.44.3
+	github.com/aws/aws-sdk-go-v2/service/athena v1.44.4
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.35.3
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.43.3
 	github.com/aws/aws-sdk-go-v2/service/autoscalingplans v1.22.4
@@ -67,7 +67,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.27.3
 	github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.24.3
 	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.25.5
-	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.43.0
+	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.43.1
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.33.3
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.37.3
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.48.3
@@ -189,10 +189,12 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/route53 v1.42.3
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.25.3
 	github.com/aws/aws-sdk-go-v2/service/route53profiles v1.2.3
+	github.com/aws/aws-sdk-go-v2/service/route53recoverycontrolconfig v1.23.3
 	github.com/aws/aws-sdk-go-v2/service/route53recoveryreadiness v1.19.3
 	github.com/aws/aws-sdk-go-v2/service/rum v1.19.3
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.58.3
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.46.3
+	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.26.3
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.10.3
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.26.3
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.32.4
@@ -210,7 +212,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/signer v1.24.3
 	github.com/aws/aws-sdk-go-v2/service/sns v1.31.3
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.34.3
-	github.com/aws/aws-sdk-go-v2/service/ssm v1.52.3
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.52.4
 	github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.24.3
 	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.32.3
 	github.com/aws/aws-sdk-go-v2/service/ssmsap v1.15.3
