@@ -764,7 +764,12 @@ resource "aws_sagemaker_feature_group" "test" {
     }
   }
 
-  depends_on = [aws_iam_role_policy_attachment.test]
+  depends_on = [aws_iam_role_policy_attachment.test, aws_iam_role_policy_attachment.test2]
+}
+
+resource "aws_iam_role_policy_attachment" "test2" {
+  role       = aws_iam_role.test.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonSageMakerFeatureStoreAccess"
 }
 `, rName, format))
 }
