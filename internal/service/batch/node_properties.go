@@ -28,8 +28,6 @@ func (np *nodeProperties) reduce() {
 	for _, node := range np.NodeRangeProperties {
 		node.Container.reduce()
 	}
-
-	return
 }
 
 func equivalentNodePropertiesJSON(str1, str2 string) (bool, error) {
