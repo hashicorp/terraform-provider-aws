@@ -82,7 +82,7 @@ func upgradeJobQueueResourceStateV0toV1(ctx context.Context, request resource.Up
 		Priority:                 jobQueueDataV0.Priority,
 		State:                    jobQueueDataV0.State,
 		Tags:                     tags.NewMapFromMapValue(jobQueueDataV0.Tags),
-		TagsAll:                  jobQueueDataV0.TagsAll,
+		TagsAll:                  tags.NewMapFromMapValue(jobQueueDataV0.TagsAll),
 		Timeouts:                 jobQueueDataV0.Timeouts,
 	}
 

@@ -12,6 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 )
 
 var (
@@ -111,10 +113,6 @@ func NewMapFromMapValue(m basetypes.MapValue) MapValue {
 	return MapValue{MapValue: m}
 }
 
-// func NewMapEmpty() MapValue {
-// 	return fwdiag.Must(NewMapValue(map[string]attr.Value{}))
-// }
-
 var (
 	_ basetypes.MapValuable                   = (*MapValue)(nil)
 	_ basetypes.MapValuableWithSemanticEquals = (*MapValue)(nil)
@@ -152,13 +150,7 @@ func (v MapValue) MapSemanticEquals(ctx context.Context, oValuable basetypes.Map
 	}
 
 	elements := v.Elements()
-	// maps.DeleteFunc(elements, func(_ string, v attr.Value) bool {
-	// 	return v.IsNull()
-	// })
 	oElements := o.Elements()
-	// maps.DeleteFunc(oElements, func(_ string, v attr.Value) bool {
-	// 	return v.IsNull()
-	// })
 
 	if len(elements) != len(oElements) {
 		return false, diags
@@ -189,4 +181,15 @@ func (v MapValue) MapSemanticEquals(ctx context.Context, oValuable basetypes.Map
 	}
 
 	return true, diags
+}
+
+func FlattenStringValueMap(ctx context.Context, v map[string]string) MapValue {
+	if len(v) == 0 {
+		return NewMapValueNull()
+	}
+
+	var output MapValue
+	fwdiag.Must[any](nil, fwflex.Flatten(ctx, v, &output))
+
+	return output
 }

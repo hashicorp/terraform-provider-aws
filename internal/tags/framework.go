@@ -20,6 +20,7 @@ func TagsAttribute() schema.Attribute {
 
 func TagsAttributeComputedOnly() schema.Attribute {
 	return schema.MapAttribute{
+		CustomType:  MapType,
 		ElementType: types.StringType,
 		Computed:    true,
 	}

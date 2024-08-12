@@ -549,7 +549,7 @@ type jobQueueResourceModel struct {
 	SchedulingPolicyARN      fwtypes.ARN                                                   `tfsdk:"scheduling_policy_arn"`
 	State                    types.String                                                  `tfsdk:"state"`
 	Tags                     tftags.MapValue                                               `tfsdk:"tags"`
-	TagsAll                  types.Map                                                     `tfsdk:"tags_all"`
+	TagsAll                  tftags.MapValue                                               `tfsdk:"tags_all"`
 	Timeouts                 timeouts.Value                                                `tfsdk:"timeouts"`
 }
 
