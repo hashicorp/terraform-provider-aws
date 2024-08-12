@@ -2855,7 +2855,7 @@ service "directconnect" {
 
   sdk {
     id             = "Direct Connect"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -4146,7 +4146,7 @@ service "gamelift" {
 
   sdk {
     id             = "GameLift"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -5616,7 +5616,7 @@ service "location" {
 
   sdk {
     id             = "Location"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -6083,7 +6083,7 @@ service "memorydb" {
 
   sdk {
     id             = "MemoryDB"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -6936,7 +6936,7 @@ service "pinpoint" {
 
   sdk {
     id             = "Pinpoint"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -7834,7 +7834,7 @@ service "route53recoveryreadiness" {
 
   sdk {
     id             = "Route53 Recovery Readiness"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -8382,7 +8382,7 @@ service "servicecatalog" {
 
   sdk {
     id             = "Service Catalog"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -8476,7 +8476,7 @@ service "ses" {
 
   sdk {
     id             = "SES"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
