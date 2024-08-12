@@ -67,8 +67,8 @@ resource "aws_bedrock_guardrail" "example" {
 
 The following arguments are required:
 
-* `blocked_input_messaging` - (Required) Messaging for when violations are detected in text.
-* `blocked_outputs_messaging` - (Required) Messaging for when violations are detected in text.
+* `blocked_input_messaging` - (Required) Message to return when the guardrail blocks a prompt.
+* `blocked_outputs_messaging` - (Required) Message to return when the guardrail blocks a model response.
 * `name` - (Required) Name of the guardrail.
 
 The following arguments are optional:
@@ -98,7 +98,7 @@ The `filters_config` configuration block supports the following arguments:
 
 ### Contextual Grounding Policy Config
 
-* `filters_config` (Attributes List) List of contextual grounding filter configs. See [Contextual Grounding Filters Config](#contextual-grounding-filters-config) for more information.
+* `filters_config` (Required) List of contextual grounding filter configs. See [Contextual Grounding Filters Config](#contextual-grounding-filters-config) for more information.
 
 #### Contextual Grounding Filters Config
 
@@ -109,7 +109,7 @@ The `filters_config` configuration block supports the following arguments:
 
 ### Topic Policy Config
 
-* `topics_config` (Attributes List) List of topic configs in topic policy. See [Topics Config](#topics-config) for more information.
+* `topics_config` (Required) List of topic configs in topic policy. See [Topics Config](#topics-config) for more information.
 
 #### Topics Config
 
