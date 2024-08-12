@@ -65,6 +65,23 @@ func (r *resourceEnvironmentProfile) Schema(ctx context.Context, req resource.Sc
 					stringvalidator.RegexMatches(regexache.MustCompile("^[a-z]{2}-[a-z]{4,10}-\\d$"), "must match ^[a-z]{2}-[a-z]{4,10}-\\d$"),
 				},
 			},
+			names.AttrCreatedAt: schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
+			},
+			"created_by": schema.StringAttribute{
+				Computed: true,
+			},
+			names.AttrDescription: schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(0, 2048),
+				},
+			},
+			"domain_identifier": schema.StringAttribute{
+				Required: true,
+			},
 			"environment_blueprint_identifier": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
@@ -72,13 +89,6 @@ func (r *resourceEnvironmentProfile) Schema(ctx context.Context, req resource.Sc
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
-				},
-			},
-			names.AttrDescription: schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				Validators: []validator.String{
-					stringvalidator.LengthBetween(0, 2048),
 				},
 			},
 			names.AttrID: schema.StringAttribute{
@@ -96,16 +106,6 @@ func (r *resourceEnvironmentProfile) Schema(ctx context.Context, req resource.Sc
 				Validators: []validator.String{
 					stringvalidator.RegexMatches(regexache.MustCompile("^[a-zA-Z0-9_-]{1,36}$"), "must match ^[a-zA-Z0-9_-]{1,36}$"),
 				},
-			},
-			names.AttrCreatedAt: schema.StringAttribute{
-				CustomType: timetypes.RFC3339Type{},
-				Computed:   true,
-			},
-			"created_by": schema.StringAttribute{
-				Computed: true,
-			},
-			"domain_identifier": schema.StringAttribute{
-				Required: true,
 			},
 			"updated_at": schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
@@ -132,18 +132,19 @@ func (r *resourceEnvironmentProfile) Schema(ctx context.Context, req resource.Sc
 
 func (r *resourceEnvironmentProfile) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
-	var plan envProfileData
+
+	var plan environmentProfileData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	in := &datazone.CreateEnvironmentProfileInput{}
-	in.EnvironmentBlueprintIdentifier = plan.EnvironmentBlueprintId.ValueStringPointer()
 	resp.Diagnostics.Append(flex.Expand(ctx, &plan, in)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	in.EnvironmentBlueprintIdentifier = plan.EnvironmentBlueprintId.ValueStringPointer()
 
 	out, err := conn.CreateEnvironmentProfile(ctx, in)
 	if err != nil {
@@ -166,13 +167,14 @@ func (r *resourceEnvironmentProfile) Create(ctx context.Context, req resource.Cr
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (r *resourceEnvironmentProfile) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
-	var state envProfileData
+	var state environmentProfileData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -193,24 +195,30 @@ func (r *resourceEnvironmentProfile) Read(ctx context.Context, req resource.Read
 
 	option := flex.WithIgnoredFieldNamesAppend("UserParameters")
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state, option)...)
-	state.EnvironmentBlueprintId = flex.StringToFramework(ctx, out.EnvironmentBlueprintId)
-	state.ProjectIdentifier = flex.StringToFramework(ctx, out.ProjectId)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	state.EnvironmentBlueprintId = flex.StringToFramework(ctx, out.EnvironmentBlueprintId)
+	state.ProjectIdentifier = flex.StringToFramework(ctx, out.ProjectId)
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *resourceEnvironmentProfile) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
-	var plan, state envProfileData
+	var plan, state environmentProfileData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	if !plan.Description.Equal(state.Description) || !plan.Name.Equal(state.Name) || !plan.UserParameters.Equal(state.UserParameters) || !plan.AwsAccountId.Equal(state.AwsAccountId) || !plan.AwsAccountRegion.Equal(state.AwsAccountRegion) {
+
+	if !plan.Description.Equal(state.Description) ||
+		!plan.Name.Equal(state.Name) ||
+		!plan.UserParameters.Equal(state.UserParameters) ||
+		!plan.AwsAccountId.Equal(state.AwsAccountId) ||
+		!plan.AwsAccountRegion.Equal(state.AwsAccountRegion) {
 		in := &datazone.UpdateEnvironmentProfileInput{}
 
 		resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
@@ -218,6 +226,7 @@ func (r *resourceEnvironmentProfile) Update(ctx context.Context, req resource.Up
 			return
 		}
 		in.Identifier = state.Id.ValueStringPointer()
+
 		out, err := conn.UpdateEnvironmentProfile(ctx, in)
 		if err != nil {
 			resp.Diagnostics.AddError(
@@ -226,19 +235,25 @@ func (r *resourceEnvironmentProfile) Update(ctx context.Context, req resource.Up
 			)
 			return
 		}
+
 		option := flex.WithIgnoredFieldNamesAppend("UserParameters")
 		resp.Diagnostics.Append(flex.Flatten(ctx, out, &state, option)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
 	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *resourceEnvironmentProfile) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
-	var state envProfileData
+
+	var state environmentProfileData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	_, err := conn.DeleteEnvironmentProfile(ctx, &datazone.DeleteEnvironmentProfileInput{
 		DomainIdentifier: state.DomainIdentifier.ValueStringPointer(),
@@ -260,14 +275,15 @@ func (r *resourceEnvironmentProfile) ImportState(ctx context.Context, req resour
 	if len(parts) != 2 {
 		resp.Diagnostics.AddError("Resource Import Invalid ID", fmt.Sprintf(`Unexpected format for import ID (%s), use: "DomainIdentifier,Id,EnvironmentBlueprint,Id,ProjectIdentifier"`, req.ID))
 	}
+
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("domain_identifier"), parts[0])...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), parts[1])...)
 }
 
-func findEnvironmentProfileByID(ctx context.Context, conn *datazone.Client, id string, domain_id string) (*datazone.GetEnvironmentProfileOutput, error) {
+func findEnvironmentProfileByID(ctx context.Context, conn *datazone.Client, id string, domainID string) (*datazone.GetEnvironmentProfileOutput, error) {
 	in := &datazone.GetEnvironmentProfileInput{
 		Identifier:       aws.String(id),
-		DomainIdentifier: aws.String(domain_id),
+		DomainIdentifier: aws.String(domainID),
 	}
 
 	out, err := conn.GetEnvironmentProfile(ctx, in)
@@ -288,21 +304,19 @@ func findEnvironmentProfileByID(ctx context.Context, conn *datazone.Client, id s
 	return out, nil
 }
 
-type envProfileData struct {
+type environmentProfileData struct {
 	AwsAccountId           types.String                                        `tfsdk:"aws_account_id"`
 	AwsAccountRegion       types.String                                        `tfsdk:"aws_account_region"`
+	CreatedAt              timetypes.RFC3339                                   `tfsdk:"created_at"`
+	CreatedBy              types.String                                        `tfsdk:"created_by"`
 	Description            types.String                                        `tfsdk:"description"`
-	Id                     types.String                                        `tfsdk:"id"`
+	DomainIdentifier       types.String                                        `tfsdk:"domain_identifier"`
 	EnvironmentBlueprintId types.String                                        `tfsdk:"environment_blueprint_identifier"`
+	Id                     types.String                                        `tfsdk:"id"`
+	Name                   types.String                                        `tfsdk:"name"`
+	ProjectIdentifier      types.String                                        `tfsdk:"project_identifier"`
+	UpdatedAt              timetypes.RFC3339                                   `tfsdk:"updated_at"`
 	UserParameters         fwtypes.ListNestedObjectValueOf[userParametersData] `tfsdk:"user_parameters"`
-
-	Name              types.String `tfsdk:"name"`
-	ProjectIdentifier types.String `tfsdk:"project_identifier"`
-
-	CreatedAt        timetypes.RFC3339 `tfsdk:"created_at"`
-	CreatedBy        types.String      `tfsdk:"created_by"`
-	DomainIdentifier types.String      `tfsdk:"domain_identifier"`
-	UpdatedAt        timetypes.RFC3339 `tfsdk:"updated_at"`
 }
 
 type userParametersData struct {
