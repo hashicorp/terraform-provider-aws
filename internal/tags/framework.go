@@ -12,6 +12,7 @@ import (
 
 func TagsAttribute() schema.Attribute {
 	return schema.MapAttribute{
+		CustomType:  MapType,
 		ElementType: types.StringType,
 		Optional:    true,
 	}
@@ -32,6 +33,9 @@ func TagsAttributeRequired() schema.Attribute {
 }
 
 var (
-	Null    = types.MapNull(types.StringType)
 	Unknown = types.MapUnknown(types.StringType)
+)
+
+var (
+	Null = NewMapValueNull()
 )
