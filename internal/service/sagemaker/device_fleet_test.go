@@ -8,8 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -162,14 +161,14 @@ func TestAccSageMakerDeviceFleet_disappears(t *testing.T) {
 
 func testAccCheckDeviceFleetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sagemaker_device_fleet" {
 				continue
 			}
 
-			deviceFleet, err := tfsagemaker.FindDeviceFleetByName(ctx, conn, rs.Primary.ID)
+			_, err := tfsagemaker.FindDeviceFleetByName(ctx, conn, rs.Primary.ID)
 			if tfresource.NotFound(err) {
 				continue
 			}
@@ -178,9 +177,7 @@ func testAccCheckDeviceFleetDestroy(ctx context.Context) resource.TestCheckFunc 
 				return err
 			}
 
-			if aws.StringValue(deviceFleet.DeviceFleetName) == rs.Primary.ID {
-				return fmt.Errorf("sagemaker Device Fleet %q still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("sagemaker Device Fleet %q still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -198,7 +195,7 @@ func testAccCheckDeviceFleetExists(ctx context.Context, n string, device_fleet *
 			return fmt.Errorf("No sagmaker Device Fleet ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
 		resp, err := tfsagemaker.FindDeviceFleetByName(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
