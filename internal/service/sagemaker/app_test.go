@@ -11,6 +11,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -36,10 +37,16 @@ func testAccDecodeAppID(t *testing.T) {
 		"canvas":           awstypes.AppTypeCanvas,
 	}
 
-	id := "arn:aws:sagemaker:us-west-2:012345678912:app/domain-id/user-profile-name/%s/app-name"
+	arn := arn.ARN{
+		AccountID: "012345678912",
+		Partition: acctest.Partition(),
+		Region:    names.EUWest2RegionID,
+		Resource:  "app/domain-id/user-profile-name/%s/app-name",
+		Service:   names.SageMaker,
+	}.String()
 
 	for key, value := range appTypes {
-		_, _, appType, _, err := tfsagemaker.DecodeAppID(fmt.Sprintf(id, key))
+		_, _, appType, _, err := tfsagemaker.DecodeAppID(fmt.Sprintf(arn, key))
 
 		if err != nil {
 			t.Errorf("Unexpected error: %s", err)
