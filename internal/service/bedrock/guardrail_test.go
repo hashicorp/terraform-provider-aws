@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	"github.com/aws/aws-sdk-go-v2/service/bedrock/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -44,7 +43,7 @@ func TestAccBedrockGuardrail_basic(t *testing.T) {
 				Config: testAccGuardrailConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGuardrailExists(ctx, resourceName, &guardrail),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, "guardrail_arn"),
 					resource.TestCheckResourceAttr(resourceName, "blocked_input_messaging", "test"),
 					resource.TestCheckResourceAttr(resourceName, "blocked_outputs_messaging", "test"),
 					resource.TestCheckResourceAttr(resourceName, "content_policy_config.#", acctest.Ct1),
@@ -66,10 +65,11 @@ func TestAccBedrockGuardrail_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccGuardrailImportStateIDFunc(ctx, resourceName),
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccGuardrailImportStateIDFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "guardrail_id",
 			},
 		},
 	})
@@ -129,10 +129,11 @@ func TestAccBedrockGuardrail_kmsKey(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccGuardrailImportStateIDFunc(ctx, resourceName),
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccGuardrailImportStateIDFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "guardrail_id",
 			},
 		},
 	})
@@ -197,7 +198,7 @@ func TestAccBedrockGuardrail_update(t *testing.T) {
 				Config: testAccGuardrailConfig_wordConfig_only(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGuardrailExists(ctx, resourceName, &guardrail),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, "guardrail_arn"),
 					resource.TestCheckResourceAttr(resourceName, "blocked_input_messaging", "test"),
 					resource.TestCheckResourceAttr(resourceName, "blocked_outputs_messaging", "test"),
 					resource.TestCheckResourceAttr(resourceName, "content_policy_config.#", acctest.Ct0),
@@ -243,24 +244,14 @@ func TestAccBedrockGuardrail_update(t *testing.T) {
 	})
 }
 
-func testAccGuardrailImportStateIDFunc(ctx context.Context, n string) resource.ImportStateIdFunc {
+func testAccGuardrailImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[n]
+		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
-			return "", fmt.Errorf("Not found: %s", n)
+			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockClient(ctx)
-
-		id := rs.Primary.ID
-		version := rs.Primary.Attributes[names.AttrVersion]
-		_, err := tfbedrock.FindGuardrailByID(ctx, conn, id, version)
-
-		if err != nil {
-			return "", err
-		}
-
-		return fmt.Sprintf("%s,%s", id, version), nil
+		return fmt.Sprintf("%s,%s", rs.Primary.Attributes["guardrail_id"], rs.Primary.Attributes["version"]), nil
 	}
 }
 
@@ -273,10 +264,10 @@ func testAccCheckGuardrailDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := conn.GetGuardrail(ctx, &bedrock.GetGuardrailInput{
-				GuardrailIdentifier: aws.String(rs.Primary.ID),
-				GuardrailVersion:    aws.String(rs.Primary.Attributes[names.AttrVersion]),
-			})
+			id := rs.Primary.Attributes["guardrail_id"]
+			version := rs.Primary.Attributes["version"]
+
+			_, err := tfbedrock.FindGuardrailByID(ctx, conn, id, version)
 			if errs.IsA[*types.ResourceNotFoundException](err) {
 				return nil
 			}
@@ -298,21 +289,20 @@ func testAccCheckGuardrailExists(ctx context.Context, name string, guardrail *be
 			return create.Error(names.Bedrock, create.ErrActionCheckingExistence, tfbedrock.ResNameGuardrail, name, errors.New("not found"))
 		}
 
-		if rs.Primary.ID == "" {
-			return create.Error(names.Bedrock, create.ErrActionCheckingExistence, tfbedrock.ResNameGuardrail, name, errors.New("not set"))
+		id := rs.Primary.Attributes["guardrail_id"]
+		version := rs.Primary.Attributes["version"]
+		if id == "" {
+			return create.Error(names.Bedrock, create.ErrActionCheckingExistence, tfbedrock.ResNameGuardrail, name, errors.New("guardrail_id not set"))
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockClient(ctx)
-		resp, err := conn.GetGuardrail(ctx, &bedrock.GetGuardrailInput{
-			GuardrailIdentifier: aws.String(rs.Primary.ID),
-			GuardrailVersion:    aws.String(rs.Primary.Attributes[names.AttrVersion]),
-		})
 
+		out, err := tfbedrock.FindGuardrailByID(ctx, conn, id, version)
 		if err != nil {
 			return create.Error(names.Bedrock, create.ErrActionCheckingExistence, tfbedrock.ResNameGuardrail, rs.Primary.ID, err)
 		}
 
-		*guardrail = *resp
+		*guardrail = *out
 
 		return nil
 	}
@@ -332,24 +322,14 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-// func testAccCheckGuardrailNotRecreated(before, after *bedrock.GetGuardrailOutput) resource.TestCheckFunc {
-// 	return func(s *terraform.State) error {
-// 		if before, after := aws.ToString(before.GuardrailId), aws.ToString(after.GuardrailId); before != after {
-// 			return create.Error(names.Bedrock, create.ErrActionCheckingNotRecreated, tfbedrock.ResNameGuardrail, aws.ToString(before.GuardrailId), errors.New("recreated"))
-// 		}
-
-// 		return nil
-// 	}
-// }
-
 func testAccGuardrailConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-
 resource "aws_bedrock_guardrail" "test" {
   name                      = %[1]q
   blocked_input_messaging   = "test"
   blocked_outputs_messaging = "test"
   description               = "test"
+
   content_policy_config {
     filters_config {
       input_strength  = "MEDIUM"
@@ -362,12 +342,14 @@ resource "aws_bedrock_guardrail" "test" {
       type            = "VIOLENCE"
     }
   }
+
   contextual_grounding_policy_config {
     filters_config {
       threshold = 0.4
       type      = "GROUNDING"
     }
   }
+
   sensitive_information_policy_config {
     pii_entities_config {
       action = "BLOCK"
@@ -381,7 +363,6 @@ resource "aws_bedrock_guardrail" "test" {
       action = "ANONYMIZE"
       type   = "USERNAME"
     }
-
     regexes_config {
       action      = "BLOCK"
       description = "example regex"
@@ -389,6 +370,7 @@ resource "aws_bedrock_guardrail" "test" {
       pattern     = "^\\d{3}-\\d{2}-\\d{4}$"
     }
   }
+
   topic_policy_config {
     topics_config {
       name       = "investment_topic"
@@ -397,6 +379,7 @@ resource "aws_bedrock_guardrail" "test" {
       definition = "Investment advice refers to inquiries, guidance, or recommendations regarding the management or allocation of funds or assets with the goal of generating returns ."
     }
   }
+
   word_policy_config {
     managed_word_lists_config {
       type = "PROFANITY"
@@ -404,16 +387,15 @@ resource "aws_bedrock_guardrail" "test" {
     words_config {
       text = "HATE"
     }
-  }
-  tags = {
-    "Modified By" = "terraform"
   }
 }
 `, rName)
 }
 
 func testAccGuardrailConfig_kmsKey(rName string) string {
-	return acctest.ConfigCompose(testAccCustomModelConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccCustomModelConfig_base(rName),
+		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
@@ -425,6 +407,7 @@ resource "aws_bedrock_guardrail" "test" {
   blocked_outputs_messaging = "test"
   description               = "test"
   kms_key_arn               = aws_kms_key.test.arn
+
   content_policy_config {
     filters_config {
       input_strength  = "MEDIUM"
@@ -437,6 +420,7 @@ resource "aws_bedrock_guardrail" "test" {
       type            = "VIOLENCE"
     }
   }
+
   word_policy_config {
     managed_word_lists_config {
       type = "PROFANITY"
@@ -444,16 +428,15 @@ resource "aws_bedrock_guardrail" "test" {
     words_config {
       text = "HATE"
     }
-  }
-  tags = {
-    "Modified By" = "terraform"
   }
 }
 `, rName))
 }
 
 func testAccGuardrailConfig_tags(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccCustomModelConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccCustomModelConfig_base(rName),
+		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
@@ -465,6 +448,7 @@ resource "aws_bedrock_guardrail" "test" {
   blocked_outputs_messaging = "test"
   description               = "test"
   kms_key_arn               = aws_kms_key.test.arn
+
   content_policy_config {
     filters_config {
       input_strength  = "MEDIUM"
@@ -477,6 +461,7 @@ resource "aws_bedrock_guardrail" "test" {
       type            = "VIOLENCE"
     }
   }
+
   word_policy_config {
     managed_word_lists_config {
       type = "PROFANITY"
@@ -485,6 +470,7 @@ resource "aws_bedrock_guardrail" "test" {
       text = "HATE"
     }
   }
+
   tags = {
     %[2]q = %[3]q
     %[4]q = %[5]q
@@ -495,12 +481,12 @@ resource "aws_bedrock_guardrail" "test" {
 
 func testAccGuardrailConfig_update(rName, blockedInputMessaging, blockedOutputMessaging, inputStrength, regexPattern, piiType, topicName, wordConfig string) string {
 	return fmt.Sprintf(`
-
 resource "aws_bedrock_guardrail" "test" {
   name                      = %[1]q
   blocked_input_messaging   = %[2]q
   blocked_outputs_messaging = %[3]q
   description               = "test"
+
   content_policy_config {
     filters_config {
       input_strength  = %[4]q
@@ -508,12 +494,12 @@ resource "aws_bedrock_guardrail" "test" {
       type            = "HATE"
     }
   }
+
   sensitive_information_policy_config {
     pii_entities_config {
       action = "BLOCK"
       type   = %[6]q
     }
-
     regexes_config {
       action      = "BLOCK"
       description = "example regex"
@@ -521,6 +507,7 @@ resource "aws_bedrock_guardrail" "test" {
       pattern     = %[5]q
     }
   }
+
   topic_policy_config {
     topics_config {
       name       = %[7]q
@@ -529,6 +516,7 @@ resource "aws_bedrock_guardrail" "test" {
       definition = "Investment advice refers to inquiries, guidance, or recommendations regarding the management or allocation of funds or assets with the goal of generating returns ."
     }
   }
+
   word_policy_config {
     managed_word_lists_config {
       type = "PROFANITY"
@@ -537,21 +525,20 @@ resource "aws_bedrock_guardrail" "test" {
       text = %[8]q
     }
   }
-  tags = {
-    "Modified By" = "terraform"
-  }
 }
 `, rName, blockedInputMessaging, blockedOutputMessaging, inputStrength, regexPattern, piiType, topicName, wordConfig)
 }
 
 func testAccGuardrailConfig_wordConfig_only(rName string) string {
-	return acctest.ConfigCompose(testAccCustomModelConfig_base(rName), fmt.Sprintf(`
-
+	return acctest.ConfigCompose(
+		testAccCustomModelConfig_base(rName),
+		fmt.Sprintf(`
 resource "aws_bedrock_guardrail" "test" {
   name                      = %[1]q
   blocked_input_messaging   = "test"
   blocked_outputs_messaging = "test"
   description               = "test"
+
   word_policy_config {
     managed_word_lists_config {
       type = "PROFANITY"
@@ -559,9 +546,6 @@ resource "aws_bedrock_guardrail" "test" {
     words_config {
       text = "HATE"
     }
-  }
-  tags = {
-    "Modified By" = "terraform"
   }
 }
 `, rName))

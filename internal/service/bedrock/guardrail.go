@@ -6,6 +6,7 @@ package bedrock
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -39,7 +40,7 @@ import (
 )
 
 // @FrameworkResource(name="Guardrail")
-// @Tags(identifierAttribute="arn")
+// @Tags(identifierAttribute="guardrail_arn")
 func newResourceGuardrail(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceGuardrail{}
 
@@ -66,7 +67,6 @@ func (r *resourceGuardrail) Metadata(_ context.Context, req resource.MetadataReq
 func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"blocked_input_messaging": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
@@ -96,7 +96,8 @@ func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaReque
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrID: framework.IDAttribute(),
+			"guardrail_arn": framework.ARNAttributeComputedOnly(),
+			"guardrail_id":  framework.IDAttribute(),
 			names.AttrKMSKeyARN: schema.StringAttribute{
 				Optional: true,
 				Validators: []validator.String{
@@ -373,12 +374,12 @@ func (r *resourceGuardrail) Create(ctx context.Context, req resource.CreateReque
 	}
 
 	plan.GuardrailArn = fwflex.StringToFramework(ctx, out.GuardrailArn)
-	plan.ID = fwflex.StringToFramework(ctx, out.GuardrailId)
+	plan.GuardrailID = fwflex.StringToFramework(ctx, out.GuardrailId)
 	plan.Version = fwflex.StringToFramework(ctx, out.Version)
 	plan.CreatedAt = fwflex.TimeToFramework(ctx, out.CreatedAt)
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitGuardrailCreated(ctx, conn, plan.ID.ValueString(), plan.Version.ValueString(), createTimeout)
+	_, err = waitGuardrailCreated(ctx, conn, plan.GuardrailID.ValueString(), plan.Version.ValueString(), createTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.Bedrock, create.ErrActionWaitingForCreation, ResNameGuardrail, plan.Name.String(), err),
@@ -387,10 +388,10 @@ func (r *resourceGuardrail) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
-	output, err := findGuardrailByID(ctx, conn, plan.ID.ValueString(), plan.Version.ValueString())
+	output, err := findGuardrailByID(ctx, conn, plan.GuardrailID.ValueString(), plan.Version.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Bedrock, create.ErrActionSetting, ResNameGuardrail, plan.ID.String(), err),
+			create.ProblemStandardMessage(names.Bedrock, create.ErrActionSetting, ResNameGuardrail, plan.GuardrailID.String(), err),
 			err.Error(),
 		)
 		return
@@ -408,7 +409,7 @@ func (r *resourceGuardrail) Read(ctx context.Context, req resource.ReadRequest, 
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	out, err := findGuardrailByID(ctx, conn, state.ID.ValueString(), state.Version.ValueString())
+	out, err := findGuardrailByID(ctx, conn, state.GuardrailID.ValueString(), state.Version.ValueString())
 
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
@@ -416,7 +417,7 @@ func (r *resourceGuardrail) Read(ctx context.Context, req resource.ReadRequest, 
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Bedrock, create.ErrActionSetting, ResNameGuardrail, state.ID.String(), err),
+			create.ProblemStandardMessage(names.Bedrock, create.ErrActionSetting, ResNameGuardrail, state.GuardrailID.String(), err),
 			err.Error(),
 		)
 		return
@@ -451,7 +452,7 @@ func (r *resourceGuardrail) Update(ctx context.Context, req resource.UpdateReque
 		!plan.Name.Equal(state.Name) ||
 		!plan.Description.Equal(state.Description) {
 		in := &bedrock.UpdateGuardrailInput{
-			GuardrailIdentifier: aws.String(plan.ID.ValueString()),
+			GuardrailIdentifier: aws.String(plan.GuardrailID.ValueString()),
 		}
 		resp.Diagnostics.Append(fwflex.Expand(ctx, plan, in, flexConfig)...)
 		if resp.Diagnostics.HasError() {
@@ -461,34 +462,34 @@ func (r *resourceGuardrail) Update(ctx context.Context, req resource.UpdateReque
 		out, err := conn.UpdateGuardrail(ctx, in)
 		if err != nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.Bedrock, create.ErrActionUpdating, ResNameGuardrail, plan.ID.String(), err),
+				create.ProblemStandardMessage(names.Bedrock, create.ErrActionUpdating, ResNameGuardrail, plan.GuardrailID.String(), err),
 				err.Error(),
 			)
 			return
 		}
 		if out == nil || out.GuardrailArn == nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.Bedrock, create.ErrActionUpdating, ResNameGuardrail, plan.ID.String(), nil),
+				create.ProblemStandardMessage(names.Bedrock, create.ErrActionUpdating, ResNameGuardrail, plan.GuardrailID.String(), nil),
 				errors.New("empty output").Error(),
 			)
 			return
 		}
 		plan.GuardrailArn = fwflex.StringToFramework(ctx, out.GuardrailArn)
-		plan.ID = fwflex.StringToFramework(ctx, out.GuardrailId)
+		plan.GuardrailID = fwflex.StringToFramework(ctx, out.GuardrailId)
 
 		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-		if _, err := waitGuardrailUpdated(ctx, conn, plan.ID.ValueString(), state.Version.ValueString(), updateTimeout); err != nil {
+		if _, err := waitGuardrailUpdated(ctx, conn, plan.GuardrailID.ValueString(), state.Version.ValueString(), updateTimeout); err != nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.Bedrock, create.ErrActionWaitingForUpdate, ResNameGuardrail, plan.ID.String(), err),
+				create.ProblemStandardMessage(names.Bedrock, create.ErrActionWaitingForUpdate, ResNameGuardrail, plan.GuardrailID.String(), err),
 				err.Error(),
 			)
 			return
 		}
 
-		output, err := findGuardrailByID(ctx, conn, plan.ID.ValueString(), plan.Version.ValueString())
+		output, err := findGuardrailByID(ctx, conn, plan.GuardrailID.ValueString(), plan.Version.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.Bedrock, create.ErrActionSetting, ResNameGuardrail, plan.ID.String(), err),
+				create.ProblemStandardMessage(names.Bedrock, create.ErrActionSetting, ResNameGuardrail, plan.GuardrailID.String(), err),
 				err.Error(),
 			)
 			return
@@ -509,23 +510,23 @@ func (r *resourceGuardrail) Delete(ctx context.Context, req resource.DeleteReque
 	}
 
 	in := &bedrock.DeleteGuardrailInput{
-		GuardrailIdentifier: aws.String(state.ID.ValueString()),
+		GuardrailIdentifier: aws.String(state.GuardrailID.ValueString()),
 	}
 	if _, err := conn.DeleteGuardrail(ctx, in); err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return
 		}
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Bedrock, create.ErrActionDeleting, ResNameGuardrail, state.ID.String(), err),
+			create.ProblemStandardMessage(names.Bedrock, create.ErrActionDeleting, ResNameGuardrail, state.GuardrailID.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	if _, err := waitGuardrailDeleted(ctx, conn, state.ID.ValueString(), state.Version.ValueString(), deleteTimeout); err != nil {
+	if _, err := waitGuardrailDeleted(ctx, conn, state.GuardrailID.ValueString(), state.Version.ValueString(), deleteTimeout); err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Bedrock, create.ErrActionWaitingForDeletion, ResNameGuardrail, state.ID.String(), err),
+			create.ProblemStandardMessage(names.Bedrock, create.ErrActionWaitingForDeletion, ResNameGuardrail, state.GuardrailID.String(), err),
 			err.Error(),
 		)
 		return
@@ -536,13 +537,13 @@ func (r *resourceGuardrail) ImportState(ctx context.Context, req resource.Import
 	parts, err := intflex.ExpandResourceId(req.ID, 2, false)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Bedrock, create.ErrActionExpandingResourceId, ResNameGuardrail, req.ID, err),
-			err.Error(),
+			"Unexpected Import Identifier",
+			fmt.Sprintf("Expected import identifier with format: guardrail_id,version. Got: %q", req.ID),
 		)
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), parts[0])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("guardrail_id"), parts[0])...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrVersion), parts[1])...)
 }
 
@@ -643,14 +644,14 @@ func findGuardrailByID(ctx context.Context, conn *bedrock.Client, id string, ver
 }
 
 type resourceGuardrailData struct {
-	GuardrailArn               types.String                                                      `tfsdk:"arn"`
 	BlockedInputMessaging      types.String                                                      `tfsdk:"blocked_input_messaging"`
 	BlockedOutputsMessaging    types.String                                                      `tfsdk:"blocked_outputs_messaging"`
 	ContentPolicy              fwtypes.ListNestedObjectValueOf[contentPolicyConfig]              `tfsdk:"content_policy_config"`
 	ContextualGroundingPolicy  fwtypes.ListNestedObjectValueOf[contextualGroundingPolicyConfig]  `tfsdk:"contextual_grounding_policy_config"`
 	CreatedAt                  timetypes.RFC3339                                                 `tfsdk:"created_at"`
 	Description                types.String                                                      `tfsdk:"description"`
-	ID                         types.String                                                      `tfsdk:"id"`
+	GuardrailArn               types.String                                                      `tfsdk:"guardrail_arn"`
+	GuardrailID                types.String                                                      `tfsdk:"guardrail_id"`
 	KmsKeyId                   types.String                                                      `tfsdk:"kms_key_arn"`
 	Name                       types.String                                                      `tfsdk:"name"`
 	SensitiveInformationPolicy fwtypes.ListNestedObjectValueOf[sensitiveInformationPolicyConfig] `tfsdk:"sensitive_information_policy_config"`

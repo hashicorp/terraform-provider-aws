@@ -59,7 +59,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Factory: newResourceGuardrail,
 			Name:    "Guardrail",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
+				IdentifierAttribute: "guardrail_arn",
 			},
 		},
 	}
