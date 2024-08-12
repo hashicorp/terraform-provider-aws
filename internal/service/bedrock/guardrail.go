@@ -103,9 +103,6 @@ func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaReque
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 2048),
 				},
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 			names.AttrName: schema.StringAttribute{
 				Required: true,
