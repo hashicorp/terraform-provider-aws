@@ -18,6 +18,10 @@ service "apigatewayv2" {
   vpc_lock = true
 }
 
+service "appfabric" {
+  region = "us-east-1"
+}
+
 service "appstream" {
   vpc_lock    = true
   parallelism = 10
