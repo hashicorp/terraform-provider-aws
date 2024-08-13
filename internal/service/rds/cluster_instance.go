@@ -259,7 +259,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 		Engine:                  aws.String(d.Get(names.AttrEngine).(string)),
 		PromotionTier:           aws.Int32(int32(d.Get("promotion_tier").(int))),
 		PubliclyAccessible:      aws.Bool(d.Get(names.AttrPubliclyAccessible).(bool)),
-		Tags:                    getTagsInV2(ctx),
+		Tags:                    getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk(names.AttrAvailabilityZone); ok {
@@ -434,7 +434,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 
 	clusterSetResourceDataEngineVersionFromClusterInstance(d, db)
 
-	setTagsOutV2(ctx, db.TagList)
+	setTagsOut(ctx, db.TagList)
 
 	return diags
 }

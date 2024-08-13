@@ -763,7 +763,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			DeletionProtection:         aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
 			PubliclyAccessible:         aws.Bool(d.Get(names.AttrPubliclyAccessible).(bool)),
 			SourceDBInstanceIdentifier: aws.String(sourceDBInstanceID),
-			Tags:                       getTagsInV2(ctx),
+			Tags:                       getTagsIn(ctx),
 		}
 
 		if _, ok := d.GetOk(names.AttrAllocatedStorage); ok {
@@ -994,7 +994,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			SourceEngine:            aws.String(tfMap["source_engine"].(string)),
 			SourceEngineVersion:     aws.String(tfMap["source_engine_version"].(string)),
 			StorageEncrypted:        aws.Bool(d.Get(names.AttrStorageEncrypted).(bool)),
-			Tags:                    getTagsInV2(ctx),
+			Tags:                    getTagsIn(ctx),
 		}
 
 		if v, ok := d.GetOk(names.AttrAvailabilityZone); ok {
@@ -1140,7 +1140,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			DBSnapshotIdentifier:    aws.String(v.(string)),
 			DeletionProtection:      aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
 			PubliclyAccessible:      aws.Bool(d.Get(names.AttrPubliclyAccessible).(bool)),
-			Tags:                    getTagsInV2(ctx),
+			Tags:                    getTagsIn(ctx),
 		}
 
 		engine := strings.ToLower(d.Get(names.AttrEngine).(string))
@@ -1399,7 +1399,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			DBInstanceClass:            aws.String(d.Get("instance_class").(string)),
 			DeletionProtection:         aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
 			PubliclyAccessible:         aws.Bool(d.Get(names.AttrPubliclyAccessible).(bool)),
-			Tags:                       getTagsInV2(ctx),
+			Tags:                       getTagsIn(ctx),
 			TargetDBInstanceIdentifier: aws.String(identifier),
 		}
 
@@ -1611,7 +1611,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			MasterUsername:          aws.String(d.Get(names.AttrUsername).(string)),
 			PubliclyAccessible:      aws.Bool(d.Get(names.AttrPubliclyAccessible).(bool)),
 			StorageEncrypted:        aws.Bool(d.Get(names.AttrStorageEncrypted).(bool)),
-			Tags:                    getTagsInV2(ctx),
+			Tags:                    getTagsIn(ctx),
 		}
 
 		if v, ok := d.GetOk(names.AttrAvailabilityZone); ok {
@@ -1999,7 +1999,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	dbSetResourceDataEngineVersionFromInstance(d, v)
 
-	setTagsOutV2(ctx, v.TagList)
+	setTagsOut(ctx, v.TagList)
 
 	return diags
 }

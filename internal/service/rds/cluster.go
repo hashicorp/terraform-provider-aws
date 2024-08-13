@@ -657,7 +657,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			Engine:              aws.String(d.Get(names.AttrEngine).(string)),
 			EngineMode:          aws.String(d.Get("engine_mode").(string)),
 			SnapshotIdentifier:  aws.String(v.(string)),
-			Tags:                getTagsInV2(ctx),
+			Tags:                getTagsIn(ctx),
 		}
 
 		if v, ok := d.GetOk(names.AttrAvailabilityZones); ok && v.(*schema.Set).Len() > 0 {
@@ -788,7 +788,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			S3Prefix:            aws.String(tfMap[names.AttrBucketPrefix].(string)),
 			SourceEngine:        aws.String(tfMap["source_engine"].(string)),
 			SourceEngineVersion: aws.String(tfMap["source_engine_version"].(string)),
-			Tags:                getTagsInV2(ctx),
+			Tags:                getTagsIn(ctx),
 		}
 
 		if v, ok := d.GetOk(names.AttrAvailabilityZones); ok && v.(*schema.Set).Len() > 0 {
@@ -911,7 +911,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			CopyTagsToSnapshot:  aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 			DBClusterIdentifier: aws.String(identifier),
 			DeletionProtection:  aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
-			Tags:                getTagsInV2(ctx),
+			Tags:                getTagsIn(ctx),
 		}
 
 		if v, ok := d.GetOk("backtrack_window"); ok {
@@ -1035,7 +1035,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			DeletionProtection:  aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
 			Engine:              aws.String(d.Get(names.AttrEngine).(string)),
 			EngineMode:          aws.String(d.Get("engine_mode").(string)),
-			Tags:                getTagsInV2(ctx),
+			Tags:                getTagsIn(ctx),
 		}
 
 		if v, ok := d.GetOkExists(names.AttrAllocatedStorage); ok {
@@ -1375,7 +1375,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	setTagsOutV2(ctx, dbc.TagList)
+	setTagsOut(ctx, dbc.TagList)
 
 	return diags
 }

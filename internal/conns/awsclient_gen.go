@@ -242,7 +242,6 @@ import (
 	opsworks_sdkv1 "github.com/aws/aws-sdk-go/service/opsworks"
 	outposts_sdkv1 "github.com/aws/aws-sdk-go/service/outposts"
 	quicksight_sdkv1 "github.com/aws/aws-sdk-go/service/quicksight"
-	rds_sdkv1 "github.com/aws/aws-sdk-go/service/rds"
 	redshift_sdkv1 "github.com/aws/aws-sdk-go/service/redshift"
 	redshiftserverless_sdkv1 "github.com/aws/aws-sdk-go/service/redshiftserverless"
 	sagemaker_sdkv1 "github.com/aws/aws-sdk-go/service/sagemaker"
@@ -962,10 +961,6 @@ func (c *AWSClient) RAMClient(ctx context.Context) *ram_sdkv2.Client {
 
 func (c *AWSClient) RBinClient(ctx context.Context) *rbin_sdkv2.Client {
 	return errs.Must(client[*rbin_sdkv2.Client](ctx, c, names.RBin, make(map[string]any)))
-}
-
-func (c *AWSClient) RDSConn(ctx context.Context) *rds_sdkv1.RDS {
-	return errs.Must(conn[*rds_sdkv1.RDS](ctx, c, names.RDS, make(map[string]any)))
 }
 
 func (c *AWSClient) RDSClient(ctx context.Context) *rds_sdkv2.Client {

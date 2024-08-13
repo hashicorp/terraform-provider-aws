@@ -6517,8 +6517,7 @@ func testAccCheckInstanceReplicaAttributes(source, replica *types.DBInstance) re
 // The snapshot is deleted.
 func testAccCheckInstanceDestroyWithFinalSnapshot(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn1 := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
-		conn2 := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_db_instance" {
@@ -6526,12 +6525,12 @@ func testAccCheckInstanceDestroyWithFinalSnapshot(ctx context.Context) resource.
 			}
 
 			finalSnapshotID := rs.Primary.Attributes[names.AttrFinalSnapshotIdentifier]
-			output, err := tfrds.FindDBSnapshotByID(ctx, conn2, finalSnapshotID)
+			output, err := tfrds.FindDBSnapshotByID(ctx, conn, finalSnapshotID)
 			if err != nil {
 				return err
 			}
 
-			tags, err := tfrds.ListTags(ctx, conn1, aws.ToString(output.DBSnapshotArn))
+			tags, err := tfrds.ListTags(ctx, conn, aws.ToString(output.DBSnapshotArn))
 			if err != nil {
 				return err
 			}
@@ -6540,7 +6539,7 @@ func testAccCheckInstanceDestroyWithFinalSnapshot(ctx context.Context) resource.
 				return fmt.Errorf("Name tag not found")
 			}
 
-			_, err = conn2.DeleteDBSnapshot(ctx, &rds.DeleteDBSnapshotInput{
+			_, err = conn.DeleteDBSnapshot(ctx, &rds.DeleteDBSnapshotInput{
 				DBSnapshotIdentifier: aws.String(finalSnapshotID),
 			})
 
@@ -6548,7 +6547,7 @@ func testAccCheckInstanceDestroyWithFinalSnapshot(ctx context.Context) resource.
 				return err
 			}
 
-			_, err = tfrds.FindDBInstanceByID(ctx, conn2, rs.Primary.Attributes[names.AttrIdentifier])
+			_, err = tfrds.FindDBInstanceByID(ctx, conn, rs.Primary.Attributes[names.AttrIdentifier])
 
 			if tfresource.NotFound(err) {
 				continue
