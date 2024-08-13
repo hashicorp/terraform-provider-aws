@@ -998,9 +998,9 @@ resource "aws_sagemaker_notebook_instance" "test" {
 func testAccNotebookInstanceConfig_acceleratorType(rName, acceleratorType string) string {
 	return acctest.ConfigCompose(testAccNotebookInstanceBaseConfig(rName), fmt.Sprintf(`
 resource "aws_sagemaker_notebook_instance" "test" {
-  name              = %[1]q
-  role_arn          = aws_iam_role.test.arn
-  instance_type     = %[2]q
+  name          = %[1]q
+  role_arn      = aws_iam_role.test.arn
+  instance_type = %[2]q
 }
   `, rName, acceleratorType))
 }
