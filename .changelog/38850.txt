@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cloudformation_type: Fixed issue with the updating a resource with a new schema handler package and configured with a lifecycle of create_before_destroy.  The updated version ID will be set as the default for the type as part of the create action.
+```

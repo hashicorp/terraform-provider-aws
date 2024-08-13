@@ -146,6 +146,38 @@ func TestAccCloudFormationType_logging(t *testing.T) {
 	})
 }
 
+func TestAccCloudFormationType_setDefaultVersion(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	typeName := fmt.Sprintf("HashiCorp::TerraformAwsProvider::TfAccTest%s", sdkacctest.RandString(8))
+	zipPath := testAccTypeZipGenerator(t, typeName)
+	zipUpdatePath := testAccTypeZipGenerator(t, typeName)
+	resourceName := "aws_cloudformation_type.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFormationServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTypeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTypeConfig_name(rName, zipPath, typeName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTypeExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "is_default_version", acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccTypeConfig_name(rName, zipUpdatePath, typeName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTypeExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "is_default_version", acctest.CtTrue),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckTypeExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
