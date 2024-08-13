@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/route53resolver"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/route53resolver/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func TestAccRoute53ResolverRule_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var rule route53resolver.ResolverRule
+	var rule awstypes.ResolverRule
 	domainName := acctest.RandomDomainName()
 	resourceName := "aws_route53_resolver_rule.test"
 
@@ -58,7 +58,7 @@ func TestAccRoute53ResolverRule_basic(t *testing.T) {
 
 func TestAccRoute53ResolverRule_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var rule route53resolver.ResolverRule
+	var rule awstypes.ResolverRule
 	domainName := acctest.RandomDomainName()
 	resourceName := "aws_route53_resolver_rule.test"
 
@@ -82,7 +82,7 @@ func TestAccRoute53ResolverRule_disappears(t *testing.T) {
 
 func TestAccRoute53ResolverRule_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var rule route53resolver.ResolverRule
+	var rule awstypes.ResolverRule
 	domainName := acctest.RandomDomainName()
 	resourceName := "aws_route53_resolver_rule.test"
 
@@ -128,7 +128,7 @@ func TestAccRoute53ResolverRule_tags(t *testing.T) {
 
 func TestAccRoute53ResolverRule_justDotDomainName(t *testing.T) {
 	ctx := acctest.Context(t)
-	var rule route53resolver.ResolverRule
+	var rule awstypes.ResolverRule
 	resourceName := "aws_route53_resolver_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -159,7 +159,7 @@ func TestAccRoute53ResolverRule_justDotDomainName(t *testing.T) {
 
 func TestAccRoute53ResolverRule_trailingDotDomainName(t *testing.T) {
 	ctx := acctest.Context(t)
-	var rule route53resolver.ResolverRule
+	var rule awstypes.ResolverRule
 	resourceName := "aws_route53_resolver_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -190,7 +190,7 @@ func TestAccRoute53ResolverRule_trailingDotDomainName(t *testing.T) {
 
 func TestAccRoute53ResolverRule_updateName(t *testing.T) {
 	ctx := acctest.Context(t)
-	var rule1, rule2 route53resolver.ResolverRule
+	var rule1, rule2 awstypes.ResolverRule
 	resourceName := "aws_route53_resolver_rule.test"
 	domainName := acctest.RandomDomainName()
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -228,7 +228,7 @@ func TestAccRoute53ResolverRule_updateName(t *testing.T) {
 
 func TestAccRoute53ResolverRule_forward(t *testing.T) {
 	ctx := acctest.Context(t)
-	var rule1, rule2, rule3 route53resolver.ResolverRule
+	var rule1, rule2, rule3 awstypes.ResolverRule
 	resourceName := "aws_route53_resolver_rule.test"
 	ep1ResourceName := "aws_route53_resolver_endpoint.test.0"
 	ep2ResourceName := "aws_route53_resolver_endpoint.test.1"
@@ -307,7 +307,7 @@ func TestAccRoute53ResolverRule_forward(t *testing.T) {
 
 func TestAccRoute53ResolverRule_forwardMultiProtocol(t *testing.T) {
 	ctx := acctest.Context(t)
-	var rule route53resolver.ResolverRule
+	var rule awstypes.ResolverRule
 	resourceName := "aws_route53_resolver_rule.test"
 	epResourceName := "aws_route53_resolver_endpoint.test.0"
 	domainName := acctest.RandomDomainName()
@@ -378,7 +378,7 @@ func TestAccRoute53ResolverRule_forwardMultiProtocol(t *testing.T) {
 
 func TestAccRoute53ResolverRule_forwardEndpointRecreate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var rule1, rule2 route53resolver.ResolverRule
+	var rule1, rule2 awstypes.ResolverRule
 	resourceName := "aws_route53_resolver_rule.test"
 	epResourceName := "aws_route53_resolver_endpoint.test.0"
 	domainName := acctest.RandomDomainName()
@@ -425,9 +425,9 @@ func TestAccRoute53ResolverRule_forwardEndpointRecreate(t *testing.T) {
 	})
 }
 
-func testAccCheckRulesSame(before, after *route53resolver.ResolverRule) resource.TestCheckFunc {
+func testAccCheckRulesSame(before, after *awstypes.ResolverRule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if before, after := aws.StringValue(before.Arn), aws.StringValue(after.Arn); before != after {
+		if before, after := aws.ToString(before.Arn), aws.ToString(after.Arn); before != after {
 			return fmt.Errorf("Expected Route53 Resolver Rule ARNs to be the same. But they were: %s, %s", before, after)
 		}
 
@@ -435,9 +435,9 @@ func testAccCheckRulesSame(before, after *route53resolver.ResolverRule) resource
 	}
 }
 
-func testAccCheckRulesDifferent(before, after *route53resolver.ResolverRule) resource.TestCheckFunc {
+func testAccCheckRulesDifferent(before, after *awstypes.ResolverRule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if before, after := aws.StringValue(before.Arn), aws.StringValue(after.Arn); before == after {
+		if before, after := aws.ToString(before.Arn), aws.ToString(after.Arn); before == after {
 			return fmt.Errorf("Expected Route53 Resolver rule ARNs to be different. But they were both: %s", before)
 		}
 
@@ -447,7 +447,7 @@ func testAccCheckRulesDifferent(before, after *route53resolver.ResolverRule) res
 
 func testAccCheckRuleDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_route53_resolver_rule" {
@@ -470,7 +470,7 @@ func testAccCheckRuleDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckRuleExists(ctx context.Context, n string, v *route53resolver.ResolverRule) resource.TestCheckFunc {
+func testAccCheckRuleExists(ctx context.Context, n string, v *awstypes.ResolverRule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -481,7 +481,7 @@ func testAccCheckRuleExists(ctx context.Context, n string, v *route53resolver.Re
 			return fmt.Errorf("No Route53 Resolver Rule ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverClient(ctx)
 
 		output, err := tfroute53resolver.FindResolverRuleByID(ctx, conn, rs.Primary.ID)
 

@@ -7864,7 +7864,7 @@ service "route53resolver" {
 
   sdk {
     id             = "Route53Resolver"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
