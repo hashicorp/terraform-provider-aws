@@ -481,7 +481,7 @@ func ResourceInstance() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.StringInSlice(NetworkType_Values(), false),
+				ValidateFunc: validation.StringInSlice(networkType_Values(), false),
 			},
 			"option_group_name": {
 				Type:     schema.TypeString,
@@ -1942,7 +1942,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	// Expose the MasterUserSecret structure as a computed attribute
 	// https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-cluster.html#:~:text=for%20future%20use.-,MasterUserSecret,-%2D%3E%20(structure)
 	if v.MasterUserSecret != nil {
-		if err := d.Set("master_user_secret", []interface{}{flattenManagedMasterUserSecret(v.MasterUserSecret)}); err != nil {
+		if err := d.Set("master_user_secret", []interface{}{flattenManagedMasterUserSecretV1(v.MasterUserSecret)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting master_user_secret: %s", err)
 		}
 	} else {
@@ -3089,6 +3089,26 @@ func flattenEndpoint(apiObject *rds.Endpoint) map[string]interface{} {
 
 	if v := apiObject.Port; v != nil {
 		tfMap[names.AttrPort] = aws.Int64Value(v)
+	}
+
+	return tfMap
+}
+
+// TODO Remove once migrated to AWS SDK for Go v2.
+func flattenManagedMasterUserSecretV1(apiObject *rds.MasterUserSecret) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if v := apiObject.KmsKeyId; v != nil {
+		tfMap[names.AttrKMSKeyID] = aws.StringValue(v)
+	}
+	if v := apiObject.SecretArn; v != nil {
+		tfMap["secret_arn"] = aws.StringValue(v)
+	}
+	if v := apiObject.SecretStatus; v != nil {
+		tfMap["secret_status"] = aws.StringValue(v)
 	}
 
 	return tfMap

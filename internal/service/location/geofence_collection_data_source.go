@@ -7,7 +7,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -61,7 +61,7 @@ const (
 func dataSourceGeofenceCollectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).LocationConn(ctx)
+	conn := meta.(*conns.AWSClient).LocationClient(ctx)
 
 	name := d.Get("collection_name").(string)
 
@@ -70,12 +70,12 @@ func dataSourceGeofenceCollectionRead(ctx context.Context, d *schema.ResourceDat
 		return create.AppendDiagError(diags, names.Location, create.ErrActionReading, DSNameGeofenceCollection, name, err)
 	}
 
-	d.SetId(aws.StringValue(out.CollectionName))
+	d.SetId(aws.ToString(out.CollectionName))
 	d.Set("collection_arn", out.CollectionArn)
-	d.Set(names.AttrCreateTime, aws.TimeValue(out.CreateTime).Format(time.RFC3339))
+	d.Set(names.AttrCreateTime, aws.ToTime(out.CreateTime).Format(time.RFC3339))
 	d.Set(names.AttrDescription, out.Description)
 	d.Set(names.AttrKMSKeyID, out.KmsKeyId)
-	d.Set("update_time", aws.TimeValue(out.UpdateTime).Format(time.RFC3339))
+	d.Set("update_time", aws.ToTime(out.UpdateTime).Format(time.RFC3339))
 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

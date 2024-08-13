@@ -8,14 +8,15 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ses"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ses"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfses "github.com/hashicorp/terraform-provider-aws/internal/service/ses"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -73,7 +74,7 @@ func TestAccSESReceiptRuleSet_disappears(t *testing.T) {
 
 func testAccCheckReceiptRuleSetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ses_receipt_rule_set" {
@@ -84,9 +85,9 @@ func testAccCheckReceiptRuleSetDestroy(ctx context.Context) resource.TestCheckFu
 				RuleSetName: aws.String(rs.Primary.ID),
 			}
 
-			_, err := conn.DescribeReceiptRuleSetWithContext(ctx, params)
+			_, err := conn.DescribeReceiptRuleSet(ctx, params)
 
-			if tfawserr.ErrCodeEquals(err, ses.ErrCodeRuleSetDoesNotExistException) {
+			if errs.IsA[*awstypes.RuleSetDoesNotExistException](err) {
 				continue
 			}
 
@@ -112,13 +113,13 @@ func testAccCheckReceiptRuleSetExists(ctx context.Context, n string) resource.Te
 			return fmt.Errorf("SES Receipt Rule Set name not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
 
 		params := &ses.DescribeReceiptRuleSetInput{
 			RuleSetName: aws.String(rs.Primary.ID),
 		}
 
-		_, err := conn.DescribeReceiptRuleSetWithContext(ctx, params)
+		_, err := conn.DescribeReceiptRuleSet(ctx, params)
 		return err
 	}
 }

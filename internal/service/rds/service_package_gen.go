@@ -19,7 +19,12 @@ import (
 type servicePackage struct{}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{}
+	return []*types.ServicePackageFrameworkDataSource{
+		{
+			Factory: newClusterParameterGroupDataSource,
+			Name:    "Cluster Parameter Group",
+		},
+	}
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
@@ -87,12 +92,15 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Certificate",
 		},
 		{
-			Factory:  DataSourceCluster,
+			Factory:  dataSourceCluster,
 			TypeName: "aws_rds_cluster",
+			Name:     "Cluster",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceClusters,
+			Factory:  dataSourceClusters,
 			TypeName: "aws_rds_clusters",
+			Name:     "Clusters",
 		},
 		{
 			Factory:  dataSourceEngineVersion,
@@ -228,8 +236,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceClusterActivityStream,
+			Factory:  resourceClusterActivityStream,
 			TypeName: "aws_rds_cluster_activity_stream",
+			Name:     "Cluster Activity Stream",
 		},
 		{
 			Factory:  resourceClusterEndpoint,
@@ -269,8 +278,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceGlobalCluster,
+			Factory:  resourceGlobalCluster,
 			TypeName: "aws_rds_global_cluster",
+			Name:     "Global Cluster",
 		},
 		{
 			Factory:  resourceReservedInstance,
