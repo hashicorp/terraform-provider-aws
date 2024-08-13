@@ -475,8 +475,14 @@ func resourceWorkgroupDelete(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func updateWorkgroup(ctx context.Context, conn *redshiftserverless.Client, input *redshiftserverless.UpdateWorkgroupInput, timeout time.Duration) error {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ConflictException](ctx, workgroupUpdatedTimeout,
+		func() (interface{}, error) {
+			return conn.UpdateWorkgroup(ctx, input)
+		},
+		// "ConflictException: There is an operation running on the workgroup. Try to update it later."
+		"operation running")
+
 	name := aws.ToString(input.WorkgroupName)
-	_, err := conn.UpdateWorkgroup(ctx, input)
 
 	if err != nil {
 		return fmt.Errorf("updating Redshift Serverless Workgroup (%s): %w", name, err)
@@ -491,6 +497,7 @@ func updateWorkgroup(ctx context.Context, conn *redshiftserverless.Client, input
 
 const (
 	workgroupDeletedTimeout = 10 * time.Minute
+	workgroupUpdatedTimeout = 10 * time.Minute
 )
 
 func findWorkgroupByName(ctx context.Context, conn *redshiftserverless.Client, name string) (*awstypes.Workgroup, error) {

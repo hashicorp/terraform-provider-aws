@@ -403,6 +403,12 @@ resource "aws_redshiftserverless_workgroup" "test" {
   workgroup_name = %[1]q
   base_capacity  = %[2]d
 }
+
+resource "aws_redshiftserverless_snapshot" "test" {
+  namespace_name   = aws_redshiftserverless_workgroup.test.namespace_name
+  snapshot_name    = %[1]q
+  retention_period = 10
+}
 `, rName, baseCapacity)
 }
 
