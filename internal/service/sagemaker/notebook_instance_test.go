@@ -645,7 +645,7 @@ func TestAccSageMakerNotebookInstance_acceleratorTypes(t *testing.T) {
 				Config: testAccNotebookInstanceConfig_acceleratorType(rName, string(awstypes.InstanceTypeMlInf1Xlarge)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotebookInstanceExists(ctx, resourceName, &notebook),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", string(awstypes.InstanceTypeMlInf1Xlarge)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, string(awstypes.InstanceTypeMlInf1Xlarge)),
 				),
 			},
 			{
@@ -657,14 +657,14 @@ func TestAccSageMakerNotebookInstance_acceleratorTypes(t *testing.T) {
 				Config: testAccNotebookInstanceConfig_acceleratorType(rName, string(awstypes.InstanceTypeMlInf12xlarge)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotebookInstanceExists(ctx, resourceName, &notebook),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", string(awstypes.InstanceTypeMlInf12xlarge)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, string(awstypes.InstanceTypeMlInf12xlarge)),
 				),
 			},
 			{
 				Config: testAccNotebookInstanceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotebookInstanceExists(ctx, resourceName, &notebook),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", string(awstypes.InstanceTypeMlT2Medium)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, string(awstypes.InstanceTypeMlT2Medium)),
 				),
 			},
 		},
