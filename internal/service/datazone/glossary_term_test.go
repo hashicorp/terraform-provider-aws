@@ -116,8 +116,6 @@ func TestAccDataZoneGlossaryTerm_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "short_description", "short_desc"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ENABLED"),
-					//resource.TestCheckResourceAttrSet(resourceName, "term_relations.classifies.#"),
-					//resource.TestCheckResourceAttrSet(resourceName, "term_relations.is_a.#"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttrSet(resourceName, "created_by"),
 				),
@@ -142,15 +140,13 @@ func TestAccDataZoneGlossaryTerm_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ENABLED"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttrSet(resourceName, "created_by"),
-					resource.TestCheckResourceAttrSet(resourceName, "updated_by"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"updated_at"},
-				ImportStateIdFunc:       testAccAuthorizerGlossaryTermImportStateIdFunc(resourceName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccAuthorizerGlossaryTermImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -203,9 +199,11 @@ func testAccCheckGlossaryTermDestroy(ctx context.Context) resource.TestCheckFunc
 				Identifier:       aws.String(rs.Primary.ID),
 				DomainIdentifier: aws.String(rs.Primary.Attributes["domain_identifier"]),
 			})
+
 			if errs.IsA[*types.ResourceNotFoundException](err) || errs.IsA[*types.AccessDeniedException](err) {
-				return nil
+				continue
 			}
+
 			if err != nil {
 				return create.Error(names.DataZone, create.ErrActionCheckingDestroyed, tfdatazone.ResNameGlossaryTerm, rs.Primary.ID, err)
 			}
@@ -263,10 +261,6 @@ func testAccCheckGlossaryTermNotRecreated(before, after *datazone.GetGlossaryTer
 
 func testAccGlossaryTermConfig_basic(rName, gName, dName, pName string) string {
 	return acctest.ConfigCompose(testAccGlossaryConfig_basic(gName, "", dName, pName), fmt.Sprintf(`
-
-
-
-
 resource "aws_datazone_glossary_term" "second" {
   domain_identifier   = aws_datazone_domain.test.id
   glossary_identifier = aws_datazone_glossary.test.id
@@ -301,6 +295,7 @@ resource "aws_datazone_glossary_term" "second" {
   short_description   = "short_desc"
   status              = "ENABLED"
 }
+
 resource "aws_datazone_glossary_term" "third" {
   domain_identifier   = aws_datazone_domain.test.id
   glossary_identifier = aws_datazone_glossary.test.id
@@ -309,6 +304,7 @@ resource "aws_datazone_glossary_term" "third" {
   short_description   = "short_desc"
   status              = "ENABLED"
 }
+
 resource "aws_datazone_glossary_term" "test" {
   domain_identifier   = aws_datazone_domain.test.id
   glossary_identifier = aws_datazone_glossary.test.id
