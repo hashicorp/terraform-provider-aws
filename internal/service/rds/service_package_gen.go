@@ -139,7 +139,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceInstance,
+			Factory:  resourceInstance,
 			TypeName: "aws_db_instance",
 			Name:     "DB Instance",
 			Tags: &types.ServicePackageResourceTags{

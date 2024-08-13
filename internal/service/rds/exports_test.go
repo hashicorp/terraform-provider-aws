@@ -15,6 +15,7 @@ var (
 	ResourceCustomDBEngineVersion               = resourceCustomDBEngineVersion
 	ResourceEventSubscription                   = resourceEventSubscription
 	ResourceGlobalCluster                       = resourceGlobalCluster
+	ResourceInstance                            = resourceInstance
 	ResourceInstanceAutomatedBackupsReplication = resourceInstanceAutomatedBackupsReplication
 	ResourceInstanceRoleAssociation             = resourceInstanceRoleAssociation
 	ResourceIntegration                         = newIntegrationResource
@@ -38,7 +39,7 @@ var (
 	FindDBClusterSnapshotByID                  = findDBClusterSnapshotByID
 	FindDBClusterWithActivityStream            = findDBClusterWithActivityStream
 	FindDBInstanceAutomatedBackupByARN         = findDBInstanceAutomatedBackupByARN
-	FindDBInstanceByID                         = findDBInstanceByIDSDKv1
+	FindDBInstanceByID                         = findDBInstanceByID
 	FindDBInstanceRoleByTwoPartKey             = findDBInstanceRoleByTwoPartKey
 	FindDBParameterGroupByName                 = findDBParameterGroupByName
 	FindDBProxyByName                          = findDBProxyByName
@@ -60,7 +61,7 @@ var (
 	ProxyTargetParseResourceID                 = proxyTargetParseResourceID
 	WaitBlueGreenDeploymentDeleted             = waitBlueGreenDeploymentDeleted
 	WaitBlueGreenDeploymentAvailable           = waitBlueGreenDeploymentAvailable
-	WaitDBInstanceAvailable                    = waitDBInstanceAvailableSDKv2
+	WaitDBInstanceAvailable                    = waitDBInstanceAvailable
 	WaitDBInstanceDeleted                      = waitDBInstanceDeleted
 
 	ErrCodeInvalidAction               = errCodeInvalidAction
