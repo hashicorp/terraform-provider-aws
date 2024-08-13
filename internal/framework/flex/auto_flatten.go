@@ -83,6 +83,18 @@ func autoFlattenConvert(ctx context.Context, from, to any, flexer autoFlexer) di
 	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourcePath, sourcePath.String())
 	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetPath, targetPath.String())
 
+	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourceType, fullTypeName(reflect.TypeOf(from)))
+	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetType, fullTypeName(reflect.TypeOf(to)))
+
+	if _, ok := to.(attr.Value); !ok {
+		vf := reflect.ValueOf(from)
+		if vf.Kind() == reflect.Invalid || vf.Kind() == reflect.Pointer && vf.IsNil() {
+			tflog.SubsystemError(ctx, subsystemName, "Source is nil")
+			diags.Append(diagFlatteningSourceIsNil(reflect.TypeOf(from)))
+			return diags
+		}
+	}
+
 	ctx, valFrom, valTo, d := autoFlexValues(ctx, from, to)
 	diags.Append(d...)
 	if diags.HasError() {
@@ -97,6 +109,8 @@ func autoFlattenConvert(ctx context.Context, from, to any, flexer autoFlexer) di
 			return diags
 		}
 	}
+
+	valFrom = reflect.ValueOf(from)
 
 	// Anything else.
 	diags.Append(flexer.convert(ctx, sourcePath, valFrom, targetPath, valTo)...)
@@ -135,12 +149,20 @@ func (flattener autoFlattener) convert(ctx context.Context, sourcePath path.Path
 		diags.Append(flattener.bool(ctx, vFrom, false, tTo, vTo)...)
 		return diags
 
-	case reflect.Float32, reflect.Float64:
-		diags.Append(flattener.float(ctx, vFrom, false, tTo, vTo)...)
+	case reflect.Float64:
+		diags.Append(flattener.float64(ctx, vFrom, vFrom.Type(), false, tTo, vTo)...)
 		return diags
 
-	case reflect.Int32, reflect.Int64:
-		diags.Append(flattener.int(ctx, vFrom, false, tTo, vTo)...)
+	case reflect.Float32:
+		diags.Append(flattener.float32(ctx, vFrom, false, tTo, vTo)...)
+		return diags
+
+	case reflect.Int64:
+		diags.Append(flattener.int64(ctx, vFrom, vFrom.Type(), false, tTo, vTo)...)
+		return diags
+
+	case reflect.Int32:
+		diags.Append(flattener.int32(ctx, vFrom, false, tTo, vTo)...)
 		return diags
 
 	case reflect.String:
@@ -207,12 +229,15 @@ func (flattener autoFlattener) bool(ctx context.Context, vFrom reflect.Value, is
 	return diags
 }
 
-// float copies an AWS API float value to a compatible Plugin Framework value.
-func (flattener autoFlattener) float(ctx context.Context, vFrom reflect.Value, isNullFrom bool, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+// float64 copies an AWS API float64 value to a compatible Plugin Framework value.
+func (flattener autoFlattener) float64(ctx context.Context, vFrom reflect.Value, sourceType reflect.Type, isNullFrom bool, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch tTo := tTo.(type) {
 	case basetypes.Float64Typable:
+		//
+		// float32/float64 -> types.Float64.
+		//
 		float64Value := types.Float64Null()
 		if !isNullFrom {
 			switch from := vFrom.Interface().(type) {
@@ -229,9 +254,72 @@ func (flattener autoFlattener) float(ctx context.Context, vFrom reflect.Value, i
 			return diags
 		}
 
+		vTo.Set(reflect.ValueOf(v))
+		return diags
+
+	case basetypes.Float32Typable:
+		// Only returns an error when the target type is Float32Typable to prevent breaking existing resources
+		tflog.SubsystemError(ctx, subsystemName, "Flattening incompatible types")
+		diags.Append(diagFlatteningIncompatibleTypes(sourceType, vTo.Type()))
+		return diags
+	}
+
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+		"from": vFrom.Kind(),
+		"to":   tTo,
+	})
+
+	return diags
+}
+
+// float32 copies an AWS API float32 value to a compatible Plugin Framework value.
+func (flattener autoFlattener) float32(ctx context.Context, vFrom reflect.Value, isNullFrom bool, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	switch tTo := tTo.(type) {
+	case basetypes.Float64Typable:
 		//
 		// float32/float64 -> types.Float64.
 		//
+		float64Value := types.Float64Null()
+		if !isNullFrom {
+			switch from := vFrom.Interface().(type) {
+			// Avoid loss of equivalence.
+			case float32:
+				float64Value = types.Float64Value(decimal.NewFromFloat32(from).InexactFloat64())
+			default:
+				float64Value = types.Float64Value(vFrom.Float())
+			}
+		}
+		v, d := tTo.ValueFromFloat64(ctx, float64Value)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		vTo.Set(reflect.ValueOf(v))
+		return diags
+
+	case basetypes.Float32Typable:
+		//
+		// float32/float64 -> types.Float32.
+		//
+		float32Value := types.Float32Null()
+		if !isNullFrom {
+			switch from := vFrom.Interface().(type) {
+			// Avoid loss of equivalence.
+			case float32:
+				float32Value = types.Float32Value(float32(decimal.NewFromFloat32(from).InexactFloat64()))
+			default:
+				float32Value = types.Float32Value(float32(vFrom.Float()))
+			}
+		}
+		v, d := tTo.ValueFromFloat32(ctx, float32Value)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
 		vTo.Set(reflect.ValueOf(v))
 		return diags
 	}
@@ -244,12 +332,15 @@ func (flattener autoFlattener) float(ctx context.Context, vFrom reflect.Value, i
 	return diags
 }
 
-// int copies an AWS API int value to a compatible Plugin Framework value.
-func (flattener autoFlattener) int(ctx context.Context, vFrom reflect.Value, isNullFrom bool, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+// int64 copies an AWS API int64 value to a compatible Plugin Framework value.
+func (flattener autoFlattener) int64(ctx context.Context, vFrom reflect.Value, sourceType reflect.Type, isNullFrom bool, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch tTo := tTo.(type) {
 	case basetypes.Int64Typable:
+		//
+		// int32/int64 -> types.Int64.
+		//
 		int64Value := types.Int64Null()
 		if !isNullFrom {
 			int64Value = types.Int64Value(vFrom.Int())
@@ -260,9 +351,60 @@ func (flattener autoFlattener) int(ctx context.Context, vFrom reflect.Value, isN
 			return diags
 		}
 
+		vTo.Set(reflect.ValueOf(v))
+		return diags
+
+	case basetypes.Int32Typable:
+		// Only returns an error when the target type is Int32Typeable to prevent breaking existing resources
+		tflog.SubsystemError(ctx, subsystemName, "Flattening incompatible types")
+		diags.Append(diagFlatteningIncompatibleTypes(sourceType, vTo.Type()))
+		return diags
+	}
+
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+		"from": vFrom.Kind(),
+		"to":   tTo,
+	})
+
+	return diags
+}
+
+// int32 copies an AWS API int32 value to a compatible Plugin Framework value.
+func (flattener autoFlattener) int32(ctx context.Context, vFrom reflect.Value, isNullFrom bool, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	switch tTo := tTo.(type) {
+	case basetypes.Int64Typable:
 		//
 		// int32/int64 -> types.Int64.
 		//
+		int64Value := types.Int64Null()
+		if !isNullFrom {
+			int64Value = types.Int64Value(vFrom.Int())
+		}
+		v, d := tTo.ValueFromInt64(ctx, int64Value)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		vTo.Set(reflect.ValueOf(v))
+		return diags
+
+	case basetypes.Int32Typable:
+		//
+		// int32/int64 -> types.Int32.
+		//
+		int32Value := types.Int32Null()
+		if !isNullFrom {
+			int32Value = types.Int32Value(int32(vFrom.Int()))
+		}
+		v, d := tTo.ValueFromInt32(ctx, int32Value)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
 		vTo.Set(reflect.ValueOf(v))
 		return diags
 	}
@@ -356,12 +498,20 @@ func (flattener autoFlattener) pointer(ctx context.Context, sourcePath path.Path
 		diags.Append(flattener.bool(ctx, vElem, isNilFrom, tTo, vTo)...)
 		return diags
 
-	case reflect.Float32, reflect.Float64:
-		diags.Append(flattener.float(ctx, vElem, isNilFrom, tTo, vTo)...)
+	case reflect.Float64:
+		diags.Append(flattener.float64(ctx, vElem, vFrom.Type(), isNilFrom, tTo, vTo)...)
 		return diags
 
-	case reflect.Int32, reflect.Int64:
-		diags.Append(flattener.int(ctx, vElem, isNilFrom, tTo, vTo)...)
+	case reflect.Float32:
+		diags.Append(flattener.float32(ctx, vElem, isNilFrom, tTo, vTo)...)
+		return diags
+
+	case reflect.Int64:
+		diags.Append(flattener.int64(ctx, vElem, vFrom.Type(), isNilFrom, tTo, vTo)...)
+		return diags
+
+	case reflect.Int32:
+		diags.Append(flattener.int32(ctx, vElem, isNilFrom, tTo, vTo)...)
 		return diags
 
 	case reflect.String:
@@ -1300,5 +1450,15 @@ func diagFlatteningMarshalSmithyDocument(sourceType reflect.Type, err error) dia
 			"This is always an error in the provider. "+
 			"Please report the following to the provider developer:\n\n"+
 			fmt.Sprintf("Marshalling JSON document of type %q failed: %s", fullTypeName(sourceType), err.Error()),
+	)
+}
+
+func diagFlatteningIncompatibleTypes(sourceType, targetType reflect.Type) diag.ErrorDiagnostic {
+	return diag.NewErrorDiagnostic(
+		"Incompatible Types",
+		"An unexpected error occurred while flattening configuration. "+
+			"This is always an error in the provider. "+
+			"Please report the following to the provider developer:\n\n"+
+			fmt.Sprintf("Source type %q cannot be flattened to target type %q.", fullTypeName(sourceType), fullTypeName(targetType)),
 	)
 }

@@ -107,6 +107,7 @@ import (
 	fis_sdkv2 "github.com/aws/aws-sdk-go-v2/service/fis"
 	fms_sdkv2 "github.com/aws/aws-sdk-go-v2/service/fms"
 	fsx_sdkv2 "github.com/aws/aws-sdk-go-v2/service/fsx"
+	gamelift_sdkv2 "github.com/aws/aws-sdk-go-v2/service/gamelift"
 	glacier_sdkv2 "github.com/aws/aws-sdk-go-v2/service/glacier"
 	globalaccelerator_sdkv2 "github.com/aws/aws-sdk-go-v2/service/globalaccelerator"
 	glue_sdkv2 "github.com/aws/aws-sdk-go-v2/service/glue"
@@ -180,9 +181,13 @@ import (
 	route53_sdkv2 "github.com/aws/aws-sdk-go-v2/service/route53"
 	route53domains_sdkv2 "github.com/aws/aws-sdk-go-v2/service/route53domains"
 	route53profiles_sdkv2 "github.com/aws/aws-sdk-go-v2/service/route53profiles"
+	route53recoverycontrolconfig_sdkv2 "github.com/aws/aws-sdk-go-v2/service/route53recoverycontrolconfig"
+	route53recoveryreadiness_sdkv2 "github.com/aws/aws-sdk-go-v2/service/route53recoveryreadiness"
+	route53resolver_sdkv2 "github.com/aws/aws-sdk-go-v2/service/route53resolver"
 	rum_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rum"
 	s3_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3"
 	s3control_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3control"
+	s3outposts_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3outposts"
 	scheduler_sdkv2 "github.com/aws/aws-sdk-go-v2/service/scheduler"
 	schemas_sdkv2 "github.com/aws/aws-sdk-go-v2/service/schemas"
 	secretsmanager_sdkv2 "github.com/aws/aws-sdk-go-v2/service/secretsmanager"
@@ -223,11 +228,9 @@ import (
 	workspaces_sdkv2 "github.com/aws/aws-sdk-go-v2/service/workspaces"
 	workspacesweb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/workspacesweb"
 	xray_sdkv2 "github.com/aws/aws-sdk-go-v2/service/xray"
-	batch_sdkv1 "github.com/aws/aws-sdk-go/service/batch"
 	connect_sdkv1 "github.com/aws/aws-sdk-go/service/connect"
 	elasticsearchservice_sdkv1 "github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	emr_sdkv1 "github.com/aws/aws-sdk-go/service/emr"
-	gamelift_sdkv1 "github.com/aws/aws-sdk-go/service/gamelift"
 	imagebuilder_sdkv1 "github.com/aws/aws-sdk-go/service/imagebuilder"
 	kinesisvideo_sdkv1 "github.com/aws/aws-sdk-go/service/kinesisvideo"
 	lexmodelbuildingservice_sdkv1 "github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
@@ -242,10 +245,6 @@ import (
 	rds_sdkv1 "github.com/aws/aws-sdk-go/service/rds"
 	redshift_sdkv1 "github.com/aws/aws-sdk-go/service/redshift"
 	redshiftserverless_sdkv1 "github.com/aws/aws-sdk-go/service/redshiftserverless"
-	route53recoverycontrolconfig_sdkv1 "github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
-	route53recoveryreadiness_sdkv1 "github.com/aws/aws-sdk-go/service/route53recoveryreadiness"
-	route53resolver_sdkv1 "github.com/aws/aws-sdk-go/service/route53resolver"
-	s3outposts_sdkv1 "github.com/aws/aws-sdk-go/service/s3outposts"
 	sagemaker_sdkv1 "github.com/aws/aws-sdk-go/service/sagemaker"
 	simpledb_sdkv1 "github.com/aws/aws-sdk-go/service/simpledb"
 	worklink_sdkv1 "github.com/aws/aws-sdk-go/service/worklink"
@@ -351,10 +350,6 @@ func (c *AWSClient) BCMDataExportsClient(ctx context.Context) *bcmdataexports_sd
 
 func (c *AWSClient) BackupClient(ctx context.Context) *backup_sdkv2.Client {
 	return errs.Must(client[*backup_sdkv2.Client](ctx, c, names.Backup, make(map[string]any)))
-}
-
-func (c *AWSClient) BatchConn(ctx context.Context) *batch_sdkv1.Batch {
-	return errs.Must(conn[*batch_sdkv1.Batch](ctx, c, names.Batch, make(map[string]any)))
 }
 
 func (c *AWSClient) BatchClient(ctx context.Context) *batch_sdkv2.Client {
@@ -677,8 +672,8 @@ func (c *AWSClient) FirehoseClient(ctx context.Context) *firehose_sdkv2.Client {
 	return errs.Must(client[*firehose_sdkv2.Client](ctx, c, names.Firehose, make(map[string]any)))
 }
 
-func (c *AWSClient) GameLiftConn(ctx context.Context) *gamelift_sdkv1.GameLift {
-	return errs.Must(conn[*gamelift_sdkv1.GameLift](ctx, c, names.GameLift, make(map[string]any)))
+func (c *AWSClient) GameLiftClient(ctx context.Context) *gamelift_sdkv2.Client {
+	return errs.Must(client[*gamelift_sdkv2.Client](ctx, c, names.GameLift, make(map[string]any)))
 }
 
 func (c *AWSClient) GlacierClient(ctx context.Context) *glacier_sdkv2.Client {
@@ -1037,16 +1032,16 @@ func (c *AWSClient) Route53ProfilesClient(ctx context.Context) *route53profiles_
 	return errs.Must(client[*route53profiles_sdkv2.Client](ctx, c, names.Route53Profiles, make(map[string]any)))
 }
 
-func (c *AWSClient) Route53RecoveryControlConfigConn(ctx context.Context) *route53recoverycontrolconfig_sdkv1.Route53RecoveryControlConfig {
-	return errs.Must(conn[*route53recoverycontrolconfig_sdkv1.Route53RecoveryControlConfig](ctx, c, names.Route53RecoveryControlConfig, make(map[string]any)))
+func (c *AWSClient) Route53RecoveryControlConfigClient(ctx context.Context) *route53recoverycontrolconfig_sdkv2.Client {
+	return errs.Must(client[*route53recoverycontrolconfig_sdkv2.Client](ctx, c, names.Route53RecoveryControlConfig, make(map[string]any)))
 }
 
-func (c *AWSClient) Route53RecoveryReadinessConn(ctx context.Context) *route53recoveryreadiness_sdkv1.Route53RecoveryReadiness {
-	return errs.Must(conn[*route53recoveryreadiness_sdkv1.Route53RecoveryReadiness](ctx, c, names.Route53RecoveryReadiness, make(map[string]any)))
+func (c *AWSClient) Route53RecoveryReadinessClient(ctx context.Context) *route53recoveryreadiness_sdkv2.Client {
+	return errs.Must(client[*route53recoveryreadiness_sdkv2.Client](ctx, c, names.Route53RecoveryReadiness, make(map[string]any)))
 }
 
-func (c *AWSClient) Route53ResolverConn(ctx context.Context) *route53resolver_sdkv1.Route53Resolver {
-	return errs.Must(conn[*route53resolver_sdkv1.Route53Resolver](ctx, c, names.Route53Resolver, make(map[string]any)))
+func (c *AWSClient) Route53ResolverClient(ctx context.Context) *route53resolver_sdkv2.Client {
+	return errs.Must(client[*route53resolver_sdkv2.Client](ctx, c, names.Route53Resolver, make(map[string]any)))
 }
 
 func (c *AWSClient) S3Client(ctx context.Context) *s3_sdkv2.Client {
@@ -1057,8 +1052,8 @@ func (c *AWSClient) S3ControlClient(ctx context.Context) *s3control_sdkv2.Client
 	return errs.Must(client[*s3control_sdkv2.Client](ctx, c, names.S3Control, make(map[string]any)))
 }
 
-func (c *AWSClient) S3OutpostsConn(ctx context.Context) *s3outposts_sdkv1.S3Outposts {
-	return errs.Must(conn[*s3outposts_sdkv1.S3Outposts](ctx, c, names.S3Outposts, make(map[string]any)))
+func (c *AWSClient) S3OutpostsClient(ctx context.Context) *s3outposts_sdkv2.Client {
+	return errs.Must(client[*s3outposts_sdkv2.Client](ctx, c, names.S3Outposts, make(map[string]any)))
 }
 
 func (c *AWSClient) SESClient(ctx context.Context) *ses_sdkv2.Client {

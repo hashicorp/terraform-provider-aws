@@ -25,8 +25,20 @@ type tfSingleStringField struct {
 	Field1 types.String `tfsdk:"field1"`
 }
 
+type tfSingleFloat64Field struct {
+	Field1 types.Float64 `tfsdk:"field1"`
+}
+
+type tfSingleFloat32Field struct {
+	Field1 types.Float32 `tfsdk:"field1"`
+}
+
 type tfSingleInt64Field struct {
 	Field1 types.Int64 `tfsdk:"field1"`
+}
+
+type tfSingleInt32Field struct {
+	Field1 types.Int32 `tfsdk:"field1"`
 }
 
 // All primitive types.
@@ -158,8 +170,36 @@ type awsSingleStringPointer struct {
 	Field1 *string
 }
 
+type awsSingleFloat64Value struct {
+	Field1 float64
+}
+
+type awsSingleFloat64Pointer struct {
+	Field1 *float64
+}
+
+type awsSingleFloat32Value struct {
+	Field1 float32
+}
+
+type awsSingleFloat32Pointer struct {
+	Field1 *float32
+}
+
 type awsSingleInt64Value struct {
 	Field1 int64
+}
+
+type awsSingleInt64Pointer struct {
+	Field1 *int64
+}
+
+type awsSingleInt32Value struct {
+	Field1 int32
+}
+
+type awsSingleInt32Pointer struct {
+	Field1 *int32
 }
 
 type awsNestedObjectPointer struct {

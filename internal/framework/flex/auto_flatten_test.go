@@ -51,18 +51,18 @@ func TestFlatten(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				infoFlattening(nil, reflect.TypeFor[*emptyStruct]()),
-				errorSourceIsNil("", nil, "", reflect.TypeFor[emptyStruct]()),
+				errorSourceIsNil("", nil, "", reflect.TypeFor[*emptyStruct]()),
 			},
 		},
 		"typed nil Source": {
 			Source: typedNilSource,
 			Target: &emptyStruct{},
 			expectedDiags: diag.Diagnostics{
-				diagFlatteningSourceIsNil(nil), // FIXME: Should give the actual type
+				diagFlatteningSourceIsNil(reflect.TypeFor[*emptyStruct]()),
 			},
 			expectedLogLines: []map[string]any{
 				infoFlattening(reflect.TypeFor[*emptyStruct](), reflect.TypeFor[*emptyStruct]()),
-				errorSourceIsNil("", nil, "", reflect.TypeFor[emptyStruct]()), // FIXME: Should give the actual type
+				errorSourceIsNil("", reflect.TypeFor[*emptyStruct](), "", reflect.TypeFor[*emptyStruct]()),
 			},
 		},
 		"nil Target": {
@@ -1260,6 +1260,884 @@ func TestFlattenGeneric(t *testing.T) {
 	}
 
 	runAutoFlattenTestCases(t, testCases)
+}
+
+func TestFlattenFloat64(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]autoFlexTestCases{
+		"float64 to Float64": {
+			"value": {
+				Source: awsSingleFloat64Value{
+					Field1: 42,
+				},
+				Target: &tfSingleFloat64Field{},
+				WantTarget: &tfSingleFloat64Field{
+					Field1: types.Float64Value(42),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleFloat64Value](), reflect.TypeFor[*tfSingleFloat64Field]()),
+					infoConverting(reflect.TypeFor[awsSingleFloat64Value](), reflect.TypeFor[*tfSingleFloat64Field]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleFloat64Value](), "Field1", reflect.TypeFor[*tfSingleFloat64Field]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[float64](), "Field1", reflect.TypeFor[types.Float64]()),
+				},
+			},
+			"zero": {
+				Source: awsSingleFloat64Value{
+					Field1: 0,
+				},
+				Target: &tfSingleFloat64Field{},
+				WantTarget: &tfSingleFloat64Field{
+					Field1: types.Float64Value(0),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleFloat64Value](), reflect.TypeFor[*tfSingleFloat64Field]()),
+					infoConverting(reflect.TypeFor[awsSingleFloat64Value](), reflect.TypeFor[*tfSingleFloat64Field]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleFloat64Value](), "Field1", reflect.TypeFor[*tfSingleFloat64Field]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[float64](), "Field1", reflect.TypeFor[types.Float64]()),
+				},
+			},
+		},
+
+		"*float64 to Float64": {
+			"value": {
+				Source: awsSingleFloat64Pointer{
+					Field1: aws.Float64(42),
+				},
+				Target: &tfSingleFloat64Field{},
+				WantTarget: &tfSingleFloat64Field{
+					Field1: types.Float64Value(42),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleFloat64Pointer](), reflect.TypeFor[*tfSingleFloat64Field]()),
+					infoConverting(reflect.TypeFor[awsSingleFloat64Pointer](), reflect.TypeFor[*tfSingleFloat64Field]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleFloat64Pointer](), "Field1", reflect.TypeFor[*tfSingleFloat64Field]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[*float64](), "Field1", reflect.TypeFor[types.Float64]()),
+				},
+			},
+			"zero": {
+				Source: awsSingleFloat64Pointer{
+					Field1: aws.Float64(0),
+				},
+				Target: &tfSingleFloat64Field{},
+				WantTarget: &tfSingleFloat64Field{
+					Field1: types.Float64Value(0),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleFloat64Pointer](), reflect.TypeFor[*tfSingleFloat64Field]()),
+					infoConverting(reflect.TypeFor[awsSingleFloat64Pointer](), reflect.TypeFor[*tfSingleFloat64Field]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleFloat64Pointer](), "Field1", reflect.TypeFor[*tfSingleFloat64Field]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[*float64](), "Field1", reflect.TypeFor[types.Float64]()),
+				},
+			},
+			"null": {
+				Source: awsSingleFloat64Pointer{
+					Field1: nil,
+				},
+				Target: &tfSingleFloat64Field{},
+				WantTarget: &tfSingleFloat64Field{
+					Field1: types.Float64Null(),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleFloat64Pointer](), reflect.TypeFor[*tfSingleFloat64Field]()),
+					infoConverting(reflect.TypeFor[awsSingleFloat64Pointer](), reflect.TypeFor[*tfSingleFloat64Field]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleFloat64Pointer](), "Field1", reflect.TypeFor[*tfSingleFloat64Field]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[*float64](), "Field1", reflect.TypeFor[types.Float64]()),
+				},
+			},
+		},
+
+		// For historical reasons, float32 can be flattened to Float64 values
+		"float32 to Float64": {
+			"value": {
+				Source: awsSingleFloat32Value{
+					Field1: 42,
+				},
+				Target: &tfSingleFloat64Field{},
+				WantTarget: &tfSingleFloat64Field{
+					Field1: types.Float64Value(42),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleFloat32Value](), reflect.TypeFor[*tfSingleFloat64Field]()),
+					infoConverting(reflect.TypeFor[awsSingleFloat32Value](), reflect.TypeFor[*tfSingleFloat64Field]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleFloat32Value](), "Field1", reflect.TypeFor[*tfSingleFloat64Field]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[float32](), "Field1", reflect.TypeFor[types.Float64]()),
+				},
+			},
+			"zero": {
+				Source: awsSingleFloat32Value{
+					Field1: 0,
+				},
+				Target: &tfSingleFloat64Field{},
+				WantTarget: &tfSingleFloat64Field{
+					Field1: types.Float64Value(0),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleFloat32Value](), reflect.TypeFor[*tfSingleFloat64Field]()),
+					infoConverting(reflect.TypeFor[awsSingleFloat32Value](), reflect.TypeFor[*tfSingleFloat64Field]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleFloat32Value](), "Field1", reflect.TypeFor[*tfSingleFloat64Field]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[float32](), "Field1", reflect.TypeFor[types.Float64]()),
+				},
+			},
+		},
+
+		"*float32 to Float64": {
+			"value": {
+				Source: awsSingleFloat32Pointer{
+					Field1: aws.Float32(42),
+				},
+				Target: &tfSingleFloat64Field{},
+				WantTarget: &tfSingleFloat64Field{
+					Field1: types.Float64Value(42),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleFloat32Pointer](), reflect.TypeFor[*tfSingleFloat64Field]()),
+					infoConverting(reflect.TypeFor[awsSingleFloat32Pointer](), reflect.TypeFor[*tfSingleFloat64Field]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleFloat32Pointer](), "Field1", reflect.TypeFor[*tfSingleFloat64Field]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[*float32](), "Field1", reflect.TypeFor[types.Float64]()),
+				},
+			},
+			"zero": {
+				Source: awsSingleFloat32Pointer{
+					Field1: aws.Float32(0),
+				},
+				Target: &tfSingleFloat64Field{},
+				WantTarget: &tfSingleFloat64Field{
+					Field1: types.Float64Value(0),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleFloat32Pointer](), reflect.TypeFor[*tfSingleFloat64Field]()),
+					infoConverting(reflect.TypeFor[awsSingleFloat32Pointer](), reflect.TypeFor[*tfSingleFloat64Field]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleFloat32Pointer](), "Field1", reflect.TypeFor[*tfSingleFloat64Field]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[*float32](), "Field1", reflect.TypeFor[types.Float64]()),
+				},
+			},
+			"null": {
+				Source: awsSingleFloat32Pointer{
+					Field1: nil,
+				},
+				Target: &tfSingleFloat64Field{},
+				WantTarget: &tfSingleFloat64Field{
+					Field1: types.Float64Null(),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleFloat32Pointer](), reflect.TypeFor[*tfSingleFloat64Field]()),
+					infoConverting(reflect.TypeFor[awsSingleFloat32Pointer](), reflect.TypeFor[*tfSingleFloat64Field]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleFloat32Pointer](), "Field1", reflect.TypeFor[*tfSingleFloat64Field]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[*float32](), "Field1", reflect.TypeFor[types.Float64]()),
+				},
+			},
+		},
+	}
+
+	for testName, cases := range testCases {
+		cases := cases
+		t.Run(testName, func(t *testing.T) {
+			t.Parallel()
+
+			runAutoFlattenTestCases(t, cases)
+		})
+	}
+}
+
+func TestFlattenFloat32(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]autoFlexTestCases{
+		"float32 to Float32": {
+			"value": {
+				Source: awsSingleFloat32Value{
+					Field1: 42,
+				},
+				Target: &tfSingleFloat32Field{},
+				WantTarget: &tfSingleFloat32Field{
+					Field1: types.Float32Value(42),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleFloat32Value](), reflect.TypeFor[*tfSingleFloat32Field]()),
+					infoConverting(reflect.TypeFor[awsSingleFloat32Value](), reflect.TypeFor[*tfSingleFloat32Field]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleFloat32Value](), "Field1", reflect.TypeFor[*tfSingleFloat32Field]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[float32](), "Field1", reflect.TypeFor[types.Float32]()),
+				},
+			},
+			"zero": {
+				Source: awsSingleFloat32Value{
+					Field1: 0,
+				},
+				Target: &tfSingleFloat32Field{},
+				WantTarget: &tfSingleFloat32Field{
+					Field1: types.Float32Value(0),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleFloat32Value](), reflect.TypeFor[*tfSingleFloat32Field]()),
+					infoConverting(reflect.TypeFor[awsSingleFloat32Value](), reflect.TypeFor[*tfSingleFloat32Field]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleFloat32Value](), "Field1", reflect.TypeFor[*tfSingleFloat32Field]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[float32](), "Field1", reflect.TypeFor[types.Float32]()),
+				},
+			},
+		},
+
+		"*float32 to Float32": {
+			"value": {
+				Source: awsSingleFloat32Pointer{
+					Field1: aws.Float32(42),
+				},
+				Target: &tfSingleFloat32Field{},
+				WantTarget: &tfSingleFloat32Field{
+					Field1: types.Float32Value(42),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleFloat32Pointer](), reflect.TypeFor[*tfSingleFloat32Field]()),
+					infoConverting(reflect.TypeFor[awsSingleFloat32Pointer](), reflect.TypeFor[*tfSingleFloat32Field]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleFloat32Pointer](), "Field1", reflect.TypeFor[*tfSingleFloat32Field]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[*float32](), "Field1", reflect.TypeFor[types.Float32]()),
+				},
+			},
+			"zero": {
+				Source: awsSingleFloat32Pointer{
+					Field1: aws.Float32(0),
+				},
+				Target: &tfSingleFloat32Field{},
+				WantTarget: &tfSingleFloat32Field{
+					Field1: types.Float32Value(0),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleFloat32Pointer](), reflect.TypeFor[*tfSingleFloat32Field]()),
+					infoConverting(reflect.TypeFor[awsSingleFloat32Pointer](), reflect.TypeFor[*tfSingleFloat32Field]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleFloat32Pointer](), "Field1", reflect.TypeFor[*tfSingleFloat32Field]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[*float32](), "Field1", reflect.TypeFor[types.Float32]()),
+				},
+			},
+			"null": {
+				Source: awsSingleFloat32Pointer{
+					Field1: nil,
+				},
+				Target: &tfSingleFloat32Field{},
+				WantTarget: &tfSingleFloat32Field{
+					Field1: types.Float32Null(),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleFloat32Pointer](), reflect.TypeFor[*tfSingleFloat32Field]()),
+					infoConverting(reflect.TypeFor[awsSingleFloat32Pointer](), reflect.TypeFor[*tfSingleFloat32Field]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleFloat32Pointer](), "Field1", reflect.TypeFor[*tfSingleFloat32Field]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[*float32](), "Field1", reflect.TypeFor[types.Float32]()),
+				},
+			},
+		},
+
+		// float64 cannot be flattened to Float32
+		"float64 to Float32": {
+			"value": {
+				Source: awsSingleFloat64Value{
+					Field1: 42,
+				},
+				Target: &tfSingleFloat32Field{},
+				expectedDiags: diag.Diagnostics{
+					diagFlatteningIncompatibleTypes(reflect.TypeFor[float64](), reflect.TypeFor[types.Float32]()),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleFloat64Value](), reflect.TypeFor[*tfSingleFloat32Field]()),
+					infoConverting(reflect.TypeFor[awsSingleFloat64Value](), reflect.TypeFor[*tfSingleFloat32Field]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleFloat64Value](), "Field1", reflect.TypeFor[*tfSingleFloat32Field]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[float64](), "Field1", reflect.TypeFor[types.Float32]()),
+					errorFlatteningIncompatibleTypes("Field1", reflect.TypeFor[float64](), "Field1", reflect.TypeFor[types.Float32]()),
+				},
+			},
+			"zero": {
+				Source: awsSingleFloat64Value{
+					Field1: 0,
+				},
+				Target: &tfSingleFloat32Field{},
+				expectedDiags: diag.Diagnostics{
+					diagFlatteningIncompatibleTypes(reflect.TypeFor[float64](), reflect.TypeFor[types.Float32]()),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleFloat64Value](), reflect.TypeFor[*tfSingleFloat32Field]()),
+					infoConverting(reflect.TypeFor[awsSingleFloat64Value](), reflect.TypeFor[*tfSingleFloat32Field]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleFloat64Value](), "Field1", reflect.TypeFor[*tfSingleFloat32Field]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[float64](), "Field1", reflect.TypeFor[types.Float32]()),
+					errorFlatteningIncompatibleTypes("Field1", reflect.TypeFor[float64](), "Field1", reflect.TypeFor[types.Float32]()),
+				},
+			},
+		},
+
+		"*float64 to Float32": {
+			"value": {
+				Source: awsSingleFloat64Pointer{
+					Field1: aws.Float64(42),
+				},
+				Target: &tfSingleFloat32Field{},
+				expectedDiags: diag.Diagnostics{
+					diagFlatteningIncompatibleTypes(reflect.TypeFor[*float64](), reflect.TypeFor[types.Float32]()),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleFloat64Pointer](), reflect.TypeFor[*tfSingleFloat32Field]()),
+					infoConverting(reflect.TypeFor[awsSingleFloat64Pointer](), reflect.TypeFor[*tfSingleFloat32Field]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleFloat64Pointer](), "Field1", reflect.TypeFor[*tfSingleFloat32Field]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[*float64](), "Field1", reflect.TypeFor[types.Float32]()),
+					errorFlatteningIncompatibleTypes("Field1", reflect.TypeFor[*float64](), "Field1", reflect.TypeFor[types.Float32]()),
+				},
+			},
+			"zero": {
+				Source: awsSingleFloat64Pointer{
+					Field1: aws.Float64(0),
+				},
+				Target: &tfSingleFloat32Field{},
+				expectedDiags: diag.Diagnostics{
+					diagFlatteningIncompatibleTypes(reflect.TypeFor[*float64](), reflect.TypeFor[types.Float32]()),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleFloat64Pointer](), reflect.TypeFor[*tfSingleFloat32Field]()),
+					infoConverting(reflect.TypeFor[awsSingleFloat64Pointer](), reflect.TypeFor[*tfSingleFloat32Field]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleFloat64Pointer](), "Field1", reflect.TypeFor[*tfSingleFloat32Field]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[*float64](), "Field1", reflect.TypeFor[types.Float32]()),
+					errorFlatteningIncompatibleTypes("Field1", reflect.TypeFor[*float64](), "Field1", reflect.TypeFor[types.Float32]()),
+				},
+			},
+			"null": {
+				Source: awsSingleFloat64Pointer{
+					Field1: nil,
+				},
+				Target: &tfSingleFloat32Field{},
+				expectedDiags: diag.Diagnostics{
+					diagFlatteningIncompatibleTypes(reflect.TypeFor[*float64](), reflect.TypeFor[types.Float32]()),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleFloat64Pointer](), reflect.TypeFor[*tfSingleFloat32Field]()),
+					infoConverting(reflect.TypeFor[awsSingleFloat64Pointer](), reflect.TypeFor[*tfSingleFloat32Field]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleFloat64Pointer](), "Field1", reflect.TypeFor[*tfSingleFloat32Field]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[*float64](), "Field1", reflect.TypeFor[types.Float32]()),
+					errorFlatteningIncompatibleTypes("Field1", reflect.TypeFor[*float64](), "Field1", reflect.TypeFor[types.Float32]()),
+				},
+			},
+		},
+	}
+
+	for testName, cases := range testCases {
+		cases := cases
+		t.Run(testName, func(t *testing.T) {
+			t.Parallel()
+
+			runAutoFlattenTestCases(t, cases)
+		})
+	}
+}
+
+func TestFlattenInt64(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]autoFlexTestCases{
+		"int64 to Int64": {
+			"value": {
+				Source: awsSingleInt64Value{
+					Field1: 42,
+				},
+				Target: &tfSingleInt64Field{},
+				WantTarget: &tfSingleInt64Field{
+					Field1: types.Int64Value(42),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleInt64Value](), reflect.TypeFor[*tfSingleInt64Field]()),
+					infoConverting(reflect.TypeFor[awsSingleInt64Value](), reflect.TypeFor[*tfSingleInt64Field]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleInt64Value](), "Field1", reflect.TypeFor[*tfSingleInt64Field]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[int64](), "Field1", reflect.TypeFor[types.Int64]()),
+				},
+			},
+			"zero": {
+				Source: awsSingleInt64Value{
+					Field1: 0,
+				},
+				Target: &tfSingleInt64Field{},
+				WantTarget: &tfSingleInt64Field{
+					Field1: types.Int64Value(0),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleInt64Value](), reflect.TypeFor[*tfSingleInt64Field]()),
+					infoConverting(reflect.TypeFor[awsSingleInt64Value](), reflect.TypeFor[*tfSingleInt64Field]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleInt64Value](), "Field1", reflect.TypeFor[*tfSingleInt64Field]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[int64](), "Field1", reflect.TypeFor[types.Int64]()),
+				},
+			},
+		},
+
+		"*int64 to Int64": {
+			"value": {
+				Source: awsSingleInt64Pointer{
+					Field1: aws.Int64(42),
+				},
+				Target: &tfSingleInt64Field{},
+				WantTarget: &tfSingleInt64Field{
+					Field1: types.Int64Value(42),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleInt64Pointer](), reflect.TypeFor[*tfSingleInt64Field]()),
+					infoConverting(reflect.TypeFor[awsSingleInt64Pointer](), reflect.TypeFor[*tfSingleInt64Field]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleInt64Pointer](), "Field1", reflect.TypeFor[*tfSingleInt64Field]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[*int64](), "Field1", reflect.TypeFor[types.Int64]()),
+				},
+			},
+			"zero": {
+				Source: awsSingleInt64Pointer{
+					Field1: aws.Int64(0),
+				},
+				Target: &tfSingleInt64Field{},
+				WantTarget: &tfSingleInt64Field{
+					Field1: types.Int64Value(0),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleInt64Pointer](), reflect.TypeFor[*tfSingleInt64Field]()),
+					infoConverting(reflect.TypeFor[awsSingleInt64Pointer](), reflect.TypeFor[*tfSingleInt64Field]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleInt64Pointer](), "Field1", reflect.TypeFor[*tfSingleInt64Field]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[*int64](), "Field1", reflect.TypeFor[types.Int64]()),
+				},
+			},
+			"null": {
+				Source: awsSingleInt64Pointer{
+					Field1: nil,
+				},
+				Target: &tfSingleInt64Field{},
+				WantTarget: &tfSingleInt64Field{
+					Field1: types.Int64Null(),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleInt64Pointer](), reflect.TypeFor[*tfSingleInt64Field]()),
+					infoConverting(reflect.TypeFor[awsSingleInt64Pointer](), reflect.TypeFor[*tfSingleInt64Field]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleInt64Pointer](), "Field1", reflect.TypeFor[*tfSingleInt64Field]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[*int64](), "Field1", reflect.TypeFor[types.Int64]()),
+				},
+			},
+		},
+
+		// For historical reasons, int32 can be flattened to Int64 values
+		"int32 to Int64": {
+			"value": {
+				Source: awsSingleInt32Value{
+					Field1: 42,
+				},
+				Target: &tfSingleInt64Field{},
+				WantTarget: &tfSingleInt64Field{
+					Field1: types.Int64Value(42),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleInt32Value](), reflect.TypeFor[*tfSingleInt64Field]()),
+					infoConverting(reflect.TypeFor[awsSingleInt32Value](), reflect.TypeFor[*tfSingleInt64Field]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleInt32Value](), "Field1", reflect.TypeFor[*tfSingleInt64Field]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[int32](), "Field1", reflect.TypeFor[types.Int64]()),
+				},
+			},
+			"zero": {
+				Source: awsSingleInt32Value{
+					Field1: 0,
+				},
+				Target: &tfSingleInt64Field{},
+				WantTarget: &tfSingleInt64Field{
+					Field1: types.Int64Value(0),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleInt32Value](), reflect.TypeFor[*tfSingleInt64Field]()),
+					infoConverting(reflect.TypeFor[awsSingleInt32Value](), reflect.TypeFor[*tfSingleInt64Field]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleInt32Value](), "Field1", reflect.TypeFor[*tfSingleInt64Field]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[int32](), "Field1", reflect.TypeFor[types.Int64]()),
+				},
+			},
+		},
+
+		"*int32 to Int64": {
+			"value": {
+				Source: awsSingleInt32Pointer{
+					Field1: aws.Int32(42),
+				},
+				Target: &tfSingleInt64Field{},
+				WantTarget: &tfSingleInt64Field{
+					Field1: types.Int64Value(42),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleInt32Pointer](), reflect.TypeFor[*tfSingleInt64Field]()),
+					infoConverting(reflect.TypeFor[awsSingleInt32Pointer](), reflect.TypeFor[*tfSingleInt64Field]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleInt32Pointer](), "Field1", reflect.TypeFor[*tfSingleInt64Field]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[*int32](), "Field1", reflect.TypeFor[types.Int64]()),
+				},
+			},
+			"zero": {
+				Source: awsSingleInt32Pointer{
+					Field1: aws.Int32(0),
+				},
+				Target: &tfSingleInt64Field{},
+				WantTarget: &tfSingleInt64Field{
+					Field1: types.Int64Value(0),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleInt32Pointer](), reflect.TypeFor[*tfSingleInt64Field]()),
+					infoConverting(reflect.TypeFor[awsSingleInt32Pointer](), reflect.TypeFor[*tfSingleInt64Field]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleInt32Pointer](), "Field1", reflect.TypeFor[*tfSingleInt64Field]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[*int32](), "Field1", reflect.TypeFor[types.Int64]()),
+				},
+			},
+			"null": {
+				Source: awsSingleInt32Pointer{
+					Field1: nil,
+				},
+				Target: &tfSingleInt64Field{},
+				WantTarget: &tfSingleInt64Field{
+					Field1: types.Int64Null(),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleInt32Pointer](), reflect.TypeFor[*tfSingleInt64Field]()),
+					infoConverting(reflect.TypeFor[awsSingleInt32Pointer](), reflect.TypeFor[*tfSingleInt64Field]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleInt32Pointer](), "Field1", reflect.TypeFor[*tfSingleInt64Field]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[*int32](), "Field1", reflect.TypeFor[types.Int64]()),
+				},
+			},
+		},
+	}
+
+	for testName, cases := range testCases {
+		cases := cases
+		t.Run(testName, func(t *testing.T) {
+			t.Parallel()
+
+			runAutoFlattenTestCases(t, cases)
+		})
+	}
+}
+
+func TestFlattenInt32(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]autoFlexTestCases{
+		"int32 to Int32": {
+			"value": {
+				Source: awsSingleInt32Value{
+					Field1: 42,
+				},
+				Target: &tfSingleInt32Field{},
+				WantTarget: &tfSingleInt32Field{
+					Field1: types.Int32Value(42),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleInt32Value](), reflect.TypeFor[*tfSingleInt32Field]()),
+					infoConverting(reflect.TypeFor[awsSingleInt32Value](), reflect.TypeFor[*tfSingleInt32Field]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleInt32Value](), "Field1", reflect.TypeFor[*tfSingleInt32Field]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[int32](), "Field1", reflect.TypeFor[types.Int32]()),
+				},
+			},
+			"zero": {
+				Source: awsSingleInt32Value{
+					Field1: 0,
+				},
+				Target: &tfSingleInt32Field{},
+				WantTarget: &tfSingleInt32Field{
+					Field1: types.Int32Value(0),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleInt32Value](), reflect.TypeFor[*tfSingleInt32Field]()),
+					infoConverting(reflect.TypeFor[awsSingleInt32Value](), reflect.TypeFor[*tfSingleInt32Field]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleInt32Value](), "Field1", reflect.TypeFor[*tfSingleInt32Field]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[int32](), "Field1", reflect.TypeFor[types.Int32]()),
+				},
+			},
+		},
+
+		"*int32 to Int32": {
+			"value": {
+				Source: awsSingleInt32Pointer{
+					Field1: aws.Int32(42),
+				},
+				Target: &tfSingleInt32Field{},
+				WantTarget: &tfSingleInt32Field{
+					Field1: types.Int32Value(42),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleInt32Pointer](), reflect.TypeFor[*tfSingleInt32Field]()),
+					infoConverting(reflect.TypeFor[awsSingleInt32Pointer](), reflect.TypeFor[*tfSingleInt32Field]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleInt32Pointer](), "Field1", reflect.TypeFor[*tfSingleInt32Field]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[*int32](), "Field1", reflect.TypeFor[types.Int32]()),
+				},
+			},
+			"zero": {
+				Source: awsSingleInt32Pointer{
+					Field1: aws.Int32(0),
+				},
+				Target: &tfSingleInt32Field{},
+				WantTarget: &tfSingleInt32Field{
+					Field1: types.Int32Value(0),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleInt32Pointer](), reflect.TypeFor[*tfSingleInt32Field]()),
+					infoConverting(reflect.TypeFor[awsSingleInt32Pointer](), reflect.TypeFor[*tfSingleInt32Field]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleInt32Pointer](), "Field1", reflect.TypeFor[*tfSingleInt32Field]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[*int32](), "Field1", reflect.TypeFor[types.Int32]()),
+				},
+			},
+			"null": {
+				Source: awsSingleInt32Pointer{
+					Field1: nil,
+				},
+				Target: &tfSingleInt32Field{},
+				WantTarget: &tfSingleInt32Field{
+					Field1: types.Int32Null(),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleInt32Pointer](), reflect.TypeFor[*tfSingleInt32Field]()),
+					infoConverting(reflect.TypeFor[awsSingleInt32Pointer](), reflect.TypeFor[*tfSingleInt32Field]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleInt32Pointer](), "Field1", reflect.TypeFor[*tfSingleInt32Field]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[*int32](), "Field1", reflect.TypeFor[types.Int32]()),
+				},
+			},
+		},
+
+		// int64 cannot be flattened to Int32
+		"int64 to Int32": {
+			"value": {
+				Source: awsSingleInt64Value{
+					Field1: 42,
+				},
+				Target: &tfSingleInt32Field{},
+				expectedDiags: diag.Diagnostics{
+					diagFlatteningIncompatibleTypes(reflect.TypeFor[int64](), reflect.TypeFor[types.Int32]()),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleInt64Value](), reflect.TypeFor[*tfSingleInt32Field]()),
+					infoConverting(reflect.TypeFor[awsSingleInt64Value](), reflect.TypeFor[*tfSingleInt32Field]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleInt64Value](), "Field1", reflect.TypeFor[*tfSingleInt32Field]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[int64](), "Field1", reflect.TypeFor[types.Int32]()),
+					errorFlatteningIncompatibleTypes("Field1", reflect.TypeFor[int64](), "Field1", reflect.TypeFor[types.Int32]()),
+				},
+			},
+			"zero": {
+				Source: awsSingleInt64Value{
+					Field1: 0,
+				},
+				Target: &tfSingleInt32Field{},
+				expectedDiags: diag.Diagnostics{
+					diagFlatteningIncompatibleTypes(reflect.TypeFor[int64](), reflect.TypeFor[types.Int32]()),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleInt64Value](), reflect.TypeFor[*tfSingleInt32Field]()),
+					infoConverting(reflect.TypeFor[awsSingleInt64Value](), reflect.TypeFor[*tfSingleInt32Field]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleInt64Value](), "Field1", reflect.TypeFor[*tfSingleInt32Field]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[int64](), "Field1", reflect.TypeFor[types.Int32]()),
+					errorFlatteningIncompatibleTypes("Field1", reflect.TypeFor[int64](), "Field1", reflect.TypeFor[types.Int32]()),
+				},
+			},
+		},
+
+		"*int64 to Int32": {
+			"value": {
+				Source: awsSingleInt64Pointer{
+					Field1: aws.Int64(42),
+				},
+				Target: &tfSingleInt32Field{},
+				expectedDiags: diag.Diagnostics{
+					diagFlatteningIncompatibleTypes(reflect.TypeFor[*int64](), reflect.TypeFor[types.Int32]()),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleInt64Pointer](), reflect.TypeFor[*tfSingleInt32Field]()),
+					infoConverting(reflect.TypeFor[awsSingleInt64Pointer](), reflect.TypeFor[*tfSingleInt32Field]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleInt64Pointer](), "Field1", reflect.TypeFor[*tfSingleInt32Field]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[*int64](), "Field1", reflect.TypeFor[types.Int32]()),
+					errorFlatteningIncompatibleTypes("Field1", reflect.TypeFor[*int64](), "Field1", reflect.TypeFor[types.Int32]()),
+				},
+			},
+			"zero": {
+				Source: awsSingleInt64Pointer{
+					Field1: aws.Int64(0),
+				},
+				Target: &tfSingleInt32Field{},
+				expectedDiags: diag.Diagnostics{
+					diagFlatteningIncompatibleTypes(reflect.TypeFor[*int64](), reflect.TypeFor[types.Int32]()),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleInt64Pointer](), reflect.TypeFor[*tfSingleInt32Field]()),
+					infoConverting(reflect.TypeFor[awsSingleInt64Pointer](), reflect.TypeFor[*tfSingleInt32Field]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleInt64Pointer](), "Field1", reflect.TypeFor[*tfSingleInt32Field]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[*int64](), "Field1", reflect.TypeFor[types.Int32]()),
+					errorFlatteningIncompatibleTypes("Field1", reflect.TypeFor[*int64](), "Field1", reflect.TypeFor[types.Int32]()),
+				},
+			},
+			"null": {
+				Source: awsSingleInt64Pointer{
+					Field1: nil,
+				},
+				Target: &tfSingleInt32Field{},
+				expectedDiags: diag.Diagnostics{
+					diagFlatteningIncompatibleTypes(reflect.TypeFor[*int64](), reflect.TypeFor[types.Int32]()),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleInt64Pointer](), reflect.TypeFor[*tfSingleInt32Field]()),
+					infoConverting(reflect.TypeFor[awsSingleInt64Pointer](), reflect.TypeFor[*tfSingleInt32Field]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleInt64Pointer](), "Field1", reflect.TypeFor[*tfSingleInt32Field]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[*int64](), "Field1", reflect.TypeFor[types.Int32]()),
+					errorFlatteningIncompatibleTypes("Field1", reflect.TypeFor[*int64](), "Field1", reflect.TypeFor[types.Int32]()),
+				},
+			},
+		},
+	}
+
+	for testName, cases := range testCases {
+		cases := cases
+		t.Run(testName, func(t *testing.T) {
+			t.Parallel()
+
+			runAutoFlattenTestCases(t, cases)
+		})
+	}
+}
+
+func TestFlattenTopLevelStringPtr(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		source           *string
+		expectedValue    types.String
+		expectedDiags    diag.Diagnostics
+		expectedLogLines []map[string]any
+	}{
+		"value": {
+			source:        aws.String("value"),
+			expectedValue: types.StringValue("value"),
+			expectedDiags: diag.Diagnostics{},
+			expectedLogLines: []map[string]any{
+				infoFlattening(reflect.TypeFor[*string](), reflect.TypeFor[*types.String]()),
+				infoConverting(reflect.TypeFor[*string](), reflect.TypeFor[types.String]()),
+			},
+		},
+
+		"empty": {
+			source:        aws.String(""),
+			expectedValue: types.StringValue(""),
+			expectedDiags: diag.Diagnostics{},
+			expectedLogLines: []map[string]any{
+				infoFlattening(reflect.TypeFor[*string](), reflect.TypeFor[*types.String]()),
+				infoConverting(reflect.TypeFor[*string](), reflect.TypeFor[types.String]()),
+			},
+		},
+
+		"nil": {
+			source:        nil,
+			expectedValue: types.StringNull(),
+			expectedDiags: diag.Diagnostics{},
+			expectedLogLines: []map[string]any{
+				infoFlattening(reflect.TypeFor[*string](), reflect.TypeFor[*types.String]()),
+				infoConverting(reflect.TypeFor[*string](), reflect.TypeFor[types.String]()),
+			},
+		},
+	}
+
+	for testName, testCase := range testCases {
+		testCase := testCase
+
+		t.Run(testName, func(t *testing.T) {
+			t.Parallel()
+
+			ctx := context.Background()
+
+			var buf bytes.Buffer
+			ctx = tflogtest.RootLogger(ctx, &buf)
+
+			ctx = registerTestingLogger(ctx)
+
+			var target types.String
+			diags := Flatten(ctx, testCase.source, &target)
+
+			if diff := cmp.Diff(diags, testCase.expectedDiags); diff != "" {
+				t.Errorf("unexpected diagnostics difference: %s", diff)
+			}
+
+			lines, err := tflogtest.MultilineJSONDecode(&buf)
+			if err != nil {
+				t.Fatalf("Flatten: decoding log lines: %s", err)
+			}
+			if diff := cmp.Diff(lines, testCase.expectedLogLines); diff != "" {
+				t.Errorf("unexpected log lines diff (+wanted, -got): %s", diff)
+			}
+
+			if !diags.HasError() {
+				less := func(a, b any) bool { return fmt.Sprintf("%+v", a) < fmt.Sprintf("%+v", b) }
+				if diff := cmp.Diff(target, testCase.expectedValue, cmpopts.SortSlices(less)); diff != "" {
+					t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+				}
+			}
+		})
+	}
+}
+
+func TestFlattenTopLevelInt64Ptr(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		source           *int64
+		expectedValue    types.Int64
+		expectedDiags    diag.Diagnostics
+		expectedLogLines []map[string]any
+	}{
+		"value": {
+			source:        aws.Int64(42),
+			expectedValue: types.Int64Value(42),
+			expectedDiags: diag.Diagnostics{},
+			expectedLogLines: []map[string]any{
+				infoFlattening(reflect.TypeFor[*int64](), reflect.TypeFor[*types.Int64]()),
+				infoConverting(reflect.TypeFor[*int64](), reflect.TypeFor[types.Int64]()),
+			},
+		},
+
+		"empty": {
+			source:        aws.Int64(0),
+			expectedValue: types.Int64Value(0),
+			expectedDiags: diag.Diagnostics{},
+			expectedLogLines: []map[string]any{
+				infoFlattening(reflect.TypeFor[*int64](), reflect.TypeFor[*types.Int64]()),
+				infoConverting(reflect.TypeFor[*int64](), reflect.TypeFor[types.Int64]()),
+			},
+		},
+
+		"nil": {
+			source:        nil,
+			expectedValue: types.Int64Null(),
+			expectedDiags: diag.Diagnostics{},
+			expectedLogLines: []map[string]any{
+				infoFlattening(reflect.TypeFor[*int64](), reflect.TypeFor[*types.Int64]()),
+				infoConverting(reflect.TypeFor[*int64](), reflect.TypeFor[types.Int64]()),
+			},
+		},
+	}
+
+	for testName, testCase := range testCases {
+		testCase := testCase
+
+		t.Run(testName, func(t *testing.T) {
+			t.Parallel()
+
+			ctx := context.Background()
+
+			var buf bytes.Buffer
+			ctx = tflogtest.RootLogger(ctx, &buf)
+
+			ctx = registerTestingLogger(ctx)
+
+			var target types.Int64
+			diags := Flatten(ctx, testCase.source, &target)
+
+			if diff := cmp.Diff(diags, testCase.expectedDiags); diff != "" {
+				t.Errorf("unexpected diagnostics difference: %s", diff)
+			}
+
+			lines, err := tflogtest.MultilineJSONDecode(&buf)
+			if err != nil {
+				t.Fatalf("Flatten: decoding log lines: %s", err)
+			}
+			if diff := cmp.Diff(lines, testCase.expectedLogLines); diff != "" {
+				t.Errorf("unexpected log lines diff (+wanted, -got): %s", diff)
+			}
+
+			if !diags.HasError() {
+				less := func(a, b any) bool { return fmt.Sprintf("%+v", a) < fmt.Sprintf("%+v", b) }
+				if diff := cmp.Diff(target, testCase.expectedValue, cmpopts.SortSlices(less)); diff != "" {
+					t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+				}
+			}
+		})
+	}
 }
 
 func TestFlattenSimpleNestedBlockWithStringEnum(t *testing.T) {
