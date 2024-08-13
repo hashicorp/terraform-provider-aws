@@ -775,6 +775,7 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
   }
 
   data_capture_config {
+    enable_capture              = true
     initial_sampling_percentage = 100
 
     destination_s3_uri = "s3://${aws_s3_bucket.test.bucket_regional_domain_name}/capture"
@@ -1119,8 +1120,6 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
     }
   }
   role_arn = aws_iam_role.test.arn
-
-  depends_on = [aws_sagemaker_endpoint_configuration.test]
 }
 `, rName))
 }
