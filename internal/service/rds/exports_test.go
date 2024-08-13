@@ -9,6 +9,7 @@ var (
 	ResourceCluster                             = resourceCluster
 	ResourceClusterActivityStream               = resourceClusterActivityStream
 	ResourceClusterEndpoint                     = resourceClusterEndpoint
+	ResourceClusterInstance                     = resourceClusterInstance
 	ResourceClusterParameterGroup               = resourceClusterParameterGroup
 	ResourceClusterRoleAssociation              = resourceClusterRoleAssociation
 	ResourceClusterSnapshot                     = resourceClusterSnapshot
