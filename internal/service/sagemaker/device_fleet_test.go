@@ -20,7 +20,7 @@ import (
 )
 
 func TestAccSageMakerDeviceFleet_basic(t *testing.T) {
-	acctest.Skip(t, "skipping tests; Amazon Sagemaker Edge has been deprecated on April 26th, 2024")
+	acctest.Skip(t, "skipping test; Amazon Sagemaker Edge has been deprecated on April 26th, 2024")
 
 	ctx := acctest.Context(t)
 	var deviceFleet sagemaker.DescribeDeviceFleetOutput
@@ -57,7 +57,7 @@ func TestAccSageMakerDeviceFleet_basic(t *testing.T) {
 }
 
 func TestAccSageMakerDeviceFleet_description(t *testing.T) {
-	acctest.Skip(t, "skipping tests; Amazon Sagemaker Edge has been deprecated on April 26th, 2024")
+	acctest.Skip(t, "skipping test; Amazon Sagemaker Edge has been deprecated on April 26th, 2024")
 
 	ctx := acctest.Context(t)
 	var deviceFleet sagemaker.DescribeDeviceFleetOutput
@@ -94,7 +94,7 @@ func TestAccSageMakerDeviceFleet_description(t *testing.T) {
 }
 
 func TestAccSageMakerDeviceFleet_tags(t *testing.T) {
-	acctest.Skip(t, "skipping tests; Amazon Sagemaker Edge has been deprecated on April 26th, 2024")
+	acctest.Skip(t, "skipping test; Amazon Sagemaker Edge has been deprecated on April 26th, 2024")
 
 	ctx := acctest.Context(t)
 	var deviceFleet sagemaker.DescribeDeviceFleetOutput
@@ -142,7 +142,7 @@ func TestAccSageMakerDeviceFleet_tags(t *testing.T) {
 }
 
 func TestAccSageMakerDeviceFleet_disappears(t *testing.T) {
-	acctest.Skip(t, "skipping tests; Amazon Sagemaker Edge has been deprecated on April 26th, 2024")
+	acctest.Skip(t, "skipping test; Amazon Sagemaker Edge has been deprecated on April 26th, 2024")
 
 	ctx := acctest.Context(t)
 	var deviceFleet sagemaker.DescribeDeviceFleetOutput
