@@ -6,15 +6,15 @@ service "amp" {
   parallelism = 10
 }
 
-service "appautoscaling" {
-  vpc_lock = true
-}
-
 service "apigateway" {
   vpc_lock = true
 }
 
 service "apigatewayv2" {
+  vpc_lock = true
+}
+
+service "appautoscaling" {
   vpc_lock = true
 }
 
