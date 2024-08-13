@@ -263,7 +263,7 @@ resource "aws_lexv2models_slot_type" "test" {
     resolution_strategy = "OriginalValue"
   }
 
-  slot_type_values  {
+  slot_type_values {
     sample_value {
       value = "testval"
     }
