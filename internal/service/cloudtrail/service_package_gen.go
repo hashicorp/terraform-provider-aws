@@ -21,8 +21,8 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newOrganizationAdminAccountResource,
-			Name:    "CloudTrail Organization Admin Account",
+			Factory: newOrganizationDelegatedAdminAccountResource,
+			Name:    "Organization Delegated Admin Account",
 		},
 	}
 }

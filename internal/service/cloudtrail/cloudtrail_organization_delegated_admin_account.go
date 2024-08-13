@@ -26,37 +26,37 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource("aws_cloudtrail_organization_admin_account", name="Organization Delegated Admin Account")
-func newOrganizationAdminAccountResource(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &cloudTrailOrganizationAdminAccountResource{}, nil
+// @FrameworkResource("aws_cloudtrail_organization_delegated_admin_account", name="Organization Delegated Admin Account")
+func newOrganizationDelegatedAdminAccountResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &organizationDelegatedAdminAccountResource{}, nil
 }
 
-type cloudTrailOrganizationAdminAccountResource struct {
+type organizationDelegatedAdminAccountResource struct {
 	framework.ResourceWithConfigure
 	framework.WithNoUpdate
 	framework.WithImportByID
 }
 
-func (*cloudTrailOrganizationAdminAccountResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_cloudtrail_organization_admin_account"
+func (*organizationDelegatedAdminAccountResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_cloudtrail_organization_delegated_admin_account"
 }
 
-func (r *cloudTrailOrganizationAdminAccountResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+func (r *organizationDelegatedAdminAccountResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"delegated_admin_account_id": schema.StringAttribute{
+			names.AttrAccountID: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
 					fwvalidators.AWSAccountID(),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			names.AttrARN: schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			names.AttrEmail: schema.StringAttribute{
@@ -82,8 +82,8 @@ func (r *cloudTrailOrganizationAdminAccountResource) Schema(ctx context.Context,
 	}
 }
 
-func (r *cloudTrailOrganizationAdminAccountResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	var data cloudTrailOrganizationAdminAccountResourceModel
+func (r *organizationDelegatedAdminAccountResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data organizationDelegatedAdminAccountResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -91,7 +91,7 @@ func (r *cloudTrailOrganizationAdminAccountResource) Create(ctx context.Context,
 
 	conn := r.Meta().CloudTrailClient(ctx)
 
-	accountID := data.DelegatedAdminAccountID.ValueString()
+	accountID := data.AccountID.ValueString()
 	input := &cloudtrail.RegisterOrganizationDelegatedAdminInput{
 		MemberAccountId: aws.String(accountID),
 	}
@@ -123,8 +123,8 @@ func (r *cloudTrailOrganizationAdminAccountResource) Create(ctx context.Context,
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *cloudTrailOrganizationAdminAccountResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	var data cloudTrailOrganizationAdminAccountResourceModel
+func (r *organizationDelegatedAdminAccountResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data organizationDelegatedAdminAccountResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -162,8 +162,8 @@ func (r *cloudTrailOrganizationAdminAccountResource) Read(ctx context.Context, r
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *cloudTrailOrganizationAdminAccountResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	var data cloudTrailOrganizationAdminAccountResourceModel
+func (r *organizationDelegatedAdminAccountResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data organizationDelegatedAdminAccountResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -186,21 +186,21 @@ func (r *cloudTrailOrganizationAdminAccountResource) Delete(ctx context.Context,
 	}
 }
 
-type cloudTrailOrganizationAdminAccountResourceModel struct {
-	ARN                     types.String `tfsdk:"arn"`
-	DelegatedAdminAccountID types.String `tfsdk:"delegated_admin_account_id"`
-	Email                   types.String `tfsdk:"email"`
-	ID                      types.String `tfsdk:"id"`
-	Name                    types.String `tfsdk:"name"`
-	ServicePrincipal        types.String `tfsdk:"service_principal"`
+type organizationDelegatedAdminAccountResourceModel struct {
+	AccountID        types.String `tfsdk:"account_id"`
+	ARN              types.String `tfsdk:"arn"`
+	Email            types.String `tfsdk:"email"`
+	ID               types.String `tfsdk:"id"`
+	Name             types.String `tfsdk:"name"`
+	ServicePrincipal types.String `tfsdk:"service_principal"`
 }
 
-func (model *cloudTrailOrganizationAdminAccountResourceModel) InitFromID() error {
-	model.DelegatedAdminAccountID = model.ID
+func (model *organizationDelegatedAdminAccountResourceModel) InitFromID() error {
+	model.AccountID = model.ID
 
 	return nil
 }
 
-func (model *cloudTrailOrganizationAdminAccountResourceModel) setID() {
-	model.ID = model.DelegatedAdminAccountID
+func (model *organizationDelegatedAdminAccountResourceModel) setID() {
+	model.ID = model.AccountID
 }

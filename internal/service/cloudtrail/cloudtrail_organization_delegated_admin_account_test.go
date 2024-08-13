@@ -21,9 +21,9 @@ import (
 // Prerequisites:
 // * Organizations management account
 // * Organization member account
-func TestAccCloudTrailOrganizationAdminAccount_basic(t *testing.T) {
+func TestAccCloudTrailOrganizationDelegatedAdminAccount_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_cloudtrail_organization_admin_account.test"
+	resourceName := "aws_cloudtrail_organization_delegated_admin_account.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -32,12 +32,12 @@ func TestAccCloudTrailOrganizationAdminAccount_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOrganizationAdminAccountDestroy(ctx),
+		CheckDestroy:             testAccCheckOrganizationDelegatedAdminAccountDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationAdminAccountConfig_basic,
+				Config: testAccOrganizationDelegatedAdminAccountConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOrganizationAdminAccountExists(ctx, resourceName),
+					testAccCheckOrganizationDelegatedAdminAccountExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEmail),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrName),
@@ -53,9 +53,9 @@ func TestAccCloudTrailOrganizationAdminAccount_basic(t *testing.T) {
 	})
 }
 
-func TestAccCloudTrailOrganizationAdminAccount_disappears(t *testing.T) {
+func TestAccCloudTrailOrganizationDelegatedAdminAccount_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_cloudtrail_organization_admin_account.test"
+	resourceName := "aws_cloudtrail_organization_delegated_admin_account.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -64,13 +64,13 @@ func TestAccCloudTrailOrganizationAdminAccount_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOrganizationAdminAccountDestroy(ctx),
+		CheckDestroy:             testAccCheckOrganizationDelegatedAdminAccountDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationAdminAccountConfig_basic,
+				Config: testAccOrganizationDelegatedAdminAccountConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationAdminAccountExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcloudtrail.ResourceOrganizationAdminAccount, resourceName),
+					testAccCheckOrganizationDelegatedAdminAccountExists(ctx, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcloudtrail.ResourceOrganizationDelegatedAdminAccount, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -78,12 +78,12 @@ func TestAccCloudTrailOrganizationAdminAccount_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckOrganizationAdminAccountDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckOrganizationDelegatedAdminAccountDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_cloudtrail_organization_admin_account" {
+			if rs.Type != "aws_cloudtrail_organization_delegated_admin_account" {
 				continue
 			}
 
@@ -104,7 +104,7 @@ func testAccCheckOrganizationAdminAccountDestroy(ctx context.Context) resource.T
 	}
 }
 
-func testAccCheckOrganizationAdminAccountExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckOrganizationDelegatedAdminAccountExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -119,10 +119,10 @@ func testAccCheckOrganizationAdminAccountExists(ctx context.Context, n string) r
 	}
 }
 
-const testAccOrganizationAdminAccountConfig_basic = `
+const testAccOrganizationDelegatedAdminAccountConfig_basic = `
 data "aws_organizations_organization" "test" {}
 
-resource "aws_cloudtrail_organization_admin_account" "test" {
-  delegated_admin_account_id = data.aws_organizations_organization.test.non_master_accounts[0].id
+resource "aws_cloudtrail_organization_delegated_admin_account" "test" {
+  account_id = data.aws_organizations_organization.test.non_master_accounts[0].id
 }
 `
