@@ -149,8 +149,12 @@ func (flattener autoFlattener) convert(ctx context.Context, sourcePath path.Path
 		diags.Append(flattener.bool(ctx, vFrom, false, tTo, vTo)...)
 		return diags
 
-	case reflect.Float32, reflect.Float64:
-		diags.Append(flattener.float(ctx, vFrom, false, tTo, vTo)...)
+	case reflect.Float64:
+		diags.Append(flattener.float64(ctx, vFrom, vFrom.Type(), false, tTo, vTo)...)
+		return diags
+
+	case reflect.Float32:
+		diags.Append(flattener.float32(ctx, vFrom, false, tTo, vTo)...)
 		return diags
 
 	case reflect.Int64:
@@ -225,12 +229,15 @@ func (flattener autoFlattener) bool(ctx context.Context, vFrom reflect.Value, is
 	return diags
 }
 
-// float copies an AWS API float value to a compatible Plugin Framework value.
-func (flattener autoFlattener) float(ctx context.Context, vFrom reflect.Value, isNullFrom bool, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+// float64 copies an AWS API float64 value to a compatible Plugin Framework value.
+func (flattener autoFlattener) float64(ctx context.Context, vFrom reflect.Value, sourceType reflect.Type, isNullFrom bool, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch tTo := tTo.(type) {
 	case basetypes.Float64Typable:
+		//
+		// float32/float64 -> types.Float64.
+		//
 		float64Value := types.Float64Null()
 		if !isNullFrom {
 			switch from := vFrom.Interface().(type) {
@@ -247,9 +254,72 @@ func (flattener autoFlattener) float(ctx context.Context, vFrom reflect.Value, i
 			return diags
 		}
 
+		vTo.Set(reflect.ValueOf(v))
+		return diags
+
+	case basetypes.Float32Typable:
+		// Only returns an error when the target type is Float32Typable to prevent breaking existing resources
+		tflog.SubsystemError(ctx, subsystemName, "Flattening incompatible types")
+		diags.Append(diagFlatteningIncompatibleTypes(sourceType, vTo.Type()))
+		return diags
+	}
+
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+		"from": vFrom.Kind(),
+		"to":   tTo,
+	})
+
+	return diags
+}
+
+// float32 copies an AWS API float32 value to a compatible Plugin Framework value.
+func (flattener autoFlattener) float32(ctx context.Context, vFrom reflect.Value, isNullFrom bool, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	switch tTo := tTo.(type) {
+	case basetypes.Float64Typable:
 		//
 		// float32/float64 -> types.Float64.
 		//
+		float64Value := types.Float64Null()
+		if !isNullFrom {
+			switch from := vFrom.Interface().(type) {
+			// Avoid loss of equivalence.
+			case float32:
+				float64Value = types.Float64Value(decimal.NewFromFloat32(from).InexactFloat64())
+			default:
+				float64Value = types.Float64Value(vFrom.Float())
+			}
+		}
+		v, d := tTo.ValueFromFloat64(ctx, float64Value)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		vTo.Set(reflect.ValueOf(v))
+		return diags
+
+	case basetypes.Float32Typable:
+		//
+		// float32/float64 -> types.Float32.
+		//
+		float32Value := types.Float32Null()
+		if !isNullFrom {
+			switch from := vFrom.Interface().(type) {
+			// Avoid loss of equivalence.
+			case float32:
+				float32Value = types.Float32Value(float32(decimal.NewFromFloat32(from).InexactFloat64()))
+			default:
+				float32Value = types.Float32Value(float32(vFrom.Float()))
+			}
+		}
+		v, d := tTo.ValueFromFloat32(ctx, float32Value)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
 		vTo.Set(reflect.ValueOf(v))
 		return diags
 	}
@@ -428,8 +498,12 @@ func (flattener autoFlattener) pointer(ctx context.Context, sourcePath path.Path
 		diags.Append(flattener.bool(ctx, vElem, isNilFrom, tTo, vTo)...)
 		return diags
 
-	case reflect.Float32, reflect.Float64:
-		diags.Append(flattener.float(ctx, vElem, isNilFrom, tTo, vTo)...)
+	case reflect.Float64:
+		diags.Append(flattener.float64(ctx, vElem, vFrom.Type(), isNilFrom, tTo, vTo)...)
+		return diags
+
+	case reflect.Float32:
+		diags.Append(flattener.float32(ctx, vElem, isNilFrom, tTo, vTo)...)
 		return diags
 
 	case reflect.Int64:
