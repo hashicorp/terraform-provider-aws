@@ -12,6 +12,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -641,11 +642,10 @@ func TestAccSageMakerNotebookInstance_acceleratorTypes(t *testing.T) {
 		CheckDestroy:             testAccCheckNotebookInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNotebookInstanceConfig_acceleratorType(rName, "ml.eia2.medium"),
+				Config: testAccNotebookInstanceConfig_acceleratorType(rName, string(awstypes.InstanceTypeMlInf1Xlarge)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotebookInstanceExists(ctx, resourceName, &notebook),
-					resource.TestCheckResourceAttr(resourceName, "accelerator_types.#", acctest.Ct1),
-					resource.TestCheckTypeSetElemAttr(resourceName, "accelerator_types.*", "ml.eia2.medium"),
+					resource.TestCheckResourceAttr(resourceName, "instance_type", string(awstypes.InstanceTypeMlInf1Xlarge)),
 				),
 			},
 			{
@@ -654,18 +654,17 @@ func TestAccSageMakerNotebookInstance_acceleratorTypes(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccNotebookInstanceConfig_acceleratorType(rName, "ml.eia2.large"),
+				Config: testAccNotebookInstanceConfig_acceleratorType(rName, string(awstypes.InstanceTypeMlInf12xlarge)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotebookInstanceExists(ctx, resourceName, &notebook),
-					resource.TestCheckResourceAttr(resourceName, "accelerator_types.#", acctest.Ct1),
-					resource.TestCheckTypeSetElemAttr(resourceName, "accelerator_types.*", "ml.eia2.large"),
+					resource.TestCheckResourceAttr(resourceName, "instance_type", string(awstypes.InstanceTypeMlInf12xlarge)),
 				),
 			},
 			{
 				Config: testAccNotebookInstanceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotebookInstanceExists(ctx, resourceName, &notebook),
-					resource.TestCheckResourceAttr(resourceName, "accelerator_types.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "instance_type", string(awstypes.InstanceTypeMlT2Medium)),
 				),
 			},
 		},
@@ -1001,8 +1000,7 @@ func testAccNotebookInstanceConfig_acceleratorType(rName, acceleratorType string
 resource "aws_sagemaker_notebook_instance" "test" {
   name              = %[1]q
   role_arn          = aws_iam_role.test.arn
-  instance_type     = "ml.t2.xlarge"
-  accelerator_types = [%[2]q]
+  instance_type     = %[2]q
 }
   `, rName, acceleratorType))
 }
