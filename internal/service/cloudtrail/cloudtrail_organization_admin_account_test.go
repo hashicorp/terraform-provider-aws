@@ -8,13 +8,11 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/YakDriver/regexache"
-	organizationstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudtrail"
+	tfcloudtrail "github.com/hashicorp/terraform-provider-aws/internal/service/cloudtrail"
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -25,9 +23,7 @@ import (
 // * Organization member account
 func TestAccCloudTrailOrganizationAdminAccount_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var organization organizationstypes.DelegatedAdministrator
 	resourceName := "aws_cloudtrail_organization_admin_account.test"
-	organizationData := "data.aws_organizations_organization.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -39,12 +35,13 @@ func TestAccCloudTrailOrganizationAdminAccount_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckOrganizationAdminAccountDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationAdminAccountConfig(),
+				Config: testAccOrganizationAdminAccountConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOrganizationAdminAccountExists(ctx, resourceName, &organization),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "organizations", regexache.MustCompile("account/.+")),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, organizationData, "non_master_accounts.0.id"),
-					resource.TestCheckResourceAttr(resourceName, "service_principal", cloudtrail.ServicePrincipal),
+					testAccCheckOrganizationAdminAccountExists(ctx, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEmail),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, "service_principal", tfcloudtrail.ServicePrincipal),
 				),
 			},
 			{
@@ -58,7 +55,6 @@ func TestAccCloudTrailOrganizationAdminAccount_basic(t *testing.T) {
 
 func TestAccCloudTrailOrganizationAdminAccount_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var organization organizationstypes.DelegatedAdministrator
 	resourceName := "aws_cloudtrail_organization_admin_account.test"
 
 	resource.Test(t, resource.TestCase{
@@ -71,10 +67,10 @@ func TestAccCloudTrailOrganizationAdminAccount_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckOrganizationAdminAccountDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationAdminAccountConfig(),
+				Config: testAccOrganizationAdminAccountConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationAdminAccountExists(ctx, resourceName, &organization),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, cloudtrail.ResourceOrganizationAdminAccount, resourceName),
+					testAccCheckOrganizationAdminAccountExists(ctx, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcloudtrail.ResourceOrganizationAdminAccount, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -91,7 +87,7 @@ func testAccCheckOrganizationAdminAccountDestroy(ctx context.Context) resource.T
 				continue
 			}
 
-			_, err := tforganizations.FindDelegatedAdministratorByTwoPartKey(ctx, conn, rs.Primary.Attributes["delegated_admin_account_id"], rs.Primary.Attributes["service_principal"])
+			_, err := tforganizations.FindDelegatedAdministratorByTwoPartKey(ctx, conn, rs.Primary.ID, tfcloudtrail.ServicePrincipal)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -108,32 +104,25 @@ func testAccCheckOrganizationAdminAccountDestroy(ctx context.Context) resource.T
 	}
 }
 
-func testAccCheckOrganizationAdminAccountExists(ctx context.Context, n string, v *organizationstypes.DelegatedAdministrator) resource.TestCheckFunc {
+func testAccCheckOrganizationAdminAccountExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("not found: %s", n)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsClient(ctx)
 
-		output, err := tforganizations.FindDelegatedAdministratorByTwoPartKey(ctx, conn, rs.Primary.Attributes["delegated_admin_account_id"], rs.Primary.Attributes["service_principal"])
+		_, err := tforganizations.FindDelegatedAdministratorByTwoPartKey(ctx, conn, rs.Primary.ID, tfcloudtrail.ServicePrincipal)
 
-		if err != nil {
-			return err
-		}
-
-		*v = *output
-
-		return nil
+		return err
 	}
 }
 
-func testAccOrganizationAdminAccountConfig() string {
-	return `
+const testAccOrganizationAdminAccountConfig_basic = `
 data "aws_organizations_organization" "test" {}
 
 resource "aws_cloudtrail_organization_admin_account" "test" {
   delegated_admin_account_id = data.aws_organizations_organization.test.non_master_accounts[0].id
-}`
 }
+`
