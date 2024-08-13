@@ -21,7 +21,7 @@ import (
 // Prerequisites:
 // * Organizations management account
 // * Organization member account
-func TestAccCloudTrailOrganizationDelegatedAdminAccount_basic(t *testing.T) {
+func testAccOrganizationDelegatedAdminAccount_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cloudtrail_organization_delegated_admin_account.test"
 
@@ -53,7 +53,7 @@ func TestAccCloudTrailOrganizationDelegatedAdminAccount_basic(t *testing.T) {
 	})
 }
 
-func TestAccCloudTrailOrganizationDelegatedAdminAccount_disappears(t *testing.T) {
+func testAccOrganizationDelegatedAdminAccount_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cloudtrail_organization_delegated_admin_account.test"
 
