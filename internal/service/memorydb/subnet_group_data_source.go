@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_memorydb_subnet_group")
-func DataSourceSubnetGroup() *schema.Resource {
+// @SDKDataSource("aws_memorydb_subnet_group", name="Subnet Group")
+func dataSourceSubnetGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSubnetGroupRead,
 
