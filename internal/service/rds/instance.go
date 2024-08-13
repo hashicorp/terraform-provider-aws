@@ -51,7 +51,7 @@ import (
 
 // @SDKResource("aws_db_instance", name="DB Instance")
 // @Tags(identifierAttribute="arn")
-// @Testing(existsType="github.com/aws/aws-sdk-go/service/rds;rds.DBInstance")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/rds/types;types.DBInstance")
 // @Testing(importIgnore="apply_immediately;password")
 func resourceInstance() *schema.Resource {
 	return &schema.Resource{
