@@ -69,7 +69,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.25.5
 	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.43.1
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.33.3
-	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.37.3
+	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.37.4
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.48.3
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.19.3
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.16.4
@@ -94,12 +94,12 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.11.3
 	github.com/aws/aws-sdk-go-v2/service/drs v1.28.3
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.34.4
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.174.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.175.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.32.0
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.25.3
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.44.3
 	github.com/aws/aws-sdk-go-v2/service/efs v1.31.3
-	github.com/aws/aws-sdk-go-v2/service/eks v1.47.0
+	github.com/aws/aws-sdk-go-v2/service/eks v1.48.0
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.40.5
 	github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.26.2
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.26.3
@@ -121,7 +121,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/glue v1.93.0
 	github.com/aws/aws-sdk-go-v2/service/grafana v1.24.3
 	github.com/aws/aws-sdk-go-v2/service/greengrass v1.25.3
-	github.com/aws/aws-sdk-go-v2/service/groundstation v1.29.3
+	github.com/aws/aws-sdk-go-v2/service/groundstation v1.29.4
 	github.com/aws/aws-sdk-go-v2/service/guardduty v1.45.3
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.26.3
 	github.com/aws/aws-sdk-go-v2/service/iam v1.34.3
@@ -152,7 +152,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/m2 v1.15.3
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.32.0
 	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.57.3
-	github.com/aws/aws-sdk-go-v2/service/medialive v1.55.0
+	github.com/aws/aws-sdk-go-v2/service/medialive v1.56.0
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.32.3
 	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.15.0
 	github.com/aws/aws-sdk-go-v2/service/mediastore v1.22.3
