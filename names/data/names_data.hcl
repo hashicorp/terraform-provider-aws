@@ -7460,7 +7460,7 @@ service "redshiftserverless" {
 
   sdk {
     id             = "Redshift Serverless"
-    client_version = [1, 2]
+    client_version = [2]
   }
 
   names {
