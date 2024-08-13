@@ -136,3 +136,52 @@ func findFrameworkByName(ctx context.Context, conn *backup.Client, name string) 
 
 	return output, nil
 }
+
+func findRestoreTestingPlanByName(ctx context.Context, conn *backup.Client, name string) (*backup.GetRestoreTestingPlanOutput, error) {
+	in := &backup.GetRestoreTestingPlanInput{
+		RestoreTestingPlanName: aws.String(name),
+	}
+
+	out, err := conn.GetRestoreTestingPlan(ctx, in)
+	if err != nil {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: in,
+			}
+		}
+
+		return nil, err
+	}
+
+	if out == nil || out.RestoreTestingPlan == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out, nil
+}
+
+func findRestoreTestingSelectionByName(ctx context.Context, conn *backup.Client, name string, restoreTestingPlanName string) (*backup.GetRestoreTestingSelectionOutput, error) {
+	in := &backup.GetRestoreTestingSelectionInput{
+		RestoreTestingPlanName:      aws.String(restoreTestingPlanName),
+		RestoreTestingSelectionName: aws.String(name),
+	}
+
+	out, err := conn.GetRestoreTestingSelection(ctx, in)
+	if err != nil {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: in,
+			}
+		}
+
+		return nil, err
+	}
+
+	if out == nil || out.RestoreTestingSelection == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out, nil
+}
