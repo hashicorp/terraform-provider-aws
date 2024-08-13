@@ -46,6 +46,7 @@ func TestAccIPAM_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "default_resource_discovery_association_id", regexache.MustCompile(`^ipam-res-disco-assoc-[0-9a-f]+`)),
 					resource.TestMatchResourceAttr(resourceName, "default_resource_discovery_id", regexache.MustCompile(`^ipam-res-disco-[0-9a-f]+`)),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "enable_private_gua", acctest.CtFalse),
 				),
 			},
 			{
@@ -214,6 +215,39 @@ func TestAccIPAM_tier(t *testing.T) {
 				ImportStateVerify: true,
 			},
 		},
+	})
+}
+
+func TestAccIPAM_enablePrivateGua(t *testing.T) {
+	ctx := acctest.Context(t)
+	var ipam awstypes.Ipam
+	resourceName := "aws_vpc_ipam.test"
+	resource.ParallelTest(t, resource.TestCase{
+			PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+			ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+			ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+			CheckDestroy:             testAccCheckIPAMDestroy(ctx),
+			Steps: []resource.TestStep{
+					{
+							Config: testAccIPAMConfig_enablePrivateGua("true"),
+							Check: resource.ComposeTestCheckFunc(
+									testAccCheckIPAMExists(ctx, resourceName, &ipam),
+									resource.TestCheckResourceAttr(resourceName, "enable_private_gua", acctest.CtTrue),
+							),
+					},
+					{
+							Config: testAccIPAMConfig_enablePrivateGua("false"),
+							Check: resource.ComposeTestCheckFunc(
+									testAccCheckIPAMExists(ctx, resourceName, &ipam),
+									resource.TestCheckResourceAttr(resourceName, "enable_private_gua", acctest.CtFalse),
+							),
+					},
+					{
+							ResourceName:      resourceName,
+							ImportState:       true,
+							ImportStateVerify: true,
+					},
+			},
 	})
 }
 
@@ -425,4 +459,17 @@ resource "aws_vpc_ipam" "test" {
   tier = "%s"
 }
 `, tier)
+}
+
+func testAccIPAMConfig_enablePrivateGua(enablePrivateGua string) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_vpc_ipam" "test" {
+	operating_regions {
+		region_name = data.aws_region.current.name
+	}
+	enable_private_gua = %s
+}
+`, enablePrivateGua)
 }

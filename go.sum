@@ -210,6 +210,8 @@ github.com/aws/aws-sdk-go-v2/service/dynamodb v1.34.4 h1:utG3S4T+X7nONPIpRoi1tVc
 github.com/aws/aws-sdk-go-v2/service/dynamodb v1.34.4/go.mod h1:q9vzW3Xr1KEXa8n4waHiFt1PrppNDlMymlYP+xpsFbY=
 github.com/aws/aws-sdk-go-v2/service/ec2 v1.174.0 h1:xY25etxTt0mYfWVWv8DjIUcJQyX2cwBeInpIvg6Sbsw=
 github.com/aws/aws-sdk-go-v2/service/ec2 v1.174.0/go.mod h1:o6QDjdVKpP5EF0dp/VlvqckzuSDATr1rLdHt3A5m0YY=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.175.0 h1:t8ACYzijrk828orkkmk0GT+RQnB1sQ7tXBIFq58yG0M=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.175.0/go.mod h1:o6QDjdVKpP5EF0dp/VlvqckzuSDATr1rLdHt3A5m0YY=
 github.com/aws/aws-sdk-go-v2/service/ecr v1.32.0 h1:lZoKOTEQUf5Oi9qVaZM/Hb0Z6SHIwwpDjbLFOVgB2t8=
 github.com/aws/aws-sdk-go-v2/service/ecr v1.32.0/go.mod h1:RhaP7Wil0+uuuhiE4FzOOEFZwkmFAk1ZflXzK+O3ptU=
 github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.25.3 h1:n2eqzO9VabUkd77b88Hos6OEtbGohB/TRrtXLTZi38Y=
@@ -408,10 +410,10 @@ github.com/aws/aws-sdk-go-v2/service/route53domains v1.25.3 h1:VGLIgiClxmwxBpGzH
 github.com/aws/aws-sdk-go-v2/service/route53domains v1.25.3/go.mod h1:Kgq5O7ZaDk0mTZmX6YCL+ZtZ1YcJHtGsVubp0OT77MA=
 github.com/aws/aws-sdk-go-v2/service/route53profiles v1.2.3 h1:N4f5sliNiWcp3abC+8YpcaVjXuaNJIlz/dBd+saimm0=
 github.com/aws/aws-sdk-go-v2/service/route53profiles v1.2.3/go.mod h1:r2B4BvTn3zSMK+BFHGl0q63B/nJMOk9/NukLZzqO8sY=
-github.com/aws/aws-sdk-go-v2/service/route53recoveryreadiness v1.19.3 h1:M6D+IRT6YdeL+qLIdy4u4zEoMOqq3lJnNUGt0cxEI04=
-github.com/aws/aws-sdk-go-v2/service/route53recoveryreadiness v1.19.3/go.mod h1:y4m7VlTWV77mBzMdAZWjudnobe0E77tKy5Z9+IQIku0=
 github.com/aws/aws-sdk-go-v2/service/route53recoverycontrolconfig v1.23.3 h1:apYav6exfbLJ+kRGPa27GTrUuCS4ctI0mJEeiDxSeDE=
 github.com/aws/aws-sdk-go-v2/service/route53recoverycontrolconfig v1.23.3/go.mod h1:citOcziml/EM6I2ycb7XHuBw0whC8jVD2y+vU7wQD4k=
+github.com/aws/aws-sdk-go-v2/service/route53recoveryreadiness v1.19.3 h1:M6D+IRT6YdeL+qLIdy4u4zEoMOqq3lJnNUGt0cxEI04=
+github.com/aws/aws-sdk-go-v2/service/route53recoveryreadiness v1.19.3/go.mod h1:y4m7VlTWV77mBzMdAZWjudnobe0E77tKy5Z9+IQIku0=
 github.com/aws/aws-sdk-go-v2/service/rum v1.19.3 h1:DR+GYJRPL7eEZknnGdwm+lH686LmUBB/X2YVQDHLNY4=
 github.com/aws/aws-sdk-go-v2/service/rum v1.19.3/go.mod h1:5jFxbuc05P/+BbJvVbBspMbzDR2IFU0LegQG3iUvj8g=
 github.com/aws/aws-sdk-go-v2/service/s3 v1.58.3 h1:hT8ZAZRIfqBqHbzKTII+CIiY8G2oC9OpLedkZ51DWl8=

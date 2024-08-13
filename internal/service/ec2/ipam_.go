@@ -63,6 +63,10 @@ func resourceIPAM() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"enable_private_gua": {
+				Type: 		schema.TypeBool,
+				Optional: true,
+			},
 			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -141,6 +145,10 @@ func resourceIPAMCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		input.Tier = awstypes.IpamTier(v.(string))
 	}
 
+	if v, ok := d.GetOk("enable_private_gua"); ok {
+		input.EnablePrivateGua = aws.Bool(v.(bool))
+	}
+
 	output, err := conn.CreateIpam(ctx, input)
 
 	if err != nil {
@@ -183,6 +191,7 @@ func resourceIPAMRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("private_default_scope_id", ipam.PrivateDefaultScopeId)
 	d.Set("scope_count", ipam.ScopeCount)
 	d.Set("tier", ipam.Tier)
+	d.Set("enable_private_gua", ipam.EnablePrivateGua)
 
 	setTagsOut(ctx, ipam.Tags)
 
@@ -227,6 +236,10 @@ func resourceIPAMUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 		if d.HasChange("tier") {
 			input.Tier = awstypes.IpamTier(d.Get("tier").(string))
+		}
+
+		if d.HasChange("enable_private_gua") {
+			input.EnablePrivateGua = aws.Bool(d.Get("enable_private_gua").(bool))
 		}
 
 		_, err := conn.ModifyIpam(ctx, input)
