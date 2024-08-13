@@ -1,0 +1,39 @@
+```release-note:bug
+aws_dx_lag: Checks for errors other than NotFound when reading.
+```
+
+```release-note:bug
+aws_dynamodb_kinesis_streaming_destination: Checks for errors other than NotFound when reading.
+```
+
+```release-note:bug
+aws_ec2_capacity_block_reservation: Checks for errors other than NotFound when reading.
+```
+
+```release-note:bug
+aws_route_table: Checks for errors other than NotFound when reading.
+```
+
+```release-note:bug
+aws_opensearchserverless_access_policy: Checks for errors other than NotFound when reading.
+```
+
+```release-note:bug
+aws_opensearchserverless_collection: Checks for errors other than NotFound when reading.
+```
+
+```release-note:bug
+aws_opensearchserverless_security_config: Checks for errors other than NotFound when reading.
+```
+
+```release-note:bug
+aws_opensearchserverless_security_policy: Checks for errors other than NotFound when reading.
+```
+
+```release-note:bug
+aws_opensearchserverless_vpc_endpoint: Checks for errors other than NotFound when reading.
+```
+
+```release-note:bug
+aws_ram_principal_association: Checks for errors other than NotFound when reading.
+```

@@ -24,12 +24,18 @@ import (
 	accounttypes "github.com/aws/aws-sdk-go-v2/service/account/types"
 	"github.com/aws/aws-sdk-go-v2/service/acmpca"
 	acmpcatypes "github.com/aws/aws-sdk-go-v2/service/acmpca/types"
+	"github.com/aws/aws-sdk-go-v2/service/cloudsearch"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
+	"github.com/aws/aws-sdk-go-v2/service/costexplorer"
+	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
+	dstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
+	iamtypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
 	inspector2types "github.com/aws/aws-sdk-go-v2/service/inspector2/types"
 	organizationstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
+	"github.com/aws/aws-sdk-go-v2/service/pinpoint"
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
 	ssoadmintypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
@@ -37,8 +43,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/directoryservice"
-	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/outposts"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
@@ -769,6 +773,47 @@ func CheckResourceAttrJMESPair(nameFirst, keyFirst, jmesPath, nameSecond, keySec
 	}
 }
 
+func CheckResourceAttrJMESNotExists(name, key, jmesPath string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		is, err := PrimaryInstanceState(s, name)
+		if err != nil {
+			return err
+		}
+
+		attr, ok := is.Attributes[key]
+		if !ok {
+			return fmt.Errorf("%s: Attribute %q not set", name, key)
+		}
+
+		var jsonData any
+		err = json.Unmarshal([]byte(attr), &jsonData)
+		if err != nil {
+			return fmt.Errorf("%s: Expected attribute %q to be JSON: %w", name, key, err)
+		}
+
+		result, err := jmespath.Search(jmesPath, jsonData)
+		if err != nil {
+			return fmt.Errorf("invalid JMESPath %q: %w", jmesPath, err)
+		}
+
+		var v string
+		switch x := result.(type) {
+		case nil:
+			return nil
+		case string:
+			v = x
+		case float64:
+			v = strconv.FormatFloat(x, 'f', -1, 64)
+		case bool:
+			v = fmt.Sprint(x)
+		default:
+			return fmt.Errorf(`%[1]s: Attribute %[2]q, JMESPath %[3]q got "%#[4]v" (%[4]T), expected no attribute`, name, key, jmesPath, result)
+		}
+
+		return fmt.Errorf("%s: Attribute %q, JMESPath %q expected no attribute, got %#v", name, key, jmesPath, v)
+	}
+}
+
 // CheckResourceAttrContains ensures the Terraform state value contains the specified substr.
 func CheckResourceAttrContains(name, key, substr string) resource.TestCheckFunc {
 	return resource.TestCheckResourceAttrWith(name, key, func(value string) error {
@@ -836,6 +881,10 @@ func Partition() string {
 	return names.PartitionForRegion(Region())
 }
 
+func PartitionRegions() []string {
+	return RegionsInPartition(Partition())
+}
+
 func PartitionDNSSuffix() string {
 	return names.DNSSuffixForPartition(Partition())
 }
@@ -884,6 +933,10 @@ func PreCheckPartitionHasService(t *testing.T, serviceID string) {
 
 func PreCheckMultipleRegion(t *testing.T, regions int) {
 	t.Helper()
+
+	if len(PartitionRegions()) <= 1 {
+		t.Skipf("Skipping multiple region test as 1 or fewer regions detected in partion (%s)", Partition())
+	}
 
 	if Region() == AlternateRegion() {
 		t.Fatalf("%s and %s must be set to different values for acceptance tests", envvar.DefaultRegion, envvar.AlternateRegion)
@@ -976,6 +1029,74 @@ func PreCheckPartitionNot(t *testing.T, partitions ...string) {
 		if curr := Partition(); curr == partition {
 			t.Skipf("skipping tests; current partition (%s) not supported", curr)
 		}
+	}
+}
+
+func PreCheckCognitoIdentityProvider(ctx context.Context, t *testing.T) {
+	t.Helper()
+
+	conn := Provider.Meta().(*conns.AWSClient).CognitoIDPClient(ctx)
+
+	input := &cognitoidentityprovider.ListUserPoolsInput{
+		MaxResults: aws.Int32(1),
+	}
+
+	_, err := conn.ListUserPools(ctx, input)
+
+	if PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
+func PreCheckCECostAllocationTagPayerAccount(ctx context.Context, t *testing.T) {
+	t.Helper()
+
+	conn := Provider.Meta().(*conns.AWSClient).CEClient(ctx)
+
+	_, err := conn.ListCostAllocationTags(ctx, &costexplorer.ListCostAllocationTagsInput{})
+
+	if errs.MessageContains(err, "AccessDeniedException", "Linked account doesn't have access to") {
+		t.Skip("skipping tests; this AWS account must be a payer account")
+	}
+
+	if err != nil {
+		t.Fatalf("listing Cost Explorer Cost Allocation Tags: %s", err)
+	}
+}
+
+func PreCheckCECostCategoryPayerAccount(ctx context.Context, t *testing.T) {
+	t.Helper()
+
+	conn := Provider.Meta().(*conns.AWSClient).CEClient(ctx)
+
+	_, err := conn.ListCostCategoryDefinitions(ctx, &costexplorer.ListCostCategoryDefinitionsInput{})
+
+	if errs.MessageContains(err, "AccessDeniedException", "Linked account doesn't have access to") {
+		t.Skip("skipping tests; this AWS account must be a payer account")
+	}
+
+	if err != nil {
+		t.Fatalf("listing Cost Explorer Cost Categories: %s", err)
+	}
+}
+
+func PreCheckCloudSearchAccountAllowListed(ctx context.Context, t *testing.T) {
+	t.Helper()
+
+	conn := Provider.Meta().(*conns.AWSClient).CloudSearchClient(ctx)
+
+	_, err := conn.ListDomainNames(ctx, &cloudsearch.ListDomainNamesInput{})
+
+	if errs.MessageContains(err, "NotAuthorized", "New domain creation not supported on this account") {
+		t.Skip("skipping tests; this AWS account does not support new CloudSearch domain creation")
+	}
+
+	if err != nil {
+		t.Fatalf("listing CloudSearch Domain Names: %s", err)
 	}
 }
 
@@ -1077,6 +1198,22 @@ func PreCheckOrganizationMemberAccountWithProvider(ctx context.Context, t *testi
 	}
 }
 
+func PreCheckPinpointApp(ctx context.Context, t *testing.T) {
+	conn := Provider.Meta().(*conns.AWSClient).PinpointClient(ctx)
+
+	input := &pinpoint.GetAppsInput{}
+
+	_, err := conn.GetApps(ctx, input)
+
+	if PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
 func PreCheckRegionOptIn(ctx context.Context, t *testing.T, region string) {
 	t.Helper()
 
@@ -1149,7 +1286,7 @@ func PreCheckIAMServiceLinkedRoleWithProvider(ctx context.Context, t *testing.T,
 	input := &iam.ListRolesInput{
 		PathPrefix: aws.String(pathPrefix),
 	}
-	var role awstypes.Role
+	var role iamtypes.Role
 
 	pages := iam.NewListRolesPaginator(conn, input)
 	for pages.HasMorePages() {
@@ -1175,10 +1312,10 @@ func PreCheckIAMServiceLinkedRoleWithProvider(ctx context.Context, t *testing.T,
 func PreCheckDirectoryService(ctx context.Context, t *testing.T) {
 	t.Helper()
 
-	conn := Provider.Meta().(*conns.AWSClient).DSConn(ctx)
+	conn := Provider.Meta().(*conns.AWSClient).DSClient(ctx)
 	input := &directoryservice.DescribeDirectoriesInput{}
 
-	_, err := conn.DescribeDirectoriesWithContext(ctx, input)
+	_, err := conn.DescribeDirectories(ctx, input)
 
 	if PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -1195,20 +1332,20 @@ func PreCheckDirectoryService(ctx context.Context, t *testing.T) {
 func PreCheckDirectoryServiceSimpleDirectory(ctx context.Context, t *testing.T) {
 	t.Helper()
 
-	conn := Provider.Meta().(*conns.AWSClient).DSConn(ctx)
+	conn := Provider.Meta().(*conns.AWSClient).DSClient(ctx)
 	input := &directoryservice.CreateDirectoryInput{
 		Name:     aws.String("corp.example.com"),
 		Password: aws.String("PreCheck123"),
-		Size:     aws.String(directoryservice.DirectorySizeSmall),
+		Size:     dstypes.DirectorySizeSmall,
 	}
 
-	_, err := conn.CreateDirectoryWithContext(ctx, input)
+	_, err := conn.CreateDirectory(ctx, input)
 
-	if tfawserr.ErrMessageContains(err, directoryservice.ErrCodeClientException, "Simple AD directory creation is currently not supported in this region") {
+	if errs.IsAErrorMessageContains[*dstypes.ClientException](err, "Simple AD directory creation is currently not supported in this region") {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
-	if err != nil && !tfawserr.ErrMessageContains(err, directoryservice.ErrCodeInvalidParameterException, "VpcSettings must be specified") {
+	if err != nil && !errs.IsAErrorMessageContains[*dstypes.InvalidParameterException](err, "VpcSettings must be specified") {
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
@@ -2192,7 +2329,7 @@ data "aws_ec2_instance_type_offering" "%[1]s" {
 `, name, strings.Join(preferredInstanceTypes, "\", \""))
 }
 
-func configLatestAmazonLinux2HVMEBSAMI(architecture string) string {
+func configLatestAmazonLinux2HVMEBSAMI(architecture ec2types.ArchitectureValues) string {
 	return fmt.Sprintf(`
 data "aws_ami" "amzn2-ami-minimal-hvm-ebs-%[1]s" {
   most_recent = true
@@ -2220,14 +2357,14 @@ data "aws_ami" "amzn2-ami-minimal-hvm-ebs-%[1]s" {
 // describes the latest Amazon Linux 2 x86_64 AMI using HVM virtualization and an EBS root device.
 // The data source is named 'amzn2-ami-minimal-hvm-ebs-x86_64'.
 func ConfigLatestAmazonLinux2HVMEBSX8664AMI() string {
-	return configLatestAmazonLinux2HVMEBSAMI(ec2.ArchitectureValuesX8664)
+	return configLatestAmazonLinux2HVMEBSAMI(ec2types.ArchitectureValuesX8664)
 }
 
 // ConfigLatestAmazonLinux2HVMEBSARM64AMI returns the configuration for a data source that
 // describes the latest Amazon Linux 2 arm64 AMI using HVM virtualization and an EBS root device.
 // The data source is named 'amzn2-ami-minimal-hvm-ebs-arm64'.
 func ConfigLatestAmazonLinux2HVMEBSARM64AMI() string {
-	return configLatestAmazonLinux2HVMEBSAMI(ec2.ArchitectureValuesArm64)
+	return configLatestAmazonLinux2HVMEBSAMI(ec2types.ArchitectureValuesArm64)
 }
 
 func ConfigLambdaBase(policyName, roleName, sgName string) string {
@@ -2455,32 +2592,7 @@ resource "aws_subnet" "test" {
 	)
 }
 
-func CheckVPCExists(ctx context.Context, n string, v *ec2.Vpc) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("no VPC ID is set")
-		}
-
-		conn := Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
-
-		output, err := tfec2.FindVPCByID(ctx, conn, rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		*v = *output
-
-		return nil
-	}
-}
-
-func CheckVPCExistsV2(ctx context.Context, n string, v *ec2types.Vpc) resource.TestCheckFunc {
+func CheckVPCExists(ctx context.Context, n string, v *ec2types.Vpc) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -2493,7 +2605,7 @@ func CheckVPCExistsV2(ctx context.Context, n string, v *ec2types.Vpc) resource.T
 
 		conn := Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		output, err := tfec2.FindVPCByIDV2(ctx, conn, rs.Primary.ID)
+		output, err := tfec2.FindVPCByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

@@ -3,14 +3,14 @@
 
 // Package names provides constants for AWS service names that are used as keys
 // for the endpoints slice in internal/conns/conns.go. The package also exposes
-// access to data found in the data/names_data.csv file, which provides additional
+// access to data found in the data/names_data.hcl file, which provides additional
 // service-related name information.
 //
 // Consumers of the names package include the conns package
 // (internal/conn/conns.go), the provider package
 // (internal/provider/provider.go), generators, and the skaff tool.
 //
-// It is very important that information in the data/names_data.csv be exactly
+// It is very important that information in the data/names_data.hcl be exactly
 // correct because the Terrform AWS Provider relies on the information to
 // function correctly.
 package names
@@ -26,91 +26,113 @@ import (
 
 // Endpoint constants defined by the AWS SDK v1 but not defined in the AWS SDK v2.
 const (
-	ACMPCAEndpointID                     = "acm-pca"
-	AMPEndpointID                        = "aps"
-	APIGatewayID                         = "apigateway"
-	APIGatewayV2EndpointID               = "apigateway"
-	AccessAnalyzerEndpointID             = "access-analyzer"
-	AmplifyEndpointID                    = "amplify"
-	AppConfigEndpointID                  = "appconfig"
-	AppFabricEndpointID                  = "appfabric"
-	AppIntegrationsEndpointID            = "app-integrations"
-	AppStreamEndpointID                  = "appstream2"
-	AppSyncEndpointID                    = "appsync"
-	ApplicationAutoscalingEndpointID     = "application-autoscaling"
-	ApplicationInsightsEndpointID        = "applicationinsights"
-	AthenaEndpointID                     = "athena"
-	AuditManagerEndpointID               = "auditmanager"
-	AutoScalingPlansEndpointID           = "autoscaling-plans"
-	BCMDataExportsEndpointID             = "bcm-data-exports"
-	BackupEndpointID                     = "backup"
-	BatchEndpointID                      = "batch"
-	BedrockAgentEndpointID               = "bedrockagent"
-	BedrockEndpointID                    = "bedrock"
-	BudgetsEndpointID                    = "budgets"
-	ChimeSDKMediaPipelinesEndpointID     = "media-pipelines-chime"
-	ChimeSDKVoiceEndpointID              = "voice-chime"
-	Cloud9EndpointID                     = "cloud9"
-	CloudFormationEndpointID             = "cloudformation"
-	CloudFrontEndpointID                 = "cloudfront"
-	CloudSearchEndpointID                = "cloudsearch"
-	CloudWatchEndpointID                 = "monitoring"
-	CodeArtifactEndpointID               = "codeartifact"
-	CodeGuruReviewerEndpointID           = "codeguru-reviewer"
-	CodeStarConnectionsEndpointID        = "codestar-connections"
-	CognitoIdentityEndpointID            = "cognito-identity"
-	ComprehendEndpointID                 = "comprehend"
-	ConfigServiceEndpointID              = "config"
-	DLMEndpointID                        = "dlm"
-	DevOpsGuruEndpointID                 = "devops-guru"
-	DeviceFarmEndpointID                 = "devicefarm"
-	ECREndpointID                        = "api.ecr"
-	EKSEndpointID                        = "eks"
-	EMREndpointID                        = "elasticmapreduce"
-	EventsEndpointID                     = "events"
-	EvidentlyEndpointID                  = "evidently"
-	FMSEndpointID                        = "fms"
-	IVSChatEndpointID                    = "ivschat"
-	IdentityStoreEndpointID              = "identitystore"
-	Inspector2EndpointID                 = "inspector2"
-	KMSEndpointID                        = "kms"
-	KendraEndpointID                     = "kendra"
-	LambdaEndpointID                     = "lambda"
-	LexV2ModelsEndpointID                = "models-v2-lex"
-	M2EndpointID                         = "m2"
-	MQEndpointID                         = "mq"
-	MediaConvertEndpointID               = "mediaconvert"
-	MediaLiveEndpointID                  = "medialive"
-	ObservabilityAccessManagerEndpointID = "oam"
-	OpenSearchIngestionEndpointID        = "osis"
-	OpenSearchServerlessEndpointID       = "aoss"
-	PaymentCryptographyEndpointID        = "paymentcryptography"
-	PipesEndpointID                      = "pipes"
-	PollyEndpointID                      = "polly"
-	QLDBEndpointID                       = "qldb"
-	RUMEndpointID                        = "rum"
-	RedshiftEndpointID                   = "redshift"
-	RedshiftServerlessEndpointID         = "redshift-serverless"
-	RekognitionEndpointID                = "rekognition"
-	ResourceExplorer2EndpointID          = "resource-explorer-2"
-	RolesAnywhereEndpointID              = "rolesanywhere"
-	Route53DomainsEndpointID             = "route53domains"
-	SSMEndpointID                        = "ssm"
-	SSMIncidentsEndpointID               = "ssm-incidents"
-	SSOAdminEndpointID                   = "sso"
-	STSEndpointID                        = "sts"
-	SchedulerEndpointID                  = "scheduler"
-	SchemasEndpointID                    = "schemas"
-	ServiceCatalogAppRegistryEndpointID  = "servicecatalog-appregistry"
-	ServiceDiscoveryEndpointID           = "servicediscovery"
-	ServiceQuotasEndpointID              = "servicequotas"
-	ShieldEndpointID                     = "shield"
-	TranscribeEndpointID                 = "transcribe"
-	TransferEndpointID                   = "transfer"
-	VPCLatticeEndpointID                 = "vpc-lattice"
-	VerifiedPermissionsEndpointID        = "verifiedpermissions"
-	WAFEndpointID                        = "waf"
-	WAFRegionalEndpointID                = "waf-regional"
+	ACMPCAEndpointID                       = "acm-pca"
+	AMPEndpointID                          = "aps"
+	APIGatewayID                           = "apigateway"
+	APIGatewayV2EndpointID                 = "apigateway"
+	AccessAnalyzerEndpointID               = "access-analyzer"
+	AmplifyEndpointID                      = "amplify"
+	AppConfigEndpointID                    = "appconfig"
+	AppFabricEndpointID                    = "appfabric"
+	AppIntegrationsEndpointID              = "app-integrations"
+	AppMeshEndpointID                      = "appmesh"
+	AppStreamEndpointID                    = "appstream2"
+	AppSyncEndpointID                      = "appsync"
+	ApplicationAutoscalingEndpointID       = "application-autoscaling"
+	ApplicationInsightsEndpointID          = "applicationinsights"
+	AthenaEndpointID                       = "athena"
+	AuditManagerEndpointID                 = "auditmanager"
+	AutoScalingPlansEndpointID             = "autoscaling-plans"
+	BCMDataExportsEndpointID               = "bcm-data-exports"
+	BackupEndpointID                       = "backup"
+	BatchEndpointID                        = "batch"
+	BedrockAgentEndpointID                 = "bedrockagent"
+	BedrockEndpointID                      = "bedrock"
+	BudgetsEndpointID                      = "budgets"
+	ChimeEndpointID                        = "chime"
+	ChimeSDKMediaPipelinesEndpointID       = "media-pipelines-chime"
+	ChimeSDKVoiceEndpointID                = "voice-chime"
+	Cloud9EndpointID                       = "cloud9"
+	CloudFormationEndpointID               = "cloudformation"
+	CloudFrontEndpointID                   = "cloudfront"
+	CloudSearchEndpointID                  = "cloudsearch"
+	CloudWatchEndpointID                   = "monitoring"
+	CodeArtifactEndpointID                 = "codeartifact"
+	CodeGuruReviewerEndpointID             = "codeguru-reviewer"
+	CodeStarConnectionsEndpointID          = "codestar-connections"
+	CognitoIdentityEndpointID              = "cognito-identity"
+	ComprehendEndpointID                   = "comprehend"
+	ConfigServiceEndpointID                = "config"
+	DataExchangeEndpointID                 = "dataexchange"
+	DataPipelineEndpointID                 = "datapipeline"
+	DetectiveEndpointID                    = "api.detective"
+	DeviceFarmEndpointID                   = "devicefarm"
+	DevOpsGuruEndpointID                   = "devops-guru"
+	DirectConnectEndpointID                = "directconnect"
+	DLMEndpointID                          = "dlm"
+	ECREndpointID                          = "api.ecr"
+	ECSEndpointID                          = "ecs"
+	EFSEndpointID                          = "elasticfilesystem"
+	EKSEndpointID                          = "eks"
+	ELBEndpointID                          = "elasticloadbalancing"
+	EMREndpointID                          = "elasticmapreduce"
+	ElasticTranscoderEndpointID            = "elastictranscoder"
+	ElastiCacheEndpointID                  = "elasticache"
+	EventsEndpointID                       = "events"
+	EvidentlyEndpointID                    = "evidently"
+	FMSEndpointID                          = "fms"
+	FSxEndpointID                          = "fsx"
+	GameLiftEndpointID                     = "gamelift"
+	GrafanaEndpointID                      = "grafana"
+	GlueEndpointID                         = "glue"
+	IVSEndpointID                          = "ivs"
+	IVSChatEndpointID                      = "ivschat"
+	IdentityStoreEndpointID                = "identitystore"
+	Inspector2EndpointID                   = "inspector2"
+	KMSEndpointID                          = "kms"
+	KafkaConnectEndpointID                 = "kafkaconnect"
+	KendraEndpointID                       = "kendra"
+	LambdaEndpointID                       = "lambda"
+	LexV2ModelsEndpointID                  = "models-v2-lex"
+	LocationEndpointID                     = "location"
+	M2EndpointID                           = "m2"
+	MQEndpointID                           = "mq"
+	MediaConvertEndpointID                 = "mediaconvert"
+	MediaLiveEndpointID                    = "medialive"
+	ObservabilityAccessManagerEndpointID   = "oam"
+	OpenSearchIngestionEndpointID          = "osis"
+	OpenSearchServerlessEndpointID         = "aoss"
+	PaymentCryptographyEndpointID          = "paymentcryptography"
+	PipesEndpointID                        = "pipes"
+	PollyEndpointID                        = "polly"
+	QLDBEndpointID                         = "qldb"
+	RUMEndpointID                          = "rum"
+	RedshiftEndpointID                     = "redshift"
+	RedshiftServerlessEndpointID           = "redshift-serverless"
+	RekognitionEndpointID                  = "rekognition"
+	ResourceExplorer2EndpointID            = "resource-explorer-2"
+	RolesAnywhereEndpointID                = "rolesanywhere"
+	Route53DomainsEndpointID               = "route53domains"
+	Route53RecoveryControlConfigEndpointID = "route53-recovery-control-config"
+	ServiceCatalogEndpointID               = "servicecatalog"
+	SSMEndpointID                          = "ssm"
+	SSMIncidentsEndpointID                 = "ssm-incidents"
+	SSOAdminEndpointID                     = "sso"
+	STSEndpointID                          = "sts"
+	SchedulerEndpointID                    = "scheduler"
+	SchemasEndpointID                      = "schemas"
+	ServiceCatalogAppRegistryEndpointID    = "servicecatalog-appregistry"
+	ServiceDiscoveryEndpointID             = "servicediscovery"
+	ServiceQuotasEndpointID                = "servicequotas"
+	SESEndpointID                          = "email"
+	ShieldEndpointID                       = "shield"
+	TranscribeEndpointID                   = "transcribe"
+	TransferEndpointID                     = "transfer"
+	VPCLatticeEndpointID                   = "vpc-lattice"
+	VerifiedPermissionsEndpointID          = "verifiedpermissions"
+	WAFEndpointID                          = "waf"
+	WAFRegionalEndpointID                  = "waf-regional"
+	DataZoneEndpointID                     = "datazone"
 )
 
 // These should move to aws-sdk-go-base.
@@ -241,6 +263,51 @@ func DNSSuffixForPartition(partition string) string {
 	}
 }
 
+func ServicePrincipalSuffixForPartition(partition string) string {
+	switch partition {
+	case ChinaPartitionID:
+		return "amazonaws.com.cn"
+	case ISOPartitionID:
+		return "c2s.ic.gov"
+	case ISOBPartitionID:
+		return "sc2s.sgov.gov"
+	default:
+		return "amazonaws.com"
+	}
+}
+
+// SPN region unique taken from
+// https://github.com/aws/aws-cdk/blob/main/packages/aws-cdk-lib/region-info/lib/default.ts
+func ServicePrincipalNameForPartition(service string, partition string) string {
+	if service != "" && partition != StandardPartitionID {
+		switch partition {
+		case ISOPartitionID:
+			switch service {
+			case "cloudhsm",
+				"config",
+				"logs",
+				"workspaces":
+				return DNSSuffixForPartition(partition)
+			}
+		case ISOBPartitionID:
+			switch service {
+			case "dms",
+				"logs":
+				return DNSSuffixForPartition(partition)
+			}
+		case ChinaPartitionID:
+			switch service {
+			case "codedeploy",
+				"elasticmapreduce",
+				"logs":
+				return DNSSuffixForPartition(partition)
+			}
+		}
+	}
+
+	return "amazonaws.com"
+}
+
 func IsOptInRegion(region string) bool {
 	switch region {
 	case AFSouth1RegionID,
@@ -288,18 +355,15 @@ func ReverseDNS(hostname string) string {
 	return strings.Join(parts, ".")
 }
 
-// Type ServiceDatum corresponds closely to columns in `data/names_data.csv` and are
+// Type ServiceDatum corresponds closely to attributes and blocks in `data/names_data.hcl` and are
 // described in detail in README.md.
-type ServiceDatum struct {
+type serviceDatum struct {
 	Aliases            []string
 	AWSServiceEnvVar   string
 	Brand              string
 	ClientSDKV1        bool
 	DeprecatedEnvVar   string
-	EndpointOnly       bool
 	GoV1ClientTypeName string
-	GoV1Package        string
-	GoV2Package        string
 	HumanFriendly      string
 	ProviderNameUpper  string
 	SDKID              string
@@ -307,24 +371,24 @@ type ServiceDatum struct {
 }
 
 // serviceData key is the AWS provider service package
-var serviceData map[string]*ServiceDatum
+var serviceData map[string]serviceDatum
 
 func init() {
-	serviceData = make(map[string]*ServiceDatum)
+	serviceData = make(map[string]serviceDatum)
 
-	// Data from names_data.csv
-	if err := readCSVIntoServiceData(); err != nil {
-		log.Fatalf("reading CSV into service data: %s", err)
+	// Data from names_data.hcl
+	if err := readHCLIntoServiceData(); err != nil {
+		log.Fatalf("reading HCL into service data: %s", err)
 	}
 }
 
-func readCSVIntoServiceData() error {
-	// names_data.csv is dynamically embedded so changes, additions should be made
+func readHCLIntoServiceData() error {
+	// names_data.hcl is dynamically embedded so changes, additions should be made
 	// there also
 
 	d, err := data.ReadAllServiceData()
 	if err != nil {
-		return fmt.Errorf("reading CSV into service data: %w", err)
+		return fmt.Errorf("reading HCL into service data: %w", err)
 	}
 
 	for _, l := range d {
@@ -338,15 +402,12 @@ func readCSVIntoServiceData() error {
 
 		p := l.ProviderPackage()
 
-		serviceData[p] = &ServiceDatum{
+		sd := serviceDatum{
 			AWSServiceEnvVar:   l.AWSServiceEnvVar(),
 			Brand:              l.Brand(),
 			ClientSDKV1:        l.ClientSDKV1(),
 			DeprecatedEnvVar:   l.DeprecatedEnvVar(),
-			EndpointOnly:       l.EndpointOnly(),
 			GoV1ClientTypeName: l.GoV1ClientTypeName(),
-			GoV1Package:        l.GoV1Package(),
-			GoV2Package:        l.GoV2Package(),
 			HumanFriendly:      l.HumanFriendly(),
 			ProviderNameUpper:  l.ProviderNameUpper(),
 			SDKID:              l.SDKID(),
@@ -359,7 +420,9 @@ func readCSVIntoServiceData() error {
 			a = append(a, l.Aliases()...)
 		}
 
-		serviceData[p].Aliases = a
+		sd.Aliases = a
+
+		serviceData[p] = sd
 	}
 
 	return nil
@@ -418,27 +481,6 @@ func Endpoints() []Endpoint {
 	}
 
 	return endpoints
-}
-
-type ServiceNameUpper struct {
-	ProviderPackage   string
-	ProviderNameUpper string
-	SDKID             string
-}
-
-func ServiceNamesUpper() []ServiceNameUpper {
-	serviceNames := make([]ServiceNameUpper, 0, len(serviceData))
-
-	for k, v := range serviceData {
-		sn := ServiceNameUpper{
-			ProviderPackage:   k,
-			ProviderNameUpper: v.ProviderNameUpper,
-			SDKID:             v.SDKID,
-		}
-		serviceNames = append(serviceNames, sn)
-	}
-
-	return serviceNames
 }
 
 func ProviderNameUpper(service string) (string, error) {
@@ -519,44 +561,6 @@ func HumanFriendly(service string) (string, error) {
 	}
 
 	return "", fmt.Errorf("no service data found for %s", service)
-}
-
-func AWSGoPackage(providerPackage string, version int) (string, error) {
-	switch version {
-	case 1:
-		return AWSGoV1Package(providerPackage)
-	case 2:
-		return AWSGoV2Package(providerPackage)
-	default:
-		return "", fmt.Errorf("unsupported AWS SDK Go version: %d", version)
-	}
-}
-
-func AWSGoV1Package(providerPackage string) (string, error) {
-	if v, ok := serviceData[providerPackage]; ok {
-		return v.GoV1Package, nil
-	}
-
-	return "", fmt.Errorf("getting AWS SDK Go v1 package, %s not found", providerPackage)
-}
-
-func AWSGoV2Package(providerPackage string) (string, error) {
-	if v, ok := serviceData[providerPackage]; ok {
-		return v.GoV2Package, nil
-	}
-
-	return "", fmt.Errorf("getting AWS SDK Go v2 package, %s not found", providerPackage)
-}
-
-func AWSGoClientTypeName(providerPackage string, version int) (string, error) {
-	switch version {
-	case 1:
-		return AWSGoV1ClientTypeName(providerPackage)
-	case 2:
-		return "Client", nil
-	default:
-		return "", fmt.Errorf("unsupported AWS SDK Go version: %d", version)
-	}
 }
 
 func AWSGoV1ClientTypeName(providerPackage string) (string, error) {

@@ -10,14 +10,16 @@ import (
 	"strings"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ses"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/ses"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -63,9 +65,9 @@ func ResourceEventDestination() *schema.Resource {
 							),
 						},
 						"value_source": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(ses.DimensionValueSource_Values(), false),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.DimensionValueSource](),
 						},
 					},
 				},
@@ -108,8 +110,8 @@ func ResourceEventDestination() *schema.Resource {
 				ForceNew: true,
 				Set:      schema.HashString,
 				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(ses.EventType_Values(), false),
+					Type:             schema.TypeString,
+					ValidateDiagFunc: enum.Validate[awstypes.EventType](),
 				},
 			},
 			names.AttrName: {
@@ -143,25 +145,30 @@ func ResourceEventDestination() *schema.Resource {
 
 func resourceEventDestinationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn(ctx)
+	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
 	configurationSetName := d.Get("configuration_set_name").(string)
 	eventDestinationName := d.Get(names.AttrName).(string)
 	enabled := d.Get(names.AttrEnabled).(bool)
-	matchingEventTypes := d.Get("matching_types").(*schema.Set)
+	matchingEventTypes := flex.ExpandStringValueSet(d.Get("matching_types").(*schema.Set))
+
+	matchingEventTypesEnum := make([]awstypes.EventType, len(matchingEventTypes))
+	for i, v := range matchingEventTypes {
+		matchingEventTypesEnum[i] = awstypes.EventType(v)
+	}
 
 	createOpts := &ses.CreateConfigurationSetEventDestinationInput{
 		ConfigurationSetName: aws.String(configurationSetName),
-		EventDestination: &ses.EventDestination{
+		EventDestination: &awstypes.EventDestination{
 			Name:               aws.String(eventDestinationName),
-			Enabled:            aws.Bool(enabled),
-			MatchingEventTypes: flex.ExpandStringSet(matchingEventTypes),
+			Enabled:            enabled,
+			MatchingEventTypes: matchingEventTypesEnum,
 		},
 	}
 
 	if v, ok := d.GetOk("cloudwatch_destination"); ok {
 		destination := v.(*schema.Set).List()
-		createOpts.EventDestination.CloudWatchDestination = &ses.CloudWatchDestination{
+		createOpts.EventDestination.CloudWatchDestination = &awstypes.CloudWatchDestination{
 			DimensionConfigurations: generateCloudWatchDestination(destination),
 		}
 		log.Printf("[DEBUG] Creating cloudwatch destination: %#v", destination)
@@ -171,7 +178,7 @@ func resourceEventDestinationCreate(ctx context.Context, d *schema.ResourceData,
 		destination := v.([]interface{})
 
 		kinesis := destination[0].(map[string]interface{})
-		createOpts.EventDestination.KinesisFirehoseDestination = &ses.KinesisFirehoseDestination{
+		createOpts.EventDestination.KinesisFirehoseDestination = &awstypes.KinesisFirehoseDestination{
 			DeliveryStreamARN: aws.String(kinesis[names.AttrStreamARN].(string)),
 			IAMRoleARN:        aws.String(kinesis[names.AttrRoleARN].(string)),
 		}
@@ -181,13 +188,13 @@ func resourceEventDestinationCreate(ctx context.Context, d *schema.ResourceData,
 	if v, ok := d.GetOk("sns_destination"); ok {
 		destination := v.([]interface{})
 		sns := destination[0].(map[string]interface{})
-		createOpts.EventDestination.SNSDestination = &ses.SNSDestination{
+		createOpts.EventDestination.SNSDestination = &awstypes.SNSDestination{
 			TopicARN: aws.String(sns[names.AttrTopicARN].(string)),
 		}
 		log.Printf("[DEBUG] Creating sns destination: %#v", sns)
 	}
 
-	_, err := conn.CreateConfigurationSetEventDestinationWithContext(ctx, createOpts)
+	_, err := conn.CreateConfigurationSetEventDestination(ctx, createOpts)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating SES configuration set event destination: %s", err)
 	}
@@ -200,16 +207,16 @@ func resourceEventDestinationCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourceEventDestinationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn(ctx)
+	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
 	configurationSetName := d.Get("configuration_set_name").(string)
 	input := &ses.DescribeConfigurationSetInput{
-		ConfigurationSetAttributeNames: aws.StringSlice([]string{ses.ConfigurationSetAttributeEventDestinations}),
+		ConfigurationSetAttributeNames: []awstypes.ConfigurationSetAttribute{awstypes.ConfigurationSetAttributeEventDestinations},
 		ConfigurationSetName:           aws.String(configurationSetName),
 	}
 
-	output, err := conn.DescribeConfigurationSetWithContext(ctx, input)
-	if tfawserr.ErrCodeEquals(err, ses.ErrCodeConfigurationSetDoesNotExistException) {
+	output, err := conn.DescribeConfigurationSet(ctx, input)
+	if errs.IsA[*awstypes.ConfigurationSetDoesNotExistException](err) {
 		log.Printf("[WARN] SES Configuration Set (%s) not found, removing from state", configurationSetName)
 		d.SetId("")
 		return diags
@@ -218,10 +225,11 @@ func resourceEventDestinationRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading SES Configuration Set Event Destination (%s): %s", d.Id(), err)
 	}
 
-	var thisEventDestination *ses.EventDestination
+	var thisEventDestination *awstypes.EventDestination
 	for _, eventDestination := range output.EventDestinations {
-		if aws.StringValue(eventDestination.Name) == d.Id() {
-			thisEventDestination = eventDestination
+		if aws.ToString(eventDestination.Name) == d.Id() {
+			ed := eventDestination
+			thisEventDestination = &ed
 			break
 		}
 	}
@@ -240,7 +248,7 @@ func resourceEventDestinationRead(ctx context.Context, d *schema.ResourceData, m
 	if err := d.Set("kinesis_destination", flattenKinesisFirehoseDestination(thisEventDestination.KinesisFirehoseDestination)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting kinesis_destination: %s", err)
 	}
-	if err := d.Set("matching_types", flex.FlattenStringSet(thisEventDestination.MatchingEventTypes)); err != nil {
+	if err := d.Set("matching_types", thisEventDestination.MatchingEventTypes); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting matching_types: %s", err)
 	}
 	if err := d.Set("sns_destination", flattenSNSDestination(thisEventDestination.SNSDestination)); err != nil {
@@ -261,13 +269,18 @@ func resourceEventDestinationRead(ctx context.Context, d *schema.ResourceData, m
 
 func resourceEventDestinationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn(ctx)
+	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
 	log.Printf("[DEBUG] SES Delete Configuration Set Destination: %s", d.Id())
-	_, err := conn.DeleteConfigurationSetEventDestinationWithContext(ctx, &ses.DeleteConfigurationSetEventDestinationInput{
+	_, err := conn.DeleteConfigurationSetEventDestination(ctx, &ses.DeleteConfigurationSetEventDestinationInput{
 		ConfigurationSetName: aws.String(d.Get("configuration_set_name").(string)),
 		EventDestinationName: aws.String(d.Id()),
 	})
+
+	if errs.IsA[*awstypes.EventDestinationDoesNotExistException](err) {
+		log.Printf("[DEBUG] SES Delete Configuration Set Destination already deleted: %s", d.Id())
+		return diags
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting SES Event Destination (%s): %s", d.Id(), err)
@@ -291,22 +304,22 @@ func resourceEventDestinationImport(ctx context.Context, d *schema.ResourceData,
 	return []*schema.ResourceData{d}, nil
 }
 
-func generateCloudWatchDestination(v []interface{}) []*ses.CloudWatchDimensionConfiguration {
-	b := make([]*ses.CloudWatchDimensionConfiguration, len(v))
+func generateCloudWatchDestination(v []interface{}) []awstypes.CloudWatchDimensionConfiguration {
+	b := make([]awstypes.CloudWatchDimensionConfiguration, len(v))
 
 	for i, vI := range v {
 		cloudwatch := vI.(map[string]interface{})
-		b[i] = &ses.CloudWatchDimensionConfiguration{
+		b[i] = awstypes.CloudWatchDimensionConfiguration{
 			DefaultDimensionValue: aws.String(cloudwatch[names.AttrDefaultValue].(string)),
 			DimensionName:         aws.String(cloudwatch["dimension_name"].(string)),
-			DimensionValueSource:  aws.String(cloudwatch["value_source"].(string)),
+			DimensionValueSource:  awstypes.DimensionValueSource(cloudwatch["value_source"].(string)),
 		}
 	}
 
 	return b
 }
 
-func flattenCloudWatchDestination(destination *ses.CloudWatchDestination) []interface{} {
+func flattenCloudWatchDestination(destination *awstypes.CloudWatchDestination) []interface{} {
 	if destination == nil {
 		return []interface{}{}
 	}
@@ -315,9 +328,9 @@ func flattenCloudWatchDestination(destination *ses.CloudWatchDestination) []inte
 
 	for _, dimensionConfiguration := range destination.DimensionConfigurations {
 		mDimensionConfiguration := map[string]interface{}{
-			names.AttrDefaultValue: aws.StringValue(dimensionConfiguration.DefaultDimensionValue),
-			"dimension_name":       aws.StringValue(dimensionConfiguration.DimensionName),
-			"value_source":         aws.StringValue(dimensionConfiguration.DimensionValueSource),
+			names.AttrDefaultValue: aws.ToString(dimensionConfiguration.DefaultDimensionValue),
+			"dimension_name":       aws.ToString(dimensionConfiguration.DimensionName),
+			"value_source":         string(dimensionConfiguration.DimensionValueSource),
 		}
 
 		vDimensionConfigurations = append(vDimensionConfigurations, mDimensionConfiguration)
@@ -326,26 +339,26 @@ func flattenCloudWatchDestination(destination *ses.CloudWatchDestination) []inte
 	return vDimensionConfigurations
 }
 
-func flattenKinesisFirehoseDestination(destination *ses.KinesisFirehoseDestination) []interface{} {
+func flattenKinesisFirehoseDestination(destination *awstypes.KinesisFirehoseDestination) []interface{} {
 	if destination == nil {
 		return []interface{}{}
 	}
 
 	mDestination := map[string]interface{}{
-		names.AttrRoleARN:   aws.StringValue(destination.IAMRoleARN),
-		names.AttrStreamARN: aws.StringValue(destination.DeliveryStreamARN),
+		names.AttrRoleARN:   aws.ToString(destination.IAMRoleARN),
+		names.AttrStreamARN: aws.ToString(destination.DeliveryStreamARN),
 	}
 
 	return []interface{}{mDestination}
 }
 
-func flattenSNSDestination(destination *ses.SNSDestination) []interface{} {
+func flattenSNSDestination(destination *awstypes.SNSDestination) []interface{} {
 	if destination == nil {
 		return []interface{}{}
 	}
 
 	mDestination := map[string]interface{}{
-		names.AttrTopicARN: aws.StringValue(destination.TopicARN),
+		names.AttrTopicARN: aws.ToString(destination.TopicARN),
 	}
 
 	return []interface{}{mDestination}

@@ -5,10 +5,8 @@ package efs
 import (
 	"context"
 
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	efs_sdkv1 "github.com/aws/aws-sdk-go/service/efs"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	efs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/efs"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -27,20 +25,26 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceAccessPoint,
+			Factory:  dataSourceAccessPoint,
 			TypeName: "aws_efs_access_point",
+			Name:     "Access Point",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceAccessPoints,
+			Factory:  dataSourceAccessPoints,
 			TypeName: "aws_efs_access_points",
+			Name:     "Access Point",
 		},
 		{
-			Factory:  DataSourceFileSystem,
+			Factory:  dataSourceFileSystem,
 			TypeName: "aws_efs_file_system",
+			Name:     "File System",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceMountTarget,
+			Factory:  dataSourceMountTarget,
 			TypeName: "aws_efs_mount_target",
+			Name:     "Mount Target",
 		},
 	}
 }
@@ -48,7 +52,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceAccessPoint,
+			Factory:  resourceAccessPoint,
 			TypeName: "aws_efs_access_point",
 			Name:     "Access Point",
 			Tags: &types.ServicePackageResourceTags{
@@ -56,11 +60,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceBackupPolicy,
+			Factory:  resourceBackupPolicy,
 			TypeName: "aws_efs_backup_policy",
+			Name:     "Backup Policy",
 		},
 		{
-			Factory:  ResourceFileSystem,
+			Factory:  resourceFileSystem,
 			TypeName: "aws_efs_file_system",
 			Name:     "File System",
 			Tags: &types.ServicePackageResourceTags{
@@ -68,16 +73,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceFileSystemPolicy,
+			Factory:  resourceFileSystemPolicy,
 			TypeName: "aws_efs_file_system_policy",
+			Name:     "File System Policy",
 		},
 		{
-			Factory:  ResourceMountTarget,
+			Factory:  resourceMountTarget,
 			TypeName: "aws_efs_mount_target",
 			Name:     "Mount Target",
 		},
 		{
-			Factory:  ResourceReplicationConfiguration,
+			Factory:  resourceReplicationConfiguration,
 			TypeName: "aws_efs_replication_configuration",
 			Name:     "Replication Configuration",
 		},
@@ -88,22 +94,14 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.EFS
 }
 
-// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*efs_sdkv1.EFS, error) {
-	sess := config[names.AttrSession].(*session_sdkv1.Session)
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*efs_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
 
-	cfg := aws_sdkv1.Config{}
-
-	if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
-		tflog.Debug(ctx, "setting endpoint", map[string]any{
-			"tf_aws.endpoint": endpoint,
-		})
-		cfg.Endpoint = aws_sdkv1.String(endpoint)
-	} else {
-		cfg.EndpointResolver = newEndpointResolverSDKv1(ctx)
-	}
-
-	return efs_sdkv1.New(sess.Copy(&cfg)), nil
+	return efs_sdkv2.NewFromConfig(cfg,
+		efs_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+	), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

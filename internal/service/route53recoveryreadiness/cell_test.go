@@ -9,14 +9,14 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/route53recoveryreadiness"
+	"github.com/aws/aws-sdk-go-v2/service/route53recoveryreadiness"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfroute53recoveryreadiness "github.com/hashicorp/terraform-provider-aws/internal/service/route53recoveryreadiness"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -202,21 +202,24 @@ func TestAccRoute53RecoveryReadinessCell_timeout(t *testing.T) {
 
 func testAccCheckCellDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryReadinessConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryReadinessClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_route53recoveryreadiness_cell" {
 				continue
 			}
 
-			input := &route53recoveryreadiness.GetCellInput{
-				CellName: aws.String(rs.Primary.ID),
+			_, err := tfroute53recoveryreadiness.FindCellByName(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			_, err := conn.GetCellWithContext(ctx, input)
-			if err == nil {
-				return fmt.Errorf("Route53RecoveryReadiness Channel (%s) not deleted", rs.Primary.ID)
+			if err != nil {
+				return err
 			}
+
+			return fmt.Errorf("Route53 Recovery Readiness Cell %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -231,24 +234,20 @@ func testAccCheckCellExists(ctx context.Context, name string) resource.TestCheck
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryReadinessConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryReadinessClient(ctx)
 
-		input := &route53recoveryreadiness.GetCellInput{
-			CellName: aws.String(rs.Primary.ID),
-		}
-
-		_, err := conn.GetCellWithContext(ctx, input)
+		_, err := tfroute53recoveryreadiness.FindCellByName(ctx, conn, rs.Primary.ID)
 
 		return err
 	}
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryReadinessConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryReadinessClient(ctx)
 
 	input := &route53recoveryreadiness.ListCellsInput{}
 
-	_, err := conn.ListCellsWithContext(ctx, input)
+	_, err := conn.ListCells(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

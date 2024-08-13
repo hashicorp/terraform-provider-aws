@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -448,6 +449,52 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 		},
 	}
 
+	subSlotValueElicitationSettingLNB := schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[SubSlotValueElicitationSettingData](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Blocks: map[string]schema.Block{
+				"default_value_specification":     defaultValueSpecificationLNB,
+				"prompt_specification":            promptSpecificationLNB,
+				"sample_utterance":                sampleUtteranceLNB,
+				"wait_and_continue_specification": waitAndContinueSpecificationLNB,
+			},
+		},
+	}
+
+	slotSpecificationsLNB := schema.SetNestedBlock{
+		Validators: []validator.Set{
+			setvalidator.SizeAtMost(6),
+		},
+		CustomType: fwtypes.NewSetNestedObjectTypeOf[SlotSpecificationsData](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"map_block_key": schema.StringAttribute{
+					Required: true,
+				},
+				"slot_type_id": schema.StringAttribute{
+					Required: true,
+				},
+			},
+			Blocks: map[string]schema.Block{
+				"value_elicitation_setting": subSlotValueElicitationSettingLNB,
+			},
+		},
+	}
+
+	subSlotSettingLNB := schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[SubSlotSettingData](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				names.AttrExpression: schema.StringAttribute{
+					Optional: true,
+				},
+			},
+			Blocks: map[string]schema.Block{
+				"slot_specification": slotSpecificationsLNB,
+			},
+		},
+	}
+
 	valueElicitationSettingLNB := schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[ValueElicitationSettingData](ctx),
 		Validators: []validator.List{
@@ -514,6 +561,7 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 				Required: true,
 			},
 			"slot_type_id": schema.StringAttribute{
+				Computed: true,
 				Optional: true,
 			},
 		},
@@ -521,7 +569,7 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 			"multiple_values_setting":   multValueSettingsLNB,
 			"obfuscation_setting":       obfuscationSettingLNB,
 			"value_elicitation_setting": valueElicitationSettingLNB,
-			//sub_slot_setting
+			"sub_slot_setting":          subSlotSettingLNB,
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
@@ -530,6 +578,8 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 		},
 	}
 }
+
+var slotFlexOpt = flex.WithFieldNamePrefix(ResNameSlot)
 
 func (r *resourceSlot) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().LexV2ModelsClient(ctx)
@@ -544,7 +594,7 @@ func (r *resourceSlot) Create(ctx context.Context, req resource.CreateRequest, r
 		SlotName: aws.String(plan.Name.ValueString()),
 	}
 
-	resp.Diagnostics.Append(flex.Expand(context.WithValue(ctx, flex.ResourcePrefix, ResNameSlot), &plan, in)...)
+	resp.Diagnostics.Append(flex.Expand(ctx, &plan, in, slotFlexOpt)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -583,7 +633,7 @@ func (r *resourceSlot) Create(ctx context.Context, req resource.CreateRequest, r
 
 	plan.ID = types.StringValue(id)
 
-	resp.Diagnostics.Append(flex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, ResNameSlot), out, &plan)...)
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan, slotFlexOpt)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -613,7 +663,7 @@ func (r *resourceSlot) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, ResNameSlot), out, &state)...)
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state, slotFlexOpt)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -634,7 +684,7 @@ func (r *resourceSlot) Update(ctx context.Context, req resource.UpdateRequest, r
 	if slotHasChanges(ctx, plan, state) {
 		input := &lexmodelsv2.UpdateSlotInput{}
 
-		resp.Diagnostics.Append(flex.Expand(context.WithValue(ctx, flex.ResourcePrefix, ResNameSlot), plan, input)...)
+		resp.Diagnostics.Append(flex.Expand(ctx, plan, input, slotFlexOpt)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -655,7 +705,7 @@ func (r *resourceSlot) Update(ctx context.Context, req resource.UpdateRequest, r
 			return
 		}
 
-		resp.Diagnostics.Append(flex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, ResNameSlot), input, &plan)...)
+		resp.Diagnostics.Append(flex.Flatten(ctx, input, &plan, slotFlexOpt)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -748,6 +798,25 @@ type resourceSlotData struct {
 	Timeouts                timeouts.Value                                               `tfsdk:"timeouts"`
 	SlotTypeID              types.String                                                 `tfsdk:"slot_type_id"`
 	ValueElicitationSetting fwtypes.ListNestedObjectValueOf[ValueElicitationSettingData] `tfsdk:"value_elicitation_setting"`
+	SubSlotSetting          fwtypes.ListNestedObjectValueOf[SubSlotSettingData]          `tfsdk:"sub_slot_setting"`
+}
+
+type SubSlotSettingData struct {
+	Expression        types.String                                           `tfsdk:"expression"`
+	SlotSpecification fwtypes.SetNestedObjectValueOf[SlotSpecificationsData] `tfsdk:"slot_specification"`
+}
+
+type SlotSpecificationsData struct {
+	SlotTypeID              types.String                                                        `tfsdk:"slot_type_id"`
+	ValueElicitationSetting fwtypes.ListNestedObjectValueOf[SubSlotValueElicitationSettingData] `tfsdk:"value_elicitation_setting"`
+	MapBlockKey             types.String                                                        `tfsdk:"map_block_key"`
+}
+
+type SubSlotValueElicitationSettingData struct {
+	PromptSpecification          fwtypes.ListNestedObjectValueOf[PromptSpecification]              `tfsdk:"prompt_specification"`
+	DefaultValueSpecification    fwtypes.ListNestedObjectValueOf[DefaultValueSpecificationData]    `tfsdk:"default_value_specification"`
+	SampleUtterance              fwtypes.ListNestedObjectValueOf[SampleUtterance]                  `tfsdk:"sample_utterance"`
+	WaitAndContinueSpecification fwtypes.ListNestedObjectValueOf[WaitAndContinueSpecificationData] `tfsdk:"wait_and_continue_specification"`
 }
 
 type MultipleValuesSettingData struct {

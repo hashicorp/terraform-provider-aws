@@ -225,6 +225,11 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	if v, ok := d.GetOk("inline_policy"); ok && v.(*schema.Set).Len() > 0 {
 		policies := expandRoleInlinePolicies(roleName, v.(*schema.Set).List())
 		if err := addRoleInlinePolicies(ctx, conn, policies); err != nil {
+			derr := deleteRole(ctx, conn, roleName, true, true, false)
+			if derr != nil {
+				return sdkdiag.AppendErrorf(diags, "creating IAM role (%s), inline policy failed (%s), deleting role: %s", d.Id(), err, derr)
+			}
+
 			return sdkdiag.AppendErrorf(diags, "creating IAM Role (%s): %s", name, err)
 		}
 	}
@@ -512,24 +517,28 @@ func deleteRole(ctx context.Context, conn *iam.Client, roleName string, forceDet
 	if forceDetach || hasManaged {
 		policyARNs, err := findRoleAttachedPolicies(ctx, conn, roleName)
 
-		if err != nil {
+		switch {
+		case tfresource.NotFound(err):
+		case err != nil:
 			return fmt.Errorf("reading IAM Policies attached to Role (%s): %w", roleName, err)
-		}
-
-		if err := deleteRolePolicyAttachments(ctx, conn, roleName, policyARNs); err != nil {
-			return err
+		default:
+			if err := deleteRolePolicyAttachments(ctx, conn, roleName, policyARNs); err != nil {
+				return err
+			}
 		}
 	}
 
 	if forceDetach || hasInline {
 		inlinePolicies, err := findRolePolicyNames(ctx, conn, roleName)
 
-		if err != nil {
+		switch {
+		case tfresource.NotFound(err):
+		case err != nil:
 			return fmt.Errorf("reading IAM Role (%s) inline policies: %w", roleName, err)
-		}
-
-		if err := deleteRoleInlinePolicies(ctx, conn, roleName, inlinePolicies); err != nil {
-			return err
+		default:
+			if err := deleteRoleInlinePolicies(ctx, conn, roleName, inlinePolicies); err != nil {
+				return err
+			}
 		}
 	}
 

@@ -66,6 +66,8 @@ This data source exports the following attributes in addition to the arguments a
 * `role_arn` - ARN of the IAM role that provides permissions for the Kubernetes control plane to make calls to AWS API operations on your behalf.
 * `status` - Status of the EKS cluster. One of `CREATING`, `ACTIVE`, `DELETING`, `FAILED`.
 * `tags` - Key-value map of resource tags.
+* `upgrade_policy` - (Optional) Configuration block for the support policy to use for the cluster.
+    * `support_type` - (Optional) Support type to use for the cluster.
 * `version` - Kubernetes server version for the cluster.
 * `vpc_config` - Nested list containing VPC configuration for the cluster.
     * `cluster_security_group_id` - The cluster security group that was created by Amazon EKS for the cluster.

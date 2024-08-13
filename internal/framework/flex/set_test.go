@@ -309,6 +309,59 @@ func TestExpandFrameworkStringValueSet(t *testing.T) {
 	}
 }
 
+func TestExpandFrameworkStringyValueSet(t *testing.T) {
+	t.Parallel()
+
+	type testEnum string
+	var testVal1 testEnum = "testVal1"
+	var testVal2 testEnum = "testVal2"
+
+	type testCase struct {
+		input    types.Set
+		expected itypes.Set[testEnum]
+	}
+	tests := map[string]testCase{
+		"null": {
+			input:    types.SetNull(types.StringType),
+			expected: nil,
+		},
+		"unknown": {
+			input:    types.SetUnknown(types.StringType),
+			expected: nil,
+		},
+		"two elements": {
+			input: types.SetValueMust(types.StringType, []attr.Value{
+				types.StringValue(string(testVal1)),
+				types.StringValue(string(testVal2)),
+			}),
+			expected: []testEnum{testVal1, testVal2},
+		},
+		"zero elements": {
+			input:    types.SetValueMust(types.StringType, []attr.Value{}),
+			expected: []testEnum{},
+		},
+		"invalid element type": {
+			input: types.SetValueMust(types.Int64Type, []attr.Value{
+				types.Int64Value(42),
+			}),
+			expected: nil,
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := flex.ExpandFrameworkStringyValueSet[testEnum](context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
 func TestFlattenFrameworkInt32Set(t *testing.T) {
 	t.Parallel()
 

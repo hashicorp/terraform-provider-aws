@@ -37,7 +37,7 @@ func TestAccEC2CapacityBlockReservation_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             nil,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		Steps: []resource.TestStep{
 			{
@@ -64,10 +64,6 @@ func testAccCheckCapacityBlockReservationExists(ctx context.Context, n string, v
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EC2 Capacity Reservation ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
