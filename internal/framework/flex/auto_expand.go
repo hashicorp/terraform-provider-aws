@@ -163,6 +163,10 @@ func (expander autoExpander) convert(ctx context.Context, sourcePath path.Path, 
 		diags.Append(expander.float64(ctx, vFrom, vTo)...)
 		return diags
 
+	case basetypes.Float32Valuable:
+		diags.Append(expander.float32(ctx, vFrom, vTo)...)
+		return diags
+
 	case basetypes.Int64Valuable:
 		diags.Append(expander.int64(ctx, vFrom, vTo)...)
 		return diags
@@ -280,6 +284,41 @@ func (expander autoExpander) float64(ctx context.Context, vFrom basetypes.Float6
 		"to":   vTo.Kind(),
 	})
 
+	return diags
+}
+
+// float32 copies a Plugin Framework Float32(ish) value to a compatible AWS API value.
+func (expander autoExpander) float32(ctx context.Context, vFrom basetypes.Float32Valuable, vTo reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	v, d := vFrom.ToFloat32Value(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	switch tTo := vTo.Type(); vTo.Kind() {
+	case reflect.Float32:
+		//
+		// types.Float32 -> float32.
+		//
+		vTo.SetFloat(float64(v.ValueFloat32()))
+		return diags
+
+	case reflect.Pointer:
+		switch tElem := tTo.Elem(); tElem.Kind() {
+		case reflect.Float32:
+			//
+			// types.Float32 -> *float32.
+			//
+			to := float32(v.ValueFloat32())
+			vTo.Set(reflect.ValueOf(&to))
+			return diags
+		}
+	}
+
+	tflog.SubsystemError(ctx, subsystemName, "Expanding incompatible types")
+	diags.Append(diagExpandingIncompatibleTypes(reflect.TypeOf(vFrom), vTo.Type()))
 	return diags
 }
 
