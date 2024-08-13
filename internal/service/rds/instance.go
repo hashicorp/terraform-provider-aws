@@ -68,12 +68,12 @@ func resourceInstance() *schema.Resource {
 		StateUpgraders: []schema.StateUpgrader{
 			{
 				Type:    resourceInstanceResourceV0().CoreConfigSchema().ImpliedType(),
-				Upgrade: InstanceStateUpgradeV0,
+				Upgrade: instanceStateUpgradeV0,
 				Version: 0,
 			},
 			{
 				Type:    resourceInstanceResourceV1().CoreConfigSchema().ImpliedType(),
-				Upgrade: InstanceStateUpgradeV1,
+				Upgrade: instanceStateUpgradeV1,
 				Version: 1,
 			},
 		},
