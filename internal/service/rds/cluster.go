@@ -215,7 +215,7 @@ func resourceCluster() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(ClusterExportableLogType_Values(), false),
+					ValidateFunc: validation.StringInSlice(clusterExportableLogType_Values(), false),
 				},
 			},
 			names.AttrEndpoint: {
