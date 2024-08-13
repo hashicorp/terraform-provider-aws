@@ -450,7 +450,7 @@ func resourceWorkgroupDelete(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Redshift Serverless Workgroup: %s", d.Id())
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ConflictException](ctx, 10*time.Minute,
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ConflictException](ctx, workgroupDeletedTimeout,
 		func() (interface{}, error) {
 			return conn.DeleteWorkgroup(ctx, &redshiftserverless.DeleteWorkgroupInput{
 				WorkgroupName: aws.String(d.Id()),
@@ -488,6 +488,10 @@ func updateWorkgroup(ctx context.Context, conn *redshiftserverless.Client, input
 
 	return nil
 }
+
+const (
+	workgroupDeletedTimeout = 10 * time.Minute
+)
 
 func findWorkgroupByName(ctx context.Context, conn *redshiftserverless.Client, name string) (*awstypes.Workgroup, error) {
 	input := &redshiftserverless.GetWorkgroupInput{

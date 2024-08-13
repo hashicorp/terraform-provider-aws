@@ -269,7 +269,7 @@ func resourceNamespaceDelete(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Redshift Serverless Namespace: %s", d.Id())
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ConflictException](ctx, 10*time.Minute,
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ConflictException](ctx, namespaceDeletedTimeout,
 		func() (interface{}, error) {
 			return conn.DeleteNamespace(ctx, &redshiftserverless.DeleteNamespaceInput{
 				NamespaceName: aws.String(d.Id()),
@@ -292,6 +292,11 @@ func resourceNamespaceDelete(ctx context.Context, d *schema.ResourceData, meta i
 
 	return diags
 }
+
+const (
+	namespaceDeletedTimeout = 10 * time.Minute
+	namespaceUpdatedTimeout = 10 * time.Minute
+)
 
 func findNamespaceByName(ctx context.Context, conn *redshiftserverless.Client, name string) (*awstypes.Namespace, error) {
 	input := &redshiftserverless.GetNamespaceInput{
@@ -339,7 +344,7 @@ func waitNamespaceDeleted(ctx context.Context, conn *redshiftserverless.Client, 
 		Pending: enum.Slice(awstypes.NamespaceStatusDeleting),
 		Target:  []string{},
 		Refresh: statusNamespace(ctx, conn, name),
-		Timeout: 10 * time.Minute,
+		Timeout: namespaceDeletedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -356,7 +361,7 @@ func waitNamespaceUpdated(ctx context.Context, conn *redshiftserverless.Client, 
 		Pending: enum.Slice(awstypes.NamespaceStatusModifying),
 		Target:  enum.Slice(awstypes.NamespaceStatusAvailable),
 		Refresh: statusNamespace(ctx, conn, name),
-		Timeout: 10 * time.Minute,
+		Timeout: namespaceUpdatedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -376,7 +381,6 @@ func flattenNamespaceIAMRoles(iamRoles []string) []string {
 	var tfList []string
 
 	for _, iamRole := range iamRoles {
-
 		if arn.IsARN(iamRole) {
 			tfList = append(tfList, iamRole)
 			continue
