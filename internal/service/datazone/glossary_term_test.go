@@ -313,8 +313,8 @@ resource "aws_datazone_glossary_term" "test" {
   short_description   = "short"
   status              = "ENABLED"
   term_relations {
-    classifies = ["${aws_datazone_glossary_term.third.id}"]
-    is_a       = ["${aws_datazone_glossary_term.third.id}"]
+    classifies = [aws_datazone_glossary_term.third.id]
+    is_a       = [aws_datazone_glossary_term.third.id]
   }
 }
 `, rName, gName, dName))

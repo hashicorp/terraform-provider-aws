@@ -12,8 +12,8 @@ Terraform resource for managing an AWS DataZone Glossary Term.
 ## Example Usage
 
 ```terraform
-resource "aws_iam_role" "domain_execution_role" {
-  name = "example_name"
+resource "aws_iam_role" "example" {
+  name = "example"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -35,7 +35,7 @@ resource "aws_iam_role" "domain_execution_role" {
   })
 
   inline_policy {
-    name = "example_name"
+    name = "example"
     policy = jsonencode({
       Version = "2012-10-17"
       Statement = [
@@ -54,58 +54,35 @@ resource "aws_iam_role" "domain_execution_role" {
   }
 }
 
-resource "aws_datazone_domain" "test" {
+resource "aws_datazone_domain" "example" {
   name                  = "example_name"
-  domain_execution_role = aws_iam_role.domain_execution_role.arn
+  domain_execution_role = aws_iam_role.example.arn
 }
 
-resource "aws_security_group" "test" {
+resource "aws_security_group" "example" {
   name = "example_name"
 }
 
-resource "aws_datazone_project" "test" {
-  domain_identifier   = aws_datazone_domain.test.id
+resource "aws_datazone_project" "example" {
+  domain_identifier   = aws_datazone_domain.example.id
   glossary_terms      = ["2N8w6XJCwZf"]
-  name                = "example_name"
-  description         = "desc"
+  name                = "example"
   skip_deletion_check = true
 }
 
-resource "aws_datazone_glossary" "test" {
+resource "aws_datazone_glossary" "example" {
   description               = "description"
-  name                      = "example_name"
-  owning_project_identifier = aws_datazone_project.test.id
-  status                    = "DISABLED"
-  domain_identifier         = aws_datazone_project.test.domain_identifier
+  name                      = "example"
+  owning_project_identifier = aws_datazone_project.example.id
+  status                    = "ENABLED"
+  domain_identifier         = aws_datazone_project.example.domain_identifier
 }
-resource "aws_datazone_glossary_term" "test" {
-  domain_identifier   = aws_datazone_domain.test.id
-  glossary_identifier = aws_datazone_glossary.test.id
-  long_description    = "long_description"
-  name                = "example-name"
-  short_description   = "short_desc"
-  status              = "ENABLED"
-  term_relations {
-    classifies = ["id of other glossary term"]
-    is_a       = ["id of other glossary term"]
-  }
-}
-```
 
-### Basic Usage
-
-```terraform
-resource "aws_datazone_glossary_term" "test" {
-  domain_identifier   = aws_datazone_domain.test.id
-  glossary_identifier = aws_datazone_glossary.test.id
-  long_description    = "long_description"
-  name                = "example-name"
-  short_description   = "short_desc"
+resource "aws_datazone_glossary_term" "example" {
+  domain_identifier   = aws_datazone_domain.example.id
+  glossary_identifier = aws_datazone_glossary.example.id
+  name                = "example"
   status              = "ENABLED"
-  term_relations {
-    classifies = ["id of other glossary term"]
-    is_a       = ["id of other glossary term"]
-  }
 }
 ```
 
@@ -113,9 +90,9 @@ resource "aws_datazone_glossary_term" "test" {
 
 The following arguments are required:
 
-* `glossary_identifier` - (Required) Identifier of glossary.
 * `domain_identifier` - (Required) Identifier of domain.
-* `name` - (Required) Name of glossary term./
+* `glossary_identifier` - (Required) Identifier of glossary.
+* `name` - (Required) Name of glossary term.
 
 The following arguments are optional:
 
@@ -133,27 +110,25 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - Id of the glossary term.
 * `created_at` - Time of glossary term creation.
 * `created_by` - Creator of glossary term.
-* `updated_at` - Time of glossary term update.
-* `updated_by` - Updater of glossary term.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `30m`)
+* `create` - (Default `30s`)
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DataZone Glossary Term using a comma-delimited string combining the domain id, glossary term id, and the glossary id. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DataZone Glossary Term using a comma-delimited string combining the `domain_identifier`, `id`, and the `glossary_identifier`. For example:
 
 ```terraform
 import {
   to = aws_datazone_glossary_term.example
-  id = "domain-id,glossary-term-id,glossary-id"
+  id = "domain_identifier,id,glossary_identifier"
 }
 ```
 
-Using `terraform import`, import DataZone Glossary Term using a comma-delimited string combining the domain id, glossary term id, and the glossary id. For example:
+Using `terraform import`, import DataZone Glossary Term using a comma-delimited string combining the `domain_identifier`, `id`, and the `glossary_identifier`. For example:
 
 ```console
 % terraform import aws_datazone_glossary_term.example domain-id,glossary-term-id,glossary-id
