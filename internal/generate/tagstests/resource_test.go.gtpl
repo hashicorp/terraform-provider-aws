@@ -69,28 +69,32 @@ plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), know
 
 {{ define "ImportBodyIgnoreKey1" }}
 {{ template "CommonImportBody" . }}
-{{ if or (eq .Implementation "framework") (gt (len .ImportIgnore) 0) -}}
+{{ if eq .Implementation "framework" -}}
 	ImportStateVerifyIgnore: []string{
-		{{- if eq .Implementation "framework" }}
         "tags.key1", // The canonical value returned by the AWS API is ""
-		{{- end -}}
-		{{ range $i, $v := .ImportIgnore }}
-		{{ $v }},
-		{{ end }}
+		{{ if gt (len .ImportIgnore) 0 -}}
+		{{ range $i, $v := .ImportIgnore }}{{ $v }},{{ end }}
+		{{ end -}}
+	},
+{{- else if gt (len .ImportIgnore) 0 -}}
+	ImportStateVerifyIgnore: []string{
+		{{ range $i, $v := .ImportIgnore }}{{ $v }},{{ end }}
 	},
 {{- end }}
 {{ end }}
 
 {{ define "ImportBodyIgnoreResourceKey1" }}
 {{ template "CommonImportBody" . }}
-{{ if or (eq .Implementation "framework") (gt (len .ImportIgnore) 0) -}}
+{{ if eq .Implementation "framework" -}}
 	ImportStateVerifyIgnore: []string{
-		{{- if eq .Implementation "framework" }}
         "tags.resourcekey1", // The canonical value returned by the AWS API is ""
-		{{- end -}}
-		{{ range $i, $v := .ImportIgnore }}
-		{{ $v }},
-		{{ end }}
+		{{ if gt (len .ImportIgnore) 0 -}}
+		{{ range $i, $v := .ImportIgnore }}{{ $v }},{{ end }}
+		{{ end -}}
+	},
+{{ else if gt (len .ImportIgnore) 0 -}}
+	ImportStateVerifyIgnore: []string{
+		{{ range $i, $v := .ImportIgnore }}{{ $v }},{{ end }}
 	},
 {{- end }}
 {{ end }}
