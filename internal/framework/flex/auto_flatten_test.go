@@ -120,65 +120,6 @@ func TestFlatten(t *testing.T) {
 			},
 		},
 
-		"json interface Source string Target": {
-			Source: &awsJSONStringer{
-				Field1: &testJSONDocument{
-					Value: &struct {
-						Test string `json:"test"`
-					}{
-						Test: "a",
-					},
-				},
-			},
-			Target: &tfSingleStringField{},
-			WantTarget: &tfSingleStringField{
-				Field1: types.StringValue(`{"test":"a"}`),
-			},
-			expectedLogLines: []map[string]any{
-				infoFlattening(reflect.TypeFor[*awsJSONStringer](), reflect.TypeFor[*tfSingleStringField]()),
-				infoConverting(reflect.TypeFor[awsJSONStringer](), reflect.TypeFor[*tfSingleStringField]()),
-				traceMatchedFields("Field1", reflect.TypeFor[awsJSONStringer](), "Field1", reflect.TypeFor[*tfSingleStringField]()),
-				infoConvertingWithPath("Field1", reflect.TypeFor[smithyjson.JSONStringer](), "Field1", reflect.TypeFor[types.String]()),
-			},
-		},
-		"json interface Source JSONValue Target": {
-			Source: &awsJSONStringer{
-				Field1: &testJSONDocument{
-					Value: &struct {
-						Test string `json:"test"`
-					}{
-						Test: "a",
-					},
-				},
-			},
-			Target: &tfJSONStringer{},
-			WantTarget: &tfJSONStringer{
-				Field1: fwtypes.SmithyJSONValue(`{"test":"a"}`, newTestJSONDocument),
-			},
-			expectedLogLines: []map[string]any{
-				infoFlattening(reflect.TypeFor[*awsJSONStringer](), reflect.TypeFor[*tfJSONStringer]()),
-				infoConverting(reflect.TypeFor[awsJSONStringer](), reflect.TypeFor[*tfJSONStringer]()),
-				traceMatchedFields("Field1", reflect.TypeFor[awsJSONStringer](), "Field1", reflect.TypeFor[*tfJSONStringer]()),
-				infoConvertingWithPath("Field1", reflect.TypeFor[smithyjson.JSONStringer](), "Field1", reflect.TypeFor[fwtypes.SmithyJSON[smithyjson.JSONStringer]]()),
-			},
-		},
-		"json interface Source marshal error": {
-			Source: &awsJSONStringer{
-				Field1: &testJSONDocumentError{},
-			},
-			Target: &tfSingleStringField{},
-			expectedDiags: diag.Diagnostics{
-				diagFlatteningMarshalSmithyDocument(reflect.TypeFor[*testJSONDocumentError](), errMarshallSmithyDocument),
-			},
-			expectedLogLines: []map[string]any{
-				infoFlattening(reflect.TypeFor[*awsJSONStringer](), reflect.TypeFor[*tfSingleStringField]()),
-				infoConverting(reflect.TypeFor[awsJSONStringer](), reflect.TypeFor[*tfSingleStringField]()),
-				traceMatchedFields("Field1", reflect.TypeFor[awsJSONStringer](), "Field1", reflect.TypeFor[*tfSingleStringField]()),
-				infoConvertingWithPath("Field1", reflect.TypeFor[smithyjson.JSONStringer](), "Field1", reflect.TypeFor[types.String]()),
-				errorMarshallingJSONDocument("Field1", reflect.TypeFor[smithyjson.JSONStringer](), "Field1", reflect.TypeFor[types.String](), errMarshallSmithyDocument),
-			},
-		},
-
 		"empty struct Source and Target": {
 			Source:     emptyStruct{},
 			Target:     &emptyStruct{},
@@ -2946,6 +2887,73 @@ func TestFlattenOptions(t *testing.T) {
 			},
 		},
 	}
+	runAutoFlattenTestCases(t, testCases)
+}
+
+func TestFlattenInterfaceToString(t *testing.T) {
+	t.Parallel()
+
+	testCases := autoFlexTestCases{
+		"json interface Source string Target": {
+			Source: &awsJSONStringer{
+				Field1: &testJSONDocument{
+					Value: &struct {
+						Test string `json:"test"`
+					}{
+						Test: "a",
+					},
+				},
+			},
+			Target: &tfSingleStringField{},
+			WantTarget: &tfSingleStringField{
+				Field1: types.StringValue(`{"test":"a"}`),
+			},
+			expectedLogLines: []map[string]any{
+				infoFlattening(reflect.TypeFor[*awsJSONStringer](), reflect.TypeFor[*tfSingleStringField]()),
+				infoConverting(reflect.TypeFor[awsJSONStringer](), reflect.TypeFor[*tfSingleStringField]()),
+				traceMatchedFields("Field1", reflect.TypeFor[awsJSONStringer](), "Field1", reflect.TypeFor[*tfSingleStringField]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[smithyjson.JSONStringer](), "Field1", reflect.TypeFor[types.String]()),
+			},
+		},
+		"json interface Source JSONValue Target": {
+			Source: &awsJSONStringer{
+				Field1: &testJSONDocument{
+					Value: &struct {
+						Test string `json:"test"`
+					}{
+						Test: "a",
+					},
+				},
+			},
+			Target: &tfJSONStringer{},
+			WantTarget: &tfJSONStringer{
+				Field1: fwtypes.SmithyJSONValue(`{"test":"a"}`, newTestJSONDocument),
+			},
+			expectedLogLines: []map[string]any{
+				infoFlattening(reflect.TypeFor[*awsJSONStringer](), reflect.TypeFor[*tfJSONStringer]()),
+				infoConverting(reflect.TypeFor[awsJSONStringer](), reflect.TypeFor[*tfJSONStringer]()),
+				traceMatchedFields("Field1", reflect.TypeFor[awsJSONStringer](), "Field1", reflect.TypeFor[*tfJSONStringer]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[smithyjson.JSONStringer](), "Field1", reflect.TypeFor[fwtypes.SmithyJSON[smithyjson.JSONStringer]]()),
+			},
+		},
+		"json interface Source marshal error": {
+			Source: &awsJSONStringer{
+				Field1: &testJSONDocumentError{},
+			},
+			Target: &tfSingleStringField{},
+			expectedDiags: diag.Diagnostics{
+				diagFlatteningMarshalSmithyDocument(reflect.TypeFor[*testJSONDocumentError](), errMarshallSmithyDocument),
+			},
+			expectedLogLines: []map[string]any{
+				infoFlattening(reflect.TypeFor[*awsJSONStringer](), reflect.TypeFor[*tfSingleStringField]()),
+				infoConverting(reflect.TypeFor[awsJSONStringer](), reflect.TypeFor[*tfSingleStringField]()),
+				traceMatchedFields("Field1", reflect.TypeFor[awsJSONStringer](), "Field1", reflect.TypeFor[*tfSingleStringField]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[smithyjson.JSONStringer](), "Field1", reflect.TypeFor[types.String]()),
+				errorMarshallingJSONDocument("Field1", reflect.TypeFor[smithyjson.JSONStringer](), "Field1", reflect.TypeFor[types.String](), errMarshallSmithyDocument),
+			},
+		},
+	}
+
 	runAutoFlattenTestCases(t, testCases)
 }
 
