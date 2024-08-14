@@ -609,7 +609,7 @@ func TestAccECSTaskDefinition_fsxWinFileSystem(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	if acctest.Partition() == "aws-us-gov" {
+	if acctest.Partition() == names.USGovCloudPartitionID {
 		t.Skip("Amazon FSx for Windows File Server volumes for ECS tasks are not supported in GovCloud partition")
 	}
 
