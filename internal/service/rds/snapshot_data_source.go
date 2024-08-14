@@ -8,8 +8,9 @@ import (
 	"sort"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/rds"
+	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,7 +23,7 @@ import (
 // @SDKDataSource("aws_db_snapshot", name="DB Snapshot")
 // @Tags
 // @Testing(tagsTest=false)
-func DataSourceSnapshot() *schema.Resource {
+func dataSourceSnapshot() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSnapshotRead,
 
@@ -133,7 +134,7 @@ func DataSourceSnapshot() *schema.Resource {
 
 func dataSourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn(ctx)
+	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
 	input := &rds.DescribeDBSnapshotsInput{
 		IncludePublic: aws.Bool(d.Get("include_public").(bool)),
@@ -152,10 +153,10 @@ func dataSourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta in
 		input.SnapshotType = aws.String(v.(string))
 	}
 
-	f := tfslices.PredicateTrue[*rds.DBSnapshot]()
-	if tags := getTagsIn(ctx); len(tags) > 0 {
-		f = func(v *rds.DBSnapshot) bool {
-			return KeyValueTags(ctx, v.TagList).ContainsAll(KeyValueTags(ctx, tags))
+	f := tfslices.PredicateTrue[*types.DBSnapshot]()
+	if tags := getTagsInV2(ctx); len(tags) > 0 {
+		f = func(v *types.DBSnapshot) bool {
+			return keyValueTagsV2(ctx, v.TagList).ContainsAll(keyValueTagsV2(ctx, tags))
 		}
 	}
 
@@ -169,7 +170,7 @@ func dataSourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "Your query returned no results. Please change your search criteria and try again.")
 	}
 
-	var snapshot *rds.DBSnapshot
+	var snapshot *types.DBSnapshot
 	if len(snapshots) > 1 {
 		if d.Get(names.AttrMostRecent).(bool) {
 			snapshot = mostRecentDBSnapshot(snapshots)
@@ -177,10 +178,10 @@ func dataSourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta in
 			return sdkdiag.AppendErrorf(diags, "Your query returned more than one result. Please try a more specific search criteria.")
 		}
 	} else {
-		snapshot = snapshots[0]
+		snapshot = &snapshots[0]
 	}
 
-	d.SetId(aws.StringValue(snapshot.DBSnapshotIdentifier))
+	d.SetId(aws.ToString(snapshot.DBSnapshotIdentifier))
 	d.Set(names.AttrAllocatedStorage, snapshot.AllocatedStorage)
 	d.Set(names.AttrAvailabilityZone, snapshot.AvailabilityZone)
 	d.Set("db_instance_identifier", snapshot.DBInstanceIdentifier)
@@ -207,12 +208,12 @@ func dataSourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set(names.AttrStorageType, snapshot.StorageType)
 	d.Set(names.AttrVPCID, snapshot.VpcId)
 
-	setTagsOut(ctx, snapshot.TagList)
+	setTagsOutV2(ctx, snapshot.TagList)
 
 	return diags
 }
 
-type rdsSnapshotSort []*rds.DBSnapshot
+type rdsSnapshotSort []types.DBSnapshot
 
 func (a rdsSnapshotSort) Len() int      { return len(a) }
 func (a rdsSnapshotSort) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
@@ -225,11 +226,11 @@ func (a rdsSnapshotSort) Less(i, j int) bool {
 		return false
 	}
 
-	return (*a[i].SnapshotCreateTime).Before(*a[j].SnapshotCreateTime)
+	return (aws.ToTime(a[i].SnapshotCreateTime)).Before(aws.ToTime(a[j].SnapshotCreateTime))
 }
 
-func mostRecentDBSnapshot(snapshots []*rds.DBSnapshot) *rds.DBSnapshot {
+func mostRecentDBSnapshot(snapshots []types.DBSnapshot) *types.DBSnapshot {
 	sortedSnapshots := snapshots
 	sort.Sort(rdsSnapshotSort(sortedSnapshots))
-	return sortedSnapshots[len(sortedSnapshots)-1]
+	return &sortedSnapshots[len(sortedSnapshots)-1]
 }

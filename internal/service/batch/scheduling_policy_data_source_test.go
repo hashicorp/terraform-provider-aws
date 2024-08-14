@@ -45,7 +45,7 @@ func TestAccBatchSchedulingPolicyDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccSchedulingPolicyDataSourceConfig(rName string) string {
+func testAccSchedulingPolicyDataSourceConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_batch_scheduling_policy" "test" {
   name = %[1]q
@@ -69,7 +69,7 @@ resource "aws_batch_scheduling_policy" "test" {
 }
 
 func testAccSchedulingPolicyDataSourceConfig_basic(rName string) string {
-	return fmt.Sprintf(testAccSchedulingPolicyDataSourceConfig(rName) + `
+	return acctest.ConfigCompose(testAccSchedulingPolicyDataSourceConfig_base(rName), `
 data "aws_batch_scheduling_policy" "test" {
   arn = aws_batch_scheduling_policy.test.arn
 }

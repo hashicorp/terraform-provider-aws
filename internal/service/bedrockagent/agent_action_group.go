@@ -190,7 +190,7 @@ func (r *agentActionGroupResource) Schema(ctx context.Context, request resource.
 												names.AttrParameters: schema.SetNestedBlock{
 													CustomType: fwtypes.NewSetNestedObjectTypeOf[parameterDetailModel](ctx),
 													NestedObject: schema.NestedBlockObject{
-														Attributes: map[string]schema.Attribute{
+														Attributes: map[string]schema.Attribute{ // nosemgrep:ci.semgrep.framework.map_block_key-meaningful-names
 															names.AttrDescription: schema.StringAttribute{
 																Optional: true,
 																Validators: []validator.String{
@@ -291,16 +291,6 @@ func (r *agentActionGroupResource) Read(ctx context.Context, request resource.Re
 	if response.Diagnostics.HasError() {
 		return
 	}
-
-	// AutoFlEx doesn't yet handle union types.
-	data.ActionGroupExecutor = flattenActionGroupExecutor(ctx, output.ActionGroupExecutor)
-	data.APISchema = flattenAPISchema(ctx, output.ApiSchema)
-	functionSchema, diags := flattenFunctionSchema(ctx, output.FunctionSchema)
-	response.Diagnostics.Append(diags...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-	data.FunctionSchema = functionSchema
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -450,7 +440,8 @@ type actionGroupExecutorModel struct {
 }
 
 var (
-	_ fwflex.Expander = actionGroupExecutorModel{}
+	_ fwflex.Expander  = actionGroupExecutorModel{}
+	_ fwflex.Flattener = &actionGroupExecutorModel{}
 )
 
 func (m actionGroupExecutorModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
@@ -468,13 +459,28 @@ func (m actionGroupExecutorModel) Expand(ctx context.Context) (result any, diags
 	return nil, diags
 }
 
+func (m *actionGroupExecutorModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+	switch t := v.(type) {
+	case awstypes.ActionGroupExecutorMemberCustomControl:
+		m.CustomControl = fwtypes.StringEnumValue(t.Value)
+
+	case awstypes.ActionGroupExecutorMemberLambda:
+		m.Lambda = fwtypes.ARNValue(t.Value)
+
+		return diags
+	}
+
+	return diags
+}
+
 type apiSchemaModel struct {
 	Payload types.String                                       `tfsdk:"payload"`
 	S3      fwtypes.ListNestedObjectValueOf[s3IdentifierModel] `tfsdk:"s3"`
 }
 
 var (
-	_ fwflex.Expander = apiSchemaModel{}
+	_ fwflex.Expander  = apiSchemaModel{}
+	_ fwflex.Flattener = &apiSchemaModel{}
 )
 
 func (m apiSchemaModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
@@ -498,6 +504,39 @@ func (m apiSchemaModel) Expand(ctx context.Context) (result any, diags diag.Diag
 	return nil, diags
 }
 
+func (m *apiSchemaModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+	switch t := v.(type) {
+	case awstypes.APISchemaMemberPayload:
+		m.Payload = fwflex.StringToFramework(ctx, &t.Value)
+
+		return diags
+
+	case awstypes.APISchemaMemberS3:
+		var model s3IdentifierModel
+		d := fwflex.Flatten(ctx, t.Value, &model)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.S3 = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+
+		return diags
+	}
+
+	return diags
+}
+
+type s3IdentifierModel struct {
+	S3BucketName types.String `tfsdk:"s3_bucket_name"`
+	S3ObjectKey  types.String `tfsdk:"s3_object_key"`
+}
+
+var (
+	_ fwflex.Expander  = functionSchemaModel{}
+	_ fwflex.Flattener = &functionSchemaModel{}
+)
+
 type functionSchemaModel struct {
 	MemberFunctions fwtypes.ListNestedObjectValueOf[memberFunctionsModel] `tfsdk:"member_functions"`
 }
@@ -505,19 +544,42 @@ type functionSchemaModel struct {
 func (m functionSchemaModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
 	switch {
 	case !m.MemberFunctions.IsNull():
-		fooModel := fwdiag.Must(m.MemberFunctions.ToPtr(ctx))
-		var memberFunctions []awstypes.Function
-		diags.Append(fwflex.Expand(ctx, fooModel.Functions, &memberFunctions)...)
+		memberFunctionsModel := fwdiag.Must(m.MemberFunctions.ToPtr(ctx))
+		var functions []awstypes.Function
+		diags.Append(fwflex.Expand(ctx, memberFunctionsModel.Functions, &functions)...)
 		if diags.HasError() {
 			return nil, diags
 		}
 
 		return &awstypes.FunctionSchemaMemberFunctions{
-			Value: memberFunctions,
+			Value: functions,
 		}, diags
 	}
 
 	return nil, diags
+}
+
+func (m *functionSchemaModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+	m.MemberFunctions = fwtypes.NewListNestedObjectValueOfNull[memberFunctionsModel](ctx)
+
+	switch t := v.(type) {
+	case awstypes.FunctionSchemaMemberFunctions:
+		var functions fwtypes.ListNestedObjectValueOf[functionModel]
+		diags.Append(fwflex.Flatten(ctx, t.Value, &functions)...)
+		if diags.HasError() {
+			return diags
+		}
+
+		memberFunctions := memberFunctionsModel{
+			Functions: functions,
+		}
+
+		m.MemberFunctions = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &memberFunctions)
+
+		return diags
+	}
+
+	return diags
 }
 
 type memberFunctionsModel struct {
@@ -535,73 +597,4 @@ type parameterDetailModel struct {
 	MapBlockKey types.String                      `tfsdk:"map_block_key"`
 	Required    types.Bool                        `tfsdk:"required"`
 	Type        fwtypes.StringEnum[awstypes.Type] `tfsdk:"type"`
-}
-
-type s3IdentifierModel struct {
-	S3BucketName types.String `tfsdk:"s3_bucket_name"`
-	S3ObjectKey  types.String `tfsdk:"s3_object_key"`
-}
-
-func flattenActionGroupExecutor(ctx context.Context, apiObject awstypes.ActionGroupExecutor) fwtypes.ListNestedObjectValueOf[actionGroupExecutorModel] {
-	if apiObject == nil {
-		return fwtypes.NewListNestedObjectValueOfNull[actionGroupExecutorModel](ctx)
-	}
-
-	var actionGroupExecutorData actionGroupExecutorModel
-
-	switch v := apiObject.(type) {
-	case *awstypes.ActionGroupExecutorMemberCustomControl:
-		actionGroupExecutorData.CustomControl = fwtypes.StringEnumValue(v.Value)
-	case *awstypes.ActionGroupExecutorMemberLambda:
-		actionGroupExecutorData.Lambda = fwtypes.ARNValue(v.Value)
-	}
-
-	return fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &actionGroupExecutorData)
-}
-
-func flattenAPISchema(ctx context.Context, apiObject awstypes.APISchema) fwtypes.ListNestedObjectValueOf[apiSchemaModel] {
-	if apiObject == nil {
-		return fwtypes.NewListNestedObjectValueOfNull[apiSchemaModel](ctx)
-	}
-
-	var apiSchemaData apiSchemaModel
-
-	switch v := apiObject.(type) {
-	case *awstypes.APISchemaMemberPayload:
-		apiSchemaData.Payload = fwflex.StringValueToFramework(ctx, v.Value)
-		apiSchemaData.S3 = fwtypes.NewListNestedObjectValueOfNull[s3IdentifierModel](ctx)
-
-	case *awstypes.APISchemaMemberS3:
-		apiSchemaData.Payload = types.StringNull()
-		apiSchemaData.S3 = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &s3IdentifierModel{
-			S3BucketName: fwflex.StringToFramework(ctx, v.Value.S3BucketName),
-			S3ObjectKey:  fwflex.StringToFramework(ctx, v.Value.S3ObjectKey),
-		})
-	}
-
-	return fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &apiSchemaData)
-}
-
-func flattenFunctionSchema(ctx context.Context, apiObject awstypes.FunctionSchema) (fwtypes.ListNestedObjectValueOf[functionSchemaModel], diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	if apiObject == nil {
-		return fwtypes.NewListNestedObjectValueOfNull[functionSchemaModel](ctx), diags
-	}
-
-	var functionSchemaData functionSchemaModel
-
-	switch v := apiObject.(type) {
-	case *awstypes.FunctionSchemaMemberFunctions:
-		var functions fwtypes.ListNestedObjectValueOf[functionModel]
-		diags.Append(fwflex.Flatten(ctx, v.Value, &functions)...)
-		if diags.HasError() {
-			return fwtypes.NewListNestedObjectValueOfNull[functionSchemaModel](ctx), diags
-		}
-		functionSchemaData.MemberFunctions = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &memberFunctionsModel{
-			Functions: functions,
-		})
-	}
-
-	return fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &functionSchemaData), diags
 }

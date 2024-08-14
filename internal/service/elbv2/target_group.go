@@ -378,6 +378,12 @@ func resourceTargetGroup() *schema.Resource {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
+						"unhealthy_draining_interval": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      0,
+							ValidateFunc: validation.IntBetween(0, 360000),
+						},
 					},
 				},
 			},
@@ -1321,7 +1327,12 @@ func expandTargetGroupTargetHealthStateAttributes(tfMap map[string]interface{}, 
 			awstypes.TargetGroupAttribute{
 				Key:   aws.String(targetGroupAttributeTargetHealthStateUnhealthyConnectionTerminationEnabled),
 				Value: flex.BoolValueToString(tfMap["enable_unhealthy_connection_termination"].(bool)),
-			})
+			},
+			awstypes.TargetGroupAttribute{
+				Key:   aws.String(targetGroupAttributeTargetHealthStateUnhealthyDrainingIntervalSeconds),
+				Value: flex.IntValueToString(tfMap["unhealthy_draining_interval"].(int)),
+			},
+		)
 	}
 
 	return apiObjects
@@ -1340,6 +1351,8 @@ func flattenTargetGroupTargetHealthStateAttributes(apiObjects []awstypes.TargetG
 			switch k, v := aws.ToString(apiObject.Key), apiObject.Value; k {
 			case targetGroupAttributeTargetHealthStateUnhealthyConnectionTerminationEnabled:
 				tfMap["enable_unhealthy_connection_termination"] = flex.StringToBoolValue(v)
+			case targetGroupAttributeTargetHealthStateUnhealthyDrainingIntervalSeconds:
+				tfMap["unhealthy_draining_interval"] = flex.StringToIntValue(v)
 			}
 		}
 	}

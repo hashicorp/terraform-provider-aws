@@ -26,105 +26,114 @@ import (
 
 // Endpoint constants defined by the AWS SDK v1 but not defined in the AWS SDK v2.
 const (
-	ACMPCAEndpointID                     = "acm-pca"
-	AMPEndpointID                        = "aps"
-	APIGatewayID                         = "apigateway"
-	APIGatewayV2EndpointID               = "apigateway"
-	AccessAnalyzerEndpointID             = "access-analyzer"
-	AmplifyEndpointID                    = "amplify"
-	AppConfigEndpointID                  = "appconfig"
-	AppFabricEndpointID                  = "appfabric"
-	AppIntegrationsEndpointID            = "app-integrations"
-	AppStreamEndpointID                  = "appstream2"
-	AppSyncEndpointID                    = "appsync"
-	ApplicationAutoscalingEndpointID     = "application-autoscaling"
-	ApplicationInsightsEndpointID        = "applicationinsights"
-	AthenaEndpointID                     = "athena"
-	AuditManagerEndpointID               = "auditmanager"
-	AutoScalingPlansEndpointID           = "autoscaling-plans"
-	BCMDataExportsEndpointID             = "bcm-data-exports"
-	BackupEndpointID                     = "backup"
-	BatchEndpointID                      = "batch"
-	BedrockAgentEndpointID               = "bedrockagent"
-	BedrockEndpointID                    = "bedrock"
-	BudgetsEndpointID                    = "budgets"
-	ChimeEndpointID                      = "chime"
-	ChimeSDKMediaPipelinesEndpointID     = "media-pipelines-chime"
-	ChimeSDKVoiceEndpointID              = "voice-chime"
-	Cloud9EndpointID                     = "cloud9"
-	CloudFormationEndpointID             = "cloudformation"
-	CloudFrontEndpointID                 = "cloudfront"
-	CloudSearchEndpointID                = "cloudsearch"
-	CloudWatchEndpointID                 = "monitoring"
-	CodeArtifactEndpointID               = "codeartifact"
-	CodeGuruReviewerEndpointID           = "codeguru-reviewer"
-	CodeStarConnectionsEndpointID        = "codestar-connections"
-	CognitoIdentityEndpointID            = "cognito-identity"
-	ComprehendEndpointID                 = "comprehend"
-	ConfigServiceEndpointID              = "config"
-	DataExchangeEndpointID               = "dataexchange"
-	DataPipelineEndpointID               = "datapipeline"
-	DetectiveEndpointID                  = "api.detective"
-	DeviceFarmEndpointID                 = "devicefarm"
-	DevOpsGuruEndpointID                 = "devops-guru"
-	DLMEndpointID                        = "dlm"
-	ECREndpointID                        = "api.ecr"
-	ECSEndpointID                        = "ecs"
-	EFSEndpointID                        = "elasticfilesystem"
-	EKSEndpointID                        = "eks"
-	ELBEndpointID                        = "elasticloadbalancing"
-	EMREndpointID                        = "elasticmapreduce"
-	ElasticTranscoderEndpointID          = "elastictranscoder"
-	ElastiCacheEndpointID                = "elasticache"
-	EventsEndpointID                     = "events"
-	EvidentlyEndpointID                  = "evidently"
-	FMSEndpointID                        = "fms"
-	FSxEndpointID                        = "fsx"
-	GrafanaEndpointID                    = "grafana"
-	IVSEndpointID                        = "ivs"
-	IVSChatEndpointID                    = "ivschat"
-	IdentityStoreEndpointID              = "identitystore"
-	Inspector2EndpointID                 = "inspector2"
-	KMSEndpointID                        = "kms"
-	KafkaConnectEndpointID               = "kafkaconnect"
-	KendraEndpointID                     = "kendra"
-	LambdaEndpointID                     = "lambda"
-	LexV2ModelsEndpointID                = "models-v2-lex"
-	M2EndpointID                         = "m2"
-	MQEndpointID                         = "mq"
-	MediaConvertEndpointID               = "mediaconvert"
-	MediaLiveEndpointID                  = "medialive"
-	ObservabilityAccessManagerEndpointID = "oam"
-	OpenSearchIngestionEndpointID        = "osis"
-	OpenSearchServerlessEndpointID       = "aoss"
-	PaymentCryptographyEndpointID        = "paymentcryptography"
-	PipesEndpointID                      = "pipes"
-	PollyEndpointID                      = "polly"
-	QLDBEndpointID                       = "qldb"
-	RUMEndpointID                        = "rum"
-	RedshiftEndpointID                   = "redshift"
-	RedshiftServerlessEndpointID         = "redshift-serverless"
-	RekognitionEndpointID                = "rekognition"
-	ResourceExplorer2EndpointID          = "resource-explorer-2"
-	RolesAnywhereEndpointID              = "rolesanywhere"
-	Route53DomainsEndpointID             = "route53domains"
-	SSMEndpointID                        = "ssm"
-	SSMIncidentsEndpointID               = "ssm-incidents"
-	SSOAdminEndpointID                   = "sso"
-	STSEndpointID                        = "sts"
-	SchedulerEndpointID                  = "scheduler"
-	SchemasEndpointID                    = "schemas"
-	ServiceCatalogAppRegistryEndpointID  = "servicecatalog-appregistry"
-	ServiceDiscoveryEndpointID           = "servicediscovery"
-	ServiceQuotasEndpointID              = "servicequotas"
-	ShieldEndpointID                     = "shield"
-	TranscribeEndpointID                 = "transcribe"
-	TransferEndpointID                   = "transfer"
-	VPCLatticeEndpointID                 = "vpc-lattice"
-	VerifiedPermissionsEndpointID        = "verifiedpermissions"
-	WAFEndpointID                        = "waf"
-	WAFRegionalEndpointID                = "waf-regional"
-	DataZoneEndpointID                   = "datazone"
+	ACMPCAEndpointID                       = "acm-pca"
+	AMPEndpointID                          = "aps"
+	APIGatewayID                           = "apigateway"
+	APIGatewayV2EndpointID                 = "apigateway"
+	AccessAnalyzerEndpointID               = "access-analyzer"
+	AmplifyEndpointID                      = "amplify"
+	AppConfigEndpointID                    = "appconfig"
+	AppFabricEndpointID                    = "appfabric"
+	AppIntegrationsEndpointID              = "app-integrations"
+	AppMeshEndpointID                      = "appmesh"
+	AppStreamEndpointID                    = "appstream2"
+	AppSyncEndpointID                      = "appsync"
+	ApplicationAutoscalingEndpointID       = "application-autoscaling"
+	ApplicationInsightsEndpointID          = "applicationinsights"
+	AthenaEndpointID                       = "athena"
+	AuditManagerEndpointID                 = "auditmanager"
+	AutoScalingPlansEndpointID             = "autoscaling-plans"
+	BCMDataExportsEndpointID               = "bcm-data-exports"
+	BackupEndpointID                       = "backup"
+	BatchEndpointID                        = "batch"
+	BedrockAgentEndpointID                 = "bedrockagent"
+	BedrockEndpointID                      = "bedrock"
+	BudgetsEndpointID                      = "budgets"
+	ChimeEndpointID                        = "chime"
+	ChimeSDKMediaPipelinesEndpointID       = "media-pipelines-chime"
+	ChimeSDKVoiceEndpointID                = "voice-chime"
+	Cloud9EndpointID                       = "cloud9"
+	CloudFormationEndpointID               = "cloudformation"
+	CloudFrontEndpointID                   = "cloudfront"
+	CloudSearchEndpointID                  = "cloudsearch"
+	CloudWatchEndpointID                   = "monitoring"
+	CodeArtifactEndpointID                 = "codeartifact"
+	CodeGuruReviewerEndpointID             = "codeguru-reviewer"
+	CodeStarConnectionsEndpointID          = "codestar-connections"
+	CognitoIdentityEndpointID              = "cognito-identity"
+	ComprehendEndpointID                   = "comprehend"
+	ConfigServiceEndpointID                = "config"
+	DataExchangeEndpointID                 = "dataexchange"
+	DataPipelineEndpointID                 = "datapipeline"
+	DetectiveEndpointID                    = "api.detective"
+	DeviceFarmEndpointID                   = "devicefarm"
+	DevOpsGuruEndpointID                   = "devops-guru"
+	DirectConnectEndpointID                = "directconnect"
+	DLMEndpointID                          = "dlm"
+	ECREndpointID                          = "api.ecr"
+	ECSEndpointID                          = "ecs"
+	EFSEndpointID                          = "elasticfilesystem"
+	EKSEndpointID                          = "eks"
+	ELBEndpointID                          = "elasticloadbalancing"
+	EMREndpointID                          = "elasticmapreduce"
+	ElasticTranscoderEndpointID            = "elastictranscoder"
+	ElastiCacheEndpointID                  = "elasticache"
+	EventsEndpointID                       = "events"
+	EvidentlyEndpointID                    = "evidently"
+	FMSEndpointID                          = "fms"
+	FSxEndpointID                          = "fsx"
+	GameLiftEndpointID                     = "gamelift"
+	GrafanaEndpointID                      = "grafana"
+	GlueEndpointID                         = "glue"
+	IVSEndpointID                          = "ivs"
+	IVSChatEndpointID                      = "ivschat"
+	IdentityStoreEndpointID                = "identitystore"
+	Inspector2EndpointID                   = "inspector2"
+	KMSEndpointID                          = "kms"
+	KafkaConnectEndpointID                 = "kafkaconnect"
+	KendraEndpointID                       = "kendra"
+	KinesisVideoEndpointID                 = "kinesisvideo"
+	LambdaEndpointID                       = "lambda"
+	LexV2ModelsEndpointID                  = "models-v2-lex"
+	LocationEndpointID                     = "location"
+	M2EndpointID                           = "m2"
+	MQEndpointID                           = "mq"
+	MediaConvertEndpointID                 = "mediaconvert"
+	MediaLiveEndpointID                    = "medialive"
+	ObservabilityAccessManagerEndpointID   = "oam"
+	OpenSearchIngestionEndpointID          = "osis"
+	OpenSearchServerlessEndpointID         = "aoss"
+	PaymentCryptographyEndpointID          = "paymentcryptography"
+	PipesEndpointID                        = "pipes"
+	PollyEndpointID                        = "polly"
+	QLDBEndpointID                         = "qldb"
+	RUMEndpointID                          = "rum"
+	RedshiftEndpointID                     = "redshift"
+	RedshiftServerlessEndpointID           = "redshift-serverless"
+	RekognitionEndpointID                  = "rekognition"
+	ResourceExplorer2EndpointID            = "resource-explorer-2"
+	RolesAnywhereEndpointID                = "rolesanywhere"
+	Route53DomainsEndpointID               = "route53domains"
+	Route53RecoveryControlConfigEndpointID = "route53-recovery-control-config"
+	ServiceCatalogEndpointID               = "servicecatalog"
+	SSMEndpointID                          = "ssm"
+	SSMIncidentsEndpointID                 = "ssm-incidents"
+	SSOAdminEndpointID                     = "sso"
+	STSEndpointID                          = "sts"
+	SchedulerEndpointID                    = "scheduler"
+	SchemasEndpointID                      = "schemas"
+	ServiceCatalogAppRegistryEndpointID    = "servicecatalog-appregistry"
+	ServiceDiscoveryEndpointID             = "servicediscovery"
+	ServiceQuotasEndpointID                = "servicequotas"
+	SESEndpointID                          = "email"
+	ShieldEndpointID                       = "shield"
+	TranscribeEndpointID                   = "transcribe"
+	TransferEndpointID                     = "transfer"
+	VPCLatticeEndpointID                   = "vpc-lattice"
+	VerifiedPermissionsEndpointID          = "verifiedpermissions"
+	WAFEndpointID                          = "waf"
+	WAFRegionalEndpointID                  = "waf-regional"
+	DataZoneEndpointID                     = "datazone"
 )
 
 // These should move to aws-sdk-go-base.
@@ -253,6 +262,51 @@ func DNSSuffixForPartition(partition string) string {
 	default:
 		return "amazonaws.com"
 	}
+}
+
+func ServicePrincipalSuffixForPartition(partition string) string {
+	switch partition {
+	case ChinaPartitionID:
+		return "amazonaws.com.cn"
+	case ISOPartitionID:
+		return "c2s.ic.gov"
+	case ISOBPartitionID:
+		return "sc2s.sgov.gov"
+	default:
+		return "amazonaws.com"
+	}
+}
+
+// SPN region unique taken from
+// https://github.com/aws/aws-cdk/blob/main/packages/aws-cdk-lib/region-info/lib/default.ts
+func ServicePrincipalNameForPartition(service string, partition string) string {
+	if service != "" && partition != StandardPartitionID {
+		switch partition {
+		case ISOPartitionID:
+			switch service {
+			case "cloudhsm",
+				"config",
+				"logs",
+				"workspaces":
+				return DNSSuffixForPartition(partition)
+			}
+		case ISOBPartitionID:
+			switch service {
+			case "dms",
+				"logs":
+				return DNSSuffixForPartition(partition)
+			}
+		case ChinaPartitionID:
+			switch service {
+			case "codedeploy",
+				"elasticmapreduce",
+				"logs":
+				return DNSSuffixForPartition(partition)
+			}
+		}
+	}
+
+	return "amazonaws.com"
 }
 
 func IsOptInRegion(region string) bool {

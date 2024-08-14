@@ -10,9 +10,9 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ses"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/ses"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -85,7 +85,7 @@ func TestAccSESDomainIdentity_trailingPeriod(t *testing.T) {
 
 func testAccCheckDomainIdentityDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ses_domain_identity" {
@@ -94,17 +94,18 @@ func testAccCheckDomainIdentityDestroy(ctx context.Context) resource.TestCheckFu
 
 			domain := rs.Primary.ID
 			params := &ses.GetIdentityVerificationAttributesInput{
-				Identities: []*string{
-					aws.String(domain),
+				Identities: []string{
+					domain,
 				},
 			}
 
-			response, err := conn.GetIdentityVerificationAttributesWithContext(ctx, params)
+			response, err := conn.GetIdentityVerificationAttributes(ctx, params)
 			if err != nil {
 				return err
 			}
 
-			if response.VerificationAttributes[domain] != nil {
+			_, exists := response.VerificationAttributes[domain]
+			if exists {
 				return fmt.Errorf("SES Domain Identity %s still exists. Failing!", domain)
 			}
 		}
@@ -125,20 +126,21 @@ func testAccCheckDomainIdentityExists(ctx context.Context, n string) resource.Te
 		}
 
 		domain := rs.Primary.ID
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
 
 		params := &ses.GetIdentityVerificationAttributesInput{
-			Identities: []*string{
-				aws.String(domain),
+			Identities: []string{
+				domain,
 			},
 		}
 
-		response, err := conn.GetIdentityVerificationAttributesWithContext(ctx, params)
+		response, err := conn.GetIdentityVerificationAttributes(ctx, params)
 		if err != nil {
 			return err
 		}
 
-		if response.VerificationAttributes[domain] == nil {
+		_, exists := response.VerificationAttributes[domain]
+		if !exists {
 			return fmt.Errorf("SES Domain Identity %s not found in AWS", domain)
 		}
 
@@ -148,13 +150,13 @@ func testAccCheckDomainIdentityExists(ctx context.Context, n string) resource.Te
 
 func testAccCheckDomainIdentityDisappears(ctx context.Context, identity string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
 
 		input := &ses.DeleteIdentityInput{
 			Identity: aws.String(identity),
 		}
 
-		_, err := conn.DeleteIdentityWithContext(ctx, input)
+		_, err := conn.DeleteIdentity(ctx, input)
 
 		return err
 	}
@@ -182,11 +184,11 @@ func testAccCheckDomainIdentityARN(n string, domain string) resource.TestCheckFu
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
 
 	input := &ses.ListIdentitiesInput{}
 
-	_, err := conn.ListIdentitiesWithContext(ctx, input)
+	_, err := conn.ListIdentities(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
