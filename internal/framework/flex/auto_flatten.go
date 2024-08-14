@@ -536,33 +536,40 @@ func (flattener autoFlattener) interface_(ctx context.Context, vFrom reflect.Val
 
 	switch tTo := tTo.(type) {
 	case basetypes.StringTypable:
-		stringValue := types.StringNull()
 		//
 		// JSONStringer -> types.String-ish.
 		//
-		if doc, ok := vFrom.Interface().(smithyjson.JSONStringer); ok {
+		if vFrom.Type() == reflect.TypeFor[smithyjson.JSONStringer]() {
 			tflog.SubsystemInfo(ctx, subsystemName, "Source implements json.JSONStringer")
-			b, err := doc.MarshalSmithyDocument()
-			if err != nil {
-				// An error here would be an upstream error in the AWS SDK, because errors in json.Marshal
-				// are caused by conditions such as cyclic structures
-				// See https://pkg.go.dev/encoding/json#Marshal
-				tflog.SubsystemError(ctx, subsystemName, "Marshalling JSON document", map[string]any{
-					logAttrKeyError: err.Error(),
-				})
-				diags.Append(diagFlatteningMarshalSmithyDocument(reflect.TypeOf(doc), err))
+
+			stringValue := types.StringNull()
+
+			if vFrom.IsNil() {
+				tflog.SubsystemTrace(ctx, subsystemName, "Flattening null value")
+			} else {
+				doc := vFrom.Interface().(smithyjson.JSONStringer)
+				b, err := doc.MarshalSmithyDocument()
+				if err != nil {
+					// An error here would be an upstream error in the AWS SDK, because errors in json.Marshal
+					// are caused by conditions such as cyclic structures
+					// See https://pkg.go.dev/encoding/json#Marshal
+					tflog.SubsystemError(ctx, subsystemName, "Marshalling JSON document", map[string]any{
+						logAttrKeyError: err.Error(),
+					})
+					diags.Append(diagFlatteningMarshalSmithyDocument(reflect.TypeOf(doc), err))
+					return diags
+				}
+				stringValue = types.StringValue(string(b))
+			}
+			v, d := tTo.ValueFromString(ctx, stringValue)
+			diags.Append(d...)
+			if diags.HasError() {
 				return diags
 			}
-			stringValue = types.StringValue(string(b))
-		}
-		v, d := tTo.ValueFromString(ctx, stringValue)
-		diags.Append(d...)
-		if diags.HasError() {
+
+			vTo.Set(reflect.ValueOf(v))
 			return diags
 		}
-
-		vTo.Set(reflect.ValueOf(v))
-		return diags
 
 	case fwtypes.NestedObjectType:
 		//
