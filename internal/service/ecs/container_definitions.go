@@ -59,6 +59,19 @@ func (cd containerDefinitions) reduce(isAWSVPC bool) {
 		if def.Essential == nil {
 			cd[i].Essential = aws.Bool(true)
 		}
+		// Replace nil HealthCheck values with default values. For each property, the default value can be found
+		// in the doc comment for this property.
+		if hc := def.HealthCheck; hc != nil {
+			if hc.Interval == nil {
+				hc.Interval = aws.Int32(30)
+			}
+			if hc.Retries == nil {
+				hc.Retries = aws.Int32(3)
+			}
+			if hc.Timeout == nil {
+				hc.Timeout = aws.Int32(5)
+			}
+		}
 		for j, pm := range def.PortMappings {
 			if pm.Protocol == awstypes.TransportProtocolTcp {
 				cd[i].PortMappings[j].Protocol = ""
