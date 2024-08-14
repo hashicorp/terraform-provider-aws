@@ -9,13 +9,13 @@ import (
 	"os"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/pinpoint"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpoint/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfpinpoint "github.com/hashicorp/terraform-provider-aws/internal/service/pinpoint"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -27,7 +27,7 @@ import (
 
 func TestAccPinpointGCMChannel_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var channel pinpoint.GCMChannelResponse
+	var channel awstypes.GCMChannelResponse
 	resourceName := "aws_pinpoint_gcm_channel.test_gcm_channel"
 
 	if os.Getenv("GCM_API_KEY") == "" {
@@ -66,7 +66,7 @@ func TestAccPinpointGCMChannel_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckGCMChannelExists(ctx context.Context, n string, channel *pinpoint.GCMChannelResponse) resource.TestCheckFunc {
+func testAccCheckGCMChannelExists(ctx context.Context, n string, channel *awstypes.GCMChannelResponse) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -77,19 +77,41 @@ func testAccCheckGCMChannelExists(ctx context.Context, n string, channel *pinpoi
 			return fmt.Errorf("No Pinpoint GCM Channel with that application ID exists")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointClient(ctx)
 
-		// Check if the app exists
-		params := &pinpoint.GetGcmChannelInput{
-			ApplicationId: aws.String(rs.Primary.ID),
-		}
-		output, err := conn.GetGcmChannelWithContext(ctx, params)
+		output, err := tfpinpoint.FindGCMChannelByApplicationId(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		*channel = *output.GCMChannelResponse
+		*channel = *output
+
+		return nil
+	}
+}
+
+func testAccCheckGCMChannelDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointClient(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_pinpoint_gcm_channel" {
+				continue
+			}
+
+			_, err := tfpinpoint.FindGCMChannelByApplicationId(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Pinpoint GCM Channel %s still exists", rs.Primary.ID)
+		}
 
 		return nil
 	}
@@ -105,31 +127,4 @@ resource "aws_pinpoint_gcm_channel" "test_gcm_channel" {
   api_key        = "%s"
 }
 `, apiKey)
-}
-
-func testAccCheckGCMChannelDestroy(ctx context.Context) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn(ctx)
-
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_pinpoint_gcm_channel" {
-				continue
-			}
-
-			// Check if the event stream exists
-			params := &pinpoint.GetGcmChannelInput{
-				ApplicationId: aws.String(rs.Primary.ID),
-			}
-			_, err := conn.GetGcmChannelWithContext(ctx, params)
-			if err != nil {
-				if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
-					continue
-				}
-				return err
-			}
-			return fmt.Errorf("GCM Channel exists when it should be destroyed!")
-		}
-
-		return nil
-	}
 }

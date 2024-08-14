@@ -297,7 +297,7 @@ func TestAccMemoryDBACL_update_userNames(t *testing.T) {
 
 func testAccCheckACLDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_memorydb_acl" {
@@ -332,7 +332,7 @@ func testAccCheckACLExists(ctx context.Context, n string) resource.TestCheckFunc
 			return fmt.Errorf("No MemoryDB ACL ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBClient(ctx)
 
 		_, err := tfmemorydb.FindACLByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 

@@ -284,6 +284,7 @@ class MyConvertedCode extends TerraformStack {
   <li><code>redshiftdata</code> (or <code>redshiftdataapiservice</code>)</li>
   <li><code>redshiftserverless</code></li>
   <li><code>rekognition</code></li>
+  <li><code>resiliencehub</code></li>
   <li><code>resourceexplorer2</code></li>
   <li><code>resourcegroups</code></li>
   <li><code>resourcegroupstaggingapi</code> (or <code>resourcegroupstagging</code>)</li>
@@ -448,4 +449,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-227dc81e204e7a234b4a0663958241753fb418ed412942f24e32d7208467522e -->
+<!-- cache-key: cdktf-0.20.1 input-694af91cfede44c08b7bcfc43909d45a468dabcd574457f24471cea30221c722 -->

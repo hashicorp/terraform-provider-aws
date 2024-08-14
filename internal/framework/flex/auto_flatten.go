@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -22,6 +23,11 @@ import (
 )
 
 // Flatten = AWS --> TF
+
+// Flattener is implemented by types that customize their flattening
+type Flattener interface {
+	Flatten(ctx context.Context, v any) diag.Diagnostics
+}
 
 // Flatten "flattens" an AWS SDK for Go v2 API data structure into
 // a resource's "business logic" data structure, implemented using
@@ -33,11 +39,12 @@ func Flatten(ctx context.Context, apiObject, tfObject any, optFns ...AutoFlexOpt
 	var diags diag.Diagnostics
 	flattener := newAutoFlattener(optFns)
 
-	diags.Append(autoFlexConvert(ctx, apiObject, tfObject, flattener)...)
-	if diags.HasError() {
-		diags.AddError("AutoFlEx", fmt.Sprintf("Flatten[%T, %T]", apiObject, tfObject))
-		return diags
-	}
+	tflog.SubsystemInfo(ctx, subsystemName, "Flattening", map[string]any{
+		logAttrKeySourceType: fullTypeName(reflect.TypeOf(apiObject)),
+		logAttrKeyTargetType: fullTypeName(reflect.TypeOf(tfObject)),
+	})
+
+	diags.Append(autoFlattenConvert(ctx, apiObject, tfObject, flattener)...)
 
 	return diags
 }
@@ -66,15 +73,75 @@ func (flattener autoFlattener) getOptions() AutoFlexOptions {
 	return flattener.Options
 }
 
-// convert converts a single AWS API value to its Plugin Framework equivalent.
-func (flattener autoFlattener) convert(ctx context.Context, vFrom, vTo reflect.Value) diag.Diagnostics {
+// autoFlattenConvert converts `from` to `to` using the specified auto-flexer.
+func autoFlattenConvert(ctx context.Context, from, to any, flexer autoFlexer) diag.Diagnostics {
 	var diags diag.Diagnostics
+
+	sourcePath := path.Empty()
+	targetPath := path.Empty()
+
+	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourcePath, sourcePath.String())
+	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetPath, targetPath.String())
+
+	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourceType, fullTypeName(reflect.TypeOf(from)))
+	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetType, fullTypeName(reflect.TypeOf(to)))
+
+	if _, ok := to.(attr.Value); !ok {
+		vf := reflect.ValueOf(from)
+		if vf.Kind() == reflect.Invalid || vf.Kind() == reflect.Pointer && vf.IsNil() {
+			tflog.SubsystemError(ctx, subsystemName, "Source is nil")
+			diags.Append(diagFlatteningSourceIsNil(reflect.TypeOf(from)))
+			return diags
+		}
+	}
+
+	ctx, valFrom, valTo, d := autoFlexValues(ctx, from, to)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	// Top-level struct to struct conversion.
+	if valFrom.IsValid() && valTo.IsValid() {
+		if typFrom, typTo := valFrom.Type(), valTo.Type(); typFrom.Kind() == reflect.Struct && typTo.Kind() == reflect.Struct {
+			tflog.SubsystemInfo(ctx, subsystemName, "Converting")
+			diags.Append(autoFlexConvertStruct(ctx, sourcePath, from, targetPath, to, flexer)...)
+			return diags
+		}
+	}
+
+	valFrom = reflect.ValueOf(from)
+
+	// Anything else.
+	diags.Append(flexer.convert(ctx, sourcePath, valFrom, targetPath, valTo)...)
+	return diags
+}
+
+// convert converts a single AWS API value to its Plugin Framework equivalent.
+func (flattener autoFlattener) convert(ctx context.Context, sourcePath path.Path, vFrom reflect.Value, targetPath path.Path, vTo reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourcePath, sourcePath.String())
+	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetPath, targetPath.String())
+
+	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourceType, fullTypeName(valueType(vFrom)))
+	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetType, fullTypeName(valueType(vTo)))
 
 	valTo, ok := vTo.Interface().(attr.Value)
 	if !ok {
-		diags.AddError("AutoFlEx", fmt.Sprintf("does not implement attr.Value: %s", vTo.Kind()))
+		// Check for `nil` (i.e. Kind == Invalid) here, because we allow primitive types to be `nil`
+		if vFrom.Kind() == reflect.Invalid {
+			tflog.SubsystemError(ctx, subsystemName, "Source is nil")
+			diags.Append(diagFlatteningSourceIsNil(valueType(vFrom)))
+			return diags
+		}
+
+		tflog.SubsystemError(ctx, subsystemName, "Target does not implement attr.Value")
+		diags.Append(diagFlatteningTargetDoesNotImplementAttrValue(reflect.TypeOf(vTo.Interface())))
 		return diags
 	}
+
+	tflog.SubsystemInfo(ctx, subsystemName, "Converting")
 
 	tTo := valTo.Type(ctx)
 	switch k := vFrom.Kind(); k {
@@ -82,32 +149,40 @@ func (flattener autoFlattener) convert(ctx context.Context, vFrom, vTo reflect.V
 		diags.Append(flattener.bool(ctx, vFrom, false, tTo, vTo)...)
 		return diags
 
-	case reflect.Float32, reflect.Float64:
-		diags.Append(flattener.float(ctx, vFrom, false, tTo, vTo)...)
+	case reflect.Float64:
+		diags.Append(flattener.float64(ctx, vFrom, vFrom.Type(), false, tTo, vTo)...)
 		return diags
 
-	case reflect.Int32, reflect.Int64:
-		diags.Append(flattener.int(ctx, vFrom, false, tTo, vTo)...)
+	case reflect.Float32:
+		diags.Append(flattener.float32(ctx, vFrom, false, tTo, vTo)...)
+		return diags
+
+	case reflect.Int64:
+		diags.Append(flattener.int64(ctx, vFrom, vFrom.Type(), false, tTo, vTo)...)
+		return diags
+
+	case reflect.Int32:
+		diags.Append(flattener.int32(ctx, vFrom, false, tTo, vTo)...)
 		return diags
 
 	case reflect.String:
 		diags.Append(flattener.string(ctx, vFrom, false, tTo, vTo)...)
 		return diags
 
-	case reflect.Ptr:
-		diags.Append(flattener.ptr(ctx, vFrom, tTo, vTo)...)
+	case reflect.Pointer:
+		diags.Append(flattener.pointer(ctx, sourcePath, vFrom, targetPath, tTo, vTo)...)
 		return diags
 
 	case reflect.Slice:
-		diags.Append(flattener.slice(ctx, vFrom, tTo, vTo)...)
+		diags.Append(flattener.slice(ctx, sourcePath, vFrom, targetPath, tTo, vTo)...)
 		return diags
 
 	case reflect.Map:
-		diags.Append(flattener.map_(ctx, vFrom, tTo, vTo)...)
+		diags.Append(flattener.map_(ctx, sourcePath, vFrom, targetPath, tTo, vTo)...)
 		return diags
 
 	case reflect.Struct:
-		diags.Append(flattener.struct_(ctx, vFrom, false, tTo, vTo)...)
+		diags.Append(flattener.struct_(ctx, sourcePath, vFrom, false, targetPath, tTo, vTo)...)
 		return diags
 
 	case reflect.Interface:
@@ -115,7 +190,7 @@ func (flattener autoFlattener) convert(ctx context.Context, vFrom, vTo reflect.V
 		return diags
 	}
 
-	tflog.Info(ctx, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
 		"from": vFrom.Kind(),
 		"to":   tTo,
 	})
@@ -146,7 +221,7 @@ func (flattener autoFlattener) bool(ctx context.Context, vFrom reflect.Value, is
 		return diags
 	}
 
-	tflog.Info(ctx, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
 		"from": vFrom.Kind(),
 		"to":   tTo,
 	})
@@ -154,12 +229,15 @@ func (flattener autoFlattener) bool(ctx context.Context, vFrom reflect.Value, is
 	return diags
 }
 
-// float copies an AWS API float value to a compatible Plugin Framework value.
-func (flattener autoFlattener) float(ctx context.Context, vFrom reflect.Value, isNullFrom bool, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+// float64 copies an AWS API float64 value to a compatible Plugin Framework value.
+func (flattener autoFlattener) float64(ctx context.Context, vFrom reflect.Value, sourceType reflect.Type, isNullFrom bool, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch tTo := tTo.(type) {
 	case basetypes.Float64Typable:
+		//
+		// float32/float64 -> types.Float64.
+		//
 		float64Value := types.Float64Null()
 		if !isNullFrom {
 			switch from := vFrom.Interface().(type) {
@@ -176,14 +254,17 @@ func (flattener autoFlattener) float(ctx context.Context, vFrom reflect.Value, i
 			return diags
 		}
 
-		//
-		// float32/float64 -> types.Float64.
-		//
 		vTo.Set(reflect.ValueOf(v))
+		return diags
+
+	case basetypes.Float32Typable:
+		// Only returns an error when the target type is Float32Typable to prevent breaking existing resources
+		tflog.SubsystemError(ctx, subsystemName, "Flattening incompatible types")
+		diags.Append(diagFlatteningIncompatibleTypes(sourceType, vTo.Type()))
 		return diags
 	}
 
-	tflog.Info(ctx, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
 		"from": vFrom.Kind(),
 		"to":   tTo,
 	})
@@ -191,12 +272,75 @@ func (flattener autoFlattener) float(ctx context.Context, vFrom reflect.Value, i
 	return diags
 }
 
-// int copies an AWS API int value to a compatible Plugin Framework value.
-func (flattener autoFlattener) int(ctx context.Context, vFrom reflect.Value, isNullFrom bool, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+// float32 copies an AWS API float32 value to a compatible Plugin Framework value.
+func (flattener autoFlattener) float32(ctx context.Context, vFrom reflect.Value, isNullFrom bool, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	switch tTo := tTo.(type) {
+	case basetypes.Float64Typable:
+		//
+		// float32/float64 -> types.Float64.
+		//
+		float64Value := types.Float64Null()
+		if !isNullFrom {
+			switch from := vFrom.Interface().(type) {
+			// Avoid loss of equivalence.
+			case float32:
+				float64Value = types.Float64Value(decimal.NewFromFloat32(from).InexactFloat64())
+			default:
+				float64Value = types.Float64Value(vFrom.Float())
+			}
+		}
+		v, d := tTo.ValueFromFloat64(ctx, float64Value)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		vTo.Set(reflect.ValueOf(v))
+		return diags
+
+	case basetypes.Float32Typable:
+		//
+		// float32/float64 -> types.Float32.
+		//
+		float32Value := types.Float32Null()
+		if !isNullFrom {
+			switch from := vFrom.Interface().(type) {
+			// Avoid loss of equivalence.
+			case float32:
+				float32Value = types.Float32Value(float32(decimal.NewFromFloat32(from).InexactFloat64()))
+			default:
+				float32Value = types.Float32Value(float32(vFrom.Float()))
+			}
+		}
+		v, d := tTo.ValueFromFloat32(ctx, float32Value)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		vTo.Set(reflect.ValueOf(v))
+		return diags
+	}
+
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+		"from": vFrom.Kind(),
+		"to":   tTo,
+	})
+
+	return diags
+}
+
+// int64 copies an AWS API int64 value to a compatible Plugin Framework value.
+func (flattener autoFlattener) int64(ctx context.Context, vFrom reflect.Value, sourceType reflect.Type, isNullFrom bool, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch tTo := tTo.(type) {
 	case basetypes.Int64Typable:
+		//
+		// int32/int64 -> types.Int64.
+		//
 		int64Value := types.Int64Null()
 		if !isNullFrom {
 			int64Value = types.Int64Value(vFrom.Int())
@@ -207,14 +351,65 @@ func (flattener autoFlattener) int(ctx context.Context, vFrom reflect.Value, isN
 			return diags
 		}
 
+		vTo.Set(reflect.ValueOf(v))
+		return diags
+
+	case basetypes.Int32Typable:
+		// Only returns an error when the target type is Int32Typeable to prevent breaking existing resources
+		tflog.SubsystemError(ctx, subsystemName, "Flattening incompatible types")
+		diags.Append(diagFlatteningIncompatibleTypes(sourceType, vTo.Type()))
+		return diags
+	}
+
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+		"from": vFrom.Kind(),
+		"to":   tTo,
+	})
+
+	return diags
+}
+
+// int32 copies an AWS API int32 value to a compatible Plugin Framework value.
+func (flattener autoFlattener) int32(ctx context.Context, vFrom reflect.Value, isNullFrom bool, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	switch tTo := tTo.(type) {
+	case basetypes.Int64Typable:
 		//
 		// int32/int64 -> types.Int64.
 		//
+		int64Value := types.Int64Null()
+		if !isNullFrom {
+			int64Value = types.Int64Value(vFrom.Int())
+		}
+		v, d := tTo.ValueFromInt64(ctx, int64Value)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		vTo.Set(reflect.ValueOf(v))
+		return diags
+
+	case basetypes.Int32Typable:
+		//
+		// int32/int64 -> types.Int32.
+		//
+		int32Value := types.Int32Null()
+		if !isNullFrom {
+			int32Value = types.Int32Value(int32(vFrom.Int()))
+		}
+		v, d := tTo.ValueFromInt32(ctx, int32Value)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
 		vTo.Set(reflect.ValueOf(v))
 		return diags
 	}
 
-	tflog.Info(ctx, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
 		"from": vFrom.Kind(),
 		"to":   tTo,
 	})
@@ -248,7 +443,7 @@ func (flattener autoFlattener) string(ctx context.Context, vFrom reflect.Value, 
 		return diags
 	}
 
-	tflog.Info(ctx, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
 		"from": vFrom.Kind(),
 		"to":   tTo,
 	})
@@ -286,7 +481,7 @@ func (flattener autoFlattener) time(ctx context.Context, vFrom reflect.Value, is
 		return diags
 	}
 
-	tflog.Info(ctx, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
 		"from": vFrom.Kind(),
 		"to":   vTo,
 	})
@@ -294,8 +489,8 @@ func (flattener autoFlattener) time(ctx context.Context, vFrom reflect.Value, is
 	return diags
 }
 
-// ptr copies an AWS API pointer value to a compatible Plugin Framework value.
-func (flattener autoFlattener) ptr(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+// pointer copies an AWS API pointer value to a compatible Plugin Framework value.
+func (flattener autoFlattener) pointer(ctx context.Context, sourcePath path.Path, vFrom reflect.Value, targetPath path.Path, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch vElem, isNilFrom := vFrom.Elem(), vFrom.IsNil(); vFrom.Type().Elem().Kind() {
@@ -303,12 +498,20 @@ func (flattener autoFlattener) ptr(ctx context.Context, vFrom reflect.Value, tTo
 		diags.Append(flattener.bool(ctx, vElem, isNilFrom, tTo, vTo)...)
 		return diags
 
-	case reflect.Float32, reflect.Float64:
-		diags.Append(flattener.float(ctx, vElem, isNilFrom, tTo, vTo)...)
+	case reflect.Float64:
+		diags.Append(flattener.float64(ctx, vElem, vFrom.Type(), isNilFrom, tTo, vTo)...)
 		return diags
 
-	case reflect.Int32, reflect.Int64:
-		diags.Append(flattener.int(ctx, vElem, isNilFrom, tTo, vTo)...)
+	case reflect.Float32:
+		diags.Append(flattener.float32(ctx, vElem, isNilFrom, tTo, vTo)...)
+		return diags
+
+	case reflect.Int64:
+		diags.Append(flattener.int64(ctx, vElem, vFrom.Type(), isNilFrom, tTo, vTo)...)
+		return diags
+
+	case reflect.Int32:
+		diags.Append(flattener.int32(ctx, vElem, isNilFrom, tTo, vTo)...)
 		return diags
 
 	case reflect.String:
@@ -316,11 +519,11 @@ func (flattener autoFlattener) ptr(ctx context.Context, vFrom reflect.Value, tTo
 		return diags
 
 	case reflect.Struct:
-		diags.Append(flattener.struct_(ctx, vElem, isNilFrom, tTo, vTo)...)
+		diags.Append(flattener.struct_(ctx, sourcePath, vElem, isNilFrom, targetPath, tTo, vTo)...)
 		return diags
 	}
 
-	tflog.Info(ctx, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
 		"from": vFrom.Kind(),
 		"to":   tTo,
 	})
@@ -338,11 +541,16 @@ func (flattener autoFlattener) interface_(ctx context.Context, vFrom reflect.Val
 			//
 			// JSONStringer -> types.String-ish.
 			//
-			if vFrom.Type().Implements(reflect.TypeOf((*smithyjson.JSONStringer)(nil)).Elem()) {
-				doc := vFrom.Interface().(smithyjson.JSONStringer)
+			if doc, ok := vFrom.Interface().(smithyjson.JSONStringer); ok {
 				b, err := doc.MarshalSmithyDocument()
 				if err != nil {
-					diags.AddError("AutoFlEx", err.Error())
+					// An error here would be an upstream error in the AWS SDK, because errors in json.Marshal
+					// are caused by conditions such as cyclic structures
+					// See https://pkg.go.dev/encoding/json#Marshal
+					tflog.SubsystemError(ctx, subsystemName, "Marshalling JSON document", map[string]any{
+						logAttrKeyError: err.Error(),
+					})
+					diags.Append(diagFlatteningMarshalSmithyDocument(reflect.TypeOf(doc), err))
 					return diags
 				}
 				stringValue = types.StringValue(string(b))
@@ -356,9 +564,16 @@ func (flattener autoFlattener) interface_(ctx context.Context, vFrom reflect.Val
 
 		vTo.Set(reflect.ValueOf(v))
 		return diags
+
+	case fwtypes.NestedObjectType:
+		//
+		// interface -> types.List(OfObject) or types.Object.
+		//
+		diags.Append(flattener.interfaceToNestedObject(ctx, vFrom, vFrom.IsNil(), tTo, vTo)...)
+		return diags
 	}
 
-	tflog.Info(ctx, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
 		"from": vFrom.Kind(),
 		"to":   tTo,
 	})
@@ -367,14 +582,14 @@ func (flattener autoFlattener) interface_(ctx context.Context, vFrom reflect.Val
 }
 
 // struct_ copies an AWS API struct value to a compatible Plugin Framework value.
-func (flattener autoFlattener) struct_(ctx context.Context, vFrom reflect.Value, isNilFrom bool, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+func (flattener autoFlattener) struct_(ctx context.Context, sourcePath path.Path, vFrom reflect.Value, isNilFrom bool, targetPath path.Path, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	if tTo, ok := tTo.(fwtypes.NestedObjectType); ok {
 		//
 		// *struct -> types.List(OfObject) or types.Object.
 		//
-		diags.Append(flattener.structToNestedObject(ctx, vFrom, isNilFrom, tTo, vTo)...)
+		diags.Append(flattener.structToNestedObject(ctx, sourcePath, vFrom, isNilFrom, targetPath, tTo, vTo)...)
 		return diags
 	}
 
@@ -394,7 +609,7 @@ func (flattener autoFlattener) struct_(ctx context.Context, vFrom reflect.Value,
 }
 
 // slice copies an AWS API slice value to a compatible Plugin Framework value.
-func (flattener autoFlattener) slice(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+func (flattener autoFlattener) slice(ctx context.Context, sourcePath path.Path, vFrom reflect.Value, targetPath path.Path, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch tSliceElem := vFrom.Type().Elem(); tSliceElem.Kind() {
@@ -432,7 +647,7 @@ func (flattener autoFlattener) slice(ctx context.Context, vFrom reflect.Value, t
 			return diags
 		}
 
-	case reflect.Ptr:
+	case reflect.Pointer:
 		switch tSliceElem.Elem().Kind() {
 		case reflect.Int32:
 			switch tTo := tTo.(type) {
@@ -490,7 +705,7 @@ func (flattener autoFlattener) slice(ctx context.Context, vFrom reflect.Value, t
 				//
 				// []*struct -> types.List(OfObject).
 				//
-				diags.Append(flattener.sliceOfStructToNestedObjectCollection(ctx, vFrom, tTo, vTo)...)
+				diags.Append(flattener.sliceOfStructToNestedObjectCollection(ctx, sourcePath, vFrom, targetPath, tTo, vTo)...)
 				return diags
 			}
 		}
@@ -500,16 +715,21 @@ func (flattener autoFlattener) slice(ctx context.Context, vFrom reflect.Value, t
 			//
 			// []struct -> types.List(OfObject).
 			//
-			diags.Append(flattener.sliceOfStructToNestedObjectCollection(ctx, vFrom, tTo, vTo)...)
+			diags.Append(flattener.sliceOfStructToNestedObjectCollection(ctx, sourcePath, vFrom, targetPath, tTo, vTo)...)
 			return diags
 		}
 
 	case reflect.Interface:
-		// Smithy union type handling not yet implemented. Silently skip.
-		return diags
+		if tTo, ok := tTo.(fwtypes.NestedObjectCollectionType); ok {
+			//
+			// []interface -> types.List(OfObject).
+			//
+			diags.Append(flattener.sliceOfStructToNestedObjectCollection(ctx, sourcePath, vFrom, targetPath, tTo, vTo)...)
+			return diags
+		}
 	}
 
-	tflog.Info(ctx, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
 		"from": vFrom.Kind(),
 		"to":   tTo,
 	})
@@ -518,7 +738,7 @@ func (flattener autoFlattener) slice(ctx context.Context, vFrom reflect.Value, t
 }
 
 // map_ copies an AWS API map value to a compatible Plugin Framework value.
-func (flattener autoFlattener) map_(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+func (flattener autoFlattener) map_(ctx context.Context, sourcePath path.Path, vFrom reflect.Value, targetPath path.Path, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch tMapKey := vFrom.Type().Key(); tMapKey.Kind() {
@@ -531,7 +751,7 @@ func (flattener autoFlattener) map_(ctx context.Context, vFrom reflect.Value, tT
 				// map[string]struct -> fwtypes.SetNestedObjectOf[Object]
 				//
 				if tTo, ok := tTo.(fwtypes.NestedObjectCollectionType); ok {
-					diags.Append(flattener.structMapToObjectList(ctx, vFrom, tTo, vTo)...)
+					diags.Append(flattener.structMapToObjectList(ctx, sourcePath, vFrom, targetPath, tTo, vTo)...)
 					return diags
 				}
 
@@ -540,7 +760,7 @@ func (flattener autoFlattener) map_(ctx context.Context, vFrom reflect.Value, tT
 				// map[string]struct -> fwtypes.ListNestedObjectOf[Object]
 				//
 				if tTo, ok := tTo.(fwtypes.NestedObjectCollectionType); ok {
-					diags.Append(flattener.structMapToObjectList(ctx, vFrom, tTo, vTo)...)
+					diags.Append(flattener.structMapToObjectList(ctx, sourcePath, vFrom, targetPath, tTo, vTo)...)
 					return diags
 				}
 			}
@@ -552,6 +772,7 @@ func (flattener autoFlattener) map_(ctx context.Context, vFrom reflect.Value, tT
 				// map[string]string -> types.Map(OfString).
 				//
 				if vFrom.IsNil() {
+					tflog.SubsystemTrace(ctx, subsystemName, "Flattening with MapNull")
 					to, d := tTo.ValueFromMap(ctx, types.MapNull(types.StringType))
 					diags.Append(d...)
 					if diags.HasError() {
@@ -563,6 +784,9 @@ func (flattener autoFlattener) map_(ctx context.Context, vFrom reflect.Value, tT
 				}
 
 				from := vFrom.Interface().(map[string]string)
+				tflog.SubsystemTrace(ctx, subsystemName, "Flattening with MapValue", map[string]any{
+					logAttrKeySourceSize: len(from),
+				})
 				elements := make(map[string]attr.Value, len(from))
 				for k, v := range from {
 					elements[k] = types.StringValue(v)
@@ -590,6 +814,7 @@ func (flattener autoFlattener) map_(ctx context.Context, vFrom reflect.Value, tT
 				// map[string]map[string]string -> types.Map(OfMap[types.String]).
 				//
 				if vFrom.IsNil() {
+					tflog.SubsystemTrace(ctx, subsystemName, "Flattening with MapNull")
 					to, d := tTo.ValueFromMap(ctx, types.MapNull(types.MapType{ElemType: types.StringType}))
 					diags.Append(d...)
 					if diags.HasError() {
@@ -603,12 +828,22 @@ func (flattener autoFlattener) map_(ctx context.Context, vFrom reflect.Value, tT
 				switch tMapElem.Elem().Kind() {
 				case reflect.String:
 					from := vFrom.Interface().(map[string]map[string]string)
+					tflog.SubsystemTrace(ctx, subsystemName, "Flattening map", map[string]any{
+						logAttrKeySourceSize: len(from),
+					})
 					elements := make(map[string]attr.Value, len(from))
 					for k, v := range from {
 						innerElements := make(map[string]attr.Value, len(v))
 						for ik, iv := range v {
 							innerElements[ik] = types.StringValue(iv)
 						}
+						tflog.SubsystemTrace(ctx, subsystemName, "Flattening with NewMapValueOf", map[string]any{
+							logAttrKeySourcePath: sourcePath.AtMapKey(k).String(),
+							logAttrKeySourceType: fullTypeName(reflect.TypeOf(v)),
+							logAttrKeySourceSize: len(v),
+							logAttrKeyTargetPath: targetPath.AtMapKey(k).String(),
+							logAttrKeyTargetType: fullTypeName(reflect.TypeOf(innerElements)),
+						})
 						innerMap, d := fwtypes.NewMapValueOf[types.String](ctx, innerElements)
 						diags.Append(d...)
 						if diags.HasError() {
@@ -632,14 +867,24 @@ func (flattener autoFlattener) map_(ctx context.Context, vFrom reflect.Value, tT
 					vTo.Set(reflect.ValueOf(to))
 					return diags
 
-				case reflect.Ptr:
+				case reflect.Pointer:
 					from := vFrom.Interface().(map[string]map[string]*string)
+					tflog.SubsystemTrace(ctx, subsystemName, "Flattening map", map[string]any{
+						logAttrKeySourceSize: len(from),
+					})
 					elements := make(map[string]attr.Value, len(from))
 					for k, v := range from {
 						innerElements := make(map[string]attr.Value, len(v))
 						for ik, iv := range v {
 							innerElements[ik] = types.StringValue(*iv)
 						}
+						tflog.SubsystemTrace(ctx, subsystemName, "Flattening with NewMapValueOf", map[string]any{
+							logAttrKeySourcePath: sourcePath.AtMapKey(k).String(),
+							logAttrKeySourceType: fullTypeName(reflect.TypeOf(v)),
+							logAttrKeySourceSize: len(v),
+							logAttrKeyTargetPath: targetPath.AtMapKey(k).String(),
+							logAttrKeyTargetType: fullTypeName(reflect.TypeOf(innerElements)),
+						})
 						innerMap, d := fwtypes.NewMapValueOf[types.String](ctx, innerElements)
 						diags.Append(d...)
 						if diags.HasError() {
@@ -665,11 +910,11 @@ func (flattener autoFlattener) map_(ctx context.Context, vFrom reflect.Value, tT
 				}
 			}
 
-		case reflect.Ptr:
+		case reflect.Pointer:
 			switch tMapElem.Elem().Kind() {
 			case reflect.Struct:
 				if tTo, ok := tTo.(fwtypes.NestedObjectCollectionType); ok {
-					diags.Append(flattener.structMapToObjectList(ctx, vFrom, tTo, vTo)...)
+					diags.Append(flattener.structMapToObjectList(ctx, sourcePath, vFrom, targetPath, tTo, vTo)...)
 					return diags
 				}
 
@@ -680,7 +925,7 @@ func (flattener autoFlattener) map_(ctx context.Context, vFrom reflect.Value, tT
 					// map[string]struct -> fwtypes.ListNestedObjectOf[Object]
 					//
 					if tTo, ok := tTo.(fwtypes.NestedObjectCollectionType); ok {
-						diags.Append(flattener.structMapToObjectList(ctx, vFrom, tTo, vTo)...)
+						diags.Append(flattener.structMapToObjectList(ctx, sourcePath, vFrom, targetPath, tTo, vTo)...)
 						return diags
 					}
 
@@ -689,6 +934,7 @@ func (flattener autoFlattener) map_(ctx context.Context, vFrom reflect.Value, tT
 					// map[string]*string -> types.Map(OfString).
 					//
 					if vFrom.IsNil() {
+						tflog.SubsystemTrace(ctx, subsystemName, "Flattening with MapNull")
 						to, d := tTo.ValueFromMap(ctx, types.MapNull(types.StringType))
 						diags.Append(d...)
 						if diags.HasError() {
@@ -700,6 +946,9 @@ func (flattener autoFlattener) map_(ctx context.Context, vFrom reflect.Value, tT
 					}
 
 					from := vFrom.Interface().(map[string]*string)
+					tflog.SubsystemTrace(ctx, subsystemName, "Flattening with MapValue", map[string]any{
+						logAttrKeySourceSize: len(from),
+					})
 					elements := make(map[string]attr.Value, len(from))
 					for k, v := range from {
 						elements[k] = types.StringPointerValue(v)
@@ -723,7 +972,7 @@ func (flattener autoFlattener) map_(ctx context.Context, vFrom reflect.Value, tT
 		}
 	}
 
-	tflog.Info(ctx, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
 		"from": vFrom.Kind(),
 		"to":   tTo,
 	})
@@ -731,11 +980,12 @@ func (flattener autoFlattener) map_(ctx context.Context, vFrom reflect.Value, tT
 	return diags
 }
 
-func (flattener autoFlattener) structMapToObjectList(ctx context.Context, vFrom reflect.Value, tTo fwtypes.NestedObjectCollectionType, vTo reflect.Value) diag.Diagnostics {
+func (flattener autoFlattener) structMapToObjectList(ctx context.Context, sourcePath path.Path, vFrom reflect.Value, targetPath path.Path, tTo fwtypes.NestedObjectCollectionType, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	if vFrom.IsNil() {
 		val, d := tTo.NullValue(ctx)
+		tflog.SubsystemTrace(ctx, subsystemName, "Flattening null value")
 		diags.Append(d...)
 		if diags.HasError() {
 			return diags
@@ -756,6 +1006,10 @@ func (flattener autoFlattener) structMapToObjectList(ctx context.Context, vFrom 
 
 	i := 0
 	for _, key := range vFrom.MapKeys() {
+		sourcePath := sourcePath.AtMapKey(key.Interface().(string))
+		targetPath := targetPath.AtListIndex(i)
+		ctx := tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourcePath, sourcePath.String())
+		ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetPath, targetPath.String())
 		target, d := tTo.NewObjectPtr(ctx)
 		diags.Append(d...)
 		if diags.HasError() {
@@ -763,17 +1017,21 @@ func (flattener autoFlattener) structMapToObjectList(ctx context.Context, vFrom 
 		}
 
 		fromInterface := vFrom.MapIndex(key).Interface()
-		if vFrom.MapIndex(key).Kind() == reflect.Ptr {
+		if vFrom.MapIndex(key).Kind() == reflect.Pointer {
 			fromInterface = vFrom.MapIndex(key).Elem().Interface()
 		}
 
-		diags.Append(autoFlexConvertStruct(ctx, fromInterface, target, flattener)...)
+		ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourceType, fullTypeName(reflect.TypeOf(fromInterface)))
+
+		diags.Append(setMapBlockKey(ctx, target, key)...)
 		if diags.HasError() {
 			return diags
 		}
 
-		d = blockKeyMapSet(target, key)
-		diags.Append(d...)
+		diags.Append(autoFlexConvertStruct(ctx, sourcePath, fromInterface, targetPath, target, flattener)...)
+		if diags.HasError() {
+			return diags
+		}
 
 		t.Index(i).Set(reflect.ValueOf(target))
 		i++
@@ -791,7 +1049,7 @@ func (flattener autoFlattener) structMapToObjectList(ctx context.Context, vFrom 
 }
 
 // structToNestedObject copies an AWS API struct value to a compatible Plugin Framework NestedObjectValue value.
-func (flattener autoFlattener) structToNestedObject(ctx context.Context, vFrom reflect.Value, isNullFrom bool, tTo fwtypes.NestedObjectType, vTo reflect.Value) diag.Diagnostics {
+func (flattener autoFlattener) structToNestedObject(ctx context.Context, sourcePath path.Path, vFrom reflect.Value, isNullFrom bool, targetPath path.Path, tTo fwtypes.NestedObjectType, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	if isNullFrom {
@@ -812,13 +1070,76 @@ func (flattener autoFlattener) structToNestedObject(ctx context.Context, vFrom r
 		return diags
 	}
 
-	diags.Append(autoFlexConvertStruct(ctx, vFrom.Interface(), to, flattener)...)
+	diags.Append(autoFlexConvertStruct(ctx, sourcePath, vFrom.Interface(), targetPath, to, flattener)...)
 	if diags.HasError() {
 		return diags
 	}
 
 	// Set the target structure as a mapped Object.
 	val, d := tTo.ValueFromObjectPtr(ctx, to)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	vTo.Set(reflect.ValueOf(val))
+	return diags
+}
+
+// interfaceToNestedObject copies an AWS API interface value to a compatible Plugin Framework NestedObjectValue value.
+func (flattener autoFlattener) interfaceToNestedObject(ctx context.Context, vFrom reflect.Value, isNullFrom bool, tTo fwtypes.NestedObjectType, vTo reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if isNullFrom {
+		val, d := tTo.NullValue(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		vTo.Set(reflect.ValueOf(val))
+		return diags
+	}
+
+	to, d := tTo.NewObjectPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	toFlattener, ok := to.(Flattener)
+	if !ok {
+		val, d := tTo.NullValue(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		vTo.Set(reflect.ValueOf(val))
+
+		tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]any{
+			"from": vFrom.Kind(),
+			"to":   tTo,
+		})
+		return diags
+	}
+
+	tflog.SubsystemInfo(ctx, subsystemName, "Source implements flex.Flattener")
+
+	// Dereference interface
+	vFrom = vFrom.Elem()
+	// If it's a pointer, dereference again to get the underlying type
+	if vFrom.Kind() == reflect.Pointer {
+		vFrom = vFrom.Elem()
+	}
+
+	diags.Append(flattenFlattener(ctx, vFrom, toFlattener)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	// Set the target structure as a mapped Object.
+	val, d := tTo.ValueFromObjectPtr(ctx, toFlattener)
 	diags.Append(d...)
 	if diags.HasError() {
 		return diags
@@ -899,7 +1220,7 @@ func (flattener autoFlattener) sliceOfPrimitiveToSet(ctx context.Context, vFrom 
 }
 
 // sliceOfStructToNestedObjectCollection copies an AWS API []struct value to a compatible Plugin Framework NestedObjectCollectionValue value.
-func (flattener autoFlattener) sliceOfStructToNestedObjectCollection(ctx context.Context, vFrom reflect.Value, tTo fwtypes.NestedObjectCollectionType, vTo reflect.Value) diag.Diagnostics {
+func (flattener autoFlattener) sliceOfStructToNestedObjectCollection(ctx context.Context, sourcePath path.Path, vFrom reflect.Value, targetPath path.Path, tTo fwtypes.NestedObjectCollectionType, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	if vFrom.IsNil() {
@@ -923,13 +1244,17 @@ func (flattener autoFlattener) sliceOfStructToNestedObjectCollection(ctx context
 
 	t := reflect.ValueOf(to)
 	for i := 0; i < n; i++ {
+		sourcePath := sourcePath.AtListIndex(i)
+		targetPath := targetPath.AtListIndex(i)
+		ctx := tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourcePath, sourcePath.String())
+		ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetPath, targetPath.String())
 		target, d := tTo.NewObjectPtr(ctx)
 		diags.Append(d...)
 		if diags.HasError() {
 			return diags
 		}
 
-		diags.Append(autoFlexConvertStruct(ctx, vFrom.Index(i).Interface(), target, flattener)...)
+		diags.Append(autoFlexConvertStruct(ctx, sourcePath, vFrom.Index(i).Interface(), targetPath, target, flattener)...)
 		if diags.HasError() {
 			return diags
 		}
@@ -948,14 +1273,16 @@ func (flattener autoFlattener) sliceOfStructToNestedObjectCollection(ctx context
 	return diags
 }
 
-// blockKeyMapSet takes a struct and assigns the value of the `key`
-func blockKeyMapSet(to any, key reflect.Value) diag.Diagnostics {
+// setMapBlockKey takes a struct and assigns the value of the `key`
+func setMapBlockKey(ctx context.Context, to any, key reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	valTo := reflect.ValueOf(to)
-	if kind := valTo.Kind(); kind == reflect.Ptr {
+	if kind := valTo.Kind(); kind == reflect.Pointer {
 		valTo = valTo.Elem()
 	}
+
+	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetType, fullTypeName(valueType(valTo)))
 
 	if valTo.Kind() != reflect.Struct {
 		diags.AddError("AutoFlEx", fmt.Sprintf("wrong type (%T), expected struct", valTo))
@@ -968,7 +1295,7 @@ func blockKeyMapSet(to any, key reflect.Value) diag.Diagnostics {
 			continue // Skip unexported fields.
 		}
 
-		if field.Name != MapBlockKey {
+		if field.Name != mapBlockKeyFieldName {
 			continue
 		}
 
@@ -990,7 +1317,8 @@ func blockKeyMapSet(to any, key reflect.Value) diag.Diagnostics {
 		return diags
 	}
 
-	diags.AddError("AutoFlEx", fmt.Sprintf("unable to find map block key (%s)", MapBlockKey))
+	tflog.SubsystemError(ctx, subsystemName, "Target has no map block key")
+	diags.Append(diagFlatteningNoMapBlockKey(valTo.Type()))
 
 	return diags
 }
@@ -1019,4 +1347,118 @@ func newStringValueFromReflectPointerValue(v reflect.Value) attr.Value {
 	}
 
 	return newStringValueFromReflectValue(v.Elem())
+}
+
+func flattenFlattener(ctx context.Context, fromVal reflect.Value, toFlattener Flattener) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	valTo := reflect.ValueOf(toFlattener)
+
+	diags.Append(flattenPrePopulate(ctx, valTo)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	from := fromVal.Interface()
+
+	diags.Append(toFlattener.Flatten(ctx, from)...)
+
+	return diags
+}
+
+func flattenPrePopulate(ctx context.Context, toVal reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if toVal.Kind() == reflect.Pointer {
+		toVal = toVal.Elem()
+	}
+
+	typeTo := toVal.Type()
+	for i := 0; i < typeTo.NumField(); i++ {
+		field := typeTo.Field(i)
+		if !field.IsExported() {
+			continue // Skip unexported fields.
+		}
+
+		fieldVal := toVal.Field(i)
+		if !fieldVal.CanSet() {
+			diags.AddError(
+				"Incompatible Types",
+				"An unexpected error occurred while flattening configuration. "+
+					"This is always an error in the provider. "+
+					"Please report the following to the provider developer:\n\n"+
+					fmt.Sprintf("Field %q in %q is not settable.", field.Name, fullTypeName(fieldVal.Type())),
+			)
+		}
+
+		fieldTo, ok := fieldVal.Interface().(attr.Value)
+		if !ok {
+			continue // Skip non-attr.Type fields.
+		}
+		tTo := fieldTo.Type(ctx)
+		switch tTo := tTo.(type) {
+		// The zero values of primitive types are Null.
+
+		// Aggregate types.
+		case fwtypes.NestedObjectType:
+			v, d := tTo.NullValue(ctx)
+			diags.Append(d...)
+			if diags.HasError() {
+				return diags
+			}
+			fieldVal.Set(reflect.ValueOf(v))
+		}
+	}
+
+	return diags
+}
+
+func diagFlatteningSourceIsNil(sourceType reflect.Type) diag.ErrorDiagnostic {
+	return diag.NewErrorDiagnostic(
+		"Incompatible Types",
+		"An unexpected error occurred while flattening configuration. "+
+			"This is always an error in the provider. "+
+			"Please report the following to the provider developer:\n\n"+
+			fmt.Sprintf("Source of type %q is nil.", fullTypeName(sourceType)),
+	)
+}
+
+func diagFlatteningTargetDoesNotImplementAttrValue(targetType reflect.Type) diag.ErrorDiagnostic {
+	return diag.NewErrorDiagnostic(
+		"Incompatible Types",
+		"An unexpected error occurred while flattening configuration. "+
+			"This is always an error in the provider. "+
+			"Please report the following to the provider developer:\n\n"+
+			fmt.Sprintf("Target type %q does not implement attr.Value", fullTypeName(targetType)),
+	)
+}
+
+func diagFlatteningNoMapBlockKey(sourceType reflect.Type) diag.ErrorDiagnostic {
+	return diag.NewErrorDiagnostic(
+		"Incompatible Types",
+		"An unexpected error occurred while flattening configuration. "+
+			"This is always an error in the provider. "+
+			"Please report the following to the provider developer:\n\n"+
+			fmt.Sprintf("Target type %q does not contain field %q", fullTypeName(sourceType), mapBlockKeyFieldName),
+	)
+}
+
+func diagFlatteningMarshalSmithyDocument(sourceType reflect.Type, err error) diag.ErrorDiagnostic {
+	return diag.NewErrorDiagnostic(
+		"Incompatible Types",
+		"An unexpected error occurred while flattening configuration. "+
+			"This is always an error in the provider. "+
+			"Please report the following to the provider developer:\n\n"+
+			fmt.Sprintf("Marshalling JSON document of type %q failed: %s", fullTypeName(sourceType), err.Error()),
+	)
+}
+
+func diagFlatteningIncompatibleTypes(sourceType, targetType reflect.Type) diag.ErrorDiagnostic {
+	return diag.NewErrorDiagnostic(
+		"Incompatible Types",
+		"An unexpected error occurred while flattening configuration. "+
+			"This is always an error in the provider. "+
+			"Please report the following to the provider developer:\n\n"+
+			fmt.Sprintf("Source type %q cannot be flattened to target type %q.", fullTypeName(sourceType), fullTypeName(targetType)),
+	)
 }

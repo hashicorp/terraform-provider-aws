@@ -488,6 +488,11 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		inputC.ElasticIp = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk(names.AttrEncrypted); ok {
+		inputC.Encrypted = aws.Bool(v.(bool))
+		inputR.Encrypted = aws.Bool(v.(bool))
+	}
+
 	if v, ok := d.GetOk("enhanced_vpc_routing"); ok {
 		inputR.EnhancedVpcRouting = aws.Bool(v.(bool))
 		inputC.EnhancedVpcRouting = aws.Bool(v.(bool))
@@ -580,10 +585,6 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if _, ok := d.GetOk("master_username"); !ok {
 			return sdkdiag.AppendErrorf(diags, `provider.aws: aws_redshift_cluster: %s: "master_username": required field is not set`, d.Get(names.AttrClusterIdentifier).(string))
-		}
-
-		if v, ok := d.GetOk(names.AttrEncrypted); ok {
-			inputC.Encrypted = aws.Bool(v.(bool))
 		}
 
 		if v := d.Get("number_of_nodes").(int); v > 1 {
