@@ -542,6 +542,7 @@ func (flattener autoFlattener) interface_(ctx context.Context, vFrom reflect.Val
 			// JSONStringer -> types.String-ish.
 			//
 			if doc, ok := vFrom.Interface().(smithyjson.JSONStringer); ok {
+				tflog.SubsystemInfo(ctx, subsystemName, "Source implements json.JSONStringer")
 				b, err := doc.MarshalSmithyDocument()
 				if err != nil {
 					// An error here would be an upstream error in the AWS SDK, because errors in json.Marshal

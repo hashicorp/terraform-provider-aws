@@ -2890,7 +2890,7 @@ func TestFlattenOptions(t *testing.T) {
 	runAutoFlattenTestCases(t, testCases)
 }
 
-func TestFlattenInterfaceToString(t *testing.T) {
+func TestFlattenInterfaceToStringTypable(t *testing.T) {
 	t.Parallel()
 
 	testCases := autoFlexTestCases{
@@ -2913,6 +2913,8 @@ func TestFlattenInterfaceToString(t *testing.T) {
 				infoConverting(reflect.TypeFor[awsJSONStringer](), reflect.TypeFor[*tfSingleStringField]()),
 				traceMatchedFields("Field1", reflect.TypeFor[awsJSONStringer](), "Field1", reflect.TypeFor[*tfSingleStringField]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[smithyjson.JSONStringer](), "Field1", reflect.TypeFor[types.String]()),
+				// infoSourceImplementsJSONStringer("Field1", reflect.TypeFor[testJSONDocument](), "Field1", reflect.TypeFor[types.String]()),
+				infoSourceImplementsJSONStringer("Field1", reflect.TypeFor[smithyjson.JSONStringer](), "Field1", reflect.TypeFor[types.String]()), // TODO: fix source type
 			},
 		},
 		"null json interface Source string Target": {
@@ -2950,6 +2952,8 @@ func TestFlattenInterfaceToString(t *testing.T) {
 				infoConverting(reflect.TypeFor[awsJSONStringer](), reflect.TypeFor[*tfJSONStringer]()),
 				traceMatchedFields("Field1", reflect.TypeFor[awsJSONStringer](), "Field1", reflect.TypeFor[*tfJSONStringer]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[smithyjson.JSONStringer](), "Field1", reflect.TypeFor[fwtypes.SmithyJSON[smithyjson.JSONStringer]]()),
+				// infoSourceImplementsJSONStringer("Field1", reflect.TypeFor[testJSONDocument](), "Field1", reflect.TypeFor[fwtypes.SmithyJSON[smithyjson.JSONStringer]]()),
+				infoSourceImplementsJSONStringer("Field1", reflect.TypeFor[smithyjson.JSONStringer](), "Field1", reflect.TypeFor[fwtypes.SmithyJSON[smithyjson.JSONStringer]]()), // TODO: fix source type
 			},
 		},
 		"null json interface Source JSONValue Target": {
@@ -2981,6 +2985,8 @@ func TestFlattenInterfaceToString(t *testing.T) {
 				infoConverting(reflect.TypeFor[awsJSONStringer](), reflect.TypeFor[*tfSingleStringField]()),
 				traceMatchedFields("Field1", reflect.TypeFor[awsJSONStringer](), "Field1", reflect.TypeFor[*tfSingleStringField]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[smithyjson.JSONStringer](), "Field1", reflect.TypeFor[types.String]()),
+				// infoSourceImplementsJSONStringer("Field1", reflect.TypeFor[testJSONDocument](), "Field1", reflect.TypeFor[types.String]()),
+				infoSourceImplementsJSONStringer("Field1", reflect.TypeFor[smithyjson.JSONStringer](), "Field1", reflect.TypeFor[types.String]()), // TODO: fix source type
 				errorMarshallingJSONDocument("Field1", reflect.TypeFor[smithyjson.JSONStringer](), "Field1", reflect.TypeFor[types.String](), errMarshallSmithyDocument),
 			},
 		},

@@ -385,6 +385,18 @@ func infoSourceImplementsFlexFlattener(sourcePath string, sourceType reflect.Typ
 	}
 }
 
+func infoSourceImplementsJSONStringer(sourcePath string, sourceType reflect.Type, targetPath string, targetType reflect.Type) map[string]any {
+	return map[string]any{
+		"@level":             hclog.Info.String(),
+		"@module":            logModule,
+		"@message":           "Source implements json.JSONStringer",
+		logAttrKeySourcePath: sourcePath,
+		logAttrKeySourceType: fullTypeName(sourceType),
+		logAttrKeyTargetPath: targetPath,
+		logAttrKeyTargetType: fullTypeName(targetType),
+	}
+}
+
 func errorSourceDoesNotImplementAttrValue(sourcePath string, sourceType reflect.Type, targetPath string, targetType reflect.Type) map[string]any {
 	return map[string]any{
 		"@level":             hclog.Error.String(),
