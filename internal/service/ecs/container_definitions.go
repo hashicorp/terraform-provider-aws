@@ -171,6 +171,10 @@ func (cd containerDefinitions) compactArrays() {
 }
 
 func compactArray[S ~[]E, E any](s S) S {
+	if len(s) == 0 {
+		return s
+	}
+
 	return tfslices.Filter(s, func(e E) bool {
 		return !itypes.IsZero(&e)
 	})
@@ -205,6 +209,8 @@ func expandContainerDefinitions(tfString string) ([]awstypes.ContainerDefinition
 			return nil, fmt.Errorf("invalid container definition supplied at index (%d)", i)
 		}
 	}
+
+	containerDefinitions(apiObjects).compactArrays()
 
 	return apiObjects, nil
 }
