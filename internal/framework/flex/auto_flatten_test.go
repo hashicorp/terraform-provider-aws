@@ -2996,6 +2996,42 @@ func TestFlattenInterfaceToStringTypable(t *testing.T) {
 				errorMarshallingJSONDocument("Field1", reflect.TypeFor[smithyjson.JSONStringer](), "Field1", reflect.TypeFor[types.String](), errMarshallSmithyDocument),
 			},
 		},
+
+		"non-json interface Source string Target": {
+			Source: awsInterfaceSingle{
+				Field1: &awsInterfaceInterfaceImpl{
+					AWSField: "value1",
+				},
+			},
+			Target: &tfSingleStringField{},
+			WantTarget: &tfSingleStringField{
+				Field1: types.StringNull(),
+			},
+			expectedLogLines: []map[string]any{
+				infoFlattening(reflect.TypeFor[awsInterfaceSingle](), reflect.TypeFor[*tfSingleStringField]()),
+				infoConverting(reflect.TypeFor[awsInterfaceSingle](), reflect.TypeFor[*tfSingleStringField]()),
+				traceMatchedFields("Field1", reflect.TypeFor[awsInterfaceSingle](), "Field1", reflect.TypeFor[*tfSingleStringField]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[awsInterfaceInterface](), "Field1", reflect.TypeFor[types.String]()),
+				errorFlatteningIncompatibleTypes("Field1", reflect.TypeFor[awsInterfaceInterface](), "Field1", reflect.TypeFor[types.String]()),
+			},
+		},
+
+		"null non-json interface Source string Target": {
+			Source: awsInterfaceSingle{
+				Field1: nil,
+			},
+			Target: &tfSingleStringField{},
+			WantTarget: &tfSingleStringField{
+				Field1: types.StringNull(),
+			},
+			expectedLogLines: []map[string]any{
+				infoFlattening(reflect.TypeFor[awsInterfaceSingle](), reflect.TypeFor[*tfSingleStringField]()),
+				infoConverting(reflect.TypeFor[awsInterfaceSingle](), reflect.TypeFor[*tfSingleStringField]()),
+				traceMatchedFields("Field1", reflect.TypeFor[awsInterfaceSingle](), "Field1", reflect.TypeFor[*tfSingleStringField]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[awsInterfaceInterface](), "Field1", reflect.TypeFor[types.String]()),
+				errorFlatteningIncompatibleTypes("Field1", reflect.TypeFor[awsInterfaceInterface](), "Field1", reflect.TypeFor[types.String]()),
+			},
+		},
 	}
 
 	runAutoFlattenTestCases(t, testCases)

@@ -579,10 +579,7 @@ func (flattener autoFlattener) interface_(ctx context.Context, vFrom reflect.Val
 		return diags
 	}
 
-	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
-		"from": vFrom.Kind(),
-		"to":   tTo,
-	})
+	tflog.SubsystemError(ctx, subsystemName, "Flattening incompatible types")
 
 	return diags
 }
