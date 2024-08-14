@@ -243,7 +243,6 @@ import (
 	outposts_sdkv1 "github.com/aws/aws-sdk-go/service/outposts"
 	quicksight_sdkv1 "github.com/aws/aws-sdk-go/service/quicksight"
 	rds_sdkv1 "github.com/aws/aws-sdk-go/service/rds"
-	redshift_sdkv1 "github.com/aws/aws-sdk-go/service/redshift"
 	sagemaker_sdkv1 "github.com/aws/aws-sdk-go/service/sagemaker"
 	simpledb_sdkv1 "github.com/aws/aws-sdk-go/service/simpledb"
 	worklink_sdkv1 "github.com/aws/aws-sdk-go/service/worklink"
@@ -973,10 +972,6 @@ func (c *AWSClient) RDSClient(ctx context.Context) *rds_sdkv2.Client {
 
 func (c *AWSClient) RUMClient(ctx context.Context) *rum_sdkv2.Client {
 	return errs.Must(client[*rum_sdkv2.Client](ctx, c, names.RUM, make(map[string]any)))
-}
-
-func (c *AWSClient) RedshiftConn(ctx context.Context) *redshift_sdkv1.Redshift {
-	return errs.Must(conn[*redshift_sdkv1.Redshift](ctx, c, names.Redshift, make(map[string]any)))
 }
 
 func (c *AWSClient) RedshiftClient(ctx context.Context) *redshift_sdkv2.Client {
