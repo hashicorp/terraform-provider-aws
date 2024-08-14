@@ -13,6 +13,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	smithyjson "github.com/aws/smithy-go/encoding/json"
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
@@ -49,6 +50,9 @@ func (cd containerDefinitions) reduce(isAWSVPC bool) {
 	cd.orderContainers()
 	cd.orderEnvironmentVariables()
 	cd.orderSecrets()
+
+	// Compact any sparse lists.
+	cd.compactSparseLists()
 
 	for i, def := range cd {
 		// Deal with special fields which have defaults.
@@ -146,6 +150,35 @@ func (cd containerDefinitions) orderSecrets() {
 func (cd containerDefinitions) orderContainers() {
 	sort.Slice(cd, func(i, j int) bool {
 		return aws.ToString(cd[i].Name) < aws.ToString(cd[j].Name)
+	})
+}
+
+func (cd containerDefinitions) compactSparseLists() {
+	for i, def := range cd {
+		cd[i].Command = compactSparseList(def.Command)
+		cd[i].CredentialSpecs = compactSparseList(def.CredentialSpecs)
+		cd[i].DependsOn = compactSparseList(def.DependsOn)
+		cd[i].DnsSearchDomains = compactSparseList(def.DnsSearchDomains)
+		cd[i].DnsServers = compactSparseList(def.DnsServers)
+		cd[i].DockerSecurityOptions = compactSparseList(def.DockerSecurityOptions)
+		cd[i].EntryPoint = compactSparseList(def.EntryPoint)
+		cd[i].Environment = compactSparseList(def.Environment)
+		cd[i].EnvironmentFiles = compactSparseList(def.EnvironmentFiles)
+		cd[i].ExtraHosts = compactSparseList(def.ExtraHosts)
+		cd[i].Links = compactSparseList(def.Links)
+		cd[i].MountPoints = compactSparseList(def.MountPoints)
+		cd[i].PortMappings = compactSparseList(def.PortMappings)
+		cd[i].ResourceRequirements = compactSparseList(def.ResourceRequirements)
+		cd[i].Secrets = compactSparseList(def.Secrets)
+		cd[i].SystemControls = compactSparseList(def.SystemControls)
+		cd[i].Ulimits = compactSparseList(def.Ulimits)
+		cd[i].VolumesFrom = compactSparseList(def.VolumesFrom)
+	}
+}
+
+func compactSparseList[S ~[]E, E any](s S) S {
+	return tfslices.Filter(s, func(e E) bool {
+		return !itypes.IsZero(&e)
 	})
 }
 
