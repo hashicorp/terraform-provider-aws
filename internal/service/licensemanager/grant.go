@@ -5,6 +5,7 @@ package licensemanager
 
 import (
 	"context"
+	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/licensemanager"
@@ -14,21 +15,17 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-const (
-	ResGrant = "Grant"
-)
-
-// @SDKResource("aws_licensemanager_grant")
-func ResourceGrant() *schema.Resource {
+// @SDKResource("aws_licensemanager_grant", name="Grant")
+func resourceGrant() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGrantCreate,
 		ReadWithoutTimeout:   resourceGrantRead,
@@ -101,83 +98,79 @@ func ResourceGrant() *schema.Resource {
 
 func resourceGrantCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).LicenseManagerClient(ctx)
 
-	in := &licensemanager.CreateGrantInput{
-		AllowedOperations: expandAllowedOperations(d.Get("allowed_operations").(*schema.Set).List()),
+	name := d.Get(names.AttrName).(string)
+	input := &licensemanager.CreateGrantInput{
+		AllowedOperations: flex.ExpandStringyValueSet[awstypes.AllowedOperation](d.Get("allowed_operations").(*schema.Set)),
 		ClientToken:       aws.String(id.UniqueId()),
-		GrantName:         aws.String(d.Get(names.AttrName).(string)),
+		GrantName:         aws.String(name),
 		HomeRegion:        aws.String(meta.(*conns.AWSClient).Region),
 		LicenseArn:        aws.String(d.Get("license_arn").(string)),
 		Principals:        []string{d.Get(names.AttrPrincipal).(string)},
 	}
 
-	out, err := conn.CreateGrant(ctx, in)
+	output, err := conn.CreateGrant(ctx, input)
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.LicenseManager, create.ErrActionCreating, ResGrant, d.Get(names.AttrName).(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating License Manager Grant (%s): %s", name, err)
 	}
 
-	d.SetId(aws.ToString(out.GrantArn))
+	d.SetId(aws.ToString(output.GrantArn))
 
 	return append(diags, resourceGrantRead(ctx, d, meta)...)
 }
 
 func resourceGrantRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).LicenseManagerClient(ctx)
 
-	out, err := FindGrantByARN(ctx, conn, d.Id())
+	grant, err := findGrantByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		create.LogNotFoundRemoveState(names.LicenseManager, create.ErrActionReading, ResGrant, d.Id())
+		log.Printf("[WARN] License Manager Grant %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.LicenseManager, create.ErrActionReading, ResGrant, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading License Manager Grant (%s): %s", d.Id(), err)
 	}
 
-	d.Set("allowed_operations", out.GrantedOperations)
-	d.Set(names.AttrARN, out.GrantArn)
-	d.Set("home_region", out.HomeRegion)
-	d.Set("license_arn", out.LicenseArn)
-	d.Set(names.AttrName, out.GrantName)
-	d.Set("parent_arn", out.ParentArn)
-	d.Set(names.AttrPrincipal, out.GranteePrincipalArn)
-	d.Set(names.AttrStatus, out.GrantStatus)
-	d.Set(names.AttrVersion, out.Version)
+	d.Set("allowed_operations", grant.GrantedOperations)
+	d.Set(names.AttrARN, grant.GrantArn)
+	d.Set("home_region", grant.HomeRegion)
+	d.Set("license_arn", grant.LicenseArn)
+	d.Set(names.AttrName, grant.GrantName)
+	d.Set("parent_arn", grant.ParentArn)
+	d.Set(names.AttrPrincipal, grant.GranteePrincipalArn)
+	d.Set(names.AttrStatus, grant.GrantStatus)
+	d.Set(names.AttrVersion, grant.Version)
 
 	return diags
 }
 
 func resourceGrantUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).LicenseManagerClient(ctx)
 
-	in := &licensemanager.CreateGrantVersionInput{
-		GrantArn:    aws.String(d.Id()),
+	input := &licensemanager.CreateGrantVersionInput{
 		ClientToken: aws.String(id.UniqueId()),
+		GrantArn:    aws.String(d.Id()),
 	}
 
 	if d.HasChange("allowed_operations") {
-		in.AllowedOperations = tfslices.ApplyToAll(d.Get("allowed_operations").([]string), func(v string) awstypes.AllowedOperation {
-			return awstypes.AllowedOperation(v)
-		})
+		input.AllowedOperations = flex.ExpandStringyValueSet[awstypes.AllowedOperation](d.Get("allowed_operations").(*schema.Set))
 	}
 
 	if d.HasChange(names.AttrName) {
-		in.GrantName = aws.String(d.Get(names.AttrName).(string))
+		input.GrantName = aws.String(d.Get(names.AttrName).(string))
 	}
 
-	_, err := conn.CreateGrantVersion(ctx, in)
+	_, err := conn.CreateGrantVersion(ctx, input)
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.LicenseManager, create.ErrActionUpdating, ResGrant, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating License Manager Grant (%s): %s", d.Id(), err)
 	}
 
 	return append(diags, resourceGrantRead(ctx, d, meta)...)
@@ -185,45 +178,48 @@ func resourceGrantUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceGrantDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).LicenseManagerClient(ctx)
 
-	out, err := FindGrantByARN(ctx, conn, d.Id())
-
-	if tfresource.NotFound(err) {
-		create.LogNotFoundRemoveState(names.LicenseManager, create.ErrActionReading, ResGrant, d.Id())
-		return diags
-	}
-
-	if err != nil {
-		return create.AppendDiagError(diags, names.LicenseManager, create.ErrActionReading, ResGrant, d.Id(), err)
-	}
-
-	in := &licensemanager.DeleteGrantInput{
+	_, err := conn.DeleteGrant(ctx, &licensemanager.DeleteGrantInput{
 		GrantArn: aws.String(d.Id()),
-		Version:  out.Version,
-	}
-
-	_, err = conn.DeleteGrant(ctx, in)
+		Version:  aws.String(names.AttrVersion),
+	})
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.LicenseManager, create.ErrActionDeleting, ResGrant, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting License Manager Grant (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func FindGrantByARN(ctx context.Context, conn *licensemanager.Client, arn string) (*awstypes.Grant, error) {
-	in := &licensemanager.GetGrantInput{
+func findGrantByARN(ctx context.Context, conn *licensemanager.Client, arn string) (*awstypes.Grant, error) {
+	input := &licensemanager.GetGrantInput{
 		GrantArn: aws.String(arn),
 	}
 
-	out, err := conn.GetGrant(ctx, in)
+	output, err := findGrant(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if status := output.GrantStatus; status == awstypes.GrantStatusDeleted || status == awstypes.GrantStatusRejected {
+		return nil, &retry.NotFoundError{
+			Message:     string(status),
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findGrant(ctx context.Context, conn *licensemanager.Client, input *licensemanager.GetGrantInput) (*awstypes.Grant, error) {
+	output, err := conn.GetGrant(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
-			LastRequest: in,
+			LastRequest: input,
 		}
 	}
 
@@ -231,23 +227,9 @@ func FindGrantByARN(ctx context.Context, conn *licensemanager.Client, arn string
 		return nil, err
 	}
 
-	if out == nil || out.Grant == nil || out.Grant.GrantStatus == awstypes.GrantStatusDeleted || out.Grant.GrantStatus == awstypes.GrantStatusRejected {
-		return nil, tfresource.NewEmptyResultError(in)
+	if output == nil || output.Grant == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return out.Grant, nil
-}
-
-func expandAllowedOperations(rawOperations []interface{}) []awstypes.AllowedOperation {
-	if rawOperations == nil {
-		return nil
-	}
-
-	operations := make([]awstypes.AllowedOperation, 0, 8)
-
-	for _, item := range rawOperations {
-		operations = append(operations, awstypes.AllowedOperation(item.(string)))
-	}
-
-	return operations
+	return output.Grant, nil
 }

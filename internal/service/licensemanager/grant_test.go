@@ -166,23 +166,11 @@ func testAccCheckGrantExists(ctx context.Context, n string) resource.TestCheckFu
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No License Manager License Configuration ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LicenseManagerClient(ctx)
 
-		out, err := tflicensemanager.FindGrantByARN(ctx, conn, rs.Primary.ID)
+		_, err := tflicensemanager.FindGrantByARN(ctx, conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		if out == nil {
-			return fmt.Errorf("Grant %q does not exist", rs.Primary.ID)
-		}
-
-		return nil
+		return err
 	}
 }
 
