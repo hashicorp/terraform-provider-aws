@@ -42,8 +42,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceAssociation,
+			Factory:  resourceAssociation,
 			TypeName: "aws_licensemanager_association",
+			Name:     "Association",
 		},
 		{
 			Factory:  ResourceGrant,

@@ -76,19 +76,9 @@ func testAccCheckAssociationExists(ctx context.Context, n string) resource.TestC
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No License Manager Association ID is set")
-		}
-
-		resourceARN, licenseConfigurationARN, err := tflicensemanager.AssociationParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LicenseManagerClient(ctx)
 
-		return tflicensemanager.FindAssociation(ctx, conn, resourceARN, licenseConfigurationARN)
+		return tflicensemanager.FindAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrResourceARN], rs.Primary.Attributes["license_configuration_arn"])
 	}
 }
 
@@ -101,13 +91,7 @@ func testAccCheckAssociationDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			resourceARN, licenseConfigurationARN, err := tflicensemanager.AssociationParseResourceID(rs.Primary.ID)
-
-			if err != nil {
-				return err
-			}
-
-			err = tflicensemanager.FindAssociation(ctx, conn, resourceARN, licenseConfigurationARN)
+			err := tflicensemanager.FindAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrResourceARN], rs.Primary.Attributes["license_configuration_arn"])
 
 			if tfresource.NotFound(err) {
 				continue
