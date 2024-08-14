@@ -611,7 +611,8 @@ func TestContainerDefinitionsAreEquivalent_sparseArrays(t *testing.T) {
             "mysql"
         ],
         "portMappings": [],
-        "essential": true
+        "essential": true,
+        "command": [""]
     }
 ]`
 

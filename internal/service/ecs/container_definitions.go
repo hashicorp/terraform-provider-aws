@@ -52,7 +52,7 @@ func (cd containerDefinitions) reduce(isAWSVPC bool) {
 	cd.orderSecrets()
 
 	// Compact any sparse lists.
-	cd.compactSparseLists()
+	cd.compactArrays()
 
 	for i, def := range cd {
 		// Deal with special fields which have defaults.
@@ -153,30 +153,24 @@ func (cd containerDefinitions) orderContainers() {
 	})
 }
 
-func (cd containerDefinitions) compactSparseLists() {
+// compactArrays removes any zero values from the object arrays in the container definitions.
+func (cd containerDefinitions) compactArrays() {
 	for i, def := range cd {
-		cd[i].Command = compactSparseList(def.Command)
-		cd[i].CredentialSpecs = compactSparseList(def.CredentialSpecs)
-		cd[i].DependsOn = compactSparseList(def.DependsOn)
-		cd[i].DnsSearchDomains = compactSparseList(def.DnsSearchDomains)
-		cd[i].DnsServers = compactSparseList(def.DnsServers)
-		cd[i].DockerSecurityOptions = compactSparseList(def.DockerSecurityOptions)
-		cd[i].EntryPoint = compactSparseList(def.EntryPoint)
-		cd[i].Environment = compactSparseList(def.Environment)
-		cd[i].EnvironmentFiles = compactSparseList(def.EnvironmentFiles)
-		cd[i].ExtraHosts = compactSparseList(def.ExtraHosts)
-		cd[i].Links = compactSparseList(def.Links)
-		cd[i].MountPoints = compactSparseList(def.MountPoints)
-		cd[i].PortMappings = compactSparseList(def.PortMappings)
-		cd[i].ResourceRequirements = compactSparseList(def.ResourceRequirements)
-		cd[i].Secrets = compactSparseList(def.Secrets)
-		cd[i].SystemControls = compactSparseList(def.SystemControls)
-		cd[i].Ulimits = compactSparseList(def.Ulimits)
-		cd[i].VolumesFrom = compactSparseList(def.VolumesFrom)
+		cd[i].DependsOn = compactArray(def.DependsOn)
+		cd[i].Environment = compactArray(def.Environment)
+		cd[i].EnvironmentFiles = compactArray(def.EnvironmentFiles)
+		cd[i].ExtraHosts = compactArray(def.ExtraHosts)
+		cd[i].MountPoints = compactArray(def.MountPoints)
+		cd[i].PortMappings = compactArray(def.PortMappings)
+		cd[i].ResourceRequirements = compactArray(def.ResourceRequirements)
+		cd[i].Secrets = compactArray(def.Secrets)
+		cd[i].SystemControls = compactArray(def.SystemControls)
+		cd[i].Ulimits = compactArray(def.Ulimits)
+		cd[i].VolumesFrom = compactArray(def.VolumesFrom)
 	}
 }
 
-func compactSparseList[S ~[]E, E any](s S) S {
+func compactArray[S ~[]E, E any](s S) S {
 	return tfslices.Filter(s, func(e E) bool {
 		return !itypes.IsZero(&e)
 	})

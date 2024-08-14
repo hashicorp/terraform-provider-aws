@@ -93,7 +93,7 @@ func resourceTaskDefinition() *schema.Resource {
 					containerDefinitions(orderedCDs).orderContainers()
 					containerDefinitions(orderedCDs).orderEnvironmentVariables()
 					containerDefinitions(orderedCDs).orderSecrets()
-					containerDefinitions(orderedCDs).compactSparseLists()
+					containerDefinitions(orderedCDs).compactArrays()
 					unnormalizedJson, _ := flattenContainerDefinitions(orderedCDs)
 					json, _ := structure.NormalizeJsonString(unnormalizedJson)
 					return json
