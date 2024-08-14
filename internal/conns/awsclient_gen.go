@@ -188,6 +188,7 @@ import (
 	s3_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3"
 	s3control_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3control"
 	s3outposts_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3outposts"
+	sagemaker_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	scheduler_sdkv2 "github.com/aws/aws-sdk-go-v2/service/scheduler"
 	schemas_sdkv2 "github.com/aws/aws-sdk-go-v2/service/schemas"
 	secretsmanager_sdkv2 "github.com/aws/aws-sdk-go-v2/service/secretsmanager"
@@ -244,7 +245,6 @@ import (
 	quicksight_sdkv1 "github.com/aws/aws-sdk-go/service/quicksight"
 	rds_sdkv1 "github.com/aws/aws-sdk-go/service/rds"
 	redshift_sdkv1 "github.com/aws/aws-sdk-go/service/redshift"
-	sagemaker_sdkv1 "github.com/aws/aws-sdk-go/service/sagemaker"
 	simpledb_sdkv1 "github.com/aws/aws-sdk-go/service/simpledb"
 	worklink_sdkv1 "github.com/aws/aws-sdk-go/service/worklink"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -1103,8 +1103,8 @@ func (c *AWSClient) SWFClient(ctx context.Context) *swf_sdkv2.Client {
 	return errs.Must(client[*swf_sdkv2.Client](ctx, c, names.SWF, make(map[string]any)))
 }
 
-func (c *AWSClient) SageMakerConn(ctx context.Context) *sagemaker_sdkv1.SageMaker {
-	return errs.Must(conn[*sagemaker_sdkv1.SageMaker](ctx, c, names.SageMaker, make(map[string]any)))
+func (c *AWSClient) SageMakerClient(ctx context.Context) *sagemaker_sdkv2.Client {
+	return errs.Must(client[*sagemaker_sdkv2.Client](ctx, c, names.SageMaker, make(map[string]any)))
 }
 
 func (c *AWSClient) SchedulerClient(ctx context.Context) *scheduler_sdkv2.Client {
