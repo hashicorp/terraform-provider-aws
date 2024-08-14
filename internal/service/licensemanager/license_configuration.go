@@ -28,7 +28,7 @@ import (
 
 // @SDKResource("aws_licensemanager_license_configuration", name="License Configuration")
 // @Tags(identifierAttribute="id")
-func ResourceLicenseConfiguration() *schema.Resource {
+func resourceLicenseConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLicenseConfigurationCreate,
 		ReadWithoutTimeout:   resourceLicenseConfigurationRead,
@@ -90,7 +90,6 @@ func ResourceLicenseConfiguration() *schema.Resource {
 
 func resourceLicenseConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).LicenseManagerClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
@@ -129,10 +128,9 @@ func resourceLicenseConfigurationCreate(ctx context.Context, d *schema.ResourceD
 
 func resourceLicenseConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).LicenseManagerClient(ctx)
 
-	output, err := FindLicenseConfigurationByARN(ctx, conn, d.Id())
+	output, err := findLicenseConfigurationByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] License Manager License Configuration %s not found, removing from state", d.Id())
@@ -160,7 +158,6 @@ func resourceLicenseConfigurationRead(ctx context.Context, d *schema.ResourceDat
 
 func resourceLicenseConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).LicenseManagerClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
@@ -187,7 +184,6 @@ func resourceLicenseConfigurationUpdate(ctx context.Context, d *schema.ResourceD
 
 func resourceLicenseConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).LicenseManagerClient(ctx)
 
 	log.Printf("[DEBUG] Deleting License Manager License Configuration: %s", d.Id())
@@ -206,11 +202,15 @@ func resourceLicenseConfigurationDelete(ctx context.Context, d *schema.ResourceD
 	return diags
 }
 
-func FindLicenseConfigurationByARN(ctx context.Context, conn *licensemanager.Client, arn string) (*licensemanager.GetLicenseConfigurationOutput, error) {
+func findLicenseConfigurationByARN(ctx context.Context, conn *licensemanager.Client, arn string) (*licensemanager.GetLicenseConfigurationOutput, error) {
 	input := &licensemanager.GetLicenseConfigurationInput{
 		LicenseConfigurationArn: aws.String(arn),
 	}
 
+	return findLicenseConfiguration(ctx, conn, input)
+}
+
+func findLicenseConfiguration(ctx context.Context, conn *licensemanager.Client, input *licensemanager.GetLicenseConfigurationInput) (*licensemanager.GetLicenseConfigurationOutput, error) {
 	output, err := conn.GetLicenseConfiguration(ctx, input)
 
 	if errs.IsAErrorMessageContains[*awstypes.InvalidParameterValueException](err, "Invalid license configuration ARN") {

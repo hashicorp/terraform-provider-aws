@@ -57,7 +57,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Grant Accepter",
 		},
 		{
-			Factory:  ResourceLicenseConfiguration,
+			Factory:  resourceLicenseConfiguration,
 			TypeName: "aws_licensemanager_license_configuration",
 			Name:     "License Configuration",
 			Tags: &types.ServicePackageResourceTags{

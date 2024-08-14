@@ -197,10 +197,6 @@ func testAccCheckLicenseConfigurationExists(ctx context.Context, n string, v *li
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No License Manager License Configuration ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LicenseManagerClient(ctx)
 
 		output, err := tflicensemanager.FindLicenseConfigurationByARN(ctx, conn, rs.Primary.ID)

@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/licensemanager"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
 func RegisterSweepers() {
@@ -37,7 +37,7 @@ func sweepLicenseConfigurations(region string) error {
 		}
 
 		for _, v := range page.LicenseConfigurations {
-			r := ResourceLicenseConfiguration()
+			r := resourceLicenseConfiguration()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.LicenseConfigurationArn))
 
@@ -47,7 +47,7 @@ func sweepLicenseConfigurations(region string) error {
 		return !lastPage
 	})
 
-	if awsv1.SkipSweepError(err) {
+	if awsv2.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping License Manager License Configuration sweep for %s: %s", region, err)
 		return nil
 	}
