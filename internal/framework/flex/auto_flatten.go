@@ -186,7 +186,7 @@ func (flattener autoFlattener) convert(ctx context.Context, sourcePath path.Path
 		return diags
 
 	case reflect.Interface:
-		diags.Append(flattener.interface_(ctx, vFrom, false, tTo, vTo)...)
+		diags.Append(flattener.interface_(ctx, vFrom, tTo, vTo)...)
 		return diags
 	}
 
@@ -531,31 +531,29 @@ func (flattener autoFlattener) pointer(ctx context.Context, sourcePath path.Path
 	return diags
 }
 
-func (flattener autoFlattener) interface_(ctx context.Context, vFrom reflect.Value, isNullFrom bool, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+func (flattener autoFlattener) interface_(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch tTo := tTo.(type) {
 	case basetypes.StringTypable:
 		stringValue := types.StringNull()
-		if !isNullFrom {
-			//
-			// JSONStringer -> types.String-ish.
-			//
-			if doc, ok := vFrom.Interface().(smithyjson.JSONStringer); ok {
-				tflog.SubsystemInfo(ctx, subsystemName, "Source implements json.JSONStringer")
-				b, err := doc.MarshalSmithyDocument()
-				if err != nil {
-					// An error here would be an upstream error in the AWS SDK, because errors in json.Marshal
-					// are caused by conditions such as cyclic structures
-					// See https://pkg.go.dev/encoding/json#Marshal
-					tflog.SubsystemError(ctx, subsystemName, "Marshalling JSON document", map[string]any{
-						logAttrKeyError: err.Error(),
-					})
-					diags.Append(diagFlatteningMarshalSmithyDocument(reflect.TypeOf(doc), err))
-					return diags
-				}
-				stringValue = types.StringValue(string(b))
+		//
+		// JSONStringer -> types.String-ish.
+		//
+		if doc, ok := vFrom.Interface().(smithyjson.JSONStringer); ok {
+			tflog.SubsystemInfo(ctx, subsystemName, "Source implements json.JSONStringer")
+			b, err := doc.MarshalSmithyDocument()
+			if err != nil {
+				// An error here would be an upstream error in the AWS SDK, because errors in json.Marshal
+				// are caused by conditions such as cyclic structures
+				// See https://pkg.go.dev/encoding/json#Marshal
+				tflog.SubsystemError(ctx, subsystemName, "Marshalling JSON document", map[string]any{
+					logAttrKeyError: err.Error(),
+				})
+				diags.Append(diagFlatteningMarshalSmithyDocument(reflect.TypeOf(doc), err))
+				return diags
 			}
+			stringValue = types.StringValue(string(b))
 		}
 		v, d := tTo.ValueFromString(ctx, stringValue)
 		diags.Append(d...)
