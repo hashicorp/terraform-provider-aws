@@ -180,12 +180,12 @@ func resourceTypeCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	set_default_input := &cloudformation.SetTypeDefaultVersionInput{
+	setDefaultInput := &cloudformation.SetTypeDefaultVersionInput{
 		TypeName:  input.TypeName,
 		Type:      input.Type,
 		VersionId: aws.String(versionID),
 	}
-	_, err = conn.SetTypeDefaultVersion(ctx, set_default_input)
+	_, err = conn.SetTypeDefaultVersion(ctx, setDefaultInput)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting default version for CloudFormation Type (%s): %s", typeName, err)
