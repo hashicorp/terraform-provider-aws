@@ -2915,6 +2915,22 @@ func TestFlattenInterfaceToString(t *testing.T) {
 				infoConvertingWithPath("Field1", reflect.TypeFor[smithyjson.JSONStringer](), "Field1", reflect.TypeFor[types.String]()),
 			},
 		},
+		"null json interface Source string Target": {
+			Source: &awsJSONStringer{
+				Field1: nil,
+			},
+			Target: &tfSingleStringField{},
+			WantTarget: &tfSingleStringField{
+				Field1: types.StringNull(),
+			},
+			expectedLogLines: []map[string]any{
+				infoFlattening(reflect.TypeFor[*awsJSONStringer](), reflect.TypeFor[*tfSingleStringField]()),
+				infoConverting(reflect.TypeFor[awsJSONStringer](), reflect.TypeFor[*tfSingleStringField]()),
+				traceMatchedFields("Field1", reflect.TypeFor[awsJSONStringer](), "Field1", reflect.TypeFor[*tfSingleStringField]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[smithyjson.JSONStringer](), "Field1", reflect.TypeFor[types.String]()),
+			},
+		},
+
 		"json interface Source JSONValue Target": {
 			Source: &awsJSONStringer{
 				Field1: &testJSONDocument{
@@ -2936,6 +2952,22 @@ func TestFlattenInterfaceToString(t *testing.T) {
 				infoConvertingWithPath("Field1", reflect.TypeFor[smithyjson.JSONStringer](), "Field1", reflect.TypeFor[fwtypes.SmithyJSON[smithyjson.JSONStringer]]()),
 			},
 		},
+		"null json interface Source JSONValue Target": {
+			Source: &awsJSONStringer{
+				Field1: nil,
+			},
+			Target: &tfJSONStringer{},
+			WantTarget: &tfJSONStringer{
+				Field1: fwtypes.SmithyJSONNull[smithyjson.JSONStringer](),
+			},
+			expectedLogLines: []map[string]any{
+				infoFlattening(reflect.TypeFor[*awsJSONStringer](), reflect.TypeFor[*tfJSONStringer]()),
+				infoConverting(reflect.TypeFor[awsJSONStringer](), reflect.TypeFor[*tfJSONStringer]()),
+				traceMatchedFields("Field1", reflect.TypeFor[awsJSONStringer](), "Field1", reflect.TypeFor[*tfJSONStringer]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[smithyjson.JSONStringer](), "Field1", reflect.TypeFor[fwtypes.SmithyJSON[smithyjson.JSONStringer]]()),
+			},
+		},
+
 		"json interface Source marshal error": {
 			Source: &awsJSONStringer{
 				Field1: &testJSONDocumentError{},
