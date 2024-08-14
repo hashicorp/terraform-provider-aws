@@ -3,10 +3,10 @@ package main
 
 import (
 	"errors"
-	"exampleresource/cmd/resource"
 	"fmt"
 	"log"
 
+	"exampleresource/cmd/resource"
 	"github.com/aws-cloudformation/cloudformation-cli-go-plugin/cfn"
 	"github.com/aws-cloudformation/cloudformation-cli-go-plugin/cfn/handler"
 )

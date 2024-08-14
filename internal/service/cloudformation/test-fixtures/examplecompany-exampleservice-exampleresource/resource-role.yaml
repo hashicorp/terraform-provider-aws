@@ -1,6 +1,3 @@
-# Copyright (c) HashiCorp, Inc.
-# SPDX-License-Identifier: MPL-2.0
-
 AWSTemplateFormatVersion: "2010-09-09"
 Description: >
   This CloudFormation template creates a role assumed by CloudFormation
@@ -12,25 +9,32 @@ Resources:
     Properties:
       MaxSessionDuration: 8400
       AssumeRolePolicyDocument:
-        Version: "2012-10-17"
+        Version: '2012-10-17'
         Statement:
           - Effect: Allow
             Principal:
               Service: resources.cloudformation.amazonaws.com
             Action: sts:AssumeRole
+            Condition:
+              StringEquals:
+                aws:SourceAccount:
+                  Ref: AWS::AccountId
+              StringLike:
+                aws:SourceArn:
+                  Fn::Sub: arn:${AWS::Partition}:cloudformation:${AWS::Region}:${AWS::AccountId}:type/resource/ExampleCompany-ExampleService-ExampleResource/*
       Path: "/"
       Policies:
         - PolicyName: ResourceTypePolicy
           PolicyDocument:
-            Version: "2012-10-17"
+            Version: '2012-10-17'
             Statement:
               - Effect: Allow
                 Action:
-                  - "initech:CreateReport"
-                  - "initech:DeleteReport"
-                  - "initech:DescribeReport"
-                  - "initech:ListReports"
-                  - "initech:UpdateReport"
+                - "initech:CreateReport"
+                - "initech:DeleteReport"
+                - "initech:DescribeReport"
+                - "initech:ListReports"
+                - "initech:UpdateReport"
                 Resource: "*"
 Outputs:
   ExecutionRoleArn:

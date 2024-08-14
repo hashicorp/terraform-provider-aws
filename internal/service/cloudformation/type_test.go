@@ -266,7 +266,7 @@ func testAccTypeZipGenerator(t *testing.T, typeName string) string {
 	}
 
 	sourceBinDirectoryPath := filepath.Join(sourceDirectoryPath, "bin")
-	sourceBinHandlerFilePath := filepath.Join(sourceBinDirectoryPath, "handler")
+	sourceBinHandlerFilePath := filepath.Join(sourceBinDirectoryPath, "bootstrap")
 	targetHandlerZipFilePath := filepath.Join(targetDirectoryPath, "handler.zip")
 
 	err = testAccTypeBuildHandlerZip(sourceBinHandlerFilePath, targetHandlerZipFilePath)
