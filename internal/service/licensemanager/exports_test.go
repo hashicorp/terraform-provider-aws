@@ -5,9 +5,11 @@ package licensemanager
 
 // Exports for use in tests only.
 var (
-	ResourceAssociation = resourceAssociation
-	ResourceGrant       = resourceGrant
+	ResourceAssociation   = resourceAssociation
+	ResourceGrant         = resourceGrant
+	ResourceGrantAccepter = resourceGrantAccepter
 
 	FindAssociationByTwoPartKey = findAssociationByTwoPartKey
 	FindGrantByARN              = findGrantByARN
+	FindReceivedGrantByARN      = findReceivedGrantByARN
 )

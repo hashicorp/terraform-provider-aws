@@ -183,5 +183,9 @@ func findLicenseSpecifications(ctx context.Context, conn *licensemanager.Client,
 		return !lastPage
 	})
 
+	if err != nil {
+		return nil, err
+	}
+
 	return output, err
 }

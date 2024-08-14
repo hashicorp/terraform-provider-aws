@@ -102,23 +102,11 @@ func testAccCheckGrantAccepterExists(ctx context.Context, n string, providerF fu
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No License Manager License Configuration ID is set")
-		}
-
 		conn := providerF().Meta().(*conns.AWSClient).LicenseManagerClient(ctx)
 
-		out, err := tflicensemanager.FindGrantAccepterByGrantARN(ctx, conn, rs.Primary.ID)
+		_, err := tflicensemanager.FindReceivedGrantByARN(ctx, conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		if out == nil {
-			return fmt.Errorf("GrantAccepter %q does not exist", rs.Primary.ID)
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -131,7 +119,7 @@ func testAccCheckGrantAccepterDestroyWithProvider(ctx context.Context) acctest.T
 				continue
 			}
 
-			_, err := tflicensemanager.FindGrantAccepterByGrantARN(ctx, conn, rs.Primary.ID)
+			_, err := tflicensemanager.FindReceivedGrantByARN(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -141,7 +129,7 @@ func testAccCheckGrantAccepterDestroyWithProvider(ctx context.Context) acctest.T
 				return err
 			}
 
-			return fmt.Errorf("License Manager GrantAccepter %s still exists", rs.Primary.ID)
+			return fmt.Errorf("License Manager Grant Accepter %s still exists", rs.Primary.ID)
 		}
 
 		return nil
