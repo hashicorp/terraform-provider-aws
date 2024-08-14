@@ -186,7 +186,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `configuration` - (Optional) Execute command configuration for the cluster. See [`configueration` Block](#configuration-block) for details.
+* `configuration` - (Optional) Execute command configuration for the cluster. See [`configuration` Block](#configuration-block) for details.
 * `serviceConnectDefaults` - (Optional) Default Service Connect namespace. See [`serviceConnectDefaults` Block](#service_connect_defaults-block) for details.
 * `setting` - (Optional) Configuration block(s) with cluster settings. For example, this can be used to enable CloudWatch Container Insights for a cluster. See [`setting` Block](#setting-block) for details.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -272,4 +272,4 @@ Using `terraform import`, import ECS clusters using the cluster name. For exampl
 % terraform import aws_ecs_cluster.stateless stateless-app
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ce3c6b13fb8b84480df8276839643d2e4ad1fc669627b6f56ea0c5da6604c507 -->
+<!-- cache-key: cdktf-0.20.1 input-5a1f09418ccf39300c804f4ebc1b140373e9d8f20f6c67a88c7ee5454f47f0f2 -->

@@ -35,6 +35,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
 	inspector2types "github.com/aws/aws-sdk-go-v2/service/inspector2/types"
 	organizationstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
+	"github.com/aws/aws-sdk-go-v2/service/pinpoint"
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
 	ssoadmintypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
@@ -43,7 +44,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/outposts"
-	"github.com/aws/aws-sdk-go/service/pinpoint"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -1199,11 +1199,11 @@ func PreCheckOrganizationMemberAccountWithProvider(ctx context.Context, t *testi
 }
 
 func PreCheckPinpointApp(ctx context.Context, t *testing.T) {
-	conn := Provider.Meta().(*conns.AWSClient).PinpointConn(ctx)
+	conn := Provider.Meta().(*conns.AWSClient).PinpointClient(ctx)
 
 	input := &pinpoint.GetAppsInput{}
 
-	_, err := conn.GetAppsWithContext(ctx, input)
+	_, err := conn.GetApps(ctx, input)
 
 	if PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

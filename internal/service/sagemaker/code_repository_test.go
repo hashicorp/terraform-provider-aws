@@ -8,9 +8,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -190,7 +189,6 @@ func TestAccSageMakerCodeRepository_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodeRepositoryExists(ctx, resourceName, &repo),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceCodeRepository(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceCodeRepository(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -200,14 +198,14 @@ func TestAccSageMakerCodeRepository_disappears(t *testing.T) {
 
 func testAccCheckCodeRepositoryDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sagemaker_code_repository" {
 				continue
 			}
 
-			codeRepository, err := tfsagemaker.FindCodeRepositoryByName(ctx, conn, rs.Primary.ID)
+			_, err := tfsagemaker.FindCodeRepositoryByName(ctx, conn, rs.Primary.ID)
 
 			if tfawserr.ErrMessageContains(err, tfsagemaker.ErrCodeValidationException, "Cannot find CodeRepository") {
 				continue
@@ -217,9 +215,7 @@ func testAccCheckCodeRepositoryDestroy(ctx context.Context) resource.TestCheckFu
 				return fmt.Errorf("reading SageMaker Code Repository (%s): %w", rs.Primary.ID, err)
 			}
 
-			if aws.StringValue(codeRepository.CodeRepositoryName) == rs.Primary.ID {
-				return fmt.Errorf("sagemaker Code Repository %q still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("sagemaker Code Repository %q still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -237,7 +233,7 @@ func testAccCheckCodeRepositoryExists(ctx context.Context, n string, codeRepo *s
 			return fmt.Errorf("No sagmaker Code Repository ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
 		resp, err := tfsagemaker.FindCodeRepositoryByName(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
