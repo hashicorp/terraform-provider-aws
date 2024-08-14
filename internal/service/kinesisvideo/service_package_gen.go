@@ -29,7 +29,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceStream,
+			Factory:  resourceStream,
 			TypeName: "aws_kinesis_video_stream",
 			Name:     "Stream",
 			Tags: &types.ServicePackageResourceTags{
