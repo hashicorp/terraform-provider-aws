@@ -4039,7 +4039,7 @@ func TestAccRDSInstance_MySQL_snapshotRestoreWithEngineVersion(t *testing.T) {
 					testAccCheckDBInstanceExists(ctx, restoreResourceName, &vRestoredInstance),
 					testAccCheckDBInstanceExists(ctx, resourceName, &v),
 					// Hardcoded older version. Will need to update when no longer compatible to upgrade from this to the default version.
-					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "8.0.31"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "8.0.32"),
 					resource.TestCheckResourceAttrPair(restoreResourceName, names.AttrEngineVersion, "data.aws_rds_engine_version.default", names.AttrVersion),
 				),
 			},
@@ -8159,7 +8159,7 @@ func testAccInstanceConfig_mySQLSnapshotRestoreEngineVersion(rName string) strin
 resource "aws_db_instance" "test" {
   allocated_storage   = 20
   engine              = data.aws_rds_engine_version.default.engine
-  engine_version      = "8.0.31" # test is from older to newer version, update when restore from this to current default version is incompatible
+  engine_version      = "8.0.32" # test is from older to newer version, update when restore from this to current default version is incompatible
   identifier          = %[1]q
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
   skip_final_snapshot = true
