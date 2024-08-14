@@ -34,7 +34,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/acm v1.28.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/acmpca v1.35.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/amp v1.27.3 // indirect
-	github.com/aws/aws-sdk-go-v2/service/amplify v1.23.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/amplify v1.24.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/apigateway v1.25.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/apigatewayv2 v1.22.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/appconfig v1.31.3 // indirect
@@ -46,7 +46,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/applicationsignals v1.3.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/appmesh v1.27.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/apprunner v1.30.3 // indirect
-	github.com/aws/aws-sdk-go-v2/service/appstream v1.37.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/appstream v1.38.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/appsync v1.35.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/athena v1.44.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.35.3 // indirect
@@ -129,13 +129,13 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/evidently v1.21.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/finspace v1.26.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/firehose v1.32.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/fis v1.26.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/fis v1.27.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/fms v1.35.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/fsx v1.47.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/gamelift v1.33.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.24.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.27.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/glue v1.93.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/glue v1.94.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/grafana v1.24.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/greengrass v1.25.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.29.4 // indirect
@@ -181,7 +181,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/memorydb v1.21.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/mq v1.25.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/mwaa v1.29.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.10.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.11.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.41.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/networkmonitor v1.5.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/oam v1.13.4 // indirect
