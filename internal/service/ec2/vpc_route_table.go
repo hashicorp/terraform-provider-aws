@@ -174,7 +174,7 @@ func resourceRouteTableCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	input := &ec2.CreateRouteTableInput{
 		ClientToken:       aws.String(id.UniqueId()),
-		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeRouteTable),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeRouteTable),
 		VpcId:             aws.String(d.Get(names.AttrVPCID).(string)),
 	}
 
@@ -255,7 +255,7 @@ func resourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set(names.AttrVPCID, routeTable.VpcId)
 
 	// Ignore the AmazonFSx service tag in addition to standard ignores.
-	setTagsOutV2(ctx, TagsV2(keyValueTagsV2(ctx, routeTable.Tags).Ignore(tftags.New(ctx, []string{"AmazonFSx"}))))
+	setTagsOut(ctx, Tags(keyValueTags(ctx, routeTable.Tags).Ignore(tftags.New(ctx, []string{"AmazonFSx"}))))
 
 	return diags
 }

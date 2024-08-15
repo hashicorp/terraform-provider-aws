@@ -7,8 +7,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/locationservice"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/location"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -59,13 +59,13 @@ func DataSourceTracker() *schema.Resource {
 
 func dataSourceTrackerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LocationConn(ctx)
+	conn := meta.(*conns.AWSClient).LocationClient(ctx)
 
-	input := &locationservice.DescribeTrackerInput{
+	input := &location.DescribeTrackerInput{
 		TrackerName: aws.String(d.Get("tracker_name").(string)),
 	}
 
-	output, err := conn.DescribeTrackerWithContext(ctx, input)
+	output, err := conn.DescribeTracker(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "getting Location Service Tracker: %s", err)
@@ -75,15 +75,15 @@ func dataSourceTrackerRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "getting Location Service Tracker: empty response")
 	}
 
-	d.SetId(aws.StringValue(output.TrackerName))
-	d.Set(names.AttrCreateTime, aws.TimeValue(output.CreateTime).Format(time.RFC3339))
+	d.SetId(aws.ToString(output.TrackerName))
+	d.Set(names.AttrCreateTime, aws.ToTime(output.CreateTime).Format(time.RFC3339))
 	d.Set(names.AttrDescription, output.Description)
 	d.Set(names.AttrKMSKeyID, output.KmsKeyId)
 	d.Set("position_filtering", output.PositionFiltering)
 	d.Set(names.AttrTags, KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(meta.(*conns.AWSClient).IgnoreTagsConfig).Map())
 	d.Set("tracker_arn", output.TrackerArn)
 	d.Set("tracker_name", output.TrackerName)
-	d.Set("update_time", aws.TimeValue(output.UpdateTime).Format(time.RFC3339))
+	d.Set("update_time", aws.ToTime(output.UpdateTime).Format(time.RFC3339))
 
 	return diags
 }

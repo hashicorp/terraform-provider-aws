@@ -27,3 +27,6 @@ tests/
 
 # Semgrep-action log folder
 .semgrep_logs/
+
+# Our Semgrep rules folder
+.ci/semgrep/

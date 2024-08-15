@@ -1,3 +1,3 @@
 `release-note:enhancement
-resource/aws_batch_job_definition: Adds ability to define `ecs_properties`
+resource/aws_batch_job_definition: Add `ecs_properties` argument
 ```

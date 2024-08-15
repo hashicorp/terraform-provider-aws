@@ -410,7 +410,7 @@ The `maintenance_options` block supports the following:
 
 The `instance_market_options` block supports the following:
 
-* `market_type` - (Optional) Type of market for the instance. Valid value is `spot`. Defaults to `spot`. Required if `spot_options` is specified.
+* `market_type` - (Optional) Type of market for the instance. Valid values are `spot` and `capacity-block`. Defaults to `spot`. Required if `spot_options` is specified.
 * `spot_options` - (Optional) Block to configure the options for Spot Instances. See [Spot Options](#spot-options) below for details on attributes.
 
 ### Metadata Options
@@ -536,4 +536,4 @@ Using `terraform import`, import instances using the `id`. For example:
 % terraform import aws_instance.web i-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-22fa60b78e07a8c405942a5e6347bd94ae3a9cbb548f38ac0744b9f7ef890b1b -->
+<!-- cache-key: cdktf-0.20.1 input-4cbd1d349b1dec3420e5c1a4b8a0e331486ca31962093752a314096b1ee87d46 -->

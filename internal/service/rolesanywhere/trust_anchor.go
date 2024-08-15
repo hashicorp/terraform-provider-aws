@@ -164,11 +164,11 @@ func resourceTrustAnchorUpdate(ctx context.Context, d *schema.ResourceData, meta
 			_, n := d.GetChange(names.AttrEnabled)
 			if n == true {
 				if err := enableTrustAnchor(ctx, d.Id(), meta); err != nil {
-					sdkdiag.AppendErrorf(diags, "enabling RolesAnywhere Trust Anchor (%s): %s", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "enabling RolesAnywhere Trust Anchor (%s): %s", d.Id(), err)
 				}
 			} else {
 				if err := disableTrustAnchor(ctx, d.Id(), meta); err != nil {
-					sdkdiag.AppendErrorf(diags, "disabling RolesAnywhere Trust Anchor (%s): %s", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "disabling RolesAnywhere Trust Anchor (%s): %s", d.Id(), err)
 				}
 			}
 		}

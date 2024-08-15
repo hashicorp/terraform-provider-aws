@@ -5,9 +5,8 @@ package ec2
 
 import (
 	"context"
-	"errors"
+	"fmt"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -15,33 +14,29 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource("aws_vpc_endpoint_private_dns", name="Endpoint Private DNS")
-func newResourceEndpointPrivateDNS(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceEndpointPrivateDNS{}, nil
+// @FrameworkResource("aws_vpc_endpoint_private_dns", name="VPC Endpoint Private DNS")
+func newVPCEndpointPrivateDNSResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &vpcEndpointPrivateDNSResource{}, nil
 }
 
-const (
-	ResNameEndpointPrivateDNS = "Endpoint Private DNS"
-)
-
-type resourceEndpointPrivateDNS struct {
+type vpcEndpointPrivateDNSResource struct {
 	framework.ResourceWithConfigure
 	framework.WithNoOpDelete
 }
 
-func (r *resourceEndpointPrivateDNS) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_vpc_endpoint_private_dns"
+func (*vpcEndpointPrivateDNSResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_vpc_endpoint_private_dns"
 }
 
-func (r *resourceEndpointPrivateDNS) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *vpcEndpointPrivateDNSResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"private_dns_enabled": schema.BoolAttribute{
 				Required: true,
@@ -56,107 +51,90 @@ func (r *resourceEndpointPrivateDNS) Schema(ctx context.Context, req resource.Sc
 	}
 }
 
-func (r *resourceEndpointPrivateDNS) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *vpcEndpointPrivateDNSResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data vpcEndpointPrivateDNSResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().EC2Client(ctx)
 
-	var plan resourceEndpointPrivateDNSData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
+	input := &ec2.ModifyVpcEndpointInput{
+		PrivateDnsEnabled: fwflex.BoolFromFramework(ctx, data.PrivateDNSEnabled),
+		VpcEndpointId:     fwflex.StringFromFramework(ctx, data.VPCEndpointID),
 	}
 
-	in := &ec2.ModifyVpcEndpointInput{
-		VpcEndpointId:     aws.String(plan.VpcEndpointID.ValueString()),
-		PrivateDnsEnabled: aws.Bool(plan.PrivateDNSEnabled.ValueBool()),
-	}
+	_, err := conn.ModifyVpcEndpoint(ctx, input)
 
-	out, err := conn.ModifyVpcEndpoint(ctx, in)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionCreating, ResNameEndpointPrivateDNS, plan.VpcEndpointID.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionCreating, ResNameEndpointPrivateDNS, plan.VpcEndpointID.String(), nil),
-			errors.New("empty output").Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("creating VPC Endpoint Private DNS (%s)", data.VPCEndpointID.ValueString()), err.Error())
+
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceEndpointPrivateDNS) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().EC2Client(ctx)
-
-	var state resourceEndpointPrivateDNSData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *vpcEndpointPrivateDNSResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data vpcEndpointPrivateDNSResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findVPCEndpointByID(ctx, conn, state.VpcEndpointID.ValueString())
+	conn := r.Meta().EC2Client(ctx)
+
+	vpce, err := findVPCEndpointByID(ctx, conn, data.VPCEndpointID.ValueString())
+
 	if tfresource.NotFound(err) {
-		resp.State.RemoveResource(ctx)
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
 		return
 	}
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionReading, ResNameEndpointPrivateDNS, state.VpcEndpointID.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading VPC Endpoint (%s)", data.VPCEndpointID.ValueString()), err.Error())
+
 		return
 	}
 
-	state.PrivateDNSEnabled = flex.BoolToFramework(ctx, out.PrivateDnsEnabled)
+	data.PrivateDNSEnabled = fwflex.BoolToFramework(ctx, vpce.PrivateDnsEnabled)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceEndpointPrivateDNS) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *vpcEndpointPrivateDNSResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var data vpcEndpointPrivateDNSResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().EC2Client(ctx)
 
-	var plan, state resourceEndpointPrivateDNSData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+	input := &ec2.ModifyVpcEndpointInput{
+		PrivateDnsEnabled: fwflex.BoolFromFramework(ctx, data.PrivateDNSEnabled),
+		VpcEndpointId:     fwflex.StringFromFramework(ctx, data.VPCEndpointID),
+	}
+
+	_, err := conn.ModifyVpcEndpoint(ctx, input)
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("Updating VPC Endpoint Private DNS (%s)", data.VPCEndpointID.ValueString()), err.Error())
+
 		return
 	}
 
-	if !plan.PrivateDNSEnabled.Equal(state.PrivateDNSEnabled) {
-		in := &ec2.ModifyVpcEndpointInput{
-			VpcEndpointId:     aws.String(plan.VpcEndpointID.ValueString()),
-			PrivateDnsEnabled: aws.Bool(plan.PrivateDNSEnabled.ValueBool()),
-		}
-
-		out, err := conn.ModifyVpcEndpoint(ctx, in)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.EC2, create.ErrActionCreating, ResNameEndpointPrivateDNS, plan.VpcEndpointID.String(), err),
-				err.Error(),
-			)
-			return
-		}
-		if out == nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.EC2, create.ErrActionCreating, ResNameEndpointPrivateDNS, plan.VpcEndpointID.String(), nil),
-				errors.New("empty output").Error(),
-			)
-			return
-		}
-	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceEndpointPrivateDNS) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrVPCEndpointID), req, resp)
+func (r *vpcEndpointPrivateDNSResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrVPCEndpointID), request, response)
 }
 
-type resourceEndpointPrivateDNSData struct {
-	VpcEndpointID     types.String `tfsdk:"vpc_endpoint_id"`
+type vpcEndpointPrivateDNSResourceModel struct {
 	PrivateDNSEnabled types.Bool   `tfsdk:"private_dns_enabled"`
+	VPCEndpointID     types.String `tfsdk:"vpc_endpoint_id"`
 }

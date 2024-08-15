@@ -1,6 +1,6 @@
 module github.com/hashicorp/terraform-provider-aws/tools
 
-go 1.22.5
+go 1.22.6
 
 require (
 	github.com/YakDriver/tfproviderdocs v0.13.0
@@ -8,7 +8,7 @@ require (
 	github.com/golangci/golangci-lint v1.59.1
 	github.com/hashicorp/copywrite v0.19.0
 	github.com/hashicorp/go-changelog v0.0.0-20240306190400-974418b4aaa3
-	github.com/katbyte/terrafmt v0.5.3
+	github.com/katbyte/terrafmt v0.5.4
 	github.com/pavius/impi v0.0.3
 	github.com/rhysd/actionlint v1.7.1
 	github.com/terraform-linters/tflint v0.52.0
@@ -51,7 +51,7 @@ require (
 	github.com/asaskevich/govalidator v0.0.0-20200907205600-7a23bdc65eef // indirect
 	github.com/ashanbrown/forbidigo v1.6.0 // indirect
 	github.com/ashanbrown/makezero v1.1.1 // indirect
-	github.com/aws/aws-sdk-go v1.54.19 // indirect
+	github.com/aws/aws-sdk-go v1.55.5 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect

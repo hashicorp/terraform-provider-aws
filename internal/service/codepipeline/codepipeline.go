@@ -198,6 +198,11 @@ func resourcePipeline() *schema.Resource {
 										Computed:     true,
 										ValidateFunc: validation.IntBetween(1, 999),
 									},
+									"timeout_in_minutes": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ValidateFunc: validation.IntBetween(5, 86400),
+									},
 									names.AttrVersion: {
 										Type:     schema.TypeString,
 										Required: true,
@@ -225,6 +230,7 @@ func resourcePipeline() *schema.Resource {
 			"trigger": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 50,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -658,7 +664,7 @@ func expandPipelineDeclaration(d *schema.ResourceData) (*types.PipelineDeclarati
 		case 1:
 			for region, v := range artifactStores {
 				if region != "" {
-					return nil, errors.New("region cannot be set for a single-region CodePipeline")
+					return nil, errors.New("region cannot be set for a single-region CodePipeline Pipeline")
 				}
 				v := v
 				apiObject.ArtifactStore = &v
@@ -667,11 +673,11 @@ func expandPipelineDeclaration(d *schema.ResourceData) (*types.PipelineDeclarati
 		default:
 			for region := range artifactStores {
 				if region == "" {
-					return nil, errors.New("region must be set for a cross-region CodePipeline")
+					return nil, errors.New("region must be set for a cross-region CodePipeline Pipeline")
 				}
 			}
 			if n != v.(*schema.Set).Len() {
-				return nil, errors.New("only one Artifact Store can be defined per region for a cross-region CodePipeline")
+				return nil, errors.New("only one Artifact Store can be defined per region for a cross-region CodePipeline Pipeline")
 			}
 			apiObject.ArtifactStores = artifactStores
 		}
@@ -875,6 +881,10 @@ func expandActionDeclaration(tfMap map[string]interface{}) *types.ActionDeclarat
 
 	if v, ok := tfMap["run_order"].(int); ok && v != 0 {
 		apiObject.RunOrder = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["timeout_in_minutes"].(int); ok && v != 0 {
+		apiObject.TimeoutInMinutes = aws.Int32(int32(v))
 	}
 
 	if v, ok := tfMap[names.AttrVersion].(string); ok && v != "" {
@@ -1355,6 +1365,10 @@ func flattenActionDeclaration(d *schema.ResourceData, i, j int, apiObject types.
 
 	if v := apiObject.RunOrder; v != nil {
 		tfMap["run_order"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.TimeoutInMinutes; v != nil {
+		tfMap["timeout_in_minutes"] = aws.ToInt32(v)
 	}
 
 	return tfMap

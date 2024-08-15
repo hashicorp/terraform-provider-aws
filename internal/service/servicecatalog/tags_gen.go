@@ -4,8 +4,8 @@ package servicecatalog
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/servicecatalog"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 )
@@ -13,11 +13,11 @@ import (
 // []*SERVICE.Tag handling
 
 // Tags returns servicecatalog service tags.
-func Tags(tags tftags.KeyValueTags) []*servicecatalog.Tag {
-	result := make([]*servicecatalog.Tag, 0, len(tags))
+func Tags(tags tftags.KeyValueTags) []awstypes.Tag {
+	result := make([]awstypes.Tag, 0, len(tags))
 
 	for k, v := range tags.Map() {
-		tag := &servicecatalog.Tag{
+		tag := awstypes.Tag{
 			Key:   aws.String(k),
 			Value: aws.String(v),
 		}
@@ -29,11 +29,11 @@ func Tags(tags tftags.KeyValueTags) []*servicecatalog.Tag {
 }
 
 // KeyValueTags creates tftags.KeyValueTags from servicecatalog service tags.
-func KeyValueTags(ctx context.Context, tags []*servicecatalog.Tag) tftags.KeyValueTags {
+func KeyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		m[aws.ToString(tag.Key)] = tag.Value
 	}
 
 	return tftags.New(ctx, m)
@@ -41,7 +41,7 @@ func KeyValueTags(ctx context.Context, tags []*servicecatalog.Tag) tftags.KeyVal
 
 // getTagsIn returns servicecatalog service tags from Context.
 // nil is returned if there are no input tags.
-func getTagsIn(ctx context.Context) []*servicecatalog.Tag {
+func getTagsIn(ctx context.Context) []awstypes.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -52,7 +52,7 @@ func getTagsIn(ctx context.Context) []*servicecatalog.Tag {
 }
 
 // setTagsOut sets servicecatalog service tags in Context.
-func setTagsOut(ctx context.Context, tags []*servicecatalog.Tag) {
+func setTagsOut(ctx context.Context, tags []awstypes.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = option.Some(KeyValueTags(ctx, tags))
 	}
