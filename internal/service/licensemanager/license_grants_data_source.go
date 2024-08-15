@@ -15,20 +15,24 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters"
+	namevaluesfiltersv2 "github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters/v2"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_licensemanager_grants")
-func DataSourceDistributedGrants() *schema.Resource {
+// @SDKDataSource("aws_licensemanager_grants", name="Grants")
+func dataSourceGrants() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDistributedGrantsRead,
+
 		Schema: map[string]*schema.Schema{
-			names.AttrFilter: DataSourceFiltersSchema(),
 			names.AttrARNs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			names.AttrFilter: namevaluesfilters.Schema(),
 		},
 	}
 }
@@ -37,43 +41,35 @@ func dataSourceDistributedGrantsRead(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LicenseManagerClient(ctx)
 
-	in := &licensemanager.ListDistributedGrantsInput{}
+	input := &licensemanager.ListDistributedGrantsInput{}
 
-	in.Filters = BuildFiltersDataSource(
-		d.Get(names.AttrFilter).(*schema.Set),
-	)
-
-	if len(in.Filters) == 0 {
-		in.Filters = nil
+	if v, ok := d.GetOk(names.AttrFilter); ok && v.(*schema.Set).Len() > 0 {
+		input.Filters = namevaluesfiltersv2.New(v.(*schema.Set)).LicenseManagerFilters()
 	}
 
-	out, err := FindDistributedDistributedGrants(ctx, conn, in)
+	grants, err := findDistributedGrants(ctx, conn, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Distributes Grants: %s", err)
-	}
-
-	var grantARNs []string
-
-	for _, v := range out {
-		grantARNs = append(grantARNs, aws.ToString(v.GrantArn))
+		return sdkdiag.AppendErrorf(diags, "reading License Manager Distributed Grants: %s", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set(names.AttrARNs, grantARNs)
+	d.Set(names.AttrARNs, tfslices.ApplyToAll(grants, func(v awstypes.Grant) string {
+		return aws.ToString(v.GrantArn)
+	}))
 
 	return diags
 }
 
-func FindDistributedDistributedGrants(ctx context.Context, conn *licensemanager.Client, in *licensemanager.ListDistributedGrantsInput) ([]awstypes.Grant, error) {
-	var out []awstypes.Grant
+func findDistributedGrants(ctx context.Context, conn *licensemanager.Client, input *licensemanager.ListDistributedGrantsInput) ([]awstypes.Grant, error) {
+	var output []awstypes.Grant
 
-	err := listDistributedGrantsPages(ctx, conn, in, func(page *licensemanager.ListDistributedGrantsOutput, lastPage bool) bool {
+	err := listDistributedGrantsPages(ctx, conn, input, func(page *licensemanager.ListDistributedGrantsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		out = append(out, page.Grants...)
+		output = append(output, page.Grants...)
 
 		return !lastPage
 	})
@@ -81,7 +77,7 @@ func FindDistributedDistributedGrants(ctx context.Context, conn *licensemanager.
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
-			LastRequest: in,
+			LastRequest: input,
 		}
 	}
 
@@ -89,5 +85,5 @@ func FindDistributedDistributedGrants(ctx context.Context, conn *licensemanager.
 		return nil, err
 	}
 
-	return out, nil
+	return output, nil
 }
