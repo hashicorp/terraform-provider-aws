@@ -15,20 +15,24 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters"
+	namevaluesfiltersv2 "github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters/v2"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_licensemanager_received_licenses")
-func DataSourceReceivedLicenses() *schema.Resource {
+// @SDKDataSource("aws_licensemanager_received_licenses", name="Received Licenses")
+func dataSourceReceivedLicenses() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceReceivedLicensesRead,
+
 		Schema: map[string]*schema.Schema{
 			names.AttrARNs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrFilter: DataSourceFiltersSchema(),
+			names.AttrFilter: namevaluesfilters.Schema(),
 		},
 	}
 }
@@ -37,30 +41,22 @@ func dataSourceReceivedLicensesRead(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LicenseManagerClient(ctx)
 
-	in := &licensemanager.ListReceivedLicensesInput{}
+	input := &licensemanager.ListReceivedLicensesInput{}
 
-	in.Filters = BuildFiltersDataSource(
-		d.Get(names.AttrFilter).(*schema.Set),
-	)
-
-	if len(in.Filters) == 0 {
-		in.Filters = nil
+	if v, ok := d.GetOk(names.AttrFilter); ok && v.(*schema.Set).Len() > 0 {
+		input.Filters = namevaluesfiltersv2.New(v.(*schema.Set)).LicenseManagerFilters()
 	}
 
-	out, err := findReceivedLicenses(ctx, conn, in)
+	licenses, err := findReceivedLicenses(ctx, conn, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Received Licenses: %s", err)
-	}
-
-	var licenseARNs []string
-
-	for _, v := range out {
-		licenseARNs = append(licenseARNs, aws.ToString(v.LicenseArn))
+		return sdkdiag.AppendErrorf(diags, "reading License Manager Received Licenses: %s", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set(names.AttrARNs, licenseARNs)
+	d.Set(names.AttrARNs, tfslices.ApplyToAll(licenses, func(v awstypes.GrantedLicense) string {
+		return aws.ToString(v.LicenseArn)
+	}))
 
 	return diags
 }

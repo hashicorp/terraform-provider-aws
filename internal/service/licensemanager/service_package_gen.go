@@ -35,8 +35,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Received License",
 		},
 		{
-			Factory:  DataSourceReceivedLicenses,
+			Factory:  dataSourceReceivedLicenses,
 			TypeName: "aws_licensemanager_received_licenses",
+			Name:     "Received Licenses",
 		},
 	}
 }
