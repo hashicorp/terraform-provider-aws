@@ -338,13 +338,13 @@ func (r *managedUserPoolClientResource) Schema(ctx context.Context, request reso
 func (r *managedUserPoolClientResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	conn := r.Meta().CognitoIDPClient(ctx)
 
-	var config resourceManagedUserPoolClientData
+	var config resourceManagedUserPoolClientModel
 	response.Diagnostics.Append(request.Config.Get(ctx, &config)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	var plan resourceManagedUserPoolClientData
+	var plan resourceManagedUserPoolClientModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -533,7 +533,7 @@ func (r *managedUserPoolClientResource) Create(ctx context.Context, request reso
 }
 
 func (r *managedUserPoolClientResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	var state resourceManagedUserPoolClientData
+	var state resourceManagedUserPoolClientModel
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -593,19 +593,19 @@ func (r *managedUserPoolClientResource) Read(ctx context.Context, request resour
 }
 
 func (r *managedUserPoolClientResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var config resourceManagedUserPoolClientData
+	var config resourceManagedUserPoolClientModel
 	response.Diagnostics.Append(request.Config.Get(ctx, &config)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	var plan resourceManagedUserPoolClientData
+	var plan resourceManagedUserPoolClientModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	var state resourceManagedUserPoolClientData
+	var state resourceManagedUserPoolClientModel
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -754,7 +754,7 @@ func findUserPoolClientByName(ctx context.Context, conn *cognitoidentityprovider
 	return findUserPoolClientByTwoPartKey(ctx, conn, userPoolID, aws.ToString(userPoolClient.ClientId))
 }
 
-type resourceManagedUserPoolClientData struct {
+type resourceManagedUserPoolClientModel struct {
 	AccessTokenValidity                      types.Int64                                                 `tfsdk:"access_token_validity"`
 	AllowedOauthFlows                        types.Set                                                   `tfsdk:"allowed_oauth_flows"`
 	AllowedOauthFlowsUserPoolClient          types.Bool                                                  `tfsdk:"allowed_oauth_flows_user_pool_client"`
@@ -782,7 +782,7 @@ type resourceManagedUserPoolClientData struct {
 	WriteAttributes                          types.Set                                                   `tfsdk:"write_attributes"`
 }
 
-func (data resourceManagedUserPoolClientData) updateInput(ctx context.Context, diags *diag.Diagnostics) *cognitoidentityprovider.UpdateUserPoolClientInput {
+func (data resourceManagedUserPoolClientModel) updateInput(ctx context.Context, diags *diag.Diagnostics) *cognitoidentityprovider.UpdateUserPoolClientInput {
 	return &cognitoidentityprovider.UpdateUserPoolClientInput{
 		AccessTokenValidity:                      fwflex.Int32FromFrameworkLegacy(ctx, data.AccessTokenValidity),
 		AllowedOAuthFlows:                        fwflex.ExpandFrameworkStringyValueSet[awstypes.OAuthFlowType](ctx, data.AllowedOauthFlows),
@@ -817,7 +817,7 @@ type resourceManagedUserPoolClientAccessTokenValidityValidator struct {
 
 func (v resourceManagedUserPoolClientAccessTokenValidityValidator) ValidateResource(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
 	v.validate(ctx, req, resp,
-		func(rupcd resourceManagedUserPoolClientData) types.Int64 {
+		func(rupcd resourceManagedUserPoolClientModel) types.Int64 {
 			return rupcd.AccessTokenValidity
 		},
 		func(tvu *tokenValidityUnits) awstypes.TimeUnitsType {
@@ -834,7 +834,7 @@ type resourceManagedUserPoolClientIDTokenValidityValidator struct {
 
 func (v resourceManagedUserPoolClientIDTokenValidityValidator) ValidateResource(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
 	v.validate(ctx, req, resp,
-		func(rupcd resourceManagedUserPoolClientData) types.Int64 {
+		func(rupcd resourceManagedUserPoolClientModel) types.Int64 {
 			return rupcd.IdTokenValidity
 		},
 		func(tvu *tokenValidityUnits) awstypes.TimeUnitsType {
@@ -851,7 +851,7 @@ type resourceManagedUserPoolClientRefreshTokenValidityValidator struct {
 
 func (v resourceManagedUserPoolClientRefreshTokenValidityValidator) ValidateResource(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
 	v.validate(ctx, req, resp,
-		func(rupcd resourceManagedUserPoolClientData) types.Int64 {
+		func(rupcd resourceManagedUserPoolClientModel) types.Int64 {
 			return rupcd.RefreshTokenValidity
 		},
 		func(tvu *tokenValidityUnits) awstypes.TimeUnitsType {
@@ -875,8 +875,8 @@ func (v resourceManagedUserPoolClientValidityValidator) MarkdownDescription(_ co
 	return fmt.Sprintf("must have a duration between %s and %s", v.min, v.max)
 }
 
-func (v resourceManagedUserPoolClientValidityValidator) validate(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse, valF func(resourceManagedUserPoolClientData) types.Int64, unitF func(*tokenValidityUnits) awstypes.TimeUnitsType) {
-	var config resourceManagedUserPoolClientData
+func (v resourceManagedUserPoolClientValidityValidator) validate(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse, valF func(resourceManagedUserPoolClientModel) types.Int64, unitF func(*tokenValidityUnits) awstypes.TimeUnitsType) {
+	var config resourceManagedUserPoolClientModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
