@@ -22,6 +22,7 @@ BUG FIXES:
 * resource/aws_controltower_landing_zone: Fix unreturned `sdkdiags.AppendErrorf` function calls ([#38854](https://github.com/hashicorp/terraform-provider-aws/issues/38854))
 * resource/aws_db_event_subscription: Fix plan-time validation of `name` and `name_prefix` ([#38194](https://github.com/hashicorp/terraform-provider-aws/issues/38194))
 * resource/aws_ecs_cluster_capacity_providers: Fix unreturned `sdkdiags.AppendErrorf` function calls ([#38854](https://github.com/hashicorp/terraform-provider-aws/issues/38854))
+* resource/aws_ecs_service: Fix crash from nil `service_registries` item ([#38883](https://github.com/hashicorp/terraform-provider-aws/issues/38883))
 * resource/aws_ecs_task_definition: Prevent lowercasing of the first character of JSON keys in `container_definitions.dockerLabels` ([#38804](https://github.com/hashicorp/terraform-provider-aws/issues/38804))
 * resource/aws_elasticache_replication_group: Fix crash when setting `replicas_per_node_group` if node groups are empty ([#38797](https://github.com/hashicorp/terraform-provider-aws/issues/38797))
 * resource/aws_fms_policy: Fix unreturned `sdkdiags.AppendErrorf` function calls ([#38854](https://github.com/hashicorp/terraform-provider-aws/issues/38854))
