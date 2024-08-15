@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/datafy"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -194,9 +195,30 @@ func resourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta int
 	volume, err := findEBSVolumeByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] EBS Volume %s not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
+		// if not found on aws, it may mean we datafied it and deleted the volume
+		dc := meta.(*conns.AWSClient).DatafyClient(ctx)
+		if datafyVolume, datafyErr := dc.GetVolume(d.Id()); datafyErr == nil {
+			// if we are managing this volume, just return the state as is
+			if datafyVolume.IsManaged {
+				return diags
+			}
+
+			// if the volume was replaced (new source due to undatafy), it means the new
+			// volume is now the source volume, and we need to set the "new" values from aws
+			if datafyVolume.IsReplacement {
+				newId := aws.ToString(datafyVolume.VolumeId)
+				diags = sdkdiag.AppendWarningf(diags, "new EBS Volume (%s) has been created to replace the undatafied EBS Volume (%s)", d.Id(), newId)
+
+				d.SetId(newId)
+				volume, err = findEBSVolumeByID(ctx, conn, newId)
+			}
+		} else if datafy.NotFound(datafyErr) {
+			log.Printf("[WARN] EBS Volume %s not found, removing from state", d.Id())
+			d.SetId("")
+			return diags
+		} else {
+			err = datafyErr
+		}
 	}
 
 	if err != nil {
@@ -232,6 +254,29 @@ func resourceEBSVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+		// once the volume is managed, datafy has control on the volume, and it can't be updated via terraform.
+		// if it was replaced (new source due to undatafy), so we set the new id and the volume properties to the state
+		// and give back control to terraform
+		dc := meta.(*conns.AWSClient).DatafyClient(ctx)
+		if datafyVolume, datafyErr := dc.GetVolume(d.Id()); datafyErr == nil {
+			if datafyVolume.IsManaged {
+				return sdkdiag.AppendErrorf(diags, "can't modify datafied EBS Volume (%s)", d.Id())
+			}
+			if datafyVolume.IsReplacement {
+				newId := aws.ToString(datafyVolume.VolumeId)
+				diags = sdkdiag.AppendWarningf(diags, "new EBS Volume (%s) has been created to replace the undatafied EBS Volume (%s)", d.Id(), newId)
+
+				d.SetId(newId)
+				if diags := resourceEBSVolumeRead(ctx, d, meta); diags.HasError() {
+					return diags
+				}
+
+				return resourceEBSVolumeUpdate(ctx, d, meta)
+			}
+		} else if !datafy.NotFound(datafyErr) {
+			return sdkdiag.AppendErrorf(diags, "modifying EBS Volume (%s): %s", d.Id(), datafyErr)
+		}
+
 		input := &ec2.ModifyVolumeInput{
 			VolumeId: aws.String(d.Id()),
 		}
@@ -280,6 +325,23 @@ func resourceEBSVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta i
 func resourceEBSVolumeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+
+	// once the volume is managed, datafy has control on the volume, and it can't be deleted via terraform
+	// the call must go via datafy api - that will also create the snapshot if needed.
+	// if it was replaced, set the new id to the state and give back control to terraform
+	dc := meta.(*conns.AWSClient).DatafyClient(ctx)
+	if datafyVolume, datafyErr := dc.GetVolume(d.Id()); datafyErr == nil {
+		if datafyVolume.IsManaged {
+			return sdkdiag.AppendErrorf(diags, "can't delete datafied EBS Volume (%s). Please undatafy the EBS Volume first", d.Id())
+		}
+		if datafyVolume.IsReplacement {
+			newId := aws.ToString(datafyVolume.VolumeId)
+			diags = sdkdiag.AppendWarningf(diags, "new EBS Volume (%s) has been created to replace the undatafied EBS Volume (%s)", d.Id(), newId)
+			d.SetId(newId)
+		}
+	} else if !datafy.NotFound(datafyErr) {
+		return sdkdiag.AppendErrorf(diags, "deleting EBS Volume (%s): %s", d.Id(), datafyErr)
+	}
 
 	if d.Get("final_snapshot").(bool) {
 		input := &ec2.CreateSnapshotInput{
