@@ -918,6 +918,119 @@ func TestExpandGeneric(t *testing.T) {
 	runAutoExpandTestCases(t, testCases)
 }
 
+func TestExpandBool(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]autoFlexTestCases{
+		"Bool to bool": {
+			"true": {
+				Source: tfSingleBoolField{
+					Field1: types.BoolValue(true),
+				},
+				Target: &awsSingleBoolValue{},
+				WantTarget: &awsSingleBoolValue{
+					Field1: true,
+				},
+				expectedLogLines: []map[string]any{
+					infoExpanding(reflect.TypeFor[tfSingleBoolField](), reflect.TypeFor[*awsSingleBoolValue]()),
+					infoConverting(reflect.TypeFor[tfSingleBoolField](), reflect.TypeFor[*awsSingleBoolValue]()),
+					traceMatchedFields("Field1", reflect.TypeFor[tfSingleBoolField](), "Field1", reflect.TypeFor[*awsSingleBoolValue]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[types.Bool](), "Field1", reflect.TypeFor[bool]()),
+				},
+			},
+			"false": {
+				Source: tfSingleBoolField{
+					Field1: types.BoolValue(false),
+				},
+				Target: &awsSingleBoolValue{},
+				WantTarget: &awsSingleBoolValue{
+					Field1: false,
+				},
+				expectedLogLines: []map[string]any{
+					infoExpanding(reflect.TypeFor[tfSingleBoolField](), reflect.TypeFor[*awsSingleBoolValue]()),
+					infoConverting(reflect.TypeFor[tfSingleBoolField](), reflect.TypeFor[*awsSingleBoolValue]()),
+					traceMatchedFields("Field1", reflect.TypeFor[tfSingleBoolField](), "Field1", reflect.TypeFor[*awsSingleBoolValue]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[types.Bool](), "Field1", reflect.TypeFor[bool]()),
+				},
+			},
+			"null": {
+				Source: tfSingleBoolField{
+					Field1: types.BoolNull(),
+				},
+				Target: &awsSingleBoolValue{},
+				WantTarget: &awsSingleBoolValue{
+					Field1: false,
+				},
+				expectedLogLines: []map[string]any{
+					infoExpanding(reflect.TypeFor[tfSingleBoolField](), reflect.TypeFor[*awsSingleBoolValue]()),
+					infoConverting(reflect.TypeFor[tfSingleBoolField](), reflect.TypeFor[*awsSingleBoolValue]()),
+					traceMatchedFields("Field1", reflect.TypeFor[tfSingleBoolField](), "Field1", reflect.TypeFor[*awsSingleBoolValue]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[types.Bool](), "Field1", reflect.TypeFor[bool]()),
+					traceExpandingNullValue("Field1", reflect.TypeFor[types.Bool](), "Field1", reflect.TypeFor[bool]()),
+				},
+			},
+		},
+
+		"Bool to *bool": {
+			"true": {
+				Source: tfSingleBoolField{
+					Field1: types.BoolValue(true),
+				},
+				Target: &awsSingleBoolPointer{},
+				WantTarget: &awsSingleBoolPointer{
+					Field1: aws.Bool(true),
+				},
+				expectedLogLines: []map[string]any{
+					infoExpanding(reflect.TypeFor[tfSingleBoolField](), reflect.TypeFor[*awsSingleBoolPointer]()),
+					infoConverting(reflect.TypeFor[tfSingleBoolField](), reflect.TypeFor[*awsSingleBoolPointer]()),
+					traceMatchedFields("Field1", reflect.TypeFor[tfSingleBoolField](), "Field1", reflect.TypeFor[*awsSingleBoolPointer]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[types.Bool](), "Field1", reflect.TypeFor[*bool]()),
+				},
+			},
+			"false": {
+				Source: tfSingleBoolField{
+					Field1: types.BoolValue(false),
+				},
+				Target: &awsSingleBoolPointer{},
+				WantTarget: &awsSingleBoolPointer{
+					Field1: aws.Bool(false),
+				},
+				expectedLogLines: []map[string]any{
+					infoExpanding(reflect.TypeFor[tfSingleBoolField](), reflect.TypeFor[*awsSingleBoolPointer]()),
+					infoConverting(reflect.TypeFor[tfSingleBoolField](), reflect.TypeFor[*awsSingleBoolPointer]()),
+					traceMatchedFields("Field1", reflect.TypeFor[tfSingleBoolField](), "Field1", reflect.TypeFor[*awsSingleBoolPointer]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[types.Bool](), "Field1", reflect.TypeFor[*bool]()),
+				},
+			},
+			"null": {
+				Source: tfSingleBoolField{
+					Field1: types.BoolNull(),
+				},
+				Target: &awsSingleBoolPointer{},
+				WantTarget: &awsSingleBoolPointer{
+					Field1: nil,
+				},
+				expectedLogLines: []map[string]any{
+					infoExpanding(reflect.TypeFor[tfSingleBoolField](), reflect.TypeFor[*awsSingleBoolPointer]()),
+					infoConverting(reflect.TypeFor[tfSingleBoolField](), reflect.TypeFor[*awsSingleBoolPointer]()),
+					traceMatchedFields("Field1", reflect.TypeFor[tfSingleBoolField](), "Field1", reflect.TypeFor[*awsSingleBoolPointer]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[types.Bool](), "Field1", reflect.TypeFor[*bool]()),
+					traceExpandingNullValue("Field1", reflect.TypeFor[types.Bool](), "Field1", reflect.TypeFor[*bool]()),
+				},
+			},
+		},
+	}
+
+	for testName, cases := range testCases {
+		cases := cases
+		t.Run(testName, func(t *testing.T) {
+			t.Parallel()
+
+			runAutoExpandTestCases(t, cases)
+		})
+	}
+}
+
 func TestExpandFloat64(t *testing.T) {
 	t.Parallel()
 

@@ -49,6 +49,10 @@ type tfSingleInt32Field struct {
 	Field1 types.Int32 `tfsdk:"field1"`
 }
 
+type tfSingleBoolField struct {
+	Field1 types.Bool `tfsdk:"field1"`
+}
+
 // All primitive types.
 type tfAllThePrimitiveFields struct {
 	Field1  types.String  `tfsdk:"field1"`
@@ -168,6 +172,14 @@ type tfCaptializationDiff struct {
 // awsCapitalizationDiff testing for fields that only differ by capitalization
 type awsCapitalizationDiff struct {
 	FieldUrl *string
+}
+
+type awsSingleBoolValue struct {
+	Field1 bool
+}
+
+type awsSingleBoolPointer struct {
+	Field1 *bool
 }
 
 type awsSingleStringValue struct {
