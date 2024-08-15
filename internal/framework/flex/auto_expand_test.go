@@ -985,7 +985,6 @@ func TestExpandBool(t *testing.T) {
 					infoConverting(reflect.TypeFor[tfSingleBoolFieldLegacy](), reflect.TypeFor[*awsSingleBoolValue]()),
 					traceMatchedFields("Field1", reflect.TypeFor[tfSingleBoolFieldLegacy](), "Field1", reflect.TypeFor[*awsSingleBoolValue]()),
 					infoConvertingWithPath("Field1", reflect.TypeFor[types.Bool](), "Field1", reflect.TypeFor[bool]()),
-					debugUsingLegacyExpander("Field1", reflect.TypeFor[types.Bool](), "Field1", reflect.TypeFor[bool]()),
 				},
 			},
 			"false": {
@@ -1001,7 +1000,6 @@ func TestExpandBool(t *testing.T) {
 					infoConverting(reflect.TypeFor[tfSingleBoolFieldLegacy](), reflect.TypeFor[*awsSingleBoolValue]()),
 					traceMatchedFields("Field1", reflect.TypeFor[tfSingleBoolFieldLegacy](), "Field1", reflect.TypeFor[*awsSingleBoolValue]()),
 					infoConvertingWithPath("Field1", reflect.TypeFor[types.Bool](), "Field1", reflect.TypeFor[bool]()),
-					debugUsingLegacyExpander("Field1", reflect.TypeFor[types.Bool](), "Field1", reflect.TypeFor[bool]()),
 				},
 			},
 			"null": {
@@ -1018,7 +1016,6 @@ func TestExpandBool(t *testing.T) {
 					traceMatchedFields("Field1", reflect.TypeFor[tfSingleBoolFieldLegacy](), "Field1", reflect.TypeFor[*awsSingleBoolValue]()),
 					infoConvertingWithPath("Field1", reflect.TypeFor[types.Bool](), "Field1", reflect.TypeFor[bool]()),
 					traceExpandingNullValue("Field1", reflect.TypeFor[types.Bool](), "Field1", reflect.TypeFor[bool]()),
-					// TODO: should log about legacy expander
 				},
 			},
 		},
@@ -1630,7 +1627,6 @@ func TestExpandInt64(t *testing.T) {
 					infoConverting(reflect.TypeFor[tfSingleInt64FieldLegacy](), reflect.TypeFor[*awsSingleInt64Value]()),
 					traceMatchedFields("Field1", reflect.TypeFor[tfSingleInt64FieldLegacy](), "Field1", reflect.TypeFor[*awsSingleInt64Value]()),
 					infoConvertingWithPath("Field1", reflect.TypeFor[types.Int64](), "Field1", reflect.TypeFor[int64]()),
-					debugUsingLegacyExpander("Field1", reflect.TypeFor[types.Int64](), "Field1", reflect.TypeFor[int64]()),
 				},
 			},
 			"zero": {
@@ -1646,7 +1642,6 @@ func TestExpandInt64(t *testing.T) {
 					infoConverting(reflect.TypeFor[tfSingleInt64FieldLegacy](), reflect.TypeFor[*awsSingleInt64Value]()),
 					traceMatchedFields("Field1", reflect.TypeFor[tfSingleInt64FieldLegacy](), "Field1", reflect.TypeFor[*awsSingleInt64Value]()),
 					infoConvertingWithPath("Field1", reflect.TypeFor[types.Int64](), "Field1", reflect.TypeFor[int64]()),
-					debugUsingLegacyExpander("Field1", reflect.TypeFor[types.Int64](), "Field1", reflect.TypeFor[int64]()),
 				},
 			},
 			"null": {
@@ -1663,7 +1658,6 @@ func TestExpandInt64(t *testing.T) {
 					traceMatchedFields("Field1", reflect.TypeFor[tfSingleInt64FieldLegacy](), "Field1", reflect.TypeFor[*awsSingleInt64Value]()),
 					infoConvertingWithPath("Field1", reflect.TypeFor[types.Int64](), "Field1", reflect.TypeFor[int64]()),
 					traceExpandingNullValue("Field1", reflect.TypeFor[types.Int64](), "Field1", reflect.TypeFor[int64]()),
-					// TODO: should log about legacy expander
 				},
 			},
 		},
@@ -1833,7 +1827,6 @@ func TestExpandInt64(t *testing.T) {
 					infoConverting(reflect.TypeFor[tfSingleInt64FieldLegacy](), reflect.TypeFor[*awsSingleInt32Value]()),
 					traceMatchedFields("Field1", reflect.TypeFor[tfSingleInt64FieldLegacy](), "Field1", reflect.TypeFor[*awsSingleInt32Value]()),
 					infoConvertingWithPath("Field1", reflect.TypeFor[types.Int64](), "Field1", reflect.TypeFor[int32]()),
-					debugUsingLegacyExpander("Field1", reflect.TypeFor[types.Int64](), "Field1", reflect.TypeFor[int32]()),
 				},
 			},
 			"zero": {
@@ -1849,7 +1842,6 @@ func TestExpandInt64(t *testing.T) {
 					infoConverting(reflect.TypeFor[tfSingleInt64FieldLegacy](), reflect.TypeFor[*awsSingleInt32Value]()),
 					traceMatchedFields("Field1", reflect.TypeFor[tfSingleInt64FieldLegacy](), "Field1", reflect.TypeFor[*awsSingleInt32Value]()),
 					infoConvertingWithPath("Field1", reflect.TypeFor[types.Int64](), "Field1", reflect.TypeFor[int32]()),
-					debugUsingLegacyExpander("Field1", reflect.TypeFor[types.Int64](), "Field1", reflect.TypeFor[int32]()),
 				},
 			},
 			"null": {
@@ -1866,7 +1858,6 @@ func TestExpandInt64(t *testing.T) {
 					traceMatchedFields("Field1", reflect.TypeFor[tfSingleInt64FieldLegacy](), "Field1", reflect.TypeFor[*awsSingleInt32Value]()),
 					infoConvertingWithPath("Field1", reflect.TypeFor[types.Int64](), "Field1", reflect.TypeFor[int32]()),
 					traceExpandingNullValue("Field1", reflect.TypeFor[types.Int64](), "Field1", reflect.TypeFor[int32]()),
-					// TODO: should log about legacy expander
 				},
 			},
 		},
@@ -2049,7 +2040,6 @@ func TestExpandInt32(t *testing.T) {
 					infoConverting(reflect.TypeFor[tfSingleInt32FieldLegacy](), reflect.TypeFor[*awsSingleInt32Value]()),
 					traceMatchedFields("Field1", reflect.TypeFor[tfSingleInt32FieldLegacy](), "Field1", reflect.TypeFor[*awsSingleInt32Value]()),
 					infoConvertingWithPath("Field1", reflect.TypeFor[types.Int32](), "Field1", reflect.TypeFor[int32]()),
-					debugUsingLegacyExpander("Field1", reflect.TypeFor[types.Int32](), "Field1", reflect.TypeFor[int32]()),
 				},
 			},
 			"zero": {
@@ -2065,7 +2055,6 @@ func TestExpandInt32(t *testing.T) {
 					infoConverting(reflect.TypeFor[tfSingleInt32FieldLegacy](), reflect.TypeFor[*awsSingleInt32Value]()),
 					traceMatchedFields("Field1", reflect.TypeFor[tfSingleInt32FieldLegacy](), "Field1", reflect.TypeFor[*awsSingleInt32Value]()),
 					infoConvertingWithPath("Field1", reflect.TypeFor[types.Int32](), "Field1", reflect.TypeFor[int32]()),
-					debugUsingLegacyExpander("Field1", reflect.TypeFor[types.Int32](), "Field1", reflect.TypeFor[int32]()),
 				},
 			},
 			"null": {
@@ -2082,7 +2071,6 @@ func TestExpandInt32(t *testing.T) {
 					traceMatchedFields("Field1", reflect.TypeFor[tfSingleInt32FieldLegacy](), "Field1", reflect.TypeFor[*awsSingleInt32Value]()),
 					infoConvertingWithPath("Field1", reflect.TypeFor[types.Int32](), "Field1", reflect.TypeFor[int32]()),
 					traceExpandingNullValue("Field1", reflect.TypeFor[types.Int32](), "Field1", reflect.TypeFor[int32]()),
-					// TODO: should log about legacy expander
 				},
 			},
 		},
