@@ -7,14 +7,16 @@ package datazone
 var (
 	ResourceDomain                            = newResourceDomain
 	ResourceEnvironmentBlueprintConfiguration = newResourceEnvironmentBlueprintConfiguration
-	IsResourceMissing                         = isResourceMissing
-	ResourceProject                           = newResourceProject
 	ResourceEnvironmentProfile                = newResourceEnvironmentProfile
-	FindEnvironmentProfileByID                = findEnvironmentProfileByID
-	ResourceGlossary                          = newResourceGlossary
-	FindGlossaryByID                          = findGlossaryByID
 	ResourceFormType                          = newResourceFormType
-	FindFormTypeByID                          = findFormTypeByID
+	ResourceGlossary                          = newResourceGlossary
 	ResourceGlossaryTerm                      = newResourceGlossaryTerm
-	FindGlossaryTermByID                      = findGlossaryTermByID
+	ResourceProject                           = newResourceProject
+
+	FindEnvironmentProfileByID = findEnvironmentProfileByID
+	FindFormTypeByID           = findFormTypeByID
+	FindGlossaryByID           = findGlossaryByID
+	FindGlossaryTermByID       = findGlossaryTermByID
+
+	IsResourceMissing = isResourceMissing
 )

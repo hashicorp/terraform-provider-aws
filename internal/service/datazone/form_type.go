@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -20,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -37,6 +39,8 @@ import (
 // @FrameworkResource("aws_datazone_form_type", name="Form Type")
 func newResourceFormType(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceFormType{}
+	r.SetDefaultCreateTimeout(30 * time.Second)
+
 	return r, nil
 }
 
@@ -46,7 +50,6 @@ const (
 
 type resourceFormType struct {
 	framework.ResourceWithConfigure
-	framework.WithImportByID
 	framework.WithTimeouts
 	framework.WithNoUpdate
 }
@@ -69,11 +72,17 @@ func (r *resourceFormType) Schema(ctx context.Context, req resource.SchemaReques
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 2048),
 				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"domain_identifier": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.RegexMatches(regexache.MustCompile(`^dzd[-_][a-zA-Z0-9_-]{1,36}$`), "^dzd[-_][a-zA-Z0-9_-]{1,36}$"),
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"imports": schema.ListAttribute{
@@ -81,8 +90,10 @@ func (r *resourceFormType) Schema(ctx context.Context, req resource.SchemaReques
 				Computed:   true,
 			},
 			names.AttrName: schema.StringAttribute{
-				Required:   true,
-				Validators: []validator.String{},
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"origin_domain_id": schema.StringAttribute{
 				Computed: true,
@@ -101,6 +112,9 @@ func (r *resourceFormType) Schema(ctx context.Context, req resource.SchemaReques
 				Validators: []validator.String{
 					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9_-]{1,36}$`), "^[a-zA-Z0-9_-]{1,36}$"),
 				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"revision": schema.StringAttribute{
 				Computed: true,
@@ -109,6 +123,10 @@ func (r *resourceFormType) Schema(ctx context.Context, req resource.SchemaReques
 				CustomType: fwtypes.StringEnumType[awstypes.FormTypeStatus](),
 				Optional:   true,
 				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -118,10 +136,16 @@ func (r *resourceFormType) Schema(ctx context.Context, req resource.SchemaReques
 					listvalidator.SizeAtMost(1),
 					listvalidator.IsRequired(),
 				},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"smithy": schema.StringAttribute{
 							Required: true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
 						},
 					},
 				},
@@ -141,14 +165,14 @@ func (r *resourceFormType) Create(ctx context.Context, req resource.CreateReques
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	in := &datazone.CreateFormTypeInput{}
-	in.DomainIdentifier = plan.DomainIdentifier.ValueStringPointer()
-	resp.Diagnostics.Append(flex.Expand(ctx, &plan, in)...)
+
+	in := datazone.CreateFormTypeInput{}
+	resp.Diagnostics.Append(flex.Expand(ctx, plan, &in)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	option := flex.WithIgnoredFieldNames([]string{"Model"})
-	out, err := conn.CreateFormType(ctx, in)
+
+	out, err := conn.CreateFormType(ctx, &in)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.DataZone, create.ErrActionCreating, ResNameFormType, plan.Name.String(), err),
@@ -175,11 +199,14 @@ func (r *resourceFormType) Create(ctx context.Context, req resource.CreateReques
 		)
 		return
 	}
+
 	output := outputRaws.(*datazone.GetFormTypeOutput)
+	option := flex.WithIgnoredFieldNames([]string{"Model"})
 	resp.Diagnostics.Append(flex.Flatten(ctx, output, &plan, option)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -210,7 +237,9 @@ func (r *resourceFormType) Read(ctx context.Context, req resource.ReadRequest, r
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
 	state.OwningProjectIdentifier = flex.StringToFramework(ctx, out.OwningProjectId)
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -261,14 +290,14 @@ func findFormTypeByID(ctx context.Context, conn *datazone.Client, domainId strin
 	}
 
 	out, err := conn.GetFormType(ctx, in)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
 		}
+	}
 
+	if err != nil {
 		return nil, err
 	}
 
