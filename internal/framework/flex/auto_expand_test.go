@@ -2440,6 +2440,55 @@ func TestExpandString(t *testing.T) {
 			},
 		},
 
+		"legacy String to string": {
+			"value": {
+				Source: tfSingleStringFieldLegacy{
+					Field1: types.StringValue("value"),
+				},
+				Target: &awsSingleStringValue{},
+				WantTarget: &awsSingleStringValue{
+					Field1: "value",
+				},
+				expectedLogLines: []map[string]any{
+					infoExpanding(reflect.TypeFor[tfSingleStringFieldLegacy](), reflect.TypeFor[*awsSingleStringValue]()),
+					infoConverting(reflect.TypeFor[tfSingleStringFieldLegacy](), reflect.TypeFor[*awsSingleStringValue]()),
+					traceMatchedFields("Field1", reflect.TypeFor[tfSingleStringFieldLegacy](), "Field1", reflect.TypeFor[*awsSingleStringValue]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[string]()),
+				},
+			},
+			"empty": {
+				Source: tfSingleStringFieldLegacy{
+					Field1: types.StringValue(""),
+				},
+				Target: &awsSingleStringValue{},
+				WantTarget: &awsSingleStringValue{
+					Field1: "",
+				},
+				expectedLogLines: []map[string]any{
+					infoExpanding(reflect.TypeFor[tfSingleStringFieldLegacy](), reflect.TypeFor[*awsSingleStringValue]()),
+					infoConverting(reflect.TypeFor[tfSingleStringFieldLegacy](), reflect.TypeFor[*awsSingleStringValue]()),
+					traceMatchedFields("Field1", reflect.TypeFor[tfSingleStringFieldLegacy](), "Field1", reflect.TypeFor[*awsSingleStringValue]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[string]()),
+				},
+			},
+			"null": {
+				Source: tfSingleStringFieldLegacy{
+					Field1: types.StringNull(),
+				},
+				Target: &awsSingleStringValue{},
+				WantTarget: &awsSingleStringValue{
+					Field1: "",
+				},
+				expectedLogLines: []map[string]any{
+					infoExpanding(reflect.TypeFor[tfSingleStringFieldLegacy](), reflect.TypeFor[*awsSingleStringValue]()),
+					infoConverting(reflect.TypeFor[tfSingleStringFieldLegacy](), reflect.TypeFor[*awsSingleStringValue]()),
+					traceMatchedFields("Field1", reflect.TypeFor[tfSingleStringFieldLegacy](), "Field1", reflect.TypeFor[*awsSingleStringValue]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[string]()),
+					traceExpandingNullValue("Field1", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[string]()),
+				},
+			},
+		},
+
 		"String to *string": {
 			"value": {
 				Source: tfSingleStringField{
@@ -2485,6 +2534,58 @@ func TestExpandString(t *testing.T) {
 					traceMatchedFields("Field1", reflect.TypeFor[tfSingleStringField](), "Field1", reflect.TypeFor[*awsSingleStringPointer]()),
 					infoConvertingWithPath("Field1", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[*string]()),
 					traceExpandingNullValue("Field1", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[*string]()),
+				},
+			},
+		},
+
+		"legacy String to *string": {
+			"value": {
+				Source: tfSingleStringFieldLegacy{
+					Field1: types.StringValue("value"),
+				},
+				Target: &awsSingleStringPointer{},
+				WantTarget: &awsSingleStringPointer{
+					Field1: aws.String("value"),
+				},
+				expectedLogLines: []map[string]any{
+					infoExpanding(reflect.TypeFor[tfSingleStringFieldLegacy](), reflect.TypeFor[*awsSingleStringPointer]()),
+					infoConverting(reflect.TypeFor[tfSingleStringFieldLegacy](), reflect.TypeFor[*awsSingleStringPointer]()),
+					traceMatchedFields("Field1", reflect.TypeFor[tfSingleStringFieldLegacy](), "Field1", reflect.TypeFor[*awsSingleStringPointer]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[*string]()),
+					debugUsingLegacyExpander("Field1", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[*string]()),
+				},
+			},
+			"empty": {
+				Source: tfSingleStringFieldLegacy{
+					Field1: types.StringValue(""),
+				},
+				Target: &awsSingleStringPointer{},
+				WantTarget: &awsSingleStringPointer{
+					Field1: nil,
+				},
+				expectedLogLines: []map[string]any{
+					infoExpanding(reflect.TypeFor[tfSingleStringFieldLegacy](), reflect.TypeFor[*awsSingleStringPointer]()),
+					infoConverting(reflect.TypeFor[tfSingleStringFieldLegacy](), reflect.TypeFor[*awsSingleStringPointer]()),
+					traceMatchedFields("Field1", reflect.TypeFor[tfSingleStringFieldLegacy](), "Field1", reflect.TypeFor[*awsSingleStringPointer]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[*string]()),
+					debugUsingLegacyExpander("Field1", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[*string]()),
+				},
+			},
+			"null": {
+				Source: tfSingleStringFieldLegacy{
+					Field1: types.StringNull(),
+				},
+				Target: &awsSingleStringPointer{},
+				WantTarget: &awsSingleStringPointer{
+					Field1: nil,
+				},
+				expectedLogLines: []map[string]any{
+					infoExpanding(reflect.TypeFor[tfSingleStringFieldLegacy](), reflect.TypeFor[*awsSingleStringPointer]()),
+					infoConverting(reflect.TypeFor[tfSingleStringFieldLegacy](), reflect.TypeFor[*awsSingleStringPointer]()),
+					traceMatchedFields("Field1", reflect.TypeFor[tfSingleStringFieldLegacy](), "Field1", reflect.TypeFor[*awsSingleStringPointer]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[*string]()),
+					traceExpandingNullValue("Field1", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[*string]()),
+					// TODO: should log about legacy expander
 				},
 			},
 		},

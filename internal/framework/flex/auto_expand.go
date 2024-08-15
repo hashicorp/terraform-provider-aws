@@ -176,7 +176,7 @@ func (expander autoExpander) convert(ctx context.Context, sourcePath path.Path, 
 		return diags
 
 	case basetypes.StringValuable:
-		diags.Append(expander.string(ctx, vFrom, vTo)...)
+		diags.Append(expander.string(ctx, vFrom, vTo, fieldOpts)...)
 		return diags
 
 	// Aggregate types.
@@ -426,7 +426,7 @@ func (expander autoExpander) int32(ctx context.Context, vFrom basetypes.Int32Val
 }
 
 // string copies a Plugin Framework String(ish) value to a compatible AWS API value.
-func (expander autoExpander) string(ctx context.Context, vFrom basetypes.StringValuable, vTo reflect.Value) diag.Diagnostics {
+func (expander autoExpander) string(ctx context.Context, vFrom basetypes.StringValuable, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	v, d := vFrom.ToStringValue(ctx)
@@ -476,6 +476,12 @@ func (expander autoExpander) string(ctx context.Context, vFrom basetypes.StringV
 			//
 			// types.String -> *string.
 			//
+			if fieldOpts.legacy {
+				tflog.SubsystemDebug(ctx, subsystemName, "Using legacy expander")
+				if len(v.ValueString()) == 0 {
+					return diags
+				}
+			}
 			vTo.Set(reflect.ValueOf(v.ValueStringPointer()))
 			return diags
 
