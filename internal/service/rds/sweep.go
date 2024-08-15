@@ -374,7 +374,7 @@ func sweepInstances(region string) error {
 		}
 
 		for _, v := range page.DBInstances {
-			r := ResourceInstance()
+			r := resourceInstance()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.DbiResourceId))
 			d.Set(names.AttrApplyImmediately, true)

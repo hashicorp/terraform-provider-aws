@@ -4,12 +4,35 @@ package v2
 
 import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/aws/aws-sdk-go-v2/aws"
+	licensemanagertypes "github.com/aws/aws-sdk-go-v2/service/licensemanager/types"
 	rdstypes "github.com/aws/aws-sdk-go-v2/service/rds/types"
 	route53resolvertypes "github.com/aws/aws-sdk-go-v2/service/route53resolver/types"
 	secretsmanagertypes "github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
 )
 
 // []*SERVICE.Filter handling
+
+// LicenseManagerFilters returns licensemanager service filters.
+func (filters NameValuesFilters) LicenseManagerFilters() []licensemanagertypes.Filter {
+	m := filters.Map()
+
+	if len(m) == 0 {
+		return nil
+	}
+
+	result := make([]licensemanagertypes.Filter, 0, len(m))
+
+	for k, v := range m {
+		filter := licensemanagertypes.Filter{
+			Name:   aws.String(k),
+			Values: v,
+		}
+
+		result = append(result, filter)
+	}
+
+	return result
+}
 
 // RDSFilters returns rds service filters.
 func (filters NameValuesFilters) RDSFilters() []rdstypes.Filter {

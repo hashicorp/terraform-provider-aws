@@ -186,7 +186,7 @@ func (flattener autoFlattener) convert(ctx context.Context, sourcePath path.Path
 		return diags
 
 	case reflect.Interface:
-		diags.Append(flattener.interface_(ctx, vFrom, false, tTo, vTo)...)
+		diags.Append(flattener.interface_(ctx, vFrom, tTo, vTo)...)
 		return diags
 	}
 
@@ -531,17 +531,23 @@ func (flattener autoFlattener) pointer(ctx context.Context, sourcePath path.Path
 	return diags
 }
 
-func (flattener autoFlattener) interface_(ctx context.Context, vFrom reflect.Value, isNullFrom bool, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+func (flattener autoFlattener) interface_(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch tTo := tTo.(type) {
 	case basetypes.StringTypable:
-		stringValue := types.StringNull()
-		if !isNullFrom {
-			//
-			// JSONStringer -> types.String-ish.
-			//
-			if doc, ok := vFrom.Interface().(smithyjson.JSONStringer); ok {
+		//
+		// JSONStringer -> types.String-ish.
+		//
+		if vFrom.Type() == reflect.TypeFor[smithyjson.JSONStringer]() {
+			tflog.SubsystemInfo(ctx, subsystemName, "Source implements json.JSONStringer")
+
+			stringValue := types.StringNull()
+
+			if vFrom.IsNil() {
+				tflog.SubsystemTrace(ctx, subsystemName, "Flattening null value")
+			} else {
+				doc := vFrom.Interface().(smithyjson.JSONStringer)
 				b, err := doc.MarshalSmithyDocument()
 				if err != nil {
 					// An error here would be an upstream error in the AWS SDK, because errors in json.Marshal
@@ -555,15 +561,15 @@ func (flattener autoFlattener) interface_(ctx context.Context, vFrom reflect.Val
 				}
 				stringValue = types.StringValue(string(b))
 			}
-		}
-		v, d := tTo.ValueFromString(ctx, stringValue)
-		diags.Append(d...)
-		if diags.HasError() {
+			v, d := tTo.ValueFromString(ctx, stringValue)
+			diags.Append(d...)
+			if diags.HasError() {
+				return diags
+			}
+
+			vTo.Set(reflect.ValueOf(v))
 			return diags
 		}
-
-		vTo.Set(reflect.ValueOf(v))
-		return diags
 
 	case fwtypes.NestedObjectType:
 		//
@@ -573,10 +579,7 @@ func (flattener autoFlattener) interface_(ctx context.Context, vFrom reflect.Val
 		return diags
 	}
 
-	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
-		"from": vFrom.Kind(),
-		"to":   tTo,
-	})
+	tflog.SubsystemError(ctx, subsystemName, "Flattening incompatible types")
 
 	return diags
 }
@@ -1124,7 +1127,7 @@ func (flattener autoFlattener) interfaceToNestedObject(ctx context.Context, vFro
 		return diags
 	}
 
-	tflog.SubsystemInfo(ctx, subsystemName, "Source implements flex.Flattener")
+	tflog.SubsystemInfo(ctx, subsystemName, "Target implements flex.Flattener")
 
 	// Dereference interface
 	vFrom = vFrom.Elem()

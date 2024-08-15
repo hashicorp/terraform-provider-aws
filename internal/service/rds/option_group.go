@@ -152,7 +152,7 @@ func resourceOptionGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 		MajorEngineVersion:     aws.String(d.Get("major_engine_version").(string)),
 		OptionGroupDescription: aws.String(d.Get("option_group_description").(string)),
 		OptionGroupName:        aws.String(name),
-		Tags:                   getTagsInV2(ctx),
+		Tags:                   getTagsIn(ctx),
 	}
 
 	_, err := conn.CreateOptionGroup(ctx, input)

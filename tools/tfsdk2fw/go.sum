@@ -54,8 +54,8 @@ github.com/aws/aws-sdk-go-v2/service/acmpca v1.35.0 h1:GZ7eaCsYZar0pOQPzBJeP8ImF
 github.com/aws/aws-sdk-go-v2/service/acmpca v1.35.0/go.mod h1:vDUysl9ROGF6GAsl1OgTg6xHDnw391hCc5+IYg2U/GQ=
 github.com/aws/aws-sdk-go-v2/service/amp v1.27.3 h1:o1cMErMp45oKZ2ScvBOdVXYhvu6FdUcz0Xn+JpDd408=
 github.com/aws/aws-sdk-go-v2/service/amp v1.27.3/go.mod h1:TuSBSV1IedYHHrC4A3bW84WjQXNSzc6XasgvuDRDb4E=
-github.com/aws/aws-sdk-go-v2/service/amplify v1.23.3 h1:Plmg9O8/Pt4SKvPtUfSqCfv+SSSllouzlISFcvHK4bM=
-github.com/aws/aws-sdk-go-v2/service/amplify v1.23.3/go.mod h1:aP9g/m4SSSWUU+htIGXJIY8qy+pGydwr3gpt3OcjBJE=
+github.com/aws/aws-sdk-go-v2/service/amplify v1.24.0 h1:AahC79lvGvneGrV4eKufnVjdUW/KySMvwsByQtkumXc=
+github.com/aws/aws-sdk-go-v2/service/amplify v1.24.0/go.mod h1:aP9g/m4SSSWUU+htIGXJIY8qy+pGydwr3gpt3OcjBJE=
 github.com/aws/aws-sdk-go-v2/service/apigateway v1.25.4 h1:tya0sBEw+Sb9ztjykjX+InfZLufo4v1XyXhy4uPsyW4=
 github.com/aws/aws-sdk-go-v2/service/apigateway v1.25.4/go.mod h1:jmTl7BrsxCEUl4HwtL9tCDVfmSmCwatcUQA7QXgtT34=
 github.com/aws/aws-sdk-go-v2/service/apigatewayv2 v1.22.4 h1:CRu+uzE4qzjJBNkcwCKdzGzx1bMPsmulB7q8qyoa6FI=
@@ -78,8 +78,8 @@ github.com/aws/aws-sdk-go-v2/service/appmesh v1.27.3 h1:UorKcN0SsvTcL4CGZsh2xcK3
 github.com/aws/aws-sdk-go-v2/service/appmesh v1.27.3/go.mod h1:Jei7cWyXVkr10MXWBHbbFDIzDWEsVRGDicGNE2Kh05M=
 github.com/aws/aws-sdk-go-v2/service/apprunner v1.30.3 h1:x6wptcqKbH2eQw7v43MI25ILW3OtIyYwZ9gifEM0DW8=
 github.com/aws/aws-sdk-go-v2/service/apprunner v1.30.3/go.mod h1:buTv8bJjlKxqALyK7/2G1206H/YYllu0R/F9Hz0rhv4=
-github.com/aws/aws-sdk-go-v2/service/appstream v1.37.0 h1:novlmw4mzemK9FHfneoni0pG0eCPISgeW72apbWSxdY=
-github.com/aws/aws-sdk-go-v2/service/appstream v1.37.0/go.mod h1:zgB9SASIAI0KWFuUSlo9pGC37f6DDjh1ZJfZEhQcPhU=
+github.com/aws/aws-sdk-go-v2/service/appstream v1.38.0 h1:fEUEq067unJlCnfcXPBAqS7ZrP4yI1Po8SB6gJsWBwE=
+github.com/aws/aws-sdk-go-v2/service/appstream v1.38.0/go.mod h1:zgB9SASIAI0KWFuUSlo9pGC37f6DDjh1ZJfZEhQcPhU=
 github.com/aws/aws-sdk-go-v2/service/appsync v1.35.0 h1:JAfFXlcC/DzLu6+5QOMAHCCq0spH59Ex00idQUyWkyM=
 github.com/aws/aws-sdk-go-v2/service/appsync v1.35.0/go.mod h1:1BIEiY+76rNP8PEcv/Iyt7ybml38JqitIbrHfMDEYb8=
 github.com/aws/aws-sdk-go-v2/service/athena v1.44.4 h1:/pKCxCslWWJpiVuYD1cF5xaklegUpG+qfAg1314DnIM=
@@ -134,8 +134,8 @@ github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.37.3 h1:pnvujeesw3tP0iDLK
 github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.37.3/go.mod h1:eJZGfJNuTmvBgiy2O5XIPlHMBi4GUYoJoKZ6U6wCVVk=
 github.com/aws/aws-sdk-go-v2/service/codeartifact v1.30.3 h1:9eAjfGKFWduKyCR94Qi/JfORoJLndGydph2dcLtM7gI=
 github.com/aws/aws-sdk-go-v2/service/codeartifact v1.30.3/go.mod h1:AdirH4VV5v1ik2pOOU0WdEdojBBgzTdECBrOQl0ojOc=
-github.com/aws/aws-sdk-go-v2/service/codebuild v1.40.3 h1:v+CiUB5RsmyRpGQ5Tddwn3prS1Y+uCIKVAzZ0Wb3Nyk=
-github.com/aws/aws-sdk-go-v2/service/codebuild v1.40.3/go.mod h1:HDiBVjDHX2n7UGFgynZLkVGPXvEnurxlEeaxPF/Ql/0=
+github.com/aws/aws-sdk-go-v2/service/codebuild v1.41.0 h1:6PFiOLDIeIvzBKdeIBT9ZnR+SJbEAlHV5k+wrwfzzfw=
+github.com/aws/aws-sdk-go-v2/service/codebuild v1.41.0/go.mod h1:HDiBVjDHX2n7UGFgynZLkVGPXvEnurxlEeaxPF/Ql/0=
 github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.15.3 h1:Bz3QJAdZd1z1rxlllKMl0s5y8kjbryqeMhlX57XJ5q8=
 github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.15.3/go.mod h1:R3dXCLxoYZu1zDODLw810Je3DOydgMUC2MZqyf8Gi9g=
 github.com/aws/aws-sdk-go-v2/service/codecommit v1.25.0 h1:EyXii3hsD7M6mLoZjVbnIo14NI+ig8lopPGYVua/a+M=
@@ -244,8 +244,8 @@ github.com/aws/aws-sdk-go-v2/service/finspace v1.26.3 h1:Y8VS/XHyeJ1cxSCtmvUOFLq
 github.com/aws/aws-sdk-go-v2/service/finspace v1.26.3/go.mod h1:xbE7o+ADq+h0DeKA/05618ox75wY/jtoZTF9XuvSvnI=
 github.com/aws/aws-sdk-go-v2/service/firehose v1.32.0 h1:1ovnU04ZuvpaqJUGmqrcwJ9xZViHmdJpZQ0NUqMT5co=
 github.com/aws/aws-sdk-go-v2/service/firehose v1.32.0/go.mod h1:8rN4JsVXcCHl/f4hwOWVuy+iQ5iolXOdSX+QFYZyubw=
-github.com/aws/aws-sdk-go-v2/service/fis v1.26.3 h1:NwddG0xUTBM2zoq4D8rotQmT2Z/S8IGM+D2wYzKFSQs=
-github.com/aws/aws-sdk-go-v2/service/fis v1.26.3/go.mod h1:QmdVf0N/vrhckZLHK4x+f+u9EUuMhetsRgu1rjU1eL0=
+github.com/aws/aws-sdk-go-v2/service/fis v1.27.0 h1:UfzjSUfxR7Suy/t1OfkExG0s1vxPgIP1//gIYutlZ9I=
+github.com/aws/aws-sdk-go-v2/service/fis v1.27.0/go.mod h1:QmdVf0N/vrhckZLHK4x+f+u9EUuMhetsRgu1rjU1eL0=
 github.com/aws/aws-sdk-go-v2/service/fms v1.35.3 h1:QeYAz3JhpkTxkS+fifDBfmgWFdSRBI21MQzN2bCO1xo=
 github.com/aws/aws-sdk-go-v2/service/fms v1.35.3/go.mod h1:GXASgVouW5X/bmEgOoV/tkzJkp5ib7ZeA+YxMc5piqs=
 github.com/aws/aws-sdk-go-v2/service/fsx v1.47.2 h1:EDZ4UX4c8NJl5Zm2tj1OlbVdNA0wv2xNt55L6g38Va4=
@@ -256,8 +256,8 @@ github.com/aws/aws-sdk-go-v2/service/glacier v1.24.3 h1:de8RU808VMx8km6t2wY3WDWi
 github.com/aws/aws-sdk-go-v2/service/glacier v1.24.3/go.mod h1:F/qjepwnxPHHUTK9ikZp14jLyrvB18kZ/22MmaPxtHE=
 github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.27.0 h1:nlm6tZX8gwsVktDKTQe3IOagNVK1+6CGf9IpdWM6x+E=
 github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.27.0/go.mod h1:ehkx8lBkJkZbdKYX2GyMFmdOAfcGs0mjcbaNXNiHAEE=
-github.com/aws/aws-sdk-go-v2/service/glue v1.93.0 h1:7SAjXIznTdV7+PqzR6vLf/FNtp1VHUztslfmYoDQmyM=
-github.com/aws/aws-sdk-go-v2/service/glue v1.93.0/go.mod h1:FewbVAhRiTt+/8nKDBFTY68lTmtKlI6QMPKMB6aMboQ=
+github.com/aws/aws-sdk-go-v2/service/glue v1.94.0 h1:UP0b6p3uL6WzRPsBUAAEmoJLDTKJXqPbi5rJ24GLSx4=
+github.com/aws/aws-sdk-go-v2/service/glue v1.94.0/go.mod h1:FewbVAhRiTt+/8nKDBFTY68lTmtKlI6QMPKMB6aMboQ=
 github.com/aws/aws-sdk-go-v2/service/grafana v1.24.3 h1:riHLAJSqo5zczCyMSo8XDA46X2aDpQvB46F0seKuNEM=
 github.com/aws/aws-sdk-go-v2/service/grafana v1.24.3/go.mod h1:2ipW9QX9MlePs99Dy8ohwfdW847hMJG6BU9jvixIpxE=
 github.com/aws/aws-sdk-go-v2/service/greengrass v1.25.3 h1:5KauP/IHPWGoHni4mt2Sjp0EtHMkdWtPP3v81qaHHyg=
@@ -312,6 +312,8 @@ github.com/aws/aws-sdk-go-v2/service/kinesisanalytics v1.23.3 h1:jlRe7BuV+4SghH9
 github.com/aws/aws-sdk-go-v2/service/kinesisanalytics v1.23.3/go.mod h1:qb0UKyBXIZbkXmn8M3WoRRZPyfbr1exhN1F21Od1S2o=
 github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2 v1.28.2 h1:0ihcsCNzq2iuIaNEiLDFd7YcUKnuhNvKjoGWV+WaEpA=
 github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2 v1.28.2/go.mod h1:MTVEJMay748rHk8FSi6SqxyOsehY0dbcG+R+KOp9Oig=
+github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.25.3 h1:Ag5oIVdwWHGu4Da0lNPg6iivuQJUmTzBaAyJz7eY7M8=
+github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.25.3/go.mod h1:ZwH9gpRAFa3TSocqR5Qm+Vb1sUBitXq0N1+n67ljqcw=
 github.com/aws/aws-sdk-go-v2/service/kms v1.35.3 h1:UPTdlTOwWUX49fVi7cymEN6hDqCwe3LNv1vi7TXUutk=
 github.com/aws/aws-sdk-go-v2/service/kms v1.35.3/go.mod h1:gjDP16zn+WWalyaUqwCCioQ8gU8lzttCCc9jYsiQI/8=
 github.com/aws/aws-sdk-go-v2/service/lakeformation v1.35.3 h1:Rfl7JjXVdriUprd8TTlbgcTyPU/Pl+v/O/nMD9HYpgA=
@@ -348,8 +350,8 @@ github.com/aws/aws-sdk-go-v2/service/mq v1.25.3 h1:SyRcb9GRPcoNKCuLnpj1qGIr/8stn
 github.com/aws/aws-sdk-go-v2/service/mq v1.25.3/go.mod h1:Xu8nT/Yj64z5Gj1ebVB3drPEIBsPNDoFhx2xZDrdGlc=
 github.com/aws/aws-sdk-go-v2/service/mwaa v1.29.4 h1:lptYTP7Br5zll9USf2aKY1ZlN69vYAlZOSCv1Q+k1S4=
 github.com/aws/aws-sdk-go-v2/service/mwaa v1.29.4/go.mod h1:mtgvj3nNI+LiRNT07JaHbTh6E/y8QRrClvd+/GMhMS4=
-github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.10.3 h1:XEbvRhi+ELazJaqh8k0KgTZrAgXM3rmR0hsGPTIpUIo=
-github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.10.3/go.mod h1:tfCOS8E/SwIkqHHGgpwRZTly3ZQxcsORZPEVBKMkbx4=
+github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.11.0 h1:2x6N4qsLINDC7rWxucwNDe61WWqKLBnjNksLqHA+s9w=
+github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.11.0/go.mod h1:tfCOS8E/SwIkqHHGgpwRZTly3ZQxcsORZPEVBKMkbx4=
 github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.41.0 h1:mvbaX3/zHNXRHqHNuk6NOS3JkaxqxPYLqWC4v7tObTI=
 github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.41.0/go.mod h1:Y9mINPJv+o9q8Ztr5/PRh2C1Iynik64IhPzwe2ERGqQ=
 github.com/aws/aws-sdk-go-v2/service/networkmonitor v1.5.3 h1:I+m+rITTdVA9BNJeuCzYgMQjqbUE10xcY0OqgBvFEFE=
@@ -422,6 +424,8 @@ github.com/aws/aws-sdk-go-v2/service/s3control v1.46.3 h1:3De8/YQpup0mLNKh0G9JHW
 github.com/aws/aws-sdk-go-v2/service/s3control v1.46.3/go.mod h1:sUA7DOI2fdRHQQUpvRVfYKTo9P0+UAsWYBHvyqFHcC0=
 github.com/aws/aws-sdk-go-v2/service/s3outposts v1.26.3 h1:Hg1FVxD9pelFS8j3ilHJDUe6J/Q/VVwzWaNtN8vyNUQ=
 github.com/aws/aws-sdk-go-v2/service/s3outposts v1.26.3/go.mod h1:GVq0lM4BUD3GyiLzlNWXUq9U/H5t+2eytsEDirQSAn4=
+github.com/aws/aws-sdk-go-v2/service/sagemaker v1.153.0 h1:daHocIfZjMiDNghao41FO0QqFf6J71aGmxl1+nXQ5PU=
+github.com/aws/aws-sdk-go-v2/service/sagemaker v1.153.0/go.mod h1:lDmK3DHWV6Y6hpzeUAaXq4w+ks6fFYXdkjavIe8STCE=
 github.com/aws/aws-sdk-go-v2/service/scheduler v1.10.3 h1:gmpU7E0ntMzXr+yQQIXbiiueOewf/1BQ9WgeaXo6BcQ=
 github.com/aws/aws-sdk-go-v2/service/scheduler v1.10.3/go.mod h1:jnQp5kPPvEgPmVPm0h/XZPmlx7DQ0pqUiISRO4s6U3s=
 github.com/aws/aws-sdk-go-v2/service/schemas v1.26.3 h1:ZJW2OQNpkR8P7URtISmF8twpvz2V0tUN/OgMenlxkao=
@@ -504,8 +508,8 @@ github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.21.3 h1:fZVJVU+fgDbHDZpHv4
 github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.21.3/go.mod h1:CWln0RlRf0Cc4Csr4HkyXI6BkkIujyTeWuwTo3hijP0=
 github.com/aws/aws-sdk-go-v2/service/xray v1.27.3 h1:0jSgvovW7R95P8XJiGxYfrnxdryQyClvebJeYbUlecw=
 github.com/aws/aws-sdk-go-v2/service/xray v1.27.3/go.mod h1:yKewwhgsy9idJZ7oJLrFleYmy2oq/JSLQWdHNgLUYMM=
-github.com/aws/smithy-go v1.20.3 h1:ryHwveWzPV5BIof6fyDvor6V3iUL7nTfiTKXHiW05nE=
-github.com/aws/smithy-go v1.20.3/go.mod h1:krry+ya/rV9RDcV/Q16kpu6ypI4K2czasz0NC3qS14E=
+github.com/aws/smithy-go v1.20.4 h1:2HK1zBdPgRbjFOHlfeQZfpC4r72MOb9bZkiFwggKO+4=
+github.com/aws/smithy-go v1.20.4/go.mod h1:irrKGvNn1InZwb2d7fkIRNucdfwR8R+Ts3wxYa/cJHg=
 github.com/beevik/etree v1.4.1 h1:PmQJDDYahBGNKDcpdX8uPy1xRCwoCGVUiW669MEirVI=
 github.com/beevik/etree v1.4.1/go.mod h1:gPNJNaBGVZ9AwsidazFZyygnd+0pAU38N4D+WemwKNs=
 github.com/bgentry/speakeasy v0.1.0 h1:ByYyxL9InA1OWqxJqqp2A5pYHUrCiAL6K3J+LKSsQkY=

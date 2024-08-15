@@ -5169,7 +5169,7 @@ service "kinesisvideo" {
 
   sdk {
     id             = "Kinesis Video"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -5553,7 +5553,7 @@ service "licensemanager" {
 
   sdk {
     id             = "License Manager"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -7264,7 +7264,7 @@ service "rds" {
 
   sdk {
     id             = "RDS"
-    client_version = [1, 2]
+    client_version = [2]
   }
 
   names {
@@ -8014,7 +8014,7 @@ service "sagemaker" {
 
   sdk {
     id             = "SageMaker"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
