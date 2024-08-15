@@ -54,6 +54,8 @@ func TestAccBatchJobDefinition_basic(t *testing.T) {
 						"ulimits": [],
 						"volumes": []
 						}`),
+					resource.TestCheckResourceAttr(resourceName, "ecs_properties", ""),
+					resource.TestCheckResourceAttr(resourceName, "eks_properties.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "platform_capabilities.#", acctest.Ct0),
@@ -976,6 +978,37 @@ func TestAccBatchJobDefinition_emptyRetryStrategy(t *testing.T) {
 	})
 }
 
+func TestAccBatchJobDefinition_ECSProperties_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var jd awstypes.JobDefinition
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_batch_job_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckJobDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccJobDefinitionConfig_ECSProperties_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
+					resource.TestCheckResourceAttrSet(resourceName, "ecs_properties"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"deregister_on_new_revision",
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckJobDefinitionExists(ctx context.Context, n string, v *awstypes.JobDefinition) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -1893,4 +1926,108 @@ resource "aws_batch_job_definition" "test" {
   }
 }
 `, rName)
+}
+
+func testAccJobDefinitionConfig_ECSProperties_basic(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "ecs_task_execution_role" {
+  name               = %[1]q
+  assume_role_policy = data.aws_iam_policy_document.assume_role_policy.json
+}
+
+data "aws_iam_policy_document" "assume_role_policy" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["ecs-tasks.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_policy" {
+  role       = aws_iam_role.ecs_task_execution_role.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+}
+
+resource "aws_batch_job_definition" "test" {
+  name = %[1]q
+  type = "container"
+
+  platform_capabilities = ["FARGATE"]
+
+  ecs_properties = jsonencode({
+    taskProperties = [
+      {
+        executionRoleArn = aws_iam_role.ecs_task_execution_role.arn
+        containers = [
+          {
+            image   = "public.ecr.aws/amazonlinux/amazonlinux:1"
+            command = ["sleep", "60"]
+            dependsOn = [
+              {
+                containerName = "container_b"
+                condition     = "COMPLETE"
+              }
+            ]
+            secrets = [
+              {
+                name      = "TEST"
+                valueFrom = "DUMMY"
+              }
+            ]
+            environment = [
+              {
+                name  = "test"
+                value = "Environment Variable"
+              }
+            ]
+            essential = true
+            logConfiguration = {
+              logDriver = "awslogs"
+              options = {
+                "awslogs-group"         = %[1]q
+                "awslogs-region"        = %[2]q
+                "awslogs-stream-prefix" = "ecs"
+              }
+            }
+            name                   = "container_a"
+            privileged             = false
+            readonlyRootFilesystem = false
+            resourceRequirements = [
+              {
+                value = "1.0"
+                type  = "VCPU"
+              },
+              {
+                value = "2048"
+                type  = "MEMORY"
+              }
+            ]
+          },
+          {
+            image     = "public.ecr.aws/amazonlinux/amazonlinux:1"
+            command   = ["sleep", "360"]
+            name      = "container_b"
+            essential = false
+            resourceRequirements = [
+              {
+                value = "1.0"
+                type  = "VCPU"
+              },
+              {
+                value = "2048"
+                type  = "MEMORY"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  })
+}
+`, rName, acctest.Region())
 }

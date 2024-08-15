@@ -78,6 +78,7 @@ func resourceJobDefinition() *schema.Resource {
 			},
 			"ecs_properties": {
 				Type:          schema.TypeString,
+				Optional:      true,
 				ConflictsWith: []string{"container_properties", "eks_properties", "node_properties"},
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
@@ -982,7 +983,7 @@ func validJobECSProperties(v interface{}, k string) (ws []string, errors []error
 	value := v.(string)
 	_, err := expandECSProperties(value)
 	if err != nil {
-		errors = append(errors, fmt.Errorf("AWS Batch Job node_properties is invalid: %s", err))
+		errors = append(errors, fmt.Errorf("AWS Batch Job ecs_properties is invalid: %s", err))
 	}
 	return
 }

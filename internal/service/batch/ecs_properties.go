@@ -57,6 +57,11 @@ func (cp *taskContainerProperties) reduce() {
 		return aws.ToString(kvp.Value) != ""
 	})
 
+	// Deal with special fields which have defaults.
+	if cp.Essential == nil {
+		cp.Essential = aws.Bool(true)
+	}
+
 	// Set all empty slices to nil.
 	if len(cp.Command) == 0 {
 		cp.Command = nil
@@ -66,6 +71,9 @@ func (cp *taskContainerProperties) reduce() {
 	}
 	if len(cp.Environment) == 0 {
 		cp.Environment = nil
+	}
+	if cp.LogConfiguration != nil && len(cp.LogConfiguration.SecretOptions) == 0 {
+		cp.LogConfiguration.SecretOptions = nil
 	}
 	if len(cp.MountPoints) == 0 {
 		cp.MountPoints = nil
