@@ -253,6 +253,7 @@ func resourceEBSVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
+	// if the volume was replaced (new source due to undatafy), it means the new
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		// once the volume is managed, datafy has control on the volume, and it can't be updated via terraform.
 		// if it was replaced (new source due to undatafy), so we set the new id and the volume properties to the state
