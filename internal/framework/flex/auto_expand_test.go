@@ -971,6 +971,58 @@ func TestExpandBool(t *testing.T) {
 			},
 		},
 
+		"legacy Bool to bool": {
+			"true": {
+				Source: tfSingleBoolFieldLegacy{
+					Field1: types.BoolValue(true),
+				},
+				Target: &awsSingleBoolValue{},
+				WantTarget: &awsSingleBoolValue{
+					Field1: true,
+				},
+				expectedLogLines: []map[string]any{
+					infoExpanding(reflect.TypeFor[tfSingleBoolFieldLegacy](), reflect.TypeFor[*awsSingleBoolValue]()),
+					infoConverting(reflect.TypeFor[tfSingleBoolFieldLegacy](), reflect.TypeFor[*awsSingleBoolValue]()),
+					traceMatchedFields("Field1", reflect.TypeFor[tfSingleBoolFieldLegacy](), "Field1", reflect.TypeFor[*awsSingleBoolValue]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[types.Bool](), "Field1", reflect.TypeFor[bool]()),
+					debugUsingLegacyExpander("Field1", reflect.TypeFor[types.Bool](), "Field1", reflect.TypeFor[bool]()),
+				},
+			},
+			"false": {
+				Source: tfSingleBoolFieldLegacy{
+					Field1: types.BoolValue(false),
+				},
+				Target: &awsSingleBoolValue{},
+				WantTarget: &awsSingleBoolValue{
+					Field1: false,
+				},
+				expectedLogLines: []map[string]any{
+					infoExpanding(reflect.TypeFor[tfSingleBoolFieldLegacy](), reflect.TypeFor[*awsSingleBoolValue]()),
+					infoConverting(reflect.TypeFor[tfSingleBoolFieldLegacy](), reflect.TypeFor[*awsSingleBoolValue]()),
+					traceMatchedFields("Field1", reflect.TypeFor[tfSingleBoolFieldLegacy](), "Field1", reflect.TypeFor[*awsSingleBoolValue]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[types.Bool](), "Field1", reflect.TypeFor[bool]()),
+					debugUsingLegacyExpander("Field1", reflect.TypeFor[types.Bool](), "Field1", reflect.TypeFor[bool]()),
+				},
+			},
+			"null": {
+				Source: tfSingleBoolFieldLegacy{
+					Field1: types.BoolNull(),
+				},
+				Target: &awsSingleBoolValue{},
+				WantTarget: &awsSingleBoolValue{
+					Field1: false,
+				},
+				expectedLogLines: []map[string]any{
+					infoExpanding(reflect.TypeFor[tfSingleBoolFieldLegacy](), reflect.TypeFor[*awsSingleBoolValue]()),
+					infoConverting(reflect.TypeFor[tfSingleBoolFieldLegacy](), reflect.TypeFor[*awsSingleBoolValue]()),
+					traceMatchedFields("Field1", reflect.TypeFor[tfSingleBoolFieldLegacy](), "Field1", reflect.TypeFor[*awsSingleBoolValue]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[types.Bool](), "Field1", reflect.TypeFor[bool]()),
+					traceExpandingNullValue("Field1", reflect.TypeFor[types.Bool](), "Field1", reflect.TypeFor[bool]()),
+					// TODO: should log about legacy expander
+				},
+			},
+		},
+
 		"Bool to *bool": {
 			"true": {
 				Source: tfSingleBoolField{
@@ -1016,6 +1068,58 @@ func TestExpandBool(t *testing.T) {
 					traceMatchedFields("Field1", reflect.TypeFor[tfSingleBoolField](), "Field1", reflect.TypeFor[*awsSingleBoolPointer]()),
 					infoConvertingWithPath("Field1", reflect.TypeFor[types.Bool](), "Field1", reflect.TypeFor[*bool]()),
 					traceExpandingNullValue("Field1", reflect.TypeFor[types.Bool](), "Field1", reflect.TypeFor[*bool]()),
+				},
+			},
+		},
+
+		"legacy Bool to *bool": {
+			"true": {
+				Source: tfSingleBoolFieldLegacy{
+					Field1: types.BoolValue(true),
+				},
+				Target: &awsSingleBoolPointer{},
+				WantTarget: &awsSingleBoolPointer{
+					Field1: aws.Bool(true),
+				},
+				expectedLogLines: []map[string]any{
+					infoExpanding(reflect.TypeFor[tfSingleBoolFieldLegacy](), reflect.TypeFor[*awsSingleBoolPointer]()),
+					infoConverting(reflect.TypeFor[tfSingleBoolFieldLegacy](), reflect.TypeFor[*awsSingleBoolPointer]()),
+					traceMatchedFields("Field1", reflect.TypeFor[tfSingleBoolFieldLegacy](), "Field1", reflect.TypeFor[*awsSingleBoolPointer]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[types.Bool](), "Field1", reflect.TypeFor[*bool]()),
+					debugUsingLegacyExpander("Field1", reflect.TypeFor[types.Bool](), "Field1", reflect.TypeFor[*bool]()),
+				},
+			},
+			"false": {
+				Source: tfSingleBoolFieldLegacy{
+					Field1: types.BoolValue(false),
+				},
+				Target: &awsSingleBoolPointer{},
+				WantTarget: &awsSingleBoolPointer{
+					Field1: nil,
+				},
+				expectedLogLines: []map[string]any{
+					infoExpanding(reflect.TypeFor[tfSingleBoolFieldLegacy](), reflect.TypeFor[*awsSingleBoolPointer]()),
+					infoConverting(reflect.TypeFor[tfSingleBoolFieldLegacy](), reflect.TypeFor[*awsSingleBoolPointer]()),
+					traceMatchedFields("Field1", reflect.TypeFor[tfSingleBoolFieldLegacy](), "Field1", reflect.TypeFor[*awsSingleBoolPointer]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[types.Bool](), "Field1", reflect.TypeFor[*bool]()),
+					debugUsingLegacyExpander("Field1", reflect.TypeFor[types.Bool](), "Field1", reflect.TypeFor[*bool]()),
+				},
+			},
+			"null": {
+				Source: tfSingleBoolFieldLegacy{
+					Field1: types.BoolNull(),
+				},
+				Target: &awsSingleBoolPointer{},
+				WantTarget: &awsSingleBoolPointer{
+					Field1: nil,
+				},
+				expectedLogLines: []map[string]any{
+					infoExpanding(reflect.TypeFor[tfSingleBoolFieldLegacy](), reflect.TypeFor[*awsSingleBoolPointer]()),
+					infoConverting(reflect.TypeFor[tfSingleBoolFieldLegacy](), reflect.TypeFor[*awsSingleBoolPointer]()),
+					traceMatchedFields("Field1", reflect.TypeFor[tfSingleBoolFieldLegacy](), "Field1", reflect.TypeFor[*awsSingleBoolPointer]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[types.Bool](), "Field1", reflect.TypeFor[*bool]()),
+					traceExpandingNullValue("Field1", reflect.TypeFor[types.Bool](), "Field1", reflect.TypeFor[*bool]()),
+					// TODO: should log about legacy expander
 				},
 			},
 		},

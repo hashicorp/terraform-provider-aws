@@ -61,6 +61,10 @@ type tfSingleBoolField struct {
 	Field1 types.Bool `tfsdk:"field1"`
 }
 
+type tfSingleBoolFieldLegacy struct {
+	Field1 types.Bool `tfsdk:"field1" autoflex:",legacy"`
+}
+
 // All primitive types.
 type tfAllThePrimitiveFields struct {
 	Field1  types.String  `tfsdk:"field1"`

@@ -156,7 +156,7 @@ func (expander autoExpander) convert(ctx context.Context, sourcePath path.Path, 
 	switch vFrom := vFrom.(type) {
 	// Primitive types.
 	case basetypes.BoolValuable:
-		diags.Append(expander.bool(ctx, vFrom, vTo)...)
+		diags.Append(expander.bool(ctx, vFrom, vTo, legacy)...)
 		return diags
 
 	case basetypes.Float64Valuable:
@@ -206,7 +206,7 @@ func (expander autoExpander) convert(ctx context.Context, sourcePath path.Path, 
 }
 
 // bool copies a Plugin Framework Bool(ish) value to a compatible AWS API value.
-func (expander autoExpander) bool(ctx context.Context, vFrom basetypes.BoolValuable, vTo reflect.Value) diag.Diagnostics {
+func (expander autoExpander) bool(ctx context.Context, vFrom basetypes.BoolValuable, vTo reflect.Value, legacy bool) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	v, d := vFrom.ToBoolValue(ctx)
@@ -220,6 +220,9 @@ func (expander autoExpander) bool(ctx context.Context, vFrom basetypes.BoolValua
 		//
 		// types.Bool -> bool.
 		//
+		if legacy {
+			tflog.SubsystemDebug(ctx, subsystemName, "Using legacy expander")
+		}
 		vTo.SetBool(v.ValueBool())
 		return diags
 
@@ -229,6 +232,12 @@ func (expander autoExpander) bool(ctx context.Context, vFrom basetypes.BoolValua
 			//
 			// types.Bool -> *bool.
 			//
+			if legacy {
+				tflog.SubsystemDebug(ctx, subsystemName, "Using legacy expander")
+				if !v.ValueBool() {
+					return diags
+				}
+			}
 			vTo.Set(reflect.ValueOf(v.ValueBoolPointer()))
 			return diags
 		}
