@@ -125,7 +125,7 @@ func autoFlexConvertStruct(ctx context.Context, sourcePath path.Path, from any, 
 		if fromField.PkgPath != "" {
 			continue // Skip unexported fields.
 		}
-		fromNameOverride, _ := autoflexTags(fromField)
+		fromNameOverride, fromOpts := autoflexTags(fromField)
 		fieldName := fromField.Name
 		if opts.isIgnoredField(fieldName) {
 			tflog.SubsystemTrace(ctx, subsystemName, "Skipping ignored source field", map[string]any{
@@ -181,6 +181,7 @@ func autoFlexConvertStruct(ctx context.Context, sourcePath path.Path, from any, 
 		})
 
 		opts := fieldOpts{
+			legacy:    fromOpts.Legacy() || toOpts.Legacy(),
 			omitempty: toOpts.OmitEmpty(),
 		}
 
@@ -277,6 +278,7 @@ func autoflexTags(field reflect.StructField) (string, tagOptions) {
 }
 
 type fieldOpts struct {
+	legacy    bool
 	omitempty bool
 }
 

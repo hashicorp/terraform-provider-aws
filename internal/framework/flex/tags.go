@@ -38,6 +38,10 @@ func (o tagOptions) Contains(optionName string) bool {
 	return false
 }
 
+func (o tagOptions) Legacy() bool {
+	return o.Contains("legacy")
+}
+
 func (o tagOptions) OmitEmpty() bool {
 	return o.Contains("omitempty")
 }

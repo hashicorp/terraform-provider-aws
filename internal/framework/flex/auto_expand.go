@@ -168,7 +168,7 @@ func (expander autoExpander) convert(ctx context.Context, sourcePath path.Path, 
 		return diags
 
 	case basetypes.Int64Valuable:
-		diags.Append(expander.int64(ctx, vFrom, vTo)...)
+		diags.Append(expander.int64(ctx, vFrom, vTo, fieldOpts)...)
 		return diags
 
 	case basetypes.Int32Valuable:
@@ -323,7 +323,7 @@ func (expander autoExpander) float32(ctx context.Context, vFrom basetypes.Float3
 }
 
 // int64 copies a Plugin Framework Int64(ish) value to a compatible AWS API value.
-func (expander autoExpander) int64(ctx context.Context, vFrom basetypes.Int64Valuable, vTo reflect.Value) diag.Diagnostics {
+func (expander autoExpander) int64(ctx context.Context, vFrom basetypes.Int64Valuable, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	v, d := vFrom.ToInt64Value(ctx)
@@ -337,6 +337,9 @@ func (expander autoExpander) int64(ctx context.Context, vFrom basetypes.Int64Val
 		//
 		// types.Int32/types.Int64 -> int32/int64.
 		//
+		if fieldOpts.legacy {
+			tflog.SubsystemDebug(ctx, subsystemName, "Using legacy expander")
+		}
 		vTo.SetInt(v.ValueInt64())
 		return diags
 
@@ -347,6 +350,12 @@ func (expander autoExpander) int64(ctx context.Context, vFrom basetypes.Int64Val
 			// types.Int32/types.Int64 -> *int32.
 			//
 			to := int32(v.ValueInt64())
+			if fieldOpts.legacy {
+				tflog.SubsystemDebug(ctx, subsystemName, "Using legacy expander")
+				if to == 0 {
+					return diags
+				}
+			}
 			vTo.Set(reflect.ValueOf(&to))
 			return diags
 
@@ -354,6 +363,13 @@ func (expander autoExpander) int64(ctx context.Context, vFrom basetypes.Int64Val
 			//
 			// types.Int32/types.Int64 -> *int64.
 			//
+			if fieldOpts.legacy {
+				tflog.SubsystemDebug(ctx, subsystemName, "Using legacy expander")
+				i := v.ValueInt64()
+				if i == 0 {
+					return diags
+				}
+			}
 			vTo.Set(reflect.ValueOf(v.ValueInt64Pointer()))
 			return diags
 		}
