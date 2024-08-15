@@ -647,7 +647,7 @@ func TestContainerDefinitionsAreEquivalent_healthCheck(t *testing.T) {
             "logDriver": "awslogs",
             "options": {
                 "awslogs-group": "foo-bar-e196c99",
-                "awslogs-region": "us-east-1",
+                "awslogs-region": "region-1",
                 "awslogs-stream-prefix": "nginx"
             }
         }
@@ -674,7 +674,7 @@ func TestContainerDefinitionsAreEquivalent_healthCheck(t *testing.T) {
             "logDriver": "awslogs",
             "options": {
                 "awslogs-group": "foo-bar-e196c99",
-                "awslogs-region": "us-east-1",
+                "awslogs-region": "region-1",
                 "awslogs-stream-prefix": "nginx"
             }
         },
