@@ -176,7 +176,7 @@ The following arguments are optional:
 * `postConfirmation` - (Optional) Post-confirmation AWS Lambda trigger.
 * `preAuthentication` - (Optional) Pre-authentication AWS Lambda trigger.
 * `preSignUp` - (Optional) Pre-registration AWS Lambda trigger.
-* `preTokenGeneration` - (Optional) Allow to customize identity token claims before token generation. Set this parameter for legacy purposes; for new instances of pre token generation triggers, set the LambdaArn of `preTokenGenerationConfig`.
+* `preTokenGeneration` - (Optional) Allow to customize identity token claims before token generation. Set this parameter for legacy purposes; for new instances of pre token generation triggers, set the lambda_arn of `preTokenGenerationConfig`.
 * `preTokenGenerationConfig` - (Optional) Allow to customize access tokens. See [pre_token_configuration_type](#pre_token_configuration_type)
 * `userMigration` - (Optional) User migration Lambda config type.
 * `verifyAuthChallengeResponse` - (Optional) Verifies the authentication challenge response.
@@ -196,7 +196,7 @@ The following arguments are optional:
 
 #### pre_token_configuration_type
 
-* `lambdaArn` - (Required) The Lambda Amazon Resource Name of the Lambda function that Amazon Cognito triggers to customize access tokens. If you also set an ARN in `PreTokenGeneration`, its value must be identical to this one.
+* `lambdaArn` - (Required) The Lambda Amazon Resource Name of the Lambda function that Amazon Cognito triggers to customize access tokens. If you also set an ARN in `preTokenGeneration`, its value must be identical to this one.
 * `lambdaVersion` - (Required) The Lambda version represents the signature of the "version" attribute in the "event" information Amazon Cognito passes to your pre Token Generation Lambda function. The supported values are `V1_0`, `V2_0`.
 
 ### password_policy
@@ -345,4 +345,4 @@ Using `terraform import`, import Cognito User Pools using the `id`. For example:
 % terraform import aws_cognito_user_pool.pool us-west-2_abc123
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-2f809b084147af2996716cfad5e9a619056ffe3394b484a61ecd1460775b988c -->
+<!-- cache-key: cdktf-0.20.1 input-d2add4de169176a18d535e64e6b4e2b8a61a2e7ab8a1120b63e928572a07990e -->

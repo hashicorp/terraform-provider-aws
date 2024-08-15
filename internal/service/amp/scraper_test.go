@@ -41,15 +41,15 @@ func TestAccAMPScraper_basic(t *testing.T) {
 				Config: testAccScraperConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScraperExists(ctx, resourceName, &scraper),
-					resource.TestCheckNoResourceAttr(resourceName, "alias"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "destination.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "destination.0.amp.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "role_arn"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrAlias),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "destination.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "destination.0.amp.#", acctest.Ct1),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
 					resource.TestCheckResourceAttrSet(resourceName, "scrape_configuration"),
-					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "source.0.eks.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "source.0.eks.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -90,57 +90,6 @@ func TestAccAMPScraper_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAMPScraper_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var scraper types.ScraperDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_prometheus_scraper.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckScraperDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccScraperConfig_tags1(rName, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScraperExists(ctx, resourceName, &scraper),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccScraperConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScraperExists(ctx, resourceName, &scraper),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccScraperConfig_tags1(rName, "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScraperExists(ctx, resourceName, &scraper),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccAMPScraper_alias(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -162,7 +111,7 @@ func TestAccAMPScraper_alias(t *testing.T) {
 				Config: testAccScraperConfig_alias(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScraperExists(ctx, resourceName, &scraper),
-					resource.TestCheckResourceAttr(resourceName, "alias", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, rName),
 				),
 			},
 			{
@@ -195,7 +144,7 @@ func TestAccAMPScraper_securityGroups(t *testing.T) {
 				Config: testAccScraperConfig_securityGroups(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScraperExists(ctx, resourceName, &scraper),
-					resource.TestCheckResourceAttr(resourceName, "source.0.eks.0.security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.eks.0.security_group_ids.#", acctest.Ct1),
 				),
 			},
 			{
@@ -422,57 +371,6 @@ resource "aws_prometheus_scraper" "test" {
   }
 }
 `, scrapeConfigBlob))
-}
-
-func testAccScraperConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccScraperConfig_base(rName), fmt.Sprintf(`
-resource "aws_prometheus_scraper" "test" {
-  scrape_configuration = %[3]q
-
-  source {
-    eks {
-      cluster_arn = aws_eks_cluster.test.arn
-      subnet_ids  = aws_subnet.test[*].id
-    }
-  }
-
-  destination {
-    amp {
-      workspace_arn = aws_prometheus_workspace.test.arn
-    }
-  }
-
-  tags = {
-    %[1]q = %[2]q
-  }
-}
-`, tagKey1, tagValue1, scrapeConfigBlob))
-}
-
-func testAccScraperConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccScraperConfig_base(rName), fmt.Sprintf(`
-resource "aws_prometheus_scraper" "test" {
-  scrape_configuration = %[5]q
-
-  source {
-    eks {
-      cluster_arn = aws_eks_cluster.test.arn
-      subnet_ids  = aws_subnet.test[*].id
-    }
-  }
-
-  destination {
-    amp {
-      workspace_arn = aws_prometheus_workspace.test.arn
-    }
-  }
-
-  tags = {
-    %[1]q = %[2]q
-    %[3]q = %[4]q
-  }
-}
-`, tagKey1, tagValue1, tagKey2, tagValue2, scrapeConfigBlob))
 }
 
 func testAccScraperConfig_alias(rName string) string {

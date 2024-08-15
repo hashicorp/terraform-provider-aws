@@ -9,13 +9,14 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ses"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/ses"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ses_email_identity")
@@ -29,11 +30,11 @@ func ResourceEmailIdentity() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"email": {
+			names.AttrEmail: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -47,16 +48,16 @@ func ResourceEmailIdentity() *schema.Resource {
 
 func resourceEmailIdentityCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn(ctx)
+	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
-	email := d.Get("email").(string)
+	email := d.Get(names.AttrEmail).(string)
 	email = strings.TrimSuffix(email, ".")
 
 	createOpts := &ses.VerifyEmailIdentityInput{
 		EmailAddress: aws.String(email),
 	}
 
-	_, err := conn.VerifyEmailIdentityWithContext(ctx, createOpts)
+	_, err := conn.VerifyEmailIdentity(ctx, createOpts)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "requesting SES email identity verification: %s", err)
 	}
@@ -68,18 +69,18 @@ func resourceEmailIdentityCreate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn(ctx)
+	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
 	email := d.Id()
-	d.Set("email", email)
+	d.Set(names.AttrEmail, email)
 
 	readOpts := &ses.GetIdentityVerificationAttributesInput{
-		Identities: []*string{
-			aws.String(email),
+		Identities: []string{
+			email,
 		},
 	}
 
-	response, err := conn.GetIdentityVerificationAttributesWithContext(ctx, readOpts)
+	response, err := conn.GetIdentityVerificationAttributes(ctx, readOpts)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading SES Identity Verification Attributes (%s): %s", d.Id(), err)
 	}
@@ -98,21 +99,21 @@ func resourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, meta
 		Resource:  fmt.Sprintf("identity/%s", d.Id()),
 		Service:   "ses",
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	return diags
 }
 
 func resourceEmailIdentityDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn(ctx)
+	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
-	email := d.Get("email").(string)
+	email := d.Get(names.AttrEmail).(string)
 
 	deleteOpts := &ses.DeleteIdentityInput{
 		Identity: aws.String(email),
 	}
 
-	_, err := conn.DeleteIdentityWithContext(ctx, deleteOpts)
+	_, err := conn.DeleteIdentity(ctx, deleteOpts)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting SES email identity: %s", err)
 	}

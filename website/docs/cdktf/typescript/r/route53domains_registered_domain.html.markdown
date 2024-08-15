@@ -53,7 +53,7 @@ class MyConvertedCode extends TerraformStack {
 
 ~> **NOTE:** You must specify the same privacy setting for `adminPrivacy`, `registrantPrivacy` and `techPrivacy`.
 
-This argument supports the following arguments:
+This resource supports the following arguments:
 
 * `adminContact` - (Optional) Details about the domain administrative contact. See [Contact Blocks](#contact-blocks) for more details.
 * `adminPrivacy` - (Optional) Whether domain administrative contact information is concealed from WHOIS queries. Default: `true`.
@@ -71,7 +71,7 @@ This argument supports the following arguments:
 
 ### Contact Blocks
 
-The `adminContact`, `registrantContact` and `techContact` blocks support the following:
+The `adminContact`, `billingContact`, `registrantContact` and `techContact` blocks support the following:
 
 * `addressLine1` - (Optional) First line of the contact's address.
 * `addressLine2` - (Optional) Second line of contact's address, if any.
@@ -151,4 +151,4 @@ Using `terraform import`, import domains using the domain name. For example:
 % terraform import aws_route53domains_registered_domain.example example.com
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-c569bdb14e20e946199538f9489aec56d2ab0d9ba80660ce3c540c45817507e9 -->
+<!-- cache-key: cdktf-0.20.1 input-f3a43c49a370aa3f3597964c2d4afca7628a448994f55687aeb34234b8e0224c -->

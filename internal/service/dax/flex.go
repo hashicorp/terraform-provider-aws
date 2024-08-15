@@ -6,12 +6,13 @@ package dax
 import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dax/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func expandEncryptAtRestOptions(m map[string]interface{}) *awstypes.SSESpecification {
 	options := awstypes.SSESpecification{}
 
-	if v, ok := m["enabled"]; ok {
+	if v, ok := m[names.AttrEnabled]; ok {
 		options.Enabled = aws.Bool(v.(bool))
 	}
 
@@ -26,8 +27,8 @@ func expandParameterGroupParameterNameValue(config []interface{}) []awstypes.Par
 	for _, raw := range config {
 		m := raw.(map[string]interface{})
 		pnv := awstypes.ParameterNameValue{
-			ParameterName:  aws.String(m["name"].(string)),
-			ParameterValue: aws.String(m["value"].(string)),
+			ParameterName:  aws.String(m[names.AttrName].(string)),
+			ParameterValue: aws.String(m[names.AttrValue].(string)),
 		}
 		results = append(results, pnv)
 	}
@@ -36,14 +37,14 @@ func expandParameterGroupParameterNameValue(config []interface{}) []awstypes.Par
 
 func flattenEncryptAtRestOptions(options *awstypes.SSEDescription) []map[string]interface{} {
 	m := map[string]interface{}{
-		"enabled": false,
+		names.AttrEnabled: false,
 	}
 
 	if options == nil {
 		return []map[string]interface{}{m}
 	}
 
-	m["enabled"] = options.Status == awstypes.SSEStatusEnabled
+	m[names.AttrEnabled] = options.Status == awstypes.SSEStatusEnabled
 
 	return []map[string]interface{}{m}
 }
@@ -55,8 +56,8 @@ func flattenParameterGroupParameters(params []awstypes.Parameter) []map[string]i
 	results := make([]map[string]interface{}, 0)
 	for _, p := range params {
 		m := map[string]interface{}{
-			"name":  aws.ToString(p.ParameterName),
-			"value": aws.ToString(p.ParameterValue),
+			names.AttrName:  aws.ToString(p.ParameterName),
+			names.AttrValue: aws.ToString(p.ParameterValue),
 		}
 		results = append(results, m)
 	}
