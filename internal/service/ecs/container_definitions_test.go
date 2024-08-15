@@ -576,3 +576,51 @@ func TestContainerDefinitionsAreEquivalent_missingEnvironmentName(t *testing.T) 
 		t.Fatal("Expected definitions to be equal.")
 	}
 }
+
+func TestContainerDefinitionsAreEquivalent_sparseArrays(t *testing.T) {
+	t.Parallel()
+
+	cfgRepresention := `
+[
+    {
+      "name": "wordpress",
+      "links": [
+        "mysql"
+      ],
+      "image": "wordpress",
+      "essential": true,
+      "portMappings": [
+        {}
+      ],
+      "memory": 500,
+      "cpu": 10,
+      "environment": [null],
+      "mountPoints": [{"containerPath": null}],
+      "command": [""]
+    }
+]`
+
+	apiRepresentation := `
+[
+    {
+        "name": "wordpress",
+        "image": "wordpress",
+        "cpu": 10,
+        "memory": 500,
+        "links": [
+            "mysql"
+        ],
+        "portMappings": [],
+        "essential": true,
+        "command": [""]
+    }
+]`
+
+	equal, err := containerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !equal {
+		t.Fatal("Expected definitions to be equal.")
+	}
+}
