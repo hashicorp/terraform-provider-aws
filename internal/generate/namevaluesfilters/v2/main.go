@@ -30,6 +30,7 @@ func main() {
 
 	// Representing types such as []*ec2.Filter, []*rds.Filter, ...
 	sliceServiceNames := []string{
+		"licensemanager",
 		"rds",
 		"secretsmanager",
 		"route53resolver",

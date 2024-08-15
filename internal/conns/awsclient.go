@@ -19,7 +19,6 @@ import (
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	opsworks_sdkv1 "github.com/aws/aws-sdk-go/service/opsworks"
-	rds_sdkv1 "github.com/aws/aws-sdk-go/service/rds"
 	baselogging "github.com/hashicorp/aws-sdk-go-base/v2/logging"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -84,16 +83,6 @@ func (c *AWSClient) PartitionHostname(ctx context.Context, prefix string) string
 // The prefix should not contain a trailing period.
 func (c *AWSClient) RegionalHostname(ctx context.Context, prefix string) string {
 	return fmt.Sprintf("%s.%s.%s", prefix, c.Region, c.DNSSuffix(ctx))
-}
-
-// RDSConnForRegion returns an AWS SDK For Go v1 RDS API client for the specified AWS Region.
-// If the specified region is not the default a new "simple" client is created.
-// This new client does not use any configured endpoint override.
-func (c *AWSClient) RDSConnForRegion(ctx context.Context, region string) *rds_sdkv1.RDS {
-	if region == c.Region {
-		return c.RDSConn(ctx)
-	}
-	return rds_sdkv1.New(c.session, aws_sdkv1.NewConfig().WithRegion(region))
 }
 
 // S3ExpressClient returns an AWS SDK for Go v2 S3 API client suitable for use with S3 Express (directory buckets).

@@ -135,7 +135,7 @@ func (r *integrationResource) Create(ctx context.Context, request resource.Creat
 	}
 
 	// Additional fields.
-	input.Tags = getTagsInV2(ctx)
+	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateIntegration(ctx, input)
 
@@ -207,7 +207,7 @@ func (r *integrationResource) Read(ctx context.Context, request resource.ReadReq
 		data.AdditionalEncryptionContext = prevAdditionalEncryptionContext
 	}
 
-	setTagsOutV2(ctx, output.Tags)
+	setTagsOut(ctx, output.Tags)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }

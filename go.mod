@@ -57,7 +57,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.40.3
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.37.3
 	github.com/aws/aws-sdk-go-v2/service/codeartifact v1.30.3
-	github.com/aws/aws-sdk-go-v2/service/codebuild v1.40.3
+	github.com/aws/aws-sdk-go-v2/service/codebuild v1.41.0
 	github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.15.3
 	github.com/aws/aws-sdk-go-v2/service/codecommit v1.25.0
 	github.com/aws/aws-sdk-go-v2/service/codedeploy v1.27.3
@@ -147,6 +147,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.56.3
 	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.6.3
 	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.46.0
+	github.com/aws/aws-sdk-go-v2/service/licensemanager v1.27.3
 	github.com/aws/aws-sdk-go-v2/service/lightsail v1.40.3
 	github.com/aws/aws-sdk-go-v2/service/location v1.40.3
 	github.com/aws/aws-sdk-go-v2/service/lookoutmetrics v1.29.3
@@ -197,7 +198,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.58.3
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.46.3
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.26.3
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.152.0
+	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.153.0
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.10.3
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.26.3
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.32.4
@@ -238,7 +239,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.45.0
 	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.21.3
 	github.com/aws/aws-sdk-go-v2/service/xray v1.27.3
-	github.com/aws/smithy-go v1.20.3
+	github.com/aws/smithy-go v1.20.4
 	github.com/beevik/etree v1.4.1
 	github.com/cedar-policy/cedar-go v0.0.0-20240318205125-470d1fe984bb
 	github.com/davecgh/go-spew v1.1.1
