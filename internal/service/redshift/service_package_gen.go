@@ -64,7 +64,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  dataSourceOrderableCluster,
 			TypeName: "aws_redshift_orderable_cluster",
-			Name:     "Orderable Cluster Options",
+			Name:     "Orderable Cluster",
 		},
 		{
 			Factory:  dataSourceServiceAccount,
