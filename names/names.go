@@ -63,6 +63,7 @@ const (
 	CognitoIdentityEndpointID              = "cognito-identity"
 	ComprehendEndpointID                   = "comprehend"
 	ConfigServiceEndpointID                = "config"
+	ConnectEndpointID                      = "connect"
 	DataExchangeEndpointID                 = "dataexchange"
 	DataPipelineEndpointID                 = "datapipeline"
 	DetectiveEndpointID                    = "api.detective"
