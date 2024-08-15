@@ -192,12 +192,12 @@ func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		if n == true {
 			err := enableProfile(ctx, d.Id(), meta)
 			if err != nil {
-				sdkdiag.AppendErrorf(diags, "enabling RolesAnywhere Profile (%s): %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "enabling RolesAnywhere Profile (%s): %s", d.Id(), err)
 			}
 		} else {
 			err := disableProfile(ctx, d.Id(), meta)
 			if err != nil {
-				sdkdiag.AppendErrorf(diags, "disabling RolesAnywhere Profile (%s): %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "disabling RolesAnywhere Profile (%s): %s", d.Id(), err)
 			}
 		}
 	}
