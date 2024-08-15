@@ -94,8 +94,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceBotAssociation,
+			Factory:  resourceBotAssociation,
 			TypeName: "aws_connect_bot_association",
+			Name:     "Bot Association",
 		},
 		{
 			Factory:  ResourceContactFlow,

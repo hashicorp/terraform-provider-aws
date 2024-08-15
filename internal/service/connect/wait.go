@@ -15,8 +15,6 @@ import (
 )
 
 const (
-	botAssociationCreateTimeout = 5 * time.Minute
-
 	phoneNumberCreatedTimeout = 2 * time.Minute
 	phoneNumberUpdatedTimeout = 2 * time.Minute
 	phoneNumberDeletedTimeout = 2 * time.Minute

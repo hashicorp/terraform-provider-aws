@@ -61,7 +61,7 @@ func dataSourceBotAssociationRead(ctx context.Context, d *schema.ResourceData, m
 		region = aws.StringValue(lexBot.LexRegion)
 	}
 
-	lexBot, err := FindBotAssociationV1ByNameAndRegionWithContext(ctx, conn, instanceID, name, region)
+	lexBot, err := FindBotAssociationByThreePartKey(ctx, conn, instanceID, name, region)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "finding Connect Bot Association (%s,%s): %s", instanceID, name, err)
 	}
