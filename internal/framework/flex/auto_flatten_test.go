@@ -120,65 +120,6 @@ func TestFlatten(t *testing.T) {
 			},
 		},
 
-		"json interface Source string Target": {
-			Source: &awsJSONStringer{
-				Field1: &testJSONDocument{
-					Value: &struct {
-						Test string `json:"test"`
-					}{
-						Test: "a",
-					},
-				},
-			},
-			Target: &tfSingleStringField{},
-			WantTarget: &tfSingleStringField{
-				Field1: types.StringValue(`{"test":"a"}`),
-			},
-			expectedLogLines: []map[string]any{
-				infoFlattening(reflect.TypeFor[*awsJSONStringer](), reflect.TypeFor[*tfSingleStringField]()),
-				infoConverting(reflect.TypeFor[awsJSONStringer](), reflect.TypeFor[*tfSingleStringField]()),
-				traceMatchedFields("Field1", reflect.TypeFor[awsJSONStringer](), "Field1", reflect.TypeFor[*tfSingleStringField]()),
-				infoConvertingWithPath("Field1", reflect.TypeFor[smithyjson.JSONStringer](), "Field1", reflect.TypeFor[types.String]()),
-			},
-		},
-		"json interface Source JSONValue Target": {
-			Source: &awsJSONStringer{
-				Field1: &testJSONDocument{
-					Value: &struct {
-						Test string `json:"test"`
-					}{
-						Test: "a",
-					},
-				},
-			},
-			Target: &tfJSONStringer{},
-			WantTarget: &tfJSONStringer{
-				Field1: fwtypes.SmithyJSONValue(`{"test":"a"}`, newTestJSONDocument),
-			},
-			expectedLogLines: []map[string]any{
-				infoFlattening(reflect.TypeFor[*awsJSONStringer](), reflect.TypeFor[*tfJSONStringer]()),
-				infoConverting(reflect.TypeFor[awsJSONStringer](), reflect.TypeFor[*tfJSONStringer]()),
-				traceMatchedFields("Field1", reflect.TypeFor[awsJSONStringer](), "Field1", reflect.TypeFor[*tfJSONStringer]()),
-				infoConvertingWithPath("Field1", reflect.TypeFor[smithyjson.JSONStringer](), "Field1", reflect.TypeFor[fwtypes.SmithyJSON[smithyjson.JSONStringer]]()),
-			},
-		},
-		"json interface Source marshal error": {
-			Source: &awsJSONStringer{
-				Field1: &testJSONDocumentError{},
-			},
-			Target: &tfSingleStringField{},
-			expectedDiags: diag.Diagnostics{
-				diagFlatteningMarshalSmithyDocument(reflect.TypeFor[*testJSONDocumentError](), errMarshallSmithyDocument),
-			},
-			expectedLogLines: []map[string]any{
-				infoFlattening(reflect.TypeFor[*awsJSONStringer](), reflect.TypeFor[*tfSingleStringField]()),
-				infoConverting(reflect.TypeFor[awsJSONStringer](), reflect.TypeFor[*tfSingleStringField]()),
-				traceMatchedFields("Field1", reflect.TypeFor[awsJSONStringer](), "Field1", reflect.TypeFor[*tfSingleStringField]()),
-				infoConvertingWithPath("Field1", reflect.TypeFor[smithyjson.JSONStringer](), "Field1", reflect.TypeFor[types.String]()),
-				errorMarshallingJSONDocument("Field1", reflect.TypeFor[smithyjson.JSONStringer](), "Field1", reflect.TypeFor[types.String](), errMarshallSmithyDocument),
-			},
-		},
-
 		"empty struct Source and Target": {
 			Source:     emptyStruct{},
 			Target:     &emptyStruct{},
@@ -2949,6 +2890,153 @@ func TestFlattenOptions(t *testing.T) {
 	runAutoFlattenTestCases(t, testCases)
 }
 
+func TestFlattenInterfaceToStringTypable(t *testing.T) {
+	t.Parallel()
+
+	testCases := autoFlexTestCases{
+		"json interface Source string Target": {
+			Source: &awsJSONStringer{
+				Field1: &testJSONDocument{
+					Value: &struct {
+						Test string `json:"test"`
+					}{
+						Test: "a",
+					},
+				},
+			},
+			Target: &tfSingleStringField{},
+			WantTarget: &tfSingleStringField{
+				Field1: types.StringValue(`{"test":"a"}`),
+			},
+			expectedLogLines: []map[string]any{
+				infoFlattening(reflect.TypeFor[*awsJSONStringer](), reflect.TypeFor[*tfSingleStringField]()),
+				infoConverting(reflect.TypeFor[awsJSONStringer](), reflect.TypeFor[*tfSingleStringField]()),
+				traceMatchedFields("Field1", reflect.TypeFor[awsJSONStringer](), "Field1", reflect.TypeFor[*tfSingleStringField]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[smithyjson.JSONStringer](), "Field1", reflect.TypeFor[types.String]()),
+				// infoSourceImplementsJSONStringer("Field1", reflect.TypeFor[testJSONDocument](), "Field1", reflect.TypeFor[types.String]()),
+				infoSourceImplementsJSONStringer("Field1", reflect.TypeFor[smithyjson.JSONStringer](), "Field1", reflect.TypeFor[types.String]()), // TODO: fix source type
+			},
+		},
+		"null json interface Source string Target": {
+			Source: &awsJSONStringer{
+				Field1: nil,
+			},
+			Target: &tfSingleStringField{},
+			WantTarget: &tfSingleStringField{
+				Field1: types.StringNull(),
+			},
+			expectedLogLines: []map[string]any{
+				infoFlattening(reflect.TypeFor[*awsJSONStringer](), reflect.TypeFor[*tfSingleStringField]()),
+				infoConverting(reflect.TypeFor[awsJSONStringer](), reflect.TypeFor[*tfSingleStringField]()),
+				traceMatchedFields("Field1", reflect.TypeFor[awsJSONStringer](), "Field1", reflect.TypeFor[*tfSingleStringField]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[smithyjson.JSONStringer](), "Field1", reflect.TypeFor[types.String]()),
+				// infoSourceImplementsJSONStringer("Field1", reflect.TypeFor[testJSONDocument](), "Field1", reflect.TypeFor[types.String]()),
+				infoSourceImplementsJSONStringer("Field1", reflect.TypeFor[smithyjson.JSONStringer](), "Field1", reflect.TypeFor[types.String]()), // TODO: fix source type
+				traceFlatteningNullValue("Field1", reflect.TypeFor[smithyjson.JSONStringer](), "Field1", reflect.TypeFor[types.String]()),
+			},
+		},
+
+		"json interface Source JSONValue Target": {
+			Source: &awsJSONStringer{
+				Field1: &testJSONDocument{
+					Value: &struct {
+						Test string `json:"test"`
+					}{
+						Test: "a",
+					},
+				},
+			},
+			Target: &tfJSONStringer{},
+			WantTarget: &tfJSONStringer{
+				Field1: fwtypes.SmithyJSONValue(`{"test":"a"}`, newTestJSONDocument),
+			},
+			expectedLogLines: []map[string]any{
+				infoFlattening(reflect.TypeFor[*awsJSONStringer](), reflect.TypeFor[*tfJSONStringer]()),
+				infoConverting(reflect.TypeFor[awsJSONStringer](), reflect.TypeFor[*tfJSONStringer]()),
+				traceMatchedFields("Field1", reflect.TypeFor[awsJSONStringer](), "Field1", reflect.TypeFor[*tfJSONStringer]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[smithyjson.JSONStringer](), "Field1", reflect.TypeFor[fwtypes.SmithyJSON[smithyjson.JSONStringer]]()),
+				// infoSourceImplementsJSONStringer("Field1", reflect.TypeFor[testJSONDocument](), "Field1", reflect.TypeFor[fwtypes.SmithyJSON[smithyjson.JSONStringer]]()),
+				infoSourceImplementsJSONStringer("Field1", reflect.TypeFor[smithyjson.JSONStringer](), "Field1", reflect.TypeFor[fwtypes.SmithyJSON[smithyjson.JSONStringer]]()), // TODO: fix source type
+			},
+		},
+		"null json interface Source JSONValue Target": {
+			Source: &awsJSONStringer{
+				Field1: nil,
+			},
+			Target: &tfJSONStringer{},
+			WantTarget: &tfJSONStringer{
+				Field1: fwtypes.SmithyJSONNull[smithyjson.JSONStringer](),
+			},
+			expectedLogLines: []map[string]any{
+				infoFlattening(reflect.TypeFor[*awsJSONStringer](), reflect.TypeFor[*tfJSONStringer]()),
+				infoConverting(reflect.TypeFor[awsJSONStringer](), reflect.TypeFor[*tfJSONStringer]()),
+				traceMatchedFields("Field1", reflect.TypeFor[awsJSONStringer](), "Field1", reflect.TypeFor[*tfJSONStringer]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[smithyjson.JSONStringer](), "Field1", reflect.TypeFor[fwtypes.SmithyJSON[smithyjson.JSONStringer]]()),
+				// infoSourceImplementsJSONStringer("Field1", reflect.TypeFor[testJSONDocument](), "Field1", reflect.TypeFor[fwtypes.SmithyJSON[smithyjson.JSONStringer]]()),
+				infoSourceImplementsJSONStringer("Field1", reflect.TypeFor[smithyjson.JSONStringer](), "Field1", reflect.TypeFor[fwtypes.SmithyJSON[smithyjson.JSONStringer]]()), // TODO: fix source type
+				traceFlatteningNullValue("Field1", reflect.TypeFor[smithyjson.JSONStringer](), "Field1", reflect.TypeFor[fwtypes.SmithyJSON[smithyjson.JSONStringer]]()),
+			},
+		},
+
+		"json interface Source marshal error": {
+			Source: &awsJSONStringer{
+				Field1: &testJSONDocumentError{},
+			},
+			Target: &tfSingleStringField{},
+			expectedDiags: diag.Diagnostics{
+				diagFlatteningMarshalSmithyDocument(reflect.TypeFor[*testJSONDocumentError](), errMarshallSmithyDocument),
+			},
+			expectedLogLines: []map[string]any{
+				infoFlattening(reflect.TypeFor[*awsJSONStringer](), reflect.TypeFor[*tfSingleStringField]()),
+				infoConverting(reflect.TypeFor[awsJSONStringer](), reflect.TypeFor[*tfSingleStringField]()),
+				traceMatchedFields("Field1", reflect.TypeFor[awsJSONStringer](), "Field1", reflect.TypeFor[*tfSingleStringField]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[smithyjson.JSONStringer](), "Field1", reflect.TypeFor[types.String]()),
+				// infoSourceImplementsJSONStringer("Field1", reflect.TypeFor[testJSONDocument](), "Field1", reflect.TypeFor[types.String]()),
+				infoSourceImplementsJSONStringer("Field1", reflect.TypeFor[smithyjson.JSONStringer](), "Field1", reflect.TypeFor[types.String]()), // TODO: fix source type
+				errorMarshallingJSONDocument("Field1", reflect.TypeFor[smithyjson.JSONStringer](), "Field1", reflect.TypeFor[types.String](), errMarshallSmithyDocument),
+			},
+		},
+
+		"non-json interface Source string Target": {
+			Source: awsInterfaceSingle{
+				Field1: &awsInterfaceInterfaceImpl{
+					AWSField: "value1",
+				},
+			},
+			Target: &tfSingleStringField{},
+			WantTarget: &tfSingleStringField{
+				Field1: types.StringNull(),
+			},
+			expectedLogLines: []map[string]any{
+				infoFlattening(reflect.TypeFor[awsInterfaceSingle](), reflect.TypeFor[*tfSingleStringField]()),
+				infoConverting(reflect.TypeFor[awsInterfaceSingle](), reflect.TypeFor[*tfSingleStringField]()),
+				traceMatchedFields("Field1", reflect.TypeFor[awsInterfaceSingle](), "Field1", reflect.TypeFor[*tfSingleStringField]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[awsInterfaceInterface](), "Field1", reflect.TypeFor[types.String]()),
+				errorFlatteningIncompatibleTypes("Field1", reflect.TypeFor[awsInterfaceInterface](), "Field1", reflect.TypeFor[types.String]()),
+			},
+		},
+
+		"null non-json interface Source string Target": {
+			Source: awsInterfaceSingle{
+				Field1: nil,
+			},
+			Target: &tfSingleStringField{},
+			WantTarget: &tfSingleStringField{
+				Field1: types.StringNull(),
+			},
+			expectedLogLines: []map[string]any{
+				infoFlattening(reflect.TypeFor[awsInterfaceSingle](), reflect.TypeFor[*tfSingleStringField]()),
+				infoConverting(reflect.TypeFor[awsInterfaceSingle](), reflect.TypeFor[*tfSingleStringField]()),
+				traceMatchedFields("Field1", reflect.TypeFor[awsInterfaceSingle](), "Field1", reflect.TypeFor[*tfSingleStringField]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[awsInterfaceInterface](), "Field1", reflect.TypeFor[types.String]()),
+				errorFlatteningIncompatibleTypes("Field1", reflect.TypeFor[awsInterfaceInterface](), "Field1", reflect.TypeFor[types.String]()),
+			},
+		},
+	}
+
+	runAutoFlattenTestCases(t, testCases)
+}
+
 func TestFlattenInterface(t *testing.T) {
 	t.Parallel()
 
@@ -2989,7 +3077,7 @@ func TestFlattenInterface(t *testing.T) {
 				infoConverting(reflect.TypeFor[awsInterfaceSingle](), reflect.TypeFor[*tfListNestedObject[tfInterfaceFlexer]]()),
 				traceMatchedFields("Field1", reflect.TypeFor[awsInterfaceSingle](), "Field1", reflect.TypeFor[*tfListNestedObject[tfInterfaceFlexer]]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[awsInterfaceInterface](), "Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfInterfaceFlexer]]()),
-				infoSourceImplementsFlexFlattener("Field1", reflect.TypeFor[awsInterfaceInterface](), "Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfInterfaceFlexer]]()),
+				infoTargetImplementsFlexFlattener("Field1", reflect.TypeFor[awsInterfaceInterface](), "Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfInterfaceFlexer]]()),
 				// StringValueToFramework in testFlexTFInterfaceFlexer.Flatten()
 				infoFlatteningWithPath("Field1", reflect.TypeFor[string](), "Field1", reflect.TypeFor[*types.String]()),
 				infoConvertingWithPath("", reflect.TypeFor[string](), "", reflect.TypeFor[types.String]()), // TODO: fix path
@@ -3079,7 +3167,7 @@ func TestFlattenInterface(t *testing.T) {
 				infoConverting(reflect.TypeFor[awsInterfaceSingle](), reflect.TypeFor[*tfSetNestedObject[tfInterfaceFlexer]]()),
 				traceMatchedFields("Field1", reflect.TypeFor[awsInterfaceSingle](), "Field1", reflect.TypeFor[*tfSetNestedObject[tfInterfaceFlexer]]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[awsInterfaceInterface](), "Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfInterfaceFlexer]]()),
-				infoSourceImplementsFlexFlattener("Field1", reflect.TypeFor[awsInterfaceInterface](), "Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfInterfaceFlexer]]()),
+				infoTargetImplementsFlexFlattener("Field1", reflect.TypeFor[awsInterfaceInterface](), "Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfInterfaceFlexer]]()),
 				// StringValueToFramework in testFlexTFInterfaceFlexer.Flatten()
 				infoFlatteningWithPath("Field1", reflect.TypeFor[string](), "Field1", reflect.TypeFor[*types.String]()),
 				infoConvertingWithPath("", reflect.TypeFor[string](), "", reflect.TypeFor[types.String]()), // TODO: fix path
@@ -3143,11 +3231,11 @@ func TestFlattenInterface(t *testing.T) {
 				infoConverting(reflect.TypeFor[awsInterfaceSlice](), reflect.TypeFor[*tfListNestedObject[tfInterfaceFlexer]]()),
 				traceMatchedFields("Field1", reflect.TypeFor[awsInterfaceSlice](), "Field1", reflect.TypeFor[*tfListNestedObject[tfInterfaceFlexer]]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[[]awsInterfaceInterface](), "Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfInterfaceFlexer]]()),
-				infoSourceImplementsFlexFlattener("Field1[0]", reflect.TypeFor[awsInterfaceInterfaceImpl](), "Field1[0]", reflect.TypeFor[*tfInterfaceFlexer]()),
+				infoTargetImplementsFlexFlattener("Field1[0]", reflect.TypeFor[awsInterfaceInterfaceImpl](), "Field1[0]", reflect.TypeFor[*tfInterfaceFlexer]()),
 				// StringValueToFramework in testFlexTFInterfaceFlexer.Flatten()
 				infoFlatteningWithPath("Field1[0]", reflect.TypeFor[string](), "Field1[0]", reflect.TypeFor[*types.String]()),
 				infoConvertingWithPath("", reflect.TypeFor[string](), "", reflect.TypeFor[types.String]()), // TODO: fix path
-				infoSourceImplementsFlexFlattener("Field1[1]", reflect.TypeFor[awsInterfaceInterfaceImpl](), "Field1[1]", reflect.TypeFor[*tfInterfaceFlexer]()),
+				infoTargetImplementsFlexFlattener("Field1[1]", reflect.TypeFor[awsInterfaceInterfaceImpl](), "Field1[1]", reflect.TypeFor[*tfInterfaceFlexer]()),
 				// StringValueToFramework in testFlexTFInterfaceFlexer.Flatten()
 				infoFlatteningWithPath("Field1[1]", reflect.TypeFor[string](), "Field1[1]", reflect.TypeFor[*types.String]()),
 				infoConvertingWithPath("", reflect.TypeFor[string](), "", reflect.TypeFor[types.String]()), // TODO: fix path
@@ -3211,11 +3299,11 @@ func TestFlattenInterface(t *testing.T) {
 				infoConverting(reflect.TypeFor[awsInterfaceSlice](), reflect.TypeFor[*tfSetNestedObject[tfInterfaceFlexer]]()),
 				traceMatchedFields("Field1", reflect.TypeFor[awsInterfaceSlice](), "Field1", reflect.TypeFor[*tfSetNestedObject[tfInterfaceFlexer]]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[[]awsInterfaceInterface](), "Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfInterfaceFlexer]]()),
-				infoSourceImplementsFlexFlattener("Field1[0]", reflect.TypeFor[awsInterfaceInterfaceImpl](), "Field1[0]", reflect.TypeFor[*tfInterfaceFlexer]()),
+				infoTargetImplementsFlexFlattener("Field1[0]", reflect.TypeFor[awsInterfaceInterfaceImpl](), "Field1[0]", reflect.TypeFor[*tfInterfaceFlexer]()),
 				// StringValueToFramework in testFlexTFInterfaceFlexer.Flatten()
 				infoFlatteningWithPath("Field1[0]", reflect.TypeFor[string](), "Field1[0]", reflect.TypeFor[*types.String]()),
 				infoConvertingWithPath("", reflect.TypeFor[string](), "", reflect.TypeFor[types.String]()), // TODO: fix path
-				infoSourceImplementsFlexFlattener("Field1[1]", reflect.TypeFor[awsInterfaceInterfaceImpl](), "Field1[1]", reflect.TypeFor[*tfInterfaceFlexer]()),
+				infoTargetImplementsFlexFlattener("Field1[1]", reflect.TypeFor[awsInterfaceInterfaceImpl](), "Field1[1]", reflect.TypeFor[*tfInterfaceFlexer]()),
 				// StringValueToFramework in testFlexTFInterfaceFlexer.Flatten()
 				infoFlatteningWithPath("Field1[1]", reflect.TypeFor[string](), "Field1[1]", reflect.TypeFor[*types.String]()),
 				infoConvertingWithPath("", reflect.TypeFor[string](), "", reflect.TypeFor[types.String]()), // TODO: fix path
@@ -3253,7 +3341,7 @@ func TestFlattenInterface(t *testing.T) {
 				infoConverting(reflect.TypeFor[awsInterfaceSingle](), reflect.TypeFor[*tfObjectValue[tfInterfaceFlexer]]()),
 				traceMatchedFields("Field1", reflect.TypeFor[awsInterfaceSingle](), "Field1", reflect.TypeFor[*tfObjectValue[tfInterfaceFlexer]]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[awsInterfaceInterface](), "Field1", reflect.TypeFor[fwtypes.ObjectValueOf[tfInterfaceFlexer]]()),
-				infoSourceImplementsFlexFlattener("Field1", reflect.TypeFor[awsInterfaceInterface](), "Field1", reflect.TypeFor[fwtypes.ObjectValueOf[tfInterfaceFlexer]]()),
+				infoTargetImplementsFlexFlattener("Field1", reflect.TypeFor[awsInterfaceInterface](), "Field1", reflect.TypeFor[fwtypes.ObjectValueOf[tfInterfaceFlexer]]()),
 				// StringValueToFramework in testFlexTFInterfaceFlexer.Flatten()
 				infoFlatteningWithPath("Field1", reflect.TypeFor[string](), "Field1", reflect.TypeFor[*types.String]()),
 				infoConvertingWithPath("", reflect.TypeFor[string](), "", reflect.TypeFor[types.String]()), // TODO: fix path
@@ -3280,7 +3368,7 @@ func TestFlattenFlattener(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				infoFlattening(reflect.TypeFor[awsExpander](), reflect.TypeFor[*tfFlexer]()),
 				infoConverting(reflect.TypeFor[awsExpander](), reflect.TypeFor[*tfFlexer]()),
-				infoSourceImplementsFlexFlattener("", reflect.TypeFor[awsExpander](), "", reflect.TypeFor[*tfFlexer]()),
+				infoTargetImplementsFlexFlattener("", reflect.TypeFor[awsExpander](), "", reflect.TypeFor[*tfFlexer]()),
 				// StringValueToFramework in testFlexTFFlexer.Flatten()
 				infoFlatteningWithPath("", reflect.TypeFor[string](), "", reflect.TypeFor[*types.String]()), // TODO: fix path
 				infoConvertingWithPath("", reflect.TypeFor[string](), "", reflect.TypeFor[types.String]()),  // TODO: fix path
@@ -3297,7 +3385,7 @@ func TestFlattenFlattener(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				infoFlattening(reflect.TypeFor[awsExpanderIncompatible](), reflect.TypeFor[*tfFlexer]()),
 				infoConverting(reflect.TypeFor[awsExpanderIncompatible](), reflect.TypeFor[*tfFlexer]()),
-				infoSourceImplementsFlexFlattener("", reflect.TypeFor[awsExpanderIncompatible](), "", reflect.TypeFor[*tfFlexer]()),
+				infoTargetImplementsFlexFlattener("", reflect.TypeFor[awsExpanderIncompatible](), "", reflect.TypeFor[*tfFlexer]()),
 			},
 		},
 		"single struct Source and single list Target": {
@@ -3319,7 +3407,7 @@ func TestFlattenFlattener(t *testing.T) {
 				infoConverting(reflect.TypeFor[awsExpanderSingleStruct](), reflect.TypeFor[*tfExpanderListNestedObject]()),
 				traceMatchedFields("Field1", reflect.TypeFor[awsExpanderSingleStruct](), "Field1", reflect.TypeFor[*tfExpanderListNestedObject]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[awsExpander](), "Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfFlexer]]()),
-				infoSourceImplementsFlexFlattener("Field1", reflect.TypeFor[awsExpander](), "Field1", reflect.TypeFor[*tfFlexer]()),
+				infoTargetImplementsFlexFlattener("Field1", reflect.TypeFor[awsExpander](), "Field1", reflect.TypeFor[*tfFlexer]()),
 				// StringValueToFramework in testFlexTFFlexer.Flatten()
 				infoFlatteningWithPath("Field1", reflect.TypeFor[string](), "Field1", reflect.TypeFor[*types.String]()),
 				infoConvertingWithPath("", reflect.TypeFor[string](), "", reflect.TypeFor[types.String]()), // TODO: fix path
@@ -3359,7 +3447,7 @@ func TestFlattenFlattener(t *testing.T) {
 				infoConverting(reflect.TypeFor[awsExpanderSingleStruct](), reflect.TypeFor[*tfExpanderSetNestedObject]()),
 				traceMatchedFields("Field1", reflect.TypeFor[awsExpanderSingleStruct](), "Field1", reflect.TypeFor[*tfExpanderSetNestedObject]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[awsExpander](), "Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfFlexer]]()),
-				infoSourceImplementsFlexFlattener("Field1", reflect.TypeFor[awsExpander](), "Field1", reflect.TypeFor[*tfFlexer]()),
+				infoTargetImplementsFlexFlattener("Field1", reflect.TypeFor[awsExpander](), "Field1", reflect.TypeFor[*tfFlexer]()),
 				// StringValueToFramework in testFlexTFFlexer.Flatten()
 				infoFlatteningWithPath("Field1", reflect.TypeFor[string](), "Field1", reflect.TypeFor[*types.String]()),
 				infoConvertingWithPath("", reflect.TypeFor[string](), "", reflect.TypeFor[types.String]()), // TODO: fix path
@@ -3384,7 +3472,7 @@ func TestFlattenFlattener(t *testing.T) {
 				infoConverting(reflect.TypeFor[awsExpanderSinglePtr](), reflect.TypeFor[*tfExpanderListNestedObject]()),
 				traceMatchedFields("Field1", reflect.TypeFor[awsExpanderSinglePtr](), "Field1", reflect.TypeFor[*tfExpanderListNestedObject]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[*awsExpander](), "Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfFlexer]]()),
-				infoSourceImplementsFlexFlattener("Field1", reflect.TypeFor[awsExpander](), "Field1", reflect.TypeFor[*tfFlexer]()),
+				infoTargetImplementsFlexFlattener("Field1", reflect.TypeFor[awsExpander](), "Field1", reflect.TypeFor[*tfFlexer]()),
 				// StringValueToFramework in testFlexTFFlexer.Flatten()
 				infoFlatteningWithPath("Field1", reflect.TypeFor[string](), "Field1", reflect.TypeFor[*types.String]()),
 				infoConvertingWithPath("", reflect.TypeFor[string](), "", reflect.TypeFor[types.String]()), // TODO: fix path
@@ -3409,7 +3497,7 @@ func TestFlattenFlattener(t *testing.T) {
 				infoConverting(reflect.TypeFor[awsExpanderSinglePtr](), reflect.TypeFor[*tfExpanderSetNestedObject]()),
 				traceMatchedFields("Field1", reflect.TypeFor[awsExpanderSinglePtr](), "Field1", reflect.TypeFor[*tfExpanderSetNestedObject]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[*awsExpander](), "Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfFlexer]]()),
-				infoSourceImplementsFlexFlattener("Field1", reflect.TypeFor[awsExpander](), "Field1", reflect.TypeFor[*tfFlexer]()),
+				infoTargetImplementsFlexFlattener("Field1", reflect.TypeFor[awsExpander](), "Field1", reflect.TypeFor[*tfFlexer]()),
 				// StringValueToFramework in testFlexTFFlexer.Flatten()
 				infoFlatteningWithPath("Field1", reflect.TypeFor[string](), "Field1", reflect.TypeFor[*types.String]()),
 				infoConvertingWithPath("", reflect.TypeFor[string](), "", reflect.TypeFor[types.String]()), // TODO: fix path
@@ -3473,11 +3561,11 @@ func TestFlattenFlattener(t *testing.T) {
 				infoConverting(reflect.TypeFor[awsExpanderStructSlice](), reflect.TypeFor[*tfExpanderListNestedObject]()),
 				traceMatchedFields("Field1", reflect.TypeFor[awsExpanderStructSlice](), "Field1", reflect.TypeFor[*tfExpanderListNestedObject]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[[]awsExpander](), "Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfFlexer]]()),
-				infoSourceImplementsFlexFlattener("Field1[0]", reflect.TypeFor[awsExpander](), "Field1[0]", reflect.TypeFor[*tfFlexer]()),
+				infoTargetImplementsFlexFlattener("Field1[0]", reflect.TypeFor[awsExpander](), "Field1[0]", reflect.TypeFor[*tfFlexer]()),
 				// StringValueToFramework in testFlexTFFlexer.Flatten()
 				infoFlatteningWithPath("Field1[0]", reflect.TypeFor[string](), "Field1[0]", reflect.TypeFor[*types.String]()),
 				infoConvertingWithPath("", reflect.TypeFor[string](), "", reflect.TypeFor[types.String]()), // TODO: fix path
-				infoSourceImplementsFlexFlattener("Field1[1]", reflect.TypeFor[awsExpander](), "Field1[1]", reflect.TypeFor[*tfFlexer]()),
+				infoTargetImplementsFlexFlattener("Field1[1]", reflect.TypeFor[awsExpander](), "Field1[1]", reflect.TypeFor[*tfFlexer]()),
 				// StringValueToFramework in testFlexTFFlexer.Flatten()
 				infoFlatteningWithPath("Field1[1]", reflect.TypeFor[string](), "Field1[1]", reflect.TypeFor[*types.String]()),
 				infoConvertingWithPath("", reflect.TypeFor[string](), "", reflect.TypeFor[types.String]()), // TODO: fix path
@@ -3525,11 +3613,11 @@ func TestFlattenFlattener(t *testing.T) {
 				infoConverting(reflect.TypeFor[awsExpanderPtrSlice](), reflect.TypeFor[*tfExpanderListNestedObject]()),
 				traceMatchedFields("Field1", reflect.TypeFor[awsExpanderPtrSlice](), "Field1", reflect.TypeFor[*tfExpanderListNestedObject]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[[]*awsExpander](), "Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfFlexer]]()),
-				infoSourceImplementsFlexFlattener("Field1[0]", reflect.TypeFor[awsExpander](), "Field1[0]", reflect.TypeFor[*tfFlexer]()),
+				infoTargetImplementsFlexFlattener("Field1[0]", reflect.TypeFor[awsExpander](), "Field1[0]", reflect.TypeFor[*tfFlexer]()),
 				// StringValueToFramework in testFlexTFFlexer.Flatten()
 				infoFlatteningWithPath("Field1[0]", reflect.TypeFor[string](), "Field1[0]", reflect.TypeFor[*types.String]()),
 				infoConvertingWithPath("", reflect.TypeFor[string](), "", reflect.TypeFor[types.String]()), // TODO: fix path
-				infoSourceImplementsFlexFlattener("Field1[1]", reflect.TypeFor[awsExpander](), "Field1[1]", reflect.TypeFor[*tfFlexer]()),
+				infoTargetImplementsFlexFlattener("Field1[1]", reflect.TypeFor[awsExpander](), "Field1[1]", reflect.TypeFor[*tfFlexer]()),
 				// StringValueToFramework in testFlexTFFlexer.Flatten()
 				infoFlatteningWithPath("Field1[1]", reflect.TypeFor[string](), "Field1[1]", reflect.TypeFor[*types.String]()),
 				infoConvertingWithPath("", reflect.TypeFor[string](), "", reflect.TypeFor[types.String]()), // TODO: fix path
@@ -3577,11 +3665,11 @@ func TestFlattenFlattener(t *testing.T) {
 				infoConverting(reflect.TypeFor[awsExpanderStructSlice](), reflect.TypeFor[*tfExpanderSetNestedObject]()),
 				traceMatchedFields("Field1", reflect.TypeFor[awsExpanderStructSlice](), "Field1", reflect.TypeFor[*tfExpanderSetNestedObject]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[[]awsExpander](), "Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfFlexer]]()),
-				infoSourceImplementsFlexFlattener("Field1[0]", reflect.TypeFor[awsExpander](), "Field1[0]", reflect.TypeFor[*tfFlexer]()),
+				infoTargetImplementsFlexFlattener("Field1[0]", reflect.TypeFor[awsExpander](), "Field1[0]", reflect.TypeFor[*tfFlexer]()),
 				// StringValueToFramework in testFlexTFFlexer.Flatten()
 				infoFlatteningWithPath("Field1[0]", reflect.TypeFor[string](), "Field1[0]", reflect.TypeFor[*types.String]()),
 				infoConvertingWithPath("", reflect.TypeFor[string](), "", reflect.TypeFor[types.String]()), // TODO: fix path
-				infoSourceImplementsFlexFlattener("Field1[1]", reflect.TypeFor[awsExpander](), "Field1[1]", reflect.TypeFor[*tfFlexer]()),
+				infoTargetImplementsFlexFlattener("Field1[1]", reflect.TypeFor[awsExpander](), "Field1[1]", reflect.TypeFor[*tfFlexer]()),
 				// StringValueToFramework in testFlexTFFlexer.Flatten()
 				infoFlatteningWithPath("Field1[1]", reflect.TypeFor[string](), "Field1[1]", reflect.TypeFor[*types.String]()),
 				infoConvertingWithPath("", reflect.TypeFor[string](), "", reflect.TypeFor[types.String]()), // TODO: fix path
@@ -3629,11 +3717,11 @@ func TestFlattenFlattener(t *testing.T) {
 				infoConverting(reflect.TypeFor[awsExpanderPtrSlice](), reflect.TypeFor[*tfExpanderSetNestedObject]()),
 				traceMatchedFields("Field1", reflect.TypeFor[awsExpanderPtrSlice](), "Field1", reflect.TypeFor[*tfExpanderSetNestedObject]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[[]*awsExpander](), "Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfFlexer]]()),
-				infoSourceImplementsFlexFlattener("Field1[0]", reflect.TypeFor[awsExpander](), "Field1[0]", reflect.TypeFor[*tfFlexer]()),
+				infoTargetImplementsFlexFlattener("Field1[0]", reflect.TypeFor[awsExpander](), "Field1[0]", reflect.TypeFor[*tfFlexer]()),
 				// StringValueToFramework in testFlexTFFlexer.Flatten()
 				infoFlatteningWithPath("Field1[0]", reflect.TypeFor[string](), "Field1[0]", reflect.TypeFor[*types.String]()),
 				infoConvertingWithPath("", reflect.TypeFor[string](), "", reflect.TypeFor[types.String]()), // TODO: fix path
-				infoSourceImplementsFlexFlattener("Field1[1]", reflect.TypeFor[awsExpander](), "Field1[1]", reflect.TypeFor[*tfFlexer]()),
+				infoTargetImplementsFlexFlattener("Field1[1]", reflect.TypeFor[awsExpander](), "Field1[1]", reflect.TypeFor[*tfFlexer]()),
 				// StringValueToFramework in testFlexTFFlexer.Flatten()
 				infoFlatteningWithPath("Field1[1]", reflect.TypeFor[string](), "Field1[1]", reflect.TypeFor[*types.String]()),
 				infoConvertingWithPath("", reflect.TypeFor[string](), "", reflect.TypeFor[types.String]()), // TODO: fix path
@@ -3656,7 +3744,7 @@ func TestFlattenFlattener(t *testing.T) {
 				infoConverting(reflect.TypeFor[awsExpanderSingleStruct](), reflect.TypeFor[*tfExpanderObjectValue]()),
 				traceMatchedFields("Field1", reflect.TypeFor[awsExpanderSingleStruct](), "Field1", reflect.TypeFor[*tfExpanderObjectValue]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[awsExpander](), "Field1", reflect.TypeFor[fwtypes.ObjectValueOf[tfFlexer]]()),
-				infoSourceImplementsFlexFlattener("Field1", reflect.TypeFor[awsExpander](), "Field1", reflect.TypeFor[*tfFlexer]()),
+				infoTargetImplementsFlexFlattener("Field1", reflect.TypeFor[awsExpander](), "Field1", reflect.TypeFor[*tfFlexer]()),
 				// StringValueToFramework in testFlexTFFlexer.Flatten()
 				infoFlatteningWithPath("Field1", reflect.TypeFor[string](), "Field1", reflect.TypeFor[*types.String]()),
 				infoConvertingWithPath("", reflect.TypeFor[string](), "", reflect.TypeFor[types.String]()), // TODO: fix path
@@ -3679,7 +3767,7 @@ func TestFlattenFlattener(t *testing.T) {
 				infoConverting(reflect.TypeFor[awsExpanderSinglePtr](), reflect.TypeFor[*tfExpanderObjectValue]()),
 				traceMatchedFields("Field1", reflect.TypeFor[awsExpanderSinglePtr](), "Field1", reflect.TypeFor[*tfExpanderObjectValue]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[*awsExpander](), "Field1", reflect.TypeFor[fwtypes.ObjectValueOf[tfFlexer]]()),
-				infoSourceImplementsFlexFlattener("Field1", reflect.TypeFor[awsExpander](), "Field1", reflect.TypeFor[*tfFlexer]()),
+				infoTargetImplementsFlexFlattener("Field1", reflect.TypeFor[awsExpander](), "Field1", reflect.TypeFor[*tfFlexer]()),
 				// StringValueToFramework in testFlexTFFlexer.Flatten()
 				infoFlatteningWithPath("Field1", reflect.TypeFor[string](), "Field1", reflect.TypeFor[*types.String]()),
 				infoConvertingWithPath("", reflect.TypeFor[string](), "", reflect.TypeFor[types.String]()), // TODO: fix path
