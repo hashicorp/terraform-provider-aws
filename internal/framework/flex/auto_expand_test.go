@@ -1883,6 +1883,119 @@ func TestExpandInt32(t *testing.T) {
 	}
 }
 
+func TestExpandString(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]autoFlexTestCases{
+		"String to string": {
+			"value": {
+				Source: tfSingleStringField{
+					Field1: types.StringValue("value"),
+				},
+				Target: &awsSingleStringValue{},
+				WantTarget: &awsSingleStringValue{
+					Field1: "value",
+				},
+				expectedLogLines: []map[string]any{
+					infoExpanding(reflect.TypeFor[tfSingleStringField](), reflect.TypeFor[*awsSingleStringValue]()),
+					infoConverting(reflect.TypeFor[tfSingleStringField](), reflect.TypeFor[*awsSingleStringValue]()),
+					traceMatchedFields("Field1", reflect.TypeFor[tfSingleStringField](), "Field1", reflect.TypeFor[*awsSingleStringValue]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[string]()),
+				},
+			},
+			"empty": {
+				Source: tfSingleStringField{
+					Field1: types.StringValue(""),
+				},
+				Target: &awsSingleStringValue{},
+				WantTarget: &awsSingleStringValue{
+					Field1: "",
+				},
+				expectedLogLines: []map[string]any{
+					infoExpanding(reflect.TypeFor[tfSingleStringField](), reflect.TypeFor[*awsSingleStringValue]()),
+					infoConverting(reflect.TypeFor[tfSingleStringField](), reflect.TypeFor[*awsSingleStringValue]()),
+					traceMatchedFields("Field1", reflect.TypeFor[tfSingleStringField](), "Field1", reflect.TypeFor[*awsSingleStringValue]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[string]()),
+				},
+			},
+			"null": {
+				Source: tfSingleStringField{
+					Field1: types.StringNull(),
+				},
+				Target: &awsSingleStringValue{},
+				WantTarget: &awsSingleStringValue{
+					Field1: "",
+				},
+				expectedLogLines: []map[string]any{
+					infoExpanding(reflect.TypeFor[tfSingleStringField](), reflect.TypeFor[*awsSingleStringValue]()),
+					infoConverting(reflect.TypeFor[tfSingleStringField](), reflect.TypeFor[*awsSingleStringValue]()),
+					traceMatchedFields("Field1", reflect.TypeFor[tfSingleStringField](), "Field1", reflect.TypeFor[*awsSingleStringValue]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[string]()),
+					traceExpandingNullValue("Field1", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[string]()),
+				},
+			},
+		},
+
+		"String to *string": {
+			"value": {
+				Source: tfSingleStringField{
+					Field1: types.StringValue("value"),
+				},
+				Target: &awsSingleStringPointer{},
+				WantTarget: &awsSingleStringPointer{
+					Field1: aws.String("value"),
+				},
+				expectedLogLines: []map[string]any{
+					infoExpanding(reflect.TypeFor[tfSingleStringField](), reflect.TypeFor[*awsSingleStringPointer]()),
+					infoConverting(reflect.TypeFor[tfSingleStringField](), reflect.TypeFor[*awsSingleStringPointer]()),
+					traceMatchedFields("Field1", reflect.TypeFor[tfSingleStringField](), "Field1", reflect.TypeFor[*awsSingleStringPointer]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[*string]()),
+				},
+			},
+			"empty": {
+				Source: tfSingleStringField{
+					Field1: types.StringValue(""),
+				},
+				Target: &awsSingleStringPointer{},
+				WantTarget: &awsSingleStringPointer{
+					Field1: aws.String(""),
+				},
+				expectedLogLines: []map[string]any{
+					infoExpanding(reflect.TypeFor[tfSingleStringField](), reflect.TypeFor[*awsSingleStringPointer]()),
+					infoConverting(reflect.TypeFor[tfSingleStringField](), reflect.TypeFor[*awsSingleStringPointer]()),
+					traceMatchedFields("Field1", reflect.TypeFor[tfSingleStringField](), "Field1", reflect.TypeFor[*awsSingleStringPointer]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[*string]()),
+				},
+			},
+			"null": {
+				Source: tfSingleStringField{
+					Field1: types.StringNull(),
+				},
+				Target: &awsSingleStringPointer{},
+				WantTarget: &awsSingleStringPointer{
+					Field1: nil,
+				},
+				expectedLogLines: []map[string]any{
+					infoExpanding(reflect.TypeFor[tfSingleStringField](), reflect.TypeFor[*awsSingleStringPointer]()),
+					infoConverting(reflect.TypeFor[tfSingleStringField](), reflect.TypeFor[*awsSingleStringPointer]()),
+					traceMatchedFields("Field1", reflect.TypeFor[tfSingleStringField](), "Field1", reflect.TypeFor[*awsSingleStringPointer]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[*string]()),
+					traceExpandingNullValue("Field1", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[*string]()),
+				},
+			},
+		},
+	}
+
+	for testName, cases := range testCases {
+		cases := cases
+		t.Run(testName, func(t *testing.T) {
+			t.Parallel()
+
+			runAutoExpandTestCases(t, cases)
+		})
+	}
+}
+
 func TestExpandSimpleSingleNestedBlock(t *testing.T) {
 	t.Parallel()
 
