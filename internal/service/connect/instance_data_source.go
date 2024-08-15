@@ -8,9 +8,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/connect"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/connect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -93,9 +92,9 @@ func DataSourceInstance() *schema.Resource {
 func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
-	var matchedInstance *awstypes.Instance
+	var matchedInstance *connect.Instance
 
 	if v, ok := d.GetOk("instance_id"); ok {
 		instanceID := v.(string)
@@ -119,7 +118,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 			return sdkdiag.AppendErrorf(diags, "finding Connect Instance Summary by instance_alias (%s): not found", instanceAlias)
 		}
 
-		matchedInstance = &awstypes.Instance{
+		matchedInstance = &connect.Instance{
 			Arn:                    instanceSummary.Arn,
 			CreatedTime:            instanceSummary.CreatedTime,
 			Id:                     instanceSummary.Id,
@@ -136,7 +135,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "no Connect Instance found for query, try adjusting your search criteria")
 	}
 
-	d.SetId(aws.ToString(matchedInstance.Id))
+	d.SetId(aws.StringValue(matchedInstance.Id))
 	d.Set("arn", matchedInstance.Arn)
 	if matchedInstance.CreatedTime != nil {
 		d.Set("created_time", matchedInstance.CreatedTime.Format(time.RFC3339))
@@ -159,40 +158,46 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func dataSourceGetInstanceSummaryByInstanceAlias(ctx context.Context, conn *connect.Client, instanceAlias string) (*awstypes.InstanceSummary, error) {
-	var result *awstypes.InstanceSummary
+func dataSourceGetInstanceSummaryByInstanceAlias(ctx context.Context, conn *connect.Connect, instanceAlias string) (*connect.InstanceSummary, error) {
+	var result *connect.InstanceSummary
 
 	input := &connect.ListInstancesInput{
-		MaxResults: aws.Int32(ListInstancesMaxResults),
+		MaxResults: aws.Int64(ListInstancesMaxResults),
 	}
 
-	pages := connect.NewListInstancesPaginator(conn, input)
-
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if err != nil {
-			return nil, err
+	err := conn.ListInstancesPagesWithContext(ctx, input, func(page *connect.ListInstancesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
 		for _, is := range page.InstanceSummaryList {
-			if aws.ToString(is.InstanceAlias) == instanceAlias {
-				result = &is
+			if is == nil {
+				continue
+			}
+
+			if aws.StringValue(is.InstanceAlias) == instanceAlias {
+				result = is
+				return false
 			}
 		}
 
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
 	}
 
 	return result, nil
 }
 
-func dataSourceInstanceReadAttribute(ctx context.Context, conn *connect.Client, instanceID string, attributeType string) (bool, error) {
+func dataSourceInstanceReadAttribute(ctx context.Context, conn *connect.Connect, instanceID string, attributeType string) (bool, error) {
 	input := &connect.DescribeInstanceAttributeInput{
 		InstanceId:    aws.String(instanceID),
-		AttributeType: awstypes.InstanceAttributeType(attributeType),
+		AttributeType: aws.String(attributeType),
 	}
 
-	out, err := conn.DescribeInstanceAttribute(ctx, input)
+	out, err := conn.DescribeInstanceAttributeWithContext(ctx, input)
 
 	if err != nil {
 		return false, err

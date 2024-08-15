@@ -7,9 +7,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/connect"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/connect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -68,7 +67,7 @@ func DataSourceSecurityProfile() *schema.Resource {
 func dataSourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	instanceID := d.Get("instance_id").(string)
@@ -94,7 +93,7 @@ func dataSourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, 
 		input.SecurityProfileId = securityProfileSummary.Id
 	}
 
-	resp, err := conn.DescribeSecurityProfile(ctx, input)
+	resp, err := conn.DescribeSecurityProfileWithContext(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "getting Connect Security Profile: %s", err)
@@ -121,40 +120,47 @@ func dataSourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if permissions != nil {
-		d.Set("permissions", flex.FlattenStringValueSet(permissions))
+		d.Set("permissions", flex.FlattenStringSet(permissions))
 	}
 
 	if err := d.Set("tags", KeyValueTags(ctx, securityProfile.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.ToString(resp.SecurityProfile.Id)))
+	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(resp.SecurityProfile.Id)))
 
 	return diags
 }
 
-func dataSourceGetSecurityProfileSummaryByName(ctx context.Context, conn *connect.Client, instanceID, name string) (*awstypes.SecurityProfileSummary, error) {
-	var result *awstypes.SecurityProfileSummary
+func dataSourceGetSecurityProfileSummaryByName(ctx context.Context, conn *connect.Connect, instanceID, name string) (*connect.SecurityProfileSummary, error) {
+	var result *connect.SecurityProfileSummary
 
 	input := &connect.ListSecurityProfilesInput{
 		InstanceId: aws.String(instanceID),
-		MaxResults: aws.Int32(ListSecurityProfilesMaxResults),
+		MaxResults: aws.Int64(ListSecurityProfilesMaxResults),
 	}
 
-	pages := connect.NewListSecurityProfilesPaginator(conn, input)
-
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if err != nil {
-			return nil, err
+	err := conn.ListSecurityProfilesPagesWithContext(ctx, input, func(page *connect.ListSecurityProfilesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
 		for _, qs := range page.SecurityProfileSummaryList {
-			if aws.ToString(qs.Name) == name {
-				result = &qs
+			if qs == nil {
+				continue
+			}
+
+			if aws.StringValue(qs.Name) == name {
+				result = qs
+				return false
 			}
 		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
 	}
 
 	return result, nil

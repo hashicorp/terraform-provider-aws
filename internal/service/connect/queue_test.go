@@ -8,15 +8,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/connect"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/connect"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -47,7 +46,7 @@ func testAccQueue_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "queue_id"),
 					resource.TestCheckResourceAttr(resourceName, "quick_connect_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "status", string(awstypes.QueueStatusEnabled)),
+					resource.TestCheckResourceAttr(resourceName, "status", connect.QueueStatusEnabled),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 				),
 			},
@@ -67,7 +66,7 @@ func testAccQueue_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "queue_id"),
 					resource.TestCheckResourceAttr(resourceName, "quick_connect_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "status", string(awstypes.QueueStatusEnabled)),
+					resource.TestCheckResourceAttr(resourceName, "status", connect.QueueStatusEnabled),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 				),
 			},
@@ -125,7 +124,7 @@ func testAccQueue_updateHoursOfOperationId(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "queue_id"),
 					resource.TestCheckResourceAttr(resourceName, "quick_connect_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "status", string(awstypes.QueueStatusEnabled)),
+					resource.TestCheckResourceAttr(resourceName, "status", connect.QueueStatusEnabled),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 				),
 			},
@@ -145,7 +144,7 @@ func testAccQueue_updateHoursOfOperationId(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "queue_id"),
 					resource.TestCheckResourceAttr(resourceName, "quick_connect_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "status", string(awstypes.QueueStatusEnabled)),
+					resource.TestCheckResourceAttr(resourceName, "status", connect.QueueStatusEnabled),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 				),
 			},
@@ -165,7 +164,7 @@ func testAccQueue_updateHoursOfOperationId(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "queue_id"),
 					resource.TestCheckResourceAttr(resourceName, "quick_connect_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "status", string(awstypes.QueueStatusEnabled)),
+					resource.TestCheckResourceAttr(resourceName, "status", connect.QueueStatusEnabled),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 				),
 			},
@@ -203,7 +202,7 @@ func testAccQueue_updateMaxContacts(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "queue_id"),
 					resource.TestCheckResourceAttr(resourceName, "quick_connect_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "status", string(awstypes.QueueStatusEnabled)),
+					resource.TestCheckResourceAttr(resourceName, "status", connect.QueueStatusEnabled),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 				),
 			},
@@ -224,7 +223,7 @@ func testAccQueue_updateMaxContacts(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "queue_id"),
 					resource.TestCheckResourceAttr(resourceName, "quick_connect_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "status", string(awstypes.QueueStatusEnabled)),
+					resource.TestCheckResourceAttr(resourceName, "status", connect.QueueStatusEnabled),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 				),
 			},
@@ -260,7 +259,7 @@ func testAccQueue_updateOutboundCallerConfig(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "queue_id"),
 					resource.TestCheckResourceAttr(resourceName, "quick_connect_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "status", string(awstypes.QueueStatusEnabled)),
+					resource.TestCheckResourceAttr(resourceName, "status", connect.QueueStatusEnabled),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 				),
 			},
@@ -282,7 +281,7 @@ func testAccQueue_updateOutboundCallerConfig(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "queue_id"),
 					resource.TestCheckResourceAttr(resourceName, "quick_connect_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "status", string(awstypes.QueueStatusEnabled)),
+					resource.TestCheckResourceAttr(resourceName, "status", connect.QueueStatusEnabled),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 				),
 			},
@@ -296,8 +295,8 @@ func testAccQueue_updateStatus(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_queue.test"
-	originalStatus := string(awstypes.QueueStatusEnabled)
-	updatedStatus := awstypes.QueueStatusDisabled
+	originalStatus := connect.QueueStatusEnabled
+	updatedStatus := connect.QueueStatusDisabled
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -326,7 +325,7 @@ func testAccQueue_updateStatus(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccQueueConfig_status(rName, rName2, string(updatedStatus)),
+				Config: testAccQueueConfig_status(rName, rName2, updatedStatus),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -336,7 +335,7 @@ func testAccQueue_updateStatus(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "queue_id"),
 					resource.TestCheckResourceAttr(resourceName, "quick_connect_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "status", string(updatedStatus)),
+					resource.TestCheckResourceAttr(resourceName, "status", updatedStatus),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 				),
 			},
@@ -372,7 +371,7 @@ func testAccQueue_updateQuickConnectIds(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "queue_id"),
 					resource.TestCheckResourceAttr(resourceName, "quick_connect_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "status", string(awstypes.QueueStatusEnabled)),
+					resource.TestCheckResourceAttr(resourceName, "status", connect.QueueStatusEnabled),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 				),
 			},
@@ -394,7 +393,7 @@ func testAccQueue_updateQuickConnectIds(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "queue_id"),
 					resource.TestCheckResourceAttr(resourceName, "quick_connect_ids.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "quick_connect_ids.0", "aws_connect_quick_connect.test1", "quick_connect_id"),
-					resource.TestCheckResourceAttr(resourceName, "status", string(awstypes.QueueStatusEnabled)),
+					resource.TestCheckResourceAttr(resourceName, "status", connect.QueueStatusEnabled),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 				),
 			},
@@ -415,7 +414,7 @@ func testAccQueue_updateQuickConnectIds(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "queue_id"),
 					resource.TestCheckResourceAttr(resourceName, "quick_connect_ids.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "status", string(awstypes.QueueStatusEnabled)),
+					resource.TestCheckResourceAttr(resourceName, "status", connect.QueueStatusEnabled),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 				),
 			},
@@ -437,7 +436,7 @@ func testAccQueue_updateQuickConnectIds(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "queue_id"),
 					resource.TestCheckResourceAttr(resourceName, "quick_connect_ids.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "quick_connect_ids.0", "aws_connect_quick_connect.test1", "quick_connect_id"),
-					resource.TestCheckResourceAttr(resourceName, "status", string(awstypes.QueueStatusEnabled)),
+					resource.TestCheckResourceAttr(resourceName, "status", connect.QueueStatusEnabled),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 				),
 			},
@@ -512,14 +511,14 @@ func testAccCheckQueueExists(ctx context.Context, resourceName string, function 
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
 
 		params := &connect.DescribeQueueInput{
 			QueueId:    aws.String(queueID),
 			InstanceId: aws.String(instanceID),
 		}
 
-		getFunction, err := conn.DescribeQueue(ctx, params)
+		getFunction, err := conn.DescribeQueueWithContext(ctx, params)
 		if err != nil {
 			return err
 		}
@@ -537,7 +536,7 @@ func testAccCheckQueueDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectClient(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
 
 			instanceID, queueID, err := tfconnect.QueueParseID(rs.Primary.ID)
 
@@ -550,9 +549,9 @@ func testAccCheckQueueDestroy(ctx context.Context) resource.TestCheckFunc {
 				InstanceId: aws.String(instanceID),
 			}
 
-			_, err = conn.DescribeQueue(ctx, params)
+			_, err = conn.DescribeQueueWithContext(ctx, params)
 
-			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			if tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
 				continue
 			}
 

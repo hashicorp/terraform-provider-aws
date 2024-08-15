@@ -7,9 +7,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/connect"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/connect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -44,7 +43,7 @@ func DataSourcePrompt() *schema.Resource {
 func dataSourcePromptRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID := d.Get("instance_id").(string)
 	name := d.Get("name").(string)
@@ -64,33 +63,40 @@ func dataSourcePromptRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("prompt_id", promptSummary.Id)
 	d.Set("name", promptSummary.Name)
 
-	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.ToString(promptSummary.Id)))
+	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(promptSummary.Id)))
 
 	return diags
 }
 
-func dataSourceGetPromptSummaryByName(ctx context.Context, conn *connect.Client, instanceID, name string) (*awstypes.PromptSummary, error) {
-	var result *awstypes.PromptSummary
+func dataSourceGetPromptSummaryByName(ctx context.Context, conn *connect.Connect, instanceID, name string) (*connect.PromptSummary, error) {
+	var result *connect.PromptSummary
 
 	input := &connect.ListPromptsInput{
 		InstanceId: aws.String(instanceID),
-		MaxResults: aws.Int32(ListPromptsMaxResults),
+		MaxResults: aws.Int64(ListPromptsMaxResults),
 	}
 
-	pages := connect.NewListPromptsPaginator(conn, input)
-
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if err != nil {
-			return nil, err
+	err := conn.ListPromptsPagesWithContext(ctx, input, func(page *connect.ListPromptsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
 		for _, cf := range page.PromptSummaryList {
-			if aws.ToString(cf.Name) == name {
-				result = &cf
+			if cf == nil {
+				continue
+			}
+
+			if aws.StringValue(cf.Name) == name {
+				result = cf
+				return false
 			}
 		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
 	}
 
 	return result, nil

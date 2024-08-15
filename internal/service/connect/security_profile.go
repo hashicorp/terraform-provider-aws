@@ -9,14 +9,13 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/connect"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/connect"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -82,7 +81,7 @@ func ResourceSecurityProfile() *schema.Resource {
 func resourceSecurityProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID := d.Get("instance_id").(string)
 	securityProfileName := d.Get("name").(string)
@@ -97,11 +96,11 @@ func resourceSecurityProfileCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if v, ok := d.GetOk("permissions"); ok && v.(*schema.Set).Len() > 0 {
-		input.Permissions = flex.ExpandStringValueSet(v.(*schema.Set))
+		input.Permissions = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	log.Printf("[DEBUG] Creating Connect Security Profile %+v", input)
-	output, err := conn.CreateSecurityProfile(ctx, input)
+	log.Printf("[DEBUG] Creating Connect Security Profile %s", input)
+	output, err := conn.CreateSecurityProfileWithContext(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Connect Security Profile (%s): %s", securityProfileName, err)
@@ -111,7 +110,7 @@ func resourceSecurityProfileCreate(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "creating Connect Security Profile (%s): empty output", securityProfileName)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.ToString(output.SecurityProfileId)))
+	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(output.SecurityProfileId)))
 
 	return append(diags, resourceSecurityProfileRead(ctx, d, meta)...)
 }
@@ -119,7 +118,7 @@ func resourceSecurityProfileCreate(ctx context.Context, d *schema.ResourceData, 
 func resourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, securityProfileID, err := SecurityProfileParseID(d.Id())
 
@@ -127,12 +126,12 @@ func resourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	resp, err := conn.DescribeSecurityProfile(ctx, &connect.DescribeSecurityProfileInput{
+	resp, err := conn.DescribeSecurityProfileWithContext(ctx, &connect.DescribeSecurityProfileInput{
 		InstanceId:        aws.String(instanceID),
 		SecurityProfileId: aws.String(securityProfileID),
 	})
 
-	if !d.IsNewResource() && errs.IsA[*awstypes.ResourceNotFoundException](err) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Connect Security Profile (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -161,7 +160,7 @@ func resourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if permissions != nil {
-		d.Set("permissions", flex.FlattenStringValueSet(permissions))
+		d.Set("permissions", flex.FlattenStringSet(permissions))
 	}
 
 	setTagsOut(ctx, resp.SecurityProfile.Tags)
@@ -172,7 +171,7 @@ func resourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, me
 func resourceSecurityProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, securityProfileID, err := SecurityProfileParseID(d.Id())
 
@@ -190,10 +189,10 @@ func resourceSecurityProfileUpdate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if d.HasChange("permissions") {
-		input.Permissions = flex.ExpandStringValueSet(d.Get("permissions").(*schema.Set))
+		input.Permissions = flex.ExpandStringSet(d.Get("permissions").(*schema.Set))
 	}
 
-	_, err = conn.UpdateSecurityProfile(ctx, input)
+	_, err = conn.UpdateSecurityProfileWithContext(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating SecurityProfile (%s): %s", d.Id(), err)
@@ -205,7 +204,7 @@ func resourceSecurityProfileUpdate(ctx context.Context, d *schema.ResourceData, 
 func resourceSecurityProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, securityProfileID, err := SecurityProfileParseID(d.Id())
 
@@ -213,7 +212,7 @@ func resourceSecurityProfileDelete(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	_, err = conn.DeleteSecurityProfile(ctx, &connect.DeleteSecurityProfileInput{
+	_, err = conn.DeleteSecurityProfileWithContext(ctx, &connect.DeleteSecurityProfileInput{
 		InstanceId:        aws.String(instanceID),
 		SecurityProfileId: aws.String(securityProfileID),
 	})
@@ -235,26 +234,27 @@ func SecurityProfileParseID(id string) (string, string, error) {
 	return parts[0], parts[1], nil
 }
 
-func getSecurityProfilePermissions(ctx context.Context, conn *connect.Client, instanceID, securityProfileID string) ([]string, error) {
-	var result []string
+func getSecurityProfilePermissions(ctx context.Context, conn *connect.Connect, instanceID, securityProfileID string) ([]*string, error) {
+	var result []*string
 
 	input := &connect.ListSecurityProfilePermissionsInput{
 		InstanceId:        aws.String(instanceID),
-		MaxResults:        aws.Int32(ListSecurityProfilePermissionsMaxResults),
+		MaxResults:        aws.Int64(ListSecurityProfilePermissionsMaxResults),
 		SecurityProfileId: aws.String(securityProfileID),
 	}
 
-	pages := connect.NewListSecurityProfilePermissionsPaginator(conn, input)
-
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if err != nil {
-			return nil, err
+	err := conn.ListSecurityProfilePermissionsPagesWithContext(ctx, input, func(page *connect.ListSecurityProfilePermissionsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
 		result = append(result, page.Permissions...)
 
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
 	}
 
 	return result, nil

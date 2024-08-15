@@ -7,16 +7,14 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/connect"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/connect"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -46,10 +44,10 @@ func ResourcePhoneNumber() *schema.Resource {
 				Computed: true,
 			},
 			"country_code": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.PhoneNumberCountryCode](),
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(connect.PhoneNumberCountryCode_Values(), false),
 			},
 			"description": {
 				Type:         schema.TypeString,
@@ -89,10 +87,10 @@ func ResourcePhoneNumber() *schema.Resource {
 				ValidateFunc: verify.ValidARN,
 			},
 			"type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.PhoneNumberType](),
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(connect.PhoneNumberType_Values(), false),
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -103,14 +101,14 @@ func ResourcePhoneNumber() *schema.Resource {
 func resourcePhoneNumberCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	targetArn := d.Get("target_arn").(string)
 	phoneNumberType := d.Get("type").(string)
 	input := &connect.SearchAvailablePhoneNumbersInput{
-		MaxResults:             aws.Int32(1),
-		PhoneNumberCountryCode: awstypes.PhoneNumberCountryCode(d.Get("country_code").(string)),
-		PhoneNumberType:        awstypes.PhoneNumberType(phoneNumberType),
+		MaxResults:             aws.Int64(1),
+		PhoneNumberCountryCode: aws.String(d.Get("country_code").(string)),
+		PhoneNumberType:        aws.String(phoneNumberType),
 		TargetArn:              aws.String(targetArn),
 	}
 
@@ -118,8 +116,8 @@ func resourcePhoneNumberCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.PhoneNumberPrefix = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Searching for Connect Available Phone Numbers %+v", input)
-	output, err := conn.SearchAvailablePhoneNumbers(ctx, input)
+	log.Printf("[DEBUG] Searching for Connect Available Phone Numbers %s", input)
+	output, err := conn.SearchAvailablePhoneNumbersWithContext(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "searching Connect Phone Number for Connect Instance (%s,%s): %s", targetArn, phoneNumberType, err)
@@ -133,7 +131,7 @@ func resourcePhoneNumberCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	uuid, err := uuid.GenerateUUID()
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "generating uuid for ClientToken for Connect Instance (%s,%s): %s", targetArn, aws.ToString(phoneNumber), err)
+		return sdkdiag.AppendErrorf(diags, "generating uuid for ClientToken for Connect Instance (%s,%s): %s", targetArn, aws.StringValue(phoneNumber), err)
 	}
 
 	input2 := &connect.ClaimPhoneNumberInput{
@@ -147,19 +145,19 @@ func resourcePhoneNumberCreate(ctx context.Context, d *schema.ResourceData, meta
 		input2.PhoneNumberDescription = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Claiming Connect Phone Number %+v", input2)
-	output2, err2 := conn.ClaimPhoneNumber(ctx, input2)
+	log.Printf("[DEBUG] Claiming Connect Phone Number %s", input2)
+	output2, err2 := conn.ClaimPhoneNumberWithContext(ctx, input2)
 
 	if err2 != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Connect Phone Number for Connect Instance (%s,%s): %s", targetArn, aws.ToString(phoneNumber), err2)
+		return sdkdiag.AppendErrorf(diags, "creating Connect Phone Number for Connect Instance (%s,%s): %s", targetArn, aws.StringValue(phoneNumber), err2)
 	}
 
 	if output2 == nil || output2.PhoneNumberId == nil {
-		return sdkdiag.AppendErrorf(diags, "creating Connect Phone Number for Connect Instance (%s,%s): empty output", targetArn, aws.ToString(phoneNumber))
+		return sdkdiag.AppendErrorf(diags, "creating Connect Phone Number for Connect Instance (%s,%s): empty output", targetArn, aws.StringValue(phoneNumber))
 	}
 
 	phoneNumberId := output2.PhoneNumberId
-	d.SetId(aws.ToString(phoneNumberId))
+	d.SetId(aws.StringValue(phoneNumberId))
 
 	if _, err := waitPhoneNumberCreated(ctx, conn, d.Timeout(schema.TimeoutCreate), d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Phone Number (%s) creation: %s", d.Id(), err)
@@ -171,15 +169,15 @@ func resourcePhoneNumberCreate(ctx context.Context, d *schema.ResourceData, meta
 func resourcePhoneNumberRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	phoneNumberId := d.Id()
 
-	resp, err := conn.DescribePhoneNumber(ctx, &connect.DescribePhoneNumberInput{
+	resp, err := conn.DescribePhoneNumberWithContext(ctx, &connect.DescribePhoneNumberInput{
 		PhoneNumberId: aws.String(phoneNumberId),
 	})
 
-	if !d.IsNewResource() && errs.IsA[*awstypes.ResourceNotFoundException](err) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Connect Phone Number (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -214,7 +212,7 @@ func resourcePhoneNumberRead(ctx context.Context, d *schema.ResourceData, meta i
 func resourcePhoneNumberUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	phoneNumberId := d.Id()
 
@@ -224,7 +222,7 @@ func resourcePhoneNumberUpdate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if d.HasChange("target_arn") {
-		_, err := conn.UpdatePhoneNumber(ctx, &connect.UpdatePhoneNumberInput{
+		_, err := conn.UpdatePhoneNumberWithContext(ctx, &connect.UpdatePhoneNumberInput{
 			ClientToken:   aws.String(uuid),
 			PhoneNumberId: aws.String(phoneNumberId),
 			TargetArn:     aws.String(d.Get("target_arn").(string)),
@@ -245,7 +243,7 @@ func resourcePhoneNumberUpdate(ctx context.Context, d *schema.ResourceData, meta
 func resourcePhoneNumberDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	phoneNumberId := d.Id()
 
@@ -254,7 +252,7 @@ func resourcePhoneNumberDelete(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "generating uuid for ClientToken for Phone Number %s: %s", phoneNumberId, err)
 	}
 
-	_, err = conn.ReleasePhoneNumber(ctx, &connect.ReleasePhoneNumberInput{
+	_, err = conn.ReleasePhoneNumberWithContext(ctx, &connect.ReleasePhoneNumberInput{
 		ClientToken:   aws.String(uuid),
 		PhoneNumberId: aws.String(phoneNumberId),
 	})
@@ -270,14 +268,14 @@ func resourcePhoneNumberDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func flattenPhoneNumberStatus(apiObject *awstypes.PhoneNumberStatus) []interface{} {
+func flattenPhoneNumberStatus(apiObject *connect.PhoneNumberStatus) []interface{} {
 	if apiObject == nil {
 		return []interface{}{}
 	}
 
 	values := map[string]interface{}{
-		"message": aws.ToString(apiObject.Message),
-		"status":  string(apiObject.Status),
+		"message": aws.StringValue(apiObject.Message),
+		"status":  aws.StringValue(apiObject.Status),
 	}
 
 	return []interface{}{values}

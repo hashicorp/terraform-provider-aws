@@ -7,14 +7,13 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/connect"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/connect"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
@@ -97,7 +96,7 @@ func userHierarchyLevelSchema() *schema.Schema {
 func resourceUserHierarchyStructureCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID := d.Get("instance_id").(string)
 
@@ -106,8 +105,8 @@ func resourceUserHierarchyStructureCreate(ctx context.Context, d *schema.Resourc
 		InstanceId:         aws.String(instanceID),
 	}
 
-	log.Printf("[DEBUG] Creating Connect User Hierarchy Structure %+v", input)
-	_, err := conn.UpdateUserHierarchyStructure(ctx, input)
+	log.Printf("[DEBUG] Creating Connect User Hierarchy Structure %s", input)
+	_, err := conn.UpdateUserHierarchyStructureWithContext(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Connect User Hierarchy Structure for Connect Instance (%s): %s", instanceID, err)
@@ -121,15 +120,15 @@ func resourceUserHierarchyStructureCreate(ctx context.Context, d *schema.Resourc
 func resourceUserHierarchyStructureRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID := d.Id()
 
-	resp, err := conn.DescribeUserHierarchyStructure(ctx, &connect.DescribeUserHierarchyStructureInput{
+	resp, err := conn.DescribeUserHierarchyStructureWithContext(ctx, &connect.DescribeUserHierarchyStructureInput{
 		InstanceId: aws.String(instanceID),
 	})
 
-	if !d.IsNewResource() && errs.IsA[*awstypes.ResourceNotFoundException](err) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Connect User Hierarchy Structure (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -155,12 +154,12 @@ func resourceUserHierarchyStructureRead(ctx context.Context, d *schema.ResourceD
 func resourceUserHierarchyStructureUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID := d.Id()
 
 	if d.HasChange("hierarchy_structure") {
-		_, err := conn.UpdateUserHierarchyStructure(ctx, &connect.UpdateUserHierarchyStructureInput{
+		_, err := conn.UpdateUserHierarchyStructureWithContext(ctx, &connect.UpdateUserHierarchyStructureInput{
 			HierarchyStructure: expandUserHierarchyStructure(d.Get("hierarchy_structure").([]interface{})),
 			InstanceId:         aws.String(instanceID),
 		})
@@ -176,12 +175,12 @@ func resourceUserHierarchyStructureUpdate(ctx context.Context, d *schema.Resourc
 func resourceUserHierarchyStructureDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID := d.Id()
 
-	_, err := conn.UpdateUserHierarchyStructure(ctx, &connect.UpdateUserHierarchyStructureInput{
-		HierarchyStructure: &awstypes.HierarchyStructureUpdate{},
+	_, err := conn.UpdateUserHierarchyStructureWithContext(ctx, &connect.UpdateUserHierarchyStructureInput{
+		HierarchyStructure: &connect.HierarchyStructureUpdate{},
 		InstanceId:         aws.String(instanceID),
 	})
 
@@ -192,9 +191,9 @@ func resourceUserHierarchyStructureDelete(ctx context.Context, d *schema.Resourc
 	return diags
 }
 
-func expandUserHierarchyStructure(userHierarchyStructure []interface{}) *awstypes.HierarchyStructureUpdate {
+func expandUserHierarchyStructure(userHierarchyStructure []interface{}) *connect.HierarchyStructureUpdate {
 	if len(userHierarchyStructure) == 0 {
-		return &awstypes.HierarchyStructureUpdate{}
+		return &connect.HierarchyStructureUpdate{}
 	}
 
 	tfMap, ok := userHierarchyStructure[0].(map[string]interface{})
@@ -203,7 +202,7 @@ func expandUserHierarchyStructure(userHierarchyStructure []interface{}) *awstype
 		return nil
 	}
 
-	result := &awstypes.HierarchyStructureUpdate{
+	result := &connect.HierarchyStructureUpdate{
 		LevelOne:   expandUserHierarchyStructureLevel(tfMap["level_one"].([]interface{})),
 		LevelTwo:   expandUserHierarchyStructureLevel(tfMap["level_two"].([]interface{})),
 		LevelThree: expandUserHierarchyStructureLevel(tfMap["level_three"].([]interface{})),
@@ -214,7 +213,7 @@ func expandUserHierarchyStructure(userHierarchyStructure []interface{}) *awstype
 	return result
 }
 
-func expandUserHierarchyStructureLevel(userHierarchyStructureLevel []interface{}) *awstypes.HierarchyLevelUpdate {
+func expandUserHierarchyStructureLevel(userHierarchyStructureLevel []interface{}) *connect.HierarchyLevelUpdate {
 	if len(userHierarchyStructureLevel) == 0 {
 		return nil
 	}
@@ -225,14 +224,14 @@ func expandUserHierarchyStructureLevel(userHierarchyStructureLevel []interface{}
 		return nil
 	}
 
-	result := &awstypes.HierarchyLevelUpdate{
+	result := &connect.HierarchyLevelUpdate{
 		Name: aws.String(tfMap["name"].(string)),
 	}
 
 	return result
 }
 
-func flattenUserHierarchyStructure(userHierarchyStructure *awstypes.HierarchyStructure) []interface{} {
+func flattenUserHierarchyStructure(userHierarchyStructure *connect.HierarchyStructure) []interface{} {
 	if userHierarchyStructure == nil {
 		return []interface{}{}
 	}
@@ -262,15 +261,15 @@ func flattenUserHierarchyStructure(userHierarchyStructure *awstypes.HierarchyStr
 	return []interface{}{values}
 }
 
-func flattenUserHierarchyStructureLevel(userHierarchyStructureLevel *awstypes.HierarchyLevel) []interface{} {
+func flattenUserHierarchyStructureLevel(userHierarchyStructureLevel *connect.HierarchyLevel) []interface{} {
 	if userHierarchyStructureLevel == nil {
 		return []interface{}{}
 	}
 
 	level := map[string]interface{}{
-		"arn":  aws.ToString(userHierarchyStructureLevel.Arn),
-		"id":   aws.ToString(userHierarchyStructureLevel.Id),
-		"name": aws.ToString(userHierarchyStructureLevel.Name),
+		"arn":  aws.StringValue(userHierarchyStructureLevel.Arn),
+		"id":   aws.StringValue(userHierarchyStructureLevel.Id),
+		"name": aws.StringValue(userHierarchyStructureLevel.Name),
 	}
 
 	return []interface{}{level}

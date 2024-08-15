@@ -9,14 +9,13 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/connect"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/connect"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -124,7 +123,7 @@ func userHierarchyPathLevelSchema() *schema.Schema {
 func resourceUserHierarchyGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID := d.Get("instance_id").(string)
 	userHierarchyGroupName := d.Get("name").(string)
@@ -138,8 +137,8 @@ func resourceUserHierarchyGroupCreate(ctx context.Context, d *schema.ResourceDat
 		input.ParentGroupId = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating Connect User Hierarchy Group %+v", input)
-	output, err := conn.CreateUserHierarchyGroup(ctx, input)
+	log.Printf("[DEBUG] Creating Connect User Hierarchy Group %s", input)
+	output, err := conn.CreateUserHierarchyGroupWithContext(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Connect User Hierarchy Group (%s): %s", userHierarchyGroupName, err)
@@ -149,7 +148,7 @@ func resourceUserHierarchyGroupCreate(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "creating Connect User Hierarchy Group (%s): empty output", userHierarchyGroupName)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.ToString(output.HierarchyGroupId)))
+	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(output.HierarchyGroupId)))
 
 	return append(diags, resourceUserHierarchyGroupRead(ctx, d, meta)...)
 }
@@ -157,7 +156,7 @@ func resourceUserHierarchyGroupCreate(ctx context.Context, d *schema.ResourceDat
 func resourceUserHierarchyGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, userHierarchyGroupID, err := UserHierarchyGroupParseID(d.Id())
 
@@ -165,12 +164,12 @@ func resourceUserHierarchyGroupRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	resp, err := conn.DescribeUserHierarchyGroup(ctx, &connect.DescribeUserHierarchyGroupInput{
+	resp, err := conn.DescribeUserHierarchyGroupWithContext(ctx, &connect.DescribeUserHierarchyGroupInput{
 		HierarchyGroupId: aws.String(userHierarchyGroupID),
 		InstanceId:       aws.String(instanceID),
 	})
 
-	if !d.IsNewResource() && errs.IsA[*awstypes.ResourceNotFoundException](err) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Connect User Hierarchy Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -202,7 +201,7 @@ func resourceUserHierarchyGroupRead(ctx context.Context, d *schema.ResourceData,
 func resourceUserHierarchyGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, userHierarchyGroupID, err := UserHierarchyGroupParseID(d.Id())
 
@@ -211,7 +210,7 @@ func resourceUserHierarchyGroupUpdate(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if d.HasChange("name") {
-		_, err = conn.UpdateUserHierarchyGroupName(ctx, &connect.UpdateUserHierarchyGroupNameInput{
+		_, err = conn.UpdateUserHierarchyGroupNameWithContext(ctx, &connect.UpdateUserHierarchyGroupNameInput{
 			HierarchyGroupId: aws.String(userHierarchyGroupID),
 			InstanceId:       aws.String(instanceID),
 			Name:             aws.String(d.Get("name").(string)),
@@ -227,7 +226,7 @@ func resourceUserHierarchyGroupUpdate(ctx context.Context, d *schema.ResourceDat
 func resourceUserHierarchyGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, userHierarchyGroupID, err := UserHierarchyGroupParseID(d.Id())
 
@@ -235,7 +234,7 @@ func resourceUserHierarchyGroupDelete(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	_, err = conn.DeleteUserHierarchyGroup(ctx, &connect.DeleteUserHierarchyGroupInput{
+	_, err = conn.DeleteUserHierarchyGroupWithContext(ctx, &connect.DeleteUserHierarchyGroupInput{
 		HierarchyGroupId: aws.String(userHierarchyGroupID),
 		InstanceId:       aws.String(instanceID),
 	})
@@ -257,7 +256,7 @@ func UserHierarchyGroupParseID(id string) (string, string, error) {
 	return parts[0], parts[1], nil
 }
 
-func flattenUserHierarchyPath(userHierarchyPath *awstypes.HierarchyPath) []interface{} {
+func flattenUserHierarchyPath(userHierarchyPath *connect.HierarchyPath) []interface{} {
 	if userHierarchyPath == nil {
 		return []interface{}{}
 	}
@@ -287,15 +286,15 @@ func flattenUserHierarchyPath(userHierarchyPath *awstypes.HierarchyPath) []inter
 	return []interface{}{values}
 }
 
-func flattenUserHierarchyPathLevel(userHierarchyPathLevel *awstypes.HierarchyGroupSummary) []interface{} {
+func flattenUserHierarchyPathLevel(userHierarchyPathLevel *connect.HierarchyGroupSummary) []interface{} {
 	if userHierarchyPathLevel == nil {
 		return []interface{}{}
 	}
 
 	level := map[string]interface{}{
-		"arn":  aws.ToString(userHierarchyPathLevel.Arn),
-		"id":   aws.ToString(userHierarchyPathLevel.Id),
-		"name": aws.ToString(userHierarchyPathLevel.Name),
+		"arn":  aws.StringValue(userHierarchyPathLevel.Arn),
+		"id":   aws.StringValue(userHierarchyPathLevel.Id),
+		"name": aws.StringValue(userHierarchyPathLevel.Name),
 	}
 
 	return []interface{}{level}

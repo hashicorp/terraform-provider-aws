@@ -8,15 +8,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/connect"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/connect"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -251,14 +250,14 @@ func testAccCheckHoursOfOperationExists(ctx context.Context, resourceName string
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
 
 		params := &connect.DescribeHoursOfOperationInput{
 			HoursOfOperationId: aws.String(hoursOfOperationID),
 			InstanceId:         aws.String(instanceID),
 		}
 
-		getFunction, err := conn.DescribeHoursOfOperation(ctx, params)
+		getFunction, err := conn.DescribeHoursOfOperationWithContext(ctx, params)
 		if err != nil {
 			return err
 		}
@@ -276,7 +275,7 @@ func testAccCheckHoursOfOperationDestroy(ctx context.Context) resource.TestCheck
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectClient(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
 
 			instanceID, hoursOfOperationID, err := tfconnect.HoursOfOperationParseID(rs.Primary.ID)
 
@@ -289,9 +288,9 @@ func testAccCheckHoursOfOperationDestroy(ctx context.Context) resource.TestCheck
 				InstanceId:         aws.String(instanceID),
 			}
 
-			_, err = conn.DescribeHoursOfOperation(ctx, params)
+			_, err = conn.DescribeHoursOfOperationWithContext(ctx, params)
 
-			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			if tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
 				continue
 			}
 

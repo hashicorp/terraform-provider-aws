@@ -11,16 +11,14 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/connect"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/connect"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -69,10 +67,10 @@ func ResourceVocabulary() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
 			"language_code": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.VocabularyLanguageCode](),
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(connect.VocabularyLanguageCode_Values(), false),
 			},
 			"last_modified_time": {
 				Type:     schema.TypeString,
@@ -104,7 +102,7 @@ func ResourceVocabulary() *schema.Resource {
 func resourceVocabularyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID := d.Get("instance_id").(string)
 	vocabularyName := d.Get("name").(string)
@@ -112,13 +110,13 @@ func resourceVocabularyCreate(ctx context.Context, d *schema.ResourceData, meta 
 		ClientToken:    aws.String(id.UniqueId()),
 		InstanceId:     aws.String(instanceID),
 		Content:        aws.String(d.Get("content").(string)),
-		LanguageCode:   awstypes.VocabularyLanguageCode(d.Get("language_code").(string)),
+		LanguageCode:   aws.String(d.Get("language_code").(string)),
 		Tags:           getTagsIn(ctx),
 		VocabularyName: aws.String(vocabularyName),
 	}
 
-	log.Printf("[DEBUG] Creating Connect Vocabulary %+v", input)
-	output, err := conn.CreateVocabulary(ctx, input)
+	log.Printf("[DEBUG] Creating Connect Vocabulary %s", input)
+	output, err := conn.CreateVocabularyWithContext(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Connect Vocabulary (%s): %s", vocabularyName, err)
@@ -128,7 +126,7 @@ func resourceVocabularyCreate(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "creating Connect Vocabulary (%s): empty output", vocabularyName)
 	}
 
-	vocabularyID := aws.ToString(output.VocabularyId)
+	vocabularyID := aws.StringValue(output.VocabularyId)
 
 	d.SetId(fmt.Sprintf("%s:%s", instanceID, vocabularyID))
 
@@ -143,7 +141,7 @@ func resourceVocabularyCreate(ctx context.Context, d *schema.ResourceData, meta 
 func resourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, vocabularyID, err := VocabularyParseID(d.Id())
 
@@ -151,12 +149,12 @@ func resourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	resp, err := conn.DescribeVocabulary(ctx, &connect.DescribeVocabularyInput{
+	resp, err := conn.DescribeVocabularyWithContext(ctx, &connect.DescribeVocabularyInput{
 		InstanceId:   aws.String(instanceID),
 		VocabularyId: aws.String(vocabularyID),
 	})
 
-	if !d.IsNewResource() && errs.IsA[*awstypes.ResourceNotFoundException](err) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Connect Vocabulary (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -195,7 +193,7 @@ func resourceVocabularyUpdate(ctx context.Context, d *schema.ResourceData, meta 
 func resourceVocabularyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, vocabularyID, err := VocabularyParseID(d.Id())
 
@@ -203,7 +201,7 @@ func resourceVocabularyDelete(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	_, err = conn.DeleteVocabulary(ctx, &connect.DeleteVocabularyInput{
+	_, err = conn.DeleteVocabularyWithContext(ctx, &connect.DeleteVocabularyInput{
 		InstanceId:   aws.String(instanceID),
 		VocabularyId: aws.String(vocabularyID),
 	})

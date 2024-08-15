@@ -8,9 +8,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/connect"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/connect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -74,7 +73,7 @@ func DataSourceVocabulary() *schema.Resource {
 func dataSourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	instanceID := d.Get("instance_id").(string)
@@ -93,10 +92,14 @@ func dataSourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta 
 			return sdkdiag.AppendErrorf(diags, "finding Connect Vocabulary Summary by name (%s): %s", name, err)
 		}
 
+		if vocabularySummary == nil {
+			return sdkdiag.AppendErrorf(diags, "finding Connect Vocabulary Summary by name (%s): not found", name)
+		}
+
 		input.VocabularyId = vocabularySummary.Id
 	}
 
-	resp, err := conn.DescribeVocabulary(ctx, input)
+	resp, err := conn.DescribeVocabularyWithContext(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "getting Connect Vocabulary: %s", err)
@@ -122,35 +125,41 @@ func dataSourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.ToString(vocabulary.Id)))
+	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(vocabulary.Id)))
 
 	return diags
 }
 
-func dataSourceGetVocabularySummaryByName(ctx context.Context, conn *connect.Client, instanceID, name string) (awstypes.VocabularySummary, error) {
-	var result awstypes.VocabularySummary
+func dataSourceGetVocabularySummaryByName(ctx context.Context, conn *connect.Connect, instanceID, name string) (*connect.VocabularySummary, error) {
+	var result *connect.VocabularySummary
 
 	input := &connect.SearchVocabulariesInput{
 		InstanceId:     aws.String(instanceID),
-		MaxResults:     aws.Int32(SearchVocabulariesMaxResults),
+		MaxResults:     aws.Int64(SearchVocabulariesMaxResults),
 		NameStartsWith: aws.String(name),
 	}
 
-	pages := connect.NewSearchVocabulariesPaginator(conn, input)
-
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if err != nil {
-			return result, err
+	err := conn.SearchVocabulariesPagesWithContext(ctx, input, func(page *connect.SearchVocabulariesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
 		for _, qs := range page.VocabularySummaryList {
-			if aws.ToString(qs.Name) == name {
+			if qs == nil {
+				continue
+			}
+
+			if aws.StringValue(qs.Name) == name {
 				result = qs
+				return false
 			}
 		}
 
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
 	}
 
 	return result, nil

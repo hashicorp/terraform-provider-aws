@@ -7,9 +7,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/connect"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/connect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -66,7 +65,7 @@ func DataSourceContactFlowModule() *schema.Resource {
 func dataSourceContactFlowModuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	instanceID := d.Get("instance_id").(string)
@@ -85,10 +84,14 @@ func dataSourceContactFlowModuleRead(ctx context.Context, d *schema.ResourceData
 			return sdkdiag.AppendErrorf(diags, "finding Connect Contact Flow Module Summary by name (%s): %s", name, err)
 		}
 
+		if contactFlowModuleSummary == nil {
+			return sdkdiag.AppendErrorf(diags, "finding Connect Contact Flow Module Summary by name (%s): not found", name)
+		}
+
 		input.ContactFlowModuleId = contactFlowModuleSummary.Id
 	}
 
-	resp, err := conn.DescribeContactFlowModule(ctx, input)
+	resp, err := conn.DescribeContactFlowModuleWithContext(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "getting Connect Contact Flow Module: %s", err)
@@ -112,34 +115,40 @@ func dataSourceContactFlowModuleRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.ToString(contactFlowModule.Id)))
+	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(contactFlowModule.Id)))
 
 	return diags
 }
 
-func dataSourceGetContactFlowModuleSummaryByName(ctx context.Context, conn *connect.Client, instanceID, name string) (awstypes.ContactFlowModuleSummary, error) {
-	var result awstypes.ContactFlowModuleSummary
+func dataSourceGetContactFlowModuleSummaryByName(ctx context.Context, conn *connect.Connect, instanceID, name string) (*connect.ContactFlowModuleSummary, error) {
+	var result *connect.ContactFlowModuleSummary
 
 	input := &connect.ListContactFlowModulesInput{
 		InstanceId: aws.String(instanceID),
-		MaxResults: aws.Int32(ListContactFlowModulesMaxResults),
+		MaxResults: aws.Int64(ListContactFlowModulesMaxResults),
 	}
 
-	pages := connect.NewListContactFlowModulesPaginator(conn, input)
-
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if err != nil {
-			return result, nil
+	err := conn.ListContactFlowModulesPagesWithContext(ctx, input, func(page *connect.ListContactFlowModulesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
 		for _, cf := range page.ContactFlowModulesSummaryList {
+			if cf == nil {
+				continue
+			}
 
-			if aws.ToString(cf.Name) == name {
+			if aws.StringValue(cf.Name) == name {
 				result = cf
+				return false
 			}
 		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
 	}
 
 	return result, nil

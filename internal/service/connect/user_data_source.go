@@ -7,9 +7,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/connect"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/connect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -117,7 +116,7 @@ func DataSourceUser() *schema.Resource {
 func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	instanceID := d.Get("instance_id").(string)
@@ -143,7 +142,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 		input.UserId = userSummary.Id
 	}
 
-	resp, err := conn.DescribeUser(ctx, input)
+	resp, err := conn.DescribeUserWithContext(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "getting Connect User: %s", err)
@@ -161,7 +160,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("instance_id", instanceID)
 	d.Set("name", user.Username)
 	d.Set("routing_profile_id", user.RoutingProfileId)
-	d.Set("security_profile_ids", flex.FlattenStringValueSet(user.SecurityProfileIds))
+	d.Set("security_profile_ids", flex.FlattenStringSet(user.SecurityProfileIds))
 	d.Set("user_id", user.Id)
 
 	if err := d.Set("identity_info", flattenIdentityInfo(user.IdentityInfo)); err != nil {
@@ -176,33 +175,40 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.ToString(user.Id)))
+	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(user.Id)))
 
 	return diags
 }
 
-func dataSourceGetUserSummaryByName(ctx context.Context, conn *connect.Client, instanceID, name string) (*awstypes.UserSummary, error) {
-	var result *awstypes.UserSummary
+func dataSourceGetUserSummaryByName(ctx context.Context, conn *connect.Connect, instanceID, name string) (*connect.UserSummary, error) {
+	var result *connect.UserSummary
 
 	input := &connect.ListUsersInput{
 		InstanceId: aws.String(instanceID),
-		MaxResults: aws.Int32(ListUsersMaxResults),
+		MaxResults: aws.Int64(ListUsersMaxResults),
 	}
 
-	pages := connect.NewListUsersPaginator(conn, input)
-
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if err != nil {
-			return nil, err
+	err := conn.ListUsersPagesWithContext(ctx, input, func(page *connect.ListUsersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
 		for _, qs := range page.UserSummaryList {
-			if aws.ToString(qs.Username) == name {
-				result = &qs
+			if qs == nil {
+				continue
+			}
+
+			if aws.StringValue(qs.Username) == name {
+				result = qs
+				return false
 			}
 		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
 	}
 
 	return result, nil
