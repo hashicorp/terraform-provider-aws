@@ -5,31 +5,23 @@ package licensemanager
 
 import (
 	"context"
-	"errors"
-	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/licensemanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/licensemanager/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-const (
-	ResReceivedLicense = "Received License"
-)
-
-// @SDKDataSource("aws_licensemanager_received_license")
-func DataSourceReceivedLicense() *schema.Resource {
+// @SDKDataSource("aws_licensemanager_received_license", name="Received License")
+func dataSourceReceivedLicense() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceReceivedLicenseRead,
 		Schema: map[string]*schema.Schema{
@@ -222,67 +214,62 @@ func dataSourceReceivedLicenseRead(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.AWSClient).LicenseManagerClient(ctx)
 
 	arn := d.Get("license_arn").(string)
-
-	in := &licensemanager.ListReceivedLicensesInput{
-		LicenseArns: []string{arn},
-	}
-
-	out, err := FindReceivedLicenseByARN(ctx, conn, in)
+	license, err := findReceivedLicenseByARN(ctx, conn, arn)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading License Manager Received License (%s): %s", arn, err)
 	}
 
-	d.SetId(aws.ToString(out.LicenseArn))
-	d.Set("beneficiary", out.Beneficiary)
-	d.Set("consumption_configuration", []interface{}{flattenConsumptionConfiguration(out.ConsumptionConfiguration)})
-	d.Set("entitlements", flattenEntitlements(out.Entitlements))
-	d.Set("home_region", out.HomeRegion)
-	d.Set(names.AttrIssuer, []interface{}{flattenIssuer(out.Issuer)})
-	d.Set("license_arn", out.LicenseArn)
-	d.Set("license_metadata", flattenMetadatas(out.LicenseMetadata))
-	d.Set("license_name", out.LicenseName)
-	d.Set("product_name", out.ProductName)
-	d.Set("product_sku", out.ProductSKU)
-	d.Set("received_metadata", []interface{}{flattenReceivedMetadata(out.ReceivedMetadata)})
-	d.Set(names.AttrStatus, out.Status)
-	d.Set("validity", []interface{}{flattenDateTimeRange(out.Validity)})
-	d.Set(names.AttrVersion, out.Version)
-
-	if v := aws.ToString(out.CreateTime); v != "" {
-		seconds, err := strconv.ParseInt(v, 10, 64)
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading License Manager Received License (%s): %s", arn, err)
-		}
-		d.Set(names.AttrCreateTime, time.Unix(seconds, 0).UTC().Format(time.RFC3339))
+	d.SetId(aws.ToString(license.LicenseArn))
+	d.Set("beneficiary", license.Beneficiary)
+	if err := d.Set("consumption_configuration", []interface{}{flattenConsumptionConfiguration(license.ConsumptionConfiguration)}); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting consumption_configuration: %s", err)
 	}
+	if v := aws.ToString(license.CreateTime); v != "" {
+		d.Set(names.AttrCreateTime, time.Unix(flex.StringValueToInt64Value(v), 0).UTC().Format(time.RFC3339))
+	}
+	if err := d.Set("entitlements", flattenEntitlements(license.Entitlements)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting entitlements: %s", err)
+	}
+	d.Set("home_region", license.HomeRegion)
+	if err := d.Set(names.AttrIssuer, []interface{}{flattenIssuerDetails(license.Issuer)}); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting issuer: %s", err)
+	}
+	d.Set("license_arn", license.LicenseArn)
+	if err := d.Set("license_metadata", flattenMetadatas(license.LicenseMetadata)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting license_metadata: %s", err)
+	}
+	d.Set("license_name", license.LicenseName)
+	d.Set("product_name", license.ProductName)
+	d.Set("product_sku", license.ProductSKU)
+	if err := d.Set("received_metadata", []interface{}{flattenReceivedMetadata(license.ReceivedMetadata)}); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting received_metadata: %s", err)
+	}
+	d.Set(names.AttrStatus, license.Status)
+	if err := d.Set("validity", []interface{}{flattenDateTimeRange(license.Validity)}); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting validity: %s", err)
+	}
+	d.Set(names.AttrVersion, license.Version)
 
 	return diags
 }
 
-func FindReceivedLicenseByARN(ctx context.Context, conn *licensemanager.Client, in *licensemanager.ListReceivedLicensesInput) (*awstypes.GrantedLicense, error) {
-	out, err := conn.ListReceivedLicenses(ctx, in)
-
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
-		}
+func findReceivedLicenseByARN(ctx context.Context, conn *licensemanager.Client, arn string) (*awstypes.GrantedLicense, error) {
+	input := &licensemanager.ListReceivedLicensesInput{
+		LicenseArns: []string{arn},
 	}
+
+	return findReceivedLicense(ctx, conn, input)
+}
+
+func findReceivedLicense(ctx context.Context, conn *licensemanager.Client, input *licensemanager.ListReceivedLicensesInput) (*awstypes.GrantedLicense, error) {
+	output, err := findReceivedLicenses(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if len(out.Licenses) == 0 {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-
-	if len(out.Licenses) > 1 {
-		return nil, create.Error(names.LicenseManager, create.ErrActionReading, ResReceivedLicense, in.LicenseArns[0], errors.New("More than one License Returned by the API."))
-	}
-
-	return &out.Licenses[0], nil
+	return tfresource.AssertSingleValueResult(output)
 }
 
 func flattenConsumptionConfiguration(apiObject *awstypes.ConsumptionConfiguration) map[string]interface{} {
@@ -294,14 +281,14 @@ func flattenConsumptionConfiguration(apiObject *awstypes.ConsumptionConfiguratio
 
 	if v := apiObject.BorrowConfiguration; v != nil {
 		tfMap["borrow_configuration"] = map[string]interface{}{
-			"max_time_to_live_in_minutes": v.MaxTimeToLiveInMinutes,
-			"allow_early_check_in":        v.AllowEarlyCheckIn,
+			"allow_early_check_in":        aws.ToBool(v.AllowEarlyCheckIn),
+			"max_time_to_live_in_minutes": aws.ToInt32(v.MaxTimeToLiveInMinutes),
 		}
 	}
 
 	if v := apiObject.ProvisionalConfiguration.MaxTimeToLiveInMinutes; v != nil {
 		tfMap["provisional_configuration"] = []interface{}{map[string]interface{}{
-			"max_time_to_live_in_minutes": int(aws.ToInt32(v)),
+			"max_time_to_live_in_minutes": aws.ToInt32(v),
 		}}
 	}
 
@@ -318,45 +305,45 @@ func flattenEntitlements(apiObjects []awstypes.Entitlement) []interface{} {
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		out := flattenEntitlement(apiObject)
+		tfMap := flattenEntitlement(&apiObject)
 
-		if len(out) > 0 {
-			tfList = append(tfList, out)
+		if len(tfMap) > 0 {
+			tfList = append(tfList, tfMap)
 		}
 	}
 
 	return tfList
 }
 
-func flattenEntitlement(apiObject awstypes.Entitlement) map[string]interface{} {
+func flattenEntitlement(apiObject *awstypes.Entitlement) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.AllowCheckIn; v != nil {
-		tfMap["allow_check_in"] = v
+		tfMap["allow_check_in"] = aws.ToBool(v)
 	}
 
 	if v := apiObject.MaxCount; v != nil {
-		tfMap["max_count"] = v
+		tfMap["max_count"] = aws.ToInt64(v)
 	}
 
 	if v := apiObject.Name; v != nil {
-		tfMap[names.AttrName] = v
+		tfMap[names.AttrName] = aws.ToString(v)
 	}
 
 	if v := apiObject.Overage; v != nil {
-		tfMap["overage"] = v
+		tfMap["overage"] = aws.ToBool(v)
 	}
 
 	tfMap[names.AttrUnit] = apiObject.Unit
 
 	if v := apiObject.Value; v != nil {
-		tfMap[names.AttrValue] = v
+		tfMap[names.AttrValue] = aws.ToString(v)
 	}
 
 	return tfMap
 }
 
-func flattenIssuer(apiObject *awstypes.IssuerDetails) map[string]interface{} {
+func flattenIssuerDetails(apiObject *awstypes.IssuerDetails) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -364,15 +351,15 @@ func flattenIssuer(apiObject *awstypes.IssuerDetails) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.KeyFingerprint; v != nil {
-		tfMap["key_fingerprint"] = v
+		tfMap["key_fingerprint"] = aws.ToString(v)
 	}
 
 	if v := apiObject.Name; v != nil {
-		tfMap[names.AttrName] = v
+		tfMap[names.AttrName] = aws.ToString(v)
 	}
 
 	if v := apiObject.SignKey; v != nil {
-		tfMap["sign_key"] = v
+		tfMap["sign_key"] = aws.ToString(v)
 	}
 
 	return tfMap
@@ -386,25 +373,25 @@ func flattenMetadatas(apiObjects []awstypes.Metadata) []interface{} {
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		out := flattenLicenseMetadata(apiObject)
+		tfMap := flattenMetadata(&apiObject)
 
-		if len(out) > 0 {
-			tfList = append(tfList, out)
+		if len(tfMap) > 0 {
+			tfList = append(tfList, tfMap)
 		}
 	}
 
 	return tfList
 }
 
-func flattenLicenseMetadata(apiObject awstypes.Metadata) map[string]interface{} {
+func flattenMetadata(apiObject *awstypes.Metadata) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Name; v != nil {
-		tfMap[names.AttrName] = v
+		tfMap[names.AttrName] = aws.ToString(v)
 	}
 
 	if v := apiObject.Value; v != nil {
-		tfMap[names.AttrValue] = v
+		tfMap[names.AttrValue] = aws.ToString(v)
 	}
 
 	return tfMap
@@ -424,7 +411,7 @@ func flattenReceivedMetadata(apiObject *awstypes.ReceivedMetadata) map[string]in
 	tfMap["received_status"] = apiObject.ReceivedStatus
 
 	if v := apiObject.ReceivedStatusReason; v != nil {
-		tfMap["received_status_reason"] = v
+		tfMap["received_status_reason"] = aws.ToString(v)
 	}
 
 	return tfMap
@@ -438,11 +425,11 @@ func flattenDateTimeRange(apiObject *awstypes.DatetimeRange) map[string]interfac
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Begin; v != nil {
-		tfMap["begin"] = v
+		tfMap["begin"] = aws.ToString(v)
 	}
 
 	if v := apiObject.End; v != nil {
-		tfMap["end"] = v
+		tfMap["end"] = aws.ToString(v)
 	}
 
 	return tfMap

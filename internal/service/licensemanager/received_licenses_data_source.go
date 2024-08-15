@@ -47,7 +47,7 @@ func dataSourceReceivedLicensesRead(ctx context.Context, d *schema.ResourceData,
 		in.Filters = nil
 	}
 
-	out, err := FindReceivedLicenses(ctx, conn, in)
+	out, err := findReceivedLicenses(ctx, conn, in)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Received Licenses: %s", err)
@@ -65,15 +65,15 @@ func dataSourceReceivedLicensesRead(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func FindReceivedLicenses(ctx context.Context, conn *licensemanager.Client, in *licensemanager.ListReceivedLicensesInput) ([]awstypes.GrantedLicense, error) {
-	var out []awstypes.GrantedLicense
+func findReceivedLicenses(ctx context.Context, conn *licensemanager.Client, in *licensemanager.ListReceivedLicensesInput) ([]awstypes.GrantedLicense, error) {
+	var output []awstypes.GrantedLicense
 
 	err := listReceivedLicensesPages(ctx, conn, in, func(page *licensemanager.ListReceivedLicensesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		out = append(out, page.Licenses...)
+		output = append(output, page.Licenses...)
 
 		return !lastPage
 	})
@@ -89,5 +89,5 @@ func FindReceivedLicenses(ctx context.Context, conn *licensemanager.Client, in *
 		return nil, err
 	}
 
-	return out, nil
+	return output, nil
 }
