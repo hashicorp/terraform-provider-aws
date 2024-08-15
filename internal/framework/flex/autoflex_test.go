@@ -53,6 +53,10 @@ type tfSingleInt32Field struct {
 	Field1 types.Int32 `tfsdk:"field1"`
 }
 
+type tfSingleInt32FieldLegacy struct {
+	Field1 types.Int32 `tfsdk:"field1" autoflex:",legacy"`
+}
+
 type tfSingleBoolField struct {
 	Field1 types.Bool `tfsdk:"field1"`
 }
