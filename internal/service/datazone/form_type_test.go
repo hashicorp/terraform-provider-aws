@@ -10,17 +10,15 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/datazone"
-	"github.com/aws/aws-sdk-go-v2/service/datazone/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfdatazone "github.com/hashicorp/terraform-provider-aws/internal/service/datazone"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -31,8 +29,7 @@ func TestAccDataZoneFormType_basic(t *testing.T) {
 	}
 
 	var formtype datazone.GetFormTypeOutput
-	dName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	pName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resourceName := "aws_datazone_form_type.test"
 	domainName := "aws_datazone_domain.test"
@@ -48,7 +45,7 @@ func TestAccDataZoneFormType_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckFormTypeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFormTypeConfig_basic(pName, dName),
+				Config: testAccFormTypeConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFormTypeExists(ctx, resourceName, &formtype),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
@@ -81,8 +78,7 @@ func TestAccDataZoneFormType_disappears(t *testing.T) {
 	}
 
 	var formtype datazone.GetFormTypeOutput
-	dName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	pName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resourceName := "aws_datazone_form_type.test"
 
@@ -97,7 +93,7 @@ func TestAccDataZoneFormType_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckFormTypeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFormTypeConfig_basic(pName, dName),
+				Config: testAccFormTypeConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFormTypeExists(ctx, resourceName, &formtype),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdatazone.ResourceFormType, resourceName),
@@ -117,16 +113,11 @@ func testAccCheckFormTypeDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			in := &datazone.GetFormTypeInput{
-				DomainIdentifier:   aws.String(rs.Primary.Attributes["domain_identifier"]),
-				FormTypeIdentifier: aws.String(rs.Primary.Attributes[names.AttrName]),
-				Revision:           aws.String(rs.Primary.Attributes["revision"]),
+			_, err := tfdatazone.FindFormTypeByID(ctx, conn, rs.Primary.Attributes["domain_identifier"], rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes["revision"])
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			_, err := conn.GetFormType(ctx, in)
-			if errs.IsA[*types.ResourceNotFoundException](err) || errs.IsA[*types.AccessDeniedException](err) {
-				return nil
-			}
 			if err != nil {
 				return create.Error(names.DataZone, create.ErrActionCheckingDestroyed, tfdatazone.ResNameFormType, rs.Primary.ID, err)
 			}
@@ -173,9 +164,8 @@ func testAccAuthorizerImportStateUserProfileFunc(resourceName string) resource.I
 	}
 }
 
-func testAccFormTypeConfig_basic(pName, dName string) string {
-	return acctest.ConfigCompose(testAccProjectConfig_basic(pName, dName), (`
-
+func testAccFormTypeConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccProjectConfig_basic(rName, rName), `
 resource "aws_datazone_form_type" "test" {
   description               = "desc"
   name                      = "SageMakerModelFormType"
@@ -198,5 +188,5 @@ resource "aws_datazone_form_type" "test" {
 		EOF
   }
 }
-`))
+`)
 }

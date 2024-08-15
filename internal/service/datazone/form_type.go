@@ -290,7 +290,7 @@ func findFormTypeByID(ctx context.Context, conn *datazone.Client, domainId strin
 	}
 
 	out, err := conn.GetFormType(ctx, in)
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsA[*awstypes.AccessDeniedException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
