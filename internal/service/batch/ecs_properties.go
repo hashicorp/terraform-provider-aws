@@ -1,17 +1,93 @@
 package batch
 
 import (
+	"sort"
 	_ "unsafe" // Required for go:linkname
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	_ "github.com/aws/aws-sdk-go-v2/service/batch" // Required for go:linkname
 	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
 	smithyjson "github.com/aws/smithy-go/encoding/json"
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
-type ecsProperties awstypes.EcsProperties
+type ecsProperties struct {
+	TaskProperties []*ecsTaskProperties
+}
 
 func (ep *ecsProperties) reduce() {
+	for _, taskProp := range ep.TaskProperties {
+		taskProp.reduce()
+	}
+}
+
+type ecsTaskProperties awstypes.EcsTaskProperties
+
+func (tp *ecsTaskProperties) reduce() {
+	tp.orderContainers()
+
+	for i, c := range tp.Containers {
+		cp := taskContainerProperties(c)
+		pcp := &cp
+		pcp.reduce()
+		tp.Containers[i] = awstypes.TaskContainerProperties(cp)
+	}
+
+	// Set all empty slices to nil.
+	if len(tp.Volumes) == 0 {
+		tp.Volumes = nil
+	}
+}
+
+func (tp *ecsTaskProperties) orderContainers() {
+	sort.Slice(tp.Containers, func(i, j int) bool {
+		return aws.ToString(tp.Containers[i].Name) < aws.ToString(tp.Containers[j].Name)
+	})
+}
+
+type taskContainerProperties awstypes.TaskContainerProperties
+
+func (cp *taskContainerProperties) reduce() {
+	cp.orderEnvironmentVariables()
+	cp.orderSecrets()
+
+	// Remove environment variables with empty values.
+	cp.Environment = tfslices.Filter(cp.Environment, func(kvp awstypes.KeyValuePair) bool {
+		return aws.ToString(kvp.Value) != ""
+	})
+
+	// Set all empty slices to nil.
+	if len(cp.Command) == 0 {
+		cp.Command = nil
+	}
+	if len(cp.DependsOn) == 0 {
+		cp.DependsOn = nil
+	}
+	if len(cp.Environment) == 0 {
+		cp.Environment = nil
+	}
+	if len(cp.MountPoints) == 0 {
+		cp.MountPoints = nil
+	}
+	if len(cp.Secrets) == 0 {
+		cp.Secrets = nil
+	}
+	if len(cp.Ulimits) == 0 {
+		cp.Ulimits = nil
+	}
+}
+
+func (cp *taskContainerProperties) orderEnvironmentVariables() {
+	sort.Slice(cp.Environment, func(i, j int) bool {
+		return aws.ToString(cp.Environment[i].Name) < aws.ToString(cp.Environment[j].Name)
+	})
+}
+
+func (cp *taskContainerProperties) orderSecrets() {
+	sort.Slice(cp.Secrets, func(i, j int) bool {
+		return aws.ToString(cp.Secrets[i].Name) < aws.ToString(cp.Secrets[j].Name)
+	})
 }
 
 func equivalentECSPropertiesJSON(str1, str2 string) (bool, error) {
