@@ -448,6 +448,7 @@ func getQueueQuickConnectIDs(ctx context.Context, conn *connect.Client, instance
 		for _, qc := range page.QuickConnectSummaryList {
 			result = append(result, qc.Id)
 		}
+
 	}
 
 	return result, nil

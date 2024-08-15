@@ -169,6 +169,7 @@ func dataSourceGetQueueSummaryByName(ctx context.Context, conn *connect.Client, 
 				result = &qs
 			}
 		}
+
 	}
 
 	return result, nil
