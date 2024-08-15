@@ -348,8 +348,8 @@ type resourceFrameworkData struct {
 	FrameworkType  types.String `tfsdk:"framework_type"`
 	ID             types.String `tfsdk:"id"`
 	Name           types.String `tfsdk:"name"`
-	Tags           types.Map    `tfsdk:"tags"`
-	TagsAll        types.Map    `tfsdk:"tags_all"`
+	Tags           tftags.Map   `tfsdk:"tags"`
+	TagsAll        tftags.Map   `tfsdk:"tags_all"`
 }
 
 type frameworkControlSetsData struct {
