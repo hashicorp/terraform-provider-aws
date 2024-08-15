@@ -1598,6 +1598,55 @@ func TestExpandFloat32(t *testing.T) {
 			},
 		},
 
+		"legacy Float32 to float32": {
+			"value": {
+				Source: tfSingleFloat32FieldLegacy{
+					Field1: types.Float32Value(42),
+				},
+				Target: &awsSingleFloat32Value{},
+				WantTarget: &awsSingleFloat32Value{
+					Field1: 42,
+				},
+				expectedLogLines: []map[string]any{
+					infoExpanding(reflect.TypeFor[tfSingleFloat32FieldLegacy](), reflect.TypeFor[*awsSingleFloat32Value]()),
+					infoConverting(reflect.TypeFor[tfSingleFloat32FieldLegacy](), reflect.TypeFor[*awsSingleFloat32Value]()),
+					traceMatchedFields("Field1", reflect.TypeFor[tfSingleFloat32FieldLegacy](), "Field1", reflect.TypeFor[*awsSingleFloat32Value]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[types.Float32](), "Field1", reflect.TypeFor[float32]()),
+				},
+			},
+			"zero": {
+				Source: tfSingleFloat32FieldLegacy{
+					Field1: types.Float32Value(0),
+				},
+				Target: &awsSingleFloat32Value{},
+				WantTarget: &awsSingleFloat32Value{
+					Field1: 0,
+				},
+				expectedLogLines: []map[string]any{
+					infoExpanding(reflect.TypeFor[tfSingleFloat32FieldLegacy](), reflect.TypeFor[*awsSingleFloat32Value]()),
+					infoConverting(reflect.TypeFor[tfSingleFloat32FieldLegacy](), reflect.TypeFor[*awsSingleFloat32Value]()),
+					traceMatchedFields("Field1", reflect.TypeFor[tfSingleFloat32FieldLegacy](), "Field1", reflect.TypeFor[*awsSingleFloat32Value]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[types.Float32](), "Field1", reflect.TypeFor[float32]()),
+				},
+			},
+			"null": {
+				Source: tfSingleFloat32FieldLegacy{
+					Field1: types.Float32Null(),
+				},
+				Target: &awsSingleFloat32Value{},
+				WantTarget: &awsSingleFloat32Value{
+					Field1: 0,
+				},
+				expectedLogLines: []map[string]any{
+					infoExpanding(reflect.TypeFor[tfSingleFloat32FieldLegacy](), reflect.TypeFor[*awsSingleFloat32Value]()),
+					infoConverting(reflect.TypeFor[tfSingleFloat32FieldLegacy](), reflect.TypeFor[*awsSingleFloat32Value]()),
+					traceMatchedFields("Field1", reflect.TypeFor[tfSingleFloat32FieldLegacy](), "Field1", reflect.TypeFor[*awsSingleFloat32Value]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[types.Float32](), "Field1", reflect.TypeFor[float32]()),
+					traceExpandingNullValue("Field1", reflect.TypeFor[types.Float32](), "Field1", reflect.TypeFor[float32]()),
+				},
+			},
+		},
+
 		"Float32 to *float32": {
 			"value": {
 				Source: tfSingleFloat32Field{
@@ -1643,6 +1692,58 @@ func TestExpandFloat32(t *testing.T) {
 					traceMatchedFields("Field1", reflect.TypeFor[tfSingleFloat32Field](), "Field1", reflect.TypeFor[*awsSingleFloat32Pointer]()),
 					infoConvertingWithPath("Field1", reflect.TypeFor[types.Float32](), "Field1", reflect.TypeFor[*float32]()),
 					traceExpandingNullValue("Field1", reflect.TypeFor[types.Float32](), "Field1", reflect.TypeFor[*float32]()),
+				},
+			},
+		},
+
+		"legacy Float32 to *float32": {
+			"value": {
+				Source: tfSingleFloat32FieldLegacy{
+					Field1: types.Float32Value(42),
+				},
+				Target: &awsSingleFloat32Pointer{},
+				WantTarget: &awsSingleFloat32Pointer{
+					Field1: aws.Float32(42),
+				},
+				expectedLogLines: []map[string]any{
+					infoExpanding(reflect.TypeFor[tfSingleFloat32FieldLegacy](), reflect.TypeFor[*awsSingleFloat32Pointer]()),
+					infoConverting(reflect.TypeFor[tfSingleFloat32FieldLegacy](), reflect.TypeFor[*awsSingleFloat32Pointer]()),
+					traceMatchedFields("Field1", reflect.TypeFor[tfSingleFloat32FieldLegacy](), "Field1", reflect.TypeFor[*awsSingleFloat32Pointer]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[types.Float32](), "Field1", reflect.TypeFor[*float32]()),
+					debugUsingLegacyExpander("Field1", reflect.TypeFor[types.Float32](), "Field1", reflect.TypeFor[*float32]()),
+				},
+			},
+			"zero": {
+				Source: tfSingleFloat32FieldLegacy{
+					Field1: types.Float32Value(0),
+				},
+				Target: &awsSingleFloat32Pointer{},
+				WantTarget: &awsSingleFloat32Pointer{
+					Field1: nil,
+				},
+				expectedLogLines: []map[string]any{
+					infoExpanding(reflect.TypeFor[tfSingleFloat32FieldLegacy](), reflect.TypeFor[*awsSingleFloat32Pointer]()),
+					infoConverting(reflect.TypeFor[tfSingleFloat32FieldLegacy](), reflect.TypeFor[*awsSingleFloat32Pointer]()),
+					traceMatchedFields("Field1", reflect.TypeFor[tfSingleFloat32FieldLegacy](), "Field1", reflect.TypeFor[*awsSingleFloat32Pointer]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[types.Float32](), "Field1", reflect.TypeFor[*float32]()),
+					debugUsingLegacyExpander("Field1", reflect.TypeFor[types.Float32](), "Field1", reflect.TypeFor[*float32]()),
+				},
+			},
+			"null": {
+				Source: tfSingleFloat32FieldLegacy{
+					Field1: types.Float32Null(),
+				},
+				Target: &awsSingleFloat32Pointer{},
+				WantTarget: &awsSingleFloat32Pointer{
+					Field1: nil,
+				},
+				expectedLogLines: []map[string]any{
+					infoExpanding(reflect.TypeFor[tfSingleFloat32FieldLegacy](), reflect.TypeFor[*awsSingleFloat32Pointer]()),
+					infoConverting(reflect.TypeFor[tfSingleFloat32FieldLegacy](), reflect.TypeFor[*awsSingleFloat32Pointer]()),
+					traceMatchedFields("Field1", reflect.TypeFor[tfSingleFloat32FieldLegacy](), "Field1", reflect.TypeFor[*awsSingleFloat32Pointer]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[types.Float32](), "Field1", reflect.TypeFor[*float32]()),
+					traceExpandingNullValue("Field1", reflect.TypeFor[types.Float32](), "Field1", reflect.TypeFor[*float32]()),
+					// TODO: should log about legacy expander
 				},
 			},
 		},
@@ -1700,6 +1801,58 @@ func TestExpandFloat32(t *testing.T) {
 			},
 		},
 
+		"legacy Float32 to float64": {
+			"value": {
+				Source: tfSingleFloat32FieldLegacy{
+					Field1: types.Float32Value(42),
+				},
+				Target: &awsSingleFloat64Value{},
+				expectedDiags: diag.Diagnostics{
+					diagExpandingIncompatibleTypes(reflect.TypeFor[types.Float32](), reflect.TypeFor[float64]()),
+				},
+				expectedLogLines: []map[string]any{
+					infoExpanding(reflect.TypeFor[tfSingleFloat32FieldLegacy](), reflect.TypeFor[*awsSingleFloat64Value]()),
+					infoConverting(reflect.TypeFor[tfSingleFloat32FieldLegacy](), reflect.TypeFor[*awsSingleFloat64Value]()),
+					traceMatchedFields("Field1", reflect.TypeFor[tfSingleFloat32FieldLegacy](), "Field1", reflect.TypeFor[*awsSingleFloat64Value]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[types.Float32](), "Field1", reflect.TypeFor[float64]()),
+					errorExpandingIncompatibleTypes("Field1", reflect.TypeFor[types.Float32](), "Field1", reflect.TypeFor[float64]()),
+				},
+			},
+			"zero": {
+				Source: tfSingleFloat32FieldLegacy{
+					Field1: types.Float32Value(0),
+				},
+				Target: &awsSingleFloat64Value{},
+				expectedDiags: diag.Diagnostics{
+					diagExpandingIncompatibleTypes(reflect.TypeFor[types.Float32](), reflect.TypeFor[float64]()),
+				},
+				expectedLogLines: []map[string]any{
+					infoExpanding(reflect.TypeFor[tfSingleFloat32FieldLegacy](), reflect.TypeFor[*awsSingleFloat64Value]()),
+					infoConverting(reflect.TypeFor[tfSingleFloat32FieldLegacy](), reflect.TypeFor[*awsSingleFloat64Value]()),
+					traceMatchedFields("Field1", reflect.TypeFor[tfSingleFloat32FieldLegacy](), "Field1", reflect.TypeFor[*awsSingleFloat64Value]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[types.Float32](), "Field1", reflect.TypeFor[float64]()),
+					errorExpandingIncompatibleTypes("Field1", reflect.TypeFor[types.Float32](), "Field1", reflect.TypeFor[float64]()),
+				},
+			},
+			"null": {
+				// TODO: The test for a null value happens before type checking
+				Source: tfSingleFloat32FieldLegacy{
+					Field1: types.Float32Null(),
+				},
+				Target: &awsSingleFloat64Value{},
+				WantTarget: &awsSingleFloat64Value{
+					Field1: 0,
+				},
+				expectedLogLines: []map[string]any{
+					infoExpanding(reflect.TypeFor[tfSingleFloat32FieldLegacy](), reflect.TypeFor[*awsSingleFloat64Value]()),
+					infoConverting(reflect.TypeFor[tfSingleFloat32FieldLegacy](), reflect.TypeFor[*awsSingleFloat64Value]()),
+					traceMatchedFields("Field1", reflect.TypeFor[tfSingleFloat32FieldLegacy](), "Field1", reflect.TypeFor[*awsSingleFloat64Value]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[types.Float32](), "Field1", reflect.TypeFor[float64]()),
+					traceExpandingNullValue("Field1", reflect.TypeFor[types.Float32](), "Field1", reflect.TypeFor[float64]()),
+				},
+			},
+		},
+
 		"Float32 to *float64": {
 			"value": {
 				Source: tfSingleFloat32Field{
@@ -1746,6 +1899,58 @@ func TestExpandFloat32(t *testing.T) {
 					infoExpanding(reflect.TypeFor[tfSingleFloat32Field](), reflect.TypeFor[*awsSingleFloat64Pointer]()),
 					infoConverting(reflect.TypeFor[tfSingleFloat32Field](), reflect.TypeFor[*awsSingleFloat64Pointer]()),
 					traceMatchedFields("Field1", reflect.TypeFor[tfSingleFloat32Field](), "Field1", reflect.TypeFor[*awsSingleFloat64Pointer]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[types.Float32](), "Field1", reflect.TypeFor[*float64]()),
+					traceExpandingNullValue("Field1", reflect.TypeFor[types.Float32](), "Field1", reflect.TypeFor[*float64]()),
+				},
+			},
+		},
+
+		"legacy Float32 to *float64": {
+			"value": {
+				Source: tfSingleFloat32FieldLegacy{
+					Field1: types.Float32Value(42),
+				},
+				Target: &awsSingleFloat64Pointer{},
+				expectedDiags: diag.Diagnostics{
+					diagExpandingIncompatibleTypes(reflect.TypeFor[types.Float32](), reflect.TypeFor[*float64]()),
+				},
+				expectedLogLines: []map[string]any{
+					infoExpanding(reflect.TypeFor[tfSingleFloat32FieldLegacy](), reflect.TypeFor[*awsSingleFloat64Pointer]()),
+					infoConverting(reflect.TypeFor[tfSingleFloat32FieldLegacy](), reflect.TypeFor[*awsSingleFloat64Pointer]()),
+					traceMatchedFields("Field1", reflect.TypeFor[tfSingleFloat32FieldLegacy](), "Field1", reflect.TypeFor[*awsSingleFloat64Pointer]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[types.Float32](), "Field1", reflect.TypeFor[*float64]()),
+					errorExpandingIncompatibleTypes("Field1", reflect.TypeFor[types.Float32](), "Field1", reflect.TypeFor[*float64]()),
+				},
+			},
+			"zero": {
+				Source: tfSingleFloat32FieldLegacy{
+					Field1: types.Float32Value(0),
+				},
+				Target: &awsSingleFloat64Pointer{},
+				expectedDiags: diag.Diagnostics{
+					diagExpandingIncompatibleTypes(reflect.TypeFor[types.Float32](), reflect.TypeFor[*float64]()),
+				},
+				expectedLogLines: []map[string]any{
+					infoExpanding(reflect.TypeFor[tfSingleFloat32FieldLegacy](), reflect.TypeFor[*awsSingleFloat64Pointer]()),
+					infoConverting(reflect.TypeFor[tfSingleFloat32FieldLegacy](), reflect.TypeFor[*awsSingleFloat64Pointer]()),
+					traceMatchedFields("Field1", reflect.TypeFor[tfSingleFloat32FieldLegacy](), "Field1", reflect.TypeFor[*awsSingleFloat64Pointer]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[types.Float32](), "Field1", reflect.TypeFor[*float64]()),
+					errorExpandingIncompatibleTypes("Field1", reflect.TypeFor[types.Float32](), "Field1", reflect.TypeFor[*float64]()),
+				},
+			},
+			"null": {
+				// TODO: The test for a null value happens before type checking
+				Source: tfSingleFloat32FieldLegacy{
+					Field1: types.Float32Null(),
+				},
+				Target: &awsSingleFloat64Pointer{},
+				WantTarget: &awsSingleFloat64Pointer{
+					Field1: nil,
+				},
+				expectedLogLines: []map[string]any{
+					infoExpanding(reflect.TypeFor[tfSingleFloat32FieldLegacy](), reflect.TypeFor[*awsSingleFloat64Pointer]()),
+					infoConverting(reflect.TypeFor[tfSingleFloat32FieldLegacy](), reflect.TypeFor[*awsSingleFloat64Pointer]()),
+					traceMatchedFields("Field1", reflect.TypeFor[tfSingleFloat32FieldLegacy](), "Field1", reflect.TypeFor[*awsSingleFloat64Pointer]()),
 					infoConvertingWithPath("Field1", reflect.TypeFor[types.Float32](), "Field1", reflect.TypeFor[*float64]()),
 					traceExpandingNullValue("Field1", reflect.TypeFor[types.Float32](), "Field1", reflect.TypeFor[*float64]()),
 				},

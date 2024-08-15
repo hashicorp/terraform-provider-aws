@@ -164,7 +164,7 @@ func (expander autoExpander) convert(ctx context.Context, sourcePath path.Path, 
 		return diags
 
 	case basetypes.Float32Valuable:
-		diags.Append(expander.float32(ctx, vFrom, vTo)...)
+		diags.Append(expander.float32(ctx, vFrom, vTo, legacy)...)
 		return diags
 
 	case basetypes.Int64Valuable:
@@ -306,7 +306,7 @@ func (expander autoExpander) float64(ctx context.Context, vFrom basetypes.Float6
 }
 
 // float32 copies a Plugin Framework Float32(ish) value to a compatible AWS API value.
-func (expander autoExpander) float32(ctx context.Context, vFrom basetypes.Float32Valuable, vTo reflect.Value) diag.Diagnostics {
+func (expander autoExpander) float32(ctx context.Context, vFrom basetypes.Float32Valuable, vTo reflect.Value, legacy bool) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	v, d := vFrom.ToFloat32Value(ctx)
@@ -329,8 +329,13 @@ func (expander autoExpander) float32(ctx context.Context, vFrom basetypes.Float3
 			//
 			// types.Float32 -> *float32.
 			//
-			to := float32(v.ValueFloat32())
-			vTo.Set(reflect.ValueOf(&to))
+			if legacy {
+				tflog.SubsystemDebug(ctx, subsystemName, "Using legacy expander")
+				if v.ValueFloat32() == 0 {
+					return diags
+				}
+			}
+			vTo.Set(reflect.ValueOf(v.ValueFloat32Pointer()))
 			return diags
 		}
 	}
