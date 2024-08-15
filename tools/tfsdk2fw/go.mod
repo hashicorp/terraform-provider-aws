@@ -74,7 +74,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.40.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.37.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/codeartifact v1.30.3 // indirect
-	github.com/aws/aws-sdk-go-v2/service/codebuild v1.40.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/codebuild v1.41.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.15.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/codecommit v1.25.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/codedeploy v1.27.3 // indirect
@@ -163,6 +163,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kinesis v1.29.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/kinesisanalytics v1.23.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2 v1.28.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.25.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/kms v1.35.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.35.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.56.3 // indirect
@@ -218,7 +219,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.58.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.46.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.26.3 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.152.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.153.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.10.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.26.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.32.4 // indirect

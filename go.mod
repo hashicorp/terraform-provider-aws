@@ -57,7 +57,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.40.3
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.37.3
 	github.com/aws/aws-sdk-go-v2/service/codeartifact v1.30.3
-	github.com/aws/aws-sdk-go-v2/service/codebuild v1.40.3
+	github.com/aws/aws-sdk-go-v2/service/codebuild v1.41.0
 	github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.15.3
 	github.com/aws/aws-sdk-go-v2/service/codecommit v1.25.0
 	github.com/aws/aws-sdk-go-v2/service/codedeploy v1.27.3
@@ -197,7 +197,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.58.3
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.46.3
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.26.3
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.152.0
+	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.153.0
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.10.3
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.26.3
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.32.4

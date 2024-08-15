@@ -134,8 +134,8 @@ github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.37.3 h1:pnvujeesw3tP0iDLK
 github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.37.3/go.mod h1:eJZGfJNuTmvBgiy2O5XIPlHMBi4GUYoJoKZ6U6wCVVk=
 github.com/aws/aws-sdk-go-v2/service/codeartifact v1.30.3 h1:9eAjfGKFWduKyCR94Qi/JfORoJLndGydph2dcLtM7gI=
 github.com/aws/aws-sdk-go-v2/service/codeartifact v1.30.3/go.mod h1:AdirH4VV5v1ik2pOOU0WdEdojBBgzTdECBrOQl0ojOc=
-github.com/aws/aws-sdk-go-v2/service/codebuild v1.40.3 h1:v+CiUB5RsmyRpGQ5Tddwn3prS1Y+uCIKVAzZ0Wb3Nyk=
-github.com/aws/aws-sdk-go-v2/service/codebuild v1.40.3/go.mod h1:HDiBVjDHX2n7UGFgynZLkVGPXvEnurxlEeaxPF/Ql/0=
+github.com/aws/aws-sdk-go-v2/service/codebuild v1.41.0 h1:6PFiOLDIeIvzBKdeIBT9ZnR+SJbEAlHV5k+wrwfzzfw=
+github.com/aws/aws-sdk-go-v2/service/codebuild v1.41.0/go.mod h1:HDiBVjDHX2n7UGFgynZLkVGPXvEnurxlEeaxPF/Ql/0=
 github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.15.3 h1:Bz3QJAdZd1z1rxlllKMl0s5y8kjbryqeMhlX57XJ5q8=
 github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.15.3/go.mod h1:R3dXCLxoYZu1zDODLw810Je3DOydgMUC2MZqyf8Gi9g=
 github.com/aws/aws-sdk-go-v2/service/codecommit v1.25.0 h1:EyXii3hsD7M6mLoZjVbnIo14NI+ig8lopPGYVua/a+M=
@@ -312,6 +312,8 @@ github.com/aws/aws-sdk-go-v2/service/kinesisanalytics v1.23.3 h1:jlRe7BuV+4SghH9
 github.com/aws/aws-sdk-go-v2/service/kinesisanalytics v1.23.3/go.mod h1:qb0UKyBXIZbkXmn8M3WoRRZPyfbr1exhN1F21Od1S2o=
 github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2 v1.28.2 h1:0ihcsCNzq2iuIaNEiLDFd7YcUKnuhNvKjoGWV+WaEpA=
 github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2 v1.28.2/go.mod h1:MTVEJMay748rHk8FSi6SqxyOsehY0dbcG+R+KOp9Oig=
+github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.25.3 h1:Ag5oIVdwWHGu4Da0lNPg6iivuQJUmTzBaAyJz7eY7M8=
+github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.25.3/go.mod h1:ZwH9gpRAFa3TSocqR5Qm+Vb1sUBitXq0N1+n67ljqcw=
 github.com/aws/aws-sdk-go-v2/service/kms v1.35.3 h1:UPTdlTOwWUX49fVi7cymEN6hDqCwe3LNv1vi7TXUutk=
 github.com/aws/aws-sdk-go-v2/service/kms v1.35.3/go.mod h1:gjDP16zn+WWalyaUqwCCioQ8gU8lzttCCc9jYsiQI/8=
 github.com/aws/aws-sdk-go-v2/service/lakeformation v1.35.3 h1:Rfl7JjXVdriUprd8TTlbgcTyPU/Pl+v/O/nMD9HYpgA=
@@ -422,8 +424,8 @@ github.com/aws/aws-sdk-go-v2/service/s3control v1.46.3 h1:3De8/YQpup0mLNKh0G9JHW
 github.com/aws/aws-sdk-go-v2/service/s3control v1.46.3/go.mod h1:sUA7DOI2fdRHQQUpvRVfYKTo9P0+UAsWYBHvyqFHcC0=
 github.com/aws/aws-sdk-go-v2/service/s3outposts v1.26.3 h1:Hg1FVxD9pelFS8j3ilHJDUe6J/Q/VVwzWaNtN8vyNUQ=
 github.com/aws/aws-sdk-go-v2/service/s3outposts v1.26.3/go.mod h1:GVq0lM4BUD3GyiLzlNWXUq9U/H5t+2eytsEDirQSAn4=
-github.com/aws/aws-sdk-go-v2/service/sagemaker v1.152.0 h1:y3jRrFbGve0omxt5gDStki51bjYJ6gxhtXr7VFagVv4=
-github.com/aws/aws-sdk-go-v2/service/sagemaker v1.152.0/go.mod h1:lDmK3DHWV6Y6hpzeUAaXq4w+ks6fFYXdkjavIe8STCE=
+github.com/aws/aws-sdk-go-v2/service/sagemaker v1.153.0 h1:daHocIfZjMiDNghao41FO0QqFf6J71aGmxl1+nXQ5PU=
+github.com/aws/aws-sdk-go-v2/service/sagemaker v1.153.0/go.mod h1:lDmK3DHWV6Y6hpzeUAaXq4w+ks6fFYXdkjavIe8STCE=
 github.com/aws/aws-sdk-go-v2/service/scheduler v1.10.3 h1:gmpU7E0ntMzXr+yQQIXbiiueOewf/1BQ9WgeaXo6BcQ=
 github.com/aws/aws-sdk-go-v2/service/scheduler v1.10.3/go.mod h1:jnQp5kPPvEgPmVPm0h/XZPmlx7DQ0pqUiISRO4s6U3s=
 github.com/aws/aws-sdk-go-v2/service/schemas v1.26.3 h1:ZJW2OQNpkR8P7URtISmF8twpvz2V0tUN/OgMenlxkao=
