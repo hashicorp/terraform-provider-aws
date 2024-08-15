@@ -445,7 +445,6 @@ func resourceJobDefinition() *schema.Resource {
 					},
 				},
 			},
-
 			names.AttrType: {
 				Type:             schema.TypeString,
 				Required:         true,
@@ -612,7 +611,8 @@ func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, me
 		Type:              jobDefinitionType,
 	}
 
-	if jobDefinitionType == awstypes.JobDefinitionTypeContainer {
+	switch jobDefinitionType {
+	case awstypes.JobDefinitionTypeContainer:
 		if v, ok := d.GetOk("node_properties"); ok && v != nil {
 			return sdkdiag.AppendErrorf(diags, "No `node_properties` can be specified when `type` is %q", jobDefinitionType)
 		}
@@ -623,7 +623,7 @@ func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, me
 				return sdkdiag.AppendFromErr(diags, err)
 			}
 
-			removeEmptyEnvironmentVariables(&diags, props.Environment, cty.GetAttrPath("container_properties"))
+			diags = append(diags, removeEmptyEnvironmentVariables(props.Environment, cty.GetAttrPath("container_properties"))...)
 			input.ContainerProperties = props
 		}
 
@@ -633,6 +633,11 @@ func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, me
 				return sdkdiag.AppendFromErr(diags, err)
 			}
 
+			for _, taskProp := range props.TaskProperties {
+				for _, c := range taskProp.Containers {
+					diags = append(diags, removeEmptyEnvironmentVariables(c.Environment, cty.GetAttrPath("ecs_properties"))...)
+				}
+			}
 			input.EcsProperties = props
 		}
 
@@ -645,9 +650,8 @@ func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, me
 				}
 			}
 		}
-	}
 
-	if jobDefinitionType == awstypes.JobDefinitionTypeMultinode {
+	case awstypes.JobDefinitionTypeMultinode:
 		if v, ok := d.GetOk("container_properties"); ok && v != nil {
 			return sdkdiag.AppendErrorf(diags, "No `container_properties` can be specified when `type` is %q", jobDefinitionType)
 		}
@@ -665,7 +669,7 @@ func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, me
 			}
 
 			for _, node := range props.NodeRangeProperties {
-				removeEmptyEnvironmentVariables(&diags, node.Container.Environment, cty.GetAttrPath("node_properties"))
+				diags = append(diags, removeEmptyEnvironmentVariables(node.Container.Environment, cty.GetAttrPath("node_properties"))...)
 			}
 			input.NodeProperties = props
 		}
@@ -780,51 +784,54 @@ func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, me
 			Type:              jobDefinitionType,
 		}
 
-		if v, ok := d.GetOk("container_properties"); ok {
-			props, err := expandContainerProperties(v.(string))
-			if err != nil {
-				return sdkdiag.AppendFromErr(diags, err)
-			}
+		switch jobDefinitionType {
+		case awstypes.JobDefinitionTypeContainer:
+			if v, ok := d.GetOk("container_properties"); ok {
+				props, err := expandContainerProperties(v.(string))
+				if err != nil {
+					return sdkdiag.AppendFromErr(diags, err)
+				}
 
-			if jobDefinitionType == awstypes.JobDefinitionTypeContainer {
-				removeEmptyEnvironmentVariables(&diags, props.Environment, cty.GetAttrPath("container_properties"))
+				diags = append(diags, removeEmptyEnvironmentVariables(props.Environment, cty.GetAttrPath("container_properties"))...)
 				input.ContainerProperties = props
 			}
-		}
 
-		if v, ok := d.GetOk("ecs_properties"); ok {
-			props, err := expandECSProperties(v.(string))
-			if err != nil {
-				return sdkdiag.AppendFromErr(diags, err)
+			if v, ok := d.GetOk("ecs_properties"); ok {
+				props, err := expandECSProperties(v.(string))
+				if err != nil {
+					return sdkdiag.AppendFromErr(diags, err)
+				}
+
+				for _, taskProp := range props.TaskProperties {
+					for _, c := range taskProp.Containers {
+						diags = append(diags, removeEmptyEnvironmentVariables(c.Environment, cty.GetAttrPath("ecs_properties"))...)
+					}
+				}
+				input.EcsProperties = props
 			}
 
-			input.EcsProperties = props
-		}
-
-		if v, ok := d.GetOk("eks_properties"); ok {
-			eksProps := v.([]interface{})[0].(map[string]interface{})
-			if podProps, ok := eksProps["pod_properties"].([]interface{}); ok && len(podProps) > 0 {
-				props := expandEKSPodProperties(podProps[0].(map[string]interface{}))
-				input.EksProperties = &awstypes.EksProperties{
-					PodProperties: props,
+			if v, ok := d.GetOk("eks_properties"); ok {
+				eksProps := v.([]interface{})[0].(map[string]interface{})
+				if podProps, ok := eksProps["pod_properties"].([]interface{}); ok && len(podProps) > 0 {
+					props := expandEKSPodProperties(podProps[0].(map[string]interface{}))
+					input.EksProperties = &awstypes.EksProperties{
+						PodProperties: props,
+					}
 				}
 			}
-		}
 
-		if v, ok := d.GetOk("node_properties"); ok {
-			props, err := expandJobNodeProperties(v.(string))
-			if err != nil {
-				return sdkdiag.AppendFromErr(diags, err)
+		case awstypes.JobDefinitionTypeMultinode:
+			if v, ok := d.GetOk("node_properties"); ok {
+				props, err := expandJobNodeProperties(v.(string))
+				if err != nil {
+					return sdkdiag.AppendFromErr(diags, err)
+				}
+
+				for _, node := range props.NodeRangeProperties {
+					diags = append(diags, removeEmptyEnvironmentVariables(node.Container.Environment, cty.GetAttrPath("node_properties"))...)
+				}
+				input.NodeProperties = props
 			}
-
-			for _, node := range props.NodeRangeProperties {
-				removeEmptyEnvironmentVariables(&diags, node.Container.Environment, cty.GetAttrPath("node_properties"))
-			}
-			input.NodeProperties = props
-		}
-
-		if v, ok := d.GetOk(names.AttrPropagateTags); ok {
-			input.PropagateTags = aws.Bool(v.(bool))
 		}
 
 		if v, ok := d.GetOk(names.AttrParameters); ok {
@@ -835,12 +842,16 @@ func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, me
 			input.PlatformCapabilities = flex.ExpandStringyValueSet[awstypes.PlatformCapability](v.(*schema.Set))
 		}
 
-		if v, ok := d.GetOk("scheduling_priority"); ok {
-			input.SchedulingPriority = aws.Int32(int32(v.(int)))
+		if v, ok := d.GetOk(names.AttrPropagateTags); ok {
+			input.PropagateTags = aws.Bool(v.(bool))
 		}
 
 		if v, ok := d.GetOk("retry_strategy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			input.RetryStrategy = expandRetryStrategy(v.([]interface{})[0].(map[string]interface{}))
+		}
+
+		if v, ok := d.GetOk("scheduling_priority"); ok {
+			input.SchedulingPriority = aws.Int32(int32(v.(int)))
 		}
 
 		if v, ok := d.GetOk(names.AttrTimeout); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -1138,16 +1149,20 @@ func flattenJobTimeout(apiObject *awstypes.JobTimeout) map[string]interface{} {
 	return tfMap
 }
 
-func removeEmptyEnvironmentVariables(diags *diag.Diagnostics, environment []awstypes.KeyValuePair, attributePath cty.Path) {
+func removeEmptyEnvironmentVariables(environment []awstypes.KeyValuePair, attributePath cty.Path) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	for _, env := range environment {
 		if aws.ToString(env.Value) == "" {
-			*diags = append(*diags, errs.NewAttributeWarningDiagnostic(
+			diags = append(diags, errs.NewAttributeWarningDiagnostic(
 				attributePath,
 				"Ignoring environment variable",
 				fmt.Sprintf("The environment variable %q has an empty value, which is ignored by the Batch service", aws.ToString(env.Name))),
 			)
 		}
 	}
+
+	return diags
 }
 
 func expandEKSPodProperties(tfMap map[string]interface{}) *awstypes.EksPodProperties {
