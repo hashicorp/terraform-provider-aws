@@ -34,22 +34,23 @@ func testAccDataLakeSettings_basic(t *testing.T) {
 				Config: testAccDataLakeSettingsConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataLakeSettingsExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "catalog_id", "data.aws_caller_identity.current", "account_id"),
-					resource.TestCheckResourceAttr(resourceName, "admins.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCatalogID, "data.aws_caller_identity.current", names.AttrAccountID),
+					resource.TestCheckResourceAttr(resourceName, "admins.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "admins.0", "data.aws_iam_session_context.current", "issuer_arn"),
-					resource.TestCheckResourceAttr(resourceName, "create_database_default_permissions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "create_database_default_permissions.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "create_database_default_permissions.0.principal", "IAM_ALLOWED_PRINCIPALS"),
-					resource.TestCheckResourceAttr(resourceName, "create_database_default_permissions.0.permissions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "create_database_default_permissions.0.permissions.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "create_database_default_permissions.0.permissions.0", "ALL"),
-					resource.TestCheckResourceAttr(resourceName, "create_table_default_permissions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "create_table_default_permissions.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "create_table_default_permissions.0.principal", "IAM_ALLOWED_PRINCIPALS"),
-					resource.TestCheckResourceAttr(resourceName, "create_table_default_permissions.0.permissions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "create_table_default_permissions.0.permissions.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "create_table_default_permissions.0.permissions.0", "ALL"),
-					resource.TestCheckResourceAttr(resourceName, "allow_external_data_filtering", "true"),
-					resource.TestCheckResourceAttr(resourceName, "external_data_filtering_allow_list.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "external_data_filtering_allow_list.0", "data.aws_caller_identity.current", "account_id"),
-					resource.TestCheckResourceAttr(resourceName, "authorized_session_tag_value_list.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "allow_external_data_filtering", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "external_data_filtering_allow_list.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "external_data_filtering_allow_list.0", "data.aws_caller_identity.current", names.AttrAccountID),
+					resource.TestCheckResourceAttr(resourceName, "authorized_session_tag_value_list.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "authorized_session_tag_value_list.0", "engine1"),
+					resource.TestCheckResourceAttr(resourceName, "allow_full_table_external_data_access", acctest.CtTrue),
 				),
 			},
 		},
@@ -92,7 +93,7 @@ func testAccDataLakeSettings_withoutCatalogID(t *testing.T) {
 				Config: testAccDataLakeSettingsConfig_withoutCatalogID,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataLakeSettingsExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "admins.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "admins.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "admins.0", "data.aws_iam_session_context.current", "issuer_arn"),
 				),
 			},
@@ -114,7 +115,7 @@ func testAccDataLakeSettings_readOnlyAdmins(t *testing.T) {
 				Config: testAccDataLakeSettingsConfig_readOnlyAdmins,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataLakeSettingsExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "read_only_admins.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "read_only_admins.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "read_only_admins.0", "data.aws_iam_session_context.current", "issuer_arn"),
 				),
 			},
@@ -133,8 +134,8 @@ func testAccCheckDataLakeSettingsDestroy(ctx context.Context) resource.TestCheck
 
 			input := &lakeformation.GetDataLakeSettingsInput{}
 
-			if rs.Primary.Attributes["catalog_id"] != "" {
-				input.CatalogId = aws.String(rs.Primary.Attributes["catalog_id"])
+			if rs.Primary.Attributes[names.AttrCatalogID] != "" {
+				input.CatalogId = aws.String(rs.Primary.Attributes[names.AttrCatalogID])
 			}
 
 			output, err := conn.GetDataLakeSettings(ctx, input)
@@ -171,8 +172,8 @@ func testAccCheckDataLakeSettingsExists(ctx context.Context, resourceName string
 
 		input := &lakeformation.GetDataLakeSettingsInput{}
 
-		if rs.Primary.Attributes["catalog_id"] != "" {
-			input.CatalogId = aws.String(rs.Primary.Attributes["catalog_id"])
+		if rs.Primary.Attributes[names.AttrCatalogID] != "" {
+			input.CatalogId = aws.String(rs.Primary.Attributes[names.AttrCatalogID])
 		}
 
 		_, err := conn.GetDataLakeSettings(ctx, input)
@@ -205,11 +206,12 @@ resource "aws_lakeformation_data_lake_settings" "test" {
     permissions = ["ALL"]
   }
 
-  admins                             = [data.aws_iam_session_context.current.issuer_arn]
-  trusted_resource_owners            = [data.aws_caller_identity.current.account_id]
-  allow_external_data_filtering      = true
-  external_data_filtering_allow_list = [data.aws_caller_identity.current.account_id]
-  authorized_session_tag_value_list  = ["engine1"]
+  admins                                = [data.aws_iam_session_context.current.issuer_arn]
+  trusted_resource_owners               = [data.aws_caller_identity.current.account_id]
+  allow_external_data_filtering         = true
+  allow_full_table_external_data_access = true
+  external_data_filtering_allow_list    = [data.aws_caller_identity.current.account_id]
+  authorized_session_tag_value_list     = ["engine1"]
 }
 `
 

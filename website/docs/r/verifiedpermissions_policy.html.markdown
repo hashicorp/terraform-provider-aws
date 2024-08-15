@@ -33,10 +33,6 @@ The following arguments are required:
 * `policy_store_id` - (Required) The Policy Store ID of the policy store.
 * `definition`- (Required) The definition of the policy. See [Definition](#definition) below.
 
-The following arguments are optional:
-
-* `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-
 ### Definition
 
 * `static` - (Optional) The static policy statement. See [Static](#static) below.
@@ -61,8 +57,8 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Policy. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `created_date` - The date the policy was created.
+* `policy_id` - The Policy ID of the policy.
 
 ## Import
 

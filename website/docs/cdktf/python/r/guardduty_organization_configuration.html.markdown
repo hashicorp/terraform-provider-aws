@@ -62,7 +62,7 @@ class MyConvertedCode(TerraformStack):
 
 ~> **NOTE:** One of `auto_enable` or `auto_enable_organization_members` must be specified.
 
-This argument supports the following arguments:
+This resource supports the following arguments:
 
 * `auto_enable` - (Optional) *Deprecated:* Use `auto_enable_organization_members` instead. When this setting is enabled, all new accounts that are created in, or added to, the organization are added as a member accounts of the organization’s GuardDuty delegated administrator and GuardDuty is enabled in that AWS Region.
 * `auto_enable_organization_members` - (Optional) Indicates the auto-enablement configuration of GuardDuty for the member accounts in the organization. Valid values are `ALL`, `NEW`, `NONE`.
@@ -147,4 +147,4 @@ Using `terraform import`, import GuardDuty Organization Configurations using the
 % terraform import aws_guardduty_organization_configuration.example 00b00fd5aecc0ab60a708659477e9617
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-445f6fbfec553e986e4f75415b80de0e8cbed40dec40a9dd732c3ede81c717e3 -->
+<!-- cache-key: cdktf-0.20.1 input-0204debd69a542a4ab875fac471e6f3104005ffcf7df6f2813bc3941f9df1990 -->

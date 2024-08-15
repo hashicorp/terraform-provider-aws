@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore/types"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -47,7 +48,7 @@ func (r *keyResource) Schema(ctx context.Context, request resource.SchemaRequest
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
-			"key": schema.StringAttribute{
+			names.AttrKey: schema.StringAttribute{
 				Required:            true,
 				MarkdownDescription: "The key to put.",
 				PlanModifiers: []planmodifier.String{
@@ -66,7 +67,7 @@ func (r *keyResource) Schema(ctx context.Context, request resource.SchemaRequest
 				Computed:            true,
 				MarkdownDescription: "Total size of the Key Value Store in bytes.",
 			},
-			"value": schema.StringAttribute{
+			names.AttrValue: schema.StringAttribute{
 				Required:            true,
 				MarkdownDescription: "The value to put.",
 			},
@@ -328,12 +329,12 @@ func (data *keyResourceModel) InitFromID() error {
 		return err
 	}
 
-	v, err := fwdiag.AsError(fwtypes.ARNValue(parts[0]))
+	_, err = arn.Parse(parts[0])
 	if err != nil {
 		return err
 	}
 
-	data.KvsARN = v
+	data.KvsARN = fwtypes.ARNValue(parts[0])
 	data.Key = types.StringValue(parts[1])
 
 	return nil

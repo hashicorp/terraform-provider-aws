@@ -41,7 +41,7 @@ func TestAccRedshiftDataShareConsumerAssociation_basic(t *testing.T) {
 				Config: testAccDataShareConsumerAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataShareConsumerAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "consumer_region", regionDataSourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "consumer_region", regionDataSourceName, names.AttrName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "data_share_arn", "redshift", regexache.MustCompile(`datashare:+.`)),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "producer_arn", "redshift-serverless", regexache.MustCompile(`namespace/+.`)),
 				),
@@ -99,7 +99,7 @@ func TestAccRedshiftDataShareConsumerAssociation_associateEntireAccount(t *testi
 				Config: testAccDataShareConsumerAssociationConfig_associateEntireAccount(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataShareConsumerAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "associate_entire_account", "true"),
+					resource.TestCheckResourceAttr(resourceName, "associate_entire_account", acctest.CtTrue),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "data_share_arn", "redshift", regexache.MustCompile(`datashare:+.`)),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "producer_arn", "redshift-serverless", regexache.MustCompile(`namespace/+.`)),
 				),

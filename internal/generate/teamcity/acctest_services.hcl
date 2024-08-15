@@ -1,8 +1,9 @@
 # Copyright (c) HashiCorp, Inc.
 # SPDX-License-Identifier: MPL-2.0
 
-service "appautoscaling" {
-  vpc_lock = true
+service "amp" {
+  # The maximum scrapers per region quota is fixed at 10
+  parallelism = 10
 }
 
 service "apigateway" {
@@ -11,6 +12,14 @@ service "apigateway" {
 
 service "apigatewayv2" {
   vpc_lock = true
+}
+
+service "appautoscaling" {
+  vpc_lock = true
+}
+
+service "appfabric" {
+  region = "us-east-1"
 }
 
 service "appstream" {
@@ -80,7 +89,7 @@ service "ec2ebs" {
 
 service "ec2outposts" {
   vpc_lock                   = true
-  pattern_override           = "TestAccOutposts"
+  pattern_override           = "TestAccEC2Outposts"
   split_package_real_package = "ec2"
 }
 
@@ -228,6 +237,11 @@ service "storagegateway" {
 
 service "synthetics" {
   parallelism = 10
+}
+
+service "timestreaminfluxdb" {
+  vpc_lock    = true
+  parallelism = 3
 }
 
 service "transfer" {

@@ -5,56 +5,86 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// listTags lists ec2 service tags.
+// findTag fetches an individual ec2 service tag for a resource.
+// Returns whether the key value and any errors. A NotFoundError is used to signal that no value was found.
+// This function will optimise the handling over listTags, if possible.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func listTags(ctx context.Context, conn ec2iface.EC2API, identifier string) (tftags.KeyValueTags, error) {
+func findTag(ctx context.Context, conn *ec2.Client, identifier, key string, optFns ...func(*ec2.Options)) (*string, error) {
 	input := &ec2.DescribeTagsInput{
-		Filters: []*ec2.Filter{
+		Filters: []awstypes.Filter{
 			{
 				Name:   aws.String("resource-id"),
-				Values: []*string{aws.String(identifier)},
+				Values: []string{identifier},
+			},
+			{
+				Name:   aws.String(names.AttrKey),
+				Values: []string{key},
 			},
 		},
 	}
-	var output []*ec2.TagDescription
 
-	err := conn.DescribeTagsPagesWithContext(ctx, input, func(page *ec2.DescribeTagsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	output, err := conn.DescribeTags(ctx, input, optFns...)
+
+	if err != nil {
+		return nil, err
+	}
+
+	listTags := keyValueTags(ctx, output.Tags)
+
+	if !listTags.KeyExists(key) {
+		return nil, tfresource.NewEmptyResultError(nil)
+	}
+
+	return listTags.KeyValue(key), nil
+}
+
+// listTags lists ec2 service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func listTags(ctx context.Context, conn *ec2.Client, identifier string, optFns ...func(*ec2.Options)) (tftags.KeyValueTags, error) {
+	input := &ec2.DescribeTagsInput{
+		Filters: []awstypes.Filter{
+			{
+				Name:   aws.String("resource-id"),
+				Values: []string{identifier},
+			},
+		},
+	}
+	var output []awstypes.TagDescription
+
+	pages := ec2.NewDescribeTagsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx, optFns...)
+
+		if err != nil {
+			return tftags.New(ctx, nil), err
 		}
 
 		for _, v := range page.Tags {
-			if v != nil {
-				output = append(output, v)
-			}
+			output = append(output, v)
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(ctx, output), nil
+	return keyValueTags(ctx, output), nil
 }
 
 // ListTags lists ec2 service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := listTags(ctx, meta.(*conns.AWSClient).EC2Conn(ctx), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).EC2Client(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -70,11 +100,11 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 // []*SERVICE.Tag handling
 
 // Tags returns ec2 service tags.
-func Tags(tags tftags.KeyValueTags) []*ec2.Tag {
-	result := make([]*ec2.Tag, 0, len(tags))
+func Tags(tags tftags.KeyValueTags) []awstypes.Tag {
+	result := make([]awstypes.Tag, 0, len(tags))
 
 	for k, v := range tags.Map() {
-		tag := &ec2.Tag{
+		tag := awstypes.Tag{
 			Key:   aws.String(k),
 			Value: aws.String(v),
 		}
@@ -85,26 +115,26 @@ func Tags(tags tftags.KeyValueTags) []*ec2.Tag {
 	return result
 }
 
-// KeyValueTags creates tftags.KeyValueTags from ec2 service tags.
+// keyValueTags creates tftags.KeyValueTags from ec2 service tags.
 //
 // Accepts the following types:
-//   - []*ec2.Tag
-//   - []*ec2.TagDescription
-func KeyValueTags(ctx context.Context, tags any) tftags.KeyValueTags {
+//   - []awstypes.Tag
+//   - []awstypes.TagDescription
+func keyValueTags(ctx context.Context, tags any) tftags.KeyValueTags {
 	switch tags := tags.(type) {
-	case []*ec2.Tag:
+	case []awstypes.Tag:
 		m := make(map[string]*string, len(tags))
 
 		for _, tag := range tags {
-			m[aws.StringValue(tag.Key)] = tag.Value
+			m[aws.ToString(tag.Key)] = tag.Value
 		}
 
 		return tftags.New(ctx, m)
-	case []*ec2.TagDescription:
+	case []awstypes.TagDescription:
 		m := make(map[string]*string, len(tags))
 
 		for _, tag := range tags {
-			m[aws.StringValue(tag.Key)] = tag.Value
+			m[aws.ToString(tag.Key)] = tag.Value
 		}
 
 		return tftags.New(ctx, m)
@@ -115,7 +145,7 @@ func KeyValueTags(ctx context.Context, tags any) tftags.KeyValueTags {
 
 // getTagsIn returns ec2 service tags from Context.
 // nil is returned if there are no input tags.
-func getTagsIn(ctx context.Context) []*ec2.Tag {
+func getTagsIn(ctx context.Context) []awstypes.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -128,14 +158,14 @@ func getTagsIn(ctx context.Context) []*ec2.Tag {
 // setTagsOut sets ec2 service tags in Context.
 func setTagsOut(ctx context.Context, tags any) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = option.Some(KeyValueTags(ctx, tags))
+		inContext.TagsOut = option.Some(keyValueTags(ctx, tags))
 	}
 }
 
 // updateTags updates ec2 service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func updateTags(ctx context.Context, conn ec2iface.EC2API, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn *ec2.Client, identifier string, oldTagsMap, newTagsMap any, optFns ...func(*ec2.Options)) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -145,11 +175,11 @@ func updateTags(ctx context.Context, conn ec2iface.EC2API, identifier string, ol
 	removedTags = removedTags.IgnoreSystem(names.EC2)
 	if len(removedTags) > 0 {
 		input := &ec2.DeleteTagsInput{
-			Resources: aws.StringSlice([]string{identifier}),
+			Resources: []string{identifier},
 			Tags:      Tags(removedTags),
 		}
 
-		_, err := conn.DeleteTagsWithContext(ctx, input)
+		_, err := conn.DeleteTags(ctx, input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -160,11 +190,11 @@ func updateTags(ctx context.Context, conn ec2iface.EC2API, identifier string, ol
 	updatedTags = updatedTags.IgnoreSystem(names.EC2)
 	if len(updatedTags) > 0 {
 		input := &ec2.CreateTagsInput{
-			Resources: aws.StringSlice([]string{identifier}),
+			Resources: []string{identifier},
 			Tags:      Tags(updatedTags),
 		}
 
-		_, err := conn.CreateTagsWithContext(ctx, input)
+		_, err := conn.CreateTags(ctx, input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
@@ -177,5 +207,5 @@ func updateTags(ctx context.Context, conn ec2iface.EC2API, identifier string, ol
 // UpdateTags updates ec2 service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return updateTags(ctx, meta.(*conns.AWSClient).EC2Conn(ctx), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).EC2Client(ctx), identifier, oldTags, newTags)
 }

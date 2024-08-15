@@ -50,7 +50,7 @@ func ResourceConnectPeer() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -69,7 +69,7 @@ func ResourceConnectPeer() *schema.Resource {
 					},
 				},
 			},
-			"configuration": {
+			names.AttrConfiguration: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -111,7 +111,7 @@ func ResourceConnectPeer() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"protocol": {
+						names.AttrProtocol: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -144,7 +144,7 @@ func ResourceConnectPeer() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -179,7 +179,7 @@ func ResourceConnectPeer() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile(`^arn:[^:]{1,63}:ec2:[^:]{0,63}:[^:]{0,63}:subnet\/subnet-[0-9a-f]{8,17}$|^$`), "Must be a valid subnet ARN"),
 				),
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -283,24 +283,24 @@ func resourceConnectPeerRead(ctx context.Context, d *schema.ResourceData, meta i
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("connect-peer/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	bgpOptions := map[string]interface{}{}
 	bgpOptions["peer_asn"] = connectPeer.Configuration.BgpConfigurations[0].PeerAsn
 	d.Set("bgp_options", []interface{}{bgpOptions})
-	d.Set("configuration", []interface{}{flattenPeerConfiguration(connectPeer.Configuration)})
+	d.Set(names.AttrConfiguration, []interface{}{flattenPeerConfiguration(connectPeer.Configuration)})
 	d.Set("connect_peer_id", connectPeer.ConnectPeerId)
 	d.Set("core_network_id", connectPeer.CoreNetworkId)
 	if connectPeer.CreatedAt != nil {
-		d.Set("created_at", aws.TimeValue(connectPeer.CreatedAt).Format(time.RFC3339))
+		d.Set(names.AttrCreatedAt, aws.TimeValue(connectPeer.CreatedAt).Format(time.RFC3339))
 	} else {
-		d.Set("created_at", nil)
+		d.Set(names.AttrCreatedAt, nil)
 	}
 	d.Set("edge_location", connectPeer.EdgeLocation)
 	d.Set("connect_attachment_id", connectPeer.ConnectAttachmentId)
 	d.Set("inside_cidr_blocks", connectPeer.Configuration.InsideCidrBlocks)
 	d.Set("peer_address", connectPeer.Configuration.PeerAddress)
 	d.Set("subnet_arn", connectPeer.SubnetArn)
-	d.Set("state", connectPeer.State)
+	d.Set(names.AttrState, connectPeer.State)
 
 	setTagsOut(ctx, connectPeer.Tags)
 
@@ -383,22 +383,26 @@ func flattenPeerConfiguration(apiObject *networkmanager.ConnectPeerConfiguration
 
 	confMap := map[string]interface{}{}
 
-	if v := apiObject.BgpConfigurations; v != nil {
+	for _, v := range apiObject.BgpConfigurations {
 		bgpConfMap := map[string]interface{}{}
 
-		if a := v[0].CoreNetworkAddress; a != nil {
+		if a := v.CoreNetworkAddress; a != nil {
 			bgpConfMap["core_network_address"] = aws.StringValue(a)
 		}
-		if a := v[0].CoreNetworkAsn; a != nil {
+		if a := v.CoreNetworkAsn; a != nil {
 			bgpConfMap["core_network_asn"] = aws.Int64Value(a)
 		}
-		if a := v[0].PeerAddress; a != nil {
+		if a := v.PeerAddress; a != nil {
 			bgpConfMap["peer_address"] = aws.StringValue(a)
 		}
-		if a := v[0].PeerAsn; a != nil {
+		if a := v.PeerAsn; a != nil {
 			bgpConfMap["peer_asn"] = aws.Int64Value(a)
 		}
-		confMap["bgp_configurations"] = []interface{}{bgpConfMap}
+		var existing []interface{}
+		if c, ok := confMap["bgp_configurations"]; ok {
+			existing = c.([]interface{})
+		}
+		confMap["bgp_configurations"] = append(existing, bgpConfMap)
 	}
 	if v := apiObject.CoreNetworkAddress; v != nil {
 		confMap["core_network_address"] = aws.StringValue(v)
@@ -410,7 +414,7 @@ func flattenPeerConfiguration(apiObject *networkmanager.ConnectPeerConfiguration
 		confMap["peer_address"] = aws.StringValue(v)
 	}
 	if v := apiObject.Protocol; v != nil {
-		confMap["protocol"] = aws.StringValue(v)
+		confMap[names.AttrProtocol] = aws.StringValue(v)
 	}
 
 	return confMap

@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 )
 
@@ -96,13 +97,13 @@ func SingularDataSourceFindError(resourceType string, err error) error {
 	return fmt.Errorf("reading %s: %w", resourceType, err)
 }
 
-// FoundFunc is function that returns false if the specified value causes a `NotFound` error to be returned.
-type FoundFunc[T any] func(*T) bool
+// foundFunc is function that returns false if the specified value causes a `NotFound` error to be returned.
+type foundFunc[T any] tfslices.Predicate[*T]
 
 // AssertSinglePtrResult returns the single non-nil pointer value in the specified slice.
 // Returns a `NotFound` error otherwise.
 // If any of the specified functions return false for the value, a `NotFound` error is returned.
-func AssertSinglePtrResult[T any](a []*T, fs ...FoundFunc[T]) (*T, error) {
+func AssertSinglePtrResult[T any](a []*T, fs ...foundFunc[T]) (*T, error) {
 	if l := len(a); l == 0 {
 		return nil, NewEmptyResultError(nil)
 	} else if l > 1 {
@@ -132,15 +133,34 @@ func AssertMaybeSinglePtrResult[T any](a []*T) (option.Option[*T], error) {
 	return option.Some(a[0]), nil
 }
 
+// AssertMaybeSingleValueResult returns the single non-nil value in the specified slice, or `None` if the slice is empty.
+// Returns a `NotFound` error otherwise.
+func AssertMaybeSingleValueResult[T any](a []T) (option.Option[T], error) {
+	if l := len(a); l == 0 {
+		return option.None[T](), nil
+	} else if l > 1 {
+		return nil, NewTooManyResultsError(l, nil)
+	}
+
+	return option.Some(a[0]), nil
+}
+
 // AssertSingleValueResult returns a pointer to the single value in the specified slice of values.
 // Returns a `NotFound` error otherwise.
-func AssertSingleValueResult[T any](a []T) (*T, error) {
+func AssertSingleValueResult[T any](a []T, fs ...foundFunc[T]) (*T, error) {
 	if l := len(a); l == 0 {
 		return nil, NewEmptyResultError(nil)
 	} else if l > 1 {
 		return nil, NewTooManyResultsError(l, nil)
+	} else {
+		v := &a[0]
+		for _, f := range fs {
+			if !f(v) {
+				return nil, NewEmptyResultError(nil)
+			}
+		}
+		return v, nil
 	}
-	return &a[0], nil
 }
 
 // AssertFirstValueResult returns a pointer to the first value in the specified slice of values.

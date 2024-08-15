@@ -53,7 +53,7 @@ func (m *multiplexProgram) Metadata(_ context.Context, request resource.Metadata
 func (m *multiplexProgram) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"multiplex_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -92,10 +92,10 @@ func (m *multiplexProgram) Schema(ctx context.Context, req resource.SchemaReques
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"provider_name": schema.StringAttribute{
+									names.AttrProviderName: schema.StringAttribute{
 										Required: true,
 									},
-									"service_name": schema.StringAttribute{
+									names.AttrServiceName: schema.StringAttribute{
 										Required: true,
 									},
 								},
@@ -136,7 +136,7 @@ func (m *multiplexProgram) Schema(ctx context.Context, req resource.SchemaReques
 														int64planmodifier.UseStateForUnknown(),
 													},
 												},
-												"priority": schema.Int64Attribute{
+												names.AttrPriority: schema.Int64Attribute{
 													Optional: true,
 													Computed: true,
 													PlanModifiers: []planmodifier.Int64{
@@ -368,7 +368,7 @@ func (m *multiplexProgram) Delete(ctx context.Context, req resource.DeleteReques
 }
 
 func (m *multiplexProgram) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func FindMultiplexProgramByID(ctx context.Context, conn *medialive.Client, multiplexId, programName string) (*medialive.DescribeMultiplexProgramOutput, error) {
@@ -484,9 +484,9 @@ func (sms statmuxSettingsObject) expand(ctx context.Context) *mltypes.MultiplexS
 
 var (
 	statmuxAttrs = map[string]attr.Type{
-		"minimum_bitrate": types.Int64Type,
-		"maximum_bitrate": types.Int64Type,
-		"priority":        types.Int64Type,
+		"minimum_bitrate":  types.Int64Type,
+		"maximum_bitrate":  types.Int64Type,
+		names.AttrPriority: types.Int64Type,
 	}
 
 	videoSettingsAttrs = map[string]attr.Type{
@@ -495,8 +495,8 @@ var (
 	}
 
 	serviceDescriptorAttrs = map[string]attr.Type{
-		"provider_name": types.StringType,
-		"service_name":  types.StringType,
+		names.AttrProviderName: types.StringType,
+		names.AttrServiceName:  types.StringType,
 	}
 
 	multiplexProgramSettingsAttrs = map[string]attr.Type{
@@ -533,8 +533,8 @@ func flattenServiceDescriptor(ctx context.Context, sd *mltypes.MultiplexProgramS
 	}
 
 	attrs := map[string]attr.Value{}
-	attrs["provider_name"] = flex.StringToFrameworkLegacy(ctx, sd.ProviderName)
-	attrs["service_name"] = flex.StringToFrameworkLegacy(ctx, sd.ServiceName)
+	attrs[names.AttrProviderName] = flex.StringToFrameworkLegacy(ctx, sd.ProviderName)
+	attrs[names.AttrServiceName] = flex.StringToFrameworkLegacy(ctx, sd.ServiceName)
 
 	vals := types.ObjectValueMust(serviceDescriptorAttrs, attrs)
 
@@ -551,7 +551,7 @@ func flattenStatMuxSettings(ctx context.Context, mps *mltypes.MultiplexStatmuxVi
 	attrs := map[string]attr.Value{}
 	attrs["minimum_bitrate"] = flex.Int32ToFramework(ctx, mps.MinimumBitrate)
 	attrs["maximum_bitrate"] = flex.Int32ToFramework(ctx, mps.MaximumBitrate)
-	attrs["priority"] = flex.Int32ToFramework(ctx, mps.Priority)
+	attrs[names.AttrPriority] = flex.Int32ToFramework(ctx, mps.Priority)
 
 	vals := types.ObjectValueMust(statmuxAttrs, attrs)
 

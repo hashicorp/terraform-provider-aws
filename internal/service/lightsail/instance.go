@@ -28,7 +28,7 @@ import (
 )
 
 // @SDKResource("aws_lightsail_instance", name="Instance")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="id", resourceType="Instance")
 func ResourceInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceCreate,
@@ -46,7 +46,7 @@ func ResourceInstance() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"type": {
+						names.AttrType: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(flattenAddOnTypeValues(types.AddOnType("").Values()), false),
@@ -56,7 +56,7 @@ func ResourceInstance() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringMatch(regexache.MustCompile(`^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$`), "must be in HH:00 format, and in Coordinated Universal Time (UTC)."),
 						},
-						"status": {
+						names.AttrStatus: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice([]string{"Enabled", "Disabled"}, false),
@@ -64,7 +64,7 @@ func ResourceInstance() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -74,7 +74,7 @@ func ResourceInstance() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+[^_.-]$`), "must contain only alphanumeric characters, underscores, hyphens, and dots"),
 				),
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -113,11 +113,11 @@ func ResourceInstance() *schema.Resource {
 			},
 
 			// additional info returned from the API
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -129,7 +129,7 @@ func ResourceInstance() *schema.Resource {
 				Type:     schema.TypeFloat,
 				Computed: true,
 			},
-			"ip_address_type": {
+			names.AttrIPAddressType: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "dualstack",
@@ -151,7 +151,7 @@ func ResourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"username": {
+			names.AttrUsername: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -159,7 +159,7 @@ func ResourceInstance() *schema.Resource {
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 		CustomizeDiff: customdiff.All(
-			customdiff.ValidateChange("availability_zone", func(ctx context.Context, old, new, meta any) error {
+			customdiff.ValidateChange(names.AttrAvailabilityZone, func(ctx context.Context, old, new, meta any) error {
 				// The availability_zone must be in the same region as the provider region
 				if !strings.HasPrefix(new.(string), meta.(*conns.AWSClient).Region) {
 					return fmt.Errorf("availability_zone must be within the same region as provider region: %s", meta.(*conns.AWSClient).Region)
@@ -176,10 +176,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
-	iName := d.Get("name").(string)
+	iName := d.Get(names.AttrName).(string)
 
 	in := lightsail.CreateInstancesInput{
-		AvailabilityZone: aws.String(d.Get("availability_zone").(string)),
+		AvailabilityZone: aws.String(d.Get(names.AttrAvailabilityZone).(string)),
 		BlueprintId:      aws.String(d.Get("blueprint_id").(string)),
 		BundleId:         aws.String(d.Get("bundle_id").(string)),
 		InstanceNames:    []string{iName},
@@ -194,7 +194,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		in.UserData = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("ip_address_type"); ok {
+	if v, ok := d.GetOk(names.AttrIPAddressType); ok {
 		in.IpAddressType = types.IpAddressType(v.(string))
 	}
 
@@ -252,21 +252,21 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.Set("add_on", flattenAddOns(out.AddOns))
-	d.Set("availability_zone", out.Location.AvailabilityZone)
+	d.Set(names.AttrAvailabilityZone, out.Location.AvailabilityZone)
 	d.Set("blueprint_id", out.BlueprintId)
 	d.Set("bundle_id", out.BundleId)
 	d.Set("key_pair_name", out.SshKeyName)
-	d.Set("name", out.Name)
+	d.Set(names.AttrName, out.Name)
 
 	// additional attributes
-	d.Set("arn", out.Arn)
-	d.Set("username", out.Username)
-	d.Set("created_at", out.CreatedAt.Format(time.RFC3339))
+	d.Set(names.AttrARN, out.Arn)
+	d.Set(names.AttrUsername, out.Username)
+	d.Set(names.AttrCreatedAt, out.CreatedAt.Format(time.RFC3339))
 	d.Set("cpu_count", out.Hardware.CpuCount)
 	d.Set("ram_size", out.Hardware.RamSizeInGb)
 
 	d.Set("ipv6_addresses", out.Ipv6Addresses)
-	d.Set("ip_address_type", out.IpAddressType)
+	d.Set(names.AttrIPAddressType, out.IpAddressType)
 	d.Set("is_static_ip", out.IsStaticIp)
 	d.Set("private_ip_address", out.PrivateIpAddress)
 	d.Set("public_ip_address", out.PublicIpAddress)
@@ -307,11 +307,11 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
-	if d.HasChange("ip_address_type") {
+	if d.HasChange(names.AttrIPAddressType) {
 		out, err := conn.SetIpAddressType(ctx, &lightsail.SetIpAddressTypeInput{
 			ResourceName:  aws.String(d.Id()),
 			ResourceType:  types.ResourceTypeInstance,
-			IpAddressType: types.IpAddressType(d.Get("ip_address_type").(string)),
+			IpAddressType: types.IpAddressType(d.Get(names.AttrIPAddressType).(string)),
 		})
 
 		if err != nil {
@@ -345,7 +345,7 @@ func expandAddOnRequest(addOnListRaw []interface{}) *types.AddOnRequest {
 
 	for _, addOnRaw := range addOnListRaw {
 		addOnMap := addOnRaw.(map[string]interface{})
-		addOnRequest.AddOnType = types.AddOnType(addOnMap["type"].(string))
+		addOnRequest.AddOnType = types.AddOnType(addOnMap[names.AttrType].(string))
 		addOnRequest.AutoSnapshotAddOnRequest = &types.AutoSnapshotAddOnRequest{
 			SnapshotTimeOfDay: aws.String(addOnMap["snapshot_time"].(string)),
 		}
@@ -362,7 +362,7 @@ func expandAddOnEnabled(addOnListRaw []interface{}) bool {
 	var enabled bool
 	for _, addOnRaw := range addOnListRaw {
 		addOnMap := addOnRaw.(map[string]interface{})
-		enabled = addOnMap["status"].(string) == "Enabled"
+		enabled = addOnMap[names.AttrStatus].(string) == "Enabled"
 	}
 
 	return enabled
@@ -373,9 +373,9 @@ func flattenAddOns(addOns []types.AddOn) []interface{} {
 
 	for _, addOn := range addOns {
 		rawAddOn := map[string]interface{}{
-			"type":          aws.ToString(addOn.Name),
-			"snapshot_time": aws.ToString(addOn.SnapshotTimeOfDay),
-			"status":        aws.ToString(addOn.Status),
+			names.AttrType:   aws.ToString(addOn.Name),
+			"snapshot_time":  aws.ToString(addOn.SnapshotTimeOfDay),
+			names.AttrStatus: aws.ToString(addOn.Status),
 		}
 		rawAddOns = append(rawAddOns, rawAddOn)
 	}

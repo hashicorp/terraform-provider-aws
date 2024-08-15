@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func lineChartVisualSchema() *schema.Schema {
@@ -22,8 +23,8 @@ func lineChartVisualSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"visual_id": idSchema(),
-				"actions":   visualCustomActionsSchema(customActionsMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
+				"visual_id":       idSchema(),
+				names.AttrActions: visualCustomActionsSchema(customActionsMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
 				"chart_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartConfiguration.html
 					Type:     schema.TypeList,
 					Optional: true,
@@ -63,7 +64,7 @@ func lineChartVisualSchema() *schema.Schema {
 													"category":        dimensionFieldSchema(dimensionsFieldMaxItems200), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
 													"colors":          dimensionFieldSchema(dimensionsFieldMaxItems200), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
 													"small_multiples": dimensionFieldSchema(1),                          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
-													"values":          measureFieldSchema(measureFieldsMaxItems200),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
+													names.AttrValues:  measureFieldSchema(measureFieldsMaxItems200),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
 												},
 											},
 										},
@@ -114,7 +115,7 @@ func lineChartVisualSchema() *schema.Schema {
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
 																"date": stringSchema(true, verify.ValidUTCTimestamp),
-																"value": {
+																names.AttrValue: {
 																	Type:     schema.TypeFloat,
 																	Required: true,
 																},
@@ -130,7 +131,7 @@ func lineChartVisualSchema() *schema.Schema {
 															Schema: map[string]*schema.Schema{
 																"end_date":   stringSchema(true, verify.ValidUTCTimestamp),
 																"start_date": stringSchema(true, verify.ValidUTCTimestamp),
-																"value": {
+																names.AttrValue: {
 																	Type:     schema.TypeFloat,
 																	Required: true,
 																},
@@ -271,7 +272,7 @@ func lineChartVisualSchema() *schema.Schema {
 								},
 							},
 							"tooltip":                tooltipOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TooltipOptions.html
-							"type":                   stringOptionalComputedSchema(validation.StringInSlice(quicksight.LineChartType_Values(), false)),
+							names.AttrType:           stringOptionalComputedSchema(validation.StringInSlice(quicksight.LineChartType_Values(), false)),
 							"visual_palette":         visualPaletteSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualPalette.html
 							"x_axis_display_options": axisDisplayOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AxisDisplayOptions.html
 							"x_axis_label_options":   chartAxisLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
@@ -341,7 +342,7 @@ func expandLineChartVisual(tfList []interface{}) *quicksight.LineChartVisual {
 	if v, ok := tfMap["visual_id"].(string); ok && v != "" {
 		visual.VisualId = aws.String(v)
 	}
-	if v, ok := tfMap["actions"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrActions].([]interface{}); ok && len(v) > 0 {
 		visual.Actions = expandVisualCustomActions(v)
 	}
 	if v, ok := tfMap["chart_configuration"].([]interface{}); ok && len(v) > 0 {
@@ -372,7 +373,7 @@ func expandLineChartConfiguration(tfList []interface{}) *quicksight.LineChartCon
 
 	config := &quicksight.LineChartConfiguration{}
 
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		config.Type = aws.String(v)
 	}
 	if v, ok := tfMap["contribution_analysis_defaults"].([]interface{}); ok && len(v) > 0 {
@@ -473,7 +474,7 @@ func expandLineChartAggregatedFieldWells(tfList []interface{}) *quicksight.LineC
 	if v, ok := tfMap["small_multiples"].([]interface{}); ok && len(v) > 0 {
 		config.SmallMultiples = expandDimensionFields(v)
 	}
-	if v, ok := tfMap["values"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrValues].([]interface{}); ok && len(v) > 0 {
 		config.Values = expandMeasureFields(v)
 	}
 
@@ -704,7 +705,7 @@ func expandWhatIfPointScenario(tfList []interface{}) *quicksight.WhatIfPointScen
 		scenario.Date = aws.Time(t)
 	}
 
-	if v, ok := tfMap["value"].(float64); ok {
+	if v, ok := tfMap[names.AttrValue].(float64); ok {
 		scenario.Value = aws.Float64(v)
 	}
 
@@ -731,7 +732,7 @@ func expandWhatIfRangeScenario(tfList []interface{}) *quicksight.WhatIfRangeScen
 		t, _ := time.Parse(time.RFC3339, v) // Format validated with validateFunc
 		scenario.StartDate = aws.Time(t)
 	}
-	if v, ok := tfMap["value"].(float64); ok {
+	if v, ok := tfMap[names.AttrValue].(float64); ok {
 		scenario.Value = aws.Float64(v)
 	}
 
@@ -922,7 +923,7 @@ func flattenLineChartVisual(apiObject *quicksight.LineChartVisual) []interface{}
 		"visual_id": aws.StringValue(apiObject.VisualId),
 	}
 	if apiObject.Actions != nil {
-		tfMap["actions"] = flattenVisualCustomAction(apiObject.Actions)
+		tfMap[names.AttrActions] = flattenVisualCustomAction(apiObject.Actions)
 	}
 	if apiObject.ChartConfiguration != nil {
 		tfMap["chart_configuration"] = flattenLineChartConfiguration(apiObject.ChartConfiguration)
@@ -992,7 +993,7 @@ func flattenLineChartConfiguration(apiObject *quicksight.LineChartConfiguration)
 		tfMap["tooltip"] = flattenTooltipOptions(apiObject.Tooltip)
 	}
 	if apiObject.Type != nil {
-		tfMap["type"] = aws.StringValue(apiObject.Type)
+		tfMap[names.AttrType] = aws.StringValue(apiObject.Type)
 	}
 	if apiObject.VisualPalette != nil {
 		tfMap["visual_palette"] = flattenVisualPalette(apiObject.VisualPalette)
@@ -1099,7 +1100,7 @@ func flattenLineChartAggregatedFieldWells(apiObject *quicksight.LineChartAggrega
 		tfMap["small_multiples"] = flattenDimensionFields(apiObject.SmallMultiples)
 	}
 	if apiObject.Values != nil {
-		tfMap["values"] = flattenMeasureFields(apiObject.Values)
+		tfMap[names.AttrValues] = flattenMeasureFields(apiObject.Values)
 	}
 
 	return []interface{}{tfMap}
@@ -1184,7 +1185,7 @@ func flattenWhatIfPointScenario(apiObject *quicksight.WhatIfPointScenario) []int
 		tfMap["date"] = aws.TimeValue(apiObject.Date).Format(time.RFC3339)
 	}
 	if apiObject.Value != nil {
-		tfMap["value"] = aws.Float64Value(apiObject.Value)
+		tfMap[names.AttrValue] = aws.Float64Value(apiObject.Value)
 	}
 
 	return []interface{}{tfMap}
@@ -1203,7 +1204,7 @@ func flattenWhatIfRangeScenario(apiObject *quicksight.WhatIfRangeScenario) []int
 		tfMap["start_date"] = aws.TimeValue(apiObject.StartDate).Format(time.RFC3339)
 	}
 	if apiObject.Value != nil {
-		tfMap["value"] = aws.Float64Value(apiObject.Value)
+		tfMap[names.AttrValue] = aws.Float64Value(apiObject.Value)
 	}
 
 	return []interface{}{tfMap}
