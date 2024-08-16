@@ -31,7 +31,7 @@ func testAccBotAssociation_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckBotAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBotAssociationConfig_v1Basic(rName, rName2),
+				Config: testAccBotAssociationConfig_basic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBotAssociationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
@@ -63,7 +63,7 @@ func testAccBotAssociation_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckBotAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBotAssociationConfig_v1Basic(rName, rName2),
+				Config: testAccBotAssociationConfig_basic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBotAssociationExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconnect.ResourceBotAssociation(), instanceResourceName),
@@ -160,7 +160,7 @@ resource "aws_connect_instance" "test" {
   `, rName, rName2)
 }
 
-func testAccBotAssociationConfig_v1Basic(rName, rName2 string) string {
+func testAccBotAssociationConfig_basic(rName, rName2 string) string {
 	return acctest.ConfigCompose(testAccBotAssociationConfig_base(rName, rName2), `
 resource "aws_connect_bot_association" "test" {
   instance_id = aws_connect_instance.test.id

@@ -25,8 +25,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceBotAssociation,
+			Factory:  dataSourceBotAssociation,
 			TypeName: "aws_connect_bot_association",
+			Name:     "Bot Association",
 		},
 		{
 			Factory:  DataSourceContactFlow,

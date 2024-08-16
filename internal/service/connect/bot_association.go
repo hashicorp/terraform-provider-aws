@@ -84,6 +84,8 @@ func resourceBotAssociationCreate(ctx context.Context, d *schema.ResourceData, m
 		}
 	}
 
+	id := botAssociationCreateResourceID(instanceID, aws.ToString(input.LexBot.Name), aws.ToString(input.LexBot.LexRegion))
+
 	const (
 		timeout = 5 * time.Minute
 	)
@@ -91,13 +93,11 @@ func resourceBotAssociationCreate(ctx context.Context, d *schema.ResourceData, m
 		return conn.AssociateBot(ctx, input)
 	})
 
-	lbaId := botAssociationCreateResourceID(instanceID, aws.ToString(input.LexBot.Name), aws.ToString(input.LexBot.LexRegion))
-
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Connect Bot Association (%s): %s", lbaId, err)
+		return sdkdiag.AppendErrorf(diags, "creating Connect Bot Association (%s): %s", id, err)
 	}
 
-	d.SetId(lbaId)
+	d.SetId(id)
 
 	return append(diags, resourceBotAssociationRead(ctx, d, meta)...)
 }
