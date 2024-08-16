@@ -86,7 +86,7 @@ func expandEBSOptions(m map[string]interface{}) *awstypes.EBSOptions {
 			var volumeType awstypes.VolumeType
 			if v, ok := m[names.AttrVolumeType]; ok && v.(string) != "" {
 				volumeType = awstypes.VolumeType(v.(string))
-				options.VolumeType = awstypes.VolumeType(volumeType)
+				options.VolumeType = volumeType
 			}
 
 			if v, ok := m[names.AttrIOPS]; ok && v.(int) > 0 && ebsVolumeTypePermitsIopsInput(volumeType) {
@@ -169,7 +169,6 @@ func flattenEBSOptions(o *awstypes.EBSOptions) []map[string]interface{} {
 		}
 
 		m[names.AttrVolumeType] = o.VolumeType
-
 	}
 
 	return []map[string]interface{}{m}
