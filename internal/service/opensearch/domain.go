@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/opensearch"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearch/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
@@ -1463,14 +1462,14 @@ func ebsVolumeTypePermitsThroughputInput(volumeType awstypes.VolumeType) bool {
 
 func domainErrorRetryable(err error) (bool, error) {
 	switch {
-	case tfawserr.ErrMessageContains(err, "InvalidTypeException", "Error setting policy"),
-		tfawserr.ErrMessageContains(err, "ValidationException", "enable a service-linked role to give Amazon ES permissions"),
-		tfawserr.ErrMessageContains(err, "ValidationException", "Domain is still being deleted"),
-		tfawserr.ErrMessageContains(err, "ValidationException", "Amazon OpenSearch Service must be allowed to use the passed role"),
-		tfawserr.ErrMessageContains(err, "ValidationException", "The passed role has not propagated yet"),
-		tfawserr.ErrMessageContains(err, "ValidationException", "Authentication error"),
-		tfawserr.ErrMessageContains(err, "ValidationException", "Unauthorized Operation: OpenSearch Service must be authorised to describe"),
-		tfawserr.ErrMessageContains(err, "ValidationException", "The passed role must authorize Amazon OpenSearch Service to describe"):
+	case errs.IsAErrorMessageContains[*awstypes.InvalidTypeException](err, "Error setting policy"),
+		errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "enable a service-linked role to give Amazon ES permissions"),
+		errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "Domain is still being deleted"),
+		errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "Amazon OpenSearch Service must be allowed to use the passed role"),
+		errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "The passed role has not propagated yet"),
+		errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "Authentication error"),
+		errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "Unauthorized Operation: OpenSearch Service must be authorised to describe"),
+		errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "The passed role must authorize Amazon OpenSearch Service to describe"):
 		return true, err
 
 	default:
