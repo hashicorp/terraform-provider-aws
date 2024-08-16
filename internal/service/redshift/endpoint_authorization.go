@@ -190,10 +190,11 @@ func resourceEndpointAuthorizationDelete(ctx context.Context, d *schema.Resource
 
 	_, err = conn.RevokeEndpointAccess(ctx, input)
 
+	if errs.IsA[*awstypes.EndpointAuthorizationNotFoundFault](err) || errs.IsA[*awstypes.ClusterNotFoundFault](err) {
+		return diags
+	}
+
 	if err != nil {
-		if errs.IsA[*awstypes.EndpointAuthorizationNotFoundFault](err) {
-			return diags
-		}
 		return sdkdiag.AppendErrorf(diags, "deleting Redshift Endpoint Authorization (%s): %s", d.Id(), err)
 	}
 
