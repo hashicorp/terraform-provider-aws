@@ -480,8 +480,8 @@ github.com/aws/aws-sdk-go-v2/service/storagegateway v1.31.4 h1:1jVRBgclr7cpeLiIs
 github.com/aws/aws-sdk-go-v2/service/storagegateway v1.31.4/go.mod h1:WmqcvGd10eSVYIjcQYmBmk/tcIoCaxGtUHA1J1hSZvQ=
 github.com/aws/aws-sdk-go-v2/service/sts v1.30.4 h1:iAckBT2OeEK/kBDyN/jDtpEExhjeeA/Im2q4X0rJZT8=
 github.com/aws/aws-sdk-go-v2/service/sts v1.30.4/go.mod h1:vmSqFK+BVIwVpDAGZB3CoCXHzurt4qBE8lf+I/kRTh0=
-github.com/aws/aws-sdk-go-v2/service/swf v1.25.3 h1:7zYsHA9ORjiCHYzTJf0g+gwo3mPpn2XbMlWQreiXWdM=
-github.com/aws/aws-sdk-go-v2/service/swf v1.25.3/go.mod h1:FIwuqwcEguy+ToyQzMwpMAXc9Kxh5QwH3nlXMeHdHnA=
+github.com/aws/aws-sdk-go-v2/service/swf v1.25.4 h1:TZ8i30MwDZybhMTTtSR6MfDRmq6IC1g0Yd+uYIu+U+M=
+github.com/aws/aws-sdk-go-v2/service/swf v1.25.4/go.mod h1:friMlcMGTLFKOYtghIFILFGt/qXHugU3LVyb+ZZoUto=
 github.com/aws/aws-sdk-go-v2/service/synthetics v1.26.3 h1:JPgfM6lEqJ3O3kYLYWxYaZEL4pE4binxBWYzXxFADBE=
 github.com/aws/aws-sdk-go-v2/service/synthetics v1.26.3/go.mod h1:iVEoUBC/J06ZwJujK/pa57Gm+G9OOfYxynf2O2hWtWc=
 github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.2.3 h1:Qbimk+9ZyMxjyunIkdvaDeA/LLbeSV0NqurwC2D/gKg=
