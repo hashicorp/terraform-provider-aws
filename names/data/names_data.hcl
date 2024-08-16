@@ -7389,7 +7389,7 @@ service "redshift" {
 
   sdk {
     id             = "Redshift"
-    client_version = [1, 2]
+    client_version = [2]
   }
 
   names {
