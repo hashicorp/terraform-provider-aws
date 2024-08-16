@@ -191,6 +191,87 @@ resource "aws_batch_job_definition" "test" {
 }
 ```
 
+### Job definition of type container using `ecs_properties`
+
+```terraform
+resource "aws_batch_job_definition" "test" {
+  name = "tf_test_batch_job_definition"
+  type = "container"
+
+  platform_capabilities = ["FARGATE"]
+
+  ecs_properties = jsonencode({
+    taskProperties = [
+      {
+        executionRoleArn = aws_iam_role.ecs_task_execution_role.arn
+        containers = [
+          {
+            image   = "public.ecr.aws/amazonlinux/amazonlinux:1"
+            command = ["sleep", "60"]
+            dependsOn = [
+              {
+                containerName = "container_b"
+                condition     = "COMPLETE"
+              }
+            ]
+            secrets = [
+              {
+                name      = "TEST"
+                valueFrom = "DUMMY"
+              }
+            ]
+            environment = [
+              {
+                name  = "test"
+                value = "Environment Variable"
+              }
+            ]
+            essential = true
+            logConfiguration = {
+              logDriver = "awslogs"
+              options = {
+                "awslogs-group"         = "tf_test_batch_job"
+                "awslogs-region"        = "us-west-2"
+                "awslogs-stream-prefix" = "ecs"
+              }
+            }
+            name                   = "container_a"
+            privileged             = false
+            readonlyRootFilesystem = false
+            resourceRequirements = [
+              {
+                value = "1.0"
+                type  = "VCPU"
+              },
+              {
+                value = "2048"
+                type  = "MEMORY"
+              }
+            ]
+          },
+          {
+            image     = "public.ecr.aws/amazonlinux/amazonlinux:1"
+            command   = ["sleep", "360"]
+            name      = "container_b"
+            essential = false
+            resourceRequirements = [
+              {
+                value = "1.0"
+                type  = "VCPU"
+              },
+              {
+                value = "2048"
+                type  = "MEMORY"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  })
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
