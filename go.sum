@@ -316,8 +316,8 @@ github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.25.4 h1:tjkbOT23BfsZTHn96JO
 github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.25.4/go.mod h1:cfZaiL9W37cK78XUMWmZB/Gaq54fRC9bqYsadOyY0VY=
 github.com/aws/aws-sdk-go-v2/service/kms v1.35.4 h1:mG1MH6yPwT5gNEeBrhig3FHc4mK0QaZOXsmQUbphP6Y=
 github.com/aws/aws-sdk-go-v2/service/kms v1.35.4/go.mod h1:A5CS0VRmxxj2YKYLCY08l/Zzbd01m6JZn0WzxgT1OCA=
-github.com/aws/aws-sdk-go-v2/service/lakeformation v1.35.3 h1:Rfl7JjXVdriUprd8TTlbgcTyPU/Pl+v/O/nMD9HYpgA=
-github.com/aws/aws-sdk-go-v2/service/lakeformation v1.35.3/go.mod h1:cyogDr92z2UF8fBoRN/+/gKuVTrxBD10bo6PVn3tDeQ=
+github.com/aws/aws-sdk-go-v2/service/lakeformation v1.35.4 h1:KIYVcbLdEVB8L8NYG3xvSOqSnCRCORiYDMrI0cHj/T0=
+github.com/aws/aws-sdk-go-v2/service/lakeformation v1.35.4/go.mod h1:rc53HT3ic2CMOoxHrew0RLSTlGG69MbGTlhDV/zEvtc=
 github.com/aws/aws-sdk-go-v2/service/lambda v1.56.3 h1:r/y4nQOln25cbjrD8Wmzhhvnvr2ObPjgcPvPdoU9yHs=
 github.com/aws/aws-sdk-go-v2/service/lambda v1.56.3/go.mod h1:/4Vaddp+wJc1AA8ViAqwWKAcYykPV+ZplhmLQuq3RbQ=
 github.com/aws/aws-sdk-go-v2/service/launchwizard v1.6.3 h1:HlZn+zJoCEFuUvKLGbGXVIwXp3XA1xvLf/udp7ABDvk=
