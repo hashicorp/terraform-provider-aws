@@ -383,6 +383,9 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 }
 
 func {{ template "testname" . }}_tags_null(t *testing.T) {
+{{- if .SkipNullTags }}
+	t.Skip("Resource {{ .Name }} does not support null tags")
+{{ end }}
 	{{- template "Init" . }}
 
 	resource.{{ if .Serialize }}Test{{ else }}ParallelTest{{ end }}(t, resource.TestCase{
@@ -1903,6 +1906,9 @@ func {{ template "testname" . }}_tags_DefaultTags_emptyProviderOnlyTag(t *testin
 }
 
 func {{ template "testname" . }}_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
+{{- if .SkipNullTags }}
+	t.Skip("Resource {{ .Name }} does not support null tags")
+{{ end }}
 	{{- template "Init" . }}
 
 	resource.{{ if .Serialize }}Test{{ else }}ParallelTest{{ end }}(t, resource.TestCase{
@@ -1988,6 +1994,9 @@ func {{ template "testname" . }}_tags_DefaultTags_nullOverlappingResourceTag(t *
 }
 
 func {{ template "testname" . }}_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
+{{- if .SkipNullTags }}
+	t.Skip("Resource {{ .Name }} does not support null tags")
+{{ end }}
 	{{- template "Init" . }}
 
 	resource.{{ if .Serialize }}Test{{ else }}ParallelTest{{ end }}(t, resource.TestCase{
