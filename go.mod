@@ -38,7 +38,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/backup v1.36.4
 	github.com/aws/aws-sdk-go-v2/service/batch v1.43.1
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.5.4
-	github.com/aws/aws-sdk-go-v2/service/bedrock v1.13.0
+	github.com/aws/aws-sdk-go-v2/service/bedrock v1.13.1
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.16.0
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.25.3
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.4.3
