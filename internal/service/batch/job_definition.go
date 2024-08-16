@@ -634,9 +634,9 @@ func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, me
 				return sdkdiag.AppendFromErr(diags, err)
 			}
 
-			for _, taskProp := range props.TaskProperties {
-				for _, c := range taskProp.Containers {
-					diags = append(diags, removeEmptyEnvironmentVariables(c.Environment, cty.GetAttrPath("ecs_properties"))...)
+			for _, taskProps := range props.TaskProperties {
+				for _, container := range taskProps.Containers {
+					diags = append(diags, removeEmptyEnvironmentVariables(container.Environment, cty.GetAttrPath("ecs_properties"))...)
 				}
 			}
 			input.EcsProperties = props
@@ -803,9 +803,9 @@ func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, me
 					return sdkdiag.AppendFromErr(diags, err)
 				}
 
-				for _, taskProp := range props.TaskProperties {
-					for _, c := range taskProp.Containers {
-						diags = append(diags, removeEmptyEnvironmentVariables(c.Environment, cty.GetAttrPath("ecs_properties"))...)
+				for _, taskProps := range props.TaskProperties {
+					for _, container := range taskProps.Containers {
+						diags = append(diags, removeEmptyEnvironmentVariables(container.Environment, cty.GetAttrPath("ecs_properties"))...)
 					}
 				}
 				input.EcsProperties = props
