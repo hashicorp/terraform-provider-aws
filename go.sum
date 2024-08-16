@@ -376,8 +376,8 @@ github.com/aws/aws-sdk-go-v2/service/pipes v1.14.4 h1:2fwqaGPD7PKUYKLqeoyEiqYykZ
 github.com/aws/aws-sdk-go-v2/service/pipes v1.14.4/go.mod h1:IcjocBWL1l0Z1RiLycZYvSGSSbFiZlOxn/ZWt8Pin9E=
 github.com/aws/aws-sdk-go-v2/service/polly v1.42.4 h1:aFD49SdTdSj5Mqijyw9g3pkX8BlB4uY9PUQutouOZCA=
 github.com/aws/aws-sdk-go-v2/service/polly v1.42.4/go.mod h1:EBQG16GyTvSu5WRp7XF86TgUGZMxEemXRodXxoKwzhU=
-github.com/aws/aws-sdk-go-v2/service/pricing v1.30.3 h1:CO5rn/wveWDphdllj+E6fdfX26XhmBj6zbntQbwajzE=
-github.com/aws/aws-sdk-go-v2/service/pricing v1.30.3/go.mod h1:JnnBNRgok4OQBoHCzpS37BgWNQkbY73q97HZMCDgvho=
+github.com/aws/aws-sdk-go-v2/service/pricing v1.30.4 h1:FTLZaannrPDlvD4/ZxL2fwUWh3uGSgVosJ58cCQ07fE=
+github.com/aws/aws-sdk-go-v2/service/pricing v1.30.4/go.mod h1:jpELsHJrG2Gy/Pc0FHd1s4PDQ7DdsyVLJXpjZz9F8y4=
 github.com/aws/aws-sdk-go-v2/service/qbusiness v1.10.2 h1:ZEVUuXUj5FERUTzzACAFJ8p/0q3AWTkvnbOOp9nVIXA=
 github.com/aws/aws-sdk-go-v2/service/qbusiness v1.10.2/go.mod h1:+O5t/RLHL/ureGkytxCumU3VQjAaKOQ4PU89+aZC9ow=
 github.com/aws/aws-sdk-go-v2/service/qldb v1.23.3 h1:qrU3Xiv20E8yPTJq7ZDTjVOBuYVbEE9NsucXKP57YiE=

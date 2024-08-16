@@ -173,7 +173,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pinpoint v1.32.4
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.14.4
 	github.com/aws/aws-sdk-go-v2/service/polly v1.42.4
-	github.com/aws/aws-sdk-go-v2/service/pricing v1.30.3
+	github.com/aws/aws-sdk-go-v2/service/pricing v1.30.4
 	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.10.2
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.23.3
 	github.com/aws/aws-sdk-go-v2/service/ram v1.27.3
