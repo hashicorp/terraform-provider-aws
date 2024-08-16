@@ -123,7 +123,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/greengrass v1.25.4
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.29.5
 	github.com/aws/aws-sdk-go-v2/service/guardduty v1.45.4
-	github.com/aws/aws-sdk-go-v2/service/healthlake v1.26.3
+	github.com/aws/aws-sdk-go-v2/service/healthlake v1.26.4
 	github.com/aws/aws-sdk-go-v2/service/iam v1.34.3
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.25.3
 	github.com/aws/aws-sdk-go-v2/service/inspector v1.23.3
