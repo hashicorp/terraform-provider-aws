@@ -178,7 +178,7 @@ func instanceRoleAssociationParseResourceID(id string) (string, string, error) {
 }
 
 func findDBInstanceRoleByTwoPartKey(ctx context.Context, conn *rds.Client, dbInstanceIdentifier, roleARN string) (*types.DBInstanceRole, error) {
-	dbInstance, err := findDBInstanceByIDSDKv2(ctx, conn, dbInstanceIdentifier)
+	dbInstance, err := findDBInstanceByID(ctx, conn, dbInstanceIdentifier)
 
 	if err != nil {
 		return nil, err

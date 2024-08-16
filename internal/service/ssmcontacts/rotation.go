@@ -113,7 +113,7 @@ func (r *resourceRotation) Schema(ctx context.Context, request resource.SchemaRe
 								listplanmodifier.UseStateForUnknown(),
 							},
 							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
+								Attributes: map[string]schema.Attribute{ // nosemgrep:ci.semgrep.framework.map_block_key-meaningful-names
 									"map_block_key": schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.DayOfWeek](),
 										Required:   true,

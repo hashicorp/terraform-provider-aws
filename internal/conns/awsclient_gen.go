@@ -133,11 +133,13 @@ import (
 	kinesis_sdkv2 "github.com/aws/aws-sdk-go-v2/service/kinesis"
 	kinesisanalytics_sdkv2 "github.com/aws/aws-sdk-go-v2/service/kinesisanalytics"
 	kinesisanalyticsv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2"
+	kinesisvideo_sdkv2 "github.com/aws/aws-sdk-go-v2/service/kinesisvideo"
 	kms_sdkv2 "github.com/aws/aws-sdk-go-v2/service/kms"
 	lakeformation_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lakeformation"
 	lambda_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lambda"
 	launchwizard_sdkv2 "github.com/aws/aws-sdk-go-v2/service/launchwizard"
 	lexmodelsv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lexmodelsv2"
+	licensemanager_sdkv2 "github.com/aws/aws-sdk-go-v2/service/licensemanager"
 	lightsail_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lightsail"
 	location_sdkv2 "github.com/aws/aws-sdk-go-v2/service/location"
 	lookoutmetrics_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lookoutmetrics"
@@ -183,10 +185,12 @@ import (
 	route53profiles_sdkv2 "github.com/aws/aws-sdk-go-v2/service/route53profiles"
 	route53recoverycontrolconfig_sdkv2 "github.com/aws/aws-sdk-go-v2/service/route53recoverycontrolconfig"
 	route53recoveryreadiness_sdkv2 "github.com/aws/aws-sdk-go-v2/service/route53recoveryreadiness"
+	route53resolver_sdkv2 "github.com/aws/aws-sdk-go-v2/service/route53resolver"
 	rum_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rum"
 	s3_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3"
 	s3control_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3control"
 	s3outposts_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3outposts"
+	sagemaker_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	scheduler_sdkv2 "github.com/aws/aws-sdk-go-v2/service/scheduler"
 	schemas_sdkv2 "github.com/aws/aws-sdk-go-v2/service/schemas"
 	secretsmanager_sdkv2 "github.com/aws/aws-sdk-go-v2/service/secretsmanager"
@@ -231,9 +235,7 @@ import (
 	elasticsearchservice_sdkv1 "github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	emr_sdkv1 "github.com/aws/aws-sdk-go/service/emr"
 	imagebuilder_sdkv1 "github.com/aws/aws-sdk-go/service/imagebuilder"
-	kinesisvideo_sdkv1 "github.com/aws/aws-sdk-go/service/kinesisvideo"
 	lexmodelbuildingservice_sdkv1 "github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
-	licensemanager_sdkv1 "github.com/aws/aws-sdk-go/service/licensemanager"
 	macie2_sdkv1 "github.com/aws/aws-sdk-go/service/macie2"
 	neptune_sdkv1 "github.com/aws/aws-sdk-go/service/neptune"
 	networkmanager_sdkv1 "github.com/aws/aws-sdk-go/service/networkmanager"
@@ -241,11 +243,6 @@ import (
 	opsworks_sdkv1 "github.com/aws/aws-sdk-go/service/opsworks"
 	outposts_sdkv1 "github.com/aws/aws-sdk-go/service/outposts"
 	quicksight_sdkv1 "github.com/aws/aws-sdk-go/service/quicksight"
-	rds_sdkv1 "github.com/aws/aws-sdk-go/service/rds"
-	redshift_sdkv1 "github.com/aws/aws-sdk-go/service/redshift"
-	redshiftserverless_sdkv1 "github.com/aws/aws-sdk-go/service/redshiftserverless"
-	route53resolver_sdkv1 "github.com/aws/aws-sdk-go/service/route53resolver"
-	sagemaker_sdkv1 "github.com/aws/aws-sdk-go/service/sagemaker"
 	simpledb_sdkv1 "github.com/aws/aws-sdk-go/service/simpledb"
 	worklink_sdkv1 "github.com/aws/aws-sdk-go/service/worklink"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -784,8 +781,8 @@ func (c *AWSClient) KinesisAnalyticsV2Client(ctx context.Context) *kinesisanalyt
 	return errs.Must(client[*kinesisanalyticsv2_sdkv2.Client](ctx, c, names.KinesisAnalyticsV2, make(map[string]any)))
 }
 
-func (c *AWSClient) KinesisVideoConn(ctx context.Context) *kinesisvideo_sdkv1.KinesisVideo {
-	return errs.Must(conn[*kinesisvideo_sdkv1.KinesisVideo](ctx, c, names.KinesisVideo, make(map[string]any)))
+func (c *AWSClient) KinesisVideoClient(ctx context.Context) *kinesisvideo_sdkv2.Client {
+	return errs.Must(client[*kinesisvideo_sdkv2.Client](ctx, c, names.KinesisVideo, make(map[string]any)))
 }
 
 func (c *AWSClient) LakeFormationClient(ctx context.Context) *lakeformation_sdkv2.Client {
@@ -808,8 +805,8 @@ func (c *AWSClient) LexV2ModelsClient(ctx context.Context) *lexmodelsv2_sdkv2.Cl
 	return errs.Must(client[*lexmodelsv2_sdkv2.Client](ctx, c, names.LexV2Models, make(map[string]any)))
 }
 
-func (c *AWSClient) LicenseManagerConn(ctx context.Context) *licensemanager_sdkv1.LicenseManager {
-	return errs.Must(conn[*licensemanager_sdkv1.LicenseManager](ctx, c, names.LicenseManager, make(map[string]any)))
+func (c *AWSClient) LicenseManagerClient(ctx context.Context) *licensemanager_sdkv2.Client {
+	return errs.Must(client[*licensemanager_sdkv2.Client](ctx, c, names.LicenseManager, make(map[string]any)))
 }
 
 func (c *AWSClient) LightsailClient(ctx context.Context) *lightsail_sdkv2.Client {
@@ -964,10 +961,6 @@ func (c *AWSClient) RBinClient(ctx context.Context) *rbin_sdkv2.Client {
 	return errs.Must(client[*rbin_sdkv2.Client](ctx, c, names.RBin, make(map[string]any)))
 }
 
-func (c *AWSClient) RDSConn(ctx context.Context) *rds_sdkv1.RDS {
-	return errs.Must(conn[*rds_sdkv1.RDS](ctx, c, names.RDS, make(map[string]any)))
-}
-
 func (c *AWSClient) RDSClient(ctx context.Context) *rds_sdkv2.Client {
 	return errs.Must(client[*rds_sdkv2.Client](ctx, c, names.RDS, make(map[string]any)))
 }
@@ -976,20 +969,12 @@ func (c *AWSClient) RUMClient(ctx context.Context) *rum_sdkv2.Client {
 	return errs.Must(client[*rum_sdkv2.Client](ctx, c, names.RUM, make(map[string]any)))
 }
 
-func (c *AWSClient) RedshiftConn(ctx context.Context) *redshift_sdkv1.Redshift {
-	return errs.Must(conn[*redshift_sdkv1.Redshift](ctx, c, names.Redshift, make(map[string]any)))
-}
-
 func (c *AWSClient) RedshiftClient(ctx context.Context) *redshift_sdkv2.Client {
 	return errs.Must(client[*redshift_sdkv2.Client](ctx, c, names.Redshift, make(map[string]any)))
 }
 
 func (c *AWSClient) RedshiftDataClient(ctx context.Context) *redshiftdata_sdkv2.Client {
 	return errs.Must(client[*redshiftdata_sdkv2.Client](ctx, c, names.RedshiftData, make(map[string]any)))
-}
-
-func (c *AWSClient) RedshiftServerlessConn(ctx context.Context) *redshiftserverless_sdkv1.RedshiftServerless {
-	return errs.Must(conn[*redshiftserverless_sdkv1.RedshiftServerless](ctx, c, names.RedshiftServerless, make(map[string]any)))
 }
 
 func (c *AWSClient) RedshiftServerlessClient(ctx context.Context) *redshiftserverless_sdkv2.Client {
@@ -1040,8 +1025,8 @@ func (c *AWSClient) Route53RecoveryReadinessClient(ctx context.Context) *route53
 	return errs.Must(client[*route53recoveryreadiness_sdkv2.Client](ctx, c, names.Route53RecoveryReadiness, make(map[string]any)))
 }
 
-func (c *AWSClient) Route53ResolverConn(ctx context.Context) *route53resolver_sdkv1.Route53Resolver {
-	return errs.Must(conn[*route53resolver_sdkv1.Route53Resolver](ctx, c, names.Route53Resolver, make(map[string]any)))
+func (c *AWSClient) Route53ResolverClient(ctx context.Context) *route53resolver_sdkv2.Client {
+	return errs.Must(client[*route53resolver_sdkv2.Client](ctx, c, names.Route53Resolver, make(map[string]any)))
 }
 
 func (c *AWSClient) S3Client(ctx context.Context) *s3_sdkv2.Client {
@@ -1108,8 +1093,8 @@ func (c *AWSClient) SWFClient(ctx context.Context) *swf_sdkv2.Client {
 	return errs.Must(client[*swf_sdkv2.Client](ctx, c, names.SWF, make(map[string]any)))
 }
 
-func (c *AWSClient) SageMakerConn(ctx context.Context) *sagemaker_sdkv1.SageMaker {
-	return errs.Must(conn[*sagemaker_sdkv1.SageMaker](ctx, c, names.SageMaker, make(map[string]any)))
+func (c *AWSClient) SageMakerClient(ctx context.Context) *sagemaker_sdkv2.Client {
+	return errs.Must(client[*sagemaker_sdkv2.Client](ctx, c, names.SageMaker, make(map[string]any)))
 }
 
 func (c *AWSClient) SchedulerClient(ctx context.Context) *scheduler_sdkv2.Client {

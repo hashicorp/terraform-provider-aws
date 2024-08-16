@@ -139,7 +139,7 @@ func resourceReservedInstanceCreate(ctx context.Context, d *schema.ResourceData,
 
 	input := &rds.PurchaseReservedDBInstancesOfferingInput{
 		ReservedDBInstancesOfferingId: aws.String(d.Get("offering_id").(string)),
-		Tags:                          getTagsInV2(ctx),
+		Tags:                          getTagsIn(ctx),
 	}
 
 	if v, ok := d.Get(names.AttrInstanceCount).(int); ok && v > 0 {

@@ -41,8 +41,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:    "Environment Profile",
 		},
 		{
+			Factory: newResourceFormType,
+			Name:    "Form Type",
+		},
+		{
 			Factory: newResourceGlossary,
 			Name:    "Glossary",
+		},
+		{
+			Factory: newResourceGlossaryTerm,
+			Name:    "Glossary Term",
 		},
 		{
 			Factory: newResourceProject,
