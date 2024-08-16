@@ -129,7 +129,7 @@ resource "aws_batch_job_queue" "test" {
   job_state_time_limit_action {
     action           = "CANCEL"
     max_time_seconds = 600
-    reason           = "foobar"
+    reason           = "MISCONFIGURATION:JOB_RESOURCE_REQUIREMENT"
     state            = "RUNNABLE"
   }
 }
