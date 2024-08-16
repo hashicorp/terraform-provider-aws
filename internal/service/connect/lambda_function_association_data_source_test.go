@@ -83,7 +83,7 @@ resource "aws_connect_lambda_function_association" "test" {
 }
 
 func testAccLambdaFunctionAssociationDataSourceConfig_basic(rName string, rName2 string) string {
-	return fmt.Sprintf(testAccLambdaFunctionAssociationDataSourceConfig_base(rName, rName2) + `
+	return acctest.ConfigCompose(testAccLambdaFunctionAssociationDataSourceConfig_base(rName, rName2) + `
 data "aws_connect_lambda_function_association" "test" {
   function_arn = aws_connect_lambda_function_association.test.function_arn
   instance_id  = aws_connect_instance.test.id

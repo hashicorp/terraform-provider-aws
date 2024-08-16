@@ -56,7 +56,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_connect_instance_storage_config",
 		},
 		{
-			Factory:  DataSourceLambdaFunctionAssociation,
+			Factory:  dataSourceLambdaFunctionAssociation,
 			TypeName: "aws_connect_lambda_function_association",
 		},
 		{
@@ -138,8 +138,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_connect_instance_storage_config",
 		},
 		{
-			Factory:  ResourceLambdaFunctionAssociation,
+			Factory:  resourceLambdaFunctionAssociation,
 			TypeName: "aws_connect_lambda_function_association",
+			Name:     "Lambda Function Association",
 		},
 		{
 			Factory:  ResourcePhoneNumber,

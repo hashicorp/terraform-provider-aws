@@ -217,36 +217,6 @@ func resourceHoursOfOperationUpdate(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourceHoursOfOperationRead(ctx, d, meta)...)
 }
 
-func findHoursOfOperationByTwoPartKey(ctx context.Context, conn *connect.Client, instanceID, hoursOfOperationID string) (*awstypes.HoursOfOperation, error) {
-	input := &connect.DescribeHoursOfOperationInput{
-		HoursOfOperationId: aws.String(hoursOfOperationID),
-		InstanceId:         aws.String(instanceID),
-	}
-
-	return findHoursOfOperation(ctx, conn, input)
-}
-
-func findHoursOfOperation(ctx context.Context, conn *connect.Client, input *connect.DescribeHoursOfOperationInput) (*awstypes.HoursOfOperation, error) {
-	output, err := conn.DescribeHoursOfOperation(ctx, input)
-
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.HoursOfOperation == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.HoursOfOperation, nil
-}
-
 func resourceHoursOfOperationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
@@ -286,6 +256,36 @@ func hoursOfOperationParseResourceID(id string) (string, string, error) {
 	}
 
 	return parts[0], parts[1], nil
+}
+
+func findHoursOfOperationByTwoPartKey(ctx context.Context, conn *connect.Client, instanceID, hoursOfOperationID string) (*awstypes.HoursOfOperation, error) {
+	input := &connect.DescribeHoursOfOperationInput{
+		HoursOfOperationId: aws.String(hoursOfOperationID),
+		InstanceId:         aws.String(instanceID),
+	}
+
+	return findHoursOfOperation(ctx, conn, input)
+}
+
+func findHoursOfOperation(ctx context.Context, conn *connect.Client, input *connect.DescribeHoursOfOperationInput) (*awstypes.HoursOfOperation, error) {
+	output, err := conn.DescribeHoursOfOperation(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.HoursOfOperation == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.HoursOfOperation, nil
 }
 
 func expandHoursOfOperationConfigs(tfList []interface{}) []awstypes.HoursOfOperationConfig {

@@ -5,13 +5,15 @@ package connect
 
 // Exports for use in tests only.
 var (
-	ResourceBotAssociation    = resourceBotAssociation
-	ResourceContactFlow       = resourceContactFlow
-	ResourceContactFlowModule = resourceContactFlowModule
-	ResourceHoursOfOperation  = resourceHoursOfOperation
+	ResourceBotAssociation            = resourceBotAssociation
+	ResourceContactFlow               = resourceContactFlow
+	ResourceContactFlowModule         = resourceContactFlowModule
+	ResourceHoursOfOperation          = resourceHoursOfOperation
+	ResourceLambdaFunctionAssociation = resourceLambdaFunctionAssociation
 
-	FindBotAssociationByThreePartKey  = findBotAssociationByThreePartKey
-	FindContactFlowByTwoPartKey       = findContactFlowByTwoPartKey
-	FindContactFlowModuleByTwoPartKey = findContactFlowModuleByTwoPartKey
-	FindHoursOfOperationByTwoPartKey  = findHoursOfOperationByTwoPartKey
+	FindBotAssociationByThreePartKey          = findBotAssociationByThreePartKey
+	FindContactFlowByTwoPartKey               = findContactFlowByTwoPartKey
+	FindContactFlowModuleByTwoPartKey         = findContactFlowModuleByTwoPartKey
+	FindHoursOfOperationByTwoPartKey          = findHoursOfOperationByTwoPartKey
+	FindLambdaFunctionAssociationByTwoPartKey = findLambdaFunctionAssociationByTwoPartKey
 )
