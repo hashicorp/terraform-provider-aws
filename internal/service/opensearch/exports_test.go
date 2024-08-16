@@ -5,7 +5,6 @@ package opensearch
 
 // Exports for use in tests only.
 var (
-	ResourceDomain                    = resourceDomain
 	ResourceDomainSAMLOptions         = resourceDomainSAMLOptions
 	ResourceInboundConnectionAccepter = resourceInboundConnectionAccepter
 	ResourceOutboundConnection        = resourceOutboundConnection
