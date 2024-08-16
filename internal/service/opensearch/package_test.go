@@ -82,7 +82,7 @@ func testAccCheckPackageExists(ctx context.Context, n string) resource.TestCheck
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchClient(ctx)
 
 		_, err := tfopensearch.FindPackageByID(ctx, conn, rs.Primary.ID)
 
@@ -97,7 +97,7 @@ func testAccCheckPackageDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchClient(ctx)
 
 			_, err := tfopensearch.FindPackageByID(ctx, conn, rs.Primary.ID)
 
