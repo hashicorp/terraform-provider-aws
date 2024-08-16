@@ -162,7 +162,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mq v1.25.4
 	github.com/aws/aws-sdk-go-v2/service/mwaa v1.29.5
 	github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.11.1
-	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.41.0
+	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.41.1
 	github.com/aws/aws-sdk-go-v2/service/networkmonitor v1.5.3
 	github.com/aws/aws-sdk-go-v2/service/oam v1.13.4
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.13.3
