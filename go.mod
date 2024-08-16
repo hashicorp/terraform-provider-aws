@@ -237,7 +237,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.51.5
 	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.32.4
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.45.1
-	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.21.3
+	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.21.4
 	github.com/aws/aws-sdk-go-v2/service/xray v1.27.3
 	github.com/aws/smithy-go v1.20.4
 	github.com/beevik/etree v1.4.1
