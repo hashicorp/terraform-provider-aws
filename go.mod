@@ -29,7 +29,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/applicationsignals v1.3.1
 	github.com/aws/aws-sdk-go-v2/service/appmesh v1.27.4
 	github.com/aws/aws-sdk-go-v2/service/apprunner v1.30.4
-	github.com/aws/aws-sdk-go-v2/service/appstream v1.38.0
+	github.com/aws/aws-sdk-go-v2/service/appstream v1.38.1
 	github.com/aws/aws-sdk-go-v2/service/appsync v1.35.0
 	github.com/aws/aws-sdk-go-v2/service/athena v1.44.4
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.35.3
