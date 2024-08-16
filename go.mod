@@ -119,7 +119,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.24.4
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.27.1
 	github.com/aws/aws-sdk-go-v2/service/glue v1.94.1
-	github.com/aws/aws-sdk-go-v2/service/grafana v1.24.3
+	github.com/aws/aws-sdk-go-v2/service/grafana v1.24.4
 	github.com/aws/aws-sdk-go-v2/service/greengrass v1.25.3
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.29.4
 	github.com/aws/aws-sdk-go-v2/service/guardduty v1.45.3
