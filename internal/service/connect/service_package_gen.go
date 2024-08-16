@@ -110,7 +110,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceContactFlowModule,
+			Factory:  resourceContactFlowModule,
 			TypeName: "aws_connect_contact_flow_module",
 			Name:     "Contact Flow Module",
 			Tags: &types.ServicePackageResourceTags{

@@ -248,7 +248,7 @@ func resourceContactFlowDelete(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	log.Printf("[DEBUG] Deleting Connect Contact Flow : %s", contactFlowID)
+	log.Printf("[DEBUG] Deleting Connect Contact Flow: %s", d.Id())
 	_, err = conn.DeleteContactFlow(ctx, &connect.DeleteContactFlowInput{
 		ContactFlowId: aws.String(contactFlowID),
 		InstanceId:    aws.String(instanceID),
