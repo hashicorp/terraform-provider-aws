@@ -134,7 +134,7 @@ func resourcePartnerDelete(ctx context.Context, d *schema.ResourceData, meta int
 		PartnerName:       aws.String(partnerName),
 	})
 
-	if errs.IsA[*awstypes.PartnerNotFoundFault](err) {
+	if errs.IsA[*awstypes.PartnerNotFoundFault](err) || errs.IsA[*awstypes.ClusterNotFoundFault](err) {
 		return diags
 	}
 
