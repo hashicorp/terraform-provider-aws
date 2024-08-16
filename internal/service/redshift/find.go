@@ -386,7 +386,7 @@ func findClusterSnapshotByID(ctx context.Context, conn *redshift.Client, id stri
 
 	output, err := conn.DescribeClusterSnapshots(ctx, input)
 
-	if errs.IsA[*awstypes.ClusterNotFoundFault](err) {
+	if errs.IsA[*awstypes.ClusterNotFoundFault](err) || errs.IsA[*awstypes.ClusterSnapshotNotFoundFault](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
