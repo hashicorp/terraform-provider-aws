@@ -36,8 +36,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceContactFlowModule,
+			Factory:  dataSourceContactFlowModule,
 			TypeName: "aws_connect_contact_flow_module",
+			Name:     "Contact Flow Module",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  DataSourceHoursOfOperation,
