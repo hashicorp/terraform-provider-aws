@@ -127,16 +127,16 @@ func dataSourceJobQueueRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "setting compute_environment_order: %s", err)
 	}
 
-	jobStateTimeLimitActions := make([]map[string]interface{}, 0)
-	for _, v := range jobQueue.JobStateTimeLimitActions {
-		jobStateTimeLimitAction := map[string]interface{}{}
-		jobStateTimeLimitAction["action"] = aws.StringValue(v.Action)
-		jobStateTimeLimitAction["max_time_seconds"] = aws.Int64Value(v.MaxTimeSeconds)
-		jobStateTimeLimitAction["reason"] = aws.StringValue(v.Reason)
-		jobStateTimeLimitAction["state"] = aws.StringValue(v.State)
-		jobStateTimeLimitActions = append(jobStateTimeLimitActions, jobStateTimeLimitAction)
+	tfList = make([]interface{}, 0)
+	for _, apiObject := range jobQueue.JobStateTimeLimitActions {
+		tfMap := map[string]interface{}{}
+		tfMap["action"] = apiObject.Action
+		tfMap["max_time_seconds"] = aws.ToInt32(apiObject.MaxTimeSeconds)
+		tfMap["reason"] = aws.ToString(apiObject.Reason)
+		tfMap["state"] = apiObject.State
+		tfList = append(tfList, tfMap)
 	}
-	if err := d.Set("job_state_time_limit_action", jobStateTimeLimitActions); err != nil {
+	if err := d.Set("job_state_time_limit_action", tfList); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting job_state_time_limit_action: %s", err)
 	}
 
