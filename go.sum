@@ -360,8 +360,8 @@ github.com/aws/aws-sdk-go-v2/service/networkmonitor v1.5.4 h1:u/vDkh3lVqFHavOO2u
 github.com/aws/aws-sdk-go-v2/service/networkmonitor v1.5.4/go.mod h1:kLZ+wCSQ04+zCjbymFTlNmlB78Mxi7dORmfbeChB7CY=
 github.com/aws/aws-sdk-go-v2/service/oam v1.13.5 h1:51VYR5C0+/QEUrFURnwIGvT1eyiaKwnfQCoXVMRKtmg=
 github.com/aws/aws-sdk-go-v2/service/oam v1.13.5/go.mod h1:dwn0suVbD6cdXDZQsEr5iYf4dhxDVr5wEAKSiCLSSQ8=
-github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.13.3 h1:xRRPnilDJCDohQ+J1dUH4UvzL6P+KPQ0NwO7cs0odfc=
-github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.13.3/go.mod h1:J9Ybe5zLnJG/PsLrdI80ihIW1MYSHMlQyVtdc1X9irQ=
+github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.13.4 h1:3Y4N61NHpii/6m38masM+VYJgnHhGtktEyJVZcTv0nc=
+github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.13.4/go.mod h1:pQOhum5PBwXCSspA6bT4EZLhpawWF2aHTToUu/5vIBg=
 github.com/aws/aws-sdk-go-v2/service/organizations v1.30.2 h1:+tGF0JH2u4HwneqNFAKFHqENwfpBweKj67+LbwTKpqE=
 github.com/aws/aws-sdk-go-v2/service/organizations v1.30.2/go.mod h1:6wxO8s5wMumyNRsOgOgcIvqvF8rIf8Cj7Khhn/bFI0c=
 github.com/aws/aws-sdk-go-v2/service/osis v1.12.3 h1:T9+bvsT2me+zQx7rUUTgalP7u5lOruoZoH8Xnp1gSPI=
