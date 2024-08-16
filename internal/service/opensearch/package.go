@@ -203,7 +203,7 @@ func findPackages(ctx context.Context, conn *opensearch.Client, input *opensearc
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "Package not found") {
 			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
