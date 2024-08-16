@@ -100,7 +100,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Bot Association",
 		},
 		{
-			Factory:  ResourceContactFlow,
+			Factory:  resourceContactFlow,
 			TypeName: "aws_connect_contact_flow",
 			Name:     "Contact Flow",
 			Tags: &types.ServicePackageResourceTags{

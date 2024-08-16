@@ -161,7 +161,7 @@ func resourceBotAssociationDelete(ctx context.Context, d *schema.ResourceData, m
 
 const botAssociationResourceIDSeparator = ":"
 
-func botAssociationCreateResourceID(instanceID string, botName string, region string) string {
+func botAssociationCreateResourceID(instanceID, botName, region string) string {
 	parts := []string{instanceID, botName, region}
 	id := strings.Join(parts, botAssociationResourceIDSeparator)
 

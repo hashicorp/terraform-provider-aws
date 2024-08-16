@@ -6,6 +6,8 @@ package connect
 // Exports for use in tests only.
 var (
 	ResourceBotAssociation = resourceBotAssociation
+	ResourceContactFlow    = resourceContactFlow
 
 	FindBotAssociationByThreePartKey = findBotAssociationByThreePartKey
+	FindContactFlowByTwoPartKey      = findContactFlowByTwoPartKey
 )
