@@ -478,8 +478,8 @@ type domainResourceModel struct {
 	Name                types.String   `tfsdk:"name"`
 	PortalUrl           types.String   `tfsdk:"portal_url"`
 	SingleSignOn        types.List     `tfsdk:"single_sign_on"`
-	Tags                types.Map      `tfsdk:"tags"`
-	TagsAll             types.Map      `tfsdk:"tags_all"`
+	Tags                tftags.Map     `tfsdk:"tags"`
+	TagsAll             tftags.Map     `tfsdk:"tags_all"`
 	Timeouts            timeouts.Value `tfsdk:"timeouts"`
 }
 
