@@ -122,7 +122,7 @@ func (r *jobQueueResource) Schema(ctx context.Context, request resource.SchemaRe
 				CustomType: fwtypes.NewListNestedObjectTypeOf[jobStateTimeLimitActionModel](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"action": schema.StringAttribute{
+						names.AttrAction: schema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.JobStateTimeLimitActionsAction](),
 							Required:   true,
 						},
@@ -135,7 +135,7 @@ func (r *jobQueueResource) Schema(ctx context.Context, request resource.SchemaRe
 						"reason": schema.StringAttribute{
 							Required: true,
 						},
-						"state": schema.StringAttribute{
+						names.AttrState: schema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.JobStateTimeLimitActionsState](),
 							Required:   true,
 						},

@@ -48,7 +48,7 @@ func dataSourceJobQueue() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"action": {
+						names.AttrAction: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -60,7 +60,7 @@ func dataSourceJobQueue() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"state": {
+						names.AttrState: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -130,10 +130,10 @@ func dataSourceJobQueueRead(ctx context.Context, d *schema.ResourceData, meta in
 	tfList = make([]interface{}, 0)
 	for _, apiObject := range jobQueue.JobStateTimeLimitActions {
 		tfMap := map[string]interface{}{}
-		tfMap["action"] = apiObject.Action
+		tfMap[names.AttrAction] = apiObject.Action
 		tfMap["max_time_seconds"] = aws.ToInt32(apiObject.MaxTimeSeconds)
 		tfMap["reason"] = aws.ToString(apiObject.Reason)
-		tfMap["state"] = apiObject.State
+		tfMap[names.AttrState] = apiObject.State
 		tfList = append(tfList, tfMap)
 	}
 	if err := d.Set("job_state_time_limit_action", tfList); err != nil {

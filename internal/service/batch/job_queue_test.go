@@ -425,7 +425,7 @@ func TestAccBatchJobQueue_jobStateTimeLimitActionsMultiple(t *testing.T) {
 				Config: testAccJobQueueConfig_jobStateTimeLimitAction(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
-					resource.TestCheckResourceAttr(resourceName, "job_state_time_limit_action.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "job_state_time_limit_action.#", acctest.Ct2),
 				),
 			},
 			{
@@ -437,7 +437,7 @@ func TestAccBatchJobQueue_jobStateTimeLimitActionsMultiple(t *testing.T) {
 				Config: testAccJobQueueConfig_jobStateTimeLimitActionUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
-					resource.TestCheckResourceAttr(resourceName, "job_state_time_limit_action.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "job_state_time_limit_action.#", acctest.Ct2),
 				),
 			},
 		},
