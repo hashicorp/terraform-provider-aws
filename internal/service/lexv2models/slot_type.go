@@ -239,7 +239,7 @@ func (r *resourceSlotType) Create(ctx context.Context, req resource.CreateReques
 	}
 
 	in := &lexmodelsv2.CreateSlotTypeInput{
-		SlotTypeName: aws.String(plan.Name.ValueString()),
+		SlotTypeName: plan.Name.ValueStringPointer(),
 	}
 	resp.Diagnostics.Append(flex.Expand(ctx, &plan, in, slotTypeFlexOpt)...)
 	if resp.Diagnostics.HasError() {
@@ -369,10 +369,10 @@ func (r *resourceSlotType) Delete(ctx context.Context, req resource.DeleteReques
 	}
 
 	in := &lexmodelsv2.DeleteSlotTypeInput{
-		BotId:      aws.String(state.BotID.ValueString()),
-		BotVersion: aws.String(state.BotVersion.ValueString()),
-		LocaleId:   aws.String(state.LocaleID.ValueString()),
-		SlotTypeId: aws.String(state.SlotTypeID.ValueString()),
+		BotId:      state.BotID.ValueStringPointer(),
+		BotVersion: state.BotVersion.ValueStringPointer(),
+		LocaleId:   state.LocaleID.ValueStringPointer(),
+		SlotTypeId: state.SlotTypeID.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteSlotType(ctx, in)

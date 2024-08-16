@@ -124,9 +124,9 @@ func (r *resourceVpcEndpoint) Create(ctx context.Context, req resource.CreateReq
 
 	in := &opensearchserverless.CreateVpcEndpointInput{
 		ClientToken: aws.String(id.UniqueId()),
-		Name:        aws.String(plan.Name.ValueString()),
+		Name:        plan.Name.ValueStringPointer(),
 		SubnetIds:   flex.ExpandFrameworkStringValueSet(ctx, plan.SubnetIds),
-		VpcId:       aws.String(plan.VpcId.ValueString()),
+		VpcId:       plan.VpcId.ValueStringPointer(),
 	}
 
 	if !plan.SecurityGroupIds.IsNull() && !plan.SecurityGroupIds.IsUnknown() {
@@ -210,7 +210,7 @@ func (r *resourceVpcEndpoint) Update(ctx context.Context, req resource.UpdateReq
 
 	input := &opensearchserverless.UpdateVpcEndpointInput{
 		ClientToken: aws.String(id.UniqueId()),
-		Id:          aws.String(plan.ID.ValueString()),
+		Id:          plan.ID.ValueStringPointer(),
 	}
 
 	if !plan.SecurityGroupIds.Equal(state.SecurityGroupIds) {
@@ -290,7 +290,7 @@ func (r *resourceVpcEndpoint) Delete(ctx context.Context, req resource.DeleteReq
 
 	_, err := conn.DeleteVpcEndpoint(ctx, &opensearchserverless.DeleteVpcEndpointInput{
 		ClientToken: aws.String(id.UniqueId()),
-		Id:          aws.String(state.ID.ValueString()),
+		Id:          state.ID.ValueStringPointer(),
 	})
 
 	if err != nil {

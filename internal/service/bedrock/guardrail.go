@@ -453,7 +453,7 @@ func (r *resourceGuardrail) Update(ctx context.Context, req resource.UpdateReque
 		!plan.Name.Equal(state.Name) ||
 		!plan.Description.Equal(state.Description) {
 		in := &bedrock.UpdateGuardrailInput{
-			GuardrailIdentifier: aws.String(plan.GuardrailID.ValueString()),
+			GuardrailIdentifier: plan.GuardrailID.ValueStringPointer(),
 		}
 		resp.Diagnostics.Append(fwflex.Expand(ctx, plan, in, flexOpt)...)
 		if resp.Diagnostics.HasError() {
@@ -511,7 +511,7 @@ func (r *resourceGuardrail) Delete(ctx context.Context, req resource.DeleteReque
 	}
 
 	in := &bedrock.DeleteGuardrailInput{
-		GuardrailIdentifier: aws.String(state.GuardrailID.ValueString()),
+		GuardrailIdentifier: state.GuardrailID.ValueStringPointer(),
 	}
 	if _, err := conn.DeleteGuardrail(ctx, in); err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {

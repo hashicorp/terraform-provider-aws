@@ -320,7 +320,7 @@ func (r *phoneNumberResource) Delete(ctx context.Context, request resource.Delet
 	conn := r.Meta().PinpointSMSVoiceV2Client(ctx)
 
 	_, err := conn.ReleasePhoneNumber(ctx, &pinpointsmsvoicev2.ReleasePhoneNumberInput{
-		PhoneNumberId: aws.String(data.PhoneNumberID.ValueString()),
+		PhoneNumberId: data.PhoneNumberID.ValueStringPointer(),
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {

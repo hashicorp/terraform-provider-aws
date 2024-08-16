@@ -435,7 +435,7 @@ func (r *environmentResource) Delete(ctx context.Context, request resource.Delet
 	conn := r.Meta().M2Client(ctx)
 
 	_, err := conn.DeleteEnvironment(ctx, &m2.DeleteEnvironmentInput{
-		EnvironmentId: aws.String(data.ID.ValueString()),
+		EnvironmentId: data.ID.ValueStringPointer(),
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {

@@ -144,7 +144,7 @@ func (r *resourceApplication) Update(ctx context.Context, req resource.UpdateReq
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		in.Application = aws.String(plan.ID.ValueString()) // Set manually, AWS naming is inconsistent
+		in.Application = plan.ID.ValueStringPointer() // Set manually, AWS naming is inconsistent
 
 		out, err := conn.UpdateApplication(ctx, in)
 		if err != nil {
@@ -178,7 +178,7 @@ func (r *resourceApplication) Delete(ctx context.Context, req resource.DeleteReq
 	}
 
 	in := &servicecatalogappregistry.DeleteApplicationInput{
-		Application: aws.String(state.ID.ValueString()),
+		Application: state.ID.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteApplication(ctx, in)
