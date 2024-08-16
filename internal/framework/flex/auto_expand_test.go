@@ -454,24 +454,6 @@ func TestExpand(t *testing.T) {
 				infoConvertingWithPath("FieldURL", reflect.TypeFor[types.String](), "FieldUrl", reflect.TypeFor[*string]()),
 			},
 		},
-		"resource name prefix": {
-			Options: []AutoFlexOptionsFunc{
-				WithFieldNamePrefix("Intent"),
-			},
-			Source: &tfFieldNamePrefix{
-				Name: types.StringValue("Ovodoghen"),
-			},
-			Target: &awsFieldNamePrefix{},
-			WantTarget: &awsFieldNamePrefix{
-				IntentName: aws.String("Ovodoghen"),
-			},
-			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[*tfFieldNamePrefix](), reflect.TypeFor[*awsFieldNamePrefix]()),
-				infoConverting(reflect.TypeFor[tfFieldNamePrefix](), reflect.TypeFor[*awsFieldNamePrefix]()),
-				traceMatchedFields("Name", reflect.TypeFor[tfFieldNamePrefix](), "IntentName", reflect.TypeFor[*awsFieldNamePrefix]()),
-				infoConvertingWithPath("Name", reflect.TypeFor[types.String](), "IntentName", reflect.TypeFor[*string]()),
-			},
-		},
 		"resource name suffix": {
 			Options: []AutoFlexOptionsFunc{WithFieldNameSuffix("Config")},
 			Source: &tfFieldNameSuffix{
@@ -911,6 +893,52 @@ func TestExpandGeneric(t *testing.T) {
 				traceMatchedFieldsWithPath("FieldOuter[0]", "FieldInner", reflect.TypeFor[tfMapOfString](), "FieldOuter", "FieldInner", reflect.TypeFor[*awsMapOfString]()),
 				infoConvertingWithPath("FieldOuter[0].FieldInner", reflect.TypeFor[fwtypes.MapValueOf[types.String]](), "FieldOuter.FieldInner", reflect.TypeFor[map[string]string]()),
 				traceExpandingWithElementsAs("FieldOuter[0].FieldInner", reflect.TypeFor[fwtypes.MapValueOf[types.String]](), 1, "FieldOuter.FieldInner", reflect.TypeFor[map[string]string]()),
+			},
+		},
+	}
+
+	runAutoExpandTestCases(t, testCases)
+}
+
+func TestExpandFieldNamePrefix(t *testing.T) {
+	t.Parallel()
+
+	testCases := autoFlexTestCases{
+		"exact match": {
+			Options: []AutoFlexOptionsFunc{
+				WithFieldNamePrefix("Intent"),
+			},
+			Source: &tfFieldNamePrefix{
+				Name: types.StringValue("Ovodoghen"),
+			},
+			Target: &awsFieldNamePrefix{},
+			WantTarget: &awsFieldNamePrefix{
+				IntentName: aws.String("Ovodoghen"),
+			},
+			expectedLogLines: []map[string]any{
+				infoExpanding(reflect.TypeFor[*tfFieldNamePrefix](), reflect.TypeFor[*awsFieldNamePrefix]()),
+				infoConverting(reflect.TypeFor[tfFieldNamePrefix](), reflect.TypeFor[*awsFieldNamePrefix]()),
+				traceMatchedFields("Name", reflect.TypeFor[tfFieldNamePrefix](), "IntentName", reflect.TypeFor[*awsFieldNamePrefix]()),
+				infoConvertingWithPath("Name", reflect.TypeFor[types.String](), "IntentName", reflect.TypeFor[*string]()),
+			},
+		},
+
+		"case-insensitive": {
+			Options: []AutoFlexOptionsFunc{
+				WithFieldNamePrefix("Client"),
+			},
+			Source: &tfFieldNamePrefixInsensitive{
+				ID: types.StringValue("abc123"),
+			},
+			Target: &awsFieldNamePrefixInsensitive{},
+			WantTarget: &awsFieldNamePrefixInsensitive{
+				ClientId: aws.String("abc123"),
+			},
+			expectedLogLines: []map[string]any{
+				infoExpanding(reflect.TypeFor[*tfFieldNamePrefixInsensitive](), reflect.TypeFor[*awsFieldNamePrefixInsensitive]()),
+				infoConverting(reflect.TypeFor[tfFieldNamePrefixInsensitive](), reflect.TypeFor[*awsFieldNamePrefixInsensitive]()),
+				traceMatchedFields("ID", reflect.TypeFor[tfFieldNamePrefixInsensitive](), "ClientId", reflect.TypeFor[*awsFieldNamePrefixInsensitive]()),
+				infoConvertingWithPath("ID", reflect.TypeFor[types.String](), "ClientId", reflect.TypeFor[*string]()),
 			},
 		},
 	}

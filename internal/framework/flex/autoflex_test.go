@@ -268,6 +268,14 @@ type awsFieldNamePrefix struct {
 	IntentName *string
 }
 
+type tfFieldNamePrefixInsensitive struct {
+	ID types.String `tfsdk:"id"`
+}
+
+type awsFieldNamePrefixInsensitive struct {
+	ClientId *string
+}
+
 // tfFieldNameSuffix has no suffix to test matching on suffix
 type tfFieldNameSuffix struct {
 	Policy types.String `tfsdk:"policy"`
