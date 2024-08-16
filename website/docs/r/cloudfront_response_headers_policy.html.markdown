@@ -79,8 +79,8 @@ resource "aws_cloudfront_response_headers_policy" "example" {
   }
 
   remove_headers_config {
-    items { 
-      header = "Set-Cookie" 
+    items {
+      header = "Set-Cookie"
     }
   }
 
