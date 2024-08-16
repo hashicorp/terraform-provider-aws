@@ -476,8 +476,8 @@ github.com/aws/aws-sdk-go-v2/service/ssoadmin v1.27.5 h1:E1FPa9xEDKEMcKsRrZ/wuon
 github.com/aws/aws-sdk-go-v2/service/ssoadmin v1.27.5/go.mod h1:vts2iEAgM9gsyWx5c1z6db/Kw5WBKKoZBb65JfW3YR8=
 github.com/aws/aws-sdk-go-v2/service/ssooidc v1.26.5 h1:SKvPgvdvmiTWoi0GAJ7AsJfOz3ngVkD/ERbs5pUnHNI=
 github.com/aws/aws-sdk-go-v2/service/ssooidc v1.26.5/go.mod h1:20sz31hv/WsPa3HhU3hfrIet2kxM4Pe0r20eBZ20Tac=
-github.com/aws/aws-sdk-go-v2/service/storagegateway v1.31.3 h1:0hdxWCS8mM4qsZI3GldBkXeee4X25aC9wZGQhpbt6w8=
-github.com/aws/aws-sdk-go-v2/service/storagegateway v1.31.3/go.mod h1:N2tZQtDCR/Ls4o1pH6neRhhlkhKNE6SoruLn6nTpnzU=
+github.com/aws/aws-sdk-go-v2/service/storagegateway v1.31.4 h1:1jVRBgclr7cpeLiIs348kKXobvVjdlbHfVYM40Y/Bv0=
+github.com/aws/aws-sdk-go-v2/service/storagegateway v1.31.4/go.mod h1:WmqcvGd10eSVYIjcQYmBmk/tcIoCaxGtUHA1J1hSZvQ=
 github.com/aws/aws-sdk-go-v2/service/sts v1.30.4 h1:iAckBT2OeEK/kBDyN/jDtpEExhjeeA/Im2q4X0rJZT8=
 github.com/aws/aws-sdk-go-v2/service/sts v1.30.4/go.mod h1:vmSqFK+BVIwVpDAGZB3CoCXHzurt4qBE8lf+I/kRTh0=
 github.com/aws/aws-sdk-go-v2/service/swf v1.25.3 h1:7zYsHA9ORjiCHYzTJf0g+gwo3mPpn2XbMlWQreiXWdM=
