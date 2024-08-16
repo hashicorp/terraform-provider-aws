@@ -14,10 +14,10 @@ import (
 )
 
 const (
-	UpgradeStatusUnknown = "Unknown"
-	ConfigStatusNotFound = "NotFound"
-	ConfigStatusUnknown  = "Unknown"
-	ConfigStatusExists   = "Exists"
+	upgradeStatusUnknown = "Unknown"
+	configStatusNotFound = "NotFound"
+	configStatusUnknown  = "Unknown"
+	configStatusExists   = "Exists"
 )
 
 func statusUpgradeStatus(ctx context.Context, conn *opensearch.Client, name string) retry.StateRefreshFunc {
@@ -26,7 +26,7 @@ func statusUpgradeStatus(ctx context.Context, conn *opensearch.Client, name stri
 			DomainName: aws.String(name),
 		})
 		if err != nil {
-			return nil, UpgradeStatusUnknown, err
+			return nil, upgradeStatusUnknown, err
 		}
 
 		// opensearch upgrades consist of multiple steps:
@@ -48,13 +48,13 @@ func domainConfigStatus(ctx context.Context, conn *opensearch.Client, name strin
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			// if first return value is nil, WaitForState treats as not found - here not found is treated differently
-			return "not nil", ConfigStatusNotFound, nil
+			return "not nil", configStatusNotFound, nil
 		}
 
 		if err != nil {
-			return nil, ConfigStatusUnknown, err
+			return nil, configStatusUnknown, err
 		}
 
-		return out, ConfigStatusExists, nil
+		return out, configStatusExists, nil
 	}
 }
