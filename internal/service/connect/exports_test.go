@@ -8,8 +8,10 @@ var (
 	ResourceBotAssociation    = resourceBotAssociation
 	ResourceContactFlow       = resourceContactFlow
 	ResourceContactFlowModule = resourceContactFlowModule
+	ResourceHoursOfOperation  = resourceHoursOfOperation
 
 	FindBotAssociationByThreePartKey  = findBotAssociationByThreePartKey
 	FindContactFlowByTwoPartKey       = findContactFlowByTwoPartKey
 	FindContactFlowModuleByTwoPartKey = findContactFlowModuleByTwoPartKey
+	FindHoursOfOperationByTwoPartKey  = findHoursOfOperationByTwoPartKey
 )

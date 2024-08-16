@@ -120,7 +120,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceHoursOfOperation,
+			Factory:  resourceHoursOfOperation,
 			TypeName: "aws_connect_hours_of_operation",
 			Name:     "Hours Of Operation",
 			Tags: &types.ServicePackageResourceTags{

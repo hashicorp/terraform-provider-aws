@@ -157,7 +157,7 @@ func dataSourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData,
 	d.Set(names.AttrName, hoursOfOperation.Name)
 	d.Set("time_zone", hoursOfOperation.TimeZone)
 
-	if err := d.Set("config", flattenConfigs(hoursOfOperation.Config)); err != nil {
+	if err := d.Set("config", flattenHoursOfOperationConfigs(hoursOfOperation.Config)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting config: %s", err)
 	}
 
