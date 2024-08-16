@@ -30,8 +30,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Bot Association",
 		},
 		{
-			Factory:  DataSourceContactFlow,
+			Factory:  dataSourceContactFlow,
 			TypeName: "aws_connect_contact_flow",
+			Name:     "Contact Flow",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  DataSourceContactFlowModule,
