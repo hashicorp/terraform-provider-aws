@@ -159,7 +159,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.15.1
 	github.com/aws/aws-sdk-go-v2/service/mediastore v1.22.4
 	github.com/aws/aws-sdk-go-v2/service/memorydb v1.21.6
-	github.com/aws/aws-sdk-go-v2/service/mq v1.25.3
+	github.com/aws/aws-sdk-go-v2/service/mq v1.25.4
 	github.com/aws/aws-sdk-go-v2/service/mwaa v1.29.4
 	github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.11.0
 	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.41.0
