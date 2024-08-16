@@ -154,7 +154,7 @@ func TestEquivalentECSPropertiesJSON(t *testing.T) {
             "options": {
               "awslogs-stream-prefix": "ecs",
               "awslogs-group": "ewbankkit-test-003",
-              "awslogs-region": "us-west-2"
+              "awslogs-region": "region-2"
             },
             "secretOptions": []
           },
@@ -205,7 +205,7 @@ func TestEquivalentECSPropertiesJSON(t *testing.T) {
           "ulimits": []
         }
       ],
-      "executionRoleArn": "arn:aws:iam::187416307283:role/ewbankkit-test-003",
+      "executionRoleArn": "role1",
       "platformVersion": "LATEST",
       "volumes": []
     }
@@ -240,7 +240,7 @@ func TestEquivalentECSPropertiesJSON(t *testing.T) {
             "logDriver": "awslogs",
             "options": {
               "awslogs-group": "ewbankkit-test-003",
-              "awslogs-region": "us-west-2",
+              "awslogs-region": "region-2",
               "awslogs-stream-prefix": "ecs"
             }
           },
@@ -284,7 +284,7 @@ func TestEquivalentECSPropertiesJSON(t *testing.T) {
           ]
         }
       ],
-      "executionRoleArn": "arn:aws:iam::187416307283:role/ewbankkit-test-003"
+      "executionRoleArn": "role1"
     }
   ]
 }
