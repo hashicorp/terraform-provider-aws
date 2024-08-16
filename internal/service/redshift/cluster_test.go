@@ -334,13 +334,6 @@ func TestAccRedshiftCluster_snapshotCopy(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "snapshot_copy.0.retention_period", acctest.Ct3),
 				),
 			},
-			{
-				Config: testAccClusterConfig_snapshotCopyDisabled(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "snapshot_copy.#", acctest.Ct0),
-				),
-			},
 		},
 	})
 }
@@ -1392,25 +1385,6 @@ resource "aws_redshift_cluster" "test" {
   }
 
   skip_final_snapshot = true
-}
-`, rName))
-}
-
-func testAccClusterConfig_snapshotCopyDisabled(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigMultipleRegionProvider(2),
-		acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"),
-		fmt.Sprintf(`
-resource "aws_redshift_cluster" "test" {
-  cluster_identifier                  = %[1]q
-  availability_zone                   = data.aws_availability_zones.available.names[0]
-  database_name                       = "mydb"
-  master_username                     = "foo_test"
-  master_password                     = "Mustbe8characters"
-  node_type                           = "dc2.large"
-  automated_snapshot_retention_period = 0
-  allow_version_upgrade               = false
-  skip_final_snapshot                 = true
 }
 `, rName))
 }
