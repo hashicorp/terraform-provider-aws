@@ -25,8 +25,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceDomain,
+			Factory:  dataSourceDomain,
 			TypeName: "aws_opensearch_domain",
+			Name:     "Domain",
 		},
 	}
 }
@@ -34,7 +35,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceDomain,
+			Factory:  resourceDomain,
 			TypeName: "aws_opensearch_domain",
 			Name:     "Domain",
 			Tags: &types.ServicePackageResourceTags{
@@ -42,32 +43,39 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceDomainPolicy,
+			Factory:  resourceDomainPolicy,
 			TypeName: "aws_opensearch_domain_policy",
+			Name:     "Domain Policy",
 		},
 		{
-			Factory:  ResourceDomainSAMLOptions,
+			Factory:  resourceDomainSAMLOptions,
 			TypeName: "aws_opensearch_domain_saml_options",
+			Name:     "Domain SAML Options",
 		},
 		{
-			Factory:  ResourceInboundConnectionAccepter,
+			Factory:  resourceInboundConnectionAccepter,
 			TypeName: "aws_opensearch_inbound_connection_accepter",
+			Name:     "Inbound Connection Accepter",
 		},
 		{
-			Factory:  ResourceOutboundConnection,
+			Factory:  resourceOutboundConnection,
 			TypeName: "aws_opensearch_outbound_connection",
+			Name:     "Outbound Connection",
 		},
 		{
-			Factory:  ResourcePackage,
+			Factory:  resourcePackage,
 			TypeName: "aws_opensearch_package",
+			Name:     "Package",
 		},
 		{
-			Factory:  ResourcePackageAssociation,
+			Factory:  resourcePackageAssociation,
 			TypeName: "aws_opensearch_package_association",
+			Name:     "Package Association",
 		},
 		{
-			Factory:  ResourceVPCEndpoint,
+			Factory:  resourceVPCEndpoint,
 			TypeName: "aws_opensearch_vpc_endpoint",
+			Name:     "VPC Endpoint",
 		},
 	}
 }
