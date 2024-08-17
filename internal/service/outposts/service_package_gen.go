@@ -5,10 +5,8 @@ package outposts
 import (
 	"context"
 
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	outposts_sdkv1 "github.com/aws/aws-sdk-go/service/outposts"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	outposts_sdkv2 "github.com/aws/aws-sdk-go-v2/service/outposts"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -27,36 +25,44 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceOutpostAsset,
+			Factory:  dataSourceOutpostAsset,
 			TypeName: "aws_outposts_asset",
+			Name:     "Asset",
 		},
 		{
-			Factory:  DataSourceOutpostAssets,
+			Factory:  dataSourceOutpostAssets,
 			TypeName: "aws_outposts_assets",
+			Name:     "Assets",
 		},
 		{
-			Factory:  DataSourceOutpost,
+			Factory:  dataSourceOutpost,
 			TypeName: "aws_outposts_outpost",
+			Name:     "Outpost",
 		},
 		{
-			Factory:  DataSourceOutpostInstanceType,
+			Factory:  dataSourceOutpostInstanceType,
 			TypeName: "aws_outposts_outpost_instance_type",
+			Name:     "Outpost Instance Type",
 		},
 		{
-			Factory:  DataSourceOutpostInstanceTypes,
+			Factory:  dataSourceOutpostInstanceTypes,
 			TypeName: "aws_outposts_outpost_instance_types",
+			Name:     "Outpost Instance Types",
 		},
 		{
-			Factory:  DataSourceOutposts,
+			Factory:  dataSourceOutposts,
 			TypeName: "aws_outposts_outposts",
+			Name:     "Outposts",
 		},
 		{
-			Factory:  DataSourceSite,
+			Factory:  dataSourceSite,
 			TypeName: "aws_outposts_site",
+			Name:     "Site",
 		},
 		{
-			Factory:  DataSourceSites,
+			Factory:  dataSourceSites,
 			TypeName: "aws_outposts_sites",
+			Name:     "Sites",
 		},
 	}
 }
@@ -69,22 +75,14 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.Outposts
 }
 
-// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*outposts_sdkv1.Outposts, error) {
-	sess := config[names.AttrSession].(*session_sdkv1.Session)
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*outposts_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
 
-	cfg := aws_sdkv1.Config{}
-
-	if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
-		tflog.Debug(ctx, "setting endpoint", map[string]any{
-			"tf_aws.endpoint": endpoint,
-		})
-		cfg.Endpoint = aws_sdkv1.String(endpoint)
-	} else {
-		cfg.EndpointResolver = newEndpointResolverSDKv1(ctx)
-	}
-
-	return outposts_sdkv1.New(sess.Copy(&cfg)), nil
+	return outposts_sdkv2.NewFromConfig(cfg,
+		outposts_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+	), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {
