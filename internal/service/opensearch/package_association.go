@@ -123,7 +123,7 @@ func resourcePackageAssociationDelete(ctx context.Context, d *schema.ResourceDat
 		PackageID:  aws.String(packageID),
 	})
 
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "Package is not associated to this domain") {
 		return diags
 	}
 
