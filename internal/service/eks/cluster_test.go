@@ -132,7 +132,7 @@ func TestAccEKSCluster_with_dangling_eni(t *testing.T) {
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					provisionDanglingEni(ctx, resourceName, &cluster),
+					provisionDanglingEni(ctx, &cluster),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfeks.ResourceCluster(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -141,7 +141,7 @@ func TestAccEKSCluster_with_dangling_eni(t *testing.T) {
 	})
 }
 
-func provisionDanglingEni(ctx context.Context, name string, t *types.Cluster) resource.TestCheckFunc {
+func provisionDanglingEni(ctx context.Context, t *types.Cluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		subnetId := t.ResourcesVpcConfig.SubnetIds[0]
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
