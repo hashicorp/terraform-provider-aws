@@ -7,6 +7,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"strings"
 	"testing"
 
@@ -20,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -111,6 +114,65 @@ func TestAccEKSCluster_disappears(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAccEKSCluster_with_dangling_eni(t *testing.T) {
+	ctx := acctest.Context(t)
+	var cluster types.Cluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_eks_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					provisionDanglingEni(ctx, resourceName, &cluster),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfeks.ResourceCluster(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func provisionDanglingEni(ctx context.Context, name string, t *types.Cluster) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		subnetId := t.ResourcesVpcConfig.SubnetIds[0]
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+
+		sg, err := tfec2.FindSecurityGroupByNameAndVPCID(ctx, conn, aws.ToString(t.Name)+"-node-sg", aws.ToString(t.ResourcesVpcConfig.VpcId))
+		if err != nil {
+			return err
+		}
+
+		_, err = conn.CreateNetworkInterface(ctx, &ec2.CreateNetworkInterfaceInput{
+			SubnetId: aws.String(subnetId),
+			Groups:   []string{aws.ToString(sg.GroupId)},
+			TagSpecifications: []ec2types.TagSpecification{
+				{
+					ResourceType: ec2types.ResourceTypeNetworkInterface,
+					Tags: []ec2types.Tag{
+						{
+							Key:   aws.String("cluster.k8s.amazonaws.com/name"),
+							Value: t.Name,
+						},
+					},
+				},
+			},
+		})
+
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
 }
 
 func TestAccEKSCluster_AccessConfig_create(t *testing.T) {
@@ -1110,7 +1172,14 @@ resource "aws_eks_cluster" "test" {
     subnet_ids = aws_subnet.test[*].id
   }
 
-  depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
+  on_destroy_delete_dangling_enis = true
+
+  depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy, aws_security_group.node_sg]
+}
+
+resource "aws_security_group" "node_sg" {
+  name = "%[1]s-node-sg"
+  vpc_id = aws_vpc.test.id
 }
 `, rName))
 }

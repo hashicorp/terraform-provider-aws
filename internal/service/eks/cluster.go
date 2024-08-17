@@ -6,11 +6,13 @@ package eks
 import (
 	"context"
 	"fmt"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"log"
 	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/eks"
 	"github.com/aws/aws-sdk-go-v2/service/eks/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -218,6 +220,11 @@ func resourceCluster() *schema.Resource {
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validClusterName,
+			},
+			"on_destroy_delete_dangling_enis": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 			"outpost_config": {
 				Type:          schema.TypeList,
@@ -698,6 +705,10 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "waiting for EKS Cluster (%s) delete: %s", d.Id(), err)
 	}
 
+	if v, ok := d.GetOk("on_destroy_delete_dangling_enis"); ok {
+		handleDanglingEnis(ctx, d, meta, v.(bool))
+	}
+
 	return diags
 }
 
@@ -726,6 +737,67 @@ func findClusterByName(ctx context.Context, conn *eks.Client, name string) (*typ
 	}
 
 	return output.Cluster, nil
+}
+
+func handleDanglingEnis(ctx context.Context, d *schema.ResourceData, meta interface{}, deleteDanglingEnis bool) {
+	if deleteDanglingEnis {
+		ec2Conn := meta.(*conns.AWSClient).EC2Client(ctx)
+
+		v, ok := d.GetOk("vpc_config.0.vpc_id")
+		if !ok || v == nil {
+			log.Printf("[WARN] unable to get vpc id. Ignoring ENI Cleanup")
+
+			return
+		}
+
+		vpcId, ok := v.(string)
+		if !ok {
+			log.Printf("[WARN] unable to get vpc id. Ignoring ENI Cleanup")
+
+			return
+		}
+
+		danglingEnis := make([]*string, 0)
+
+		paginator := ec2.NewDescribeNetworkInterfacesPaginator(ec2Conn, &ec2.DescribeNetworkInterfacesInput{
+			Filters: []ec2types.Filter{
+				{
+					Name:   aws.String("vpc-id"),
+					Values: []string{vpcId},
+				},
+				{
+					Name:   aws.String("status"),
+					Values: []string{"available"},
+				},
+				{
+					Name:   aws.String("tag:cluster.k8s.amazonaws.com/name"),
+					Values: []string{d.Id()},
+				},
+			},
+		})
+
+		for paginator.HasMorePages() {
+			page, err := paginator.NextPage(ctx)
+			if err != nil {
+				log.Printf("[WARN] error getting dangling Network Interfaces. Ignoring: %v", err)
+
+				return
+			}
+
+			for _, ni := range page.NetworkInterfaces {
+				danglingEnis = append(danglingEnis, ni.NetworkInterfaceId)
+			}
+		}
+
+		for _, eni := range danglingEnis {
+			_, err := ec2Conn.DeleteNetworkInterface(ctx, &ec2.DeleteNetworkInterfaceInput{
+				NetworkInterfaceId: eni,
+			})
+			if err != nil {
+				log.Printf("[WARN] error deleting Network Interface (%s): %v", aws.ToString(eni), err)
+			}
+		}
+	}
 }
 
 func updateVPCConfig(ctx context.Context, conn *eks.Client, name string, vpcConfig *types.VpcConfigRequest, timeout time.Duration) error {
