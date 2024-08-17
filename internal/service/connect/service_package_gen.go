@@ -143,7 +143,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Lambda Function Association",
 		},
 		{
-			Factory:  ResourcePhoneNumber,
+			Factory:  resourcePhoneNumber,
 			TypeName: "aws_connect_phone_number",
 			Name:     "Phone Number",
 			Tags: &types.ServicePackageResourceTags{
