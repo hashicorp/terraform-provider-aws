@@ -53,6 +53,7 @@ const (
 	ChimeSDKMediaPipelinesEndpointID       = "media-pipelines-chime"
 	ChimeSDKVoiceEndpointID                = "voice-chime"
 	Cloud9EndpointID                       = "cloud9"
+	CloudControlEndpointID                 = "cloudcontrol"
 	CloudFormationEndpointID               = "cloudformation"
 	CloudFrontEndpointID                   = "cloudfront"
 	CloudSearchEndpointID                  = "cloudsearch"
@@ -136,7 +137,6 @@ const (
 	DataZoneEndpointID                     = "datazone"
 )
 
-// These should move to aws-sdk-go-base.
 // See https://github.com/hashicorp/aws-sdk-go-base/issues/649.
 const (
 	ChinaPartitionID      = "aws-cn"     // AWS China partition.
