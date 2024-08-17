@@ -11,6 +11,7 @@ var (
 	ResourceHoursOfOperation          = resourceHoursOfOperation
 	ResourceLambdaFunctionAssociation = resourceLambdaFunctionAssociation
 	ResourcePhoneNumber               = resourcePhoneNumber
+	ResourceVocabulary                = resourceVocabulary
 
 	FindBotAssociationByThreePartKey          = findBotAssociationByThreePartKey
 	FindContactFlowByTwoPartKey               = findContactFlowByTwoPartKey
@@ -18,4 +19,5 @@ var (
 	FindHoursOfOperationByTwoPartKey          = findHoursOfOperationByTwoPartKey
 	FindLambdaFunctionAssociationByTwoPartKey = findLambdaFunctionAssociationByTwoPartKey
 	FindPhoneNumberByID                       = findPhoneNumberByID
+	FindVocabularyByTwoPartKey                = findVocabularyByTwoPartKey
 )

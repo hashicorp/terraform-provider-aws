@@ -203,7 +203,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_connect_user_hierarchy_structure",
 		},
 		{
-			Factory:  ResourceVocabulary,
+			Factory:  resourceVocabulary,
 			TypeName: "aws_connect_vocabulary",
 			Name:     "Vocabulary",
 			Tags: &types.ServicePackageResourceTags{
