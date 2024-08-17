@@ -266,8 +266,8 @@ type provisionedModelThroughputResourceModel struct {
 	ModelUnits           types.Int64                                     `tfsdk:"model_units"`
 	ProvisionedModelARN  types.String                                    `tfsdk:"provisioned_model_arn"`
 	ProvisionedModelName types.String                                    `tfsdk:"provisioned_model_name"`
-	Tags                 types.Map                                       `tfsdk:"tags"`
-	TagsAll              types.Map                                       `tfsdk:"tags_all"`
+	Tags                 tftags.Map                                      `tfsdk:"tags"`
+	TagsAll              tftags.Map                                      `tfsdk:"tags_all"`
 	Timeouts             timeouts.Value                                  `tfsdk:"timeouts"`
 }
 
