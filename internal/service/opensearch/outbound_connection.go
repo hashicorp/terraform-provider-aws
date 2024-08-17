@@ -84,6 +84,7 @@ func resourceOutboundConnection() *schema.Resource {
 					Type:             schema.TypeString,
 					Optional:         true,
 					ForceNew:         true,
+					Computed:         true,
 					ValidateDiagFunc: enum.Validate[awstypes.ConnectionMode](),
 				},
 				"connection_properties": {
@@ -179,7 +180,7 @@ func resourceOutboundConnectionRead(ctx context.Context, d *schema.ResourceData,
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] OpenSearch Outbound Connection (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
@@ -193,7 +194,7 @@ func resourceOutboundConnectionRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("remote_domain_info", flattenOutboundConnectionDomainInfo(connection.RemoteDomainInfo))
 	d.Set("local_domain_info", flattenOutboundConnectionDomainInfo(connection.LocalDomainInfo))
 
-	return nil
+	return diags
 }
 
 func resourceOutboundConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -206,7 +207,7 @@ func resourceOutboundConnectionDelete(ctx context.Context, d *schema.ResourceDat
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
@@ -217,7 +218,7 @@ func resourceOutboundConnectionDelete(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "waiting for OpenSearch Outbound Connection (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func findOutboundConnectionByID(ctx context.Context, conn *opensearch.Client, id string) (*awstypes.OutboundConnection, error) {

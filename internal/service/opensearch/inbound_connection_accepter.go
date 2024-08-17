@@ -90,7 +90,7 @@ func resourceInboundConnectionRead(ctx context.Context, d *schema.ResourceData, 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] OpenSearch Inbound Connection (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
@@ -99,7 +99,7 @@ func resourceInboundConnectionRead(ctx context.Context, d *schema.ResourceData, 
 
 	d.Set(names.AttrConnectionID, connection.ConnectionId)
 	d.Set("connection_status", connection.ConnectionStatus.StatusCode)
-	return nil
+	return diags
 }
 
 func resourceInboundConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -120,7 +120,7 @@ func resourceInboundConnectionDelete(ctx context.Context, d *schema.ResourceData
 			return sdkdiag.AppendErrorf(diags, "waiting for OpenSearch Inbound Connection (%s) reject: %s", d.Id(), err)
 		}
 
-		return nil
+		return diags
 	}
 
 	log.Printf("[DEBUG] Deleting OpenSearch Inbound Connection: %s", d.Id())
@@ -129,7 +129,7 @@ func resourceInboundConnectionDelete(ctx context.Context, d *schema.ResourceData
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
@@ -140,7 +140,7 @@ func resourceInboundConnectionDelete(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "waiting for OpenSearch Inbound Connection (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func findInboundConnectionByID(ctx context.Context, conn *opensearch.Client, id string) (*awstypes.InboundConnection, error) {
