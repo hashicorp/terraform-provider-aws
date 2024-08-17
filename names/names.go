@@ -137,6 +137,7 @@ const (
 	DataZoneEndpointID                     = "datazone"
 )
 
+// These should move to aws-sdk-go-base.
 // See https://github.com/hashicorp/aws-sdk-go-base/issues/649.
 const (
 	ChinaPartitionID      = "aws-cn"     // AWS China partition.
