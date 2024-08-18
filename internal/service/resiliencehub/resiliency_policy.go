@@ -297,7 +297,7 @@ func (r *resourceResiliencyPolicy) Create(ctx context.Context, req resource.Crea
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	
+
 	plan.flattenPolicy(ctx, created.Policy)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
@@ -400,7 +400,7 @@ func (r *resourceResiliencyPolicy) Update(ctx context.Context, req resource.Upda
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		
+
 		state.flattenPolicy(ctx, updated.Policy)
 	}
 
