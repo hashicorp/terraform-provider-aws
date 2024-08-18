@@ -359,7 +359,7 @@ func testAccCheckResiliencyPolicyNotRecreated(before, after *resiliencehub.Descr
 func testAccResiliencyPolicyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_resiliencehub_resiliency_policy" "test" {
-  policy_name        = %[1]q
+  policy_name = %[1]q
 
   policy_description = %[1]q
 
@@ -388,7 +388,7 @@ resource "aws_resiliencehub_resiliency_policy" "test" {
 
   tags = {
     Name = %[1]q
-	Value = "Other"
+    Value = "Other"
   }
 }
 `, rName)
@@ -397,7 +397,7 @@ resource "aws_resiliencehub_resiliency_policy" "test" {
 func testAccResiliencyPolicyConfig_updatePolicyName(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_resiliencehub_resiliency_policy" "test" {
-  policy_name        = %[1]q
+  policy_name = %[1]q
 
   policy_description = "testAccResiliencyPolicyConfig_updatePolicyName"
 
@@ -425,7 +425,7 @@ resource "aws_resiliencehub_resiliency_policy" "test" {
   }
 
   tags = {
-	Value = "Other"
+    Value = "Other"
   }
 }
 `, rName)
@@ -434,7 +434,7 @@ resource "aws_resiliencehub_resiliency_policy" "test" {
 func testAccResiliencyPolicyConfig_updatePolicyDescription(rName, resPolicyDescValue string) string {
 	return fmt.Sprintf(`
 resource "aws_resiliencehub_resiliency_policy" "test" {
-  policy_name        = %[1]q
+  policy_name = %[1]q
 
   policy_description = %[2]q
 
@@ -463,7 +463,7 @@ resource "aws_resiliencehub_resiliency_policy" "test" {
 
   tags = {
     Name = %[1]q
-	Value = "Other"
+    Value = "Other"
   }
 }
 `, rName, resPolicyDescValue)
@@ -472,7 +472,7 @@ resource "aws_resiliencehub_resiliency_policy" "test" {
 func testAccResiliencyPolicyConfig_updateDataLocationConstraint(rName, resDataLocConstValue string) string {
 	return fmt.Sprintf(`
 resource "aws_resiliencehub_resiliency_policy" "test" {
-  policy_name        = %[1]q
+  policy_name = %[1]q
 
   policy_description = %[1]q
 
@@ -501,7 +501,7 @@ resource "aws_resiliencehub_resiliency_policy" "test" {
 
   tags = {
     Name = %[1]q
-	Value = "Other"
+    Value = "Other"
   }
 }
 `, rName, resDataLocConstValue)
@@ -510,7 +510,7 @@ resource "aws_resiliencehub_resiliency_policy" "test" {
 func testAccResiliencyPolicyConfig_updateTier(rName, resTierValue string) string {
 	return fmt.Sprintf(`
 resource "aws_resiliencehub_resiliency_policy" "test" {
-  policy_name        = %[1]q
+  policy_name = %[1]q
 
   policy_description = %[1]q
 
@@ -539,7 +539,7 @@ resource "aws_resiliencehub_resiliency_policy" "test" {
 
   tags = {
     Name = %[1]q
-	Value = "Other"
+    Value = "Other"
   }
 }
 `, rName, resTierValue)
@@ -548,7 +548,7 @@ resource "aws_resiliencehub_resiliency_policy" "test" {
 func testAccResiliencyPolicyConfig_updatePolicy(rName, resPolicyObjValue string) string {
 	return fmt.Sprintf(`
 resource "aws_resiliencehub_resiliency_policy" "test" {
-  policy_name        = %[1]q
+  policy_name = %[1]q
 
   policy_description = %[1]q
 
@@ -577,7 +577,7 @@ resource "aws_resiliencehub_resiliency_policy" "test" {
 
   tags = {
     Name = %[1]q
-	Value = "Other"
+    Value = "Other"
   }
 }
 `, rName, resPolicyObjValue)
@@ -586,7 +586,7 @@ resource "aws_resiliencehub_resiliency_policy" "test" {
 func testAccResiliencyPolicyConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_resiliencehub_resiliency_policy" "test" {
-  policy_name        = %[1]q
+  policy_name = %[1]q
 
   policy_description = %[1]q
 
@@ -623,7 +623,7 @@ resource "aws_resiliencehub_resiliency_policy" "test" {
 func testAccResiliencyPolicyConfig_tag2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_resiliencehub_resiliency_policy" "test" {
-  policy_name        = %[1]q
+  policy_name = %[1]q
 
   policy_description = %[1]q
 
