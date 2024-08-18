@@ -297,11 +297,8 @@ func (r *resourceResiliencyPolicy) Create(ctx context.Context, req resource.Crea
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	resp.Diagnostics.Append(plan.flattenPolicy(ctx, created.Policy)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	
+	plan.flattenPolicy(ctx, created.Policy)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
@@ -336,10 +333,7 @@ func (r *resourceResiliencyPolicy) Read(ctx context.Context, req resource.ReadRe
 		return
 	}
 
-	resp.Diagnostics.Append(state.flattenPolicy(ctx, out.Policy)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	state.flattenPolicy(ctx, out.Policy)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -406,11 +400,8 @@ func (r *resourceResiliencyPolicy) Update(ctx context.Context, req resource.Upda
 		if resp.Diagnostics.HasError() {
 			return
 		}
-
-		resp.Diagnostics.Append(state.flattenPolicy(ctx, updated.Policy)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
+		
+		state.flattenPolicy(ctx, updated.Policy)
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
@@ -599,11 +590,9 @@ func (m *resourceResiliencyPolicyModel) expandPolicy(ctx context.Context, in *re
 	return diags
 }
 
-func (m *resourceResiliencyPolicyData) flattenPolicy(ctx context.Context, failurePolicy map[string]awstypes.FailurePolicy) (diags diag.Diagnostics) {
-
+func (m *resourceResiliencyPolicyData) flattenPolicy(ctx context.Context, failurePolicy map[string]awstypes.FailurePolicy) {
 	if len(failurePolicy) == 0 {
 		m.Policy = fwtypes.NewObjectValueOfNull[resourceResiliencyPolicyModel](ctx)
-		return diags
 	}
 
 	newResObjModel := func(policyType string, failurePolicy map[string]awstypes.FailurePolicy) fwtypes.ObjectValueOf[resourceResiliencyObjectiveModel] {
@@ -622,8 +611,6 @@ func (m *resourceResiliencyPolicyData) flattenPolicy(ctx context.Context, failur
 		newResObjModel(resiliencyPolicyTypeSoftware, failurePolicy),
 		newResObjModel(resiliencyPolicyTypeRegion, failurePolicy),
 	})
-
-	return
 }
 
 type resourceResiliencyPolicyData struct {
