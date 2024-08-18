@@ -121,7 +121,7 @@ func dataSourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData,
 		hoursOfOperationSummary, err := findHoursOfOperationSummaryByTwoPartKey(ctx, conn, instanceID, name)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "finding Connect Hours Of Operation (%s) summary: %s", name, err)
+			return sdkdiag.AppendErrorf(diags, "reading Connect Hours Of Operation (%s) summary: %s", name, err)
 		}
 
 		input.HoursOfOperationId = hoursOfOperationSummary.Id

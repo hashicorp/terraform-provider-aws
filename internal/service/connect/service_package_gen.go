@@ -92,8 +92,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_connect_user_hierarchy_structure",
 		},
 		{
-			Factory:  DataSourceVocabulary,
+			Factory:  dataSourceVocabulary,
 			TypeName: "aws_connect_vocabulary",
+			Name:     "Vocabulary",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 	}
 }
