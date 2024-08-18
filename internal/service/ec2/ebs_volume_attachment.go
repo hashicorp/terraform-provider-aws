@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/datafy"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -144,9 +145,30 @@ func resourceVolumeAttachmentRead(ctx context.Context, d *schema.ResourceData, m
 	_, err := findVolumeAttachment(ctx, conn, volumeID, instanceID, deviceName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] EBS Volume Attachment %s not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
+		// if not found on aws, it may mean we datafied it and deleted the volume
+		dc := meta.(*conns.AWSClient).DatafyClient(ctx)
+		if datafyVolume, datafyErr := dc.GetVolume(d.Id()); datafyErr == nil {
+			// if we are managing this volume, just return the state as is
+			if datafyVolume.IsManaged {
+				return diags
+			}
+
+			// if the volume was replaced (new source due to undatafy), it means the new
+			// volume is now the source volume, and we need to set the "new" values from aws
+			if datafyVolume.IsReplacement {
+				newId := aws.ToString(datafyVolume.VolumeId)
+				diags = sdkdiag.AppendWarningf(diags, "new EBS Volume (%s) has been created to replace the undatafied EBS Volume (%s)", d.Id(), newId)
+
+				// let's hope it's the same device name
+				d.SetId(volumeAttachmentID(deviceName, volumeID, instanceID))
+			}
+		} else if datafy.NotFound(datafyErr) {
+			log.Printf("[WARN] EBS Volume Attachment %s not found, removing from state", d.Id())
+			d.SetId("")
+			return diags
+		} else {
+			err = datafyErr
+		}
 	}
 
 	if err != nil {
@@ -172,6 +194,22 @@ func resourceVolumeAttachmentDelete(ctx context.Context, d *schema.ResourceData,
 		if err := stopVolumeAttachmentInstance(ctx, conn, instanceID, false, instanceStopTimeout); err != nil {
 			return sdkdiag.AppendErrorf(diags, "deleting EBS Volume (%s) Attachment (%s): %s", volumeID, instanceID, err)
 		}
+	}
+
+	// once the volume is managed, datafy has control on the volume, and it can't be detached via terraform
+	// the call must go via datafy api
+	dc := meta.(*conns.AWSClient).DatafyClient(ctx)
+	if datafyVolume, datafyErr := dc.GetVolume(d.Id()); datafyErr == nil {
+		if datafyVolume.IsManaged {
+			return sdkdiag.AppendErrorf(diags, "can't delete EBS Volume Attachment (%s) of an datafid EBS Volume (%s). Please undatafy the EBS Volume first", d.Id(), volumeID)
+		}
+		if datafyVolume.IsReplacement {
+			newId := aws.ToString(datafyVolume.VolumeId)
+			diags = sdkdiag.AppendWarningf(diags, "new EBS Volume (%s) has been created to replace the undatafied EBS Volume (%s)", d.Id(), newId)
+			volumeID = newId
+		}
+	} else if !datafy.NotFound(datafyErr) {
+		return sdkdiag.AppendErrorf(diags, "deleting EBS Volum Attachment (%s): %s", d.Id(), datafyErr)
 	}
 
 	input := &ec2.DetachVolumeInput{
