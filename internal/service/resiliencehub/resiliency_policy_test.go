@@ -20,9 +20,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/names"
-
 	tfresiliencehub "github.com/hashicorp/terraform-provider-aws/internal/service/resiliencehub"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccResilienceHubResiliencyPolicy_basic(t *testing.T) {
@@ -387,7 +386,7 @@ resource "aws_resiliencehub_resiliency_policy" "test" {
   }
 
   tags = {
-    Name = %[1]q
+    Name  = %[1]q
     Value = "Other"
   }
 }
@@ -462,7 +461,7 @@ resource "aws_resiliencehub_resiliency_policy" "test" {
   }
 
   tags = {
-    Name = %[1]q
+    Name  = %[1]q
     Value = "Other"
   }
 }
@@ -500,7 +499,7 @@ resource "aws_resiliencehub_resiliency_policy" "test" {
   }
 
   tags = {
-    Name = %[1]q
+    Name  = %[1]q
     Value = "Other"
   }
 }
@@ -538,7 +537,7 @@ resource "aws_resiliencehub_resiliency_policy" "test" {
   }
 
   tags = {
-    Name = %[1]q
+    Name  = %[1]q
     Value = "Other"
   }
 }
@@ -576,7 +575,7 @@ resource "aws_resiliencehub_resiliency_policy" "test" {
   }
 
   tags = {
-    Name = %[1]q
+    Name  = %[1]q
     Value = "Other"
   }
 }
