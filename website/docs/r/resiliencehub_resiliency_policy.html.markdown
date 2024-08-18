@@ -64,13 +64,13 @@ The following arguments are optional:
 
 The following arguments are required:
 
-* `az` - (Attributes) Specifies Availability Zone failure policy. See [`policy.az`](#`policy.az`)
-* `hardware` - (Attributes) Specifies Infrastructure failure policy. See [`policy.hardware`](#`policy.hardware`)
-* `software` - (Attributes) Specifies Application failure policy. See [`policy.software`](#`policy.software`)
+* `az` - (Attributes) Specifies Availability Zone failure policy. See [`policy.az`](#policyaz)
+* `hardware` - (Attributes) Specifies Infrastructure failure policy. See [`policy.hardware`](#policyhardware)
+* `software` - (Attributes) Specifies Application failure policy. See [`policy.software`](#policysoftware)
 
 The following arguments are optional:
 
-* `region` - (Attributes) Specifies Region failure policy. [`policy.region`](#`policy.region`)
+* `region` - (Attributes) Specifies Region failure policy. [`policy.region`](#policyregion)
 
 ### `policy.az`
 
