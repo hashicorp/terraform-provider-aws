@@ -212,6 +212,22 @@ func resourceVolumeAttachmentDelete(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
+	// once the volume is managed, datafy has control on the volume, and it can't be detached via terraform
+	// the call must go via datafy api
+	dc := meta.(*conns.AWSClient).DatafyClient(ctx)
+	if datafyVolume, datafyErr := dc.GetVolume(volumeID); datafyErr == nil {
+		if datafyVolume.IsManaged {
+			return sdkdiag.AppendErrorf(diags, "can't delete EBS Volume Attachment (%s) of an datafid EBS Volume (%s). Please undatafy the EBS Volume first", d.Id(), volumeID)
+		}
+		if datafyVolume.IsReplacement {
+			newId := aws.ToString(datafyVolume.VolumeId)
+			diags = sdkdiag.AppendWarningf(diags, "new EBS Volume (%s) has been created to replace the undatafied EBS Volume (%s)", d.Id(), newId)
+			volumeID = newId
+		}
+	} else if !datafy.NotFound(datafyErr) {
+		return sdkdiag.AppendErrorf(diags, "deleting EBS Volum Attachment (%s): %s", d.Id(), datafyErr)
+	}
+
 	input := &ec2.DetachVolumeInput{
 		Device:     aws.String(deviceName),
 		Force:      aws.Bool(d.Get("force_detach").(bool)),
