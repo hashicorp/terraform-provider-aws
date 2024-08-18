@@ -164,11 +164,11 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("security_profile_ids", flex.FlattenStringSet(user.SecurityProfileIds))
 	d.Set("user_id", user.Id)
 
-	if err := d.Set("identity_info", flattenIdentityInfo(user.IdentityInfo)); err != nil {
+	if err := d.Set("identity_info", flattenUserIdentityInfo(user.IdentityInfo)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting identity_info: %s", err)
 	}
 
-	if err := d.Set("phone_config", flattenPhoneConfig(user.PhoneConfig)); err != nil {
+	if err := d.Set("phone_config", flattenUserPhoneConfig(user.PhoneConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting phone_config: %s", err)
 	}
 
