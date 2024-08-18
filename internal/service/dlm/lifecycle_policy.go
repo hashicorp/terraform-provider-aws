@@ -176,8 +176,7 @@ func resourceLifecyclePolicy() *schema.Resource {
 						},
 						"resource_types": {
 							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
+							Required: true,
 							Elem: &schema.Schema{
 								Type:             schema.TypeString,
 								ValidateDiagFunc: enum.Validate[awstypes.ResourceTypeValues](),
