@@ -12,6 +12,7 @@ var (
 	ResourceLambdaFunctionAssociation = resourceLambdaFunctionAssociation
 	ResourcePhoneNumber               = resourcePhoneNumber
 	ResourceUser                      = resourceUser
+	ResourceUserHierarchyGroup        = resourceUserHierarchyGroup
 	ResourceVocabulary                = resourceVocabulary
 
 	FindBotAssociationByThreePartKey          = findBotAssociationByThreePartKey
@@ -21,5 +22,6 @@ var (
 	FindLambdaFunctionAssociationByTwoPartKey = findLambdaFunctionAssociationByTwoPartKey
 	FindPhoneNumberByID                       = findPhoneNumberByID
 	FindUserByTwoPartKey                      = findUserByTwoPartKey
+	FindUserHierarchyGroupByTwoPartKey        = findUserHierarchyGroupByTwoPartKey
 	FindVocabularyByTwoPartKey                = findVocabularyByTwoPartKey
 )

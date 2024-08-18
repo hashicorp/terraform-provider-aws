@@ -268,7 +268,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		_, err = conn.UpdateUserHierarchy(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Connect User HierarchyGroupId (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Connect User (%s) HierarchyGroupId: %s", d.Id(), err)
 		}
 	}
 
@@ -283,7 +283,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		_, err = conn.UpdateUserIdentityInfo(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Connect User IdentityInfo (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Connect User (%s) IdentityInfo: %s", d.Id(), err)
 		}
 	}
 
@@ -298,7 +298,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		_, err = conn.UpdateUserPhoneConfig(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Connect User PhoneConfig (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Connect User (%s) PhoneConfig: %s", d.Id(), err)
 		}
 	}
 
@@ -313,7 +313,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		_, err = conn.UpdateUserRoutingProfile(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Connect User RoutingProfileId (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Connect User (%s) RoutingProfileId: %s", d.Id(), err)
 		}
 	}
 
@@ -328,7 +328,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		_, err = conn.UpdateUserSecurityProfiles(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Connect User SecurityProfileIds (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Connect User (%s) SecurityProfileIds: %s", d.Id(), err)
 		}
 	}
 
