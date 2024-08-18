@@ -38,7 +38,6 @@ func TestAccResilienceHubResiliencyPolicy_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
-			acctest.PreCheckPartitionHasService(t, names.ResilienceHubServiceID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ResilienceHubServiceID),
@@ -49,8 +48,8 @@ func TestAccResilienceHubResiliencyPolicy_basic(t *testing.T) {
 				Config: testAccResiliencyPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "policy_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "policy_description", rName),
 					resource.TestCheckResourceAttr(resourceName, "tier", "NotApplicable"),
@@ -95,7 +94,6 @@ func TestAccResilienceHubResiliencyPolicy_update(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
-			acctest.PreCheckPartitionHasService(t, names.ResilienceHubServiceID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ResilienceHubServiceID),
@@ -196,7 +194,6 @@ func TestAccResilienceHubResiliencyPolicy_tags(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
-			acctest.PreCheckPartitionHasService(t, names.ResilienceHubServiceID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ResilienceHubServiceID),
@@ -259,7 +256,6 @@ func TestAccResilienceHubResiliencyPolicy_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
-			acctest.PreCheckPartitionHasService(t, names.ResilienceHubServiceID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ResilienceHubServiceID),

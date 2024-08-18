@@ -144,7 +144,7 @@ func (r *resourceResiliencyPolicy) Schema(ctx context.Context, req resource.Sche
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"policy": schema.SingleNestedBlock{
+			names.AttrPolicy: schema.SingleNestedBlock{
 				Description: "The resiliency failure policy.",
 				CustomType:  fwtypes.NewObjectTypeOf[resourceResiliencyPolicyModel](ctx),
 				PlanModifiers: []planmodifier.Object{
@@ -187,7 +187,7 @@ func (r *resourceResiliencyPolicy) Schema(ctx context.Context, req resource.Sche
 						},
 						Attributes: requiredObjAttrs,
 					},
-					"region": schema.SingleNestedBlock{
+					names.AttrRegion: schema.SingleNestedBlock{
 						CustomType:  fwtypes.NewObjectTypeOf[resourceResiliencyObjectiveModel](ctx),
 						Description: "The RTO and RPO target to measure resiliency for potential region disruptions.",
 						PlanModifiers: []planmodifier.Object{
@@ -363,7 +363,6 @@ func (r *resourceResiliencyPolicy) Update(ctx context.Context, req resource.Upda
 		!plan.DataLocationConstraint.Equal(state.DataLocationConstraint) ||
 		!plan.Tier.Equal(state.Tier) ||
 		!plan.PolicyName.Equal(state.PolicyName) {
-
 		in := &resiliencehub.UpdateResiliencyPolicyInput{
 			PolicyArn: flex.StringFromFramework(ctx, plan.ID),
 		}
@@ -562,14 +561,13 @@ func findResiliencyPolicyByID(ctx context.Context, conn *resiliencehub.Client, i
 	return out.Policy, nil
 }
 
-func (r *resourceResiliencyPolicyData) setId() {
-	r.ID = r.PolicyArn
+func (m *resourceResiliencyPolicyData) setId() {
+	m.ID = m.PolicyArn
 }
 
 func (m *resourceResiliencyPolicyModel) expandPolicy(ctx context.Context, in *resiliencehub.CreateResiliencyPolicyInput) (diags diag.Diagnostics) {
-
 	if in == nil {
-		return
+		return diags
 	}
 
 	failurePolicy := make(map[string]awstypes.FailurePolicy)
@@ -587,7 +585,7 @@ func (m *resourceResiliencyPolicyModel) expandPolicy(ctx context.Context, in *re
 			resObjModel, d := v.ToPtr(ctx)
 			diags.Append(d...)
 			if diags.HasError() {
-				return
+				return diags
 			}
 			failurePolicy[k] = awstypes.FailurePolicy{
 				RpoInSecs: resObjModel.RpoInSecs.ValueInt32(),
@@ -598,14 +596,14 @@ func (m *resourceResiliencyPolicyModel) expandPolicy(ctx context.Context, in *re
 
 	in.Policy = failurePolicy
 
-	return
+	return diags
 }
 
 func (m *resourceResiliencyPolicyData) flattenPolicy(ctx context.Context, failurePolicy map[string]awstypes.FailurePolicy) (diags diag.Diagnostics) {
 
 	if len(failurePolicy) == 0 {
 		m.Policy = fwtypes.NewObjectValueOfNull[resourceResiliencyPolicyModel](ctx)
-		return
+		return diags
 	}
 
 	newResObjModel := func(policyType string, failurePolicy map[string]awstypes.FailurePolicy) fwtypes.ObjectValueOf[resourceResiliencyObjectiveModel] {
