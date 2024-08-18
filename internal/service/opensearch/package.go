@@ -162,7 +162,7 @@ func resourcePackageDelete(ctx context.Context, d *schema.ResourceData, meta int
 		PackageID: aws.String(d.Id()),
 	})
 
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "Package not found") {
 		return diags
 	}
 

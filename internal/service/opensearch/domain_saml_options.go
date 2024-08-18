@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -154,10 +155,12 @@ func resourceDomainSAMLOptionsPut(ctx context.Context, d *schema.ResourceData, m
 
 	log.Printf("[DEBUG] Updating OpenSearch domain SAML Options %#v", config)
 
-	_, err := conn.UpdateDomainConfig(ctx, &opensearch.UpdateDomainConfigInput{
-		DomainName:              aws.String(domainName),
-		AdvancedSecurityOptions: &config,
-	})
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ValidationException](ctx, propagationTimeout, func() (any, error) {
+		return conn.UpdateDomainConfig(ctx, &opensearch.UpdateDomainConfigInput{
+			DomainName:              aws.String(domainName),
+			AdvancedSecurityOptions: &config,
+		})
+	}, "A change/update is in progress. Please wait for it to complete before requesting another change.")
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating OpenSearch Domain SAML Options (%s): %s", d.Id(), err)
@@ -179,10 +182,17 @@ func resourceDomainSAMLOptionsDelete(ctx context.Context, d *schema.ResourceData
 	domainName := d.Get(names.AttrDomainName).(string)
 	config := awstypes.AdvancedSecurityOptionsInput{}
 
-	_, err := conn.UpdateDomainConfig(ctx, &opensearch.UpdateDomainConfigInput{
-		DomainName:              aws.String(domainName),
-		AdvancedSecurityOptions: &config,
-	})
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ValidationException](ctx, propagationTimeout, func() (any, error) {
+		return conn.UpdateDomainConfig(ctx, &opensearch.UpdateDomainConfigInput{
+			DomainName:              aws.String(domainName),
+			AdvancedSecurityOptions: &config,
+		})
+	}, "A change/update is in progress. Please wait for it to complete before requesting another change.")
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting OpenSearch Domain SAML Options (%s): %s", d.Id(), err)
 	}

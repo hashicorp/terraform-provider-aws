@@ -40,7 +40,7 @@ func waitUpgradeSucceeded(ctx context.Context, conn *opensearch.Client, name str
 	return nil, err
 }
 
-func WaitForDomainCreation(ctx context.Context, conn *opensearch.Client, domainName string, timeout time.Duration) error {
+func waitForDomainCreation(ctx context.Context, conn *opensearch.Client, domainName string, timeout time.Duration) error {
 	var out *awstypes.DomainStatus
 	err := tfresource.Retry(ctx, timeout, func() *retry.RetryError {
 		var err error

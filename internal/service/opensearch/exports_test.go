@@ -21,4 +21,5 @@ var (
 	EBSVolumeTypePermitsThroughputInput = ebsVolumeTypePermitsThroughputInput
 	ParseEngineVersion                  = parseEngineVersion
 	VPCEndpointsError                   = vpcEndpointsError
+	WaitForDomainCreation               = waitForDomainCreation
 )

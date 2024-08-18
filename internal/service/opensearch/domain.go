@@ -46,7 +46,7 @@ func resourceDomain() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(90 * time.Minute),
+			Create: schema.DefaultTimeout(120 * time.Minute),
 			Update: schema.DefaultTimeout(180 * time.Minute),
 			Delete: schema.DefaultTimeout(90 * time.Minute),
 		},
@@ -791,7 +791,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	d.SetId(aws.ToString(out.DomainStatus.ARN))
 
 	log.Printf("[DEBUG] Waiting for OpenSearch Domain %q to be created", d.Id())
-	if err := WaitForDomainCreation(ctx, conn, d.Get(names.AttrDomainName).(string), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if err := waitForDomainCreation(ctx, conn, d.Get(names.AttrDomainName).(string), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for OpenSearch Domain (%s) to be created: %s", d.Id(), err)
 	}
 
@@ -804,10 +804,12 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 
 		log.Printf("[DEBUG] Updating OpenSearch Domain config: %#v", input)
-		_, err = conn.UpdateDomainConfig(ctx, input)
-
+		_, err := tfresource.RetryWhen(ctx, propagationTimeout, func() (any, error) {
+			return conn.UpdateDomainConfig(ctx, input)
+		},
+			domainErrorRetryable)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating OpenSearch Domain config: %s", err)
+			return sdkdiag.AppendErrorf(diags, "updating OpenSearch Domain (%s): %s", d.Id(), err)
 		}
 
 		if err := waitForDomainUpdate(ctx, conn, d.Get(names.AttrDomainName).(string), d.Timeout(schema.TimeoutCreate)); err != nil {
