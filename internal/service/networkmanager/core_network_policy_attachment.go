@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -103,7 +103,7 @@ func resourceCoreNetworkPolicyAttachmentRead(ctx context.Context, d *schema.Reso
 	} else if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Network Manager Core Network (%s) policy: %s", d.Id(), err)
 	} else {
-		encodedPolicyDocument, err := structure.NormalizeJsonString(coreNetworkPolicy.PolicyDocument)
+		encodedPolicyDocument, err := structure.NormalizeJsonString(aws.ToString(coreNetworkPolicy.PolicyDocument))
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "encoding Network Manager Core Network (%s) policy document: %s", d.Id(), err)
