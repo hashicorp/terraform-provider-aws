@@ -98,7 +98,7 @@ func (r *resourceResiliencyPolicy) Schema(ctx context.Context, req resource.Sche
 				Description: "The name of the policy.",
 				Required:    true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 				Validators: []validator.String{
 					stringvalidator.RegexMatches(regexache.MustCompile(
@@ -361,10 +361,15 @@ func (r *resourceResiliencyPolicy) Update(ctx context.Context, req resource.Upda
 
 	if !plan.PolicyDescription.Equal(state.PolicyDescription) ||
 		!plan.DataLocationConstraint.Equal(state.DataLocationConstraint) ||
-		!plan.Tier.Equal(state.Tier) {
+		!plan.Tier.Equal(state.Tier) ||
+		!plan.PolicyName.Equal(state.PolicyName) {
 
 		in := &resiliencehub.UpdateResiliencyPolicyInput{
 			PolicyArn: flex.StringFromFramework(ctx, plan.ID),
+		}
+
+		if !plan.PolicyName.Equal(state.PolicyName) {
+			in.PolicyName = flex.StringFromFramework(ctx, plan.PolicyName)
 		}
 
 		if !plan.PolicyDescription.Equal(state.PolicyDescription) {
@@ -610,7 +615,6 @@ func (m *resourceResiliencyPolicyData) flattenPolicy(ctx context.Context, failur
 				RtoInSecs: types.Int32Value(pv.RtoInSecs)})
 		} else {
 			return fwtypes.NewObjectValueOfNull[resourceResiliencyObjectiveModel](ctx)
-
 		}
 	}
 

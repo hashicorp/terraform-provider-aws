@@ -82,10 +82,11 @@ func TestAccResilienceHubResiliencyPolicy_update(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var policy1, policy2, policy3, policy4, policy5 resiliencehub.DescribeResiliencyPolicyOutput
+	var policy1, policy2, policy3, policy4, policy5, policy6 resiliencehub.DescribeResiliencyPolicyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_resiliencehub_resiliency_policy.test"
 
+	updatedPolicyName := "updated-policy-name"
 	updatedPolicyDescription := "updated policy desecription"
 	updatedDataLocationConstraint := "SameCountry"
 	updatedTier := "MissionCritical"
@@ -128,10 +129,19 @@ func TestAccResilienceHubResiliencyPolicy_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccResiliencyPolicyConfig_updatePolicydescription(rName, updatedPolicyDescription),
+				Config: testAccResiliencyPolicyConfig_updatePolicyName(updatedPolicyName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy2),
 					testAccCheckResiliencyPolicyNotRecreated(&policy1, &policy2),
+					resource.TestCheckResourceAttr(resourceName, "policy_name", updatedPolicyName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, names.ResilienceHubServiceID, regexache.MustCompile(`resiliency-policy/.+`)),
+				),
+			},
+			{
+				Config: testAccResiliencyPolicyConfig_updatePolicyDescription(rName, updatedPolicyDescription),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy3),
+					testAccCheckResiliencyPolicyNotRecreated(&policy2, &policy3),
 					resource.TestCheckResourceAttr(resourceName, "policy_description", updatedPolicyDescription),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, names.ResilienceHubServiceID, regexache.MustCompile(`resiliency-policy/.+`)),
 				),
@@ -139,8 +149,8 @@ func TestAccResilienceHubResiliencyPolicy_update(t *testing.T) {
 			{
 				Config: testAccResiliencyPolicyConfig_updateDataLocationConstraint(rName, updatedDataLocationConstraint),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy3),
-					testAccCheckResiliencyPolicyNotRecreated(&policy2, &policy3),
+					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy4),
+					testAccCheckResiliencyPolicyNotRecreated(&policy3, &policy4),
 					resource.TestCheckResourceAttr(resourceName, "data_location_constraint", updatedDataLocationConstraint),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, names.ResilienceHubServiceID, regexache.MustCompile(`resiliency-policy/.+`)),
 				),
@@ -148,8 +158,8 @@ func TestAccResilienceHubResiliencyPolicy_update(t *testing.T) {
 			{
 				Config: testAccResiliencyPolicyConfig_updateTier(rName, updatedTier),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy4),
-					testAccCheckResiliencyPolicyNotRecreated(&policy3, &policy4),
+					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy5),
+					testAccCheckResiliencyPolicyNotRecreated(&policy4, &policy5),
 					resource.TestCheckResourceAttr(resourceName, "tier", updatedTier),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, names.ResilienceHubServiceID, regexache.MustCompile(`resiliency-policy/.+`)),
 				),
@@ -157,7 +167,7 @@ func TestAccResilienceHubResiliencyPolicy_update(t *testing.T) {
 			{
 				Config: testAccResiliencyPolicyConfig_updatePolicy(rName, updatedPolicyObjValue),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy5),
+					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy6),
 					resource.TestCheckResourceAttr(resourceName, "policy.az.rpo_in_secs", updatedPolicyObjValue),
 					resource.TestCheckResourceAttr(resourceName, "policy.az.rto_in_secs", updatedPolicyObjValue),
 					resource.TestCheckResourceAttr(resourceName, "policy.hardware.rpo_in_secs", updatedPolicyObjValue),
@@ -384,7 +394,44 @@ resource "aws_resiliencehub_resiliency_policy" "test" {
 `, rName)
 }
 
-func testAccResiliencyPolicyConfig_updatePolicydescription(rName, resPolicyDescValue string) string {
+func testAccResiliencyPolicyConfig_updatePolicyName(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_resiliencehub_resiliency_policy" "test" {
+  policy_name        = %[1]q
+
+  policy_description = "testAccResiliencyPolicyConfig_updatePolicyName"
+
+  tier = "NotApplicable"
+
+  data_location_constraint = "AnyLocation"
+
+  policy {
+    region {
+      rpo_in_secs = 3600
+      rto_in_secs = 3600
+    }
+    az {
+      rpo_in_secs = 3600
+      rto_in_secs = 3600
+    }
+    hardware {
+      rpo_in_secs = 3600
+      rto_in_secs = 3600
+    }
+    software {
+      rpo_in_secs = 3600
+      rto_in_secs = 3600
+    }
+  }
+
+  tags = {
+	Value = "Other"
+  }
+}
+`, rName)
+}
+
+func testAccResiliencyPolicyConfig_updatePolicyDescription(rName, resPolicyDescValue string) string {
 	return fmt.Sprintf(`
 resource "aws_resiliencehub_resiliency_policy" "test" {
   policy_name        = %[1]q
