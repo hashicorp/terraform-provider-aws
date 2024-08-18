@@ -82,6 +82,8 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceUser,
 			TypeName: "aws_connect_user",
+			Name:     "User",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  DataSourceUserHierarchyGroup,
