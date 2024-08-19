@@ -70,6 +70,30 @@ func resourceInstance() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"datafy": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"version": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: datafy.ValidAgentVersion,
+						},
+						"token": {
+							Type:          schema.TypeString,
+							Optional:      true,
+							ConflictsWith: []string{"datafy.0.token_secret_name"},
+						},
+						"token_secret_name": {
+							Type:          schema.TypeString,
+							Optional:      true,
+							ConflictsWith: []string{"datafy.0.token"},
+						},
+					},
+				},
+			},
 			"ami": {
 				Type:         schema.TypeString,
 				ForceNew:     true,
@@ -1802,16 +1826,10 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		// Otherwise, you must provide base64-encoded text".
 
 		if d.HasChange("user_data") {
-			// Decode so the AWS SDK doesn't double encode.
-			v, err := itypes.Base64Decode(d.Get("user_data").(string))
-			if err != nil {
-				v = []byte(d.Get("user_data").(string))
-			}
-
 			input := &ec2.ModifyInstanceAttributeInput{
 				InstanceId: aws.String(d.Id()),
 				UserData: &awstypes.BlobAttributeValue{
-					Value: v,
+					Value: []byte(buildUserData(ctx, d, meta)),
 				},
 			}
 
@@ -1821,17 +1839,10 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if d.HasChange("user_data_base64") {
-			// Schema validation technically ensures the data is Base64 encoded.
-			// Decode so the AWS SDK doesn't double encode.
-			v, err := itypes.Base64Decode(d.Get("user_data_base64").(string))
-			if err != nil {
-				v = []byte(d.Get("user_data_base64").(string))
-			}
-
 			input := &ec2.ModifyInstanceAttributeInput{
 				InstanceId: aws.String(d.Id()),
 				UserData: &awstypes.BlobAttributeValue{
-					Value: v,
+					Value: []byte(buildUserData(ctx, d, meta)),
 				},
 			}
 
@@ -3019,14 +3030,7 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interfa
 		}
 	}
 
-	userData := d.Get("user_data").(string)
-	userDataBase64 := d.Get("user_data_base64").(string)
-
-	if userData != "" {
-		opts.UserData64 = flex.StringValueToBase64String(userData)
-	} else if userDataBase64 != "" {
-		opts.UserData64 = aws.String(userDataBase64)
-	}
+	opts.UserData64 = aws.String(itypes.Base64EncodeOnce([]byte(buildUserData(ctx, d, meta))))
 
 	// check for non-default Subnet, and cast it to a String
 	subnet, hasSubnet := d.GetOk(names.AttrSubnetID)
@@ -3173,6 +3177,45 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	return opts, nil
+}
+
+func buildUserData(ctx context.Context, d *schema.ResourceData, meta interface{}) string {
+	var datafyInstallScript string
+	if datafyVersion := d.Get("datafy.0.version").(string); datafyVersion != "" {
+		if tokenSecretName := d.Get("datafy.0.token_secret_name").(string); tokenSecretName != "" {
+			datafyInstallScript = datafy.InstallScriptWithSecretManager(tokenSecretName, datafyVersion)
+		} else {
+			token := d.Get("datafy.0.token").(string)
+			if token == "" {
+				token = meta.(*conns.AWSClient).DatafyConfig(ctx).Token
+			}
+			datafyInstallScript = datafy.InstallScript(token, datafyVersion)
+		}
+	}
+
+	userData := d.Get("user_data").(string)
+	userDataBase64 := d.Get("user_data_base64").(string)
+
+	var userDataOutput string
+	if userData != "" {
+		userDataOutput = userData
+		if v, err := itypes.Base64Decode(userData); err != nil {
+			userDataOutput = string(v)
+		}
+	} else if userDataBase64 != "" {
+		if v, err := itypes.Base64Decode(userDataBase64); err != nil {
+			userDataOutput = string(v)
+		}
+	}
+
+	if datafyInstallScript != "" {
+		if userDataOutput == "" {
+			userDataOutput = "#!/bin/sh"
+		}
+		userDataOutput = fmt.Sprintf("%s\n%s", userDataOutput, datafyInstallScript)
+	}
+
+	return userDataOutput
 }
 
 // startInstance starts an EC2 instance and waits for the instance to start.

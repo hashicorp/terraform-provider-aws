@@ -52,6 +52,10 @@ type AWSClient struct {
 	datafyConfig *datafy.Config
 }
 
+func (c *AWSClient) DatafyConfig(context.Context) datafy.Config {
+	return c.datafyConfig.Copy()
+}
+
 func (c *AWSClient) DatafyClient(context.Context) *datafy.Client {
 	return datafy.NewDatafyClient(c.datafyConfig)
 }
