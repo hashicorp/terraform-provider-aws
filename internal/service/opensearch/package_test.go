@@ -45,6 +45,7 @@ func TestAccOpenSearchPackage_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"available_package_version",
 					"package_source", // This isn't returned by the API
 				},
 			},
