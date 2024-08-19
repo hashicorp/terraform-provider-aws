@@ -24,7 +24,7 @@ import (
 )
 
 func TestAccWorkLinkFleet_basic(t *testing.T) {
-	acctest.Skip(t, "skipping test; Amazon Worklink has been deprecated and will be removed in the next major release")
+	acctest.Skip(t, "skipping test; Amazon WorkLink has been deprecated and will be removed in the next major release")
 
 	ctx := acctest.Context(t)
 	suffix := sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha)
@@ -55,7 +55,7 @@ func TestAccWorkLinkFleet_basic(t *testing.T) {
 }
 
 func TestAccWorkLinkFleet_displayName(t *testing.T) {
-	acctest.Skip(t, "skipping test; Amazon Worklink has been deprecated and will be removed in the next major release")
+	acctest.Skip(t, "skipping test; Amazon WorkLink has been deprecated and will be removed in the next major release")
 
 	ctx := acctest.Context(t)
 	suffix := sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha)
@@ -91,7 +91,7 @@ func TestAccWorkLinkFleet_displayName(t *testing.T) {
 }
 
 func TestAccWorkLinkFleet_optimizeForEndUserLocation(t *testing.T) {
-	acctest.Skip(t, "skipping test; Amazon Worklink has been deprecated and will be removed in the next major release")
+	acctest.Skip(t, "skipping test; Amazon WorkLink has been deprecated and will be removed in the next major release")
 
 	ctx := acctest.Context(t)
 	suffix := sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha)
@@ -127,7 +127,7 @@ func TestAccWorkLinkFleet_optimizeForEndUserLocation(t *testing.T) {
 }
 
 func TestAccWorkLinkFleet_auditStreamARN(t *testing.T) {
-	acctest.Skip(t, "skipping test; Amazon Worklink has been deprecated and will be removed in the next major release")
+	acctest.Skip(t, "skipping test; Amazon WorkLink has been deprecated and will be removed in the next major release")
 
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha)
@@ -156,7 +156,7 @@ func TestAccWorkLinkFleet_auditStreamARN(t *testing.T) {
 }
 
 func TestAccWorkLinkFleet_network(t *testing.T) {
-	acctest.Skip(t, "skipping test; Amazon Worklink has been deprecated and will be removed in the next major release")
+	acctest.Skip(t, "skipping test; Amazon WorkLink has been deprecated and will be removed in the next major release")
 
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha)
@@ -202,7 +202,7 @@ func TestAccWorkLinkFleet_network(t *testing.T) {
 }
 
 func TestAccWorkLinkFleet_deviceCaCertificate(t *testing.T) {
-	acctest.Skip(t, "skipping test; Amazon Worklink has been deprecated and will be removed in the next major release")
+	acctest.Skip(t, "skipping test; Amazon WorkLink has been deprecated and will be removed in the next major release")
 
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha)
@@ -238,7 +238,7 @@ func TestAccWorkLinkFleet_deviceCaCertificate(t *testing.T) {
 }
 
 func TestAccWorkLinkFleet_identityProvider(t *testing.T) {
-	acctest.Skip(t, "skipping test; Amazon Worklink has been deprecated and will be removed in the next major release")
+	acctest.Skip(t, "skipping test; Amazon WorkLink has been deprecated and will be removed in the next major release")
 
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha)
@@ -273,7 +273,7 @@ func TestAccWorkLinkFleet_identityProvider(t *testing.T) {
 }
 
 func TestAccWorkLinkFleet_disappears(t *testing.T) {
-	acctest.Skip(t, "skipping test; Amazon Worklink has been deprecated and will be removed in the next major release")
+	acctest.Skip(t, "skipping test; Amazon WorkLink has been deprecated and will be removed in the next major release")
 
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha)
