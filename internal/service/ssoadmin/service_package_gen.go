@@ -30,6 +30,10 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 			Factory: newDataSourcePrincipalApplicationAssignments,
 			Name:    "Principal Application Assignments",
 		},
+		{
+			Factory: newPermissionSetsDataSource,
+			Name:    "Permission Sets",
+		},
 	}
 }
 
@@ -69,10 +73,6 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourcePermissionSet,
 			TypeName: "aws_ssoadmin_permission_set",
-		},
-		{
-			Factory:  DataSourcePermissionSets,
-			TypeName: "aws_ssoadmin_permission_sets",
 		},
 	}
 }

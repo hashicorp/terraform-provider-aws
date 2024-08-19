@@ -6,59 +6,79 @@ package ssoadmin
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ssoadmin_permission_sets")
-func DataSourcePermissionSets() *schema.Resource {
-	return &schema.Resource{
-		ReadWithoutTimeout: dataSourcePermissionSetsRead,
+// @FrameworkDataSource(name="Permission Sets")
+func newPermissionSetsDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &permissionSetsDataSource{}, nil
+}
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARNs: {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+type permissionSetsDataSource struct {
+	framework.DataSourceWithConfigure
+}
+
+func (*permissionSetsDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
+	response.TypeName = "aws_ssoadmin_permission_sets"
+}
+
+func (d *permissionSetsDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+	response.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			names.AttrARNs: schema.ListAttribute{
+				ElementType: types.StringType,
+				Computed:    true,
 			},
-			"instance_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
+			names.AttrID: framework.IDAttribute(),
+			"instance_arn": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Required:   true,
 			},
 		},
 	}
 }
 
-func dataSourcePermissionSetsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
-
-	instanceArn := d.Get("instance_arn").(string)
-
-	input := &ssoadmin.ListPermissionSetsInput{
-		InstanceArn: aws.String(instanceArn),
+func (d *permissionSetsDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	var data permissionSetsDataSourceModel
+	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
-	var permissionSetArns []string
-	paginator := ssoadmin.NewListPermissionSetsPaginator(conn, input)
-	for paginator.HasMorePages() {
-		page, err := paginator.NextPage(ctx)
+	conn := d.Meta().SSOAdminClient(ctx)
+
+	var arns []string
+	input := &ssoadmin.ListPermissionSetsInput{
+		InstanceArn: fwflex.StringFromFramework(ctx, data.InstanceARN),
+	}
+	pages := ssoadmin.NewListPermissionSetsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "listing SSO Permission Sets: %s", err)
+			response.Diagnostics.AddError("listing SSO Permission Sets", err.Error())
+
+			return
 		}
 
-		permissionSetArns = append(permissionSetArns, page.PermissionSets...)
+		arns = append(arns, page.PermissionSets...)
 	}
 
-	d.SetId(instanceArn)
-	d.Set(names.AttrARNs, permissionSetArns)
+	data.ID = fwflex.StringValueToFramework(ctx, data.InstanceARN.ValueString())
+	data.ARNs = fwflex.FlattenFrameworkStringValueList(ctx, arns)
 
-	return diags
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+}
+
+type permissionSetsDataSourceModel struct {
+	ARNs        types.List   `tfsdk:"arns"`
+	ID          types.String `tfsdk:"id"`
+	InstanceARN fwtypes.ARN  `tfsdk:"instance_arn"`
 }
