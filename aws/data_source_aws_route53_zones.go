@@ -14,7 +14,16 @@ func dataSourceAwsRoute53Zones() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceAwsRoute53ZonesRead,
 		Schema: map[string]*schema.Schema{
+			"filter": ec2CustomFiltersSchema(),
+
 			"tags": tagsSchemaComputed(),
+
+			"ids": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
+			},
 		},
 	}
 }
