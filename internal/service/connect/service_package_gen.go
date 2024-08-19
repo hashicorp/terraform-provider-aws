@@ -68,8 +68,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_connect_queue",
 		},
 		{
-			Factory:  DataSourceQuickConnect,
+			Factory:  dataSourceQuickConnect,
 			TypeName: "aws_connect_quick_connect",
+			Name:     "Quick Connect",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  dataSourceRoutingProfile,
