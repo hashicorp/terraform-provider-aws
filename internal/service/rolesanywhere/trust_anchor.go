@@ -8,9 +8,9 @@ import (
 	"errors"
 	"log"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
 	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere/types"
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -110,7 +110,7 @@ func resourceTrustAnchorCreate(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "creating RolesAnywhere Trust Anchor (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.TrustAnchor.TrustAnchorId))
+	d.SetId(aws.ToString(output.TrustAnchor.TrustAnchorId))
 
 	return append(diags, resourceTrustAnchorRead(ctx, d, meta)...)
 }

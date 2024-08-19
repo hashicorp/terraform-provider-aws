@@ -8,9 +8,9 @@ import (
 	"log"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -207,7 +207,7 @@ func dataSourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta
 		var targetGroups []awstypes.TargetGroup
 
 		for _, targetGroup := range results {
-			arn := aws.StringValue(targetGroup.TargetGroupArn)
+			arn := aws.ToString(targetGroup.TargetGroupArn)
 			tags, err := listTags(ctx, conn, arn)
 
 			if errs.IsA[*awstypes.TargetGroupNotFoundException](err) {
@@ -233,7 +233,7 @@ func dataSourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	targetGroup := results[0]
-	d.SetId(aws.StringValue(targetGroup.TargetGroupArn))
+	d.SetId(aws.ToString(targetGroup.TargetGroupArn))
 	d.Set(names.AttrARN, targetGroup.TargetGroupArn)
 	d.Set("arn_suffix", TargetGroupSuffixFromARN(targetGroup.TargetGroupArn))
 	d.Set("load_balancer_arns", flex.FlattenStringValueSet(targetGroup.LoadBalancerArns))
