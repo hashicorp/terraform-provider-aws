@@ -31,13 +31,12 @@ func dataSourceAwsRoute53ZonesRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if res == nil || len(res.HostedZones) == 0 {
-		return fmt.Errorf("no matching hosted zone found")
+		return fmt.Errorf("no maching hosted zone found")
 	}
 
 	zoneIds := make([]string, 0)
 	for _, zone := range res.HostedZones {
-		zoneIdToSet := cleanZoneID(aws.StringValue(zone.Id))
-		zoneIds = append(zoneIds, zoneIdToSet)
+		zoneIds = append(zoneIds, aws.StringValue(zone.Id))
 	}
 
 	d.SetId(meta.(*AWSClient).region)
