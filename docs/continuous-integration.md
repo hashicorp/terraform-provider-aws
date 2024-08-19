@@ -242,18 +242,6 @@ PKG=rds make golangci-lint2
 
 GoReleaser CI build-32-bit ensures that GoReleaser can build a 32-bit binary. This check catches rare but important edge cases. Currently, we do not offer a `make` target to run this check locally.
 
-### Preferred Library Version Check / `diffgrep`
-
-The Preferred Library Version Check doesn't cause CI to fail but will leave a comment on the pull request.
-
-This check verifies that preferred library versions are used in the development of new resources. It inspects the pull request diff for any occurrence of a non-preferred library name, typically seen in an import block. Currently, the only check is for AWS SDK for Go V1, but this may be extended in the future. If a non-preferred library version is detected, the check will not fail but will leave a comment on the pull request linking to the relevant contributor documentation.
-
-Use the `preferred-lib` target to check your changes against the `origin/main` branch of your Git repository (configurable using `BASE_REF`):
-
-```console
-make preferred-lib
-```
-
 ### Provider Checks
 
 Provider checks are a suite of tests that ensure Go code functions and markdown is correct.

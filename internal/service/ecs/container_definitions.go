@@ -54,11 +54,25 @@ func (cd containerDefinitions) reduce(isAWSVPC bool) {
 	// Compact any sparse lists.
 	cd.compactArrays()
 
+	// Deal with special fields which have defaults.
+	// See https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html#container_definitions.
 	for i, def := range cd {
-		// Deal with special fields which have defaults.
 		if def.Essential == nil {
 			cd[i].Essential = aws.Bool(true)
 		}
+
+		if hc := def.HealthCheck; hc != nil {
+			if hc.Interval == nil {
+				hc.Interval = aws.Int32(30)
+			}
+			if hc.Retries == nil {
+				hc.Retries = aws.Int32(3)
+			}
+			if hc.Timeout == nil {
+				hc.Timeout = aws.Int32(5)
+			}
+		}
+
 		for j, pm := range def.PortMappings {
 			if pm.Protocol == awstypes.TransportProtocolTcp {
 				cd[i].PortMappings[j].Protocol = ""
