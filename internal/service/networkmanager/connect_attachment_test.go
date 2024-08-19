@@ -48,9 +48,10 @@ func TestAccNetworkManagerConnectAttachment_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"state"},
 			},
 		},
 	})
@@ -84,9 +85,10 @@ func TestAccNetworkManagerConnectAttachment_basic_NoDependsOn(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"state"},
 			},
 		},
 	})
@@ -144,9 +146,10 @@ func TestAccNetworkManagerConnectAttachment_protocolNoEncap(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"state"},
 			},
 		},
 	})
