@@ -107,6 +107,10 @@ func SkipSweepError(err error) bool {
 	if tfawserr.ErrMessageContains(err, "ValidationException", "Account not found for the request") {
 		return true
 	}
+	// Example (redshiftserverless): ValidationException: The ServerlessToServerlessRestore operation isn't supported
+	if tfawserr.ErrMessageContains(err, "ValidationException", "operation isn't supported") {
+		return true
+	}
 	// For example from us-west-2 SageMaker device fleet
 	if tfawserr.ErrMessageContains(err, "ValidationException", "We are retiring Amazon Sagemaker Edge") {
 		return true
