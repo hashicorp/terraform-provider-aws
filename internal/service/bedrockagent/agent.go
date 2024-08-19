@@ -212,6 +212,8 @@ func (r *agentResource) Create(ctx context.Context, request resource.CreateReque
 		}
 	}
 
+	removeDefaultPrompts(agent)
+
 	// Set values for unknowns.
 	response.Diagnostics.Append(fwflex.Flatten(ctx, agent, &data)...)
 	if response.Diagnostics.HasError() {
@@ -251,6 +253,8 @@ func (r *agentResource) Read(ctx context.Context, request resource.ReadRequest, 
 
 		return
 	}
+
+	removeDefaultPrompts(agent)
 
 	response.Diagnostics.Append(fwflex.Flatten(ctx, agent, &data)...)
 	if response.Diagnostics.HasError() {
@@ -537,6 +541,23 @@ func waitAgentDeleted(ctx context.Context, conn *bedrockagent.Client, id string,
 	}
 
 	return nil, err
+}
+
+func removeDefaultPrompts(agent *awstypes.Agent) {
+
+	pocm := agent.PromptOverrideConfiguration
+
+	overrides := pocm.PromptConfigurations
+
+	var filtered []awstypes.PromptConfiguration
+
+	for _, override := range overrides {
+		if override.PromptCreationMode == awstypes.CreationModeOverridden {
+			filtered = append(filtered, override)
+		}
+	}
+
+	pocm.PromptConfigurations = filtered
 }
 
 type agentResourceModel struct {
