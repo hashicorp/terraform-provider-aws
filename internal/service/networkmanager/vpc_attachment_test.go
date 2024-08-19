@@ -154,7 +154,7 @@ func TestAccNetworkManagerVPCAttachment_Attached_basic(t *testing.T) {
 						ResourceName:            resourceName,
 						ImportState:             true,
 						ImportStateVerify:       true,
-						ImportStateVerifyIgnore: []string{"state"},
+						ImportStateVerifyIgnore: []string{names.AttrState},
 					},
 				},
 			})
