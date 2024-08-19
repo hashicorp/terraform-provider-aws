@@ -72,8 +72,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_connect_quick_connect",
 		},
 		{
-			Factory:  DataSourceRoutingProfile,
+			Factory:  dataSourceRoutingProfile,
 			TypeName: "aws_connect_routing_profile",
+			Name:     "Routing Profile",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  dataSourceSecurityProfile,

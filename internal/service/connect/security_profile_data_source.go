@@ -83,7 +83,7 @@ func dataSourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, 
 		input.SecurityProfileId = aws.String(v.(string))
 	} else if v, ok := d.GetOk(names.AttrName); ok {
 		name := v.(string)
-		securityProfileSummary, err := findSecurityProfileSummaryTwoPartKey(ctx, conn, instanceID, name)
+		securityProfileSummary, err := findSecurityProfileSummaryByTwoPartKey(ctx, conn, instanceID, name)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading Connect Security Profile (%s) summary: %s", name, err)
@@ -121,7 +121,7 @@ func dataSourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func findSecurityProfileSummaryTwoPartKey(ctx context.Context, conn *connect.Client, instanceID, name string) (*awstypes.SecurityProfileSummary, error) {
+func findSecurityProfileSummaryByTwoPartKey(ctx context.Context, conn *connect.Client, instanceID, name string) (*awstypes.SecurityProfileSummary, error) {
 	const maxResults = 60
 	input := &connect.ListSecurityProfilesInput{
 		InstanceId: aws.String(instanceID),

@@ -213,7 +213,7 @@ func resourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, met
 	queueConfigs, err := findRoutingConfigQueueConfigSummariesByTwoPartKey(ctx, conn, instanceID, routingProfileID)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "finding Connect Routing Profile Queue Configs Summary by Routing Profile ID (%s): %s", routingProfileID, err)
+		return sdkdiag.AppendErrorf(diags, "reading Connect Routing Profile (%s) Queue Config summaries: %s", d.Id(), err)
 	}
 
 	if err := d.Set("queue_configs", flattenRoutingConfigQueueConfigSummaries(queueConfigs)); err != nil {

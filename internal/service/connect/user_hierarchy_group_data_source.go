@@ -93,7 +93,7 @@ func dataSourceUserHierarchyGroupRead(ctx context.Context, d *schema.ResourceDat
 		input.HierarchyGroupId = aws.String(v.(string))
 	} else if v, ok := d.GetOk(names.AttrName); ok {
 		name := v.(string)
-		hierarchyGroupSummary, err := findUserHierarchyGroupByTwoPartKey(ctx, conn, instanceID, name)
+		hierarchyGroupSummary, err := findUserHierarchyGroupSummaryByTwoPartKey(ctx, conn, instanceID, name)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading Connect User Hierarchy Group (%s) summary: %s", name, err)
@@ -125,7 +125,7 @@ func dataSourceUserHierarchyGroupRead(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func findUserHierarchyGroupSummaryTwoPartKey(ctx context.Context, conn *connect.Client, instanceID, name string) (*awstypes.HierarchyGroupSummary, error) {
+func findUserHierarchyGroupSummaryByTwoPartKey(ctx context.Context, conn *connect.Client, instanceID, name string) (*awstypes.HierarchyGroupSummary, error) {
 	const maxResults = 60
 	input := &connect.ListUserHierarchyGroupsInput{
 		InstanceId: aws.String(instanceID),
