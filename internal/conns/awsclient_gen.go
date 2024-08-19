@@ -158,9 +158,11 @@ import (
 	networkmanager_sdkv2 "github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	networkmonitor_sdkv2 "github.com/aws/aws-sdk-go-v2/service/networkmonitor"
 	oam_sdkv2 "github.com/aws/aws-sdk-go-v2/service/oam"
+	opensearch_sdkv2 "github.com/aws/aws-sdk-go-v2/service/opensearch"
 	opensearchserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	organizations_sdkv2 "github.com/aws/aws-sdk-go-v2/service/organizations"
 	osis_sdkv2 "github.com/aws/aws-sdk-go-v2/service/osis"
+	outposts_sdkv2 "github.com/aws/aws-sdk-go-v2/service/outposts"
 	paymentcryptography_sdkv2 "github.com/aws/aws-sdk-go-v2/service/paymentcryptography"
 	pcaconnectorad_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pcaconnectorad"
 	pinpoint_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pinpoint"
@@ -239,9 +241,7 @@ import (
 	lexmodelbuildingservice_sdkv1 "github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	macie2_sdkv1 "github.com/aws/aws-sdk-go/service/macie2"
 	neptune_sdkv1 "github.com/aws/aws-sdk-go/service/neptune"
-	opensearchservice_sdkv1 "github.com/aws/aws-sdk-go/service/opensearchservice"
 	opsworks_sdkv1 "github.com/aws/aws-sdk-go/service/opsworks"
-	outposts_sdkv1 "github.com/aws/aws-sdk-go/service/outposts"
 	quicksight_sdkv1 "github.com/aws/aws-sdk-go/service/quicksight"
 	simpledb_sdkv1 "github.com/aws/aws-sdk-go/service/simpledb"
 	worklink_sdkv1 "github.com/aws/aws-sdk-go/service/worklink"
@@ -893,8 +893,8 @@ func (c *AWSClient) ObservabilityAccessManagerClient(ctx context.Context) *oam_s
 	return errs.Must(client[*oam_sdkv2.Client](ctx, c, names.ObservabilityAccessManager, make(map[string]any)))
 }
 
-func (c *AWSClient) OpenSearchConn(ctx context.Context) *opensearchservice_sdkv1.OpenSearchService {
-	return errs.Must(conn[*opensearchservice_sdkv1.OpenSearchService](ctx, c, names.OpenSearch, make(map[string]any)))
+func (c *AWSClient) OpenSearchClient(ctx context.Context) *opensearch_sdkv2.Client {
+	return errs.Must(client[*opensearch_sdkv2.Client](ctx, c, names.OpenSearch, make(map[string]any)))
 }
 
 func (c *AWSClient) OpenSearchIngestionClient(ctx context.Context) *osis_sdkv2.Client {
@@ -913,8 +913,8 @@ func (c *AWSClient) OrganizationsClient(ctx context.Context) *organizations_sdkv
 	return errs.Must(client[*organizations_sdkv2.Client](ctx, c, names.Organizations, make(map[string]any)))
 }
 
-func (c *AWSClient) OutpostsConn(ctx context.Context) *outposts_sdkv1.Outposts {
-	return errs.Must(conn[*outposts_sdkv1.Outposts](ctx, c, names.Outposts, make(map[string]any)))
+func (c *AWSClient) OutpostsClient(ctx context.Context) *outposts_sdkv2.Client {
+	return errs.Must(client[*outposts_sdkv2.Client](ctx, c, names.Outposts, make(map[string]any)))
 }
 
 func (c *AWSClient) PCAConnectorADClient(ctx context.Context) *pcaconnectorad_sdkv2.Client {

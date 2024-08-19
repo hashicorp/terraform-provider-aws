@@ -35,6 +35,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
 	inspector2types "github.com/aws/aws-sdk-go-v2/service/inspector2/types"
 	organizationstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
+	"github.com/aws/aws-sdk-go-v2/service/outposts"
 	"github.com/aws/aws-sdk-go-v2/service/pinpoint"
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
 	ssoadmintypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
@@ -43,7 +44,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/outposts"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -1353,10 +1353,10 @@ func PreCheckDirectoryServiceSimpleDirectory(ctx context.Context, t *testing.T) 
 func PreCheckOutpostsOutposts(ctx context.Context, t *testing.T) {
 	t.Helper()
 
-	conn := Provider.Meta().(*conns.AWSClient).OutpostsConn(ctx)
+	conn := Provider.Meta().(*conns.AWSClient).OutpostsClient(ctx)
 	input := &outposts.ListOutpostsInput{}
 
-	output, err := conn.ListOutpostsWithContext(ctx, input)
+	output, err := conn.ListOutposts(ctx, input)
 
 	if PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

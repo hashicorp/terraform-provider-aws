@@ -104,7 +104,9 @@ func ExpandStringyValueListEmpty[E ~string](configured []any) []E {
 func FlattenStringList(list []*string) []interface{} {
 	vs := make([]interface{}, 0, len(list))
 	for _, v := range list {
-		vs = append(vs, *v)
+		if v != nil {
+			vs = append(vs, *v)
+		}
 	}
 	return vs
 }
