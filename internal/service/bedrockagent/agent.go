@@ -333,6 +333,8 @@ func (r *agentResource) Update(ctx context.Context, request resource.UpdateReque
 			}
 		}
 
+		removeDefaultPrompts(agent)
+
 		// Set values for unknowns.
 		response.Diagnostics.Append(fwflex.Flatten(ctx, agent, &new)...)
 		if response.Diagnostics.HasError() {
