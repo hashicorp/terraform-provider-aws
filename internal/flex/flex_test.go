@@ -525,3 +525,32 @@ func TestDiffSlices(t *testing.T) {
 		}
 	}
 }
+
+func TestFlattenStringList(t *testing.T) {
+	t.Parallel()
+
+	foo := "bar"
+	baz := "qux"
+
+	tests := []struct {
+		name string
+		list []*string
+		want []interface{}
+	}{
+		{"nil", nil, []interface{}{}},
+		{"empty", []*string{}, []interface{}{}},
+		{"nil item", []*string{nil}, []interface{}{}},
+		{"single item", []*string{&foo}, []interface{}{foo}},
+		{"multiple items", []*string{&foo, &baz}, []interface{}{foo, baz}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			got := FlattenStringList(tt.list)
+			if diff := cmp.Diff(got, tt.want); diff != "" {
+				t.Errorf("FlattenStringList() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
