@@ -157,6 +157,7 @@ import (
 	networkfirewall_sdkv2 "github.com/aws/aws-sdk-go-v2/service/networkfirewall"
 	networkmonitor_sdkv2 "github.com/aws/aws-sdk-go-v2/service/networkmonitor"
 	oam_sdkv2 "github.com/aws/aws-sdk-go-v2/service/oam"
+	opensearch_sdkv2 "github.com/aws/aws-sdk-go-v2/service/opensearch"
 	opensearchserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	organizations_sdkv2 "github.com/aws/aws-sdk-go-v2/service/organizations"
 	osis_sdkv2 "github.com/aws/aws-sdk-go-v2/service/osis"
@@ -240,7 +241,6 @@ import (
 	macie2_sdkv1 "github.com/aws/aws-sdk-go/service/macie2"
 	neptune_sdkv1 "github.com/aws/aws-sdk-go/service/neptune"
 	networkmanager_sdkv1 "github.com/aws/aws-sdk-go/service/networkmanager"
-	opensearchservice_sdkv1 "github.com/aws/aws-sdk-go/service/opensearchservice"
 	opsworks_sdkv1 "github.com/aws/aws-sdk-go/service/opsworks"
 	quicksight_sdkv1 "github.com/aws/aws-sdk-go/service/quicksight"
 	simpledb_sdkv1 "github.com/aws/aws-sdk-go/service/simpledb"
@@ -893,8 +893,8 @@ func (c *AWSClient) ObservabilityAccessManagerClient(ctx context.Context) *oam_s
 	return errs.Must(client[*oam_sdkv2.Client](ctx, c, names.ObservabilityAccessManager, make(map[string]any)))
 }
 
-func (c *AWSClient) OpenSearchConn(ctx context.Context) *opensearchservice_sdkv1.OpenSearchService {
-	return errs.Must(conn[*opensearchservice_sdkv1.OpenSearchService](ctx, c, names.OpenSearch, make(map[string]any)))
+func (c *AWSClient) OpenSearchClient(ctx context.Context) *opensearch_sdkv2.Client {
+	return errs.Must(client[*opensearch_sdkv2.Client](ctx, c, names.OpenSearch, make(map[string]any)))
 }
 
 func (c *AWSClient) OpenSearchIngestionClient(ctx context.Context) *osis_sdkv2.Client {
