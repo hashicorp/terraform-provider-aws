@@ -88,7 +88,7 @@ func resourceApplication() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							// Because the SDK only accepts typed arguments from SourceType, we cannot add `other` even though the API will accept it.
-							// This service has been deprecated and will only for completeness sake be migrated, will remove the validation as to not cause a client validation expection but rather let AWS API handle it.
+							// This service has been deprecated and will only for completeness sake be migrated, will remove the validation as to not cause a client validation exception but rather let AWS API handle it.
 							//ValidateFunc: validation.StringInSlice(append(opsworks.SourceType_Values(), "other"), false),
 						},
 
