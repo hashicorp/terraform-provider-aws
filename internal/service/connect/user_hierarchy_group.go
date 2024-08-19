@@ -41,30 +41,6 @@ func resourceUserHierarchyGroup() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		SchemaFunc: func() map[string]*schema.Schema {
-			// Each level shares the same schema.
-			hierarchyPathLevelSchema := func() *schema.Schema {
-				return &schema.Schema{
-					Type:     schema.TypeList,
-					Computed: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							names.AttrARN: {
-								Type:     schema.TypeString,
-								Computed: true,
-							},
-							names.AttrID: {
-								Type:     schema.TypeString,
-								Computed: true,
-							},
-							names.AttrName: {
-								Type:     schema.TypeString,
-								Computed: true,
-							},
-						},
-					},
-				}
-			}
-
 			return map[string]*schema.Schema{
 				names.AttrARN: {
 					Type:     schema.TypeString,
@@ -79,26 +55,11 @@ func resourceUserHierarchyGroup() *schema.Resource {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"level_one": func() *schema.Schema {
-								schema := hierarchyPathLevelSchema()
-								return schema
-							}(),
-							"level_two": func() *schema.Schema {
-								schema := hierarchyPathLevelSchema()
-								return schema
-							}(),
-							"level_three": func() *schema.Schema {
-								schema := hierarchyPathLevelSchema()
-								return schema
-							}(),
-							"level_four": func() *schema.Schema {
-								schema := hierarchyPathLevelSchema()
-								return schema
-							}(),
-							"level_five": func() *schema.Schema {
-								schema := hierarchyPathLevelSchema()
-								return schema
-							}(),
+							"level_one":   hierarchyPathLevelSchema(),
+							"level_two":   hierarchyPathLevelSchema(),
+							"level_three": hierarchyPathLevelSchema(),
+							"level_four":  hierarchyPathLevelSchema(),
+							"level_five":  hierarchyPathLevelSchema(),
 						},
 					},
 				},
@@ -124,6 +85,30 @@ func resourceUserHierarchyGroup() *schema.Resource {
 				names.AttrTags:    tftags.TagsSchema(),
 				names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			}
+		},
+	}
+}
+
+// Each level shares the same schema.
+func hierarchyPathLevelSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			},
 		},
 	}
 }
