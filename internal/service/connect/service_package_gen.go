@@ -205,8 +205,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceUserHierarchyStructure,
+			Factory:  resourceUserHierarchyStructure,
 			TypeName: "aws_connect_user_hierarchy_structure",
+			Name:     "User Hierarchy Structure",
 		},
 		{
 			Factory:  resourceVocabulary,

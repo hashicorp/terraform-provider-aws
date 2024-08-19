@@ -101,7 +101,7 @@ func dataSourceUserHierarchyStructureRead(ctx context.Context, d *schema.Resourc
 		return sdkdiag.AppendErrorf(diags, "getting Connect User Hierarchy Structure for Connect Instance (%s): empty response", instanceID)
 	}
 
-	if err := d.Set("hierarchy_structure", flattenUserHierarchyStructure(resp.HierarchyStructure)); err != nil {
+	if err := d.Set("hierarchy_structure", flattenHierarchyStructure(resp.HierarchyStructure)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting Connect User Hierarchy Structure for Connect Instance: (%s)", instanceID)
 	}
 

@@ -13,6 +13,7 @@ var (
 	ResourcePhoneNumber               = resourcePhoneNumber
 	ResourceUser                      = resourceUser
 	ResourceUserHierarchyGroup        = resourceUserHierarchyGroup
+	ResourceUserHierarchyStructure    = resourceUserHierarchyStructure
 	ResourceVocabulary                = resourceVocabulary
 
 	FindBotAssociationByThreePartKey          = findBotAssociationByThreePartKey
@@ -23,5 +24,6 @@ var (
 	FindPhoneNumberByID                       = findPhoneNumberByID
 	FindUserByTwoPartKey                      = findUserByTwoPartKey
 	FindUserHierarchyGroupByTwoPartKey        = findUserHierarchyGroupByTwoPartKey
+	FindUserHierarchyStructureByID            = findUserHierarchyStructureByID
 	FindVocabularyByTwoPartKey                = findVocabularyByTwoPartKey
 )
