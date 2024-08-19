@@ -76,8 +76,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_connect_routing_profile",
 		},
 		{
-			Factory:  DataSourceSecurityProfile,
+			Factory:  dataSourceSecurityProfile,
 			TypeName: "aws_connect_security_profile",
+			Name:     "Security Profile",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  DataSourceUser,
