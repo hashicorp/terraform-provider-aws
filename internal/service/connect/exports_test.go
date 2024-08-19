@@ -11,6 +11,7 @@ var (
 	ResourceHoursOfOperation          = resourceHoursOfOperation
 	ResourceLambdaFunctionAssociation = resourceLambdaFunctionAssociation
 	ResourcePhoneNumber               = resourcePhoneNumber
+	ResourceRoutingProfile            = resourceRoutingProfile
 	ResourceSecurityProfile           = resourceSecurityProfile
 	ResourceUser                      = resourceUser
 	ResourceUserHierarchyGroup        = resourceUserHierarchyGroup
@@ -23,6 +24,7 @@ var (
 	FindHoursOfOperationByTwoPartKey          = findHoursOfOperationByTwoPartKey
 	FindLambdaFunctionAssociationByTwoPartKey = findLambdaFunctionAssociationByTwoPartKey
 	FindPhoneNumberByID                       = findPhoneNumberByID
+	FindRoutingProfileByTwoPartKey            = findRoutingProfileByTwoPartKey
 	FindSecurityProfileByTwoPartKey           = findSecurityProfileByTwoPartKey
 	FindUserByTwoPartKey                      = findUserByTwoPartKey
 	FindUserHierarchyGroupByTwoPartKey        = findUserHierarchyGroupByTwoPartKey

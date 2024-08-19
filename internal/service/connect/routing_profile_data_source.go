@@ -146,7 +146,7 @@ func dataSourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, m
 
 	routingProfile := resp.RoutingProfile
 
-	if err := d.Set("media_concurrencies", flattenRoutingProfileMediaConcurrencies(routingProfile.MediaConcurrencies)); err != nil {
+	if err := d.Set("media_concurrencies", flattenMediaConcurrencies(routingProfile.MediaConcurrencies)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 

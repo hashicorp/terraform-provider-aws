@@ -176,7 +176,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceRoutingProfile,
+			Factory:  resourceRoutingProfile,
 			TypeName: "aws_connect_routing_profile",
 			Name:     "Routing Profile",
 			Tags: &types.ServicePackageResourceTags{
