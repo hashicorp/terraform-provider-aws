@@ -88,7 +88,7 @@ This resource supports the following arguments:
 * `volumeSize` - (Optional) The size, in GB, of the ML storage volume to attach to the notebook instance. The default value is 5 GB.
 * `subnetId` - (Optional) The VPC subnet ID.
 * `securityGroups` - (Optional) The associated security groups.
-* `acceleratorTypes` - (Optional, Deprecated)) A list of Elastic Inference (EI) instance types to associate with this notebook instance. See [Elastic Inference Accelerator](https://docs.aws.amazon.com/sagemaker/latest/dg/ei.html) for more details. Valid values: `ml.eia1.medium`, `ml.eia1.large`, `ml.eia1.xlarge`, `ml.eia2.medium`, `ml.eia2.large`, `ml.eia2.xlarge`.
+* `acceleratorTypes` - (Optional, Deprecated) A list of Elastic Inference (EI) instance types to associate with this notebook instance. See [Elastic Inference Accelerator](https://docs.aws.amazon.com/sagemaker/latest/dg/ei.html) for more details. Valid values: `ml.eia1.medium`, `ml.eia1.large`, `ml.eia1.xlarge`, `ml.eia2.medium`, `ml.eia2.large`, `ml.eia2.xlarge`.
 * `additionalCodeRepositories` - (Optional) An array of up to three Git repositories to associate with the notebook instance.
  These can be either the names of Git repositories stored as resources in your account, or the URL of Git repositories in [AWS CodeCommit](https://docs.aws.amazon.com/codecommit/latest/userguide/welcome.html) or in any other Git repository. These repositories are cloned at the same level as the default repository of your notebook instance.
 * `defaultCodeRepository` - (Optional) The Git repository associated with the notebook instance as its default code repository. This can be either the name of a Git repository stored as a resource in your account, or the URL of a Git repository in [AWS CodeCommit](https://docs.aws.amazon.com/codecommit/latest/userguide/welcome.html) or in any other Git repository.
@@ -145,4 +145,4 @@ Using `terraform import`, import SageMaker Notebook Instances using the `name`. 
 % terraform import aws_sagemaker_notebook_instance.test_notebook_instance my-notebook-instance
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-5e252144d6a5568e5371adc34a319d772ad3c8b4f238312ded06d5c31a1b0f15 -->
+<!-- cache-key: cdktf-0.20.1 input-7b793590709519efd0f96bd3612e9c4d048d225f9ade368bd3db9274a33268bd -->

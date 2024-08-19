@@ -161,6 +161,7 @@ import (
 	opensearchserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	organizations_sdkv2 "github.com/aws/aws-sdk-go-v2/service/organizations"
 	osis_sdkv2 "github.com/aws/aws-sdk-go-v2/service/osis"
+	outposts_sdkv2 "github.com/aws/aws-sdk-go-v2/service/outposts"
 	paymentcryptography_sdkv2 "github.com/aws/aws-sdk-go-v2/service/paymentcryptography"
 	pcaconnectorad_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pcaconnectorad"
 	pinpoint_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pinpoint"
@@ -241,7 +242,6 @@ import (
 	neptune_sdkv1 "github.com/aws/aws-sdk-go/service/neptune"
 	networkmanager_sdkv1 "github.com/aws/aws-sdk-go/service/networkmanager"
 	opsworks_sdkv1 "github.com/aws/aws-sdk-go/service/opsworks"
-	outposts_sdkv1 "github.com/aws/aws-sdk-go/service/outposts"
 	quicksight_sdkv1 "github.com/aws/aws-sdk-go/service/quicksight"
 	simpledb_sdkv1 "github.com/aws/aws-sdk-go/service/simpledb"
 	worklink_sdkv1 "github.com/aws/aws-sdk-go/service/worklink"
@@ -913,8 +913,8 @@ func (c *AWSClient) OrganizationsClient(ctx context.Context) *organizations_sdkv
 	return errs.Must(client[*organizations_sdkv2.Client](ctx, c, names.Organizations, make(map[string]any)))
 }
 
-func (c *AWSClient) OutpostsConn(ctx context.Context) *outposts_sdkv1.Outposts {
-	return errs.Must(conn[*outposts_sdkv1.Outposts](ctx, c, names.Outposts, make(map[string]any)))
+func (c *AWSClient) OutpostsClient(ctx context.Context) *outposts_sdkv2.Client {
+	return errs.Must(client[*outposts_sdkv2.Client](ctx, c, names.Outposts, make(map[string]any)))
 }
 
 func (c *AWSClient) PCAConnectorADClient(ctx context.Context) *pcaconnectorad_sdkv2.Client {

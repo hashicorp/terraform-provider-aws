@@ -11,7 +11,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
-	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -120,11 +119,11 @@ func expandAssociationConfig(l []interface{}) *awstypes.AssociationConfig {
 		m = inner[0].(map[string]interface{})
 		if len(m) > 0 {
 			configuration.RequestBody = make(map[string]awstypes.RequestBodyAssociatedResourceTypeConfig)
-			for _, resourceType := range wafv2.AssociatedResourceType_Values() {
-				if v, ok := m[strings.ToLower(resourceType)]; ok {
+			for _, resourceType := range awstypes.AssociatedResourceType.Values("") {
+				if v, ok := m[strings.ToLower(string(resourceType))]; ok {
 					m := v.([]interface{})
 					if len(m) > 0 {
-						configuration.RequestBody[resourceType] = expandRequestBodyConfigItem(m)
+						configuration.RequestBody[string(resourceType)] = expandRequestBodyConfigItem(m)
 					}
 				}
 			}
@@ -1792,9 +1791,9 @@ func flattenAssociationConfig(config *awstypes.AssociationConfig) interface{} {
 	}
 
 	requestBodyConfig := map[string]interface{}{}
-	for _, resourceType := range wafv2.AssociatedResourceType_Values() {
-		if requestBodyAssociatedResourceTypeConfig, ok := config.RequestBody[resourceType]; ok {
-			requestBodyConfig[strings.ToLower(resourceType)] = []map[string]interface{}{{
+	for _, resourceType := range awstypes.AssociatedResourceType.Values("") {
+		if requestBodyAssociatedResourceTypeConfig, ok := config.RequestBody[string(resourceType)]; ok {
+			requestBodyConfig[strings.ToLower(string(resourceType))] = []map[string]interface{}{{
 				"default_size_inspection_limit": requestBodyAssociatedResourceTypeConfig.DefaultSizeInspectionLimit,
 			}}
 		}
