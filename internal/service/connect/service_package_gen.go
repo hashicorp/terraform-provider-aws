@@ -164,7 +164,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceQueue,
+			Factory:  resourceQueue,
 			TypeName: "aws_connect_queue",
 			Name:     "Queue",
 			Tags: &types.ServicePackageResourceTags{

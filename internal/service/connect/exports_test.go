@@ -11,6 +11,7 @@ var (
 	ResourceHoursOfOperation          = resourceHoursOfOperation
 	ResourceLambdaFunctionAssociation = resourceLambdaFunctionAssociation
 	ResourcePhoneNumber               = resourcePhoneNumber
+	ResourceQueue                     = resourceQueue
 	ResourceQuickConnect              = resourceQuickConnect
 	ResourceRoutingProfile            = resourceRoutingProfile
 	ResourceSecurityProfile           = resourceSecurityProfile
@@ -25,6 +26,7 @@ var (
 	FindHoursOfOperationByTwoPartKey          = findHoursOfOperationByTwoPartKey
 	FindLambdaFunctionAssociationByTwoPartKey = findLambdaFunctionAssociationByTwoPartKey
 	FindPhoneNumberByID                       = findPhoneNumberByID
+	FindQueueByTwoPartKey                     = findQueueByTwoPartKey
 	FindQuickConnectByTwoPartKey              = findQuickConnectByTwoPartKey
 	FindRoutingProfileByTwoPartKey            = findRoutingProfileByTwoPartKey
 	FindSecurityProfileByTwoPartKey           = findSecurityProfileByTwoPartKey

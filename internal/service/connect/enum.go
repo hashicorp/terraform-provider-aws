@@ -12,9 +12,6 @@ const (
 	// MaxResults Valid Range: Minimum value of 1. Maximum value of 1000
 	// https://docs.aws.amazon.com/connect/latest/APIReference/API_ListPrompts.html
 	ListPromptsMaxResults = 60
-	// ListQueueQuickConnectsMaxResults Valid Range: Minimum value of 1. Maximum value of 100.
-	// https://docs.aws.amazon.com/connect/latest/APIReference/API_ListQueueQuickConnects.html
-	ListQueueQuickConnectsMaxResults = 60
 	// ListQueuesMaxResults Valid Range: Minimum value of 1. Maximum value of 1000.
 	// https://docs.aws.amazon.com/connect/latest/APIReference/API_ListQueues.html
 	ListQueuesMaxResults = 60
