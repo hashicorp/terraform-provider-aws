@@ -5,6 +5,11 @@ ENHANCEMENTS:
 * data-source/aws_batch_job_queue: Add `job_state_time_limit_action` attribute ([#38784](https://github.com/hashicorp/terraform-provider-aws/issues/38784))
 * resource/aws_batch_job_queue: Add `job_state_time_limit_action` argument ([#38784](https://github.com/hashicorp/terraform-provider-aws/issues/38784))
 
+BUG FIXES:
+
+* provider: Fix crash when flattening string pointer slices with nil items ([#38886](https://github.com/hashicorp/terraform-provider-aws/issues/38886))
+* resource/aws_quicksight_data_set: Fix crash when setting `logical_table_map.data_transforms.project_operation.projected_columns` with null list elements ([#38886](https://github.com/hashicorp/terraform-provider-aws/issues/38886))
+
 ## 5.63.0 (August 15, 2024)
 
 FEATURES:
