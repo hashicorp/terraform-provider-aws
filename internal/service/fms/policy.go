@@ -269,17 +269,17 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("delete_unused_fm_managed_resources", policy.DeleteUnusedFMManagedResources)
 	d.Set(names.AttrDescription, policy.PolicyDescription)
 	if err := d.Set("exclude_map", flattenPolicyMap(policy.ExcludeMap)); err != nil {
-		sdkdiag.AppendErrorf(diags, "setting exclude_map: %s", err)
+		diags = sdkdiag.AppendErrorf(diags, "setting exclude_map: %s", err)
 	}
 	d.Set("exclude_resource_tags", policy.ExcludeResourceTags)
 	if err := d.Set("include_map", flattenPolicyMap(policy.IncludeMap)); err != nil {
-		sdkdiag.AppendErrorf(diags, "setting include_map: %s", err)
+		diags = sdkdiag.AppendErrorf(diags, "setting include_map: %s", err)
 	}
 	d.Set(names.AttrName, policy.PolicyName)
 	d.Set("policy_update_token", policy.PolicyUpdateToken)
 	d.Set("remediation_enabled", policy.RemediationEnabled)
 	if err := d.Set(names.AttrResourceTags, flattenResourceTags(policy.ResourceTags)); err != nil {
-		sdkdiag.AppendErrorf(diags, "setting resource_tags: %s", err)
+		diags = sdkdiag.AppendErrorf(diags, "setting resource_tags: %s", err)
 	}
 	d.Set(names.AttrResourceType, policy.ResourceType)
 	d.Set("resource_type_list", policy.ResourceTypeList)
@@ -290,7 +290,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 		"policy_option":        flattenPolicyOption(policy.SecurityServicePolicyData.PolicyOption),
 	}}
 	if err := d.Set("security_service_policy_data", securityServicePolicy); err != nil {
-		sdkdiag.AppendErrorf(diags, "setting security_service_policy_data: %s", err)
+		diags = sdkdiag.AppendErrorf(diags, "setting security_service_policy_data: %s", err)
 	}
 
 	return diags

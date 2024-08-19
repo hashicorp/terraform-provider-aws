@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ses"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ses"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -74,20 +74,20 @@ func TestAccSESReceiptFilter_disappears(t *testing.T) {
 
 func testAccCheckReceiptFilterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ses_receipt_filter" {
 				continue
 			}
 
-			response, err := conn.ListReceiptFiltersWithContext(ctx, &ses.ListReceiptFiltersInput{})
+			response, err := conn.ListReceiptFilters(ctx, &ses.ListReceiptFiltersInput{})
 			if err != nil {
 				return err
 			}
 
 			for _, element := range response.Filters {
-				if aws.StringValue(element.Name) == rs.Primary.ID {
+				if aws.ToString(element.Name) == rs.Primary.ID {
 					return fmt.Errorf("SES Receipt Filter (%s) still exists", rs.Primary.ID)
 				}
 			}
@@ -108,15 +108,15 @@ func testAccCheckReceiptFilterExists(ctx context.Context, n string) resource.Tes
 			return fmt.Errorf("SES receipt filter ID not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
 
-		response, err := conn.ListReceiptFiltersWithContext(ctx, &ses.ListReceiptFiltersInput{})
+		response, err := conn.ListReceiptFilters(ctx, &ses.ListReceiptFiltersInput{})
 		if err != nil {
 			return err
 		}
 
 		for _, element := range response.Filters {
-			if aws.StringValue(element.Name) == rs.Primary.ID {
+			if aws.ToString(element.Name) == rs.Primary.ID {
 				return nil
 			}
 		}

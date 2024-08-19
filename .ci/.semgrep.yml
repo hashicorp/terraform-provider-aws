@@ -634,3 +634,28 @@ rules:
     patterns:
       - pattern-regex: "(Create|Read|Update|Delete)Context:"
     severity: ERROR
+
+  - id: unreturned-sdkdiag-AppendErrorf
+    languages: [go]
+    message: Calls to `sdkdiag.AppendErrorf()` should be returned or set to the `diags` variable
+    paths:
+      include:
+        - internal/
+    patterns:
+      - pattern: |
+          if err != nil {
+            sdkdiag.AppendErrorf($DIAGS, ...)
+          }
+      - pattern-not: |
+          if err != nil {
+            return sdkdiag.AppendErrorf($DIAGS, ...)
+          }
+      - pattern-not: |
+          if err != nil {
+            return ..., sdkdiag.AppendErrorf($DIAGS, ...)
+          }
+      - pattern-not: |
+          if err != nil {
+            $DIAGS = sdkdiag.AppendErrorf($DIAGS, ...)
+          }
+    severity: ERROR

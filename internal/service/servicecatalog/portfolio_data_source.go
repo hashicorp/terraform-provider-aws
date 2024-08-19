@@ -8,8 +8,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/servicecatalog"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -19,9 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_servicecatalog_portfolio")
+// @SDKDataSource("aws_servicecatalog_portfolio", name="Portfolio")
 // @Tags
-func DataSourcePortfolio() *schema.Resource {
+func dataSourcePortfolio() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePortfolioRead,
 
@@ -33,8 +33,8 @@ func DataSourcePortfolio() *schema.Resource {
 			"accept_language": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      "en",
-				ValidateFunc: validation.StringInSlice(AcceptLanguage_Values(), false),
+				Default:      acceptLanguageEnglish,
+				ValidateFunc: validation.StringInSlice(acceptLanguage_Values(), false),
 			},
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -67,7 +67,7 @@ func DataSourcePortfolio() *schema.Resource {
 
 func dataSourcePortfolioRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 	input := &servicecatalog.DescribePortfolioInput{
 		Id: aws.String(d.Get(names.AttrID).(string)),
@@ -77,7 +77,7 @@ func dataSourcePortfolioRead(ctx context.Context, d *schema.ResourceData, meta i
 		input.AcceptLanguage = aws.String(v.(string))
 	}
 
-	output, err := conn.DescribePortfolioWithContext(ctx, input)
+	output, err := conn.DescribePortfolio(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "getting Service Catalog Portfolio (%s): %s", d.Get(names.AttrID).(string), err)
@@ -89,9 +89,9 @@ func dataSourcePortfolioRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	detail := output.PortfolioDetail
 
-	d.SetId(aws.StringValue(detail.Id))
+	d.SetId(aws.ToString(detail.Id))
 
-	if err := d.Set(names.AttrCreatedTime, aws.TimeValue(detail.CreatedTime).Format(time.RFC3339)); err != nil {
+	if err := d.Set(names.AttrCreatedTime, aws.ToTime(detail.CreatedTime).Format(time.RFC3339)); err != nil {
 		log.Printf("[DEBUG] Error setting created_time: %s", err)
 	}
 

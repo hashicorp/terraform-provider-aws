@@ -891,7 +891,7 @@ service "batch" {
 
   sdk {
     id             = "Batch"
-    client_version = [1, 2]
+    client_version = [2]
   }
 
   names {
@@ -2855,7 +2855,7 @@ service "directconnect" {
 
   sdk {
     id             = "Direct Connect"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -4146,7 +4146,7 @@ service "gamelift" {
 
   sdk {
     id             = "GameLift"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -5169,7 +5169,7 @@ service "kinesisvideo" {
 
   sdk {
     id             = "Kinesis Video"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -5553,7 +5553,7 @@ service "licensemanager" {
 
   sdk {
     id             = "License Manager"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -5616,7 +5616,7 @@ service "location" {
 
   sdk {
     id             = "Location"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -6083,7 +6083,7 @@ service "memorydb" {
 
   sdk {
     id             = "MemoryDB"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -6563,7 +6563,7 @@ service "opensearch" {
 
   sdk {
     id             = "OpenSearch"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -6733,7 +6733,7 @@ service "outposts" {
 
   sdk {
     id             = "Outposts"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -6936,7 +6936,7 @@ service "pinpoint" {
 
   sdk {
     id             = "Pinpoint"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -7264,7 +7264,7 @@ service "rds" {
 
   sdk {
     id             = "RDS"
-    client_version = [1, 2]
+    client_version = [2]
   }
 
   names {
@@ -7389,7 +7389,7 @@ service "redshift" {
 
   sdk {
     id             = "Redshift"
-    client_version = [1, 2]
+    client_version = [2]
   }
 
   names {
@@ -7460,7 +7460,7 @@ service "redshiftserverless" {
 
   sdk {
     id             = "Redshift Serverless"
-    client_version = [1, 2]
+    client_version = [2]
   }
 
   names {
@@ -7799,7 +7799,7 @@ service "route53recoverycontrolconfig" {
 
   sdk {
     id             = "Route53 Recovery Control Config"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -7834,7 +7834,7 @@ service "route53recoveryreadiness" {
 
   sdk {
     id             = "Route53 Recovery Readiness"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -7864,7 +7864,7 @@ service "route53resolver" {
 
   sdk {
     id             = "Route53Resolver"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -7985,7 +7985,7 @@ service "s3outposts" {
 
   sdk {
     id             = "S3Outposts"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -8014,7 +8014,7 @@ service "sagemaker" {
 
   sdk {
     id             = "SageMaker"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -8382,7 +8382,7 @@ service "servicecatalog" {
 
   sdk {
     id             = "Service Catalog"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -8476,7 +8476,7 @@ service "ses" {
 
   sdk {
     id             = "SES"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {

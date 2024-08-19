@@ -105,7 +105,7 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 		},
 	)
 	if tfresource.NotFound(err) {
-		sdkdiag.AppendErrorf(diags, "XXX no ACM Certificate matching domain (%s)", domain)
+		return sdkdiag.AppendErrorf(diags, "XXX no ACM Certificate matching domain (%s)", domain)
 	} else if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ACM Certificates: %s", err)
 	}

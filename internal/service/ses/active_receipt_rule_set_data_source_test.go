@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/ses"
+	"github.com/aws/aws-sdk-go-v2/service/ses"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -85,9 +85,9 @@ data "aws_ses_active_receipt_rule_set" "test" {}
 }
 
 func testAccPreCheckUnsetActiveRuleSet(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
 
-	output, err := conn.DescribeActiveReceiptRuleSetWithContext(ctx, &ses.DescribeActiveReceiptRuleSetInput{})
+	output, err := conn.DescribeActiveReceiptRuleSet(ctx, &ses.DescribeActiveReceiptRuleSetInput{})
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
@@ -98,7 +98,7 @@ func testAccPreCheckUnsetActiveRuleSet(ctx context.Context, t *testing.T) {
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 
-	_, err = conn.SetActiveReceiptRuleSetWithContext(ctx, &ses.SetActiveReceiptRuleSetInput{
+	_, err = conn.SetActiveReceiptRuleSet(ctx, &ses.SetActiveReceiptRuleSetInput{
 		RuleSetName: nil,
 	})
 	if acctest.PreCheckSkipError(err) {

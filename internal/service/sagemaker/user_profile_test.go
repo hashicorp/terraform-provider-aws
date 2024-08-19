@@ -10,8 +10,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -372,7 +371,7 @@ func testAccUserProfile_disappears(t *testing.T) {
 
 func testAccCheckUserProfileDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sagemaker_user_profile" {
@@ -382,7 +381,7 @@ func testAccCheckUserProfileDestroy(ctx context.Context) resource.TestCheckFunc 
 			domainID := rs.Primary.Attributes["domain_id"]
 			userProfileName := rs.Primary.Attributes["user_profile_name"]
 
-			userProfile, err := tfsagemaker.FindUserProfileByName(ctx, conn, domainID, userProfileName)
+			_, err := tfsagemaker.FindUserProfileByName(ctx, conn, domainID, userProfileName)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -392,10 +391,7 @@ func testAccCheckUserProfileDestroy(ctx context.Context) resource.TestCheckFunc 
 				return fmt.Errorf("reading SageMaker User Profile (%s): %w", rs.Primary.ID, err)
 			}
 
-			userProfileArn := aws.StringValue(userProfile.UserProfileArn)
-			if userProfileArn == rs.Primary.ID {
-				return fmt.Errorf("SageMaker User Profile %q still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("SageMaker User Profile %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -413,7 +409,7 @@ func testAccCheckUserProfileExists(ctx context.Context, n string, userProfile *s
 			return fmt.Errorf("No sagmaker domain ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
 
 		domainID := rs.Primary.Attributes["domain_id"]
 		userProfileName := rs.Primary.Attributes["user_profile_name"]

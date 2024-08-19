@@ -31,6 +31,7 @@ func RegisterSweepers() {
 			"aws_eks_fargate_profile",
 			"aws_eks_node_group",
 			"aws_emrcontainers_virtual_cluster",
+			"aws_prometheus_scraper",
 		},
 	})
 
