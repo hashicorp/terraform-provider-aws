@@ -1,5 +1,9 @@
 ## 5.64.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `aws_route53_zones` ([#17457](https://github.com/hashicorp/terraform-provider-aws/issues/17457))
+
 ENHANCEMENTS:
 
 * data-source/aws_batch_job_queue: Add `job_state_time_limit_action` attribute ([#38784](https://github.com/hashicorp/terraform-provider-aws/issues/38784))
