@@ -1,5 +1,5 @@
 ---
-subcategory: "Elastic Load Balancing v2 (ALB/NLB)"
+subcategory: "ELB (Elastic Load Balancing)"
 layout: "aws"
 page_title: "AWS: aws_lb_listener"
 description: |-
@@ -12,13 +12,11 @@ description: |-
 
 Provides information about a Load Balancer Listener.
 
-This data source can prove useful when a module accepts an LB Listener as an
-input variable and needs to know the LB it is attached to, or other
-information specific to the listener in question.
+This data source can prove useful when a module accepts an LB Listener as an input variable and needs to know the LB it is attached to, or other information specific to the listener in question.
 
 ## Example Usage
 
-```hcl
+```terraform
 # get listener from listener arn
 
 variable "listener_arn" {
@@ -43,13 +41,18 @@ data "aws_lb_listener" "selected443" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
-* `arn` - (Optional) The arn of the listener. Required if `load_balancer_arn` and `port` is not set.
-* `load_balancer_arn` - (Optional) The arn of the load balancer. Required if `arn` is not set.
-* `port` - (Optional) The port of the listener. Required if `arn` is not set.
+* `arn` - (Optional) ARN of the listener. Required if `load_balancer_arn` and `port` is not set.
+* `load_balancer_arn` - (Optional) ARN of the load balancer. Required if `arn` is not set.
+* `port` - (Optional) Port of the listener. Required if `arn` is not set.
 
-## Attributes Reference
+## Attribute Reference
 
-See the [LB Listener Resource](/docs/providers/aws/r/lb_listener.html) for details
-on the returned attributes - they are identical.
+See the [LB Listener Resource](/docs/providers/aws/r/lb_listener.html) for details on the returned attributes - they are identical.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `read` - (Default `20m`)

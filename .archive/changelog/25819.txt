@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_appmesh_gateway_route: Add `http2_route.action.rewrite`, `http2_route.match.hostname`, `http_route.action.rewrite` and `http_route.match.hostname` arguments
+```

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_glue_resource_policy: Fix erroneous diffs in `policy` when no changes made or policies are equivalent
+```

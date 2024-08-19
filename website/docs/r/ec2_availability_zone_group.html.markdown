@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "EC2 (Elastic Compute Cloud)"
 layout: "aws"
 page_title: "AWS: aws_ec2_availability_zone_group"
 description: |-
@@ -14,7 +14,7 @@ Manages an EC2 Availability Zone Group, such as updating its opt-in status.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_ec2_availability_zone_group" "example" {
   group_name    = "us-west-2-lax-1"
   opt_in_status = "opted-in"
@@ -28,16 +28,25 @@ The following arguments are required:
 * `group_name` - (Required) Name of the Availability Zone Group.
 * `opt_in_status` - (Required) Indicates whether to enable or disable Availability Zone Group. Valid values: `opted-in` or `not-opted-in`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Name of the Availability Zone Group.
 
 ## Import
 
-EC2 Availability Zone Groups can be imported using the group name, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EC2 Availability Zone Groups using the group name. For example:
 
+```terraform
+import {
+  to = aws_ec2_availability_zone_group.example
+  id = "us-west-2-lax-1"
+}
 ```
-$ terraform import aws_ec2_availability_zone_group.example us-west-2-lax-1
+
+Using `terraform import`, import EC2 Availability Zone Groups using the group name. For example:
+
+```console
+% terraform import aws_ec2_availability_zone_group.example us-west-2-lax-1
 ```

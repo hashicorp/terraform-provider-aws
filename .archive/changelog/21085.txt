@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_dx_connection: Mark `provider_name` as Computed to avoid resource recreation with pre-v3.56.0 configurations
+```
+
+```release-note:bug
+resource/aws_dx_lag: Mark `provider_name` as Computed to avoid resource recreation with pre-v3.56.0 configurations
+```

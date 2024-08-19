@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_api_gateway_rest_api_policy: Fix erroneous diffs in `policy` when no changes made or policies are equivalent
+```
+
+```release-note:bug
+resource/aws_api_gateway_rest_api: Fix erroneous diffs in `policy` when no changes made or policies are equivalent
+```

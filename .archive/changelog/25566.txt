@@ -1,0 +1,7 @@
+```release-note:enhancement
+data-source/aws_ami: Make `owners` optional
+```
+
+```release-note:enhancement
+data-source/aws_ami: Add `include_deprecated` argument
+```

@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_emrserverless_application: Add `architecture` argument
+```
+
+```release-note:enhancement
+resource/aws_emrserverless_application: Mark `maximum_capacity` and `maximum_capacity.disk` as Computed, preventing spurious resource diffs
+```

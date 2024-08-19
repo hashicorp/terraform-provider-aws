@@ -1,0 +1,15 @@
+```release-note:new-data-source
+aws_service_discovery_service
+```
+
+```release-note:new-data-source
+aws_service_discovery_http_namespace
+```
+
+```release-note:enhancement
+resource/aws_service_discovery_http_namespace: Add `http_name` attribute
+```
+
+```release-note:enhancement
+data-source/aws_service_discovery_dns_namespace: Add `tags` attribute
+```

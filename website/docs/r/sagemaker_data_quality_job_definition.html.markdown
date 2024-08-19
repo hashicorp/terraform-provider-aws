@@ -1,0 +1,179 @@
+---
+subcategory: "SageMaker"
+layout: "aws"
+page_title: "AWS: aws_sagemaker_data_quality_job_definition"
+description: |-
+  Provides a SageMaker Data Quality Job Definition resource.
+---
+
+# Resource: aws_sagemaker_data_quality_job_definition
+
+Provides a SageMaker data quality job definition resource.
+
+## Example Usage
+
+Basic usage:
+
+```terraform
+resource "aws_sagemaker_data_quality_job_definition" "test" {
+  name = "my-data-quality-job-definition"
+
+  data_quality_app_specification {
+    image_uri = data.aws_sagemaker_prebuilt_ecr_image.monitor.registry_path
+  }
+  data_quality_job_input {
+    endpoint_input {
+      endpoint_name = aws_sagemaker_endpoint.my_endpoint.name
+    }
+  }
+  data_quality_job_output_config {
+    monitoring_outputs {
+      s3_output {
+        s3_uri = "https://${aws_s3_bucket.my_bucket.bucket_regional_domain_name}/output"
+      }
+    }
+  }
+  job_resources {
+    cluster_config {
+      instance_count    = 1
+      instance_type     = "ml.t3.medium"
+      volume_size_in_gb = 20
+    }
+  }
+  role_arn = aws_iam_role.my_role.arn
+}
+```
+
+## Argument Reference
+
+This resource supports the following arguments:
+
+* `data_quality_app_specification` - (Required) Specifies the container that runs the monitoring job. Fields are documented below.
+* `data_quality_baseline_config` - (Optional) Configures the constraints and baselines for the monitoring job. Fields are documented below.
+* `data_quality_job_input` - (Required) A list of inputs for the monitoring job. Fields are documented below.
+* `data_quality_job_output_config` - (Required) The output configuration for monitoring jobs. Fields are documented below.
+* `job_resources` - (Required) Identifies the resources to deploy for a monitoring job. Fields are documented below.
+* `name` - (Optional) The name of the data quality job definition. If omitted, Terraform will assign a random, unique name.
+* `network_config` - (Optional) Specifies networking configuration for the monitoring job. Fields are documented below.
+* `role_arn` - (Required) The Amazon Resource Name (ARN) of an IAM role that Amazon SageMaker can assume to perform tasks on your behalf.
+* `stopping_condition` - (Optional) A time limit for how long the monitoring job is allowed to run before stopping. Fields are documented below.
+* `tags` - (Optional) A mapping of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### data_quality_app_specification
+
+* `environment` - (Optional) Sets the environment variables in the container that the monitoring job runs. A list of key value pairs.
+* `image_uri` - (Required) The container image that the data quality monitoring job runs.
+* `post_analytics_processor_source_uri` - (Optional) An Amazon S3 URI to a script that is called after analysis has been performed. Applicable only for the built-in (first party) containers.
+* `record_preprocessor_source_uri` - (Optional) An Amazon S3 URI to a script that is called per row prior to running analysis. It can base64 decode the payload and convert it into a flatted json so that the built-in container can use the converted data. Applicable only for the built-in (first party) containers.
+
+### data_quality_baseline_config
+
+* `constraints_resource` - (Optional) The constraints resource for a monitoring job. Fields are documented below.
+* `statistics_resource` - (Optional) The statistics resource for a monitoring job. Fields are documented below.
+
+#### constraints_resource
+
+* `s3_uri` - (Optional) The Amazon S3 URI for the constraints resource.
+
+#### statistics_resource
+
+* `s3_uri` - (Optional) The Amazon S3 URI for the statistics resource.
+
+### data_quality_job_input
+
+* `batch_transform_input` - (Optional) Input object for the batch transform job. Fields are documented below.
+* `endpoint_input` - (Optional) Input object for the endpoint. Fields are documented below.
+
+#### batch_transform_input
+
+* `data_captured_destination_s3_uri` - (Required) The Amazon S3 location being used to capture the data.
+* `dataset_format` - (Required) The dataset format for your batch transform job. Fields are documented below.
+* `local_path` - (Optional) Path to the filesystem where the batch transform data is available to the container. Defaults to `/opt/ml/processing/input`.
+* `s3_data_distribution_type` - (Optional) Whether input data distributed in Amazon S3 is fully replicated or sharded by an S3 key. Defaults to `FullyReplicated`. Valid values are `FullyReplicated` or `ShardedByS3Key`
+* `s3_input_mode` - (Optional) Whether the `Pipe` or `File` is used as the input mode for transferring data for the monitoring job. `Pipe` mode is recommended for large datasets. `File` mode is useful for small files that fit in memory. Defaults to `File`.  Valid values are `Pipe` or `File`
+
+##### dataset_format
+
+* `csv` - (Optional) The CSV dataset used in the monitoring job. Fields are documented below.
+* `json` - (Optional) The JSON dataset used in the monitoring job. Fields are documented below.
+
+###### csv
+
+* `header` - (Optional) Indicates if the CSV data has a header.
+
+###### json
+
+* `line` - (Optional) Indicates if the file should be read as a json object per line.
+
+#### endpoint_input
+
+* `endpoint_name` - (Required) An endpoint in customer's account which has `data_capture_config` enabled.
+* `local_path` - (Optional) Path to the filesystem where the endpoint data is available to the container. Defaults to `/opt/ml/processing/input`.
+* `s3_data_distribution_type` - (Optional) Whether input data distributed in Amazon S3 is fully replicated or sharded by an S3 key. Defaults to `FullyReplicated`. Valid values are `FullyReplicated` or `ShardedByS3Key`
+* `s3_input_mode` - (Optional) Whether the `Pipe` or `File` is used as the input mode for transferring data for the monitoring job. `Pipe` mode is recommended for large datasets. `File` mode is useful for small files that fit in memory. Defaults to `File`.  Valid values are `Pipe` or `File`
+
+### data_quality_job_output_config
+
+* `kms_key_id` - (Optional) The AWS Key Management Service (AWS KMS) key that Amazon SageMaker uses to encrypt the model artifacts at rest using Amazon S3 server-side encryption.
+* `monitoring_outputs` - (Required) Monitoring outputs for monitoring jobs. This is where the output of the periodic monitoring jobs is uploaded. Fields are documented below.
+
+#### monitoring_outputs
+
+* `s3_output` - (Required) The Amazon S3 storage location where the results of a monitoring job are saved. Fields are documented below.
+
+##### s3_output
+
+* `local_path` - (Optional) The local path to the Amazon S3 storage location where Amazon SageMaker saves the results of a monitoring job. LocalPath is an absolute path for the output data. Defaults to `/opt/ml/processing/output`.
+* `s3_upload_mode` - (Optional) Whether to upload the results of the monitoring job continuously or after the job completes. Valid values are `Continuous` or `EndOfJob`
+* `s3_uri` - (Required) A URI that identifies the Amazon S3 storage location where Amazon SageMaker saves the results of a monitoring job.
+
+### job_resources
+
+* `cluster_config` - (Required) The configuration for the cluster resources used to run the processing job. Fields are documented below.
+
+#### cluster_config
+
+* `instance_count` - (Required) The number of ML compute instances to use in the model monitoring job. For distributed processing jobs, specify a value greater than 1.
+* `instance_type` - (Required) The ML compute instance type for the processing job.
+* `volume_kms_key_id` - (Optional) The AWS Key Management Service (AWS KMS) key that Amazon SageMaker uses to encrypt data on the storage volume attached to the ML compute instance(s) that run the model monitoring job.
+* `volume_size_in_gb` - (Required) The size of the ML storage volume, in gigabytes, that you want to provision. You must specify sufficient ML storage for your scenario.
+
+### network_config
+
+* `enable_inter_container_traffic_encryption` - (Optional) Whether to encrypt all communications between the instances used for the monitoring jobs. Choose `true` to encrypt communications. Encryption provides greater security for distributed jobs, but the processing might take longer.
+* `enable_network_isolation` - (Optional) Whether to allow inbound and outbound network calls to and from the containers used for the monitoring job.
+* `vpc_config` - (Optional) Specifies a VPC that your training jobs and hosted models have access to. Control access to and from your training and model containers by configuring the VPC. Fields are documented below.
+
+#### vpc_config
+
+* `security_group_ids` - (Required) The VPC security group IDs, in the form sg-xxxxxxxx. Specify the security groups for the VPC that is specified in the `subnets` field.
+* `subnets` - (Required) The ID of the subnets in the VPC to which you want to connect your training job or model.
+
+### stopping_condition
+
+* `max_runtime_in_seconds` - (Required) The maximum runtime allowed in seconds.
+
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
+
+* `arn` - The Amazon Resource Name (ARN) assigned by AWS to this data quality job definition.
+* `name` - The name of the data quality job definition.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+## Import
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import data quality job definitions using the `name`. For example:
+
+```terraform
+import {
+  to = aws_sagemaker_data_quality_job_definition.test_data_quality_job_definition
+  id = "data-quality-job-definition-foo"
+}
+```
+
+Using `terraform import`, import data quality job definitions using the `name`. For example:
+
+```console
+% terraform import aws_sagemaker_data_quality_job_definition.test_data_quality_job_definition data-quality-job-definition-foo
+```

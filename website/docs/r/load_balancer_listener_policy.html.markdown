@@ -1,5 +1,5 @@
 ---
-subcategory: "Elastic Load Balancing (ELB Classic)"
+subcategory: "ELB Classic"
 layout: "aws"
 page_title: "AWS: aws_load_balancer_listener_policy"
 description: |-
@@ -10,10 +10,11 @@ description: |-
 
 Attaches a load balancer policy to an ELB Listener.
 
+## Example Usage
 
-## Example Usage for Custom Policy
+### Custom Policy
 
-```hcl
+```terraform
 resource "aws_elb" "wu-tang" {
   name               = "wu-tang"
   availability_zones = ["us-east-1a"]
@@ -59,9 +60,9 @@ resource "aws_load_balancer_listener_policy" "wu-tang-listener-policies-443" {
 
 This example shows how to customize the TLS settings of an HTTPS listener.
 
-## Example Usage for AWS Predefined Security Policy
+### AWS Predefined Security Policy
 
-```hcl
+```terraform
 resource "aws_elb" "wu-tang" {
   name               = "wu-tang"
   availability_zones = ["us-east-1a"]
@@ -104,15 +105,16 @@ This example shows how to add a [Predefined Security Policy for ELBs](https://do
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `load_balancer_name` - (Required) The load balancer to attach the policy to.
 * `load_balancer_port` - (Required) The load balancer listener port to apply the policy to.
 * `policy_names` - (Required) List of Policy Names to apply to the backend server.
+* `triggers` - (Optional) Map of arbitrary keys and values that, when changed, will trigger an update. To force an update without changing these keys/values, use the [`terraform taint` command](https://www.terraform.io/docs/commands/taint.html).
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the policy.
 * `load_balancer_name` - The load balancer on which the policy is defined.

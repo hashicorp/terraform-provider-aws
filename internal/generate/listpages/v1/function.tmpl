@@ -1,0 +1,17 @@
+
+func {{ .Name }}Pages(ctx context.Context, conn {{ .RecvType }}, input {{ .ParamType }}, fn func({{ .ResultType }}, bool) bool) error {
+	for {
+		output, err := conn.{{ .AWSName }}WithContext(ctx, input)
+		if err != nil {
+			return err
+		}
+
+		lastPage := aws.StringValue(output.{{ .OutputPaginator }}) == ""
+		if !fn(output, lastPage) || lastPage {
+			break
+		}
+
+		input.{{ .InputPaginator }} = output.{{ .OutputPaginator }}
+	}
+	return nil
+}

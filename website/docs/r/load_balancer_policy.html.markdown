@@ -1,5 +1,5 @@
 ---
-subcategory: "Elastic Load Balancing (ELB Classic)"
+subcategory: "ELB Classic"
 layout: "aws"
 page_title: "AWS: aws_load_balancer_policy"
 description: |-
@@ -12,7 +12,7 @@ Provides a load balancer policy, which can be attached to an ELB listener or bac
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_elb" "wu-tang" {
   name               = "wu-tang"
   availability_zones = ["us-east-1a"]
@@ -35,6 +35,8 @@ resource "aws_load_balancer_policy" "wu-tang-ca-pubkey-policy" {
   policy_name        = "wu-tang-ca-pubkey-policy"
   policy_type_name   = "PublicKeyPolicyType"
 
+  # The public key of a CA certificate file can be extracted with:
+  # $ cat wu-tang-ca.pem | openssl x509 -pubkey -noout | grep -v '\-\-\-\-' | tr -d '\n' > wu-tang-pubkey
   policy_attribute {
     name  = "PublicKey"
     value = file("wu-tang-pubkey")
@@ -98,26 +100,18 @@ resource "aws_load_balancer_listener_policy" "wu-tang-listener-policies-443" {
 }
 ```
 
-Where the file `pubkey` in the current directory contains only the _public key_ of the certificate.
-
-```shell
-cat wu-tang-ca.pem | openssl x509 -pubkey -noout | grep -v '\-\-\-\-' | tr -d '\n' > wu-tang-pubkey
-```
-
-This example shows how to enable backend authentication for an ELB as well as customize the TLS settings.
-
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `load_balancer_name` - (Required) The load balancer on which the policy is defined.
 * `policy_name` - (Required) The name of the load balancer policy.
 * `policy_type_name` - (Required) The policy type.
 * `policy_attribute` - (Optional) Policy attribute to apply to the policy.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the policy.
 * `policy_name` - The name of the stickiness policy.

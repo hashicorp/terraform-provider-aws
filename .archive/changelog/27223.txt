@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_medialive_multiplex_program: Add ability to update `multiplex_program_settings` in place
+```
+
+```release-note:note
+resource/aws_medialive_multiplex_program: The `statemux_settings` argument has been deprecated. Use the `statmux_settings` argument instead
+```

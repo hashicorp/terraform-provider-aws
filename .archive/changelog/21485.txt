@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_appstream_user
+```
+
+```release-note:new-resource
+aws_appstream_stack_user_association
+```

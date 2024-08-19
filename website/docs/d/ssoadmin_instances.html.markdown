@@ -12,7 +12,7 @@ Use this data source to get ARNs and Identity Store IDs of Single Sign-On (SSO) 
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_ssoadmin_instances" "example" {}
 
 output "arn" {
@@ -28,7 +28,9 @@ output "identity_store_id" {
 
 There are no arguments available for this data source.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `arns` - Set of Amazon Resource Names (ARNs) of the SSO Instances.
 * `id` - AWS Region.

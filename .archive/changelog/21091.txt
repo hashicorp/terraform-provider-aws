@@ -1,0 +1,15 @@
+```release-note:enhancement
+resource/aws_lambda_function: Add support for Graviton2 with `architectures` argument
+```
+
+```release-note:enhancement
+resource/aws_lambda_layer_version: Add support for Graviton2 with `compatible_architectures` argument
+```
+
+```release-note:enhancement
+data-source/aws_lambda_function: Add support for Graviton2 with `architectures` attribute
+```
+
+```release-note:enhancement
+data-source/aws_lambda_layer_version: Add support for Graviton2 with `compatible_architectures` attribute
+```

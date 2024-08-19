@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_dms_endpoint: Change `s3_settings` `cdc_min_file_size` default to 32000 in order to align with AWS's change from megabytes to kilobytes for this setting
+```
+
+```release-note:note
+resource/aws_dms_endpoint: For `s3_settings` `cdc_min_file_size`, AWS changed the multiplier to kilobytes instead of megabytes. In other words, prior to the change, a value of `32` represented 32 MiB. After the change, a value of `32` represents 32 KB. Change your configuration accordingly.
+```

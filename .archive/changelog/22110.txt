@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_dynamodb_table: Add `table_class` argument
+```
+
+```release-note:enhancement
+data-source/aws_dynamodb_table: Add `table_class` attribute
+```

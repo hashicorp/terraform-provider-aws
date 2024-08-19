@@ -28,6 +28,7 @@ Alternatively to using `-var` with each command, the `terraform.template.tfvars`
 
 Once the stack is created, wait for a few minutes and test the stack by launching a browser with the ALB url.
 
+<!-- markdownlint-disable-next-line no-trailing-punctuation -->
 ## Destroy :boom:
 
 ```

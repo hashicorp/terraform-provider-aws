@@ -1,5 +1,5 @@
 ---
-subcategory: "WAF Regional"
+subcategory: "WAF Classic Regional"
 layout: "aws"
 page_title: "AWS: aws_wafregional_rate_based_rule"
 description: |-
@@ -12,7 +12,7 @@ description: |-
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_wafregional_rate_based_rule" "example" {
   name = "tfWAFRegionalRateBasedRule"
 }
@@ -20,11 +20,12 @@ data "aws_wafregional_rate_based_rule" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
-* `name` - (Required) The name of the WAF Regional rate based rule.
+* `name` - (Required) Name of the WAF Regional rate based rule.
 
-## Attributes Reference
-In addition to all arguments above, the following attributes are exported:
+## Attribute Reference
 
-* `id` - The ID of the WAF Regional rate based rule.
+This data source exports the following attributes in addition to the arguments above:
+
+* `id` - ID of the WAF Regional rate based rule.

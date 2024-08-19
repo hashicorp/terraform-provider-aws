@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_wafv2_web_acl: Support `scope_down_statement` on `managed_rule_group_statement`
+```

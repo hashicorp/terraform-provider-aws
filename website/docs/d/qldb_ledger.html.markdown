@@ -1,5 +1,5 @@
 ---
-subcategory: "Quantum Ledger Database (QLDB)"
+subcategory: "QLDB (Quantum Ledger Database)"
 layout: "aws"
 page_title: "AWS: aws_qldb_ledger"
 description: |-
@@ -12,7 +12,7 @@ Use this data source to fetch information about a Quantum Ledger Database.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_qldb_ledger" "example" {
   name = "an_example_ledger"
 }
@@ -20,9 +20,9 @@ data "aws_qldb_ledger" "example" {
 
 ## Argument Reference
 
-* `name` - (Required) The friendly name of the ledger to match.
+* `name` - (Required) Friendly name of the ledger to match.
 
-## Attributes Reference
+## Attribute Reference
 
-* `arn` - Amazon Resource Name (ARN) of the ledger.
-* `deletion_protection` - Deletion protection on the QLDB Ledger instance. Set to `true` by default.
+See the [QLDB Ledger Resource](/docs/providers/aws/r/qldb_ledger.html) for details on the
+returned attributes - they are identical.

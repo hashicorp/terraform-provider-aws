@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_dms_replication_task: Fix perpetual diff on dms replication_task settings
+```

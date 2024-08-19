@@ -1,0 +1,7 @@
+```release-note:enhancement
+provider: Add support for `shared_config_file` parameter
+```
+
+```release-note:enhancement
+provider: Updates AWS authentication to use AWS SDK for Go v2 <https://aws.github.io/aws-sdk-go-v2/docs/>
+```

@@ -1,0 +1,7 @@
+```release-note:enhancement
+provider: Add support for `shared_credentials_files` parameter and deprecates `shared_credentials_file`
+```
+
+```release-note:enhancement
+provider: Changes `shared_config_file` parameter to `shared_config_files`
+```

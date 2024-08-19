@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_lb: Fix to avoid creating a load balancer with same name as an existing load balancer
+```

@@ -1,0 +1,49 @@
+name: Skaff Checks
+
+on:
+  push:
+    branches:
+      - main
+      - 'release/**'
+  pull_request:
+    paths:
+      - names/**
+      - skaff/**
+
+## NOTE: !!!
+## When changing these workflows, ensure that the following is updated:
+##   - Documentation: docs/continuous-integration.md
+##   - Documentation: docs/makefile-cheat-sheet.md
+##   - Makefile: ./GNUmakefile
+
+jobs:
+  compile_skaff:
+    name: Compile skaff
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
+        with:
+          go-version-file: skaff/go.mod
+      # See also: https://github.com/actions/setup-go/issues/54
+      - name: go env
+        run: |
+          echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
+      - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
+        continue-on-error: true
+        timeout-minutes: 2
+        with:
+          path: ${{ env.GOCACHE }}
+          key: ${{ runner.os }}-GOCACHE-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
+      - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
+        continue-on-error: true
+        timeout-minutes: 2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
+      - name: Try building
+        run: |
+          cd skaff
+          go build

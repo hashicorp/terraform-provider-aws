@@ -1,5 +1,5 @@
 ---
-subcategory: "Elastic Load Balancing (ELB Classic)"
+subcategory: "ELB Classic"
 layout: "aws"
 page_title: "AWS: aws_proxy_protocol_policy"
 description: |-
@@ -12,7 +12,7 @@ Provides a proxy protocol policy, which allows an ELB to carry a client connecti
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_elb" "lb" {
   name               = "test-lb"
   availability_zones = ["us-east-1a"]
@@ -40,16 +40,16 @@ resource "aws_proxy_protocol_policy" "smtp" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `load_balancer` - (Required) The load balancer to which the policy
   should be attached.
 * `instance_ports` - (Required) List of instance ports to which the policy
   should be applied. This can be specified if the protocol is SSL or TCP.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the policy.
 * `load_balancer` - The load balancer to which the policy is attached.

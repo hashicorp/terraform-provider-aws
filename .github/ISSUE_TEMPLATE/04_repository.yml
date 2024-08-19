@@ -1,0 +1,42 @@
+name: "Repository/Meta"
+description: Choose this option when the issue has to do with the repository itself, including GitHub Actions, labels, workflows, etc.
+title: "[Repo]: "
+labels: ["repository"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        # Thank you for opening an issue!
+
+        This form is for issues pertaining to the repository itself. This might include changes to GitHub Actions, labels, procedures, etc. For issues with the contribution documentation, please use the "Report a Documentation Error" form.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Please leave a brief description of the issue or proposed change.
+    validations:
+      required: true
+
+  - type: textarea
+    id: references
+    attributes:
+      label: References
+      description: |
+        Where possible, please supply links to vendor documentation, other GitHub issues (open or closed) or pull requests that give additional context.
+
+        [Information about referencing Github Issues](https://help.github.com/articles/basic-writing-and-formatting-syntax/#referencing-issues-and-pull-requests)
+    validations:
+      required: false
+
+  - type: dropdown
+    id: will_contribute
+    attributes:
+      label: Would you like to implement a fix?
+      description: |
+        If you plan to implement a fix for this, check this box to let the maintainers and community know (you can update this later if you change your mind). If this would be your first contribution, refer to the [contribution guide](https://hashicorp.github.io/terraform-provider-aws/) for tips on getting started.
+      options:
+        - "No"
+        - "Yes"
+    validations:
+      required: false

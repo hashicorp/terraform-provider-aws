@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_s3_bucket: Correct Route 53 hosted zone ID for S3 websites in the `eu-south-1`, `af-south-1` and `us-gov-east-1` AWS Regions
+```
+
+```release-note:bug
+data-source/aws_s3_bucket: Correct Route 53 hosted zone ID for S3 websites in the `eu-south-1`, `af-south-1` and `us-gov-east-1` AWS Regions
+```

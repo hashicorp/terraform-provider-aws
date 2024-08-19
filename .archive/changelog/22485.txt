@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_eks_cluster: Add `ip_family` to the `kubernetes_network_config` configuration block
+```
+
+```release-note:enhancement
+data-source/aws_eks_cluster: Add `ip_family` to the `kubernetes_network_config` configuration block
+```

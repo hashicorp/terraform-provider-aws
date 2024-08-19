@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_finspace_kx_cluster: In-place updates are now supported for the `code`, `database`, and `initialization_script` arguments. The update timeout has been increased to 30 minutes.
+```

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_emr_cluster: Ignore `UnknownOperationException` errors when reading a cluster's auto-termination policy
+```

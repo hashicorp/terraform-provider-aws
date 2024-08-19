@@ -1,0 +1,11 @@
+```release-note:bug
+datasource/aws_ecs_task_execution: Fix type assertion panic on `overrides.0.inference_accelerator_overrides` attribute
+```
+
+```release-note:bug
+datasource/aws_ecs_task_execution: Fix type assertion panic on `overrides.0.container_overrides.*.environment` attribute
+```
+
+```release-note:bug
+datasource/aws_ecs_task_execution: Fix type assertion panic on `overrides.0.container_overrides.*.resource_requirements` attribute
+```

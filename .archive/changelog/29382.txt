@@ -1,0 +1,8 @@
+```release-note:enhancement
+resource/aws_organizations_policy: Add `skip_destroy` attribute
+```
+
+```release-note:enhancement
+resource/aws_organizations_policy_attachment: Add `skip_destroy` attribute
+```
+

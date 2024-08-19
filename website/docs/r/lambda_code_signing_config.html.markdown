@@ -14,7 +14,7 @@ For information about Lambda code signing configurations and how to use them, se
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_lambda_code_signing_config" "new_csc" {
   allowed_publishers {
     signing_profile_version_arns = [
@@ -45,8 +45,9 @@ The `policies` block supports the following argument:
 
 * `untrusted_artifact_on_deployment` - (Required) Code signing configuration policy for deployment validation failure. If you set the policy to Enforce, Lambda blocks the deployment request if code-signing validation checks fail. If you set the policy to Warn, Lambda allows the deployment and creates a CloudWatch log. Valid values: `Warn`, `Enforce`. Default value: `Warn`.
 
+## Attribute Reference
 
-## Attributes Reference
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the code signing configuration.
 * `config_id` - Unique identifier for the code signing configuration.
@@ -56,8 +57,17 @@ The `policies` block supports the following argument:
 
 ## Import
 
-Code Signing Configs can be imported using their ARN, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Code Signing Configs using their ARN. For example:
 
+```terraform
+import {
+  to = aws_lambda_code_signing_config.imported_csc
+  id = "arn:aws:lambda:us-west-2:123456789012:code-signing-config:csc-0f6c334abcdea4d8b"
+}
 ```
-$ terraform import aws_lambda_code_signing_config.imported_csc arn:aws:lambda:us-west-2:123456789012:code-signing-config:csc-0f6c334abcdea4d8b
+
+Using `terraform import`, import Code Signing Configs using their ARN. For example:
+
+```console
+% terraform import aws_lambda_code_signing_config.imported_csc arn:aws:lambda:us-west-2:123456789012:code-signing-config:csc-0f6c334abcdea4d8b
 ```
