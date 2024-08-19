@@ -150,7 +150,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_expectPolicyErrorInvalidAS
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccCoreNetworkPolicyAttachmentConfig_expectPolicyErrorInvalidASNRange(),
-				ExpectError: regexache.MustCompile("INVALID_ASN_RANGE"),
+				ExpectError: regexache.MustCompile("CoreNetworkPolicyException: Incorrect policy"),
 			},
 		},
 	})
