@@ -25,7 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_connect_instance_storage_config")
+// @SDKResource("aws_connect_instance_storage_config", name="Instance Storage Config")
 func resourceInstanceStorageConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceStorageConfigCreate,

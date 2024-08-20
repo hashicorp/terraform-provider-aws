@@ -52,8 +52,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_connect_instance",
 		},
 		{
-			Factory:  DataSourceInstanceStorageConfig,
+			Factory:  dataSourceInstanceStorageConfig,
 			TypeName: "aws_connect_instance_storage_config",
+			Name:     "Instance Storage Config",
 		},
 		{
 			Factory:  dataSourceLambdaFunctionAssociation,
@@ -152,6 +153,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  resourceInstanceStorageConfig,
 			TypeName: "aws_connect_instance_storage_config",
+			Name:     "Instance Storage Config",
 		},
 		{
 			Factory:  resourceLambdaFunctionAssociation,
