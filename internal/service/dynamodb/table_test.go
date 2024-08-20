@@ -1678,8 +1678,12 @@ func TestAccDynamoDBTable_encryption(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTable_RestoreCrossAccount(t *testing.T) {
+func TestAccDynamoDBTable_restoreCrossAccount(t *testing.T) {
 	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf awstypes.TableDescription
 	resourceName := "aws_dynamodb_table.test"
 	resourceNameRestore := "aws_dynamodb_table.test_restore"
