@@ -30,7 +30,6 @@ func TestAccACMCertificateDataSource_singleIssued(t *testing.T) {
 	var domain string
 	var tagName string
 	var tagValue string
-	var certType string
 
 	if os.Getenv("ACM_CERTIFICATE_SINGLE_ISSUED_MOST_RECENT_ARN") != "" {
 		arnRe = regexache.MustCompile(fmt.Sprintf("^%s$", os.Getenv("ACM_CERTIFICATE_SINGLE_ISSUED_MOST_RECENT_ARN")))
@@ -50,12 +49,6 @@ func TestAccACMCertificateDataSource_singleIssued(t *testing.T) {
 	} else {
 		tagName = "Name"
 		tagValue = fmt.Sprintf("tf-acc-single-issued.%s", os.Getenv("ACM_CERTIFICATE_ROOT_DOMAIN"))
-	}
-
-	if os.Getenv("ACM_CERTIFICATE_TYPE") != "" {
-		certType = os.Getenv("ACM_CERTIFICATE_TYPE")
-	} else {
-		certType = acm.CertificateTypeAmazonIssued
 	}
 
 	resourceName := "data.aws_acm_certificate.test"
@@ -86,11 +79,7 @@ func TestAccACMCertificateDataSource_singleIssued(t *testing.T) {
 				),
 			},
 			{
-<<<<<<< HEAD
 				Config: testAccCertificateDataSourceConfig_types(domain, string(awstypes.CertificateTypeAmazonIssued)),
-=======
-				Config: testAccCertificateDataSourceConfig_types(domain, certType),
->>>>>>> c6cd276c8c (feat: support for filtering by tags)
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
 					resource.TestMatchResourceAttr(resourceName, names.AttrARN, arnRe),
@@ -117,11 +106,7 @@ func TestAccACMCertificateDataSource_singleIssued(t *testing.T) {
 				),
 			},
 			{
-<<<<<<< HEAD
 				Config: testAccCertificateDataSourceConfig_mostRecentAndTypes(domain, string(awstypes.CertificateTypeAmazonIssued), true),
-=======
-				Config: testAccCertificateDataSourceConfig_mostRecentAndTypes(domain, certType, true),
->>>>>>> c6cd276c8c (feat: support for filtering by tags)
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
 					resource.TestMatchResourceAttr(resourceName, names.AttrARN, arnRe),
@@ -150,7 +135,7 @@ func TestAccACMCertificateDataSource_singleIssued(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCertificateDataSourceConfig_typesAndTags(domain, certType, tagName, tagValue),
+				Config: testAccCertificateDataSourceConfig_typesAndTags(domain, acm.CertificateTypeAmazonIssued, tagName, tagValue),
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
 					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
@@ -177,7 +162,7 @@ func TestAccACMCertificateDataSource_singleIssued(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCertificateDataSourceConfig_mostRecentAndTypesAndTags(domain, certType, tagName, tagValue, true),
+				Config: testAccCertificateDataSourceConfig_mostRecentAndTypesAndTags(domain, acm.CertificateTypeAmazonIssued, tagName, tagValue, true),
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
 					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
@@ -206,7 +191,7 @@ func TestAccACMCertificateDataSource_singleIssued(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCertificateDataSourceConfig_TagsAndTypes(certType, tagName, tagValue),
+				Config: testAccCertificateDataSourceConfig_TagsAndTypes(acm.CertificateTypeAmazonIssued, tagName, tagValue),
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
 					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
@@ -233,7 +218,7 @@ func TestAccACMCertificateDataSource_singleIssued(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCertificateDataSourceConfig_TagsAndMostRecentAndTypes(certType, tagName, tagValue, true),
+				Config: testAccCertificateDataSourceConfig_TagsAndMostRecentAndTypes(acm.CertificateTypeAmazonIssued, tagName, tagValue, true),
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
 					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
@@ -255,7 +240,6 @@ func TestAccACMCertificateDataSource_multipleIssued(t *testing.T) {
 	var domain string
 	var tagName string
 	var tagValue string
-	var certType string
 
 	if os.Getenv("ACM_CERTIFICATE_MULTIPLE_ISSUED_MOST_RECENT_ARN") != "" {
 		arnRe = regexache.MustCompile(fmt.Sprintf("^%s$", os.Getenv("ACM_CERTIFICATE_MULTIPLE_ISSUED_MOST_RECENT_ARN")))
@@ -277,12 +261,6 @@ func TestAccACMCertificateDataSource_multipleIssued(t *testing.T) {
 		tagValue = fmt.Sprintf("tf-acc-multiple-issued.%s", os.Getenv("ACM_CERTIFICATE_ROOT_DOMAIN"))
 	}
 
-	if os.Getenv("ACM_CERTIFICATE_TYPE") != "" {
-		certType = os.Getenv("ACM_CERTIFICATE_TYPE")
-	} else {
-		certType = acm.CertificateTypeAmazonIssued
-	}
-
 	resourceName := "data.aws_acm_certificate.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -299,13 +277,8 @@ func TestAccACMCertificateDataSource_multipleIssued(t *testing.T) {
 				ExpectError: regexache.MustCompile(`multiple ACM Certificates matching domain`),
 			},
 			{
-<<<<<<< HEAD
 				Config:      testAccCertificateDataSourceConfig_types(domain, string(awstypes.CertificateTypeAmazonIssued)),
 				ExpectError: regexache.MustCompile(`multiple ACM Certificates matching domain`),
-=======
-				Config:      testAccCertificateDataSourceConfig_types(domain, certType),
-				ExpectError: regexp.MustCompile(`multiple ACM Certificates matching search criteria`),
->>>>>>> c6cd276c8c (feat: support for filtering by tags)
 			},
 			{
 				Config: testAccCertificateDataSourceConfig_mostRecent(domain, true),
@@ -322,11 +295,7 @@ func TestAccACMCertificateDataSource_multipleIssued(t *testing.T) {
 				),
 			},
 			{
-<<<<<<< HEAD
 				Config: testAccCertificateDataSourceConfig_mostRecentAndTypes(domain, string(awstypes.CertificateTypeAmazonIssued), true),
-=======
-				Config: testAccCertificateDataSourceConfig_mostRecentAndTypes(domain, certType, true),
->>>>>>> c6cd276c8c (feat: support for filtering by tags)
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
 					resource.TestMatchResourceAttr(resourceName, names.AttrARN, arnRe),
@@ -334,15 +303,15 @@ func TestAccACMCertificateDataSource_multipleIssued(t *testing.T) {
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_basicAndTags(domain, tagName, tagValue),
-				ExpectError: regexp.MustCompile(`multiple ACM Certificates matching search criteria`),
+				ExpectError: regexp.MustCompile(`multiple ACM Certificates matching input criteria`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_statusAndTags(domain, acm.CertificateStatusIssued, tagName, tagValue),
-				ExpectError: regexp.MustCompile(`multiple ACM Certificates matching search criteria`),
+				ExpectError: regexp.MustCompile(`multiple ACM Certificates matching input criteria`),
 			},
 			{
-				Config:      testAccCertificateDataSourceConfig_typesAndTags(domain, certType, tagName, tagValue),
-				ExpectError: regexp.MustCompile(`multiple ACM Certificates matching search criteria`),
+				Config:      testAccCertificateDataSourceConfig_typesAndTags(domain, acm.CertificateTypeAmazonIssued, tagName, tagValue),
+				ExpectError: regexp.MustCompile(`multiple ACM Certificates matching input criteria`),
 			},
 			{
 				Config: testAccCertificateDataSourceConfig_mostRecentAndTags(domain, tagName, tagValue, true),
@@ -359,7 +328,7 @@ func TestAccACMCertificateDataSource_multipleIssued(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCertificateDataSourceConfig_mostRecentAndTypesAndTags(domain, certType, tagName, tagValue, true),
+				Config: testAccCertificateDataSourceConfig_mostRecentAndTypesAndTags(domain, acm.CertificateTypeAmazonIssued, tagName, tagValue, true),
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
 					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
@@ -367,15 +336,15 @@ func TestAccACMCertificateDataSource_multipleIssued(t *testing.T) {
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_basicTags(tagName, tagValue),
-				ExpectError: regexp.MustCompile(`multiple ACM Certificates matching search criteria`),
+				ExpectError: regexp.MustCompile(`multiple ACM Certificates matching input criteria`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_TagsAndStatus(acm.CertificateStatusIssued, tagName, tagValue),
-				ExpectError: regexp.MustCompile(`multiple ACM Certificates matching search criteria`),
+				ExpectError: regexp.MustCompile(`multiple ACM Certificates matching input criteria`),
 			},
 			{
-				Config:      testAccCertificateDataSourceConfig_TagsAndTypes(certType, tagName, tagValue),
-				ExpectError: regexp.MustCompile(`multiple ACM Certificates matching search criteria`),
+				Config:      testAccCertificateDataSourceConfig_TagsAndTypes(acm.CertificateTypeAmazonIssued, tagName, tagValue),
+				ExpectError: regexp.MustCompile(`multiple ACM Certificates matching input criteria`),
 			},
 			{
 				Config: testAccCertificateDataSourceConfig_TagsAndMostRecent(tagName, tagValue, true),
@@ -392,7 +361,7 @@ func TestAccACMCertificateDataSource_multipleIssued(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCertificateDataSourceConfig_TagsAndMostRecentAndTypes(certType, tagName, tagValue, true),
+				Config: testAccCertificateDataSourceConfig_TagsAndMostRecentAndTypes(acm.CertificateTypeAmazonIssued, tagName, tagValue, true),
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
 					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
@@ -404,16 +373,8 @@ func TestAccACMCertificateDataSource_multipleIssued(t *testing.T) {
 
 func TestAccACMCertificateDataSource_noMatchReturnsError(t *testing.T) {
 	ctx := acctest.Context(t)
-	var certType string
-
 	if os.Getenv("ACM_CERTIFICATE_ROOT_DOMAIN") == "" {
 		t.Skip("Environment variable ACM_CERTIFICATE_ROOT_DOMAIN is not set")
-	}
-
-	if os.Getenv("ACM_CERTIFICATE_TYPE") != "" {
-		certType = os.Getenv("ACM_CERTIFICATE_TYPE")
-	} else {
-		certType = acm.CertificateTypeAmazonIssued
 	}
 
 	domain := fmt.Sprintf("tf-acc-nonexistent.%s", os.Getenv("ACM_CERTIFICATE_ROOT_DOMAIN"))
@@ -434,8 +395,8 @@ func TestAccACMCertificateDataSource_noMatchReturnsError(t *testing.T) {
 				ExpectError: regexache.MustCompile(`no ACM Certificate matching domain`),
 			},
 			{
-				Config:      testAccCertificateDataSourceConfig_types(domain, certType),
-				ExpectError: regexp.MustCompile(`no ACM Certificate matching domain`),
+				Config:      testAccCertificateDataSourceConfig_types(domain, string(awstypes.CertificateTypeAmazonIssued)),
+				ExpectError: regexache.MustCompile(`no ACM Certificate matching domain`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_mostRecent(domain, true),
@@ -446,68 +407,56 @@ func TestAccACMCertificateDataSource_noMatchReturnsError(t *testing.T) {
 				ExpectError: regexache.MustCompile(`no ACM Certificate matching domain`),
 			},
 			{
-				Config:      testAccCertificateDataSourceConfig_mostRecentAndTypes(domain, certType, true),
-				ExpectError: regexp.MustCompile(`no ACM Certificate matching domain`),
+				Config:      testAccCertificateDataSourceConfig_mostRecentAndTypes(domain, string(awstypes.CertificateTypeAmazonIssued), true),
+				ExpectError: regexache.MustCompile(`no ACM Certificate matching domain`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_basicAndTags(domain, tagName, tagValue),
-				ExpectError: regexp.MustCompile(`no ACM Certificate matching search criteria`),
+				ExpectError: regexp.MustCompile(`no ACM Certificate found matching input criteria`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_statusAndTags(domain, acm.CertificateStatusIssued, tagName, tagValue),
-				ExpectError: regexp.MustCompile(`no ACM Certificate matching search criteria`),
+				ExpectError: regexp.MustCompile(`no ACM Certificate found matching input criteria`),
 			},
 			{
-				Config:      testAccCertificateDataSourceConfig_typesAndTags(domain, certType, tagName, tagValue),
-				ExpectError: regexp.MustCompile(`no ACM Certificate matching search criteria`),
+				Config:      testAccCertificateDataSourceConfig_typesAndTags(domain, acm.CertificateTypeAmazonIssued, tagName, tagValue),
+				ExpectError: regexp.MustCompile(`no ACM Certificate found matching input criteria`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_mostRecentAndTags(domain, tagName, tagValue, true),
-				ExpectError: regexp.MustCompile(`no ACM Certificate matching search criteria`),
+				ExpectError: regexp.MustCompile(`no ACM Certificate found matching input criteria`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_mostRecentAndStatusAndTags(domain, acm.CertificateStatusIssued, tagName, tagValue, true),
-				ExpectError: regexp.MustCompile(`no ACM Certificate matching search criteria`),
+				ExpectError: regexp.MustCompile(`no ACM Certificate found matching input criteria`),
 			},
 			{
-				Config:      testAccCertificateDataSourceConfig_mostRecentAndTypesAndTags(domain, certType, tagName, tagValue, true),
-				ExpectError: regexp.MustCompile(`no ACM Certificate matching search criteria`),
+				Config:      testAccCertificateDataSourceConfig_mostRecentAndTypesAndTags(domain, acm.CertificateTypeAmazonIssued, tagName, tagValue, true),
+				ExpectError: regexp.MustCompile(`no ACM Certificate found matching input criteria`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_basicTags(tagName, tagValue),
-				ExpectError: regexp.MustCompile(`no ACM Certificate matching search criteria`),
+				ExpectError: regexp.MustCompile(`no ACM Certificate found matching input criteria`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_TagsAndStatus(acm.CertificateStatusIssued, tagName, tagValue),
-				ExpectError: regexp.MustCompile(`no ACM Certificate matching search criteria`),
+				ExpectError: regexp.MustCompile(`no ACM Certificate found matching input criteria`),
 			},
 			{
-				Config:      testAccCertificateDataSourceConfig_TagsAndTypes(certType, tagName, tagValue),
-				ExpectError: regexp.MustCompile(`no ACM Certificate matching search criteria`),
+				Config:      testAccCertificateDataSourceConfig_TagsAndTypes(acm.CertificateTypeAmazonIssued, tagName, tagValue),
+				ExpectError: regexp.MustCompile(`no ACM Certificate found matching input criteria`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_TagsAndMostRecent(tagName, tagValue, true),
-				ExpectError: regexp.MustCompile(`no ACM Certificate matching search criteria`),
+				ExpectError: regexp.MustCompile(`no ACM Certificate found matching input criteria`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_TagsAndMostRecentAndStatus(acm.CertificateStatusIssued, tagName, tagValue, true),
-				ExpectError: regexp.MustCompile(`no ACM Certificate matching search criteria`),
+				ExpectError: regexp.MustCompile(`no ACM Certificate found matching input criteria`),
 			},
 			{
-				Config:      testAccCertificateDataSourceConfig_TagsAndMostRecentAndTypes(certType, tagName, tagValue, true),
-				ExpectError: regexp.MustCompile(`no ACM Certificate matching search criteria`),
-			},
-			{
-				Config:      testAccCertificateDataSourceConfig_certTypes(certType),
-				ExpectError: regexp.MustCompile(`no ACM Certificate matching search criteria. Please use at least domain or tags as search criteria`),
-			},
-			{
-				Config:      testAccCertificateDataSourceConfig_certStatus(acm.CertificateStatusIssued),
-				ExpectError: regexp.MustCompile(`no ACM Certificate matching search criteria. Please use at least domain or tags as search criteria`),
-			},
-			{
-				Config:      testAccCertificateDataSourceConfig_certStatusTypes(acm.CertificateStatusIssued, certType),
-				ExpectError: regexp.MustCompile(`no ACM Certificate matching search criteria. Please use at least domain or tags as search criteria`),
+				Config:      testAccCertificateDataSourceConfig_TagsAndMostRecentAndTypes(acm.CertificateTypeAmazonIssued, tagName, tagValue, true),
+				ExpectError: regexp.MustCompile(`no ACM Certificate found matching input criteria`),
 			},
 		},
 	})
@@ -518,30 +467,25 @@ func TestAccACMCertificateDataSource_keyTypes(t *testing.T) {
 	resourceName := "aws_acm_certificate.test"
 	dataSourceName := "data.aws_acm_certificate.test"
 	key := acctest.TLSRSAPrivateKeyPEM(t, 4096)
-	domainName := acctest.RandomDomain().String()
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, domainName)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, acctest.RandomDomain().String())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	tagName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	tagValue := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ExternalProviders: map[string]resource.ExternalProvider{
-			"time": {
-				Source:            "hashicorp/time",
-				VersionConstraint: "0.9.1",
-			},
-		},
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCertificateDataSourceConfig_keyTypes(acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key), domainName),
+				Config: testAccCertificateDataSourceConfig_keyTypes(acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key), rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTags, dataSourceName, names.AttrTags),
 				),
 			},
 			{
-				Config: testAccCertificateDataSourceConfig_keyTypesAndTags(acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key), tagName, domainName),
+				Config: testAccCertificateDataSourceConfig_keyTypesAndTags(acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key), tagName, tagValue),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "tags", dataSourceName, "tags"),
@@ -617,18 +561,9 @@ resource "aws_acm_certificate" "test" {
   }
 }
 
-provider "time" {}
-
-resource "time_sleep" "wait_1_seconds" {
-  depends_on = [aws_acm_certificate.test]
-
-  create_duration = "1s"
-}
-
 data "aws_acm_certificate" "test" {
-  domain     = aws_acm_certificate.test.domain_name
-  key_types  = ["RSA_4096"]
-  depends_on = [time_sleep.wait_1_seconds]
+  domain    = aws_acm_certificate.test.domain_name
+  key_types = ["RSA_4096"]
 }
 `, certificate, key, rName)
 }
@@ -657,10 +592,10 @@ data "aws_acm_certificate" "test" {
 func testAccCertificateDataSourceConfig_TagsAndTypes(certType, key, value string) string {
 	return fmt.Sprintf(`
 data "aws_acm_certificate" "test" {
+  types  = [%[2]q]
   tags   = {
 	%[2]q = %[3]q
   }
-  types  = [%[1]q]
 }
 `, certType, key, value)
 }
@@ -773,31 +708,6 @@ data "aws_acm_certificate" "test" {
 `, domain, certType, mostRecent, key, value)
 }
 
-func testAccCertificateDataSourceConfig_certTypes(certType string) string {
-	return fmt.Sprintf(`
-data "aws_acm_certificate" "test" {
-  types = [%[1]q]
-}
-`, certType)
-}
-
-func testAccCertificateDataSourceConfig_certStatus(certType string) string {
-	return fmt.Sprintf(`
-data "aws_acm_certificate" "test" {
-  statuses = [%[1]q]
-}
-`, certType)
-}
-
-func testAccCertificateDataSourceConfig_certStatusTypes(status, certType string) string {
-	return fmt.Sprintf(`
-data "aws_acm_certificate" "test" {
-  statuses = [%[1]q]
-  types    = [%[2]q]
-}
-`, status, certType)
-}
-
 func testAccCertificateDataSourceConfig_keyTypesAndTags(certificate, key, tagName, tagValue string) string {
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
@@ -809,18 +719,11 @@ resource "aws_acm_certificate" "test" {
   }
 }
 
-resource "time_sleep" "wait_1_seconds" {
-  depends_on = [aws_acm_certificate.test]
-
-  create_duration = "1s"
-}
-
 data "aws_acm_certificate" "test" {
-  tags = {
-    %[3]q = aws_acm_certificate.test.domain_name
+  key_types = ["RSA_4096"]
+  tags 		= {
+	%[3]q = %[4]q
   }
-  key_types  = ["RSA_4096"]
-  depends_on = [time_sleep.wait_1_seconds]
 }
 `, certificate, key, tagName, tagValue)
 }
