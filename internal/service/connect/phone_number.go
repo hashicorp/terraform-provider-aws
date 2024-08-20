@@ -250,6 +250,10 @@ func resourcePhoneNumberDelete(ctx context.Context, d *schema.ResourceData, meta
 		PhoneNumberId: aws.String(d.Id()),
 	})
 
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "releasing Connect Phone Number (%s): %s", d.Id(), err)
 	}

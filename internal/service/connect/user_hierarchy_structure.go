@@ -161,6 +161,10 @@ func resourceUserHierarchyStructureDelete(ctx context.Context, d *schema.Resourc
 		InstanceId:         aws.String(d.Id()),
 	})
 
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Connect User Hierarchy Structure (%s): %s", d.Id(), err)
 	}

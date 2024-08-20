@@ -232,6 +232,10 @@ func resourceHoursOfOperationDelete(ctx context.Context, d *schema.ResourceData,
 		InstanceId:         aws.String(instanceID),
 	})
 
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Connect Hours Of Operation (%s): %s", d.Id(), err)
 	}

@@ -354,6 +354,10 @@ func resourceQueueDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		QueueId:    aws.String(queueID),
 	})
 
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Connect Queue (%s): %s", d.Id(), err)
 	}

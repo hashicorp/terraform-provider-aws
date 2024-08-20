@@ -246,6 +246,10 @@ func resourceContactFlowModuleDelete(ctx context.Context, d *schema.ResourceData
 		InstanceId:          aws.String(instanceID),
 	})
 
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Connect Contact Flow Module (%s): %s", d.Id(), err)
 	}

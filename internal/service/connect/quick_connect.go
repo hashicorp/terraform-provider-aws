@@ -274,6 +274,10 @@ func resourceQuickConnectDelete(ctx context.Context, d *schema.ResourceData, met
 		QuickConnectId: aws.String(quickConnectID),
 	})
 
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Connect Quick Connect (%s): %s", d.Id(), err)
 	}

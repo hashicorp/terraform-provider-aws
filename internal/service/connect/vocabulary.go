@@ -194,6 +194,10 @@ func resourceVocabularyDelete(ctx context.Context, d *schema.ResourceData, meta 
 		VocabularyId: aws.String(vocabularyID),
 	})
 
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Connect Vocabulary (%s): %s", d.Id(), err)
 	}

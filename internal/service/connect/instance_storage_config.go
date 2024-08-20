@@ -283,6 +283,10 @@ func resourceInstanceStorageConfigDelete(ctx context.Context, d *schema.Resource
 		ResourceType:  resourceType,
 	})
 
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Connect Instance Storage Config (%s): %s", d.Id(), err)
 	}

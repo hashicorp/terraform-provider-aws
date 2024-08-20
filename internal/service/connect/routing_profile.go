@@ -321,6 +321,10 @@ func resourceRoutingProfileDelete(ctx context.Context, d *schema.ResourceData, m
 		RoutingProfileId: aws.String(routingProfileID),
 	})
 
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Connect Routing Profile (%s): %s", d.Id(), err)
 	}

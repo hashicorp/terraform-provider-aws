@@ -205,6 +205,10 @@ func resourceSecurityProfileDelete(ctx context.Context, d *schema.ResourceData, 
 		SecurityProfileId: aws.String(securityProfileID),
 	})
 
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Connect Security Profile (%s): %s", d.Id(), err)
 	}
