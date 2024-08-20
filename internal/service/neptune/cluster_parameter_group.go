@@ -29,7 +29,7 @@ import (
 
 // @SDKResource("aws_neptune_cluster_parameter_group", name="Cluster Parameter Group")
 // @Tags(identifierAttribute="arn")
-func ResourceClusterParameterGroup() *schema.Resource {
+func resourceClusterParameterGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterParameterGroupCreate,
 		ReadWithoutTimeout:   resourceClusterParameterGroupRead,
@@ -135,7 +135,7 @@ func resourceClusterParameterGroupRead(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
-	dbClusterParameterGroup, err := FindDBClusterParameterGroupByName(ctx, conn, d.Id())
+	dbClusterParameterGroup, err := findDBClusterParameterGroupByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Neptune Cluster Parameter Group (%s) not found, removing from state", d.Id())
@@ -258,7 +258,7 @@ func modifyClusterParameterGroupParameters(ctx context.Context, conn *neptune.Cl
 	return nil
 }
 
-func FindDBClusterParameterGroupByName(ctx context.Context, conn *neptune.Client, name string) (*awstypes.DBClusterParameterGroup, error) {
+func findDBClusterParameterGroupByName(ctx context.Context, conn *neptune.Client, name string) (*awstypes.DBClusterParameterGroup, error) {
 	input := &neptune.DescribeDBClusterParameterGroupsInput{
 		DBClusterParameterGroupName: aws.String(name),
 	}
