@@ -9,6 +9,7 @@ var (
 	ResourceContactFlow               = resourceContactFlow
 	ResourceContactFlowModule         = resourceContactFlowModule
 	ResourceHoursOfOperation          = resourceHoursOfOperation
+	ResourceInstance                  = resourceInstance
 	ResourceInstanceStorageConfig     = resourceInstanceStorageConfig
 	ResourceLambdaFunctionAssociation = resourceLambdaFunctionAssociation
 	ResourcePhoneNumber               = resourcePhoneNumber
@@ -25,6 +26,7 @@ var (
 	FindContactFlowByTwoPartKey               = findContactFlowByTwoPartKey
 	FindContactFlowModuleByTwoPartKey         = findContactFlowModuleByTwoPartKey
 	FindHoursOfOperationByTwoPartKey          = findHoursOfOperationByTwoPartKey
+	FindInstanceByID                          = findInstanceByID
 	FindInstanceStorageConfigByThreePartKey   = findInstanceStorageConfigByThreePartKey
 	FindLambdaFunctionAssociationByTwoPartKey = findLambdaFunctionAssociationByTwoPartKey
 	FindPhoneNumberByID                       = findPhoneNumberByID
