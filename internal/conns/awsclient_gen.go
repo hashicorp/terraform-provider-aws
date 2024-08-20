@@ -232,6 +232,7 @@ import (
 	wafregional_sdkv2 "github.com/aws/aws-sdk-go-v2/service/wafregional"
 	wafv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/wafv2"
 	wellarchitected_sdkv2 "github.com/aws/aws-sdk-go-v2/service/wellarchitected"
+	worklink_sdkv2 "github.com/aws/aws-sdk-go-v2/service/worklink"
 	workspaces_sdkv2 "github.com/aws/aws-sdk-go-v2/service/workspaces"
 	workspacesweb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/workspacesweb"
 	xray_sdkv2 "github.com/aws/aws-sdk-go-v2/service/xray"
@@ -244,7 +245,6 @@ import (
 	neptune_sdkv1 "github.com/aws/aws-sdk-go/service/neptune"
 	quicksight_sdkv1 "github.com/aws/aws-sdk-go/service/quicksight"
 	simpledb_sdkv1 "github.com/aws/aws-sdk-go/service/simpledb"
-	worklink_sdkv1 "github.com/aws/aws-sdk-go/service/worklink"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -1197,8 +1197,8 @@ func (c *AWSClient) WellArchitectedClient(ctx context.Context) *wellarchitected_
 	return errs.Must(client[*wellarchitected_sdkv2.Client](ctx, c, names.WellArchitected, make(map[string]any)))
 }
 
-func (c *AWSClient) WorkLinkConn(ctx context.Context) *worklink_sdkv1.WorkLink {
-	return errs.Must(conn[*worklink_sdkv1.WorkLink](ctx, c, names.WorkLink, make(map[string]any)))
+func (c *AWSClient) WorkLinkClient(ctx context.Context) *worklink_sdkv2.Client {
+	return errs.Must(client[*worklink_sdkv2.Client](ctx, c, names.WorkLink, make(map[string]any)))
 }
 
 func (c *AWSClient) WorkSpacesClient(ctx context.Context) *workspaces_sdkv2.Client {

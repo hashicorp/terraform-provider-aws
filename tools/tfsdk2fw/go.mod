@@ -263,6 +263,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/wafregional v1.23.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.51.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.32.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/worklink v1.22.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.45.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.21.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/xray v1.27.4 // indirect
