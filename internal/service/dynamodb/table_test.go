@@ -1702,7 +1702,7 @@ func TestAccDynamoDBTable_RestoreCrossAccount(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceNameRestore, names.AttrName, rNameRestore),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "dynamodb", fmt.Sprintf("table/%s", rName)),
-					acctest.CheckResourceAttrAlternateRegionalARN(resourceNameRestore, names.AttrARN, "dynamodb", fmt.Sprintf("table/%s", reNameRestore)),
+					acctest.CheckResourceAttrAlternateRegionalARN(resourceNameRestore, names.AttrARN, "dynamodb", fmt.Sprintf("table/%s", rNameRestore)),
 				),
 			},
 			{
