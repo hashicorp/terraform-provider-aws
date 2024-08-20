@@ -40,7 +40,7 @@ func dataSourceCertificate() *schema.Resource {
 			},
 			names.AttrDomain: {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 			},
 			"key_types": {
 				Type:     schema.TypeSet,
@@ -80,9 +80,7 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).ACMClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	domain, domainOk := d.Get(names.AttrDomain)
-	tags, tagsOk := d.GetOk(names.AttrTags)
-
+	domain := d.Get(names.AttrDomain)
 	input := &acm.ListCertificatesInput{}
 
 	if v, ok := d.GetOk("key_types"); ok && v.(*schema.Set).Len() > 0 {
@@ -107,23 +105,20 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		for _, v := range page.CertificateSummaryList {
-			if domainOk && aws.ToString(v.DomainName) == domain {
-				arns = append(arns, aws.ToString(v.CertificateArn))
-			}
-			if !domainOk && tagsOk {
+			if aws.ToString(v.DomainName) == domain {
 				arns = append(arns, aws.ToString(v.CertificateArn))
 			}
 		}
 	}
 
-	if domainOk && !tagsOk && len(arns) == 0 {
+	if len(arns) == 0 {
 		return sdkdiag.AppendErrorf(diags, "no ACM Certificate matching domain (%s)", domain)
 	}
 
 	filterMostRecent := d.Get(names.AttrMostRecent).(bool)
 	certificateTypes := flex.ExpandStringyValueList[types.CertificateType](d.Get("types").([]interface{}))
 
-	if domainOk && !tagsOk && !filterMostRecent && len(certificateTypes) == 0 && len(arns) > 1 {
+	if !filterMostRecent && len(certificateTypes) == 0 && len(arns) > 1 {
 		return sdkdiag.AppendErrorf(diags, "multiple ACM Certificates matching domain (%s)", domain)
 	}
 
@@ -140,57 +135,8 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 			return sdkdiag.AppendErrorf(diags, "reading ACM Certificate (%s): %s", arn, err)
 		}
 
-		if tagsOk {
-			certificateTags, err := ListTags(ctx, conn, aws.ToString(certificate.CertificateArn))
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "listing tags for ACM Certificate (%s): %s", aws.ToString(certificate.CertificateArn), err)
-			}
-
-			certificateTagsIgnoreAWS := certificateTags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()
-
-			if len(certificateTagsIgnoreAWS) > 0 {
-				if tagsMatch(tags.(map[string]string), certificateTagsIgnoreAWS) {
-					if matchedCertificate == nil {
-						matchedCertificate = certificate
-					}
-
-					// At this point, we already have a candidate certificate.
-					// Check if we are filtering by most recent and update if necessary.
-					if filterMostRecent {
-						matchedCertificate, err = mostRecentCertificate(certificate, matchedCertificate)
-
-						if err != nil {
-							return sdkdiag.AppendErrorf(diags, err)
-						}
-					}
-
-					// If there is no filtering by certificate types, multiple certificates having same tags
-					if len(certificateTypes) == 0 {
-						// Now we have multiple candidate certificates and we only allow one certificate.
-						return sdkdiag.AppendErrorf(diags, "multiple ACM Certificates matching input criteria")
-					}
-				}
-			}
-
-			// If there is no filtering by certificate types, proceed to next certificate
-			if len(certificateTypes) == 0 {
-				continue
-			}
-		}
-
 		if len(certificateTypes) > 0 {
 			for _, certificateType := range certificateTypes {
-				// If there is matched certificated by tags, setting matched certificate to nil
-				// we are ensuring that matched certificate should also have matched certificate type.
-				if tagsOk && matchedCertificate != nil {
-					matchedCertificate = nil
-				}
-
-				// If there is no matching by tags skip current certificate from further filtering.
-				if tagsOk && matchedCertificate == nil {
-					continue
-				}
-
 				if certificate.Type == certificateType {
 					// We do not have a candidate certificate.
 					if matchedCertificate == nil {
@@ -211,7 +157,7 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 						break
 					}
 					// Now we have multiple candidate certificates and we only allow one certificate.
-					return sdkdiag.AppendErrorf(diags, "multiple ACM Certificates matching input criteria")
+					return sdkdiag.AppendErrorf(diags, "multiple ACM Certificates matching domain (%s)", domain)
 				}
 			}
 
@@ -238,11 +184,11 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		// Now we have multiple candidate certificates and we only allow one certificate.
-		return sdkdiag.AppendErrorf(diags, "multiple ACM Certificates matching input criteria")
+		return sdkdiag.AppendErrorf(diags, "multiple ACM Certificates matching domain (%s)", domain)
 	}
 
 	if matchedCertificate == nil {
-		return sdkdiag.AppendErrorf(diags, "no ACM Certificate found matching input criteria")
+		return sdkdiag.AppendErrorf(diags, "no ACM Certificate matching domain (%s)", domain)
 	}
 
 	// Get the certificate data if the status is issued
@@ -272,13 +218,13 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set(names.AttrARN, matchedCertificate.CertificateArn)
 	d.Set(names.AttrStatus, matchedCertificate.Status)
 
-	matchedCertificateTags, err := listTags(ctx, conn, aws.ToString(matchedCertificate.CertificateArn))
+	tags, err := listTags(ctx, conn, aws.ToString(matchedCertificate.CertificateArn))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for ACM Certificate (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set(names.AttrTags, matchedCertificateTags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
@@ -301,17 +247,4 @@ func mostRecentCertificate(i, j *types.CertificateDetail) (*types.CertificateDet
 		return i, nil
 	}
 	return j, nil
-}
-
-func tagsMatch(tagsFilter, tagsCertificate map[string]string) bool {
-	if len(tagsFilter) > len(tagsCertificate) {
-		return false
-	}
-
-	for k, v := range tagsFilter {
-		if tagsCertificate[k] != v {
-			return false
-		}
-	}
-	return true
 }
