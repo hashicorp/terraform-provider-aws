@@ -145,7 +145,7 @@ func sweepClusters(region string) error {
 			arn := aws.ToString(v.DBClusterArn)
 			id := aws.ToString(v.DBClusterIdentifier)
 
-			r := ResourceCluster()
+			r := resourceCluster()
 			d := r.Data(nil)
 			d.SetId(id)
 			d.Set(names.AttrApplyImmediately, true)

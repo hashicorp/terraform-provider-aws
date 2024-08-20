@@ -5,13 +5,15 @@ package neptune
 
 // Exports for use in tests only.
 var (
+	ResourceCluster               = resourceCluster
 	ResourceClusterEndpoint       = resourceClusterEndpoint
 	ResourceClusterInstance       = resourceClusterInstance
 	ResourceClusterParameterGroup = resourceClusterParameterGroup
 	ResourceClusterSnapshot       = resourceClusterSnapshot
 
 	FindClusterEndpointByTwoPartKey   = findClusterEndpointByTwoPartKey
-	FindDBClusterParameterGroupByName = findDBClusterParameterGroupByName
 	FindClusterSnapshotByID           = findClusterSnapshotByID
+	FindDBClusterByID                 = findDBClusterByID
+	FindDBClusterParameterGroupByName = findDBClusterParameterGroupByName
 	FindDBInstanceByID                = findDBInstanceByID
 )

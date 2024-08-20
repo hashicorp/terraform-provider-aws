@@ -47,7 +47,7 @@ const (
 
 // @SDKResource("aws_neptune_cluster", name="Cluster")
 // @Tags(identifierAttribute="arn")
-func ResourceCluster() *schema.Resource {
+func resourceCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterCreate,
 		ReadWithoutTimeout:   resourceClusterRead,
@@ -513,7 +513,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
-	dbc, err := FindDBClusterByID(ctx, conn, d.Id())
+	dbc, err := findDBClusterByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Neptune Cluster (%s) not found, removing from state", d.Id())
@@ -837,7 +837,7 @@ func removeClusterFromGlobalCluster(ctx context.Context, conn *neptune.Client, c
 	return nil
 }
 
-func FindDBClusterByID(ctx context.Context, conn *neptune.Client, id string) (*awstypes.DBCluster, error) {
+func findDBClusterByID(ctx context.Context, conn *neptune.Client, id string) (*awstypes.DBCluster, error) {
 	input := &neptune.DescribeDBClustersInput{
 		DBClusterIdentifier: aws.String(id),
 	}
@@ -906,7 +906,7 @@ func findDBClusters(ctx context.Context, conn *neptune.Client, input *neptune.De
 
 func statusDBCluster(ctx context.Context, conn *neptune.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindDBClusterByID(ctx, conn, id)
+		output, err := findDBClusterByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

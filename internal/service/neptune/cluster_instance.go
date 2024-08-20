@@ -448,7 +448,7 @@ func findDBInstances(ctx context.Context, conn *neptune.Client, input *neptune.D
 }
 
 func findClusterMemberByInstanceByTwoPartKey(ctx context.Context, conn *neptune.Client, clusterID, instanceID string) (*awstypes.DBClusterMember, error) {
-	output, err := FindDBClusterByID(ctx, conn, clusterID)
+	output, err := findDBClusterByID(ctx, conn, clusterID)
 
 	if err != nil {
 		return nil, err
