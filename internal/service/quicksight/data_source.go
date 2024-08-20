@@ -60,7 +60,7 @@ func ResourceDataSource() *schema.Resource {
 								Type:          schema.TypeString,
 								Optional:      true,
 								ValidateFunc:  verify.ValidARN,
-								ConflictsWith: []string{"credentials.0.credential_pair"},
+								ConflictsWith: []string{"credentials.0.credential_pair", "credentials.0.secret_arn"},
 							},
 							"credential_pair": {
 								Type:     schema.TypeList,
@@ -88,7 +88,13 @@ func ResourceDataSource() *schema.Resource {
 										},
 									},
 								},
-								ConflictsWith: []string{"credentials.0.copy_source_arn"},
+								ConflictsWith: []string{"credentials.0.copy_source_arn", "credentials.0.secret_arn"},
+							},
+							"secret_arn": {
+								Type:          schema.TypeString,
+								Optional:      true,
+								ValidateFunc:  verify.ValidARN,
+								ConflictsWith: []string{"credentials.0.credential_pair", "credentials.0.copy_source_arn"},
 							},
 						},
 					},
