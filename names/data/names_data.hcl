@@ -6644,7 +6644,7 @@ service "opsworks" {
 
   sdk {
     id             = "OpsWorks"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {

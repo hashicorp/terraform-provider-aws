@@ -190,6 +190,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/oam v1.13.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/opensearch v1.39.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.13.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/opsworks v1.24.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.30.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/osis v1.12.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/outposts v1.42.1 // indirect

@@ -160,6 +160,7 @@ import (
 	oam_sdkv2 "github.com/aws/aws-sdk-go-v2/service/oam"
 	opensearch_sdkv2 "github.com/aws/aws-sdk-go-v2/service/opensearch"
 	opensearchserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
+	opsworks_sdkv2 "github.com/aws/aws-sdk-go-v2/service/opsworks"
 	organizations_sdkv2 "github.com/aws/aws-sdk-go-v2/service/organizations"
 	osis_sdkv2 "github.com/aws/aws-sdk-go-v2/service/osis"
 	outposts_sdkv2 "github.com/aws/aws-sdk-go-v2/service/outposts"
@@ -241,7 +242,6 @@ import (
 	lexmodelbuildingservice_sdkv1 "github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	macie2_sdkv1 "github.com/aws/aws-sdk-go/service/macie2"
 	neptune_sdkv1 "github.com/aws/aws-sdk-go/service/neptune"
-	opsworks_sdkv1 "github.com/aws/aws-sdk-go/service/opsworks"
 	quicksight_sdkv1 "github.com/aws/aws-sdk-go/service/quicksight"
 	simpledb_sdkv1 "github.com/aws/aws-sdk-go/service/simpledb"
 	worklink_sdkv1 "github.com/aws/aws-sdk-go/service/worklink"
@@ -905,8 +905,8 @@ func (c *AWSClient) OpenSearchServerlessClient(ctx context.Context) *opensearchs
 	return errs.Must(client[*opensearchserverless_sdkv2.Client](ctx, c, names.OpenSearchServerless, make(map[string]any)))
 }
 
-func (c *AWSClient) OpsWorksConn(ctx context.Context) *opsworks_sdkv1.OpsWorks {
-	return errs.Must(conn[*opsworks_sdkv1.OpsWorks](ctx, c, names.OpsWorks, make(map[string]any)))
+func (c *AWSClient) OpsWorksClient(ctx context.Context) *opsworks_sdkv2.Client {
+	return errs.Must(client[*opsworks_sdkv2.Client](ctx, c, names.OpsWorks, make(map[string]any)))
 }
 
 func (c *AWSClient) OrganizationsClient(ctx context.Context) *organizations_sdkv2.Client {
