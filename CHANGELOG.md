@@ -3,10 +3,12 @@
 FEATURES:
 
 * **New Data Source:** `aws_route53_zones` ([#17457](https://github.com/hashicorp/terraform-provider-aws/issues/17457))
+* **New Data Source:** `aws_ssoadmin_permission_sets` ([#38741](https://github.com/hashicorp/terraform-provider-aws/issues/38741))
 
 ENHANCEMENTS:
 
 * data-source/aws_batch_job_queue: Add `job_state_time_limit_action` attribute ([#38784](https://github.com/hashicorp/terraform-provider-aws/issues/38784))
+* resource/aws_batch_job_definition: Add `ecs_properties` argument ([#37871](https://github.com/hashicorp/terraform-provider-aws/issues/37871))
 * resource/aws_batch_job_queue: Add `job_state_time_limit_action` argument ([#38784](https://github.com/hashicorp/terraform-provider-aws/issues/38784))
 
 BUG FIXES:
