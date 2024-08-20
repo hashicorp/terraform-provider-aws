@@ -24,8 +24,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_neptune_global_cluster")
-func ResourceGlobalCluster() *schema.Resource {
+// @SDKResource("aws_neptune_global_cluster", name="Global Cluster")
+func resourceGlobalCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGlobalClusterCreate,
 		ReadWithoutTimeout:   resourceGlobalClusterRead,
@@ -164,7 +164,7 @@ func resourceGlobalClusterRead(ctx context.Context, d *schema.ResourceData, meta
 
 	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
-	globalCluster, err := FindGlobalClusterByID(ctx, conn, d.Id())
+	globalCluster, err := findGlobalClusterByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Neptune Global Cluster (%s) not found, removing from state", d.Id())
@@ -300,7 +300,7 @@ func resourceGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func FindGlobalClusterByID(ctx context.Context, conn *neptune.Client, id string) (*awstypes.GlobalCluster, error) {
+func findGlobalClusterByID(ctx context.Context, conn *neptune.Client, id string) (*awstypes.GlobalCluster, error) {
 	input := &neptune.DescribeGlobalClustersInput{
 		GlobalClusterIdentifier: aws.String(id),
 	}
@@ -351,7 +351,6 @@ func findGlobalClusters(ctx context.Context, conn *neptune.Client, input *neptun
 	var output []awstypes.GlobalCluster
 
 	pages := neptune.NewDescribeGlobalClustersPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -378,7 +377,7 @@ func findGlobalClusters(ctx context.Context, conn *neptune.Client, input *neptun
 
 func statusGlobalCluster(ctx context.Context, conn *neptune.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindGlobalClusterByID(ctx, conn, id)
+		output, err := findGlobalClusterByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

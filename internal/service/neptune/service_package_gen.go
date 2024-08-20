@@ -84,8 +84,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceGlobalCluster,
+			Factory:  resourceGlobalCluster,
 			TypeName: "aws_neptune_global_cluster",
+			Name:     "Global Cluster",
 		},
 		{
 			Factory:  ResourceParameterGroup,

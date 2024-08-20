@@ -340,7 +340,7 @@ func sweepGlobalClusters(region string) error {
 		}
 
 		for _, v := range page.GlobalClusters {
-			r := ResourceGlobalCluster()
+			r := resourceGlobalCluster()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.GlobalClusterIdentifier))
 
