@@ -25,8 +25,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceEngineVersion,
+			Factory:  dataSourceEngineVersion,
 			TypeName: "aws_neptune_engine_version",
+			Name:     "Engine Version",
 		},
 		{
 			Factory:  DataSourceOrderableDBInstance,
