@@ -70,8 +70,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceClusterSnapshot,
+			Factory:  resourceClusterSnapshot,
 			TypeName: "aws_neptune_cluster_snapshot",
+			Name:     "Cluster Snapshot",
 		},
 		{
 			Factory:  ResourceEventSubscription,

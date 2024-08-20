@@ -21,8 +21,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_neptune_cluster_snapshot")
-func ResourceClusterSnapshot() *schema.Resource {
+// @SDKResource("aws_neptune_cluster_snapshot", name="Cluster Snapshot")
+func resourceClusterSnapshot() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterSnapshotCreate,
 		ReadWithoutTimeout:   resourceClusterSnapshotRead,
@@ -133,7 +133,7 @@ func resourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
-	snapshot, err := FindClusterSnapshotByID(ctx, conn, d.Id())
+	snapshot, err := findClusterSnapshotByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Neptune Cluster Snapshot (%s) not found, removing from state", d.Id())
@@ -184,7 +184,7 @@ func resourceClusterSnapshotDelete(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func FindClusterSnapshotByID(ctx context.Context, conn *neptune.Client, id string) (*awstypes.DBClusterSnapshot, error) {
+func findClusterSnapshotByID(ctx context.Context, conn *neptune.Client, id string) (*awstypes.DBClusterSnapshot, error) {
 	input := &neptune.DescribeDBClusterSnapshotsInput{
 		DBClusterSnapshotIdentifier: aws.String(id),
 	}
@@ -241,7 +241,7 @@ func findClusterSnapshots(ctx context.Context, conn *neptune.Client, input *nept
 
 func statusClusterSnapshot(ctx context.Context, conn *neptune.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindClusterSnapshotByID(ctx, conn, id)
+		output, err := findClusterSnapshotByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

@@ -8,8 +8,10 @@ var (
 	ResourceClusterEndpoint       = resourceClusterEndpoint
 	ResourceClusterInstance       = resourceClusterInstance
 	ResourceClusterParameterGroup = resourceClusterParameterGroup
+	ResourceClusterSnapshot       = resourceClusterSnapshot
 
 	FindClusterEndpointByTwoPartKey   = findClusterEndpointByTwoPartKey
 	FindDBClusterParameterGroupByName = findDBClusterParameterGroupByName
+	FindClusterSnapshotByID           = findClusterSnapshotByID
 	FindDBInstanceByID                = findDBInstanceByID
 )
