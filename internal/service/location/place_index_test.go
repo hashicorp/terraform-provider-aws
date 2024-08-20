@@ -8,14 +8,15 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/locationservice"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/location"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/location/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tflocation "github.com/hashicorp/terraform-provider-aws/internal/service/location"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -38,7 +39,7 @@ func TestAccLocationPlaceIndex_basic(t *testing.T) {
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreateTime),
 					resource.TestCheckResourceAttr(resourceName, "data_source", "Here"),
 					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.intended_use", locationservice.IntendedUseSingleUse),
+					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.intended_use", "SingleUse"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "index_arn", "geo", fmt.Sprintf("place-index/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
@@ -90,11 +91,11 @@ func TestAccLocationPlaceIndex_dataSourceConfigurationIntendedUse(t *testing.T) 
 		CheckDestroy:             testAccCheckPlaceIndexDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPlaceIndexConfig_configurationIntendedUse(rName, locationservice.IntendedUseSingleUse),
+				Config: testAccPlaceIndexConfig_configurationIntendedUse(rName, "SingleUse"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlaceIndexExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.intended_use", locationservice.IntendedUseSingleUse),
+					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.intended_use", "SingleUse"),
 				),
 			},
 			{
@@ -103,11 +104,11 @@ func TestAccLocationPlaceIndex_dataSourceConfigurationIntendedUse(t *testing.T) 
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccPlaceIndexConfig_configurationIntendedUse(rName, locationservice.IntendedUseStorage),
+				Config: testAccPlaceIndexConfig_configurationIntendedUse(rName, "Storage"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlaceIndexExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.intended_use", locationservice.IntendedUseStorage),
+					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.intended_use", "Storage"),
 				),
 			},
 		},
@@ -195,20 +196,20 @@ func TestAccLocationPlaceIndex_tags(t *testing.T) {
 
 func testAccCheckPlaceIndexDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LocationClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_location_place_index" {
 				continue
 			}
 
-			input := &locationservice.DescribePlaceIndexInput{
+			input := &location.DescribePlaceIndexInput{
 				IndexName: aws.String(rs.Primary.ID),
 			}
 
-			output, err := conn.DescribePlaceIndexWithContext(ctx, input)
+			output, err := conn.DescribePlaceIndex(ctx, input)
 
-			if tfawserr.ErrCodeEquals(err, locationservice.ErrCodeResourceNotFoundException) {
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 				continue
 			}
 
@@ -233,13 +234,13 @@ func testAccCheckPlaceIndexExists(ctx context.Context, resourceName string) reso
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LocationClient(ctx)
 
-		input := &locationservice.DescribePlaceIndexInput{
+		input := &location.DescribePlaceIndexInput{
 			IndexName: aws.String(rs.Primary.ID),
 		}
 
-		_, err := conn.DescribePlaceIndexWithContext(ctx, input)
+		_, err := conn.DescribePlaceIndex(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("error getting Location Service Place Index (%s): %w", rs.Primary.ID, err)

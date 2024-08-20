@@ -4,6 +4,7 @@
 
 - [Terraform](https://www.terraform.io/downloads.html) 0.12.26+ (to run acceptance tests)
 - [Go](https://golang.org/doc/install) 1.22+ (to build the provider plugin)
+- Mac, Linux or WSL (to build the provider plugin)
 
 ## Quick Start
 

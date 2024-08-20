@@ -303,6 +303,55 @@ func TestAccSSMPatchBaseline_approvedPatchesNonSec(t *testing.T) {
 	})
 }
 
+// TestAccSSMPatchBaseline_approvalRuleEmpty verifies that empty values in the ApprovalRules
+// response object are removed from the `json` attribute
+func TestAccSSMPatchBaseline_approvalRuleEmpty(t *testing.T) {
+	ctx := acctest.Context(t)
+	var before, after ssm.GetPatchBaselineOutput
+	name := sdkacctest.RandString(10)
+	resourceName := "aws_ssm_patch_baseline.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPatchBaselineDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPatchBaselineConfig_approvalRuleEmpty(name),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrJSON)),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPatchBaselineExists(ctx, resourceName, &before),
+					acctest.CheckResourceAttrJMES(resourceName, names.AttrJSON, "ApprovalRules.PatchRules[0].ApproveUntilDate", "2024-01-02"),
+					acctest.CheckResourceAttrJMESNotExists(resourceName, names.AttrJSON, "ApprovalRules.PatchRules[0].ApproveAfterDays"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccPatchBaselineConfig_approvalRuleEmptyUpdated(name),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrJSON)),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPatchBaselineExists(ctx, resourceName, &after),
+					acctest.CheckResourceAttrJMES(resourceName, names.AttrJSON, "ApprovalRules.PatchRules[0].ApproveAfterDays", "7"),
+					acctest.CheckResourceAttrJMESNotExists(resourceName, names.AttrJSON, "ApprovalRules.PatchRules[0].ApproveUntilDate"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccSSMPatchBaseline_rejectPatchesAction(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ssmPatch ssm.GetPatchBaselineOutput
@@ -629,6 +678,42 @@ resource "aws_ssm_patch_baseline" "test" {
   approved_patches                  = ["KB123456"]
   approved_patches_compliance_level = "CRITICAL"
   rejected_patches_action           = "ALLOW_AS_DEPENDENCY"
+}
+`, rName)
+}
+
+func testAccPatchBaselineConfig_approvalRuleEmpty(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_patch_baseline" "test" {
+  name                              = "patch-baseline-%[1]s"
+  description                       = "Baseline containing all updates approved for production systems"
+  approved_patches                  = ["KB123456"]
+  approved_patches_compliance_level = "CRITICAL"
+  approval_rule {
+    approve_until_date = "2024-01-02"
+    patch_filter {
+      key    = "CLASSIFICATION"
+      values = ["CriticalUpdates"]
+    }
+  }
+}
+`, rName)
+}
+
+func testAccPatchBaselineConfig_approvalRuleEmptyUpdated(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_patch_baseline" "test" {
+  name                              = "patch-baseline-%[1]s"
+  description                       = "Baseline containing all updates approved for production systems"
+  approved_patches                  = ["KB123456"]
+  approved_patches_compliance_level = "CRITICAL"
+  approval_rule {
+    approve_after_days = "7"
+    patch_filter {
+      key    = "CLASSIFICATION"
+      values = ["CriticalUpdates"]
+    }
+  }
 }
 `, rName)
 }

@@ -11,7 +11,7 @@ Use the Amazon Web Services (AWS) provider to interact with the
 many resources supported by AWS. You must configure the provider
 with the proper credentials before you can use it.
 
-Use the navigation to the left to read about the available resources. There are currently 1394 resources and 567 data sources available in the provider.
+Use the navigation to the left to read about the available resources. There are currently 1402 resources and 571 data sources available in the provider.
 
 To learn the basics of Terraform using this provider, follow the
 hands-on [get started tutorials](https://learn.hashicorp.com/tutorials/terraform/infrastructure-as-code?in=terraform/aws-get-started&utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS). Interact with AWS services,
@@ -651,9 +651,49 @@ vpc_resource_level_tags = tomap({
 })
 ```
 
+Example: Default tags from environment variables
+
+```terraform
+provider "aws" {
+  default_tags {
+    tags = {
+      Name = "Provider Tag"
+    }
+  }
+}
+
+resource "aws_vpc" "example" {
+  # ..other configuration...
+}
+
+output "vpc_resource_level_tags" {
+  value = aws_vpc.example.tags
+}
+
+output "vpc_all_tags" {
+  value = aws_vpc.example.tags_all
+}
+```
+
+Outputs:
+
+```console
+$ export TF_AWS_DEFAULT_TAGS_Environment=Test
+$ terraform apply
+...
+Outputs:
+
+vpc_all_tags = tomap({
+  "Environment" = "Test"
+  "Name" = "Provider Tag"
+})
+```
+
 The `default_tags` configuration block supports the following argument:
 
 * `tags` - (Optional) Key-value map of tags to apply to all resources.
+Default tags can also be provided via environment variables matching the pattern `TF_AWS_DEFAULT_TAGS_<tag_key>=<tag_value>`.
+If a tag is present in both an environment variable and this argument, the value in the provider configuration takes precedence.
 
 ### ignore_tags Configuration Block
 
@@ -669,8 +709,18 @@ provider "aws" {
 
 The `ignore_tags` configuration block supports the following arguments:
 
-* `keys` - (Optional) List of exact resource tag keys to ignore across all resources handled by this provider. This configuration prevents Terraform from returning the tag in any `tags` attributes and displaying any configuration difference for the tag value. If any resource configuration still has this tag key configured in the `tags` argument, it will display a perpetual difference until the tag is removed from the argument or [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) is also used.
-* `key_prefixes` - (Optional) List of resource tag key prefixes to ignore across all resources handled by this provider. This configuration prevents Terraform from returning any tag key matching the prefixes in any `tags` attributes and displaying any configuration difference for those tag values. If any resource configuration still has a tag matching one of the prefixes configured in the `tags` argument, it will display a perpetual difference until the tag is removed from the argument or [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) is also used.
+* `keys` - (Optional) List of exact resource tag keys to ignore across all resources handled by this provider.
+Ignored tag keys can also be provided via the `TF_AWS_IGNORE_TAGS_KEYS` environment variable.
+When supplying multiple keys, the values should be comma delimited.
+If both this argument and the corresponding environment variable are set, values from both sources are merged into a single list.
+This configuration prevents Terraform from returning the tag in any `tags` attributes and displaying any configuration difference for the tag value.
+If any resource configuration still has this tag key configured in the `tags` argument, it will display a perpetual difference until the tag is removed from the argument or [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) is also used.
+* `key_prefixes` - (Optional) List of resource tag key prefixes to ignore across all resources handled by this provider.
+Ignored tag key prefixes can also be provided via the `TF_AWS_IGNORE_TAGS_KEY_PREFIXES` environment variable.
+When supplying multiple key prefixes, the values should be comma delimited.
+If both this argument and the corresponding environment variable are set, values from both sources are merged into a single list.
+This configuration prevents Terraform from returning any tag key matching the prefixes in any `tags` attributes and displaying any configuration difference for those tag values.
+If any resource configuration still has a tag matching one of the prefixes configured in the `tags` argument, it will display a perpetual difference until the tag is removed from the argument or [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) is also used.
 
 ## Getting the Account ID
 

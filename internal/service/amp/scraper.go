@@ -491,6 +491,7 @@ func waitScraperDeleted(ctx context.Context, conn *amp.Client, id string, timeou
 		Target:  []string{},
 		Refresh: statusScraper(ctx, conn, id),
 		Timeout: timeout,
+		Delay:   8 * time.Minute,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

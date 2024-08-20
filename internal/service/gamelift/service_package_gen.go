@@ -5,10 +5,8 @@ package gamelift
 import (
 	"context"
 
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	gamelift_sdkv1 "github.com/aws/aws-sdk-go/service/gamelift"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	gamelift_sdkv2 "github.com/aws/aws-sdk-go-v2/service/gamelift"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -31,7 +29,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceAlias,
+			Factory:  resourceAlias,
 			TypeName: "aws_gamelift_alias",
 			Name:     "Alias",
 			Tags: &types.ServicePackageResourceTags{
@@ -39,7 +37,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceBuild,
+			Factory:  resourceBuild,
 			TypeName: "aws_gamelift_build",
 			Name:     "Build",
 			Tags: &types.ServicePackageResourceTags{
@@ -47,7 +45,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceFleet,
+			Factory:  resourceFleet,
 			TypeName: "aws_gamelift_fleet",
 			Name:     "Fleet",
 			Tags: &types.ServicePackageResourceTags{
@@ -55,7 +53,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceGameServerGroup,
+			Factory:  resourceGameServerGroup,
 			TypeName: "aws_gamelift_game_server_group",
 			Name:     "Game Server Group",
 			Tags: &types.ServicePackageResourceTags{
@@ -63,7 +61,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceGameSessionQueue,
+			Factory:  resourceGameSessionQueue,
 			TypeName: "aws_gamelift_game_session_queue",
 			Name:     "Game Session Queue",
 			Tags: &types.ServicePackageResourceTags{
@@ -71,7 +69,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceScript,
+			Factory:  resourceScript,
 			TypeName: "aws_gamelift_script",
 			Name:     "Script",
 			Tags: &types.ServicePackageResourceTags{
@@ -85,22 +83,14 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.GameLift
 }
 
-// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*gamelift_sdkv1.GameLift, error) {
-	sess := config[names.AttrSession].(*session_sdkv1.Session)
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*gamelift_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
 
-	cfg := aws_sdkv1.Config{}
-
-	if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
-		tflog.Debug(ctx, "setting endpoint", map[string]any{
-			"tf_aws.endpoint": endpoint,
-		})
-		cfg.Endpoint = aws_sdkv1.String(endpoint)
-	} else {
-		cfg.EndpointResolver = newEndpointResolverSDKv1(ctx)
-	}
-
-	return gamelift_sdkv1.New(sess.Copy(&cfg)), nil
+	return gamelift_sdkv2.NewFromConfig(cfg,
+		gamelift_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+	), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

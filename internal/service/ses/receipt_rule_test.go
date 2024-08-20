@@ -8,14 +8,15 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ses"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ses"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfses "github.com/hashicorp/terraform-provider-aws/internal/service/ses"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,7 +24,7 @@ import (
 
 func TestAccSESReceiptRule_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var rule ses.ReceiptRule
+	var rule awstypes.ReceiptRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ses_receipt_rule.test"
 
@@ -69,7 +70,7 @@ func TestAccSESReceiptRule_basic(t *testing.T) {
 
 func TestAccSESReceiptRule_s3Action(t *testing.T) {
 	ctx := acctest.Context(t)
-	var rule ses.ReceiptRule
+	var rule awstypes.ReceiptRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ses_receipt_rule.test"
 
@@ -106,7 +107,7 @@ func TestAccSESReceiptRule_s3Action(t *testing.T) {
 
 func TestAccSESReceiptRule_snsAction(t *testing.T) {
 	ctx := acctest.Context(t)
-	var rule ses.ReceiptRule
+	var rule awstypes.ReceiptRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ses_receipt_rule.test"
 
@@ -143,7 +144,7 @@ func TestAccSESReceiptRule_snsAction(t *testing.T) {
 
 func TestAccSESReceiptRule_snsActionEncoding(t *testing.T) {
 	ctx := acctest.Context(t)
-	var rule ses.ReceiptRule
+	var rule awstypes.ReceiptRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ses_receipt_rule.test"
 
@@ -180,7 +181,7 @@ func TestAccSESReceiptRule_snsActionEncoding(t *testing.T) {
 
 func TestAccSESReceiptRule_lambdaAction(t *testing.T) {
 	ctx := acctest.Context(t)
-	var rule ses.ReceiptRule
+	var rule awstypes.ReceiptRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ses_receipt_rule.test"
 
@@ -217,7 +218,7 @@ func TestAccSESReceiptRule_lambdaAction(t *testing.T) {
 
 func TestAccSESReceiptRule_stopAction(t *testing.T) {
 	ctx := acctest.Context(t)
-	var rule ses.ReceiptRule
+	var rule awstypes.ReceiptRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ses_receipt_rule.test"
 
@@ -253,7 +254,7 @@ func TestAccSESReceiptRule_stopAction(t *testing.T) {
 
 func TestAccSESReceiptRule_order(t *testing.T) {
 	ctx := acctest.Context(t)
-	var rule ses.ReceiptRule
+	var rule awstypes.ReceiptRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ses_receipt_rule.test"
 
@@ -286,7 +287,7 @@ func TestAccSESReceiptRule_order(t *testing.T) {
 
 func TestAccSESReceiptRule_actions(t *testing.T) {
 	ctx := acctest.Context(t)
-	var rule ses.ReceiptRule
+	var rule awstypes.ReceiptRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ses_receipt_rule.test"
 
@@ -327,7 +328,7 @@ func TestAccSESReceiptRule_actions(t *testing.T) {
 
 func TestAccSESReceiptRule_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var rule ses.ReceiptRule
+	var rule awstypes.ReceiptRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ses_receipt_rule.test"
 	ruleSetResourceName := "aws_ses_receipt_rule_set.test"
@@ -364,7 +365,7 @@ func TestAccSESReceiptRule_disappears(t *testing.T) {
 
 func testAccCheckReceiptRuleDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ses_receipt_rule" {
@@ -388,7 +389,7 @@ func testAccCheckReceiptRuleDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckReceiptRuleExists(ctx context.Context, n string, v *ses.ReceiptRule) resource.TestCheckFunc {
+func testAccCheckReceiptRuleExists(ctx context.Context, n string, v *awstypes.ReceiptRule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -399,7 +400,7 @@ func testAccCheckReceiptRuleExists(ctx context.Context, n string, v *ses.Receipt
 			return fmt.Errorf("No SES Receipt Rule ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
 
 		output, err := tfses.FindReceiptRuleByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["rule_set_name"])
 
@@ -425,20 +426,20 @@ func testAccReceiptRuleImportStateIdFunc(resourceName string) resource.ImportSta
 }
 
 func testAccPreCheckReceiptRule(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
 
 	input := &ses.DescribeReceiptRuleInput{
 		RuleName:    aws.String("MyRule"),
 		RuleSetName: aws.String("MyRuleSet"),
 	}
 
-	_, err := conn.DescribeReceiptRuleWithContext(ctx, input)
+	_, err := conn.DescribeReceiptRule(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
-	if tfawserr.ErrCodeEquals(err, "RuleSetDoesNotExist") {
+	if errs.IsA[*awstypes.RuleSetDoesNotExistException](err) {
 		return
 	}
 

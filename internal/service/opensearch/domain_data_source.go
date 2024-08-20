@@ -6,8 +6,8 @@ package opensearch
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/opensearchservice"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/opensearch"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -18,8 +18,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_opensearch_domain")
-func DataSourceDomain() *schema.Resource {
+// @SDKDataSource("aws_opensearch_domain", name="Domain")
+func dataSourceDomain() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDomainRead,
 
@@ -417,19 +417,19 @@ func DataSourceDomain() *schema.Resource {
 
 func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
+	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	ds, err := FindDomainByName(ctx, conn, d.Get(names.AttrDomainName).(string))
+	ds, err := findDomainByName(ctx, conn, d.Get(names.AttrDomainName).(string))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "your query returned no results")
 	}
 
-	reqDescribeDomainConfig := &opensearchservice.DescribeDomainConfigInput{
+	reqDescribeDomainConfig := &opensearch.DescribeDomainConfigInput{
 		DomainName: aws.String(d.Get(names.AttrDomainName).(string)),
 	}
 
-	respDescribeDomainConfig, err := conn.DescribeDomainConfigWithContext(ctx, reqDescribeDomainConfig)
+	respDescribeDomainConfig, err := conn.DescribeDomainConfig(ctx, reqDescribeDomainConfig)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "querying config for opensearch_domain: %s", err)
 	}
@@ -440,17 +440,17 @@ func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	dc := respDescribeDomainConfig.DomainConfig
 
-	d.SetId(aws.StringValue(ds.ARN))
+	d.SetId(aws.ToString(ds.ARN))
 
-	if ds.AccessPolicies != nil && aws.StringValue(ds.AccessPolicies) != "" {
-		policies, err := structure.NormalizeJsonString(aws.StringValue(ds.AccessPolicies))
+	if ds.AccessPolicies != nil && aws.ToString(ds.AccessPolicies) != "" {
+		policies, err := structure.NormalizeJsonString(aws.ToString(ds.AccessPolicies))
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "access policies contain an invalid JSON: %s", err)
 		}
 		d.Set("access_policies", policies)
 	}
 
-	if err := d.Set("advanced_options", flex.FlattenStringMap(ds.AdvancedOptions)); err != nil {
+	if err := d.Set("advanced_options", flex.FlattenStringValueMap(ds.AdvancedOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting advanced_options: %s", err)
 	}
 
@@ -499,7 +499,7 @@ func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta inte
 			return sdkdiag.AppendErrorf(diags, "setting vpc_options: %s", err)
 		}
 
-		endpoints := flex.FlattenStringMap(ds.Endpoints)
+		endpoints := flex.FlattenStringValueMap(ds.Endpoints)
 		if err := d.Set(names.AttrEndpoint, endpoints["vpc"]); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting endpoint: %s", err)
 		}
