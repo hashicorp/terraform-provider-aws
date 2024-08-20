@@ -542,9 +542,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	// Read Security Groups
 	sgs := make([]string, 0, len(output.SecurityGroupIds))
-	for _, sg := range output.SecurityGroupIds {
-		sgs = append(sgs, sg)
-	}
+	sgs = append(sgs, output.SecurityGroupIds...)
 	if err := d.Set(names.AttrSecurityGroupIDs, sgs); err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading OpsWorks Instance (%s): setting security_group_ids: %s", d.Id(), err)
 	}
