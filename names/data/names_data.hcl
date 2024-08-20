@@ -6471,7 +6471,7 @@ service "networkmanager" {
 
   sdk {
     id             = "NetworkManager"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
