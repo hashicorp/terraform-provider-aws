@@ -325,9 +325,14 @@ func resourceVPCAttachmentDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	log.Printf("[DEBUG] Deleting Network Manager VPC Attachment: %s", d.Id())
-	_, err := conn.DeleteAttachment(ctx, &networkmanager.DeleteAttachmentInput{
-		AttachmentId: aws.String(d.Id()),
-	})
+	const (
+		timeout = 1 * time.Minute
+	)
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ValidationException](ctx, timeout, func() (interface{}, error) {
+		return conn.DeleteAttachment(ctx, &networkmanager.DeleteAttachmentInput{
+			AttachmentId: aws.String(d.Id()),
+		})
+	}, "cannot be deleted due to existing Connect attachment")
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
