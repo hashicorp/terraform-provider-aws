@@ -546,7 +546,6 @@ func waitAgentDeleted(ctx context.Context, conn *bedrockagent.Client, id string,
 }
 
 func removeDefaultPrompts(agent *awstypes.Agent) {
-
 	pocm := agent.PromptOverrideConfiguration
 
 	overrides := pocm.PromptConfigurations
