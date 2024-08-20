@@ -150,7 +150,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_connect_instance",
 		},
 		{
-			Factory:  ResourceInstanceStorageConfig,
+			Factory:  resourceInstanceStorageConfig,
 			TypeName: "aws_connect_instance_storage_config",
 		},
 		{
