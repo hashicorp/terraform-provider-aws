@@ -32,6 +32,7 @@ func testAccClusterImportStep(n string) resource.TestStep {
 			names.AttrAllowMajorVersionUpgrade,
 			names.AttrApplyImmediately,
 			names.AttrFinalSnapshotIdentifier,
+			"cluster_members",
 			"neptune_instance_parameter_group_name",
 			"skip_final_snapshot",
 			"snapshot_identifier",
