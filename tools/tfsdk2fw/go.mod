@@ -185,6 +185,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mwaa v1.29.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.11.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.41.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/networkmanager v1.29.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/networkmonitor v1.5.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/oam v1.13.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/opensearch v1.39.3 // indirect
