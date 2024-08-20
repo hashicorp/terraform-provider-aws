@@ -10,10 +10,12 @@ var (
 	ResourceClusterInstance       = resourceClusterInstance
 	ResourceClusterParameterGroup = resourceClusterParameterGroup
 	ResourceClusterSnapshot       = resourceClusterSnapshot
+	ResourceEventSubscription     = resourceEventSubscription
 
 	FindClusterEndpointByTwoPartKey   = findClusterEndpointByTwoPartKey
 	FindClusterSnapshotByID           = findClusterSnapshotByID
 	FindDBClusterByID                 = findDBClusterByID
 	FindDBClusterParameterGroupByName = findDBClusterParameterGroupByName
 	FindDBInstanceByID                = findDBInstanceByID
+	FindEventSubscriptionByName       = findEventSubscriptionByName
 )

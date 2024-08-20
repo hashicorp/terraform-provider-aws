@@ -101,7 +101,7 @@ func sweepEventSubscriptions(region string) error {
 		}
 
 		for _, v := range page.EventSubscriptionsList {
-			r := ResourceEventSubscription()
+			r := resourceEventSubscription()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.CustSubscriptionId))
 

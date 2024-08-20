@@ -27,7 +27,7 @@ import (
 
 // @SDKResource("aws_neptune_event_subscription", name="Event Subscription")
 // @Tags(identifierAttribute="arn")
-func ResourceEventSubscription() *schema.Resource {
+func resourceEventSubscription() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEventSubscriptionCreate,
 		ReadWithoutTimeout:   resourceEventSubscriptionRead,
@@ -148,7 +148,7 @@ func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
-	output, err := FindEventSubscriptionByName(ctx, conn, d.Id())
+	output, err := findEventSubscriptionByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Neptune Event Subscription (%s) not found, removing from state", d.Id())
@@ -278,7 +278,7 @@ func resourceEventSubscriptionDelete(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func FindEventSubscriptionByName(ctx context.Context, conn *neptune.Client, name string) (*awstypes.EventSubscription, error) {
+func findEventSubscriptionByName(ctx context.Context, conn *neptune.Client, name string) (*awstypes.EventSubscription, error) {
 	input := &neptune.DescribeEventSubscriptionsInput{
 		SubscriptionName: aws.String(name),
 	}
@@ -335,7 +335,7 @@ func findEventSubscriptions(ctx context.Context, conn *neptune.Client, input *ne
 
 func statusEventSubscription(ctx context.Context, conn *neptune.Client, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindEventSubscriptionByName(ctx, conn, name)
+		output, err := findEventSubscriptionByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
