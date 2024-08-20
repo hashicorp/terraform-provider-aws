@@ -64,8 +64,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_connect_prompt",
 		},
 		{
-			Factory:  DataSourceQueue,
+			Factory:  dataSourceQueue,
 			TypeName: "aws_connect_queue",
+			Name:     "Queue",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  dataSourceQuickConnect,

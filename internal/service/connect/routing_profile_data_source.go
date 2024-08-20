@@ -139,10 +139,6 @@ func dataSourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading Connect Routing Profile: %s", err)
 	}
 
-	if err := d.Set("media_concurrencies", flattenMediaConcurrencies(routingProfile.MediaConcurrencies)); err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-
 	routingProfileID := aws.ToString(routingProfile.RoutingProfileId)
 	id := routingProfileCreateResourceID(instanceID, routingProfileID)
 	d.SetId(id)
@@ -150,6 +146,9 @@ func dataSourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("default_outbound_queue_id", routingProfile.DefaultOutboundQueueId)
 	d.Set(names.AttrDescription, routingProfile.Description)
 	d.Set(names.AttrInstanceID, instanceID)
+	if err := d.Set("media_concurrencies", flattenMediaConcurrencies(routingProfile.MediaConcurrencies)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting media_concurrencies: %s", err)
+	}
 	d.Set(names.AttrName, routingProfile.Name)
 	d.Set("routing_profile_id", routingProfileID)
 
