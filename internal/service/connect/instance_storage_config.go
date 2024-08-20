@@ -293,7 +293,7 @@ func resourceInstanceStorageConfigDelete(ctx context.Context, d *schema.Resource
 const instanceStorageConfigResourceIDSeparator = ":"
 
 func instanceStorageConfigCreateResourceID(instanceID, associationID string, resourceType awstypes.InstanceStorageResourceType) string {
-	parts := []string{instanceID, associationID, string(resourceType)}
+	parts := []string{instanceID, associationID, string(resourceType)} // nosemgrep:ci.typed-enum-conversion
 	id := strings.Join(parts, instanceStorageConfigResourceIDSeparator)
 
 	return id
