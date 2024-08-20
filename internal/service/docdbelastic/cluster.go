@@ -109,6 +109,18 @@ func (r *resourceCluster) Schema(ctx context.Context, _ resource.SchemaRequest, 
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
+			"backup_retention_period": schema.Int64Attribute{
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"preferred_backup_window": schema.StringAttribute{
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"shard_capacity": schema.Int64Attribute{
 				Required: true,
 			},
@@ -178,6 +190,14 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 
 	if !plan.PreferredMaintenanceWindow.IsNull() || !plan.PreferredMaintenanceWindow.IsUnknown() {
 		input.PreferredMaintenanceWindow = flex.StringFromFramework(ctx, plan.PreferredMaintenanceWindow)
+	}
+
+	if !plan.PreferredBackupWindow.IsNull() || !plan.PreferredBackupWindow.IsUnknown() {
+		input.PreferredBackupWindow = flex.StringFromFramework(ctx, plan.PreferredBackupWindow)
+	}
+
+	if !plan.BackupRetentionPeriod.IsNull() || !plan.BackupRetentionPeriod.IsUnknown() {
+		input.BackupRetentionPeriod = flex.Int32FromFramework(ctx, plan.BackupRetentionPeriod),
 	}
 
 	if !plan.SubnetIds.IsNull() || !plan.SubnetIds.IsUnknown() {
@@ -278,6 +298,14 @@ func (r *resourceCluster) Update(ctx context.Context, request resource.UpdateReq
 
 		if !plan.PreferredMaintenanceWindow.Equal(state.PreferredMaintenanceWindow) {
 			input.PreferredMaintenanceWindow = flex.StringFromFramework(ctx, plan.PreferredMaintenanceWindow)
+		}
+
+		if !plan.PreferredBackupWindow.Equal(state.PreferredBackupWindow) {
+			input.PreferredBackupWindow = flex.StringFromFramework(ctx, plan.PreferredBackupWindow)
+		}
+
+		if !plan.BackupRetentionPeriod.Equal(state.BackupRetentionPeriod) {
+			input.BackupRetentionPeriod = flex.Int32FromFramework(ctx, plan.BackupRetentionPeriod)
 		}
 
 		if !plan.ShardCapacity.Equal(state.ShardCapacity) {
@@ -385,6 +413,8 @@ type resourceClusterData struct {
 	ID                         types.String   `tfsdk:"id"`
 	KmsKeyID                   types.String   `tfsdk:"kms_key_id"`
 	Name                       types.String   `tfsdk:"name"`
+	BackupRetentionPeriod      types.Int64    `tfsdk:"backup_retention_period"`
+	PreferredBackupWindow      types.String   `tfsdk:"preferred_backup_window"`
 	PreferredMaintenanceWindow types.String   `tfsdk:"preferred_maintenance_window"`
 	ShardCapacity              types.Int64    `tfsdk:"shard_capacity"`
 	ShardCount                 types.Int64    `tfsdk:"shard_count"`
@@ -494,6 +524,8 @@ func (r *resourceClusterData) refreshFromOutput(ctx context.Context, output *aws
 	r.KmsKeyID = flex.StringToFramework(ctx, output.KmsKeyId)
 	r.Name = flex.StringToFramework(ctx, output.ClusterName)
 	r.PreferredMaintenanceWindow = flex.StringToFramework(ctx, output.PreferredMaintenanceWindow)
+	r.PreferredBackupWindow = flex.StringToFramework(ctx, output.PreferredBackupWindow)
+	r.BackupRetentionPeriod = flex.Int32ToFramework(ctx, output.BackupRetentionPeriod)
 	r.ShardCapacity = flex.Int32ToFramework(ctx, output.ShardCapacity)
 	r.ShardCount = flex.Int32ToFramework(ctx, output.ShardCount)
 	r.SubnetIds = flex.FlattenFrameworkStringValueSet(ctx, output.SubnetIds)
@@ -505,6 +537,8 @@ func clusterHasChanges(_ context.Context, plan, state resourceClusterData) bool 
 		!plan.AdminUserPassword.Equal(state.AdminUserPassword) ||
 		!plan.AuthType.Equal(state.AuthType) ||
 		!plan.PreferredMaintenanceWindow.Equal(state.PreferredMaintenanceWindow) ||
+		!plan.PreferredBackupWindow.Equal(state.PreferredBackupWindow) ||
+		!plan.BackupRetentionPeriod.Equal(state.BackupRetentionPeriod) ||
 		!plan.ShardCapacity.Equal(state.ShardCapacity) ||
 		!plan.ShardCount.Equal(state.ShardCount) ||
 		!plan.SubnetIds.Equal(state.SubnetIds) ||
