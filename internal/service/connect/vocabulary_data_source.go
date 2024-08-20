@@ -90,7 +90,7 @@ func dataSourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta 
 		input.VocabularyId = aws.String(v.(string))
 	} else if v, ok := d.GetOk(names.AttrName); ok {
 		name := v.(string)
-		vocabularySummary, err := findVocabularyByTwoPartKey(ctx, conn, instanceID, name)
+		vocabularySummary, err := findVocabularySummaryByTwoPartKey(ctx, conn, instanceID, name)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading Connect Vocabulary (%s) summary: %s", name, err)
