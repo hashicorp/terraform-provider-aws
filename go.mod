@@ -240,6 +240,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/wafregional v1.23.4
 	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.51.5
 	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.32.4
+	github.com/aws/aws-sdk-go-v2/service/worklink v1.22.4
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.45.1
 	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.21.4
 	github.com/aws/aws-sdk-go-v2/service/xray v1.27.4
@@ -307,7 +308,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.11.18 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.17.16 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.26.5 // indirect
-	github.com/aws/aws-sdk-go-v2/service/worklink v1.22.4 // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
 	github.com/boombuler/barcode v1.0.1 // indirect
 	github.com/bufbuild/protocompile v0.6.0 // indirect
