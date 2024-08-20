@@ -1456,7 +1456,7 @@ resource "aws_neptune_cluster_snapshot" "test" {
 }
 
 resource "aws_neptune_cluster_parameter_group" "test" {
-  family = "neptune1.2"
+  family = "neptune1.3"
   name   = %[1]q
 
   parameter {
