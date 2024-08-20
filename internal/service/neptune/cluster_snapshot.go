@@ -218,7 +218,6 @@ func findClusterSnapshots(ctx context.Context, conn *neptune.Client, input *nept
 	var output []awstypes.DBClusterSnapshot
 
 	pages := neptune.NewDescribeDBClusterSnapshotsPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 

@@ -312,7 +312,6 @@ func findEventSubscriptions(ctx context.Context, conn *neptune.Client, input *ne
 	var output []awstypes.EventSubscription
 
 	pages := neptune.NewDescribeEventSubscriptionsPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 

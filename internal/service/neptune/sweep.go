@@ -388,7 +388,7 @@ func sweepParameterGroups(region string) error {
 				continue
 			}
 
-			r := ResourceParameterGroup()
+			r := resourceParameterGroup()
 			d := r.Data(nil)
 			d.SetId(name)
 

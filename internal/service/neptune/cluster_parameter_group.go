@@ -292,7 +292,6 @@ func findDBClusterParameterGroups(ctx context.Context, conn *neptune.Client, inp
 	var output []awstypes.DBClusterParameterGroup
 
 	pages := neptune.NewDescribeDBClusterParameterGroupsPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 

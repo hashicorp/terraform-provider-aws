@@ -11,11 +11,15 @@ var (
 	ResourceClusterParameterGroup = resourceClusterParameterGroup
 	ResourceClusterSnapshot       = resourceClusterSnapshot
 	ResourceEventSubscription     = resourceEventSubscription
+	ResourceGlobalCluster         = resourceGlobalCluster
+	ResourceParameterGroup        = resourceParameterGroup
 
 	FindClusterEndpointByTwoPartKey   = findClusterEndpointByTwoPartKey
 	FindClusterSnapshotByID           = findClusterSnapshotByID
 	FindDBClusterByID                 = findDBClusterByID
 	FindDBClusterParameterGroupByName = findDBClusterParameterGroupByName
 	FindDBInstanceByID                = findDBInstanceByID
+	FindDBParameterGroupByName        = findDBParameterGroupByName
 	FindEventSubscriptionByName       = findEventSubscriptionByName
+	FindGlobalClusterByID             = findGlobalClusterByID
 )

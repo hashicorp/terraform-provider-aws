@@ -35,7 +35,7 @@ const (
 
 // @SDKResource("aws_neptune_parameter_group", name="Parameter Group")
 // @Tags(identifierAttribute="arn")
-func ResourceParameterGroup() *schema.Resource {
+func resourceParameterGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceParameterGroupCreate,
 		ReadWithoutTimeout:   resourceParameterGroupRead,
@@ -141,7 +141,7 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
-	dbParameterGroup, err := FindDBParameterGroupByName(ctx, conn, d.Id())
+	dbParameterGroup, err := findDBParameterGroupByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Neptune Parameter Group (%s) not found, removing from state", d.Id())
@@ -261,7 +261,7 @@ func delDBParameterGroupParameters(ctx context.Context, conn *neptune.Client, na
 	return nil
 }
 
-func FindDBParameterGroupByName(ctx context.Context, conn *neptune.Client, name string) (*awstypes.DBParameterGroup, error) {
+func findDBParameterGroupByName(ctx context.Context, conn *neptune.Client, name string) (*awstypes.DBParameterGroup, error) {
 	input := &neptune.DescribeDBParameterGroupsInput{
 		DBParameterGroupName: aws.String(name),
 	}
@@ -295,7 +295,6 @@ func findDBParameterGroups(ctx context.Context, conn *neptune.Client, input *nep
 	var output []awstypes.DBParameterGroup
 
 	pages := neptune.NewDescribeDBParameterGroupsPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 

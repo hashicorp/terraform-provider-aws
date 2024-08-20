@@ -879,7 +879,6 @@ func findDBClusters(ctx context.Context, conn *neptune.Client, input *neptune.De
 	var output []awstypes.DBCluster
 
 	pages := neptune.NewDescribeDBClustersPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
