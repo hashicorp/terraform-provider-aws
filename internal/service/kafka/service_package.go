@@ -19,16 +19,16 @@ import (
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*kafka.Client, error) {
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
-	return kafka.NewFromConfig(cfg, func(o *kafka.Options) {
-		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
-			o.BaseEndpoint = aws.String(endpoint)
-		}
-
-		o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), retry.IsErrorRetryableFunc(func(err error) aws.Ternary {
-			if errs.IsAErrorMessageContains[*types.TooManyRequestsException](err, "Too Many Requests") {
-				return aws.TrueTernary
-			}
-			return aws.UnknownTernary // Delegate to configured Retryer.
-		}))
-	}), nil
+	return kafka.NewFromConfig(cfg,
+		kafka.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+		func(o *kafka.Options) {
+			o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), retry.IsErrorRetryableFunc(func(err error) aws.Ternary {
+				if errs.IsAErrorMessageContains[*types.TooManyRequestsException](err, "Too Many Requests") {
+					return aws.TrueTernary
+				}
+				return aws.UnknownTernary // Delegate to configured Retryer.
+			}))
+		},
+	), nil
 }

@@ -58,7 +58,7 @@ func TestAccGlueCatalogDatabase_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "A test catalog from terraform"),
 					resource.TestCheckResourceAttr(resourceName, "location_uri", "my-location"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.param1", acctest.CtValue1),
-					resource.TestCheckResourceAttr(resourceName, "parameters.param2", "true"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.param2", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "parameters.param3", "50"),
 				),
 			},
@@ -69,7 +69,7 @@ func TestAccGlueCatalogDatabase_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "An updated test catalog from terraform"),
 					resource.TestCheckResourceAttr(resourceName, "location_uri", "my-location"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.param1", acctest.CtValue1),
-					resource.TestCheckResourceAttr(resourceName, "parameters.param2", "true"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.param2", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "parameters.param3", "50"),
 				),
 			},
@@ -300,7 +300,7 @@ func TestAccGlueCatalogDatabase_disappears(t *testing.T) {
 
 func testAccCheckDatabaseDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_glue_catalog_database" {
@@ -359,6 +359,14 @@ func testAccCatalogDatabaseConfig_federatedDatabase(rName string) string {
 data "aws_region" "current" {}
 data "aws_partition" "current" {}
 data "aws_caller_identity" "current" {}
+
+data "aws_iam_session_context" "current" {
+  arn = data.aws_caller_identity.current.arn
+}
+
+resource "aws_lakeformation_data_lake_settings" "test" {
+  admins = [data.aws_iam_session_context.current.issuer_arn]
+}
 
 resource "aws_redshiftserverless_namespace" "test" {
   namespace_name = %[1]q
@@ -549,7 +557,7 @@ func testAccCheckCatalogDatabaseExists(ctx context.Context, name string) resourc
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
 		_, err = tfglue.FindDatabaseByName(ctx, conn, catalogId, dbName)
 
 		return err

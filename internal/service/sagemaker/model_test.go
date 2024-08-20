@@ -8,15 +8,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -42,7 +40,7 @@ func TestAccSageMakerModel_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "primary_container.0.environment.%", acctest.Ct0),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrExecutionRoleARN, "aws_iam_role.test", names.AttrARN),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("model/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "enable_network_isolation", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_network_isolation", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "inference_execution_config.#", acctest.Ct0),
 				),
@@ -423,7 +421,7 @@ func TestAccSageMakerModel_networkIsolation(t *testing.T) {
 				Config: testAccModelConfig_networkIsolation(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "enable_network_isolation", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_network_isolation", acctest.CtTrue),
 				),
 			},
 			{
@@ -460,27 +458,24 @@ func TestAccSageMakerModel_disappears(t *testing.T) {
 
 func testAccCheckModelDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sagemaker_model" {
 				continue
 			}
 
-			resp, err := conn.ListModelsWithContext(ctx, &sagemaker.ListModelsInput{
-				NameContains: aws.String(rs.Primary.ID),
-			})
-			if err == nil {
-				if len(resp.Models) > 0 {
-					return fmt.Errorf("SageMaker models still exist")
-				}
+			_, err := tfsagemaker.FindModelByName(ctx, conn, rs.Primary.ID)
 
-				return nil
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			if !tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
+			if err != nil {
 				return err
 			}
+
+			return fmt.Errorf("Sagemaker Model %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -498,11 +493,9 @@ func testAccCheckModelExists(ctx context.Context, n string) resource.TestCheckFu
 			return fmt.Errorf("No sagmaker model ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
-		DescribeModelOpts := &sagemaker.DescribeModelInput{
-			ModelName: aws.String(rs.Primary.ID),
-		}
-		_, err := conn.DescribeModelWithContext(ctx, DescribeModelOpts)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
+
+		_, err := tfsagemaker.FindModelByName(ctx, conn, rs.Primary.ID)
 
 		return err
 	}

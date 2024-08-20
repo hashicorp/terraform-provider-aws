@@ -10,7 +10,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/networkfirewall"
+	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/networkfirewall/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -40,7 +41,7 @@ func TestAccNetworkFirewallFirewall_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "network-firewall", fmt.Sprintf("firewall/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "delete_protection", "false"),
+					resource.TestCheckResourceAttr(resourceName, "delete_protection", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrPair(resourceName, "firewall_policy_arn", policyResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "firewall_status.#", acctest.Ct1),
@@ -55,7 +56,7 @@ func TestAccNetworkFirewallFirewall_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", subnetResourceName, names.AttrID),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "subnet_mapping.*", map[string]string{
-						names.AttrIPAddressType: networkfirewall.IPAddressTypeIpv4,
+						names.AttrIPAddressType: string(awstypes.IPAddressTypeIpv4),
 					}),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttrSet(resourceName, "update_token"),
@@ -89,7 +90,7 @@ func TestAccNetworkFirewallFirewall_dualstackSubnet(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "network-firewall", fmt.Sprintf("firewall/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "delete_protection", "false"),
+					resource.TestCheckResourceAttr(resourceName, "delete_protection", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrPair(resourceName, "firewall_policy_arn", policyResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "firewall_status.#", acctest.Ct1),
@@ -104,7 +105,7 @@ func TestAccNetworkFirewallFirewall_dualstackSubnet(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", subnetResourceName, names.AttrID),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "subnet_mapping.*", map[string]string{
-						names.AttrIPAddressType: networkfirewall.IPAddressTypeDualstack,
+						names.AttrIPAddressType: string(awstypes.IPAddressTypeDualstack),
 					}),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttrSet(resourceName, "update_token"),
@@ -176,21 +177,21 @@ func TestAccNetworkFirewallFirewall_deleteProtection(t *testing.T) {
 				Config: testAccFirewallConfig_deleteProtection(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "delete_protection", "false"),
+					resource.TestCheckResourceAttr(resourceName, "delete_protection", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccFirewallConfig_deleteProtection(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "delete_protection", "true"),
+					resource.TestCheckResourceAttr(resourceName, "delete_protection", acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccFirewallConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "delete_protection", "false"),
+					resource.TestCheckResourceAttr(resourceName, "delete_protection", acctest.CtFalse),
 				),
 			},
 			{
@@ -433,7 +434,7 @@ func testAccCheckFirewallDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallClient(ctx)
 
 			_, err := tfnetworkfirewall.FindFirewallByARN(ctx, conn, rs.Primary.ID)
 
@@ -459,11 +460,7 @@ func testAccCheckFirewallExists(ctx context.Context, n string) resource.TestChec
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No NetworkFirewall Firewall ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallClient(ctx)
 
 		_, err := tfnetworkfirewall.FindFirewallByARN(ctx, conn, rs.Primary.ID)
 
@@ -472,11 +469,11 @@ func testAccCheckFirewallExists(ctx context.Context, n string) resource.TestChec
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallClient(ctx)
 
 	input := &networkfirewall.ListFirewallsInput{}
 
-	_, err := conn.ListFirewallsWithContext(ctx, input)
+	_, err := conn.ListFirewalls(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

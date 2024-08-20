@@ -52,7 +52,7 @@ func TestAccEvidentlyLaunch_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "groups.0.feature", "aws_evidently_feature.test", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "groups.0.name", "Variation1"),
 					resource.TestCheckResourceAttr(resourceName, "groups.0.variation", "Variation1"),
-					acctest.CheckResourceAttrRFC3339(resourceName, "last_updated_time"),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrLastUpdatedTime),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName3),
 					resource.TestCheckResourceAttrPair(resourceName, "project", "aws_evidently_project.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "randomization_salt", rName3), // set to name if not specified

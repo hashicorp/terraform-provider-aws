@@ -183,7 +183,7 @@ func TestAccSageMakerDataQualityJobDefinition_batchTransformCSVHeader(t *testing
 					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.batch_transform_input.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.batch_transform_input.0.dataset_format.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.batch_transform_input.0.dataset_format.0.csv.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.batch_transform_input.0.dataset_format.0.csv.0.header", "true"),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.batch_transform_input.0.dataset_format.0.csv.0.header", acctest.CtTrue),
 				),
 			},
 			{
@@ -244,7 +244,7 @@ func TestAccSageMakerDataQualityJobDefinition_batchTransformJSONLine(t *testing.
 					resource.TestMatchResourceAttr(resourceName, "data_quality_job_input.0.batch_transform_input.0.data_captured_destination_s3_uri", regexache.MustCompile("captured")),
 					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.batch_transform_input.0.dataset_format.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.batch_transform_input.0.dataset_format.0.json.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.batch_transform_input.0.dataset_format.0.json.0.line", "true"),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.batch_transform_input.0.dataset_format.0.json.0.line", acctest.CtTrue),
 				),
 			},
 			{
@@ -480,7 +480,7 @@ func TestAccSageMakerDataQualityJobDefinition_networkConfigTrafficEncryption(t *
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "network_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "network_config.0.enable_inter_container_traffic_encryption", "true"),
+					resource.TestCheckResourceAttr(resourceName, "network_config.0.enable_inter_container_traffic_encryption", acctest.CtTrue),
 				),
 			},
 			{
@@ -508,7 +508,7 @@ func TestAccSageMakerDataQualityJobDefinition_networkConfigEnableNetworkIsolatio
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "network_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "network_config.0.enable_network_isolation", "true"),
+					resource.TestCheckResourceAttr(resourceName, "network_config.0.enable_network_isolation", acctest.CtTrue),
 				),
 			},
 			{
@@ -581,7 +581,6 @@ func TestAccSageMakerDataQualityJobDefinition_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceDataQualityJobDefinition(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceDataQualityJobDefinition(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -591,7 +590,7 @@ func TestAccSageMakerDataQualityJobDefinition_disappears(t *testing.T) {
 
 func testAccCheckDataQualityJobDefinitionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sagemaker_data_quality_job_definition" {
@@ -625,7 +624,7 @@ func testAccCheckDataQualityJobDefinitionExists(ctx context.Context, n string) r
 			return fmt.Errorf("no SageMaker Data Quality Job Definition ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
 		_, err := tfsagemaker.FindDataQualityJobDefinitionByName(ctx, conn, rs.Primary.ID)
 
 		return err
@@ -776,6 +775,7 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
   }
 
   data_capture_config {
+    enable_capture              = true
     initial_sampling_percentage = 100
 
     destination_s3_uri = "s3://${aws_s3_bucket.test.bucket_regional_domain_name}/capture"

@@ -145,7 +145,7 @@ func sweepClusters(region string) error {
 			d.SetId(id)
 			d.Set(names.AttrApplyImmediately, true)
 			d.Set(names.AttrARN, arn)
-			d.Set("deletion_protection", false)
+			d.Set(names.AttrDeletionProtection, false)
 			d.Set("skip_final_snapshot", true)
 
 			globalCluster, err := findGlobalClusterByClusterARN(ctx, conn, arn)

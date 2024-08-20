@@ -38,7 +38,7 @@ func TestAccAppConfigConfigurationProfile_basic(t *testing.T) {
 				Config: testAccConfigurationProfileConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationProfileExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "application_id", appResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrApplicationID, appResourceName, names.AttrID),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "appconfig", regexache.MustCompile(`application/[0-9a-z]{4,7}/configurationprofile/[0-9a-z]{4,7}`)),
 					resource.TestMatchResourceAttr(resourceName, "configuration_profile_id", regexache.MustCompile(`[0-9a-z]{4,7}`)),
 					resource.TestCheckResourceAttr(resourceName, "location_uri", "hosted"),
@@ -305,51 +305,6 @@ func TestAccAppConfigConfigurationProfile_updateDescription(t *testing.T) {
 	})
 }
 
-func TestAccAppConfigConfigurationProfile_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_appconfig_configuration_profile.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AppConfigServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationProfileDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccConfigurationProfileConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccConfigurationProfileConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccConfigurationProfileConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-		},
-	})
-}
-
 func testAccCheckConfigurationProfileDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigClient(ctx)
@@ -597,37 +552,4 @@ resource "aws_appconfig_configuration_profile" "test" {
   }
 }
 `, rName))
-}
-
-func testAccConfigurationProfileConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(
-		testAccApplicationConfig_name(rName),
-		fmt.Sprintf(`
-resource "aws_appconfig_configuration_profile" "test" {
-  application_id = aws_appconfig_application.test.id
-  location_uri   = "hosted"
-  name           = %[1]q
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1))
-}
-
-func testAccConfigurationProfileConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(
-		testAccApplicationConfig_name(rName),
-		fmt.Sprintf(`
-resource "aws_appconfig_configuration_profile" "test" {
-  application_id = aws_appconfig_application.test.id
-  location_uri   = "hosted"
-  name           = %[1]q
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }

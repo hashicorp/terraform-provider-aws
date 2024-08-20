@@ -51,7 +51,7 @@ func (r *resourceIngestion) Schema(ctx context.Context, req resource.SchemaReque
 			names.AttrARN: schema.StringAttribute{
 				Computed: true,
 			},
-			"aws_account_id": schema.StringAttribute{
+			names.AttrAWSAccountID: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{

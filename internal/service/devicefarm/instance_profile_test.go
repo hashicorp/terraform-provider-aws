@@ -9,8 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/devicefarm"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/devicefarm/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -23,7 +22,7 @@ import (
 
 func TestAccDeviceFarmInstanceProfile_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var profile devicefarm.InstanceProfile
+	var profile awstypes.InstanceProfile
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameUpdated := sdkacctest.RandomWithPrefix("tf-acc-test-updated")
 	resourceName := "aws_devicefarm_instance_profile.test"
@@ -31,10 +30,10 @@ func TestAccDeviceFarmInstanceProfile_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, devicefarm.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.DeviceFarmEndpointID)
 			// Currently, DeviceFarm is only supported in us-west-2
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
-			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
+			acctest.PreCheckRegion(t, names.USWest2RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DeviceFarmServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -45,7 +44,7 @@ func TestAccDeviceFarmInstanceProfile_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceProfileExists(ctx, resourceName, &profile),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "reboot_after_use", "true"),
+					resource.TestCheckResourceAttr(resourceName, "reboot_after_use", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "devicefarm", regexache.MustCompile(`instanceprofile:.+`)),
 				),
@@ -60,7 +59,7 @@ func TestAccDeviceFarmInstanceProfile_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceProfileExists(ctx, resourceName, &profile),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
-					resource.TestCheckResourceAttr(resourceName, "reboot_after_use", "true"),
+					resource.TestCheckResourceAttr(resourceName, "reboot_after_use", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "devicefarm", regexache.MustCompile(`instanceprofile:.+`)),
 				),
@@ -71,17 +70,17 @@ func TestAccDeviceFarmInstanceProfile_basic(t *testing.T) {
 
 func TestAccDeviceFarmInstanceProfile_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var profile devicefarm.InstanceProfile
+	var profile awstypes.InstanceProfile
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_devicefarm_instance_profile.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, devicefarm.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.DeviceFarmEndpointID)
 			// Currently, DeviceFarm is only supported in us-west-2
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
-			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
+			acctest.PreCheckRegion(t, names.USWest2RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DeviceFarmServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -123,17 +122,17 @@ func TestAccDeviceFarmInstanceProfile_tags(t *testing.T) {
 
 func TestAccDeviceFarmInstanceProfile_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var profile devicefarm.InstanceProfile
+	var profile awstypes.InstanceProfile
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_devicefarm_instance_profile.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, devicefarm.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.DeviceFarmEndpointID)
 			// Currently, DeviceFarm is only supported in us-west-2
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
-			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
+			acctest.PreCheckRegion(t, names.USWest2RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DeviceFarmServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -152,7 +151,7 @@ func TestAccDeviceFarmInstanceProfile_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckInstanceProfileExists(ctx context.Context, n string, v *devicefarm.InstanceProfile) resource.TestCheckFunc {
+func testAccCheckInstanceProfileExists(ctx context.Context, n string, v *awstypes.InstanceProfile) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -163,7 +162,7 @@ func testAccCheckInstanceProfileExists(ctx context.Context, n string, v *devicef
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmClient(ctx)
 		resp, err := tfdevicefarm.FindInstanceProfileByARN(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
@@ -180,7 +179,7 @@ func testAccCheckInstanceProfileExists(ctx context.Context, n string, v *devicef
 
 func testAccCheckInstanceProfileDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_devicefarm_instance_profile" {

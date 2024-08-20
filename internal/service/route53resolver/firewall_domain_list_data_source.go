@@ -6,15 +6,16 @@ package route53resolver
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_route53_resolver_firewall_domain_list")
-func DataSourceFirewallDomainList() *schema.Resource {
+// @SDKDataSource("aws_route53_resolver_firewall_domain_list", name="Firewall Domain List")
+func dataSourceFirewallDomainList() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceFirewallDomainListRead,
 
@@ -64,16 +65,17 @@ func DataSourceFirewallDomainList() *schema.Resource {
 }
 
 func dataSourceFirewallDomainListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
 	id := d.Get("firewall_domain_list_id").(string)
-	firewallDomainList, err := FindFirewallDomainListByID(ctx, conn, id)
+	firewallDomainList, err := findFirewallDomainListByID(ctx, conn, id)
 
 	if err != nil {
-		return diag.Errorf("reading Route53 Resolver Firewall Domain List (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "reading Route53 Resolver Firewall Domain List (%s): %s", id, err)
 	}
 
-	d.SetId(aws.StringValue(firewallDomainList.Id))
+	d.SetId(aws.ToString(firewallDomainList.Id))
 	d.Set(names.AttrARN, firewallDomainList.Arn)
 	d.Set(names.AttrCreationTime, firewallDomainList.CreationTime)
 	d.Set("creator_request_id", firewallDomainList.CreatorRequestId)
@@ -85,5 +87,5 @@ func dataSourceFirewallDomainListRead(ctx context.Context, d *schema.ResourceDat
 	d.Set(names.AttrStatus, firewallDomainList.Status)
 	d.Set(names.AttrStatusMessage, firewallDomainList.StatusMessage)
 
-	return nil
+	return diags
 }

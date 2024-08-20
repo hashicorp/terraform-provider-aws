@@ -168,7 +168,7 @@ func TestAccRolesAnywhereTrustAnchor_enabled(t *testing.T) {
 				Config: testAccTrustAnchorConfig_enabled(t, rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrustAnchorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 				),
 			},
 			{
@@ -180,14 +180,14 @@ func TestAccRolesAnywhereTrustAnchor_enabled(t *testing.T) {
 				Config: testAccTrustAnchorConfig_enabled(t, rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrustAnchorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccTrustAnchorConfig_enabled(t, rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrustAnchorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 				),
 			},
 		},

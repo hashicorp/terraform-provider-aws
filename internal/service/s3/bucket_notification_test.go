@@ -36,7 +36,7 @@ func TestAccS3BucketNotification_eventbridge(t *testing.T) {
 				Config: testAccBucketNotificationConfig_eventBridge(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketNotificationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "eventbridge", "true"),
+					resource.TestCheckResourceAttr(resourceName, "eventbridge", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "lambda_function.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "queue.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "topic.#", acctest.Ct0),
@@ -67,7 +67,7 @@ func TestAccS3BucketNotification_lambdaFunction(t *testing.T) {
 				Config: testAccBucketNotificationConfig_lambdaFunction(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketNotificationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "eventbridge", "false"),
+					resource.TestCheckResourceAttr(resourceName, "eventbridge", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "lambda_function.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "lambda_function.0.events.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "lambda_function.0.filter_prefix", "tf-acc-test/"),
@@ -101,7 +101,7 @@ func TestAccS3BucketNotification_LambdaFunctionLambdaFunctionARN_alias(t *testin
 				Config: testAccBucketNotificationConfig_lambdaFunctionLambdaFunctionARNAlias(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketNotificationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "eventbridge", "false"),
+					resource.TestCheckResourceAttr(resourceName, "eventbridge", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "lambda_function.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "lambda_function.0.events.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "lambda_function.0.filter_prefix", ""),
@@ -135,7 +135,7 @@ func TestAccS3BucketNotification_queue(t *testing.T) {
 				Config: testAccBucketNotificationConfig_queue(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketNotificationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "eventbridge", "false"),
+					resource.TestCheckResourceAttr(resourceName, "eventbridge", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "lambda_function.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "queue.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "queue.0.events.#", acctest.Ct2),
@@ -169,7 +169,7 @@ func TestAccS3BucketNotification_topic(t *testing.T) {
 				Config: testAccBucketNotificationConfig_topic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketNotificationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "eventbridge", "false"),
+					resource.TestCheckResourceAttr(resourceName, "eventbridge", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "lambda_function.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "queue.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "topic.#", acctest.Ct1),
@@ -203,7 +203,7 @@ func TestAccS3BucketNotification_Topic_multiple(t *testing.T) {
 				Config: testAccBucketNotificationConfig_topicMultiple(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketNotificationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "eventbridge", "false"),
+					resource.TestCheckResourceAttr(resourceName, "eventbridge", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "lambda_function.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "queue.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "topic.#", acctest.Ct2),
@@ -362,6 +362,9 @@ resource "aws_s3_bucket_notification" "test" {
 func testAccBucketNotificationConfig_topicMultiple(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
+data "aws_service_principal" "current" {
+  service_name = "s3"
+}
 
 resource "aws_sns_topic" "test" {
   name = %[1]q
@@ -373,7 +376,7 @@ resource "aws_sns_topic" "test" {
     {
       "Sid": "",
       "Effect": "Allow",
-      "Principal": { "Service": "s3.${data.aws_partition.current.dns_suffix}" },
+      "Principal": { "Service": "${data.aws_service_principal.current.name}" },
       "Action": "SNS:Publish",
       "Resource": "arn:${data.aws_partition.current.partition}:sns:*:*:%[1]s",
       "Condition": {
@@ -527,7 +530,12 @@ resource "aws_s3_bucket_notification" "test" {
 func testAccBucketNotificationConfig_lambdaFunction(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
-
+data "aws_service_principal" "current" {
+  service_name = "s3"
+}
+data "aws_service_principal" "current_lambda" {
+  service_name = "lambda"
+}
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -538,7 +546,7 @@ resource "aws_iam_role" "test" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "lambda.${data.aws_partition.current.dns_suffix}"
+        "Service": "${data.aws_service_principal.current_lambda.name}"
       },
       "Effect": "Allow",
       "Sid": ""
@@ -552,7 +560,7 @@ resource "aws_lambda_permission" "test" {
   statement_id  = "AllowExecutionFromS3Bucket"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.test.arn
-  principal     = "s3.${data.aws_partition.current.dns_suffix}"
+  principal     = "${data.aws_service_principal.current.name}"
   source_arn    = aws_s3_bucket.test.arn
 }
 
@@ -616,6 +624,12 @@ resource "aws_s3_bucket_notification" "test" {
 func testAccBucketNotificationConfig_lambdaFunctionLambdaFunctionARNAlias(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
+data "aws_service_principal" "current" {
+  service_name = "s3"
+}
+data "aws_service_principal" "current_lambda" {
+  service_name = "lambda"
+}
 
 resource "aws_iam_role" "test" {
   assume_role_policy = <<EOF
@@ -625,7 +639,7 @@ resource "aws_iam_role" "test" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "lambda.${data.aws_partition.current.dns_suffix}"
+        "Service": "${data.aws_service_principal.current_lambda.name}"
       },
       "Effect": "Allow"
     }
@@ -653,7 +667,7 @@ resource "aws_lambda_alias" "test" {
 resource "aws_lambda_permission" "test" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.test.arn
-  principal     = "s3.${data.aws_partition.current.dns_suffix}"
+  principal     = "${data.aws_service_principal.current.name}"
   qualifier     = aws_lambda_alias.test.name
   source_arn    = aws_s3_bucket.test.arn
   statement_id  = "AllowExecutionFromS3Bucket"
@@ -678,6 +692,9 @@ resource "aws_s3_bucket_notification" "test" {
 func testAccBucketNotificationConfig_topic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
+data "aws_service_principal" "current" {
+  service_name = "s3"
+}
 
 resource "aws_sns_topic" "test" {
   name = %[1]q
@@ -690,7 +707,7 @@ resource "aws_sns_topic" "test" {
       "Sid": "",
       "Effect": "Allow",
       "Principal": {
-        "Service": "s3.${data.aws_partition.current.dns_suffix}"
+        "Service": "${data.aws_service_principal.current.name}"
       },
       "Action": "SNS:Publish",
       "Resource": "arn:${data.aws_partition.current.partition}:sns:*:*:%[1]s",

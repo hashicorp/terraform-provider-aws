@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,7 +21,7 @@ import (
 
 func TestAccDMSEventSubscription_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var eventSubscription dms.EventSubscription
+	var eventSubscription awstypes.EventSubscription
 	resourceName := "aws_dms_event_subscription.test"
 	snsTopicResourceName := "aws_sns_topic.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -37,7 +37,7 @@ func TestAccDMSEventSubscription_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &eventSubscription),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "event_categories.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "creation"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "failure"),
@@ -57,7 +57,7 @@ func TestAccDMSEventSubscription_basic(t *testing.T) {
 
 func TestAccDMSEventSubscription_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var eventSubscription dms.EventSubscription
+	var eventSubscription awstypes.EventSubscription
 	resourceName := "aws_dms_event_subscription.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -81,7 +81,7 @@ func TestAccDMSEventSubscription_disappears(t *testing.T) {
 
 func TestAccDMSEventSubscription_enabled(t *testing.T) {
 	ctx := acctest.Context(t)
-	var eventSubscription dms.EventSubscription
+	var eventSubscription awstypes.EventSubscription
 	resourceName := "aws_dms_event_subscription.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -95,7 +95,7 @@ func TestAccDMSEventSubscription_enabled(t *testing.T) {
 				Config: testAccEventSubscriptionConfig_enabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &eventSubscription),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 				),
 			},
 			{
@@ -107,14 +107,14 @@ func TestAccDMSEventSubscription_enabled(t *testing.T) {
 				Config: testAccEventSubscriptionConfig_enabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &eventSubscription),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccEventSubscriptionConfig_enabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &eventSubscription),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 				),
 			},
 		},
@@ -123,7 +123,7 @@ func TestAccDMSEventSubscription_enabled(t *testing.T) {
 
 func TestAccDMSEventSubscription_eventCategories(t *testing.T) {
 	ctx := acctest.Context(t)
-	var eventSubscription dms.EventSubscription
+	var eventSubscription awstypes.EventSubscription
 	resourceName := "aws_dms_event_subscription.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -164,7 +164,7 @@ func TestAccDMSEventSubscription_eventCategories(t *testing.T) {
 
 func TestAccDMSEventSubscription_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var eventSubscription dms.EventSubscription
+	var eventSubscription awstypes.EventSubscription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dms_event_subscription.test"
 
@@ -215,7 +215,7 @@ func testAccCheckEventSubscriptionDestroy(ctx context.Context) resource.TestChec
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).DMSClient(ctx)
 
 			_, err := tfdms.FindEventSubscriptionByName(ctx, conn, rs.Primary.ID)
 
@@ -234,14 +234,14 @@ func testAccCheckEventSubscriptionDestroy(ctx context.Context) resource.TestChec
 	}
 }
 
-func testAccCheckEventSubscriptionExists(ctx context.Context, n string, v *dms.EventSubscription) resource.TestCheckFunc {
+func testAccCheckEventSubscriptionExists(ctx context.Context, n string, v *awstypes.EventSubscription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSClient(ctx)
 
 		output, err := tfdms.FindEventSubscriptionByName(ctx, conn, rs.Primary.ID)
 

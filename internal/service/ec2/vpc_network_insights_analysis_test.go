@@ -37,11 +37,11 @@ func TestAccVPCNetworkInsightsAnalysis_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`network-insights-analysis/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "filter_in_arns.#", acctest.Ct0),
 					resource.TestCheckResourceAttrPair(resourceName, "network_insights_path_id", "aws_ec2_network_insights_path.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "path_found", "true"),
+					resource.TestCheckResourceAttr(resourceName, "path_found", acctest.CtTrue),
 					acctest.CheckResourceAttrRFC3339(resourceName, "start_date"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "succeeded"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "wait_for_completion", "true"),
+					resource.TestCheckResourceAttr(resourceName, "wait_for_completion", acctest.CtTrue),
 				),
 			},
 			{
@@ -173,7 +173,7 @@ func TestAccVPCNetworkInsightsAnalysis_waitForCompletion(t *testing.T) {
 				Config: testAccVPCNetworkInsightsAnalysisConfig_waitForCompletion(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsAnalysisExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "wait_for_completion", "false"),
+					resource.TestCheckResourceAttr(resourceName, "wait_for_completion", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "running"),
 				),
 			},
@@ -181,7 +181,7 @@ func TestAccVPCNetworkInsightsAnalysis_waitForCompletion(t *testing.T) {
 				Config: testAccVPCNetworkInsightsAnalysisConfig_waitForCompletion(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsAnalysisExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "wait_for_completion", "true"),
+					resource.TestCheckResourceAttr(resourceName, "wait_for_completion", acctest.CtTrue),
 				),
 			},
 		},
@@ -195,11 +195,7 @@ func testAccCheckNetworkInsightsAnalysisExists(ctx context.Context, n string) re
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EC2 Network Insights Analysis ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		_, err := tfec2.FindNetworkInsightsAnalysisByID(ctx, conn, rs.Primary.ID)
 
@@ -209,7 +205,7 @@ func testAccCheckNetworkInsightsAnalysisExists(ctx context.Context, n string) re
 
 func testAccCheckNetworkInsightsAnalysisDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ec2_network_insights_analysis" {

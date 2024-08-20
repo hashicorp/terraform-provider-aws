@@ -58,14 +58,14 @@ func TestAccAppRunnerService_ImageRepository_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.egress_configuration.0.egress_type", "DEFAULT"),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.egress_configuration.0.vpc_connector_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.ingress_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.ingress_configuration.0.is_publicly_accessible", "true"),
+					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.ingress_configuration.0.is_publicly_accessible", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.ip_address_type", "IPV4"),
 					resource.TestCheckResourceAttr(resourceName, "observability_configuration.#", acctest.Ct0),
 					resource.TestCheckResourceAttrSet(resourceName, "service_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "service_url"),
 					resource.TestCheckResourceAttr(resourceName, "source_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "source_configuration.0.authentication_configuration.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "source_configuration.0.auto_deployments_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "source_configuration.0.auto_deployments_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "source_configuration.0.code_repository.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "source_configuration.0.image_repository.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "source_configuration.0.image_repository.0.image_configuration.#", acctest.Ct1),
@@ -369,7 +369,7 @@ func TestAccAppRunnerService_ImageRepository_networkConfiguration(t *testing.T) 
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.egress_configuration.0.egress_type", "VPC"),
 					resource.TestCheckResourceAttrPair(resourceName, "network_configuration.0.egress_configuration.0.vpc_connector_arn", vpcConnectorResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.ingress_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.ingress_configuration.0.is_publicly_accessible", "false"),
+					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.ingress_configuration.0.is_publicly_accessible", acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, "service_url"),
 				),
 			},
@@ -401,7 +401,7 @@ func TestAccAppRunnerService_ImageRepository_observabilityConfiguration(t *testi
 					testAccCheckServiceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "observability_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "observability_configuration.0.observability_configuration_arn", observabilityConfigurationResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "observability_configuration.0.observability_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "observability_configuration.0.observability_enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -414,7 +414,7 @@ func TestAccAppRunnerService_ImageRepository_observabilityConfiguration(t *testi
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "observability_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "observability_configuration.0.observability_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "observability_configuration.0.observability_enabled", acctest.CtFalse),
 				),
 			},
 		},
@@ -503,51 +503,6 @@ func TestAccAppRunnerService_disappears(t *testing.T) {
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapprunner.ResourceService(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
-func TestAccAppRunnerService_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_apprunner_service.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServiceDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccServiceConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccServiceConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccServiceConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
 			},
 		},
 	})
@@ -1071,49 +1026,4 @@ resource "aws_apprunner_service" "test" {
   }
 }
 `, rName))
-}
-
-func testAccServiceConfig_tags1(rName string, tagKey1 string, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_apprunner_service" "test" {
-  service_name = %[1]q
-  source_configuration {
-    auto_deployments_enabled = false
-    image_repository {
-      image_configuration {
-        port = "80"
-      }
-      image_identifier      = "public.ecr.aws/nginx/nginx:latest"
-      image_repository_type = "ECR_PUBLIC"
-    }
-  }
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccServiceConfig_tags2(rName string, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_apprunner_service" "test" {
-  service_name = %[1]q
-  source_configuration {
-    auto_deployments_enabled = false
-    image_repository {
-      image_configuration {
-        port = "80"
-      }
-      image_identifier      = "public.ecr.aws/nginx/nginx:latest"
-      image_repository_type = "ECR_PUBLIC"
-    }
-  }
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }

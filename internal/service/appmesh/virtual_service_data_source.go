@@ -7,7 +7,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -18,6 +18,8 @@ import (
 )
 
 // @SDKDataSource("aws_appmesh_virtual_service", name="Virtual Service")
+// @Tags
+// @Testing(serialize=true)
 func dataSourceVirtualService() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceVirtualServiceRead,
@@ -49,7 +51,7 @@ func dataSourceVirtualService() *schema.Resource {
 					Type:     schema.TypeString,
 					Required: true,
 				},
-				"resource_owner": {
+				names.AttrResourceOwner: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -62,8 +64,7 @@ func dataSourceVirtualService() *schema.Resource {
 
 func dataSourceVirtualServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
 	virtualServiceName := d.Get(names.AttrName).(string)
 	vs, err := findVirtualServiceByThreePartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), virtualServiceName)
@@ -72,16 +73,16 @@ func dataSourceVirtualServiceRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading App Mesh Virtual Service (%s): %s", virtualServiceName, err)
 	}
 
-	d.SetId(aws.StringValue(vs.VirtualServiceName))
-	arn := aws.StringValue(vs.Metadata.Arn)
+	d.SetId(aws.ToString(vs.VirtualServiceName))
+	arn := aws.ToString(vs.Metadata.Arn)
 	d.Set(names.AttrARN, arn)
 	d.Set(names.AttrCreatedDate, vs.Metadata.CreatedAt.Format(time.RFC3339))
 	d.Set(names.AttrLastUpdatedDate, vs.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("mesh_name", vs.MeshName)
-	meshOwner := aws.StringValue(vs.Metadata.MeshOwner)
+	meshOwner := aws.ToString(vs.Metadata.MeshOwner)
 	d.Set("mesh_owner", meshOwner)
 	d.Set(names.AttrName, vs.VirtualServiceName)
-	d.Set("resource_owner", vs.Metadata.ResourceOwner)
+	d.Set(names.AttrResourceOwner, vs.Metadata.ResourceOwner)
 	if err := d.Set("spec", flattenVirtualServiceSpec(vs.Spec)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}
@@ -99,9 +100,7 @@ func dataSourceVirtualServiceRead(ctx context.Context, d *schema.ResourceData, m
 		}
 	}
 
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setKeyValueTagsOut(ctx, tags)
 
 	return diags
 }

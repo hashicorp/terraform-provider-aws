@@ -10,8 +10,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -277,6 +276,44 @@ func testAccUserProfile_kernelGatewayAppSettings_imageconfig(t *testing.T) {
 	})
 }
 
+func testAccUserProfile_codeEditorAppSettings_customImage(t *testing.T) {
+	ctx := acctest.Context(t)
+	if os.Getenv("SAGEMAKER_IMAGE_VERSION_BASE_IMAGE") == "" {
+		t.Skip("Environment variable SAGEMAKER_IMAGE_VERSION_BASE_IMAGE is not set")
+	}
+
+	var domain sagemaker.DescribeUserProfileOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_user_profile.test"
+	baseImage := os.Getenv("SAGEMAKER_IMAGE_VERSION_BASE_IMAGE")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserProfileDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserProfileConfig_codeEditorAppSettingsImage(rName, baseImage),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserProfileExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "user_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "user_settings.0.code_editor_app_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "user_settings.0.code_editor_app_settings.0.lifecycle_config_arns.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "user_settings.0.code_editor_app_settings.0.default_resource_spec.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "user_settings.0.code_editor_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.micro"),
+					resource.TestCheckResourceAttrPair(resourceName, "user_settings.0.code_editor_app_settings.0.default_resource_spec.0.sagemaker_image_version_arn", "aws_sagemaker_image_version.test", names.AttrARN),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccUserProfile_jupyterServerAppSettings(t *testing.T) {
 	ctx := acctest.Context(t)
 	var domain sagemaker.DescribeUserProfileOutput
@@ -334,7 +371,7 @@ func testAccUserProfile_disappears(t *testing.T) {
 
 func testAccCheckUserProfileDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sagemaker_user_profile" {
@@ -344,7 +381,7 @@ func testAccCheckUserProfileDestroy(ctx context.Context) resource.TestCheckFunc 
 			domainID := rs.Primary.Attributes["domain_id"]
 			userProfileName := rs.Primary.Attributes["user_profile_name"]
 
-			userProfile, err := tfsagemaker.FindUserProfileByName(ctx, conn, domainID, userProfileName)
+			_, err := tfsagemaker.FindUserProfileByName(ctx, conn, domainID, userProfileName)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -354,10 +391,7 @@ func testAccCheckUserProfileDestroy(ctx context.Context) resource.TestCheckFunc 
 				return fmt.Errorf("reading SageMaker User Profile (%s): %w", rs.Primary.ID, err)
 			}
 
-			userProfileArn := aws.StringValue(userProfile.UserProfileArn)
-			if userProfileArn == rs.Primary.ID {
-				return fmt.Errorf("SageMaker User Profile %q still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("SageMaker User Profile %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -375,7 +409,7 @@ func testAccCheckUserProfileExists(ctx context.Context, n string, userProfile *s
 			return fmt.Errorf("No sagmaker domain ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
 
 		domainID := rs.Primary.Attributes["domain_id"]
 		userProfileName := rs.Primary.Attributes["user_profile_name"]
@@ -604,6 +638,49 @@ resource "aws_sagemaker_user_profile" "test" {
     execution_role = aws_iam_role.test.arn
 
     kernel_gateway_app_settings {
+      default_resource_spec {
+        instance_type               = "ml.t3.micro"
+        sagemaker_image_version_arn = aws_sagemaker_image_version.test.arn
+      }
+    }
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+`, rName, baseImage))
+}
+
+func testAccUserProfileConfig_codeEditorAppSettingsImage(rName, baseImage string) string {
+	return acctest.ConfigCompose(testAccUserProfileConfig_base(rName), fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  role       = aws_iam_role.test.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonSageMakerFullAccess"
+}
+
+resource "aws_sagemaker_image" "test" {
+  image_name = %[1]q
+  role_arn   = aws_image_role.test.arn
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+
+resource "aws_sagemaker_image_version" "test" {
+  image_name = aws_sagemaker_image.test.id
+  base_image = %[2]q
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+
+resource "aws_sagemaker_user_profile" "test" {
+  domain_id         = aws_sagemaker_domain.test.id
+  user_profile_name = %[1]q
+
+  user_settings {
+    execution_role = aws_iam_role.test.arn
+
+    code_editor_app_settings {
       default_resource_spec {
         instance_type               = "ml.t3.micro"
         sagemaker_image_version_arn = aws_sagemaker_image_version.test.arn

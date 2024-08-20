@@ -37,7 +37,7 @@ func TestAccSESV2ConfigurationSetEventDestination_basic(t *testing.T) {
 					testAccCheckConfigurationSetEventDestinationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration_set_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "event_destination.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "event_destination.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "event_destination.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "event_destination.0.matching_event_types.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "event_destination.0.matching_event_types.0", "SEND"),
 					resource.TestCheckResourceAttr(resourceName, "event_destination_name", rName),
@@ -54,7 +54,7 @@ func TestAccSESV2ConfigurationSetEventDestination_basic(t *testing.T) {
 					testAccCheckConfigurationSetEventDestinationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration_set_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "event_destination.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "event_destination.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "event_destination.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "event_destination.0.matching_event_types.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "event_destination.0.matching_event_types.0", "REJECT"),
 					resource.TestCheckResourceAttr(resourceName, "event_destination_name", rName),
@@ -103,6 +103,35 @@ func TestAccSESV2ConfigurationSetEventDestination_cloudWatchDestination(t *testi
 					resource.TestCheckResourceAttr(resourceName, "event_destination.0.cloud_watch_destination.0.dimension_configuration.0.dimension_name", "test2"),
 					resource.TestCheckResourceAttr(resourceName, "event_destination.0.cloud_watch_destination.0.dimension_configuration.0.dimension_value_source", "MESSAGE_TAG"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccSESV2ConfigurationSetEventDestination_eventBridgeDestination(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sesv2_configuration_set_event_destination.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConfigurationSetEventDestinationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConfigurationSetEventDestinationConfig_eventBridgeDestination(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigurationSetEventDestinationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "event_destination.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "event_destination.0.event_bridge_destination.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "event_destination.0.event_bridge_destination.0.event_bus_arn", "data.aws_cloudwatch_event_bus.default", names.AttrARN),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -343,6 +372,31 @@ resource "aws_sesv2_configuration_set_event_destination" "test" {
   }
 }
 `, rName, dimension)
+}
+
+func testAccConfigurationSetEventDestinationConfig_eventBridgeDestination(rName string) string {
+	return fmt.Sprintf(`
+data "aws_cloudwatch_event_bus" "default" {
+  name = "default"
+}
+
+resource "aws_sesv2_configuration_set" "test" {
+  configuration_set_name = %[1]q
+}
+
+resource "aws_sesv2_configuration_set_event_destination" "test" {
+  configuration_set_name = aws_sesv2_configuration_set.test.configuration_set_name
+  event_destination_name = %[1]q
+
+  event_destination {
+    event_bridge_destination {
+      event_bus_arn = data.aws_cloudwatch_event_bus.default.arn
+    }
+
+    matching_event_types = ["SEND"]
+  }
+}
+`, rName)
 }
 
 func testAccConfigurationSetEventDestinationConfig_kinesisFirehoseDestinationBase(rName string) string {

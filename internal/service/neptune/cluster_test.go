@@ -28,9 +28,9 @@ func testAccClusterImportStep(n string) resource.TestStep {
 		ImportState:       true,
 		ImportStateVerify: true,
 		ImportStateVerifyIgnore: []string{
-			"allow_major_version_upgrade",
+			names.AttrAllowMajorVersionUpgrade,
 			names.AttrApplyImmediately,
-			"final_snapshot_identifier",
+			names.AttrFinalSnapshotIdentifier,
 			"neptune_instance_parameter_group_name",
 			"skip_final_snapshot",
 			"snapshot_identifier",
@@ -54,7 +54,7 @@ func TestAccNeptuneCluster_basic(t *testing.T) {
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckNoResourceAttr(resourceName, "allow_major_version_upgrade"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrAllowMajorVersionUpgrade),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrApplyImmediately),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(`cluster:.+`)),
 					acctest.CheckResourceAttrGreaterThanValue(resourceName, "availability_zones.#", 0),
@@ -63,16 +63,16 @@ func TestAccNeptuneCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cluster_identifier_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "cluster_members.#", acctest.Ct0),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_resource_id"),
-					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "false"),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "enable_cloudwatch_logs_exports.#", acctest.Ct0),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
-					resource.TestCheckResourceAttr(resourceName, "engine", "neptune"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "neptune"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
-					resource.TestCheckNoResourceAttr(resourceName, "final_snapshot_identifier"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrFinalSnapshotIdentifier),
 					resource.TestCheckResourceAttr(resourceName, "global_cluster_identifier", ""),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrHostedZoneID),
-					resource.TestCheckResourceAttr(resourceName, "iam_database_authentication_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "iam_database_authentication_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "iam_roles.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyARN, ""),
 					resource.TestCheckResourceAttr(resourceName, "neptune_cluster_parameter_group_name", "default.neptune1.3"),
@@ -84,9 +84,9 @@ func TestAccNeptuneCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint"),
 					resource.TestCheckResourceAttr(resourceName, "replication_source_identifier", ""),
 					resource.TestCheckResourceAttr(resourceName, "serverless_v2_scaling_configuration.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "skip_final_snapshot", "true"),
+					resource.TestCheckResourceAttr(resourceName, "skip_final_snapshot", acctest.CtTrue),
 					resource.TestCheckNoResourceAttr(resourceName, "snapshot_identifier"),
-					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageEncrypted, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, ""),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", acctest.Ct1),
@@ -227,7 +227,7 @@ func TestAccNeptuneCluster_copyTagsToSnapshot(t *testing.T) {
 				Config: testAccClusterConfig_copyTags(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "true"),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", acctest.CtTrue),
 				),
 			},
 			testAccClusterImportStep(resourceName),
@@ -235,14 +235,14 @@ func TestAccNeptuneCluster_copyTagsToSnapshot(t *testing.T) {
 				Config: testAccClusterConfig_copyTags(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "false"),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccClusterConfig_copyTags(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "true"),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", acctest.CtTrue),
 				),
 			},
 		},
@@ -376,7 +376,7 @@ func TestAccNeptuneCluster_encrypted(t *testing.T) {
 				Config: testAccClusterConfig_encrypted(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageEncrypted, acctest.CtTrue),
 				),
 			},
 			testAccClusterImportStep(resourceName),
@@ -435,7 +435,7 @@ func TestAccNeptuneCluster_iamAuth(t *testing.T) {
 				Config: testAccClusterConfig_iamAuth(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "iam_database_authentication_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "iam_database_authentication_enabled", acctest.CtTrue),
 				),
 			},
 			testAccClusterImportStep(resourceName),
@@ -596,7 +596,7 @@ func TestAccNeptuneCluster_deleteProtection(t *testing.T) {
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
 				),
 			},
 			testAccClusterImportStep(resourceName),
@@ -604,14 +604,14 @@ func TestAccNeptuneCluster_deleteProtection(t *testing.T) {
 				Config: testAccClusterConfig_deleteProtection(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccClusterConfig_deleteProtection(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
 				),
 			},
 		},
@@ -745,7 +745,7 @@ func testAccCheckClusterDestroyWithFinalSnapshot(ctx context.Context) resource.T
 
 			conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn(ctx)
 
-			finalSnapshotID := rs.Primary.Attributes["final_snapshot_identifier"]
+			finalSnapshotID := rs.Primary.Attributes[names.AttrFinalSnapshotIdentifier]
 			_, err := tfneptune.FindClusterSnapshotByID(ctx, conn, finalSnapshotID)
 
 			if err != nil {

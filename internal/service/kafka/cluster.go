@@ -403,7 +403,7 @@ func resourceCluster() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"cloudwatch_logs": {
+									names.AttrCloudWatchLogs: {
 										Type:             schema.TypeList,
 										Optional:         true,
 										DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
@@ -1529,7 +1529,7 @@ func expandBrokerLogs(tfMap map[string]interface{}) *types.BrokerLogs {
 
 	apiObject := &types.BrokerLogs{}
 
-	if v, ok := tfMap["cloudwatch_logs"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap[names.AttrCloudWatchLogs].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.CloudWatchLogs = expandCloudWatchLogs(v[0].(map[string]interface{}))
 	}
 
@@ -1967,7 +1967,7 @@ func flattenBrokerLogs(apiObject *types.BrokerLogs) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.CloudWatchLogs; v != nil {
-		tfMap["cloudwatch_logs"] = []interface{}{flattenCloudWatchLogs(v)}
+		tfMap[names.AttrCloudWatchLogs] = []interface{}{flattenCloudWatchLogs(v)}
 	}
 
 	if v := apiObject.Firehose; v != nil {

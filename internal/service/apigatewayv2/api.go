@@ -31,6 +31,7 @@ import (
 
 // @SDKResource("aws_apigatewayv2_api", name="API")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigatewayv2;apigatewayv2.GetApiOutput")
 func resourceAPI() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAPICreate,

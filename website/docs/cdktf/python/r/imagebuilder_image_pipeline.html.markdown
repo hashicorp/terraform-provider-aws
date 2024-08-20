@@ -49,11 +49,13 @@ The following arguments are optional:
 * `description` - (Optional) Description of the image pipeline.
 * `distribution_configuration_arn` - (Optional) Amazon Resource Name (ARN) of the Image Builder Distribution Configuration.
 * `enhanced_image_metadata_enabled` - (Optional) Whether additional information about the image being created is collected. Defaults to `true`.
+* `execution_role` - (Optional) Amazon Resource Name (ARN) of the service-linked role to be used by Image Builder to [execute workflows](https://docs.aws.amazon.com/imagebuilder/latest/userguide/manage-image-workflows.html).
 * `image_recipe_arn` - (Optional) Amazon Resource Name (ARN) of the image recipe.
 * `image_scanning_configuration` - (Optional) Configuration block with image scanning configuration. Detailed below.
 * `image_tests_configuration` - (Optional) Configuration block with image tests configuration. Detailed below.
 * `schedule` - (Optional) Configuration block with schedule settings. Detailed below.
 * `status` - (Optional) Status of the image pipeline. Valid values are `DISABLED` and `ENABLED`. Defaults to `ENABLED`.
+* `workflow` - (Optional) Configuration block with the workflow configuration. Detailed below.
 * `tags` - (Optional) Key-value map of resource tags for the image pipeline. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### image_scanning_configuration
@@ -88,6 +90,25 @@ The following arguments are optional:
 * `pipeline_execution_start_condition` - (Optional) Condition when the pipeline should trigger a new image build. Valid values are `EXPRESSION_MATCH_AND_DEPENDENCY_UPDATES_AVAILABLE` and `EXPRESSION_MATCH_ONLY`. Defaults to `EXPRESSION_MATCH_AND_DEPENDENCY_UPDATES_AVAILABLE`.
 
 * `timezone` - (Optional) The timezone that applies to the scheduling expression. For example, "Etc/UTC", "America/Los_Angeles" in the [IANA timezone format](https://www.joda.org/joda-time/timezones.html). If not specified this defaults to UTC.
+
+### workflow
+
+The following arguments are required:
+
+* `workflow_arn` - (Required) Amazon Resource Name (ARN) of the Image Builder Workflow.
+
+The following arguments are optional:
+
+* `on_failure` - (Optional) The action to take if the workflow fails. Must be one of `CONTINUE` or `ABORT`.
+* `parallel_group` - (Optional) The parallel group in which to run a test Workflow.
+* `parameter` - (Optional) Configuration block for the workflow parameters. Detailed below.
+
+### parameter
+
+The following arguments are required:
+
+* `name` - (Required) The name of the Workflow parameter.
+* `value` - (Required) The value of the Workflow parameter.
 
 ## Attribute Reference
 
@@ -126,4 +147,4 @@ Using `terraform import`, import `aws_imagebuilder_image_pipeline` resources usi
 % terraform import aws_imagebuilder_image_pipeline.example arn:aws:imagebuilder:us-east-1:123456789012:image-pipeline/example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-13e924ec569b627a02963bf24503600d1c77afb7d92500fcb19f3ff11c58c554 -->
+<!-- cache-key: cdktf-0.20.1 input-b7ef54b8ccc48bee42fd6b40e0b184c832c8d3c6a532ff264291c55060d501b7 -->

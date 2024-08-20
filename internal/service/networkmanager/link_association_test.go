@@ -69,7 +69,7 @@ func TestAccNetworkManagerLinkAssociation_disappears(t *testing.T) {
 
 func testAccCheckLinkAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_networkmanager_link_association" {
@@ -110,7 +110,7 @@ func testAccCheckLinkAssociationExists(ctx context.Context, n string) resource.T
 			return fmt.Errorf("No Network Manager Link Association ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerClient(ctx)
 
 		globalNetworkID, linkID, deviceID, err := tfnetworkmanager.LinkAssociationParseResourceID(rs.Primary.ID)
 

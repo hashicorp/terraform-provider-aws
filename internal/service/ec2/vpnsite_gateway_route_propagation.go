@@ -55,7 +55,7 @@ func resourceVPNGatewayRoutePropagationEnable(ctx context.Context, d *schema.Res
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.SetId(VPNGatewayRoutePropagationCreateID(routeTableID, gatewayID))
+	d.SetId(vpnGatewayRoutePropagationCreateID(routeTableID, gatewayID))
 
 	return append(diags, resourceVPNGatewayRoutePropagationRead(ctx, d, meta)...)
 }
@@ -64,7 +64,7 @@ func resourceVPNGatewayRoutePropagationDisable(ctx context.Context, d *schema.Re
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	routeTableID, gatewayID, err := VPNGatewayRoutePropagationParseID(d.Id())
+	routeTableID, gatewayID, err := vpnGatewayRoutePropagationParseID(d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
@@ -83,13 +83,13 @@ func resourceVPNGatewayRoutePropagationRead(ctx context.Context, d *schema.Resou
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	routeTableID, gatewayID, err := VPNGatewayRoutePropagationParseID(d.Id())
+	routeTableID, gatewayID, err := vpnGatewayRoutePropagationParseID(d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	err = findVPNGatewayRoutePropagationExistsV2(ctx, conn, routeTableID, gatewayID)
+	err = findVPNGatewayRoutePropagationExists(ctx, conn, routeTableID, gatewayID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Route Table (%s) VPN Gateway (%s) route propagation not found, removing from state", routeTableID, gatewayID)
