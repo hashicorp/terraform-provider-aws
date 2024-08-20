@@ -326,7 +326,7 @@ func resourceVPCAttachmentDelete(ctx context.Context, d *schema.ResourceData, me
 
 	log.Printf("[DEBUG] Deleting Network Manager VPC Attachment: %s", d.Id())
 	const (
-		timeout = 1 * time.Minute
+		timeout = 5 * time.Minute
 	)
 	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ValidationException](ctx, timeout, func() (interface{}, error) {
 		return conn.DeleteAttachment(ctx, &networkmanager.DeleteAttachmentInput{
