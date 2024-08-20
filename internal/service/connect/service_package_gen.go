@@ -60,8 +60,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_connect_lambda_function_association",
 		},
 		{
-			Factory:  DataSourcePrompt,
+			Factory:  dataSourcePrompt,
 			TypeName: "aws_connect_prompt",
+			Name:     "Prompt",
 		},
 		{
 			Factory:  dataSourceQueue,
