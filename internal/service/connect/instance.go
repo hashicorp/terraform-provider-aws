@@ -220,24 +220,8 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set(names.AttrServiceRole, instance.ServiceRole)
 	d.Set(names.AttrStatus, instance.InstanceStatus)
 
-	for key, attributeType := range instanceSchemaMap {
-		input := &connect.DescribeInstanceAttributeInput{
-			AttributeType: attributeType,
-			InstanceId:    aws.String(d.Id()),
-		}
-
-		output, err := conn.DescribeInstanceAttribute(ctx, input)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading Connect Instance (%s) attribute (%s): %s", d.Id(), attributeType, err)
-		}
-
-		v, err := strconv.ParseBool(aws.ToString(output.Attribute.Value))
-		if err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
-		}
-
-		d.Set(key, v)
+	if err := readInstanceAttributes(ctx, conn, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	return diags
@@ -283,6 +267,25 @@ func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	return diags
+}
+
+func readInstanceAttributes(ctx context.Context, conn *connect.Client, d *schema.ResourceData) error {
+	for key, attributeType := range instanceSchemaMap {
+		attribute, err := findInstanceAttributeByTwoPartKey(ctx, conn, d.Id(), attributeType)
+
+		if err != nil {
+			return fmt.Errorf("reading Connect Instance (%s) attribute (%s): %w", d.Id(), attributeType, err)
+		}
+
+		v, err := strconv.ParseBool(aws.ToString(attribute.Value))
+		if err != nil {
+			return err
+		}
+
+		d.Set(key, v)
+	}
+
+	return nil
 }
 
 func updateInstanceAttribute(ctx context.Context, conn *connect.Client, instanceID string, attributeType awstypes.InstanceAttributeType, value string) error {
@@ -332,6 +335,36 @@ func findInstance(ctx context.Context, conn *connect.Client, input *connect.Desc
 	}
 
 	return output.Instance, nil
+}
+
+func findInstanceAttributeByTwoPartKey(ctx context.Context, conn *connect.Client, instanceID string, attributeType awstypes.InstanceAttributeType) (*awstypes.Attribute, error) {
+	input := &connect.DescribeInstanceAttributeInput{
+		AttributeType: attributeType,
+		InstanceId:    aws.String(instanceID),
+	}
+
+	return findInstanceAttribute(ctx, conn, input)
+}
+
+func findInstanceAttribute(ctx context.Context, conn *connect.Client, input *connect.DescribeInstanceAttributeInput) (*awstypes.Attribute, error) {
+	output, err := conn.DescribeInstanceAttribute(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Attribute == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Attribute, nil
 }
 
 func statusInstance(ctx context.Context, conn *connect.Client, id string) retry.StateRefreshFunc {
