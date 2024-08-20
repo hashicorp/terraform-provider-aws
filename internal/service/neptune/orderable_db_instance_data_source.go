@@ -19,10 +19,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_neptune_orderable_db_instance")
-func DataSourceOrderableDBInstance() *schema.Resource {
+// @SDKDataSource("aws_neptune_orderable_db_instance", name="Orderable DB Instance")
+func dataSourceOrderableDBInstance() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceOrderableDBInstanceRead,
+
 		Schema: map[string]*schema.Schema{
 			names.AttrAvailabilityZones: {
 				Type:     schema.TypeList,

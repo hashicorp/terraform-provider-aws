@@ -30,8 +30,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Engine Version",
 		},
 		{
-			Factory:  DataSourceOrderableDBInstance,
+			Factory:  dataSourceOrderableDBInstance,
 			TypeName: "aws_neptune_orderable_db_instance",
+			Name:     "Orderable DB Instance",
 		},
 	}
 }
