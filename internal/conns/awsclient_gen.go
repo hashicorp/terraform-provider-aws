@@ -155,10 +155,12 @@ import (
 	mwaa_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mwaa"
 	neptunegraph_sdkv2 "github.com/aws/aws-sdk-go-v2/service/neptunegraph"
 	networkfirewall_sdkv2 "github.com/aws/aws-sdk-go-v2/service/networkfirewall"
+	networkmanager_sdkv2 "github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	networkmonitor_sdkv2 "github.com/aws/aws-sdk-go-v2/service/networkmonitor"
 	oam_sdkv2 "github.com/aws/aws-sdk-go-v2/service/oam"
 	opensearch_sdkv2 "github.com/aws/aws-sdk-go-v2/service/opensearch"
 	opensearchserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
+	opsworks_sdkv2 "github.com/aws/aws-sdk-go-v2/service/opsworks"
 	organizations_sdkv2 "github.com/aws/aws-sdk-go-v2/service/organizations"
 	osis_sdkv2 "github.com/aws/aws-sdk-go-v2/service/osis"
 	outposts_sdkv2 "github.com/aws/aws-sdk-go-v2/service/outposts"
@@ -241,8 +243,6 @@ import (
 	lexmodelbuildingservice_sdkv1 "github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	macie2_sdkv1 "github.com/aws/aws-sdk-go/service/macie2"
 	neptune_sdkv1 "github.com/aws/aws-sdk-go/service/neptune"
-	networkmanager_sdkv1 "github.com/aws/aws-sdk-go/service/networkmanager"
-	opsworks_sdkv1 "github.com/aws/aws-sdk-go/service/opsworks"
 	quicksight_sdkv1 "github.com/aws/aws-sdk-go/service/quicksight"
 	simpledb_sdkv1 "github.com/aws/aws-sdk-go/service/simpledb"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -881,8 +881,8 @@ func (c *AWSClient) NetworkFirewallClient(ctx context.Context) *networkfirewall_
 	return errs.Must(client[*networkfirewall_sdkv2.Client](ctx, c, names.NetworkFirewall, make(map[string]any)))
 }
 
-func (c *AWSClient) NetworkManagerConn(ctx context.Context) *networkmanager_sdkv1.NetworkManager {
-	return errs.Must(conn[*networkmanager_sdkv1.NetworkManager](ctx, c, names.NetworkManager, make(map[string]any)))
+func (c *AWSClient) NetworkManagerClient(ctx context.Context) *networkmanager_sdkv2.Client {
+	return errs.Must(client[*networkmanager_sdkv2.Client](ctx, c, names.NetworkManager, make(map[string]any)))
 }
 
 func (c *AWSClient) NetworkMonitorClient(ctx context.Context) *networkmonitor_sdkv2.Client {
@@ -905,8 +905,8 @@ func (c *AWSClient) OpenSearchServerlessClient(ctx context.Context) *opensearchs
 	return errs.Must(client[*opensearchserverless_sdkv2.Client](ctx, c, names.OpenSearchServerless, make(map[string]any)))
 }
 
-func (c *AWSClient) OpsWorksConn(ctx context.Context) *opsworks_sdkv1.OpsWorks {
-	return errs.Must(conn[*opsworks_sdkv1.OpsWorks](ctx, c, names.OpsWorks, make(map[string]any)))
+func (c *AWSClient) OpsWorksClient(ctx context.Context) *opsworks_sdkv2.Client {
+	return errs.Must(client[*opsworks_sdkv2.Client](ctx, c, names.OpsWorks, make(map[string]any)))
 }
 
 func (c *AWSClient) OrganizationsClient(ctx context.Context) *organizations_sdkv2.Client {

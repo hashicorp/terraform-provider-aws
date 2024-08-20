@@ -4,32 +4,32 @@
 package opsworks
 
 import (
-	"github.com/aws/aws-sdk-go/service/opsworks"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/opsworks/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_opsworks_ganglia_layer", name="Ganglia Layer")
 // @Tags(identifierAttribute="arn")
-func ResourceGangliaLayer() *schema.Resource {
+func resourceGangliaLayer() *schema.Resource {
 	layerType := &opsworksLayerType{
-		TypeName:         opsworks.LayerTypeMonitoringMaster,
+		TypeName:         awstypes.LayerTypeMonitoringMaster,
 		DefaultLayerName: "Ganglia",
 
 		Attributes: map[string]*opsworksLayerTypeAttribute{
 			names.AttrPassword: {
-				AttrName:  opsworks.LayerAttributesKeysGangliaPassword,
+				AttrName:  awstypes.LayerAttributesKeysGangliaPassword,
 				Type:      schema.TypeString,
 				Required:  true,
 				WriteOnly: true,
 			},
 			names.AttrURL: {
-				AttrName: opsworks.LayerAttributesKeysGangliaUrl,
+				AttrName: awstypes.LayerAttributesKeysGangliaUrl,
 				Type:     schema.TypeString,
 				Default:  "/ganglia",
 			},
 			names.AttrUsername: {
-				AttrName: opsworks.LayerAttributesKeysGangliaUser,
+				AttrName: awstypes.LayerAttributesKeysGangliaUser,
 				Type:     schema.TypeString,
 				Default:  "opsworks",
 			},
