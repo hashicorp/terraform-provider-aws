@@ -57,8 +57,10 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `backupRetentionPeriod` - (Optional) Number of days for which automated backups are retained. You must specify a minimum value of 1 and maximum value of 35. If not specified, 1 day will be used.
 * `kmsKeyId` - (Optional) ARN of a KMS key that is used to encrypt the Elastic DocumentDB cluster. If not specified, the default encryption key that KMS creates for your account is used.
 * `preferredMaintenanceWindow` - (Optional) Weekly time range during which system maintenance can occur in UTC. Format: `ddd:hh24:mi-ddd:hh24:mi`. If not specified, AWS will choose a random 30-minute window on a random day of the week.
+* `preferredBackupWindow` - (Optional) Daily time range during which automated backups are created if automated backups are enabled using the `backup_retention_period` parameter in UTC. Format: `hh24:mi-hh24:mi`. If not specified, a 30-minute window is selected at random from an 8-hour block of time for each AWS Region. Must be at least 30 minutes.
 * `subnetIds` - (Optional) IDs of subnets in which the Elastic DocumentDB Cluster operates.
 * `tags` - (Optional) A map of tags to assign to the collection. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpcSecurityGroupIds` - (Optional) List of VPC security groups to associate with the Elastic DocumentDB Cluster
