@@ -429,7 +429,7 @@ func sweepSubnetGroups(region string) error {
 		}
 
 		for _, v := range page.DBSubnetGroups {
-			r := ResourceSubnetGroup()
+			r := resourceSubnetGroup()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.DBSubnetGroupName))
 

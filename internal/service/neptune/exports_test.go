@@ -13,6 +13,7 @@ var (
 	ResourceEventSubscription     = resourceEventSubscription
 	ResourceGlobalCluster         = resourceGlobalCluster
 	ResourceParameterGroup        = resourceParameterGroup
+	ResourceSubnetGroup           = resourceSubnetGroup
 
 	FindClusterEndpointByTwoPartKey   = findClusterEndpointByTwoPartKey
 	FindClusterSnapshotByID           = findClusterSnapshotByID
@@ -22,4 +23,5 @@ var (
 	FindDBParameterGroupByName        = findDBParameterGroupByName
 	FindEventSubscriptionByName       = findEventSubscriptionByName
 	FindGlobalClusterByID             = findGlobalClusterByID
+	FindSubnetGroupByName             = findSubnetGroupByName
 )
