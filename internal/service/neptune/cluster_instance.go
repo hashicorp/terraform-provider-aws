@@ -28,9 +28,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_neptune_cluster_instance", name="Cluster")
+// @SDKResource("aws_neptune_cluster_instance", name="Cluster Instance")
 // @Tags(identifierAttribute="arn")
-func ResourceClusterInstance() *schema.Resource {
+func resourceClusterInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterInstanceCreate,
 		ReadWithoutTimeout:   resourceClusterInstanceRead,
@@ -256,7 +256,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
-	db, err := FindDBInstanceByID(ctx, conn, d.Id())
+	db, err := findDBInstanceByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Neptune Cluster Instance (%s) not found, removing from state", d.Id())
@@ -393,7 +393,7 @@ func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func FindDBInstanceByID(ctx context.Context, conn *neptune.Client, id string) (*awstypes.DBInstance, error) {
+func findDBInstanceByID(ctx context.Context, conn *neptune.Client, id string) (*awstypes.DBInstance, error) {
 	input := &neptune.DescribeDBInstancesInput{
 		DBInstanceIdentifier: aws.String(id),
 	}
@@ -427,7 +427,6 @@ func findDBInstances(ctx context.Context, conn *neptune.Client, input *neptune.D
 	var output []awstypes.DBInstance
 
 	pages := neptune.NewDescribeDBInstancesPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -462,7 +461,7 @@ func findClusterMemberByInstanceByTwoPartKey(ctx context.Context, conn *neptune.
 
 func statusDBInstance(ctx context.Context, conn *neptune.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindDBInstanceByID(ctx, conn, id)
+		output, err := findDBInstanceByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

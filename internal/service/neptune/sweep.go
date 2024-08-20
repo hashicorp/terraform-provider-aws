@@ -88,7 +88,6 @@ func sweepEventSubscriptions(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	pages := neptune.NewDescribeEventSubscriptionsPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -130,7 +129,6 @@ func sweepClusters(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	pages := neptune.NewDescribeDBClustersPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -190,7 +188,6 @@ func sweepClusterSnapshots(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	pages := neptune.NewDescribeDBClusterSnapshotsPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -232,7 +229,6 @@ func sweepClusterParameterGroups(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	pages := neptune.NewDescribeDBClusterParameterGroupsPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -281,7 +277,6 @@ func sweepClusterInstances(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	pages := neptune.NewDescribeDBInstancesPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -302,7 +297,7 @@ func sweepClusterInstances(region string) error {
 				continue
 			}
 
-			r := ResourceClusterInstance()
+			r := resourceClusterInstance()
 			d := r.Data(nil)
 			d.SetId(id)
 			d.Set(names.AttrApplyImmediately, true)
@@ -332,7 +327,6 @@ func sweepGlobalClusters(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	pages := neptune.NewDescribeGlobalClustersPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -374,7 +368,6 @@ func sweepParameterGroups(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	pages := neptune.NewDescribeDBParameterGroupsPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -423,7 +416,6 @@ func sweepSubnetGroups(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	pages := neptune.NewDescribeDBSubnetGroupsPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 

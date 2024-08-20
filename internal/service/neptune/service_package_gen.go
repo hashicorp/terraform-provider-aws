@@ -54,9 +54,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceClusterInstance,
+			Factory:  resourceClusterInstance,
 			TypeName: "aws_neptune_cluster_instance",
-			Name:     "Cluster",
+			Name:     "Cluster Instance",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
