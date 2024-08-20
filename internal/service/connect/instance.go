@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/attrmap"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -30,89 +29,7 @@ import (
 )
 
 var (
-	instanceSchema = map[string]*schema.Schema{
-		names.AttrARN: {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"auto_resolve_best_voices_enabled": {
-			Type:     schema.TypeBool,
-			Optional: true,
-			Default:  true, //verified default result from ListInstanceAttributes()
-		},
-		"contact_flow_logs_enabled": {
-			Type:     schema.TypeBool,
-			Optional: true,
-			Default:  false, //verified default result from ListInstanceAttributes()
-		},
-		"contact_lens_enabled": {
-			Type:     schema.TypeBool,
-			Optional: true,
-			Default:  true, //verified default result from ListInstanceAttributes()
-		},
-		names.AttrCreatedTime: {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"directory_id": {
-			Type:         schema.TypeString,
-			Optional:     true,
-			ForceNew:     true,
-			ValidateFunc: validation.StringLenBetween(12, 12),
-			AtLeastOneOf: []string{"directory_id", "instance_alias"},
-		},
-		"early_media_enabled": {
-			Type:     schema.TypeBool,
-			Optional: true,
-			Default:  true, //verified default result from ListInstanceAttributes()
-		},
-		"identity_management_type": {
-			Type:             schema.TypeString,
-			Required:         true,
-			ForceNew:         true,
-			ValidateDiagFunc: enum.Validate[awstypes.DirectoryType](),
-		},
-		"inbound_calls_enabled": {
-			Type:     schema.TypeBool,
-			Required: true,
-		},
-		"instance_alias": {
-			Type:         schema.TypeString,
-			Optional:     true,
-			ForceNew:     true,
-			AtLeastOneOf: []string{"directory_id", "instance_alias"},
-			ValidateFunc: validation.All(
-				validation.StringLenBetween(1, 64),
-				validation.StringMatch(regexache.MustCompile(`^([0-9A-Za-z]+)([0-9A-Za-z-]+)$`), "must contain only alphanumeric or hyphen characters"),
-				validation.StringDoesNotMatch(regexache.MustCompile(`^(d-).+$`), "can not start with d-"),
-			),
-		},
-		"multi_party_conference_enabled": {
-			Type:     schema.TypeBool,
-			Optional: true,
-			Default:  false, //verified default result from ListInstanceAttributes()
-		},
-		"outbound_calls_enabled": {
-			Type:     schema.TypeBool,
-			Required: true,
-		},
-		names.AttrServiceRole: {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		names.AttrStatus: {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		// Pre-release feature requiring allow-list from AWS. Removing all functionality until feature is GA
-		// "use_custom_tts_voices_enabled": {
-		// 	Type:     schema.TypeBool,
-		// 	Optional: true,
-		// 	Default:  false, //verified default result from ListInstanceAttributes()
-		// },
-	}
-
-	instanceSchemaMap = map[string]awstypes.InstanceAttributeType{
+	instanceAttributeMap = map[string]awstypes.InstanceAttributeType{
 		"auto_resolve_best_voices_enabled": awstypes.InstanceAttributeTypeAutoResolveBestVoices,
 		"contact_flow_logs_enabled":        awstypes.InstanceAttributeTypeContactflowLogs,
 		"contact_lens_enabled":             awstypes.InstanceAttributeTypeContactLens,
@@ -123,8 +40,6 @@ var (
 		// Pre-release feature requiring allow-list from AWS. Removing all functionality until feature is GA
 		//"use_custom_tts_voices_enabled": awstypes.InstanceAttributeTypeUseCustomTtsVoices,
 	}
-
-	instanceAttributeMap = attrmap.New(instanceSchemaMap, instanceSchema)
 )
 
 // @SDKResource("aws_connect_instance", name="Instance")
@@ -144,7 +59,87 @@ func resourceInstance() *schema.Resource {
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: instanceSchema,
+		Schema: map[string]*schema.Schema{
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"auto_resolve_best_voices_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true, //verified default result from ListInstanceAttributes()
+			},
+			"contact_flow_logs_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false, //verified default result from ListInstanceAttributes()
+			},
+			"contact_lens_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true, //verified default result from ListInstanceAttributes()
+			},
+			names.AttrCreatedTime: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"directory_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(12, 12),
+				AtLeastOneOf: []string{"directory_id", "instance_alias"},
+			},
+			"early_media_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true, //verified default result from ListInstanceAttributes()
+			},
+			"identity_management_type": {
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.DirectoryType](),
+			},
+			"inbound_calls_enabled": {
+				Type:     schema.TypeBool,
+				Required: true,
+			},
+			"instance_alias": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				AtLeastOneOf: []string{"directory_id", "instance_alias"},
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 64),
+					validation.StringMatch(regexache.MustCompile(`^([0-9A-Za-z]+)([0-9A-Za-z-]+)$`), "must contain only alphanumeric or hyphen characters"),
+					validation.StringDoesNotMatch(regexache.MustCompile(`^(d-).+$`), "can not start with d-"),
+				),
+			},
+			"multi_party_conference_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false, //verified default result from ListInstanceAttributes()
+			},
+			"outbound_calls_enabled": {
+				Type:     schema.TypeBool,
+				Required: true,
+			},
+			names.AttrServiceRole: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrStatus: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			// Pre-release feature requiring allow-list from AWS. Removing all functionality until feature is GA
+			// "use_custom_tts_voices_enabled": {
+			// 	Type:     schema.TypeBool,
+			// 	Optional: true,
+			// 	Default:  false, //verified default result from ListInstanceAttributes()
+			// },
+		},
 	}
 }
 
@@ -179,15 +174,8 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "waiting for Connect Instance (%s) create: %s", d.Id(), err)
 	}
 
-	attributes, err := instanceAttributeMap.ResourceDataToAPIAttributesUpdate(d)
-	if err != nil {
+	if err := createInstanceAttributes(ctx, conn, d); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
-	}
-
-	for attributeType, value := range attributes {
-		if err := updateInstanceAttribute(ctx, conn, d.Id(), attributeType, value); err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
-		}
 	}
 
 	return append(diags, resourceInstanceRead(ctx, d, meta)...)
@@ -231,15 +219,8 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
-	attributes, err := instanceAttributeMap.ResourceDataToAPIAttributesUpdate(d)
-	if err != nil {
+	if err := updateInstanceAttributes(ctx, conn, d); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
-	}
-
-	for attributeType, value := range attributes {
-		if err := updateInstanceAttribute(ctx, conn, d.Id(), attributeType, value); err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
-		}
 	}
 
 	return diags
@@ -269,8 +250,18 @@ func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
+func createInstanceAttributes(ctx context.Context, conn *connect.Client, d *schema.ResourceData) error {
+	for key, attributeType := range instanceAttributeMap {
+		if err := updateInstanceAttribute(ctx, conn, d.Id(), attributeType, strconv.FormatBool(d.Get(key).(bool))); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func readInstanceAttributes(ctx context.Context, conn *connect.Client, d *schema.ResourceData) error {
-	for key, attributeType := range instanceSchemaMap {
+	for key, attributeType := range instanceAttributeMap {
 		attribute, err := findInstanceAttributeByTwoPartKey(ctx, conn, d.Id(), attributeType)
 
 		if err != nil {
@@ -283,6 +274,20 @@ func readInstanceAttributes(ctx context.Context, conn *connect.Client, d *schema
 		}
 
 		d.Set(key, v)
+	}
+
+	return nil
+}
+
+func updateInstanceAttributes(ctx context.Context, conn *connect.Client, d *schema.ResourceData) error {
+	for key, attributeType := range instanceAttributeMap {
+		if !d.HasChange(key) {
+			continue
+		}
+
+		if err := updateInstanceAttribute(ctx, conn, d.Id(), attributeType, strconv.FormatBool(d.Get(key).(bool))); err != nil {
+			return err
+		}
 	}
 
 	return nil
