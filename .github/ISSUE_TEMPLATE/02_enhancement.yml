@@ -1,7 +1,7 @@
 name: "Request an Enhancement"
 description: "Choose this option when you would like to request an enhancement to an existing resource, data source, or the provider itself."
 title: "[Enhancement]: "
-labels: ["enhancement", "needs-triage"]
+labels: ["enhancement"]
 body:
   - type: markdown
     attributes:

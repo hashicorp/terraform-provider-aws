@@ -1,16 +1,21 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package mediapackage
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"regexp"
+	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/mediapackage"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/mediapackage"
+	"github.com/aws/aws-sdk-go-v2/service/mediapackage/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -18,9 +23,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_media_package_channel")
+// @SDKResource("aws_media_package_channel", name="Channel")
+// @Tags(identifierAttribute="arn")
 func ResourceChannel() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceChannelCreate,
@@ -31,7 +38,7 @@ func ResourceChannel() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -39,9 +46,9 @@ func ResourceChannel() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[\w-]+$`), "must only contain alphanumeric characters, dashes or underscores"),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[\w-]+$`), "must only contain alphanumeric characters, dashes or underscores"),
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "Managed by Terraform",
@@ -56,16 +63,16 @@ func ResourceChannel() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"password": {
+									names.AttrPassword: {
 										Type:      schema.TypeString,
 										Computed:  true,
 										Sensitive: true,
 									},
-									"url": {
+									names.AttrURL: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"username": {
+									names.AttrUsername: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -75,8 +82,8 @@ func ResourceChannel() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -85,85 +92,65 @@ func ResourceChannel() *schema.Resource {
 
 func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).MediaPackageConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).MediaPackageClient(ctx)
 
 	input := &mediapackage.CreateChannelInput{
 		Id:          aws.String(d.Get("channel_id").(string)),
-		Description: aws.String(d.Get("description").(string)),
+		Description: aws.String(d.Get(names.AttrDescription).(string)),
+		Tags:        getTagsIn(ctx),
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	resp, err := conn.CreateChannelWithContext(ctx, input)
+	resp, err := conn.CreateChannel(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating MediaPackage Channel: %s", err)
 	}
 
-	d.SetId(aws.StringValue(resp.Id))
+	d.SetId(aws.ToString(resp.Id))
 
 	return append(diags, resourceChannelRead(ctx, d, meta)...)
 }
 
 func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).MediaPackageConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).MediaPackageClient(ctx)
 
-	input := &mediapackage.DescribeChannelInput{
-		Id: aws.String(d.Id()),
+	resp, err := findChannelByID(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] MediaPackage Channel (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
 	}
-	resp, err := conn.DescribeChannelWithContext(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "describing MediaPackage Channel: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading MediaPackage Channel: %s", err)
 	}
-	d.Set("arn", resp.Arn)
+
+	d.Set(names.AttrARN, resp.Arn)
 	d.Set("channel_id", resp.Id)
-	d.Set("description", resp.Description)
+	d.Set(names.AttrDescription, resp.Description)
 
 	if err := d.Set("hls_ingest", flattenHLSIngest(resp.HlsIngest)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting hls_ingest: %s", err)
 	}
 
-	tags := KeyValueTags(ctx, resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	setTagsOut(ctx, resp.Tags)
 
 	return diags
 }
 
 func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).MediaPackageConn()
+	conn := meta.(*conns.AWSClient).MediaPackageClient(ctx)
 
 	input := &mediapackage.UpdateChannelInput{
 		Id:          aws.String(d.Id()),
-		Description: aws.String(d.Get("description").(string)),
+		Description: aws.String(d.Get(names.AttrDescription).(string)),
 	}
 
-	_, err := conn.UpdateChannelWithContext(ctx, input)
+	_, err := conn.UpdateChannel(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating MediaPackage Channel: %s", err)
-	}
-
-	arn := d.Get("arn").(string)
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating MediaPackage Channel (%s) tags: %s", arn, err)
-		}
 	}
 
 	return append(diags, resourceChannelRead(ctx, d, meta)...)
@@ -171,14 +158,15 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceChannelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).MediaPackageConn()
+	conn := meta.(*conns.AWSClient).MediaPackageClient(ctx)
 
 	input := &mediapackage.DeleteChannelInput{
 		Id: aws.String(d.Id()),
 	}
-	_, err := conn.DeleteChannelWithContext(ctx, input)
+	_, err := conn.DeleteChannel(ctx, input)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, mediapackage.ErrCodeNotFoundException) {
+		var nfe *types.NotFoundException
+		if errors.As(err, &nfe) {
 			return diags
 		}
 		return sdkdiag.AppendErrorf(diags, "deleting MediaPackage Channel: %s", err)
@@ -187,18 +175,19 @@ func resourceChannelDelete(ctx context.Context, d *schema.ResourceData, meta int
 	dcinput := &mediapackage.DescribeChannelInput{
 		Id: aws.String(d.Id()),
 	}
-	err = resource.RetryContext(ctx, 5*time.Minute, func() *resource.RetryError {
-		_, err := conn.DescribeChannelWithContext(ctx, dcinput)
+	err = retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
+		_, err := conn.DescribeChannel(ctx, dcinput)
 		if err != nil {
-			if tfawserr.ErrCodeEquals(err, mediapackage.ErrCodeNotFoundException) {
+			var nfe *types.NotFoundException
+			if errors.As(err, &nfe) {
 				return nil
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
-		return resource.RetryableError(fmt.Errorf("MediaPackage Channel (%s) still exists", d.Id()))
+		return retry.RetryableError(fmt.Errorf("MediaPackage Channel (%s) still exists", d.Id()))
 	})
 	if tfresource.TimedOut(err) {
-		_, err = conn.DescribeChannelWithContext(ctx, dcinput)
+		_, err = conn.DescribeChannel(ctx, dcinput)
 	}
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for MediaPackage Channel (%s) deletion: %s", d.Id(), err)
@@ -207,7 +196,7 @@ func resourceChannelDelete(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func flattenHLSIngest(h *mediapackage.HlsIngest) []map[string]interface{} {
+func flattenHLSIngest(h *types.HlsIngest) []map[string]interface{} {
 	if h.IngestEndpoints == nil {
 		return []map[string]interface{}{
 			{"ingest_endpoints": []map[string]interface{}{}},
@@ -217,9 +206,9 @@ func flattenHLSIngest(h *mediapackage.HlsIngest) []map[string]interface{} {
 	var ingestEndpoints []map[string]interface{}
 	for _, e := range h.IngestEndpoints {
 		endpoint := map[string]interface{}{
-			"password": aws.StringValue(e.Password),
-			"url":      aws.StringValue(e.Url),
-			"username": aws.StringValue(e.Username),
+			names.AttrPassword: aws.ToString(e.Password),
+			names.AttrURL:      aws.ToString(e.Url),
+			names.AttrUsername: aws.ToString(e.Username),
 		}
 
 		ingestEndpoints = append(ingestEndpoints, endpoint)
@@ -228,4 +217,30 @@ func flattenHLSIngest(h *mediapackage.HlsIngest) []map[string]interface{} {
 	return []map[string]interface{}{
 		{"ingest_endpoints": ingestEndpoints},
 	}
+}
+
+func findChannelByID(ctx context.Context, conn *mediapackage.Client, id string) (*mediapackage.DescribeChannelOutput, error) {
+	in := &mediapackage.DescribeChannelInput{
+		Id: aws.String(id),
+	}
+
+	out, err := conn.DescribeChannel(ctx, in)
+
+	if err != nil {
+		var nfe *types.NotFoundException
+		if errors.As(err, &nfe) {
+			return nil, &retry.NotFoundError{
+				LastRequest: in,
+				LastError:   err,
+			}
+		}
+
+		return nil, err
+	}
+
+	if out == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out, nil
 }

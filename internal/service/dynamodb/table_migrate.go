@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dynamodb
 
 import (
@@ -29,7 +32,7 @@ func migrateStateV0toV1(is *terraform.InstanceState) (*terraform.InstanceState, 
 	log.Printf("[DEBUG] DynamoDB Table Attributes before Migration: %#v", is.Attributes)
 
 	prefix := "global_secondary_index"
-	entity := ResourceTable()
+	entity := resourceTable()
 
 	// Read old keys
 	reader := &schema.MapFieldReader{

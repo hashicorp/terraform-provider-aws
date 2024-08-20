@@ -1,8 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package macie2
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
@@ -10,11 +12,14 @@ import (
 	"github.com/aws/aws-sdk-go/service/macie2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_macie2_account")
@@ -35,17 +40,17 @@ func ResourceAccount() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice(macie2.FindingPublishingFrequency_Values(), false),
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice(macie2.MacieStatus_Values(), false),
 			},
-			"service_role": {
+			names.AttrServiceRole: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -58,27 +63,29 @@ func ResourceAccount() *schema.Resource {
 }
 
 func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.EnableMacieInput{
-		ClientToken: aws.String(resource.UniqueId()),
+		ClientToken: aws.String(id.UniqueId()),
 	}
 
 	if v, ok := d.GetOk("finding_publishing_frequency"); ok {
 		input.FindingPublishingFrequency = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("status"); ok {
+	if v, ok := d.GetOk(names.AttrStatus); ok {
 		input.Status = aws.String(v.(string))
 	}
 
-	err := resource.RetryContext(ctx, 4*time.Minute, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, 4*time.Minute, func() *retry.RetryError {
 		_, err := conn.EnableMacieWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, macie2.ErrorCodeClientError) {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -89,43 +96,47 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error enabling Macie Account: %w", err))
+		return sdkdiag.AppendErrorf(diags, "enabling Macie Account: %s", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).AccountID)
 
-	return resourceAccountRead(ctx, d, meta)
+	return append(diags, resourceAccountRead(ctx, d, meta)...)
 }
 
 func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.GetMacieSessionInput{}
 
 	resp, err := conn.GetMacieSessionWithContext(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
-		tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") {
+	if !d.IsNewResource() && (tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
+		tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled")) {
 		log.Printf("[WARN] Macie not enabled for AWS account (%s), removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading Macie Account (%s): %w", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "reading Macie Account (%s): %s", d.Id(), err)
 	}
 
-	d.Set("status", resp.Status)
+	d.Set(names.AttrStatus, resp.Status)
 	d.Set("finding_publishing_frequency", resp.FindingPublishingFrequency)
-	d.Set("service_role", resp.ServiceRole)
-	d.Set("created_at", aws.TimeValue(resp.CreatedAt).Format(time.RFC3339))
+	d.Set(names.AttrServiceRole, resp.ServiceRole)
+	d.Set(names.AttrCreatedAt, aws.TimeValue(resp.CreatedAt).Format(time.RFC3339))
 	d.Set("updated_at", aws.TimeValue(resp.UpdatedAt).Format(time.RFC3339))
 
-	return nil
+	return diags
 }
 
 func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.UpdateMacieSessionInput{}
 
@@ -133,28 +144,30 @@ func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		input.FindingPublishingFrequency = aws.String(d.Get("finding_publishing_frequency").(string))
 	}
 
-	if d.HasChange("status") {
-		input.Status = aws.String(d.Get("status").(string))
+	if d.HasChange(names.AttrStatus) {
+		input.Status = aws.String(d.Get(names.AttrStatus).(string))
 	}
 
 	_, err := conn.UpdateMacieSessionWithContext(ctx, input)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error updating Macie Account (%s): %w", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "updating Macie Account (%s): %s", d.Id(), err)
 	}
 
-	return resourceAccountRead(ctx, d, meta)
+	return append(diags, resourceAccountRead(ctx, d, meta)...)
 }
 
 func resourceAccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.DisableMacieInput{}
 
-	err := resource.RetryContext(ctx, 4*time.Minute, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, 4*time.Minute, func() *retry.RetryError {
 		_, err := conn.DisableMacieWithContext(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, macie2.ErrCodeConflictException, "Cannot disable Macie while associated with an administrator account") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
@@ -162,7 +175,7 @@ func resourceAccountDelete(ctx context.Context, d *schema.ResourceData, meta int
 				tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") {
 				return nil
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -175,10 +188,10 @@ func resourceAccountDelete(ctx context.Context, d *schema.ResourceData, meta int
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
 			tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") {
-			return nil
+			return diags
 		}
-		return diag.FromErr(fmt.Errorf("error disabling Macie Account (%s): %w", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "disabling Macie Account (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

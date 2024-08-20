@@ -175,21 +175,36 @@ resource "aws_wafregional_web_acl_association" "association" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `web_acl_id` - (Required) The ID of the WAF Regional WebACL to create an association.
 * `resource_arn` - (Required) ARN of the resource to associate with. For example, an Application Load Balancer or API Gateway Stage.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the association
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `10m`)
+
 ## Import
 
-WAF Regional Web ACL Association can be imported using their `web_acl_id:resource_arn`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WAF Regional Web ACL Association using their `web_acl_id:resource_arn`. For example:
 
+```terraform
+import {
+  to = aws_wafregional_web_acl_association.foo
+  id = "web_acl_id:resource_arn"
+}
 ```
-$ terraform import aws_wafregional_web_acl_association.foo web_acl_id:resource_arn
+
+Using `terraform import`, import WAF Regional Web ACL Association using their `web_acl_id:resource_arn`. For example:
+
+```console
+% terraform import aws_wafregional_web_acl_association.foo web_acl_id:resource_arn
 ```

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build generate
 // +build generate
 
@@ -12,14 +15,13 @@ import (
 
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	"github.com/hashicorp/terraform-provider-aws/names"
+	namesgen "github.com/hashicorp/terraform-provider-aws/names/generate"
 )
 
 var (
-	createTagsFunc = flag.String("CreateTagsFunc", "CreateTags", "createTagsFunc")
-	getTagFunc     = flag.String("GetTagFunc", "GetTag", "getTagFunc")
+	getTagFunc     = flag.String("GetTagFunc", "findTag", "getTagFunc")
 	idAttribName   = flag.String("IDAttribName", "resource_arn", "idAttribName")
-	updateTagsFunc = flag.String("UpdateTagsFunc", "UpdateTags", "updateTagsFunc")
-	withContext    = flag.Bool("WithContext", true, `whether the Context-aware function includes "WithContext" in the name`)
+	updateTagsFunc = flag.String("UpdateTagsFunc", "updateTags", "updateTagsFunc")
 )
 
 func usage() {
@@ -30,20 +32,20 @@ func usage() {
 }
 
 type TemplateData struct {
-	AWSService           string
 	AWSServiceUpper      string
 	ProviderResourceName string
 	ServicePackage       string
 
-	CreateTagsFunc string
 	GetTagFunc     string
 	IDAttribName   string
-
 	UpdateTagsFunc string
-	WithContext    bool
 }
 
 func main() {
+	const (
+		resourceFilename     = `tag_gen.go`
+		resourceTestFilename = `tag_gen_test.go`
+	)
 	g := common.NewGenerator()
 
 	log.SetFlags(0)
@@ -51,38 +53,27 @@ func main() {
 	flag.Parse()
 
 	servicePackage := os.Getenv("GOPACKAGE")
-	awsService, err := names.AWSGoV1Package(servicePackage)
-
-	if err != nil {
-		g.Fatalf("encountered: %s", err)
-	}
-
 	u, err := names.ProviderNameUpper(servicePackage)
-
 	if err != nil {
 		g.Fatalf("encountered: %s", err)
 	}
 
-	providerResName := fmt.Sprintf("aws_%s_tag", servicePackage)
+	resourceName := fmt.Sprintf("aws_%s_tag", servicePackage)
+
+	ian := *idAttribName
+	ian = namesgen.ConstOrQuote(ian)
 
 	templateData := TemplateData{
-		AWSService:           awsService,
 		AWSServiceUpper:      u,
-		ProviderResourceName: providerResName,
+		ProviderResourceName: resourceName,
 		ServicePackage:       servicePackage,
 
-		CreateTagsFunc: *createTagsFunc,
 		GetTagFunc:     *getTagFunc,
-		IDAttribName:   *idAttribName,
+		IDAttribName:   ian,
 		UpdateTagsFunc: *updateTagsFunc,
-		WithContext:    *withContext,
 	}
 
-	const (
-		resourceFilename     = "tag_gen.go"
-		resourceTestFilename = "tag_gen_test.go"
-	)
-
+	g.Infof("Generating internal/service/%s/%s", servicePackage, resourceFilename)
 	d := g.NewGoFileDestination(resourceFilename)
 
 	if err := d.WriteTemplate("taggen", resourceTemplateBody, templateData); err != nil {
@@ -93,6 +84,7 @@ func main() {
 		g.Fatalf("generating file (%s): %s", resourceFilename, err)
 	}
 
+	g.Infof("Generating internal/service/%s/%s", servicePackage, resourceTestFilename)
 	d = g.NewGoFileDestination(resourceTestFilename)
 
 	if err := d.WriteTemplate("taggen", resourceTestTemplateBody, templateData); err != nil {

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sesv2_test
 
 import (
@@ -7,8 +10,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/sesv2/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -23,8 +26,8 @@ func TestAccSESV2EmailIdentityMailFromAttributes_basic(t *testing.T) {
 	emailIdentityName := "aws_sesv2_email_identity.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -53,8 +56,8 @@ func TestAccSESV2EmailIdentityMailFromAttributes_disappears(t *testing.T) {
 	resourceName := "aws_sesv2_email_identity_mail_from_attributes.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -77,8 +80,8 @@ func TestAccSESV2EmailIdentityMailFromAttributes_disappearsEmailIdentity(t *test
 	emailIdentityName := "aws_sesv2_email_identity.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -103,8 +106,8 @@ func TestAccSESV2EmailIdentityMailFromAttributes_behaviorOnMXFailure(t *testing.
 	resourceName := "aws_sesv2_email_identity_mail_from_attributes.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -141,8 +144,8 @@ func TestAccSESV2EmailIdentityMailFromAttributes_mailFromDomain(t *testing.T) {
 	resourceName := "aws_sesv2_email_identity_mail_from_attributes.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -180,7 +183,7 @@ func testAccCheckEmailIdentityMailFromAttributesExists(ctx context.Context, name
 			return create.Error(names.SESV2, create.ErrActionCheckingExistence, tfsesv2.ResNameEmailIdentityMailFromAttributes, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client(ctx)
 
 		out, err := tfsesv2.FindEmailIdentityByID(ctx, conn, rs.Primary.ID)
 

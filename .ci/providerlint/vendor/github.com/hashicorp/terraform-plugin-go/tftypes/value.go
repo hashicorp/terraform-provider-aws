@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package tftypes
 
 import (
@@ -8,7 +11,7 @@ import (
 	"strconv"
 	"strings"
 
-	msgpack "github.com/vmihailenco/msgpack/v4"
+	msgpack "github.com/vmihailenco/msgpack/v5"
 )
 
 // ValueConverter is an interface that provider-defined types can implement to
@@ -131,15 +134,17 @@ func (val Value) ApplyTerraform5AttributePathStep(step AttributePathStep) (inter
 	if !val.IsKnown() || val.IsNull() {
 		return nil, ErrInvalidStep
 	}
+
+	// Since this logic is very hot path, it is optimized to use Value
+	// implementation details rather than As() to avoid memory allocations.
 	switch s := step.(type) {
 	case AttributeName:
-		if !val.Type().Is(Object{}) {
+		if _, ok := val.Type().(Object); !ok {
 			return nil, ErrInvalidStep
 		}
-		o := map[string]Value{}
-		err := val.As(&o)
-		if err != nil {
-			return nil, err
+		o, ok := val.value.(map[string]Value)
+		if !ok {
+			return nil, fmt.Errorf("cannot convert %T into map[string]tftypes.Value", val.value)
 		}
 		res, ok := o[string(s)]
 		if !ok {
@@ -147,13 +152,12 @@ func (val Value) ApplyTerraform5AttributePathStep(step AttributePathStep) (inter
 		}
 		return res, nil
 	case ElementKeyString:
-		if !val.Type().Is(Map{}) {
+		if _, ok := val.Type().(Map); !ok {
 			return nil, ErrInvalidStep
 		}
-		m := map[string]Value{}
-		err := val.As(&m)
-		if err != nil {
-			return nil, err
+		m, ok := val.value.(map[string]Value)
+		if !ok {
+			return nil, fmt.Errorf("cannot convert %T into map[string]tftypes.Value", val.value)
 		}
 		res, ok := m[string(s)]
 		if !ok {
@@ -161,36 +165,37 @@ func (val Value) ApplyTerraform5AttributePathStep(step AttributePathStep) (inter
 		}
 		return res, nil
 	case ElementKeyInt:
-		if !val.Type().Is(List{}) && !val.Type().Is(Tuple{}) {
+		_, listOk := val.Type().(List)
+		_, tupleOk := val.Type().(Tuple)
+		if !listOk && !tupleOk {
 			return nil, ErrInvalidStep
 		}
 		if int64(s) < 0 {
 			return nil, ErrInvalidStep
 		}
-		sl := []Value{}
-		err := val.As(&sl)
-		if err != nil {
-			return nil, err
+		sl, ok := val.value.([]Value)
+		if !ok {
+			return nil, fmt.Errorf("cannot convert %T into []tftypes.Value", val.value)
 		}
 		if int64(len(sl)) <= int64(s) {
 			return nil, ErrInvalidStep
 		}
 		return sl[int64(s)], nil
 	case ElementKeyValue:
-		if !val.Type().Is(Set{}) {
+		if _, ok := val.Type().(Set); !ok {
 			return nil, ErrInvalidStep
 		}
-		sl := []Value{}
-		err := val.As(&sl)
-		if err != nil {
-			return nil, err
+		sl, ok := val.value.([]Value)
+		if !ok {
+			return nil, fmt.Errorf("cannot convert %T into []tftypes.Value", val.value)
 		}
+		stepValue := Value(s)
 		for _, el := range sl {
-			diffs, err := el.Diff(Value(s))
+			deepEqual, err := stepValue.deepEqual(el)
 			if err != nil {
 				return nil, err
 			}
-			if len(diffs) == 0 {
+			if deepEqual {
 				return el, nil
 			}
 		}
@@ -216,11 +221,11 @@ func (val Value) Equal(o Value) bool {
 	if !val.Type().Equal(o.Type()) {
 		return false
 	}
-	diff, err := val.Diff(o)
+	deepEqual, err := val.deepEqual(o)
 	if err != nil {
-		panic(err)
+		return false
 	}
-	return len(diff) < 1
+	return deepEqual
 }
 
 // Copy returns a defensively-copied clone of Value that shares no underlying
@@ -299,57 +304,62 @@ func newValue(t Type, val interface{}) (Value, error) {
 		}
 	}
 
-	switch {
-	case t.Is(String):
-		v, err := valueFromString(val)
+	switch typ := t.(type) {
+	case primitive:
+		switch typ.name {
+		case String.name:
+			v, err := valueFromString(val)
+			if err != nil {
+				return Value{}, err
+			}
+			return v, nil
+		case Number.name:
+			v, err := valueFromNumber(val)
+			if err != nil {
+				return Value{}, err
+			}
+			return v, nil
+		case Bool.name:
+			v, err := valueFromBool(val)
+			if err != nil {
+				return Value{}, err
+			}
+			return v, nil
+		case DynamicPseudoType.name:
+			v, err := valueFromDynamicPseudoType(val)
+			if err != nil {
+				return Value{}, err
+			}
+			return v, nil
+		default:
+			return Value{}, fmt.Errorf("unknown primitive type %v passed to tftypes.NewValue", typ)
+		}
+	case Map:
+		v, err := valueFromMap(typ.ElementType, val)
 		if err != nil {
 			return Value{}, err
 		}
 		return v, nil
-	case t.Is(Number):
-		v, err := valueFromNumber(val)
+	case Object:
+		v, err := valueFromObject(typ.AttributeTypes, typ.OptionalAttributes, val)
 		if err != nil {
 			return Value{}, err
 		}
 		return v, nil
-	case t.Is(Bool):
-		v, err := valueFromBool(val)
+	case List:
+		v, err := valueFromList(typ.ElementType, val)
 		if err != nil {
 			return Value{}, err
 		}
 		return v, nil
-	case t.Is(Map{}):
-		v, err := valueFromMap(t.(Map).ElementType, val)
+	case Set:
+		v, err := valueFromSet(typ.ElementType, val)
 		if err != nil {
 			return Value{}, err
 		}
 		return v, nil
-	case t.Is(Object{}):
-		v, err := valueFromObject(t.(Object).AttributeTypes, t.(Object).OptionalAttributes, val)
-		if err != nil {
-			return Value{}, err
-		}
-		return v, nil
-	case t.Is(List{}):
-		v, err := valueFromList(t.(List).ElementType, val)
-		if err != nil {
-			return Value{}, err
-		}
-		return v, nil
-	case t.Is(Set{}):
-		v, err := valueFromSet(t.(Set).ElementType, val)
-		if err != nil {
-			return Value{}, err
-		}
-		return v, nil
-	case t.Is(Tuple{}):
-		v, err := valueFromTuple(t.(Tuple).ElementTypes, val)
-		if err != nil {
-			return Value{}, err
-		}
-		return v, nil
-	case t.Is(DynamicPseudoType):
-		v, err := valueFromDynamicPseudoType(val)
+	case Tuple:
+		v, err := valueFromTuple(typ.ElementTypes, val)
 		if err != nil {
 			return Value{}, err
 		}
@@ -540,6 +550,7 @@ func (val Value) IsFullyKnown() bool {
 	case primitive:
 		return true
 	case List, Set, Tuple:
+		//nolint:forcetypeassert // NewValue func validates the type
 		for _, v := range val.value.([]Value) {
 			if !v.IsFullyKnown() {
 				return false
@@ -547,6 +558,7 @@ func (val Value) IsFullyKnown() bool {
 		}
 		return true
 	case Map, Object:
+		//nolint:forcetypeassert // NewValue func validates the type
 		for _, v := range val.value.(map[string]Value) {
 			if !v.IsFullyKnown() {
 				return false

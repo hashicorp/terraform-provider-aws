@@ -1,8 +1,18 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package tfprotov6
 
 import (
 	"context"
 )
+
+// DataSourceMetadata describes metadata for a data resource in the GetMetadata
+// RPC.
+type DataSourceMetadata struct {
+	// TypeName is the name of the data resource.
+	TypeName string
+}
 
 // DataSourceServer is an interface containing the methods a data source
 // implementation needs to fill.
@@ -77,6 +87,10 @@ type ReadDataSourceRequest struct {
 	//
 	// This configuration will have known values for all fields.
 	ProviderMeta *DynamicValue
+
+	// ClientCapabilities defines optionally supported protocol features for the
+	// ReadDataSource RPC, such as forward-compatible Terraform behavior changes.
+	ClientCapabilities *ReadDataSourceClientCapabilities
 }
 
 // ReadDataSourceResponse is the response from the provider about the current
@@ -95,4 +109,8 @@ type ReadDataSourceResponse struct {
 	// indicates a successful validation with no warnings or errors
 	// generated.
 	Diagnostics []*Diagnostic
+
+	// Deferred is used to indicate to Terraform that the ReadDataSource operation
+	// needs to be deferred for a reason.
+	Deferred *Deferred
 }

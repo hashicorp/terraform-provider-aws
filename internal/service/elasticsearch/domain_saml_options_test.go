@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elasticsearch_test
 
 import (
@@ -6,13 +9,14 @@ import (
 	"testing"
 
 	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfelasticsearch "github.com/hashicorp/terraform-provider-aws/internal/service/elasticsearch"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccElasticsearchDomainSAMLOptions_basic(t *testing.T) {
@@ -27,8 +31,8 @@ func TestAccElasticsearchDomainSAMLOptions_basic(t *testing.T) {
 	esDomainResourceName := "aws_elasticsearch_domain.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticsearch.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticsearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckESDomainSAMLOptionsDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -37,9 +41,9 @@ func TestAccElasticsearchDomainSAMLOptions_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, esDomainResourceName, &domain),
 					testAccCheckESDomainSAMLOptions(ctx, esDomainResourceName, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "saml_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "saml_options.0.enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "saml_options.0.idp.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "saml_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "saml_options.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "saml_options.0.idp.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "saml_options.0.idp.0.entity_id", idpEntityId),
 				),
 			},
@@ -62,8 +66,8 @@ func TestAccElasticsearchDomainSAMLOptions_disappears(t *testing.T) {
 	esDomainResourceName := "aws_elasticsearch_domain.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticsearch.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticsearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckESDomainSAMLOptionsDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -88,8 +92,8 @@ func TestAccElasticsearchDomainSAMLOptions_disappears_Domain(t *testing.T) {
 	esDomainResourceName := "aws_elasticsearch_domain.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticsearch.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticsearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckESDomainSAMLOptionsDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -115,15 +119,15 @@ func TestAccElasticsearchDomainSAMLOptions_Update(t *testing.T) {
 	esDomainResourceName := "aws_elasticsearch_domain.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticsearch.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticsearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckESDomainSAMLOptionsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainSAMLOptionsConfig_basic(rUserName, rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "saml_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "saml_options.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "saml_options.0.session_timeout_minutes", "60"),
 					testAccCheckESDomainSAMLOptions(ctx, esDomainResourceName, resourceName),
 				),
@@ -131,7 +135,7 @@ func TestAccElasticsearchDomainSAMLOptions_Update(t *testing.T) {
 			{
 				Config: testAccDomainSAMLOptionsConfig_update(rUserName, rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "saml_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "saml_options.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "saml_options.0.session_timeout_minutes", "180"),
 					testAccCheckESDomainSAMLOptions(ctx, esDomainResourceName, resourceName),
 				),
@@ -150,15 +154,15 @@ func TestAccElasticsearchDomainSAMLOptions_Disabled(t *testing.T) {
 	esDomainResourceName := "aws_elasticsearch_domain.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticsearch.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticsearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckESDomainSAMLOptionsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainSAMLOptionsConfig_basic(rUserName, rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "saml_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "saml_options.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "saml_options.0.session_timeout_minutes", "60"),
 					testAccCheckESDomainSAMLOptions(ctx, esDomainResourceName, resourceName),
 				),
@@ -166,8 +170,8 @@ func TestAccElasticsearchDomainSAMLOptions_Disabled(t *testing.T) {
 			{
 				Config: testAccDomainSAMLOptionsConfig_disabled(rUserName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "saml_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "saml_options.0.session_timeout_minutes", "0"),
+					resource.TestCheckResourceAttr(resourceName, "saml_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "saml_options.0.session_timeout_minutes", acctest.Ct0),
 					testAccCheckESDomainSAMLOptions(ctx, esDomainResourceName, resourceName),
 				),
 			},
@@ -182,8 +186,8 @@ func testAccCheckESDomainSAMLOptionsDestroy(ctx context.Context) resource.TestCh
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn()
-			_, err := tfelasticsearch.FindDomainByName(ctx, conn, rs.Primary.Attributes["domain_name"])
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn(ctx)
+			_, err := tfelasticsearch.FindDomainByName(ctx, conn, rs.Primary.Attributes[names.AttrDomainName])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -216,8 +220,8 @@ func testAccCheckESDomainSAMLOptions(ctx context.Context, esResource string, sam
 			return fmt.Errorf("Not found: %s", samlOptionsResource)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn()
-		_, err := tfelasticsearch.FindDomainByName(ctx, conn, options.Primary.Attributes["domain_name"])
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn(ctx)
+		_, err := tfelasticsearch.FindDomainByName(ctx, conn, options.Primary.Attributes[names.AttrDomainName])
 
 		return err
 	}

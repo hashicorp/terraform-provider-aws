@@ -36,6 +36,11 @@ resource "aws_budgets_budget_action" "example" {
     address           = "example@example.example"
     subscription_type = "EMAIL"
   }
+
+  tags = {
+    Tag1 = "Value1"
+    Tag2 = "Value2"
+  }
 }
 
 data "aws_iam_policy_document" "example" {
@@ -84,7 +89,7 @@ resource "aws_budgets_budget" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `account_id` - (Optional) The ID of the target account for budget. Will use current user's account_id by default if omitted.
 * `budget_name` - (Required) The name of a budget.
@@ -95,6 +100,7 @@ The following arguments are supported:
 * `execution_role_arn` - (Required) The role passed for action execution and reversion. Roles and actions must be in the same account.
 * `notification_type` - (Required) The type of a notification. Valid values are `ACTUAL` or `FORECASTED`.
 * `subscriber` - (Required) A list of subscribers. See [Subscriber](#subscriber).
+* `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Action Threshold
 
@@ -130,17 +136,36 @@ The following arguments are supported:
 * `instance_ids` - (Required) The EC2 and RDS instance IDs.
 * `region` - (Required) The Region to run the SSM document.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `action_id` - The id of the budget action.
 * `id` - ID of resource.
 * `arn` - The ARN of the budget action.
 * `status` - The status of the budget action.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `5m`)
+* `update` - (Default `5m`)
 
 ## Import
 
-Budgets can be imported using `AccountID:ActionID:BudgetName`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import budget actions using `AccountID:ActionID:BudgetName`. For example:
 
-`$ terraform import aws_budgets_budget_action.myBudget 123456789012:some-id:myBudget`
+```terraform
+import {
+  to = aws_budgets_budget_action.myBudget
+  id = "123456789012:some-id:myBudget"
+}
+```
+
+Using `terraform import`, import budget actions using `AccountID:ActionID:BudgetName`. For example:
+
+```console
+% terraform import aws_budgets_budget_action.myBudget 123456789012:some-id:myBudget
+```

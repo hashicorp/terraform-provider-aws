@@ -44,7 +44,7 @@ resource "aws_ecs_capacity_provider" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `auto_scaling_group_provider` - (Required) Configuration block for the provider for the ECS auto scaling group. Detailed below.
 * `name` - (Required) Name of the capacity provider.
@@ -53,6 +53,7 @@ The following arguments are supported:
 ### `auto_scaling_group_provider`
 
 * `auto_scaling_group_arn` - (Required) - ARN of the associated auto scaling group.
+* `managed_draining` - (Optional) - Enables or disables a graceful shutdown of instances without disturbing workloads. Valid values are `ENABLED` and `DISABLED`. The default value is `ENABLED` when a capacity provider is created.
 * `managed_scaling` - (Optional) - Configuration block defining the parameters of the auto scaling. Detailed below.
 * `managed_termination_protection` - (Optional) - Enables or disables container-aware termination of instances in the auto scaling group when scale-in happens. Valid values are `ENABLED` and `DISABLED`.
 
@@ -64,9 +65,9 @@ The following arguments are supported:
 * `status` - (Optional) Whether auto scaling is managed by ECS. Valid values are `ENABLED` and `DISABLED`.
 * `target_capacity` - (Optional) Target utilization for the capacity provider. A number between 1 and 100.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN that identifies the capacity provider.
 * `id` - ARN that identifies the capacity provider.
@@ -74,8 +75,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-ECS Capacity Providers can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ECS Capacity Providers using the `name`. For example:
 
+```terraform
+import {
+  to = aws_ecs_capacity_provider.example
+  id = "example"
+}
 ```
-$ terraform import aws_ecs_capacity_provider.example example
+
+Using `terraform import`, import ECS Capacity Providers using the `name`. For example:
+
+```console
+% terraform import aws_ecs_capacity_provider.example example
 ```

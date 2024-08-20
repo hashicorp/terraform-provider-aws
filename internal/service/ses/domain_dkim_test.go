@@ -1,18 +1,21 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ses_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strconv"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ses"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/service/ses"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSESDomainDKIM_basic(t *testing.T) {
@@ -22,10 +25,10 @@ func TestAccSESDomainDKIM_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDKIMDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -42,7 +45,7 @@ func TestAccSESDomainDKIM_basic(t *testing.T) {
 
 func testAccCheckDomainDKIMDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ses_domain_dkim" {
@@ -51,18 +54,18 @@ func testAccCheckDomainDKIMDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			domain := rs.Primary.ID
 			params := &ses.GetIdentityDkimAttributesInput{
-				Identities: []*string{
-					aws.String(domain),
+				Identities: []string{
+					domain,
 				},
 			}
 
-			resp, err := conn.GetIdentityDkimAttributesWithContext(ctx, params)
+			resp, err := conn.GetIdentityDkimAttributes(ctx, params)
 
 			if err != nil {
 				return err
 			}
 
-			if resp.DkimAttributes[domain] != nil {
+			if _, exists := resp.DkimAttributes[domain]; exists {
 				return fmt.Errorf("SES Domain Dkim %s still exists.", domain)
 			}
 		}
@@ -83,20 +86,20 @@ func testAccCheckDomainDKIMExists(ctx context.Context, n string) resource.TestCh
 		}
 
 		domain := rs.Primary.ID
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
 
 		params := &ses.GetIdentityDkimAttributesInput{
-			Identities: []*string{
-				aws.String(domain),
+			Identities: []string{
+				domain,
 			},
 		}
 
-		response, err := conn.GetIdentityDkimAttributesWithContext(ctx, params)
+		response, err := conn.GetIdentityDkimAttributes(ctx, params)
 		if err != nil {
 			return err
 		}
 
-		if response.DkimAttributes[domain] == nil {
+		if _, exists := response.DkimAttributes[domain]; !exists {
 			return fmt.Errorf("SES Domain DKIM %s not found in AWS", domain)
 		}
 
@@ -109,7 +112,7 @@ func testAccCheckDomainDKIMTokens(n string) resource.TestCheckFunc {
 		rs := s.RootModule().Resources[n]
 
 		expectedNum := 3
-		expectedFormat := regexp.MustCompile("[a-z0-9]{32}")
+		expectedFormat := regexache.MustCompile("[0-9a-z]{32}")
 
 		tokenNum, _ := strconv.Atoi(rs.Primary.Attributes["dkim_tokens.#"])
 		if expectedNum != tokenNum {

@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package codeartifact
 
@@ -7,15 +7,14 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/codeartifact"
-	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/codeartifact"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_codeartifact_domain", &resource.Sweeper{
 		Name: "aws_codeartifact_domain",
 		F:    sweepDomains,
@@ -29,96 +28,82 @@ func init() {
 
 func sweepDomains(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).CodeArtifactConn()
+	conn := client.CodeArtifactClient(ctx)
 	input := &codeartifact.ListDomainsInput{}
-	var sweeperErrs *multierror.Error
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListDomainsPagesWithContext(ctx, input, func(page *codeartifact.ListDomainsOutput, lastPage bool) bool {
-		for _, domainPtr := range page.Domains {
-			if domainPtr == nil {
-				continue
-			}
+	pages := codeartifact.NewListDomainsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-			domain := aws.StringValue(domainPtr.Name)
-			input := &codeartifact.DeleteDomainInput{
-				Domain: domainPtr.Name,
-			}
-
-			log.Printf("[INFO] Deleting CodeArtifact Domain: %s", domain)
-
-			_, err := conn.DeleteDomainWithContext(ctx, input)
-
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting CodeArtifact Domain (%s): %w", domain, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-			}
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping CodeArtifact Domain sweep for %s: %s", region, err)
+			return nil
 		}
 
-		return !lastPage
-	})
+		if err != nil {
+			return fmt.Errorf("error listing CodeArtifact Domains (%s): %w", region, err)
+		}
 
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping CodeArtifact Domain sweep for %s: %s", region, err)
-		return nil
+		for _, v := range page.Domains {
+			r := resourceDomain()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.Arn))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
 	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
-		return fmt.Errorf("error listing CodeArtifact Domains: %w", err)
+		return fmt.Errorf("error sweeping CodeArtifact Domains (%s): %w", region, err)
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	return nil
 }
 
 func sweepRepositories(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).CodeArtifactConn()
+	conn := client.CodeArtifactClient(ctx)
 	input := &codeartifact.ListRepositoriesInput{}
-	var sweeperErrs *multierror.Error
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListRepositoriesPagesWithContext(ctx, input, func(page *codeartifact.ListRepositoriesOutput, lastPage bool) bool {
-		for _, repositoryPtr := range page.Repositories {
-			if repositoryPtr == nil {
-				continue
-			}
+	pages := codeartifact.NewListRepositoriesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-			repository := aws.StringValue(repositoryPtr.Name)
-			input := &codeartifact.DeleteRepositoryInput{
-				Repository:  repositoryPtr.Name,
-				Domain:      repositoryPtr.DomainName,
-				DomainOwner: repositoryPtr.DomainOwner,
-			}
-
-			log.Printf("[INFO] Deleting CodeArtifact Repository: %s", repository)
-
-			_, err := conn.DeleteRepositoryWithContext(ctx, input)
-
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting CodeArtifact Repository (%s): %w", repository, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-			}
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping CodeArtifact Repository sweep for %s: %s", region, err)
+			return nil
 		}
 
-		return !lastPage
-	})
+		if err != nil {
+			return fmt.Errorf("error listing CodeArtifact Repositories (%s): %w", region, err)
+		}
 
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping CodeArtifact Repository sweep for %s: %s", region, err)
-		return nil
+		for _, v := range page.Repositories {
+			r := resourceRepository()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.Arn))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
 	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
-		return fmt.Errorf("error listing CodeArtifact Repositories: %w", err)
+		return fmt.Errorf("error sweeping CodeArtifact Repositories (%s): %w", region, err)
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	return nil
 }

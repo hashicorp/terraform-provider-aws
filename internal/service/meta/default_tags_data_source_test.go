@@ -1,30 +1,35 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package meta_test
 
 import (
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfmeta "github.com/hashicorp/terraform-provider-aws/internal/service/meta"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccMetaDefaultTagsDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_default_tags.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("first", "value"),
+					acctest.ConfigDefaultTags_Tags1("first", names.AttrValue),
 					testAccDefaultTagsDataSourceConfig_basic(),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.first", "value"),
+					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "tags.first", names.AttrValue),
 				),
 			},
 		},
@@ -32,10 +37,11 @@ func TestAccMetaDefaultTagsDataSource_basic(t *testing.T) {
 }
 
 func TestAccMetaDefaultTagsDataSource_empty(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_default_tags.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -43,7 +49,7 @@ func TestAccMetaDefaultTagsDataSource_empty(t *testing.T) {
 			{
 				Config: testAccDefaultTagsDataSourceConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 		},
@@ -51,10 +57,11 @@ func TestAccMetaDefaultTagsDataSource_empty(t *testing.T) {
 }
 
 func TestAccMetaDefaultTagsDataSource_multiple(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_default_tags.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -65,7 +72,7 @@ func TestAccMetaDefaultTagsDataSource_multiple(t *testing.T) {
 					testAccDefaultTagsDataSourceConfig_basic(),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.nuera", "hijo"),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.escalofrios", "calambres"),
 				),
@@ -75,10 +82,11 @@ func TestAccMetaDefaultTagsDataSource_multiple(t *testing.T) {
 }
 
 func TestAccMetaDefaultTagsDataSource_ignore(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_default_tags.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -89,7 +97,7 @@ func TestAccMetaDefaultTagsDataSource_ignore(t *testing.T) {
 					testAccDefaultTagsDataSourceConfig_basic(),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.Tabac", "Louis Chiron"),
 				),
 			},
@@ -99,7 +107,7 @@ func TestAccMetaDefaultTagsDataSource_ignore(t *testing.T) {
 					testAccDefaultTagsDataSourceConfig_basic(),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 		},

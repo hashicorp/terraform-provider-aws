@@ -1,34 +1,43 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
-	"bytes"
 	"context"
-	"fmt"
 	"log"
+	"slices"
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/rds"
+	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_db_option_group")
-func ResourceOptionGroup() *schema.Resource {
+// @SDKResource("aws_db_option_group", name="DB Option Group")
+// @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
+func resourceOptionGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOptionGroupCreate,
 		ReadWithoutTimeout:   resourceOptionGroupRead,
 		UpdateWithoutTimeout: resourceOptionGroupUpdate,
 		DeleteWithoutTimeout: resourceOptionGroupDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -38,25 +47,9 @@ func ResourceOptionGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
-			},
-			"name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validOptionGroupName,
-			},
-			"name_prefix": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"name"},
-				ValidateFunc:  validOptionGroupNamePrefix,
 			},
 			"engine_name": {
 				Type:     schema.TypeString,
@@ -68,18 +61,32 @@ func ResourceOptionGroup() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"option_group_description": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  "Managed by Terraform",
+			names.AttrName: {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{names.AttrNamePrefix},
+				ValidateFunc:  validOptionGroupName,
 			},
-
+			names.AttrNamePrefix: {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{names.AttrName},
+				ValidateFunc:  validOptionGroupNamePrefix,
+			},
 			"option": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"db_security_group_memberships": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
 						"option_name": {
 							Type:     schema.TypeString,
 							Required: true,
@@ -89,44 +96,46 @@ func ResourceOptionGroup() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"value": {
+									names.AttrValue: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
 								},
 							},
 						},
-						"port": {
+						names.AttrPort: {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
-						"db_security_group_memberships": {
-							Type:     schema.TypeSet,
+						names.AttrVersion: {
+							Type:     schema.TypeString,
 							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      schema.HashString,
 						},
 						"vpc_security_group_memberships": {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      schema.HashString,
-						},
-						"version": {
-							Type:     schema.TypeString,
-							Optional: true,
 						},
 					},
 				},
-				Set: resourceOptionHash,
 			},
-
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			"option_group_description": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Default:  "Managed by Terraform",
+			},
+			names.AttrSkipDestroy: {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -135,187 +144,101 @@ func ResourceOptionGroup() *schema.Resource {
 
 func resourceOptionGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
-	var groupName string
-	if v, ok := d.GetOk("name"); ok {
-		groupName = v.(string)
-	} else if v, ok := d.GetOk("name_prefix"); ok {
-		groupName = resource.PrefixedUniqueId(v.(string))
-	} else {
-		groupName = resource.UniqueId()
-	}
-
-	createOpts := &rds.CreateOptionGroupInput{
+	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	input := &rds.CreateOptionGroupInput{
 		EngineName:             aws.String(d.Get("engine_name").(string)),
 		MajorEngineVersion:     aws.String(d.Get("major_engine_version").(string)),
 		OptionGroupDescription: aws.String(d.Get("option_group_description").(string)),
-		OptionGroupName:        aws.String(groupName),
-		Tags:                   Tags(tags.IgnoreAWS()),
+		OptionGroupName:        aws.String(name),
+		Tags:                   getTagsIn(ctx),
 	}
 
-	log.Printf("[DEBUG] Create DB Option Group: %#v", createOpts)
-	output, err := conn.CreateOptionGroupWithContext(ctx, createOpts)
+	_, err := conn.CreateOptionGroup(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating DB Option Group: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating RDS DB Option Group (%s): %s", name, err)
 	}
 
-	d.SetId(strings.ToLower(groupName))
-	log.Printf("[INFO] DB Option Group ID: %s", d.Id())
-
-	// Set for update
-	d.Set("arn", output.OptionGroup.OptionGroupArn)
+	d.SetId(strings.ToLower(name))
 
 	return append(diags, resourceOptionGroupUpdate(ctx, d, meta)...)
 }
 
 func resourceOptionGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
-	params := &rds.DescribeOptionGroupsInput{
-		OptionGroupName: aws.String(d.Id()),
-	}
+	option, err := findOptionGroupByName(ctx, conn, d.Id())
 
-	log.Printf("[DEBUG] Describe DB Option Group: %#v", params)
-	options, err := conn.DescribeOptionGroupsWithContext(ctx, params)
-
-	if tfawserr.ErrCodeEquals(err, rds.ErrCodeOptionGroupNotFoundFault) {
-		log.Printf("[WARN] RDS Option Group (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] RDS DB Option Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Describing DB Option Group: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading RDS DB Option Group (%s): %s", d.Id(), err)
 	}
 
-	var option *rds.OptionGroup
-	for _, ogl := range options.OptionGroupsList {
-		if aws.StringValue(ogl.OptionGroupName) == d.Id() {
-			option = ogl
-			break
-		}
-	}
-
-	if option == nil {
-		log.Printf("[WARN] RDS Option Group (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
-	}
-
-	d.Set("arn", option.OptionGroupArn)
-	d.Set("name", option.OptionGroupName)
-	d.Set("major_engine_version", option.MajorEngineVersion)
+	d.Set(names.AttrARN, option.OptionGroupArn)
 	d.Set("engine_name", option.EngineName)
-	d.Set("option_group_description", option.OptionGroupDescription)
-
-	if err := d.Set("option", flattenOptions(option.Options, expandOptionConfiguration(d.Get("option").(*schema.Set).List()))); err != nil {
+	d.Set("major_engine_version", option.MajorEngineVersion)
+	d.Set(names.AttrName, option.OptionGroupName)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(option.OptionGroupName)))
+	if err := d.Set("option", flattenOptions(option.Options, expandOptionConfigurations(d.Get("option").(*schema.Set).List()))); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting option: %s", err)
 	}
-
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for RDS Option Group (%s): %s", d.Get("arn").(string), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	d.Set("option_group_description", option.OptionGroupDescription)
+	// Support in-place update of non-refreshable attribute.
+	d.Set(names.AttrSkipDestroy, d.Get(names.AttrSkipDestroy))
 
 	return diags
 }
 
-func optionInList(optionName string, list []*string) bool {
-	for _, opt := range list {
-		if aws.StringValue(opt) == optionName {
-			return true
-		}
-	}
-	return false
-}
-
 func resourceOptionGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSClient(ctx)
+
 	if d.HasChange("option") {
 		o, n := d.GetChange("option")
-		if o == nil {
-			o = new(schema.Set)
-		}
-		if n == nil {
-			n = new(schema.Set)
-		}
-
-		os := o.(*schema.Set)
-		ns := n.(*schema.Set)
-		optionsToInclude := expandOptionConfiguration(ns.Difference(os).List())
+		os, ns := o.(*schema.Set), n.(*schema.Set)
+		optionsToInclude := expandOptionConfigurations(ns.Difference(os).List())
 		optionsToIncludeNames := flattenOptionNames(ns.Difference(os).List())
-		optionsToRemove := []*string{}
+		optionsToRemove := []string{}
 		optionsToRemoveNames := flattenOptionNames(os.Difference(ns).List())
 
 		for _, optionToRemoveName := range optionsToRemoveNames {
-			if optionInList(*optionToRemoveName, optionsToIncludeNames) {
+			if slices.Contains(optionsToIncludeNames, optionToRemoveName) {
 				continue
 			}
 			optionsToRemove = append(optionsToRemove, optionToRemoveName)
 		}
 
-		// Ensure there is actually something to update
+		// Ensure there is actually something to update.
 		// InvalidParameterValue: At least one option must be added, modified, or removed.
 		if len(optionsToInclude) > 0 || len(optionsToRemove) > 0 {
-			modifyOpts := &rds.ModifyOptionGroupInput{
-				OptionGroupName:  aws.String(d.Id()),
+			input := &rds.ModifyOptionGroupInput{
 				ApplyImmediately: aws.Bool(true),
+				OptionGroupName:  aws.String(d.Id()),
 			}
 
 			if len(optionsToInclude) > 0 {
-				modifyOpts.OptionsToInclude = optionsToInclude
+				input.OptionsToInclude = optionsToInclude
 			}
 
 			if len(optionsToRemove) > 0 {
-				modifyOpts.OptionsToRemove = optionsToRemove
+				input.OptionsToRemove = optionsToRemove
 			}
 
-			log.Printf("[DEBUG] Modify DB Option Group: %s", modifyOpts)
+			_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+				return conn.ModifyOptionGroup(ctx, input)
+			}, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
 
-			err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
-				_, err := conn.ModifyOptionGroupWithContext(ctx, modifyOpts)
-				if err != nil {
-					// InvalidParameterValue: IAM role ARN value is invalid or does not include the required permissions for: SQLSERVER_BACKUP_RESTORE
-					if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
-						return resource.RetryableError(err)
-					}
-					return resource.NonRetryableError(err)
-				}
-				return nil
-			})
-			if tfresource.TimedOut(err) {
-				_, err = conn.ModifyOptionGroupWithContext(ctx, modifyOpts)
-			}
 			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "modifying DB Option Group: %s", err)
+				return sdkdiag.AppendErrorf(diags, "modifying RDS DB Option Group (%s): %s", d.Id(), err)
 			}
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating RDS Option Group (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 
@@ -324,68 +247,221 @@ func resourceOptionGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceOptionGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
-	deleteOpts := &rds.DeleteOptionGroupInput{
-		OptionGroupName: aws.String(d.Id()),
+	if _, ok := d.GetOk(names.AttrSkipDestroy); ok {
+		log.Printf("[DEBUG] Retaining RDS DB Option Group: %s", d.Id())
+		return diags
 	}
 
-	log.Printf("[DEBUG] Deleting RDS Option Group: %s", d.Id())
-	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-		_, err := conn.DeleteOptionGroupWithContext(ctx, deleteOpts)
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, rds.ErrCodeInvalidOptionGroupStateFault) {
-				log.Printf(`[DEBUG] AWS believes the RDS Option Group is still in use, this could be because of a internal snapshot create by AWS, see github issue #4597 for more info. retrying...`)
-				return resource.RetryableError(err)
-			}
-			return resource.NonRetryableError(err)
-		}
-		return nil
+	log.Printf("[DEBUG] Deleting RDS DB Option Group: %s", d.Id())
+	_, err := tfresource.RetryWhenIsA[*types.InvalidOptionGroupStateFault](ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+		return conn.DeleteOptionGroup(ctx, &rds.DeleteOptionGroupInput{
+			OptionGroupName: aws.String(d.Id()),
+		})
 	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteOptionGroupWithContext(ctx, deleteOpts)
+
+	if errs.IsA[*types.OptionGroupNotFoundFault](err) {
+		return diags
 	}
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Deleting DB Option Group: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting RDS DB Option Group (%s): %s", d.Id(), err)
 	}
+
 	return diags
 }
 
-func flattenOptionNames(configured []interface{}) []*string {
-	var optionNames []*string
-	for _, pRaw := range configured {
-		data := pRaw.(map[string]interface{})
-		optionNames = append(optionNames, aws.String(data["option_name"].(string)))
+func findOptionGroupByName(ctx context.Context, conn *rds.Client, name string) (*types.OptionGroup, error) {
+	input := &rds.DescribeOptionGroupsInput{
+		OptionGroupName: aws.String(name),
+	}
+	output, err := findOptionGroup(ctx, conn, input, tfslices.PredicateTrue[*types.OptionGroup]())
+
+	if err != nil {
+		return nil, err
 	}
 
-	return optionNames
+	// Eventual consistency check.
+	if aws.ToString(output.OptionGroupName) != name {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
 }
 
-func resourceOptionHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	buf.WriteString(fmt.Sprintf("%s-", m["option_name"].(string)))
-	if _, ok := m["port"]; ok {
-		buf.WriteString(fmt.Sprintf("%d-", m["port"].(int)))
+func findOptionGroup(ctx context.Context, conn *rds.Client, input *rds.DescribeOptionGroupsInput, filter tfslices.Predicate[*types.OptionGroup]) (*types.OptionGroup, error) {
+	output, err := findOptionGroups(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
 	}
 
-	for _, oRaw := range m["option_settings"].(*schema.Set).List() {
-		o := oRaw.(map[string]interface{})
-		buf.WriteString(fmt.Sprintf("%s-", o["name"].(string)))
-		buf.WriteString(fmt.Sprintf("%s-", o["value"].(string)))
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findOptionGroups(ctx context.Context, conn *rds.Client, input *rds.DescribeOptionGroupsInput, filter tfslices.Predicate[*types.OptionGroup]) ([]types.OptionGroup, error) {
+	var output []types.OptionGroup
+
+	pages := rds.NewDescribeOptionGroupsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*types.OptionGroupNotFoundFault](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.OptionGroupsList {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
 	}
 
-	for _, vpcRaw := range m["vpc_security_group_memberships"].(*schema.Set).List() {
-		buf.WriteString(fmt.Sprintf("%s-", vpcRaw.(string)))
+	return output, nil
+}
+
+func flattenOptionNames(tfList []interface{}) []string {
+	return tfslices.ApplyToAll(tfList, func(v interface{}) string {
+		return v.(map[string]interface{})["option_name"].(string)
+	})
+}
+
+func expandOptionConfigurations(tfList []interface{}) []types.OptionConfiguration {
+	var apiObjects []types.OptionConfiguration
+
+	for _, tfMapRaw := range tfList {
+		tfMap := tfMapRaw.(map[string]interface{})
+
+		apiObject := types.OptionConfiguration{
+			OptionName: aws.String(tfMap["option_name"].(string)),
+		}
+
+		if v, ok := tfMap["db_security_group_memberships"].(*schema.Set); ok && v.Len() > 0 {
+			apiObject.DBSecurityGroupMemberships = flex.ExpandStringValueSet(v)
+		}
+
+		if v, ok := tfMap["option_settings"].(*schema.Set); ok && v.Len() > 0 {
+			apiObject.OptionSettings = expandOptionSettings(v.List())
+		}
+
+		if v, ok := tfMap[names.AttrPort].(int); ok && v != 0 {
+			apiObject.Port = aws.Int32(int32(v))
+		}
+
+		if v, ok := tfMap[names.AttrVersion].(string); ok && v != "" {
+			apiObject.OptionVersion = aws.String(v)
+		}
+
+		if v, ok := tfMap["vpc_security_group_memberships"].(*schema.Set); ok && v.Len() > 0 {
+			apiObject.VpcSecurityGroupMemberships = flex.ExpandStringValueSet(v)
+		}
+
+		apiObjects = append(apiObjects, apiObject)
 	}
 
-	for _, sgRaw := range m["db_security_group_memberships"].(*schema.Set).List() {
-		buf.WriteString(fmt.Sprintf("%s-", sgRaw.(string)))
+	return apiObjects
+}
+
+func flattenOptions(apiObjects []types.Option, configuredObjects []types.OptionConfiguration) []interface{} {
+	tfList := make([]interface{}, 0)
+
+	for _, apiObject := range apiObjects {
+		if apiObject.OptionName == nil {
+			continue
+		}
+
+		optionName := aws.ToString(apiObject.OptionName)
+		var configuredOption *types.OptionConfiguration
+		if v := tfslices.Filter(configuredObjects, func(v types.OptionConfiguration) bool {
+			return aws.ToString(v.OptionName) == optionName
+		}); len(v) > 0 {
+			configuredOption = &v[0]
+		}
+
+		optionSettings := make([]interface{}, 0)
+		for _, apiOptionSetting := range apiObject.OptionSettings {
+			// The RDS API responds with all settings. Omit settings that match default value,
+			// but only if unconfigured. This is to prevent operators from continually needing
+			// to continually update their Terraform configurations to match new option settings
+			// when added by the API.
+			optionSettingName := aws.ToString(apiOptionSetting.Name)
+			var configuredOptionSetting *types.OptionSetting
+
+			if configuredOption != nil {
+				if v := tfslices.Filter(configuredOption.OptionSettings, func(v types.OptionSetting) bool {
+					return aws.ToString(v.Name) == optionSettingName
+				}); len(v) > 0 {
+					configuredOptionSetting = &v[0]
+				}
+			}
+
+			optionSettingValue := aws.ToString(apiOptionSetting.Value)
+			if configuredOptionSetting == nil && optionSettingValue == aws.ToString(apiOptionSetting.DefaultValue) {
+				continue
+			}
+
+			optionSetting := map[string]interface{}{
+				names.AttrName:  optionSettingName,
+				names.AttrValue: optionSettingValue,
+			}
+
+			// Some values, like passwords, are sent back from the API as ****.
+			// Set the response to match the configuration to prevent an unexpected difference.
+			if configuredOptionSetting != nil && optionSettingValue == "****" {
+				optionSetting[names.AttrValue] = aws.ToString(configuredOptionSetting.Value)
+			}
+
+			optionSettings = append(optionSettings, optionSetting)
+		}
+
+		tfMap := map[string]interface{}{
+			"db_security_group_memberships": tfslices.ApplyToAll(apiObject.DBSecurityGroupMemberships, func(v types.DBSecurityGroupMembership) string {
+				return aws.ToString(v.DBSecurityGroupName)
+			}),
+			"option_name":     optionName,
+			"option_settings": optionSettings,
+			"vpc_security_group_memberships": tfslices.ApplyToAll(apiObject.VpcSecurityGroupMemberships, func(v types.VpcSecurityGroupMembership) string {
+				return aws.ToString(v.VpcSecurityGroupId)
+			}),
+		}
+
+		if apiObject.OptionVersion != nil && configuredOption != nil && configuredOption.OptionVersion != nil {
+			tfMap[names.AttrVersion] = aws.ToString(apiObject.OptionVersion)
+		}
+
+		if apiObject.Port != nil && configuredOption != nil && configuredOption.Port != nil {
+			tfMap[names.AttrPort] = aws.ToInt32(apiObject.Port)
+		}
+
+		tfList = append(tfList, tfMap)
 	}
 
-	if v, ok := m["version"]; ok && v.(string) != "" {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	return tfList
+}
+
+func expandOptionSettings(tfList []interface{}) []types.OptionSetting {
+	apiObjects := make([]types.OptionSetting, 0, len(tfList))
+
+	for _, tfMapRaw := range tfList {
+		tfMap := tfMapRaw.(map[string]interface{})
+
+		apiObject := types.OptionSetting{
+			Name:  aws.String(tfMap[names.AttrName].(string)),
+			Value: aws.String(tfMap[names.AttrValue].(string)),
+		}
+
+		apiObjects = append(apiObjects, apiObject)
 	}
 
-	return create.StringHashcode(buf.String())
+	return apiObjects
 }

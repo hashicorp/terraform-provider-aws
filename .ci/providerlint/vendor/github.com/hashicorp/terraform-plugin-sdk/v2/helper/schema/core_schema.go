@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package schema
 
 import (
@@ -364,5 +367,5 @@ func (r *Resource) CoreConfigSchema() *configschema.Block {
 }
 
 func (r *Resource) coreConfigSchema() *configschema.Block {
-	return schemaMap(r.Schema).CoreConfigSchema()
+	return schemaMap(r.SchemaMap()).CoreConfigSchema()
 }

@@ -1,20 +1,26 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53resolver
 
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/route53resolver"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/route53resolver"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/route53resolver/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_route53_resolver_firewall_config")
-func DataSourceFirewallConfig() *schema.Resource {
+// @SDKDataSource("aws_route53_resolver_firewall_config", name="Firewall Config")
+func dataSourceFirewallConfig() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceFirewallConfigRead,
 
@@ -23,11 +29,11 @@ func DataSourceFirewallConfig() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"resource_id": {
+			names.AttrResourceID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -36,32 +42,33 @@ func DataSourceFirewallConfig() *schema.Resource {
 }
 
 func dataSourceFirewallConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn()
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
-	id := d.Get("resource_id").(string)
+	id := d.Get(names.AttrResourceID).(string)
 	firewallConfig, err := findFirewallConfigByResourceID(ctx, conn, id)
 
 	if err != nil {
-		return diag.Errorf("reading Route53 Resolver Firewall Config (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "reading Route53 Resolver Firewall Config (%s): %s", id, err)
 	}
 
-	d.SetId(aws.StringValue(firewallConfig.Id))
+	d.SetId(aws.ToString(firewallConfig.Id))
 	d.Set("firewall_fail_open", firewallConfig.FirewallFailOpen)
-	d.Set("owner_id", firewallConfig.OwnerId)
-	d.Set("resource_id", firewallConfig.ResourceId)
+	d.Set(names.AttrOwnerID, firewallConfig.OwnerId)
+	d.Set(names.AttrResourceID, firewallConfig.ResourceId)
 
-	return nil
+	return diags
 }
 
-func findFirewallConfigByResourceID(ctx context.Context, conn *route53resolver.Route53Resolver, id string) (*route53resolver.FirewallConfig, error) {
+func findFirewallConfigByResourceID(ctx context.Context, conn *route53resolver.Client, id string) (*awstypes.FirewallConfig, error) {
 	input := &route53resolver.GetFirewallConfigInput{
 		ResourceId: aws.String(id),
 	}
 
-	output, err := conn.GetFirewallConfigWithContext(ctx, input)
+	output, err := conn.GetFirewallConfig(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

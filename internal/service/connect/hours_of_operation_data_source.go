@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect
 
 import (
@@ -11,7 +14,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_connect_hours_of_operation")
@@ -19,7 +24,7 @@ func DataSourceHoursOfOperation() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceHoursOfOperationRead,
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -48,7 +53,7 @@ func DataSourceHoursOfOperation() *schema.Resource {
 								},
 							},
 						},
-						"start_time": {
+						names.AttrStartTime: {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{
@@ -71,36 +76,31 @@ func DataSourceHoursOfOperation() *schema.Resource {
 					m := v.(map[string]interface{})
 					buf.WriteString(m["day"].(string))
 					buf.WriteString(fmt.Sprintf("%+v", m["end_time"].([]interface{})))
-					buf.WriteString(fmt.Sprintf("%+v", m["start_time"].([]interface{})))
+					buf.WriteString(fmt.Sprintf("%+v", m[names.AttrStartTime].([]interface{})))
 					return create.StringHashcode(buf.String())
 				},
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
-			},
-			"hours_of_operation_arn": {
-				Type:       schema.TypeString,
-				Computed:   true,
-				Deprecated: "use 'arn' attribute instead",
 			},
 			"hours_of_operation_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"hours_of_operation_id", "name"},
+				ExactlyOneOf: []string{"hours_of_operation_id", names.AttrName},
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"name", "hours_of_operation_id"},
+				ExactlyOneOf: []string{names.AttrName, "hours_of_operation_id"},
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"time_zone": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -110,10 +110,12 @@ func DataSourceHoursOfOperation() *schema.Resource {
 }
 
 func dataSourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	instanceID := d.Get("instance_id").(string)
+	instanceID := d.Get(names.AttrInstanceID).(string)
 
 	input := &connect.DescribeHoursOfOperationInput{
 		InstanceId: aws.String(instanceID),
@@ -121,16 +123,16 @@ func dataSourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData,
 
 	if v, ok := d.GetOk("hours_of_operation_id"); ok {
 		input.HoursOfOperationId = aws.String(v.(string))
-	} else if v, ok := d.GetOk("name"); ok {
+	} else if v, ok := d.GetOk(names.AttrName); ok {
 		name := v.(string)
 		hoursOfOperationSummary, err := dataSourceGetHoursOfOperationSummaryByName(ctx, conn, instanceID, name)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error finding Connect Hours of Operation Summary by name (%s): %w", name, err))
+			return sdkdiag.AppendErrorf(diags, "finding Connect Hours of Operation Summary by name (%s): %s", name, err)
 		}
 
 		if hoursOfOperationSummary == nil {
-			return diag.FromErr(fmt.Errorf("error finding Connect Hours of Operation Summary by name (%s): not found", name))
+			return sdkdiag.AppendErrorf(diags, "finding Connect Hours of Operation Summary by name (%s): not found", name)
 		}
 
 		input.HoursOfOperationId = hoursOfOperationSummary.Id
@@ -139,34 +141,33 @@ func dataSourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData,
 	resp, err := conn.DescribeHoursOfOperationWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect Hours of Operation: %w", err))
+		return sdkdiag.AppendErrorf(diags, "getting Connect Hours of Operation: %s", err)
 	}
 
 	if resp == nil || resp.HoursOfOperation == nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect Hours of Operation: empty response"))
+		return sdkdiag.AppendErrorf(diags, "getting Connect Hours of Operation: empty response")
 	}
 
 	hoursOfOperation := resp.HoursOfOperation
 
-	d.Set("arn", hoursOfOperation.HoursOfOperationArn)
-	d.Set("hours_of_operation_arn", hoursOfOperation.HoursOfOperationArn) // Deprecated
+	d.Set(names.AttrARN, hoursOfOperation.HoursOfOperationArn)
 	d.Set("hours_of_operation_id", hoursOfOperation.HoursOfOperationId)
-	d.Set("instance_id", instanceID)
-	d.Set("description", hoursOfOperation.Description)
-	d.Set("name", hoursOfOperation.Name)
+	d.Set(names.AttrInstanceID, instanceID)
+	d.Set(names.AttrDescription, hoursOfOperation.Description)
+	d.Set(names.AttrName, hoursOfOperation.Name)
 	d.Set("time_zone", hoursOfOperation.TimeZone)
 
 	if err := d.Set("config", flattenConfigs(hoursOfOperation.Config)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting config: %s", err))
+		return sdkdiag.AppendErrorf(diags, "setting config: %s", err)
 	}
 
-	if err := d.Set("tags", KeyValueTags(ctx, hoursOfOperation.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags: %s", err))
+	if err := d.Set(names.AttrTags, KeyValueTags(ctx, hoursOfOperation.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(hoursOfOperation.HoursOfOperationId)))
 
-	return nil
+	return diags
 }
 
 func dataSourceGetHoursOfOperationSummaryByName(ctx context.Context, conn *connect.Connect, instanceID, name string) (*connect.HoursOfOperationSummary, error) {

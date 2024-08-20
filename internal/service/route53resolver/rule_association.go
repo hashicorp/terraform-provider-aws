@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53resolver
 
 import (
@@ -6,19 +9,23 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/route53resolver"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/route53resolver"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/route53resolver/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_route53_resolver_rule_association")
-func ResourceRuleAssociation() *schema.Resource {
+// @SDKResource("aws_route53_resolver_rule_association", name="Rule Association")
+func resourceRuleAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRuleAssociationCreate,
 		ReadWithoutTimeout:   resourceRuleAssociationRead,
@@ -34,7 +41,7 @@ func ResourceRuleAssociation() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -46,7 +53,7 @@ func ResourceRuleAssociation() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 64),
 			},
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -57,87 +64,90 @@ func ResourceRuleAssociation() *schema.Resource {
 }
 
 func resourceRuleAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn()
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
 	input := &route53resolver.AssociateResolverRuleInput{
 		ResolverRuleId: aws.String(d.Get("resolver_rule_id").(string)),
-		VPCId:          aws.String(d.Get("vpc_id").(string)),
+		VPCId:          aws.String(d.Get(names.AttrVPCID).(string)),
 	}
 
-	if v, ok := d.GetOk("name"); ok {
+	if v, ok := d.GetOk(names.AttrName); ok {
 		input.Name = aws.String(v.(string))
 	}
 
-	output, err := conn.AssociateResolverRuleWithContext(ctx, input)
+	output, err := conn.AssociateResolverRule(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Route53 Resolver Rule Association: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Route53 Resolver Rule Association: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.ResolverRuleAssociation.Id))
+	d.SetId(aws.ToString(output.ResolverRuleAssociation.Id))
 
 	if _, err := waitRuleAssociationCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for Route53 Resolver Rule Association (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Route53 Resolver Rule Association (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceRuleAssociationRead(ctx, d, meta)
+	return append(diags, resourceRuleAssociationRead(ctx, d, meta)...)
 }
 
 func resourceRuleAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn()
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
-	ruleAssociation, err := FindResolverRuleAssociationByID(ctx, conn, d.Id())
+	ruleAssociation, err := findResolverRuleAssociationByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Route53 Resolver Rule Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Route53 Resolver Rule Association (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Route53 Resolver Rule Association (%s): %s", d.Id(), err)
 	}
 
-	d.Set("name", ruleAssociation.Name)
+	d.Set(names.AttrName, ruleAssociation.Name)
 	d.Set("resolver_rule_id", ruleAssociation.ResolverRuleId)
-	d.Set("vpc_id", ruleAssociation.VPCId)
+	d.Set(names.AttrVPCID, ruleAssociation.VPCId)
 
-	return nil
+	return diags
 }
 
 func resourceRuleAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn()
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Route53 Resolver Rule Association: %s", d.Id())
-	_, err := conn.DisassociateResolverRuleWithContext(ctx, &route53resolver.DisassociateResolverRuleInput{
+	_, err := conn.DisassociateResolverRule(ctx, &route53resolver.DisassociateResolverRuleInput{
 		ResolverRuleId: aws.String(d.Get("resolver_rule_id").(string)),
-		VPCId:          aws.String(d.Get("vpc_id").(string)),
+		VPCId:          aws.String(d.Get(names.AttrVPCID).(string)),
 	})
 
-	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
-		return nil
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Route53 Resolver Rule Association (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Route53 Resolver Rule Association (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitRuleAssociationDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for Route53 Resolver Rule Association (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Route53 Resolver Rule Association (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func FindResolverRuleAssociationByID(ctx context.Context, conn *route53resolver.Route53Resolver, id string) (*route53resolver.ResolverRuleAssociation, error) {
+func findResolverRuleAssociationByID(ctx context.Context, conn *route53resolver.Client, id string) (*awstypes.ResolverRuleAssociation, error) {
 	input := &route53resolver.GetResolverRuleAssociationInput{
 		ResolverRuleAssociationId: aws.String(id),
 	}
 
-	output, err := conn.GetResolverRuleAssociationWithContext(ctx, input)
+	output, err := conn.GetResolverRuleAssociation(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -154,9 +164,9 @@ func FindResolverRuleAssociationByID(ctx context.Context, conn *route53resolver.
 	return output.ResolverRuleAssociation, nil
 }
 
-func statusRuleAssociation(ctx context.Context, conn *route53resolver.Route53Resolver, id string) resource.StateRefreshFunc {
+func statusRuleAssociation(ctx context.Context, conn *route53resolver.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindResolverRuleAssociationByID(ctx, conn, id)
+		output, err := findResolverRuleAssociationByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -166,14 +176,14 @@ func statusRuleAssociation(ctx context.Context, conn *route53resolver.Route53Res
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.Status), nil
+		return output, string(output.Status), nil
 	}
 }
 
-func waitRuleAssociationCreated(ctx context.Context, conn *route53resolver.Route53Resolver, id string, timeout time.Duration) (*route53resolver.ResolverRuleAssociation, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{route53resolver.ResolverRuleAssociationStatusCreating},
-		Target:     []string{route53resolver.ResolverRuleAssociationStatusComplete},
+func waitRuleAssociationCreated(ctx context.Context, conn *route53resolver.Client, id string, timeout time.Duration) (*awstypes.ResolverRuleAssociation, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(awstypes.ResolverRuleAssociationStatusCreating),
+		Target:     enum.Slice(awstypes.ResolverRuleAssociationStatusComplete),
 		Refresh:    statusRuleAssociation(ctx, conn, id),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
@@ -182,8 +192,8 @@ func waitRuleAssociationCreated(ctx context.Context, conn *route53resolver.Route
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*route53resolver.ResolverRuleAssociation); ok {
-		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusMessage)))
+	if output, ok := outputRaw.(*awstypes.ResolverRuleAssociation); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 
 		return output, err
 	}
@@ -191,9 +201,9 @@ func waitRuleAssociationCreated(ctx context.Context, conn *route53resolver.Route
 	return nil, err
 }
 
-func waitRuleAssociationDeleted(ctx context.Context, conn *route53resolver.Route53Resolver, id string, timeout time.Duration) (*route53resolver.ResolverRuleAssociation, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{route53resolver.ResolverRuleAssociationStatusDeleting},
+func waitRuleAssociationDeleted(ctx context.Context, conn *route53resolver.Client, id string, timeout time.Duration) (*awstypes.ResolverRuleAssociation, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(awstypes.ResolverRuleAssociationStatusDeleting),
 		Target:     []string{},
 		Refresh:    statusRuleAssociation(ctx, conn, id),
 		Timeout:    timeout,
@@ -203,8 +213,8 @@ func waitRuleAssociationDeleted(ctx context.Context, conn *route53resolver.Route
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*route53resolver.ResolverRuleAssociation); ok {
-		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusMessage)))
+	if output, ok := outputRaw.(*awstypes.ResolverRuleAssociation); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 
 		return output, err
 	}

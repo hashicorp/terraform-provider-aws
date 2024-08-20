@@ -259,7 +259,7 @@ resource "aws_networkfirewall_rule_group" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `capacity` - (Required, Forces new resource) The maximum number of operating resources that this rule group can use. For a stateless rule group, the capacity required is the sum of the capacity requirements of the individual rules. For a stateful rule group, the minimum capacity required is the number of individual rules.
 
@@ -288,7 +288,7 @@ The following arguments are supported:
 
 The `rule_group` block supports the following argument:
 
-* `reference_sets` - (Optional) A configuration block that defines the IP Set References for the rule group. See [Reference Sets](#reference-sets) below for details.
+* `reference_sets` - (Optional) A configuration block that defines the IP Set References for the rule group. See [Reference Sets](#reference-sets) below for details. Please notes that there can only be a maximum of 5 `reference_sets` in a `rule_group`. See the [AWS documentation](https://docs.aws.amazon.com/network-firewall/latest/developerguide/rule-groups-ip-set-references.html#rule-groups-ip-set-reference-limits) for details.
 
 * `rule_variables` - (Optional) A configuration block that defines additional settings available to use in the rules defined in the rule group. Can only be specified for **stateful** rule groups. See [Rule Variables](#rule-variables) below for details.
 
@@ -382,7 +382,7 @@ The `rules_source_list` block supports the following arguments:
 
 The `stateful_rule` block supports the following arguments:
 
-* `action` - (Required) Action to take with packets in a traffic flow when the flow matches the stateful rule criteria. For all actions, AWS Network Firewall performs the specified action and discontinues stateful inspection of the traffic flow. Valid values: `ALERT`, `DROP` or `PASS`.
+* `action` - (Required) Action to take with packets in a traffic flow when the flow matches the stateful rule criteria. For all actions, AWS Network Firewall performs the specified action and discontinues stateful inspection of the traffic flow. Valid values: `ALERT`, `DROP`, `PASS`, or `REJECT`.
 
 * `header` - (Required) A configuration block containing the stateful 5-tuple inspection criteria for the rule, used to inspect traffic flows. See [Header](#header) below for details.
 
@@ -516,9 +516,9 @@ Valid values: `FIN`, `SYN`, `RST`, `PSH`, `ACK`, `URG`, `ECE`, `CWR`.
 * `masks` - (Optional) Set of flags to consider in the inspection. To inspect all flags, leave this empty.
 Valid values: `FIN`, `SYN`, `RST`, `PSH`, `ACK`, `URG`, `ECE`, `CWR`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The Amazon Resource Name (ARN) that identifies the rule group.
 
@@ -530,8 +530,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Network Firewall Rule Groups can be imported using their `ARN`.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Network Firewall Rule Groups using their `arn`. For example:
 
+```terraform
+import {
+  to = aws_networkfirewall_rule_group.example
+  id = "arn:aws:network-firewall:us-west-1:123456789012:stateful-rulegroup/example"
+}
 ```
-$ terraform import aws_networkfirewall_rule_group.example arn:aws:network-firewall:us-west-1:123456789012:stateful-rulegroup/example
+
+Using `terraform import`, import Network Firewall Rule Groups using their `arn`. For example:
+
+```console
+% terraform import aws_networkfirewall_rule_group.example arn:aws:network-firewall:us-west-1:123456789012:stateful-rulegroup/example
 ```

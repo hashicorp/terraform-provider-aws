@@ -1,29 +1,25 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package secretsmanager
 
 import (
 	"context"
-	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/secretsmanager"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_secretsmanager_secret_rotation")
-func DataSourceSecretRotation() *schema.Resource {
+// @SDKDataSource("aws_secretsmanager_secret_rotation", name="Secret Rotation")
+func dataSourceSecretRotation() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSecretRotationRead,
 
 		Schema: map[string]*schema.Schema{
-			"secret_id": {
-				Type:         schema.TypeString,
-				ValidateFunc: validation.StringLenBetween(1, 2048),
-				Required:     true,
-			},
 			"rotation_enabled": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -41,8 +37,20 @@ func DataSourceSecretRotation() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
+						names.AttrDuration: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrScheduleExpression: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
+			},
+			"secret_id": {
+				Type:     schema.TypeString,
+				Required: true,
 			},
 		},
 	}
@@ -50,27 +58,18 @@ func DataSourceSecretRotation() *schema.Resource {
 
 func dataSourceSecretRotationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerConn()
+	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
+
 	secretID := d.Get("secret_id").(string)
+	output, err := findSecretByID(ctx, conn, secretID)
 
-	input := &secretsmanager.DescribeSecretInput{
-		SecretId: aws.String(secretID),
-	}
-
-	log.Printf("[DEBUG] Reading Secrets Manager Secret: %s", input)
-	output, err := conn.DescribeSecretWithContext(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret (%s): %s", secretID, err)
 	}
 
-	if output.ARN == nil {
-		return sdkdiag.AppendErrorf(diags, "Secrets Manager Secret %q not found", secretID)
-	}
-
-	d.SetId(aws.StringValue(output.ARN))
+	d.SetId(aws.ToString(output.ARN))
 	d.Set("rotation_enabled", output.RotationEnabled)
 	d.Set("rotation_lambda_arn", output.RotationLambdaARN)
-
 	if err := d.Set("rotation_rules", flattenRotationRules(output.RotationRules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting rotation_rules: %s", err)
 	}

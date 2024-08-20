@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53resolver
 
 import (
@@ -5,18 +8,22 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/route53resolver"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/route53resolver"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/route53resolver/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_route53_resolver_config")
-func ResourceConfig() *schema.Resource {
+// @SDKResource("aws_route53_resolver_config", name="Config")
+func resourceConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfigCreate,
 		ReadWithoutTimeout:   resourceConfigRead,
@@ -29,15 +36,15 @@ func ResourceConfig() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"autodefined_reverse_flag": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(autodefinedReverseFlag_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.AutodefinedReverseFlag](),
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"resource_id": {
+			names.AttrResourceID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -47,127 +54,114 @@ func ResourceConfig() *schema.Resource {
 }
 
 func resourceConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn()
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
-	autodefinedReverseFlag := d.Get("autodefined_reverse_flag").(string)
+	autodefinedReverseFlag := awstypes.AutodefinedReverseFlag(d.Get("autodefined_reverse_flag").(string))
 	input := &route53resolver.UpdateResolverConfigInput{
-		AutodefinedReverseFlag: aws.String(autodefinedReverseFlag),
-		ResourceId:             aws.String(d.Get("resource_id").(string)),
+		AutodefinedReverseFlag: autodefinedReverseFlag,
+		ResourceId:             aws.String(d.Get(names.AttrResourceID).(string)),
 	}
 
-	output, err := conn.UpdateResolverConfigWithContext(ctx, input)
+	output, err := conn.UpdateResolverConfig(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Route53 Resolver Config: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Route53 Resolver Config: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.ResolverConfig.Id))
+	d.SetId(aws.ToString(output.ResolverConfig.Id))
 
 	if _, err = waitAutodefinedReverseUpdated(ctx, conn, d.Id(), autodefinedReverseFlag); err != nil {
-		return diag.Errorf("waiting for Route53 Resolver Config (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Route53 Resolver Config (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceConfigRead(ctx, d, meta)
+	return append(diags, resourceConfigRead(ctx, d, meta)...)
 }
 
 func resourceConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn()
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
-	resolverConfig, err := FindResolverConfigByID(ctx, conn, d.Id())
+	resolverConfig, err := findResolverConfigByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Route53 Resolver Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Route53 Resolver Config (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Route53 Resolver Config (%s): %s", d.Id(), err)
 	}
 
-	var autodefinedReverseFlag string
-	if aws.StringValue(resolverConfig.AutodefinedReverse) == route53resolver.ResolverAutodefinedReverseStatusEnabled {
-		autodefinedReverseFlag = autodefinedReverseFlagEnable
+	var autodefinedReverseFlag awstypes.AutodefinedReverseFlag
+	if resolverConfig.AutodefinedReverse == awstypes.ResolverAutodefinedReverseStatusEnabled {
+		autodefinedReverseFlag = awstypes.AutodefinedReverseFlagEnable
 	} else {
-		autodefinedReverseFlag = autodefinedReverseFlagDisable
+		autodefinedReverseFlag = awstypes.AutodefinedReverseFlagDisable
 	}
 	d.Set("autodefined_reverse_flag", autodefinedReverseFlag)
-	d.Set("owner_id", resolverConfig.OwnerId)
-	d.Set("resource_id", resolverConfig.ResourceId)
+	d.Set(names.AttrOwnerID, resolverConfig.OwnerId)
+	d.Set(names.AttrResourceID, resolverConfig.ResourceId)
 
-	return nil
+	return diags
 }
 
 func resourceConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn()
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
-	autodefinedReverseFlag := d.Get("autodefined_reverse_flag").(string)
+	autodefinedReverseFlag := awstypes.AutodefinedReverseFlag(d.Get("autodefined_reverse_flag").(string))
 	input := &route53resolver.UpdateResolverConfigInput{
-		AutodefinedReverseFlag: aws.String(autodefinedReverseFlag),
-		ResourceId:             aws.String(d.Get("resource_id").(string)),
+		AutodefinedReverseFlag: autodefinedReverseFlag,
+		ResourceId:             aws.String(d.Get(names.AttrResourceID).(string)),
 	}
 
-	_, err := conn.UpdateResolverConfigWithContext(ctx, input)
+	_, err := conn.UpdateResolverConfig(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("updating Route53 Resolver Config: %s", err)
+		return sdkdiag.AppendErrorf(diags, "updating Route53 Resolver Config: %s", err)
 	}
 
 	if _, err = waitAutodefinedReverseUpdated(ctx, conn, d.Id(), autodefinedReverseFlag); err != nil {
-		return diag.Errorf("waiting for Route53 Resolver Config (%s) update: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Route53 Resolver Config (%s) update: %s", d.Id(), err)
 	}
 
-	return resourceConfigRead(ctx, d, meta)
+	return append(diags, resourceConfigRead(ctx, d, meta)...)
 }
 
-func FindResolverConfigByID(ctx context.Context, conn *route53resolver.Route53Resolver, id string) (*route53resolver.ResolverConfig, error) {
+func findResolverConfigByID(ctx context.Context, conn *route53resolver.Client, id string) (*awstypes.ResolverConfig, error) {
 	input := &route53resolver.ListResolverConfigsInput{}
-	var output *route53resolver.ResolverConfig
 
 	// GetResolverConfig does not support query by ID.
-	err := conn.ListResolverConfigsPagesWithContext(ctx, input, func(page *route53resolver.ListResolverConfigsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
+	pages := route53resolver.NewListResolverConfigsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-		for _, v := range page.ResolverConfigs {
-			if aws.StringValue(v.Id) == id {
-				output = v
-
-				return false
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
 			}
 		}
 
-		return !lastPage
-	})
+		if err != nil {
+			return nil, err
+		}
 
-	if err != nil {
-		return nil, err
+		for _, v := range page.ResolverConfigs {
+			if aws.ToString(v.Id) == id {
+				return &v, nil
+			}
+		}
 	}
 
-	if output == nil {
-		return nil, &resource.NotFoundError{LastRequest: input}
-	}
-
-	return output, nil
+	return nil, tfresource.NewEmptyResultError(input)
 }
 
-const (
-	// https://docs.aws.amazon.com/Route53/latest/APIReference/API_route53resolver_UpdateResolverConfig.html#API_route53resolver_UpdateResolverConfig_RequestSyntax
-	autodefinedReverseFlagDisable = "DISABLE"
-	autodefinedReverseFlagEnable  = "ENABLE"
-)
-
-func autodefinedReverseFlag_Values() []string {
-	return []string{
-		autodefinedReverseFlagDisable,
-		autodefinedReverseFlagEnable,
-	}
-}
-
-func statusAutodefinedReverse(ctx context.Context, conn *route53resolver.Route53Resolver, id string) resource.StateRefreshFunc {
+func statusAutodefinedReverse(ctx context.Context, conn *route53resolver.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindResolverConfigByID(ctx, conn, id)
+		output, err := findResolverConfigByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -177,7 +171,7 @@ func statusAutodefinedReverse(ctx context.Context, conn *route53resolver.Route53
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.AutodefinedReverse), nil
+		return output, string(output.AutodefinedReverse), nil
 	}
 }
 
@@ -185,42 +179,42 @@ const (
 	autodefinedReverseUpdatedTimeout = 10 * time.Minute
 )
 
-func waitAutodefinedReverseUpdated(ctx context.Context, conn *route53resolver.Route53Resolver, id, autodefinedReverseFlag string) (*route53resolver.ResolverConfig, error) {
-	if autodefinedReverseFlag == autodefinedReverseFlagDisable {
+func waitAutodefinedReverseUpdated(ctx context.Context, conn *route53resolver.Client, id string, autodefinedReverseFlag awstypes.AutodefinedReverseFlag) (*awstypes.ResolverConfig, error) {
+	if autodefinedReverseFlag == awstypes.AutodefinedReverseFlagDisable {
 		return waitAutodefinedReverseDisabled(ctx, conn, id)
 	} else {
 		return waitAutodefinedReverseEnabled(ctx, conn, id)
 	}
 }
 
-func waitAutodefinedReverseEnabled(ctx context.Context, conn *route53resolver.Route53Resolver, id string) (*route53resolver.ResolverConfig, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{route53resolver.ResolverAutodefinedReverseStatusEnabling},
-		Target:  []string{route53resolver.ResolverAutodefinedReverseStatusEnabled},
+func waitAutodefinedReverseEnabled(ctx context.Context, conn *route53resolver.Client, id string) (*awstypes.ResolverConfig, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.ResolverAutodefinedReverseStatusEnabling),
+		Target:  enum.Slice(awstypes.ResolverAutodefinedReverseStatusEnabled),
 		Refresh: statusAutodefinedReverse(ctx, conn, id),
 		Timeout: autodefinedReverseUpdatedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*route53resolver.ResolverConfig); ok {
+	if output, ok := outputRaw.(*awstypes.ResolverConfig); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitAutodefinedReverseDisabled(ctx context.Context, conn *route53resolver.Route53Resolver, id string) (*route53resolver.ResolverConfig, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{route53resolver.ResolverAutodefinedReverseStatusDisabling},
-		Target:  []string{route53resolver.ResolverAutodefinedReverseStatusDisabled},
+func waitAutodefinedReverseDisabled(ctx context.Context, conn *route53resolver.Client, id string) (*awstypes.ResolverConfig, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.ResolverAutodefinedReverseStatusDisabling),
+		Target:  enum.Slice(awstypes.ResolverAutodefinedReverseStatusDisabled),
 		Refresh: statusAutodefinedReverse(ctx, conn, id),
 		Timeout: autodefinedReverseUpdatedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*route53resolver.ResolverConfig); ok {
+	if output, ok := outputRaw.(*awstypes.ResolverConfig); ok {
 		return output, err
 	}
 

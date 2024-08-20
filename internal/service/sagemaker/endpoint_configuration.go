@@ -1,27 +1,36 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker
 
 import (
 	"context"
 	"log"
-	"regexp"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_sagemaker_endpoint_configuration")
-func ResourceEndpointConfiguration() *schema.Resource {
+// @SDKResource("aws_sagemaker_endpoint_configuration", name="Endpoint Configuration")
+// @Tags(identifierAttribute="arn")
+func resourceEndpointConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEndpointConfigurationCreate,
 		ReadWithoutTimeout:   resourceEndpointConfigurationRead,
@@ -32,7 +41,7 @@ func ResourceEndpointConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -66,7 +75,7 @@ func ResourceEndpointConfiguration() *schema.Resource {
 							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"kms_key_id": {
+									names.AttrKMSKeyID: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ForceNew:     true,
@@ -85,6 +94,15 @@ func ResourceEndpointConfiguration() *schema.Resource {
 													ForceNew:     true,
 													ValidateFunc: verify.ValidARN,
 												},
+												"include_inference_response_in": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													ForceNew: true,
+													Elem: &schema.Schema{
+														Type:             schema.TypeString,
+														ValidateDiagFunc: enum.Validate[awstypes.AsyncNotificationTopicTypes](),
+													},
+												},
 												"success_topic": {
 													Type:         schema.TypeString,
 													Optional:     true,
@@ -94,12 +112,21 @@ func ResourceEndpointConfiguration() *schema.Resource {
 											},
 										},
 									},
+									"s3_failure_path": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ForceNew: true,
+										ValidateFunc: validation.All(
+											validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+											validation.StringLenBetween(1, 512),
+										),
+									},
 									"s3_output_path": {
 										Type:     schema.TypeString,
 										Required: true,
 										ForceNew: true,
 										ValidateFunc: validation.All(
-											validation.StringMatch(regexp.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+											validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
 											validation.StringLenBetween(1, 512),
 										),
 									},
@@ -116,53 +143,6 @@ func ResourceEndpointConfiguration() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enable_capture": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							ForceNew: true,
-						},
-
-						"initial_sampling_percentage": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.IntBetween(0, 100),
-						},
-
-						"destination_s3_uri": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-							ValidateFunc: validation.All(
-								validation.StringMatch(regexp.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
-								validation.StringLenBetween(1, 512),
-							)},
-
-						"kms_key_id": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-
-						"capture_options": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 2,
-							MinItems: 1,
-							ForceNew: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"capture_mode": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.StringInSlice(sagemaker.CaptureMode_Values(), false),
-									},
-								},
-							},
-						},
-
 						"capture_content_type_header": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -177,7 +157,7 @@ func ResourceEndpointConfiguration() *schema.Resource {
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
 											ValidateFunc: validation.All(
-												validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9])*\/[a-zA-Z0-9](-*[a-zA-Z0-9.])*`), ""),
+												validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z])*\/[0-9A-Za-z](-*[0-9A-Za-z.])*`), ""),
 												validation.StringLenBetween(1, 256),
 											),
 										},
@@ -191,7 +171,7 @@ func ResourceEndpointConfiguration() *schema.Resource {
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
 											ValidateFunc: validation.All(
-												validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9])*\/[a-zA-Z0-9](-*[a-zA-Z0-9.])*`), ""),
+												validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z])*\/[0-9A-Za-z](-*[0-9A-Za-z.])*`), ""),
 												validation.StringLenBetween(1, 256),
 											),
 										},
@@ -201,21 +181,73 @@ func ResourceEndpointConfiguration() *schema.Resource {
 								},
 							},
 						},
+						"capture_options": {
+							Type:     schema.TypeList,
+							Required: true,
+							MaxItems: 2,
+							MinItems: 1,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"capture_mode": {
+										Type:             schema.TypeString,
+										Required:         true,
+										ForceNew:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.CaptureMode](),
+									},
+								},
+							},
+						},
+						"destination_s3_uri": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+							ValidateFunc: validation.All(
+								validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+								validation.StringLenBetween(1, 512),
+							),
+						},
+						"enable_capture": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							ForceNew: true,
+						},
+						"initial_sampling_percentage": {
+							Type:         schema.TypeInt,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.IntBetween(0, 100),
+						},
+						names.AttrKMSKeyID: {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: verify.ValidARN,
+						},
 					},
 				},
 			},
-			"name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validName,
-			},
-			"kms_key_arn": {
+			names.AttrKMSKeyARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
+			},
+			names.AttrName: {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{names.AttrNamePrefix},
+				ValidateFunc:  validName,
+			},
+			names.AttrNamePrefix: {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{names.AttrName},
+				ValidateFunc:  validPrefix,
 			},
 			"production_variants": {
 				Type:     schema.TypeList,
@@ -225,10 +257,10 @@ func ResourceEndpointConfiguration() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"accelerator_type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringInSlice(sagemaker.ProductionVariantAcceleratorType_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							ForceNew:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.ProductionVariantAcceleratorType](),
 						},
 						"container_startup_health_check_timeout_in_seconds": {
 							Type:         schema.TypeInt,
@@ -248,11 +280,11 @@ func ResourceEndpointConfiguration() *schema.Resource {
 										Required: true,
 										ForceNew: true,
 										ValidateFunc: validation.All(
-											validation.StringMatch(regexp.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+											validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
 											validation.StringLenBetween(1, 512),
 										),
 									},
-									"kms_key_id": {
+									names.AttrKMSKeyID: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ForceNew:     true,
@@ -260,6 +292,17 @@ func ResourceEndpointConfiguration() *schema.Resource {
 									},
 								},
 							},
+						},
+						"enable_ssm_access": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							ForceNew: true,
+						},
+						"inference_ami_version": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ForceNew:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.ProductionVariantInferenceAmiVersion](),
 						},
 						"initial_instance_count": {
 							Type:         schema.TypeInt,
@@ -274,11 +317,11 @@ func ResourceEndpointConfiguration() *schema.Resource {
 							ValidateFunc: validation.FloatAtLeast(0),
 							Default:      1,
 						},
-						"instance_type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringInSlice(sagemaker.ProductionVariantInstanceType_Values(), false),
+						names.AttrInstanceType: {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ForceNew:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.ProductionVariantInstanceType](),
 						},
 						"model_data_download_timeout_in_seconds": {
 							Type:         schema.TypeInt,
@@ -290,6 +333,21 @@ func ResourceEndpointConfiguration() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
+						},
+						"routing_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"routing_strategy": {
+										Type:             schema.TypeString,
+										Required:         true,
+										ForceNew:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.RoutingStrategy](),
+									},
+								},
+							},
 						},
 						"serverless_config": {
 							Type:     schema.TypeList,
@@ -309,6 +367,12 @@ func ResourceEndpointConfiguration() *schema.Resource {
 										Required:     true,
 										ForceNew:     true,
 										ValidateFunc: validation.IntInSlice([]int{1024, 2048, 3072, 4096, 5120, 6144}),
+									},
+									"provisioned_concurrency": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.IntBetween(1, 200),
 									},
 								},
 							},
@@ -337,10 +401,10 @@ func ResourceEndpointConfiguration() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"accelerator_type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringInSlice(sagemaker.ProductionVariantAcceleratorType_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							ForceNew:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.ProductionVariantAcceleratorType](),
 						},
 						"container_startup_health_check_timeout_in_seconds": {
 							Type:         schema.TypeInt,
@@ -360,11 +424,11 @@ func ResourceEndpointConfiguration() *schema.Resource {
 										Required: true,
 										ForceNew: true,
 										ValidateFunc: validation.All(
-											validation.StringMatch(regexp.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+											validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
 											validation.StringLenBetween(1, 512),
 										),
 									},
-									"kms_key_id": {
+									names.AttrKMSKeyID: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ForceNew:     true,
@@ -372,6 +436,17 @@ func ResourceEndpointConfiguration() *schema.Resource {
 									},
 								},
 							},
+						},
+						"enable_ssm_access": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							ForceNew: true,
+						},
+						"inference_ami_version": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ForceNew:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.ProductionVariantInferenceAmiVersion](),
 						},
 						"initial_instance_count": {
 							Type:         schema.TypeInt,
@@ -386,11 +461,11 @@ func ResourceEndpointConfiguration() *schema.Resource {
 							ValidateFunc: validation.FloatAtLeast(0),
 							Default:      1,
 						},
-						"instance_type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringInSlice(sagemaker.ProductionVariantInstanceType_Values(), false),
+						names.AttrInstanceType: {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ForceNew:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.ProductionVariantInstanceType](),
 						},
 						"model_data_download_timeout_in_seconds": {
 							Type:         schema.TypeInt,
@@ -402,6 +477,21 @@ func ResourceEndpointConfiguration() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
+						},
+						"routing_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"routing_strategy": {
+										Type:             schema.TypeString,
+										Required:         true,
+										ForceNew:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.RoutingStrategy](),
+									},
+								},
+							},
 						},
 						"serverless_config": {
 							Type:     schema.TypeList,
@@ -422,6 +512,12 @@ func ResourceEndpointConfiguration() *schema.Resource {
 										ForceNew:     true,
 										ValidateFunc: validation.IntInSlice([]int{1024, 2048, 3072, 4096, 5120, 6144}),
 									},
+									"provisioned_concurrency": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.IntBetween(1, 200),
+									},
 								},
 							},
 						},
@@ -440,8 +536,8 @@ func ResourceEndpointConfiguration() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -450,28 +546,18 @@ func ResourceEndpointConfiguration() *schema.Resource {
 
 func resourceEndpointConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
-	var name string
-	if v, ok := d.GetOk("name"); ok {
-		name = v.(string)
-	} else {
-		name = resource.UniqueId()
-	}
+	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 
 	createOpts := &sagemaker.CreateEndpointConfigInput{
 		EndpointConfigName: aws.String(name),
 		ProductionVariants: expandProductionVariants(d.Get("production_variants").([]interface{})),
+		Tags:               getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("kms_key_arn"); ok {
+	if v, ok := d.GetOk(names.AttrKMSKeyARN); ok {
 		createOpts.KmsKeyId = aws.String(v.(string))
-	}
-
-	if len(tags) > 0 {
-		createOpts.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	if v, ok := d.GetOk("shadow_production_variants"); ok && len(v.([]interface{})) > 0 {
@@ -487,7 +573,7 @@ func resourceEndpointConfigurationCreate(ctx context.Context, d *schema.Resource
 	}
 
 	log.Printf("[DEBUG] SageMaker Endpoint Configuration create config: %#v", *createOpts)
-	_, err := conn.CreateEndpointConfigWithContext(ctx, createOpts)
+	_, err := conn.CreateEndpointConfig(ctx, createOpts)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating SageMaker Endpoint Configuration: %s", err)
 	}
@@ -498,11 +584,9 @@ func resourceEndpointConfigurationCreate(ctx context.Context, d *schema.Resource
 
 func resourceEndpointConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
-	endpointConfig, err := FindEndpointConfigByName(ctx, conn, d.Id())
+	endpointConfig, err := findEndpointConfigByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SageMaker Endpoint Configuration (%s) not found, removing from state", d.Id())
@@ -514,9 +598,10 @@ func resourceEndpointConfigurationRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "reading SageMaker Endpoint Configuration (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", endpointConfig.EndpointConfigArn)
-	d.Set("name", endpointConfig.EndpointConfigName)
-	d.Set("kms_key_arn", endpointConfig.KmsKeyId)
+	d.Set(names.AttrARN, endpointConfig.EndpointConfigArn)
+	d.Set(names.AttrName, endpointConfig.EndpointConfigName)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(endpointConfig.EndpointConfigName)))
+	d.Set(names.AttrKMSKeyARN, endpointConfig.KmsKeyId)
 
 	if err := d.Set("production_variants", flattenProductionVariants(endpointConfig.ProductionVariants)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting production_variants for SageMaker Endpoint Configuration (%s): %s", d.Id(), err)
@@ -534,51 +619,29 @@ func resourceEndpointConfigurationRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "setting async_inference_config for SageMaker Endpoint Configuration (%s): %s", d.Id(), err)
 	}
 
-	tags, err := ListTags(ctx, conn, aws.StringValue(endpointConfig.EndpointConfigArn))
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for SageMaker Endpoint Configuration (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
 func resourceEndpointConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
+	// Tags only.
 
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SageMaker Endpoint Configuration (%s) tags: %s", d.Id(), err)
-		}
-	}
 	return append(diags, resourceEndpointConfigurationRead(ctx, d, meta)...)
 }
 
 func resourceEndpointConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	deleteOpts := &sagemaker.DeleteEndpointConfigInput{
 		EndpointConfigName: aws.String(d.Id()),
 	}
 	log.Printf("[INFO] Deleting SageMaker Endpoint Configuration: %s", d.Id())
 
-	_, err := conn.DeleteEndpointConfigWithContext(ctx, deleteOpts)
+	_, err := conn.DeleteEndpointConfig(ctx, deleteOpts)
 
-	if tfawserr.ErrMessageContains(err, "ValidationException", "Could not find endpoint configuration") {
+	if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Could not find endpoint configuration") {
 		return diags
 	}
 
@@ -589,48 +652,77 @@ func resourceEndpointConfigurationDelete(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func expandProductionVariants(configured []interface{}) []*sagemaker.ProductionVariant {
-	containers := make([]*sagemaker.ProductionVariant, 0, len(configured))
+func findEndpointConfigByName(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeEndpointConfigOutput, error) {
+	input := &sagemaker.DescribeEndpointConfigInput{
+		EndpointConfigName: aws.String(name),
+	}
+
+	output, err := conn.DescribeEndpointConfig(ctx, input)
+
+	if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Could not find endpoint configuration") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func expandProductionVariants(configured []interface{}) []awstypes.ProductionVariant {
+	containers := make([]awstypes.ProductionVariant, 0, len(configured))
 
 	for _, lRaw := range configured {
 		data := lRaw.(map[string]interface{})
 
-		l := &sagemaker.ProductionVariant{
+		l := awstypes.ProductionVariant{
 			ModelName: aws.String(data["model_name"].(string)),
 		}
 
 		if v, ok := data["initial_instance_count"].(int); ok && v > 0 {
-			l.InitialInstanceCount = aws.Int64(int64(v))
+			l.InitialInstanceCount = aws.Int32(int32(v))
 		}
 
 		if v, ok := data["container_startup_health_check_timeout_in_seconds"].(int); ok && v > 0 {
-			l.ContainerStartupHealthCheckTimeoutInSeconds = aws.Int64(int64(v))
+			l.ContainerStartupHealthCheckTimeoutInSeconds = aws.Int32(int32(v))
 		}
 
 		if v, ok := data["model_data_download_timeout_in_seconds"].(int); ok && v > 0 {
-			l.ModelDataDownloadTimeoutInSeconds = aws.Int64(int64(v))
+			l.ModelDataDownloadTimeoutInSeconds = aws.Int32(int32(v))
 		}
 
 		if v, ok := data["volume_size_in_gb"].(int); ok && v > 0 {
-			l.VolumeSizeInGB = aws.Int64(int64(v))
+			l.VolumeSizeInGB = aws.Int32(int32(v))
 		}
 
-		if v, ok := data["instance_type"].(string); ok && v != "" {
-			l.InstanceType = aws.String(v)
+		if v, ok := data[names.AttrInstanceType].(string); ok && v != "" {
+			l.InstanceType = awstypes.ProductionVariantInstanceType(v)
 		}
 
-		if v, ok := data["variant_name"]; ok {
-			l.VariantName = aws.String(v.(string))
+		if v, ok := data["variant_name"].(string); ok && v != "" {
+			l.VariantName = aws.String(v)
 		} else {
-			l.VariantName = aws.String(resource.UniqueId())
+			l.VariantName = aws.String(id.UniqueId())
 		}
 
-		if v, ok := data["initial_variant_weight"]; ok {
-			l.InitialVariantWeight = aws.Float64(v.(float64))
+		if v, ok := data["initial_variant_weight"].(float64); ok {
+			l.InitialVariantWeight = aws.Float32(float32(v))
 		}
 
 		if v, ok := data["accelerator_type"].(string); ok && v != "" {
-			l.AcceleratorType = aws.String(v)
+			l.AcceleratorType = awstypes.ProductionVariantAcceleratorType(v)
+		}
+
+		if v, ok := data["routing_config"].([]interface{}); ok && len(v) > 0 {
+			l.RoutingConfig = expandRoutingConfig(v)
 		}
 
 		if v, ok := data["serverless_config"].([]interface{}); ok && len(v) > 0 {
@@ -641,41 +733,51 @@ func expandProductionVariants(configured []interface{}) []*sagemaker.ProductionV
 			l.CoreDumpConfig = expandCoreDumpConfig(v)
 		}
 
+		if v, ok := data["enable_ssm_access"].(bool); ok {
+			l.EnableSSMAccess = aws.Bool(v)
+		}
+
+		if v, ok := data["inference_ami_version"].(string); ok && v != "" {
+			l.InferenceAmiVersion = awstypes.ProductionVariantInferenceAmiVersion(v)
+		}
+
 		containers = append(containers, l)
 	}
 
 	return containers
 }
 
-func flattenProductionVariants(list []*sagemaker.ProductionVariant) []map[string]interface{} {
+func flattenProductionVariants(list []awstypes.ProductionVariant) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(list))
 
 	for _, i := range list {
 		l := map[string]interface{}{
-			"accelerator_type":       aws.StringValue(i.AcceleratorType),
-			"initial_variant_weight": aws.Float64Value(i.InitialVariantWeight),
-			"model_name":             aws.StringValue(i.ModelName),
-			"variant_name":           aws.StringValue(i.VariantName),
+			"accelerator_type":       i.AcceleratorType,
+			names.AttrInstanceType:   i.InstanceType,
+			"inference_ami_version":  i.InferenceAmiVersion,
+			"initial_variant_weight": aws.ToFloat32(i.InitialVariantWeight),
+			"model_name":             aws.ToString(i.ModelName),
+			"variant_name":           aws.ToString(i.VariantName),
 		}
 
 		if i.InitialInstanceCount != nil {
-			l["initial_instance_count"] = aws.Int64Value(i.InitialInstanceCount)
+			l["initial_instance_count"] = aws.ToInt32(i.InitialInstanceCount)
 		}
 
 		if i.ContainerStartupHealthCheckTimeoutInSeconds != nil {
-			l["container_startup_health_check_timeout_in_seconds"] = aws.Int64Value(i.ContainerStartupHealthCheckTimeoutInSeconds)
+			l["container_startup_health_check_timeout_in_seconds"] = aws.ToInt32(i.ContainerStartupHealthCheckTimeoutInSeconds)
 		}
 
 		if i.ModelDataDownloadTimeoutInSeconds != nil {
-			l["model_data_download_timeout_in_seconds"] = aws.Int64Value(i.ModelDataDownloadTimeoutInSeconds)
+			l["model_data_download_timeout_in_seconds"] = aws.ToInt32(i.ModelDataDownloadTimeoutInSeconds)
 		}
 
 		if i.VolumeSizeInGB != nil {
-			l["volume_size_in_gb"] = aws.Int64Value(i.VolumeSizeInGB)
+			l["volume_size_in_gb"] = aws.ToInt32(i.VolumeSizeInGB)
 		}
 
-		if i.InstanceType != nil {
-			l["instance_type"] = aws.StringValue(i.InstanceType)
+		if i.RoutingConfig != nil {
+			l["routing_config"] = flattenRoutingConfig(i.RoutingConfig)
 		}
 
 		if i.ServerlessConfig != nil {
@@ -686,20 +788,24 @@ func flattenProductionVariants(list []*sagemaker.ProductionVariant) []map[string
 			l["core_dump_config"] = flattenCoreDumpConfig(i.CoreDumpConfig)
 		}
 
+		if i.EnableSSMAccess != nil {
+			l["enable_ssm_access"] = aws.ToBool(i.EnableSSMAccess)
+		}
+
 		result = append(result, l)
 	}
 	return result
 }
 
-func expandDataCaptureConfig(configured []interface{}) *sagemaker.DataCaptureConfig {
+func expandDataCaptureConfig(configured []interface{}) *awstypes.DataCaptureConfig {
 	if len(configured) == 0 {
 		return nil
 	}
 
 	m := configured[0].(map[string]interface{})
 
-	c := &sagemaker.DataCaptureConfig{
-		InitialSamplingPercentage: aws.Int64(int64(m["initial_sampling_percentage"].(int))),
+	c := &awstypes.DataCaptureConfig{
+		InitialSamplingPercentage: aws.Int32(int32(m["initial_sampling_percentage"].(int))),
 		DestinationS3Uri:          aws.String(m["destination_s3_uri"].(string)),
 		CaptureOptions:            expandCaptureOptions(m["capture_options"].([]interface{})),
 	}
@@ -708,7 +814,7 @@ func expandDataCaptureConfig(configured []interface{}) *sagemaker.DataCaptureCon
 		c.EnableCapture = aws.Bool(v.(bool))
 	}
 
-	if v, ok := m["kms_key_id"].(string); ok && v != "" {
+	if v, ok := m[names.AttrKMSKeyID].(string); ok && v != "" {
 		c.KmsKeyId = aws.String(v)
 	}
 
@@ -719,23 +825,23 @@ func expandDataCaptureConfig(configured []interface{}) *sagemaker.DataCaptureCon
 	return c
 }
 
-func flattenDataCaptureConfig(dataCaptureConfig *sagemaker.DataCaptureConfig) []map[string]interface{} {
+func flattenDataCaptureConfig(dataCaptureConfig *awstypes.DataCaptureConfig) []map[string]interface{} {
 	if dataCaptureConfig == nil {
 		return []map[string]interface{}{}
 	}
 
 	cfg := map[string]interface{}{
-		"initial_sampling_percentage": aws.Int64Value(dataCaptureConfig.InitialSamplingPercentage),
-		"destination_s3_uri":          aws.StringValue(dataCaptureConfig.DestinationS3Uri),
+		"initial_sampling_percentage": aws.ToInt32(dataCaptureConfig.InitialSamplingPercentage),
+		"destination_s3_uri":          aws.ToString(dataCaptureConfig.DestinationS3Uri),
 		"capture_options":             flattenCaptureOptions(dataCaptureConfig.CaptureOptions),
 	}
 
 	if dataCaptureConfig.EnableCapture != nil {
-		cfg["enable_capture"] = aws.BoolValue(dataCaptureConfig.EnableCapture)
+		cfg["enable_capture"] = aws.ToBool(dataCaptureConfig.EnableCapture)
 	}
 
 	if dataCaptureConfig.KmsKeyId != nil {
-		cfg["kms_key_id"] = aws.StringValue(dataCaptureConfig.KmsKeyId)
+		cfg[names.AttrKMSKeyID] = aws.ToString(dataCaptureConfig.KmsKeyId)
 	}
 
 	if dataCaptureConfig.CaptureContentTypeHeader != nil {
@@ -745,14 +851,14 @@ func flattenDataCaptureConfig(dataCaptureConfig *sagemaker.DataCaptureConfig) []
 	return []map[string]interface{}{cfg}
 }
 
-func expandCaptureOptions(configured []interface{}) []*sagemaker.CaptureOption {
-	containers := make([]*sagemaker.CaptureOption, 0, len(configured))
+func expandCaptureOptions(configured []interface{}) []awstypes.CaptureOption {
+	containers := make([]awstypes.CaptureOption, 0, len(configured))
 
 	for _, lRaw := range configured {
 		data := lRaw.(map[string]interface{})
 
-		l := &sagemaker.CaptureOption{
-			CaptureMode: aws.String(data["capture_mode"].(string)),
+		l := awstypes.CaptureOption{
+			CaptureMode: awstypes.CaptureMode(data["capture_mode"].(string)),
 		}
 		containers = append(containers, l)
 	}
@@ -760,33 +866,33 @@ func expandCaptureOptions(configured []interface{}) []*sagemaker.CaptureOption {
 	return containers
 }
 
-func flattenCaptureOptions(list []*sagemaker.CaptureOption) []map[string]interface{} {
+func flattenCaptureOptions(list []awstypes.CaptureOption) []map[string]interface{} {
 	containers := make([]map[string]interface{}, 0, len(list))
 
 	for _, lRaw := range list {
 		captureOption := make(map[string]interface{})
-		captureOption["capture_mode"] = aws.StringValue(lRaw.CaptureMode)
+		captureOption["capture_mode"] = lRaw.CaptureMode
 		containers = append(containers, captureOption)
 	}
 
 	return containers
 }
 
-func expandCaptureContentTypeHeader(m map[string]interface{}) *sagemaker.CaptureContentTypeHeader {
-	c := &sagemaker.CaptureContentTypeHeader{}
+func expandCaptureContentTypeHeader(m map[string]interface{}) *awstypes.CaptureContentTypeHeader {
+	c := &awstypes.CaptureContentTypeHeader{}
 
 	if v, ok := m["csv_content_types"].(*schema.Set); ok && v.Len() > 0 {
-		c.CsvContentTypes = flex.ExpandStringSet(v)
+		c.CsvContentTypes = flex.ExpandStringValueSet(v)
 	}
 
 	if v, ok := m["json_content_types"].(*schema.Set); ok && v.Len() > 0 {
-		c.JsonContentTypes = flex.ExpandStringSet(v)
+		c.JsonContentTypes = flex.ExpandStringValueSet(v)
 	}
 
 	return c
 }
 
-func flattenCaptureContentTypeHeader(contentTypeHeader *sagemaker.CaptureContentTypeHeader) []map[string]interface{} {
+func flattenCaptureContentTypeHeader(contentTypeHeader *awstypes.CaptureContentTypeHeader) []map[string]interface{} {
 	if contentTypeHeader == nil {
 		return []map[string]interface{}{}
 	}
@@ -794,24 +900,24 @@ func flattenCaptureContentTypeHeader(contentTypeHeader *sagemaker.CaptureContent
 	l := make(map[string]interface{})
 
 	if contentTypeHeader.CsvContentTypes != nil {
-		l["csv_content_types"] = flex.FlattenStringSet(contentTypeHeader.CsvContentTypes)
+		l["csv_content_types"] = flex.FlattenStringValueSet(contentTypeHeader.CsvContentTypes)
 	}
 
 	if contentTypeHeader.JsonContentTypes != nil {
-		l["json_content_types"] = flex.FlattenStringSet(contentTypeHeader.JsonContentTypes)
+		l["json_content_types"] = flex.FlattenStringValueSet(contentTypeHeader.JsonContentTypes)
 	}
 
 	return []map[string]interface{}{l}
 }
 
-func expandEndpointConfigAsyncInferenceConfig(configured []interface{}) *sagemaker.AsyncInferenceConfig {
+func expandEndpointConfigAsyncInferenceConfig(configured []interface{}) *awstypes.AsyncInferenceConfig {
 	if len(configured) == 0 {
 		return nil
 	}
 
 	m := configured[0].(map[string]interface{})
 
-	c := &sagemaker.AsyncInferenceConfig{}
+	c := &awstypes.AsyncInferenceConfig{}
 
 	if v, ok := m["client_config"].([]interface{}); ok && len(v) > 0 {
 		c.ClientConfig = expandEndpointConfigClientConfig(v)
@@ -824,35 +930,39 @@ func expandEndpointConfigAsyncInferenceConfig(configured []interface{}) *sagemak
 	return c
 }
 
-func expandEndpointConfigClientConfig(configured []interface{}) *sagemaker.AsyncInferenceClientConfig {
+func expandEndpointConfigClientConfig(configured []interface{}) *awstypes.AsyncInferenceClientConfig {
 	if len(configured) == 0 {
 		return nil
 	}
 
 	m := configured[0].(map[string]interface{})
 
-	c := &sagemaker.AsyncInferenceClientConfig{}
+	c := &awstypes.AsyncInferenceClientConfig{}
 
 	if v, ok := m["max_concurrent_invocations_per_instance"]; ok {
-		c.MaxConcurrentInvocationsPerInstance = aws.Int64(int64(v.(int)))
+		c.MaxConcurrentInvocationsPerInstance = aws.Int32(int32(v.(int)))
 	}
 
 	return c
 }
 
-func expandEndpointConfigOutputConfig(configured []interface{}) *sagemaker.AsyncInferenceOutputConfig {
+func expandEndpointConfigOutputConfig(configured []interface{}) *awstypes.AsyncInferenceOutputConfig {
 	if len(configured) == 0 {
 		return nil
 	}
 
 	m := configured[0].(map[string]interface{})
 
-	c := &sagemaker.AsyncInferenceOutputConfig{
+	c := &awstypes.AsyncInferenceOutputConfig{
 		S3OutputPath: aws.String(m["s3_output_path"].(string)),
 	}
 
-	if v, ok := m["kms_key_id"].(string); ok && v != "" {
+	if v, ok := m[names.AttrKMSKeyID].(string); ok && v != "" {
 		c.KmsKeyId = aws.String(v)
+	}
+
+	if v, ok := m["s3_failure_path"].(string); ok && v != "" {
+		c.S3FailurePath = aws.String(v)
 	}
 
 	if v, ok := m["notification_config"].([]interface{}); ok && len(v) > 0 {
@@ -862,14 +972,14 @@ func expandEndpointConfigOutputConfig(configured []interface{}) *sagemaker.Async
 	return c
 }
 
-func expandEndpointConfigNotificationConfig(configured []interface{}) *sagemaker.AsyncInferenceNotificationConfig {
+func expandEndpointConfigNotificationConfig(configured []interface{}) *awstypes.AsyncInferenceNotificationConfig {
 	if len(configured) == 0 {
 		return nil
 	}
 
 	m := configured[0].(map[string]interface{})
 
-	c := &sagemaker.AsyncInferenceNotificationConfig{}
+	c := &awstypes.AsyncInferenceNotificationConfig{}
 
 	if v, ok := m["error_topic"].(string); ok && v != "" {
 		c.ErrorTopic = aws.String(v)
@@ -879,50 +989,74 @@ func expandEndpointConfigNotificationConfig(configured []interface{}) *sagemaker
 		c.SuccessTopic = aws.String(v)
 	}
 
+	if v, ok := m["include_inference_response_in"].(*schema.Set); ok && v.Len() > 0 {
+		c.IncludeInferenceResponseIn = flex.ExpandStringyValueSet[awstypes.AsyncNotificationTopicTypes](v)
+	}
+
 	return c
 }
 
-func expandServerlessConfig(configured []interface{}) *sagemaker.ProductionVariantServerlessConfig {
+func expandRoutingConfig(configured []interface{}) *awstypes.ProductionVariantRoutingConfig {
 	if len(configured) == 0 {
 		return nil
 	}
 
 	m := configured[0].(map[string]interface{})
 
-	c := &sagemaker.ProductionVariantServerlessConfig{}
+	c := &awstypes.ProductionVariantRoutingConfig{}
+
+	if v, ok := m["routing_strategy"].(string); ok && v != "" {
+		c.RoutingStrategy = awstypes.RoutingStrategy(v)
+	}
+
+	return c
+}
+
+func expandServerlessConfig(configured []interface{}) *awstypes.ProductionVariantServerlessConfig {
+	if len(configured) == 0 {
+		return nil
+	}
+
+	m := configured[0].(map[string]interface{})
+
+	c := &awstypes.ProductionVariantServerlessConfig{}
 
 	if v, ok := m["max_concurrency"].(int); ok {
-		c.MaxConcurrency = aws.Int64(int64(v))
+		c.MaxConcurrency = aws.Int32(int32(v))
 	}
 
 	if v, ok := m["memory_size_in_mb"].(int); ok {
-		c.MemorySizeInMB = aws.Int64(int64(v))
+		c.MemorySizeInMB = aws.Int32(int32(v))
+	}
+
+	if v, ok := m["provisioned_concurrency"].(int); ok && v > 0 {
+		c.ProvisionedConcurrency = aws.Int32(int32(v))
 	}
 
 	return c
 }
 
-func expandCoreDumpConfig(configured []interface{}) *sagemaker.ProductionVariantCoreDumpConfig {
+func expandCoreDumpConfig(configured []interface{}) *awstypes.ProductionVariantCoreDumpConfig {
 	if len(configured) == 0 {
 		return nil
 	}
 
 	m := configured[0].(map[string]interface{})
 
-	c := &sagemaker.ProductionVariantCoreDumpConfig{}
+	c := &awstypes.ProductionVariantCoreDumpConfig{}
 
 	if v, ok := m["destination_s3_uri"].(string); ok {
 		c.DestinationS3Uri = aws.String(v)
 	}
 
-	if v, ok := m["kms_key_id"].(string); ok {
+	if v, ok := m[names.AttrKMSKeyID].(string); ok {
 		c.KmsKeyId = aws.String(v)
 	}
 
 	return c
 }
 
-func flattenEndpointConfigAsyncInferenceConfig(config *sagemaker.AsyncInferenceConfig) []map[string]interface{} {
+func flattenEndpointConfigAsyncInferenceConfig(config *awstypes.AsyncInferenceConfig) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -940,7 +1074,7 @@ func flattenEndpointConfigAsyncInferenceConfig(config *sagemaker.AsyncInferenceC
 	return []map[string]interface{}{cfg}
 }
 
-func flattenEndpointConfigClientConfig(config *sagemaker.AsyncInferenceClientConfig) []map[string]interface{} {
+func flattenEndpointConfigClientConfig(config *awstypes.AsyncInferenceClientConfig) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -948,33 +1082,37 @@ func flattenEndpointConfigClientConfig(config *sagemaker.AsyncInferenceClientCon
 	cfg := map[string]interface{}{}
 
 	if config.MaxConcurrentInvocationsPerInstance != nil {
-		cfg["max_concurrent_invocations_per_instance"] = aws.Int64Value(config.MaxConcurrentInvocationsPerInstance)
+		cfg["max_concurrent_invocations_per_instance"] = aws.ToInt32(config.MaxConcurrentInvocationsPerInstance)
 	}
 
 	return []map[string]interface{}{cfg}
 }
 
-func flattenEndpointConfigOutputConfig(config *sagemaker.AsyncInferenceOutputConfig) []map[string]interface{} {
+func flattenEndpointConfigOutputConfig(config *awstypes.AsyncInferenceOutputConfig) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
 
 	cfg := map[string]interface{}{
-		"s3_output_path": aws.StringValue(config.S3OutputPath),
+		"s3_output_path": aws.ToString(config.S3OutputPath),
 	}
 
 	if config.KmsKeyId != nil {
-		cfg["kms_key_id"] = aws.StringValue(config.KmsKeyId)
+		cfg[names.AttrKMSKeyID] = aws.ToString(config.KmsKeyId)
 	}
 
 	if config.NotificationConfig != nil {
 		cfg["notification_config"] = flattenEndpointConfigNotificationConfig(config.NotificationConfig)
 	}
 
+	if config.S3FailurePath != nil {
+		cfg["s3_failure_path"] = aws.ToString(config.S3FailurePath)
+	}
+
 	return []map[string]interface{}{cfg}
 }
 
-func flattenEndpointConfigNotificationConfig(config *sagemaker.AsyncInferenceNotificationConfig) []map[string]interface{} {
+func flattenEndpointConfigNotificationConfig(config *awstypes.AsyncInferenceNotificationConfig) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -982,17 +1120,33 @@ func flattenEndpointConfigNotificationConfig(config *sagemaker.AsyncInferenceNot
 	cfg := map[string]interface{}{}
 
 	if config.ErrorTopic != nil {
-		cfg["error_topic"] = aws.StringValue(config.ErrorTopic)
+		cfg["error_topic"] = aws.ToString(config.ErrorTopic)
 	}
 
 	if config.SuccessTopic != nil {
-		cfg["success_topic"] = aws.StringValue(config.SuccessTopic)
+		cfg["success_topic"] = aws.ToString(config.SuccessTopic)
+	}
+
+	if config.IncludeInferenceResponseIn != nil {
+		cfg["include_inference_response_in"] = flex.FlattenStringyValueSet[awstypes.AsyncNotificationTopicTypes](config.IncludeInferenceResponseIn)
 	}
 
 	return []map[string]interface{}{cfg}
 }
 
-func flattenServerlessConfig(config *sagemaker.ProductionVariantServerlessConfig) []map[string]interface{} {
+func flattenRoutingConfig(config *awstypes.ProductionVariantRoutingConfig) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	cfg := map[string]interface{}{
+		"routing_strategy": config.RoutingStrategy,
+	}
+
+	return []map[string]interface{}{cfg}
+}
+
+func flattenServerlessConfig(config *awstypes.ProductionVariantServerlessConfig) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -1000,17 +1154,21 @@ func flattenServerlessConfig(config *sagemaker.ProductionVariantServerlessConfig
 	cfg := map[string]interface{}{}
 
 	if config.MaxConcurrency != nil {
-		cfg["max_concurrency"] = aws.Int64Value(config.MaxConcurrency)
+		cfg["max_concurrency"] = aws.ToInt32(config.MaxConcurrency)
 	}
 
 	if config.MemorySizeInMB != nil {
-		cfg["memory_size_in_mb"] = aws.Int64Value(config.MemorySizeInMB)
+		cfg["memory_size_in_mb"] = aws.ToInt32(config.MemorySizeInMB)
+	}
+
+	if config.ProvisionedConcurrency != nil {
+		cfg["provisioned_concurrency"] = aws.ToInt32(config.ProvisionedConcurrency)
 	}
 
 	return []map[string]interface{}{cfg}
 }
 
-func flattenCoreDumpConfig(config *sagemaker.ProductionVariantCoreDumpConfig) []map[string]interface{} {
+func flattenCoreDumpConfig(config *awstypes.ProductionVariantCoreDumpConfig) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -1018,11 +1176,11 @@ func flattenCoreDumpConfig(config *sagemaker.ProductionVariantCoreDumpConfig) []
 	cfg := map[string]interface{}{}
 
 	if config.DestinationS3Uri != nil {
-		cfg["destination_s3_uri"] = aws.StringValue(config.DestinationS3Uri)
+		cfg["destination_s3_uri"] = aws.ToString(config.DestinationS3Uri)
 	}
 
 	if config.KmsKeyId != nil {
-		cfg["kms_key_id"] = aws.StringValue(config.KmsKeyId)
+		cfg[names.AttrKMSKeyID] = aws.ToString(config.KmsKeyId)
 	}
 
 	return []map[string]interface{}{cfg}

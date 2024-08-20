@@ -27,10 +27,10 @@ resource "aws_gamelift_build" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Name of the build
-* `operating_system` - (Required) Operating system that the game server binaries are built to run onE.g., `WINDOWS_2012`, `AMAZON_LINUX` or `AMAZON_LINUX_2`.
+* `operating_system` - (Required) Operating system that the game server binaries are built to run on. Valid values: `WINDOWS_2012`, `AMAZON_LINUX`, `AMAZON_LINUX_2`, `WINDOWS_2016`, `AMAZON_LINUX_2023`.
 * `storage_location` - (Required) Information indicating where your game build files are stored. See below.
 * `version` - (Optional) Version that is associated with this build.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -44,9 +44,9 @@ The following arguments are supported:
 * `role_arn` - (Required) ARN of the access role that allows Amazon GameLift to access your S3 bucket.
 * `object_version` - (Optional) A specific version of the file. If not set, the latest version of the file is retrieved.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - GameLift Build ID.
 * `arn` - GameLift Build ARN.
@@ -54,8 +54,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-GameLift Builds can be imported using the ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import GameLift Builds using the ID. For example:
 
+```terraform
+import {
+  to = aws_gamelift_build.example
+  id = "<build-id>"
+}
 ```
-$ terraform import aws_gamelift_build.example <build-id>
+
+Using `terraform import`, import GameLift Builds using the ID. For example:
+
+```console
+% terraform import aws_gamelift_build.example <build-id>
 ```

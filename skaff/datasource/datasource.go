@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package datasource
 
 import (
@@ -12,11 +15,14 @@ import (
 	"text/template"
 
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"github.com/hashicorp/terraform-provider-aws/skaff/resource"
+	"github.com/hashicorp/terraform-provider-aws/skaff/convert"
 )
 
 //go:embed datasource.tmpl
 var datasourceTmpl string
+
+//go:embed datasourcefw.tmpl
+var datasourceFrameworkTmpl string
 
 //go:embed datasourcetest.tmpl
 var datasourceTestTmpl string
@@ -29,17 +35,19 @@ type TemplateData struct {
 	DataSourceLower      string
 	DataSourceSnake      string
 	IncludeComments      bool
+	IncludeTags          bool
 	HumanFriendlyService string
 	ServicePackage       string
 	Service              string
 	ServiceLower         string
 	AWSServiceName       string
 	AWSGoSDKV2           bool
+	PluginFramework      bool
 	HumanDataSourceName  string
 	ProviderResourceName string
 }
 
-func Create(dsName, snakeName string, comments, force, v2 bool) error {
+func Create(dsName, snakeName string, comments, force, v2, pluginFramework, tags bool) error {
 	wd, err := os.Getwd() // os.Getenv("GOPACKAGE") not available since this is not run with go generate
 	if err != nil {
 		return fmt.Errorf("error reading working directory: %s", err)
@@ -59,7 +67,7 @@ func Create(dsName, snakeName string, comments, force, v2 bool) error {
 		return fmt.Errorf("error checking: snake name should be all lower case with underscores, if needed (e.g., db_instance)")
 	}
 
-	snakeName = resource.ToSnakeCase(dsName, snakeName)
+	snakeName = convert.ToSnakeCase(dsName, snakeName)
 
 	s, err := names.ProviderNameUpper(servicePackage)
 	if err != nil {
@@ -82,17 +90,23 @@ func Create(dsName, snakeName string, comments, force, v2 bool) error {
 		DataSourceSnake:      snakeName,
 		HumanFriendlyService: hf,
 		IncludeComments:      comments,
+		IncludeTags:          tags,
 		ServicePackage:       servicePackage,
 		Service:              s,
 		ServiceLower:         strings.ToLower(s),
 		AWSServiceName:       sn,
 		AWSGoSDKV2:           v2,
-		HumanDataSourceName:  resource.HumanResName(dsName),
-		ProviderResourceName: resource.ProviderResourceName(servicePackage, snakeName),
+		PluginFramework:      pluginFramework,
+		HumanDataSourceName:  convert.ToHumanResName(dsName),
+		ProviderResourceName: convert.ToProviderResourceName(servicePackage, snakeName),
 	}
 
+	tmpl := datasourceTmpl
+	if pluginFramework {
+		tmpl = datasourceFrameworkTmpl
+	}
 	f := fmt.Sprintf("%s_data_source.go", snakeName)
-	if err = writeTemplate("newds", f, datasourceTmpl, force, templateData); err != nil {
+	if err = writeTemplate("newds", f, tmpl, force, templateData); err != nil {
 		return fmt.Errorf("writing datasource template: %w", err)
 	}
 

@@ -80,16 +80,16 @@ resource "aws_dms_replication_subnet_group" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `replication_subnet_group_description` - (Required) Description for the subnet group.
 * `replication_subnet_group_id` - (Required) Name for the replication subnet group. This value is stored as a lowercase string. It must contain no more than 255 alphanumeric characters, periods, spaces, underscores, or hyphens and cannot be `default`.
 * `subnet_ids` - (Required) List of at least 2 EC2 subnet IDs for the subnet group. The subnets must cover at least 2 availability zones.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `vpc_id` - The ID of the VPC the subnet group is in.
@@ -104,8 +104,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Replication subnet groups can be imported using the `replication_subnet_group_id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import replication subnet groups using the `replication_subnet_group_id`. For example:
 
+```terraform
+import {
+  to = aws_dms_replication_subnet_group.test
+  id = "test-dms-replication-subnet-group-tf"
+}
 ```
-$ terraform import aws_dms_replication_subnet_group.test test-dms-replication-subnet-group-tf
+
+Using `terraform import`, import replication subnet groups using the `replication_subnet_group_id`. For example:
+
+```console
+% terraform import aws_dms_replication_subnet_group.test test-dms-replication-subnet-group-tf
 ```

@@ -1,31 +1,41 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ds
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/directoryservice"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
 	directoryApplicationDeauthorizedPropagationTimeout = 2 * time.Minute
 )
 
-// @SDKResource("aws_directory_service_directory")
-func ResourceDirectory() *schema.Resource {
+// @SDKResource("aws_directory_service_directory", name="Directory")
+// @Tags(identifierAttribute="id")
+func resourceDirectory() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDirectoryCreate,
 		ReadWithoutTimeout:   resourceDirectoryRead,
@@ -47,7 +57,7 @@ func ResourceDirectory() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"alias": {
+			names.AttrAlias: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -60,7 +70,7 @@ func ResourceDirectory() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"availability_zones": {
+						names.AttrAvailabilityZones: {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -84,13 +94,13 @@ func ResourceDirectory() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 						},
-						"subnet_ids": {
+						names.AttrSubnetIDs: {
 							Type:     schema.TypeSet,
 							Required: true,
 							ForceNew: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"vpc_id": {
+						names.AttrVPCID: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
@@ -98,7 +108,7 @@ func ResourceDirectory() *schema.Resource {
 					},
 				},
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -115,23 +125,24 @@ func ResourceDirectory() *schema.Resource {
 				Computed: true,
 			},
 			"edition": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(directoryservice.DirectoryEdition_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.DirectoryEdition](),
 			},
 			"enable_sso": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+			names.AttrName: {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: domainValidator,
 			},
-			"password": {
+			names.AttrPassword: {
 				Type:      schema.TypeString,
 				Required:  true,
 				ForceNew:  true,
@@ -147,21 +158,21 @@ func ResourceDirectory() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"size": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(directoryservice.DirectorySize_Values(), false),
+			names.AttrSize: {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.DirectorySize](),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
-			"type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      directoryservice.DirectoryTypeSimpleAd,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(directoryservice.DirectoryType_Values(), false),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			names.AttrType: {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.DirectoryTypeSimpleAd,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.DirectoryType](),
 			},
 			"vpc_settings": {
 				Type:     schema.TypeList,
@@ -170,18 +181,18 @@ func ResourceDirectory() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"availability_zones": {
+						names.AttrAvailabilityZones: {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"subnet_ids": {
+						names.AttrSubnetIDs: {
 							Type:     schema.TypeSet,
 							Required: true,
 							ForceNew: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"vpc_id": {
+						names.AttrVPCID: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
@@ -197,117 +208,63 @@ func ResourceDirectory() *schema.Resource {
 
 func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).DSClient(ctx)
 
-	name := d.Get("name").(string)
-	switch directoryType := d.Get("type").(string); directoryType {
-	case directoryservice.DirectoryTypeAdconnector:
-		input := &directoryservice.ConnectDirectoryInput{
-			Name:     aws.String(name),
-			Password: aws.String(d.Get("password").(string)),
-			Tags:     Tags(tags.IgnoreAWS()),
-		}
+	name := d.Get(names.AttrName).(string)
+	var creator directoryCreator
+	switch directoryType := awstypes.DirectoryType(d.Get(names.AttrType).(string)); directoryType {
+	case awstypes.DirectoryTypeAdConnector:
+		creator = adConnectorCreator{}
 
-		if v, ok := d.GetOk("connect_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.ConnectSettings = expandDirectoryConnectSettings(v.([]interface{})[0].(map[string]interface{}))
-		}
+	case awstypes.DirectoryTypeMicrosoftAd:
+		creator = microsoftADCreator{}
 
-		if v, ok := d.GetOk("description"); ok {
-			input.Description = aws.String(v.(string))
-		}
-
-		if v, ok := d.GetOk("size"); ok {
-			input.Size = aws.String(v.(string))
-		} else {
-			// Matching previous behavior of Default: "Large" for Size attribute.
-			input.Size = aws.String(directoryservice.DirectorySizeLarge)
-		}
-
-		if v, ok := d.GetOk("short_name"); ok {
-			input.ShortName = aws.String(v.(string))
-		}
-
-		output, err := conn.ConnectDirectoryWithContext(ctx, input)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating Directory Service %s Directory (%s): %s", directoryType, name, err)
-		}
-
-		d.SetId(aws.StringValue(output.DirectoryId))
-
-	case directoryservice.DirectoryTypeMicrosoftAd:
-		input := &directoryservice.CreateMicrosoftADInput{
-			Name:     aws.String(name),
-			Password: aws.String(d.Get("password").(string)),
-			Tags:     Tags(tags.IgnoreAWS()),
-		}
-
-		if v, ok := d.GetOk("description"); ok {
-			input.Description = aws.String(v.(string))
-		}
-
-		if v, ok := d.GetOk("edition"); ok {
-			input.Edition = aws.String(v.(string))
-		}
-
-		if v, ok := d.GetOk("short_name"); ok {
-			input.ShortName = aws.String(v.(string))
-		}
-
-		if v, ok := d.GetOk("vpc_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.VpcSettings = expandDirectoryVpcSettings(v.([]interface{})[0].(map[string]interface{}))
-		}
-
-		output, err := conn.CreateMicrosoftADWithContext(ctx, input)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating Directory Service %s Directory (%s): %s", directoryType, name, err)
-		}
-
-		d.SetId(aws.StringValue(output.DirectoryId))
-
-	case directoryservice.DirectoryTypeSimpleAd:
-		input := &directoryservice.CreateDirectoryInput{
-			Name:     aws.String(name),
-			Password: aws.String(d.Get("password").(string)),
-			Tags:     Tags(tags.IgnoreAWS()),
-		}
-
-		if v, ok := d.GetOk("description"); ok {
-			input.Description = aws.String(v.(string))
-		}
-
-		if v, ok := d.GetOk("size"); ok {
-			input.Size = aws.String(v.(string))
-		} else {
-			// Matching previous behavior of Default: "Large" for Size attribute.
-			input.Size = aws.String(directoryservice.DirectorySizeLarge)
-		}
-
-		if v, ok := d.GetOk("short_name"); ok {
-			input.ShortName = aws.String(v.(string))
-		}
-
-		if v, ok := d.GetOk("vpc_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.VpcSettings = expandDirectoryVpcSettings(v.([]interface{})[0].(map[string]interface{}))
-		}
-
-		output, err := conn.CreateDirectoryWithContext(ctx, input)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating Directory Service %s Directory (%s): %s", directoryType, name, err)
-		}
-
-		d.SetId(aws.StringValue(output.DirectoryId))
+	case awstypes.DirectoryTypeSimpleAd:
+		creator = simpleADCreator{}
 	}
 
-	if _, err := waitDirectoryCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Directory Service Directory (%s) create: %s", d.Id(), err)
+	// Sometimes creating a directory will return `Failed`, especially when multiple directories are being
+	// created concurrently. Retry creation in that case.
+	// When it fails, it will typically be within the first few minutes of creation, so there is no need
+	// to wait for deletion.
+	err := tfresource.Retry(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
+		if err := creator.Create(ctx, conn, name, d); err != nil {
+			return retry.NonRetryableError(err)
+		}
+
+		if _, err := waitDirectoryCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+			if use, ok := errs.As[*retry.UnexpectedStateError](err); ok {
+				if use.State == string(awstypes.DirectoryStageFailed) {
+					tflog.Info(ctx, "retrying failed Directory creation", map[string]any{
+						"directory_id":       d.Id(),
+						names.AttrDomainName: name,
+					})
+					_, deleteErr := conn.DeleteDirectory(ctx, &directoryservice.DeleteDirectoryInput{
+						DirectoryId: aws.String(d.Id()),
+					})
+
+					if deleteErr != nil {
+						diags = append(diags, errs.NewWarningDiagnostic(
+							"Unable to Delete Failed Directory",
+							fmt.Sprintf("While creating the Directory Service Directory %q, an attempt failed. Deleting the failed Directory failed: %s", name, deleteErr),
+						))
+					}
+
+					return retry.RetryableError(err)
+				}
+			}
+
+			return retry.NonRetryableError(err)
+		}
+
+		return nil
+	}, tfresource.WithPollInterval(1*time.Minute))
+
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, fmt.Errorf("creating Directory Service %s Directory (%s): %w", creator.TypeName(), name, err))
 	}
 
-	if v, ok := d.GetOk("alias"); ok {
+	if v, ok := d.GetOk(names.AttrAlias); ok {
 		if err := createAlias(ctx, conn, d.Id(), v.(string)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
@@ -330,11 +287,9 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).DSClient(ctx)
 
-	dir, err := FindDirectoryByID(ctx, conn, d.Id())
+	dir, err := findDirectoryByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Directory Service Directory (%s) not found, removing from state", d.Id())
@@ -347,7 +302,7 @@ func resourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	d.Set("access_url", dir.AccessUrl)
-	d.Set("alias", dir.Alias)
+	d.Set(names.AttrAlias, dir.Alias)
 	if dir.ConnectSettings != nil {
 		if err := d.Set("connect_settings", []interface{}{flattenDirectoryConnectSettingsDescription(dir.ConnectSettings, dir.DnsIpAddrs)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting connect_settings: %s", err)
@@ -355,24 +310,24 @@ func resourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta int
 	} else {
 		d.Set("connect_settings", nil)
 	}
-	d.Set("description", dir.Description)
+	d.Set(names.AttrDescription, dir.Description)
 	d.Set("desired_number_of_domain_controllers", dir.DesiredNumberOfDomainControllers)
-	if aws.StringValue(dir.Type) == directoryservice.DirectoryTypeAdconnector {
-		d.Set("dns_ip_addresses", aws.StringValueSlice(dir.ConnectSettings.ConnectIps))
+	if dir.Type == awstypes.DirectoryTypeAdConnector {
+		d.Set("dns_ip_addresses", dir.ConnectSettings.ConnectIps)
 	} else {
-		d.Set("dns_ip_addresses", aws.StringValueSlice(dir.DnsIpAddrs))
+		d.Set("dns_ip_addresses", dir.DnsIpAddrs)
 	}
 	d.Set("edition", dir.Edition)
 	d.Set("enable_sso", dir.SsoEnabled)
-	d.Set("name", dir.Name)
-	if aws.StringValue(dir.Type) == directoryservice.DirectoryTypeAdconnector {
+	d.Set(names.AttrName, dir.Name)
+	if dir.Type == awstypes.DirectoryTypeAdConnector {
 		d.Set("security_group_id", dir.ConnectSettings.SecurityGroupId)
 	} else {
 		d.Set("security_group_id", dir.VpcSettings.SecurityGroupId)
 	}
 	d.Set("short_name", dir.ShortName)
-	d.Set("size", dir.Size)
-	d.Set("type", dir.Type)
+	d.Set(names.AttrSize, dir.Size)
+	d.Set(names.AttrType, dir.Type)
 	if dir.VpcSettings != nil {
 		if err := d.Set("vpc_settings", []interface{}{flattenDirectoryVpcSettingsDescription(dir.VpcSettings)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting vpc_settings: %s", err)
@@ -381,29 +336,12 @@ func resourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta int
 		d.Set("vpc_settings", nil)
 	}
 
-	tags, err := ListTags(ctx, conn, d.Id())
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Directory Service Directory (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
 func resourceDirectoryUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DSConn()
+	conn := meta.(*conns.AWSClient).DSClient(ctx)
 
 	if d.HasChange("desired_number_of_domain_controllers") {
 		if err := updateNumberOfDomainControllers(ctx, conn, d.Id(), d.Get("desired_number_of_domain_controllers").(int), d.Timeout(schema.TimeoutUpdate)); err != nil {
@@ -423,29 +361,21 @@ func resourceDirectoryUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Directory Service Directory (%s) tags: %s", d.Id(), err)
-		}
-	}
-
 	return append(diags, resourceDirectoryRead(ctx, d, meta)...)
 }
 
 func resourceDirectoryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DSConn()
+	conn := meta.(*conns.AWSClient).DSClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Directory Service Directory: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, directoryApplicationDeauthorizedPropagationTimeout, func() (interface{}, error) {
-		return conn.DeleteDirectoryWithContext(ctx, &directoryservice.DeleteDirectoryInput{
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ClientException](ctx, directoryApplicationDeauthorizedPropagationTimeout, func() (interface{}, error) {
+		return conn.DeleteDirectory(ctx, &directoryservice.DeleteDirectoryInput{
 			DirectoryId: aws.String(d.Id()),
 		})
-	}, directoryservice.ErrCodeClientException, "authorized applications")
+	}, "authorized applications")
 
-	if tfawserr.ErrCodeEquals(err, directoryservice.ErrCodeEntityDoesNotExistException) {
+	if errs.IsA[*awstypes.EntityDoesNotExistException](err) {
 		return diags
 	}
 
@@ -460,13 +390,144 @@ func resourceDirectoryDelete(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func createAlias(ctx context.Context, conn *directoryservice.DirectoryService, directoryID, alias string) error {
+type directoryCreator interface {
+	TypeName() string
+	Create(ctx context.Context, conn *directoryservice.Client, name string, d *schema.ResourceData) error
+}
+
+type adConnectorCreator struct{}
+
+func (c adConnectorCreator) TypeName() string {
+	return "AD Connector"
+}
+
+func (c adConnectorCreator) Create(ctx context.Context, conn *directoryservice.Client, name string, d *schema.ResourceData) error {
+	input := &directoryservice.ConnectDirectoryInput{
+		Name:     aws.String(name),
+		Password: aws.String(d.Get(names.AttrPassword).(string)),
+		Tags:     getTagsIn(ctx),
+	}
+
+	if v, ok := d.GetOk("connect_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.ConnectSettings = expandDirectoryConnectSettings(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk(names.AttrDescription); ok {
+		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk(names.AttrSize); ok {
+		input.Size = awstypes.DirectorySize(v.(string))
+	} else {
+		// Matching previous behavior of Default: "Large" for Size attribute.
+		input.Size = awstypes.DirectorySizeLarge
+	}
+
+	if v, ok := d.GetOk("short_name"); ok {
+		input.ShortName = aws.String(v.(string))
+	}
+
+	output, err := conn.ConnectDirectory(ctx, input)
+
+	if err != nil {
+		return err
+	}
+
+	d.SetId(aws.ToString(output.DirectoryId))
+
+	return nil
+}
+
+type microsoftADCreator struct{}
+
+func (c microsoftADCreator) TypeName() string {
+	return "Microsoft AD"
+}
+
+func (c microsoftADCreator) Create(ctx context.Context, conn *directoryservice.Client, name string, d *schema.ResourceData) error {
+	input := &directoryservice.CreateMicrosoftADInput{
+		Name:     aws.String(name),
+		Password: aws.String(d.Get(names.AttrPassword).(string)),
+		Tags:     getTagsIn(ctx),
+	}
+
+	if v, ok := d.GetOk(names.AttrDescription); ok {
+		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("edition"); ok {
+		input.Edition = awstypes.DirectoryEdition(v.(string))
+	}
+
+	if v, ok := d.GetOk("short_name"); ok {
+		input.ShortName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("vpc_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.VpcSettings = expandDirectoryVpcSettings(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	output, err := conn.CreateMicrosoftAD(ctx, input)
+
+	if err != nil {
+		return err
+	}
+
+	d.SetId(aws.ToString(output.DirectoryId))
+
+	return nil
+}
+
+type simpleADCreator struct{}
+
+func (c simpleADCreator) TypeName() string {
+	return "Simple AD"
+}
+
+func (c simpleADCreator) Create(ctx context.Context, conn *directoryservice.Client, name string, d *schema.ResourceData) error {
+	input := &directoryservice.CreateDirectoryInput{
+		Name:     aws.String(name),
+		Password: aws.String(d.Get(names.AttrPassword).(string)),
+		Tags:     getTagsIn(ctx),
+	}
+
+	if v, ok := d.GetOk(names.AttrDescription); ok {
+		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk(names.AttrSize); ok {
+		input.Size = awstypes.DirectorySize(v.(string))
+	} else {
+		// Matching previous behavior of Default: "Large" for Size attribute.
+		input.Size = awstypes.DirectorySizeLarge
+	}
+
+	if v, ok := d.GetOk("short_name"); ok {
+		input.ShortName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("vpc_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.VpcSettings = expandDirectoryVpcSettings(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	output, err := conn.CreateDirectory(ctx, input)
+
+	if err != nil {
+		return err
+	}
+
+	d.SetId(aws.ToString(output.DirectoryId))
+
+	return nil
+}
+
+func createAlias(ctx context.Context, conn *directoryservice.Client, directoryID, alias string) error {
 	input := &directoryservice.CreateAliasInput{
 		Alias:       aws.String(alias),
 		DirectoryId: aws.String(directoryID),
 	}
 
-	_, err := conn.CreateAliasWithContext(ctx, input)
+	_, err := conn.CreateAlias(ctx, input)
 
 	if err != nil {
 		return fmt.Errorf("creating Directory Service Directory (%s) alias (%s): %w", directoryID, alias, err)
@@ -475,12 +536,12 @@ func createAlias(ctx context.Context, conn *directoryservice.DirectoryService, d
 	return nil
 }
 
-func disableSSO(ctx context.Context, conn *directoryservice.DirectoryService, directoryID string) error {
+func disableSSO(ctx context.Context, conn *directoryservice.Client, directoryID string) error {
 	input := &directoryservice.DisableSsoInput{
 		DirectoryId: aws.String(directoryID),
 	}
 
-	_, err := conn.DisableSsoWithContext(ctx, input)
+	_, err := conn.DisableSso(ctx, input)
 
 	if err != nil {
 		return fmt.Errorf("disabling Directory Service Directory (%s) SSO: %w", directoryID, err)
@@ -489,12 +550,12 @@ func disableSSO(ctx context.Context, conn *directoryservice.DirectoryService, di
 	return nil
 }
 
-func enableSSO(ctx context.Context, conn *directoryservice.DirectoryService, directoryID string) error {
+func enableSSO(ctx context.Context, conn *directoryservice.Client, directoryID string) error {
 	input := &directoryservice.EnableSsoInput{
 		DirectoryId: aws.String(directoryID),
 	}
 
-	_, err := conn.EnableSsoWithContext(ctx, input)
+	_, err := conn.EnableSso(ctx, input)
 
 	if err != nil {
 		return fmt.Errorf("enabling Directory Service Directory (%s) SSO: %w", directoryID, err)
@@ -503,29 +564,29 @@ func enableSSO(ctx context.Context, conn *directoryservice.DirectoryService, dir
 	return nil
 }
 
-func updateNumberOfDomainControllers(ctx context.Context, conn *directoryservice.DirectoryService, directoryID string, desiredNumber int, timeout time.Duration) error {
-	oldDomainControllers, err := FindDomainControllers(ctx, conn, &directoryservice.DescribeDomainControllersInput{
+func updateNumberOfDomainControllers(ctx context.Context, conn *directoryservice.Client, directoryID string, desiredNumber int, timeout time.Duration, optFns ...func(*directoryservice.Options)) error {
+	oldDomainControllers, err := findDomainControllers(ctx, conn, &directoryservice.DescribeDomainControllersInput{
 		DirectoryId: aws.String(directoryID),
-	})
+	}, optFns...)
 
 	if err != nil {
 		return fmt.Errorf("reading Directory Service Directory (%s) domain controllers: %w", directoryID, err)
 	}
 
 	input := &directoryservice.UpdateNumberOfDomainControllersInput{
-		DesiredNumber: aws.Int64(int64(desiredNumber)),
+		DesiredNumber: aws.Int32(int32(desiredNumber)),
 		DirectoryId:   aws.String(directoryID),
 	}
 
-	_, err = conn.UpdateNumberOfDomainControllersWithContext(ctx, input)
+	_, err = conn.UpdateNumberOfDomainControllers(ctx, input, optFns...)
 
 	if err != nil {
 		return fmt.Errorf("updating Directory Service Directory (%s) number of domain controllers (%d): %w", directoryID, desiredNumber, err)
 	}
 
-	newDomainControllers, err := FindDomainControllers(ctx, conn, &directoryservice.DescribeDomainControllersInput{
+	newDomainControllers, err := findDomainControllers(ctx, conn, &directoryservice.DescribeDomainControllersInput{
 		DirectoryId: aws.String(directoryID),
-	})
+	}, optFns...)
 
 	if err != nil {
 		return fmt.Errorf("reading Directory Service Directory (%s) domain controllers: %w", directoryID, err)
@@ -534,14 +595,14 @@ func updateNumberOfDomainControllers(ctx context.Context, conn *directoryservice
 	var wait []string
 
 	for _, v := range newDomainControllers {
-		domainControllerID := aws.StringValue(v.DomainControllerId)
+		domainControllerID := aws.ToString(v.DomainControllerId)
 		isNew := true
 
 		for _, v := range oldDomainControllers {
-			if aws.StringValue(v.DomainControllerId) == domainControllerID {
+			if aws.ToString(v.DomainControllerId) == domainControllerID {
 				isNew = false
 
-				if aws.StringValue(v.Status) != directoryservice.DomainControllerStatusActive {
+				if v.Status != awstypes.DomainControllerStatusActive {
 					wait = append(wait, domainControllerID)
 				}
 			}
@@ -554,11 +615,11 @@ func updateNumberOfDomainControllers(ctx context.Context, conn *directoryservice
 
 	for _, v := range wait {
 		if len(newDomainControllers) > len(oldDomainControllers) {
-			if _, err = waitDomainControllerCreated(ctx, conn, directoryID, v, timeout); err != nil {
+			if _, err = waitDomainControllerCreated(ctx, conn, directoryID, v, timeout, optFns...); err != nil {
 				return fmt.Errorf("waiting for Directory Service Directory (%s) Domain Controller (%s) create: %w", directoryID, v, err)
 			}
 		} else {
-			if _, err := waitDomainControllerDeleted(ctx, conn, directoryID, v, timeout); err != nil {
+			if _, err := waitDomainControllerDeleted(ctx, conn, directoryID, v, timeout, optFns...); err != nil {
 				return fmt.Errorf("waiting for Directory Service Directory (%s) Domain Controller (%s) delete: %w", directoryID, v, err)
 			}
 		}
@@ -567,33 +628,268 @@ func updateNumberOfDomainControllers(ctx context.Context, conn *directoryservice
 	return nil
 }
 
-func expandDirectoryConnectSettings(tfMap map[string]interface{}) *directoryservice.DirectoryConnectSettings {
+func findDirectory(ctx context.Context, conn *directoryservice.Client, input *directoryservice.DescribeDirectoriesInput) (*awstypes.DirectoryDescription, error) {
+	output, err := findDirectories(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findDirectories(ctx context.Context, conn *directoryservice.Client, input *directoryservice.DescribeDirectoriesInput) ([]awstypes.DirectoryDescription, error) {
+	var output []awstypes.DirectoryDescription
+
+	pages := directoryservice.NewDescribeDirectoriesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.EntityDoesNotExistException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.DirectoryDescriptions...)
+	}
+
+	return output, nil
+}
+
+func findDirectoryByID(ctx context.Context, conn *directoryservice.Client, id string) (*awstypes.DirectoryDescription, error) {
+	input := &directoryservice.DescribeDirectoriesInput{
+		DirectoryIds: []string{id},
+	}
+
+	output, err := findDirectory(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if stage := output.Stage; stage == awstypes.DirectoryStageDeleted {
+		return nil, &retry.NotFoundError{
+			Message:     string(stage),
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func statusDirectoryStage(ctx context.Context, conn *directoryservice.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findDirectoryByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Stage), nil
+	}
+}
+
+func waitDirectoryCreated(ctx context.Context, conn *directoryservice.Client, id string, timeout time.Duration) (*awstypes.DirectoryDescription, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.DirectoryStageRequested, awstypes.DirectoryStageCreating, awstypes.DirectoryStageCreated),
+		Target:  enum.Slice(awstypes.DirectoryStageActive),
+		Refresh: statusDirectoryStage(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	// Wrap any error returned with waiting message
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("waiting for completion: %w", err)
+		}
+	}()
+
+	if output, ok := outputRaw.(*awstypes.DirectoryDescription); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.StageReason)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitDirectoryDeleted(ctx context.Context, conn *directoryservice.Client, id string, timeout time.Duration) (*awstypes.DirectoryDescription, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(awstypes.DirectoryStageActive, awstypes.DirectoryStageDeleting),
+		Target:     []string{},
+		Refresh:    statusDirectoryStage(ctx, conn, id),
+		Timeout:    timeout,
+		Delay:      1 * time.Minute,
+		MinTimeout: 10 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	// Wrap any error returned with waiting message
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("waiting for completion: %w", err)
+		}
+	}()
+
+	if output, ok := outputRaw.(*awstypes.DirectoryDescription); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.StageReason)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func findDomainController(ctx context.Context, conn *directoryservice.Client, input *directoryservice.DescribeDomainControllersInput, optFns ...func(*directoryservice.Options)) (*awstypes.DomainController, error) {
+	output, err := findDomainControllers(ctx, conn, input, optFns...)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findDomainControllers(ctx context.Context, conn *directoryservice.Client, input *directoryservice.DescribeDomainControllersInput, optFns ...func(*directoryservice.Options)) ([]awstypes.DomainController, error) {
+	var output []awstypes.DomainController
+
+	pages := directoryservice.NewDescribeDomainControllersPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx, optFns...)
+
+		if errs.IsA[*awstypes.EntityDoesNotExistException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.DomainControllers...)
+	}
+
+	return output, nil
+}
+
+func findDomainControllerByTwoPartKey(ctx context.Context, conn *directoryservice.Client, directoryID, domainControllerID string, optFns ...func(*directoryservice.Options)) (*awstypes.DomainController, error) {
+	input := &directoryservice.DescribeDomainControllersInput{
+		DirectoryId:         aws.String(directoryID),
+		DomainControllerIds: []string{domainControllerID},
+	}
+
+	output, err := findDomainController(ctx, conn, input, optFns...)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if status := output.Status; status == awstypes.DomainControllerStatusDeleted {
+		return nil, &retry.NotFoundError{
+			Message:     string(status),
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func statusDomainController(ctx context.Context, conn *directoryservice.Client, directoryID, domainControllerID string, optFns ...func(*directoryservice.Options)) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findDomainControllerByTwoPartKey(ctx, conn, directoryID, domainControllerID, optFns...)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status), nil
+	}
+}
+
+func waitDomainControllerCreated(ctx context.Context, conn *directoryservice.Client, directoryID, domainControllerID string, timeout time.Duration, optFns ...func(*directoryservice.Options)) (*awstypes.DomainController, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.DomainControllerStatusCreating),
+		Target:  enum.Slice(awstypes.DomainControllerStatusActive),
+		Refresh: statusDomainController(ctx, conn, directoryID, domainControllerID, optFns...),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.DomainController); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitDomainControllerDeleted(ctx context.Context, conn *directoryservice.Client, directoryID, domainControllerID string, timeout time.Duration, optFns ...func(*directoryservice.Options)) (*awstypes.DomainController, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.DomainControllerStatusDeleting),
+		Target:  []string{},
+		Refresh: statusDomainController(ctx, conn, directoryID, domainControllerID, optFns...),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.DomainController); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func expandDirectoryConnectSettings(tfMap map[string]interface{}) *awstypes.DirectoryConnectSettings {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &directoryservice.DirectoryConnectSettings{}
+	apiObject := &awstypes.DirectoryConnectSettings{}
 
 	if v, ok := tfMap["customer_dns_ips"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.CustomerDnsIps = flex.ExpandStringSet(v)
+		apiObject.CustomerDnsIps = flex.ExpandStringValueSet(v)
 	}
 
 	if v, ok := tfMap["customer_username"].(string); ok && v != "" {
 		apiObject.CustomerUserName = aws.String(v)
 	}
 
-	if v, ok := tfMap["subnet_ids"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.SubnetIds = flex.ExpandStringSet(v)
+	if v, ok := tfMap[names.AttrSubnetIDs].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.SubnetIds = flex.ExpandStringValueSet(v)
 	}
 
-	if v, ok := tfMap["vpc_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrVPCID].(string); ok && v != "" {
 		apiObject.VpcId = aws.String(v)
 	}
 
 	return apiObject
 }
 
-func flattenDirectoryConnectSettingsDescription(apiObject *directoryservice.DirectoryConnectSettingsDescription, dnsIpAddrs []*string) map[string]interface{} {
+func flattenDirectoryConnectSettingsDescription(apiObject *awstypes.DirectoryConnectSettingsDescription, dnsIpAddrs []string) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -601,51 +897,51 @@ func flattenDirectoryConnectSettingsDescription(apiObject *directoryservice.Dire
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.AvailabilityZones; v != nil {
-		tfMap["availability_zones"] = aws.StringValueSlice(v)
+		tfMap[names.AttrAvailabilityZones] = v
 	}
 
 	if v := apiObject.ConnectIps; v != nil {
-		tfMap["connect_ips"] = aws.StringValueSlice(v)
+		tfMap["connect_ips"] = v
 	}
 
 	if dnsIpAddrs != nil {
-		tfMap["customer_dns_ips"] = aws.StringValueSlice(dnsIpAddrs)
+		tfMap["customer_dns_ips"] = dnsIpAddrs
 	}
 
 	if v := apiObject.CustomerUserName; v != nil {
-		tfMap["customer_username"] = aws.StringValue(v)
+		tfMap["customer_username"] = aws.ToString(v)
 	}
 
 	if v := apiObject.SubnetIds; v != nil {
-		tfMap["subnet_ids"] = aws.StringValueSlice(v)
+		tfMap[names.AttrSubnetIDs] = v
 	}
 
 	if v := apiObject.VpcId; v != nil {
-		tfMap["vpc_id"] = aws.StringValue(v)
+		tfMap[names.AttrVPCID] = aws.ToString(v)
 	}
 
 	return tfMap
 }
 
-func expandDirectoryVpcSettings(tfMap map[string]interface{}) *directoryservice.DirectoryVpcSettings { // nosemgrep:ci.caps5-in-func-name
+func expandDirectoryVpcSettings(tfMap map[string]interface{}) *awstypes.DirectoryVpcSettings { // nosemgrep:ci.caps5-in-func-name
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &directoryservice.DirectoryVpcSettings{}
+	apiObject := &awstypes.DirectoryVpcSettings{}
 
-	if v, ok := tfMap["subnet_ids"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.SubnetIds = flex.ExpandStringSet(v)
+	if v, ok := tfMap[names.AttrSubnetIDs].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.SubnetIds = flex.ExpandStringValueSet(v)
 	}
 
-	if v, ok := tfMap["vpc_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrVPCID].(string); ok && v != "" {
 		apiObject.VpcId = aws.String(v)
 	}
 
 	return apiObject
 }
 
-func flattenDirectoryVpcSettings(apiObject *directoryservice.DirectoryVpcSettings) map[string]interface{} { // nosemgrep:ci.caps5-in-func-name
+func flattenDirectoryVpcSettings(apiObject *awstypes.DirectoryVpcSettings) map[string]interface{} { // nosemgrep:ci.caps5-in-func-name
 	if apiObject == nil {
 		return nil
 	}
@@ -653,17 +949,17 @@ func flattenDirectoryVpcSettings(apiObject *directoryservice.DirectoryVpcSetting
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.SubnetIds; v != nil {
-		tfMap["subnet_ids"] = aws.StringValueSlice(v)
+		tfMap[names.AttrSubnetIDs] = v
 	}
 
 	if v := apiObject.VpcId; v != nil {
-		tfMap["vpc_id"] = aws.StringValue(v)
+		tfMap[names.AttrVPCID] = aws.ToString(v)
 	}
 
 	return tfMap
 }
 
-func flattenDirectoryVpcSettingsDescription(apiObject *directoryservice.DirectoryVpcSettingsDescription) map[string]interface{} { // nosemgrep:ci.caps5-in-func-name
+func flattenDirectoryVpcSettingsDescription(apiObject *awstypes.DirectoryVpcSettingsDescription) map[string]interface{} { // nosemgrep:ci.caps5-in-func-name
 	if apiObject == nil {
 		return nil
 	}
@@ -671,15 +967,15 @@ func flattenDirectoryVpcSettingsDescription(apiObject *directoryservice.Director
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.AvailabilityZones; v != nil {
-		tfMap["availability_zones"] = aws.StringValueSlice(v)
+		tfMap[names.AttrAvailabilityZones] = v
 	}
 
 	if v := apiObject.SubnetIds; v != nil {
-		tfMap["subnet_ids"] = aws.StringValueSlice(v)
+		tfMap[names.AttrSubnetIDs] = v
 	}
 
 	if v := apiObject.VpcId; v != nil {
-		tfMap["vpc_id"] = aws.StringValue(v)
+		tfMap[names.AttrVPCID] = aws.ToString(v)
 	}
 
 	return tfMap

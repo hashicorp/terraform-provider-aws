@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package opsworks_test
 
 import (
@@ -8,11 +11,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccOpsWorksInstance_basic(t *testing.T) {
@@ -23,8 +27,8 @@ func TestAccOpsWorksInstance_basic(t *testing.T) {
 	dataSourceName := "data.aws_availability_zones.available"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -34,22 +38,22 @@ func TestAccOpsWorksInstance_basic(t *testing.T) {
 					testAccCheckInstanceExists(ctx, resourceName, &opsinst),
 					testAccCheckInstanceAttributes(&opsinst),
 					resource.TestCheckResourceAttr(resourceName, "hostname", "tf-acc1"),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.micro"),
-					resource.TestCheckResourceAttr(resourceName, "state", "stopped"),
-					resource.TestCheckResourceAttr(resourceName, "layer_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "install_updates_on_boot", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "t2.micro"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "stopped"),
+					resource.TestCheckResourceAttr(resourceName, "layer_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "install_updates_on_boot", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "architecture", "x86_64"),
 					resource.TestCheckResourceAttr(resourceName, "tenancy", "default"),
-					resource.TestCheckResourceAttr(resourceName, "os", "Amazon Linux 2016.09"),                       // inherited from opsworks_stack_test
-					resource.TestCheckResourceAttr(resourceName, "root_device_type", "ebs"),                          // inherited from opsworks_stack_test
-					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", dataSourceName, "names.0"), // inherited from opsworks_stack_test
+					resource.TestCheckResourceAttr(resourceName, "os", "Amazon Linux 2016.09"),                              // inherited from opsworks_stack_test
+					resource.TestCheckResourceAttr(resourceName, "root_device_type", "ebs"),                                 // inherited from opsworks_stack_test
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAvailabilityZone, dataSourceName, "names.0"), // inherited from opsworks_stack_test
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"state"}, //state is something we pass to the API and get back as status :(
+				ImportStateVerifyIgnore: []string{names.AttrState}, //state is something we pass to the API and get back as status :(
 			},
 			{
 				Config: testAccInstanceConfig_update(rName),
@@ -57,8 +61,8 @@ func TestAccOpsWorksInstance_basic(t *testing.T) {
 					testAccCheckInstanceExists(ctx, resourceName, &opsinst),
 					testAccCheckInstanceAttributes(&opsinst),
 					resource.TestCheckResourceAttr(resourceName, "hostname", "tf-acc1"),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.small"),
-					resource.TestCheckResourceAttr(resourceName, "layer_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "t2.small"),
+					resource.TestCheckResourceAttr(resourceName, "layer_ids.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "os", "Amazon Linux 2015.09"),
 					resource.TestCheckResourceAttr(resourceName, "tenancy", "default"),
 				),
@@ -74,8 +78,8 @@ func TestAccOpsWorksInstance_updateHostNameForceNew(t *testing.T) {
 	var before, after opsworks.Instance
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -90,7 +94,7 @@ func TestAccOpsWorksInstance_updateHostNameForceNew(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"state"},
+				ImportStateVerifyIgnore: []string{names.AttrState},
 			},
 			{
 				Config: testAccInstanceConfig_updateHostName(rName),
@@ -126,7 +130,7 @@ func testAccCheckInstanceExists(ctx context.Context,
 			return fmt.Errorf("No Opsworks Instance is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn(ctx)
 
 		params := &opsworks.DescribeInstancesInput{
 			InstanceIds: []*string{&rs.Primary.ID},
@@ -175,7 +179,7 @@ func testAccCheckInstanceAttributes(
 
 func testAccCheckInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_opsworks_instance" {
 				continue

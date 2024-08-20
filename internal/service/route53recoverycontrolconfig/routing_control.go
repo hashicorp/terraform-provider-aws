@@ -1,21 +1,28 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53recoverycontrolconfig
 
 import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	r53rcc "github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	r53rcc "github.com/aws/aws-sdk-go-v2/service/route53recoverycontrolconfig"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/route53recoverycontrolconfig/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_route53recoverycontrolconfig_routing_control")
-func ResourceRoutingControl() *schema.Resource {
+// @SDKResource("aws_route53recoverycontrolconfig_routing_control", name="Routing Control")
+func resourceRoutingControl() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRoutingControlCreate,
 		ReadWithoutTimeout:   resourceRoutingControlRead,
@@ -25,7 +32,7 @@ func ResourceRoutingControl() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -39,11 +46,11 @@ func ResourceRoutingControl() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -53,19 +60,19 @@ func ResourceRoutingControl() *schema.Resource {
 
 func resourceRoutingControlCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn()
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigClient(ctx)
 
 	input := &r53rcc.CreateRoutingControlInput{
-		ClientToken:        aws.String(resource.UniqueId()),
+		ClientToken:        aws.String(id.UniqueId()),
 		ClusterArn:         aws.String(d.Get("cluster_arn").(string)),
-		RoutingControlName: aws.String(d.Get("name").(string)),
+		RoutingControlName: aws.String(d.Get(names.AttrName).(string)),
 	}
 
 	if v, ok := d.GetOk("control_panel_arn"); ok {
 		input.ControlPanelArn = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateRoutingControlWithContext(ctx, input)
+	output, err := conn.CreateRoutingControl(ctx, input)
 	result := output.RoutingControl
 
 	if err != nil {
@@ -76,7 +83,7 @@ func resourceRoutingControlCreate(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "creating Route53 Recovery Control Config Routing Control: empty response")
 	}
 
-	d.SetId(aws.StringValue(result.RoutingControlArn))
+	d.SetId(aws.ToString(result.RoutingControlArn))
 
 	if _, err := waitRoutingControlCreated(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Route53 Recovery Control Config Routing Control (%s) to be Deployed: %s", d.Id(), err)
@@ -87,15 +94,11 @@ func resourceRoutingControlCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceRoutingControlRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn()
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigClient(ctx)
 
-	input := &r53rcc.DescribeRoutingControlInput{
-		RoutingControlArn: aws.String(d.Id()),
-	}
+	output, err := findRoutingControlByARN(ctx, conn, d.Id())
 
-	output, err := conn.DescribeRoutingControlWithContext(ctx, input)
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, r53rcc.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Route53 Recovery Control Config Routing Control (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -105,29 +108,24 @@ func resourceRoutingControlRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "describing Route53 Recovery Control Config Routing Control: %s", err)
 	}
 
-	if output == nil || output.RoutingControl == nil {
-		return sdkdiag.AppendErrorf(diags, "describing Route53 Recovery Control Config Routing Control: %s", "empty response")
-	}
-
-	result := output.RoutingControl
-	d.Set("arn", result.RoutingControlArn)
-	d.Set("control_panel_arn", result.ControlPanelArn)
-	d.Set("name", result.Name)
-	d.Set("status", result.Status)
+	d.Set(names.AttrARN, output.RoutingControlArn)
+	d.Set("control_panel_arn", output.ControlPanelArn)
+	d.Set(names.AttrName, output.Name)
+	d.Set(names.AttrStatus, output.Status)
 
 	return diags
 }
 
 func resourceRoutingControlUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn()
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigClient(ctx)
 
 	input := &r53rcc.UpdateRoutingControlInput{
-		RoutingControlName: aws.String(d.Get("name").(string)),
-		RoutingControlArn:  aws.String(d.Get("arn").(string)),
+		RoutingControlName: aws.String(d.Get(names.AttrName).(string)),
+		RoutingControlArn:  aws.String(d.Get(names.AttrARN).(string)),
 	}
 
-	_, err := conn.UpdateRoutingControlWithContext(ctx, input)
+	_, err := conn.UpdateRoutingControl(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Route53 Recovery Control Config Routing Control: %s", err)
@@ -138,14 +136,14 @@ func resourceRoutingControlUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceRoutingControlDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn()
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigClient(ctx)
 
 	log.Printf("[INFO] Deleting Route53 Recovery Control Config Routing Control: %s", d.Id())
-	_, err := conn.DeleteRoutingControlWithContext(ctx, &r53rcc.DeleteRoutingControlInput{
+	_, err := conn.DeleteRoutingControl(ctx, &r53rcc.DeleteRoutingControlInput{
 		RoutingControlArn: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, r53rcc.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -155,7 +153,7 @@ func resourceRoutingControlDelete(ctx context.Context, d *schema.ResourceData, m
 
 	_, err = waitRoutingControlDeleted(ctx, conn, d.Id())
 
-	if tfawserr.ErrCodeEquals(err, r53rcc.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -164,4 +162,27 @@ func resourceRoutingControlDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	return diags
+}
+
+func findRoutingControlByARN(ctx context.Context, conn *r53rcc.Client, arn string) (*awstypes.RoutingControl, error) {
+	input := &r53rcc.DescribeRoutingControlInput{
+		RoutingControlArn: aws.String(arn),
+	}
+
+	output, err := conn.DescribeRoutingControl(ctx, input)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.RoutingControl == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.RoutingControl, nil
 }

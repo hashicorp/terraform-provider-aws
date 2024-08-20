@@ -1,16 +1,20 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package glue_test
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/glue"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccGlueCatalogTableDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_glue_catalog_table.test"
 	datasourceName := "data.aws_glue_catalog_table.test"
 
@@ -18,20 +22,20 @@ func TestAccGlueCatalogTableDataSource_basic(t *testing.T) {
 	tName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCatalogTableDataSourceConfig_basic(dbName, tName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(datasourceName, "catalog_id", resourceName, "catalog_id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "database_name", resourceName, "database_name"),
-					resource.TestCheckResourceAttrPair(datasourceName, "description", resourceName, "description"),
-					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(datasourceName, "owner", resourceName, "owner"),
-					resource.TestCheckResourceAttrPair(datasourceName, "parameters", resourceName, "parameters"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrCatalogID, resourceName, names.AttrCatalogID),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDatabaseName, resourceName, names.AttrDatabaseName),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrOwner, resourceName, names.AttrOwner),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrParameters, resourceName, names.AttrParameters),
 					resource.TestCheckResourceAttrPair(datasourceName, "partition_keys", resourceName, "partition_keys"),
 					resource.TestCheckResourceAttrPair(datasourceName, "retention", resourceName, "retention"),
 					resource.TestCheckResourceAttrPair(datasourceName, "storage_descriptor", resourceName, "storage_descriptor"),

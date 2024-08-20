@@ -42,7 +42,7 @@ resource "aws_route53_record" "example_ses_domain_mail_from_txt" {
   name    = aws_ses_domain_mail_from.example.mail_from_domain
   type    = "TXT"
   ttl     = "600"
-  records = ["v=spf1 include:amazonses.com -all"]
+  records = ["v=spf1 include:amazonses.com ~all"]
 }
 ```
 
@@ -71,16 +71,25 @@ The following arguments are optional:
 
 * `behavior_on_mx_failure` - (Optional) The action that you want Amazon SES to take if it cannot successfully read the required MX record when you send an email. Defaults to `UseDefaultValue`. See the [SES API documentation](https://docs.aws.amazon.com/ses/latest/APIReference/API_SetIdentityMailFromDomain.html) for more information.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The domain name.
 
 ## Import
 
-MAIL FROM domain can be imported using the `domain` attribute, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import MAIL FROM domain using the `domain` attribute. For example:
 
+```terraform
+import {
+  to = aws_ses_domain_mail_from.example
+  id = "example.com"
+}
 ```
-$ terraform import aws_ses_domain_mail_from.example example.com
+
+Using `terraform import`, import MAIL FROM domain using the `domain` attribute. For example:
+
+```console
+% terraform import aws_ses_domain_mail_from.example example.com
 ```

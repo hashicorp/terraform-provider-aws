@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package servicecatalog
 
 import (
@@ -5,21 +8,24 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/servicecatalog"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_servicecatalog_portfolio_share")
-func ResourcePortfolioShare() *schema.Resource {
+// @SDKResource("aws_servicecatalog_portfolio_share", name="Portfolio Share")
+func resourcePortfolioShare() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePortfolioShareCreate,
 		ReadWithoutTimeout:   resourcePortfolioShareRead,
@@ -40,8 +46,8 @@ func ResourcePortfolioShare() *schema.Resource {
 			"accept_language": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      AcceptLanguageEnglish,
-				ValidateFunc: validation.StringInSlice(AcceptLanguage_Values(), false),
+				Default:      acceptLanguageEnglish,
+				ValidateFunc: validation.StringInSlice(acceptLanguage_Values(), false),
 			},
 			"accepted": {
 				Type:     schema.TypeBool,
@@ -81,11 +87,11 @@ func ResourcePortfolioShare() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(servicecatalog.DescribePortfolioShareType_Values(), false),
+			names.AttrType: {
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.DescribePortfolioShareType](),
 			},
 			"wait_for_acceptance": {
 				Type:     schema.TypeBool,
@@ -98,53 +104,53 @@ func ResourcePortfolioShare() *schema.Resource {
 
 func resourcePortfolioShareCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 	input := &servicecatalog.CreatePortfolioShareInput{
 		PortfolioId:     aws.String(d.Get("portfolio_id").(string)),
-		SharePrincipals: aws.Bool(d.Get("share_principals").(bool)),
+		SharePrincipals: d.Get("share_principals").(bool),
 		AcceptLanguage:  aws.String(d.Get("accept_language").(string)),
 	}
 
-	if v, ok := d.GetOk("type"); ok && v.(string) == servicecatalog.DescribePortfolioShareTypeAccount {
+	if v, ok := d.GetOk(names.AttrType); ok && v.(string) == string(awstypes.DescribePortfolioShareTypeAccount) {
 		input.AccountId = aws.String(d.Get("principal_id").(string))
 	} else {
-		orgNode := &servicecatalog.OrganizationNode{}
+		orgNode := &awstypes.OrganizationNode{}
 		orgNode.Value = aws.String(d.Get("principal_id").(string))
 
-		if v.(string) == servicecatalog.DescribePortfolioShareTypeOrganizationMemberAccount {
+		if v.(string) == string(awstypes.DescribePortfolioShareTypeOrganizationMemberAccount) {
 			// portfolio_share type ORGANIZATION_MEMBER_ACCOUNT = org node type ACCOUNT
-			orgNode.Type = aws.String(servicecatalog.OrganizationNodeTypeAccount)
+			orgNode.Type = awstypes.OrganizationNodeTypeAccount
 		} else {
-			orgNode.Type = aws.String(d.Get("type").(string))
+			orgNode.Type = awstypes.OrganizationNodeType(d.Get(names.AttrType).(string))
 		}
 
 		input.OrganizationNode = orgNode
 	}
 
 	if v, ok := d.GetOk("share_tag_options"); ok {
-		input.ShareTagOptions = aws.Bool(v.(bool))
+		input.ShareTagOptions = v.(bool)
 	}
 
 	var output *servicecatalog.CreatePortfolioShareOutput
-	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
 		var err error
 
-		output, err = conn.CreatePortfolioShareWithContext(ctx, input)
+		output, err = conn.CreatePortfolioShare(ctx, input)
 
-		if tfawserr.ErrMessageContains(err, servicecatalog.ErrCodeInvalidParametersException, "profile does not exist") {
-			return resource.RetryableError(err)
+		if errs.IsAErrorMessageContains[*awstypes.InvalidParametersException](err, "profile does not exist") {
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
 	})
 
 	if tfresource.TimedOut(err) {
-		output, err = conn.CreatePortfolioShareWithContext(ctx, input)
+		output, err = conn.CreatePortfolioShare(ctx, input)
 	}
 
 	if err != nil {
@@ -155,7 +161,7 @@ func resourcePortfolioShareCreate(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "creating Service Catalog Portfolio Share: empty response")
 	}
 
-	d.SetId(PortfolioShareCreateResourceID(d.Get("portfolio_id").(string), d.Get("type").(string), d.Get("principal_id").(string)))
+	d.SetId(portfolioShareCreateResourceID(d.Get("portfolio_id").(string), d.Get(names.AttrType).(string), d.Get("principal_id").(string)))
 
 	waitForAcceptance := false
 	if v, ok := d.GetOk("wait_for_acceptance"); ok {
@@ -164,11 +170,11 @@ func resourcePortfolioShareCreate(ctx context.Context, d *schema.ResourceData, m
 
 	// only get a token if organization node, otherwise check without token
 	if output.PortfolioShareToken != nil {
-		if _, err := WaitPortfolioShareCreatedWithToken(ctx, conn, aws.StringValue(output.PortfolioShareToken), waitForAcceptance, d.Timeout(schema.TimeoutCreate)); err != nil {
+		if _, err := waitPortfolioShareCreatedWithToken(ctx, conn, aws.ToString(output.PortfolioShareToken), waitForAcceptance, d.Timeout(schema.TimeoutCreate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Service Catalog Portfolio Share (%s) to be ready: %s", d.Id(), err)
 		}
 	} else {
-		if _, err := WaitPortfolioShareReady(ctx, conn, d.Get("portfolio_id").(string), d.Get("type").(string), d.Get("principal_id").(string), waitForAcceptance, d.Timeout(schema.TimeoutCreate)); err != nil {
+		if _, err := waitPortfolioShareReady(ctx, conn, d.Get("portfolio_id").(string), d.Get(names.AttrType).(string), d.Get("principal_id").(string), waitForAcceptance, d.Timeout(schema.TimeoutCreate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Service Catalog Portfolio Share (%s) to be ready: %s", d.Id(), err)
 		}
 	}
@@ -178,9 +184,9 @@ func resourcePortfolioShareCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourcePortfolioShareRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-	portfolioID, shareType, principalID, err := PortfolioShareParseResourceID(d.Id())
+	portfolioID, shareType, principalID, err := portfolioShareParseResourceID(d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "could not parse ID (%s): %s", d.Id(), err)
@@ -191,7 +197,7 @@ func resourcePortfolioShareRead(ctx context.Context, d *schema.ResourceData, met
 		waitForAcceptance = v.(bool)
 	}
 
-	output, err := WaitPortfolioShareReady(ctx, conn, portfolioID, shareType, principalID, waitForAcceptance, d.Timeout(schema.TimeoutRead))
+	output, err := waitPortfolioShareReady(ctx, conn, portfolioID, shareType, principalID, waitForAcceptance, d.Timeout(schema.TimeoutRead))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Service Catalog Portfolio Share (%s) not found, removing from state", d.Id())
@@ -208,7 +214,7 @@ func resourcePortfolioShareRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("principal_id", output.PrincipalId)
 	d.Set("share_principals", output.SharePrincipals)
 	d.Set("share_tag_options", output.ShareTagOptions)
-	d.Set("type", output.Type)
+	d.Set(names.AttrType, output.Type)
 	d.Set("wait_for_acceptance", waitForAcceptance)
 
 	return diags
@@ -216,7 +222,7 @@ func resourcePortfolioShareRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourcePortfolioShareUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 	input := &servicecatalog.UpdatePortfolioShareInput{
 		PortfolioId:    aws.String(d.Get("portfolio_id").(string)),
@@ -231,38 +237,38 @@ func resourcePortfolioShareUpdate(ctx context.Context, d *schema.ResourceData, m
 		input.ShareTagOptions = aws.Bool(d.Get("share_tag_options").(bool))
 	}
 
-	if v, ok := d.GetOk("type"); ok && v.(string) == servicecatalog.DescribePortfolioShareTypeAccount {
+	if v, ok := d.GetOk(names.AttrType); ok && v.(string) == string(awstypes.DescribePortfolioShareTypeAccount) {
 		input.AccountId = aws.String(d.Get("principal_id").(string))
 	} else {
-		orgNode := &servicecatalog.OrganizationNode{}
+		orgNode := &awstypes.OrganizationNode{}
 		orgNode.Value = aws.String(d.Get("principal_id").(string))
 
-		if v.(string) == servicecatalog.DescribePortfolioShareTypeOrganizationMemberAccount {
+		if v.(string) == string(awstypes.DescribePortfolioShareTypeOrganizationMemberAccount) {
 			// portfolio_share type ORGANIZATION_MEMBER_ACCOUNT = org node type ACCOUNT
-			orgNode.Type = aws.String(servicecatalog.OrganizationNodeTypeAccount)
+			orgNode.Type = awstypes.OrganizationNodeTypeAccount
 		} else {
-			orgNode.Type = aws.String(d.Get("type").(string))
+			orgNode.Type = awstypes.OrganizationNodeType(d.Get(names.AttrType).(string))
 		}
 
 		input.OrganizationNode = orgNode
 	}
 
-	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
-		_, err := conn.UpdatePortfolioShareWithContext(ctx, input)
+	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *retry.RetryError {
+		_, err := conn.UpdatePortfolioShare(ctx, input)
 
-		if tfawserr.ErrMessageContains(err, servicecatalog.ErrCodeInvalidParametersException, "profile does not exist") {
-			return resource.RetryableError(err)
+		if errs.IsAErrorMessageContains[*awstypes.InvalidParametersException](err, "profile does not exist") {
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
 	})
 
 	if tfresource.TimedOut(err) {
-		_, err = conn.UpdatePortfolioShareWithContext(ctx, input)
+		_, err = conn.UpdatePortfolioShare(ctx, input)
 	}
 
 	if err != nil {
@@ -274,7 +280,7 @@ func resourcePortfolioShareUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourcePortfolioShareDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 	input := &servicecatalog.DeletePortfolioShareInput{
 		PortfolioId: aws.String(d.Get("portfolio_id").(string)),
@@ -284,25 +290,25 @@ func resourcePortfolioShareDelete(ctx context.Context, d *schema.ResourceData, m
 		input.AcceptLanguage = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("type"); ok && v.(string) == servicecatalog.DescribePortfolioShareTypeAccount {
+	if v, ok := d.GetOk(names.AttrType); ok && v.(string) == string(awstypes.DescribePortfolioShareTypeAccount) {
 		input.AccountId = aws.String(d.Get("principal_id").(string))
 	} else {
-		orgNode := &servicecatalog.OrganizationNode{}
+		orgNode := &awstypes.OrganizationNode{}
 		orgNode.Value = aws.String(d.Get("principal_id").(string))
 
-		if v.(string) == servicecatalog.DescribePortfolioShareTypeOrganizationMemberAccount {
+		if v.(string) == string(awstypes.DescribePortfolioShareTypeOrganizationMemberAccount) {
 			// portfolio_share type ORGANIZATION_MEMBER_ACCOUNT = org node type ACCOUNT
-			orgNode.Type = aws.String(servicecatalog.OrganizationNodeTypeAccount)
+			orgNode.Type = awstypes.OrganizationNodeTypeAccount
 		} else {
-			orgNode.Type = aws.String(d.Get("type").(string))
+			orgNode.Type = awstypes.OrganizationNodeType(d.Get(names.AttrType).(string))
 		}
 
 		input.OrganizationNode = orgNode
 	}
 
-	output, err := conn.DeletePortfolioShareWithContext(ctx, input)
+	output, err := conn.DeletePortfolioShare(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -312,11 +318,11 @@ func resourcePortfolioShareDelete(ctx context.Context, d *schema.ResourceData, m
 
 	// only get a token if organization node, otherwise check without token
 	if output.PortfolioShareToken != nil {
-		if _, err := WaitPortfolioShareDeletedWithToken(ctx, conn, aws.StringValue(output.PortfolioShareToken), d.Timeout(schema.TimeoutDelete)); err != nil {
+		if _, err := waitPortfolioShareDeletedWithToken(ctx, conn, aws.ToString(output.PortfolioShareToken), d.Timeout(schema.TimeoutDelete)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Service Catalog Portfolio Share (%s) to be deleted: %s", d.Id(), err)
 		}
 	} else {
-		if _, err := WaitPortfolioShareDeleted(ctx, conn, d.Get("portfolio_id").(string), d.Get("type").(string), d.Get("principal_id").(string), d.Timeout(schema.TimeoutDelete)); err != nil {
+		if _, err := waitPortfolioShareDeleted(ctx, conn, d.Get("portfolio_id").(string), d.Get(names.AttrType).(string), d.Get("principal_id").(string), d.Timeout(schema.TimeoutDelete)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Service Catalog Portfolio Share (%s) to be deleted: %s", d.Id(), err)
 		}
 	}

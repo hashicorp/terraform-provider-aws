@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package quicksight_test
 
 import (
@@ -10,12 +13,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccQuickSightGroup_basic(t *testing.T) {
@@ -26,8 +30,8 @@ func TestAccQuickSightGroup_basic(t *testing.T) {
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -35,16 +39,16 @@ func TestAccQuickSightGroup_basic(t *testing.T) {
 				Config: testAccGroupConfig_basic(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "group_name", rName1),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "quicksight", fmt.Sprintf("group/default/%s", rName1)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrGroupName, rName1),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "quicksight", fmt.Sprintf("group/default/%s", rName1)),
 				),
 			},
 			{
 				Config: testAccGroupConfig_basic(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "group_name", rName2),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "quicksight", fmt.Sprintf("group/default/%s", rName2)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrGroupName, rName2),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "quicksight", fmt.Sprintf("group/default/%s", rName2)),
 				),
 			},
 			{
@@ -63,8 +67,8 @@ func TestAccQuickSightGroup_withDescription(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -72,14 +76,14 @@ func TestAccQuickSightGroup_withDescription(t *testing.T) {
 				Config: testAccGroupConfig_description(rName, "Description 1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "description", "Description 1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Description 1"),
 				),
 			},
 			{
 				Config: testAccGroupConfig_description(rName, "Description 2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "description", "Description 2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Description 2"),
 				),
 			},
 			{
@@ -98,8 +102,8 @@ func TestAccQuickSightGroup_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -127,7 +131,7 @@ func testAccCheckGroupExists(ctx context.Context, resourceName string, group *qu
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
 
 		input := &quicksight.DescribeGroupInput{
 			AwsAccountId: aws.String(awsAccountID),
@@ -153,7 +157,7 @@ func testAccCheckGroupExists(ctx context.Context, resourceName string, group *qu
 
 func testAccCheckGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_quicksight_group" {
 				continue
@@ -186,7 +190,7 @@ func testAccCheckGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 
 func testAccCheckGroupDisappears(ctx context.Context, v *quicksight.Group) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
 
 		arn, err := arn.Parse(aws.StringValue(v.Arn))
 		if err != nil {

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package tfjson
 
 import (
@@ -73,6 +76,14 @@ type FunctionSignature struct {
 	// Description is an optional human-readable description
 	// of the function
 	Description string `json:"description,omitempty"`
+
+	// Summary is an optional shortened description of the function
+	Summary string `json:"summary,omitempty"`
+
+	// DeprecationMessage is an optional message that indicates that the
+	// function should be considered deprecated and what actions should be
+	// performed by the practitioner to handle the deprecation.
+	DeprecationMessage string `json:"deprecation_message,omitempty"`
 
 	// ReturnType is the ctyjson representation of the function's
 	// return types based on supplying all parameters using

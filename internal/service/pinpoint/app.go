@@ -1,24 +1,33 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package pinpoint
 
 import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/pinpoint"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/pinpoint"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpoint/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_pinpoint_app")
-func ResourceApp() *schema.Resource {
+// @SDKResource("aws_pinpoint_app", name="App")
+// @Tags(identifierAttribute="arn")
+func resourceApp() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAppCreate,
 		ReadWithoutTimeout:   resourceAppRead,
@@ -29,50 +38,29 @@ func ResourceApp() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
-			},
-			"name_prefix": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"application_id": {
+			names.AttrApplicationID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			//"cloudwatch_metrics_enabled": {
-			//	Type:     schema.TypeBool,
-			//	Optional: true,
-			//	Default:  false,
-			//},
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"campaign_hook": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == "1" && new == "0" {
-						return true
-					}
-					return false
-				},
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"lambda_function_name": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"mode": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								pinpoint.ModeDelivery,
-								pinpoint.ModeFilter,
-							}, false),
+						names.AttrMode: {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.Mode](),
 						},
 						"web_url": {
 							Type:     schema.TypeString,
@@ -81,16 +69,16 @@ func ResourceApp() *schema.Resource {
 					},
 				},
 			},
+			//"cloudwatch_metrics_enabled": {
+			//	Type:     schema.TypeBool,
+			//	Optional: true,
+			//	Default:  false,
+			//},
 			"limits": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == "1" && new == "0" {
-						return true
-					}
-					return false
-				},
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"daily": {
@@ -116,16 +104,25 @@ func ResourceApp() *schema.Resource {
 					},
 				},
 			},
+			names.AttrName: {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{names.AttrNamePrefix},
+			},
+			names.AttrNamePrefix: {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{names.AttrName},
+			},
 			"quiet_time": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == "1" && new == "0" {
-						return true
-					}
-					return false
-				},
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"end": {
@@ -139,12 +136,8 @@ func ResourceApp() *schema.Resource {
 					},
 				},
 			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -153,189 +146,189 @@ func ResourceApp() *schema.Resource {
 
 func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).PinpointConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
-	var name string
-
-	if v, ok := d.GetOk("name"); ok {
-		name = v.(string)
-	} else if v, ok := d.GetOk("name_prefix"); ok {
-		name = resource.PrefixedUniqueId(v.(string))
-	} else {
-		name = resource.UniqueId()
-	}
-
-	log.Printf("[DEBUG] Pinpoint create app: %s", name)
-
-	req := &pinpoint.CreateAppInput{
-		CreateApplicationRequest: &pinpoint.CreateApplicationRequest{
+	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	input := &pinpoint.CreateAppInput{
+		CreateApplicationRequest: &awstypes.CreateApplicationRequest{
 			Name: aws.String(name),
+			Tags: getTagsIn(ctx),
 		},
 	}
 
-	if len(tags) > 0 {
-		req.CreateApplicationRequest.Tags = Tags(tags.IgnoreAWS())
-	}
+	output, err := conn.CreateApp(ctx, input)
 
-	output, err := conn.CreateAppWithContext(ctx, req)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Pinpoint app: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Pinpoint App (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.ApplicationResponse.Id))
-	d.Set("arn", output.ApplicationResponse.Arn)
+	d.SetId(aws.ToString(output.ApplicationResponse.Id))
 
 	return append(diags, resourceAppUpdate(ctx, d, meta)...)
 }
 
+func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
+
+	app, err := findAppByID(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Pinpoint App (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Pinpoint App (%s): %s", d.Id(), err)
+	}
+
+	settings, err := findAppSettingsByID(ctx, conn, d.Id())
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Pinpoint App (%s) settings: %s", d.Id(), err)
+	}
+
+	d.Set(names.AttrApplicationID, app.Id)
+	d.Set(names.AttrARN, app.Arn)
+	if err := d.Set("campaign_hook", flattenCampaignHook(settings.CampaignHook)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting campaign_hook: %s", err)
+	}
+	if err := d.Set("limits", flattenCampaignLimits(settings.Limits)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting limits: %s", err)
+	}
+	d.Set(names.AttrName, app.Name)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(app.Name)))
+	if err := d.Set("quiet_time", flattenQuietTime(settings.QuietTime)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting quiet_time: %s", err)
+	}
+
+	return diags
+}
+
 func resourceAppUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).PinpointConn()
+	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
-	appSettings := &pinpoint.WriteApplicationSettingsRequest{}
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+		appSettings := &awstypes.WriteApplicationSettingsRequest{}
 
-	//if d.HasChange("cloudwatch_metrics_enabled") {
-	//	appSettings.CloudWatchMetricsEnabled = aws.Bool(d.Get("cloudwatch_metrics_enabled").(bool));
-	//}
+		if d.HasChange("campaign_hook") {
+			appSettings.CampaignHook = expandCampaignHook(d.Get("campaign_hook").([]interface{}))
+		}
 
-	if d.HasChange("campaign_hook") {
-		appSettings.CampaignHook = expandCampaignHook(d.Get("campaign_hook").([]interface{}))
-	}
+		//if d.HasChange("cloudwatch_metrics_enabled") {
+		//	appSettings.CloudWatchMetricsEnabled = aws.Bool(d.Get("cloudwatch_metrics_enabled").(bool));
+		//}
 
-	if d.HasChange("limits") {
-		appSettings.Limits = expandCampaignLimits(d.Get("limits").([]interface{}))
-	}
+		if d.HasChange("limits") {
+			appSettings.Limits = expandCampaignLimits(d.Get("limits").([]interface{}))
+		}
 
-	if d.HasChange("quiet_time") {
-		appSettings.QuietTime = expandQuietTime(d.Get("quiet_time").([]interface{}))
-	}
+		if d.HasChange("quiet_time") {
+			appSettings.QuietTime = expandQuietTime(d.Get("quiet_time").([]interface{}))
+		}
 
-	req := pinpoint.UpdateApplicationSettingsInput{
-		ApplicationId:                   aws.String(d.Id()),
-		WriteApplicationSettingsRequest: appSettings,
-	}
+		input := &pinpoint.UpdateApplicationSettingsInput{
+			ApplicationId:                   aws.String(d.Id()),
+			WriteApplicationSettingsRequest: appSettings,
+		}
 
-	_, err := conn.UpdateApplicationSettingsWithContext(ctx, &req)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Pinpoint Application (%s): %s", d.Id(), err)
-	}
+		_, err := conn.UpdateApplicationSettings(ctx, input)
 
-	if !d.IsNewResource() {
-		arn := d.Get("arn").(string)
-		if d.HasChange("tags_all") {
-			o, n := d.GetChange("tags_all")
-
-			if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
-				return sdkdiag.AppendErrorf(diags, "updating PinPoint Application (%s) tags: %s", arn, err)
-			}
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Pinpoint App (%s) settings: %s", d.Id(), err)
 		}
 	}
 
 	return append(diags, resourceAppRead(ctx, d, meta)...)
 }
 
-func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAppDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).PinpointConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
-	log.Printf("[INFO] Reading Pinpoint App Attributes for %s", d.Id())
-
-	app, err := conn.GetAppWithContext(ctx, &pinpoint.GetAppInput{
+	log.Printf("[DEBUG] Deleting Pinpoint App: %s", d.Id())
+	_, err := conn.DeleteApp(ctx, &pinpoint.DeleteAppInput{
 		ApplicationId: aws.String(d.Id()),
 	})
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
-			log.Printf("[WARN] Pinpoint App (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return diags
-		}
 
-		return sdkdiag.AppendErrorf(diags, "reading Pinpoint Application (%s): %s", d.Id(), err)
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return diags
 	}
-
-	settings, err := conn.GetApplicationSettingsWithContext(ctx, &pinpoint.GetApplicationSettingsInput{
-		ApplicationId: aws.String(d.Id()),
-	})
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
-			log.Printf("[WARN] Pinpoint App (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return diags
-		}
-
-		return sdkdiag.AppendErrorf(diags, "reading Pinpoint Application (%s) settings: %s", d.Id(), err)
-	}
-
-	arn := aws.StringValue(app.ApplicationResponse.Arn)
-	d.Set("name", app.ApplicationResponse.Name)
-	d.Set("application_id", app.ApplicationResponse.Id)
-	d.Set("arn", arn)
-
-	if err := d.Set("campaign_hook", flattenCampaignHook(settings.ApplicationSettingsResource.CampaignHook)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting campaign_hook: %s", err)
-	}
-	if err := d.Set("limits", flattenCampaignLimits(settings.ApplicationSettingsResource.Limits)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting limits: %s", err)
-	}
-	if err := d.Set("quiet_time", flattenQuietTime(settings.ApplicationSettingsResource.QuietTime)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting quiet_time: %s", err)
-	}
-
-	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for PinPoint Application (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting Pinpoint App (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func resourceAppDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).PinpointConn()
-
-	log.Printf("[DEBUG] Pinpoint Delete App: %s", d.Id())
-	_, err := conn.DeleteAppWithContext(ctx, &pinpoint.DeleteAppInput{
-		ApplicationId: aws.String(d.Id()),
-	})
-
-	if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
-		return diags
+func findAppByID(ctx context.Context, conn *pinpoint.Client, id string) (*awstypes.ApplicationResponse, error) {
+	input := &pinpoint.GetAppInput{
+		ApplicationId: aws.String(id),
 	}
 
-	return sdkdiag.AppendErrorf(diags, "deleting Pinpoint Application (%s): %s", d.Id(), err)
+	output, err := conn.GetApp(ctx, input)
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.ApplicationResponse == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.ApplicationResponse, nil
 }
 
-func expandCampaignHook(configs []interface{}) *pinpoint.CampaignHook {
-	if len(configs) == 0 {
+func findAppSettingsByID(ctx context.Context, conn *pinpoint.Client, id string) (*awstypes.ApplicationSettingsResource, error) {
+	input := &pinpoint.GetApplicationSettingsInput{
+		ApplicationId: aws.String(id),
+	}
+
+	output, err := conn.GetApplicationSettings(ctx, input)
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.ApplicationSettingsResource == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.ApplicationSettingsResource, nil
+}
+
+func expandCampaignHook(configs []interface{}) *awstypes.CampaignHook {
+	if len(configs) == 0 || configs[0] == nil {
 		return nil
 	}
 
 	m := configs[0].(map[string]interface{})
 
-	ch := &pinpoint.CampaignHook{}
+	ch := &awstypes.CampaignHook{}
 
 	if v, ok := m["lambda_function_name"]; ok {
 		ch.LambdaFunctionName = aws.String(v.(string))
 	}
 
-	if v, ok := m["mode"]; ok {
-		ch.Mode = aws.String(v.(string))
+	if v, ok := m[names.AttrMode]; ok {
+		ch.Mode = awstypes.Mode(v.(string))
 	}
 
 	if v, ok := m["web_url"]; ok {
@@ -345,71 +338,71 @@ func expandCampaignHook(configs []interface{}) *pinpoint.CampaignHook {
 	return ch
 }
 
-func flattenCampaignHook(ch *pinpoint.CampaignHook) []interface{} {
+func flattenCampaignHook(ch *awstypes.CampaignHook) []interface{} {
 	l := make([]interface{}, 0)
 
 	m := map[string]interface{}{}
 
-	m["lambda_function_name"] = aws.StringValue(ch.LambdaFunctionName)
-	m["mode"] = aws.StringValue(ch.Mode)
-	m["web_url"] = aws.StringValue(ch.WebUrl)
+	m["lambda_function_name"] = aws.ToString(ch.LambdaFunctionName)
+	m[names.AttrMode] = ch.Mode
+	m["web_url"] = aws.ToString(ch.WebUrl)
 
 	l = append(l, m)
 
 	return l
 }
 
-func expandCampaignLimits(configs []interface{}) *pinpoint.CampaignLimits {
-	if len(configs) == 0 {
+func expandCampaignLimits(configs []interface{}) *awstypes.CampaignLimits {
+	if len(configs) == 0 || configs[0] == nil {
 		return nil
 	}
 
 	m := configs[0].(map[string]interface{})
 
-	cl := pinpoint.CampaignLimits{}
+	cl := awstypes.CampaignLimits{}
 
 	if v, ok := m["daily"]; ok {
-		cl.Daily = aws.Int64(int64(v.(int)))
+		cl.Daily = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := m["maximum_duration"]; ok {
-		cl.MaximumDuration = aws.Int64(int64(v.(int)))
+		cl.MaximumDuration = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := m["messages_per_second"]; ok {
-		cl.MessagesPerSecond = aws.Int64(int64(v.(int)))
+		cl.MessagesPerSecond = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := m["total"]; ok {
-		cl.Total = aws.Int64(int64(v.(int)))
+		cl.Total = aws.Int32(int32(v.(int)))
 	}
 
 	return &cl
 }
 
-func flattenCampaignLimits(cl *pinpoint.CampaignLimits) []interface{} {
+func flattenCampaignLimits(cl *awstypes.CampaignLimits) []interface{} {
 	l := make([]interface{}, 0)
 
 	m := map[string]interface{}{}
 
-	m["daily"] = aws.Int64Value(cl.Daily)
-	m["maximum_duration"] = aws.Int64Value(cl.MaximumDuration)
-	m["messages_per_second"] = aws.Int64Value(cl.MessagesPerSecond)
-	m["total"] = aws.Int64Value(cl.Total)
+	m["daily"] = aws.ToInt32(cl.Daily)
+	m["maximum_duration"] = aws.ToInt32(cl.MaximumDuration)
+	m["messages_per_second"] = aws.ToInt32(cl.MessagesPerSecond)
+	m["total"] = aws.ToInt32(cl.Total)
 
 	l = append(l, m)
 
 	return l
 }
 
-func expandQuietTime(configs []interface{}) *pinpoint.QuietTime {
-	if len(configs) == 0 {
+func expandQuietTime(configs []interface{}) *awstypes.QuietTime {
+	if len(configs) == 0 || configs[0] == nil {
 		return nil
 	}
 
 	m := configs[0].(map[string]interface{})
 
-	qt := pinpoint.QuietTime{}
+	qt := awstypes.QuietTime{}
 
 	if v, ok := m["end"]; ok {
 		qt.End = aws.String(v.(string))
@@ -422,13 +415,13 @@ func expandQuietTime(configs []interface{}) *pinpoint.QuietTime {
 	return &qt
 }
 
-func flattenQuietTime(qt *pinpoint.QuietTime) []interface{} {
+func flattenQuietTime(qt *awstypes.QuietTime) []interface{} {
 	l := make([]interface{}, 0)
 
 	m := map[string]interface{}{}
 
-	m["end"] = aws.StringValue(qt.End)
-	m["start"] = aws.StringValue(qt.Start)
+	m["end"] = aws.ToString(qt.End)
+	m["start"] = aws.ToString(qt.Start)
 
 	l = append(l, m)
 

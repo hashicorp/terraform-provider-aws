@@ -24,6 +24,8 @@ data "aws_location_place_index" "example" {
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `create_time` - Timestamp for when the place index resource was created in ISO 8601 format.
 * `data_source` - Data provider of geospatial data.
 * `data_source_configuration` - List of configurations that specify data storage option for requesting Places.

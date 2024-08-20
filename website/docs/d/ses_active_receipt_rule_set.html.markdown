@@ -16,9 +16,9 @@ Retrieve the active SES receipt rule set
 data "aws_ses_active_receipt_rule_set" "main" {}
 ```
 
-## Attributes Reference
+## Attribute Reference
 
-The following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - SES receipt rule set ARN.
 * `rule_set_name` - Name of the rule set

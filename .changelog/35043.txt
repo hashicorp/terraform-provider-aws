@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_codebuild_project: Prevent erroneous diffs on `build_timeout` and `queued_timeout` for Lambda compute types
+```

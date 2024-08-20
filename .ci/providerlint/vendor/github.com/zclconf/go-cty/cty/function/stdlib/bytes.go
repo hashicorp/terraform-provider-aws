@@ -38,7 +38,8 @@ var BytesLenFunc = function.New(&function.Spec{
 			AllowDynamicType: true,
 		},
 	},
-	Type: function.StaticReturnType(cty.Number),
+	Type:         function.StaticReturnType(cty.Number),
+	RefineResult: refineNonNull,
 	Impl: func(args []cty.Value, retType cty.Type) (cty.Value, error) {
 		bufPtr := args[0].EncapsulatedValue().(*[]byte)
 		return cty.NumberIntVal(int64(len(*bufPtr))), nil
@@ -65,7 +66,8 @@ var BytesSliceFunc = function.New(&function.Spec{
 			AllowDynamicType: true,
 		},
 	},
-	Type: function.StaticReturnType(Bytes),
+	Type:         function.StaticReturnType(Bytes),
+	RefineResult: refineNonNull,
 	Impl: func(args []cty.Value, retType cty.Type) (cty.Value, error) {
 		bufPtr := args[0].EncapsulatedValue().(*[]byte)
 

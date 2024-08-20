@@ -54,16 +54,25 @@ The following arguments are optional:
 
 ~> **NOTE:** When `start_time` and `end_time` are specified with `recurrence` , they form the boundaries of when the recurring action will start and stop.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN assigned by AWS to the autoscaling schedule.
 
 ## Import
 
-AutoScaling ScheduledAction can be imported using the `auto-scaling-group-name` and `scheduled-action-name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AutoScaling ScheduledAction using the `auto-scaling-group-name` and `scheduled-action-name`. For example:
 
+```terraform
+import {
+  to = aws_autoscaling_schedule.resource-name
+  id = "auto-scaling-group-name/scheduled-action-name"
+}
 ```
-$ terraform import aws_autoscaling_schedule.resource-name auto-scaling-group-name/scheduled-action-name
+
+Using `terraform import`, import AutoScaling ScheduledAction using the `auto-scaling-group-name` and `scheduled-action-name`. For example:
+
+```console
+% terraform import aws_autoscaling_schedule.resource-name auto-scaling-group-name/scheduled-action-name
 ```

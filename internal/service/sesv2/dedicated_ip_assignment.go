@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sesv2
 
 import (
@@ -12,7 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -58,7 +61,8 @@ const (
 )
 
 func resourceDedicatedIPAssignmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client()
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	in := &sesv2.PutDedicatedIpInPoolInput{
 		Ip:                  aws.String(d.Get("ip").(string)),
@@ -67,36 +71,38 @@ func resourceDedicatedIPAssignmentCreate(ctx context.Context, d *schema.Resource
 
 	_, err := conn.PutDedicatedIpInPool(ctx, in)
 	if err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionCreating, ResNameDedicatedIPAssignment, d.Get("ip").(string), err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionCreating, ResNameDedicatedIPAssignment, d.Get("ip").(string), err)
 	}
 
 	id := toID(d.Get("ip").(string), d.Get("destination_pool_name").(string))
 	d.SetId(id)
 
-	return resourceDedicatedIPAssignmentRead(ctx, d, meta)
+	return append(diags, resourceDedicatedIPAssignmentRead(ctx, d, meta)...)
 }
 
 func resourceDedicatedIPAssignmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client()
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	out, err := FindDedicatedIPAssignmentByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SESV2 DedicatedIPAssignment (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 	if err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionReading, ResNameDedicatedIPAssignment, d.Id(), err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionReading, ResNameDedicatedIPAssignment, d.Id(), err)
 	}
 
-	d.Set("ip", aws.ToString(out.Ip))
-	d.Set("destination_pool_name", aws.ToString(out.PoolName))
+	d.Set("ip", out.Ip)
+	d.Set("destination_pool_name", out.PoolName)
 
-	return nil
+	return diags
 }
 
 func resourceDedicatedIPAssignmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client()
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 	ip, _ := splitID(d.Id())
 
 	log.Printf("[INFO] Deleting SESV2 DedicatedIPAssignment %s", d.Id())
@@ -108,13 +114,13 @@ func resourceDedicatedIPAssignmentDelete(ctx context.Context, d *schema.Resource
 	if err != nil {
 		var nfe *types.NotFoundException
 		if errors.As(err, &nfe) {
-			return nil
+			return diags
 		}
 
-		return create.DiagError(names.SESV2, create.ErrActionDeleting, ResNameDedicatedIPAssignment, d.Id(), err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionDeleting, ResNameDedicatedIPAssignment, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 const (
@@ -140,7 +146,7 @@ func FindDedicatedIPAssignmentByID(ctx context.Context, conn *sesv2.Client, id s
 	if err != nil {
 		var nfe *types.NotFoundException
 		if errors.As(err, &nfe) {
-			return nil, &resource.NotFoundError{
+			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
 			}
@@ -153,7 +159,7 @@ func FindDedicatedIPAssignmentByID(ctx context.Context, conn *sesv2.Client, id s
 		return nil, tfresource.NewEmptyResultError(in)
 	}
 	if out.DedicatedIp.PoolName == nil || aws.ToString(out.DedicatedIp.PoolName) != destinationPoolName {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   ErrIncorrectPoolAssignment,
 			LastRequest: in,
 		}

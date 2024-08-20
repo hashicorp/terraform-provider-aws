@@ -1,0 +1,11 @@
+```release-note:new-resource
+aws_lakeformation_data_cells_filter
+```
+
+```release-note:enhancement
+resource/aws_lakeformation_permissions: Add `data_cells_filter` attribute
+```
+
+```release-note:enhancement
+data-source/aws_lakeformation_permissions: Add `data_cells_filter` attribute
+```

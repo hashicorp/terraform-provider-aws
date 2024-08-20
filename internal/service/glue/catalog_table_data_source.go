@@ -1,19 +1,25 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package glue
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/glue"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_glue_catalog_table")
@@ -22,36 +28,36 @@ func DataSourceCatalogTable() *schema.Resource {
 		ReadWithoutTimeout: dataSourceCatalogTableRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"catalog_id": {
+			names.AttrCatalogID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"database_name": {
+			names.AttrDatabaseName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 255),
-					validation.StringDoesNotMatch(regexp.MustCompile(`[A-Z]`), "uppercase characters cannot be used"),
+					validation.StringDoesNotMatch(regexache.MustCompile(`[A-Z]`), "uppercase characters cannot be used"),
 				),
 			},
-			"owner": {
+			names.AttrOwner: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"parameters": {
+			names.AttrParameters: {
 				Type:     schema.TypeMap,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -82,15 +88,15 @@ func DataSourceCatalogTable() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"comment": {
+						names.AttrComment: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -112,6 +118,11 @@ func DataSourceCatalogTable() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"additional_locations": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
 						"bucket_columns": {
 							Type:     schema.TypeList,
 							Computed: true,
@@ -124,20 +135,20 @@ func DataSourceCatalogTable() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"comment": {
+									names.AttrComment: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"parameters": {
+									names.AttrParameters: {
 										Type:     schema.TypeMap,
 										Computed: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
-									"type": {
+									names.AttrType: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -152,7 +163,7 @@ func DataSourceCatalogTable() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"location": {
+						names.AttrLocation: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -164,7 +175,7 @@ func DataSourceCatalogTable() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"parameters": {
+						names.AttrParameters: {
 							Type:     schema.TypeMap,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -174,11 +185,11 @@ func DataSourceCatalogTable() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"parameters": {
+									names.AttrParameters: {
 										Type:     schema.TypeMap,
 										Computed: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
@@ -283,15 +294,19 @@ func DataSourceCatalogTable() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"catalog_id": {
+						names.AttrCatalogID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"database_name": {
+						names.AttrDatabaseName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrRegion: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -316,11 +331,13 @@ func DataSourceCatalogTable() *schema.Resource {
 }
 
 func dataSourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).GlueConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
 	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID)
-	dbName := d.Get("database_name").(string)
-	name := d.Get("name").(string)
+	dbName := d.Get(names.AttrDatabaseName).(string)
+	name := d.Get(names.AttrName).(string)
 
 	d.SetId(fmt.Sprintf("%s:%s:%s", catalogID, dbName, name))
 
@@ -338,14 +355,14 @@ func dataSourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, met
 		input.TransactionId = aws.String(v.(string))
 	}
 
-	out, err := conn.GetTableWithContext(ctx, input)
+	out, err := conn.GetTable(ctx, input)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
-			return diag.Errorf("No Glue table %s found for catalog_id: %s, database_name: %s", name, catalogID,
+		if errs.IsA[*awstypes.EntityNotFoundException](err) {
+			return sdkdiag.AppendErrorf(diags, "No Glue table %s found for catalog_id: %s, database_name: %s", name, catalogID,
 				dbName)
 		}
 
-		return diag.Errorf("Error reading Glue Catalog Table: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading Glue Catalog Table: %s", err)
 	}
 
 	table := out.Table
@@ -354,36 +371,36 @@ func dataSourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, met
 		Service:   "glue",
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("table/%s/%s", dbName, aws.StringValue(table.Name)),
+		Resource:  fmt.Sprintf("table/%s/%s", dbName, aws.ToString(table.Name)),
 	}.String()
-	d.Set("arn", tableArn)
+	d.Set(names.AttrARN, tableArn)
 
-	d.Set("name", table.Name)
-	d.Set("catalog_id", catalogID)
-	d.Set("database_name", dbName)
-	d.Set("description", table.Description)
-	d.Set("owner", table.Owner)
+	d.Set(names.AttrName, table.Name)
+	d.Set(names.AttrCatalogID, catalogID)
+	d.Set(names.AttrDatabaseName, dbName)
+	d.Set(names.AttrDescription, table.Description)
+	d.Set(names.AttrOwner, table.Owner)
 	d.Set("retention", table.Retention)
 
 	if err := d.Set("storage_descriptor", flattenStorageDescriptor(table.StorageDescriptor)); err != nil {
-		return diag.Errorf("error setting storage_descriptor: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting storage_descriptor: %s", err)
 	}
 
 	if err := d.Set("partition_keys", flattenColumns(table.PartitionKeys)); err != nil {
-		return diag.Errorf("error setting partition_keys: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting partition_keys: %s", err)
 	}
 
 	d.Set("view_original_text", table.ViewOriginalText)
 	d.Set("view_expanded_text", table.ViewExpandedText)
 	d.Set("table_type", table.TableType)
 
-	if err := d.Set("parameters", aws.StringValueMap(table.Parameters)); err != nil {
-		return diag.Errorf("error setting parameters: %s", err)
+	if err := d.Set(names.AttrParameters, table.Parameters); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting parameters: %s", err)
 	}
 
 	if table.TargetTable != nil {
 		if err := d.Set("target_table", []interface{}{flattenTableTargetTable(table.TargetTable)}); err != nil {
-			return diag.Errorf("error setting target_table: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting target_table: %s", err)
 		}
 	} else {
 		d.Set("target_table", nil)
@@ -394,16 +411,16 @@ func dataSourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, met
 		TableName:    out.Table.Name,
 		DatabaseName: out.Table.DatabaseName,
 	}
-	partOut, err := conn.GetPartitionIndexesWithContext(ctx, partIndexInput)
+	partOut, err := conn.GetPartitionIndexes(ctx, partIndexInput)
 	if err != nil {
-		return diag.Errorf("error getting Glue Partition Indexes: %s", err)
+		return sdkdiag.AppendErrorf(diags, "getting Glue Partition Indexes: %s", err)
 	}
 
 	if partOut != nil && len(partOut.PartitionIndexDescriptorList) > 0 {
 		if err := d.Set("partition_index", flattenPartitionIndexes(partOut.PartitionIndexDescriptorList)); err != nil {
-			return diag.Errorf("error setting partition_index: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting partition_index: %s", err)
 		}
 	}
 
-	return nil
+	return diags
 }

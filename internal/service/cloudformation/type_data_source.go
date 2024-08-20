@@ -1,25 +1,31 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudformation
 
 import (
 	"context"
-	"fmt"
-	"regexp"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudformation"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_cloudformation_type")
-func DataSourceType() *schema.Resource {
+// @SDKDataSource("aws_cloudformation_type", name="Type")
+func dataSourceType() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTypeRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -32,7 +38,7 @@ func DataSourceType() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -40,7 +46,7 @@ func DataSourceType() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"execution_role_arn": {
+			names.AttrExecutionRoleARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -53,7 +59,7 @@ func DataSourceType() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"log_group_name": {
+						names.AttrLogGroupName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -68,7 +74,7 @@ func DataSourceType() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"schema": {
+			names.AttrSchema: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -76,11 +82,11 @@ func DataSourceType() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(cloudformation.RegistryType_Values(), false),
+			names.AttrType: {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.RegistryType](),
 			},
 			"type_arn": {
 				Type:     schema.TypeString,
@@ -92,7 +98,7 @@ func DataSourceType() *schema.Resource {
 				Computed: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(10, 204),
-					validation.StringMatch(regexp.MustCompile(`[A-Za-z0-9]{2,64}::[A-Za-z0-9]{2,64}::[A-Za-z0-9]{2,64}(::MODULE){0,1}`), "three alphanumeric character sections separated by double colons (::)"),
+					validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z]{2,64}::[0-9A-Za-z]{2,64}::[0-9A-Za-z]{2,64}(::MODULE){0,1}`), "three alphanumeric character sections separated by double colons (::)"),
 				),
 			},
 			"version_id": {
@@ -108,16 +114,17 @@ func DataSourceType() *schema.Resource {
 }
 
 func dataSourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudFormationConn()
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
 	input := &cloudformation.DescribeTypeInput{}
 
-	if v, ok := d.GetOk("arn"); ok {
+	if v, ok := d.GetOk(names.AttrARN); ok {
 		input.Arn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("type"); ok {
-		input.Type = aws.String(v.(string))
+	if v, ok := d.GetOk(names.AttrType); ok {
+		input.Type = awstypes.RegistryType(v.(string))
 	}
 
 	if v, ok := d.GetOk("type_name"); ok {
@@ -128,38 +135,33 @@ func dataSourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interf
 		input.VersionId = aws.String(v.(string))
 	}
 
-	output, err := conn.DescribeTypeWithContext(ctx, input)
+	output, err := findType(ctx, conn, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading CloudFormation Type: %w", err))
+		return sdkdiag.AppendErrorf(diags, "reading CloudFormation Type: %s", err)
 	}
 
-	if output == nil {
-		return diag.FromErr(fmt.Errorf("error reading CloudFormation Type: empty response"))
-	}
-
-	d.SetId(aws.StringValue(output.Arn))
-
-	d.Set("arn", output.Arn)
+	d.SetId(aws.ToString(output.Arn))
+	d.Set(names.AttrARN, output.Arn)
 	d.Set("default_version_id", output.DefaultVersionId)
 	d.Set("deprecated_status", output.DeprecatedStatus)
-	d.Set("description", output.Description)
+	d.Set(names.AttrDescription, output.Description)
 	d.Set("documentation_url", output.DocumentationUrl)
-	d.Set("execution_role_arn", output.ExecutionRoleArn)
+	d.Set(names.AttrExecutionRoleARN, output.ExecutionRoleArn)
 	d.Set("is_default_version", output.IsDefaultVersion)
 	if output.LoggingConfig != nil {
 		if err := d.Set("logging_config", []interface{}{flattenLoggingConfig(output.LoggingConfig)}); err != nil {
-			return diag.FromErr(fmt.Errorf("error setting logging_config: %w", err))
+			return sdkdiag.AppendErrorf(diags, "setting logging_config: %s", err)
 		}
 	} else {
 		d.Set("logging_config", nil)
 	}
 	d.Set("provisioning_type", output.ProvisioningType)
-	d.Set("schema", output.Schema)
+	d.Set(names.AttrSchema, output.Schema)
 	d.Set("source_url", output.SourceUrl)
-	d.Set("type", output.Type)
+	d.Set(names.AttrType, output.Type)
 	d.Set("type_name", output.TypeName)
 	d.Set("visibility", output.Visibility)
 
-	return nil
+	return diags
 }

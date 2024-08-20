@@ -1,35 +1,49 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/rds"
+	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_db_proxy_endpoint")
-func ResourceProxyEndpoint() *schema.Resource {
+// @SDKResource("aws_db_proxy_endpoint", name="DB Proxy Endpoint")
+// @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
+func resourceProxyEndpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProxyEndpointCreate,
 		ReadWithoutTimeout:   resourceProxyEndpointRead,
 		DeleteWithoutTimeout: resourceProxyEndpointDelete,
 		UpdateWithoutTimeout: resourceProxyEndpointUpdate,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		CustomizeDiff: verify.SetTagsDiff,
+
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
 			Update: schema.DefaultTimeout(30 * time.Minute),
@@ -37,15 +51,9 @@ func ResourceProxyEndpoint() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
-			},
-			"db_proxy_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validIdentifier,
 			},
 			"db_proxy_endpoint_name": {
 				Type:         schema.TypeString,
@@ -53,7 +61,13 @@ func ResourceProxyEndpoint() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validIdentifier,
 			},
-			"endpoint": {
+			"db_proxy_name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validIdentifier,
+			},
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -61,20 +75,20 @@ func ResourceProxyEndpoint() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"target_role": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      rds.DBProxyEndpointTargetRoleReadWrite,
-				ValidateFunc: validation.StringInSlice(rds.DBProxyEndpointTargetRole_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				Default:          types.DBProxyEndpointTargetRoleReadWrite,
+				ValidateDiagFunc: enum.Validate[types.DBProxyEndpointTargetRole](),
 			},
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"vpc_security_group_ids": {
+			names.AttrVPCSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -92,35 +106,32 @@ func ResourceProxyEndpoint() *schema.Resource {
 
 func resourceProxyEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
-	dbProxyName := d.Get("db_proxy_name").(string)
-	dbProxyEndpointName := d.Get("db_proxy_endpoint_name").(string)
-
-	params := rds.CreateDBProxyEndpointInput{
+	dbProxyName, dbProxyEndpointName := d.Get("db_proxy_name").(string), d.Get("db_proxy_endpoint_name").(string)
+	id := proxyEndpointCreateResourceID(dbProxyName, dbProxyEndpointName)
+	input := &rds.CreateDBProxyEndpointInput{
 		DBProxyName:         aws.String(dbProxyName),
 		DBProxyEndpointName: aws.String(dbProxyEndpointName),
-		TargetRole:          aws.String(d.Get("target_role").(string)),
-		VpcSubnetIds:        flex.ExpandStringSet(d.Get("vpc_subnet_ids").(*schema.Set)),
-		Tags:                Tags(tags.IgnoreAWS()),
+		Tags:                getTagsIn(ctx),
+		TargetRole:          types.DBProxyEndpointTargetRole(d.Get("target_role").(string)),
+		VpcSubnetIds:        flex.ExpandStringValueSet(d.Get("vpc_subnet_ids").(*schema.Set)),
 	}
 
-	if v := d.Get("vpc_security_group_ids").(*schema.Set); v.Len() > 0 {
-		params.VpcSecurityGroupIds = flex.ExpandStringSet(v)
+	if v, ok := d.GetOk(names.AttrVPCSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
+		input.VpcSecurityGroupIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	_, err := conn.CreateDBProxyEndpointWithContext(ctx, &params)
+	_, err := conn.CreateDBProxyEndpoint(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Creating RDS DB Proxy Endpoint (%s/%s): %s", dbProxyName, dbProxyEndpointName, err)
+		return sdkdiag.AppendErrorf(diags, "creating RDS DB Proxy Endpoint (%s): %s", id, err)
 	}
 
-	d.SetId(strings.Join([]string{dbProxyName, dbProxyEndpointName}, "/"))
+	d.SetId(id)
 
-	if _, err := waitDBProxyEndpointAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Proxy Endpoint (%s) to become available: %s", d.Id(), err)
+	if _, err := waitDBProxyEndpointAvailable(ctx, conn, dbProxyName, dbProxyEndpointName, d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Proxy Endpoint (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceProxyEndpointRead(ctx, d, meta)...)
@@ -128,19 +139,16 @@ func resourceProxyEndpointCreate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceProxyEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
-	dbProxyEndpoint, err := FindDBProxyEndpoint(ctx, conn, d.Id())
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) {
-		log.Printf("[WARN] RDS DB Proxy Endpoint (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
+	dbProxyName, dbProxyEndpointName, err := proxyEndpointParseResourceID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyEndpointNotFoundFault) {
+	dbProxyEndpoint, err := findDBProxyEndpointByTwoPartKey(ctx, conn, dbProxyName, dbProxyEndpointName)
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] RDS DB Proxy Endpoint (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -150,73 +158,42 @@ func resourceProxyEndpointRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "reading RDS DB Proxy Endpoint (%s): %s", d.Id(), err)
 	}
 
-	if dbProxyEndpoint == nil {
-		if d.IsNewResource() {
-			return sdkdiag.AppendErrorf(diags, "reading RDS DB Proxy Endpoint (%s): not found after creation", d.Id())
-		}
-
-		log.Printf("[WARN] RDS DB Proxy Endpoint (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
-	}
-
-	endpointArn := aws.StringValue(dbProxyEndpoint.DBProxyEndpointArn)
-	d.Set("arn", endpointArn)
-	d.Set("db_proxy_name", dbProxyEndpoint.DBProxyName)
-	d.Set("endpoint", dbProxyEndpoint.Endpoint)
+	d.Set(names.AttrARN, dbProxyEndpoint.DBProxyEndpointArn)
 	d.Set("db_proxy_endpoint_name", dbProxyEndpoint.DBProxyEndpointName)
+	d.Set("db_proxy_name", dbProxyEndpoint.DBProxyName)
+	d.Set(names.AttrEndpoint, dbProxyEndpoint.Endpoint)
 	d.Set("is_default", dbProxyEndpoint.IsDefault)
 	d.Set("target_role", dbProxyEndpoint.TargetRole)
-	d.Set("vpc_id", dbProxyEndpoint.VpcId)
-	d.Set("target_role", dbProxyEndpoint.TargetRole)
-	d.Set("vpc_subnet_ids", flex.FlattenStringSet(dbProxyEndpoint.VpcSubnetIds))
-	d.Set("vpc_security_group_ids", flex.FlattenStringSet(dbProxyEndpoint.VpcSecurityGroupIds))
-
-	tags, err := ListTags(ctx, conn, endpointArn)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for RDS DB Proxy Endpoint (%s): %s", endpointArn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	d.Set(names.AttrVPCID, dbProxyEndpoint.VpcId)
+	d.Set(names.AttrVPCSecurityGroupIDs, dbProxyEndpoint.VpcSecurityGroupIds)
+	d.Set("vpc_subnet_ids", dbProxyEndpoint.VpcSubnetIds)
 
 	return diags
 }
 
 func resourceProxyEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
-	if d.HasChange("vpc_security_group_ids") {
-		params := rds.ModifyDBProxyEndpointInput{
-			DBProxyEndpointName: aws.String(d.Get("db_proxy_endpoint_name").(string)),
-			VpcSecurityGroupIds: flex.ExpandStringSet(d.Get("vpc_security_group_ids").(*schema.Set)),
-		}
-
-		_, err := conn.ModifyDBProxyEndpointWithContext(ctx, &params)
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating DB Proxy Endpoint: %s", err)
-		}
-
-		if _, err := waitDBProxyEndpointAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Proxy Endpoint (%s) to become modified: %s", d.Id(), err)
-		}
+	dbProxyName, dbProxyEndpointName, err := proxyEndpointParseResourceID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
+	if d.HasChange(names.AttrVPCSecurityGroupIDs) {
+		input := &rds.ModifyDBProxyEndpointInput{
+			DBProxyEndpointName: aws.String(dbProxyEndpointName),
+			VpcSecurityGroupIds: flex.ExpandStringValueSet(d.Get(names.AttrVPCSecurityGroupIDs).(*schema.Set)),
+		}
 
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating RDS DB Proxy Endpoint (%s) tags: %s", d.Get("arn").(string), err)
+		_, err := conn.ModifyDBProxyEndpoint(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating RDS DB Proxy Endpoint (%s): %s", d.Id(), err)
+		}
+
+		if _, err := waitDBProxyEndpointAvailable(ctx, conn, dbProxyName, dbProxyEndpointName, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Proxy Endpoint (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -225,28 +202,157 @@ func resourceProxyEndpointUpdate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceProxyEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
-	params := rds.DeleteDBProxyEndpointInput{
-		DBProxyEndpointName: aws.String(d.Get("db_proxy_endpoint_name").(string)),
+	dbProxyName, dbProxyEndpointName, err := proxyEndpointParseResourceID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	log.Printf("[DEBUG] Delete DB Proxy Endpoint: %#v", params)
-	_, err := conn.DeleteDBProxyEndpointWithContext(ctx, &params)
+	log.Printf("[DEBUG] Deleting RDS DB Proxy Endpoint: %s", d.Id())
+	_, err = conn.DeleteDBProxyEndpoint(ctx, &rds.DeleteDBProxyEndpointInput{
+		DBProxyEndpointName: aws.String(dbProxyEndpointName),
+	})
+
+	if errs.IsA[*types.DBProxyNotFoundFault](err) || errs.IsA[*types.DBProxyEndpointNotFoundFault](err) {
+		return diags
+	}
 
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) || tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyEndpointNotFoundFault) {
-			return diags
-		}
-		return sdkdiag.AppendErrorf(diags, "Deleting DB Proxy Endpoint: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting RDS DB Proxy Endpoint (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitDBProxyEndpointDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) || tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyEndpointNotFoundFault) {
-			return diags
-		}
-		return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Proxy Endpoint (%s) to become deleted: %s", d.Id(), err)
+	if _, err := waitDBProxyEndpointDeleted(ctx, conn, dbProxyName, dbProxyEndpointName, d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Proxy Endpoint (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
+}
+
+const proxyEndpointResourceIDSeparator = "/"
+
+func proxyEndpointCreateResourceID(dbProxyName, dbProxyEndpointName string) string {
+	parts := []string{dbProxyName, dbProxyEndpointName}
+	id := strings.Join(parts, proxyEndpointResourceIDSeparator)
+
+	return id
+}
+
+func proxyEndpointParseResourceID(id string) (string, string, error) {
+	parts := strings.SplitN(id, proxyEndpointResourceIDSeparator, 2)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected DBPROXYNAME%[2]sDBPROXYENDPOINTNAME", id, proxyEndpointResourceIDSeparator)
+}
+
+func findDBProxyEndpointByTwoPartKey(ctx context.Context, conn *rds.Client, dbProxyName, dbProxyEndpointName string) (*types.DBProxyEndpoint, error) {
+	input := &rds.DescribeDBProxyEndpointsInput{
+		DBProxyName:         aws.String(dbProxyName),
+		DBProxyEndpointName: aws.String(dbProxyEndpointName),
+	}
+	output, err := findDBProxyEndpoint(ctx, conn, input, tfslices.PredicateTrue[*types.DBProxyEndpoint]())
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.DBProxyName) != dbProxyName || aws.ToString(output.DBProxyEndpointName) != dbProxyEndpointName {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findDBProxyEndpoint(ctx context.Context, conn *rds.Client, input *rds.DescribeDBProxyEndpointsInput, filter tfslices.Predicate[*types.DBProxyEndpoint]) (*types.DBProxyEndpoint, error) {
+	output, err := findDBProxyEndpoints(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findDBProxyEndpoints(ctx context.Context, conn *rds.Client, input *rds.DescribeDBProxyEndpointsInput, filter tfslices.Predicate[*types.DBProxyEndpoint]) ([]types.DBProxyEndpoint, error) {
+	var output []types.DBProxyEndpoint
+
+	pages := rds.NewDescribeDBProxyEndpointsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*types.DBProxyNotFoundFault](err) || errs.IsA[*types.DBProxyEndpointNotFoundFault](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.DBProxyEndpoints {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
+	}
+
+	return output, nil
+}
+
+func statusDBProxyEndpoint(ctx context.Context, conn *rds.Client, dbProxyName, dbProxyEndpointName string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findDBProxyEndpointByTwoPartKey(ctx, conn, dbProxyName, dbProxyEndpointName)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status), nil
+	}
+}
+
+func waitDBProxyEndpointAvailable(ctx context.Context, conn *rds.Client, dbProxyName, dbProxyEndpointName string, timeout time.Duration) (*types.DBProxyEndpoint, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.DBProxyEndpointStatusCreating, types.DBProxyEndpointStatusModifying),
+		Target:  enum.Slice(types.DBProxyEndpointStatusAvailable),
+		Refresh: statusDBProxyEndpoint(ctx, conn, dbProxyName, dbProxyEndpointName),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.DBProxyEndpoint); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitDBProxyEndpointDeleted(ctx context.Context, conn *rds.Client, dbProxyName, dbProxyEndpointName string, timeout time.Duration) (*types.DBProxyEndpoint, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.DBProxyEndpointStatusDeleting),
+		Target:  []string{},
+		Refresh: statusDBProxyEndpoint(ctx, conn, dbProxyName, dbProxyEndpointName),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.DBProxyEndpoint); ok {
+		return output, err
+	}
+
+	return nil, err
 }

@@ -1,25 +1,29 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccVPCManagedPrefixListsDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCManagedPrefixListsDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue("data.aws_ec2_managed_prefix_lists.test", "ids.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue("data.aws_ec2_managed_prefix_lists.test", "ids.#", 0),
 				),
 			},
 		},
@@ -27,17 +31,18 @@ func TestAccVPCManagedPrefixListsDataSource_basic(t *testing.T) {
 }
 
 func TestAccVPCManagedPrefixListsDataSource_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCManagedPrefixListsDataSourceConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_ec2_managed_prefix_lists.test", "ids.#", "1"),
+					resource.TestCheckResourceAttr("data.aws_ec2_managed_prefix_lists.test", "ids.#", acctest.Ct1),
 				),
 			},
 		},
@@ -45,15 +50,16 @@ func TestAccVPCManagedPrefixListsDataSource_tags(t *testing.T) {
 }
 
 func TestAccVPCManagedPrefixListsDataSource_noMatches(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCManagedPrefixListsDataSourceConfig_noMatches,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_ec2_managed_prefix_lists.test", "ids.#", "0"),
+					resource.TestCheckResourceAttr("data.aws_ec2_managed_prefix_lists.test", "ids.#", acctest.Ct0),
 				),
 			},
 		},

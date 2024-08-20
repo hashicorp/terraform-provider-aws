@@ -1,27 +1,31 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
 	"context"
-	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_vpc_peering_connection_accepter")
-func ResourceVPCPeeringConnectionAccepter() *schema.Resource {
+// @SDKResource("aws_vpc_peering_connection_accepter", name="VPC Peering Connection")
+// @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
+func resourceVPCPeeringConnectionAccepter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCPeeringAccepterCreate,
 		ReadWithoutTimeout:   resourceVPCPeeringConnectionRead,
 		UpdateWithoutTimeout: resourceVPCPeeringConnectionUpdate,
-		DeleteWithoutTimeout: resourceVPCPeeringAccepterDelete,
+		DeleteWithoutTimeout: schema.NoopContext,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(1 * time.Minute),
@@ -65,10 +69,10 @@ func ResourceVPCPeeringConnectionAccepter() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"requester": vpcPeeringConnectionOptionsSchema,
-			"tags":      tftags.TagsSchema(),
-			"tags_all":  tftags.TagsSchemaComputed(),
-			"vpc_id": {
+			"requester":       vpcPeeringConnectionOptionsSchema,
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -85,16 +89,10 @@ func ResourceVPCPeeringConnectionAccepter() *schema.Resource {
 
 func resourceVPCPeeringAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
-
-	if peeringConnectionOptionsAllowsClassicLink(d) {
-		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic no VPC Peering Connections can be accepted with ClassicLink options enabled`)
-	}
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	vpcPeeringConnectionID := d.Get("vpc_peering_connection_id").(string)
-	vpcPeeringConnection, err := FindVPCPeeringConnectionByID(ctx, conn, vpcPeeringConnectionID)
+	vpcPeeringConnection, err := findVPCPeeringConnectionByID(ctx, conn, vpcPeeringConnectionID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC Peering Connection (%s): %s", vpcPeeringConnectionID, err)
@@ -102,7 +100,7 @@ func resourceVPCPeeringAccepterCreate(ctx context.Context, d *schema.ResourceDat
 
 	d.SetId(vpcPeeringConnectionID)
 
-	if _, ok := d.GetOk("auto_accept"); ok && aws.StringValue(vpcPeeringConnection.Status.Code) == ec2.VpcPeeringConnectionStateReasonCodePendingAcceptance {
+	if _, ok := d.GetOk("auto_accept"); ok && vpcPeeringConnection.Status.Code == awstypes.VpcPeeringConnectionStateReasonCodePendingAcceptance {
 		vpcPeeringConnection, err = acceptVPCPeeringConnection(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 
 		if err != nil {
@@ -114,18 +112,9 @@ func resourceVPCPeeringAccepterCreate(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if len(tags) > 0 {
-		if err := CreateTags(ctx, conn, d.Id(), tags.Map()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating EC2 VPC Peering Connection (%s) tags: %s", d.Id(), err)
-		}
+	if err := createTags(ctx, conn, d.Id(), getTagsIn(ctx)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting EC2 VPC Peering Connection (%s) tags: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceVPCPeeringConnectionRead(ctx, d, meta)...)
-}
-
-func resourceVPCPeeringAccepterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	log.Printf("[WARN]  EC2 VPC Peering Connection (%s) not deleted, removing from state", d.Id())
-
-	return diags
 }

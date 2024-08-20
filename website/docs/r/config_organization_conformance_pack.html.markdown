@@ -85,7 +85,7 @@ EOT
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required, Forces new resource) The name of the organization conformance pack. Must begin with a letter and contain from 1 to 128 alphanumeric characters and hyphens.
 * `delivery_s3_bucket` - (Optional) Amazon S3 bucket where AWS Config stores conformance pack templates. Delivery bucket must begin with `awsconfigconforms` prefix. Maximum length of 63.
@@ -102,9 +102,9 @@ The `input_parameter` configuration block supports the following arguments:
 * `parameter_name` - (Required) The input key.
 * `parameter_value` - (Required) The input value.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the organization conformance pack.
 * `id` - The name of the organization conformance pack.
@@ -119,8 +119,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Config Organization Conformance Packs can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Config Organization Conformance Packs using the `name`. For example:
 
+```terraform
+import {
+  to = aws_config_organization_conformance_pack.example
+  id = "example"
+}
 ```
-$ terraform import aws_config_organization_conformance_pack.example example
+
+Using `terraform import`, import Config Organization Conformance Packs using the `name`. For example:
+
+```console
+% terraform import aws_config_organization_conformance_pack.example example
 ```

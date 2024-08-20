@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package location
 
 import (
@@ -6,22 +9,24 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/locationservice"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/location"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/location/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_location_geofence_collection")
+// @SDKResource("aws_location_geofence_collection", name="Geofence Collection")
+// @Tags(identifierAttribute="collection_arn")
 func ResourceGeofenceCollection() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGeofenceCollectionCreate,
@@ -50,16 +55,16 @@ func ResourceGeofenceCollection() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
-			"create_time": {
+			names.AttrCreateTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1000),
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -69,8 +74,8 @@ func ResourceGeofenceCollection() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -82,146 +87,123 @@ const (
 )
 
 func resourceGeofenceCollectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LocationConn()
+	var diags diag.Diagnostics
 
-	in := &locationservice.CreateGeofenceCollectionInput{
+	conn := meta.(*conns.AWSClient).LocationClient(ctx)
+
+	in := &location.CreateGeofenceCollectionInput{
 		CollectionName: aws.String(d.Get("collection_name").(string)),
+		Tags:           getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok && v != "" {
+	if v, ok := d.GetOk(names.AttrDescription); ok && v != "" {
 		in.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("kms_key_id"); ok && v != "" {
+	if v, ok := d.GetOk(names.AttrKMSKeyID); ok && v != "" {
 		in.KmsKeyId = aws.String(v.(string))
 	}
 
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
-
-	if len(tags) > 0 {
-		in.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	out, err := conn.CreateGeofenceCollectionWithContext(ctx, in)
+	out, err := conn.CreateGeofenceCollection(ctx, in)
 	if err != nil {
-		return create.DiagError(names.Location, create.ErrActionCreating, ResNameGeofenceCollection, d.Get("collection_name").(string), err)
+		return create.AppendDiagError(diags, names.Location, create.ErrActionCreating, ResNameGeofenceCollection, d.Get("collection_name").(string), err)
 	}
 
 	if out == nil {
-		return create.DiagError(names.Location, create.ErrActionCreating, ResNameGeofenceCollection, d.Get("collection_name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.Location, create.ErrActionCreating, ResNameGeofenceCollection, d.Get("collection_name").(string), errors.New("empty output"))
 	}
 
-	d.SetId(aws.StringValue(out.CollectionName))
+	d.SetId(aws.ToString(out.CollectionName))
 
-	return resourceGeofenceCollectionRead(ctx, d, meta)
+	return append(diags, resourceGeofenceCollectionRead(ctx, d, meta)...)
 }
 
 func resourceGeofenceCollectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LocationConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).LocationClient(ctx)
 
 	out, err := findGeofenceCollectionByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Location GeofenceCollection (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Location, create.ErrActionReading, ResNameGeofenceCollection, d.Id(), err)
+		return create.AppendDiagError(diags, names.Location, create.ErrActionReading, ResNameGeofenceCollection, d.Id(), err)
 	}
 
 	d.Set("collection_arn", out.CollectionArn)
 	d.Set("collection_name", out.CollectionName)
-	d.Set("create_time", aws.TimeValue(out.CreateTime).Format(time.RFC3339))
-	d.Set("description", out.Description)
-	d.Set("kms_key_id", out.KmsKeyId)
-	d.Set("update_time", aws.TimeValue(out.UpdateTime).Format(time.RFC3339))
+	d.Set(names.AttrCreateTime, aws.ToTime(out.CreateTime).Format(time.RFC3339))
+	d.Set(names.AttrDescription, out.Description)
+	d.Set(names.AttrKMSKeyID, out.KmsKeyId)
+	d.Set("update_time", aws.ToTime(out.UpdateTime).Format(time.RFC3339))
 
-	tags, err := ListTags(ctx, conn, d.Get("collection_arn").(string))
-	if err != nil {
-		return create.DiagError(names.Location, create.ErrActionReading, ResNameGeofenceCollection, d.Id(), err)
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.Location, create.ErrActionSetting, ResNameGeofenceCollection, d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagError(names.Location, create.ErrActionSetting, ResNameGeofenceCollection, d.Id(), err)
-	}
-
-	return nil
+	return diags
 }
 
 func resourceGeofenceCollectionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LocationConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).LocationClient(ctx)
 
 	update := false
 
-	in := &locationservice.UpdateGeofenceCollectionInput{
+	in := &location.UpdateGeofenceCollectionInput{
 		CollectionName: aws.String(d.Id()),
 	}
 
-	if d.HasChange("description") {
-		in.Description = aws.String(d.Get("description").(string))
+	if d.HasChange(names.AttrDescription) {
+		in.Description = aws.String(d.Get(names.AttrDescription).(string))
 		update = true
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("collection_arn").(string), o, n); err != nil {
-			return create.DiagError(names.Location, create.ErrActionUpdating, ResNameGeofenceCollection, d.Id(), err)
-		}
-	}
-
 	if !update {
-		return nil
+		return diags
 	}
 
 	log.Printf("[DEBUG] Updating Location GeofenceCollection (%s): %#v", d.Id(), in)
-	_, err := conn.UpdateGeofenceCollectionWithContext(ctx, in)
+	_, err := conn.UpdateGeofenceCollection(ctx, in)
 	if err != nil {
-		return create.DiagError(names.Location, create.ErrActionUpdating, ResNameGeofenceCollection, d.Id(), err)
+		return create.AppendDiagError(diags, names.Location, create.ErrActionUpdating, ResNameGeofenceCollection, d.Id(), err)
 	}
 
-	return resourceGeofenceCollectionRead(ctx, d, meta)
+	return append(diags, resourceGeofenceCollectionRead(ctx, d, meta)...)
 }
 
 func resourceGeofenceCollectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LocationConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).LocationClient(ctx)
 
 	log.Printf("[INFO] Deleting Location GeofenceCollection %s", d.Id())
 
-	_, err := conn.DeleteGeofenceCollectionWithContext(ctx, &locationservice.DeleteGeofenceCollectionInput{
+	_, err := conn.DeleteGeofenceCollection(ctx, &location.DeleteGeofenceCollectionInput{
 		CollectionName: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, locationservice.ErrCodeResourceNotFoundException) {
-		return nil
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Location, create.ErrActionDeleting, ResNameGeofenceCollection, d.Id(), err)
+		return create.AppendDiagError(diags, names.Location, create.ErrActionDeleting, ResNameGeofenceCollection, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func findGeofenceCollectionByName(ctx context.Context, conn *locationservice.LocationService, name string) (*locationservice.DescribeGeofenceCollectionOutput, error) {
-	in := &locationservice.DescribeGeofenceCollectionInput{
+func findGeofenceCollectionByName(ctx context.Context, conn *location.Client, name string) (*location.DescribeGeofenceCollectionOutput, error) {
+	in := &location.DescribeGeofenceCollectionInput{
 		CollectionName: aws.String(name),
 	}
 
-	out, err := conn.DescribeGeofenceCollectionWithContext(ctx, in)
-	if tfawserr.ErrCodeEquals(err, locationservice.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+	out, err := conn.DescribeGeofenceCollection(ctx, in)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}

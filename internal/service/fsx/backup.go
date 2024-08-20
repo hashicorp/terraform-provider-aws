@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package fsx
 
 import (
@@ -5,27 +8,34 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/fsx"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/fsx"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_fsx_backup")
-func ResourceBackup() *schema.Resource {
+// @SDKResource("aws_fsx_backup", name="Backup")
+// @Tags(identifierAttribute="arn")
+func resourceBackup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBackupCreate,
 		ReadWithoutTimeout:   resourceBackupRead,
 		UpdateWithoutTimeout: resourceBackupUpdate,
 		DeleteWithoutTimeout: resourceBackupDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -36,26 +46,26 @@ func ResourceBackup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"file_system_id": {
+			names.AttrFileSystemID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchemaComputed(),
-			"tags_all": tftags.TagsSchemaComputed(),
-			"type": {
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			names.AttrType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -74,15 +84,14 @@ func ResourceBackup() *schema.Resource {
 
 func resourceBackupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
 	input := &fsx.CreateBackupInput{
-		ClientRequestToken: aws.String(resource.UniqueId()),
+		ClientRequestToken: aws.String(id.UniqueId()),
+		Tags:               getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("file_system_id"); ok {
+	if v, ok := d.GetOk(names.AttrFileSystemID); ok {
 		input.FileSystemId = aws.String(v.(string))
 	}
 
@@ -98,35 +107,16 @@ func resourceBackupCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "creating FSx Backup: %s", "can only specify either file_system_id or volume_id")
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
+	output, err := conn.CreateBackup(ctx, input)
 
-	result, err := conn.CreateBackupWithContext(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating FSx Backup: %s", err)
 	}
 
-	d.SetId(aws.StringValue(result.Backup.BackupId))
+	d.SetId(aws.ToString(output.Backup.BackupId))
 
-	log.Println("[DEBUG] Waiting for FSx backup to become available")
 	if _, err := waitBackupAvailable(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for FSx Backup (%s) to be available: %s", d.Id(), err)
-	}
-
-	return append(diags, resourceBackupRead(ctx, d, meta)...)
-}
-
-func resourceBackupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating FSx Backup (%s) tags: %s", d.Get("arn").(string), err)
-		}
+		return sdkdiag.AppendErrorf(diags, "waiting for FSx Backup (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceBackupRead(ctx, d, meta)...)
@@ -134,11 +124,10 @@ func resourceBackupUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceBackupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
-	backup, err := FindBackupByID(ctx, conn, d.Id())
+	backup, err := findBackupByID(ctx, conn, d.Id())
+
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] FSx Backup (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -149,58 +138,152 @@ func resourceBackupRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading FSx Backup (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", backup.ResourceARN)
-	d.Set("type", backup.Type)
-
+	d.Set(names.AttrARN, backup.ResourceARN)
 	if backup.FileSystem != nil {
-		fs := backup.FileSystem
-		d.Set("file_system_id", fs.FileSystemId)
+		d.Set(names.AttrFileSystemID, backup.FileSystem.FileSystemId)
 	}
-
-	d.Set("kms_key_id", backup.KmsKeyId)
-
-	d.Set("owner_id", backup.OwnerId)
-
+	d.Set(names.AttrKMSKeyID, backup.KmsKeyId)
+	d.Set(names.AttrOwnerID, backup.OwnerId)
+	d.Set(names.AttrType, backup.Type)
 	if backup.Volume != nil {
 		d.Set("volume_id", backup.Volume.VolumeId)
 	}
 
-	tags := KeyValueTags(ctx, backup.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	setTagsOut(ctx, backup.Tags)
 
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
+	return diags
+}
+
+func resourceBackupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	// Tags only.
+
+	return append(diags, resourceBackupRead(ctx, d, meta)...)
+}
+
+func resourceBackupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).FSxClient(ctx)
+
+	log.Printf("[INFO] Deleting FSx Backup: %s", d.Id())
+	_, err := conn.DeleteBackup(ctx, &fsx.DeleteBackupInput{
+		BackupId: aws.String(d.Id()),
+	})
+
+	if errs.IsA[*awstypes.BackupNotFound](err) {
+		return diags
 	}
 
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting FSx Backup (%s): %s", d.Id(), err)
+	}
+
+	if _, err := waitBackupDeleted(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for FSx Backup (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func resourceBackupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
-
-	request := &fsx.DeleteBackupInput{
-		BackupId: aws.String(d.Id()),
+func findBackupByID(ctx context.Context, conn *fsx.Client, id string) (*awstypes.Backup, error) {
+	input := &fsx.DescribeBackupsInput{
+		BackupIds: []string{id},
 	}
 
-	log.Printf("[INFO] Deleting FSx Backup: %s", d.Id())
-	_, err := conn.DeleteBackupWithContext(ctx, request)
+	return findBackup(ctx, conn, input, tfslices.PredicateTrue[*awstypes.Backup]())
+}
+
+func findBackup(ctx context.Context, conn *fsx.Client, input *fsx.DescribeBackupsInput, filter tfslices.Predicate[*awstypes.Backup]) (*awstypes.Backup, error) {
+	output, err := findBackups(ctx, conn, input, filter)
 
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, fsx.ErrCodeBackupNotFound) {
-			return diags
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findBackups(ctx context.Context, conn *fsx.Client, input *fsx.DescribeBackupsInput, filter tfslices.Predicate[*awstypes.Backup]) ([]awstypes.Backup, error) {
+	var output []awstypes.Backup
+
+	pages := fsx.NewDescribeBackupsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.FileSystemNotFound](err) || errs.IsA[*awstypes.BackupNotFound](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
 		}
-		return sdkdiag.AppendErrorf(diags, "deleting FSx Backup (%s): %s", d.Id(), err)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Backups {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
 	}
 
-	log.Println("[DEBUG] Waiting for backup to delete")
-	if _, err := waitBackupDeleted(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for FSx Backup (%s) to deleted: %s", d.Id(), err)
+	return output, nil
+}
+
+func statusBackup(ctx context.Context, conn *fsx.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findBackupByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Lifecycle), nil
+	}
+}
+
+func waitBackupAvailable(ctx context.Context, conn *fsx.Client, id string) (*awstypes.Backup, error) {
+	const (
+		timeout = 10 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.BackupLifecycleCreating, awstypes.BackupLifecyclePending, awstypes.BackupLifecycleTransferring),
+		Target:  enum.Slice(awstypes.BackupLifecycleAvailable),
+		Refresh: statusBackup(ctx, conn, id),
+		Timeout: timeout,
 	}
 
-	return diags
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Backup); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitBackupDeleted(ctx context.Context, conn *fsx.Client, id string) (*awstypes.Backup, error) {
+	const (
+		timeout = 10 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.FileSystemLifecycleDeleting),
+		Target:  []string{},
+		Refresh: statusBackup(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Backup); ok {
+		return output, err
+	}
+
+	return nil, err
 }

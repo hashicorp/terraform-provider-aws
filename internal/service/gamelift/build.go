@@ -1,49 +1,58 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package gamelift
 
 import (
 	"context"
 	"log"
+	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/gamelift"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/gamelift"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/gamelift/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_gamelift_build")
-func ResourceBuild() *schema.Resource {
+// @SDKResource("aws_gamelift_build", name="Build")
+// @Tags(identifierAttribute="arn")
+func resourceBuild() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBuildCreate,
 		ReadWithoutTimeout:   resourceBuildRead,
 		UpdateWithoutTimeout: resourceBuildUpdate,
 		DeleteWithoutTimeout: resourceBuildDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
 			"operating_system": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(gamelift.OperatingSystem_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.OperatingSystem](),
 			},
 			"storage_location": {
 				Type:     schema.TypeList,
@@ -52,12 +61,12 @@ func ResourceBuild() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"bucket": {
+						names.AttrBucket: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
 						},
-						"key": {
+						names.AttrKey: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
@@ -67,7 +76,7 @@ func ResourceBuild() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 						},
-						"role_arn": {
+						names.AttrRoleARN: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -76,13 +85,13 @@ func ResourceBuild() *schema.Resource {
 					},
 				},
 			},
-			"version": {
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			names.AttrVersion: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -91,46 +100,42 @@ func ResourceBuild() *schema.Resource {
 
 func resourceBuildCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GameLiftConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).GameLiftClient(ctx)
 
-	input := gamelift.CreateBuildInput{
-		Name:            aws.String(d.Get("name").(string)),
-		OperatingSystem: aws.String(d.Get("operating_system").(string)),
+	name := d.Get(names.AttrName).(string)
+	input := &gamelift.CreateBuildInput{
+		Name:            aws.String(name),
+		OperatingSystem: awstypes.OperatingSystem(d.Get("operating_system").(string)),
 		StorageLocation: expandStorageLocation(d.Get("storage_location").([]interface{})),
-		Tags:            Tags(tags.IgnoreAWS()),
+		Tags:            getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("version"); ok {
+	if v, ok := d.GetOk(names.AttrVersion); ok {
 		input.Version = aws.String(v.(string))
 	}
 
-	log.Printf("[INFO] Creating GameLift Build: %s", input)
-	var out *gamelift.CreateBuildOutput
-	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
-		var err error
-		out, err = conn.CreateBuildWithContext(ctx, &input)
-		if err != nil {
-			if tfawserr.ErrMessageContains(err, gamelift.ErrCodeInvalidRequestException, "Provided build is not accessible.") ||
-				tfawserr.ErrMessageContains(err, gamelift.ErrCodeInvalidRequestException, "GameLift cannot assume the role") {
-				return resource.RetryableError(err)
+	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
+		func() (interface{}, error) {
+			return conn.CreateBuild(ctx, input)
+		},
+		func(err error) (bool, error) {
+			if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "Provided build is not accessible.") ||
+				errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "GameLift cannot assume the role") {
+				return true, err
 			}
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		out, err = conn.CreateBuildWithContext(ctx, &input)
-	}
+
+			return false, err
+		},
+	)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating GameLift build client: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating GameLift Build (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(out.Build.BuildId))
+	d.SetId(aws.ToString(outputRaw.(*gamelift.CreateBuildOutput).Build.BuildId))
 
 	if _, err := waitBuildReady(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for GameLift Build (%s) to ready: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for GameLift Build (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceBuildRead(ctx, d, meta)...)
@@ -138,12 +143,10 @@ func resourceBuildCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceBuildRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GameLiftConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).GameLiftClient(ctx)
 
-	log.Printf("[INFO] Reading GameLift Build: %s", d.Id())
-	build, err := FindBuildByID(ctx, conn, d.Id())
+	build, err := findBuildByID(ctx, conn, d.Id())
+
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] GameLift Build (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -154,58 +157,32 @@ func resourceBuildRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "reading GameLift Build (%s): %s", d.Id(), err)
 	}
 
-	d.Set("name", build.Name)
+	d.Set(names.AttrARN, build.BuildArn)
+	d.Set(names.AttrName, build.Name)
 	d.Set("operating_system", build.OperatingSystem)
-	d.Set("version", build.Version)
-
-	arn := aws.StringValue(build.BuildArn)
-	d.Set("arn", arn)
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Game Lift Build (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	d.Set(names.AttrVersion, build.Version)
 
 	return diags
 }
 
 func resourceBuildUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GameLiftConn()
+	conn := meta.(*conns.AWSClient).GameLiftClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
-		log.Printf("[INFO] Updating GameLift Build: %s", d.Id())
-		input := gamelift.UpdateBuildInput{
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+		input := &gamelift.UpdateBuildInput{
 			BuildId: aws.String(d.Id()),
-			Name:    aws.String(d.Get("name").(string)),
+			Name:    aws.String(d.Get(names.AttrName).(string)),
 		}
-		if v, ok := d.GetOk("version"); ok {
+
+		if v, ok := d.GetOk(names.AttrVersion); ok {
 			input.Version = aws.String(v.(string))
 		}
 
-		_, err := conn.UpdateBuildWithContext(ctx, &input)
+		_, err := conn.UpdateBuild(ctx, input)
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating GameLift build client: %s", err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		arn := d.Get("arn").(string)
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Game Lift Build (%s) tags: %s", arn, err)
+			return sdkdiag.AppendErrorf(diags, "updating GameLift Build (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -214,30 +191,93 @@ func resourceBuildUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceBuildDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GameLiftConn()
+	conn := meta.(*conns.AWSClient).GameLiftClient(ctx)
 
 	log.Printf("[INFO] Deleting GameLift Build: %s", d.Id())
-	_, err := conn.DeleteBuildWithContext(ctx, &gamelift.DeleteBuildInput{
+	_, err := conn.DeleteBuild(ctx, &gamelift.DeleteBuildInput{
 		BuildId: aws.String(d.Id()),
 	})
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting GameLift Build Client (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting GameLift Build (%s): %s", d.Id(), err)
 	}
+
 	return diags
 }
 
-func expandStorageLocation(cfg []interface{}) *gamelift.S3Location {
-	loc := cfg[0].(map[string]interface{})
-
-	location := &gamelift.S3Location{
-		Bucket:  aws.String(loc["bucket"].(string)),
-		Key:     aws.String(loc["key"].(string)),
-		RoleArn: aws.String(loc["role_arn"].(string)),
+func findBuildByID(ctx context.Context, conn *gamelift.Client, id string) (*awstypes.Build, error) {
+	input := &gamelift.DescribeBuildInput{
+		BuildId: aws.String(id),
 	}
 
-	if v, ok := loc["object_version"].(string); ok && v != "" {
-		location.ObjectVersion = aws.String(v)
+	output, err := conn.DescribeBuild(ctx, input)
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
 	}
 
-	return location
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Build == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Build, nil
+}
+
+func statusBuild(ctx context.Context, conn *gamelift.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findBuildByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status), nil
+	}
+}
+
+func waitBuildReady(ctx context.Context, conn *gamelift.Client, id string) (*awstypes.Build, error) {
+	const (
+		timeout = 1 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.BuildStatusInitialized),
+		Target:  enum.Slice(awstypes.BuildStatusReady),
+		Refresh: statusBuild(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Build); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func expandStorageLocation(tfList []interface{}) *awstypes.S3Location {
+	tfMap := tfList[0].(map[string]interface{})
+
+	apiObject := &awstypes.S3Location{
+		Bucket:  aws.String(tfMap[names.AttrBucket].(string)),
+		Key:     aws.String(tfMap[names.AttrKey].(string)),
+		RoleArn: aws.String(tfMap[names.AttrRoleARN].(string)),
+	}
+
+	if v, ok := tfMap["object_version"].(string); ok && v != "" {
+		apiObject.ObjectVersion = aws.String(v)
+	}
+
+	return apiObject
 }

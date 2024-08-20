@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_ecr_pull_through_cache_rule: Fix plan time validation for `ecr_repository_prefix`
+```
+
+```release-note:bug
+data-source/aws_ecr_pull_through_cache_rule: Fix plan time validation for `ecr_repository_prefix`
+```

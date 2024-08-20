@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_prometheus_scraper: Fixes invalid result after apply error.
+```

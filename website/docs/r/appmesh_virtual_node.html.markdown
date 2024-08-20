@@ -171,7 +171,7 @@ resource "aws_appmesh_virtual_node" "serviceb1" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Name to use for the virtual node. Must be between 1 and 255 characters in length.
 * `mesh_name` - (Required) Name of the service mesh in which to create the virtual node. Must be between 1 and 255 characters in length.
@@ -275,7 +275,18 @@ The `access_log` object supports the following:
 
 The `file` object supports the following:
 
+* `format` - (Optional) The specified format for the logs.
 * `path` - (Required) File path to write access logs to. You can use `/dev/stdout` to send access logs to standard out. Must be between 1 and 255 characters in length.
+
+The `format` object supports the following:
+
+* `json` - (Optional) The logging format for JSON.
+* `text` - (Optional) The logging format for text. Must be between 1 and 1000 characters in length.
+
+The `json` object supports the following:
+
+* `key` - (Required) The specified key for the JSON. Must be between 1 and 100 characters in length.
+* `value` - (Required) The specified value for the JSON. Must be between 1 and 100 characters in length.
 
 The `service_discovery` object supports the following:
 
@@ -292,6 +303,8 @@ Use the [`aws_service_discovery_http_namespace`](/docs/providers/aws/r/service_d
 The `dns` object supports the following:
 
 * `hostname` - (Required) DNS host name for your virtual node.
+* `ip_preference` - (Optional) The preferred IP version that this virtual node uses. Valid values: `IPv6_PREFERRED`, `IPv4_PREFERRED`, `IPv4_ONLY`, `IPv6_ONLY`.
+* `response_type` - (Optional) The DNS response type for the virtual node. Valid values: `LOADBALANCER`, `ENDPOINTS`.
 
 The `port_mapping` object supports the following:
 
@@ -432,9 +445,9 @@ The `sds` object supports the following:
 
 * `secret_name` - (Required) Name of the secret for a virtual node's Transport Layer Security (TLS) Secret Discovery Service validation context trust.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the virtual node.
 * `arn` - ARN of the virtual node.
@@ -445,11 +458,19 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-App Mesh virtual nodes can be imported using `mesh_name` together with the virtual node's `name`,
-e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import App Mesh virtual nodes using `mesh_name` together with the virtual node's `name`. For example:
 
+```terraform
+import {
+  to = aws_appmesh_virtual_node.serviceb1
+  id = "simpleapp/serviceBv1"
+}
 ```
-$ terraform import aws_appmesh_virtual_node.serviceb1 simpleapp/serviceBv1
+
+Using `terraform import`, import App Mesh virtual nodes using `mesh_name` together with the virtual node's `name`. For example:
+
+```console
+% terraform import aws_appmesh_virtual_node.serviceb1 simpleapp/serviceBv1
 ```
 
 [1]: /docs/providers/aws/index.html

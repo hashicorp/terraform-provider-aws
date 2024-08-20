@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package imagebuilder
 
 import (
@@ -8,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -16,9 +19,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_imagebuilder_component")
+// @SDKResource("aws_imagebuilder_component", name="Component")
+// @Tags(identifierAttribute="id")
 func ResourceComponent() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceComponentCreate,
@@ -30,7 +35,7 @@ func ResourceComponent() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -45,36 +50,36 @@ func ResourceComponent() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"data", "uri"},
+				ExactlyOneOf: []string{"data", names.AttrURI},
 				ValidateFunc: validation.StringLenBetween(1, 16000),
 			},
 			"date_created": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
-			"encrypted": {
+			names.AttrEncrypted: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 126),
 			},
-			"owner": {
+			names.AttrOwner: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -84,7 +89,7 @@ func ResourceComponent() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(imagebuilder.Platform_Values(), false),
 			},
-			"skip_destroy": {
+			names.AttrSkipDestroy: {
 				Type:     schema.TypeBool,
 				Default:  false,
 				Optional: true,
@@ -100,19 +105,19 @@ func ResourceComponent() *schema.Resource {
 				MinItems: 1,
 				MaxItems: 25,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
-			"type": {
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			names.AttrType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"uri": {
+			names.AttrURI: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"data", "uri"},
+				ExactlyOneOf: []string{"data", names.AttrURI},
 			},
-			"version": {
+			names.AttrVersion: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -126,12 +131,11 @@ func ResourceComponent() *schema.Resource {
 
 func resourceComponentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
 
 	input := &imagebuilder.CreateComponentInput{
-		ClientToken: aws.String(resource.UniqueId()),
+		ClientToken: aws.String(id.UniqueId()),
+		Tags:        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("change_description"); ok {
@@ -142,15 +146,15 @@ func resourceComponentCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.Data = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("kms_key_id"); ok {
+	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("name"); ok {
+	if v, ok := d.GetOk(names.AttrName); ok {
 		input.Name = aws.String(v.(string))
 	}
 
@@ -162,15 +166,11 @@ func resourceComponentCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.SupportedOsVersions = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	if v, ok := d.GetOk("uri"); ok {
+	if v, ok := d.GetOk(names.AttrURI); ok {
 		input.Uri = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("version"); ok {
+	if v, ok := d.GetOk(names.AttrVersion); ok {
 		input.SemanticVersion = aws.String(v.(string))
 	}
 
@@ -191,9 +191,7 @@ func resourceComponentCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceComponentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
 
 	input := &imagebuilder.GetComponentInput{
 		ComponentBuildVersionArn: aws.String(d.Id()),
@@ -217,46 +215,30 @@ func resourceComponentRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	component := output.Component
 
-	d.Set("arn", component.Arn)
+	d.Set(names.AttrARN, component.Arn)
 	d.Set("change_description", component.ChangeDescription)
 	d.Set("data", component.Data)
 	d.Set("date_created", component.DateCreated)
-	d.Set("description", component.Description)
-	d.Set("encrypted", component.Encrypted)
-	d.Set("kms_key_id", component.KmsKeyId)
-	d.Set("name", component.Name)
-	d.Set("owner", component.Owner)
+	d.Set(names.AttrDescription, component.Description)
+	d.Set(names.AttrEncrypted, component.Encrypted)
+	d.Set(names.AttrKMSKeyID, component.KmsKeyId)
+	d.Set(names.AttrName, component.Name)
+	d.Set(names.AttrOwner, component.Owner)
 	d.Set("platform", component.Platform)
 	d.Set("supported_os_versions", aws.StringValueSlice(component.SupportedOsVersions))
 
-	tags := KeyValueTags(ctx, component.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	setTagsOut(ctx, component.Tags)
 
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
-	d.Set("type", component.Type)
-	d.Set("version", component.Version)
+	d.Set(names.AttrType, component.Type)
+	d.Set(names.AttrVersion, component.Version)
 
 	return diags
 }
 
 func resourceComponentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags for Image Builder Component (%s): %s", d.Id(), err)
-		}
-	}
+	// Tags only.
 
 	return append(diags, resourceComponentRead(ctx, d, meta)...)
 }
@@ -264,12 +246,12 @@ func resourceComponentUpdate(ctx context.Context, d *schema.ResourceData, meta i
 func resourceComponentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	if v, ok := d.GetOk("skip_destroy"); ok && v.(bool) {
+	if v, ok := d.GetOk(names.AttrSkipDestroy); ok && v.(bool) {
 		log.Printf("[DEBUG] Retaining Imagebuilder Component version %q", d.Id())
 		return diags
 	}
 
-	conn := meta.(*conns.AWSClient).ImageBuilderConn()
+	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
 
 	input := &imagebuilder.DeleteComponentInput{
 		ComponentBuildVersionArn: aws.String(d.Id()),

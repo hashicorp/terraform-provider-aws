@@ -30,7 +30,7 @@ resource "aws_ec2_fleet" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `context` - (Optional) Reserved.
 * `excess_capacity_termination_policy` - (Optional) Whether running instances should be terminated if the total target capacity of the EC2 Fleet is decreased below the current size of the EC2. Valid values: `no-termination`, `termination`. Defaults to `termination`. Supported only for fleets of type `maintain`.
@@ -130,6 +130,7 @@ This configuration block supports the following:
 * `instance_generations` - (Optional) Indicates whether current or previous generation instance types are included. The current generation instance types are recommended for use. Valid values are `current` and `previous`. Default is `current` and `previous` generation instance types.
 * `local_storage` - (Optional) Indicate whether instance types with local storage volumes are `included`, `excluded`, or `required`. Default is `included`.
 * `local_storage_types` - (Optional) List of local storage type names. Valid values are `hdd` and `ssd`. Default any storage type.
+* `max_spot_price_as_percentage_of_optimal_on_demand_price` - (Optional) The price protection threshold for Spot Instances. This is the maximum you’ll pay for a Spot Instance, expressed as a percentage higher than the cheapest M, C, or R instance type with your specified attributes. When Amazon EC2 Auto Scaling selects instance types with your attributes, we will exclude instance types whose price is higher than your threshold. The parameter accepts an integer, which Amazon EC2 Auto Scaling interprets as a percentage. To turn off price protection, specify a high value, such as 999999. Conflicts with `spot_max_price_percentage_over_lowest_price`
 * `memory_gib_per_vcpu` - (Optional) Block describing the minimum and maximum amount of memory (GiB) per vCPU. Default is no minimum or maximum.
     * `min` - (Optional) The minimum amount of memory per vCPU, in GiB. To specify no minimum limit, omit this parameter.
     * `max` - (Optional) The maximum amount of memory per vCPU, in GiB. To specify no maximum limit, omit this parameter.
@@ -147,7 +148,7 @@ This configuration block supports the following:
     If you set `target_capacity_unit_type` to `vcpu` or `memory-mib`, the price protection threshold is applied based on the per-vCPU or per-memory price instead of the per-instance price.
 
 * `require_hibernate_support` - (Optional) Indicate whether instance types must support On-Demand Instance Hibernation, either `true` or `false`. Default is `false`.
-* `spot_max_price_percentage_over_lowest_price` - (Optional) The price protection threshold for Spot Instances. This is the maximum you’ll pay for a Spot Instance, expressed as a percentage higher than the cheapest M, C, or R instance type with your specified attributes. When Amazon EC2 Auto Scaling selects instance types with your attributes, we will exclude instance types whose price is higher than your threshold. The parameter accepts an integer, which Amazon EC2 Auto Scaling interprets as a percentage. To turn off price protection, specify a high value, such as 999999. Default is 100.
+* `spot_max_price_percentage_over_lowest_price` - (Optional) The price protection threshold for Spot Instances. This is the maximum you’ll pay for a Spot Instance, expressed as a percentage higher than the cheapest M, C, or R instance type with your specified attributes. When Amazon EC2 Auto Scaling selects instance types with your attributes, we will exclude instance types whose price is higher than your threshold. The parameter accepts an integer, which Amazon EC2 Auto Scaling interprets as a percentage. To turn off price protection, specify a high value, such as 999999. Default is 100. Conflicts with `max_spot_price_as_percentage_of_optimal_on_demand_price`
 
     If you set DesiredCapacityType to vcpu or memory-mib, the price protection threshold is applied based on the per vCPU or per memory price instead of the per instance price.
 
@@ -199,9 +200,9 @@ This configuration block supports the following:
 
 * `total_target_capacity` - (Required) The number of units to request, filled using `default_target_capacity_type`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Fleet identifier
 * `arn` - The ARN of the fleet
@@ -225,8 +226,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_ec2_fleet` can be imported by using the Fleet identifier, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_ec2_fleet` using the Fleet identifier. For example:
 
+```terraform
+import {
+  to = aws_ec2_fleet.example
+  id = "fleet-b9b55d27-c5fc-41ac-a6f3-48fcc91f080c"
+}
 ```
-$ terraform import aws_ec2_fleet.example fleet-b9b55d27-c5fc-41ac-a6f3-48fcc91f080c
+
+Using `terraform import`, import `aws_ec2_fleet` using the Fleet identifier. For example:
+
+```console
+% terraform import aws_ec2_fleet.example fleet-b9b55d27-c5fc-41ac-a6f3-48fcc91f080c
 ```

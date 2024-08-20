@@ -1,15 +1,19 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package workspaces
 
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/service/workspaces"
+	"github.com/aws/aws-sdk-go-v2/service/workspaces/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_workspaces_directory")
@@ -18,7 +22,7 @@ func DataSourceDirectory() *schema.Resource {
 		ReadWithoutTimeout: dataSourceDirectoryRead,
 
 		Schema: map[string]*schema.Schema{
-			"alias": {
+			names.AttrAlias: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -84,12 +88,12 @@ func DataSourceDirectory() *schema.Resource {
 					},
 				},
 			},
-			"subnet_ids": {
+			names.AttrSubnetIDs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags": tftags.TagsSchema(),
+			names.AttrTags: tftags.TagsSchema(),
 			"workspace_access_properties": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -168,7 +172,7 @@ func DataSourceDirectory() *schema.Resource {
 
 func dataSourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WorkSpacesConn()
+	conn := meta.(*conns.AWSClient).WorkSpacesClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	directoryID := d.Get("directory_id").(string)
@@ -177,22 +181,22 @@ func dataSourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta i
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "getting WorkSpaces Directory (%s): %s", directoryID, err)
 	}
-	if state == workspaces.WorkspaceDirectoryStateDeregistered {
+	if state == string(types.WorkspaceDirectoryStateDeregistered) {
 		return sdkdiag.AppendErrorf(diags, "WorkSpaces directory %s was not found", directoryID)
 	}
 
 	d.SetId(directoryID)
 
-	directory := rawOutput.(*workspaces.WorkspaceDirectory)
+	directory := rawOutput.(*types.WorkspaceDirectory)
 	d.Set("directory_id", directory.DirectoryId)
 	d.Set("workspace_security_group_id", directory.WorkspaceSecurityGroupId)
 	d.Set("iam_role_id", directory.IamRoleId)
 	d.Set("registration_code", directory.RegistrationCode)
 	d.Set("directory_name", directory.DirectoryName)
 	d.Set("directory_type", directory.DirectoryType)
-	d.Set("alias", directory.Alias)
+	d.Set(names.AttrAlias, directory.Alias)
 
-	if err := d.Set("subnet_ids", flex.FlattenStringSet(directory.SubnetIds)); err != nil {
+	if err := d.Set(names.AttrSubnetIDs, flex.FlattenStringValueSet(directory.SubnetIds)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting subnet_ids: %s", err)
 	}
 
@@ -208,19 +212,19 @@ func dataSourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "setting workspace_creation_properties: %s", err)
 	}
 
-	if err := d.Set("ip_group_ids", flex.FlattenStringSet(directory.IpGroupIds)); err != nil {
+	if err := d.Set("ip_group_ids", flex.FlattenStringValueSet(directory.IpGroupIds)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ip_group_ids: %s", err)
 	}
 
-	if err := d.Set("dns_ip_addresses", flex.FlattenStringSet(directory.DnsIpAddresses)); err != nil {
+	if err := d.Set("dns_ip_addresses", flex.FlattenStringValueSet(directory.DnsIpAddresses)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting dns_ip_addresses: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, d.Id())
+	tags, err := listTags(ctx, conn, d.Id())
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags: %s", err)
 	}
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

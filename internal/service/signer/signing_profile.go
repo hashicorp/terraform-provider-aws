@@ -1,26 +1,34 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package signer
 
 import (
 	"context"
 	"log"
-	"regexp"
-	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/signer"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/signer"
+	"github.com/aws/aws-sdk-go-v2/service/signer/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_signer_signing_profile")
+// @SDKResource("aws_signer_signing_profile", name="Signing Profile")
+// @Tags(identifierAttribute="arn")
 func ResourceSigningProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSigningProfileCreate,
@@ -33,60 +41,35 @@ func ResourceSigningProfile() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"platform_id": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"AWSLambda-SHA384-ECDSA"},
-					false),
+				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_]{0,64}$`), "must be alphanumeric with max length of 64 characters"),
+				ConflictsWith: []string{names.AttrNamePrefix},
+				ValidateFunc:  validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_]{0,64}$`), "must be alphanumeric with max length of 64 characters"),
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
-				ValidateFunc:  validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_]{0,38}$`), "must be alphanumeric with max length of 38 characters"),
-			},
-			"signature_validity_period": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"value": {
-							Type:     schema.TypeInt,
-							Required: true,
-							ForceNew: true,
-						},
-						"type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringInSlice(signer.ValidityType_Values(), false),
-						},
-					},
-				},
-			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
+				ConflictsWith: []string{names.AttrName},
+				ValidateFunc:  validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_]{0,38}$`), "must be alphanumeric with max length of 38 characters"),
 			},
 			"platform_display_name": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"platform_id": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(PlatformID_Values(), false),
 			},
 			"revocation_record": {
 				Type:     schema.TypeList,
@@ -108,11 +91,51 @@ func ResourceSigningProfile() *schema.Resource {
 					},
 				},
 			},
-			"status": {
+			"signature_validity_period": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrType: {
+							Type:             schema.TypeString,
+							Required:         true,
+							ForceNew:         true,
+							ValidateDiagFunc: enum.Validate[types.ValidityType](),
+						},
+						names.AttrValue: {
+							Type:     schema.TypeInt,
+							Required: true,
+							ForceNew: true,
+						},
+					},
+				},
+			},
+			"signing_material": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Computed: true,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrCertificateARN: {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+					},
+				},
+			},
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"version": {
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			names.AttrVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -128,153 +151,146 @@ func ResourceSigningProfile() *schema.Resource {
 
 func resourceSigningProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SignerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).SignerClient(ctx)
 
-	log.Printf("[DEBUG] Creating Signer signing profile")
-
-	profileName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
-	profileName = strings.Replace(profileName, "-", "_", -1)
-
-	signingProfileInput := &signer.PutSigningProfileInput{
-		ProfileName: aws.String(profileName),
+	name := create.NewNameGenerator(
+		create.WithConfiguredName(d.Get(names.AttrName).(string)),
+		create.WithConfiguredPrefix(d.Get(names.AttrNamePrefix).(string)),
+		create.WithDefaultPrefix("terraform_"),
+	).Generate()
+	input := &signer.PutSigningProfileInput{
 		PlatformId:  aws.String(d.Get("platform_id").(string)),
+		ProfileName: aws.String(name),
+		Tags:        getTagsIn(ctx),
 	}
 
 	if v, exists := d.GetOk("signature_validity_period"); exists {
 		signatureValidityPeriod := v.([]interface{})[0].(map[string]interface{})
-		signingProfileInput.SignatureValidityPeriod = &signer.SignatureValidityPeriod{
-			Value: aws.Int64(int64(signatureValidityPeriod["value"].(int))),
-			Type:  aws.String(signatureValidityPeriod["type"].(string)),
+		input.SignatureValidityPeriod = &types.SignatureValidityPeriod{
+			Value: int32(signatureValidityPeriod[names.AttrValue].(int)),
+			Type:  types.ValidityType(signatureValidityPeriod[names.AttrType].(string)),
 		}
 	}
 
-	if len(tags) > 0 {
-		signingProfileInput.Tags = Tags(tags.IgnoreAWS())
+	if v, ok := d.Get("signing_material").([]interface{}); ok && len(v) > 0 {
+		input.SigningMaterial = expandSigningMaterial(v)
 	}
 
-	_, err := conn.PutSigningProfileWithContext(ctx, signingProfileInput)
+	_, err := conn.PutSigningProfile(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Signer signing profile: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Signer Signing Profile (%s): %s", name, err)
 	}
 
-	d.SetId(profileName)
+	d.SetId(name)
 
 	return append(diags, resourceSigningProfileRead(ctx, d, meta)...)
 }
 
 func resourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SignerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).SignerClient(ctx)
 
-	signingProfileOutput, err := conn.GetSigningProfileWithContext(ctx, &signer.GetSigningProfileInput{
-		ProfileName: aws.String(d.Id()),
-	})
+	output, err := findSigningProfileByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, signer.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Signer Signing Profile (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Signer signing profile (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Signer Signing Profile (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("platform_id", signingProfileOutput.PlatformId); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting signer signing profile platform id: %s", err)
+	d.Set(names.AttrARN, output.Arn)
+	d.Set(names.AttrName, output.ProfileName)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(output.ProfileName)))
+	d.Set("platform_display_name", output.PlatformDisplayName)
+	d.Set("platform_id", output.PlatformId)
+	if err := d.Set("revocation_record", flattenSigningProfileRevocationRecord(output.RevocationRecord)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting revocation_record: %s", err)
 	}
-
-	if err := d.Set("signature_validity_period", []interface{}{
-		map[string]interface{}{
-			"value": signingProfileOutput.SignatureValidityPeriod.Value,
-			"type":  signingProfileOutput.SignatureValidityPeriod.Type,
-		},
-	}); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting signer signing profile signature validity period: %s", err)
+	if v := output.SignatureValidityPeriod; v != nil {
+		if err := d.Set("signature_validity_period", []interface{}{
+			map[string]interface{}{
+				names.AttrValue: v.Value,
+				names.AttrType:  v.Type,
+			},
+		}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting signature_validity_period: %s", err)
+		}
 	}
-
-	if err := d.Set("platform_display_name", signingProfileOutput.PlatformDisplayName); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting signer signing profile platform display name: %s", err)
+	if output.SigningMaterial != nil {
+		if err := d.Set("signing_material", flattenSigningMaterial(output.SigningMaterial)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting signing_material: %s", err)
+		}
 	}
+	d.Set(names.AttrStatus, output.Status)
+	d.Set(names.AttrVersion, output.ProfileVersion)
+	d.Set("version_arn", output.ProfileVersionArn)
 
-	if err := d.Set("name", signingProfileOutput.ProfileName); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting signer signing profile name: %s", err)
-	}
-
-	if err := d.Set("arn", signingProfileOutput.Arn); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting signer signing profile arn: %s", err)
-	}
-
-	if err := d.Set("version", signingProfileOutput.ProfileVersion); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting signer signing profile version: %s", err)
-	}
-
-	if err := d.Set("version_arn", signingProfileOutput.ProfileVersionArn); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting signer signing profile version arn: %s", err)
-	}
-
-	if err := d.Set("status", signingProfileOutput.Status); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting signer signing profile status: %s", err)
-	}
-
-	tags := KeyValueTags(ctx, signingProfileOutput.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
-	if err := d.Set("revocation_record", flattenSigningProfileRevocationRecord(signingProfileOutput.RevocationRecord)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting signer signing profile revocation record: %s", err)
-	}
+	setTagsOut(ctx, output.Tags)
 
 	return diags
 }
 
 func resourceSigningProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SignerConn()
 
-	arn := d.Get("arn").(string)
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Signer signing profile (%s) tags: %s", arn, err)
-		}
-	}
+	// Tags only.
 
 	return append(diags, resourceSigningProfileRead(ctx, d, meta)...)
 }
 
 func resourceSigningProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SignerConn()
+	conn := meta.(*conns.AWSClient).SignerClient(ctx)
 
-	_, err := conn.CancelSigningProfileWithContext(ctx, &signer.CancelSigningProfileInput{
+	log.Printf("[DEBUG] Deleting Signer Signing Profile: %s", d.Id())
+	_, err := conn.CancelSigningProfile(ctx, &signer.CancelSigningProfileInput{
 		ProfileName: aws.String(d.Id()),
 	})
 
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, signer.ErrCodeResourceNotFoundException) {
-			return diags
-		}
-		return sdkdiag.AppendErrorf(diags, "canceling Signer signing profile (%s): %s", d.Id(), err)
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return diags
 	}
 
-	log.Printf("[DEBUG] Signer signing profile %q canceled", d.Id())
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting Signer Signing Profile (%s): %s", d.Id(), err)
+	}
+
 	return diags
 }
 
-func flattenSigningProfileRevocationRecord(apiObject *signer.SigningProfileRevocationRecord) interface{} {
+func expandSigningMaterial(in []interface{}) *types.SigningMaterial {
+	if len(in) == 0 {
+		return nil
+	}
+
+	m := in[0].(map[string]interface{})
+	var out types.SigningMaterial
+
+	if v, ok := m[names.AttrCertificateARN].(string); ok && v != "" {
+		out.CertificateArn = aws.String(v)
+	}
+
+	return &out
+}
+
+func flattenSigningMaterial(apiObject *types.SigningMaterial) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		names.AttrCertificateARN: aws.ToString(apiObject.CertificateArn),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenSigningProfileRevocationRecord(apiObject *types.SigningProfileRevocationRecord) interface{} {
 	if apiObject == nil {
 		return []interface{}{}
 	}
@@ -282,16 +298,57 @@ func flattenSigningProfileRevocationRecord(apiObject *signer.SigningProfileRevoc
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.RevocationEffectiveFrom; v != nil {
-		tfMap["revocation_effective_from"] = aws.TimeValue(v).Format(time.RFC3339)
+		tfMap["revocation_effective_from"] = aws.ToTime(v).Format(time.RFC3339)
 	}
 
 	if v := apiObject.RevokedAt; v != nil {
-		tfMap["revoked_at"] = aws.TimeValue(v).Format(time.RFC3339)
+		tfMap["revoked_at"] = aws.ToTime(v).Format(time.RFC3339)
 	}
 
 	if v := apiObject.RevokedBy; v != nil {
-		tfMap["revoked_by"] = aws.StringValue(v)
+		tfMap["revoked_by"] = aws.ToString(v)
 	}
 
 	return []interface{}{tfMap}
+}
+
+func PlatformID_Values() []string {
+	return []string{
+		"AWSLambda-SHA384-ECDSA",
+		"Notation-OCI-SHA384-ECDSA",
+		"AWSIoTDeviceManagement-SHA256-ECDSA",
+		"AmazonFreeRTOS-TI-CC3220SF",
+		"AmazonFreeRTOS-Default"}
+}
+
+func findSigningProfileByName(ctx context.Context, conn *signer.Client, name string) (*signer.GetSigningProfileOutput, error) {
+	input := &signer.GetSigningProfileInput{
+		ProfileName: aws.String(name),
+	}
+
+	output, err := conn.GetSigningProfile(ctx, input)
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+			LastError:   err,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if status := output.Status; status == types.SigningProfileStatusCanceled {
+		return nil, &retry.NotFoundError{
+			Message:     string(status),
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
 }

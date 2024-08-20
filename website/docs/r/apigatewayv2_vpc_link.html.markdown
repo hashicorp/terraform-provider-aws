@@ -19,7 +19,7 @@ To enable private integration for REST APIs, use the Amazon API Gateway Version 
 resource "aws_apigatewayv2_vpc_link" "example" {
   name               = "example"
   security_group_ids = [data.aws_security_group.example.id]
-  subnet_ids         = data.aws_subnet_ids.example.ids
+  subnet_ids         = data.aws_subnets.example.ids
 
   tags = {
     Usage = "example"
@@ -29,16 +29,16 @@ resource "aws_apigatewayv2_vpc_link" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Name of the VPC Link. Must be between 1 and 128 characters in length.
 * `security_group_ids` - (Required) Security group IDs for the VPC Link.
 * `subnet_ids` - (Required) Subnet IDs for the VPC Link.
 * `tags` - (Optional) Map of tags to assign to the VPC Link. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - VPC Link identifier.
 * `arn` - VPC Link ARN.
@@ -46,8 +46,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_apigatewayv2_vpc_link` can be imported by using the VPC Link identifier, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_apigatewayv2_vpc_link` using the VPC Link identifier. For example:
 
+```terraform
+import {
+  to = aws_apigatewayv2_vpc_link.example
+  id = "aabbccddee"
+}
 ```
-$ terraform import aws_apigatewayv2_vpc_link.example aabbccddee
+
+Using `terraform import`, import `aws_apigatewayv2_vpc_link` using the VPC Link identifier. For example:
+
+```console
+% terraform import aws_apigatewayv2_vpc_link.example aabbccddee
 ```

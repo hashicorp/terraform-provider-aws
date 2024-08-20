@@ -1,139 +1,220 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
 	"context"
-	"fmt"
 	"log"
+	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/rds"
+	"github.com/aws/aws-sdk-go-v2/service/rds/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_rds_cluster_activity_stream")
-func ResourceClusterActivityStream() *schema.Resource {
+// @SDKResource("aws_rds_cluster_activity_stream", name="Cluster Activity Stream")
+func resourceClusterActivityStream() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterActivityStreamCreate,
 		ReadWithoutTimeout:   resourceClusterActivityStreamRead,
 		DeleteWithoutTimeout: resourceClusterActivityStreamDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"resource_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"kms_key_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"mode": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(rds.ActivityStreamMode_Values(), false),
-			},
-			"kinesis_stream_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"engine_native_audit_fields_included": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 				ForceNew: true,
 			},
+			"kinesis_stream_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrKMSKeyID: {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			names.AttrMode: {
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[types.ActivityStreamMode](),
+			},
+			names.AttrResourceARN: {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
+			},
 		},
 	}
 }
 
 func resourceClusterActivityStreamCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RDSConn()
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
-	resourceArn := d.Get("resource_arn").(string)
-
-	startActivityStreamInput := &rds.StartActivityStreamInput{
-		ResourceArn:                     aws.String(resourceArn),
+	arn := d.Get(names.AttrResourceARN).(string)
+	input := &rds.StartActivityStreamInput{
 		ApplyImmediately:                aws.Bool(true),
-		KmsKeyId:                        aws.String(d.Get("kms_key_id").(string)),
-		Mode:                            aws.String(d.Get("mode").(string)),
 		EngineNativeAuditFieldsIncluded: aws.Bool(d.Get("engine_native_audit_fields_included").(bool)),
+		KmsKeyId:                        aws.String(d.Get(names.AttrKMSKeyID).(string)),
+		Mode:                            types.ActivityStreamMode(d.Get(names.AttrMode).(string)),
+		ResourceArn:                     aws.String(arn),
 	}
 
-	log.Printf("[DEBUG] RDS Cluster start activity stream input: %s", startActivityStreamInput)
+	_, err := conn.StartActivityStream(ctx, input)
 
-	resp, err := conn.StartActivityStreamWithContext(ctx, startActivityStreamInput)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("creating RDS Cluster Activity Stream: %s", err))
+		return sdkdiag.AppendErrorf(diags, "creating RDS Cluster Activity Stream (%s): %s", arn, err)
 	}
 
-	log.Printf("[DEBUG]: RDS Cluster start activity stream response: %s", resp)
+	d.SetId(arn)
 
-	d.SetId(resourceArn)
-
-	err = waitActivityStreamStarted(ctx, conn, d.Id())
-	if err != nil {
-		return diag.FromErr(err)
+	if _, err := waitActivityStreamStarted(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster Activity Stream (%s) start: %s", d.Id(), err)
 	}
 
-	return resourceClusterActivityStreamRead(ctx, d, meta)
+	return append(diags, resourceClusterActivityStreamRead(ctx, d, meta)...)
 }
 
 func resourceClusterActivityStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RDSConn()
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
-	log.Printf("[DEBUG] Finding DB Cluster (%s)", d.Id())
-	resp, err := FindDBClusterWithActivityStream(ctx, conn, d.Id())
+	output, err := findDBClusterWithActivityStream(ctx, conn, d.Id())
 
-	if tfresource.NotFound(err) {
-		log.Printf("[WARN] RDS Cluster (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] RDS Cluster Activity Stream (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("describing RDS Cluster (%s): %s", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "reading RDS Cluster Activity Stream (%s): %s", d.Id(), err)
 	}
 
-	d.Set("resource_arn", resp.DBClusterArn)
-	d.Set("kms_key_id", resp.ActivityStreamKmsKeyId)
-	d.Set("kinesis_stream_name", resp.ActivityStreamKinesisStreamName)
-	d.Set("mode", resp.ActivityStreamMode)
+	d.Set("kinesis_stream_name", output.ActivityStreamKinesisStreamName)
+	d.Set(names.AttrKMSKeyID, output.ActivityStreamKmsKeyId)
+	d.Set(names.AttrMode, output.ActivityStreamMode)
+	d.Set(names.AttrResourceARN, output.DBClusterArn)
 
-	return nil
+	return diags
 }
 
 func resourceClusterActivityStreamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RDSConn()
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
-	stopActivityStreamInput := &rds.StopActivityStreamInput{
+	log.Printf("[DEBUG] Deleting RDS Cluster Activity Stream: %s", d.Id())
+	_, err := conn.StopActivityStream(ctx, &rds.StopActivityStreamInput{
 		ApplyImmediately: aws.Bool(true),
 		ResourceArn:      aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterCombination, "Activity Streams feature expected to be started, but is stopped") {
+		return diags
 	}
 
-	log.Printf("[DEBUG] RDS Cluster stop activity stream input: %s", stopActivityStreamInput)
-
-	resp, err := conn.StopActivityStreamWithContext(ctx, stopActivityStreamInput)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("stopping RDS Cluster Activity Stream: %w", err))
+		return sdkdiag.AppendErrorf(diags, "stopping RDS Cluster Activity Stream (%s): %s", d.Id(), err)
 	}
 
-	log.Printf("[DEBUG] RDS Cluster stop activity stream response: %s", resp)
+	if _, err := waitActivityStreamStopped(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster Activity Stream (%s) stop: %s", d.Id(), err)
+	}
 
-	err = waitActivityStreamStopped(ctx, conn, d.Id())
+	return diags
+}
+
+func findDBClusterWithActivityStream(ctx context.Context, conn *rds.Client, arn string) (*types.DBCluster, error) {
+	output, err := findDBClusterByID(ctx, conn, arn)
+
 	if err != nil {
-		return diag.FromErr(err)
+		return nil, err
 	}
 
-	return nil
+	if status := output.ActivityStreamStatus; status == types.ActivityStreamStatusStopped {
+		return nil, &retry.NotFoundError{
+			Message: string(status),
+		}
+	}
+
+	return output, nil
+}
+
+func statusDBClusterActivityStream(ctx context.Context, conn *rds.Client, arn string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findDBClusterWithActivityStream(ctx, conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.ActivityStreamStatus), nil
+	}
+}
+
+func waitActivityStreamStarted(ctx context.Context, conn *rds.Client, arn string) (*types.DBCluster, error) {
+	const (
+		timeout = 30 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(types.ActivityStreamStatusStarting),
+		Target:     enum.Slice(types.ActivityStreamStatusStarted),
+		Refresh:    statusDBClusterActivityStream(ctx, conn, arn),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.DBCluster); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitActivityStreamStopped(ctx context.Context, conn *rds.Client, arn string) (*types.DBCluster, error) {
+	const (
+		timeout = 30 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(types.ActivityStreamStatusStopping),
+		Target:     []string{},
+		Refresh:    statusDBClusterActivityStream(ctx, conn, arn),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.DBCluster); ok {
+		return output, err
+	}
+
+	return nil, err
 }

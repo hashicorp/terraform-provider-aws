@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package opsworks_test
 
 import (
@@ -6,13 +9,14 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/opsworks"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfopsworks "github.com/hashicorp/terraform-provider-aws/internal/service/opsworks"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccOpsWorksUserProfile_basic(t *testing.T) {
@@ -22,8 +26,8 @@ func TestAccOpsWorksUserProfile_basic(t *testing.T) {
 	resourceName := "aws_opsworks_user_profile.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserProfileDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -33,7 +37,7 @@ func TestAccOpsWorksUserProfile_basic(t *testing.T) {
 					testAccCheckUserProfileExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "ssh_public_key", ""),
 					resource.TestCheckResourceAttr(resourceName, "ssh_username", rName1),
-					resource.TestCheckResourceAttr(resourceName, "allow_self_management", "false"),
+					resource.TestCheckResourceAttr(resourceName, "allow_self_management", acctest.CtFalse),
 				),
 			},
 			{
@@ -42,7 +46,7 @@ func TestAccOpsWorksUserProfile_basic(t *testing.T) {
 					testAccCheckUserProfileExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "ssh_public_key", ""),
 					resource.TestCheckResourceAttr(resourceName, "ssh_username", rName2),
-					resource.TestCheckResourceAttr(resourceName, "allow_self_management", "false"),
+					resource.TestCheckResourceAttr(resourceName, "allow_self_management", acctest.CtFalse),
 				),
 			},
 		},
@@ -55,8 +59,8 @@ func TestAccOpsWorksUserProfile_disappears(t *testing.T) {
 	resourceName := "aws_opsworks_user_profile.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserProfileDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -83,7 +87,7 @@ func testAccCheckUserProfileExists(ctx context.Context, n string) resource.TestC
 			return fmt.Errorf("No OpsWorks User Profile ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn(ctx)
 
 		_, err := tfopsworks.FindUserProfileByARN(ctx, conn, rs.Primary.ID)
 
@@ -93,7 +97,7 @@ func testAccCheckUserProfileExists(ctx context.Context, n string) resource.TestC
 
 func testAccCheckUserProfileDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_opsworks_user_profile" {

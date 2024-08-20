@@ -1,21 +1,25 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appconfig
 
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/appconfig"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/appconfig"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/appconfig/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindExtensionById(ctx context.Context, conn *appconfig.AppConfig, id string) (*appconfig.GetExtensionOutput, error) {
+func FindExtensionById(ctx context.Context, conn *appconfig.Client, id string) (*appconfig.GetExtensionOutput, error) {
 	in := &appconfig.GetExtensionInput{ExtensionIdentifier: aws.String(id)}
-	out, err := conn.GetExtensionWithContext(ctx, in)
+	out, err := conn.GetExtension(ctx, in)
 
-	if tfawserr.ErrCodeEquals(err, appconfig.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}
@@ -32,12 +36,12 @@ func FindExtensionById(ctx context.Context, conn *appconfig.AppConfig, id string
 	return out, nil
 }
 
-func FindExtensionAssociationById(ctx context.Context, conn *appconfig.AppConfig, id string) (*appconfig.GetExtensionAssociationOutput, error) {
+func FindExtensionAssociationById(ctx context.Context, conn *appconfig.Client, id string) (*appconfig.GetExtensionAssociationOutput, error) {
 	in := &appconfig.GetExtensionAssociationInput{ExtensionAssociationId: aws.String(id)}
-	out, err := conn.GetExtensionAssociationWithContext(ctx, in)
+	out, err := conn.GetExtensionAssociation(ctx, in)
 
-	if tfawserr.ErrCodeEquals(err, appconfig.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}
