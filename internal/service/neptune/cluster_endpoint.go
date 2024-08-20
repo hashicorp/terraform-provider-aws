@@ -30,7 +30,7 @@ import (
 
 // @SDKResource("aws_neptune_cluster_endpoint", name="Cluster Endpoint")
 // @Tags(identifierAttribute="arn")
-func ResourceClusterEndpoint() *schema.Resource {
+func resourceClusterEndpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterEndpointCreate,
 		ReadWithoutTimeout:   resourceClusterEndpointRead,
@@ -135,7 +135,7 @@ func resourceClusterEndpointRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	ep, err := FindClusterEndpointByTwoPartKey(ctx, conn, clusterID, clusterEndpointID)
+	ep, err := findClusterEndpointByTwoPartKey(ctx, conn, clusterID, clusterEndpointID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Neptune Cluster Endpoint (%s) not found, removing from state", d.Id())
@@ -245,7 +245,7 @@ func clusterEndpointParseResourceID(id string) (string, string, error) {
 	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected CLUSTER-ID%[2]sCLUSTER-ENDPOINT-ID", id, clusterEndpointResourceIDSeparator)
 }
 
-func FindClusterEndpointByTwoPartKey(ctx context.Context, conn *neptune.Client, clusterID, clusterEndpointID string) (*awstypes.DBClusterEndpoint, error) {
+func findClusterEndpointByTwoPartKey(ctx context.Context, conn *neptune.Client, clusterID, clusterEndpointID string) (*awstypes.DBClusterEndpoint, error) {
 	input := &neptune.DescribeDBClusterEndpointsInput{
 		DBClusterIdentifier:         aws.String(clusterID),
 		DBClusterEndpointIdentifier: aws.String(clusterEndpointID),
@@ -291,7 +291,7 @@ func findClusterEndpoints(ctx context.Context, conn *neptune.Client, input *nept
 
 func statusClusterEndpoint(ctx context.Context, conn *neptune.Client, clusterID, clusterEndpointID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindClusterEndpointByTwoPartKey(ctx, conn, clusterID, clusterEndpointID)
+		output, err := findClusterEndpointByTwoPartKey(ctx, conn, clusterID, clusterEndpointID)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
