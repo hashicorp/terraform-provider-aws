@@ -818,7 +818,7 @@ func removeClusterFromGlobalCluster(ctx context.Context, conn *neptune.Client, c
 
 	_, err := conn.RemoveFromGlobalCluster(ctx, input)
 
-	if errs.IsA[*awstypes.DBClusterNotFoundFault](err) || errs.IsA[*awstypes.GlobalClusterNotFoundFault](err) {
+	if errs.IsA[*awstypes.DBClusterNotFoundFault](err) || errs.IsA[*awstypes.GlobalClusterNotFoundFault](err) || tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "not found in global cluster") {
 		return nil
 	}
 
