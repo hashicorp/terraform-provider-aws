@@ -501,25 +501,15 @@ func resourceIntentDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LexModelsClient(ctx)
 
-	input := &lexmodelbuildingservice.DeleteIntentInput{
-		Name: aws.String(d.Id()),
-	}
-
-	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *retry.RetryError {
-		_, err := conn.DeleteIntent(ctx, input)
-
-		if errs.IsA[*awstypes.ConflictException](err) {
-			return retry.RetryableError(fmt.Errorf("%q: there is a pending operation, intent still deleting", d.Id()))
-		}
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
+	log.Printf("[DEBUG] Deleting Lex Model Intent: %s", d.Id())
+	_, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+		return conn.DeleteIntent(ctx, &lexmodelbuildingservice.DeleteIntentInput{
+			Name: aws.String(d.Id()),
+		})
 	})
 
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteIntent(ctx, input)
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return diags
 	}
 
 	if err != nil {
@@ -527,7 +517,7 @@ func resourceIntentDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if _, err := waitIntentDeleted(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Lex Model Intent (%s): waiting for completion: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Lex Model Intent (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
