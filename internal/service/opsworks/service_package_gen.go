@@ -5,10 +5,8 @@ package opsworks
 import (
 	"context"
 
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	opsworks_sdkv1 "github.com/aws/aws-sdk-go/service/opsworks"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	opsworks_sdkv2 "github.com/aws/aws-sdk-go-v2/service/opsworks"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -31,11 +29,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceApplication,
+			Factory:  resourceApplication,
 			TypeName: "aws_opsworks_application",
+			Name:     "Application",
 		},
 		{
-			Factory:  ResourceCustomLayer,
+			Factory:  resourceCustomLayer,
 			TypeName: "aws_opsworks_custom_layer",
 			Name:     "Custom Layer",
 			Tags: &types.ServicePackageResourceTags{
@@ -43,7 +42,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceECSClusterLayer,
+			Factory:  resourceECSClusterLayer,
 			TypeName: "aws_opsworks_ecs_cluster_layer",
 			Name:     "ECS Cluster Layer",
 			Tags: &types.ServicePackageResourceTags{
@@ -51,7 +50,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceGangliaLayer,
+			Factory:  resourceGangliaLayer,
 			TypeName: "aws_opsworks_ganglia_layer",
 			Name:     "Ganglia Layer",
 			Tags: &types.ServicePackageResourceTags{
@@ -59,7 +58,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceHAProxyLayer,
+			Factory:  resourceHAProxyLayer,
 			TypeName: "aws_opsworks_haproxy_layer",
 			Name:     "HAProxy Layer",
 			Tags: &types.ServicePackageResourceTags{
@@ -67,11 +66,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceInstance,
+			Factory:  resourceInstance,
 			TypeName: "aws_opsworks_instance",
+			Name:     "Instance",
 		},
 		{
-			Factory:  ResourceJavaAppLayer,
+			Factory:  resourceJavaAppLayer,
 			TypeName: "aws_opsworks_java_app_layer",
 			Name:     "Java App Layer",
 			Tags: &types.ServicePackageResourceTags{
@@ -79,7 +79,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceMemcachedLayer,
+			Factory:  resourceMemcachedLayer,
 			TypeName: "aws_opsworks_memcached_layer",
 			Name:     "Memcached Layer",
 			Tags: &types.ServicePackageResourceTags{
@@ -87,7 +87,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceMySQLLayer,
+			Factory:  resourceMySQLLayer,
 			TypeName: "aws_opsworks_mysql_layer",
 			Name:     "MySQL Layer",
 			Tags: &types.ServicePackageResourceTags{
@@ -95,7 +95,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceNodejsAppLayer,
+			Factory:  resourceNodejsAppLayer,
 			TypeName: "aws_opsworks_nodejs_app_layer",
 			Name:     "NodeJS App Layer",
 			Tags: &types.ServicePackageResourceTags{
@@ -103,11 +103,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourcePermission,
+			Factory:  resourcePermission,
 			TypeName: "aws_opsworks_permission",
+			Name:     "Permission",
 		},
 		{
-			Factory:  ResourcePHPAppLayer,
+			Factory:  resourcePHPAppLayer,
 			TypeName: "aws_opsworks_php_app_layer",
 			Name:     "PHP App Layer",
 			Tags: &types.ServicePackageResourceTags{
@@ -115,7 +116,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceRailsAppLayer,
+			Factory:  resourceRailsAppLayer,
 			TypeName: "aws_opsworks_rails_app_layer",
 			Name:     "Rails App Layer",
 			Tags: &types.ServicePackageResourceTags{
@@ -123,17 +124,18 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceRDSDBInstance,
+			Factory:  resourceRDSDBInstance,
 			TypeName: "aws_opsworks_rds_db_instance",
+			Name:     "RDS DB Instance",
 		},
 		{
-			Factory:  ResourceStack,
+			Factory:  resourceStack,
 			TypeName: "aws_opsworks_stack",
 			Name:     "Stack",
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  ResourceStaticWebLayer,
+			Factory:  resourceStaticWebLayer,
 			TypeName: "aws_opsworks_static_web_layer",
 			Name:     "Static Web Layer",
 			Tags: &types.ServicePackageResourceTags{
@@ -141,8 +143,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceUserProfile,
+			Factory:  resourceUserProfile,
 			TypeName: "aws_opsworks_user_profile",
+			Name:     "Profile",
 		},
 	}
 }
@@ -151,22 +154,14 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.OpsWorks
 }
 
-// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*opsworks_sdkv1.OpsWorks, error) {
-	sess := config[names.AttrSession].(*session_sdkv1.Session)
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*opsworks_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
 
-	cfg := aws_sdkv1.Config{}
-
-	if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
-		tflog.Debug(ctx, "setting endpoint", map[string]any{
-			"tf_aws.endpoint": endpoint,
-		})
-		cfg.Endpoint = aws_sdkv1.String(endpoint)
-	} else {
-		cfg.EndpointResolver = newEndpointResolverSDKv1(ctx)
-	}
-
-	return opsworks_sdkv1.New(sess.Copy(&cfg)), nil
+	return opsworks_sdkv2.NewFromConfig(cfg,
+		opsworks_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+	), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

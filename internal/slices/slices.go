@@ -3,7 +3,9 @@
 
 package slices
 
-import "slices"
+import (
+	"slices"
+)
 
 // Reverse returns a reversed copy of the slice `s`.
 func Reverse[S ~[]E, E any](s S) S {
@@ -145,4 +147,34 @@ func IndexOf[S ~[]any, E comparable](s S, v E) int {
 		}
 	}
 	return -1
+}
+
+type signed interface {
+	~int | ~int32 | ~int64
+}
+
+// Range returns a slice of integers from `start` to `stop` (exclusive) using the specified `step`.
+func Range[T signed](start, stop, step T) []T {
+	v := make([]T, 0)
+
+	switch {
+	case step > 0:
+		if start >= stop {
+			return nil
+		}
+		for i := start; i < stop; i += step {
+			v = append(v, i)
+		}
+	case step < 0:
+		if start <= stop {
+			return nil
+		}
+		for i := start; i > stop; i += step {
+			v = append(v, i)
+		}
+	default:
+		return nil
+	}
+
+	return v
 }

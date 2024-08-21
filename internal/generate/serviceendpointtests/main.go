@@ -36,6 +36,7 @@ func main() {
 		switch packageName {
 		case "cloudfrontkeyvaluestore", // Endpoint includes account ID
 			"codecatalyst",        // Bearer auth token needs special handling
+			"location",            // Resolver modifies URL
 			"mwaa",                // Resolver modifies URL
 			"neptunegraph",        // EndpointParameters has an additional parameter, ApiType
 			"paymentcryptography", // Resolver modifies URL

@@ -11,7 +11,6 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -28,7 +27,7 @@ func TestAccFSxLustreFileSystem_basic(t *testing.T) {
 	resourceName := "aws_fsx_lustre_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	deploymentType := awstypes.LustreDeploymentTypeScratch1
-	if acctest.Partition() == endpoints.AwsUsGovPartitionID {
+	if acctest.Partition() == names.USGovCloudPartitionID {
 		deploymentType = awstypes.LustreDeploymentTypeScratch2 // SCRATCH_1 not supported in GovCloud
 	}
 

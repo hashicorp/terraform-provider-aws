@@ -21,8 +21,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Default AutoScaling Configuration Version")
-func newResourceIndex(context.Context) (resource.ResourceWithConfigure, error) {
+// @FrameworkResource("aws_apprunner_default_auto_scaling_configuration_version", name="Default AutoScaling Configuration Version")
+func newResourceDefaultAutoScalingConfigurationVersion(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &defaultAutoScalingConfigurationVersionResource{}
 
 	return r, nil

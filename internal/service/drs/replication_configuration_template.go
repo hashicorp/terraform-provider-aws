@@ -148,6 +148,8 @@ func (r *replicationConfigurationTemplateResource) Schema(ctx context.Context, r
 	}
 }
 
+var flexOpt = flex.WithFieldNamePrefix(ResNameReplicationConfigurationTemplate)
+
 func (r *replicationConfigurationTemplateResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data replicationConfigurationTemplateResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
@@ -158,7 +160,7 @@ func (r *replicationConfigurationTemplateResource) Create(ctx context.Context, r
 	conn := r.Meta().DRSClient(ctx)
 
 	input := &drs.CreateReplicationConfigurationTemplateInput{}
-	response.Diagnostics.Append(flex.Expand(context.WithValue(ctx, flex.ResourcePrefix, ResPrefixReplicationConfigurationTemplate), data, input)...)
+	response.Diagnostics.Append(flex.Expand(ctx, data, input, flexOpt)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -180,7 +182,7 @@ func (r *replicationConfigurationTemplateResource) Create(ctx context.Context, r
 		return
 	}
 
-	response.Diagnostics.Append(flex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, ResPrefixReplicationConfigurationTemplate), output, &data)...)
+	response.Diagnostics.Append(flex.Flatten(ctx, output, &data, flexOpt)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -212,7 +214,7 @@ func (r *replicationConfigurationTemplateResource) Read(ctx context.Context, req
 		return
 	}
 
-	response.Diagnostics.Append(flex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, ResPrefixReplicationConfigurationTemplate), output, &data)...)
+	response.Diagnostics.Append(flex.Flatten(ctx, output, &data, flexOpt)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -236,7 +238,7 @@ func (r *replicationConfigurationTemplateResource) Update(ctx context.Context, r
 
 	if replicationConfigurationTemplateHasChanges(ctx, new, old) {
 		input := &drs.UpdateReplicationConfigurationTemplateInput{}
-		response.Diagnostics.Append(flex.Expand(context.WithValue(ctx, flex.ResourcePrefix, ResPrefixReplicationConfigurationTemplate), new, input)...)
+		response.Diagnostics.Append(flex.Expand(ctx, new, input, flexOpt)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -262,7 +264,7 @@ func (r *replicationConfigurationTemplateResource) Update(ctx context.Context, r
 		return
 	}
 
-	response.Diagnostics.Append(flex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, ResPrefixReplicationConfigurationTemplate), output, &new)...)
+	response.Diagnostics.Append(flex.Flatten(ctx, output, &new, flexOpt)...)
 	if response.Diagnostics.HasError() {
 		return
 	}

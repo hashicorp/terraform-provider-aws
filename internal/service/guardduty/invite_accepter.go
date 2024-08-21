@@ -9,13 +9,14 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/guardduty"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/guardduty"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/guardduty/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -53,7 +54,7 @@ func ResourceInviteAccepter() *schema.Resource {
 
 func resourceInviteAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
+	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
 	detectorID := d.Get("detector_id").(string)
 	invitationID := ""
@@ -62,42 +63,47 @@ func resourceInviteAccepterCreate(ctx context.Context, d *schema.ResourceData, m
 	listInvitationsInput := &guardduty.ListInvitationsInput{}
 
 	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
-		log.Printf("[DEBUG] Listing GuardDuty Invitations: %s", listInvitationsInput)
-		err := conn.ListInvitationsPagesWithContext(ctx, listInvitationsInput, func(page *guardduty.ListInvitationsOutput, lastPage bool) bool {
+		log.Printf("[DEBUG] Listing GuardDuty Invitations: %+v", listInvitationsInput)
+		pages := guardduty.NewListInvitationsPaginator(conn, listInvitationsInput)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx)
+
+			if err != nil {
+				return retry.NonRetryableError(err)
+			}
+
+			if invitationID == "" {
+				return retry.RetryableError(fmt.Errorf("unable to find pending GuardDuty Invitation for detector ID (%s) from master account ID (%s)", detectorID, masterAccountID))
+			}
+
 			for _, invitation := range page.Invitations {
-				if aws.StringValue(invitation.AccountId) == masterAccountID {
-					invitationID = aws.StringValue(invitation.InvitationId)
-					return false
+				if aws.ToString(invitation.AccountId) == masterAccountID {
+					invitationID = aws.ToString(invitation.InvitationId)
+					break
 				}
 			}
-			return !lastPage
-		})
-
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-
-		if invitationID == "" {
-			return retry.RetryableError(fmt.Errorf("unable to find pending GuardDuty Invitation for detector ID (%s) from master account ID (%s)", detectorID, masterAccountID))
 		}
 
 		return nil
 	})
 
 	if tfresource.TimedOut(err) {
-		err = conn.ListInvitationsPagesWithContext(ctx, listInvitationsInput, func(page *guardduty.ListInvitationsOutput, lastPage bool) bool {
+		pages := guardduty.NewListInvitationsPaginator(conn, listInvitationsInput)
+
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "listing GuardDuty Invitations: %s", err)
+			}
+
 			for _, invitation := range page.Invitations {
-				if aws.StringValue(invitation.AccountId) == masterAccountID {
-					invitationID = aws.StringValue(invitation.InvitationId)
-					return false
+				if aws.ToString(invitation.AccountId) == masterAccountID {
+					invitationID = aws.ToString(invitation.InvitationId)
+					break
 				}
 			}
-			return !lastPage
-		})
-	}
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing GuardDuty Invitations: %s", err)
+		}
 	}
 
 	acceptInvitationInput := &guardduty.AcceptInvitationInput{
@@ -106,8 +112,8 @@ func resourceInviteAccepterCreate(ctx context.Context, d *schema.ResourceData, m
 		MasterId:     aws.String(masterAccountID),
 	}
 
-	log.Printf("[DEBUG] Accepting GuardDuty Invitation: %s", acceptInvitationInput)
-	_, err = conn.AcceptInvitationWithContext(ctx, acceptInvitationInput)
+	log.Printf("[DEBUG] Accepting GuardDuty Invitation: %+v", acceptInvitationInput)
+	_, err = conn.AcceptInvitation(ctx, acceptInvitationInput)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "accepting GuardDuty Invitation (%s): %s", invitationID, err)
@@ -120,16 +126,16 @@ func resourceInviteAccepterCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceInviteAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
+	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
 	input := &guardduty.GetMasterAccountInput{
 		DetectorId: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Reading GuardDuty Master Account: %s", input)
-	output, err := conn.GetMasterAccountWithContext(ctx, input)
+	log.Printf("[DEBUG] Reading GuardDuty Master Account: %+v", input)
+	output, err := conn.GetMasterAccount(ctx, input)
 
-	if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
+	if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "The request is rejected because the input detectorId is not owned by the current account.") {
 		log.Printf("[WARN] GuardDuty Detector %q not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -151,16 +157,16 @@ func resourceInviteAccepterRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceInviteAccepterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
+	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
 	input := &guardduty.DisassociateFromMasterAccountInput{
 		DetectorId: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Disassociating GuardDuty Detector (%s) from GuardDuty Master Account: %s", d.Id(), input)
-	_, err := conn.DisassociateFromMasterAccountWithContext(ctx, input)
+	log.Printf("[DEBUG] Disassociating GuardDuty Detector (%s) from GuardDuty Master Account: %+v", d.Id(), input)
+	_, err := conn.DisassociateFromMasterAccount(ctx, input)
 
-	if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
+	if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "The request is rejected because the input detectorId is not owned by the current account.") {
 		return diags
 	}
 

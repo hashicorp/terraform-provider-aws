@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -46,6 +47,11 @@ func resourceBus() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validSourceName,
 			},
+			"kms_key_identifier": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(1, 2048),
+			},
 			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -72,6 +78,10 @@ func resourceBusCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	if v, ok := d.GetOk("event_source_name"); ok {
 		input.EventSourceName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("kms_key_identifier"); ok {
+		input.KmsKeyIdentifier = aws.String(v.(string))
 	}
 
 	output, err := conn.CreateEventBus(ctx, input)
@@ -123,6 +133,7 @@ func resourceBusRead(ctx context.Context, d *schema.ResourceData, meta interface
 	}
 
 	d.Set(names.AttrARN, output.Arn)
+	d.Set("kms_key_identifier", output.KmsKeyIdentifier)
 	d.Set(names.AttrName, output.Name)
 
 	return diags
@@ -130,8 +141,23 @@ func resourceBusRead(ctx context.Context, d *schema.ResourceData, meta interface
 
 func resourceBusUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
-	// Tags only.
+	if d.HasChange("kms_key_identifier") {
+		input := &eventbridge.UpdateEventBusInput{
+			Name: aws.String(d.Get(names.AttrName).(string)),
+		}
+
+		if v, ok := d.GetOk("kms_key_identifier"); ok {
+			input.KmsKeyIdentifier = aws.String(v.(string))
+		}
+
+		_, err := conn.UpdateEventBus(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating EventBridge Event Bus (%s): %s", d.Id(), err)
+		}
+	}
 
 	return append(diags, resourceBusRead(ctx, d, meta)...)
 }

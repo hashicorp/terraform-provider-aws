@@ -26,10 +26,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -86,10 +84,16 @@ func resourceTaskDefinition() *schema.Resource {
 					// Sort the lists of environment variables as they are serialized to state, so we won't get
 					// spurious reorderings in plans (diff is suppressed if the environment variables haven't changed,
 					// but they still show in the plan if some other property changes).
-					orderedCDs, _ := expandContainerDefinitions(v.(string))
+					orderedCDs, err := expandContainerDefinitions(v.(string))
+					if err != nil {
+						// e.g. The value is unknown ("74D93920-ED26-11E3-AC10-0800200C9A66").
+						// Mimic the pre-v5.59.0 behavior.
+						return "[]"
+					}
 					containerDefinitions(orderedCDs).orderContainers()
 					containerDefinitions(orderedCDs).orderEnvironmentVariables()
 					containerDefinitions(orderedCDs).orderSecrets()
+					containerDefinitions(orderedCDs).compactArrays()
 					unnormalizedJson, _ := flattenContainerDefinitions(orderedCDs)
 					json, _ := structure.NormalizeJsonString(unnormalizedJson)
 					return json
@@ -100,7 +104,8 @@ func resourceTaskDefinition() *schema.Resource {
 					equal, _ := containerDefinitionsAreEquivalent(old, new, isAWSVPC)
 					return equal
 				},
-				ValidateFunc: validTaskDefinitionContainerDefinitions,
+				DiffSuppressOnRefresh: true,
+				ValidateFunc:          validTaskDefinitionContainerDefinitions,
 			},
 			"cpu": {
 				Type:     schema.TypeString,
@@ -1204,26 +1209,6 @@ func flattenFSxWinVolumeAuthorizationConfig(config *awstypes.FSxWindowsFileServe
 
 	items = append(items, m)
 	return items
-}
-
-func flattenContainerDefinitions(apiObjects []awstypes.ContainerDefinition) (string, error) {
-	return tfjson.EncodeToString(apiObjects)
-}
-
-func expandContainerDefinitions(tfString string) ([]awstypes.ContainerDefinition, error) {
-	var apiObjects []awstypes.ContainerDefinition
-
-	if err := tfjson.DecodeFromString(tfString, &apiObjects); err != nil {
-		return nil, err
-	}
-
-	for i, apiObject := range apiObjects {
-		if itypes.IsZero(&apiObject) {
-			return nil, fmt.Errorf("invalid container definition supplied at index (%d)", i)
-		}
-	}
-
-	return apiObjects, nil
 }
 
 func expandTaskDefinitionEphemeralStorage(config []interface{}) *awstypes.EphemeralStorage {
