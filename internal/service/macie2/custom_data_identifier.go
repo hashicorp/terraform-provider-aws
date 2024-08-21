@@ -29,14 +29,16 @@ import (
 
 // @SDKResource("aws_macie2_custom_data_identifier", name="Custom Data Identifier")
 // @Tags
-func ResourceCustomDataIdentifier() *schema.Resource {
+func resourceCustomDataIdentifier() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCustomDataIdentifierCreate,
 		ReadWithoutTimeout:   resourceCustomDataIdentifierRead,
 		DeleteWithoutTimeout: resourceCustomDataIdentifierDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		Schema: map[string]*schema.Schema{
 			"regex": {
 				Type:         schema.TypeString,

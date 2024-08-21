@@ -32,15 +32,17 @@ import (
 
 // @SDKResource("aws_macie2_classification_job", name="Classification Job")
 // @Tags
-func ResourceClassificationJob() *schema.Resource {
+func resourceClassificationJob() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClassificationJobCreate,
 		ReadWithoutTimeout:   resourceClassificationJobRead,
 		UpdateWithoutTimeout: resourceClassificationJobUpdate,
 		DeleteWithoutTimeout: resourceClassificationJobDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		Schema: map[string]*schema.Schema{
 			"custom_data_identifier_ids": {
 				Type:     schema.TypeList,

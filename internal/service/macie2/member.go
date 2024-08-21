@@ -26,15 +26,17 @@ import (
 
 // @SDKResource("aws_macie2_member", name="Member")
 // @Tags
-func ResourceMember() *schema.Resource {
+func resourceMember() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMemberCreate,
 		ReadWithoutTimeout:   resourceMemberRead,
 		UpdateWithoutTimeout: resourceMemberUpdate,
 		DeleteWithoutTimeout: resourceMemberDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		Schema: map[string]*schema.Schema{
 			names.AttrAccountID: {
 				Type:     schema.TypeString,

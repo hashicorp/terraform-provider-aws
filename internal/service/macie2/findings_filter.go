@@ -32,15 +32,17 @@ import (
 
 // @SDKResource("aws_macie2_findings_filter", name="Findings Filter")
 // @Tags
-func ResourceFindingsFilter() *schema.Resource {
+func resourceFindingsFilter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFindingsFilterCreate,
 		ReadWithoutTimeout:   resourceFindingsFilterRead,
 		UpdateWithoutTimeout: resourceFindingsFilterUpdate,
 		DeleteWithoutTimeout: resourceFindingsFilterDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		Schema: map[string]*schema.Schema{
 			"finding_criteria": {
 				Type:     schema.TypeList,

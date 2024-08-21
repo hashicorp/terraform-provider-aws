@@ -19,13 +19,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_macie2_classification_export_configuration")
-func ResourceClassificationExportConfiguration() *schema.Resource {
+// @SDKResource("aws_macie2_classification_export_configuration", name="Classification Export Configuration")
+func resourceClassificationExportConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClassificationExportConfigurationCreate,
 		UpdateWithoutTimeout: resourceClassificationExportConfigurationUpdate,
 		DeleteWithoutTimeout: resourceClassificationExportConfigurationDelete,
 		ReadWithoutTimeout:   resourceClassificationExportConfigurationRead,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

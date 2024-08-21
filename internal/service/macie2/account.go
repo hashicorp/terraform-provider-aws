@@ -24,13 +24,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_macie2_account")
-func ResourceAccount() *schema.Resource {
+// @SDKResource("aws_macie2_account", name="Account")
+func resourceAccount() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccountCreate,
 		ReadWithoutTimeout:   resourceAccountRead,
 		UpdateWithoutTimeout: resourceAccountUpdate,
 		DeleteWithoutTimeout: resourceAccountDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

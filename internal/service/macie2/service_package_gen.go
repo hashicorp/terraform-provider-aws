@@ -29,44 +29,48 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceAccount,
+			Factory:  resourceAccount,
 			TypeName: "aws_macie2_account",
+			Name:     "Account",
 		},
 		{
-			Factory:  ResourceClassificationExportConfiguration,
+			Factory:  resourceClassificationExportConfiguration,
 			TypeName: "aws_macie2_classification_export_configuration",
+			Name:     "Classification Export Configuration",
 		},
 		{
-			Factory:  ResourceClassificationJob,
+			Factory:  resourceClassificationJob,
 			TypeName: "aws_macie2_classification_job",
 			Name:     "Classification Job",
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  ResourceCustomDataIdentifier,
+			Factory:  resourceCustomDataIdentifier,
 			TypeName: "aws_macie2_custom_data_identifier",
 			Name:     "Custom Data Identifier",
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  ResourceFindingsFilter,
+			Factory:  resourceFindingsFilter,
 			TypeName: "aws_macie2_findings_filter",
 			Name:     "Findings Filter",
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  ResourceInvitationAccepter,
+			Factory:  resourceInvitationAccepter,
 			TypeName: "aws_macie2_invitation_accepter",
+			Name:     "Invitation Accepter",
 		},
 		{
-			Factory:  ResourceMember,
+			Factory:  resourceMember,
 			TypeName: "aws_macie2_member",
 			Name:     "Member",
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  ResourceOrganizationAdminAccount,
+			Factory:  resourceOrganizationAdminAccount,
 			TypeName: "aws_macie2_organization_admin_account",
+			Name:     "Organization Admin Account",
 		},
 	}
 }

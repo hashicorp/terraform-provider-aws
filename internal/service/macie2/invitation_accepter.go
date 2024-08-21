@@ -23,15 +23,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_macie2_invitation_accepter")
-func ResourceInvitationAccepter() *schema.Resource {
+// @SDKResource("aws_macie2_invitation_accepter", name="Invitation Accepter")
+func resourceInvitationAccepter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInvitationAccepterCreate,
 		ReadWithoutTimeout:   resourceInvitationAccepterRead,
 		DeleteWithoutTimeout: resourceInvitationAccepterDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		Schema: map[string]*schema.Schema{
 			"administrator_account_id": {
 				Type:         schema.TypeString,

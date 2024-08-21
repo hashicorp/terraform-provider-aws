@@ -22,15 +22,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_macie2_organization_admin_account")
-func ResourceOrganizationAdminAccount() *schema.Resource {
+// @SDKResource("aws_macie2_organization_admin_account", name="Organization Admin Account")
+func resourceOrganizationAdminAccount() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOrganizationAdminAccountCreate,
 		ReadWithoutTimeout:   resourceOrganizationAdminAccountRead,
 		DeleteWithoutTimeout: resourceOrganizationAdminAccountDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		Schema: map[string]*schema.Schema{
 			"admin_account_id": {
 				Type:     schema.TypeString,
