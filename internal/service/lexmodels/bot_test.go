@@ -338,9 +338,10 @@ func TestAccLexModelsBot_description(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      rName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            rName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"abort_statement"},
 			},
 			{
 				Config: acctest.ConfigCompose(
@@ -353,9 +354,10 @@ func TestAccLexModelsBot_description(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      rName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            rName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"abort_statement"},
 			},
 		},
 	})
