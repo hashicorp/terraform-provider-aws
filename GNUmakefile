@@ -106,7 +106,7 @@ awssdkpatch: prereq-go ## Install awssdkpatch
 
 awssdkpatch-apply: awssdkpatch-gen ## Apply a patch generated with awssdkpatch
 	@echo "Applying patch for $(PKG)..."
-	@gopatch -p awssdk.patch ./$(PKG_NAME)/...
+	@gopatch --skip-generated -p awssdk.patch ./$(PKG_NAME)/...
 
 awssdkpatch-gen: awssdkpatch ## Generate a patch file using awssdkpatch
 	@if [ "$(PKG)" = "" ]; then \
@@ -124,9 +124,9 @@ changelog-misspell: ## [CI] CHANGELOG Misspell / misspell
 	@echo "make: CHANGELOG Misspell / misspell..."
 	@misspell -error -source text CHANGELOG.md .changelog
 
-ci: tools go-build gen-check acctest-lint copyright deps-check docs examples-tflint gh-workflow-lint golangci-lint import-lint preferred-lib provider-lint provider-markdown-lint semgrep skaff-check-compile sweeper-check test tfproviderdocs website yamllint ## [CI] Run all CI checks
+ci: tools go-build gen-check acctest-lint copyright deps-check docs examples-tflint gh-workflow-lint golangci-lint import-lint provider-lint provider-markdown-lint semgrep skaff-check-compile sweeper-check test tfproviderdocs website yamllint ## [CI] Run all CI checks
 
-ci-quick: tools go-build testacc-lint copyright deps-check docs examples-tflint gh-workflow-lint golangci-lint1 import-lint preferred-lib provider-lint provider-markdown-lint semgrep-code-quality semgrep-naming semgrep-naming-cae website-markdown-lint website-misspell website-terrafmt yamllint ## [CI] Run quicker CI checks
+ci-quick: tools go-build testacc-lint copyright deps-check docs examples-tflint gh-workflow-lint golangci-lint1 import-lint provider-lint provider-markdown-lint semgrep-code-quality semgrep-naming semgrep-naming-cae website-markdown-lint website-misspell website-terrafmt yamllint ## [CI] Run quicker CI checks
 
 clean: clean-make-tests clean-go clean-tidy build tools ## Clean up Go cache, tidy and re-install tools
 	@echo "make: Clean complete"
@@ -337,14 +337,6 @@ lint-fix: testacc-lint-fix website-lint-fix docs-lint-fix ## Fix acceptance test
 
 misspell: changelog-misspell docs-misspell website-misspell go-misspell ## [CI] Run all CI misspell checks
 
-preferred-lib: ## [CI] Preferred Library Version Check / diffgrep
-	@echo "make: Preferred Library Version Check / diffgrep..."
-	@found=`git diff origin/$(BASE_REF) internal/ | grep '^\+\s*"github.com/aws/aws-sdk-go/'` ; \
-	if [ "$$found" != "" ] ; then \
-		echo "Found a new reference to github.com/aws/aws-sdk-go in the codebase. Please use the preferred library github.com/aws/aws-sdk-go-v2 instead." ; \
-		exit 1 ; \
-	fi
-
 prereq-go: ## If $(GO_VER) is not installed, install it
 	@if ! type "$(GO_VER)" > /dev/null 2>&1 ; then \
 		echo "make: $(GO_VER) not found" ; \
@@ -458,7 +450,7 @@ sanity: prereq-go ## Run sanity check (failures allowed)
 
 semgrep: semgrep-code-quality semgrep-naming semgrep-naming-cae semgrep-service-naming ## [CI] Run all CI Semgrep checks
 
-semgrep-all: semgrep-validate ## Run semgrep on all files
+semgrep-all: semgrep-test semgrep-validate ## Run semgrep on all files
 	@echo "make: Running Semgrep checks locally (must have semgrep installed)..."
 	@semgrep $(SEMGREP_ARGS) \
 		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
@@ -479,10 +471,10 @@ semgrep-all: semgrep-validate ## Run semgrep on all files
 		--config 'r/dgryski.semgrep-go.oddifsequence' \
 		--config 'r/dgryski.semgrep-go.oserrors'
 
-semgrep-code-quality: semgrep-validate ## [CI] Semgrep Checks / Code Quality Scan
+semgrep-code-quality: semgrep-test semgrep-validate ## [CI] Semgrep Checks / Code Quality Scan
 	@echo "make: Semgrep Checks / Code Quality Scan..."
 	@echo "make: Running Semgrep checks locally (must have semgrep installed)"
-	semgrep $(SEMGREP_ARGS) \
+	@semgrep $(SEMGREP_ARGS) \
 		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
 		--config .ci/.semgrep.yml \
 		--config .ci/.semgrep-constants.yml \
@@ -542,6 +534,11 @@ semgrep-naming-cae: semgrep-validate ## [CI] Semgrep Checks / Naming Scan Caps/A
 	@semgrep $(SEMGREP_ARGS) \
 		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
 		--config .ci/.semgrep-caps-aws-ec2.yml
+
+semgrep-test: semgrep-validate ## Test Semgrep configuration files
+	@echo "make: Running Semgrep rule tests..."
+	@semgrep --quiet \
+		--test .ci/semgrep/
 
 semgrep-service-naming: semgrep-validate ## [CI] Semgrep Checks / Service Name Scan A-Z
 	@echo "make: Semgrep Checks / Service Name Scan A-Z..."
@@ -604,7 +601,7 @@ sweeper-unlinked: go-build ## [CI] Provider Checks / Sweeper Functions Not Linke
 		grep --count --extended-regexp 'internal/service/[a-zA-Z0-9]+\.sweep[a-zA-Z0-9]+$$'` ; \
 	echo "make: sweeper-unlinked: found $$count, expected 0" ; \
 	[ $$count -eq 0 ] || \
-        (echo "Expected `strings` to detect no sweeper function names in provider binary."; exit 1)
+		(echo "Expected `strings` to detect no sweeper function names in provider binary."; exit 1)
 
 t: prereq-go fmt-check ## Run acceptance tests (similar to testacc)
 	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
@@ -637,8 +634,8 @@ testacc: prereq-go fmt-check ## Run acceptance tests
 testacc-lint: ## [CI] Acceptance Test Linting / terrafmt
 	@echo "make: Acceptance Test Linting / terrafmt..."
 	@find $(SVC_DIR) -type f -name '*_test.go' \
-    	| sort -u \
-    	| xargs -I {} terrafmt diff --check --fmtcompat {}
+		| sort -u \
+		| xargs -I {} terrafmt diff --check --fmtcompat {}
 
 testacc-lint-fix: ## Fix acceptance test linter findings
 	@echo "make: Fixing Acceptance Test Linting / terrafmt..."
@@ -868,7 +865,6 @@ yamllint: ## [CI] YAML Linting / yamllint
 	lint-fix \
 	lint \
 	misspell \
-	preferred-lib \
 	prereq-go \
 	provider-lint \
 	provider-markdown-lint \

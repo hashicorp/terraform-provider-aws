@@ -156,7 +156,7 @@ func resourceTransitGatewayCreate(ctx context.Context, d *schema.ResourceData, m
 			MulticastSupport:             awstypes.MulticastSupportValue(d.Get("multicast_support").(string)),
 			VpnEcmpSupport:               awstypes.VpnEcmpSupportValue(d.Get("vpn_ecmp_support").(string)),
 		},
-		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeTransitGateway),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeTransitGateway),
 	}
 
 	if v, ok := d.GetOk("amazon_side_asn"); ok {
@@ -217,7 +217,7 @@ func resourceTransitGatewayRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("transit_gateway_cidr_blocks", transitGateway.Options.TransitGatewayCidrBlocks)
 	d.Set("vpn_ecmp_support", transitGateway.Options.VpnEcmpSupport)
 
-	setTagsOutV2(ctx, transitGateway.Tags)
+	setTagsOut(ctx, transitGateway.Tags)
 
 	return diags
 }
@@ -290,7 +290,10 @@ func resourceTransitGatewayDelete(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, TransitGatewayIncorrectStateTimeout, func() (interface{}, error) {
+	const (
+		timeout = 5 * time.Minute
+	)
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, func() (interface{}, error) {
 		return conn.DeleteTransitGateway(ctx, &ec2.DeleteTransitGatewayInput{
 			TransitGatewayId: aws.String(d.Id()),
 		})

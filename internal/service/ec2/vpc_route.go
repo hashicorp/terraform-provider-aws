@@ -270,7 +270,7 @@ func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "creating Route in Route Table (%s) with destination (%s): %s", routeTableID, destination, err)
 	}
 
-	d.SetId(RouteCreateID(routeTableID, destination))
+	d.SetId(routeCreateID(routeTableID, destination))
 
 	if _, err := waitRouteReady(ctx, conn, routeFinder, routeTableID, destination, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Route in Route Table (%s) with destination (%s) create: %s", routeTableID, destination, err)
@@ -501,7 +501,7 @@ func resourceRouteImport(ctx context.Context, d *schema.ResourceData, meta inter
 		d.Set(routeDestinationPrefixListID, destination)
 	}
 
-	d.SetId(RouteCreateID(routeTableID, destination))
+	d.SetId(routeCreateID(routeTableID, destination))
 
 	return []*schema.ResourceData{d}, nil
 }

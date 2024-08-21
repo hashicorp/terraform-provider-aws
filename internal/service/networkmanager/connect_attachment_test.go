@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/networkmanager"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func TestAccNetworkManagerConnectAttachment_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v networkmanager.ConnectAttachment
+	var v awstypes.ConnectAttachment
 	resourceName := "aws_networkmanager_connect_attachment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -48,9 +48,10 @@ func TestAccNetworkManagerConnectAttachment_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrState},
 			},
 		},
 	})
@@ -58,7 +59,7 @@ func TestAccNetworkManagerConnectAttachment_basic(t *testing.T) {
 
 func TestAccNetworkManagerConnectAttachment_basic_NoDependsOn(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v networkmanager.ConnectAttachment
+	var v awstypes.ConnectAttachment
 	resourceName := "aws_networkmanager_connect_attachment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -84,9 +85,10 @@ func TestAccNetworkManagerConnectAttachment_basic_NoDependsOn(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrState},
 			},
 		},
 	})
@@ -94,7 +96,7 @@ func TestAccNetworkManagerConnectAttachment_basic_NoDependsOn(t *testing.T) {
 
 func TestAccNetworkManagerConnectAttachment_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v networkmanager.ConnectAttachment
+	var v awstypes.ConnectAttachment
 	resourceName := "aws_networkmanager_connect_attachment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -118,7 +120,7 @@ func TestAccNetworkManagerConnectAttachment_disappears(t *testing.T) {
 
 func TestAccNetworkManagerConnectAttachment_protocolNoEncap(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v networkmanager.ConnectAttachment
+	var v awstypes.ConnectAttachment
 	resourceName := "aws_networkmanager_connect_attachment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -144,9 +146,10 @@ func TestAccNetworkManagerConnectAttachment_protocolNoEncap(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrState},
 			},
 		},
 	})
@@ -154,7 +157,7 @@ func TestAccNetworkManagerConnectAttachment_protocolNoEncap(t *testing.T) {
 
 func TestAccNetworkManagerConnectAttachment_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v networkmanager.ConnectAttachment
+	var v awstypes.ConnectAttachment
 	resourceName := "aws_networkmanager_connect_attachment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -198,7 +201,7 @@ func TestAccNetworkManagerConnectAttachment_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckConnectAttachmentExists(ctx context.Context, n string, v *networkmanager.ConnectAttachment) resource.TestCheckFunc {
+func testAccCheckConnectAttachmentExists(ctx context.Context, n string, v *awstypes.ConnectAttachment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -209,7 +212,7 @@ func testAccCheckConnectAttachmentExists(ctx context.Context, n string, v *netwo
 			return fmt.Errorf("No Network Manager Connect Attachment ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerClient(ctx)
 
 		output, err := tfnetworkmanager.FindConnectAttachmentByID(ctx, conn, rs.Primary.ID)
 
@@ -225,7 +228,7 @@ func testAccCheckConnectAttachmentExists(ctx context.Context, n string, v *netwo
 
 func testAccCheckConnectAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_networkmanager_connect_attachment" {

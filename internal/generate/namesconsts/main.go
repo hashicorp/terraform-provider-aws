@@ -11,11 +11,17 @@ import (
 	"sort"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
-	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/names/data"
 )
 
 type TemplateData struct {
-	Services []names.ServiceNameUpper
+	Services []ServiceDatum
+}
+
+type ServiceDatum struct {
+	ProviderPackage   string
+	ProviderNameUpper string
+	SDKID             string
 }
 
 func main() {
@@ -26,8 +32,30 @@ func main() {
 
 	g.Infof("Generating names/%s", filename)
 
-	td := TemplateData{
-		Services: names.ServiceNamesUpper(),
+	data, err := data.ReadAllServiceData()
+
+	if err != nil {
+		g.Fatalf("error reading service data: %s", err)
+	}
+
+	td := TemplateData{}
+
+	for _, l := range data {
+		if l.Exclude() {
+			continue
+		}
+
+		if l.NotImplemented() && !l.EndpointOnly() {
+			continue
+		}
+
+		sd := ServiceDatum{
+			ProviderPackage:   l.ProviderPackage(),
+			ProviderNameUpper: l.ProviderNameUpper(),
+			SDKID:             l.SDKID(),
+		}
+
+		td.Services = append(td.Services, sd)
 	}
 
 	sort.Slice(td.Services, func(i, j int) bool {

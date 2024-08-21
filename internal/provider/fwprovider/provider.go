@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tffunction "github.com/hashicorp/terraform-provider-aws/internal/function"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -262,7 +263,8 @@ func (p *fwprovider) Schema(ctx context.Context, req provider.SchemaRequest, res
 						"tags": schema.MapAttribute{
 							ElementType: types.StringType,
 							Optional:    true,
-							Description: "Resource tags to default across all resources",
+							Description: "Resource tags to default across all resources. " +
+								"Can also be configured with environment variables like `" + tftags.DefaultTagsEnvVarPrefix + "<tag_name>`.",
 						},
 					},
 				},
@@ -278,12 +280,14 @@ func (p *fwprovider) Schema(ctx context.Context, req provider.SchemaRequest, res
 						"key_prefixes": schema.SetAttribute{
 							ElementType: types.StringType,
 							Optional:    true,
-							Description: "Resource tag key prefixes to ignore across all resources.",
+							Description: "Resource tag key prefixes to ignore across all resources. " +
+								"Can also be configured with the " + tftags.IgnoreTagsKeyPrefixesEnvVar + " environment variable.",
 						},
 						"keys": schema.SetAttribute{
 							ElementType: types.StringType,
 							Optional:    true,
-							Description: "Resource tag keys to ignore across all resources.",
+							Description: "Resource tag keys to ignore across all resources. " +
+								"Can also be configured with the " + tftags.IgnoreTagsKeysEnvVar + " environment variable.",
 						},
 					},
 				},
@@ -408,6 +412,7 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 				if meta != nil {
 					ctx = tftags.NewContext(ctx, meta.DefaultTagsConfig, meta.IgnoreTagsConfig)
 					ctx = meta.RegisterLogger(ctx)
+					ctx = flex.RegisterLogger(ctx)
 				}
 
 				return ctx

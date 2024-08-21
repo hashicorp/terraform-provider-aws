@@ -42,8 +42,8 @@ tfawserr.x
 
 @@
 @@
--aws.TimeValue(...)
-+aws.ToTime(...)
+-aws.TimeValue
++aws.ToTime
 
 @@
 var x expression
@@ -85,22 +85,16 @@ var x identifier
 -{{ .ImportAlias }}.x
 +awstypes.x
 
-# ...but sometimes, it's over eager
-@@
-@@
--awstypes.Client
-+{{ .ImportAlias }}.Client
-
-@@
-@@
--awstypes.{{ .GoV1ClientTypeName }}
-+{{ .ImportAlias }}.Client
-
 @@
 var x identifier
 @@
 +import awstypes "github.com/aws/aws-sdk-go-v2/service/{{ .GoV2Package }}/types"
 awstypes.x
+
+@@
+@@
+-awstypes.{{ .GoV1ClientTypeName }}
++{{ .ImportAlias }}.Client
 
 @@
 @@
@@ -187,16 +181,6 @@ var x identifier
 @@
 +import "github.com/hashicorp/terraform-provider-aws/internal/enum"
 enum.x
-
-# Acceptance test attribute checks: convert enums back to string.
-@@
-var r expression
-var x expression
-var y expression
-var z identifier
-@@
--r.TestCheckResourceAttr(x, y, awstypes.z)
-+r.TestCheckResourceAttr(x, y, string(awstypes.z))
 
 {{- if .MultiClient }}
 # Replace generated Tags function with the V2 variant.

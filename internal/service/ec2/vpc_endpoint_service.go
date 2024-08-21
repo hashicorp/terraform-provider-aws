@@ -30,7 +30,7 @@ import (
 // @SDKResource("aws_vpc_endpoint_service", name="VPC Endpoint Service")
 // @Tags(identifierAttribute="id")
 // @Testing(tagsTest=false)
-func ResourceVPCEndpointService() *schema.Resource {
+func resourceVPCEndpointService() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCEndpointServiceCreate,
 		ReadWithoutTimeout:   resourceVPCEndpointServiceRead,
@@ -159,7 +159,7 @@ func resourceVPCEndpointServiceCreate(ctx context.Context, d *schema.ResourceDat
 	input := &ec2.CreateVpcEndpointServiceConfigurationInput{
 		AcceptanceRequired: aws.Bool(d.Get("acceptance_required").(bool)),
 		ClientToken:        aws.String(id.UniqueId()),
-		TagSpecifications:  getTagSpecificationsInV2(ctx, awstypes.ResourceTypeVpcEndpointService),
+		TagSpecifications:  getTagSpecificationsIn(ctx, awstypes.ResourceTypeVpcEndpointService),
 	}
 
 	if v, ok := d.GetOk("gateway_load_balancer_arns"); ok && v.(*schema.Set).Len() > 0 {
@@ -253,7 +253,7 @@ func resourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceData,
 	d.Set(names.AttrState, svcCfg.ServiceState)
 	d.Set("supported_ip_address_types", svcCfg.SupportedIpAddressTypes)
 
-	setTagsOutV2(ctx, svcCfg.Tags)
+	setTagsOut(ctx, svcCfg.Tags)
 
 	allowedPrincipals, err := findVPCEndpointServicePermissionsByServiceID(ctx, conn, d.Id())
 
@@ -325,7 +325,7 @@ func resourceVPCEndpointServiceDelete(ctx context.Context, d *schema.ResourceDat
 	})
 
 	if err == nil && output != nil {
-		err = unsuccessfulItemsErrorV2(output.Unsuccessful)
+		err = unsuccessfulItemsError(output.Unsuccessful)
 	}
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointServiceNotFound) {
