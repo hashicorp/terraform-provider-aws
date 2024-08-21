@@ -510,6 +510,7 @@ func TestAccLexModelsIntent_slots(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"create_version",
 					"slot.0.value_elicitation_prompt.0.message.0.group_number",
+					"slot.1.value_elicitation_prompt.0.message.0.group_number",
 				},
 			},
 		},
