@@ -54,7 +54,7 @@ func TestAccLexModelsBot_basic(t *testing.T) {
 					testAccCheckBotExists(ctx, rName, &v),
 					testAccCheckBotNotExists(ctx, testBotID, acctest.Ct1),
 
-					resource.TestCheckResourceAttr(rName, "abort_statement.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(rName, "abort_statement.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(rName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(rName, "checksum"),
 					resource.TestCheckResourceAttr(rName, "child_directed", acctest.CtFalse),
