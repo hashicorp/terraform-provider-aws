@@ -169,10 +169,10 @@ func testAccUser_updatePhoneConfig(t *testing.T) {
 	rName5 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	after_contact_work_time_limit_original := 0
 	auto_accept_original := false
-	desk_phone_number_original := "+112345678912"
+	desk_phone_number_original := "+12345678912"
 	after_contact_work_time_limit_updated := 1
 	auto_accept_updated := true
-	desk_phone_number_updated := "+112345678913"
+	desk_phone_number_updated := "+12345678913"
 
 	resourceName := "aws_connect_user.test"
 

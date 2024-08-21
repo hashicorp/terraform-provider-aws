@@ -132,7 +132,7 @@ resource "aws_connect_user" "test" {
   phone_config {
     after_contact_work_time_limit = 0
     auto_accept                   = true
-    desk_phone_number             = "+112345678913"
+    desk_phone_number             = "+12345678913"
     phone_type                    = "DESK_PHONE"
   }
 
