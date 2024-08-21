@@ -20,8 +20,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_lex_intent")
-func DataSourceIntent() *schema.Resource {
+// @SDKDataSource("aws_lex_intent", name="Intent")
+func dataSourceIntent() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceIntentRead,
 

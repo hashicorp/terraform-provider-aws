@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_lex_slot_type")
-func DataSourceSlotType() *schema.Resource {
+// @SDKDataSource("aws_lex_slot_type", name="Slot Type")
+func dataSourceSlotType() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSlotTypeRead,
 
@@ -88,7 +88,7 @@ func dataSourceSlotTypeRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	name := d.Get(names.AttrName).(string)
 	version := d.Get(names.AttrVersion).(string)
-	output, err := FindSlotTypeVersionByName(ctx, conn, name, version)
+	output, err := findSlotTypeVersionByName(ctx, conn, name, version)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Lex Slot Type (%s/%s): %s", name, version, err)

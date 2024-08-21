@@ -18,8 +18,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_lex_bot_alias")
-func DataSourceBotAlias() *schema.Resource {
+// @SDKDataSource("aws_lex_bot_alias", name="Bot Alias")
+func dataSourceBotAlias() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceBotAliasRead,
 

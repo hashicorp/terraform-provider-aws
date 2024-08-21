@@ -22,7 +22,7 @@ const (
 
 func statusBotVersion(ctx context.Context, conn *lexmodelbuildingservice.Client, name, version string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindBotVersionByName(ctx, conn, name, version)
+		output, err := findBotVersionByName(ctx, conn, name, version)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -38,7 +38,7 @@ func statusBotVersion(ctx context.Context, conn *lexmodelbuildingservice.Client,
 
 func statusSlotType(ctx context.Context, conn *lexmodelbuildingservice.Client, name, version string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindSlotTypeVersionByName(ctx, conn, name, version)
+		output, err := findSlotTypeVersionByName(ctx, conn, name, version)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

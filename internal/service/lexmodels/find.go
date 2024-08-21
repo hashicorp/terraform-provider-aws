@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindBotVersionByName(ctx context.Context, conn *lexmodelbuildingservice.Client, name, version string) (*lexmodelbuildingservice.GetBotOutput, error) {
+func findBotVersionByName(ctx context.Context, conn *lexmodelbuildingservice.Client, name, version string) (*lexmodelbuildingservice.GetBotOutput, error) {
 	input := &lexmodelbuildingservice.GetBotInput{
 		Name:           aws.String(name),
 		VersionOrAlias: aws.String(version),
@@ -41,7 +41,7 @@ func FindBotVersionByName(ctx context.Context, conn *lexmodelbuildingservice.Cli
 	return output, nil
 }
 
-func FindSlotTypeVersionByName(ctx context.Context, conn *lexmodelbuildingservice.Client, name, version string) (*lexmodelbuildingservice.GetSlotTypeOutput, error) {
+func findSlotTypeVersionByName(ctx context.Context, conn *lexmodelbuildingservice.Client, name, version string) (*lexmodelbuildingservice.GetSlotTypeOutput, error) {
 	input := &lexmodelbuildingservice.GetSlotTypeInput{
 		Name:    aws.String(name),
 		Version: aws.String(version),
@@ -67,9 +67,9 @@ func FindSlotTypeVersionByName(ctx context.Context, conn *lexmodelbuildingservic
 	return output, nil
 }
 
-// FindLatestBotVersionByName returns the latest published version of a bot or $LATEST if the bot has never been published.
+// findLatestBotVersionByName returns the latest published version of a bot or $LATEST if the bot has never been published.
 // See https://docs.aws.amazon.com/lex/latest/dg/versioning-aliases.html.
-func FindLatestBotVersionByName(ctx context.Context, conn *lexmodelbuildingservice.Client, name string) (string, error) {
+func findLatestBotVersionByName(ctx context.Context, conn *lexmodelbuildingservice.Client, name string) (string, error) {
 	input := &lexmodelbuildingservice.GetBotVersionsInput{
 		Name: aws.String(name),
 	}
@@ -106,9 +106,9 @@ func FindLatestBotVersionByName(ctx context.Context, conn *lexmodelbuildingservi
 	return strconv.Itoa(latestVersion), nil
 }
 
-// FindLatestIntentVersionByName returns the latest published version of an intent or $LATEST if the intent has never been published.
+// findLatestIntentVersionByName returns the latest published version of an intent or $LATEST if the intent has never been published.
 // See https://docs.aws.amazon.com/lex/latest/dg/versioning-aliases.html.
-func FindLatestIntentVersionByName(ctx context.Context, conn *lexmodelbuildingservice.Client, name string) (string, error) {
+func findLatestIntentVersionByName(ctx context.Context, conn *lexmodelbuildingservice.Client, name string) (string, error) {
 	input := &lexmodelbuildingservice.GetIntentVersionsInput{
 		Name: aws.String(name),
 	}
@@ -145,9 +145,9 @@ func FindLatestIntentVersionByName(ctx context.Context, conn *lexmodelbuildingse
 	return strconv.Itoa(latestVersion), nil
 }
 
-// FindLatestSlotTypeVersionByName returns the latest published version of a slot or $LATEST if the slot has never been published.
+// findLatestSlotTypeVersionByName returns the latest published version of a slot or $LATEST if the slot has never been published.
 // See https://docs.aws.amazon.com/lex/latest/dg/versioning-aliases.html.
-func FindLatestSlotTypeVersionByName(ctx context.Context, conn *lexmodelbuildingservice.Client, name string) (string, error) {
+func findLatestSlotTypeVersionByName(ctx context.Context, conn *lexmodelbuildingservice.Client, name string) (string, error) {
 	input := &lexmodelbuildingservice.GetSlotTypeVersionsInput{
 		Name: aws.String(name),
 	}

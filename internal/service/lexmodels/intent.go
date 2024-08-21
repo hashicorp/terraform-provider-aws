@@ -35,8 +35,8 @@ const (
 	intentDeleteTimeout = 5 * time.Minute
 )
 
-// @SDKResource("aws_lex_intent")
-func ResourceIntent() *schema.Resource {
+// @SDKResource("aws_lex_intent", name="Intent")
+func resourceIntent() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIntentCreate,
 		ReadWithoutTimeout:   resourceIntentRead,
@@ -397,7 +397,7 @@ func resourceIntentRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set(names.AttrLastUpdatedDate, resp.LastUpdatedDate.Format(time.RFC3339))
 	d.Set(names.AttrName, resp.Name)
 
-	version, err := FindLatestIntentVersionByName(ctx, conn, d.Id())
+	version, err := findLatestIntentVersionByName(ctx, conn, d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Lex Intent (%s) latest version: %s", d.Id(), err)

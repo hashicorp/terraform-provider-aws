@@ -27,7 +27,7 @@ import (
 )
 
 // @SDKResource("aws_lex_bot")
-func ResourceBot() *schema.Resource {
+func resourceBot() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBotCreate,
 		ReadWithoutTimeout:   resourceBotRead,
@@ -286,7 +286,7 @@ func resourceBotRead(ctx context.Context, d *schema.ResourceData, meta interface
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LexModelsClient(ctx)
 
-	output, err := FindBotVersionByName(ctx, conn, d.Id(), BotVersionLatest)
+	output, err := findBotVersionByName(ctx, conn, d.Id(), BotVersionLatest)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Lex Bot (%s) not found, removing from state", d.Id())
@@ -338,7 +338,7 @@ func resourceBotRead(ctx context.Context, d *schema.ResourceData, meta interface
 		d.Set("clarification_prompt", flattenPrompt(output.ClarificationPrompt))
 	}
 
-	version, err := FindLatestBotVersionByName(ctx, conn, d.Id())
+	version, err := findLatestBotVersionByName(ctx, conn, d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Lex Bot (%s) latest version: %s", d.Id(), err)

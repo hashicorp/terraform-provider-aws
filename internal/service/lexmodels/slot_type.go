@@ -31,8 +31,8 @@ const (
 	slotTypeDeleteTimeout = 5 * time.Minute
 )
 
-// @SDKResource("aws_lex_slot_type")
-func ResourceSlotType() *schema.Resource {
+// @SDKResource("aws_lex_slot_type", name="Slot Type")
+func resourceSlotType() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSlotTypeCreate,
 		ReadWithoutTimeout:   resourceSlotTypeRead,
@@ -182,7 +182,7 @@ func resourceSlotTypeRead(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LexModelsClient(ctx)
 
-	output, err := FindSlotTypeVersionByName(ctx, conn, d.Id(), SlotTypeVersionLatest)
+	output, err := findSlotTypeVersionByName(ctx, conn, d.Id(), SlotTypeVersionLatest)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Lex Slot Type (%s) not found, removing from state", d.Id())
@@ -205,7 +205,7 @@ func resourceSlotTypeRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Set("enumeration_value", flattenEnumerationValues(output.EnumerationValues))
 	}
 
-	version, err := FindLatestSlotTypeVersionByName(ctx, conn, d.Id())
+	version, err := findLatestSlotTypeVersionByName(ctx, conn, d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Lex Slot Type (%s) latest version: %s", d.Id(), err)

@@ -79,7 +79,7 @@ func sweepBotAliases(region string) error {
 				}
 
 				for _, botAlias := range page.BotAliases {
-					r := ResourceBotAlias()
+					r := resourceBotAlias()
 					d := r.Data(nil)
 
 					d.SetId(fmt.Sprintf("%s:%s", aws.ToString(bot.Name), aws.ToString(botAlias.Name)))
@@ -90,7 +90,7 @@ func sweepBotAliases(region string) error {
 				}
 			}
 
-			r := ResourceBotAlias()
+			r := resourceBotAlias()
 			d := r.Data(nil)
 
 			d.SetId(aws.ToString(bot.Name))
@@ -135,7 +135,7 @@ func sweepBots(region string) error {
 		}
 
 		for _, bot := range page.Bots {
-			r := ResourceBot()
+			r := resourceBot()
 			d := r.Data(nil)
 
 			d.SetId(aws.ToString(bot.Name))
@@ -180,7 +180,7 @@ func sweepIntents(region string) error {
 		}
 
 		for _, intent := range page.Intents {
-			r := ResourceIntent()
+			r := resourceIntent()
 			d := r.Data(nil)
 
 			d.SetId(aws.ToString(intent.Name))
@@ -225,7 +225,7 @@ func sweepSlotTypes(region string) error {
 		}
 
 		for _, slotType := range page.SlotTypes {
-			r := ResourceSlotType()
+			r := resourceSlotType()
 			d := r.Data(nil)
 
 			d.SetId(aws.ToString(slotType.Name))

@@ -34,13 +34,14 @@ const (
 	botAliasDeleteTimeout = 5 * time.Minute
 )
 
-// @SDKResource("aws_lex_bot_alias")
-func ResourceBotAlias() *schema.Resource {
+// @SDKResource("aws_lex_bot_alias", name="Bot Alias")
+func resourceBotAlias() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBotAliasCreate,
 		ReadWithoutTimeout:   resourceBotAliasRead,
 		UpdateWithoutTimeout: resourceBotAliasUpdate,
 		DeleteWithoutTimeout: resourceBotAliasDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceBotAliasImport,
 		},

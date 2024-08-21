@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_lex_bot")
-func DataSourceBot() *schema.Resource {
+// @SDKDataSource("aws_lex_bot", name="Bot")
+func dataSourceBot() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceBotRead,
 
@@ -99,7 +99,7 @@ func dataSourceBotRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	name := d.Get(names.AttrName).(string)
 	version := d.Get(names.AttrVersion).(string)
-	output, err := FindBotVersionByName(ctx, conn, name, version)
+	output, err := findBotVersionByName(ctx, conn, name, version)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Lex Bot (%s/%s): %s", name, version, err)

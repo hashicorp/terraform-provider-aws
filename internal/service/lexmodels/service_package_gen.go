@@ -25,20 +25,24 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceBot,
+			Factory:  dataSourceBot,
 			TypeName: "aws_lex_bot",
+			Name:     "Bot",
 		},
 		{
-			Factory:  DataSourceBotAlias,
+			Factory:  dataSourceBotAlias,
 			TypeName: "aws_lex_bot_alias",
+			Name:     "Bot Alias",
 		},
 		{
-			Factory:  DataSourceIntent,
+			Factory:  dataSourceIntent,
 			TypeName: "aws_lex_intent",
+			Name:     "Intent",
 		},
 		{
-			Factory:  DataSourceSlotType,
+			Factory:  dataSourceSlotType,
 			TypeName: "aws_lex_slot_type",
+			Name:     "Slot Type",
 		},
 	}
 }
@@ -46,20 +50,23 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceBot,
+			Factory:  resourceBot,
 			TypeName: "aws_lex_bot",
 		},
 		{
-			Factory:  ResourceBotAlias,
+			Factory:  resourceBotAlias,
 			TypeName: "aws_lex_bot_alias",
+			Name:     "Bot Alias",
 		},
 		{
-			Factory:  ResourceIntent,
+			Factory:  resourceIntent,
 			TypeName: "aws_lex_intent",
+			Name:     "Intent",
 		},
 		{
-			Factory:  ResourceSlotType,
+			Factory:  resourceSlotType,
 			TypeName: "aws_lex_slot_type",
+			Name:     "Slot Type",
 		},
 	}
 }
