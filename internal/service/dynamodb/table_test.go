@@ -1678,7 +1678,7 @@ func TestAccDynamoDBTable_encryption(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTable_restoreCrossAccount(t *testing.T) {
+func TestAccDynamoDBTable_restoreCrossRegion(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -1700,13 +1700,13 @@ func TestAccDynamoDBTable_restoreCrossAccount(t *testing.T) {
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_restoreCrossAccount(rName),
+				Config: testAccTableConfig_restoreCrossRegion(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceNameRestore, names.AttrName, rNameRestore),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "dynamodb", fmt.Sprintf("table/%s", rName)),
-					acctest.CheckResourceAttrAlternateRegionalARN(resourceNameRestore, names.AttrARN, "dynamodb", fmt.Sprintf("table/%s", rNameRestore)),
+					acctest.MatchResourceAttrRegionalARNRegion(resourceName, names.AttrARN, "dynamodb", acctest.Region(), regexache.MustCompile(`table/+.`)),
+					acctest.MatchResourceAttrRegionalARNRegion(resourceNameRestore, names.AttrARN, "dynamodb", acctest.AlternateRegion(), regexache.MustCompile(`table/+.`)),
 				),
 			},
 			{
@@ -4654,7 +4654,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName)
 }
 
-func testAccTableConfig_restoreCrossAccount(rName string) string {
+func testAccTableConfig_restoreCrossRegion(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(2),
 		fmt.Sprintf(`
