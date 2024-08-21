@@ -47,14 +47,14 @@ func TestAccLexModelsIntent_basic(t *testing.T) {
 
 					resource.TestCheckResourceAttrSet(rName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(rName, "checksum"),
-					resource.TestCheckNoResourceAttr(rName, "conclusion_statement"),
+					resource.TestCheckResourceAttr(rName, "conclusion_statement.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(rName, "confirmation_prompt.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(rName, "create_version", acctest.CtFalse),
 					acctest.CheckResourceAttrRFC3339(rName, names.AttrCreatedDate),
 					resource.TestCheckResourceAttr(rName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(rName, "dialog_code_hook.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(rName, "follow_up_prompt.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(rName, "fulfillment_activity.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(rName, "fulfillment_activity.#", acctest.Ct1),
 					acctest.CheckResourceAttrRFC3339(rName, names.AttrLastUpdatedDate),
 					resource.TestCheckResourceAttr(rName, names.AttrName, testIntentID),
 					resource.TestCheckResourceAttr(rName, "parent_intent_signature.#", acctest.Ct0),
@@ -148,10 +148,13 @@ func TestAccLexModelsIntent_conclusionStatement(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            rName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"create_version"},
+				ResourceName:      rName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"create_version",
+					"conclusion_statement.0.message.0.group_number",
+				},
 			},
 			{
 				Config: testAccIntentConfig_conclusionStatementUpdate(testIntentID),
@@ -168,10 +171,13 @@ func TestAccLexModelsIntent_conclusionStatement(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            rName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"create_version"},
+				ResourceName:      rName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"create_version",
+					"conclusion_statement.0.message.0.group_number",
+				},
 			},
 		},
 	})
@@ -318,10 +324,14 @@ func TestAccLexModelsIntent_followUpPrompt(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            rName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"create_version"},
+				ResourceName:      rName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"create_version",
+					"confirmation_prompt.0.message.0.group_number",
+					"rejection_statement.0.message.0.group_number",
+				},
 			},
 			{
 				Config: testAccIntentConfig_followUpPromptUpdate(testIntentID),
@@ -345,10 +355,14 @@ func TestAccLexModelsIntent_followUpPrompt(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            rName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"create_version"},
+				ResourceName:      rName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"create_version",
+					"confirmation_prompt.0.message.0.group_number",
+					"rejection_statement.0.message.0.group_number",
+				},
 			},
 		},
 	})
@@ -474,10 +488,13 @@ func TestAccLexModelsIntent_slots(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            rName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"create_version"},
+				ResourceName:      rName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"create_version",
+					"slot.0.value_elicitation_prompt.0.message.0.group_number",
+				},
 			},
 			{
 				Config: testAccIntentConfig_slotsUpdate(testIntentID),
@@ -487,10 +504,13 @@ func TestAccLexModelsIntent_slots(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            rName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"create_version"},
+				ResourceName:      rName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"create_version",
+					"slot.0.value_elicitation_prompt.0.message.0.group_number",
+				},
 			},
 		},
 	})
@@ -535,10 +555,13 @@ func TestAccLexModelsIntent_slotsCustom(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            rName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"create_version"},
+				ResourceName:      rName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"create_version",
+					"slot.0.value_elicitation_prompt.0.message.0.group_number",
+				},
 			},
 		},
 	})

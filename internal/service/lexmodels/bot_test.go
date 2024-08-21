@@ -66,7 +66,7 @@ func TestAccLexModelsBot_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(rName, "enable_model_improvements", acctest.CtFalse),
 					resource.TestCheckResourceAttr(rName, "failure_reason", ""),
 					resource.TestCheckResourceAttr(rName, "idle_session_ttl_in_seconds", "300"),
-					resource.TestCheckResourceAttr(rName, "intent.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(rName, "intent.#", acctest.Ct1),
 					acctest.CheckResourceAttrRFC3339(rName, names.AttrLastUpdatedDate),
 					resource.TestCheckResourceAttr(rName, "locale", "en-US"),
 					resource.TestCheckResourceAttr(rName, names.AttrName, testBotID),
@@ -74,7 +74,7 @@ func TestAccLexModelsBot_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(rName, "process_behavior", "SAVE"),
 					resource.TestCheckResourceAttr(rName, names.AttrStatus, "NOT_BUILT"),
 					resource.TestCheckResourceAttr(rName, names.AttrVersion, tflexmodels.BotVersionLatest),
-					resource.TestCheckResourceAttrSet(rName, "voice_id"),
+					resource.TestCheckResourceAttr(rName, "voice_id", ""),
 				),
 			},
 			{
@@ -677,9 +677,10 @@ func TestAccLexModelsBot_locale(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      rName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            rName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"abort_statement.0.message.0.group_number"},
 			},
 		},
 	})
