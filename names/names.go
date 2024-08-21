@@ -100,6 +100,7 @@ const (
 	LocationEndpointID                     = "location"
 	M2EndpointID                           = "m2"
 	MQEndpointID                           = "mq"
+	Macie2EndpointID                       = "macie2"
 	MediaConvertEndpointID                 = "mediaconvert"
 	MediaLiveEndpointID                    = "medialive"
 	ObservabilityAccessManagerEndpointID   = "oam"

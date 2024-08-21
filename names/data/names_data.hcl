@@ -5755,7 +5755,7 @@ service "macie2" {
 
   sdk {
     id             = "Macie2"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {

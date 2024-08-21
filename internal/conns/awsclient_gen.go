@@ -145,6 +145,7 @@ import (
 	location_sdkv2 "github.com/aws/aws-sdk-go-v2/service/location"
 	lookoutmetrics_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lookoutmetrics"
 	m2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/m2"
+	macie2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/macie2"
 	mediaconnect_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mediaconnect"
 	mediaconvert_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mediaconvert"
 	medialive_sdkv2 "github.com/aws/aws-sdk-go-v2/service/medialive"
@@ -242,7 +243,6 @@ import (
 	emr_sdkv1 "github.com/aws/aws-sdk-go/service/emr"
 	imagebuilder_sdkv1 "github.com/aws/aws-sdk-go/service/imagebuilder"
 	lexmodelbuildingservice_sdkv1 "github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
-	macie2_sdkv1 "github.com/aws/aws-sdk-go/service/macie2"
 	quicksight_sdkv1 "github.com/aws/aws-sdk-go/service/quicksight"
 	simpledb_sdkv1 "github.com/aws/aws-sdk-go/service/simpledb"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -837,8 +837,8 @@ func (c *AWSClient) MWAAClient(ctx context.Context) *mwaa_sdkv2.Client {
 	return errs.Must(client[*mwaa_sdkv2.Client](ctx, c, names.MWAA, make(map[string]any)))
 }
 
-func (c *AWSClient) Macie2Conn(ctx context.Context) *macie2_sdkv1.Macie2 {
-	return errs.Must(conn[*macie2_sdkv1.Macie2](ctx, c, names.Macie2, make(map[string]any)))
+func (c *AWSClient) Macie2Client(ctx context.Context) *macie2_sdkv2.Client {
+	return errs.Must(client[*macie2_sdkv2.Client](ctx, c, names.Macie2, make(map[string]any)))
 }
 
 func (c *AWSClient) MediaConnectClient(ctx context.Context) *mediaconnect_sdkv2.Client {
