@@ -1,4 +1,9 @@
 ## 5.64.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_dynamodb_table: Add `restore_source_table_arn` attribute ([#38953](https://github.com/hashicorp/terraform-provider-aws/issues/38953))
+
 ## 5.63.1 (August 20, 2024)
 
 FEATURES:
