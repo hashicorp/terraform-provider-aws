@@ -89,7 +89,7 @@ issues:
     - linters:
         - staticcheck
       path: "internal/service/neptune"
-      text: "SA1019: \\w+.(\\w+) is deprecated: (\\w+) has been deprecated"
+      text: "SA1019: \\w+.(\\w+) is deprecated:"
     - linters:
         - staticcheck
       path: "internal/service/s3"

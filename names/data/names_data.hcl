@@ -6373,7 +6373,7 @@ service "neptune" {
 
   sdk {
     id             = "Neptune"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
