@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/macie2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/macie2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -16,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfmacie2 "github.com/hashicorp/terraform-provider-aws/internal/service/macie2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -339,27 +338,22 @@ func testAccMember_withTags(t *testing.T) {
 	})
 }
 
-func testAccCheckMemberExists(ctx context.Context, resourceName string, macie2Session *macie2.GetMemberOutput) resource.TestCheckFunc {
+func testAccCheckMemberExists(ctx context.Context, n string, v *macie2.GetMemberOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Client(ctx)
-		input := &macie2.GetMemberInput{Id: aws.String(rs.Primary.ID)}
 
-		resp, err := conn.GetMember(ctx, input)
+		output, err := tfmacie2.FindMemberByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if resp == nil {
-			return fmt.Errorf("macie Member %q does not exist", rs.Primary.ID)
-		}
-
-		*macie2Session = *resp
+		*v = *output
 
 		return nil
 	}
@@ -374,13 +368,9 @@ func testAccCheckMemberDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			input := &macie2.GetMemberInput{Id: aws.String(rs.Primary.ID)}
-			resp, err := conn.GetMember(ctx, input)
+			_, err := tfmacie2.FindMemberByID(ctx, conn, rs.Primary.ID)
 
-			if errs.IsA[*awstypes.ResourceNotFoundException](err) ||
-				errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Macie is not enabled") ||
-				errs.IsAErrorMessageContains[*awstypes.ConflictException](err, "member accounts are associated with your account") ||
-				errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "account is not associated with your account") {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
@@ -388,9 +378,7 @@ func testAccCheckMemberDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			if resp != nil {
-				return fmt.Errorf("macie Member %q still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("Macie Member %s still exists", rs.Primary.ID)
 		}
 
 		return nil

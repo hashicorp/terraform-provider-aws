@@ -13,4 +13,6 @@ var (
 	ResourceInvitationAccepter                = resourceInvitationAccepter
 	ResourceMember                            = resourceMember
 	ResourceOrganizationAdminAccount          = resourceOrganizationAdminAccount
+
+	FindMemberByID = findMemberByID
 )

@@ -195,19 +195,11 @@ func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).Macie2Client(ctx)
 
-	input := &macie2.GetMemberInput{
-		Id: aws.String(d.Id()),
-	}
+	output, err := findMemberByID(ctx, conn, d.Id())
 
-	resp, err := conn.GetMember(ctx, input)
-
-	if !d.IsNewResource() && (errs.IsA[*awstypes.ResourceNotFoundException](err) ||
-		errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Macie is not enabled") ||
-		errs.IsAErrorMessageContains[*awstypes.ConflictException](err, "member accounts are associated with your account") ||
-		errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "account is not associated with your account")) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Macie Member (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -217,19 +209,18 @@ func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading Macie Member (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrAccountID, resp.AccountId)
-	d.Set(names.AttrEmail, resp.Email)
-	d.Set("relationship_status", resp.RelationshipStatus)
-	d.Set("administrator_account_id", resp.AdministratorAccountId)
-	d.Set("master_account_id", resp.MasterAccountId)
-	d.Set("invited_at", aws.ToTime(resp.InvitedAt).Format(time.RFC3339))
-	d.Set("updated_at", aws.ToTime(resp.UpdatedAt).Format(time.RFC3339))
-	d.Set(names.AttrARN, resp.Arn)
+	d.Set(names.AttrAccountID, output.AccountId)
+	d.Set("administrator_account_id", output.AdministratorAccountId)
+	d.Set(names.AttrARN, output.Arn)
+	d.Set(names.AttrEmail, output.Email)
+	d.Set("invited_at", aws.ToTime(output.InvitedAt).Format(time.RFC3339))
+	d.Set("master_account_id", output.MasterAccountId)
+	d.Set("relationship_status", output.RelationshipStatus)
+	d.Set("updated_at", aws.ToTime(output.UpdatedAt).Format(time.RFC3339))
 
-	setTagsOut(ctx, resp.Tags)
+	setTagsOut(ctx, output.Tags)
 
-	relationshipStatus := resp.RelationshipStatus
-	log.Printf("[DEBUG] print resp.RelationshipStatus: %v", relationshipStatus)
+	relationshipStatus := output.RelationshipStatus
 	if relationshipStatus == awstypes.RelationshipStatusEnabled ||
 		relationshipStatus == awstypes.RelationshipStatusInvited ||
 		relationshipStatus == awstypes.RelationshipStatusEmailVerificationInProgress ||
@@ -339,22 +330,68 @@ func resourceMemberUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceMemberDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).Macie2Client(ctx)
 
-	input := &macie2.DeleteMemberInput{
+	_, err := conn.DeleteMember(ctx, &macie2.DeleteMemberInput{
 		Id: aws.String(d.Id()),
+	})
+
+	if memberNotFound(err) {
+		return diags
 	}
 
-	_, err := conn.DeleteMember(ctx, input)
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) ||
-			errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Macie is not enabled") ||
-			errs.IsAErrorMessageContains[*awstypes.ConflictException](err, "member accounts are associated with your account") ||
-			errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "account is not associated with your account") {
-			return diags
-		}
 		return sdkdiag.AppendErrorf(diags, "deleting Macie Member (%s): %s", d.Id(), err)
 	}
+
 	return diags
+}
+
+func findMemberByID(ctx context.Context, conn *macie2.Client, id string) (*macie2.GetMemberOutput, error) {
+	input := &macie2.GetMemberInput{
+		Id: aws.String(id),
+	}
+
+	return findMember(ctx, conn, input)
+}
+
+func findMember(ctx context.Context, conn *macie2.Client, input *macie2.GetMemberInput) (*macie2.GetMemberOutput, error) {
+	output, err := conn.GetMember(ctx, input)
+
+	if memberNotFound(err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func memberNotFound(err error) bool {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return true
+	}
+	if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Macie is not enabled") {
+		return true
+	}
+	if errs.IsAErrorMessageContains[*awstypes.ConflictException](err, "member accounts are associated with your account") {
+		return true
+	}
+	if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "account is not associated with your account") {
+		return true
+	}
+	if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "not an associated member of account") {
+		return true
+	}
+
+	return false
 }
