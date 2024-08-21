@@ -152,7 +152,9 @@ func resourceBotAliasCreate(ctx context.Context, d *schema.ResourceData, meta in
 	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
 		output, err := conn.PutBotAlias(ctx, input)
 
-		input.Checksum = output.Checksum
+		if output != nil {
+			input.Checksum = output.Checksum
+		}
 		// IAM eventual consistency
 		if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "Lex can't access your IAM role") {
 			return retry.RetryableError(err)
