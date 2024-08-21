@@ -369,7 +369,9 @@ func TestAccLexModelsIntent_followUpPrompt(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"create_version",
 					"follow_up_prompt.0.prompt.0.message.0.group_number",
+					"follow_up_prompt.0.prompt.0.message.1.group_number",
 					"follow_up_prompt.0.rejection_statement.0.message.0.group_number",
+					"follow_up_prompt.0.rejection_statement.0.message.1.group_number",
 				},
 			},
 		},
