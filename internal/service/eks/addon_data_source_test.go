@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/eks"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/eks/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -49,7 +49,7 @@ func TestAccEKSAddonDataSource_configurationValues(t *testing.T) {
 	dataSourceResourceName := "data.aws_eks_addon.test"
 	resourceName := "aws_eks_addon.test"
 	addonName := "vpc-cni"
-	addonVersion := "v1.15.3-eksbuild.1"
+	addonVersion := "v1.18.3-eksbuild.2"
 	configurationValues := "{\"env\": {\"WARM_ENI_TARGET\":\"2\",\"ENABLE_POD_ENI\":\"true\"},\"resources\": {\"limits\":{\"cpu\":\"100m\",\"memory\":\"100Mi\"},\"requests\":{\"cpu\":\"100m\",\"memory\":\"100Mi\"}}}"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -59,7 +59,7 @@ func TestAccEKSAddonDataSource_configurationValues(t *testing.T) {
 		CheckDestroy:             testAccCheckAddonDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAddonDataSourceConfig_configurationValues(rName, addonName, addonVersion, configurationValues, eks.ResolveConflictsOverwrite),
+				Config: testAccAddonDataSourceConfig_configurationValues(rName, addonName, addonVersion, configurationValues, string(awstypes.ResolveConflictsOverwrite)),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "addon_version", dataSourceResourceName, "addon_version"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceResourceName, names.AttrARN),

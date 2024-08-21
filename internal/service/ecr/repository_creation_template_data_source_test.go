@@ -47,6 +47,25 @@ func TestAccECRRepositoryCreationTemplateDataSource_basic(t *testing.T) {
 	})
 }
 
+func TestAccECRRepositoryCreationTemplateDataSource_root(t *testing.T) {
+	ctx := acctest.Context(t)
+	dataSource := "data.aws_ecr_repository_creation_template.root"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRepositoryCreationTemplateDataSourceConfig_root(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSource, names.AttrPrefix, "ROOT"),
+				),
+			},
+		},
+	})
+}
+
 func testAccRepositoryCreationTemplateDataSourceConfig_basic(repositoryPrefix string) string {
 	return fmt.Sprintf(`
 resource "aws_ecr_repository_creation_template" "test" {
@@ -65,4 +84,20 @@ data "aws_ecr_repository_creation_template" "test" {
   prefix = aws_ecr_repository_creation_template.test.prefix
 }
 `, repositoryPrefix)
+}
+
+func testAccRepositoryCreationTemplateDataSourceConfig_root() string {
+	return `
+resource "aws_ecr_repository_creation_template" "root" {
+  prefix = "ROOT"
+
+  applied_for = [
+    "PULL_THROUGH_CACHE",
+  ]
+}
+
+data "aws_ecr_repository_creation_template" "root" {
+  prefix = aws_ecr_repository_creation_template.root.prefix
+}
+`
 }

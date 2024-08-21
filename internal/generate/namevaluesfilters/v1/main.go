@@ -31,8 +31,6 @@ func main() {
 	// Representing types such as []*fsx.Filter, []*rds.Filter, ...
 	sliceServiceNames := []string{
 		"imagebuilder",
-		"rds",
-		"route53resolver",
 	}
 	// Always sort to reduce any potential generation churn
 	sort.Strings(sliceServiceNames)

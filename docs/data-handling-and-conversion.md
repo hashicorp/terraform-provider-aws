@@ -51,7 +51,7 @@ Typically these types of drift detection issues can be discovered by implementin
 Perhaps the most distinct difference between [Terraform Plugin Framework](https://developer.hashicorp.com/terraform/plugin/framework) and [Terraform Plugin SDKv2](https://developer.hashicorp.com/terraform/plugin/sdkv2) is data handling.
 With Terraform Plugin Framework state data is strongly typed, while Plugin SDK V2 based resources represent state data generically (each attribute is an `interface{}`) and types must be asserted at runtime.
 Strongly typed data eliminates an entire class of runtime bugs and crashes, but does require compile type declarations and a slightly different approach to reading and writing data.
-The sections below contain examples for both plugin libraries, but Terraform Plugin Framework should be preferred whenever possible.
+The sections below contain examples for both plugin libraries, but Terraform Plugin Framework is **required for all net-new resources**.
 
 ## Data Conversions in the Terraform AWS Provider
 
@@ -184,6 +184,11 @@ When using the Terraform Plugin SDK v2, flattening and expanding functions must 
 AutoFlex provides two entry-point functions, `Flatten` and `Expand` defined in the package `github.com/hashicorp/terraform-provider-aws/internal/framework/flex`.
 Without configuration, these two functions should be able to convert most provider and AWS API structures.
 
+!!! note
+    AutoFlex should only be used when creating new resource and data source types.
+    It should not be used when converting a resource implementation from Terraform Plugin SDK v2 to Terraform Plugin Framework.
+    AutoFlex does not currently provide a mechanism for preserving zero-value behavior from Terraform Plugin SDK v2, which can cause breaking changes.
+
 AutoFlex uses field names to map between the source and target structures:
 
 1. An exact, case-sensitive match
@@ -206,6 +211,10 @@ For example, to include `Tags`, call
 ```go
 diags := flex.Expand(ctx, source, &target, flex.WithNoIgnoredFieldNames())
 ```
+
+AutoFlex is able to convert single-element lists from Terraform blocks into single struct or pointer values in AWS API structs.
+
+#### Overriding Default Behavior
 
 In some cases, flattening and expanding need conditional handling.
 One important case is new AWS API implementations where the input or output structs make use of [union types](https://smithy.io/2.0/spec/aggregate-types.html#union).
@@ -369,6 +378,9 @@ func (m configuration) expandToUpdateConfiguration(ctx context.Context) (result 
 }
 ```
 
+#### Troubleshooting
+
+AutoFlex can output detailed logging as it flattens or expands a value.
 To turn on logging for AutoFlex, use the environment variable `TF_LOG_AWS_AUTOFLEX` to set the logging level.
 Valid values are `ERROR`, `WARN`, `INFO`, `DEBUG`, and `TRACE`.
 By default, AutoFlex logging is set to `ERROR`.

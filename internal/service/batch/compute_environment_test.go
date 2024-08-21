@@ -9,9 +9,11 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/batch"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/batch"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -28,11 +30,11 @@ func TestExpandEC2ConfigurationsUpdate(t *testing.T) {
 	//lintignore:AWSAT002
 	testCases := []struct {
 		flattened []interface{}
-		expected  []*batch.Ec2Configuration
+		expected  []awstypes.Ec2Configuration
 	}{
 		{
 			flattened: []interface{}{},
-			expected: []*batch.Ec2Configuration{
+			expected: []awstypes.Ec2Configuration{
 				{
 					ImageType: aws.String("default"),
 				},
@@ -44,7 +46,7 @@ func TestExpandEC2ConfigurationsUpdate(t *testing.T) {
 					"image_type": "ECS_AL1",
 				},
 			},
-			expected: []*batch.Ec2Configuration{
+			expected: []awstypes.Ec2Configuration{
 				{
 					ImageType: aws.String("ECS_AL1"),
 				},
@@ -56,7 +58,7 @@ func TestExpandEC2ConfigurationsUpdate(t *testing.T) {
 					"image_id_override": "ami-deadbeef",
 				},
 			},
-			expected: []*batch.Ec2Configuration{
+			expected: []awstypes.Ec2Configuration{
 				{
 					ImageIdOverride: aws.String("ami-deadbeef"),
 				},
@@ -69,7 +71,7 @@ func TestExpandEC2ConfigurationsUpdate(t *testing.T) {
 					"image_type":        "ECS_AL1",
 				},
 			},
-			expected: []*batch.Ec2Configuration{
+			expected: []awstypes.Ec2Configuration{
 				{
 					ImageIdOverride: aws.String("ami-deadbeef"),
 					ImageType:       aws.String("ECS_AL1"),
@@ -78,9 +80,13 @@ func TestExpandEC2ConfigurationsUpdate(t *testing.T) {
 		},
 	}
 
+	ignoreExportedOpts := cmpopts.IgnoreUnexported(
+		awstypes.Ec2Configuration{},
+	)
+
 	for _, testCase := range testCases {
 		expanded := tfbatch.ExpandEC2ConfigurationsUpdate(testCase.flattened, "default")
-		if diff := cmp.Diff(expanded, testCase.expected); diff != "" {
+		if diff := cmp.Diff(expanded, testCase.expected, ignoreExportedOpts); diff != "" {
 			t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 		}
 	}
@@ -91,11 +97,11 @@ func TestExpandLaunchTemplateSpecificationUpdate(t *testing.T) {
 
 	testCases := []struct {
 		flattened []interface{}
-		expected  *batch.LaunchTemplateSpecification
+		expected  *awstypes.LaunchTemplateSpecification
 	}{
 		{
 			flattened: []interface{}{},
-			expected: &batch.LaunchTemplateSpecification{
+			expected: &awstypes.LaunchTemplateSpecification{
 				LaunchTemplateId: aws.String(""),
 			},
 		},
@@ -105,7 +111,7 @@ func TestExpandLaunchTemplateSpecificationUpdate(t *testing.T) {
 					"launch_template_id": "lt-123456",
 				},
 			},
-			expected: &batch.LaunchTemplateSpecification{
+			expected: &awstypes.LaunchTemplateSpecification{
 				LaunchTemplateId: aws.String("lt-123456"),
 				Version:          aws.String(""),
 			},
@@ -116,7 +122,7 @@ func TestExpandLaunchTemplateSpecificationUpdate(t *testing.T) {
 					"launch_template_name": "my-launch-template",
 				},
 			},
-			expected: &batch.LaunchTemplateSpecification{
+			expected: &awstypes.LaunchTemplateSpecification{
 				LaunchTemplateName: aws.String("my-launch-template"),
 				Version:            aws.String(""),
 			},
@@ -128,7 +134,7 @@ func TestExpandLaunchTemplateSpecificationUpdate(t *testing.T) {
 					names.AttrVersion:    "$LATEST",
 				},
 			},
-			expected: &batch.LaunchTemplateSpecification{
+			expected: &awstypes.LaunchTemplateSpecification{
 				LaunchTemplateId: aws.String("lt-123456"),
 				Version:          aws.String("$LATEST"),
 			},
@@ -140,16 +146,20 @@ func TestExpandLaunchTemplateSpecificationUpdate(t *testing.T) {
 					names.AttrVersion:      "$LATEST",
 				},
 			},
-			expected: &batch.LaunchTemplateSpecification{
+			expected: &awstypes.LaunchTemplateSpecification{
 				LaunchTemplateName: aws.String("my-launch-template"),
 				Version:            aws.String("$LATEST"),
 			},
 		},
 	}
 
+	ignoreExportedOpts := cmpopts.IgnoreUnexported(
+		awstypes.LaunchTemplateSpecification{},
+	)
+
 	for _, testCase := range testCases {
 		expanded := tfbatch.ExpandLaunchTemplateSpecificationUpdate(testCase.flattened)
-		if diff := cmp.Diff(expanded, testCase.expected); diff != "" {
+		if diff := cmp.Diff(expanded, testCase.expected, ignoreExportedOpts); diff != "" {
 			t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 		}
 	}
@@ -157,7 +167,7 @@ func TestExpandLaunchTemplateSpecificationUpdate(t *testing.T) {
 
 func TestAccBatchComputeEnvironment_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ce batch.ComputeEnvironmentDetail
+	var ce awstypes.ComputeEnvironmentDetail
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_compute_environment.test"
 	serviceRoleResourceName := "aws_iam_role.batch_service"
@@ -192,7 +202,7 @@ func TestAccBatchComputeEnvironment_basic(t *testing.T) {
 
 func TestAccBatchComputeEnvironment_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ce batch.ComputeEnvironmentDetail
+	var ce awstypes.ComputeEnvironmentDetail
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_compute_environment.test"
 
@@ -216,7 +226,7 @@ func TestAccBatchComputeEnvironment_disappears(t *testing.T) {
 
 func TestAccBatchComputeEnvironment_nameGenerated(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ce batch.ComputeEnvironmentDetail
+	var ce awstypes.ComputeEnvironmentDetail
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_compute_environment.test"
 
@@ -245,7 +255,7 @@ func TestAccBatchComputeEnvironment_nameGenerated(t *testing.T) {
 
 func TestAccBatchComputeEnvironment_namePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ce batch.ComputeEnvironmentDetail
+	var ce awstypes.ComputeEnvironmentDetail
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_compute_environment.test"
 
@@ -274,7 +284,7 @@ func TestAccBatchComputeEnvironment_namePrefix(t *testing.T) {
 
 func TestAccBatchComputeEnvironment_eksConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ce batch.ComputeEnvironmentDetail
+	var ce awstypes.ComputeEnvironmentDetail
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_compute_environment.test"
 	eksClusterResourceName := "aws_eks_cluster.test"
@@ -306,7 +316,7 @@ func TestAccBatchComputeEnvironment_eksConfiguration(t *testing.T) {
 
 func TestAccBatchComputeEnvironment_createEC2(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ce batch.ComputeEnvironmentDetail
+	var ce awstypes.ComputeEnvironmentDetail
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_compute_environment.test"
 	instanceProfileResourceName := "aws_iam_instance_profile.ecs_instance"
@@ -369,7 +379,7 @@ func TestAccBatchComputeEnvironment_createEC2(t *testing.T) {
 
 func TestAccBatchComputeEnvironment_updatePolicyCreate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ce batch.ComputeEnvironmentDetail
+	var ce awstypes.ComputeEnvironmentDetail
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_compute_environment.test"
 
@@ -418,7 +428,7 @@ func TestAccBatchComputeEnvironment_updatePolicyCreate(t *testing.T) {
 
 func TestAccBatchComputeEnvironment_updatePolicyUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ce batch.ComputeEnvironmentDetail
+	var ce awstypes.ComputeEnvironmentDetail
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_compute_environment.test"
 
@@ -464,7 +474,7 @@ func TestAccBatchComputeEnvironment_updatePolicyUpdate(t *testing.T) {
 
 func TestAccBatchComputeEnvironment_CreateEC2DesiredVCPUsEC2KeyPairImageID_computeResourcesTags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ce batch.ComputeEnvironmentDetail
+	var ce awstypes.ComputeEnvironmentDetail
 	resourceName := "aws_batch_compute_environment.test"
 	amiDatasourceName := "data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64"
 	instanceProfileResourceName := "aws_iam_instance_profile.ecs_instance"
@@ -532,7 +542,7 @@ func TestAccBatchComputeEnvironment_CreateEC2DesiredVCPUsEC2KeyPairImageID_compu
 
 func TestAccBatchComputeEnvironment_createSpot(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ce batch.ComputeEnvironmentDetail
+	var ce awstypes.ComputeEnvironmentDetail
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_compute_environment.test"
 	instanceProfileResourceName := "aws_iam_instance_profile.ecs_instance"
@@ -593,7 +603,7 @@ func TestAccBatchComputeEnvironment_createSpot(t *testing.T) {
 
 func TestAccBatchComputeEnvironment_CreateSpotAllocationStrategy_bidPercentage(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ce batch.ComputeEnvironmentDetail
+	var ce awstypes.ComputeEnvironmentDetail
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_compute_environment.test"
 	instanceProfileResourceName := "aws_iam_instance_profile.ecs_instance"
@@ -654,7 +664,7 @@ func TestAccBatchComputeEnvironment_CreateSpotAllocationStrategy_bidPercentage(t
 
 func TestAccBatchComputeEnvironment_createFargate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ce batch.ComputeEnvironmentDetail
+	var ce awstypes.ComputeEnvironmentDetail
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_compute_environment.test"
 	securityGroupResourceName := "aws_security_group.test"
@@ -712,7 +722,7 @@ func TestAccBatchComputeEnvironment_createFargate(t *testing.T) {
 
 func TestAccBatchComputeEnvironment_createFargateSpot(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ce batch.ComputeEnvironmentDetail
+	var ce awstypes.ComputeEnvironmentDetail
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_compute_environment.test"
 	securityGroupResourceName := "aws_security_group.test"
@@ -770,7 +780,7 @@ func TestAccBatchComputeEnvironment_createFargateSpot(t *testing.T) {
 
 func TestAccBatchComputeEnvironment_updateState(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ce batch.ComputeEnvironmentDetail
+	var ce awstypes.ComputeEnvironmentDetail
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_compute_environment.test"
 	serviceRoleResourceName := "aws_iam_role.batch_service"
@@ -826,7 +836,7 @@ func TestAccBatchComputeEnvironment_updateState(t *testing.T) {
 
 func TestAccBatchComputeEnvironment_updateServiceRole(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ce batch.ComputeEnvironmentDetail
+	var ce awstypes.ComputeEnvironmentDetail
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_compute_environment.test"
 	serviceRoleResourceName1 := "aws_iam_role.batch_service"
@@ -919,7 +929,7 @@ func TestAccBatchComputeEnvironment_updateServiceRole(t *testing.T) {
 
 func TestAccBatchComputeEnvironment_defaultServiceRole(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ce batch.ComputeEnvironmentDetail
+	var ce awstypes.ComputeEnvironmentDetail
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_compute_environment.test"
 	securityGroupResourceName := "aws_security_group.test"
@@ -980,7 +990,7 @@ func TestAccBatchComputeEnvironment_defaultServiceRole(t *testing.T) {
 
 func TestAccBatchComputeEnvironment_ComputeResources_minVCPUs(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ce batch.ComputeEnvironmentDetail
+	var ce awstypes.ComputeEnvironmentDetail
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_compute_environment.test"
 	instanceProfileResourceName := "aws_iam_instance_profile.ecs_instance"
@@ -1110,7 +1120,7 @@ func TestAccBatchComputeEnvironment_ComputeResources_minVCPUs(t *testing.T) {
 
 func TestAccBatchComputeEnvironment_ComputeResources_maxVCPUs(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ce batch.ComputeEnvironmentDetail
+	var ce awstypes.ComputeEnvironmentDetail
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_compute_environment.test"
 	instanceProfileResourceName := "aws_iam_instance_profile.ecs_instance"
@@ -1240,7 +1250,7 @@ func TestAccBatchComputeEnvironment_ComputeResources_maxVCPUs(t *testing.T) {
 
 func TestAccBatchComputeEnvironment_ec2Configuration(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ce batch.ComputeEnvironmentDetail
+	var ce awstypes.ComputeEnvironmentDetail
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_compute_environment.test"
 	instanceProfileResourceName := "aws_iam_instance_profile.ecs_instance"
@@ -1305,7 +1315,7 @@ func TestAccBatchComputeEnvironment_ec2Configuration(t *testing.T) {
 
 func TestAccBatchComputeEnvironment_ec2ConfigurationPlacementGroup(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ce batch.ComputeEnvironmentDetail
+	var ce awstypes.ComputeEnvironmentDetail
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_compute_environment.test"
 	instanceProfileResourceName := "aws_iam_instance_profile.ecs_instance"
@@ -1371,7 +1381,7 @@ func TestAccBatchComputeEnvironment_ec2ConfigurationPlacementGroup(t *testing.T)
 
 func TestAccBatchComputeEnvironment_launchTemplate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ce batch.ComputeEnvironmentDetail
+	var ce awstypes.ComputeEnvironmentDetail
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_compute_environment.test"
 	instanceProfileResourceName := "aws_iam_instance_profile.ecs_instance"
@@ -1434,7 +1444,7 @@ func TestAccBatchComputeEnvironment_launchTemplate(t *testing.T) {
 
 func TestAccBatchComputeEnvironment_updateLaunchTemplate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ce batch.ComputeEnvironmentDetail
+	var ce awstypes.ComputeEnvironmentDetail
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_compute_environment.test"
 	instanceProfileResourceName := "aws_iam_instance_profile.ecs_instance"
@@ -1537,7 +1547,7 @@ func TestAccBatchComputeEnvironment_updateLaunchTemplate(t *testing.T) {
 
 func TestAccBatchComputeEnvironment_UpdateSecurityGroupsAndSubnets_fargate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ce batch.ComputeEnvironmentDetail
+	var ce awstypes.ComputeEnvironmentDetail
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_compute_environment.test"
 	securityGroupResourceName1 := "aws_security_group.test"
@@ -1651,7 +1661,7 @@ func TestAccBatchComputeEnvironment_createUnmanagedWithComputeResources(t *testi
 
 func TestAccBatchComputeEnvironment_updateEC2(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ce batch.ComputeEnvironmentDetail
+	var ce awstypes.ComputeEnvironmentDetail
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_compute_environment.test"
 	instanceProfileResourceName := "aws_iam_instance_profile.ecs_instance"
@@ -1817,7 +1827,7 @@ func TestAccBatchComputeEnvironment_createEC2WithoutComputeResources(t *testing.
 
 func testAccCheckComputeEnvironmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_batch_compute_environment" {
@@ -1836,22 +1846,19 @@ func testAccCheckComputeEnvironmentDestroy(ctx context.Context) resource.TestChe
 
 			return fmt.Errorf("Batch Compute Environment %s still exists", rs.Primary.ID)
 		}
+
 		return nil
 	}
 }
 
-func testAccCheckComputeEnvironmentExists(ctx context.Context, n string, v *batch.ComputeEnvironmentDetail) resource.TestCheckFunc {
+func testAccCheckComputeEnvironmentExists(ctx context.Context, n string, v *awstypes.ComputeEnvironmentDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Batch Compute Environment ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchClient(ctx)
 
 		output, err := tfbatch.FindComputeEnvironmentDetailByName(ctx, conn, rs.Primary.ID)
 
@@ -1866,11 +1873,11 @@ func testAccCheckComputeEnvironmentExists(ctx context.Context, n string, v *batc
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).BatchClient(ctx)
 
 	input := &batch.DescribeComputeEnvironmentsInput{}
 
-	_, err := conn.DescribeComputeEnvironmentsWithContext(ctx, input)
+	_, err := conn.DescribeComputeEnvironments(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

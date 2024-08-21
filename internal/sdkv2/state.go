@@ -15,6 +15,11 @@ func NormalizeJsonStringSchemaStateFunc(v interface{}) string { // nosemgrep:ci.
 	return json
 }
 
+// ToLowerSchemaStateFunc converts a string value to lowercase before storing it in state.
+func ToLowerSchemaStateFunc(v interface{}) string {
+	return strings.ToLower(v.(string))
+}
+
 // ToUpperSchemaStateFunc converts a string value to uppercase before storing it in state.
 func ToUpperSchemaStateFunc(v interface{}) string {
 	return strings.ToUpper(v.(string))

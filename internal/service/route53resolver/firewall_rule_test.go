@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/route53resolver"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/route53resolver/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,7 +21,7 @@ import (
 
 func TestAccRoute53ResolverFirewallRule_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v route53resolver.FirewallRule
+	var v awstypes.FirewallRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53_resolver_firewall_rule.test"
 
@@ -54,7 +54,7 @@ func TestAccRoute53ResolverFirewallRule_basic(t *testing.T) {
 
 func TestAccRoute53ResolverFirewallRule_update_firewallDomainRedirectionAction(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v route53resolver.FirewallRule
+	var v awstypes.FirewallRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53_resolver_firewall_rule.test"
 
@@ -91,7 +91,7 @@ func TestAccRoute53ResolverFirewallRule_update_firewallDomainRedirectionAction(t
 
 func TestAccRoute53ResolverFirewallRule_block(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v route53resolver.FirewallRule
+	var v awstypes.FirewallRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53_resolver_firewall_rule.test"
 
@@ -121,7 +121,7 @@ func TestAccRoute53ResolverFirewallRule_block(t *testing.T) {
 
 func TestAccRoute53ResolverFirewallRule_blockOverride(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v route53resolver.FirewallRule
+	var v awstypes.FirewallRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53_resolver_firewall_rule.test"
 
@@ -154,7 +154,7 @@ func TestAccRoute53ResolverFirewallRule_blockOverride(t *testing.T) {
 
 func TestAccRoute53ResolverFirewallRule_qType(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v route53resolver.FirewallRule
+	var v awstypes.FirewallRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53_resolver_firewall_rule.test"
 
@@ -187,7 +187,7 @@ func TestAccRoute53ResolverFirewallRule_qType(t *testing.T) {
 
 func TestAccRoute53ResolverFirewallRule_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v route53resolver.FirewallRule
+	var v awstypes.FirewallRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53_resolver_firewall_rule.test"
 
@@ -211,7 +211,7 @@ func TestAccRoute53ResolverFirewallRule_disappears(t *testing.T) {
 
 func testAccCheckFirewallRuleDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_route53_resolver_firewall_rule" {
@@ -241,7 +241,7 @@ func testAccCheckFirewallRuleDestroy(ctx context.Context) resource.TestCheckFunc
 	}
 }
 
-func testAccCheckFirewallRuleExists(ctx context.Context, n string, v *route53resolver.FirewallRule) resource.TestCheckFunc {
+func testAccCheckFirewallRuleExists(ctx context.Context, n string, v *awstypes.FirewallRule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -258,7 +258,7 @@ func testAccCheckFirewallRuleExists(ctx context.Context, n string, v *route53res
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverClient(ctx)
 
 		output, err := tfroute53resolver.FindFirewallRuleByTwoPartKey(ctx, conn, firewallRuleGroupID, firewallDomainListID)
 

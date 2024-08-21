@@ -1,6 +1,6 @@
 module github.com/hashicorp/terraform-provider-aws/skaff
 
-go 1.22.5
+go 1.22.6
 
 require (
 	github.com/YakDriver/regexache v0.24.0
@@ -17,11 +17,11 @@ require (
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/zclconf/go-cty v1.14.4 // indirect
-	golang.org/x/mod v0.19.0 // indirect
-	golang.org/x/sync v0.7.0 // indirect
-	golang.org/x/text v0.16.0 // indirect
-	golang.org/x/tools v0.23.0 // indirect
+	github.com/zclconf/go-cty v1.15.0 // indirect
+	golang.org/x/mod v0.20.0 // indirect
+	golang.org/x/sync v0.8.0 // indirect
+	golang.org/x/text v0.17.0 // indirect
+	golang.org/x/tools v0.24.0 // indirect
 )
 
 replace github.com/hashicorp/terraform-provider-aws => ../

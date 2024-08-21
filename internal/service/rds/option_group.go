@@ -129,6 +129,11 @@ func resourceOptionGroup() *schema.Resource {
 				ForceNew: true,
 				Default:  "Managed by Terraform",
 			},
+			names.AttrSkipDestroy: {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
@@ -147,7 +152,7 @@ func resourceOptionGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 		MajorEngineVersion:     aws.String(d.Get("major_engine_version").(string)),
 		OptionGroupDescription: aws.String(d.Get("option_group_description").(string)),
 		OptionGroupName:        aws.String(name),
-		Tags:                   getTagsInV2(ctx),
+		Tags:                   getTagsIn(ctx),
 	}
 
 	_, err := conn.CreateOptionGroup(ctx, input)
@@ -186,6 +191,8 @@ func resourceOptionGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "setting option: %s", err)
 	}
 	d.Set("option_group_description", option.OptionGroupDescription)
+	// Support in-place update of non-refreshable attribute.
+	d.Set(names.AttrSkipDestroy, d.Get(names.AttrSkipDestroy))
 
 	return diags
 }
@@ -241,6 +248,11 @@ func resourceOptionGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 func resourceOptionGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
+
+	if _, ok := d.GetOk(names.AttrSkipDestroy); ok {
+		log.Printf("[DEBUG] Retaining RDS DB Option Group: %s", d.Id())
+		return diags
+	}
 
 	log.Printf("[DEBUG] Deleting RDS DB Option Group: %s", d.Id())
 	_, err := tfresource.RetryWhenIsA[*types.InvalidOptionGroupStateFault](ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {

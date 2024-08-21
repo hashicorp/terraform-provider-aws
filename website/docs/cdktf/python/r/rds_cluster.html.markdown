@@ -340,9 +340,12 @@ This resource supports the following arguments:
 * `master_user_secret_kms_key_id` - (Optional) Amazon Web Services KMS key identifier is the key ARN, key ID, alias ARN, or alias name for the KMS key. To use a KMS key in a different Amazon Web Services account, specify the key ARN or alias ARN. If not specified, the default KMS key for your Amazon Web Services account is used.
 * `master_username` - (Required unless a `snapshot_identifier` or `replication_source_identifier` is provided or unless a `global_cluster_identifier` is provided when the cluster is the "secondary" cluster of a global database) Username for the master DB user. Please refer to the [RDS Naming Constraints][5]. This argument does not support in-place updates and cannot be changed during a restore from snapshot.
 * `network_type` - (Optional) Network type of the cluster. Valid values: `IPV4`, `DUAL`.
-* `port` - (Optional) Port on which the DB accepts connections
-* `preferred_backup_window` - (Optional) Daily time range during which automated backups are created if automated backups are enabled using the BackupRetentionPeriod parameter.Time in UTC. Default: A 30-minute window selected at random from an 8-hour block of time per regionE.g., 04:00-09:00
-* `preferred_maintenance_window` - (Optional) Weekly time range during which system maintenance can occur, in (UTC) e.g., wed:04:00-wed:04:30
+* `performance_insights_enabled` - (Optional) Valid only for Non-Aurora Multi-AZ DB Clusters. Enables Performance Insights for the RDS Cluster
+* `performance_insights_kms_key_id` - (Optional) Valid only for Non-Aurora Multi-AZ DB Clusters. Specifies the KMS Key ID to encrypt Performance Insights data. If not specified, the default RDS KMS key will be used (`aws/rds`).
+* `performance_insights_retention_period` - (Optional) Valid only for Non-Aurora Multi-AZ DB Clusters. Specifies the amount of time to retain performance insights data for. Defaults to 7 days if Performance Insights are enabled. Valid values are `7`, `month * 31` (where month is a number of months from 1-23), and `731`. See [here](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_PerfInsights.Overview.cost.html) for more information on retention periods.
+* `port` - (Optional) Port on which the DB accepts connections.
+* `preferred_backup_window` - (Optional) Daily time range during which automated backups are created if automated backups are enabled using the BackupRetentionPeriod parameter.Time in UTC. Default: A 30-minute window selected at random from an 8-hour block of time per region, e.g. `04:00-09:00`.
+* `preferred_maintenance_window` - (Optional) Weekly time range during which system maintenance can occur, in (UTC) e.g., `wed:04:00-wed:04:30`
 * `replication_source_identifier` - (Optional) ARN of a source DB cluster or DB instance if this DB cluster is to be created as a Read Replica. If DB Cluster is part of a Global Cluster, use the [`lifecycle` configuration block `ignore_changes` argument](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to prevent Terraform from showing differences for this argument instead of configuring this value.
 * `restore_to_point_in_time` - (Optional) Nested attribute for [point in time restore](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-pitr.html). More details below.
 * `scaling_configuration` - (Optional) Nested attribute with scaling properties. Only valid when `engine_mode` is set to `serverless`. More details below.
@@ -397,6 +400,8 @@ This will not recreate the resource if the S3 object changes in some way. It's o
 
 ~> **NOTE:**  The DB cluster is created from the source DB cluster with the same configuration as the original DB cluster, except that the new DB cluster is created with the default DB security group. Thus, the following arguments should only be specified with the source DB cluster's respective values: `database_name`, `master_username`, `storage_encrypted`, `replication_source_identifier`, and `source_region`.
 
+~> **NOTE:**  One of `source_cluster_identifier` or `source_cluster_resource_id` must be specified.
+
 Example:
 
 ```python
@@ -421,7 +426,8 @@ class MyConvertedCode(TerraformStack):
         )
 ```
 
-* `source_cluster_identifier` - (Required) Identifier of the source database cluster from which to restore. When restoring from a cluster in another AWS account, the identifier is the ARN of that cluster.
+* `source_cluster_identifier` - (Optional) Identifier of the source database cluster from which to restore. When restoring from a cluster in another AWS account, the identifier is the ARN of that cluster.
+* `source_cluster_resource_id` - (Optional) Cluster resource ID of the source database cluster from which to restore. To be used for restoring a deleted cluster in the same account which still has a retained automatic backup available.
 * `restore_type` - (Optional) Type of restore to be performed.
    Valid options are `full-copy` (default) and `copy-on-write`.
 * `use_latest_restorable_time` - (Optional) Set to true to restore the database cluster to the latest restorable backup time. Defaults to false. Conflicts with `restore_to_time`.
@@ -573,4 +579,4 @@ Using `terraform import`, import RDS Clusters using the `cluster_identifier`. Fo
 % terraform import aws_rds_cluster.aurora_cluster aurora-prod-cluster
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-36122fdbe5e48033cead0df2a7bdacd2ee87c8495c33578fa7123d090dfc7fb0 -->
+<!-- cache-key: cdktf-0.20.1 input-d70df5756840581dbadef1fa8179389ff2481c8133dbe538ab98788b7a72b917 -->

@@ -1,6 +1,6 @@
 module github.com/hashicorp/terraform-provider-aws/tools
 
-go 1.22.5
+go 1.22.6
 
 require (
 	github.com/YakDriver/tfproviderdocs v0.13.0
@@ -13,7 +13,7 @@ require (
 	github.com/rhysd/actionlint v1.7.1
 	github.com/terraform-linters/tflint v0.52.0
 	github.com/uber-go/gopatch v0.4.0
-	mvdan.cc/gofumpt v0.6.0
+	mvdan.cc/gofumpt v0.7.0
 )
 
 require (

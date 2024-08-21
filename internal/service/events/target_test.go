@@ -1656,7 +1656,7 @@ data "aws_partition" "current" {}
 `, rName)
 }
 
-func testAccTargetHTTPConfigBase(rName string) string {
+func testAccTargetConfig_baseHTTP(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_rule" "test" {
   name        = %[1]q
@@ -1711,7 +1711,7 @@ data "aws_partition" "current" {}
 }
 
 func testAccTargetConfig_http(rName string) string {
-	return testAccTargetHTTPConfigBase(rName) + `
+	return acctest.ConfigCompose(testAccTargetConfig_baseHTTP(rName), `
 resource "aws_cloudwatch_event_target" "test" {
   arn  = "${aws_api_gateway_stage.test.execution_arn}/GET"
   rule = aws_cloudwatch_event_rule.test.id
@@ -1727,11 +1727,11 @@ resource "aws_cloudwatch_event_target" "test" {
     }
   }
 }
-`
+`)
 }
 
 func testAccTargetConfig_httpParameter(rName string) string {
-	return testAccTargetHTTPConfigBase(rName) + `
+	return acctest.ConfigCompose(testAccTargetConfig_baseHTTP(rName), `
 resource "aws_cloudwatch_event_target" "test" {
   arn  = "${aws_api_gateway_stage.test.execution_arn}/*/*/GET"
   rule = aws_cloudwatch_event_rule.test.id
@@ -1747,11 +1747,11 @@ resource "aws_cloudwatch_event_target" "test" {
     }
   }
 }
-`
+`)
 }
 
 func testAccTargetConfig_httpParameterUpdated(rName string) string {
-	return testAccTargetHTTPConfigBase(rName) + `
+	return acctest.ConfigCompose(testAccTargetConfig_baseHTTP(rName), `
 resource "aws_cloudwatch_event_target" "test" {
   arn  = "${aws_api_gateway_stage.test.execution_arn}/*/*/*/GET"
   rule = aws_cloudwatch_event_rule.test.id
@@ -1767,10 +1767,10 @@ resource "aws_cloudwatch_event_target" "test" {
     }
   }
 }
-`
+`)
 }
 
-func testAccTargetConfig_ecsBase(rName string) string {
+func testAccTargetConfig_baseECS(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -1841,7 +1841,7 @@ resource "aws_cloudwatch_event_rule" "test" {
 }
 
 func testAccTargetConfig_ecs(rName string) string {
-	return acctest.ConfigCompose(testAccTargetConfig_ecsBase(rName), `
+	return acctest.ConfigCompose(testAccTargetConfig_baseECS(rName), `
 resource "aws_cloudwatch_event_target" "test" {
   arn      = aws_ecs_cluster.test.id
   rule     = aws_cloudwatch_event_rule.test.id
@@ -1932,7 +1932,7 @@ resource "aws_redshift_cluster" "test" {
 }
 
 func testAccTargetConfig_ecsNoLaunchType(rName string) string {
-	return acctest.ConfigCompose(testAccTargetConfig_ecsBase(rName), `
+	return acctest.ConfigCompose(testAccTargetConfig_baseECS(rName), `
 resource "aws_cloudwatch_event_target" "test" {
   arn      = aws_ecs_cluster.test.id
   rule     = aws_cloudwatch_event_rule.test.id
@@ -1951,7 +1951,7 @@ resource "aws_cloudwatch_event_target" "test" {
 }
 
 func testAccTargetConfig_ecsBlankLaunchType(rName string) string {
-	return acctest.ConfigCompose(testAccTargetConfig_ecsBase(rName), `
+	return acctest.ConfigCompose(testAccTargetConfig_baseECS(rName), `
 resource "aws_cloudwatch_event_target" "test" {
   arn      = aws_ecs_cluster.test.id
   rule     = aws_cloudwatch_event_rule.test.id
@@ -1971,7 +1971,7 @@ resource "aws_cloudwatch_event_target" "test" {
 }
 
 func testAccTargetConfig_ecsBlankTaskCount(rName string) string {
-	return acctest.ConfigCompose(testAccTargetConfig_ecsBase(rName), `
+	return acctest.ConfigCompose(testAccTargetConfig_baseECS(rName), `
 resource "aws_cloudwatch_event_target" "test" {
   arn      = aws_ecs_cluster.test.id
   rule     = aws_cloudwatch_event_rule.test.id
@@ -1990,7 +1990,7 @@ resource "aws_cloudwatch_event_target" "test" {
 }
 
 func testAccTargetConfig_ecsBlankTaskCountFull(rName string) string {
-	return acctest.ConfigCompose(testAccTargetConfig_ecsBase(rName), `
+	return acctest.ConfigCompose(testAccTargetConfig_baseECS(rName), `
 resource "aws_cloudwatch_event_target" "test" {
   arn      = aws_ecs_cluster.test.id
   rule     = aws_cloudwatch_event_rule.test.id
@@ -2022,7 +2022,7 @@ resource "aws_cloudwatch_event_target" "test" {
 func testAccTargetConfig_ecsCapacityProvider(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccTargetConfig_ecsBase(rName),
+		testAccTargetConfig_baseECS(rName),
 		fmt.Sprintf(`
 resource "aws_cloudwatch_event_target" "test" {
   arn       = aws_ecs_cluster.test.id
@@ -2088,7 +2088,7 @@ resource "aws_ecs_capacity_provider" "test" {
 func testAccTargetConfig_ecsPlacementStrategy(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccTargetConfig_ecsBase(rName),
+		testAccTargetConfig_baseECS(rName),
 		fmt.Sprintf(`
 resource "aws_cloudwatch_event_target" "test" {
   arn       = aws_ecs_cluster.test.id
@@ -2629,7 +2629,7 @@ resource "aws_sns_topic" "test" {
 }
 
 func testAccTargetConfig_ecsNoPropagateTags(rName string) string {
-	return acctest.ConfigCompose(testAccTargetConfig_ecsBase(rName), `
+	return acctest.ConfigCompose(testAccTargetConfig_baseECS(rName), `
 resource "aws_cloudwatch_event_target" "test" {
   arn      = aws_ecs_cluster.test.id
   rule     = aws_cloudwatch_event_rule.test.id
