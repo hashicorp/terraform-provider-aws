@@ -99,7 +99,12 @@ func resourceTable() *schema.Resource {
 				return nil
 			},
 			func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
-				if name, arn := diff.Get("restore_source_name"), diff.Get("resource_source_table_arn"); name != "" || arn != "" {
+				if v := diff.Get("restore_source_name"); v != "" {
+					return nil
+				}
+
+				if !diff.GetRawPlan().GetAttr("restore_source_table_arn").IsWhollyKnown() ||
+					diff.Get("restore_source_table_arn") != "" {
 					return nil
 				}
 
