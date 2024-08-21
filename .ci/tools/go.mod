@@ -13,7 +13,7 @@ require (
 	github.com/rhysd/actionlint v1.7.1
 	github.com/terraform-linters/tflint v0.52.0
 	github.com/uber-go/gopatch v0.4.0
-	mvdan.cc/gofumpt v0.6.0
+	mvdan.cc/gofumpt v0.7.0
 )
 
 require (
