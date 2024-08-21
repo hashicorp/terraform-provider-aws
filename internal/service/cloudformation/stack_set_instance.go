@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -32,6 +33,8 @@ import (
 )
 
 const (
+	ResNameStackSetInstance = "Stack Set Instance"
+
 	stackSetInstanceResourceIDPartCount = 3
 )
 
@@ -271,8 +274,12 @@ func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData,
 		input.OperationPreferences = expandOperationPreferences(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	id := errs.Must(flex.FlattenResourceId([]string{stackSetName, accountOrOrgID, region}, stackSetInstanceResourceIDPartCount, false))
-	_, err := tfresource.RetryWhen(ctx, propagationTimeout,
+	id, err := flex.FlattenResourceId([]string{stackSetName, accountOrOrgID, region}, stackSetInstanceResourceIDPartCount, false)
+	if err != nil {
+		return create.AppendDiagError(diags, names.CloudFormation, create.ErrActionFlatteningResourceId, ResNameStackSetInstance, id, err)
+	}
+
+	_, err = tfresource.RetryWhen(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			input.OperationId = aws.String(sdkid.UniqueId())
 
