@@ -89,4 +89,4 @@ Using `terraform import`, import SageMaker Apps using the `id`. For example:
 % terraform import aws_sagemaker_app.example arn:aws:sagemaker:us-west-2:012345678912:app/domain-id/user-profile-name/app-type/app-name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-7ea0ad78f2f6d5e0e0b81afc82a321a001ee721bbfa0a1a97f6b54cf93a225cc -->
+<!-- cache-key: cdktf-0.20.1 input-c8770f5c5bdaa350b78f188c0956e24e0436218e71233211ee24ef6b57b7dc3a -->

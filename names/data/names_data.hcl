@@ -6471,7 +6471,7 @@ service "networkmanager" {
 
   sdk {
     id             = "NetworkManager"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -6563,7 +6563,7 @@ service "opensearch" {
 
   sdk {
     id             = "OpenSearch"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -6644,7 +6644,7 @@ service "opsworks" {
 
   sdk {
     id             = "OpsWorks"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -6733,7 +6733,7 @@ service "outposts" {
 
   sdk {
     id             = "Outposts"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -7389,7 +7389,7 @@ service "redshift" {
 
   sdk {
     id             = "Redshift"
-    client_version = [1, 2]
+    client_version = [2]
   }
 
   names {
@@ -9523,7 +9523,7 @@ service "worklink" {
 
   sdk {
     id             = "WorkLink"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
