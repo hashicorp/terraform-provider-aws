@@ -249,7 +249,9 @@ func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData,
 
 	if v, ok := d.GetOk("deployment_targets"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		dt := expandDeploymentTargets(v.([]interface{}))
-		accountOrOrgID = strings.Join(dt.OrganizationalUnitIds, "/")
+		if len(dt.OrganizationalUnitIds) > 0 {
+			accountOrOrgID = strings.Join(dt.OrganizationalUnitIds, "/")
+		}
 		input.DeploymentTargets = dt
 	} else {
 		d.Set(names.AttrAccountID, accountID)
