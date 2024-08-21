@@ -54,11 +54,11 @@ func TestAccLexModelsBot_basic(t *testing.T) {
 					testAccCheckBotExists(ctx, rName, &v),
 					testAccCheckBotNotExists(ctx, testBotID, acctest.Ct1),
 
-					resource.TestCheckNoResourceAttr(rName, "abort_statement"),
+					resource.TestCheckResourceAttr(rName, "abort_statement.#", acctest.Ct0),
 					resource.TestCheckResourceAttrSet(rName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(rName, "checksum"),
 					resource.TestCheckResourceAttr(rName, "child_directed", acctest.CtFalse),
-					resource.TestCheckNoResourceAttr(rName, "clarification_prompt"),
+					resource.TestCheckResourceAttr(rName, "clarification_prompt.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(rName, "create_version", acctest.CtFalse),
 					acctest.CheckResourceAttrRFC3339(rName, names.AttrCreatedDate),
 					resource.TestCheckResourceAttr(rName, names.AttrDescription, "Bot to order flowers on the behalf of a user"),
@@ -66,7 +66,7 @@ func TestAccLexModelsBot_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(rName, "enable_model_improvements", acctest.CtFalse),
 					resource.TestCheckResourceAttr(rName, "failure_reason", ""),
 					resource.TestCheckResourceAttr(rName, "idle_session_ttl_in_seconds", "300"),
-					resource.TestCheckNoResourceAttr(rName, "intent"),
+					resource.TestCheckResourceAttr(rName, "intent.#", acctest.Ct0),
 					acctest.CheckResourceAttrRFC3339(rName, names.AttrLastUpdatedDate),
 					resource.TestCheckResourceAttr(rName, "locale", "en-US"),
 					resource.TestCheckResourceAttr(rName, names.AttrName, testBotID),
@@ -74,13 +74,14 @@ func TestAccLexModelsBot_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(rName, "process_behavior", "SAVE"),
 					resource.TestCheckResourceAttr(rName, names.AttrStatus, "NOT_BUILT"),
 					resource.TestCheckResourceAttr(rName, names.AttrVersion, tflexmodels.BotVersionLatest),
-					resource.TestCheckNoResourceAttr(rName, "voice_id"),
+					resource.TestCheckResourceAttrSet(rName, "voice_id"),
 				),
 			},
 			{
-				ResourceName:      rName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            rName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"abort_statement.0.message.0.group_number"},
 			},
 		},
 	})
@@ -128,9 +129,10 @@ func testAccBot_createVersion(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      rName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            rName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"abort_statement.0.message.0.group_number"},
 			},
 			{
 				Config: acctest.ConfigCompose(
@@ -178,9 +180,10 @@ func TestAccLexModelsBot_abortStatement(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      rName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            rName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"abort_statement.0.message.0.group_number"},
 			},
 			{
 				Config: acctest.ConfigCompose(
@@ -200,9 +203,10 @@ func TestAccLexModelsBot_abortStatement(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      rName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            rName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"abort_statement.0.message.0.group_number"},
 			},
 		},
 	})
@@ -243,6 +247,10 @@ func TestAccLexModelsBot_clarificationPrompt(t *testing.T) {
 				ResourceName:      rName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"abort_statement.0.message.0.group_number",
+					"clarification_prompt.0.message.0.group_number",
+				},
 			},
 			{
 				Config: acctest.ConfigCompose(
@@ -260,6 +268,10 @@ func TestAccLexModelsBot_clarificationPrompt(t *testing.T) {
 				ResourceName:      rName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"abort_statement.0.message.0.group_number",
+					"clarification_prompt.0.message.0.group_number",
+				},
 			},
 		},
 	})
@@ -290,9 +302,10 @@ func TestAccLexModelsBot_childDirected(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      rName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            rName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"abort_statement.0.message.0.group_number"},
 			},
 			{
 				Config: acctest.ConfigCompose(
@@ -305,9 +318,10 @@ func TestAccLexModelsBot_childDirected(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      rName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            rName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"abort_statement.0.message.0.group_number"},
 			},
 		},
 	})
@@ -341,7 +355,7 @@ func TestAccLexModelsBot_description(t *testing.T) {
 				ResourceName:            rName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"abort_statement"},
+				ImportStateVerifyIgnore: []string{"abort_statement.0.message.0.group_number"},
 			},
 			{
 				Config: acctest.ConfigCompose(
@@ -357,7 +371,7 @@ func TestAccLexModelsBot_description(t *testing.T) {
 				ResourceName:            rName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"abort_statement"},
+				ImportStateVerifyIgnore: []string{"abort_statement.0.message.0.group_number"},
 			},
 		},
 	})
@@ -388,9 +402,10 @@ func TestAccLexModelsBot_detectSentiment(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      rName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            rName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"abort_statement.0.message.0.group_number"},
 			},
 			{
 				Config: acctest.ConfigCompose(
@@ -403,9 +418,10 @@ func TestAccLexModelsBot_detectSentiment(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      rName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            rName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"abort_statement.0.message.0.group_number"},
 			},
 		},
 	})
@@ -436,9 +452,10 @@ func TestAccLexModelsBot_enableModelImprovements(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      rName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            rName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"abort_statement.0.message.0.group_number"},
 			},
 			{
 				Config: acctest.ConfigCompose(
@@ -452,9 +469,10 @@ func TestAccLexModelsBot_enableModelImprovements(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      rName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            rName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"abort_statement.0.message.0.group_number"},
 			},
 		},
 	})
@@ -485,9 +503,10 @@ func TestAccLexModelsBot_idleSessionTTLInSeconds(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      rName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            rName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"abort_statement.0.message.0.group_number"},
 			},
 			{
 				Config: acctest.ConfigCompose(
@@ -500,9 +519,10 @@ func TestAccLexModelsBot_idleSessionTTLInSeconds(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      rName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            rName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"abort_statement.0.message.0.group_number"},
 			},
 		},
 	})
@@ -533,9 +553,10 @@ func TestAccLexModelsBot_intents(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      rName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            rName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"abort_statement.0.message.0.group_number"},
 			},
 			{
 				Config: acctest.ConfigCompose(
@@ -548,9 +569,10 @@ func TestAccLexModelsBot_intents(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      rName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            rName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"abort_statement.0.message.0.group_number"},
 			},
 		},
 	})
@@ -639,9 +661,10 @@ func TestAccLexModelsBot_locale(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      rName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            rName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"abort_statement.0.message.0.group_number"},
 			},
 			{
 				Config: acctest.ConfigCompose(
@@ -687,9 +710,10 @@ func TestAccLexModelsBot_voiceID(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      rName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            rName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"abort_statement.0.message.0.group_number"},
 			},
 			{
 				Config: acctest.ConfigCompose(
@@ -702,9 +726,10 @@ func TestAccLexModelsBot_voiceID(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      rName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            rName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"abort_statement.0.message.0.group_number"},
 			},
 		},
 	})
