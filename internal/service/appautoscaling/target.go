@@ -173,6 +173,7 @@ func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interf
 	if err := d.Set("suspended_state", flattenSuspendedState(t.SuspendedState)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting suspended_state: %s", err)
 	}
+
 	return diags
 }
 
@@ -318,44 +319,43 @@ func registerScalableTarget(ctx context.Context, conn *applicationautoscaling.Cl
 	return err
 }
 
-func expandSuspendedState(cfg []interface{}) *awstypes.SuspendedState {
-	if len(cfg) == 0 || cfg[0] == nil {
+func expandSuspendedState(tfList []interface{}) *awstypes.SuspendedState {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	out := &awstypes.SuspendedState{}
+	apiObject := &awstypes.SuspendedState{}
+	tfMap := tfList[0].(map[string]interface{})
 
-	m := cfg[0].(map[string]interface{})
-
-	if v, ok := m["dynamic_scaling_in_suspended"]; ok {
-		out.DynamicScalingInSuspended = aws.Bool(v.(bool))
+	if v, ok := tfMap["dynamic_scaling_in_suspended"]; ok {
+		apiObject.DynamicScalingInSuspended = aws.Bool(v.(bool))
 	}
-	if v, ok := m["dynamic_scaling_out_suspended"]; ok {
-		out.DynamicScalingOutSuspended = aws.Bool(v.(bool))
+	if v, ok := tfMap["dynamic_scaling_out_suspended"]; ok {
+		apiObject.DynamicScalingOutSuspended = aws.Bool(v.(bool))
 	}
-	if v, ok := m["scheduled_scaling_suspended"]; ok {
-		out.ScheduledScalingSuspended = aws.Bool(v.(bool))
+	if v, ok := tfMap["scheduled_scaling_suspended"]; ok {
+		apiObject.ScheduledScalingSuspended = aws.Bool(v.(bool))
 	}
 
-	return out
+	return apiObject
 }
 
-func flattenSuspendedState(cfg *awstypes.SuspendedState) []interface{} {
-	if cfg == nil {
+func flattenSuspendedState(apiObject *awstypes.SuspendedState) []interface{} {
+	if apiObject == nil {
 		return []interface{}{}
 	}
 
-	m := make(map[string]interface{})
+	tfMap := make(map[string]interface{})
 
-	if v := cfg.DynamicScalingInSuspended; v != nil {
-		m["dynamic_scaling_in_suspended"] = aws.ToBool(v)
+	if v := apiObject.DynamicScalingInSuspended; v != nil {
+		tfMap["dynamic_scaling_in_suspended"] = aws.ToBool(v)
 	}
-	if v := cfg.DynamicScalingOutSuspended; v != nil {
-		m["dynamic_scaling_out_suspended"] = aws.ToBool(v)
+	if v := apiObject.DynamicScalingOutSuspended; v != nil {
+		tfMap["dynamic_scaling_out_suspended"] = aws.ToBool(v)
 	}
-	if v := cfg.ScheduledScalingSuspended; v != nil {
-		m["scheduled_scaling_suspended"] = aws.ToBool(v)
+	if v := apiObject.ScheduledScalingSuspended; v != nil {
+		tfMap["scheduled_scaling_suspended"] = aws.ToBool(v)
 	}
 
-	return []interface{}{m}
+	return []interface{}{tfMap}
 }
