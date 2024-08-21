@@ -2,6 +2,7 @@
 
 ENHANCEMENTS:
 
+* resource/aws_appautoscaling_target: Add `suspended_state` configuration block ([#38942](https://github.com/hashicorp/terraform-provider-aws/issues/38942))
 * resource/aws_dynamodb_table: Add `restore_source_table_arn` attribute ([#38953](https://github.com/hashicorp/terraform-provider-aws/issues/38953))
 
 ## 5.63.1 (August 20, 2024)
