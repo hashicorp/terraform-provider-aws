@@ -111,9 +111,6 @@ func (r *resourceCluster) Schema(ctx context.Context, _ resource.SchemaRequest, 
 			},
 			"backup_retention_period": schema.Int64Attribute{
 				Optional: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 			"preferred_backup_window": schema.StringAttribute{
 				Optional: true,
