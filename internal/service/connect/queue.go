@@ -332,7 +332,9 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 			_, err = conn.DisassociateQueueQuickConnects(ctx, input)
 
-			return sdkdiag.AppendErrorf(diags, "disassociating Connect Queue (%s) Quick Connects: %s", d.Id(), err)
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "disassociating Connect Queue (%s) Quick Connects: %s", d.Id(), err)
+			}
 		}
 	}
 
