@@ -329,8 +329,8 @@ func TestAccLexModelsIntent_followUpPrompt(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"create_version",
-					"confirmation_prompt.0.message.0.group_number",
-					"rejection_statement.0.message.0.group_number",
+					"follow_up_prompt.0.prompt.0.message.0.group_number",
+					"follow_up_prompt.0.rejection_statement.0.message.0.group_number",
 				},
 			},
 			{
@@ -360,8 +360,8 @@ func TestAccLexModelsIntent_followUpPrompt(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"create_version",
-					"confirmation_prompt.0.message.0.group_number",
-					"rejection_statement.0.message.0.group_number",
+					"follow_up_prompt.0.prompt.0.message.0.group_number",
+					"follow_up_prompt.0.rejection_statement.0.message.0.group_number",
 				},
 			},
 		},
