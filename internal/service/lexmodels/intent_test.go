@@ -251,7 +251,9 @@ func TestAccLexModelsIntent_confirmationPromptAndRejectionStatement(t *testing.T
 				ImportStateVerifyIgnore: []string{
 					"create_version",
 					"confirmation_prompt.0.message.0.group_number",
+					"confirmation_prompt.0.message.1.group_number",
 					"rejection_statement.0.message.0.group_number",
+					"rejection_statement.0.message.1.group_number",
 				},
 			},
 		},
