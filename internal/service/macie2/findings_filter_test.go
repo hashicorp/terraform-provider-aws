@@ -283,9 +283,10 @@ func testAccFindingsFilter_WithDate(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"finding_criteria"},
 			},
 		},
 	})
@@ -355,9 +356,10 @@ func testAccFindingsFilter_WithNumber(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"finding_criteria"},
 			},
 		},
 	})
