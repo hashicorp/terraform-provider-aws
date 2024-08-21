@@ -55,5 +55,10 @@ This data source exports the following attributes in addition to the arguments a
     which job placement is preferred. Compute environments are selected for job placement in ascending order.
     * `compute_environment_order.#.order` - The order of the compute environment.
     * `compute_environment_order.#.compute_environment` - The ARN of the compute environment.
+* `job_state_time_limit_action` - Specifies an action that AWS Batch will take after the job has remained at the head of the queue in the specified state for longer than the specified time.
+    * `job_state_time_limit_action.#.action` - The action to take when a job is at the head of the job queue in the specified state for the specified period of time.
+    * `job_state_time_limit_action.#.max_time_seconds` - The approximate amount of time, in seconds, that must pass with the job in the specified state before the action is taken.
+    * `job_state_time_limit_action.#.reason` - The reason to log for the action being taken.
+    * `job_state_time_limit_action.#.state` - The state of the job needed to trigger the action.
 
-<!-- cache-key: cdktf-0.20.1 input-458fa4c54b7533c202af979978ce3bfb9fac6c2e69a836bcfd612403c16fe74e -->
+<!-- cache-key: cdktf-0.20.1 input-85a401d3fca6d618df41fba2a48a956f0183ce5f38d10dbdb2b4e7a58e2777e6 -->

@@ -6,9 +6,9 @@ package ssmcontacts
 import (
 	"context"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssmcontacts"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssmcontacts/types"
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -113,7 +113,7 @@ func (r *resourceRotation) Schema(ctx context.Context, request resource.SchemaRe
 								listplanmodifier.UseStateForUnknown(),
 							},
 							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
+								Attributes: map[string]schema.Attribute{ // nosemgrep:ci.semgrep.framework.map_block_key-meaningful-names
 									"map_block_key": schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.DayOfWeek](),
 										Required:   true,

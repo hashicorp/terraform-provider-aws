@@ -113,7 +113,7 @@ func resourceProxyEndpointCreate(ctx context.Context, d *schema.ResourceData, me
 	input := &rds.CreateDBProxyEndpointInput{
 		DBProxyName:         aws.String(dbProxyName),
 		DBProxyEndpointName: aws.String(dbProxyEndpointName),
-		Tags:                getTagsInV2(ctx),
+		Tags:                getTagsIn(ctx),
 		TargetRole:          types.DBProxyEndpointTargetRole(d.Get("target_role").(string)),
 		VpcSubnetIds:        flex.ExpandStringValueSet(d.Get("vpc_subnet_ids").(*schema.Set)),
 	}

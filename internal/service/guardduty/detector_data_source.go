@@ -6,7 +6,7 @@ package guardduty
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -75,7 +75,7 @@ func DataSourceDetector() *schema.Resource {
 
 func dataSourceDetectorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
+	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
 	detectorID := d.Get(names.AttrID).(string)
 
@@ -86,7 +86,7 @@ func dataSourceDetectorRead(ctx context.Context, d *schema.ResourceData, meta in
 			return sdkdiag.AppendErrorf(diags, "reading this account's single GuardDuty Detector: %s", err)
 		}
 
-		detectorID = aws.StringValue(output)
+		detectorID = aws.ToString(output)
 	}
 
 	gdo, err := FindDetectorByID(ctx, conn, detectorID)

@@ -411,28 +411,34 @@ func testAccCheckFleetDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
+const testAccFleetConfig_base = `
+data "aws_appstream_image" "test" {
+  name_regex  = "^Amazon-AppStream2-Sample-Image.*$"
+  type        = "PUBLIC"
+  most_recent = true
+}
+`
+
 func testAccFleetConfig_basic(name, instanceType string) string {
 	// "Amazon-AppStream2-Sample-Image-03-11-2023" is not available in GovCloud
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFleetConfig_base, fmt.Sprintf(`
 resource "aws_appstream_fleet" "test" {
   name          = %[1]q
-  image_name    = "Amazon-AppStream2-Sample-Image-03-11-2023"
+  image_name    = data.aws_appstream_image.test.name
   instance_type = %[2]q
 
   compute_capacity {
     desired_instances = 1
   }
 }
-`, name, instanceType)
+`, name, instanceType))
 }
 
 func testAccFleetConfig_complete(name, description, fleetType, instanceType string) string {
 	return acctest.ConfigCompose(
+		testAccFleetConfig_base,
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
-data "aws_region" "current" {}
-data "aws_partition" "current" {}
-
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 }
@@ -446,7 +452,7 @@ resource "aws_subnet" "test" {
 
 resource "aws_appstream_fleet" "test" {
   name      = %[1]q
-  image_arn = "arn:${data.aws_partition.current.partition}:appstream:${data.aws_region.current.name}::image/Amazon-AppStream2-Sample-Image-03-11-2023"
+  image_arn = data.aws_appstream_image.test.arn
 
   compute_capacity {
     desired_instances = 1
@@ -469,6 +475,7 @@ resource "aws_appstream_fleet" "test" {
 
 func testAccFleetConfig_completeNoStopping(name, description, fleetType, instanceType, displayName string) string {
 	return acctest.ConfigCompose(
+		testAccFleetConfig_base,
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
@@ -484,7 +491,7 @@ resource "aws_subnet" "test" {
 
 resource "aws_appstream_fleet" "test" {
   name       = %[1]q
-  image_name = "Amazon-AppStream2-Sample-Image-03-11-2023"
+  image_name = data.aws_appstream_image.test.name
 
   compute_capacity {
     desired_instances = 1
@@ -507,6 +514,7 @@ resource "aws_appstream_fleet" "test" {
 
 func testAccFleetConfig_tags(name, description, fleetType, instanceType, displayName string) string {
 	return acctest.ConfigCompose(
+		testAccFleetConfig_base,
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
@@ -522,7 +530,7 @@ resource "aws_subnet" "test" {
 
 resource "aws_appstream_fleet" "test" {
   name       = %[1]q
-  image_name = "Amazon-AppStream2-Sample-Image-03-11-2023"
+  image_name = data.aws_appstream_image.test.name
 
   compute_capacity {
     desired_instances = 1
@@ -549,10 +557,10 @@ resource "aws_appstream_fleet" "test" {
 
 func testAccFleetConfig_emptyDomainJoin(name, instanceType, empty string) string {
 	// "Amazon-AppStream2-Sample-Image-03-11-2023" is not available in GovCloud
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFleetConfig_base, fmt.Sprintf(`
 resource "aws_appstream_fleet" "test" {
   name          = %[1]q
-  image_name    = "Amazon-AppStream2-Sample-Image-03-11-2023"
+  image_name    = data.aws_appstream_image.test.name
   instance_type = %[2]q
 
   compute_capacity {
@@ -564,16 +572,13 @@ resource "aws_appstream_fleet" "test" {
     organizational_unit_distinguished_name = %[3]s
   }
 }
-`, name, instanceType, empty)
+`, name, instanceType, empty))
 }
 
 func testAccFleetConfig_multiSession(name, instanceType string, desiredSessions, maxSessionsPerInstance int) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
-data "aws_region" "current" {}
-data "aws_partition" "current" {}
-
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 }
@@ -585,9 +590,15 @@ resource "aws_subnet" "test" {
   vpc_id            = aws_vpc.test.id
 }
 
+data "aws_appstream_image" "test" {
+  name_regex  = "^AppStream-WinServer.*$"
+  type        = "PUBLIC"
+  most_recent = true
+}
+
 resource "aws_appstream_fleet" "test" {
   name      = %[1]q
-  image_arn = "arn:${data.aws_partition.current.partition}:appstream:${data.aws_region.current.name}::image/AppStream-WinServer2019-01-26-2024"
+  image_arn = data.aws_appstream_image.test.arn
 
   compute_capacity {
     desired_sessions = %[3]d

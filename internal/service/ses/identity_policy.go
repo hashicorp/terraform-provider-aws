@@ -10,8 +10,8 @@ import (
 	"strings"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ses"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ses"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -65,7 +65,7 @@ func ResourceIdentityPolicy() *schema.Resource {
 
 func resourceIdentityPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn(ctx)
+	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
 	identity := d.Get("identity").(string)
 	policyName := d.Get(names.AttrName).(string)
@@ -81,7 +81,7 @@ func resourceIdentityPolicyCreate(ctx context.Context, d *schema.ResourceData, m
 		Policy:     aws.String(policy),
 	}
 
-	_, err = conn.PutIdentityPolicyWithContext(ctx, input)
+	_, err = conn.PutIdentityPolicy(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating SES Identity (%s) Policy: %s", identity, err)
 	}
@@ -93,7 +93,7 @@ func resourceIdentityPolicyCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceIdentityPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn(ctx)
+	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
 	identity, policyName, err := IdentityPolicyParseID(d.Id())
 	if err != nil {
@@ -111,7 +111,7 @@ func resourceIdentityPolicyUpdate(ctx context.Context, d *schema.ResourceData, m
 		Policy:     aws.String(policy),
 	}
 
-	_, err = conn.PutIdentityPolicyWithContext(ctx, &req)
+	_, err = conn.PutIdentityPolicy(ctx, &req)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating SES Identity (%s) Policy (%s): %s", identity, policyName, err)
 	}
@@ -121,7 +121,7 @@ func resourceIdentityPolicyUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceIdentityPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn(ctx)
+	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
 	identity, policyName, err := IdentityPolicyParseID(d.Id())
 	if err != nil {
@@ -130,10 +130,10 @@ func resourceIdentityPolicyRead(ctx context.Context, d *schema.ResourceData, met
 
 	input := &ses.GetIdentityPoliciesInput{
 		Identity:    aws.String(identity),
-		PolicyNames: aws.StringSlice([]string{policyName}),
+		PolicyNames: []string{policyName},
 	}
 
-	output, err := conn.GetIdentityPoliciesWithContext(ctx, input)
+	output, err := conn.GetIdentityPolicies(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "getting SES Identity (%s) Policy (%s): %s", identity, policyName, err)
@@ -159,7 +159,7 @@ func resourceIdentityPolicyRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("identity", identity)
 	d.Set(names.AttrName, policyName)
 
-	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), aws.StringValue(policy))
+	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), policy)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading SES Identity Policy (%s): %s", d.Id(), err)
 	}
@@ -171,7 +171,7 @@ func resourceIdentityPolicyRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceIdentityPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn(ctx)
+	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
 	identity, policyName, err := IdentityPolicyParseID(d.Id())
 	if err != nil {
@@ -183,8 +183,8 @@ func resourceIdentityPolicyDelete(ctx context.Context, d *schema.ResourceData, m
 		PolicyName: aws.String(policyName),
 	}
 
-	log.Printf("[DEBUG] Deleting SES Identity Policy: %s", input)
-	_, err = conn.DeleteIdentityPolicyWithContext(ctx, input)
+	log.Printf("[DEBUG] Deleting SES Identity Policy: %s", *input.PolicyName)
+	_, err = conn.DeleteIdentityPolicy(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting SES Identity (%s) Policy (%s): %s", identity, policyName, err)

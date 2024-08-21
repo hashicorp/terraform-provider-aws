@@ -6,21 +6,22 @@ package memorydb
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/memorydb"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/memorydb"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/memorydb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindACLByName(ctx context.Context, conn *memorydb.MemoryDB, name string) (*memorydb.ACL, error) {
+func FindACLByName(ctx context.Context, conn *memorydb.Client, name string) (*awstypes.ACL, error) {
 	input := memorydb.DescribeACLsInput{
 		ACLName: aws.String(name),
 	}
 
-	output, err := conn.DescribeACLsWithContext(ctx, &input)
+	output, err := conn.DescribeACLs(ctx, &input)
 
-	if tfawserr.ErrCodeEquals(err, memorydb.ErrCodeACLNotFoundFault) {
+	if errs.IsA[*awstypes.ACLNotFoundFault](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -31,26 +32,18 @@ func FindACLByName(ctx context.Context, conn *memorydb.MemoryDB, name string) (*
 		return nil, err
 	}
 
-	if output == nil || len(output.ACLs) == 0 || output.ACLs[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output.ACLs); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return output.ACLs[0], nil
+	return tfresource.AssertSingleValueResult(output.ACLs)
 }
 
-func FindClusterByName(ctx context.Context, conn *memorydb.MemoryDB, name string) (*memorydb.Cluster, error) {
+func FindClusterByName(ctx context.Context, conn *memorydb.Client, name string) (*awstypes.Cluster, error) {
 	input := memorydb.DescribeClustersInput{
 		ClusterName:      aws.String(name),
 		ShowShardDetails: aws.Bool(true),
 	}
 
-	output, err := conn.DescribeClustersWithContext(ctx, &input)
+	output, err := conn.DescribeClusters(ctx, &input)
 
-	if tfawserr.ErrCodeEquals(err, memorydb.ErrCodeClusterNotFoundFault) {
+	if errs.IsA[*awstypes.ClusterNotFoundFault](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -61,25 +54,17 @@ func FindClusterByName(ctx context.Context, conn *memorydb.MemoryDB, name string
 		return nil, err
 	}
 
-	if output == nil || len(output.Clusters) == 0 || output.Clusters[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output.Clusters); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return output.Clusters[0], nil
+	return tfresource.AssertSingleValueResult(output.Clusters)
 }
 
-func FindParameterGroupByName(ctx context.Context, conn *memorydb.MemoryDB, name string) (*memorydb.ParameterGroup, error) {
+func FindParameterGroupByName(ctx context.Context, conn *memorydb.Client, name string) (*awstypes.ParameterGroup, error) {
 	input := memorydb.DescribeParameterGroupsInput{
 		ParameterGroupName: aws.String(name),
 	}
 
-	output, err := conn.DescribeParameterGroupsWithContext(ctx, &input)
+	output, err := conn.DescribeParameterGroups(ctx, &input)
 
-	if tfawserr.ErrCodeEquals(err, memorydb.ErrCodeParameterGroupNotFoundFault) {
+	if errs.IsA[*awstypes.ParameterGroupNotFoundFault](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -90,25 +75,17 @@ func FindParameterGroupByName(ctx context.Context, conn *memorydb.MemoryDB, name
 		return nil, err
 	}
 
-	if output == nil || len(output.ParameterGroups) == 0 || output.ParameterGroups[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output.ParameterGroups); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return output.ParameterGroups[0], nil
+	return tfresource.AssertSingleValueResult(output.ParameterGroups)
 }
 
-func FindSnapshotByName(ctx context.Context, conn *memorydb.MemoryDB, name string) (*memorydb.Snapshot, error) {
+func FindSnapshotByName(ctx context.Context, conn *memorydb.Client, name string) (*awstypes.Snapshot, error) {
 	input := memorydb.DescribeSnapshotsInput{
 		SnapshotName: aws.String(name),
 	}
 
-	output, err := conn.DescribeSnapshotsWithContext(ctx, &input)
+	output, err := conn.DescribeSnapshots(ctx, &input)
 
-	if tfawserr.ErrCodeEquals(err, memorydb.ErrCodeSnapshotNotFoundFault) {
+	if errs.IsA[*awstypes.SnapshotNotFoundFault](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -119,25 +96,17 @@ func FindSnapshotByName(ctx context.Context, conn *memorydb.MemoryDB, name strin
 		return nil, err
 	}
 
-	if output == nil || len(output.Snapshots) == 0 || output.Snapshots[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output.Snapshots); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return output.Snapshots[0], nil
+	return tfresource.AssertSingleValueResult(output.Snapshots)
 }
 
-func FindSubnetGroupByName(ctx context.Context, conn *memorydb.MemoryDB, name string) (*memorydb.SubnetGroup, error) {
+func FindSubnetGroupByName(ctx context.Context, conn *memorydb.Client, name string) (*awstypes.SubnetGroup, error) {
 	input := memorydb.DescribeSubnetGroupsInput{
 		SubnetGroupName: aws.String(name),
 	}
 
-	output, err := conn.DescribeSubnetGroupsWithContext(ctx, &input)
+	output, err := conn.DescribeSubnetGroups(ctx, &input)
 
-	if tfawserr.ErrCodeEquals(err, memorydb.ErrCodeSubnetGroupNotFoundFault) {
+	if errs.IsA[*awstypes.SubnetGroupNotFoundFault](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -148,25 +117,17 @@ func FindSubnetGroupByName(ctx context.Context, conn *memorydb.MemoryDB, name st
 		return nil, err
 	}
 
-	if output == nil || len(output.SubnetGroups) == 0 || output.SubnetGroups[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output.SubnetGroups); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return output.SubnetGroups[0], nil
+	return tfresource.AssertSingleValueResult(output.SubnetGroups)
 }
 
-func FindUserByName(ctx context.Context, conn *memorydb.MemoryDB, name string) (*memorydb.User, error) {
+func FindUserByName(ctx context.Context, conn *memorydb.Client, name string) (*awstypes.User, error) {
 	input := memorydb.DescribeUsersInput{
 		UserName: aws.String(name),
 	}
 
-	output, err := conn.DescribeUsersWithContext(ctx, &input)
+	output, err := conn.DescribeUsers(ctx, &input)
 
-	if tfawserr.ErrCodeEquals(err, memorydb.ErrCodeUserNotFoundFault) {
+	if errs.IsA[*awstypes.UserNotFoundFault](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -177,13 +138,5 @@ func FindUserByName(ctx context.Context, conn *memorydb.MemoryDB, name string) (
 		return nil, err
 	}
 
-	if output == nil || len(output.Users) == 0 || output.Users[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output.Users); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return output.Users[0], nil
+	return tfresource.AssertSingleValueResult(output.Users)
 }

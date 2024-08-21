@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/opsworks"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/opsworks/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -20,17 +20,19 @@ import (
 )
 
 func TestAccOpsWorksRDSDBInstance_basic(t *testing.T) {
+	acctest.Skip(t, "skipping test; Amazon OpsWorks has been deprecated and will be removed in the next major release")
+
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var v opsworks.RdsDbInstance
+	var v awstypes.RdsDbInstance
 	resourceName := "aws_opsworks_rds_db_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.OpsWorks) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRDSDBInstanceDestroy(ctx),
@@ -64,17 +66,19 @@ func TestAccOpsWorksRDSDBInstance_basic(t *testing.T) {
 }
 
 func TestAccOpsWorksRDSDBInstance_disappears(t *testing.T) {
+	acctest.Skip(t, "skipping test; Amazon OpsWorks has been deprecated and will be removed in the next major release")
+
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var v opsworks.RdsDbInstance
+	var v awstypes.RdsDbInstance
 	resourceName := "aws_opsworks_rds_db_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.OpsWorks) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRDSDBInstanceDestroy(ctx),
@@ -91,7 +95,7 @@ func TestAccOpsWorksRDSDBInstance_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckRDSDBInstanceExists(ctx context.Context, n string, v *opsworks.RdsDbInstance) resource.TestCheckFunc {
+func testAccCheckRDSDBInstanceExists(ctx context.Context, n string, v *awstypes.RdsDbInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -102,7 +106,7 @@ func testAccCheckRDSDBInstanceExists(ctx context.Context, n string, v *opsworks.
 			return fmt.Errorf("No OpsWorks RDS DB Instance ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksClient(ctx)
 
 		output, err := tfopsworks.FindRDSDBInstanceByTwoPartKey(ctx, conn, rs.Primary.Attributes["rds_db_instance_arn"], rs.Primary.Attributes["stack_id"])
 
@@ -118,7 +122,7 @@ func testAccCheckRDSDBInstanceExists(ctx context.Context, n string, v *opsworks.
 
 func testAccCheckRDSDBInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_opsworks_rds_db_instance" {

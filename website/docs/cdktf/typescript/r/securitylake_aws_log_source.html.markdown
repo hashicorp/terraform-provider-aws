@@ -58,7 +58,7 @@ The following arguments are required:
 * `accounts` - (Optional) Specify the AWS account information where you want to enable Security Lake.
   If not specified, uses all accounts included in the Security Lake.
 * `regions` - (Required) Specify the Regions where you want to enable Security Lake.
-* `sourceName` - (Required) The name for a AWS source. This must be a Regionally unique value. Valid values: `ROUTE53`, `VPC_FLOW`, `SH_FINDINGS`, `CLOUD_TRAIL_MGMT`, `LAMBDA_EXECUTION`, `S3_DATA`.
+* `sourceName` - (Required) The name for a AWS source. This must be a Regionally unique value. Valid values: `ROUTE53`, `VPC_FLOW`, `SH_FINDINGS`, `CLOUD_TRAIL_MGMT`, `LAMBDA_EXECUTION`, `S3_DATA`, `EKS_AUDIT`, `WAF`.
 * `sourceVersion` - (Optional) The version for a AWS source.
   If not specified, the version will be the default.
   This must be a Regionally unique value.
@@ -99,4 +99,4 @@ Using `terraform import`, import AWS log sources using the source name. For exam
 % terraform import aws_securitylake_aws_log_source.example ROUTE53
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-80cac9a273b653c7a55d700a9f8a334aab233d2bd2ba1046a02cf3da1678c3bd -->
+<!-- cache-key: cdktf-0.20.1 input-d0671d56ec0f1b461ed1d3587b88021e2af192929efe7344d891d30f21b64d4d -->
