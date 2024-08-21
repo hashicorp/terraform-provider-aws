@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/connect"
@@ -351,9 +352,14 @@ func resourceQueueDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	log.Printf("[DEBUG] Deleting Connect Queue: %s", d.Id())
-	_, err = conn.DeleteQueue(ctx, &connect.DeleteQueueInput{
-		InstanceId: aws.String(instanceID),
-		QueueId:    aws.String(queueID),
+	const (
+		timeout = 1 * time.Minute
+	)
+	_, err = tfresource.RetryWhenIsA[*awstypes.ResourceInUseException](ctx, timeout, func() (interface{}, error) {
+		return conn.DeleteQueue(ctx, &connect.DeleteQueueInput{
+			InstanceId: aws.String(instanceID),
+			QueueId:    aws.String(queueID),
+		})
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
