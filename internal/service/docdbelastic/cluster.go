@@ -197,7 +197,7 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 	}
 
 	if !plan.BackupRetentionPeriod.IsNull() || !plan.BackupRetentionPeriod.IsUnknown() {
-		input.BackupRetentionPeriod = flex.Int32FromFramework(ctx, plan.BackupRetentionPeriod),
+		input.BackupRetentionPeriod = flex.Int32FromFramework(ctx, plan.BackupRetentionPeriod)
 	}
 
 	if !plan.SubnetIds.IsNull() || !plan.SubnetIds.IsUnknown() {

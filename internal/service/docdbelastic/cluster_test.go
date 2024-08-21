@@ -1,4 +1,3 @@
-
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
@@ -398,7 +397,7 @@ resource "aws_docdbelastic_cluster" "test" {
   auth_type           = "PLAIN_TEXT"
 
   preferred_maintenance_window = "tue:04:00-tue:04:30"
-  
+
   backup_retention_period = 2
   preferred_backup_window = "03:00-04:00"
 
