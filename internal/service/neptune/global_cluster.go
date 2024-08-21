@@ -242,7 +242,7 @@ func resourceGlobalClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 
 				_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
 					return conn.ModifyDBCluster(ctx, input)
-				}, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions")
+				}, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
 
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "modifying Neptune Cluster (%s) engine version: %s", clusterID, err)
