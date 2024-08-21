@@ -28,6 +28,26 @@ const (
 	ElasticbeanstalkTagKeyPrefix                = `elasticbeanstalk:`
 	NameTagKey                                  = `Name`
 	ServerlessApplicationRepositoryTagKeyPrefix = `serverlessrepo:`
+
+	// Environment variables with this prefix will be treated as a `default_tags` key value pair
+	//
+	// The environment variable name after this suffix will be treated as the tag key. The
+	// value of the variable will be treated as the tag value. Empty values are permitted.
+	DefaultTagsEnvVarPrefix = "TF_AWS_DEFAULT_TAGS_"
+
+	// Environment variable specifying a list of tag keys to be ignored
+	//
+	// Values read from this environment variable are merged with those specified in the
+	// provider configuration. When multiple keys are provided, the values are
+	// comma-separated.
+	IgnoreTagsKeysEnvVar = "TF_AWS_IGNORE_TAGS_KEYS"
+
+	// Environment variable specifying a list of tag key prefixes to be ignored
+	//
+	// Values read from this environment variable are merged with those specified in the
+	// provider configuration. When multiple key prefixes are provided, the values are
+	// comma-separated.
+	IgnoreTagsKeyPrefixesEnvVar = "TF_AWS_IGNORE_TAGS_KEY_PREFIXES"
 )
 
 // DefaultConfig contains tags to default across all resources.

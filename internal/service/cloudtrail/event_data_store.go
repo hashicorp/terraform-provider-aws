@@ -142,6 +142,12 @@ func resourceEventDataStore() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"billing_mode": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          types.BillingModeExtendableRetentionPricing,
+				ValidateDiagFunc: enum.Validate[types.BillingMode](),
+			},
 			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -188,6 +194,7 @@ func resourceEventDataStoreCreate(ctx context.Context, d *schema.ResourceData, m
 
 	name := d.Get(names.AttrName).(string)
 	input := &cloudtrail.CreateEventDataStoreInput{
+		BillingMode:                  types.BillingMode(d.Get("billing_mode").(string)),
 		MultiRegionEnabled:           aws.Bool(d.Get("multi_region_enabled").(bool)),
 		Name:                         aws.String(name),
 		OrganizationEnabled:          aws.Bool(d.Get("organization_enabled").(bool)),
@@ -240,6 +247,7 @@ func resourceEventDataStoreRead(ctx context.Context, d *schema.ResourceData, met
 	}
 	d.Set(names.AttrARN, output.EventDataStoreArn)
 	d.Set(names.AttrKMSKeyID, output.KmsKeyId)
+	d.Set("billing_mode", output.BillingMode)
 	d.Set("multi_region_enabled", output.MultiRegionEnabled)
 	d.Set(names.AttrName, output.Name)
 	d.Set("organization_enabled", output.OrganizationEnabled)
@@ -260,6 +268,10 @@ func resourceEventDataStoreUpdate(ctx context.Context, d *schema.ResourceData, m
 
 		if d.HasChange("advanced_event_selector") {
 			input.AdvancedEventSelectors = expandAdvancedEventSelector(d.Get("advanced_event_selector").([]interface{}))
+		}
+
+		if d.HasChange("billing_mode") {
+			input.BillingMode = types.BillingMode(d.Get("billing_mode").(string))
 		}
 
 		if d.HasChange("multi_region_enabled") {

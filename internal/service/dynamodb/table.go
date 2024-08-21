@@ -103,6 +103,11 @@ func resourceTable() *schema.Resource {
 					return nil
 				}
 
+				if !diff.GetRawPlan().GetAttr("restore_source_table_arn").IsWhollyKnown() ||
+					diff.Get("restore_source_table_arn") != "" {
+					return nil
+				}
+
 				var errs []error
 				if err := validateProvisionedThroughputField(diff, "read_capacity"); err != nil {
 					errs = append(errs, err)
@@ -115,6 +120,9 @@ func resourceTable() *schema.Resource {
 			customdiff.ForceNewIfChange("restore_source_name", func(_ context.Context, old, new, meta interface{}) bool {
 				// If they differ force new unless new is cleared
 				// https://github.com/hashicorp/terraform-provider-aws/issues/25214
+				return old.(string) != new.(string) && new.(string) != ""
+			}),
+			customdiff.ForceNewIfChange("restore_source_table_arn", func(_ context.Context, old, new, meta interface{}) bool {
 				return old.(string) != new.(string) && new.(string) != ""
 			}),
 			validateTTLCustomDiff,
@@ -309,7 +317,7 @@ func resourceTable() *schema.Resource {
 				Type:          schema.TypeList,
 				Optional:      true,
 				MaxItems:      1,
-				ConflictsWith: []string{"restore_source_name"},
+				ConflictsWith: []string{"restore_source_name", "restore_source_table_arn"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"input_compression_type": {
@@ -380,10 +388,16 @@ func resourceTable() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidUTCTimestamp,
 			},
+			"restore_source_table_arn": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ValidateFunc:  verify.ValidARN,
+				ConflictsWith: []string{"import_table", "restore_source_name"},
+			},
 			"restore_source_name": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"import_table"},
+				ConflictsWith: []string{"import_table", "restore_source_table_arn"},
 			},
 			"restore_to_latest_time": {
 				Type:     schema.TypeBool,
@@ -484,10 +498,20 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		keySchemaMap["range_key"] = v.(string)
 	}
 
-	if v, ok := d.GetOk("restore_source_name"); ok {
+	sourceName, nameOk := d.GetOk("restore_source_name")
+	sourceArn, arnOk := d.GetOk("restore_source_table_arn")
+
+	if nameOk || arnOk {
 		input := &dynamodb.RestoreTableToPointInTimeInput{
-			SourceTableName: aws.String(v.(string)),
 			TargetTableName: aws.String(tableName),
+		}
+
+		if nameOk {
+			input.SourceTableName = aws.String(sourceName.(string))
+		}
+
+		if arnOk {
+			input.SourceTableArn = aws.String(sourceArn.(string))
 		}
 
 		if v, ok := d.GetOk("restore_date_time"); ok {

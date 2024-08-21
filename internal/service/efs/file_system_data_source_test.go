@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/efs"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -133,7 +133,7 @@ func TestAccEFSFileSystemDataSource_availabilityZone(t *testing.T) {
 
 func TestAccEFSFileSystemDataSource_nonExistent_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var desc efs.FileSystemDescription
+	var desc awstypes.FileSystemDescription
 	resourceName := "aws_efs_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -150,7 +150,7 @@ func TestAccEFSFileSystemDataSource_nonExistent_tags(t *testing.T) {
 			},
 			{
 				Config:      testAccFileSystemDataSourceConfig_tagsNonExistent(rName),
-				ExpectError: regexache.MustCompile(`no matching EFS file system found`),
+				ExpectError: regexache.MustCompile(`no matching EFS File System found`),
 			},
 		},
 	})
@@ -213,16 +213,7 @@ data "aws_efs_file_system" "test" {
 }
 `
 
-const testAccFileSystemDataSourceConfig_availabilityZone = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccFileSystemDataSourceConfig_availabilityZone = acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
 resource "aws_efs_file_system" "test" {
   availability_zone_name = data.aws_availability_zones.available.names[0]
 }
@@ -230,4 +221,4 @@ resource "aws_efs_file_system" "test" {
 data "aws_efs_file_system" "test" {
   file_system_id = aws_efs_file_system.test.id
 }
-`
+`)

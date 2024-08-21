@@ -2759,6 +2759,67 @@ rules:
           patterns:
             - pattern-regex: "(?i)NetworkManager"
     severity: WARNING
+  - id: networkmonitor-in-func-name
+    languages:
+      - go
+    message: Do not use "NetworkMonitor" in func name inside networkmonitor package
+    paths:
+      include:
+        - internal/service/networkmonitor
+      exclude:
+        - internal/service/networkmonitor/list_pages_gen.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)NetworkMonitor"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: networkmonitor-in-test-name
+    languages:
+      - go
+    message: Include "NetworkMonitor" in test name
+    paths:
+      include:
+        - internal/service/networkmonitor/*_test.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccNetworkMonitor"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: networkmonitor-in-const-name
+    languages:
+      - go
+    message: Do not use "NetworkMonitor" in const name inside networkmonitor package
+    paths:
+      include:
+        - internal/service/networkmonitor
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)NetworkMonitor"
+    severity: WARNING
+  - id: networkmonitor-in-var-name
+    languages:
+      - go
+    message: Do not use "NetworkMonitor" in var name inside networkmonitor package
+    paths:
+      include:
+        - internal/service/networkmonitor
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)NetworkMonitor"
+    severity: WARNING
   - id: oam-in-func-name
     languages:
       - go

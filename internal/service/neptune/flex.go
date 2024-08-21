@@ -4,19 +4,19 @@
 package neptune
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/neptune"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/neptune/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func expandParameters(configured []interface{}) []*neptune.Parameter {
-	parameters := make([]*neptune.Parameter, 0, len(configured))
+func expandParameters(configured []interface{}) []awstypes.Parameter {
+	parameters := make([]awstypes.Parameter, 0, len(configured))
 
 	for _, pRaw := range configured {
 		data := pRaw.(map[string]interface{})
 
-		p := &neptune.Parameter{
-			ApplyMethod:    aws.String(data["apply_method"].(string)),
+		p := awstypes.Parameter{
+			ApplyMethod:    awstypes.ApplyMethod(data["apply_method"].(string)),
 			ParameterName:  aws.String(data[names.AttrName].(string)),
 			ParameterValue: aws.String(data[names.AttrValue].(string)),
 		}
@@ -27,15 +27,15 @@ func expandParameters(configured []interface{}) []*neptune.Parameter {
 	return parameters
 }
 
-func flattenParameters(list []*neptune.Parameter) []map[string]interface{} {
+func flattenParameters(list []awstypes.Parameter) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(list))
 
 	for _, i := range list {
 		if i.ParameterValue != nil {
 			result = append(result, map[string]interface{}{
-				"apply_method":  aws.StringValue(i.ApplyMethod),
-				names.AttrName:  aws.StringValue(i.ParameterName),
-				names.AttrValue: aws.StringValue(i.ParameterValue),
+				"apply_method":  string(i.ApplyMethod),
+				names.AttrName:  aws.ToString(i.ParameterName),
+				names.AttrValue: aws.ToString(i.ParameterValue),
 			})
 		}
 	}

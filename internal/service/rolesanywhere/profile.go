@@ -8,9 +8,9 @@ import (
 	"errors"
 	"log"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
 	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere/types"
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -118,7 +118,7 @@ func resourceProfileCreate(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "creating RolesAnywhere Profile (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.Profile.ProfileId))
+	d.SetId(aws.ToString(output.Profile.ProfileId))
 
 	return append(diags, resourceProfileRead(ctx, d, meta)...)
 }
@@ -192,12 +192,12 @@ func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		if n == true {
 			err := enableProfile(ctx, d.Id(), meta)
 			if err != nil {
-				sdkdiag.AppendErrorf(diags, "enabling RolesAnywhere Profile (%s): %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "enabling RolesAnywhere Profile (%s): %s", d.Id(), err)
 			}
 		} else {
 			err := disableProfile(ctx, d.Id(), meta)
 			if err != nil {
-				sdkdiag.AppendErrorf(diags, "disabling RolesAnywhere Profile (%s): %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "disabling RolesAnywhere Profile (%s): %s", d.Id(), err)
 			}
 		}
 	}

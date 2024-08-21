@@ -104,7 +104,3 @@ func clusterEndpointType_Values() []string {
 		clusterEndpointTypeWriter,
 	}
 }
-
-const (
-	errCodeInvalidParameterValue = "InvalidParameterValue"
-)

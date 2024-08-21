@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	basevalidation "github.com/hashicorp/aws-sdk-go-base/v2/validation"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -33,6 +33,18 @@ var regionRegexp = regexache.MustCompile(`^[a-z]{2}(-[a-z]+)+-\d$`)
 
 // validates all listed in https://gist.github.com/shortjared/4c1e3fe52bdfa47522cfe5b41e5d6f22
 var servicePrincipalRegexp = regexache.MustCompile(`^([0-9a-z-]+\.){1,4}(amazonaws|amazon)\.com$`)
+
+func StringIsInt32(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+
+	_, err := strconv.ParseInt(value, 10, 32)
+	if err != nil {
+		errors = append(errors, fmt.Errorf("%q (%q) must be a 32-bit integer", k, v))
+		return
+	}
+
+	return
+}
 
 func Valid4ByteASN(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
