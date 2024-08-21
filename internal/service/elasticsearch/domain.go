@@ -34,7 +34,7 @@ import (
 
 // @SDKResource("aws_elasticsearch_domain", name="Domain")
 // @Tags(identifierAttribute="id")
-func ResourceDomain() *schema.Resource {
+func resourceDomain() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDomainCreate,
 		ReadWithoutTimeout:   resourceDomainRead,
@@ -548,7 +548,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	// so w/out this check Create would act as upsert
 	// and might cause duplicate domain to appear in state.
 	name := d.Get(names.AttrDomainName).(string)
-	_, err := FindDomainByName(ctx, conn, name)
+	_, err := findDomainByName(ctx, conn, name)
 
 	if err == nil {
 		return sdkdiag.AppendErrorf(diags, "Elasticsearch Domain (%s) already exists", name)
@@ -692,7 +692,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.SetId(aws.ToString(outputRaw.(*elasticsearch.CreateElasticsearchDomainOutput).DomainStatus.ARN))
 
-	if err := WaitForDomainCreation(ctx, conn, name, d.Timeout(schema.TimeoutCreate)); err != nil {
+	if err := waitForDomainCreation(ctx, conn, name, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Elasticsearch Domain (%s) create: %s", d.Id(), err)
 	}
 
@@ -722,7 +722,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).ElasticsearchClient(ctx)
 
 	name := d.Get(names.AttrDomainName).(string)
-	ds, err := FindDomainByName(ctx, conn, name)
+	ds, err := findDomainByName(ctx, conn, name)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Elasticsearch Domain (%s) not found, removing from state", d.Id())
@@ -1017,7 +1017,7 @@ func resourceDomainImport(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.Set(names.AttrDomainName, d.Id())
 
-	ds, err := FindDomainByName(ctx, conn, d.Get(names.AttrDomainName).(string))
+	ds, err := findDomainByName(ctx, conn, d.Get(names.AttrDomainName).(string))
 
 	if err != nil {
 		return nil, err

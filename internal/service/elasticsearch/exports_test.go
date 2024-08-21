@@ -4,6 +4,13 @@ package elasticsearch
 
 // Exports for use in tests only.
 var (
-	FindVPCEndpointByID = findVPCEndpointByID
-	VPCEndpointsError   = vpcEndpointsError
+	ResourceDomain            = resourceDomain
+	ResourceDomainPolicy      = resourceDomainPolicy
+	ResourceDomainSAMLOptions = resourceDomainSAMLOptions
+	ResourceVPCEndpoint       = resourceVPCEndpoint
+
+	FindDomainByName      = findDomainByName
+	FindVPCEndpointByID   = findVPCEndpointByID
+	VPCEndpointsError     = vpcEndpointsError
+	WaitForDomainCreation = waitForDomainCreation
 )

@@ -21,8 +21,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_elasticsearch_domain_saml_options")
-func ResourceDomainSAMLOptions() *schema.Resource {
+// @SDKResource("aws_elasticsearch_domain_saml_options", name="Domain SAML Options")
+func resourceDomainSAMLOptions() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDomainSAMLOptionsPut,
 		ReadWithoutTimeout:   resourceDomainSAMLOptionsRead,
@@ -123,7 +123,7 @@ func resourceDomainSAMLOptionsRead(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticsearchClient(ctx)
 
-	ds, err := FindDomainByName(ctx, conn, d.Get(names.AttrDomainName).(string))
+	ds, err := findDomainByName(ctx, conn, d.Get(names.AttrDomainName).(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Elasticsearch Domain SAML Options (%s) not found, removing from state", d.Id())

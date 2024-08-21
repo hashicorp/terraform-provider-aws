@@ -25,8 +25,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_elasticsearch_vpc_endpoint")
-func ResourceVPCEndpoint() *schema.Resource {
+// @SDKResource("aws_elasticsearch_vpc_endpoint", name="VPC Endpoint")
+func resourceVPCEndpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCEndpointCreate,
 		ReadWithoutTimeout:   resourceVPCEndpointRead,

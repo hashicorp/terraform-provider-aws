@@ -70,7 +70,7 @@ func sweepDomains(region string) error {
 		// e.g. Deleted and Processing are both true for days in the API
 		// Filter out domains that are Deleted already.
 
-		output, err := FindDomainByName(ctx, conn, name)
+		output, err := findDomainByName(ctx, conn, name)
 		if err != nil {
 			sweeperErr := fmt.Errorf("error describing Elasticsearch Domain (%s): %w", name, err)
 			log.Printf("[ERROR] %s", sweeperErr)
@@ -83,7 +83,7 @@ func sweepDomains(region string) error {
 			continue
 		}
 
-		r := ResourceDomain()
+		r := resourceDomain()
 		d := r.Data(nil)
 		d.SetId(name)
 		d.Set(names.AttrDomainName, name)

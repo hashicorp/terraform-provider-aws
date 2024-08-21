@@ -41,11 +41,11 @@ func waitUpgradeSucceeded(ctx context.Context, conn *elasticsearch.Client, name 
 	return nil, err
 }
 
-func WaitForDomainCreation(ctx context.Context, conn *elasticsearch.Client, domainName string, timeout time.Duration) error {
+func waitForDomainCreation(ctx context.Context, conn *elasticsearch.Client, domainName string, timeout time.Duration) error {
 	var out *awstypes.ElasticsearchDomainStatus
 	err := retry.RetryContext(ctx, timeout, func() *retry.RetryError {
 		var err error
-		out, err = FindDomainByName(ctx, conn, domainName)
+		out, err = findDomainByName(ctx, conn, domainName)
 		if err != nil {
 			return retry.NonRetryableError(err)
 		}
@@ -58,7 +58,7 @@ func WaitForDomainCreation(ctx context.Context, conn *elasticsearch.Client, doma
 			fmt.Errorf("%q: Timeout while waiting for the domain to be created", domainName))
 	})
 	if tfresource.TimedOut(err) {
-		out, err = FindDomainByName(ctx, conn, domainName)
+		out, err = findDomainByName(ctx, conn, domainName)
 		if err != nil {
 			return fmt.Errorf("describing Elasticsearch domain: %w", err)
 		}
@@ -74,7 +74,7 @@ func waitForDomainUpdate(ctx context.Context, conn *elasticsearch.Client, domain
 	var out *awstypes.ElasticsearchDomainStatus
 	err := retry.RetryContext(ctx, timeout, func() *retry.RetryError {
 		var err error
-		out, err = FindDomainByName(ctx, conn, domainName)
+		out, err = findDomainByName(ctx, conn, domainName)
 		if err != nil {
 			return retry.NonRetryableError(err)
 		}
@@ -87,7 +87,7 @@ func waitForDomainUpdate(ctx context.Context, conn *elasticsearch.Client, domain
 			fmt.Errorf("%q: Timeout while waiting for changes to be processed", domainName))
 	})
 	if tfresource.TimedOut(err) {
-		out, err = FindDomainByName(ctx, conn, domainName)
+		out, err = findDomainByName(ctx, conn, domainName)
 		if err != nil {
 			return fmt.Errorf("describing Elasticsearch domain: %w", err)
 		}
@@ -103,7 +103,7 @@ func waitForDomainDelete(ctx context.Context, conn *elasticsearch.Client, domain
 	var out *awstypes.ElasticsearchDomainStatus
 	err := retry.RetryContext(ctx, timeout, func() *retry.RetryError {
 		var err error
-		out, err = FindDomainByName(ctx, conn, domainName)
+		out, err = findDomainByName(ctx, conn, domainName)
 
 		if err != nil {
 			if tfresource.NotFound(err) {
@@ -119,7 +119,7 @@ func waitForDomainDelete(ctx context.Context, conn *elasticsearch.Client, domain
 		return retry.RetryableError(fmt.Errorf("timeout while waiting for the domain %q to be deleted", domainName))
 	})
 	if tfresource.TimedOut(err) {
-		out, err = FindDomainByName(ctx, conn, domainName)
+		out, err = findDomainByName(ctx, conn, domainName)
 		if err != nil {
 			if tfresource.NotFound(err) {
 				return nil

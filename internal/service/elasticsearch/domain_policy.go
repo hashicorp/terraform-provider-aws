@@ -22,8 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_elasticsearch_domain_policy")
-func ResourceDomainPolicy() *schema.Resource {
+// @SDKResource("aws_elasticsearch_domain_policy", name="Domain Policy")
+func resourceDomainPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDomainPolicyUpsert,
 		ReadWithoutTimeout:   resourceDomainPolicyRead,
@@ -59,7 +59,7 @@ func resourceDomainPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticsearchClient(ctx)
 
-	ds, err := FindDomainByName(ctx, conn, d.Get(names.AttrDomainName).(string))
+	ds, err := findDomainByName(ctx, conn, d.Get(names.AttrDomainName).(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Elasticsearch Domain Policy (%s) not found, removing from state", d.Id())
