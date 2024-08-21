@@ -338,26 +338,12 @@ func resourceIntentCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.Slots = expandSlots(v.(*schema.Set).List())
 	}
 
-	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
-		output, err := conn.PutIntent(ctx, input)
-
-		if errs.IsA[*awstypes.ConflictException](err) {
-			input.Checksum = output.Checksum
-			return retry.RetryableError(fmt.Errorf("%q intent still creating, another operation is pending: %s", d.Id(), err))
-		}
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
+	_, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+		return conn.PutIntent(ctx, input)
 	})
 
-	if tfresource.TimedOut(err) { // nosemgrep:ci.helper-schema-TimeoutError-check-doesnt-return-output
-		_, err = conn.PutIntent(ctx, input)
-	}
-
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating intent %s: %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Lex Intent (%s): %s", name, err)
 	}
 
 	d.SetId(name)
