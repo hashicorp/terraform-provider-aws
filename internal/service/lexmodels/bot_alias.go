@@ -277,36 +277,26 @@ func resourceBotAliasDelete(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LexModelsClient(ctx)
 
-	botName := d.Get("bot_name").(string)
-	botAliasName := d.Get(names.AttrName).(string)
+	botAliasName, botName := d.Get(names.AttrName).(string), d.Get("bot_name").(string)
 
-	input := &lexmodelbuildingservice.DeleteBotAliasInput{
-		BotName: aws.String(botName),
-		Name:    aws.String(botAliasName),
-	}
-
-	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *retry.RetryError {
-		_, err := conn.DeleteBotAlias(ctx, input)
-
-		if errs.IsA[*awstypes.ConflictException](err) {
-			return retry.RetryableError(fmt.Errorf("%q: bot alias still deleting", d.Id()))
-		}
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
+	log.Printf("[DEBUG] Deleting Lex Model Bot Alias: %s", d.Id())
+	_, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+		return conn.DeleteBotAlias(ctx, &lexmodelbuildingservice.DeleteBotAliasInput{
+			BotName: aws.String(botName),
+			Name:    aws.String(botAliasName),
+		})
 	})
 
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteBotAlias(ctx, input)
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return diags
 	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Lex Model Bot Alias (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitBotAliasDeleted(ctx, conn, botAliasName, botName); err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Lex Model Bot Alias (%s): waiting for completion: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Lex Model Bot Alias (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
