@@ -14,8 +14,8 @@ func validateClusterName(v interface{}, k string) (ws []string, errors []error) 
 	return validation.All(
 		validation.StringLenBetween(1, 255),
 		validation.StringMatch(
-			regexache.MustCompile("[0-9A-Za-z_-]+"),
-			"The cluster name must consist of alphanumerics, hyphens, and underscores."),
+			regexache.MustCompile("^[a-zA-Z0-9-_.]+$"),
+			"The cluster name must be 1-255 chars, consisting of only alphanumerics, hyphens, and underscores."),
 	)(v, k)
 }
 
