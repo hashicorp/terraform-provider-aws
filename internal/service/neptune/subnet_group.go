@@ -7,14 +7,15 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/neptune"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/neptune"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/neptune/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -25,7 +26,7 @@ import (
 
 // @SDKResource("aws_neptune_subnet_group", name="Subnet Group")
 // @Tags(identifierAttribute="arn")
-func ResourceSubnetGroup() *schema.Resource {
+func resourceSubnetGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSubnetGroupCreate,
 		ReadWithoutTimeout:   resourceSubnetGroupRead,
@@ -78,32 +79,32 @@ func ResourceSubnetGroup() *schema.Resource {
 
 func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
+	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
 	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &neptune.CreateDBSubnetGroupInput{
 		DBSubnetGroupName:        aws.String(name),
 		DBSubnetGroupDescription: aws.String(d.Get(names.AttrDescription).(string)),
-		SubnetIds:                flex.ExpandStringSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
+		SubnetIds:                flex.ExpandStringValueSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
 		Tags:                     getTagsIn(ctx),
 	}
 
-	output, err := conn.CreateDBSubnetGroupWithContext(ctx, input)
+	output, err := conn.CreateDBSubnetGroup(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Neptune Subnet Group (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.DBSubnetGroup.DBSubnetGroupName))
+	d.SetId(aws.ToString(output.DBSubnetGroup.DBSubnetGroupName))
 
 	return append(diags, resourceSubnetGroupRead(ctx, d, meta)...)
 }
 
 func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
+	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
-	subnetGroup, err := FindSubnetGroupByName(ctx, conn, d.Id())
+	subnetGroup, err := findSubnetGroupByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Neptune Subnet Group (%s) not found, removing from state", d.Id())
@@ -115,14 +116,14 @@ func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading Neptune Subnet Group (%s): %s", d.Id(), err)
 	}
 
-	arn := aws.StringValue(subnetGroup.DBSubnetGroupArn)
+	arn := aws.ToString(subnetGroup.DBSubnetGroupArn)
 	d.Set(names.AttrARN, arn)
 	d.Set(names.AttrDescription, subnetGroup.DBSubnetGroupDescription)
 	d.Set(names.AttrName, subnetGroup.DBSubnetGroupName)
-	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(subnetGroup.DBSubnetGroupName)))
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(subnetGroup.DBSubnetGroupName)))
 	var subnetIDs []string
 	for _, v := range subnetGroup.Subnets {
-		subnetIDs = append(subnetIDs, aws.StringValue(v.SubnetIdentifier))
+		subnetIDs = append(subnetIDs, aws.ToString(v.SubnetIdentifier))
 	}
 	d.Set(names.AttrSubnetIDs, subnetIDs)
 
@@ -131,16 +132,16 @@ func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
+	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
 	if d.HasChanges(names.AttrDescription, names.AttrSubnetIDs) {
 		input := &neptune.ModifyDBSubnetGroupInput{
 			DBSubnetGroupName:        aws.String(d.Id()),
 			DBSubnetGroupDescription: aws.String(d.Get(names.AttrDescription).(string)),
-			SubnetIds:                flex.ExpandStringSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
+			SubnetIds:                flex.ExpandStringValueSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
 		}
 
-		_, err := conn.ModifyDBSubnetGroupWithContext(ctx, input)
+		_, err := conn.ModifyDBSubnetGroup(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Neptune Subnet Group (%s): %s", d.Id(), err)
@@ -152,14 +153,14 @@ func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceSubnetGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
+	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Neptune Subnet Group: %s", d.Id())
-	_, err := conn.DeleteDBSubnetGroupWithContext(ctx, &neptune.DeleteDBSubnetGroupInput{
+	_, err := conn.DeleteDBSubnetGroup(ctx, &neptune.DeleteDBSubnetGroupInput{
 		DBSubnetGroupName: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBSubnetGroupNotFoundFault) {
+	if errs.IsA[*awstypes.DBSubnetGroupNotFoundFault](err) {
 		return diags
 	}
 
@@ -170,7 +171,7 @@ func resourceSubnetGroupDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func FindSubnetGroupByName(ctx context.Context, conn *neptune.Neptune, name string) (*neptune.DBSubnetGroup, error) {
+func findSubnetGroupByName(ctx context.Context, conn *neptune.Client, name string) (*awstypes.DBSubnetGroup, error) {
 	input := &neptune.DescribeDBSubnetGroupsInput{
 		DBSubnetGroupName: aws.String(name),
 	}
@@ -181,7 +182,7 @@ func FindSubnetGroupByName(ctx context.Context, conn *neptune.Neptune, name stri
 	}
 
 	// Eventual consistency check.
-	if aws.StringValue(output.DBSubnetGroupName) != name {
+	if aws.ToString(output.DBSubnetGroupName) != name {
 		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
@@ -190,42 +191,35 @@ func FindSubnetGroupByName(ctx context.Context, conn *neptune.Neptune, name stri
 	return output, nil
 }
 
-func findDBSubnetGroup(ctx context.Context, conn *neptune.Neptune, input *neptune.DescribeDBSubnetGroupsInput) (*neptune.DBSubnetGroup, error) {
+func findDBSubnetGroup(ctx context.Context, conn *neptune.Client, input *neptune.DescribeDBSubnetGroupsInput) (*awstypes.DBSubnetGroup, error) {
 	output, err := findDBSubnetGroups(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findDBSubnetGroups(ctx context.Context, conn *neptune.Neptune, input *neptune.DescribeDBSubnetGroupsInput) ([]*neptune.DBSubnetGroup, error) {
-	var output []*neptune.DBSubnetGroup
+func findDBSubnetGroups(ctx context.Context, conn *neptune.Client, input *neptune.DescribeDBSubnetGroupsInput) ([]awstypes.DBSubnetGroup, error) {
+	var output []awstypes.DBSubnetGroup
 
-	err := conn.DescribeDBSubnetGroupsPagesWithContext(ctx, input, func(page *neptune.DescribeDBSubnetGroupsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
+	pages := neptune.NewDescribeDBSubnetGroupsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-		for _, v := range page.DBSubnetGroups {
-			if v != nil {
-				output = append(output, v)
+		if errs.IsA[*awstypes.DBSubnetGroupNotFoundFault](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
 			}
 		}
 
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBSubnetGroupNotFoundFault) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		if err != nil {
+			return nil, err
 		}
-	}
 
-	if err != nil {
-		return nil, err
+		output = append(output, page.DBSubnetGroups...)
 	}
 
 	return output, nil

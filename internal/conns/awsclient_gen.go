@@ -153,12 +153,15 @@ import (
 	memorydb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/memorydb"
 	mq_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mq"
 	mwaa_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mwaa"
+	neptune_sdkv2 "github.com/aws/aws-sdk-go-v2/service/neptune"
 	neptunegraph_sdkv2 "github.com/aws/aws-sdk-go-v2/service/neptunegraph"
 	networkfirewall_sdkv2 "github.com/aws/aws-sdk-go-v2/service/networkfirewall"
+	networkmanager_sdkv2 "github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	networkmonitor_sdkv2 "github.com/aws/aws-sdk-go-v2/service/networkmonitor"
 	oam_sdkv2 "github.com/aws/aws-sdk-go-v2/service/oam"
 	opensearch_sdkv2 "github.com/aws/aws-sdk-go-v2/service/opensearch"
 	opensearchserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
+	opsworks_sdkv2 "github.com/aws/aws-sdk-go-v2/service/opsworks"
 	organizations_sdkv2 "github.com/aws/aws-sdk-go-v2/service/organizations"
 	osis_sdkv2 "github.com/aws/aws-sdk-go-v2/service/osis"
 	outposts_sdkv2 "github.com/aws/aws-sdk-go-v2/service/outposts"
@@ -230,6 +233,7 @@ import (
 	wafregional_sdkv2 "github.com/aws/aws-sdk-go-v2/service/wafregional"
 	wafv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/wafv2"
 	wellarchitected_sdkv2 "github.com/aws/aws-sdk-go-v2/service/wellarchitected"
+	worklink_sdkv2 "github.com/aws/aws-sdk-go-v2/service/worklink"
 	workspaces_sdkv2 "github.com/aws/aws-sdk-go-v2/service/workspaces"
 	workspacesweb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/workspacesweb"
 	xray_sdkv2 "github.com/aws/aws-sdk-go-v2/service/xray"
@@ -239,12 +243,8 @@ import (
 	imagebuilder_sdkv1 "github.com/aws/aws-sdk-go/service/imagebuilder"
 	lexmodelbuildingservice_sdkv1 "github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	macie2_sdkv1 "github.com/aws/aws-sdk-go/service/macie2"
-	neptune_sdkv1 "github.com/aws/aws-sdk-go/service/neptune"
-	networkmanager_sdkv1 "github.com/aws/aws-sdk-go/service/networkmanager"
-	opsworks_sdkv1 "github.com/aws/aws-sdk-go/service/opsworks"
 	quicksight_sdkv1 "github.com/aws/aws-sdk-go/service/quicksight"
 	simpledb_sdkv1 "github.com/aws/aws-sdk-go/service/simpledb"
-	worklink_sdkv1 "github.com/aws/aws-sdk-go/service/worklink"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -869,8 +869,8 @@ func (c *AWSClient) MemoryDBClient(ctx context.Context) *memorydb_sdkv2.Client {
 	return errs.Must(client[*memorydb_sdkv2.Client](ctx, c, names.MemoryDB, make(map[string]any)))
 }
 
-func (c *AWSClient) NeptuneConn(ctx context.Context) *neptune_sdkv1.Neptune {
-	return errs.Must(conn[*neptune_sdkv1.Neptune](ctx, c, names.Neptune, make(map[string]any)))
+func (c *AWSClient) NeptuneClient(ctx context.Context) *neptune_sdkv2.Client {
+	return errs.Must(client[*neptune_sdkv2.Client](ctx, c, names.Neptune, make(map[string]any)))
 }
 
 func (c *AWSClient) NeptuneGraphClient(ctx context.Context) *neptunegraph_sdkv2.Client {
@@ -881,8 +881,8 @@ func (c *AWSClient) NetworkFirewallClient(ctx context.Context) *networkfirewall_
 	return errs.Must(client[*networkfirewall_sdkv2.Client](ctx, c, names.NetworkFirewall, make(map[string]any)))
 }
 
-func (c *AWSClient) NetworkManagerConn(ctx context.Context) *networkmanager_sdkv1.NetworkManager {
-	return errs.Must(conn[*networkmanager_sdkv1.NetworkManager](ctx, c, names.NetworkManager, make(map[string]any)))
+func (c *AWSClient) NetworkManagerClient(ctx context.Context) *networkmanager_sdkv2.Client {
+	return errs.Must(client[*networkmanager_sdkv2.Client](ctx, c, names.NetworkManager, make(map[string]any)))
 }
 
 func (c *AWSClient) NetworkMonitorClient(ctx context.Context) *networkmonitor_sdkv2.Client {
@@ -905,8 +905,8 @@ func (c *AWSClient) OpenSearchServerlessClient(ctx context.Context) *opensearchs
 	return errs.Must(client[*opensearchserverless_sdkv2.Client](ctx, c, names.OpenSearchServerless, make(map[string]any)))
 }
 
-func (c *AWSClient) OpsWorksConn(ctx context.Context) *opsworks_sdkv1.OpsWorks {
-	return errs.Must(conn[*opsworks_sdkv1.OpsWorks](ctx, c, names.OpsWorks, make(map[string]any)))
+func (c *AWSClient) OpsWorksClient(ctx context.Context) *opsworks_sdkv2.Client {
+	return errs.Must(client[*opsworks_sdkv2.Client](ctx, c, names.OpsWorks, make(map[string]any)))
 }
 
 func (c *AWSClient) OrganizationsClient(ctx context.Context) *organizations_sdkv2.Client {
@@ -1197,8 +1197,8 @@ func (c *AWSClient) WellArchitectedClient(ctx context.Context) *wellarchitected_
 	return errs.Must(client[*wellarchitected_sdkv2.Client](ctx, c, names.WellArchitected, make(map[string]any)))
 }
 
-func (c *AWSClient) WorkLinkConn(ctx context.Context) *worklink_sdkv1.WorkLink {
-	return errs.Must(conn[*worklink_sdkv1.WorkLink](ctx, c, names.WorkLink, make(map[string]any)))
+func (c *AWSClient) WorkLinkClient(ctx context.Context) *worklink_sdkv2.Client {
+	return errs.Must(client[*worklink_sdkv2.Client](ctx, c, names.WorkLink, make(map[string]any)))
 }
 
 func (c *AWSClient) WorkSpacesClient(ctx context.Context) *workspaces_sdkv2.Client {

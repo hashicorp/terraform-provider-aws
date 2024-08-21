@@ -6373,7 +6373,7 @@ service "neptune" {
 
   sdk {
     id             = "Neptune"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -6471,7 +6471,7 @@ service "networkmanager" {
 
   sdk {
     id             = "NetworkManager"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -6644,7 +6644,7 @@ service "opsworks" {
 
   sdk {
     id             = "OpsWorks"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -9523,7 +9523,7 @@ service "worklink" {
 
   sdk {
     id             = "WorkLink"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {

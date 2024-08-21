@@ -10,8 +10,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/opsworks"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/opsworks"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/opsworks/types"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -76,10 +77,10 @@ func sweepApplication(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.OpsWorksConn(ctx)
+	conn := client.OpsWorksClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	output, err := conn.DescribeStacksWithContext(ctx, &opsworks.DescribeStacksInput{})
+	output, err := conn.DescribeStacks(ctx, &opsworks.DescribeStacksInput{})
 
 	if err != nil {
 		if awsv1.SkipSweepError(err) {
@@ -96,23 +97,19 @@ func sweepApplication(region string) error {
 			StackId: stack.StackId,
 		}
 
-		appOutput, err := conn.DescribeAppsWithContext(ctx, input)
+		appOutput, err := conn.DescribeApps(ctx, input)
 
 		if err != nil {
-			sweeperErr := fmt.Errorf("describing OpsWorks Applications for Stack (%s): %w", aws.StringValue(stack.StackId), err)
+			sweeperErr := fmt.Errorf("describing OpsWorks Applications for Stack (%s): %w", aws.ToString(stack.StackId), err)
 			log.Printf("[ERROR] %s", sweeperErr)
 			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
 			continue
 		}
 
 		for _, app := range appOutput.Apps {
-			if app == nil {
-				continue
-			}
-
-			r := ResourceApplication()
+			r := resourceApplication()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(app.AppId))
+			d.SetId(aws.ToString(app.AppId))
 
 			sweepResources = append(sweepResources, sdk.NewSweepResource(r, d, client))
 		}
@@ -128,10 +125,10 @@ func sweepInstance(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.OpsWorksConn(ctx)
+	conn := client.OpsWorksClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	output, err := conn.DescribeStacksWithContext(ctx, &opsworks.DescribeStacksInput{})
+	output, err := conn.DescribeStacks(ctx, &opsworks.DescribeStacksInput{})
 
 	if err != nil {
 		if awsv1.SkipSweepError(err) {
@@ -148,23 +145,19 @@ func sweepInstance(region string) error {
 			StackId: stack.StackId,
 		}
 
-		instanceOutput, err := conn.DescribeInstancesWithContext(ctx, input)
+		instanceOutput, err := conn.DescribeInstances(ctx, input)
 
 		if err != nil {
-			sweeperErr := fmt.Errorf("describing OpsWorks Instances for Stack (%s): %w", aws.StringValue(stack.StackId), err)
+			sweeperErr := fmt.Errorf("describing OpsWorks Instances for Stack (%s): %w", aws.ToString(stack.StackId), err)
 			log.Printf("[ERROR] %s", sweeperErr)
 			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
 			continue
 		}
 
 		for _, instance := range instanceOutput.Instances {
-			if instance == nil {
-				continue
-			}
-
-			r := ResourceInstance()
+			r := resourceInstance()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(instance.InstanceId))
+			d.SetId(aws.ToString(instance.InstanceId))
 			d.Set(names.AttrStatus, instance.Status)
 
 			sweepResources = append(sweepResources, sdk.NewSweepResource(r, d, client))
@@ -181,10 +174,10 @@ func sweepRDSDBInstance(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.OpsWorksConn(ctx)
+	conn := client.OpsWorksClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	output, err := conn.DescribeStacksWithContext(ctx, &opsworks.DescribeStacksInput{})
+	output, err := conn.DescribeStacks(ctx, &opsworks.DescribeStacksInput{})
 
 	if err != nil {
 		if awsv1.SkipSweepError(err) {
@@ -201,23 +194,19 @@ func sweepRDSDBInstance(region string) error {
 			StackId: stack.StackId,
 		}
 
-		dbInstOutput, err := conn.DescribeRdsDbInstancesWithContext(ctx, input)
+		dbInstOutput, err := conn.DescribeRdsDbInstances(ctx, input)
 
 		if err != nil {
-			sweeperErr := fmt.Errorf("describing OpsWorks RDS DB Instances for Stack (%s): %w", aws.StringValue(stack.StackId), err)
+			sweeperErr := fmt.Errorf("describing OpsWorks RDS DB Instances for Stack (%s): %w", aws.ToString(stack.StackId), err)
 			log.Printf("[ERROR] %s", sweeperErr)
 			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
 			continue
 		}
 
 		for _, dbInstance := range dbInstOutput.RdsDbInstances {
-			if dbInstance == nil {
-				continue
-			}
-
-			r := ResourceRDSDBInstance()
+			r := resourceRDSDBInstance()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(dbInstance.DbInstanceIdentifier))
+			d.SetId(aws.ToString(dbInstance.DbInstanceIdentifier))
 			d.Set("rds_db_instance_arn", dbInstance.RdsDbInstanceArn)
 
 			sweepResources = append(sweepResources, sdk.NewSweepResource(r, d, client))
@@ -234,10 +223,10 @@ func sweepStacks(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.OpsWorksConn(ctx)
+	conn := client.OpsWorksClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	output, err := conn.DescribeStacksWithContext(ctx, &opsworks.DescribeStacksInput{})
+	output, err := conn.DescribeStacks(ctx, &opsworks.DescribeStacksInput{})
 
 	if err != nil {
 		if awsv1.SkipSweepError(err) {
@@ -248,19 +237,15 @@ func sweepStacks(region string) error {
 	}
 
 	for _, stack := range output.Stacks {
-		if stack == nil {
-			continue
-		}
-
-		r := ResourceStack()
+		r := resourceStack()
 		d := r.Data(nil)
-		d.SetId(aws.StringValue(stack.StackId))
+		d.SetId(aws.ToString(stack.StackId))
 
-		if aws.StringValue(stack.VpcId) != "" {
+		if aws.ToString(stack.VpcId) != "" {
 			d.Set(names.AttrVPCID, stack.VpcId)
 		}
 
-		if aws.BoolValue(stack.UseOpsworksSecurityGroups) {
+		if aws.ToBool(stack.UseOpsworksSecurityGroups) {
 			d.Set("use_opsworks_security_groups", true)
 		}
 
@@ -277,10 +262,10 @@ func sweepLayers(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.OpsWorksConn(ctx)
+	conn := client.OpsWorksClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	output, err := conn.DescribeStacksWithContext(ctx, &opsworks.DescribeStacksInput{})
+	output, err := conn.DescribeStacks(ctx, &opsworks.DescribeStacksInput{})
 
 	if err != nil {
 		if awsv1.SkipSweepError(err) {
@@ -297,30 +282,26 @@ func sweepLayers(region string) error {
 			StackId: stack.StackId,
 		}
 
-		layerOutput, err := conn.DescribeLayersWithContext(ctx, input)
+		layerOutput, err := conn.DescribeLayers(ctx, input)
 
 		if err != nil {
-			sweeperErr := fmt.Errorf("describing OpsWorks Layers for Stack (%s): %w", aws.StringValue(stack.StackId), err)
+			sweeperErr := fmt.Errorf("describing OpsWorks Layers for Stack (%s): %w", aws.ToString(stack.StackId), err)
 			log.Printf("[ERROR] %s", sweeperErr)
 			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
 			continue
 		}
 
 		for _, layer := range layerOutput.Layers {
-			if layer == nil {
-				continue
-			}
-
 			l := &opsworksLayerType{}
 			r := l.resourceSchema()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(layer.LayerId))
+			d.SetId(aws.ToString(layer.LayerId))
 
 			if layer.Attributes != nil {
-				if v, ok := layer.Attributes[opsworks.LayerAttributesKeysEcsClusterArn]; ok && aws.StringValue(v) != "" {
-					r = ResourceECSClusterLayer()
+				if v, ok := layer.Attributes[string(awstypes.LayerAttributesKeysEcsClusterArn)]; ok && v != "" {
+					r = resourceECSClusterLayer()
 					d = r.Data(nil)
-					d.SetId(aws.StringValue(layer.LayerId))
+					d.SetId(aws.ToString(layer.LayerId))
 					d.Set("ecs_cluster_arn", v)
 				}
 			}
@@ -339,10 +320,10 @@ func sweepUserProfiles(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.OpsWorksConn(ctx)
+	conn := client.OpsWorksClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	output, err := conn.DescribeUserProfilesWithContext(ctx, &opsworks.DescribeUserProfilesInput{})
+	output, err := conn.DescribeUserProfiles(ctx, &opsworks.DescribeUserProfilesInput{})
 
 	if err != nil {
 		if awsv1.SkipSweepError(err) {
@@ -353,9 +334,9 @@ func sweepUserProfiles(region string) error {
 	}
 
 	for _, profile := range output.UserProfiles {
-		r := ResourceUserProfile()
+		r := resourceUserProfile()
 		d := r.Data(nil)
-		d.SetId(aws.StringValue(profile.IamUserArn))
+		d.SetId(aws.ToString(profile.IamUserArn))
 		sweepResources = append(sweepResources, newUserProfileSweeper(r, d, client))
 	}
 
