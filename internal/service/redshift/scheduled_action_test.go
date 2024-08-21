@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/redshift"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -24,7 +24,7 @@ import (
 
 func TestAccRedshiftScheduledAction_basicPauseCluster(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.ScheduledAction
+	var v awstypes.ScheduledAction
 	resourceName := "aws_redshift_scheduled_action.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -79,7 +79,7 @@ func TestAccRedshiftScheduledAction_basicPauseCluster(t *testing.T) {
 
 func TestAccRedshiftScheduledAction_pauseClusterWithOptions(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.ScheduledAction
+	var v awstypes.ScheduledAction
 	resourceName := "aws_redshift_scheduled_action.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	startTime := time.Now().UTC().Add(1 * time.Hour).Format(time.RFC3339)
@@ -119,7 +119,7 @@ func TestAccRedshiftScheduledAction_pauseClusterWithOptions(t *testing.T) {
 
 func TestAccRedshiftScheduledAction_basicResumeCluster(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.ScheduledAction
+	var v awstypes.ScheduledAction
 	resourceName := "aws_redshift_scheduled_action.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -174,7 +174,7 @@ func TestAccRedshiftScheduledAction_basicResumeCluster(t *testing.T) {
 
 func TestAccRedshiftScheduledAction_basicResizeCluster(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.ScheduledAction
+	var v awstypes.ScheduledAction
 	resourceName := "aws_redshift_scheduled_action.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -229,7 +229,7 @@ func TestAccRedshiftScheduledAction_basicResizeCluster(t *testing.T) {
 
 func TestAccRedshiftScheduledAction_resizeClusterWithOptions(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.ScheduledAction
+	var v awstypes.ScheduledAction
 	resourceName := "aws_redshift_scheduled_action.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -271,7 +271,7 @@ func TestAccRedshiftScheduledAction_resizeClusterWithOptions(t *testing.T) {
 
 func TestAccRedshiftScheduledAction_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.ScheduledAction
+	var v awstypes.ScheduledAction
 	resourceName := "aws_redshift_scheduled_action.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -295,7 +295,7 @@ func TestAccRedshiftScheduledAction_disappears(t *testing.T) {
 
 func testAccCheckScheduledActionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_redshift_scheduled_action" {
@@ -319,7 +319,7 @@ func testAccCheckScheduledActionDestroy(ctx context.Context) resource.TestCheckF
 	}
 }
 
-func testAccCheckScheduledActionExists(ctx context.Context, n string, v *redshift.ScheduledAction) resource.TestCheckFunc {
+func testAccCheckScheduledActionExists(ctx context.Context, n string, v *awstypes.ScheduledAction) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -330,7 +330,7 @@ func testAccCheckScheduledActionExists(ctx context.Context, n string, v *redshif
 			return fmt.Errorf("No Redshift Scheduled Action ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
 
 		output, err := tfredshift.FindScheduledActionByName(ctx, conn, rs.Primary.ID)
 

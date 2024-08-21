@@ -40,6 +40,32 @@ resource "aws_iam_role" "assume" {
 }
 ```
 
+### Workspace configuration options
+
+```terraform
+resource "aws_grafana_workspace" "example" {
+  account_access_type      = "CURRENT_ACCOUNT"
+  authentication_providers = ["SAML"]
+  permission_type          = "SERVICE_MANAGED"
+  role_arn                 = aws_iam_role.assume.arn
+
+  configuration = jsonencode(
+    {
+      "plugins" = {
+        "pluginAdminEnabled" = true
+      },
+      "unifiedAlerting" = {
+        "enabled" = false
+      }
+    }
+  )
+}
+```
+
+The optional argument `configuration` is a JSON string that enables the unified `Grafana Alerting` (Grafana version 10 or newer) and `Plugins Management` (Grafana version 9 or newer) on the Grafana Workspaces.
+
+For more information about using Grafana alerting, and the effects of turning it on or off, see [Alerts in Grafana version 10](https://docs.aws.amazon.com/grafana/latest/userguide/v10-alerts.html).
+
 ## Argument Reference
 
 The following arguments are required:

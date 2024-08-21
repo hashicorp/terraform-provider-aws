@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/neptune"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/neptune/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,7 +21,7 @@ import (
 
 func TestAccNeptuneEventSubscription_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v neptune.EventSubscription
+	var v awstypes.EventSubscription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_event_subscription.test"
 
@@ -62,7 +62,7 @@ func TestAccNeptuneEventSubscription_basic(t *testing.T) {
 
 func TestAccNeptuneEventSubscription_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v neptune.EventSubscription
+	var v awstypes.EventSubscription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_event_subscription.test"
 
@@ -86,7 +86,7 @@ func TestAccNeptuneEventSubscription_disappears(t *testing.T) {
 
 func TestAccNeptuneEventSubscription_nameGenerated(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v neptune.EventSubscription
+	var v awstypes.EventSubscription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_event_subscription.test"
 
@@ -115,7 +115,7 @@ func TestAccNeptuneEventSubscription_nameGenerated(t *testing.T) {
 
 func TestAccNeptuneEventSubscription_namePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v neptune.EventSubscription
+	var v awstypes.EventSubscription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_event_subscription.test"
 
@@ -144,7 +144,7 @@ func TestAccNeptuneEventSubscription_namePrefix(t *testing.T) {
 
 func TestAccNeptuneEventSubscription_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v neptune.EventSubscription
+	var v awstypes.EventSubscription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_event_subscription.test"
 
@@ -190,7 +190,7 @@ func TestAccNeptuneEventSubscription_tags(t *testing.T) {
 
 func TestAccNeptuneEventSubscription_withSourceIDs(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v neptune.EventSubscription
+	var v awstypes.EventSubscription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_event_subscription.test"
 
@@ -222,7 +222,7 @@ func TestAccNeptuneEventSubscription_withSourceIDs(t *testing.T) {
 
 func TestAccNeptuneEventSubscription_withCategories(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v neptune.EventSubscription
+	var v awstypes.EventSubscription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_event_subscription.test"
 
@@ -252,14 +252,14 @@ func TestAccNeptuneEventSubscription_withCategories(t *testing.T) {
 	})
 }
 
-func testAccCheckEventSubscriptionExists(ctx context.Context, n string, v *neptune.EventSubscription) resource.TestCheckFunc {
+func testAccCheckEventSubscriptionExists(ctx context.Context, n string, v *awstypes.EventSubscription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneClient(ctx)
 
 		output, err := tfneptune.FindEventSubscriptionByName(ctx, conn, rs.Primary.ID)
 
@@ -275,7 +275,7 @@ func testAccCheckEventSubscriptionExists(ctx context.Context, n string, v *neptu
 
 func testAccCheckEventSubscriptionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_neptune_event_subscription" {

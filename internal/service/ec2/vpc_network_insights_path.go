@@ -100,7 +100,7 @@ func resourceNetworkInsightsPathCreate(ctx context.Context, d *schema.ResourceDa
 		ClientToken:       aws.String(id.UniqueId()),
 		Protocol:          awstypes.Protocol(d.Get(names.AttrProtocol).(string)),
 		Source:            aws.String(d.Get(names.AttrSource).(string)),
-		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeNetworkInsightsPath),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeNetworkInsightsPath),
 	}
 
 	if v, ok := d.GetOk(names.AttrDestination); ok {
@@ -156,7 +156,7 @@ func resourceNetworkInsightsPathRead(ctx context.Context, d *schema.ResourceData
 	d.Set("source_arn", nip.SourceArn)
 	d.Set("source_ip", nip.SourceIp)
 
-	setTagsOutV2(ctx, nip.Tags)
+	setTagsOut(ctx, nip.Tags)
 
 	return diags
 }

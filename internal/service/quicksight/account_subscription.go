@@ -107,6 +107,11 @@ func ResourceAccountSubscription() *schema.Resource {
 					Optional: true,
 					ForceNew: true,
 				},
+				"iam_identity_center_instance_arn": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
 				"last_name": {
 					Type:     schema.TypeString,
 					Optional: true,
@@ -187,6 +192,10 @@ func resourceAccountSubscriptionCreate(ctx context.Context, d *schema.ResourceDa
 		in.FirstName = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("iam_identity_center_instance_arn"); ok {
+		in.IAMIdentityCenterInstanceArn = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("last_name"); ok {
 		in.LastName = aws.String(v.(string))
 	}
@@ -219,12 +228,13 @@ func resourceAccountSubscriptionRead(ctx context.Context, d *schema.ResourceData
 
 	out, err := FindAccountSubscriptionByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	var ere *tfresource.EmptyResultError
+	if !d.IsNewResource() && (tfresource.NotFound(err) || errors.As(err, &ere)) {
 		log.Printf("[WARN] QuickSight AccountSubscription (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
-	// Ressource is logically deleted with UNSUBSCRIBED status
+	// Resource is logically deleted with UNSUBSCRIBED status
 	if !d.IsNewResource() && aws.StringValue(out.AccountSubscriptionStatus) == statusUnsuscribed {
 		log.Printf("[WARN] QuickSight AccountSubscription (%s) unsuscribed, removing from state", d.Id())
 		d.SetId("")
@@ -239,6 +249,7 @@ func resourceAccountSubscriptionRead(ctx context.Context, d *schema.ResourceData
 	d.Set("edition", out.Edition)
 	d.Set("notification_email", out.NotificationEmail)
 	d.Set("account_subscription_status", out.AccountSubscriptionStatus)
+	d.Set("iam_identity_center_instance_arn", out.IAMIdentityCenterInstanceArn)
 
 	return diags
 }
@@ -342,7 +353,7 @@ func FindAccountSubscriptionByID(ctx context.Context, conn *quicksight.QuickSigh
 		return nil, err
 	}
 
-	if out == nil || out.AccountInfo.AccountName == nil {
+	if out == nil || out.AccountInfo == nil {
 		return nil, tfresource.NewEmptyResultError(in)
 	}
 

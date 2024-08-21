@@ -29,7 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Deployment")
+// @FrameworkResource("aws_apprunner_deployment", name="Deployment")
 func newDeploymentResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &deploymentResource{}
 

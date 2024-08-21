@@ -10,12 +10,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/shopspring/decimal"
 )
 
 const (
@@ -103,7 +104,9 @@ func ExpandStringyValueListEmpty[E ~string](configured []any) []E {
 func FlattenStringList(list []*string) []interface{} {
 	vs := make([]interface{}, 0, len(list))
 	for _, v := range list {
-		vs = append(vs, *v)
+		if v != nil {
+			vs = append(vs, *v)
+		}
 	}
 	return vs
 }
@@ -238,7 +241,7 @@ func FlattenStringyValueSet[E ~string](list []E) *schema.Set {
 
 func FlattenStringMap(m map[string]*string) map[string]interface{} {
 	return tfmaps.ApplyToAllValues(m, func(v *string) any {
-		return aws.StringValue(v)
+		return aws.ToString(v)
 	})
 }
 
@@ -318,7 +321,7 @@ func FlattenInt32ValueList(list []int32) []interface{} {
 // to keep compatibility w/ schema.NewSet
 func FlattenInt64List(list []*int64) []interface{} {
 	return tfslices.ApplyToAll(list, func(v *int64) any {
-		return int(aws.Int64Value(v))
+		return int(aws.ToInt64(v))
 	})
 }
 
@@ -327,7 +330,7 @@ func FlattenInt64List(list []*int64) []interface{} {
 // to keep compatibility w/ schema.NewSet
 func FlattenFloat64List(list []*float64) []interface{} {
 	return tfslices.ApplyToAll(list, func(v *float64) any {
-		return int(aws.Float64Value(v))
+		return int(aws.ToFloat64(v))
 	})
 }
 
@@ -336,7 +339,7 @@ func FlattenFloat64List(list []*float64) []interface{} {
 // to keep compatibility w/ schema.NewSet
 func FlattenInt32List(list []*int32) []interface{} {
 	return tfslices.ApplyToAll(list, func(v *int32) any {
-		return int(aws.Int32Value(v))
+		return int(aws.ToInt32(v))
 	})
 }
 
@@ -401,7 +404,7 @@ func FlattenResourceId(idParts []string, partCount int, allowEmptyPart bool) (st
 
 // BoolToStringValue converts a bool pointer to a Go string value.
 func BoolToStringValue(v *bool) string {
-	return strconv.FormatBool(aws.BoolValue(v))
+	return strconv.FormatBool(aws.ToBool(v))
 }
 
 // BoolValueToString converts a Go bool value to a string pointer.
@@ -412,12 +415,27 @@ func BoolValueToString(v bool) *string {
 // StringToBoolValue converts a string pointer to a Go bool value.
 // Only the string "true" is converted to true, all other values return false.
 func StringToBoolValue(v *string) bool {
-	return aws.StringValue(v) == strconv.FormatBool(true)
+	return aws.ToString(v) == strconv.FormatBool(true)
+}
+
+// Float32ValueToFloat64Value converts a float32 value to a Go float64 value.
+func Float32ValueToFloat64Value(v float32) float64 {
+	return decimal.NewFromFloat32(v).InexactFloat64()
+}
+
+// Float32ToFloat64Value converts a float32 pointer to a Go float64 value.
+func Float32ToFloat64Value(v *float32) float64 {
+	return Float32ValueToFloat64Value(aws.ToFloat32(v))
+}
+
+// Float64ValueToFloat32 converts a float64 value to a float32 pointer.
+func Float64ValueToFloat32(v float64) *float32 {
+	return aws.Float32(float32(v))
 }
 
 // Float64ToStringValue converts a float64 pointer to a Go string value.
 func Float64ToStringValue(v *float64) string {
-	return strconv.FormatFloat(aws.Float64Value(v), 'f', -1, 64)
+	return strconv.FormatFloat(aws.ToFloat64(v), 'f', -1, 64)
 }
 
 // IntValueToString converts a Go int value to a string pointer.
@@ -425,14 +443,19 @@ func IntValueToString(v int) *string {
 	return aws.String(strconv.Itoa(v))
 }
 
-// Int64ToStringValue converts an int64 pointer to a Go string value.
+// Int32ToStringValue converts an int32 pointer to a Go string value.
 func Int32ToStringValue(v *int32) string {
-	return strconv.FormatInt(int64(aws.Int32Value(v)), 10)
+	return strconv.FormatInt(int64(aws.ToInt32(v)), 10)
+}
+
+// Int32ValueToStringValue converts an int32 value to a Go string value.
+func Int32ValueToStringValue(v int32) string {
+	return strconv.FormatInt(int64(v), 10)
 }
 
 // Int64ToStringValue converts an int64 pointer to a Go string value.
 func Int64ToStringValue(v *int64) string {
-	return strconv.FormatInt(aws.Int64Value(v), 10)
+	return strconv.FormatInt(aws.ToInt64(v), 10)
 }
 
 // Int64ValueToString converts a Go int64 value to a string pointer.
@@ -443,20 +466,32 @@ func Int64ValueToString(v int64) *string {
 // StringToIntValue converts a string pointer to a Go int value.
 // Invalid integer strings are converted to 0.
 func StringToIntValue(v *string) int {
-	i, _ := strconv.Atoi(aws.StringValue(v))
+	i, _ := strconv.Atoi(aws.ToString(v))
 	return i
 }
 
 // StringToInt32Value converts a string pointer to a Go int32 value.
 // Invalid integer strings are converted to 0.
 func StringToInt32Value(v *string) int32 {
-	i, _ := strconv.ParseInt(aws.StringValue(v), 0, 32)
-	return int32(i)
+	return StringValueToInt32Value(aws.ToString(v))
 }
 
 // StringValueToBase64String converts a string to a Go base64 string pointer.
 func StringValueToBase64String(v string) *string {
 	return aws.String(itypes.Base64EncodeOnce([]byte(v)))
+}
+
+// StringValueToInt64 converts a string to a Go int32 pointer.
+// Invalid integer strings are converted to 0.
+func StringValueToInt32(v string) *int32 {
+	return aws.Int32(StringValueToInt32Value(v))
+}
+
+// StringValueToInt32Value converts a string to a Go int32 value.
+// Invalid integer strings are converted to 0.
+func StringValueToInt32Value(v string) int32 {
+	i, _ := strconv.ParseInt(v, 0, 32)
+	return int32(i)
 }
 
 // StringValueToInt64 converts a string to a Go int64 pointer.
@@ -490,7 +525,7 @@ func DiffStringMaps(oldMap, newMap map[string]interface{}) (map[string]*string, 
 	unchanged := make(map[string]*string)
 	for k, v := range oldMap {
 		v := v.(string)
-		if old, ok := add[k]; !ok || aws.StringValue(old) != v {
+		if old, ok := add[k]; !ok || aws.ToString(old) != v {
 			// Delete it!
 			remove[k] = aws.String(v)
 		} else if ok {

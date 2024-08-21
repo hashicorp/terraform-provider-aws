@@ -240,7 +240,7 @@ func resourceClientVPNEndpointCreate(ctx context.Context, d *schema.ResourceData
 		ClientToken:          aws.String(id.UniqueId()),
 		ServerCertificateArn: aws.String(d.Get("server_certificate_arn").(string)),
 		SplitTunnel:          aws.Bool(d.Get("split_tunnel").(bool)),
-		TagSpecifications:    getTagSpecificationsInV2(ctx, awstypes.ResourceTypeClientVpnEndpoint),
+		TagSpecifications:    getTagSpecificationsIn(ctx, awstypes.ResourceTypeClientVpnEndpoint),
 		TransportProtocol:    awstypes.TransportProtocol(d.Get("transport_protocol").(string)),
 		VpnPort:              aws.Int32(int32(d.Get("vpn_port").(int))),
 	}
@@ -362,7 +362,7 @@ func resourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set(names.AttrVPCID, ep.VpcId)
 	d.Set("vpn_port", ep.VpnPort)
 
-	setTagsOutV2(ctx, ep.Tags)
+	setTagsOut(ctx, ep.Tags)
 
 	return diags
 }
@@ -448,7 +448,7 @@ func resourceClientVPNEndpointUpdate(ctx context.Context, d *schema.ResourceData
 		}
 
 		if waitForClientConnectResponseOptionsUpdate {
-			if _, err := waitClientVPNEndpointClientConnectResponseOptionsUpdated(ctx, conn, d.Id()); err != nil {
+			if _, err := waitClientVPNEndpointClientConnectResponseOptionsUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for EC2 Client VPN Endpoint (%s) ClientConnectResponseOptions update: %s", d.Id(), err)
 			}
 		}
@@ -474,7 +474,7 @@ func resourceClientVPNEndpointDelete(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "deleting EC2 Client VPN Endpoint (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitClientVPNEndpointDeleted(ctx, conn, d.Id()); err != nil {
+	if _, err := waitClientVPNEndpointDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Client VPN Endpoint (%s) delete: %s", d.Id(), err)
 	}
 

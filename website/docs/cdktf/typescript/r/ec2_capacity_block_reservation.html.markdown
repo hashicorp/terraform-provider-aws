@@ -28,31 +28,23 @@ import { Token, TerraformStack } from "cdktf";
  */
 import { DataAwsEc2CapacityBlockOffering } from "./.gen/providers/aws/data-aws-ec2-capacity-block-offering";
 import { Ec2CapacityBlockReservation } from "./.gen/providers/aws/ec2-capacity-block-reservation";
-interface MyConfig {
-  capacityDurationHours: any;
-}
 class MyConvertedCode extends TerraformStack {
-  constructor(scope: Construct, name: string, config: MyConfig) {
+  constructor(scope: Construct, name: string) {
     super(scope, name);
+    const test = new DataAwsEc2CapacityBlockOffering(this, "test", {
+      capacityDurationHours: 24,
+      endDateRange: "2024-05-30T15:04:05Z",
+      instanceCount: 1,
+      instanceType: "p4d.24xlarge",
+      startDateRange: "2024-04-28T15:04:05Z",
+    });
     new Ec2CapacityBlockReservation(this, "example", {
-      capacityBlockOfferingId: Token.asString(test.id),
+      capacityBlockOfferingId: Token.asString(test.capacityBlockOfferingId),
       instancePlatform: "Linux/UNIX",
       tags: {
         Environment: "dev",
       },
     });
-    const dataAwsEc2CapacityBlockOfferingExample =
-      new DataAwsEc2CapacityBlockOffering(this, "example_1", {
-        capacity_duration: 24,
-        end_date: "2024-05-30T15:04:05Z",
-        instanceCount: 1,
-        instance_platform: "Linux/UNIX",
-        instanceType: "p4d.24xlarge",
-        start_date: "2024-04-28T15:04:05Z",
-        capacityDurationHours: config.capacityDurationHours,
-      });
-    /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
-    dataAwsEc2CapacityBlockOfferingExample.overrideLogicalId("example");
   }
 }
 
@@ -86,4 +78,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `tenancy` - Indicates the tenancy of the Capacity Block Reservation. Specify either `default` or `dedicated`.
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block)
 
-<!-- cache-key: cdktf-0.20.1 input-de4a54e63058184058154980dd6b982862622641c80f20ef090557139a7f57dd -->
+<!-- cache-key: cdktf-0.20.1 input-a143505ea3006f16f26ae26aa08d81bdcf5392160b05943377879fc64c70fceb -->
