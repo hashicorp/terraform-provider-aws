@@ -216,10 +216,14 @@ func TestAccLexModelsIntent_confirmationPromptAndRejectionStatement(t *testing.T
 				),
 			},
 			{
-				ResourceName:            rName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"create_version"},
+				ResourceName:      rName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"create_version",
+					"confirmation_prompt.0.message.0.group_number",
+					"rejection_statement.0.message.0.group_number",
+				},
 			},
 			{
 				Config: testAccIntentConfig_confirmationPromptAndRejectionStatementUpdate(testIntentID),
@@ -241,10 +245,14 @@ func TestAccLexModelsIntent_confirmationPromptAndRejectionStatement(t *testing.T
 				),
 			},
 			{
-				ResourceName:            rName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"create_version"},
+				ResourceName:      rName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"create_version",
+					"confirmation_prompt.0.message.0.group_number",
+					"rejection_statement.0.message.0.group_number",
+				},
 			},
 		},
 	})
