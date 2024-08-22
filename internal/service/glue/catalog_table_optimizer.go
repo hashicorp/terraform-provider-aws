@@ -249,10 +249,10 @@ func (r *resourceCatalogTableOptimizer) Delete(ctx context.Context, request reso
 	}
 
 	tflog.Debug(ctx, "deleting Glue Catalog Table Optimizer", map[string]interface{}{
-		"catalog_id":    data.CatalogID.ValueString(),
-		"database_name": data.DatabaseName.ValueString(),
-		"table_name":    data.TableName.ValueString(),
-		names.AttrType:  data.Type.ValueString(),
+		names.AttrCatalogID:    data.CatalogID.ValueString(),
+		names.AttrDatabaseName: data.DatabaseName.ValueString(),
+		names.AttrTableName:    data.TableName.ValueString(),
+		names.AttrType:         data.Type.ValueString(),
 	})
 
 	_, err := conn.DeleteTableOptimizer(ctx, &glue.DeleteTableOptimizerInput{
