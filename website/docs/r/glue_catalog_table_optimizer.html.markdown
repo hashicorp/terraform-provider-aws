@@ -59,5 +59,5 @@ import {
 Using `terraform import`, import Glue Catalog Table Optimizer using the `catalog_id,database_name,table_name,type`. For example:
 
 ```console
-% terraform import aws_datazone_domain.example 123456789012,example_database,example_table,compaction
+% terraform import aws_glue_catalog_table_optimizer.example 123456789012,example_database,example_table,compaction
 ```
