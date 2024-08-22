@@ -51,6 +51,7 @@ func resourceDomainPolicy() *schema.Resource {
 			names.AttrDomainName: {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 		},
 	}
@@ -79,7 +80,9 @@ func resourceDomainPolicyUpsert(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "setting Elasticsearch Domain Policy (%s): %s", d.Id(), err)
 	}
 
-	d.SetId("esd-policy-" + domainName)
+	if d.IsNewResource() {
+		d.SetId("esd-policy-" + domainName)
+	}
 
 	if err := waitForDomainUpdate(ctx, conn, d.Get(names.AttrDomainName).(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Elasticsearch Domain (%s) update: %s", d.Id(), err)
