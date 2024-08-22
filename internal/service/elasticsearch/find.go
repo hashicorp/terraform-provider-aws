@@ -42,3 +42,32 @@ func findDomain(ctx context.Context, conn *elasticsearch.Client, input *elastics
 
 	return output.DomainStatus, nil
 }
+
+func findDomainConfigByName(ctx context.Context, conn *elasticsearch.Client, name string) (*awstypes.ElasticsearchDomainConfig, error) {
+	input := &elasticsearch.DescribeElasticsearchDomainConfigInput{
+		DomainName: aws.String(name),
+	}
+
+	return findDomainConfig(ctx, conn, input)
+}
+
+func findDomainConfig(ctx context.Context, conn *elasticsearch.Client, input *elasticsearch.DescribeElasticsearchDomainConfigInput) (*awstypes.ElasticsearchDomainConfig, error) {
+	output, err := conn.DescribeElasticsearchDomainConfig(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.DomainConfig == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.DomainConfig, nil
+}
