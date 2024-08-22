@@ -138,6 +138,10 @@ func (r *resourceCatalogTableOptimizer) Create(ctx context.Context, request reso
 		return nil
 	})
 
+	if tfresource.TimedOut(err) {
+		_, err = conn.CreateTableOptimizer(ctx, &input)
+	}
+
 	if err != nil {
 		id, _ := flex.FlattenResourceId([]string{
 			plan.CatalogID.ValueString(),
@@ -246,7 +250,7 @@ func (r *resourceCatalogTableOptimizer) Delete(ctx context.Context, request reso
 		"catalogId":    data.CatalogID.ValueString(),
 		"databaseName": data.DatabaseName.ValueString(),
 		"tableName":    data.TableName.ValueString(),
-		names.AttrType:         data.Type.ValueString(),
+		names.AttrType: data.Type.ValueString(),
 	})
 
 	_, err := conn.DeleteTableOptimizer(ctx, &glue.DeleteTableOptimizerInput{

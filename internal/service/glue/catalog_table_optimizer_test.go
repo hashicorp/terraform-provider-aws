@@ -54,6 +54,46 @@ func TestAccGlueCatalogTableOptimizer_basic(t *testing.T) {
 	})
 }
 
+func TestAccGlueCatalogTableOptimizer_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	var catalogTableOptimizer glue.GetTableOptimizerOutput
+
+	resourceName := "aws_glue_catalog_table_optimizer.test"
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCatalogTableOptimizerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCatalogTableOptimizerConfig_update(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCatalogTableOptimizerExists(ctx, resourceName, &catalogTableOptimizer),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrCatalogID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "compaction"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.enabled", acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccCatalogTableOptimizerConfig_update(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCatalogTableOptimizerExists(ctx, resourceName, &catalogTableOptimizer),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrCatalogID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "compaction"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.enabled", acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
 func testAccCatalogTableOptimizerStateIDFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -257,4 +297,21 @@ resource "aws_glue_catalog_table_optimizer" "test" {
   }
 }
 `)
+}
+func testAccCatalogTableOptimizerConfig_update(rName string, enabled bool) string {
+	return acctest.ConfigCompose(
+		testAccCatalogTableOptimizerConfig_baseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_glue_catalog_table_optimizer" "test" {
+  catalog_id     = data.aws_caller_identity.current.account_id
+  database_name  = aws_glue_catalog_database.test.name
+  table_name     = aws_glue_catalog_table.test.name
+  type           = "compaction"
+
+  configuration {
+    role_arn = aws_iam_role.test.arn
+    enabled  = %[1]t
+  }
+}
+`, enabled))
 }
