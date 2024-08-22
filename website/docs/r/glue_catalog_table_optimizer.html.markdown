@@ -38,7 +38,7 @@ The following arguments are required:
 * `table_name` - (Required) The name of the table.
 * `type` - (Required) The type of table optimizer. Currently, the only valid value is compaction.
 * `configuration` - (Required) A configuration block that defines the table optimizer settings. The block contains:
-    * `role_arn` - (Required) The ARN of the IAM role to use for the table optimizer. 
+    * `role_arn` - (Required) The ARN of the IAM role to use for the table optimizer.
     * `enabled` - (Required) Indicates whether the table optimizer is enabled.
 
 ## Import
