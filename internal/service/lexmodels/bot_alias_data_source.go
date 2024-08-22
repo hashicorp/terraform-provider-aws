@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -18,8 +18,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_lex_bot_alias")
-func DataSourceBotAlias() *schema.Resource {
+// @SDKDataSource("aws_lex_bot_alias", name="Bot Alias")
+func dataSourceBotAlias() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceBotAliasRead,
 
@@ -64,13 +64,13 @@ func DataSourceBotAlias() *schema.Resource {
 
 func dataSourceBotAliasRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LexModelsConn(ctx)
+	conn := meta.(*conns.AWSClient).LexModelsClient(ctx)
 
 	botName := d.Get("bot_name").(string)
 	botAliasName := d.Get(names.AttrName).(string)
 	d.SetId(fmt.Sprintf("%s:%s", botName, botAliasName))
 
-	resp, err := conn.GetBotAliasWithContext(ctx, &lexmodelbuildingservice.GetBotAliasInput{
+	resp, err := conn.GetBotAlias(ctx, &lexmodelbuildingservice.GetBotAliasInput{
 		BotName: aws.String(botName),
 		Name:    aws.String(botAliasName),
 	})

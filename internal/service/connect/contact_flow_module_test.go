@@ -8,21 +8,20 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/connect"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccContactFlowModule_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v connect.DescribeContactFlowModuleOutput
+	var v awstypes.ContactFlowModule
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_contact_flow_module.test"
@@ -70,7 +69,7 @@ func testAccContactFlowModule_basic(t *testing.T) {
 
 func testAccContactFlowModule_filename(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v connect.DescribeContactFlowModuleOutput
+	var v awstypes.ContactFlowModule
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_contact_flow_module.test"
@@ -120,7 +119,7 @@ func testAccContactFlowModule_filename(t *testing.T) {
 
 func testAccContactFlowModule_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v connect.DescribeContactFlowModuleOutput
+	var v awstypes.ContactFlowModule
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_contact_flow_module.test"
@@ -143,35 +142,22 @@ func testAccContactFlowModule_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckContactFlowModuleExists(ctx context.Context, resourceName string, function *connect.DescribeContactFlowModuleOutput) resource.TestCheckFunc {
+func testAccCheckContactFlowModuleExists(ctx context.Context, n string, v *awstypes.ContactFlowModule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Connect Contact Flow Module not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("Connect Contact Flow Module ID not set")
-		}
-		instanceID, contactFlowModuleID, err := tfconnect.ContactFlowModuleParseID(rs.Primary.ID)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectClient(ctx)
+
+		output, err := tfconnect.FindContactFlowModuleByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrInstanceID], rs.Primary.Attributes["contact_flow_module_id"])
 
 		if err != nil {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
-
-		params := &connect.DescribeContactFlowModuleInput{
-			ContactFlowModuleId: aws.String(contactFlowModuleID),
-			InstanceId:          aws.String(instanceID),
-		}
-
-		getFunction, err := conn.DescribeContactFlowModuleWithContext(ctx, params)
-		if err != nil {
-			return err
-		}
-
-		*function = *getFunction
+		*v = *output
 
 		return nil
 	}
@@ -184,29 +170,21 @@ func testAccCheckContactFlowModuleDestroy(ctx context.Context) resource.TestChec
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectClient(ctx)
 
-			instanceID, contactFlowModuleID, err := tfconnect.ContactFlowModuleParseID(rs.Primary.ID)
+			_, err := tfconnect.FindContactFlowModuleByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrInstanceID], rs.Primary.Attributes["contact_flow_module_id"])
 
-			if err != nil {
-				return err
-			}
-
-			params := &connect.DescribeContactFlowModuleInput{
-				ContactFlowModuleId: aws.String(contactFlowModuleID),
-				InstanceId:          aws.String(instanceID),
-			}
-
-			_, err = conn.DescribeContactFlowModuleWithContext(ctx, params)
-
-			if tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
 			if err != nil {
 				return err
 			}
+
+			return fmt.Errorf("Connect Contact Flow Module %s still exists", rs.Primary.ID)
 		}
+
 		return nil
 	}
 }

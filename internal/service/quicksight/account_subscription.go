@@ -228,12 +228,13 @@ func resourceAccountSubscriptionRead(ctx context.Context, d *schema.ResourceData
 
 	out, err := FindAccountSubscriptionByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	var ere *tfresource.EmptyResultError
+	if !d.IsNewResource() && (tfresource.NotFound(err) || errors.As(err, &ere)) {
 		log.Printf("[WARN] QuickSight AccountSubscription (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
-	// Ressource is logically deleted with UNSUBSCRIBED status
+	// Resource is logically deleted with UNSUBSCRIBED status
 	if !d.IsNewResource() && aws.StringValue(out.AccountSubscriptionStatus) == statusUnsuscribed {
 		log.Printf("[WARN] QuickSight AccountSubscription (%s) unsuscribed, removing from state", d.Id())
 		d.SetId("")
@@ -352,7 +353,7 @@ func FindAccountSubscriptionByID(ctx context.Context, conn *quicksight.QuickSigh
 		return nil, err
 	}
 
-	if out == nil || out.AccountInfo.AccountName == nil {
+	if out == nil || out.AccountInfo == nil {
 		return nil, tfresource.NewEmptyResultError(in)
 	}
 

@@ -6,6 +6,8 @@ package batch_test
 import (
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest/jsoncmp"
 	tfbatch "github.com/hashicorp/terraform-provider-aws/internal/service/batch"
 )
 
@@ -13,18 +15,18 @@ func TestEquivalentNodePropertiesJSON(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
-		ApiJson           string
-		ConfigurationJson string
-		ExpectEquivalent  bool
-		ExpectError       bool
+		apiJSON           string
+		configurationJSON string
+		wantEquivalent    bool
+		wantErr           bool
 	}{
 		"empty": {
-			ApiJson:           ``,
-			ConfigurationJson: ``,
-			ExpectEquivalent:  true,
+			apiJSON:           ``,
+			configurationJSON: ``,
+			wantEquivalent:    true,
 		},
 		"Single Node with empty environment variable": {
-			ApiJson: `
+			apiJSON: `
 {
 	"mainNode": 1,
 	"nodeRangeProperties": [
@@ -42,7 +44,7 @@ func TestEquivalentNodePropertiesJSON(t *testing.T) {
 	"numNodes": 2
 }
 `,
-			ConfigurationJson: `
+			configurationJSON: `
 {
 	"mainNode": 1,
 	"nodeRangeProperties": [
@@ -65,10 +67,10 @@ func TestEquivalentNodePropertiesJSON(t *testing.T) {
 	"numNodes": 2
 }
 `,
-			ExpectEquivalent: true,
+			wantEquivalent: true,
 		},
 		"Two Nodes with empty command and mountPoints": {
-			ApiJson: `
+			apiJSON: `
 {
 	"mainNode": 1,
 	"nodeRangeProperties": [
@@ -99,7 +101,7 @@ func TestEquivalentNodePropertiesJSON(t *testing.T) {
 	"numNodes": 2
 }
 `,
-			ConfigurationJson: `
+			configurationJSON: `
 {
 	"mainNode": 1,
 	"nodeRangeProperties": [
@@ -130,7 +132,7 @@ func TestEquivalentNodePropertiesJSON(t *testing.T) {
 	"numNodes": 2
 }
 `,
-			ExpectEquivalent: true,
+			wantEquivalent: true,
 		},
 	}
 
@@ -139,18 +141,20 @@ func TestEquivalentNodePropertiesJSON(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := tfbatch.EquivalentNodePropertiesJSON(testCase.ConfigurationJson, testCase.ApiJson)
-
-			if err != nil && !testCase.ExpectError {
-				t.Errorf("got unexpected error: %s", err)
+			output, err := tfbatch.EquivalentNodePropertiesJSON(testCase.configurationJSON, testCase.apiJSON)
+			if got, want := err != nil, testCase.wantErr; !cmp.Equal(got, want) {
+				t.Errorf("EquivalentNodePropertiesJSON err %t, want %t", got, want)
 			}
 
-			if err == nil && testCase.ExpectError {
-				t.Errorf("expected error, but received none")
-			}
-
-			if got != testCase.ExpectEquivalent {
-				t.Errorf("got %t, expected %t", got, testCase.ExpectEquivalent)
+			if err == nil {
+				if got, want := output, testCase.wantEquivalent; !cmp.Equal(got, want) {
+					t.Errorf("EquivalentNodePropertiesJSON equivalent %t, want %t", got, want)
+					if want {
+						if diff := jsoncmp.Diff(testCase.configurationJSON, testCase.apiJSON); diff != "" {
+							t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+						}
+					}
+				}
 			}
 		})
 	}

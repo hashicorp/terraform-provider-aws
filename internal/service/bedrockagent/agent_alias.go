@@ -381,5 +381,6 @@ func (m *agentAliasResourceModel) setID() {
 }
 
 type agentAliasRoutingConfigurationListItemModel struct {
-	AgentVersion types.String `tfsdk:"agent_version"`
+	AgentVersion          types.String `tfsdk:"agent_version"`
+	ProvisionedThroughput types.String `tfsdk:"provisioned_throughput"`
 }

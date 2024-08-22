@@ -9,13 +9,16 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/storagegateway"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/storagegateway"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/storagegateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -91,10 +94,10 @@ func resourceSMBFileShare() *schema.Resource {
 				},
 			},
 			"case_sensitivity": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      storagegateway.CaseSensitivityClientSpecified,
-				ValidateFunc: validation.StringInSlice(storagegateway.CaseSensitivity_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.CaseSensitivityClientSpecified,
+				ValidateDiagFunc: enum.Validate[awstypes.CaseSensitivity](),
 			},
 			"default_storage_class": {
 				Type:         schema.TypeString,
@@ -146,10 +149,10 @@ func resourceSMBFileShare() *schema.Resource {
 				ValidateFunc: verify.ValidARN,
 			},
 			"object_acl": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      storagegateway.ObjectACLPrivate,
-				ValidateFunc: validation.StringInSlice(storagegateway.ObjectACL_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.ObjectACLPrivate,
+				ValidateDiagFunc: enum.Validate[awstypes.ObjectACL](),
 			},
 			"oplocks_enabled": {
 				Type:     schema.TypeBool,
@@ -210,7 +213,7 @@ func resourceSMBFileShare() *schema.Resource {
 
 func resourceSMBFileShareCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
+	conn := meta.(*conns.AWSClient).StorageGatewayClient(ctx)
 
 	input := &storagegateway.CreateSMBFileShareInput{
 		AccessBasedEnumeration: aws.Bool(d.Get("access_based_enumeration").(bool)),
@@ -227,7 +230,7 @@ func resourceSMBFileShareCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if v, ok := d.GetOk("admin_user_list"); ok && v.(*schema.Set).Len() > 0 {
-		input.AdminUserList = flex.ExpandStringSet(v.(*schema.Set))
+		input.AdminUserList = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("audit_destination_arn"); ok {
@@ -247,7 +250,7 @@ func resourceSMBFileShareCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if v, ok := d.GetOk("case_sensitivity"); ok {
-		input.CaseSensitivity = aws.String(v.(string))
+		input.CaseSensitivity = awstypes.CaseSensitivity(v.(string))
 	}
 
 	if v, ok := d.GetOk("default_storage_class"); ok {
@@ -259,7 +262,7 @@ func resourceSMBFileShareCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if v, ok := d.GetOk("invalid_user_list"); ok && v.(*schema.Set).Len() > 0 {
-		input.InvalidUserList = flex.ExpandStringSet(v.(*schema.Set))
+		input.InvalidUserList = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk(names.AttrKMSKeyARN); ok {
@@ -271,7 +274,7 @@ func resourceSMBFileShareCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if v, ok := d.GetOk("object_acl"); ok {
-		input.ObjectACL = aws.String(v.(string))
+		input.ObjectACL = awstypes.ObjectACL(v.(string))
 	}
 
 	if v, ok := d.GetOk("oplocks_enabled"); ok {
@@ -279,24 +282,23 @@ func resourceSMBFileShareCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if v, ok := d.GetOk("valid_user_list"); ok && v.(*schema.Set).Len() > 0 {
-		input.ValidUserList = flex.ExpandStringSet(v.(*schema.Set))
+		input.ValidUserList = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("vpc_endpoint_dns_name"); ok {
 		input.VPCEndpointDNSName = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating Storage Gateway SMB File Share: %s", input)
-	output, err := conn.CreateSMBFileShareWithContext(ctx, input)
+	output, err := conn.CreateSMBFileShare(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Storage Gateway SMB File Share: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.FileShareARN))
+	d.SetId(aws.ToString(output.FileShareARN))
 
 	if _, err = waitSMBFileShareCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Storage Gateway SMB File Share (%s) to create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Storage Gateway SMB File Share (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceSMBFileShareRead(ctx, d, meta)...)
@@ -304,9 +306,9 @@ func resourceSMBFileShareCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceSMBFileShareRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
+	conn := meta.(*conns.AWSClient).StorageGatewayClient(ctx)
 
-	fileshare, err := FindSMBFileShareByARN(ctx, conn, d.Id())
+	fileshare, err := findSMBFileShareByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Storage Gateway SMB File Share (%s) not found, removing from state", d.Id())
@@ -319,12 +321,11 @@ func resourceSMBFileShareRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.Set("access_based_enumeration", fileshare.AccessBasedEnumeration)
-	d.Set("admin_user_list", aws.StringValueSlice(fileshare.AdminUserList))
+	d.Set("admin_user_list", aws.StringSlice(fileshare.AdminUserList))
 	d.Set(names.AttrARN, fileshare.FileShareARN)
 	d.Set("audit_destination_arn", fileshare.AuditDestinationARN)
 	d.Set("authentication", fileshare.Authentication)
 	d.Set("bucket_region", fileshare.BucketRegion)
-
 	if fileshare.CacheAttributes != nil {
 		if err := d.Set("cache_attributes", []interface{}{flattenCacheAttributes(fileshare.CacheAttributes)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting cache_attributes: %s", err)
@@ -332,14 +333,13 @@ func resourceSMBFileShareRead(ctx context.Context, d *schema.ResourceData, meta 
 	} else {
 		d.Set("cache_attributes", nil)
 	}
-
 	d.Set("case_sensitivity", fileshare.CaseSensitivity)
 	d.Set("default_storage_class", fileshare.DefaultStorageClass)
 	d.Set("fileshare_id", fileshare.FileShareId)
 	d.Set("file_share_name", fileshare.FileShareName)
 	d.Set("gateway_arn", fileshare.GatewayARN)
 	d.Set("guess_mime_type_enabled", fileshare.GuessMIMETypeEnabled)
-	d.Set("invalid_user_list", aws.StringValueSlice(fileshare.InvalidUserList))
+	d.Set("invalid_user_list", aws.StringSlice(fileshare.InvalidUserList))
 	d.Set("kms_encrypted", fileshare.KMSEncrypted)
 	d.Set(names.AttrKMSKeyARN, fileshare.KMSKey)
 	d.Set("location_arn", fileshare.LocationARN)
@@ -351,7 +351,7 @@ func resourceSMBFileShareRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("requester_pays", fileshare.RequesterPays)
 	d.Set(names.AttrRoleARN, fileshare.Role)
 	d.Set("smb_acl_enabled", fileshare.SMBACLEnabled)
-	d.Set("valid_user_list", aws.StringValueSlice(fileshare.ValidUserList))
+	d.Set("valid_user_list", aws.StringSlice(fileshare.ValidUserList))
 	d.Set("vpc_endpoint_dns_name", fileshare.VPCEndpointDNSName)
 
 	setTagsOut(ctx, fileshare.Tags)
@@ -361,7 +361,7 @@ func resourceSMBFileShareRead(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceSMBFileShareUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
+	conn := meta.(*conns.AWSClient).StorageGatewayClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &storagegateway.UpdateSMBFileShareInput{
@@ -375,7 +375,7 @@ func resourceSMBFileShareUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 
 		if d.HasChange("admin_user_list") {
-			input.AdminUserList = flex.ExpandStringSet(d.Get("admin_user_list").(*schema.Set))
+			input.AdminUserList = flex.ExpandStringValueSet(d.Get("admin_user_list").(*schema.Set))
 		}
 
 		if d.HasChange("audit_destination_arn") {
@@ -386,12 +386,12 @@ func resourceSMBFileShareUpdate(ctx context.Context, d *schema.ResourceData, met
 			if v, ok := d.GetOk("cache_attributes"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				input.CacheAttributes = expandCacheAttributes(v.([]interface{})[0].(map[string]interface{}))
 			} else {
-				input.CacheAttributes = &storagegateway.CacheAttributes{}
+				input.CacheAttributes = &awstypes.CacheAttributes{}
 			}
 		}
 
 		if d.HasChange("case_sensitivity") {
-			input.CaseSensitivity = aws.String(d.Get("case_sensitivity").(string))
+			input.CaseSensitivity = awstypes.CaseSensitivity(d.Get("case_sensitivity").(string))
 		}
 
 		if d.HasChange("default_storage_class") {
@@ -403,7 +403,7 @@ func resourceSMBFileShareUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 
 		if d.HasChange("invalid_user_list") {
-			input.InvalidUserList = flex.ExpandStringSet(d.Get("invalid_user_list").(*schema.Set))
+			input.InvalidUserList = flex.ExpandStringValueSet(d.Get("invalid_user_list").(*schema.Set))
 		}
 
 		// This value can only be set when KMSEncrypted is true.
@@ -418,7 +418,7 @@ func resourceSMBFileShareUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 
 		if d.HasChange("object_acl") {
-			input.ObjectACL = aws.String(d.Get("object_acl").(string))
+			input.ObjectACL = awstypes.ObjectACL(d.Get("object_acl").(string))
 		}
 
 		if d.HasChange("oplocks_enabled") {
@@ -426,18 +426,17 @@ func resourceSMBFileShareUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 
 		if d.HasChange("valid_user_list") {
-			input.ValidUserList = flex.ExpandStringSet(d.Get("valid_user_list").(*schema.Set))
+			input.ValidUserList = flex.ExpandStringValueSet(d.Get("valid_user_list").(*schema.Set))
 		}
 
-		log.Printf("[DEBUG] Updating Storage Gateway SMB File Share: %s", input)
-		_, err := conn.UpdateSMBFileShareWithContext(ctx, input)
+		_, err := conn.UpdateSMBFileShare(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Storage Gateway SMB File Share (%s): %s", d.Id(), err)
 		}
 
 		if _, err = waitSMBFileShareUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for Storage Gateway SMB File Share (%s) to update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for Storage Gateway SMB File Share (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -446,10 +445,10 @@ func resourceSMBFileShareUpdate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceSMBFileShareDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
+	conn := meta.(*conns.AWSClient).StorageGatewayClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Storage Gateway SMB File Share: %s", d.Id())
-	_, err := conn.DeleteFileShareWithContext(ctx, &storagegateway.DeleteFileShareInput{
+	_, err := conn.DeleteFileShare(ctx, &storagegateway.DeleteFileShareInput{
 		FileShareARN: aws.String(d.Id()),
 	})
 
@@ -462,27 +461,137 @@ func resourceSMBFileShareDelete(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if _, err = waitSMBFileShareDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Storage Gateway SMB File Share (%s) to delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Storage Gateway SMB File Share (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func expandCacheAttributes(tfMap map[string]interface{}) *storagegateway.CacheAttributes {
+func findSMBFileShareByARN(ctx context.Context, conn *storagegateway.Client, arn string) (*awstypes.SMBFileShareInfo, error) {
+	input := &storagegateway.DescribeSMBFileSharesInput{
+		FileShareARNList: []string{arn},
+	}
+
+	return findSMBFileShare(ctx, conn, input)
+}
+
+func findSMBFileShare(ctx context.Context, conn *storagegateway.Client, input *storagegateway.DescribeSMBFileSharesInput) (*awstypes.SMBFileShareInfo, error) {
+	output, err := findSMBFileShares(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findSMBFileShares(ctx context.Context, conn *storagegateway.Client, input *storagegateway.DescribeSMBFileSharesInput) ([]awstypes.SMBFileShareInfo, error) {
+	output, err := conn.DescribeSMBFileShares(ctx, input)
+
+	if operationErrorCode(err) == operationErrCodeFileShareNotFound {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.SMBFileShareInfoList, nil
+}
+
+func statusSMBFileShare(ctx context.Context, conn *storagegateway.Client, arn string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findSMBFileShareByARN(ctx, conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.ToString(output.FileShareStatus), nil
+	}
+}
+
+func waitSMBFileShareCreated(ctx context.Context, conn *storagegateway.Client, arn string, timeout time.Duration) (*awstypes.SMBFileShareInfo, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{fileShareStatusCreating},
+		Target:  []string{fileShareStatusAvailable},
+		Refresh: statusSMBFileShare(ctx, conn, arn),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.SMBFileShareInfo); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitSMBFileShareUpdated(ctx context.Context, conn *storagegateway.Client, arn string, timeout time.Duration) (*awstypes.SMBFileShareInfo, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{fileShareStatusUpdating},
+		Target:  []string{fileShareStatusAvailable},
+		Refresh: statusSMBFileShare(ctx, conn, arn),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.SMBFileShareInfo); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitSMBFileShareDeleted(ctx context.Context, conn *storagegateway.Client, arn string, timeout time.Duration) (*awstypes.SMBFileShareInfo, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:        []string{fileShareStatusAvailable, fileShareStatusDeleting, fileShareStatusForceDeleting},
+		Target:         []string{},
+		Refresh:        statusSMBFileShare(ctx, conn, arn),
+		Timeout:        timeout,
+		Delay:          5 * time.Second,
+		NotFoundChecks: 1,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.SMBFileShareInfo); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func expandCacheAttributes(tfMap map[string]interface{}) *awstypes.CacheAttributes {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &storagegateway.CacheAttributes{}
+	apiObject := &awstypes.CacheAttributes{}
 
 	if v, ok := tfMap["cache_stale_timeout_in_seconds"].(int); ok && v != 0 {
-		apiObject.CacheStaleTimeoutInSeconds = aws.Int64(int64(v))
+		apiObject.CacheStaleTimeoutInSeconds = aws.Int32(int32(v))
 	}
 
 	return apiObject
 }
 
-func flattenCacheAttributes(apiObject *storagegateway.CacheAttributes) map[string]interface{} {
+func flattenCacheAttributes(apiObject *awstypes.CacheAttributes) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -490,7 +599,7 @@ func flattenCacheAttributes(apiObject *storagegateway.CacheAttributes) map[strin
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.CacheStaleTimeoutInSeconds; v != nil {
-		tfMap["cache_stale_timeout_in_seconds"] = aws.Int64Value(v)
+		tfMap["cache_stale_timeout_in_seconds"] = aws.ToInt32(v)
 	}
 
 	return tfMap

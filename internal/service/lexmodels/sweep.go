@@ -7,12 +7,12 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -49,15 +49,19 @@ func sweepBotAliases(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.LexModelsConn(ctx)
+	conn := client.LexModelsClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &lexmodelbuildingservice.GetBotsInput{}
 
-	err = conn.GetBotsPagesWithContext(ctx, input, func(page *lexmodelbuildingservice.GetBotsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := lexmodelbuildingservice.NewGetBotsPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			errs = multierror.Append(errs, fmt.Errorf("error listing Lex Bot Alias for %s: %w", region, err))
 		}
 
 		for _, bot := range page.Bots {
@@ -65,49 +69,41 @@ func sweepBotAliases(region string) error {
 				BotName: bot.Name,
 			}
 
-			err := conn.GetBotAliasesPagesWithContext(ctx, input, func(page *lexmodelbuildingservice.GetBotAliasesOutput, lastPage bool) bool {
-				if page == nil {
-					return !lastPage
+			pages := lexmodelbuildingservice.NewGetBotAliasesPaginator(conn, input)
+
+			for pages.HasMorePages() {
+				page, err := pages.NextPage(ctx)
+
+				if err != nil {
+					errs = multierror.Append(errs, fmt.Errorf("error listing Lex Bot Alias for %s: %w", region, err))
 				}
 
 				for _, botAlias := range page.BotAliases {
-					r := ResourceBotAlias()
+					r := resourceBotAlias()
 					d := r.Data(nil)
 
-					d.SetId(fmt.Sprintf("%s:%s", aws.StringValue(bot.Name), aws.StringValue(botAlias.Name)))
+					d.SetId(fmt.Sprintf("%s:%s", aws.ToString(bot.Name), aws.ToString(botAlias.Name)))
 					d.Set("bot_name", bot.Name)
 					d.Set(names.AttrName, botAlias.Name)
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
-
-				return !lastPage
-			})
-
-			if err != nil {
-				errs = multierror.Append(errs, fmt.Errorf("error listing Lex Bot Alias for %s: %w", region, err))
 			}
 
-			r := ResourceBotAlias()
+			r := resourceBotAlias()
 			d := r.Data(nil)
 
-			d.SetId(aws.StringValue(bot.Name))
+			d.SetId(aws.ToString(bot.Name))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing Lex Bot Alias for %s: %w", region, err))
 	}
 
 	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Lex Bot Alias for %s: %w", region, err))
 	}
 
-	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv2.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Lex Bot Alias sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -123,38 +119,36 @@ func sweepBots(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.LexModelsConn(ctx)
+	conn := client.LexModelsClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &lexmodelbuildingservice.GetBotsInput{}
 
-	err = conn.GetBotsPagesWithContext(ctx, input, func(page *lexmodelbuildingservice.GetBotsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := lexmodelbuildingservice.NewGetBotsPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			errs = multierror.Append(errs, fmt.Errorf("error listing Lex Bot for %s: %w", region, err))
 		}
 
 		for _, bot := range page.Bots {
-			r := ResourceBot()
+			r := resourceBot()
 			d := r.Data(nil)
 
-			d.SetId(aws.StringValue(bot.Name))
+			d.SetId(aws.ToString(bot.Name))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing Lex Bot for %s: %w", region, err))
 	}
 
 	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Lex Bot for %s: %w", region, err))
 	}
 
-	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv2.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Lex Bot sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -170,38 +164,36 @@ func sweepIntents(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.LexModelsConn(ctx)
+	conn := client.LexModelsClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &lexmodelbuildingservice.GetIntentsInput{}
 
-	err = conn.GetIntentsPagesWithContext(ctx, input, func(page *lexmodelbuildingservice.GetIntentsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := lexmodelbuildingservice.NewGetIntentsPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			errs = multierror.Append(errs, fmt.Errorf("error listing Lex Intent for %s: %w", region, err))
 		}
 
 		for _, intent := range page.Intents {
-			r := ResourceIntent()
+			r := resourceIntent()
 			d := r.Data(nil)
 
-			d.SetId(aws.StringValue(intent.Name))
+			d.SetId(aws.ToString(intent.Name))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing Lex Intent for %s: %w", region, err))
 	}
 
 	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Lex Intent for %s: %w", region, err))
 	}
 
-	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv2.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Lex Intent sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -217,38 +209,36 @@ func sweepSlotTypes(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.LexModelsConn(ctx)
+	conn := client.LexModelsClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &lexmodelbuildingservice.GetSlotTypesInput{}
 
-	err = conn.GetSlotTypesPagesWithContext(ctx, input, func(page *lexmodelbuildingservice.GetSlotTypesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := lexmodelbuildingservice.NewGetSlotTypesPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			errs = multierror.Append(errs, fmt.Errorf("error listing Lex Slot Type for %s: %w", region, err))
 		}
 
 		for _, slotType := range page.SlotTypes {
-			r := ResourceSlotType()
+			r := resourceSlotType()
 			d := r.Data(nil)
 
-			d.SetId(aws.StringValue(slotType.Name))
+			d.SetId(aws.ToString(slotType.Name))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing Lex Slot Type for %s: %w", region, err))
 	}
 
 	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Lex Slot Type for %s: %w", region, err))
 	}
 
-	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv2.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Lex Slot Type sweep for %s: %s", region, errs)
 		return nil
 	}

@@ -1079,11 +1079,11 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("cluster_state", cluster.Status.State)
 	d.Set(names.AttrARN, cluster.ClusterArn)
 
-	instanceGroups, err := fetchAllInstanceGroups(ctx, conn, d.Id())
+	instanceGroups, err := findInstanceGroupsByClusterID(ctx, conn, d.Id())
 
 	if err == nil { // find instance group
-		coreGroup := coreInstanceGroup(instanceGroups)
-		masterGroup := findMasterGroup(instanceGroups)
+		coreGroup, _ := coreInstanceGroup(instanceGroups)
+		masterGroup, _ := findMasterGroup(instanceGroups)
 
 		flattenedCoreInstanceGroup, err := flattenCoreInstanceGroup(coreGroup)
 
@@ -1100,11 +1100,11 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	instanceFleets, err := FetchAllInstanceFleets(ctx, conn, d.Id())
+	instanceFleets, err := findInstanceFleetsByClusterID(ctx, conn, d.Id())
 
 	if err == nil { // find instance fleets
-		coreFleet := findInstanceFleet(instanceFleets, awstypes.InstanceFleetTypeCore)
-		masterFleet := findInstanceFleet(instanceFleets, awstypes.InstanceFleetTypeMaster)
+		coreFleet, _ := findInstanceFleet(instanceFleets, awstypes.InstanceFleetTypeCore)
+		masterFleet, _ := findInstanceFleet(instanceFleets, awstypes.InstanceFleetTypeMaster)
 
 		flattenedCoreInstanceFleet := flattenInstanceFleet(coreFleet)
 		if err := d.Set("core_instance_fleet", flattenedCoreInstanceFleet); err != nil {
@@ -1321,7 +1321,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			// RemoveAutoScalingPolicy seems to have eventual consistency.
 			// Retry reading Instance Group configuration until the policy is removed.
 			err := retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
-				autoscalingPolicy, err := getCoreInstanceGroupAutoScalingPolicy(ctx, conn, d.Id())
+				autoscalingPolicy, err := findCoreInstanceGroupAutoScalingPolicy(ctx, conn, d.Id())
 
 				if err != nil {
 					return retry.NonRetryableError(err)
@@ -1337,7 +1337,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			if tfresource.TimedOut(err) {
 				var autoscalingPolicy *awstypes.AutoScalingPolicyDescription
 
-				autoscalingPolicy, err = getCoreInstanceGroupAutoScalingPolicy(ctx, conn, d.Id())
+				autoscalingPolicy, err = findCoreInstanceGroupAutoScalingPolicy(ctx, conn, d.Id())
 
 				if autoscalingPolicy != nil {
 					err = errors.New("still exists")
@@ -1852,13 +1852,10 @@ func flattenBootstrapArguments(actions []awstypes.Command) []map[string]interfac
 	return result
 }
 
-func coreInstanceGroup(grps []*awstypes.InstanceGroup) *awstypes.InstanceGroup {
-	for _, grp := range grps {
-		if grp.InstanceGroupType == awstypes.InstanceGroupTypeCore {
-			return grp
-		}
-	}
-	return nil
+func coreInstanceGroup(grps []awstypes.InstanceGroup) (*awstypes.InstanceGroup, error) {
+	return tfresource.AssertSingleValueResult(tfslices.Filter(grps, func(v awstypes.InstanceGroup) bool {
+		return v.InstanceGroupType == awstypes.InstanceGroupTypeCore
+	}))
 }
 
 func expandBootstrapActions(bootstrapActions []interface{}) []awstypes.BootstrapActionConfig {
@@ -2055,13 +2052,10 @@ func readBodyJSON(body string, target interface{}) error {
 	return nil
 }
 
-func findMasterGroup(instanceGroups []*awstypes.InstanceGroup) *awstypes.InstanceGroup {
-	for _, group := range instanceGroups {
-		if string(group.InstanceGroupType) == string(awstypes.InstanceRoleTypeMaster) {
-			return group
-		}
-	}
-	return nil
+func findMasterGroup(instanceGroups []awstypes.InstanceGroup) (*awstypes.InstanceGroup, error) {
+	return tfresource.AssertSingleValueResult(tfslices.Filter(instanceGroups, func(v awstypes.InstanceGroup) bool {
+		return v.InstanceGroupType == awstypes.InstanceGroupTypeMaster
+	}))
 }
 
 func resourceClusterEBSHashConfig(v interface{}) int {
@@ -2079,30 +2073,29 @@ func resourceClusterEBSHashConfig(v interface{}) int {
 	return create.StringHashcode(buf.String())
 }
 
-func getCoreInstanceGroupAutoScalingPolicy(ctx context.Context, conn *emr.Client, clusterID string) (*awstypes.AutoScalingPolicyDescription, error) {
-	instanceGroups, err := fetchAllInstanceGroups(ctx, conn, clusterID)
+func findCoreInstanceGroupAutoScalingPolicy(ctx context.Context, conn *emr.Client, clusterID string) (*awstypes.AutoScalingPolicyDescription, error) {
+	instanceGroups, err := findInstanceGroupsByClusterID(ctx, conn, clusterID)
 
 	if err != nil {
 		return nil, err
 	}
 
-	coreGroup := coreInstanceGroup(instanceGroups)
+	coreGroup, err := coreInstanceGroup(instanceGroups)
 
-	if coreGroup == nil {
-		return nil, fmt.Errorf("EMR Cluster (%s) Core Instance Group not found", clusterID)
+	if err != nil {
+		return nil, fmt.Errorf("EMR Cluster (%s) Core Instance Group: %w", clusterID, err)
 	}
 
 	return coreGroup.AutoScalingPolicy, nil
 }
 
-func fetchAllInstanceGroups(ctx context.Context, conn *emr.Client, clusterID string) ([]*awstypes.InstanceGroup, error) {
+func findInstanceGroupsByClusterID(ctx context.Context, conn *emr.Client, clusterID string) ([]awstypes.InstanceGroup, error) {
 	input := &emr.ListInstanceGroupsInput{
 		ClusterId: aws.String(clusterID),
 	}
-	var groups []awstypes.InstanceGroup
+	var output []awstypes.InstanceGroup
 
 	pages := emr.NewListInstanceGroupsPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -2110,10 +2103,10 @@ func fetchAllInstanceGroups(ctx context.Context, conn *emr.Client, clusterID str
 			return nil, err
 		}
 
-		groups = append(groups, page.InstanceGroups...)
+		output = append(output, page.InstanceGroups...)
 	}
 
-	return tfslices.ToPointers(groups), nil
+	return output, nil
 }
 
 func readInstanceFleetConfig(data map[string]interface{}, InstanceFleetType awstypes.InstanceFleetType) *awstypes.InstanceFleetConfig {
@@ -2128,21 +2121,20 @@ func readInstanceFleetConfig(data map[string]interface{}, InstanceFleetType awst
 		config.InstanceTypeConfigs = expandInstanceTypeConfigs(v.List())
 	}
 
-	if v, ok := data["launch_specifications"].([]interface{}); ok && len(v) == 1 {
+	if v, ok := data["launch_specifications"].([]interface{}); ok && len(v) == 1 && v[0] != nil {
 		config.LaunchSpecifications = expandLaunchSpecification(v[0].(map[string]interface{}))
 	}
 
 	return config
 }
 
-func FetchAllInstanceFleets(ctx context.Context, conn *emr.Client, clusterID string) ([]*awstypes.InstanceFleet, error) {
+func findInstanceFleetsByClusterID(ctx context.Context, conn *emr.Client, clusterID string) ([]awstypes.InstanceFleet, error) {
 	input := &emr.ListInstanceFleetsInput{
 		ClusterId: aws.String(clusterID),
 	}
-	var fleets []awstypes.InstanceFleet
+	var output []awstypes.InstanceFleet
 
 	pages := emr.NewListInstanceFleetsPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -2150,19 +2142,16 @@ func FetchAllInstanceFleets(ctx context.Context, conn *emr.Client, clusterID str
 			return nil, err
 		}
 
-		fleets = append(fleets, page.InstanceFleets...)
+		output = append(output, page.InstanceFleets...)
 	}
 
-	return tfslices.ToPointers(fleets), nil
+	return output, nil
 }
 
-func findInstanceFleet(instanceFleets []*awstypes.InstanceFleet, instanceRoleType awstypes.InstanceFleetType) *awstypes.InstanceFleet {
-	for _, instanceFleet := range instanceFleets {
-		if instanceFleet.InstanceFleetType == instanceRoleType {
-			return instanceFleet
-		}
-	}
-	return nil
+func findInstanceFleet(instanceFleets []awstypes.InstanceFleet, instanceRoleType awstypes.InstanceFleetType) (*awstypes.InstanceFleet, error) {
+	return tfresource.AssertSingleValueResult(tfslices.Filter(instanceFleets, func(v awstypes.InstanceFleet) bool {
+		return v.InstanceFleetType == instanceRoleType
+	}))
 }
 
 func flattenInstanceFleet(instanceFleet *awstypes.InstanceFleet) []interface{} {

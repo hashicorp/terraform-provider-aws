@@ -9,9 +9,9 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/servicecatalog"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -56,12 +57,12 @@ func TestAccServiceCatalogProduct_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.0.disable_template_validation", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.0.name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "provisioning_artifact_parameters.0.template_url"),
-					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.0.type", servicecatalog.ProvisioningArtifactTypeCloudFormationTemplate),
+					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.0.type", string(awstypes.ProvisioningArtifactTypeCloudFormationTemplate)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, tfservicecatalog.StatusCreated),
 					resource.TestCheckResourceAttr(resourceName, "support_description", "supportbeskrivning"),
 					resource.TestCheckResourceAttr(resourceName, "support_email", acctest.DefaultEmailAddress),
 					resource.TestCheckResourceAttr(resourceName, "support_url", domain),
-					resource.TestCheckResourceAttr(resourceName, names.AttrType, servicecatalog.ProductTypeCloudFormationTemplate),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.ProductTypeCloudFormationTemplate)),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -172,7 +173,7 @@ func TestAccServiceCatalogProduct_physicalID(t *testing.T) {
 						"cloudformation",
 						regexache.MustCompile(fmt.Sprintf(`stack/%s/.*`, rName)),
 					),
-					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.0.type", servicecatalog.ProvisioningArtifactTypeCloudFormationTemplate),
+					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.0.type", string(awstypes.ProvisioningArtifactTypeCloudFormationTemplate)),
 				),
 			},
 			{
@@ -190,7 +191,7 @@ func TestAccServiceCatalogProduct_physicalID(t *testing.T) {
 
 func testAccCheckProductDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_servicecatalog_product" {
@@ -201,9 +202,9 @@ func testAccCheckProductDestroy(ctx context.Context) resource.TestCheckFunc {
 				Id: aws.String(rs.Primary.ID),
 			}
 
-			output, err := conn.DescribeProductAsAdminWithContext(ctx, input)
+			output, err := conn.DescribeProductAsAdmin(ctx, input)
 
-			if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 				continue
 			}
 
@@ -228,13 +229,13 @@ func testAccCheckProductExists(ctx context.Context, resourceName string) resourc
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 		input := &servicecatalog.DescribeProductAsAdminInput{
 			Id: aws.String(rs.Primary.ID),
 		}
 
-		_, err := conn.DescribeProductAsAdminWithContext(ctx, input)
+		_, err := conn.DescribeProductAsAdmin(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("error describing Service Catalog Product (%s): %w", rs.Primary.ID, err)

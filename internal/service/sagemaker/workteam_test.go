@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/sagemaker"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func testAccWorkteam_cognitoConfig(t *testing.T) {
 	ctx := acctest.Context(t)
-	var workteam sagemaker.Workteam
+	var workteam awstypes.Workteam
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_workteam.test"
 
@@ -94,7 +94,7 @@ func testAccWorkteam_cognitoConfig(t *testing.T) {
 
 func testAccWorkteam_oidcConfig(t *testing.T) {
 	ctx := acctest.Context(t)
-	var workteam sagemaker.Workteam
+	var workteam awstypes.Workteam
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_workteam.test"
 
@@ -152,7 +152,7 @@ func testAccWorkteam_oidcConfig(t *testing.T) {
 
 func testAccWorkteam_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var workteam sagemaker.Workteam
+	var workteam awstypes.Workteam
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_workteam.test"
 
@@ -199,7 +199,7 @@ func testAccWorkteam_tags(t *testing.T) {
 
 func testAccWorkteam_notificationConfig(t *testing.T) {
 	ctx := acctest.Context(t)
-	var workteam sagemaker.Workteam
+	var workteam awstypes.Workteam
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_workteam.test"
 
@@ -253,7 +253,7 @@ func testAccWorkteam_notificationConfig(t *testing.T) {
 
 func testAccWorkteam_workerAccessConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
-	var workteam sagemaker.Workteam
+	var workteam awstypes.Workteam
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_workteam.test"
 
@@ -301,7 +301,7 @@ func testAccWorkteam_workerAccessConfiguration(t *testing.T) {
 
 func testAccWorkteam_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var workteam sagemaker.Workteam
+	var workteam awstypes.Workteam
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_workteam.test"
 
@@ -325,7 +325,7 @@ func testAccWorkteam_disappears(t *testing.T) {
 
 func testAccCheckWorkteamDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sagemaker_workteam" {
@@ -349,7 +349,7 @@ func testAccCheckWorkteamDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckWorkteamExists(ctx context.Context, n string, workteam *sagemaker.Workteam) resource.TestCheckFunc {
+func testAccCheckWorkteamExists(ctx context.Context, n string, workteam *awstypes.Workteam) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -360,7 +360,7 @@ func testAccCheckWorkteamExists(ctx context.Context, n string, workteam *sagemak
 			return fmt.Errorf("No SageMaker Workteam ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
 
 		output, err := tfsagemaker.FindWorkteamByName(ctx, conn, rs.Primary.ID)
 

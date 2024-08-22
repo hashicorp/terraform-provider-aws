@@ -106,7 +106,7 @@ class MyConvertedCode extends TerraformStack {
               ),
             },
             logDestinationType: "KinesisDataFirehose",
-            logType: "ALERT",
+            logType: "TLS",
           },
         ],
       },
@@ -128,7 +128,7 @@ This resource supports the following arguments:
 
 The `loggingConfiguration` block supports the following arguments:
 
-* `logDestinationConfig` - (Required) Set of configuration blocks describing the logging details for a firewall. See [Log Destination Config](#log-destination-config) below for details. At most, only two blocks can be specified; one for `FLOW` logs and one for `ALERT` logs.
+* `logDestinationConfig` - (Required) Set of configuration blocks describing the logging details for a firewall. See [Log Destination Config](#log-destination-config) below for details. At most, only Three blocks can be specified; one for `FLOW` logs and one for `ALERT` logs and one for `TLS` logs.
 
 ### Log Destination Config
 
@@ -141,7 +141,7 @@ The `logDestinationConfig` block supports the following arguments:
 
 * `logDestinationType` - (Required) The location to send logs to. Valid values: `S3`, `CloudWatchLogs`, `KinesisDataFirehose`.
 
-* `logType` - (Required) The type of log to send. Valid values: `ALERT` or `FLOW`. Alert logs report traffic that matches a `StatefulRule` with an action setting that sends a log message. Flow logs are standard network traffic flow logs.
+* `logType` - (Required) The type of log to send. Valid values: `ALERT` or `FLOW` or `TLS`. Alert logs report traffic that matches a `StatefulRule` with an action setting that sends a log message. Flow logs are standard network traffic flow logs.
 
 ## Attribute Reference
 
@@ -181,4 +181,4 @@ Using `terraform import`, import Network Firewall Logging Configurations using t
 % terraform import aws_networkfirewall_logging_configuration.example arn:aws:network-firewall:us-west-1:123456789012:firewall/example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-2700cb50e1d426b15657fe101c09e1dc07bb26140cf98ca4ff2db12e4a6d391e -->
+<!-- cache-key: cdktf-0.20.1 input-a424d4d289b34356de5d5f45679c9809505595ffb099b5886f34b982f524e9e4 -->

@@ -7,10 +7,6 @@ import (
 
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	directoryservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/directoryservice"
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	directoryservice_sdkv1 "github.com/aws/aws-sdk-go/service/directoryservice"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -25,7 +21,8 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceTrust,
+			Factory: newTrustResource,
+			Name:    "Trust",
 		},
 	}
 }
@@ -33,8 +30,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceDirectory,
+			Factory:  dataSourceDirectory,
 			TypeName: "aws_directory_service_directory",
+			Name:     "Directory",
 		},
 	}
 }
@@ -42,11 +40,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceConditionalForwarder,
+			Factory:  resourceConditionalForwarder,
 			TypeName: "aws_directory_service_conditional_forwarder",
+			Name:     "Conditional Forwarder",
 		},
 		{
-			Factory:  ResourceDirectory,
+			Factory:  resourceDirectory,
 			TypeName: "aws_directory_service_directory",
 			Name:     "Directory",
 			Tags: &types.ServicePackageResourceTags{
@@ -54,50 +53,36 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceLogSubscription,
+			Factory:  resourceLogSubscription,
 			TypeName: "aws_directory_service_log_subscription",
+			Name:     "Log Subscription",
 		},
 		{
-			Factory:  ResourceRadiusSettings,
+			Factory:  resourceRadiusSettings,
 			TypeName: "aws_directory_service_radius_settings",
+			Name:     "RADIUS Settings",
 		},
 		{
-			Factory:  ResourceRegion,
+			Factory:  resourceRegion,
 			TypeName: "aws_directory_service_region",
 			Name:     "Region",
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  ResourceSharedDirectory,
+			Factory:  resourceSharedDirectory,
 			TypeName: "aws_directory_service_shared_directory",
+			Name:     "Shared Directory",
 		},
 		{
-			Factory:  ResourceSharedDirectoryAccepter,
+			Factory:  resourceSharedDirectoryAccepter,
 			TypeName: "aws_directory_service_shared_directory_accepter",
+			Name:     "Shared Directory Accepter",
 		},
 	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
 	return names.DS
-}
-
-// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*directoryservice_sdkv1.DirectoryService, error) {
-	sess := config[names.AttrSession].(*session_sdkv1.Session)
-
-	cfg := aws_sdkv1.Config{}
-
-	if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
-		tflog.Debug(ctx, "setting endpoint", map[string]any{
-			"tf_aws.endpoint": endpoint,
-		})
-		cfg.Endpoint = aws_sdkv1.String(endpoint)
-	} else {
-		cfg.EndpointResolver = newEndpointResolverSDKv1(ctx)
-	}
-
-	return directoryservice_sdkv1.New(sess.Copy(&cfg)), nil
 }
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.

@@ -91,7 +91,7 @@ func dataSourceAvailabilityZonesRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	if filters, filtersOk := d.GetOk(names.AttrFilter); filtersOk {
-		request.Filters = append(request.Filters, newCustomFilterListV2(
+		request.Filters = append(request.Filters, newCustomFilterList(
 			filters.(*schema.Set),
 		)...)
 	}
