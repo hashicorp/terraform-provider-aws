@@ -51,25 +51,25 @@ func (r *resourceCatalogTableOptimizer) Metadata(_ context.Context, _ resource.M
 func (r *resourceCatalogTableOptimizer) Schema(ctx context.Context, _ resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"catalog_id": schema.StringAttribute{
+			names.AttrCatalogID: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"database_name": schema.StringAttribute{
+			names.AttrDatabaseName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"table_name": schema.StringAttribute{
+			names.AttrTableName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"type": schema.StringAttribute{
+			names.AttrType: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.TableOptimizerType](),
 				Required:   true,
 				PlanModifiers: []planmodifier.String{
@@ -78,7 +78,7 @@ func (r *resourceCatalogTableOptimizer) Schema(ctx context.Context, _ resource.S
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"configuration": schema.ListNestedBlock{
+			names.AttrConfiguration: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[configurationData](ctx),
 				Validators: []validator.List{
 					listvalidator.IsRequired(),
@@ -86,10 +86,10 @@ func (r *resourceCatalogTableOptimizer) Schema(ctx context.Context, _ resource.S
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"enabled": schema.BoolAttribute{
+						names.AttrEnabled: schema.BoolAttribute{
 							Required: true,
 						},
-						"role_arn": schema.StringAttribute{
+						names.AttrRoleARN: schema.StringAttribute{
 							CustomType: fwtypes.ARNType,
 							Required:   true,
 						},
@@ -246,7 +246,7 @@ func (r *resourceCatalogTableOptimizer) Delete(ctx context.Context, request reso
 		"catalogId":    data.CatalogID.ValueString(),
 		"databaseName": data.DatabaseName.ValueString(),
 		"tableName":    data.TableName.ValueString(),
-		"type":         data.Type.ValueString(),
+		names.AttrType:         data.Type.ValueString(),
 	})
 
 	_, err := conn.DeleteTableOptimizer(ctx, &glue.DeleteTableOptimizerInput{
@@ -287,10 +287,10 @@ func (r *resourceCatalogTableOptimizer) ImportState(ctx context.Context, request
 		return
 	}
 
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("catalog_id"), parts[0])...)
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("database_name"), parts[1])...)
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("table_name"), parts[2])...)
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("type"), parts[3])...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrCatalogID), parts[0])...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrDatabaseName), parts[1])...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrTableName), parts[2])...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrType), parts[3])...)
 }
 
 type resourceCatalogTableOptimizerData struct {

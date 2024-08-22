@@ -39,14 +39,14 @@ func TestAccGlueCatalogTableOptimizer_basic(t *testing.T) {
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrCatalogID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName),
-					resource.TestCheckResourceAttr(resourceName, "type", "compaction"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "compaction"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.enabled", acctest.CtTrue),
 				),
 			},
 			{
 				ResourceName:                         resourceName,
 				ImportStateIdFunc:                    testAccCatalogTableOptimizerStateIDFunc(resourceName),
-				ImportStateVerifyIdentifierAttribute: "table_name",
+				ImportStateVerifyIdentifierAttribute: names.AttrTableName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 			},
@@ -61,8 +61,8 @@ func testAccCatalogTableOptimizerStateIDFunc(resourceName string) resource.Impor
 			return "", fmt.Errorf("not found: %s", resourceName)
 		}
 
-		return fmt.Sprintf("%s,%s,%s,%s", rs.Primary.Attributes["catalog_id"], rs.Primary.Attributes["database_name"],
-			rs.Primary.Attributes["table_name"], rs.Primary.Attributes["type"]), nil
+		return fmt.Sprintf("%s,%s,%s,%s", rs.Primary.Attributes[names.AttrCatalogID], rs.Primary.Attributes[names.AttrDatabaseName],
+			rs.Primary.Attributes[names.AttrTableName], rs.Primary.Attributes[names.AttrType]), nil
 	}
 }
 
@@ -78,8 +78,8 @@ func testAccCheckCatalogTableOptimizerExists(ctx context.Context, resourceName s
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
-		resp, err := tfglue.FindCatalogTableOptimizer(ctx, conn, rs.Primary.Attributes["catalog_id"], rs.Primary.Attributes["database_name"],
-			rs.Primary.Attributes["table_name"], rs.Primary.Attributes["type"])
+		resp, err := tfglue.FindCatalogTableOptimizer(ctx, conn, rs.Primary.Attributes[names.AttrCatalogID], rs.Primary.Attributes[names.AttrDatabaseName],
+			rs.Primary.Attributes[names.AttrTableName], rs.Primary.Attributes[names.AttrType])
 
 		if err != nil {
 			return create.Error(names.Glue, create.ErrActionCheckingExistence, tfglue.ResNameCatalogTableOptimizer, rs.Primary.ID, err)
@@ -99,8 +99,8 @@ func testAccCheckCatalogTableOptimizerDestroy(ctx context.Context) resource.Test
 			}
 
 			conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
-			_, err := tfglue.FindCatalogTableOptimizer(ctx, conn, rs.Primary.Attributes["catalog_id"], rs.Primary.Attributes["database_name"],
-				rs.Primary.Attributes["table_name"], rs.Primary.Attributes["type"])
+			_, err := tfglue.FindCatalogTableOptimizer(ctx, conn, rs.Primary.Attributes[names.AttrCatalogID], rs.Primary.Attributes[names.AttrDatabaseName],
+				rs.Primary.Attributes[names.AttrTableName], rs.Primary.Attributes[names.AttrType])
 
 			if tfresource.NotFound(err) {
 				continue
