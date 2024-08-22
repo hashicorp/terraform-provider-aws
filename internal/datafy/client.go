@@ -11,6 +11,17 @@ func apiNotFound(err error) bool {
 	return strings.Contains(err.Error(), "404")
 }
 
+func newVolume(volume iacgateway.AWSVolume) *Volume {
+	return &Volume{
+		Volume: &awstypes.Volume{
+			VolumeId: aws.String(volume.VolumeId),
+		},
+		IsManaged:     volume.IsManaged,
+		IsDatafied:    volume.IsDatafied,
+		IsReplacement: volume.IsReplacement,
+	}
+}
+
 type Client struct {
 	config Config
 
@@ -33,11 +44,5 @@ func (c *Client) GetVolume(volumeId string) (*Volume, error) {
 		return nil, err
 	}
 
-	return &Volume{
-		Volume: &awstypes.Volume{
-			VolumeId: aws.String(volume.VolumeId),
-		},
-		IsManaged:     volume.IsManaged,
-		IsReplacement: volume.IsReplacement,
-	}, nil
+	return newVolume(*volume), nil
 }

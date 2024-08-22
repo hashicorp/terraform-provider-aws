@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -30,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/datafy"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -2140,6 +2142,25 @@ func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
+	// if the instance has a datafied volume, it can't be deleted
+	if v, ok := d.GetOk("ebs_block_device"); ok {
+		dc := meta.(*conns.AWSClient).DatafyClient(ctx)
+		for _, v := range v.(*schema.Set).List() {
+			volumeId := v.(map[string]interface{})["volume_id"].(string)
+			if datafyVol, datafyErr := dc.GetVolume(volumeId); datafyErr == nil {
+				if datafyVol.IsManaged {
+					diags = sdkdiag.AppendErrorf(diags, "can't delete EC2 Instance (%s) with datafied EBS Volume (%s). Please undatafy the EBS Volume first", d.Id(), volumeId)
+				}
+			} else if !datafy.NotFound(datafyErr) {
+				return sdkdiag.AppendErrorf(diags, "deleting EC2 Instance (%s): %s", d.Id(), datafyErr)
+			}
+		}
+
+		if diags != nil && diags.HasError() {
+			return diags
+		}
+	}
+
 	if err := disableInstanceAPITermination(ctx, conn, d.Id(), false); err != nil {
 		log.Printf("[WARN] attempting to terminate EC2 Instance (%s) despite error disabling API termination: %s", d.Id(), err)
 	}
@@ -2321,11 +2342,22 @@ func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, m
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
+	dc := meta.(*conns.AWSClient).DatafyClient(ctx)
 	for _, vol := range volResp.Volumes {
 		instanceBd := instanceBlockDevices[aws.ToString(vol.VolumeId)]
 		bd := make(map[string]interface{})
 
-		bd["volume_id"] = aws.ToString(vol.VolumeId)
+		volumeId := aws.ToString(vol.VolumeId)
+		bd["volume_id"] = volumeId
+
+		// filter out datafy and managed volumes (managed will be added below from state)
+		if datafyVol, err := dc.GetVolume(volumeId); err == nil {
+			if datafyVol.IsDatafied || datafyVol.IsManaged {
+				continue
+			}
+		} else if !datafy.NotFound(err) {
+			return blockDevices, err
+		}
 
 		if instanceBd.Ebs != nil && instanceBd.Ebs.DeleteOnTermination != nil {
 			bd[names.AttrDeleteOnTermination] = aws.ToBool(instanceBd.Ebs.DeleteOnTermination)
@@ -2371,6 +2403,36 @@ func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, m
 			blockDevices["ebs"] = append(blockDevices["ebs"].([]map[string]interface{}), bd)
 		}
 	}
+
+	// source volume that were managed may (or not) be missing, need to add them back from the state
+	if v, ok := d.GetOk("ebs_block_device"); ok {
+		for _, v := range v.(*schema.Set).List() {
+			bd := v.(map[string]interface{})
+
+			if !slices.ContainsFunc(blockDevices["ebs"].([]map[string]interface{}), func(m map[string]interface{}) bool {
+				return m["volume_id"].(string) == bd["volume_id"].(string)
+			}) {
+				// if not found in the blockDevices["ebs"], it means the volume is managed (and may also have been removed)
+				// or was replaced (new volume due to undatafy), both cases we need to add them back from the state
+				if datafyVol, err := dc.GetVolume(bd["volume_id"].(string)); err == nil {
+					if datafyVol.IsManaged || datafyVol.IsReplacement {
+						if datafyVol.IsReplacement {
+							bd["volume_id"] = aws.ToString(datafyVol.VolumeId)
+							blockDevices["ebs"] = slices.DeleteFunc(blockDevices["ebs"].([]map[string]interface{}), func(m map[string]interface{}) bool {
+								return m["volume_id"].(string) == *datafyVol.VolumeId
+							})
+						}
+						blockDevices["ebs"] = append(blockDevices["ebs"].([]map[string]interface{}), bd)
+					}
+				} else if datafy.NotFound(err) {
+					continue
+				} else {
+					return blockDevices, err
+				}
+			}
+		}
+	}
+
 	// If we determine the root device is the only block device mapping
 	// in the instance (including ephemerals) after returning from this function,
 	// we'll need to set the ebs_block_device as a clone of the root device

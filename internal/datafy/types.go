@@ -6,5 +6,6 @@ type Volume struct {
 	*types.Volume
 
 	IsManaged     bool
+	IsDatafied    bool
 	IsReplacement bool
 }
