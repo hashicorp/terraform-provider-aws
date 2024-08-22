@@ -1,4 +1,5 @@
-## 5.64.0 (Unreleased)
+## 5.65.0 (Unreleased)
+## 5.64.0 (August 22, 2024)
 
 ENHANCEMENTS:
 
