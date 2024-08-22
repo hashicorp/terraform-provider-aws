@@ -256,8 +256,8 @@ resource "aws_glue_catalog_table" "test" {
     location = "s3://${aws_s3_bucket.bucket.bucket}/files/"
 
     columns {
-      name    = "my_column_1"
-      type    = "int"
+      name = "my_column_1"
+      type = "int"
     }
   }
 }
@@ -286,30 +286,30 @@ resource "aws_lakeformation_permissions" "test" {
 
 func testAccCatalogTableOptimizerConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		testAccCatalogTableOptimizerConfig_baseConfig(rName),
-		`
+		testAccCatalogTableOptimizerConfig_baseConfig(rName), `
 resource "aws_glue_catalog_table_optimizer" "test" {
-  catalog_id     = data.aws_caller_identity.current.account_id
-  database_name  = aws_glue_catalog_database.test.name
-  table_name     = aws_glue_catalog_table.test.name
-  type           = "compaction"
+  catalog_id    = data.aws_caller_identity.current.account_id
+  database_name = aws_glue_catalog_database.test.name
+  table_name    = aws_glue_catalog_table.test.name
+  type          = "compaction"
 
   configuration {
     role_arn = aws_iam_role.test.arn
     enabled  = true
   }
 }
-`)
+`,
+	)
 }
 func testAccCatalogTableOptimizerConfig_update(rName string, enabled bool) string {
 	return acctest.ConfigCompose(
 		testAccCatalogTableOptimizerConfig_baseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_glue_catalog_table_optimizer" "test" {
-  catalog_id     = data.aws_caller_identity.current.account_id
-  database_name  = aws_glue_catalog_database.test.name
-  table_name     = aws_glue_catalog_table.test.name
-  type           = "compaction"
+  catalog_id    = data.aws_caller_identity.current.account_id
+  database_name = aws_glue_catalog_database.test.name
+  table_name    = aws_glue_catalog_table.test.name
+  type          = "compaction"
 
   configuration {
     role_arn = aws_iam_role.test.arn
