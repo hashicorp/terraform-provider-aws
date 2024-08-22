@@ -44,10 +44,11 @@ func TestAccGlueCatalogTableOptimizer_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccCatalogTableOptimizerStateIDFunc(resourceName),
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportStateIdFunc:                    testAccCatalogTableOptimizerStateIDFunc(resourceName),
+				ImportStateVerifyIdentifierAttribute: "table_name",
+				ImportState:                          true,
+				ImportStateVerify:                    true,
 			},
 		},
 	})
@@ -218,14 +219,35 @@ resource "aws_glue_catalog_table" "test" {
   }
 }
 
+data "aws_iam_session_context" "current" {
+  arn = data.aws_caller_identity.current.arn
+}
+
+resource "aws_lakeformation_data_lake_settings" "test" {
+  admins = [data.aws_iam_session_context.current.issuer_arn]
+}
+
+resource "aws_lakeformation_permissions" "test" {
+  permissions = ["ALTER", "DELETE", "DESCRIBE"]
+  principal   = aws_iam_role.test.arn
+
+  table {
+    database_name = aws_glue_catalog_table.test.database_name
+    name          = aws_glue_catalog_table.test.name
+  }
+
+  # for consistency, ensure that admins are setup before testing
+  depends_on = [aws_lakeformation_data_lake_settings.test]
+}
+
 resource "aws_glue_catalog_table_optimizer" "test" {
   catalog_id     = data.aws_caller_identity.current.account_id
   database_name  = aws_glue_catalog_database.test.name
   table_name     = aws_glue_catalog_table.test.name
 
   configuration {
-   role_arn = aws_iam_role.test.arn
-   enabled  = true
+    role_arn = aws_iam_role.test.arn
+    enabled  = true
   }
 
   type = "compaction"

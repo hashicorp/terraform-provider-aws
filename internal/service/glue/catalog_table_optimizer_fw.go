@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -286,18 +287,10 @@ func (r *resourceCatalogTableOptimizer) ImportState(ctx context.Context, request
 		return
 	}
 
-	state := resourceCatalogTableOptimizerData{
-		CatalogID:    fwflex.StringValueToFramework(ctx, parts[0]),
-		DatabaseName: fwflex.StringValueToFramework(ctx, parts[1]),
-		TableName:    fwflex.StringValueToFramework(ctx, parts[2]),
-		Type:         fwtypes.StringEnumValue(awstypes.TableOptimizerType(parts[3])),
-	}
-
-	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
-
-	if response.Diagnostics.HasError() {
-		return
-	}
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("catalog_id"), parts[0])...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("database_name"), parts[1])...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("table_name"), parts[2])...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("type"), parts[3])...)
 }
 
 type resourceCatalogTableOptimizerData struct {
@@ -309,7 +302,7 @@ type resourceCatalogTableOptimizerData struct {
 }
 
 type configurationData struct {
-	Enabled bool        `tfsdk:"enabled"`
+	Enabled types.Bool  `tfsdk:"enabled"`
 	RoleARN fwtypes.ARN `tfsdk:"role_arn"`
 }
 
