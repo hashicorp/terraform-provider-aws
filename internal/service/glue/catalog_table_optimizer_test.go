@@ -117,7 +117,7 @@ func testAccCheckCatalogTableOptimizerDestroy(ctx context.Context) resource.Test
 	}
 }
 
-func testAccCatalogTableOptimizerConfig_basic(rName string) string {
+func testAccCatalogTableOptimizerConfig_baseConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
@@ -137,7 +137,7 @@ resource "aws_iam_role" "test" {
   })
 }
 
-resource "aws_iam_role_policy" "glue_compaction_role_access" {
+resource "aws_iam_role_policy" "test" {
   role = aws_iam_role.test.id
 
   policy = jsonencode({
@@ -238,19 +238,23 @@ resource "aws_lakeformation_permissions" "test" {
 
   # for consistency, ensure that admins are setup before testing
   depends_on = [aws_lakeformation_data_lake_settings.test]
+}`, rName)
 }
 
+func testAccCatalogTableOptimizerConfig_basic(rName string) string {
+	return acctest.ConfigCompose(
+		testAccCatalogTableOptimizerConfig_baseConfig(rName),
+		`
 resource "aws_glue_catalog_table_optimizer" "test" {
   catalog_id     = data.aws_caller_identity.current.account_id
   database_name  = aws_glue_catalog_database.test.name
   table_name     = aws_glue_catalog_table.test.name
+  type           = "compaction"
 
   configuration {
     role_arn = aws_iam_role.test.arn
     enabled  = true
   }
-
-  type = "compaction"
 }
-`, rName)
+`)
 }
