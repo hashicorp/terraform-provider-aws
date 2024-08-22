@@ -95,7 +95,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.11.4
 	github.com/aws/aws-sdk-go-v2/service/drs v1.28.4
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.34.5
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.175.1
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.176.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.32.1
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.25.4
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.45.1
@@ -119,7 +119,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/gamelift v1.33.4
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.24.4
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.27.1
-	github.com/aws/aws-sdk-go-v2/service/glue v1.94.1
+	github.com/aws/aws-sdk-go-v2/service/glue v1.95.0
 	github.com/aws/aws-sdk-go-v2/service/grafana v1.24.4
 	github.com/aws/aws-sdk-go-v2/service/greengrass v1.25.4
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.29.5
@@ -145,7 +145,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.25.4
 	github.com/aws/aws-sdk-go-v2/service/kms v1.35.4
 	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.35.4
-	github.com/aws/aws-sdk-go-v2/service/lambda v1.57.0
+	github.com/aws/aws-sdk-go-v2/service/lambda v1.58.0
 	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.6.4
 	github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice v1.26.4
 	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.46.1
@@ -210,14 +210,14 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.10.4
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.26.4
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.32.5
-	github.com/aws/aws-sdk-go-v2/service/securityhub v1.51.4
+	github.com/aws/aws-sdk-go-v2/service/securityhub v1.52.0
 	github.com/aws/aws-sdk-go-v2/service/securitylake v1.16.4
 	github.com/aws/aws-sdk-go-v2/service/serverlessapplicationrepository v1.22.4
 	github.com/aws/aws-sdk-go-v2/service/servicecatalog v1.30.4
 	github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry v1.28.4
 	github.com/aws/aws-sdk-go-v2/service/servicediscovery v1.31.4
 	github.com/aws/aws-sdk-go-v2/service/servicequotas v1.23.4
-	github.com/aws/aws-sdk-go-v2/service/ses v1.25.3
+	github.com/aws/aws-sdk-go-v2/service/ses v1.26.0
 	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.33.0
 	github.com/aws/aws-sdk-go-v2/service/sfn v1.30.1
 	github.com/aws/aws-sdk-go-v2/service/shield v1.27.4
