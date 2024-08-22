@@ -470,8 +470,8 @@ func simplifiedVersion(engineType types.EngineType, autoMinorVersionUpgrade *boo
 	majorMinorEngineVersion := semver.MajorMinor("v" + *engineVersion)
 	rabbitSimplifiedVersion := "v3.13"
 	activeSimplifiedVersion := "v5.18"
-	if (engineType == types.EngineTypeRabbitmq && semver.Compare(majorMinorEngineVersion, rabbitSimplifiedVersion) == 0) ||
-		(engineType == types.EngineTypeActivemq && semver.Compare(majorMinorEngineVersion, activeSimplifiedVersion) == 0) {
+	if (strings.EqualFold(string(engineType), string(types.EngineTypeRabbitmq)) && semver.Compare(majorMinorEngineVersion, rabbitSimplifiedVersion) == 0) ||
+		(strings.EqualFold(string(engineType), string(types.EngineTypeActivemq)) && semver.Compare(majorMinorEngineVersion, activeSimplifiedVersion) == 0) {
 		return majorMinorEngineVersion[1:]
 	}
 	return *engineVersion
@@ -571,10 +571,14 @@ func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if d.HasChanges(names.AttrConfiguration, "logs", names.AttrEngineVersion) {
+		output, errors := findBrokerByID(ctx, conn, d.Id())
+		if errors != nil {
+			return sdkdiag.AppendErrorf(diags, "reading MQ Broker (%s): %s", d.Id(), errors)
+		}
 		input := &mq.UpdateBrokerInput{
 			BrokerId:      aws.String(d.Id()),
 			Configuration: expandConfigurationId(d.Get(names.AttrConfiguration).([]interface{})),
-			EngineVersion: aws.String(d.Get(names.AttrEngineVersion).(string)),
+			EngineVersion: aws.String(simplifiedVersion(output.EngineType, output.AutoMinorVersionUpgrade, output.EngineVersion)),
 			Logs:          expandLogs(d.Get("engine_type").(string), d.Get("logs").([]interface{})),
 		}
 
