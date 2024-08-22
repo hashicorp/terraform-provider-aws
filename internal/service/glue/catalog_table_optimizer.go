@@ -38,6 +38,8 @@ func newResourceCatalogTableOptimizer(context.Context) (resource.ResourceWithCon
 
 const (
 	ResNameCatalogTableOptimizer = "Catalog Table Optimizer"
+
+	idParts = 4
 )
 
 type resourceCatalogTableOptimizer struct {
@@ -148,7 +150,7 @@ func (r *resourceCatalogTableOptimizer) Create(ctx context.Context, request reso
 			plan.DatabaseName.ValueString(),
 			plan.TableName.ValueString(),
 			plan.Type.ValueString(),
-		}, 4, false)
+		}, idParts, false)
 
 		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.Glue, create.ErrActionCreating, ResNameCatalogTableOptimizer, id, err),
@@ -178,7 +180,7 @@ func (r *resourceCatalogTableOptimizer) Read(ctx context.Context, request resour
 			data.DatabaseName.ValueString(),
 			data.TableName.ValueString(),
 			data.Type.ValueString(),
-		}, 4, false)
+		}, idParts, false)
 
 		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.Glue, create.ErrActionReading, ResNameCatalogTableOptimizer, id, err),
@@ -223,7 +225,7 @@ func (r *resourceCatalogTableOptimizer) Update(ctx context.Context, request reso
 				state.DatabaseName.ValueString(),
 				state.TableName.ValueString(),
 				state.Type.ValueString(),
-			}, 4, false)
+			}, idParts, false)
 
 			response.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.Glue, create.ErrActionUpdating, ResNameCatalogTableOptimizer, id, err),
@@ -270,7 +272,7 @@ func (r *resourceCatalogTableOptimizer) Delete(ctx context.Context, request reso
 			data.DatabaseName.ValueString(),
 			data.TableName.ValueString(),
 			data.Type.ValueString(),
-		}, 4, false)
+		}, idParts, false)
 
 		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.Glue, create.ErrActionDeleting, ResNameCatalogTableOptimizer, id, err),
@@ -281,7 +283,7 @@ func (r *resourceCatalogTableOptimizer) Delete(ctx context.Context, request reso
 }
 
 func (r *resourceCatalogTableOptimizer) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	parts, err := flex.ExpandResourceId(request.ID, 4, false)
+	parts, err := flex.ExpandResourceId(request.ID, idParts, false)
 
 	if err != nil {
 		response.Diagnostics.AddError(
