@@ -349,12 +349,12 @@ data "aws_neptune_orderable_db_instance" "test" {
   engine_version = aws_neptune_cluster.test.engine_version
   license_model  = "amazon-license"
 
-  preferred_instance_classes = ["db.t3.medium", "db.r5.large", "db.r4.large"]
+  preferred_instance_classes = ["db.t4g.medium", "db.r6g.large", "db.r5.large", "db.t3.medium", "db.r4.large"]
 }
 
 resource "aws_neptune_parameter_group" "test" {
   name   = %[1]q
-  family = "neptune1.3"
+  family = join( "", ["neptune",split(".",aws_neptune_cluster.test.engine_version)[0],".",split(".",aws_neptune_cluster.test.engine_version)[1]])
 
   parameter {
     name  = "neptune_query_timeout"
@@ -370,7 +370,6 @@ resource "aws_neptune_cluster" "test" {
   cluster_identifier                   = %[1]q
   availability_zones                   = slice(data.aws_availability_zones.available.names, 0, min(3, length(data.aws_availability_zones.available.names)))
   engine                               = "neptune"
-  neptune_cluster_parameter_group_name = "default.neptune1.3"
   skip_final_snapshot                  = true
 }
 `, rName))
@@ -496,7 +495,6 @@ resource "aws_neptune_subnet_group" "test" {
 resource "aws_neptune_cluster" "test" {
   cluster_identifier                   = %[1]q
   neptune_subnet_group_name            = aws_neptune_subnet_group.test.name
-  neptune_cluster_parameter_group_name = "default.neptune1.3"
   skip_final_snapshot                  = true
 }
 `, rName))
@@ -540,8 +538,6 @@ resource "aws_neptune_cluster" "test" {
   skip_final_snapshot = true
   storage_encrypted   = true
   kms_key_arn         = aws_kms_key.test.arn
-
-  neptune_cluster_parameter_group_name = "default.neptune1.3"
 }
 `, rName))
 }
