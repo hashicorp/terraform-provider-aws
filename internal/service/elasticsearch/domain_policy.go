@@ -135,8 +135,8 @@ func resourceDomainPolicyDelete(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "deleting Elasticsearch Domain Policy (%s): %s", d.Id(), err)
 	}
 
-	if err := waitForDomainUpdate(ctx, conn, d.Get(names.AttrDomainName).(string), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Elasticsearch Domain (%s) update: %s", d.Id(), err)
+	if _, err := waitDomainConfigUpdated(ctx, conn, d.Get(names.AttrDomainName).(string), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Elasticsearch Domain (%s) Config update: %s", d.Id(), err)
 	}
 
 	return diags

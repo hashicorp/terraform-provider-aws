@@ -18,6 +18,7 @@ import (
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -560,9 +561,8 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if v, ok := d.GetOk("access_policies"); ok {
 		policy, err := structure.NormalizeJsonString(v.(string))
-
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policy, err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
 		input.AccessPolicies = aws.String(policy)
@@ -580,89 +580,81 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.AutoTuneOptions = expandAutoTuneOptionsInput(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("ebs_options"); ok {
-		options := v.([]interface{})
-
-		if len(options) == 1 {
-			if options[0] == nil {
-				return sdkdiag.AppendErrorf(diags, "At least one field is expected inside ebs_options")
-			}
-
-			s := options[0].(map[string]interface{})
-			input.EBSOptions = expandEBSOptions(s)
-		}
-	}
-
-	if v, ok := d.GetOk("encrypt_at_rest"); ok {
-		options := v.([]interface{})
-		if options[0] == nil {
-			return sdkdiag.AppendErrorf(diags, "At least one field is expected inside encrypt_at_rest")
-		}
-
-		s := options[0].(map[string]interface{})
-		input.EncryptionAtRestOptions = expandEncryptAtRestOptions(s)
-	}
-
 	if v, ok := d.GetOk("cluster_config"); ok {
-		config := v.([]interface{})
-
-		if len(config) == 1 {
-			if config[0] == nil {
+		if v := v.([]interface{}); len(v) == 1 {
+			if v[0] == nil {
 				return sdkdiag.AppendErrorf(diags, "At least one field is expected inside cluster_config")
 			}
-			m := config[0].(map[string]interface{})
-			input.ElasticsearchClusterConfig = expandElasticsearchClusterConfig(m)
+
+			input.ElasticsearchClusterConfig = expandElasticsearchClusterConfig(v[0].(map[string]interface{}))
 		}
-	}
-
-	if v, ok := d.GetOk("node_to_node_encryption"); ok {
-		options := v.([]interface{})
-
-		s := options[0].(map[string]interface{})
-		input.NodeToNodeEncryptionOptions = expandNodeToNodeEncryptionOptions(s)
-	}
-
-	if v, ok := d.GetOk("snapshot_options"); ok {
-		options := v.([]interface{})
-
-		if len(options) == 1 {
-			if options[0] == nil {
-				return sdkdiag.AppendErrorf(diags, "At least one field is expected inside snapshot_options")
-			}
-
-			o := options[0].(map[string]interface{})
-
-			snapshotOptions := awstypes.SnapshotOptions{
-				AutomatedSnapshotStartHour: aws.Int32(int32(o["automated_snapshot_start_hour"].(int))),
-			}
-
-			input.SnapshotOptions = &snapshotOptions
-		}
-	}
-
-	if v, ok := d.GetOk("vpc_options"); ok {
-		options := v.([]interface{})
-		if options[0] == nil {
-			return sdkdiag.AppendErrorf(diags, "At least one field is expected inside vpc_options")
-		}
-
-		s := options[0].(map[string]interface{})
-		input.VPCOptions = expandVPCOptions(s)
-	}
-
-	if v, ok := d.GetOk("log_publishing_options"); ok {
-		input.LogPublishingOptions = expandLogPublishingOptions(v.(*schema.Set))
-	}
-
-	if v, ok := d.GetOk("domain_endpoint_options"); ok {
-		input.DomainEndpointOptions = expandDomainEndpointOptions(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("cognito_options"); ok {
 		input.CognitoOptions = expandCognitoOptions(v.([]interface{}))
 	}
 
-	log.Printf("[DEBUG] Creating Elasticsearch Domain: %+v", input)
+	if v, ok := d.GetOk("domain_endpoint_options"); ok {
+		input.DomainEndpointOptions = expandDomainEndpointOptions(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("ebs_options"); ok {
+		if v := v.([]interface{}); len(v) == 1 {
+			if v[0] == nil {
+				return sdkdiag.AppendErrorf(diags, "At least one field is expected inside ebs_options")
+			}
+
+			input.EBSOptions = expandEBSOptions(v[0].(map[string]interface{}))
+		}
+	}
+
+	if v, ok := d.GetOk("encrypt_at_rest"); ok {
+		if v := v.([]interface{}); len(v) == 1 {
+			if v[0] == nil {
+				return sdkdiag.AppendErrorf(diags, "At least one field is expected inside encrypt_at_rest")
+			}
+
+			input.EncryptionAtRestOptions = expandEncryptAtRestOptions(v[0].(map[string]interface{}))
+		}
+	}
+
+	if v, ok := d.GetOk("log_publishing_options"); ok {
+		input.LogPublishingOptions = expandLogPublishingOptions(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("node_to_node_encryption"); ok {
+		if v := v.([]interface{}); len(v) == 1 {
+			if v[0] == nil {
+				return sdkdiag.AppendErrorf(diags, "At least one field is expected inside node_to_node_encryption")
+			}
+
+			input.NodeToNodeEncryptionOptions = expandNodeToNodeEncryptionOptions(v[0].(map[string]interface{}))
+		}
+	}
+
+	if v, ok := d.GetOk("snapshot_options"); ok {
+		if v := v.([]interface{}); len(v) == 1 {
+			if v[0] == nil {
+				return sdkdiag.AppendErrorf(diags, "At least one field is expected inside snapshot_options")
+			}
+
+			tfMap := v[0].(map[string]interface{})
+
+			input.SnapshotOptions = &awstypes.SnapshotOptions{
+				AutomatedSnapshotStartHour: aws.Int32(int32(tfMap["automated_snapshot_start_hour"].(int))),
+			}
+		}
+	}
+
+	if v, ok := d.GetOk("vpc_options"); ok {
+		if v := v.([]interface{}); len(v) == 1 {
+			if v[0] == nil {
+				return sdkdiag.AppendErrorf(diags, "At least one field is expected inside vpc_options")
+			}
+
+			input.VPCOptions = expandVPCOptions(v[0].(map[string]interface{}))
+		}
+	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
 		func() (interface{}, error) {
@@ -690,7 +682,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.SetId(aws.ToString(outputRaw.(*elasticsearch.CreateElasticsearchDomainOutput).DomainStatus.ARN))
 
-	if err := waitForDomainCreation(ctx, conn, name, d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitDomainCreated(ctx, conn, name, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Elasticsearch Domain (%s) create: %s", d.Id(), err)
 	}
 
@@ -700,15 +692,14 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 			DomainName:      aws.String(name),
 		}
 
-		log.Printf("[DEBUG] Updating Elasticsearch Domain config: %+v", input)
 		_, err = conn.UpdateElasticsearchDomainConfig(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Elasticsearch Domain (%s) config: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Elasticsearch Domain (%s) Config: %s", d.Id(), err)
 		}
 
-		if err := waitForDomainUpdate(ctx, conn, name, d.Timeout(schema.TimeoutCreate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for Elasticsearch Domain (%s) update: %s", d.Id(), err)
+		if _, err := waitDomainConfigUpdated(ctx, conn, name, d.Timeout(schema.TimeoutCreate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Elasticsearch Domain (%s) Config update: %s", d.Id(), err)
 		}
 	}
 
@@ -1003,7 +994,7 @@ func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "deleting Elasticsearch Domain (%s): %s", d.Id(), err)
 	}
 
-	if err := waitForDomainDelete(ctx, conn, name, d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waitDomainDeleted(ctx, conn, name, d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Elasticsearch Domain (%s) delete: %s", d.Id(), err)
 	}
 
@@ -1024,6 +1015,313 @@ func resourceDomainImport(ctx context.Context, d *schema.ResourceData, meta inte
 	d.SetId(aws.ToString(ds.ARN))
 
 	return []*schema.ResourceData{d}, nil
+}
+
+func findDomainByName(ctx context.Context, conn *elasticsearch.Client, name string) (*awstypes.ElasticsearchDomainStatus, error) {
+	input := &elasticsearch.DescribeElasticsearchDomainInput{
+		DomainName: aws.String(name),
+	}
+	output, err := findDomain(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if aws.ToBool(output.Deleted) {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findDomain(ctx context.Context, conn *elasticsearch.Client, input *elasticsearch.DescribeElasticsearchDomainInput) (*awstypes.ElasticsearchDomainStatus, error) {
+	output, err := conn.DescribeElasticsearchDomain(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.DomainStatus == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.DomainStatus, nil
+}
+
+func findDomainChangeProgressDetailsByName(ctx context.Context, conn *elasticsearch.Client, name string) (*awstypes.ChangeProgressDetails, error) {
+	output, err := findDomainByName(ctx, conn, name)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output.ChangeProgressDetails == nil {
+		return nil, tfresource.NewEmptyResultError(nil)
+	}
+
+	return output.ChangeProgressDetails, nil
+}
+
+func findDomainConfigByName(ctx context.Context, conn *elasticsearch.Client, name string) (*awstypes.ElasticsearchDomainConfig, error) {
+	input := &elasticsearch.DescribeElasticsearchDomainConfigInput{
+		DomainName: aws.String(name),
+	}
+
+	return findDomainConfig(ctx, conn, input)
+}
+
+func findDomainConfig(ctx context.Context, conn *elasticsearch.Client, input *elasticsearch.DescribeElasticsearchDomainConfigInput) (*awstypes.ElasticsearchDomainConfig, error) {
+	output, err := conn.DescribeElasticsearchDomainConfig(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.DomainConfig == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.DomainConfig, nil
+}
+
+func findDomainUpgradeStatusByName(ctx context.Context, conn *elasticsearch.Client, name string) (*elasticsearch.GetUpgradeStatusOutput, error) {
+	input := &elasticsearch.GetUpgradeStatusInput{
+		DomainName: aws.String(name),
+	}
+
+	return findDomainUpgradeStatus(ctx, conn, input)
+}
+
+func findDomainUpgradeStatus(ctx context.Context, conn *elasticsearch.Client, input *elasticsearch.GetUpgradeStatusInput) (*elasticsearch.GetUpgradeStatusOutput, error) {
+	output, err := conn.GetUpgradeStatus(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func statusDomainConfigChange(ctx context.Context, conn *elasticsearch.Client, name string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findDomainChangeProgressDetailsByName(ctx, conn, name)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.ConfigChangeStatus), nil
+	}
+}
+
+func statusDomainProcessing(ctx context.Context, conn *elasticsearch.Client, name string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findDomainByName(ctx, conn, name)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.DomainProcessingStatus), nil
+	}
+}
+
+const (
+	UpgradeStatusUnknown = "Unknown"
+	ConfigStatusNotFound = "NotFound"
+	ConfigStatusUnknown  = "Unknown"
+	ConfigStatusExists   = "Exists"
+)
+
+func statusUpgradeStatus(ctx context.Context, conn *elasticsearch.Client, name string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		out, err := conn.GetUpgradeStatus(ctx, &elasticsearch.GetUpgradeStatusInput{
+			DomainName: aws.String(name),
+		})
+		if err != nil {
+			return nil, UpgradeStatusUnknown, err
+		}
+
+		// Elasticsearch upgrades consist of multiple steps:
+		// https://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-version-migration.html
+		// Prevent false positive completion where the UpgradeStep is not the final UPGRADE step.
+		if out.StepStatus == awstypes.UpgradeStatusSucceeded && out.UpgradeStep != awstypes.UpgradeStepUpgrade {
+			return out, string(awstypes.UpgradeStatusInProgress), nil
+		}
+
+		return out, string(out.StepStatus), nil
+	}
+}
+
+func domainConfigStatus(ctx context.Context, conn *elasticsearch.Client, name string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		out, err := conn.DescribeElasticsearchDomainConfig(ctx, &elasticsearch.DescribeElasticsearchDomainConfigInput{
+			DomainName: aws.String(name),
+		})
+
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			// if first return value is nil, WaitForState treats as not found - here not found is treated differently
+			return "not nil", ConfigStatusNotFound, nil
+		}
+
+		if err != nil {
+			return nil, ConfigStatusUnknown, err
+		}
+
+		return out, ConfigStatusExists, nil
+	}
+}
+
+const (
+	domainUpgradeSuccessMinTimeout = 10 * time.Second
+	domainUpgradeSuccessDelay      = 30 * time.Second
+)
+
+// UpgradeSucceeded waits for an Upgrade to return Success
+func waitUpgradeSucceeded(ctx context.Context, conn *elasticsearch.Client, name string, timeout time.Duration) (*elasticsearch.GetUpgradeStatusOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice[awstypes.UpgradeStatus](awstypes.UpgradeStatusInProgress),
+		Target:     enum.Slice[awstypes.UpgradeStatus](awstypes.UpgradeStatusSucceeded),
+		Refresh:    statusUpgradeStatus(ctx, conn, name),
+		Timeout:    timeout,
+		MinTimeout: domainUpgradeSuccessMinTimeout,
+		Delay:      domainUpgradeSuccessDelay,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*elasticsearch.GetUpgradeStatusOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitDomainCreated(ctx context.Context, conn *elasticsearch.Client, domainName string, timeout time.Duration) (*awstypes.ElasticsearchDomainStatus, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.DomainProcessingStatusTypeCreating),
+		Target:  enum.Slice(awstypes.DomainProcessingStatusTypeActive),
+		Refresh: statusDomainProcessing(ctx, conn, domainName),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.ElasticsearchDomainStatus); ok {
+		if v := output.ChangeProgressDetails; v != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", v.ConfigChangeStatus, aws.ToString(v.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitForDomainUpdate(ctx context.Context, conn *elasticsearch.Client, domainName string, timeout time.Duration) error {
+	var out *awstypes.ElasticsearchDomainStatus
+	err := retry.RetryContext(ctx, timeout, func() *retry.RetryError {
+		var err error
+		out, err = findDomainByName(ctx, conn, domainName)
+		if err != nil {
+			return retry.NonRetryableError(err)
+		}
+
+		if !aws.ToBool(out.Processing) {
+			return nil
+		}
+
+		return retry.RetryableError(
+			fmt.Errorf("%q: Timeout while waiting for changes to be processed", domainName))
+	})
+	if tfresource.TimedOut(err) {
+		out, err = findDomainByName(ctx, conn, domainName)
+		if err != nil {
+			return fmt.Errorf("describing Elasticsearch domain: %w", err)
+		}
+		if !aws.ToBool(out.Processing) {
+			return nil
+		}
+	}
+
+	return err
+}
+
+func waitDomainConfigUpdated(ctx context.Context, conn *elasticsearch.Client, domainName string, timeout time.Duration) (*awstypes.ElasticsearchDomainStatus, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.DomainProcessingStatusTypeModifying),
+		Target:  enum.Slice(awstypes.DomainProcessingStatusTypeActive),
+		Refresh: statusDomainProcessing(ctx, conn, domainName),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.ElasticsearchDomainStatus); ok {
+		if v := output.ChangeProgressDetails; v != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", v.ConfigChangeStatus, aws.ToString(v.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitDomainDeleted(ctx context.Context, conn *elasticsearch.Client, domainName string, timeout time.Duration) (*awstypes.ElasticsearchDomainStatus, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.DomainProcessingStatusTypeDeleting),
+		Target:  []string{},
+		Refresh: statusDomainProcessing(ctx, conn, domainName),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.ElasticsearchDomainStatus); ok {
+		if v := output.ChangeProgressDetails; v != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", v.ConfigChangeStatus, aws.ToString(v.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
 }
 
 func warmPartitionInstanceType_Values() []string {
@@ -1048,19 +1346,17 @@ func getKibanaEndpoint(d *schema.ResourceData) string {
 }
 
 func isDedicatedMasterDisabled(k, old, new string, d *schema.ResourceData) bool {
-	v, ok := d.GetOk("cluster_config")
-	if ok {
-		clusterConfig := v.([]interface{})[0].(map[string]interface{})
-		return !clusterConfig["dedicated_master_enabled"].(bool)
+	if v, ok := d.GetOk("cluster_config"); ok {
+		tfMap := v.([]interface{})[0].(map[string]interface{})
+		return !tfMap["dedicated_master_enabled"].(bool)
 	}
 	return false
 }
 
 func isCustomEndpointDisabled(k, old, new string, d *schema.ResourceData) bool {
-	v, ok := d.GetOk("domain_endpoint_options")
-	if ok {
-		domainEndpointOptions := v.([]interface{})[0].(map[string]interface{})
-		return !domainEndpointOptions["custom_endpoint_enabled"].(bool)
+	if v, ok := d.GetOk("domain_endpoint_options"); ok {
+		tfMap := v.([]interface{})[0].(map[string]interface{})
+		return !tfMap["custom_endpoint_enabled"].(bool)
 	}
 	return false
 }
@@ -1259,7 +1555,7 @@ func ebsVolumeTypePermitsIopsInput(volumeType string) bool {
 	return slices.Contains(permittedTypes, volumeType)
 }
 
-// EBSVolumeTypePermitsIopsInput returns true if the volume type supports the Throughput input
+// ebsVolumeTypePermitsThroughputInput returns true if the volume type supports the Throughput input
 //
 // This check prevents a ValidationException when updating EBS volume types from a value
 // that supports Throughput (ex. gp3) to one that doesn't (ex. gp2).

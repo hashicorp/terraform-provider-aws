@@ -13,5 +13,5 @@ var (
 	FindDomainSAMLOptionByDomainName = findDomainSAMLOptionByDomainName
 	FindVPCEndpointByID              = findVPCEndpointByID
 	VPCEndpointsError                = vpcEndpointsError
-	WaitForDomainCreation            = waitForDomainCreation
+	WaitDomainCreated                = waitDomainCreated
 )

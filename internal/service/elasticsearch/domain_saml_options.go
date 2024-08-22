@@ -179,8 +179,8 @@ func resourceDomainSAMLOptionsDelete(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "deleting Elasticsearch Domain SAML Options (%s): %s", d.Id(), err)
 	}
 
-	if err := waitForDomainUpdate(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Elasticsearch Domain (%s) update: %s", d.Id(), err)
+	if _, err := waitDomainConfigUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Elasticsearch Domain (%s) Config update: %s", d.Id(), err)
 	}
 
 	return diags
