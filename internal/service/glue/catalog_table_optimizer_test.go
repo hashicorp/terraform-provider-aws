@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package glue_test
 
 import (
@@ -18,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccGlueCatalogTableOptimizer_basic(t *testing.T) {
+func testAccCatalogTableOptimizer_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var catalogTableOptimizer glue.GetTableOptimizerOutput
 
@@ -26,7 +29,7 @@ func TestAccGlueCatalogTableOptimizer_basic(t *testing.T) {
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -54,7 +57,7 @@ func TestAccGlueCatalogTableOptimizer_basic(t *testing.T) {
 	})
 }
 
-func TestAccGlueCatalogTableOptimizer_update(t *testing.T) {
+func testAccCatalogTableOptimizer_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var catalogTableOptimizer glue.GetTableOptimizerOutput
 
