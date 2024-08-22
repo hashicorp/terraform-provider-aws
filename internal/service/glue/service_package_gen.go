@@ -19,7 +19,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{}
+	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory: newResourceCatalogTableOptimizer,
+			Name:    "Catalog Table Optimizer",
+		},
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
@@ -56,11 +61,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceCatalogTable,
 			TypeName: "aws_glue_catalog_table",
-		},
-		{
-			Factory:  ResourceCatalogTableOptimizer,
-			TypeName: "aws_glue_catalog_table_optimizer",
-			Name:     "Catalog Table Optimizer",
 		},
 		{
 			Factory:  ResourceClassifier,
