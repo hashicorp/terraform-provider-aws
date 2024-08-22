@@ -73,6 +73,14 @@ func (d *dataSourceCollection) Schema(_ context.Context, _ datasource.SchemaRequ
 			"last_modified_date": schema.StringAttribute{
 				Computed: true,
 			},
+			"failure_message": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+			},
+			"failure_code": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+			},
 			names.AttrName: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
@@ -169,4 +177,6 @@ type dataSourceCollectionData struct {
 	StandbyReplicas    types.String `tfsdk:"standby_replicas"`
 	Tags               tftags.Map   `tfsdk:"tags"`
 	Type               types.String `tfsdk:"type"`
+	FailureMessage     types.String `tfsdk:"failure_message"`
+	FailureCode        types.String `tfsdk:"failure_code"`
 }

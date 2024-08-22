@@ -56,6 +56,8 @@ type resourceCollectionData struct {
 	TagsAll            tftags.Map     `tfsdk:"tags_all"`
 	Timeouts           timeouts.Value `tfsdk:"timeouts"`
 	Type               types.String   `tfsdk:"type"`
+	FailureMessage     types.String   `tfsdk:"failure_message"`
+	FailureCode        types.String   `tfsdk:"failure_code"`
 }
 
 const (
@@ -120,6 +122,20 @@ func (r *resourceCollection) Schema(ctx context.Context, req resource.SchemaRequ
 				},
 				Validators: []validator.String{
 					enum.FrameworkValidate[awstypes.StandbyReplicas](),
+				},
+			},
+			"failure_message": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"failure_code": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),

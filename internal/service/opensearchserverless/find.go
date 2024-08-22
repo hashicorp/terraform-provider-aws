@@ -61,7 +61,17 @@ func findCollectionByID(ctx context.Context, conn *opensearchserverless.Client, 
 		return nil, tfresource.NewEmptyResultError(in)
 	}
 
-	return &out.CollectionDetails[0], nil
+	collectionDetail := &out.CollectionDetails[0]
+
+	// Ensure default values if nil
+	if collectionDetail.FailureCode == nil {
+		collectionDetail.FailureCode = aws.String("")
+	}
+	if collectionDetail.FailureMessage == nil {
+		collectionDetail.FailureMessage = aws.String("")
+	}
+
+	return collectionDetail, nil
 }
 
 func findCollectionByName(ctx context.Context, conn *opensearchserverless.Client, name string) (*types.CollectionDetail, error) {
@@ -89,7 +99,17 @@ func findCollectionByName(ctx context.Context, conn *opensearchserverless.Client
 		return nil, tfresource.NewTooManyResultsError(len(out.CollectionDetails), in)
 	}
 
-	return &out.CollectionDetails[0], nil
+	collectionDetail := &out.CollectionDetails[0]
+
+	// Ensure default values if nil
+	if collectionDetail.FailureCode == nil {
+		collectionDetail.FailureCode = aws.String("")
+	}
+	if collectionDetail.FailureMessage == nil {
+		collectionDetail.FailureMessage = aws.String("")
+	}
+
+	return collectionDetail, nil
 }
 
 func findSecurityConfigByID(ctx context.Context, conn *opensearchserverless.Client, id string) (*types.SecurityConfigDetail, error) {
