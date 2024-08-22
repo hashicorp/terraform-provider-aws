@@ -2,18 +2,19 @@ package glue_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/service/glue"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -44,6 +45,7 @@ func TestAccGlueCatalogTableOptimizer_basic(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccCatalogTableOptimizerStateIDFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -51,37 +53,35 @@ func TestAccGlueCatalogTableOptimizer_basic(t *testing.T) {
 	})
 }
 
+func testAccCatalogTableOptimizerStateIDFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("not found: %s", resourceName)
+		}
+
+		return fmt.Sprintf("%s,%s,%s,%s", rs.Primary.Attributes["catalog_id"], rs.Primary.Attributes["database_name"],
+			rs.Primary.Attributes["table_name"], rs.Primary.Attributes["type"]), nil
+	}
+}
+
 func testAccCheckCatalogTableOptimizerExists(ctx context.Context, resourceName string, catalogTableOptimizer *glue.GetTableOptimizerOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return create.Error(names.Glue, create.ErrActionCheckingExistence, tfglue.ResNameCatalogTableOptimizer, resourceName, errors.New("not found"))
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Glue Catalog Table Optimizer ID is set")
+			return create.Error(names.Glue, create.ErrActionCheckingExistence, tfglue.ResNameCatalogTableOptimizer, resourceName, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
-		idParts := strings.Split(rs.Primary.ID, ":")
-		if len(idParts) != 4 {
-			return fmt.Errorf("unexpected format of ID (%q), expected catalog_id:database_name:table_name:type", rs.Primary.ID)
-		}
-		catalogID, databaseName, tableName, optimizerType := idParts[0], idParts[1], idParts[2], idParts[3]
-
-		resp, err := conn.GetTableOptimizerWithContext(ctx, &glue.GetTableOptimizerInput{
-			CatalogId:    aws.String(catalogID),
-			DatabaseName: aws.String(databaseName),
-			TableName:    aws.String(tableName),
-			Type:         aws.String(optimizerType),
-		})
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
+		resp, err := tfglue.FindCatalogTableOptimizer(ctx, conn, rs.Primary.Attributes["catalog_id"], rs.Primary.Attributes["database_name"],
+			rs.Primary.Attributes["table_name"], rs.Primary.Attributes["type"])
 
 		if err != nil {
-			return fmt.Errorf("error getting Glue Catalog Table Optimizer (%s): %w", rs.Primary.ID, err)
-		}
-
-		if resp == nil || resp.TableOptimizer == nil {
-			return fmt.Errorf("Glue Catalog Table Optimizer (%s) not found", rs.Primary.ID)
+			return create.Error(names.Glue, create.ErrActionCheckingExistence, tfglue.ResNameCatalogTableOptimizer, rs.Primary.ID, err)
 		}
 
 		*catalogTableOptimizer = *resp
@@ -97,27 +97,19 @@ func testAccCheckCatalogTableOptimizerDestroy(ctx context.Context) resource.Test
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
-			idParts := strings.Split(rs.Primary.ID, ":")
-			if len(idParts) != 4 {
-				return fmt.Errorf("unexpected format of ID (%q), expected catalog_id:database_name:table_name:type", rs.Primary.ID)
-			}
-			catalogID, databaseName, tableName, optimizerType := idParts[0], idParts[1], idParts[2], idParts[3]
+			conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
+			_, err := tfglue.FindCatalogTableOptimizer(ctx, conn, rs.Primary.Attributes["catalog_id"], rs.Primary.Attributes["database_name"],
+				rs.Primary.Attributes["table_name"], rs.Primary.Attributes["type"])
 
-			_, err := conn.GetTableOptimizerWithContext(ctx, &glue.GetTableOptimizerInput{
-				CatalogId:    aws.String(catalogID),
-				DatabaseName: aws.String(databaseName),
-				TableName:    aws.String(tableName),
-				Type:         aws.String(optimizerType),
-			})
+			if tfresource.NotFound(err) {
+				continue
+			}
+
 			if err != nil {
-				if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
-					return nil
-				}
-				return fmt.Errorf("error getting Glue Catalog Table Optimizer (%s): %w", rs.Primary.ID, err)
+				return err
 			}
 
-			return fmt.Errorf("Glue Catalog Table Optimizer %s still exists", rs.Primary.ID)
+			return create.Error(names.Glue, create.ErrActionCheckingDestroyed, tfglue.ResNameCatalogTableOptimizer, rs.Primary.ID, errors.New("not destroyed"))
 		}
 
 		return nil
@@ -237,11 +229,6 @@ resource "aws_glue_catalog_table_optimizer" "test" {
   }
 
   type = "compaction"
-
-  depends_on = [
-    aws_iam_role.test,
-    aws_iam_role_policy.glue_compaction_role_access
-  ]
 }
 `, rName)
 }

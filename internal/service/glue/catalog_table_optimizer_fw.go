@@ -164,7 +164,7 @@ func (r *resourceCatalogTableOptimizer) Read(ctx context.Context, request resour
 		return
 	}
 
-	output, err := findTableOptimizer(ctx, conn, data.CatalogID.ValueString(), data.DatabaseName.ValueString(), data.TableName.ValueString(), data.Type.ValueString())
+	output, err := findCatalogTableOptimizer(ctx, conn, data.CatalogID.ValueString(), data.DatabaseName.ValueString(), data.TableName.ValueString(), data.Type.ValueString())
 
 	if err != nil {
 		id, _ := flex.FlattenResourceId([]string{
@@ -312,7 +312,7 @@ type configurationData struct {
 	RoleARN fwtypes.ARN `tfsdk:"role_arn"`
 }
 
-func findTableOptimizer(ctx context.Context, conn *glue.Client, catalogID, dbName, tableName, optimizerType string) (*glue.GetTableOptimizerOutput, error) {
+func findCatalogTableOptimizer(ctx context.Context, conn *glue.Client, catalogID, dbName, tableName, optimizerType string) (*glue.GetTableOptimizerOutput, error) {
 	input := &glue.GetTableOptimizerInput{
 		CatalogId:    aws.String(catalogID),
 		DatabaseName: aws.String(dbName),
