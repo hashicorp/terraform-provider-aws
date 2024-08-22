@@ -104,7 +104,7 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	d.SetId(aws.ToString(output.VpcEndpoint.VpcEndpointId))
 
-	if err := waitVPCEndpointCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitVPCEndpointCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Elasticsearch VPC Endpoint (%s) create: %s", d.Id(), err)
 	}
 
@@ -155,7 +155,7 @@ func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "updating Elasticsearch VPC Endpoint (%s): %s", d.Id(), err)
 	}
 
-	if err := waitVPCEndpointUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if _, err := waitVPCEndpointUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Elasticsearch VPC Endpoint (%s) update: %s", d.Id(), err)
 	}
 
@@ -179,7 +179,7 @@ func resourceVPCEndpointDelete(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "deleting Elasticsearch VPC Endpoint (%s): %s", d.Id(), err)
 	}
 
-	if err := waitVPCEndpointDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waitVPCEndpointDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Elasticsearch VPC Endpoint (%s) delete: %s", d.Id(), err)
 	}
 
@@ -290,41 +290,53 @@ func statusVPCEndpoint(ctx context.Context, conn *elasticsearchservice.Client, i
 	}
 }
 
-func waitVPCEndpointCreated(ctx context.Context, conn *elasticsearchservice.Client, id string, timeout time.Duration) error {
+func waitVPCEndpointCreated(ctx context.Context, conn *elasticsearchservice.Client, id string, timeout time.Duration) (*awstypes.VpcEndpoint, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice[awstypes.VpcEndpointStatus](awstypes.VpcEndpointStatusCreating),
-		Target:  enum.Slice[awstypes.VpcEndpointStatus](awstypes.VpcEndpointStatusActive),
+		Pending: enum.Slice(awstypes.VpcEndpointStatusCreating),
+		Target:  enum.Slice(awstypes.VpcEndpointStatusActive),
 		Refresh: statusVPCEndpoint(ctx, conn, id),
 		Timeout: timeout,
 	}
 
-	_, err := stateConf.WaitForStateContext(ctx)
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	return err
+	if output, ok := outputRaw.(*awstypes.VpcEndpoint); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
-func waitVPCEndpointUpdated(ctx context.Context, conn *elasticsearchservice.Client, id string, timeout time.Duration) error {
+func waitVPCEndpointUpdated(ctx context.Context, conn *elasticsearchservice.Client, id string, timeout time.Duration) (*awstypes.VpcEndpoint, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice[awstypes.VpcEndpointStatus](awstypes.VpcEndpointStatusUpdating),
-		Target:  enum.Slice[awstypes.VpcEndpointStatus](awstypes.VpcEndpointStatusActive),
+		Pending: enum.Slice(awstypes.VpcEndpointStatusUpdating),
+		Target:  enum.Slice(awstypes.VpcEndpointStatusActive),
 		Refresh: statusVPCEndpoint(ctx, conn, id),
 		Timeout: timeout,
 	}
 
-	_, err := stateConf.WaitForStateContext(ctx)
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	return err
+	if output, ok := outputRaw.(*awstypes.VpcEndpoint); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
-func waitVPCEndpointDeleted(ctx context.Context, conn *elasticsearchservice.Client, id string, timeout time.Duration) error {
+func waitVPCEndpointDeleted(ctx context.Context, conn *elasticsearchservice.Client, id string, timeout time.Duration) (*awstypes.VpcEndpoint, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice[awstypes.VpcEndpointStatus](awstypes.VpcEndpointStatusDeleting),
+		Pending: enum.Slice(awstypes.VpcEndpointStatusDeleting),
 		Target:  []string{},
 		Refresh: statusVPCEndpoint(ctx, conn, id),
 		Timeout: timeout,
 	}
 
-	_, err := stateConf.WaitForStateContext(ctx)
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	return err
+	if output, ok := outputRaw.(*awstypes.VpcEndpoint); ok {
+		return output, err
+	}
+
+	return nil, err
 }
