@@ -241,9 +241,11 @@ func TestDiffUsers(t *testing.T) {
 }
 
 const (
-	testAccBrokerVersionNewer = "5.17.6"  // before changing, check b/c must be valid on GovCloud
-	testAccBrokerVersionOlder = "5.16.7"  // before changing, check b/c must be valid on GovCloud
-	testAccRabbitVersion      = "3.11.20" // before changing, check b/c must be valid on GovCloud
+	testAccBrokerVersionNewer      = "5.17.6" // before changing, check b/c must be valid on GovCloud
+	testAccBrokerVersionOlder      = "5.16.7" // before changing, check b/c must be valid on GovCloud
+	testAccActiveVersionSimplified = "5.18"
+	testAccRabbitVersion           = "3.11.20" // before changing, check b/c must be valid on GovCloud
+	testAccRabbitVersionSimplified = "3.13"
 )
 
 func TestAccMQBroker_basic(t *testing.T) {
@@ -282,6 +284,85 @@ func TestAccMQBroker_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "encryption_options.0.use_aws_owned_key", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "engine_type", "ActiveMQ"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, testAccBrokerVersionNewer),
+					resource.TestCheckResourceAttr(resourceName, "host_instance_type", "mq.t2.micro"),
+					resource.TestCheckResourceAttr(resourceName, "instances.#", acctest.Ct1),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.console_url",
+						regexache.MustCompile(`^https://[0-9a-f-]+\.mq.[0-9a-z-]+.amazonaws.com:8162$`)),
+					resource.TestCheckResourceAttr(resourceName, "instances.0.endpoints.#", "5"),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.0", regexache.MustCompile(`^ssl://[0-9a-z.-]+:61617$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.1", regexache.MustCompile(`^amqp\+ssl://[0-9a-z.-]+:5671$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.2", regexache.MustCompile(`^stomp\+ssl://[0-9a-z.-]+:61614$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.3", regexache.MustCompile(`^mqtt\+ssl://[0-9a-z.-]+:8883$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.4", regexache.MustCompile(`^wss://[0-9a-z.-]+:61619$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.ip_address",
+						regexache.MustCompile(`^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$`)),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_window_start_time.#", acctest.Ct1),
+					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
+					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.time_of_day"),
+					resource.TestCheckResourceAttr(resourceName, "logs.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "logs.0.general", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "logs.0.audit", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_window_start_time.0.time_zone", "UTC"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "security_groups.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "efs"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "user.#", acctest.Ct1),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
+						"console_access":   acctest.CtFalse,
+						"groups.#":         acctest.Ct0,
+						names.AttrUsername: "Test",
+						names.AttrPassword: "TestTest1234",
+					}),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
+			},
+		},
+	})
+}
+
+func TestAccMQBroker_basic_simplified_version(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var broker mq.DescribeBrokerOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_mq_broker.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBrokerConfig_basic_autoMinorVersionUpgrade(rName, testAccActiveVersionSimplified, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBrokerExists(ctx, resourceName, &broker),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "mq", regexache.MustCompile(`broker:+.`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "authentication_strategy", "simple"),
+					resource.TestCheckResourceAttr(resourceName, "broker_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
+					resource.TestMatchResourceAttr(resourceName, "configuration.0.id", regexache.MustCompile(`^c-[0-9a-z-]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "configuration.0.revision", regexache.MustCompile(`^[0-9]+$`)),
+					resource.TestCheckResourceAttr(resourceName, "deployment_mode", "SINGLE_INSTANCE"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "encryption_options.0.use_aws_owned_key", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "engine_type", "ActiveMQ"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, testAccActiveVersionSimplified),
 					resource.TestCheckResourceAttr(resourceName, "host_instance_type", "mq.t2.micro"),
 					resource.TestCheckResourceAttr(resourceName, "instances.#", acctest.Ct1),
 					resource.TestMatchResourceAttr(resourceName, "instances.0.console_url",
@@ -1126,6 +1207,99 @@ func TestAccMQBroker_RabbitMQ_basic(t *testing.T) {
 	})
 }
 
+func TestAccMQBroker_RabbitMQ_basic_with_auto_minor_version_upgrade(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var broker mq.DescribeBrokerOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_mq_broker.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBrokerConfig_rabbit_autoMinorVersionUpgrade(rName, testAccRabbitVersion, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBrokerExists(ctx, resourceName, &broker),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "engine_type", "RabbitMQ"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, testAccRabbitVersion),
+					resource.TestCheckResourceAttr(resourceName, "host_instance_type", "mq.t3.micro"),
+					resource.TestCheckResourceAttr(resourceName, "instances.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "instances.0.endpoints.#", acctest.Ct1),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.0", regexache.MustCompile(`^amqps://[0-9a-z.-]+:5671$`)),
+					resource.TestCheckResourceAttr(resourceName, "logs.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "logs.0.general", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "logs.0.audit", ""),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
+			},
+		},
+	})
+}
+
+func TestAccMQBroker_RabbitMQ_basic_simplified_version(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var broker mq.DescribeBrokerOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_mq_broker.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBrokerConfig_rabbit_autoMinorVersionUpgrade(rName, testAccRabbitVersionSimplified, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBrokerExists(ctx, resourceName, &broker),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "engine_type", "RabbitMQ"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, testAccRabbitVersionSimplified),
+					resource.TestCheckResourceAttr(resourceName, "host_instance_type", "mq.t3.micro"),
+					resource.TestCheckResourceAttr(resourceName, "instances.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "instances.0.endpoints.#", acctest.Ct1),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.0", regexache.MustCompile(`^amqps://[0-9a-z.-]+:5671$`)),
+					resource.TestCheckResourceAttr(resourceName, "logs.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "logs.0.general", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "logs.0.audit", ""),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
+			},
+		},
+	})
+}
+
 func TestAccMQBroker_RabbitMQ_config(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -1600,6 +1774,38 @@ resource "aws_mq_broker" "test" {
   }
 }
 `, rName, version)
+}
+
+func testAccBrokerConfig_basic_autoMinorVersionUpgrade(rName, version string, autoMinorVersionUpgrade bool) string {
+	return fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_mq_broker" "test" {
+  broker_name             = %[1]q
+  engine_type             = "ActiveMQ"
+  engine_version          = %[2]q
+  host_instance_type      = "mq.t2.micro"
+  security_groups         = [aws_security_group.test.id]
+  authentication_strategy = "simple"
+  storage_type            = "efs"
+  auto_minor_version_upgrade = %[3]t
+
+  logs {
+    general = true
+  }
+
+  user {
+    username = "Test"
+    password = "TestTest1234"
+  }
+}
+`, rName, version, autoMinorVersionUpgrade)
 }
 
 func testAccBrokerConfig_ebs(rName, version string) string {
@@ -2144,6 +2350,32 @@ resource "aws_mq_broker" "test" {
   }
 }
 `, rName, version)
+}
+
+func testAccBrokerConfig_rabbit_autoMinorVersionUpgrade(rName, version string, autoMinorVersionUpgrade bool) string {
+	return fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_mq_broker" "test" {
+  broker_name        = %[1]q
+  engine_type        = "RabbitMQ"
+  engine_version     = %[2]q
+  host_instance_type = "mq.t3.micro"
+  security_groups    = [aws_security_group.test.id]
+  auto_minor_version_upgrade = %[3]t
+
+  user {
+    username = "Test"
+    password = "TestTest1234"
+  }
+}
+`, rName, version, autoMinorVersionUpgrade)
 }
 
 func testAccBrokerConfig_rabbitConfig(rName, version string) string {

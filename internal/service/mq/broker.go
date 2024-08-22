@@ -8,6 +8,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"golang.org/x/mod/semver"
 	"log"
 	"reflect"
 	"strconv"
@@ -462,6 +463,20 @@ func resourceBrokerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceBrokerRead(ctx, d, meta)...)
 }
 
+func simplifiedVersion(engineType types.EngineType, autoMinorVersionUpgrade *bool, engineVersion *string) string {
+	if autoMinorVersionUpgrade == nil || !*autoMinorVersionUpgrade {
+		return *engineVersion
+	}
+	majorMinorEngineVersion := semver.MajorMinor("v" + *engineVersion)
+	rabbitSimplifiedVersion := "v3.13"
+	activeSimplifiedVersion := "v5.18"
+	if (engineType == types.EngineTypeRabbitmq && semver.Compare(majorMinorEngineVersion, rabbitSimplifiedVersion) == 0) ||
+		(engineType == types.EngineTypeActivemq && semver.Compare(majorMinorEngineVersion, activeSimplifiedVersion) == 0) {
+		return majorMinorEngineVersion[1:]
+	}
+	return *engineVersion
+}
+
 func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
@@ -486,7 +501,7 @@ func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("data_replication_mode", output.DataReplicationMode)
 	d.Set("deployment_mode", output.DeploymentMode)
 	d.Set("engine_type", output.EngineType)
-	d.Set(names.AttrEngineVersion, output.EngineVersion)
+	d.Set(names.AttrEngineVersion, simplifiedVersion(output.EngineType, output.AutoMinorVersionUpgrade, output.EngineVersion))
 	d.Set("host_instance_type", output.HostInstanceType)
 	d.Set("instances", flattenBrokerInstances(output.BrokerInstances))
 	d.Set("pending_data_replication_mode", output.PendingDataReplicationMode)
