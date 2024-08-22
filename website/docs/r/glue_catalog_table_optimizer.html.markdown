@@ -41,6 +41,10 @@ The following arguments are required:
     * `role_arn` - (Required) The ARN of the IAM role to use for the table optimizer.
     * `enabled` - (Required) Indicates whether the table optimizer is enabled.
 
+## Attribute Reference
+
+This resource exports no additional attributes.
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Glue Catalog Table Optimizer using the `catalog_id,database_name,table_name,type`. For example:
