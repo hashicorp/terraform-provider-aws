@@ -235,41 +235,41 @@ func flattenAutoTuneMaintenanceScheduleDuration(autoTuneMaintenanceScheduleDurat
 	return m
 }
 
-func flattenESSAMLOptions(d *schema.ResourceData, samlOptions *awstypes.SAMLOptionsOutput) []interface{} {
-	if samlOptions == nil {
+func flattenSAMLOptionsOutput(d *schema.ResourceData, apiObject *awstypes.SAMLOptionsOutput) []interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
-		names.AttrEnabled: aws.ToBool(samlOptions.Enabled),
-		"idp":             flattenESSAMLIdpOptions(samlOptions.Idp),
+	tfMap := map[string]interface{}{
+		names.AttrEnabled: aws.ToBool(apiObject.Enabled),
+		"idp":             flattenSAMLIdp(apiObject.Idp),
 	}
 
-	m["roles_key"] = aws.ToString(samlOptions.RolesKey)
-	m["session_timeout_minutes"] = aws.ToInt32(samlOptions.SessionTimeoutMinutes)
-	m["subject_key"] = aws.ToString(samlOptions.SubjectKey)
+	tfMap["roles_key"] = aws.ToString(apiObject.RolesKey)
+	tfMap["session_timeout_minutes"] = aws.ToInt32(apiObject.SessionTimeoutMinutes)
+	tfMap["subject_key"] = aws.ToString(apiObject.SubjectKey)
 
 	// samlOptions.master_backend_role and samlOptions.master_user_name will be added to the
 	// all_access role in kibana's security manager.  These values cannot be read or
 	// modified by the elasticsearch API.  So, we ignore it on read and let persist
 	// the value already in the state.
-	m["master_backend_role"] = d.Get("saml_options.0.master_backend_role").(string)
-	m["master_user_name"] = d.Get("saml_options.0.master_user_name").(string)
+	tfMap["master_backend_role"] = d.Get("saml_options.0.master_backend_role").(string)
+	tfMap["master_user_name"] = d.Get("saml_options.0.master_user_name").(string)
 
-	return []interface{}{m}
+	return []interface{}{tfMap}
 }
 
-func flattenESSAMLIdpOptions(SAMLIdp *awstypes.SAMLIdp) []interface{} {
-	if SAMLIdp == nil {
+func flattenSAMLIdp(apiObject *awstypes.SAMLIdp) []interface{} {
+	if apiObject == nil {
 		return []interface{}{}
 	}
 
-	m := map[string]interface{}{
-		"entity_id":        aws.ToString(SAMLIdp.EntityId),
-		"metadata_content": aws.ToString(SAMLIdp.MetadataContent),
+	tfMap := map[string]interface{}{
+		"entity_id":        aws.ToString(apiObject.EntityId),
+		"metadata_content": aws.ToString(apiObject.MetadataContent),
 	}
 
-	return []interface{}{m}
+	return []interface{}{tfMap}
 }
 
 func getMasterUserOptions(d *schema.ResourceData) []interface{} {

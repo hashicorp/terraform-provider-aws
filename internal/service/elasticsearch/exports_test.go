@@ -9,8 +9,9 @@ var (
 	ResourceDomainSAMLOptions = resourceDomainSAMLOptions
 	ResourceVPCEndpoint       = resourceVPCEndpoint
 
-	FindDomainByName      = findDomainByName
-	FindVPCEndpointByID   = findVPCEndpointByID
-	VPCEndpointsError     = vpcEndpointsError
-	WaitForDomainCreation = waitForDomainCreation
+	FindDomainByName                 = findDomainByName
+	FindDomainSAMLOptionByDomainName = findDomainSAMLOptionByDomainName
+	FindVPCEndpointByID              = findVPCEndpointByID
+	VPCEndpointsError                = vpcEndpointsError
+	WaitForDomainCreation            = waitForDomainCreation
 )

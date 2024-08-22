@@ -19,6 +19,10 @@ func findDomainByName(ctx context.Context, conn *elasticsearch.Client, name stri
 		DomainName: aws.String(name),
 	}
 
+	return findDomain(ctx, conn, input)
+}
+
+func findDomain(ctx context.Context, conn *elasticsearch.Client, input *elasticsearch.DescribeElasticsearchDomainInput) (*awstypes.ElasticsearchDomainStatus, error) {
 	output, err := conn.DescribeElasticsearchDomain(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
