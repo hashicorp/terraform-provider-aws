@@ -81,6 +81,7 @@ func (r *resourceCatalogTableOptimizer) Schema(ctx context.Context, _ resource.S
 				CustomType: fwtypes.NewListNestedObjectTypeOf[configurationData](ctx),
 				Validators: []validator.List{
 					listvalidator.IsRequired(),
+					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{

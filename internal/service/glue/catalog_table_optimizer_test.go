@@ -224,8 +224,8 @@ resource "aws_glue_catalog_table_optimizer" "test" {
   table_name     = aws_glue_catalog_table.test.name
 
   configuration {
-    role_arn = aws_iam_role.test.arn
-    enabled  = true
+   role_arn = aws_iam_role.test.arn
+   enabled  = true
   }
 
   type = "compaction"
