@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 	"strings"
 	"time"
 
@@ -26,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/semver"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -274,13 +276,9 @@ func resourceDomain() *schema.Resource {
 							Optional: true,
 						},
 						"warm_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								string(awstypes.ESWarmPartitionInstanceTypeUltrawarm1MediumElasticsearch),
-								string(awstypes.ESWarmPartitionInstanceTypeUltrawarm1LargeElasticsearch),
-								"ultrawarm1.xlarge.elasticsearch",
-							}, false),
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(warmPartitionInstanceType_Values(), false),
 						},
 						"zone_awareness_config": {
 							Type:             schema.TypeList,
@@ -613,7 +611,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 				return sdkdiag.AppendErrorf(diags, "At least one field is expected inside cluster_config")
 			}
 			m := config[0].(map[string]interface{})
-			input.ElasticsearchClusterConfig = expandClusterConfig(m)
+			input.ElasticsearchClusterConfig = expandElasticsearchClusterConfig(m)
 		}
 	}
 
@@ -771,7 +769,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "setting encrypt_at_rest: %s", err)
 	}
 
-	if err := d.Set("cluster_config", flattenClusterConfig(ds.ElasticsearchClusterConfig)); err != nil {
+	if err := d.Set("cluster_config", flattenElasticsearchClusterConfig(ds.ElasticsearchClusterConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting cluster_config: %s", err)
 	}
 
@@ -891,7 +889,7 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 				if len(config) == 1 {
 					m := config[0].(map[string]interface{})
-					input.ElasticsearchClusterConfig = expandClusterConfig(m)
+					input.ElasticsearchClusterConfig = expandElasticsearchClusterConfig(m)
 
 					// Work around "ValidationException: Your domain's Elasticsearch version does not support cold storage options. Upgrade to Elasticsearch 7.9 or later.".
 					if semver.LessThan(d.Get("elasticsearch_version").(string), "7.9") {
@@ -1028,6 +1026,10 @@ func resourceDomainImport(ctx context.Context, d *schema.ResourceData, meta inte
 	return []*schema.ResourceData{d}, nil
 }
 
+func warmPartitionInstanceType_Values() []string {
+	return tfslices.AppendUnique(enum.Values[awstypes.ESWarmPartitionInstanceType](), "ultrawarm1.xlarge.elasticsearch")
+}
+
 // inPlaceEncryptionEnableVersion returns true if, based on version, encryption
 // can be enabled in place (without ForceNew)
 func inPlaceEncryptionEnableVersion(version string) bool {
@@ -1063,83 +1065,85 @@ func isCustomEndpointDisabled(k, old, new string, d *schema.ResourceData) bool {
 	return false
 }
 
-func expandNodeToNodeEncryptionOptions(s map[string]interface{}) *awstypes.NodeToNodeEncryptionOptions {
-	options := awstypes.NodeToNodeEncryptionOptions{}
+func expandNodeToNodeEncryptionOptions(tfMap map[string]interface{}) *awstypes.NodeToNodeEncryptionOptions {
+	apiObject := &awstypes.NodeToNodeEncryptionOptions{}
 
-	if v, ok := s[names.AttrEnabled]; ok {
-		options.Enabled = aws.Bool(v.(bool))
+	if v, ok := tfMap[names.AttrEnabled]; ok {
+		apiObject.Enabled = aws.Bool(v.(bool))
 	}
-	return &options
+
+	return apiObject
 }
 
-func flattenNodeToNodeEncryptionOptions(o *awstypes.NodeToNodeEncryptionOptions) []map[string]interface{} {
-	if o == nil {
-		return []map[string]interface{}{}
+func flattenNodeToNodeEncryptionOptions(apiObject *awstypes.NodeToNodeEncryptionOptions) []interface{} {
+	if apiObject == nil {
+		return []interface{}{}
 	}
 
-	m := map[string]interface{}{}
-	if o.Enabled != nil {
-		m[names.AttrEnabled] = aws.ToBool(o.Enabled)
+	tfMap := map[string]interface{}{}
+
+	if apiObject.Enabled != nil {
+		tfMap[names.AttrEnabled] = aws.ToBool(apiObject.Enabled)
 	}
 
-	return []map[string]interface{}{m}
+	return []interface{}{tfMap}
 }
 
-func expandClusterConfig(m map[string]interface{}) *awstypes.ElasticsearchClusterConfig {
-	config := awstypes.ElasticsearchClusterConfig{}
+func expandElasticsearchClusterConfig(tfMap map[string]interface{}) *awstypes.ElasticsearchClusterConfig { // nosemgrep:ci.elasticsearch-in-func-name
+	apiObject := &awstypes.ElasticsearchClusterConfig{}
 
-	if v, ok := m["cold_storage_options"].([]interface{}); ok && len(v) > 0 {
-		config.ColdStorageOptions = expandColdStorageOptions(v[0].(map[string]interface{}))
+	if v, ok := tfMap["cold_storage_options"].([]interface{}); ok && len(v) > 0 {
+		apiObject.ColdStorageOptions = expandColdStorageOptions(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := m["dedicated_master_enabled"]; ok {
+	if v, ok := tfMap["dedicated_master_enabled"]; ok {
 		isEnabled := v.(bool)
-		config.DedicatedMasterEnabled = aws.Bool(isEnabled)
+		apiObject.DedicatedMasterEnabled = aws.Bool(isEnabled)
 
 		if isEnabled {
-			if v, ok := m["dedicated_master_count"]; ok && v.(int) > 0 {
-				config.DedicatedMasterCount = aws.Int32(int32(v.(int)))
+			if v, ok := tfMap["dedicated_master_count"]; ok && v.(int) > 0 {
+				apiObject.DedicatedMasterCount = aws.Int32(int32(v.(int)))
 			}
-			if v, ok := m["dedicated_master_type"]; ok && v.(string) != "" {
-				config.DedicatedMasterType = awstypes.ESPartitionInstanceType(v.(string))
+			if v, ok := tfMap["dedicated_master_type"]; ok && v.(string) != "" {
+				apiObject.DedicatedMasterType = awstypes.ESPartitionInstanceType(v.(string))
 			}
 		}
 	}
 
-	if v, ok := m[names.AttrInstanceCount]; ok {
-		config.InstanceCount = aws.Int32(int32(v.(int)))
+	if v, ok := tfMap[names.AttrInstanceCount]; ok {
+		apiObject.InstanceCount = aws.Int32(int32(v.(int)))
 	}
-	if v, ok := m[names.AttrInstanceType]; ok {
-		config.InstanceType = awstypes.ESPartitionInstanceType(v.(string))
+	if v, ok := tfMap[names.AttrInstanceType]; ok {
+		apiObject.InstanceType = awstypes.ESPartitionInstanceType(v.(string))
 	}
 
-	if v, ok := m["zone_awareness_enabled"]; ok {
+	if v, ok := tfMap["zone_awareness_enabled"]; ok {
 		isEnabled := v.(bool)
-		config.ZoneAwarenessEnabled = aws.Bool(isEnabled)
+		apiObject.ZoneAwarenessEnabled = aws.Bool(isEnabled)
 
 		if isEnabled {
-			if v, ok := m["zone_awareness_config"]; ok {
-				config.ZoneAwarenessConfig = expandZoneAwarenessConfig(v.([]interface{}))
+			if v, ok := tfMap["zone_awareness_config"]; ok {
+				apiObject.ZoneAwarenessConfig = expandZoneAwarenessConfig(v.([]interface{}))
 			}
 		}
 	}
 
-	if v, ok := m["warm_enabled"]; ok {
+	if v, ok := tfMap["warm_enabled"]; ok {
 		isEnabled := v.(bool)
-		config.WarmEnabled = aws.Bool(isEnabled)
+		apiObject.WarmEnabled = aws.Bool(isEnabled)
 
 		if isEnabled {
-			if v, ok := m["warm_count"]; ok {
-				config.WarmCount = aws.Int32(int32(v.(int)))
+			if v, ok := tfMap["warm_count"]; ok {
+				apiObject.WarmCount = aws.Int32(int32(v.(int)))
 			}
 
-			if v, ok := m["warm_type"]; ok {
-				config.WarmType = awstypes.ESWarmPartitionInstanceType(v.(string))
+			if v, ok := tfMap["warm_type"]; ok {
+				apiObject.WarmType = awstypes.ESWarmPartitionInstanceType(v.(string))
 			}
 		}
 	}
 
-	return &config
+	return apiObject
 }
 
 func expandColdStorageOptions(tfMap map[string]interface{}) *awstypes.ColdStorageOptions {
@@ -1156,75 +1160,74 @@ func expandColdStorageOptions(tfMap map[string]interface{}) *awstypes.ColdStorag
 	return apiObject
 }
 
-func expandZoneAwarenessConfig(l []interface{}) *awstypes.ZoneAwarenessConfig {
-	if len(l) == 0 || l[0] == nil {
+func expandZoneAwarenessConfig(tfList []interface{}) *awstypes.ZoneAwarenessConfig {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]interface{})
+	apiObject := &awstypes.ZoneAwarenessConfig{}
 
-	zoneAwarenessConfig := &awstypes.ZoneAwarenessConfig{}
-
-	if v, ok := m["availability_zone_count"]; ok && v.(int) > 0 {
-		zoneAwarenessConfig.AvailabilityZoneCount = aws.Int32(int32(v.(int)))
+	if v, ok := tfMap["availability_zone_count"]; ok && v.(int) > 0 {
+		apiObject.AvailabilityZoneCount = aws.Int32(int32(v.(int)))
 	}
 
-	return zoneAwarenessConfig
+	return apiObject
 }
 
-func flattenClusterConfig(c *awstypes.ElasticsearchClusterConfig) []map[string]interface{} {
-	m := map[string]interface{}{
-		"zone_awareness_config":  flattenZoneAwarenessConfig(c.ZoneAwarenessConfig),
-		"zone_awareness_enabled": aws.ToBool(c.ZoneAwarenessEnabled),
+func flattenElasticsearchClusterConfig(apiObject *awstypes.ElasticsearchClusterConfig) []interface{} { // nosemgrep:ci.elasticsearch-in-func-name
+	tfMap := map[string]interface{}{
+		"zone_awareness_config":  flattenZoneAwarenessConfig(apiObject.ZoneAwarenessConfig),
+		"zone_awareness_enabled": aws.ToBool(apiObject.ZoneAwarenessEnabled),
 	}
 
-	if c.ColdStorageOptions != nil {
-		m["cold_storage_options"] = flattenColdStorageOptions(c.ColdStorageOptions)
+	if apiObject.ColdStorageOptions != nil {
+		tfMap["cold_storage_options"] = flattenColdStorageOptions(apiObject.ColdStorageOptions)
 	}
-	if c.DedicatedMasterCount != nil {
-		m["dedicated_master_count"] = aws.ToInt32(c.DedicatedMasterCount)
+	if apiObject.DedicatedMasterCount != nil {
+		tfMap["dedicated_master_count"] = aws.ToInt32(apiObject.DedicatedMasterCount)
 	}
-	if c.DedicatedMasterEnabled != nil {
-		m["dedicated_master_enabled"] = aws.ToBool(c.DedicatedMasterEnabled)
+	if apiObject.DedicatedMasterEnabled != nil {
+		tfMap["dedicated_master_enabled"] = aws.ToBool(apiObject.DedicatedMasterEnabled)
 	}
-	m["dedicated_master_type"] = string(c.DedicatedMasterType)
-	if c.InstanceCount != nil {
-		m[names.AttrInstanceCount] = aws.ToInt32(c.InstanceCount)
+	tfMap["dedicated_master_type"] = apiObject.DedicatedMasterType
+	if apiObject.InstanceCount != nil {
+		tfMap[names.AttrInstanceCount] = aws.ToInt32(apiObject.InstanceCount)
 	}
-	m[names.AttrInstanceType] = string(c.InstanceType)
-	if c.WarmEnabled != nil {
-		m["warm_enabled"] = aws.ToBool(c.WarmEnabled)
+	tfMap[names.AttrInstanceType] = apiObject.InstanceType
+	if apiObject.WarmEnabled != nil {
+		tfMap["warm_enabled"] = aws.ToBool(apiObject.WarmEnabled)
 	}
-	if c.WarmCount != nil {
-		m["warm_count"] = aws.ToInt32(c.WarmCount)
+	if apiObject.WarmCount != nil {
+		tfMap["warm_count"] = aws.ToInt32(apiObject.WarmCount)
 	}
-	m["warm_type"] = string(c.WarmType)
+	tfMap["warm_type"] = string(apiObject.WarmType)
 
-	return []map[string]interface{}{m}
+	return []interface{}{tfMap}
 }
 
-func flattenColdStorageOptions(coldStorageOptions *awstypes.ColdStorageOptions) []interface{} {
-	if coldStorageOptions == nil {
+func flattenColdStorageOptions(apiObject *awstypes.ColdStorageOptions) []interface{} {
+	if apiObject == nil {
 		return []interface{}{}
 	}
 
-	m := map[string]interface{}{
-		names.AttrEnabled: aws.ToBool(coldStorageOptions.Enabled),
+	tfMap := map[string]interface{}{
+		names.AttrEnabled: aws.ToBool(apiObject.Enabled),
 	}
 
-	return []interface{}{m}
+	return []interface{}{tfMap}
 }
 
-func flattenZoneAwarenessConfig(zoneAwarenessConfig *awstypes.ZoneAwarenessConfig) []interface{} {
-	if zoneAwarenessConfig == nil {
+func flattenZoneAwarenessConfig(apiObject *awstypes.ZoneAwarenessConfig) []interface{} {
+	if apiObject == nil {
 		return []interface{}{}
 	}
 
-	m := map[string]interface{}{
-		"availability_zone_count": aws.ToInt32(zoneAwarenessConfig.AvailabilityZoneCount),
+	tfMap := map[string]interface{}{
+		"availability_zone_count": aws.ToInt32(apiObject.AvailabilityZoneCount),
 	}
 
-	return []interface{}{m}
+	return []interface{}{tfMap}
 }
 
 // advancedOptionsIgnoreDefault checks for defaults in the n map and, if
@@ -1247,30 +1250,20 @@ func advancedOptionsIgnoreDefault(o map[string]interface{}, n map[string]interfa
 	return n
 }
 
-// EBSVolumeTypePermitsIopsInput returns true if the volume type supports the Iops input
+// ebsVolumeTypePermitsIopsInput returns true if the volume type supports the Iops input
 //
 // This check prevents a ValidationException when updating EBS volume types from a value
 // that supports IOPS (ex. gp3) to one that doesn't (ex. gp2).
-func EBSVolumeTypePermitsIopsInput(volumeType string) bool {
+func ebsVolumeTypePermitsIopsInput(volumeType string) bool {
 	permittedTypes := enum.Slice(awstypes.VolumeTypeGp3, awstypes.VolumeTypeIo1)
-	for _, t := range permittedTypes {
-		if volumeType == t {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(permittedTypes, volumeType)
 }
 
 // EBSVolumeTypePermitsIopsInput returns true if the volume type supports the Throughput input
 //
 // This check prevents a ValidationException when updating EBS volume types from a value
 // that supports Throughput (ex. gp3) to one that doesn't (ex. gp2).
-func EBSVolumeTypePermitsThroughputInput(volumeType string) bool {
+func ebsVolumeTypePermitsThroughputInput(volumeType string) bool {
 	permittedTypes := enum.Slice(awstypes.VolumeTypeGp3)
-	for _, t := range permittedTypes {
-		if volumeType == t {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(permittedTypes, volumeType)
 }

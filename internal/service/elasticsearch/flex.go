@@ -88,10 +88,10 @@ func expandEBSOptions(m map[string]interface{}) *awstypes.EBSOptions {
 				volumeType = v.(string)
 				options.VolumeType = awstypes.VolumeType(volumeType)
 			}
-			if v, ok := m[names.AttrIOPS]; ok && v.(int) > 0 && EBSVolumeTypePermitsIopsInput(volumeType) {
+			if v, ok := m[names.AttrIOPS]; ok && v.(int) > 0 && ebsVolumeTypePermitsIopsInput(volumeType) {
 				options.Iops = aws.Int32(int32(v.(int)))
 			}
-			if v, ok := m[names.AttrThroughput]; ok && v.(int) > 0 && EBSVolumeTypePermitsThroughputInput(volumeType) {
+			if v, ok := m[names.AttrThroughput]; ok && v.(int) > 0 && ebsVolumeTypePermitsThroughputInput(volumeType) {
 				options.Throughput = aws.Int32(int32(v.(int)))
 			}
 		}

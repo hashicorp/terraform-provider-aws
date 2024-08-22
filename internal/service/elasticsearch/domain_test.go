@@ -23,58 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestEBSVolumeTypePermitsIopsInput(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		name       string
-		volumeType string
-		want       bool
-	}{
-		{"empty", "", false},
-		{"gp2", string(awstypes.VolumeTypeGp2), false},
-		{"gp3", string(awstypes.VolumeTypeGp3), true},
-		{"io1", string(awstypes.VolumeTypeIo1), true},
-		{"standard", string(awstypes.VolumeTypeStandard), false},
-	}
-	for _, testCase := range testCases {
-		testCase := testCase
-		t.Run(testCase.name, func(t *testing.T) {
-			t.Parallel()
-
-			if got := tfelasticsearch.EBSVolumeTypePermitsIopsInput(testCase.volumeType); got != testCase.want {
-				t.Errorf("EBSVolumeTypePermitsIopsInput() = %v, want %v", got, testCase.want)
-			}
-		})
-	}
-}
-
-func TestEBSVolumeTypePermitsThroughputInput(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		name       string
-		volumeType string
-		want       bool
-	}{
-		{"empty", "", false},
-		{"gp2", string(awstypes.VolumeTypeGp2), false},
-		{"gp3", string(awstypes.VolumeTypeGp3), true},
-		{"io1", string(awstypes.VolumeTypeIo1), false},
-		{"standard", string(awstypes.VolumeTypeStandard), false},
-	}
-	for _, testCase := range testCases {
-		testCase := testCase
-		t.Run(testCase.name, func(t *testing.T) {
-			t.Parallel()
-
-			if got := tfelasticsearch.EBSVolumeTypePermitsThroughputInput(testCase.volumeType); got != testCase.want {
-				t.Errorf("EBSVolumeTypePermitsThroughputInput() = %v, want %v", got, testCase.want)
-			}
-		})
-	}
-}
-
 func TestAccElasticsearchDomain_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {

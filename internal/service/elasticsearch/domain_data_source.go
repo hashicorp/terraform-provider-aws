@@ -411,7 +411,7 @@ func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "setting node_to_node_encryption: %s", err)
 	}
 
-	if err := d.Set("cluster_config", flattenClusterConfig(ds.ElasticsearchClusterConfig)); err != nil {
+	if err := d.Set("cluster_config", flattenElasticsearchClusterConfig(ds.ElasticsearchClusterConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting cluster_config: %s", err)
 	}
 
