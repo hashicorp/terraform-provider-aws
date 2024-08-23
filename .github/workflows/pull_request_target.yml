@@ -147,6 +147,7 @@ jobs:
         uses: ./.github/actions/team_working_board
         with:
           github_token: ${{ steps.token.outputs.token }}
+          item_url: ${{ github.event.pull_request.html_url }}
           status: "Maintainer PR"
           view: "working-board"
 
@@ -157,6 +158,7 @@ jobs:
         uses: ./.github/actions/team_working_board
         with:
           github_token: ${{ steps.token.outputs.token }}
+          item_url: ${{ github.event.pull_request.html_url }}
           status: "In Progress"
           view: "working-board"
 
@@ -165,6 +167,7 @@ jobs:
         uses: ./.github/actions/team_working_board
         with:
           github_token: ${{ steps.token.outputs.token }}
+          item_url: ${{ github.event.pull_request.html_url }}
           view: "working-board"
 
       - name: Labeled Engineering Initiative
@@ -172,6 +175,7 @@ jobs:
         uses: ./.github/actions/team_working_board
         with:
           github_token: ${{ steps.token.outputs.token }}
+          item_url: ${{ github.event.pull_request.html_url }}
           view: "engineering-initiative"
 
   add_to_milestone:
