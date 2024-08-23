@@ -137,12 +137,9 @@ func (r *resourceProfile) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	if profile != nil {
-		data.ARN = fwflex.StringToFramework(ctx, profile.Arn)
-		data.OwnerId = fwflex.StringToFramework(ctx, profile.OwnerId)
-		data.ShareStatus = fwtypes.StringEnumValue(profile.ShareStatus)
-		data.Status = fwtypes.StringEnumValue(profile.Status)
-		data.StatusMessage = fwflex.StringToFramework(ctx, profile.StatusMessage)
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, profile, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
