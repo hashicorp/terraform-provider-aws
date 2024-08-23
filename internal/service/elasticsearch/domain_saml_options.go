@@ -171,7 +171,7 @@ func resourceDomainSAMLOptionsDelete(ctx context.Context, d *schema.ResourceData
 		DomainName:              aws.String(d.Id()),
 	})
 
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "Domain is being deleted") {
 		return diags
 	}
 
