@@ -163,7 +163,17 @@ func findVPCEndpointByID(ctx context.Context, conn *opensearchserverless.Client,
 		return nil, tfresource.NewEmptyResultError(in)
 	}
 
-	return &out.VpcEndpointDetails[0], nil
+	vpcEndpointDetail := &out.VpcEndpointDetails[0]
+
+	// Ensure default values if nil
+	if vpcEndpointDetail.FailureCode == nil {
+		vpcEndpointDetail.FailureCode = aws.String("")
+	}
+	if vpcEndpointDetail.FailureMessage == nil {
+		vpcEndpointDetail.FailureMessage = aws.String("")
+	}
+
+	return vpcEndpointDetail, nil
 }
 
 func findLifecyclePolicyByNameAndType(ctx context.Context, conn *opensearchserverless.Client, name, policyType string) (*types.LifecyclePolicyDetail, error) {

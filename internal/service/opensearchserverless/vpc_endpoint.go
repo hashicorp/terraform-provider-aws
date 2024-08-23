@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
@@ -51,6 +52,8 @@ type resourceVpcEndpointData struct {
 	SubnetIds        types.Set      `tfsdk:"subnet_ids"`
 	Timeouts         timeouts.Value `tfsdk:"timeouts"`
 	VpcId            types.String   `tfsdk:"vpc_id"`
+	FailureMessage   types.String   `tfsdk:"failure_message"`
+	FailureCode      types.String   `tfsdk:"failure_code"`
 }
 
 const (
@@ -98,6 +101,20 @@ func (r *resourceVpcEndpoint) Schema(ctx context.Context, req resource.SchemaReq
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 255),
+				},
+			},
+			"failure_message": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"failure_code": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 		},
@@ -165,6 +182,14 @@ func (r *resourceVpcEndpoint) Create(ctx context.Context, req resource.CreateReq
 
 	state := plan
 	state.refreshFromOutput(ctx, vpcEndpoint)
+
+	// Set the computed values for failure_code and failure_message
+	if vpcEndpoint.FailureCode != nil {
+		state.FailureCode = types.StringValue(aws.ToString(vpcEndpoint.FailureCode))
+	}
+	if vpcEndpoint.FailureMessage != nil {
+		state.FailureMessage = types.StringValue(aws.ToString(vpcEndpoint.FailureMessage))
+	}
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -193,6 +218,13 @@ func (r *resourceVpcEndpoint) Read(ctx context.Context, req resource.ReadRequest
 	}
 
 	state.refreshFromOutput(ctx, out)
+	// Set the computed values for failure_code and failure_message
+	if out.FailureCode != nil {
+		state.FailureCode = types.StringValue(aws.ToString(out.FailureCode))
+	}
+	if out.FailureMessage != nil {
+		state.FailureMessage = types.StringValue(aws.ToString(out.FailureMessage))
+	}
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -276,6 +308,13 @@ func (r *resourceVpcEndpoint) Update(ctx context.Context, req resource.UpdateReq
 	}
 
 	plan.refreshFromOutput(ctx, vpcEndpoint)
+	// Set the computed values for failure_code and failure_message
+	if vpcEndpoint.FailureCode != nil {
+		plan.FailureCode = types.StringValue(aws.ToString(vpcEndpoint.FailureCode))
+	}
+	if vpcEndpoint.FailureMessage != nil {
+		plan.FailureMessage = types.StringValue(aws.ToString(vpcEndpoint.FailureMessage))
+	}
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 

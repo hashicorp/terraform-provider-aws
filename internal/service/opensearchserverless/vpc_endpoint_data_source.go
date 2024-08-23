@@ -53,6 +53,16 @@ func DataSourceVPCEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"failure_message": {
+				Type:     schema.TypeString,
+				Computed: true,
+				Optional: true,
+			},
+			"failure_code": {
+				Type:     schema.TypeString,
+				Computed: true,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -77,6 +87,8 @@ func dataSourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set(names.AttrSecurityGroupIDs, vpcEndpoint.SecurityGroupIds)
 	d.Set(names.AttrSubnetIDs, vpcEndpoint.SubnetIds)
 	d.Set(names.AttrVPCID, vpcEndpoint.VpcId)
+	d.Set("failure_code", vpcEndpoint.FailureCode)
+	d.Set("failure_message", vpcEndpoint.FailureMessage)
 
 	return diags
 }
