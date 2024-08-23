@@ -32,7 +32,8 @@ func TestAccEMRInstanceFleet_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceFleetConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(testAccCheckInstanceFleetExists(ctx, resourceName, &fleet),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceFleetExists(ctx, resourceName, &fleet),
 					resource.TestCheckResourceAttr(resourceName, "instance_type_configs.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "target_on_demand_capacity", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "target_spot_capacity", acctest.Ct0),
@@ -62,7 +63,8 @@ func TestAccEMRInstanceFleet_Zero_count(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceFleetConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(testAccCheckInstanceFleetExists(ctx, resourceName, &fleet),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceFleetExists(ctx, resourceName, &fleet),
 					resource.TestCheckResourceAttr(resourceName, "instance_type_configs.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "target_on_demand_capacity", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "target_spot_capacity", acctest.Ct0),
@@ -70,7 +72,8 @@ func TestAccEMRInstanceFleet_Zero_count(t *testing.T) {
 			},
 			{
 				Config: testAccInstanceFleetConfig_zeroCount(rName),
-				Check: resource.ComposeTestCheckFunc(testAccCheckInstanceFleetExists(ctx, resourceName, &fleet),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceFleetExists(ctx, resourceName, &fleet),
 					resource.TestCheckResourceAttr(resourceName, "instance_type_configs.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "target_on_demand_capacity", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "target_spot_capacity", acctest.Ct0),
@@ -100,7 +103,8 @@ func TestAccEMRInstanceFleet_ebsBasic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceFleetConfig_ebsBasic(rName),
-				Check: resource.ComposeTestCheckFunc(testAccCheckInstanceFleetExists(ctx, resourceName, &fleet),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceFleetExists(ctx, resourceName, &fleet),
 					resource.TestCheckResourceAttr(resourceName, "instance_type_configs.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "target_on_demand_capacity", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "target_spot_capacity", acctest.Ct1),
@@ -131,7 +135,8 @@ func TestAccEMRInstanceFleet_full(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceFleetConfig_full(rName),
-				Check: resource.ComposeTestCheckFunc(testAccCheckInstanceFleetExists(ctx, resourceName, &fleet),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceFleetExists(ctx, resourceName, &fleet),
 					resource.TestCheckResourceAttr(resourceName, "instance_type_configs.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "target_on_demand_capacity", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "target_spot_capacity", acctest.Ct2),
@@ -153,10 +158,6 @@ func testAccCheckInstanceFleetExists(ctx context.Context, n string, v *awstypes.
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EMR Instance Fleet ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRClient(ctx)

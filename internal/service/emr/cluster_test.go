@@ -1786,10 +1786,6 @@ func testAccCheckClusterExists(ctx context.Context, n string, v *awstypes.Cluste
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EMR Cluster ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRClient(ctx)
 
 		output, err := tfemr.FindClusterByID(ctx, conn, rs.Primary.ID)

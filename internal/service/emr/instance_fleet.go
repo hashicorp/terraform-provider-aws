@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -227,7 +228,7 @@ func resourceInstanceFleetCreate(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
-	taskFleet := map[string]interface{}{
+	tfMap := map[string]interface{}{
 		names.AttrName:              d.Get(names.AttrName),
 		"target_on_demand_capacity": d.Get("target_on_demand_capacity"),
 		"target_spot_capacity":      d.Get("target_spot_capacity"),
@@ -236,7 +237,7 @@ func resourceInstanceFleetCreate(ctx context.Context, d *schema.ResourceData, me
 	}
 	input := &emr.AddInstanceFleetInput{
 		ClusterId:     aws.String(d.Get("cluster_id").(string)),
-		InstanceFleet: readInstanceFleetConfig(taskFleet, awstypes.InstanceFleetTypeTask),
+		InstanceFleet: expandInstanceFleetConfig(tfMap, awstypes.InstanceFleetTypeTask),
 	}
 
 	output, err := conn.AddInstanceFleet(ctx, input)
@@ -266,10 +267,10 @@ func resourceInstanceFleetRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "reading EMR Instance Fleet (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("instance_type_configs", flatteninstanceTypeConfigs(fleet.InstanceTypeSpecifications)); err != nil {
+	if err := d.Set("instance_type_configs", flattenInstanceTypeSpecifications(fleet.InstanceTypeSpecifications)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting instance_type_configs: %s", err)
 	}
-	if err := d.Set("launch_specifications", flattenLaunchSpecifications(fleet.LaunchSpecifications)); err != nil {
+	if err := d.Set("launch_specifications", flattenInstanceFleetProvisioningSpecifications(fleet.LaunchSpecifications)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting launch_specifications: %s", err)
 	}
 	d.Set(names.AttrName, fleet.Name)
@@ -285,14 +286,14 @@ func resourceInstanceFleetUpdate(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
-	modifyConfig := &awstypes.InstanceFleetModifyConfig{
-		InstanceFleetId:        aws.String(d.Id()),
-		TargetOnDemandCapacity: aws.Int32(int32(d.Get("target_on_demand_capacity").(int))),
-		TargetSpotCapacity:     aws.Int32(int32(d.Get("target_spot_capacity").(int))),
-	}
+	clusterID := d.Get("cluster_id").(string)
 	input := &emr.ModifyInstanceFleetInput{
-		ClusterId:     aws.String(d.Get("cluster_id").(string)),
-		InstanceFleet: modifyConfig,
+		ClusterId: aws.String(clusterID),
+		InstanceFleet: &awstypes.InstanceFleetModifyConfig{
+			InstanceFleetId:        aws.String(d.Id()),
+			TargetOnDemandCapacity: aws.Int32(int32(d.Get("target_on_demand_capacity").(int))),
+			TargetSpotCapacity:     aws.Int32(int32(d.Get("target_spot_capacity").(int))),
+		},
 	}
 
 	_, err := conn.ModifyInstanceFleet(ctx, input)
@@ -301,18 +302,10 @@ func resourceInstanceFleetUpdate(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "updating EMR Instance Fleet (%s): %s", d.Id(), err)
 	}
 
-	stateConf := &retry.StateChangeConf{
-		Pending:    enum.Slice(awstypes.InstanceFleetStateProvisioning, awstypes.InstanceFleetStateBootstrapping, awstypes.InstanceFleetStateResizing),
-		Target:     enum.Slice(awstypes.InstanceFleetStateRunning),
-		Refresh:    statusInstanceFleet(ctx, conn, d.Get("cluster_id").(string), d.Id()),
-		Timeout:    75 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 30 * time.Second,
-	}
-
-	_, err = stateConf.WaitForStateContext(ctx)
-
-	if err != nil {
+	const (
+		timeout = 75 * time.Minute
+	)
+	if _, err := waitInstanceFleetRunning(ctx, conn, clusterID, d.Id(), timeout); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EMR Instance Fleet (%s) update: %s", d.Id(), err)
 	}
 
@@ -353,31 +346,48 @@ func findInstanceFleetByTwoPartKey(ctx context.Context, conn *emr.Client, cluste
 	input := &emr.ListInstanceFleetsInput{
 		ClusterId: aws.String(clusterID),
 	}
-	var fleets []awstypes.InstanceFleet
+
+	return findInstanceFleet(ctx, conn, input, func(v *awstypes.InstanceFleet) bool {
+		return aws.ToString(v.Id) == fleetID
+	})
+}
+
+func findInstanceFleet(ctx context.Context, conn *emr.Client, input *emr.ListInstanceFleetsInput, filter tfslices.Predicate[*awstypes.InstanceFleet]) (*awstypes.InstanceFleet, error) {
+	output, err := findInstanceFleets(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findInstanceFleets(ctx context.Context, conn *emr.Client, input *emr.ListInstanceFleetsInput, filter tfslices.Predicate[*awstypes.InstanceFleet]) ([]awstypes.InstanceFleet, error) {
+	var output []awstypes.InstanceFleet
 
 	pages := emr.NewListInstanceFleetsPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
+
+		if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "is not valid") {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
 
 		if err != nil {
 			return nil, err
 		}
 
 		for _, v := range page.InstanceFleets {
-			if v.Status != nil {
-				fleets = append(fleets, v)
+			if v.Status != nil && filter(&v) {
+				output = append(output, v)
 			}
 		}
 	}
 
-	for _, fleet := range fleets {
-		if aws.ToString(fleet.Id) == fleetID {
-			return &fleet, nil
-		}
-	}
-
-	return nil, &retry.NotFoundError{}
+	return output, nil
 }
 
 func statusInstanceFleet(ctx context.Context, conn *emr.Client, clusterID, fleetID string) retry.StateRefreshFunc {
@@ -394,4 +404,23 @@ func statusInstanceFleet(ctx context.Context, conn *emr.Client, clusterID, fleet
 
 		return output, string(output.Status.State), nil
 	}
+}
+
+func waitInstanceFleetRunning(ctx context.Context, conn *emr.Client, clusterID, fleetID string, timeout time.Duration) (*awstypes.InstanceFleet, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(awstypes.InstanceFleetStateProvisioning, awstypes.InstanceFleetStateBootstrapping, awstypes.InstanceFleetStateResizing),
+		Target:     enum.Slice(awstypes.InstanceFleetStateRunning),
+		Refresh:    statusInstanceFleet(ctx, conn, clusterID, fleetID),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.InstanceFleet); ok {
+		return output, err
+	}
+
+	return nil, err
 }

@@ -858,12 +858,12 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if l := d.Get("master_instance_fleet").([]interface{}); len(l) > 0 && l[0] != nil {
-		instanceFleetConfig := readInstanceFleetConfig(l[0].(map[string]interface{}), awstypes.InstanceFleetTypeMaster)
+		instanceFleetConfig := expandInstanceFleetConfig(l[0].(map[string]interface{}), awstypes.InstanceFleetTypeMaster)
 		instanceConfig.InstanceFleets = append(instanceConfig.InstanceFleets, *instanceFleetConfig)
 	}
 
 	if l := d.Get("core_instance_fleet").([]interface{}); len(l) > 0 && l[0] != nil {
-		instanceFleetConfig := readInstanceFleetConfig(l[0].(map[string]interface{}), awstypes.InstanceFleetTypeCore)
+		instanceFleetConfig := expandInstanceFleetConfig(l[0].(map[string]interface{}), awstypes.InstanceFleetTypeCore)
 		instanceConfig.InstanceFleets = append(instanceConfig.InstanceFleets, *instanceFleetConfig)
 	}
 
@@ -1103,8 +1103,8 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	instanceFleets, err := findInstanceFleetsByClusterID(ctx, conn, d.Id())
 
 	if err == nil { // find instance fleets
-		coreFleet, _ := findInstanceFleet(instanceFleets, awstypes.InstanceFleetTypeCore)
-		masterFleet, _ := findInstanceFleet(instanceFleets, awstypes.InstanceFleetTypeMaster)
+		coreFleet, _ := instanceFleetForRole(instanceFleets, awstypes.InstanceFleetTypeCore)
+		masterFleet, _ := instanceFleetForRole(instanceFleets, awstypes.InstanceFleetTypeMaster)
 
 		flattenedCoreInstanceFleet := flattenInstanceFleet(coreFleet)
 		if err := d.Set("core_instance_fleet", flattenedCoreInstanceFleet); err != nil {
@@ -2097,136 +2097,128 @@ func findInstanceGroupsByClusterID(ctx context.Context, conn *emr.Client, cluste
 	return findInstanceGroups(ctx, conn, input, tfslices.PredicateTrue[*awstypes.InstanceGroup]())
 }
 
-func readInstanceFleetConfig(data map[string]interface{}, InstanceFleetType awstypes.InstanceFleetType) *awstypes.InstanceFleetConfig {
-	config := &awstypes.InstanceFleetConfig{
-		InstanceFleetType:      InstanceFleetType,
-		Name:                   aws.String(data[names.AttrName].(string)),
-		TargetOnDemandCapacity: aws.Int32(int32(data["target_on_demand_capacity"].(int))),
-		TargetSpotCapacity:     aws.Int32(int32(data["target_spot_capacity"].(int))),
+func expandInstanceFleetConfig(tfMap map[string]interface{}, instanceFleetType awstypes.InstanceFleetType) *awstypes.InstanceFleetConfig {
+	apiObject := &awstypes.InstanceFleetConfig{
+		InstanceFleetType:      instanceFleetType,
+		Name:                   aws.String(tfMap[names.AttrName].(string)),
+		TargetOnDemandCapacity: aws.Int32(int32(tfMap["target_on_demand_capacity"].(int))),
+		TargetSpotCapacity:     aws.Int32(int32(tfMap["target_spot_capacity"].(int))),
 	}
 
-	if v, ok := data["instance_type_configs"].(*schema.Set); ok && v.Len() > 0 {
-		config.InstanceTypeConfigs = expandInstanceTypeConfigs(v.List())
+	if v, ok := tfMap["instance_type_configs"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.InstanceTypeConfigs = expandInstanceTypeConfigs(v.List())
 	}
 
-	if v, ok := data["launch_specifications"].([]interface{}); ok && len(v) == 1 && v[0] != nil {
-		config.LaunchSpecifications = expandLaunchSpecification(v[0].(map[string]interface{}))
+	if v, ok := tfMap["launch_specifications"].([]interface{}); ok && len(v) == 1 && v[0] != nil {
+		apiObject.LaunchSpecifications = expandLaunchSpecification(v[0].(map[string]interface{}))
 	}
 
-	return config
+	return apiObject
 }
 
 func findInstanceFleetsByClusterID(ctx context.Context, conn *emr.Client, clusterID string) ([]awstypes.InstanceFleet, error) {
 	input := &emr.ListInstanceFleetsInput{
 		ClusterId: aws.String(clusterID),
 	}
-	var output []awstypes.InstanceFleet
 
-	pages := emr.NewListInstanceFleetsPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if err != nil {
-			return nil, err
-		}
-
-		output = append(output, page.InstanceFleets...)
-	}
-
-	return output, nil
+	return findInstanceFleets(ctx, conn, input, tfslices.PredicateTrue[*awstypes.InstanceFleet]())
 }
 
-func findInstanceFleet(instanceFleets []awstypes.InstanceFleet, instanceRoleType awstypes.InstanceFleetType) (*awstypes.InstanceFleet, error) {
+func instanceFleetForRole(instanceFleets []awstypes.InstanceFleet, instanceRoleType awstypes.InstanceFleetType) (*awstypes.InstanceFleet, error) {
 	return tfresource.AssertSingleValueResult(tfslices.Filter(instanceFleets, func(v awstypes.InstanceFleet) bool {
 		return v.InstanceFleetType == instanceRoleType
 	}))
 }
 
-func flattenInstanceFleet(instanceFleet *awstypes.InstanceFleet) []interface{} {
-	if instanceFleet == nil {
+func flattenInstanceFleet(apiObject *awstypes.InstanceFleet) []interface{} {
+	if apiObject == nil {
 		return []interface{}{}
 	}
 
-	m := map[string]interface{}{
-		names.AttrID:                     aws.ToString(instanceFleet.Id),
-		names.AttrName:                   aws.ToString(instanceFleet.Name),
-		"target_on_demand_capacity":      aws.ToInt32(instanceFleet.TargetOnDemandCapacity),
-		"target_spot_capacity":           aws.ToInt32(instanceFleet.TargetSpotCapacity),
-		"provisioned_on_demand_capacity": aws.ToInt32(instanceFleet.ProvisionedOnDemandCapacity),
-		"provisioned_spot_capacity":      aws.ToInt32(instanceFleet.ProvisionedSpotCapacity),
-		"instance_type_configs":          flatteninstanceTypeConfigs(instanceFleet.InstanceTypeSpecifications),
-		"launch_specifications":          flattenLaunchSpecifications(instanceFleet.LaunchSpecifications),
+	tfMap := map[string]interface{}{
+		names.AttrID:                     aws.ToString(apiObject.Id),
+		names.AttrName:                   aws.ToString(apiObject.Name),
+		"target_on_demand_capacity":      aws.ToInt32(apiObject.TargetOnDemandCapacity),
+		"target_spot_capacity":           aws.ToInt32(apiObject.TargetSpotCapacity),
+		"provisioned_on_demand_capacity": aws.ToInt32(apiObject.ProvisionedOnDemandCapacity),
+		"provisioned_spot_capacity":      aws.ToInt32(apiObject.ProvisionedSpotCapacity),
+		"instance_type_configs":          flattenInstanceTypeSpecifications(apiObject.InstanceTypeSpecifications),
+		"launch_specifications":          flattenInstanceFleetProvisioningSpecifications(apiObject.LaunchSpecifications),
 	}
 
-	return []interface{}{m}
+	return []interface{}{tfMap}
 }
 
-func flatteninstanceTypeConfigs(instanceTypeSpecifications []awstypes.InstanceTypeSpecification) *schema.Set {
-	instanceTypeConfigs := make([]interface{}, 0)
+func flattenInstanceTypeSpecifications(apiObjects []awstypes.InstanceTypeSpecification) []interface{} {
+	tfList := make([]interface{}, 0)
 
-	for _, itc := range instanceTypeSpecifications {
-		flattenTypeConfig := make(map[string]interface{})
+	for _, apiObject := range apiObjects {
+		tfMap := make(map[string]interface{})
 
-		if itc.BidPrice != nil {
-			flattenTypeConfig["bid_price"] = aws.ToString(itc.BidPrice)
+		if apiObject.BidPrice != nil {
+			tfMap["bid_price"] = aws.ToString(apiObject.BidPrice)
 		}
 
-		if itc.BidPriceAsPercentageOfOnDemandPrice != nil {
-			flattenTypeConfig["bid_price_as_percentage_of_on_demand_price"] = aws.ToFloat64(itc.BidPriceAsPercentageOfOnDemandPrice)
+		if apiObject.BidPriceAsPercentageOfOnDemandPrice != nil {
+			tfMap["bid_price_as_percentage_of_on_demand_price"] = aws.ToFloat64(apiObject.BidPriceAsPercentageOfOnDemandPrice)
 		}
 
-		flattenTypeConfig[names.AttrInstanceType] = aws.ToString(itc.InstanceType)
-		flattenTypeConfig["weighted_capacity"] = int(aws.ToInt32(itc.WeightedCapacity))
+		tfMap["ebs_config"] = flattenEBSConfig(apiObject.EbsBlockDevices)
+		tfMap[names.AttrInstanceType] = aws.ToString(apiObject.InstanceType)
+		tfMap["weighted_capacity"] = int(aws.ToInt32(apiObject.WeightedCapacity))
 
-		flattenTypeConfig["ebs_config"] = flattenEBSConfig(itc.EbsBlockDevices)
-
-		instanceTypeConfigs = append(instanceTypeConfigs, flattenTypeConfig)
+		tfList = append(tfList, tfMap)
 	}
 
-	return schema.NewSet(resourceInstanceTypeHashConfig, instanceTypeConfigs)
+	return tfList
 }
 
-func flattenLaunchSpecifications(launchSpecifications *awstypes.InstanceFleetProvisioningSpecifications) []interface{} {
-	if launchSpecifications == nil {
+func flattenInstanceFleetProvisioningSpecifications(apiObject *awstypes.InstanceFleetProvisioningSpecifications) []interface{} {
+	if apiObject == nil {
 		return []interface{}{}
 	}
 
-	m := map[string]interface{}{
-		"on_demand_specification": flattenOnDemandSpecification(launchSpecifications.OnDemandSpecification),
-		"spot_specification":      flattenSpotSpecification(launchSpecifications.SpotSpecification),
+	tfMap := map[string]interface{}{
+		"on_demand_specification": flattenOnDemandProvisioningSpecification(apiObject.OnDemandSpecification),
+		"spot_specification":      flattenSpotProvisioningSpecification(apiObject.SpotSpecification),
 	}
-	return []interface{}{m}
+
+	return []interface{}{tfMap}
 }
 
-func flattenOnDemandSpecification(onDemandSpecification *awstypes.OnDemandProvisioningSpecification) []interface{} {
-	if onDemandSpecification == nil {
+func flattenOnDemandProvisioningSpecification(apiObject *awstypes.OnDemandProvisioningSpecification) []interface{} {
+	if apiObject == nil {
 		return []interface{}{}
 	}
-	m := map[string]interface{}{
+
+	tfMap := map[string]interface{}{
 		// The return value from api is wrong. it return the value with uppercase letters and '_' vs. '-'
 		// The value needs to be normalized to avoid perpetual difference in the Terraform plan
-		"allocation_strategy": strings.Replace(strings.ToLower(string(onDemandSpecification.AllocationStrategy)), "_", "-", -1),
+		"allocation_strategy": strings.Replace(strings.ToLower(string(apiObject.AllocationStrategy)), "_", "-", -1),
 	}
-	return []interface{}{m}
+
+	return []interface{}{tfMap}
 }
 
-func flattenSpotSpecification(spotSpecification *awstypes.SpotProvisioningSpecification) []interface{} {
-	if spotSpecification == nil {
+func flattenSpotProvisioningSpecification(apiObject *awstypes.SpotProvisioningSpecification) []interface{} {
+	if apiObject == nil {
 		return []interface{}{}
 	}
-	m := map[string]interface{}{
-		"timeout_action":           string(spotSpecification.TimeoutAction),
-		"timeout_duration_minutes": aws.ToInt32(spotSpecification.TimeoutDurationMinutes),
+
+	tfMap := map[string]interface{}{
+		"timeout_action":           string(apiObject.TimeoutAction),
+		"timeout_duration_minutes": aws.ToInt32(apiObject.TimeoutDurationMinutes),
 	}
-	if spotSpecification.BlockDurationMinutes != nil {
-		m["block_duration_minutes"] = aws.ToInt32(spotSpecification.BlockDurationMinutes)
+
+	if apiObject.BlockDurationMinutes != nil {
+		tfMap["block_duration_minutes"] = aws.ToInt32(apiObject.BlockDurationMinutes)
 	}
 
 	// The return value from api is wrong. it return the value with uppercase letters and '_' vs. '-'
 	// The value needs to be normalized to avoid perpetual difference in the Terraform plan
-	m["allocation_strategy"] = strings.Replace(strings.ToLower(string(spotSpecification.AllocationStrategy)), "_", "-", -1)
+	tfMap["allocation_strategy"] = strings.Replace(strings.ToLower(string(apiObject.AllocationStrategy)), "_", "-", -1)
 
-	return []interface{}{m}
+	return []interface{}{tfMap}
 }
 
 func expandEBSConfiguration(ebsConfigurations []interface{}) *awstypes.EbsConfiguration {
