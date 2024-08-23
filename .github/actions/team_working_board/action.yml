@@ -142,8 +142,6 @@ runs:
       env:
         GH_TOKEN: ${{ inputs.github_token }}
       run: |
-        view_option_id="$(| jq --exit-status --arg desired "${{ inputs.view }}" '.[$desired]')"
-
         gh project item-edit \
           --id "${{ steps.add_to_board.outputs.project_item_id }}" \
           --project-id "PVT_kwDOAAuecM4AF-7h" \
