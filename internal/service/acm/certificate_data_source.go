@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -43,8 +43,9 @@ func dataSourceCertificate() *schema.Resource {
 				Computed: true,
 			},
 			names.AttrDomain: {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				AtLeastOneOf: []string{"domain", names.AttrTags},
 			},
 			"key_types": {
 				Type:     schema.TypeSet,
@@ -68,7 +69,13 @@ func dataSourceCertificate() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			names.AttrTags: {
+				Type:         schema.TypeMap,
+				Optional:     true,
+				Computed:     true,
+				Elem:         &schema.Schema{Type: schema.TypeString},
+				AtLeastOneOf: []string{"domain", names.AttrTags},
+			},
 			"types": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -80,12 +87,11 @@ func dataSourceCertificate() *schema.Resource {
 
 func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).ACMClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	domain := d.Get(names.AttrDomain).(string)
-	input := acm.ListCertificatesInput{}
+	//domain := d.Get(names.AttrDomain).(string)
+	input := &acm.ListCertificatesInput{}
 
 	if v, ok := d.GetOk("key_types"); ok && v.(*schema.Set).Len() > 0 {
 		input.Includes = &types.Filters{
@@ -99,35 +105,69 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 		input.CertificateStatuses = []types.CertificateStatus{types.CertificateStatusIssued}
 	}
 
-	arns, err := tfresource.RetryGWhenNotFound(ctx, 1*time.Minute,
-		func() ([]string, error) {
-			return listCertificates(ctx, conn, &input, domain)
+	f := tfslices.PredicateTrue[*types.CertificateSummary]()
+	if domain, ok := d.GetOk("domain"); ok {
+		f = func(v *types.CertificateSummary) bool {
+			return aws.ToString(v.DomainName) == domain
+		}
+	}
+
+	const (
+		timeout = 1 * time.Minute
+	)
+	certificateSummaries, err := tfresource.RetryGWhenNotFound(ctx, timeout,
+		func() ([]types.CertificateSummary, error) {
+			output, err := findCertificates(ctx, conn, input, f)
+			switch {
+			case err != nil:
+				return nil, err
+			case len(output) == 0:
+				return nil, tfresource.NewEmptyResultError(input)
+			default:
+				return output, nil
+			}
 		},
 	)
-	if tfresource.NotFound(err) {
-		return sdkdiag.AppendErrorf(diags, "XXX no ACM Certificate matching domain (%s)", domain)
-	} else if err != nil {
+
+	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ACM Certificates: %s", err)
 	}
 
-	filterMostRecent := d.Get(names.AttrMostRecent).(bool)
-	certificateTypes := flex.ExpandStringyValueList[types.CertificateType](d.Get("types").([]interface{}))
-
-	if !filterMostRecent && len(certificateTypes) == 0 && len(arns) > 1 {
-		return sdkdiag.AppendErrorf(diags, "multiple ACM Certificates matching domain (%s)", domain)
-	}
-
-	var matchedCertificate *types.CertificateDetail
-
-	for _, arn := range arns {
+	var certificates []*types.CertificateDetail
+	for _, certificateSummary := range certificateSummaries {
+		certificateARN := aws.ToString(certificateSummary.CertificateArn)
 		input := &acm.DescribeCertificateInput{
-			CertificateArn: aws.String(arn),
+			CertificateArn: aws.String(certificateARN),
 		}
 
 		certificate, err := findCertificate(ctx, conn, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading ACM Certificate (%s): %s", arn, err)
+			return sdkdiag.AppendErrorf(diags, "reading ACM Certificate (%s): %s", certificateARN, err)
+		}
+
+		certificates = append(certificates, certificate)
+	}
+
+	filterMostRecent := d.Get(names.AttrMostRecent).(bool)
+	certificateTypes := flex.ExpandStringyValueList[types.CertificateType](d.Get("types").([]interface{}))
+
+	if !filterMostRecent && len(certificateTypes) == 0 && len(certificateSummaries) > 1 {
+		return sdkdiag.AppendErrorf(diags, "multiple ACM Certificates matching domain (%s)", domain)
+	}
+
+	var matchedCertificate *types.CertificateDetail
+
+	for _, certificateSummary := range certificateSummaries {
+		certificateARN := aws.ToString(certificateSummary.CertificateArn)
+		input := &acm.DescribeCertificateInput{
+			CertificateArn: aws.String(certificateARN),
+		}
+
+		certificate, err := findCertificate(ctx, conn, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading ACM Certificate (%s): %s", certificateARN, err)
 		}
 
 		if len(certificateTypes) > 0 {
@@ -244,27 +284,23 @@ func mostRecentCertificate(i, j *types.CertificateDetail) (*types.CertificateDet
 	return j, nil
 }
 
-func listCertificates(ctx context.Context, conn *acm.Client, input *acm.ListCertificatesInput, domain string) ([]string, error) {
-	var result []string
+func findCertificates(ctx context.Context, conn *acm.Client, input *acm.ListCertificatesInput, filter tfslices.Predicate[*types.CertificateSummary]) ([]types.CertificateSummary, error) {
+	var output []types.CertificateSummary
 
 	pages := acm.NewListCertificatesPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
 		if err != nil {
-			return []string{}, err
+			return nil, err
 		}
 
 		for _, v := range page.CertificateSummaryList {
-			if aws.ToString(v.DomainName) == domain {
-				result = append(result, aws.ToString(v.CertificateArn))
+			if filter(&v) {
+				output = append(output, v)
 			}
 		}
 	}
 
-	if len(result) == 0 {
-		return []string{}, tfresource.NewEmptyResultError(input)
-	}
-
-	return result, nil
+	return output, nil
 }
