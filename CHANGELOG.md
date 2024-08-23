@@ -1,4 +1,9 @@
 ## 5.65.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_glue_catalog_table_optimizer` ([#38052](https://github.com/hashicorp/terraform-provider-aws/issues/38052))
+
 ## 5.64.0 (August 22, 2024)
 
 ENHANCEMENTS:
