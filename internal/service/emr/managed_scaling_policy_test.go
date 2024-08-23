@@ -8,15 +8,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/emr"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfemr "github.com/hashicorp/terraform-provider-aws/internal/service/emr"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -43,7 +41,6 @@ func TestAccEMRManagedScalingPolicy_basic(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckManagedScalingPolicyDestroy(ctx),
-
 		Steps: []resource.TestStep{
 			{
 				Config: testAccManagedScalingPolicyConfig_basic(rName),
@@ -171,52 +168,34 @@ func testAccCheckManagedScalingPolicyExists(ctx context.Context, n string) resou
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EMR Managed Scaling Policy ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRClient(ctx)
-		resp, err := conn.GetManagedScalingPolicy(ctx, &emr.GetManagedScalingPolicyInput{
-			ClusterId: aws.String(rs.Primary.ID),
-		})
-		if err != nil {
-			return err
-		}
 
-		if resp.ManagedScalingPolicy == nil {
-			return fmt.Errorf("EMR Managed Scaling Policy is empty which shouldn't happen")
-		}
-		return nil
+		_, err := tfemr.FindManagedScalingPolicyByID(ctx, conn, rs.Primary.ID)
+
+		return err
 	}
 }
 
 func testAccCheckManagedScalingPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRClient(ctx)
+
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_emr_managed_scaling_policy" {
 				continue
 			}
 
-			resp, err := conn.GetManagedScalingPolicy(ctx, &emr.GetManagedScalingPolicyInput{
-				ClusterId: aws.String(rs.Primary.ID),
-			})
+			_, err := tfemr.FindManagedScalingPolicyByID(ctx, conn, rs.Primary.ID)
 
-			if tfawserr.ErrMessageContains(err, "InvalidRequestException", "does not exist") {
-				continue
-			}
-
-			if tfawserr.ErrMessageContains(err, "ValidationException", "A job flow that is shutting down, terminated, or finished may not be modified") {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
 			if err != nil {
-				return fmt.Errorf("error reading EMR Managed Scaling Policy (%s): %w", rs.Primary.ID, err)
+				return err
 			}
 
-			if resp != nil && resp.ManagedScalingPolicy != nil {
-				return fmt.Errorf("EMR Managed Scaling Policy (%s) still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("EMR Managed Scaling Policy %s still exists", rs.Primary.ID)
 		}
 
 		return nil

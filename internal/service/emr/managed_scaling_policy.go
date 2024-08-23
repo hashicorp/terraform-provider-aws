@@ -10,12 +10,15 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/emr"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/emr/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // @SDKResource("aws_emr_managed_scaling_policy", name="Managed Scaling Policy")
@@ -41,17 +44,6 @@ func resourceManagedScalingPolicy() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"unit_type": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.ComputeLimitsUnitType](),
-						},
-						"minimum_capacity_units": {
-							Type:     schema.TypeInt,
-							Required: true,
-							ForceNew: true,
-						},
 						"maximum_capacity_units": {
 							Type:     schema.TypeInt,
 							Required: true,
@@ -67,6 +59,17 @@ func resourceManagedScalingPolicy() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 						},
+						"minimum_capacity_units": {
+							Type:     schema.TypeInt,
+							Required: true,
+							ForceNew: true,
+						},
+						"unit_type": {
+							Type:             schema.TypeString,
+							Required:         true,
+							ForceNew:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.ComputeLimitsUnitType](),
+						},
 					},
 				},
 			},
@@ -78,38 +81,39 @@ func resourceManagedScalingPolicyCreate(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
-	if l := d.Get("compute_limits").(*schema.Set).List(); len(l) > 0 && l[0] != nil {
-		cl := l[0].(map[string]interface{})
+	clusterID := d.Get("cluster_id").(string)
+	if v := d.Get("compute_limits").(*schema.Set).List(); len(v) > 0 && v[0] != nil {
+		tfMap := v[0].(map[string]interface{})
 		computeLimits := &awstypes.ComputeLimits{
-			UnitType:             awstypes.ComputeLimitsUnitType(cl["unit_type"].(string)),
-			MinimumCapacityUnits: aws.Int32(int32(cl["minimum_capacity_units"].(int))),
-			MaximumCapacityUnits: aws.Int32(int32(cl["maximum_capacity_units"].(int))),
+			UnitType:             awstypes.ComputeLimitsUnitType(tfMap["unit_type"].(string)),
+			MinimumCapacityUnits: aws.Int32(int32(tfMap["minimum_capacity_units"].(int))),
+			MaximumCapacityUnits: aws.Int32(int32(tfMap["maximum_capacity_units"].(int))),
 		}
-		if v, ok := cl["maximum_core_capacity_units"].(int); ok && v > 0 {
+		if v, ok := tfMap["maximum_core_capacity_units"].(int); ok && v > 0 {
 			computeLimits.MaximumCoreCapacityUnits = aws.Int32(int32(v))
 
-			if v, ok := cl["maximum_ondemand_capacity_units"].(int); ok && v > 0 {
+			if v, ok := tfMap["maximum_ondemand_capacity_units"].(int); ok && v > 0 {
 				computeLimits.MaximumOnDemandCapacityUnits = aws.Int32(int32(v))
 			}
-		} else if v, ok := cl["maximum_ondemand_capacity_units"].(int); ok && v >= 0 {
+		} else if v, ok := tfMap["maximum_ondemand_capacity_units"].(int); ok && v >= 0 {
 			computeLimits.MaximumOnDemandCapacityUnits = aws.Int32(int32(v))
 		}
-		managedScalingPolicy := &awstypes.ManagedScalingPolicy{
-			ComputeLimits: computeLimits,
+		input := &emr.PutManagedScalingPolicyInput{
+			ClusterId: aws.String(clusterID),
+			ManagedScalingPolicy: &awstypes.ManagedScalingPolicy{
+				ComputeLimits: computeLimits,
+			},
 		}
 
-		_, err := conn.PutManagedScalingPolicy(ctx, &emr.PutManagedScalingPolicyInput{
-			ClusterId:            aws.String(d.Get("cluster_id").(string)),
-			ManagedScalingPolicy: managedScalingPolicy,
-		})
+		_, err := conn.PutManagedScalingPolicy(ctx, input)
 
 		if err != nil {
-			log.Printf("[ERROR] EMR.PutManagedScalingPolicy %s", err)
 			return sdkdiag.AppendErrorf(diags, "putting EMR Managed Scaling Policy: %s", err)
 		}
 	}
 
-	d.SetId(d.Get("cluster_id").(string))
+	d.SetId(clusterID)
+
 	return diags
 }
 
@@ -117,38 +121,22 @@ func resourceManagedScalingPolicyRead(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
-	input := &emr.GetManagedScalingPolicyInput{
-		ClusterId: aws.String(d.Id()),
-	}
+	managedScalingPolicy, err := findManagedScalingPolicyByID(ctx, conn, d.Id())
 
-	resp, err := conn.GetManagedScalingPolicy(ctx, input)
-
-	if tfawserr.ErrMessageContains(err, "ValidationException", "A job flow that is shutting down, terminated, or finished may not be modified") {
-		log.Printf("[WARN] EMR Managed Scaling Policy (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
-	}
-
-	if tfawserr.ErrMessageContains(err, "InvalidRequestException", "does not exist") {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EMR Managed Scaling Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting EMR Managed Scaling Policy (%s): %s", d.Id(), err)
-	}
-
-	// Previously after RemoveManagedScalingPolicy the API returned an error, but now it
-	// returns an empty response. We keep the original error handling above though just in case.
-	if resp == nil || resp.ManagedScalingPolicy == nil {
-		log.Printf("[WARN] EMR Managed Scaling Policy (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
+		return sdkdiag.AppendErrorf(diags, "reading EMR Managed Scaling Policy (%s): %s", d.Id(), err)
 	}
 
 	d.Set("cluster_id", d.Id())
-	d.Set("compute_limits", flattenComputeLimits(resp.ManagedScalingPolicy.ComputeLimits))
+	if err := d.Set("compute_limits", flattenComputeLimits(managedScalingPolicy.ComputeLimits)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting compute_limits: %s", err)
+	}
 
 	return diags
 }
@@ -157,25 +145,50 @@ func resourceManagedScalingPolicyDelete(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
-	input := &emr.RemoveManagedScalingPolicyInput{
-		ClusterId: aws.String(d.Get("cluster_id").(string)),
-	}
+	_, err := conn.RemoveManagedScalingPolicy(ctx, &emr.RemoveManagedScalingPolicyInput{
+		ClusterId: aws.String(d.Id()),
+	})
 
-	_, err := conn.RemoveManagedScalingPolicy(ctx, input)
-
-	if tfawserr.ErrMessageContains(err, "ValidationException", "A job flow that is shutting down, terminated, or finished may not be modified") {
-		return diags
-	}
-
-	if tfawserr.ErrMessageContains(err, "InvalidRequestException", "does not exist") {
+	if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "A job flow that is shutting down, terminated, or finished may not be modified") ||
+		errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "does not exist") {
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "removing EMR Managed Scaling Policy (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting EMR Managed Scaling Policy (%s): %s", d.Id(), err)
 	}
 
 	return diags
+}
+
+func findManagedScalingPolicyByID(ctx context.Context, conn *emr.Client, id string) (*awstypes.ManagedScalingPolicy, error) {
+	input := &emr.GetManagedScalingPolicyInput{
+		ClusterId: aws.String(id),
+	}
+
+	return findManagedScalingPolicy(ctx, conn, input)
+}
+
+func findManagedScalingPolicy(ctx context.Context, conn *emr.Client, input *emr.GetManagedScalingPolicyInput) (*awstypes.ManagedScalingPolicy, error) {
+	output, err := conn.GetManagedScalingPolicy(ctx, input)
+
+	if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "A job flow that is shutting down, terminated, or finished may not be modified") ||
+		errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "does not exist") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.ManagedScalingPolicy == nil {
+		return nil, tfresource.NewEmptyResultError((input))
+	}
+
+	return output.ManagedScalingPolicy, nil
 }
 
 func flattenComputeLimits(apiObject *awstypes.ComputeLimits) []interface{} {

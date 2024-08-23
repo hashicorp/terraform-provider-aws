@@ -18,6 +18,7 @@ var (
 	FindClusterByID                    = findClusterByID
 	FindInstanceFleetByTwoPartKey      = findInstanceFleetByTwoPartKey
 	FindInstanceGroupByTwoPartKey      = findInstanceGroupByTwoPartKey
+	FindManagedScalingPolicyByID       = findManagedScalingPolicyByID
 	FindSecurityConfigurationByName    = findSecurityConfigurationByName
 	FindStudioByID                     = findStudioByID
 	FindStudioSessionMappingByIDOrName = findStudioSessionMappingByIDOrName
