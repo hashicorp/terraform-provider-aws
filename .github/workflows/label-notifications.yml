@@ -24,7 +24,6 @@ jobs:
         uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e # v1.26.0
         env:
           ISSUE_TITLE: ${{ toJSON(github.event.issue.title || github.event.pull_request.title) }}
-          LABEL_NAME: ${{ github.event.label.name }}
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
         with:
           channel-id: ${{ secrets.SLACK_CHANNEL }}
@@ -35,7 +34,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": ":warning: The following has been labeled as a $LABEL_NAME:"
+                    "text": ":warning: The following has been labeled as a ${{ github.event.label.name }}:"
                   }
                 },
                 {
