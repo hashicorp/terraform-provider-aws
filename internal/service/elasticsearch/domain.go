@@ -1127,7 +1127,7 @@ func statusDomainUpgrade(ctx context.Context, conn *elasticsearch.Client, name s
 func waitUpgradeSucceeded(ctx context.Context, conn *elasticsearch.Client, name string, timeout time.Duration) (*elasticsearch.GetUpgradeStatusOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.UpgradeStatusInProgress),
-		Target:     enum.Slice(awstypes.UpgradeStatusSucceeded),
+		Target:     enum.Slice(awstypes.UpgradeStatusSucceeded, awstypes.UpgradeStatusSucceededWithIssues),
 		Refresh:    statusDomainUpgrade(ctx, conn, name),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
