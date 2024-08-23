@@ -1360,6 +1360,18 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	var shouldWaitForCapacity bool
 	var shouldRefreshInstances bool
 
+	// When instance refresh is enabled, the way we update the launch_template
+	// or mixed_instances_policy fields is different.  In this case,
+	// StartInstanceRefresh is passed the new launch_template or
+	// mixed_instances_policy, and the API will automatically update the Auto
+	// Scaling Group with the new launch_template or mixed_instances_policy
+	// after the instance refresh is complete.  This is because if auto-rollback
+	// is enabled, the instance refresh will be rolled back if the
+	// launch_template or mixed_instances_policy update fails and for that the
+	// original launch_template or mixed_instances_policy is needed. Thus we should not
+	// modify either of these fields using UpdateAutoScalingGroup in this case.
+	instanceRefresh, hasInstanceRefresh := d.GetOk("instance_refresh")
+
 	if d.HasChangesExcept(
 		"enabled_metrics",
 		"load_balancers",
@@ -1425,20 +1437,6 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			input.InstanceMaintenancePolicy = expandInstanceMaintenancePolicy(d.Get("instance_maintenance_policy").([]interface{}))
 		}
 
-		if d.HasChange("launch_configuration") {
-			if v, ok := d.GetOk("launch_configuration"); ok {
-				input.LaunchConfigurationName = aws.String(v.(string))
-			}
-			shouldRefreshInstances = true
-		}
-
-		if d.HasChange(names.AttrLaunchTemplate) {
-			if v, ok := d.GetOk(names.AttrLaunchTemplate); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.LaunchTemplate = expandLaunchTemplateSpecification(v.([]interface{})[0].(map[string]interface{}), false)
-			}
-			shouldRefreshInstances = true
-		}
-
 		if d.HasChange("max_instance_lifetime") {
 			input.MaxInstanceLifetime = aws.Int32(int32(d.Get("max_instance_lifetime").(int)))
 		}
@@ -1450,13 +1448,6 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		if d.HasChange("min_size") {
 			input.MinSize = aws.Int32(int32(d.Get("min_size").(int)))
 			shouldWaitForCapacity = true
-		}
-
-		if d.HasChange("mixed_instances_policy") {
-			if v, ok := d.GetOk("mixed_instances_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.MixedInstancesPolicy = expandMixedInstancesPolicy(v.([]interface{})[0].(map[string]interface{}), true)
-			}
-			shouldRefreshInstances = true
 		}
 
 		if d.HasChange("placement_group") {
@@ -1479,6 +1470,27 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		if d.HasChange("vpc_zone_identifier") {
 			input.VPCZoneIdentifier = expandVPCZoneIdentifiers(d.Get("vpc_zone_identifier").(*schema.Set).List())
+		}
+
+		if d.HasChange("launch_configuration") {
+			if v, ok := d.GetOk("launch_configuration"); ok {
+				input.LaunchConfigurationName = aws.String(v.(string))
+			}
+			shouldRefreshInstances = true
+		}
+
+		if d.HasChange(names.AttrLaunchTemplate) && !hasInstanceRefresh {
+			// NOTE: we should only  set LaunchTemplate in UpdateAutoScalingGroup if instanceRefresh is not enabled.
+			// If instanceRefresh is enabled, we should pass the LaunchTemplate to StartInstanceRefresh API instead
+			if v, ok := d.GetOk(names.AttrLaunchTemplate); !hasInstanceRefresh && ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.LaunchTemplate = expandLaunchTemplateSpecification(v.([]interface{})[0].(map[string]interface{}), false)
+			}
+		}
+
+		if d.HasChange("mixed_instances_policy") && !hasInstanceRefresh {
+			if v, ok := d.GetOk("mixed_instances_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.MixedInstancesPolicy = expandMixedInstancesPolicy(v.([]interface{})[0].(map[string]interface{}), true)
+			}
 		}
 
 		_, err := conn.UpdateAutoScalingGroup(ctx, input)
@@ -1630,8 +1642,8 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	if v, ok := d.GetOk("instance_refresh"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		tfMap := v.([]interface{})[0].(map[string]interface{})
+	if hasInstanceRefresh && len(instanceRefresh.([]interface{})) > 0 && instanceRefresh.([]interface{})[0] != nil {
+		tfMap := instanceRefresh.([]interface{})[0].(map[string]interface{})
 
 		if !shouldRefreshInstances {
 			if v, ok := tfMap[names.AttrTriggers].(*schema.Set); ok && v.Len() > 0 {
@@ -1647,7 +1659,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			}
 		}
 
-		if shouldRefreshInstances {
+		if shouldRefreshInstances || d.HasChanges(names.AttrLaunchTemplate, "mixed_instances_policy") {
 			var launchTemplate *awstypes.LaunchTemplateSpecification
 
 			if v, ok := d.GetOk(names.AttrLaunchTemplate); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -3304,16 +3316,15 @@ func expandStartInstanceRefreshInput(name string, tfMap map[string]interface{}, 
 		AutoScalingGroupName: aws.String(name),
 	}
 
+	if launchTemplate != nil || mixedInstancesPolicy != nil {
+		apiObject.DesiredConfiguration = &awstypes.DesiredConfiguration{
+			LaunchTemplate:       launchTemplate,
+			MixedInstancesPolicy: mixedInstancesPolicy,
+		}
+	}
+
 	if v, ok := tfMap["preferences"].([]interface{}); ok && len(v) > 0 {
 		apiObject.Preferences = expandRefreshPreferences(v[0].(map[string]interface{}))
-
-		// "The AutoRollback parameter cannot be set to true when the DesiredConfiguration parameter is empty".
-		if aws.ToBool(apiObject.Preferences.AutoRollback) {
-			apiObject.DesiredConfiguration = &awstypes.DesiredConfiguration{
-				LaunchTemplate:       launchTemplate,
-				MixedInstancesPolicy: mixedInstancesPolicy,
-			}
-		}
 	}
 
 	if v, ok := tfMap["strategy"].(string); ok && v != "" {
