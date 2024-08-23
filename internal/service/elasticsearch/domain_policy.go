@@ -84,8 +84,8 @@ func resourceDomainPolicyUpsert(ctx context.Context, d *schema.ResourceData, met
 		d.SetId("esd-policy-" + domainName)
 	}
 
-	if err := waitForDomainUpdate(ctx, conn, d.Get(names.AttrDomainName).(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Elasticsearch Domain (%s) update: %s", d.Id(), err)
+	if _, err := waitDomainConfigUpdated(ctx, conn, d.Get(names.AttrDomainName).(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Elasticsearch Domain (%s) Config update: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceDomainPolicyRead(ctx, d, meta)...)

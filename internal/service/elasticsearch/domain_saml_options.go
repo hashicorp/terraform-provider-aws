@@ -120,7 +120,10 @@ func resourceDomainSAMLOptionsPut(ctx context.Context, d *schema.ResourceData, m
 		DomainName: aws.String(domainName),
 	}
 
-	_, err := conn.UpdateElasticsearchDomainConfig(ctx, input)
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ValidationException](ctx, propagationTimeout,
+		func() (interface{}, error) {
+			return conn.UpdateElasticsearchDomainConfig(ctx, input)
+		}, "A change/update is in progress")
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting Elasticsearch Domain SAML Options (%s): %s", d.Id(), err)
@@ -130,8 +133,8 @@ func resourceDomainSAMLOptionsPut(ctx context.Context, d *schema.ResourceData, m
 		d.SetId(domainName)
 	}
 
-	if err := waitForDomainUpdate(ctx, conn, d.Get(names.AttrDomainName).(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Elasticsearch Domain (%s) update: %s", d.Id(), err)
+	if _, err := waitDomainConfigUpdated(ctx, conn, d.Get(names.AttrDomainName).(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Elasticsearch Domain (%s) Config update: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceDomainSAMLOptionsRead(ctx, d, meta)...)
