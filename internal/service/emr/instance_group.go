@@ -5,7 +5,6 @@ package emr
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
@@ -23,14 +22,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
-)
-
-const (
-	instanceGroupCreateTimeout = 30 * time.Minute
-	instanceGroupUpdateTimeout = 30 * time.Minute
 )
 
 // @SDKResource("aws_emr_instance_group", name="Instance Group")
@@ -40,6 +36,7 @@ func resourceInstanceGroup() *schema.Resource {
 		ReadWithoutTimeout:   resourceInstanceGroupRead,
 		UpdateWithoutTimeout: resourceInstanceGroupUpdate,
 		DeleteWithoutTimeout: resourceInstanceGroupDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
@@ -53,12 +50,14 @@ func resourceInstanceGroup() *schema.Resource {
 				return []*schema.ResourceData{d}, nil
 			},
 		},
+
 		Schema: map[string]*schema.Schema{
 			"autoscaling_policy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
-				ValidateFunc:     validation.StringIsJSON,
+				Type:                  schema.TypeString,
+				Optional:              true,
+				ValidateFunc:          validation.StringIsJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
+				DiffSuppressOnRefresh: true,
 			},
 			"bid_price": {
 				Type:     schema.TypeString,
@@ -71,10 +70,11 @@ func resourceInstanceGroup() *schema.Resource {
 				ForceNew: true,
 			},
 			"configurations_json": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
+				Type:                  schema.TypeString,
+				Optional:              true,
+				ValidateFunc:          validation.StringIsJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
+				DiffSuppressOnRefresh: true,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
@@ -149,31 +149,38 @@ func resourceInstanceGroupCreate(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
-	instanceRole := awstypes.InstanceGroupTypeTask
+	name := d.Get(names.AttrName).(string)
 	groupConfig := awstypes.InstanceGroupConfig{
 		EbsConfiguration: readEBSConfig(d),
-		InstanceRole:     awstypes.InstanceRoleType(instanceRole),
+		InstanceRole:     awstypes.InstanceRoleTypeTask,
 		InstanceType:     aws.String(d.Get(names.AttrInstanceType).(string)),
-		Name:             aws.String(d.Get(names.AttrName).(string)),
+		Name:             aws.String(name),
 	}
 
 	if v, ok := d.GetOk("autoscaling_policy"); ok {
-		var autoScalingPolicy *awstypes.AutoScalingPolicy
+		var autoScalingPolicy awstypes.AutoScalingPolicy
 
-		if err := json.Unmarshal([]byte(v.(string)), &autoScalingPolicy); err != nil {
-			return sdkdiag.AppendErrorf(diags, "[DEBUG] error parsing Auto Scaling Policy %s", err)
+		if err := tfjson.DecodeFromString(v.(string), &autoScalingPolicy); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
-		groupConfig.AutoScalingPolicy = autoScalingPolicy
+
+		groupConfig.AutoScalingPolicy = &autoScalingPolicy
+	}
+
+	groupConfig.Market = awstypes.MarketTypeOnDemand
+	if v, ok := d.GetOk("bid_price"); ok {
+		groupConfig.BidPrice = aws.String(v.(string))
+		groupConfig.Market = awstypes.MarketTypeSpot
 	}
 
 	if v, ok := d.GetOk("configurations_json"); ok {
 		info, err := structure.NormalizeJsonString(v)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "configurations_json contains an invalid JSON: %s", err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 		groupConfig.Configurations, err = expandConfigurationJSON(info)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading EMR configurations_json: %s", err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
@@ -183,29 +190,24 @@ func resourceInstanceGroupCreate(ctx context.Context, d *schema.ResourceData, me
 		groupConfig.InstanceCount = aws.Int32(1)
 	}
 
-	groupConfig.Market = awstypes.MarketTypeOnDemand
-	if v, ok := d.GetOk("bid_price"); ok {
-		groupConfig.BidPrice = aws.String(v.(string))
-		groupConfig.Market = awstypes.MarketTypeSpot
-	}
-
-	params := &emr.AddInstanceGroupsInput{
+	input := &emr.AddInstanceGroupsInput{
 		InstanceGroups: []awstypes.InstanceGroupConfig{groupConfig},
 		JobFlowId:      aws.String(d.Get("cluster_id").(string)),
 	}
 
-	resp, err := conn.AddInstanceGroups(ctx, params)
+	output, err := conn.AddInstanceGroups(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating EMR Instance Group: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating EMR Instance Group (%s): %s", name, err)
 	}
 
-	if resp == nil || len(resp.InstanceGroupIds) == 0 {
-		return sdkdiag.AppendErrorf(diags, "creating EMR Instance Group: empty response")
-	}
-	d.SetId(resp.InstanceGroupIds[0])
+	d.SetId(output.InstanceGroupIds[0])
 
-	if err := waitForInstanceGroupStateRunning(ctx, conn, d.Get("cluster_id").(string), d.Id(), instanceGroupCreateTimeout); err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating EMR Instance Group (%s): waiting for completion: %s", d.Id(), err)
+	const (
+		timeout = 30 * time.Minute
+	)
+	if _, err := waitInstanceGroupRunning(ctx, conn, d.Get("cluster_id").(string), d.Id(), timeout); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EMR Instance Group (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceInstanceGroupRead(ctx, d, meta)...)
@@ -215,56 +217,34 @@ func resourceInstanceGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
-	ig, err := fetchInstanceGroup(ctx, conn, d.Get("cluster_id").(string), d.Id())
+	ig, err := findInstanceGroupByTwoPartKey(ctx, conn, d.Get("cluster_id").(string), d.Id())
 
-	if tfresource.NotFound(err) {
-		log.Printf("[DEBUG] EMR Instance Group (%s) not found, removing", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EMR Instance Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "is not valid") {
-			log.Printf("[DEBUG] EMR Cluster corresponding to Instance Group (%s) not found, removing", d.Id())
-			d.SetId("")
-			return diags
-		}
 		return sdkdiag.AppendErrorf(diags, "reading EMR Instance Group (%s): %s", d.Id(), err)
 	}
 
-	if ig.Status != nil {
-		switch ig.Status.State {
-		case awstypes.InstanceGroupStateTerminating:
-			fallthrough
-		case awstypes.InstanceGroupStateTerminated:
-			log.Printf("[DEBUG] EMR Instance Group (%s) terminated, removing", d.Id())
-			d.SetId("")
-			return diags
-		}
+	autoscalingPolicyString, err := flattenAutoScalingPolicyDescription(ig.AutoScalingPolicy)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
-
+	d.Set("autoscaling_policy", autoscalingPolicyString)
+	d.Set("bid_price", ig.BidPrice)
 	switch {
 	case len(ig.Configurations) > 0:
 		configOut, err := flattenConfigurationJSON(ig.Configurations)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading EMR instance group configurations: %s", err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
-		if err := d.Set("configurations_json", configOut); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting EMR configurations_json for instance group (%s): %s", d.Id(), err)
-		}
+		d.Set("configurations_json", configOut)
 	default:
 		d.Set("configurations_json", "")
 	}
-
-	autoscalingPolicyString, err := flattenAutoScalingPolicyDescription(ig.AutoScalingPolicy)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading EMR Instance Group (%s): %s", d.Id(), err)
-	}
-
-	d.Set("autoscaling_policy", autoscalingPolicyString)
-
-	d.Set("bid_price", ig.BidPrice)
 	if err := d.Set("ebs_config", flattenEBSConfig(ig.EbsBlockDevices)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ebs_config: %s", err)
 	}
@@ -273,10 +253,7 @@ func resourceInstanceGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set(names.AttrInstanceType, ig.InstanceType)
 	d.Set(names.AttrName, ig.Name)
 	d.Set("running_instance_count", ig.RunningInstanceCount)
-
-	if ig.Status != nil {
-		d.Set(names.AttrStatus, ig.Status.State)
-	}
+	d.Set(names.AttrStatus, ig.Status.State)
 
 	return diags
 }
@@ -285,59 +262,65 @@ func resourceInstanceGroupUpdate(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
-	log.Printf("[DEBUG] Modify EMR task group")
 	if d.HasChanges(names.AttrInstanceCount, "configurations_json") {
-		instanceGroupModifyConfig := awstypes.InstanceGroupModifyConfig{
+		groupConfig := awstypes.InstanceGroupModifyConfig{
 			InstanceGroupId: aws.String(d.Id()),
 		}
 
 		if d.HasChange(names.AttrInstanceCount) {
-			instanceCount := d.Get(names.AttrInstanceCount).(int)
-			instanceGroupModifyConfig.InstanceCount = aws.Int32(int32(instanceCount))
+			groupConfig.InstanceCount = aws.Int32(int32(d.Get(names.AttrInstanceCount).(int)))
 		}
+
 		if d.HasChange("configurations_json") {
 			if v, ok := d.GetOk("configurations_json"); ok {
 				info, err := structure.NormalizeJsonString(v)
 				if err != nil {
-					return sdkdiag.AppendErrorf(diags, "configurations_json contains an invalid JSON: %s", err)
+					return sdkdiag.AppendFromErr(diags, err)
 				}
-				instanceGroupModifyConfig.Configurations, err = expandConfigurationJSON(info)
+				groupConfig.Configurations, err = expandConfigurationJSON(info)
 				if err != nil {
-					return sdkdiag.AppendErrorf(diags, "reading EMR configurations_json: %s", err)
+					return sdkdiag.AppendFromErr(diags, err)
 				}
 			}
 		}
-		params := &emr.ModifyInstanceGroupsInput{
+
+		input := &emr.ModifyInstanceGroupsInput{
 			InstanceGroups: []awstypes.InstanceGroupModifyConfig{
-				instanceGroupModifyConfig,
+				groupConfig,
 			},
 		}
 
-		_, err := conn.ModifyInstanceGroups(ctx, params)
+		_, err := conn.ModifyInstanceGroups(ctx, input)
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "modifying EMR Instance Group (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating EMR Instance Group (%s): %s", d.Id(), err)
 		}
 
-		if err := waitForInstanceGroupStateRunning(ctx, conn, d.Get("cluster_id").(string), d.Id(), instanceGroupUpdateTimeout); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for EMR Instance Group (%s) modification: %s", d.Id(), err)
+		const (
+			timeout = 30 * time.Minute
+		)
+		if _, err := waitInstanceGroupRunning(ctx, conn, d.Get("cluster_id").(string), d.Id(), timeout); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for EMR Instance Group (%s) update: %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("autoscaling_policy") {
-		var autoScalingPolicy *awstypes.AutoScalingPolicy
+		var autoScalingPolicy awstypes.AutoScalingPolicy
 
-		if err := json.Unmarshal([]byte(d.Get("autoscaling_policy").(string)), &autoScalingPolicy); err != nil {
-			return sdkdiag.AppendErrorf(diags, "parsing EMR Auto Scaling Policy JSON for update: %s", err)
+		if err := tfjson.DecodeFromString(d.Get("autoscaling_policy").(string), &autoScalingPolicy); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
-		putAutoScalingPolicy := &emr.PutAutoScalingPolicyInput{
+		input := &emr.PutAutoScalingPolicyInput{
+			AutoScalingPolicy: &autoScalingPolicy,
 			ClusterId:         aws.String(d.Get("cluster_id").(string)),
-			AutoScalingPolicy: autoScalingPolicy,
 			InstanceGroupId:   aws.String(d.Id()),
 		}
 
-		if _, err := conn.PutAutoScalingPolicy(ctx, putAutoScalingPolicy); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating autoscaling policy for instance group %q: %s", d.Id(), err)
+		_, err := conn.PutAutoScalingPolicy(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating EMR Instance Group (%s) AutoScalingPolicy: %s", d.Id(), err)
 		}
 	}
 
@@ -348,72 +331,117 @@ func resourceInstanceGroupDelete(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
-	log.Printf("[WARN] AWS EMR Instance Group does not support DELETE; resizing cluster to zero before removing from state")
-	params := &emr.ModifyInstanceGroupsInput{
+	input := &emr.ModifyInstanceGroupsInput{
 		InstanceGroups: []awstypes.InstanceGroupModifyConfig{
 			{
-				InstanceGroupId: aws.String(d.Id()),
 				InstanceCount:   aws.Int32(0),
+				InstanceGroupId: aws.String(d.Id()),
 			},
 		},
 	}
 
-	if _, err := conn.ModifyInstanceGroups(ctx, params); err != nil {
-		return sdkdiag.AppendErrorf(diags, "draining EMR Instance Group (%s): %s", d.Id(), err)
+	_, err := conn.ModifyInstanceGroups(ctx, input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting EMR Instance Group (%s): %s", d.Id(), err)
 	}
+
 	return diags
 }
 
-func instanceGroupStateRefresh(ctx context.Context, conn *emr.Client, clusterID, groupID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		ig, err := fetchInstanceGroup(ctx, conn, clusterID, groupID)
-		if err != nil {
-			return nil, "Not Found", err
-		}
-
-		if ig.Status == nil {
-			log.Printf("[WARN] ERM Instance Group found, but without state")
-			return nil, "Undefined", fmt.Errorf("Undefined EMR Cluster Instance Group state")
-		}
-
-		return ig, string(ig.Status.State), nil
+func findInstanceGroupByTwoPartKey(ctx context.Context, conn *emr.Client, clusterID, groupID string) (*awstypes.InstanceGroup, error) {
+	input := &emr.ListInstanceGroupsInput{
+		ClusterId: aws.String(clusterID),
 	}
+	output, err := findInstanceGroup(ctx, conn, input, func(v *awstypes.InstanceGroup) bool {
+		return aws.ToString(v.Id) == groupID
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.Status.State; state == awstypes.InstanceGroupStateTerminating || state == awstypes.InstanceGroupStateTerminated {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
 }
 
-func fetchInstanceGroup(ctx context.Context, conn *emr.Client, clusterID, groupID string) (*awstypes.InstanceGroup, error) {
-	input := &emr.ListInstanceGroupsInput{ClusterId: aws.String(clusterID)}
+func findInstanceGroup(ctx context.Context, conn *emr.Client, input *emr.ListInstanceGroupsInput, filter tfslices.Predicate[*awstypes.InstanceGroup]) (*awstypes.InstanceGroup, error) {
+	output, err := findInstanceGroups(ctx, conn, input, filter)
 
-	var groups []awstypes.InstanceGroup
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findInstanceGroups(ctx context.Context, conn *emr.Client, input *emr.ListInstanceGroupsInput, filter tfslices.Predicate[*awstypes.InstanceGroup]) ([]awstypes.InstanceGroup, error) {
+	var output []awstypes.InstanceGroup
 
 	pages := emr.NewListInstanceGroupsPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
+		if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "is not valid") {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
 		if err != nil {
-			return nil, fmt.Errorf("unable to retrieve EMR Cluster (%q): %s", clusterID, err)
+			return nil, err
 		}
 
-		groups = append(groups, page.InstanceGroups...)
-	}
-
-	if len(groups) == 0 {
-		return nil, fmt.Errorf("no instance groups found for EMR Cluster (%s)", clusterID)
-	}
-
-	var ig *awstypes.InstanceGroup
-	for _, group := range groups {
-		if groupID == aws.ToString(group.Id) {
-			ig = &group
-			break
+		for _, v := range page.InstanceGroups {
+			if v.Status != nil && filter(&v) {
+				output = append(output, v)
+			}
 		}
 	}
 
-	if ig == nil {
-		return nil, &retry.NotFoundError{}
+	return output, nil
+}
+
+func statusInstanceGroup(ctx context.Context, conn *emr.Client, clusterID, groupID string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findInstanceGroupByTwoPartKey(ctx, conn, clusterID, groupID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status.State), nil
+	}
+}
+
+func waitInstanceGroupRunning(ctx context.Context, conn *emr.Client, clusterID, groupID string, timeout time.Duration) (*awstypes.InstanceGroup, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(awstypes.InstanceGroupStateBootstrapping, awstypes.InstanceGroupStateProvisioning, awstypes.InstanceGroupStateReconfiguring, awstypes.InstanceGroupStateResizing),
+		Target:     enum.Slice(awstypes.InstanceGroupStateRunning),
+		Refresh:    statusInstanceGroup(ctx, conn, clusterID, groupID),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
 	}
 
-	return ig, nil
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.InstanceGroup); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
 // readEBSConfig populates an emr.EbsConfiguration struct
@@ -445,19 +473,4 @@ func readEBSConfig(d *schema.ResourceData) *awstypes.EbsConfiguration {
 	}
 	result.EbsBlockDeviceConfigs = ebsConfigs
 	return result
-}
-
-func waitForInstanceGroupStateRunning(ctx context.Context, conn *emr.Client, clusterID string, instanceGroupID string, timeout time.Duration) error {
-	stateConf := &retry.StateChangeConf{
-		Pending:    enum.Slice(awstypes.InstanceGroupStateBootstrapping, awstypes.InstanceGroupStateProvisioning, awstypes.InstanceGroupStateReconfiguring, awstypes.InstanceGroupStateResizing),
-		Target:     enum.Slice(awstypes.InstanceGroupStateRunning),
-		Refresh:    instanceGroupStateRefresh(ctx, conn, clusterID, instanceGroupID),
-		Timeout:    timeout,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-
-	_, err := stateConf.WaitForStateContext(ctx)
-
-	return err
 }

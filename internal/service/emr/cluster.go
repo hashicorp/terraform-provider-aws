@@ -1369,7 +1369,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		stateConf := &retry.StateChangeConf{
 			Pending: enum.Slice(awstypes.InstanceGroupStateBootstrapping, awstypes.InstanceGroupStateProvisioning, awstypes.InstanceGroupStateReconfiguring, awstypes.InstanceGroupStateResizing),
 			Target:  enum.Slice(awstypes.InstanceGroupStateRunning),
-			Refresh: instanceGroupStateRefresh(ctx, conn, d.Id(), instanceGroupID),
+			Refresh: statusInstanceGroup(ctx, conn, d.Id(), instanceGroupID),
 			Timeout: 20 * time.Minute,
 			Delay:   10 * time.Second,
 		}
@@ -2093,20 +2093,8 @@ func findInstanceGroupsByClusterID(ctx context.Context, conn *emr.Client, cluste
 	input := &emr.ListInstanceGroupsInput{
 		ClusterId: aws.String(clusterID),
 	}
-	var output []awstypes.InstanceGroup
 
-	pages := emr.NewListInstanceGroupsPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if err != nil {
-			return nil, err
-		}
-
-		output = append(output, page.InstanceGroups...)
-	}
-
-	return output, nil
+	return findInstanceGroups(ctx, conn, input, tfslices.PredicateTrue[*awstypes.InstanceGroup]())
 }
 
 func readInstanceFleetConfig(data map[string]interface{}, InstanceFleetType awstypes.InstanceFleetType) *awstypes.InstanceFleetConfig {

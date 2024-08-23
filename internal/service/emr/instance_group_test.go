@@ -317,28 +317,22 @@ func TestAccEMRInstanceGroup_EBS_ebsOptimized(t *testing.T) {
 	})
 }
 
-func testAccCheckInstanceGroupExists(ctx context.Context, name string, ig *awstypes.InstanceGroup) resource.TestCheckFunc {
+func testAccCheckInstanceGroupExists(ctx context.Context, n string, v *awstypes.InstanceGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No task group id set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRClient(ctx)
 
-		meta := acctest.Provider.Meta()
-		conn := meta.(*conns.AWSClient).EMRClient(ctx)
-		group, err := tfemr.FetchInstanceGroup(ctx, conn, rs.Primary.Attributes["cluster_id"], rs.Primary.ID)
+		output, err := tfemr.FindInstanceGroupByTwoPartKey(ctx, conn, rs.Primary.Attributes["cluster_id"], rs.Primary.ID)
+
 		if err != nil {
-			return fmt.Errorf("EMR error: %v", err)
+			return err
 		}
 
-		if group == nil {
-			return fmt.Errorf("No match found for (%s)", name)
-		}
-		*ig = *group
+		*v = *output
 
 		return nil
 	}
