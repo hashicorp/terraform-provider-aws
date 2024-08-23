@@ -1,4 +1,10 @@
-## 5.64.0 (Unreleased)
+## 5.65.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_glue_catalog_table_optimizer` ([#38052](https://github.com/hashicorp/terraform-provider-aws/issues/38052))
+
+## 5.64.0 (August 22, 2024)
 
 ENHANCEMENTS:
 
@@ -9,7 +15,10 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_bedrockagent_agent: Fixes consistency issues where only some prompts are overridden ([#38944](https://github.com/hashicorp/terraform-provider-aws/issues/38944))
 * resource/aws_cloudformation_stack_set_instance: Fix crash during construction of the `id` attribute when `deployment_targets` does not include organizational unit IDs. ([#38969](https://github.com/hashicorp/terraform-provider-aws/issues/38969))
+* resource/aws_glue_trigger: Fix crash when null `action` is configured ([#38994](https://github.com/hashicorp/terraform-provider-aws/issues/38994))
+* resource/aws_rds_cluster: Allow Web Service Data API (`enabled_http_endpoint`) to be enabled and disabled for `provisioned` engine mode and serverlessv2 ([#38997](https://github.com/hashicorp/terraform-provider-aws/issues/38997))
 
 ## 5.63.1 (August 20, 2024)
 
