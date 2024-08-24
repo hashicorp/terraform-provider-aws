@@ -149,7 +149,7 @@ func resourceManagedScalingPolicyDelete(ctx context.Context, d *schema.ResourceD
 		ClusterId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "A job flow that is shutting down, terminated, or finished may not be modified") ||
+	if tfawserr.ErrMessageContains(err, errCodeValidationException, "A job flow that is shutting down, terminated, or finished may not be modified") ||
 		errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "does not exist") {
 		return diags
 	}
@@ -172,7 +172,7 @@ func findManagedScalingPolicyByID(ctx context.Context, conn *emr.Client, id stri
 func findManagedScalingPolicy(ctx context.Context, conn *emr.Client, input *emr.GetManagedScalingPolicyInput) (*awstypes.ManagedScalingPolicy, error) {
 	output, err := conn.GetManagedScalingPolicy(ctx, input)
 
-	if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "A job flow that is shutting down, terminated, or finished may not be modified") ||
+	if tfawserr.ErrMessageContains(err, errCodeValidationException, "A job flow that is shutting down, terminated, or finished may not be modified") ||
 		errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "does not exist") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,

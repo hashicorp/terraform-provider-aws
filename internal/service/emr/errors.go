@@ -4,8 +4,8 @@
 package emr
 
 const (
-	ErrCodeAccessDeniedException     = "AccessDeniedException"
-	ErrCodeClusterNotFound           = "ClusterNotFound"
-	ErrCodeUnknownOperationException = "UnknownOperationException"
-	ErrCodeValidationException       = "ValidationException"
+	errCodeAccessDeniedException     = "AccessDeniedException"
+	errCodeClusterNotFound           = "ClusterNotFound"
+	errCodeUnknownOperationException = "UnknownOperationException"
+	errCodeValidationException       = "ValidationException"
 )

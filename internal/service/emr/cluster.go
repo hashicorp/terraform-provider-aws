@@ -1011,11 +1011,11 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			return conn.RunJobFlow(ctx, input)
 		},
 		func(err error) (bool, error) {
-			if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Invalid InstanceProfile:") {
+			if tfawserr.ErrMessageContains(err, errCodeValidationException, "Invalid InstanceProfile:") {
 				return true, err
 			}
 
-			if tfawserr.ErrMessageContains(err, ErrCodeAccessDeniedException, "Failed to authorize instance profile") {
+			if tfawserr.ErrMessageContains(err, errCodeAccessDeniedException, "Failed to authorize instance profile") {
 				return true, err
 			}
 
@@ -1204,8 +1204,8 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	})
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Auto-termination is not available for this account when using this release of EMR") ||
-			tfawserr.ErrMessageContains(err, ErrCodeUnknownOperationException, "Could not find operation GetAutoTerminationPolicy") {
+		if tfawserr.ErrMessageContains(err, errCodeValidationException, "Auto-termination is not available for this account when using this release of EMR") ||
+			tfawserr.ErrMessageContains(err, errCodeUnknownOperationException, "Could not find operation GetAutoTerminationPolicy") {
 			err = nil
 		}
 	}
@@ -1451,7 +1451,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 func findCluster(ctx context.Context, conn *emr.Client, input *emr.DescribeClusterInput) (*awstypes.Cluster, error) {
 	output, err := conn.DescribeCluster(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeClusterNotFound) || errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "is not valid") {
+	if tfawserr.ErrCodeEquals(err, errCodeClusterNotFound) || errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "is not valid") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
