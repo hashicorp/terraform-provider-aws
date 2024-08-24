@@ -400,8 +400,8 @@ github.com/aws/aws-sdk-go-v2/service/qbusiness v1.11.0 h1:/7Rx0N5FBoj8hd4R8DsaPv
 github.com/aws/aws-sdk-go-v2/service/qbusiness v1.11.0/go.mod h1:Pv7rG+8I3W5+tH3J9sUSTr1YSyppDfp6xpW4n39eUxM=
 github.com/aws/aws-sdk-go-v2/service/qldb v1.23.4 h1:71m+NvWv63AnrzLpLnLwKs6OlpeJ0g/y+IYInc/V3QI=
 github.com/aws/aws-sdk-go-v2/service/qldb v1.23.4/go.mod h1:E6pzF6rAtAfRz2IE1hRho83lQx17IUQGLCrfgS2+s6U=
-github.com/aws/aws-sdk-go-v2/service/ram v1.27.4 h1:/Dq1qVV1GzFvjs5Lz9kE1d03XeiEI+JFzqHtwmnSAx8=
-github.com/aws/aws-sdk-go-v2/service/ram v1.27.4/go.mod h1:TWkXQo8ew7pyPtytLlHIL8meywY2lOJk6QdC8zmBD/8=
+github.com/aws/aws-sdk-go-v2/service/ram v1.27.5 h1:AEH+gEiuFOA4nOh+oWf9xmuddaHWQdGoeuYojaULOYQ=
+github.com/aws/aws-sdk-go-v2/service/ram v1.27.5/go.mod h1:TWkXQo8ew7pyPtytLlHIL8meywY2lOJk6QdC8zmBD/8=
 github.com/aws/aws-sdk-go-v2/service/rbin v1.18.4 h1:oUAgSPugpGNhLsVruLMq7FBHq5DgQzokIh1xfgGB3Ro=
 github.com/aws/aws-sdk-go-v2/service/rbin v1.18.4/go.mod h1:4FFWPDJJuUu9HeE5zO2DtmITnOnXScImuhEaQlpPWEY=
 github.com/aws/aws-sdk-go-v2/service/rds v1.82.1 h1:4s+9AtQQGB5n0xMm0xRbIQOFoi6rrggMlFt8WwHcDvs=
