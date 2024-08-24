@@ -117,7 +117,7 @@ func resourceStudioSessionMappingUpdate(ctx context.Context, d *schema.ResourceD
 		StudioId:         aws.String(studioId),
 	}
 
-	if isIdentityId(identityIdOrName) {
+	if isIdentityID(identityIdOrName) {
 		input.IdentityId = aws.String(identityIdOrName)
 	} else {
 		input.IdentityName = aws.String(identityIdOrName)
@@ -170,7 +170,7 @@ func resourceStudioSessionMappingDelete(ctx context.Context, d *schema.ResourceD
 		StudioId:     aws.String(studioId),
 	}
 
-	if isIdentityId(identityIdOrName) {
+	if isIdentityID(identityIdOrName) {
 		input.IdentityId = aws.String(identityIdOrName)
 	} else {
 		input.IdentityName = aws.String(identityIdOrName)
@@ -200,7 +200,7 @@ func findStudioSessionMappingByIDOrName(ctx context.Context, conn *emr.Client, i
 		IdentityType: awstypes.IdentityType(identityType),
 	}
 
-	if isIdentityId(identityIdOrName) {
+	if isIdentityID(identityIdOrName) {
 		input.IdentityId = aws.String(identityIdOrName)
 	} else {
 		input.IdentityName = aws.String(identityIdOrName)

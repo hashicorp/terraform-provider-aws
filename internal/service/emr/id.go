@@ -10,12 +10,12 @@ import (
 	"github.com/YakDriver/regexache"
 )
 
-const IdentityIdPattern = `([0-9a-f]{10}-|)[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}`
+const identityIDPattern = `([0-9a-f]{10}-|)[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}`
 
-var IdentityIdPatternRegexp = regexache.MustCompile(IdentityIdPattern)
+var identityIDPatternRegexp = regexache.MustCompile(identityIDPattern)
 
-func isIdentityId(identityIdOrName string) bool {
-	return IdentityIdPatternRegexp.MatchString(identityIdOrName)
+func isIdentityID(identityIdOrName string) bool {
+	return identityIDPatternRegexp.MatchString(identityIdOrName)
 }
 
 func readStudioSessionMapping(id string) (studioId, identityType, identityIdOrName string, err error) {
@@ -24,7 +24,7 @@ func readStudioSessionMapping(id string) (studioId, identityType, identityIdOrNa
 		return idOrNameParts[0], idOrNameParts[1], idOrNameParts[2], nil
 	}
 
-	if isIdentityId(identityIdOrName) {
+	if isIdentityID(identityIdOrName) {
 		err = fmt.Errorf("expected ID in format studio-id:identity-type:identity-id, received: %s", identityIdOrName)
 	} else {
 		err = fmt.Errorf("expected ID in format studio-id:identity-type:identity-name, received: %s", identityIdOrName)
