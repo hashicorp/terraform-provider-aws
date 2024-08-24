@@ -290,8 +290,8 @@ github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.11.18 h1:tJ5RnkHC
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.11.18/go.mod h1:++NHzT+nAF7ZPrHPsA+ENvsXkOO8wEu+C6RXltAG4/c=
 github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.17.16 h1:jg16PhLPUiHIj8zYIW6bqzeQSuHVEiWnGA0Brz5Xv2I=
 github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.17.16/go.mod h1:Uyk1zE1VVdsHSU7096h/rwnXDzOzYQVl+FNPhPw7ShY=
-github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.16.4 h1:uEKMRTKNdS2ELDN3Kttfz7IFXanX0+T1sVE13mm/+Vk=
-github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.16.4/go.mod h1:TfxNP+f4gWfHqxnXjHQx3ltEOjE+WBxC/K0cfyaP6K4=
+github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.16.5 h1:PHRvcbXTWLtoZvsTxQ3PuoTJMz3s4hzmM4wuoN1AyVQ=
+github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.16.5/go.mod h1:TfxNP+f4gWfHqxnXjHQx3ltEOjE+WBxC/K0cfyaP6K4=
 github.com/aws/aws-sdk-go-v2/service/iot v1.55.4 h1:kSWUXF8Bmqt7WA0TkQ/+rrGyNooDmQNno7EMwbRFbIs=
 github.com/aws/aws-sdk-go-v2/service/iot v1.55.4/go.mod h1:yutfNjkxEV9lNXKElY0h0C58gIBsEanE/w3Ommjx92w=
 github.com/aws/aws-sdk-go-v2/service/iotanalytics v1.24.4 h1:W7L9VJE5IyBewnGhqSF+kiK3RgL7cAXBbVIcO+bR/fI=
