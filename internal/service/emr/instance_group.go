@@ -425,7 +425,7 @@ func statusInstanceGroup(ctx context.Context, conn *emr.Client, clusterID, group
 	}
 }
 
-func waitInstanceGroupRunning(ctx context.Context, conn *emr.Client, clusterID, groupID string, timeout time.Duration) (*awstypes.InstanceGroup, error) {
+func waitInstanceGroupRunning(ctx context.Context, conn *emr.Client, clusterID, groupID string, timeout time.Duration) (*awstypes.InstanceGroup, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.InstanceGroupStateBootstrapping, awstypes.InstanceGroupStateProvisioning, awstypes.InstanceGroupStateReconfiguring, awstypes.InstanceGroupStateResizing),
 		Target:     enum.Slice(awstypes.InstanceGroupStateRunning),
