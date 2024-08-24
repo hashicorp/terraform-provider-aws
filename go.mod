@@ -187,7 +187,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.23.4
 	github.com/aws/aws-sdk-go-v2/service/ram v1.27.5
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.18.5
-	github.com/aws/aws-sdk-go-v2/service/rds v1.82.1
+	github.com/aws/aws-sdk-go-v2/service/rds v1.82.2
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.46.5
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.27.4
 	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.21.1
