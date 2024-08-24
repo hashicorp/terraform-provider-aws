@@ -1083,7 +1083,11 @@ func findDomainUpgradeStatus(ctx context.Context, conn *elasticsearch.Client, in
 
 func statusDomainProcessing(ctx context.Context, conn *elasticsearch.Client, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findDomainByName(ctx, conn, name)
+		// Don't call findDomainByName here as the domain's Deleted flag will be set while DomainProcessingStatus is "Deleting".
+		input := &elasticsearch.DescribeElasticsearchDomainInput{
+			DomainName: aws.String(name),
+		}
+		output, err := findDomain(ctx, conn, input)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
