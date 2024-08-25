@@ -31,6 +31,7 @@ on:
 env:
   AWS_DEFAULT_REGION: us-west-2
   TERRAFORM_VERSION: "1.8.3"
+  GOPRIVATE: github.com/datafy-io
 
 jobs:
   go_mod_download:
@@ -41,6 +42,10 @@ jobs:
       - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
         with:
           go-version-file: go.mod
+      - name: Setup access for private go modules
+        run: |
+          echo "machine github.com login ${{ vars.GH_ACCESS_USERNAME }} password ${{ secrets.GH_ACCESS_TOKEN }}" >> ~/.netrc
+          echo "machine api.github.com login ${{ vars.GH_ACCESS_USERNAME }} password ${{ secrets.GH_ACCESS_TOKEN }}" >> ~/.netrc
       - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
         continue-on-error: true
         id: cache-go-pkg-mod
