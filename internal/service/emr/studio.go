@@ -123,11 +123,12 @@ func resourceStudioCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
+	name := d.Get(names.AttrName).(string)
 	input := &emr.CreateStudioInput{
 		AuthMode:                 awstypes.AuthMode(d.Get("auth_mode").(string)),
 		DefaultS3Location:        aws.String(d.Get("default_s3_location").(string)),
 		EngineSecurityGroupId:    aws.String(d.Get("engine_security_group_id").(string)),
-		Name:                     aws.String(d.Get(names.AttrName).(string)),
+		Name:                     aws.String(name),
 		ServiceRole:              aws.String(d.Get(names.AttrServiceRole).(string)),
 		SubnetIds:                flex.ExpandStringValueSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
 		Tags:                     getTagsIn(ctx),
@@ -151,64 +152,25 @@ func resourceStudioCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.UserRole = aws.String(v.(string))
 	}
 
-	var result *emr.CreateStudioOutput
-	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
-		var err error
-		result, err = conn.CreateStudio(ctx, input)
-		if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "entity does not have permissions to assume role") {
-			return retry.RetryableError(err)
-		}
-		if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "Service role does not have permission to access") {
-			return retry.RetryableError(err)
-		}
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		result, err = conn.CreateStudio(ctx, input)
-	}
+	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
+		func() (interface{}, error) {
+			return conn.CreateStudio(ctx, input)
+		},
+		func(err error) (bool, error) {
+			if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "entity does not have permissions to assume role") ||
+				errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "Service role does not have permission to access") {
+				return true, err
+			}
+
+			return false, err
+		},
+	)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating EMR Studio: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating EMR Studio (%s): %s", name, err)
 	}
 
-	d.SetId(aws.ToString(result.StudioId))
-
-	return append(diags, resourceStudioRead(ctx, d, meta)...)
-}
-
-func resourceStudioUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRClient(ctx)
-
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := &emr.UpdateStudioInput{
-			StudioId: aws.String(d.Id()),
-		}
-
-		if d.HasChange(names.AttrDescription) {
-			input.Description = aws.String(d.Get(names.AttrDescription).(string))
-		}
-
-		if d.HasChange(names.AttrName) {
-			input.Name = aws.String(d.Get(names.AttrName).(string))
-		}
-
-		if d.HasChange("default_s3_location") {
-			input.DefaultS3Location = aws.String(d.Get("default_s3_location").(string))
-		}
-
-		if d.HasChange(names.AttrSubnetIDs) {
-			input.SubnetIds = flex.ExpandStringValueSet(d.Get(names.AttrSubnetIDs).(*schema.Set))
-		}
-
-		_, err := conn.UpdateStudio(ctx, input)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EMR Studio: %s", err)
-		}
-	}
+	d.SetId(aws.ToString(outputRaw.(*emr.CreateStudioOutput).StudioId))
 
 	return append(diags, resourceStudioRead(ctx, d, meta)...)
 }
@@ -238,32 +200,66 @@ func resourceStudioRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("idp_relay_state_parameter_name", studio.IdpRelayStateParameterName)
 	d.Set(names.AttrName, studio.Name)
 	d.Set(names.AttrServiceRole, studio.ServiceRole)
+	d.Set(names.AttrSubnetIDs, studio.SubnetIds)
 	d.Set(names.AttrURL, studio.Url)
 	d.Set("user_role", studio.UserRole)
 	d.Set(names.AttrVPCID, studio.VpcId)
 	d.Set("workspace_security_group_id", studio.WorkspaceSecurityGroupId)
-	d.Set(names.AttrSubnetIDs, flex.FlattenStringValueSet(studio.SubnetIds))
 
 	setTagsOut(ctx, studio.Tags)
 
 	return diags
 }
 
+func resourceStudioUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EMRClient(ctx)
+
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+		input := &emr.UpdateStudioInput{
+			StudioId: aws.String(d.Id()),
+		}
+
+		if d.HasChange("default_s3_location") {
+			input.DefaultS3Location = aws.String(d.Get("default_s3_location").(string))
+		}
+
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
+		}
+
+		if d.HasChange(names.AttrName) {
+			input.Name = aws.String(d.Get(names.AttrName).(string))
+		}
+
+		if d.HasChange(names.AttrSubnetIDs) {
+			input.SubnetIds = flex.ExpandStringValueSet(d.Get(names.AttrSubnetIDs).(*schema.Set))
+		}
+
+		_, err := conn.UpdateStudio(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating EMR Studio: %s", err)
+		}
+	}
+
+	return append(diags, resourceStudioRead(ctx, d, meta)...)
+}
+
 func resourceStudioDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
-	request := &emr.DeleteStudioInput{
+	log.Printf("[INFO] Deleting EMR Studio: %s", d.Id())
+	_, err := conn.DeleteStudio(ctx, &emr.DeleteStudioInput{
 		StudioId: aws.String(d.Id()),
+	})
+
+	if errs.IsA[*awstypes.InternalServerException](err) {
+		return diags
 	}
 
-	log.Printf("[INFO] Deleting EMR Studio: %s", d.Id())
-	_, err := conn.DeleteStudio(ctx, request)
-
 	if err != nil {
-		if errs.IsA[*awstypes.InternalServerException](err) {
-			return diags
-		}
 		return sdkdiag.AppendErrorf(diags, "deleting EMR Studio (%s): %s", d.Id(), err)
 	}
 

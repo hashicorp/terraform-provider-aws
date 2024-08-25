@@ -183,25 +183,22 @@ func TestAccEMRStudio_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckStudioExists(ctx context.Context, resourceName string, studio *awstypes.Studio) resource.TestCheckFunc {
+func testAccCheckStudioExists(ctx context.Context, n string, v *awstypes.Studio) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRClient(ctx)
 
 		output, err := tfemr.FindStudioByID(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		if output == nil {
-			return fmt.Errorf("EMR Studio (%s) not found", rs.Primary.ID)
-		}
-
-		*studio = *output
+		*v = *output
 
 		return nil
 	}
@@ -217,6 +214,7 @@ func testAccCheckStudioDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			_, err := tfemr.FindStudioByID(ctx, conn, rs.Primary.ID)
+
 			if tfresource.NotFound(err) {
 				continue
 			}
@@ -227,6 +225,7 @@ func testAccCheckStudioDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			return fmt.Errorf("EMR Studio %s still exists", rs.Primary.ID)
 		}
+
 		return nil
 	}
 }
