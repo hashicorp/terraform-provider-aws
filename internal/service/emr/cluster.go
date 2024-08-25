@@ -1080,7 +1080,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if err == nil { // find instance group
 		coreGroup, _ := coreInstanceGroup(instanceGroups)
-		masterGroup, _ := findMasterGroup(instanceGroups)
+		masterGroup, _ := masterInstanceGroup(instanceGroups)
 
 		flattenedCoreInstanceGroup, err := flattenCoreInstanceGroup(coreGroup)
 		if err != nil {
@@ -1155,35 +1155,27 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "setting kerberos_attributes: %s", err)
 	}
 
-	respBootstraps, err := conn.ListBootstrapActions(ctx, &emr.ListBootstrapActionsInput{
-		ClusterId: cluster.Id,
-	})
+	bootstrapActions, err := findBootstrapActionsByClusterID(ctx, conn, d.Id())
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing EMR Cluster (%s) bootstrap actions: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EMR Cluster (%s) bootstrap actions: %s", d.Id(), err)
 	}
 
-	if err := d.Set("bootstrap_action", flattenBootstrapArguments(respBootstraps.BootstrapActions)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting Bootstrap Actions: %s", err)
+	if err := d.Set("bootstrap_action", flattenBootstrapArguments(bootstrapActions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting bootstrap_action: %s", err)
 	}
 
-	var stepSummaries []awstypes.StepSummary
 	input := &emr.ListStepsInput{
 		ClusterId: aws.String(d.Id()),
 	}
-
 	if v, ok := d.GetOk("list_steps_states"); ok && v.(*schema.Set).Len() > 0 {
 		input.StepStates = flex.ExpandStringyValueSet[awstypes.StepState](v.(*schema.Set))
 	}
 
-	pages := emr.NewListStepsPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
+	stepSummaries, err := findStepSummaries(ctx, conn, input)
 
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "listing EMR Cluster (%s) steps: %s", d.Id(), err)
-		}
-
-		stepSummaries = append(stepSummaries, page.Steps...)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "listing EMR Cluster (%s) step summaries: %s", d.Id(), err)
 	}
 
 	if err := d.Set("step", flattenStepSummaries(stepSummaries)); err != nil {
@@ -1192,30 +1184,23 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	// AWS provides no other way to read back the additional_info
 	if v, ok := d.GetOk("additional_info"); ok {
-		info, err := structure.NormalizeJsonString(v)
+		v, err := structure.NormalizeJsonString(v)
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
-		d.Set("additional_info", info)
+		d.Set("additional_info", v)
 	}
 
-	atpOut, err := conn.GetAutoTerminationPolicy(ctx, &emr.GetAutoTerminationPolicyInput{
-		ClusterId: aws.String(d.Id()),
-	})
-
-	if err != nil {
-		if tfawserr.ErrMessageContains(err, errCodeValidationException, "Auto-termination is not available for this account when using this release of EMR") ||
-			tfawserr.ErrMessageContains(err, errCodeUnknownOperationException, "Could not find operation GetAutoTerminationPolicy") {
-			err = nil
-		}
-	}
-
-	if err != nil {
+	autoTerminationPolicy, err := findAutoTerminationPolicyByClusterID(ctx, conn, d.Id())
+	switch {
+	case tfresource.NotFound(err):
+		d.Set("auto_termination_policy", nil)
+	case err != nil:
 		return sdkdiag.AppendErrorf(diags, "reading EMR Cluster (%s) auto-termination policy: %s", d.Id(), err)
-	}
-
-	if err := d.Set("auto_termination_policy", flattenAutoTerminationPolicy(atpOut.AutoTerminationPolicy)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting auto_termination_policy: %s", err)
+	default:
+		if err := d.Set("auto_termination_policy", flattenAutoTerminationPolicy(autoTerminationPolicy)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting auto_termination_policy: %s", err)
+		}
 	}
 
 	if err := d.Set("placement_group_config", flattenPlacementGroupConfigs(cluster.PlacementGroups)); err != nil {
@@ -1448,27 +1433,6 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func findCluster(ctx context.Context, conn *emr.Client, input *emr.DescribeClusterInput) (*awstypes.Cluster, error) {
-	output, err := conn.DescribeCluster(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, errCodeClusterNotFound) || errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "is not valid") {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.Cluster == nil || output.Cluster.Status == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.Cluster, nil
-}
-
 func findClusterByID(ctx context.Context, conn *emr.Client, id string) (*awstypes.Cluster, error) {
 	input := &emr.DescribeClusterInput{
 		ClusterId: aws.String(id),
@@ -1497,12 +1461,32 @@ func findClusterByID(ctx context.Context, conn *emr.Client, id string) (*awstype
 	return output, nil
 }
 
+func findCluster(ctx context.Context, conn *emr.Client, input *emr.DescribeClusterInput) (*awstypes.Cluster, error) {
+	output, err := conn.DescribeCluster(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeClusterNotFound) || errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "is not valid") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Cluster == nil || output.Cluster.Status == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Cluster, nil
+}
+
 func statusCluster(ctx context.Context, conn *emr.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &emr.DescribeClusterInput{
 			ClusterId: aws.String(id),
 		}
-
 		output, err := findCluster(ctx, conn, input)
 
 		if tfresource.NotFound(err) {
@@ -1567,6 +1551,97 @@ func waitClusterDeleted(ctx context.Context, conn *emr.Client, id string) (*awst
 	}
 
 	return nil, err
+}
+
+func findBootstrapActionsByClusterID(ctx context.Context, conn *emr.Client, id string) ([]awstypes.Command, error) {
+	input := &emr.ListBootstrapActionsInput{
+		ClusterId: aws.String(id),
+	}
+
+	return findBootstrapActions(ctx, conn, input)
+}
+
+func findBootstrapActions(ctx context.Context, conn *emr.Client, input *emr.ListBootstrapActionsInput) ([]awstypes.Command, error) {
+	var output []awstypes.Command
+
+	pages := emr.NewListBootstrapActionsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "is not valid") {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.BootstrapActions {
+			output = append(output, v)
+		}
+	}
+
+	return output, nil
+}
+
+func findStepSummaries(ctx context.Context, conn *emr.Client, input *emr.ListStepsInput) ([]awstypes.StepSummary, error) {
+	var output []awstypes.StepSummary
+
+	pages := emr.NewListStepsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "is not valid") {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Steps {
+			output = append(output, v)
+		}
+	}
+
+	return output, nil
+}
+
+func findAutoTerminationPolicyByClusterID(ctx context.Context, conn *emr.Client, id string) (*awstypes.AutoTerminationPolicy, error) {
+	input := &emr.GetAutoTerminationPolicyInput{
+		ClusterId: aws.String(id),
+	}
+
+	return findAutoTerminationPolicy(ctx, conn, input)
+}
+
+func findAutoTerminationPolicy(ctx context.Context, conn *emr.Client, input *emr.GetAutoTerminationPolicyInput) (*awstypes.AutoTerminationPolicy, error) {
+	output, err := conn.GetAutoTerminationPolicy(ctx, input)
+
+	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "is not valid") ||
+		tfawserr.ErrMessageContains(err, errCodeUnknownOperationException, "Could not find operation GetAutoTerminationPolicy") ||
+		tfawserr.ErrMessageContains(err, errCodeValidationException, "Auto-termination is not available for this account when using this release of EMR") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.AutoTerminationPolicy == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.AutoTerminationPolicy, nil
 }
 
 func expandApplications(tfList []interface{}) []awstypes.Application {
@@ -2050,7 +2125,7 @@ func readBodyJSON(body string, target interface{}) error {
 	return tfjson.DecodeFromString(body, target)
 }
 
-func findMasterGroup(instanceGroups []awstypes.InstanceGroup) (*awstypes.InstanceGroup, error) {
+func masterInstanceGroup(instanceGroups []awstypes.InstanceGroup) (*awstypes.InstanceGroup, error) {
 	return tfresource.AssertSingleValueResult(tfslices.Filter(instanceGroups, func(v awstypes.InstanceGroup) bool {
 		return v.InstanceGroupType == awstypes.InstanceGroupTypeMaster
 	}))
