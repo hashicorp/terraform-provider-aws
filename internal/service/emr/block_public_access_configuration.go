@@ -14,9 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_emr_block_public_access_configuration", name="Block Public Access Configuration")
@@ -42,12 +41,12 @@ func resourceBlockPublicAccessConfiguration() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"min_range": {
+						"max_range": {
 							Type:             schema.TypeInt,
 							Required:         true,
 							ValidateDiagFunc: validation.ToDiagFunc(validation.IsPortNumber),
 						},
-						"max_range": {
+						"min_range": {
 							Type:             schema.TypeInt,
 							Required:         true,
 							ValidateDiagFunc: validation.ToDiagFunc(validation.IsPortNumber),
@@ -59,15 +58,8 @@ func resourceBlockPublicAccessConfiguration() *schema.Resource {
 	}
 }
 
-const (
-	ResNameBlockPublicAccessConfiguration       = "Block Public Access Configuration"
-	dummyIDBlockPublicAccessConfiguration       = "emr-block-public-access-configuration"
-	defaultPermittedPublicSecurityGroupRulePort = 22
-)
-
 func resourceBlockPublicAccessConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
 	blockPublicAccessConfiguration := &awstypes.BlockPublicAccessConfiguration{}
@@ -75,36 +67,43 @@ func resourceBlockPublicAccessConfigurationCreate(ctx context.Context, d *schema
 	blockPublicSecurityGroupRules := d.Get("block_public_security_group_rules")
 	blockPublicAccessConfiguration.BlockPublicSecurityGroupRules = aws.Bool(blockPublicSecurityGroupRules.(bool))
 	if v, ok := d.GetOk("permitted_public_security_group_rule_range"); ok {
-		blockPublicAccessConfiguration.PermittedPublicSecurityGroupRuleRanges = expandPermittedPublicSecurityGroupRuleRanges(v.([]interface{}))
+		blockPublicAccessConfiguration.PermittedPublicSecurityGroupRuleRanges = expandPortRanges(v.([]interface{}))
 	}
 
-	in := &emr.PutBlockPublicAccessConfigurationInput{
+	input := &emr.PutBlockPublicAccessConfigurationInput{
 		BlockPublicAccessConfiguration: blockPublicAccessConfiguration,
 	}
 
-	_, err := conn.PutBlockPublicAccessConfiguration(ctx, in)
+	_, err := conn.PutBlockPublicAccessConfiguration(ctx, input)
+
 	if err != nil {
-		return create.AppendDiagError(diags, names.EMR, create.ErrActionCreating, ResNameBlockPublicAccessConfiguration, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting EMR Block Public Access Configuration: %s", err)
 	}
-	d.SetId(dummyIDBlockPublicAccessConfiguration)
+
+	d.SetId("emr-block-public-access-configuration")
 
 	return append(diags, resourceBlockPublicAccessConfigurationRead(ctx, d, meta)...)
 }
 
 func resourceBlockPublicAccessConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
-	out, err := findBlockPublicAccessConfiguration(ctx, conn)
+	bpa, err := findBlockPublicAccessConfiguration(ctx, conn)
 
-	if err != nil {
-		return create.AppendDiagError(diags, names.EMR, create.ErrActionReading, ResNameBlockPublicAccessConfiguration, d.Id(), err)
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EMR Block Public Access Configuration (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
 	}
 
-	d.Set("block_public_security_group_rules", out.BlockPublicAccessConfiguration.BlockPublicSecurityGroupRules)
-	if err := d.Set("permitted_public_security_group_rule_range", flattenPermittedPublicSecurityGroupRuleRanges(out.BlockPublicAccessConfiguration.PermittedPublicSecurityGroupRuleRanges)); err != nil {
-		return create.AppendDiagError(diags, names.EMR, create.ErrActionSetting, ResNameBlockPublicAccessConfiguration, d.Id(), err)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading EMR Block Public Access Configuration (%s): %s", d.Id(), err)
+	}
+
+	d.Set("block_public_security_group_rules", bpa.BlockPublicSecurityGroupRules)
+	if err := d.Set("permitted_public_security_group_rule_range", flattenPortRanges(bpa.PermittedPublicSecurityGroupRuleRanges)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting permitted_public_security_group_rule_range: %s", err)
 	}
 
 	return diags
@@ -112,27 +111,24 @@ func resourceBlockPublicAccessConfigurationRead(ctx context.Context, d *schema.R
 
 func resourceBlockPublicAccessConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
-	log.Print("[INFO] Restoring EMR Block Public Access Configuration to default settings")
+	log.Printf("[DEBUG] Deleting EMR Block Public Access Configuration: %s", d.Id())
+	_, err := conn.PutBlockPublicAccessConfiguration(ctx, &emr.PutBlockPublicAccessConfigurationInput{
+		BlockPublicAccessConfiguration: defaultBlockPublicAccessConfiguration(),
+	})
 
-	blockPublicAccessConfiguration := findDefaultBlockPublicAccessConfiguration()
-	in := &emr.PutBlockPublicAccessConfigurationInput{
-		BlockPublicAccessConfiguration: blockPublicAccessConfiguration,
-	}
-
-	_, err := conn.PutBlockPublicAccessConfiguration(ctx, in)
 	if err != nil {
-		return create.AppendDiagError(diags, names.EMR, create.ErrActionDeleting, ResNameBlockPublicAccessConfiguration, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "resetting EMR Block Public Access Configuration: %s", err)
 	}
 
 	return diags
 }
 
-func findBlockPublicAccessConfiguration(ctx context.Context, conn *emr.Client) (*emr.GetBlockPublicAccessConfigurationOutput, error) {
+func findBlockPublicAccessConfiguration(ctx context.Context, conn *emr.Client) (*awstypes.BlockPublicAccessConfiguration, error) {
 	input := &emr.GetBlockPublicAccessConfigurationInput{}
 	output, err := conn.GetBlockPublicAccessConfiguration(ctx, input)
+
 	if err != nil {
 		return nil, err
 	}
@@ -141,77 +137,73 @@ func findBlockPublicAccessConfiguration(ctx context.Context, conn *emr.Client) (
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return output, nil
+	return output.BlockPublicAccessConfiguration, nil
 }
 
-func findDefaultBlockPublicAccessConfiguration() *awstypes.BlockPublicAccessConfiguration {
-	defaultPort := int32(defaultPermittedPublicSecurityGroupRulePort)
-	defaultPortPointer := &defaultPort
-	portRange := awstypes.PortRange{MinRange: defaultPortPointer, MaxRange: defaultPortPointer}
-	permittedPublicSecurityGroupRuleRanges := []awstypes.PortRange{portRange}
-	blockPublicAccessConfiguration := &awstypes.BlockPublicAccessConfiguration{
-		BlockPublicSecurityGroupRules:          aws.Bool(true),
-		PermittedPublicSecurityGroupRuleRanges: permittedPublicSecurityGroupRuleRanges,
+func defaultBlockPublicAccessConfiguration() *awstypes.BlockPublicAccessConfiguration {
+	const port = 22
+
+	return &awstypes.BlockPublicAccessConfiguration{
+		BlockPublicSecurityGroupRules: aws.Bool(true),
+		PermittedPublicSecurityGroupRuleRanges: []awstypes.PortRange{{
+			MinRange: aws.Int32(port),
+			MaxRange: aws.Int32(port),
+		}},
 	}
-	return blockPublicAccessConfiguration
 }
 
-func flattenPermittedPublicSecurityGroupRuleRange(apiObject awstypes.PortRange) map[string]interface{} {
-	m := map[string]interface{}{}
+func flattenPortRange(apiObject *awstypes.PortRange) map[string]interface{} {
+	tfMap := map[string]interface{}{}
 
 	if v := apiObject.MinRange; v != nil {
-		m["min_range"] = aws.ToInt32(v)
+		tfMap["min_range"] = aws.ToInt32(v)
 	}
 
 	if v := apiObject.MaxRange; v != nil {
-		m["max_range"] = aws.ToInt32(v)
+		tfMap["max_range"] = aws.ToInt32(v)
 	}
 
-	return m
+	return tfMap
 }
 
-func flattenPermittedPublicSecurityGroupRuleRanges(apiObjects []awstypes.PortRange) []interface{} {
+func flattenPortRanges(apiObjects []awstypes.PortRange) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var l []interface{}
+	var tfMap []interface{}
 
 	for _, apiObject := range apiObjects {
-		l = append(l, flattenPermittedPublicSecurityGroupRuleRange(apiObject))
+		tfMap = append(tfMap, flattenPortRange(&apiObject))
 	}
 
-	return l
+	return tfMap
 }
 
-func expandPermittedPublicSecurityGroupRuleRange(tfMap map[string]interface{}) awstypes.PortRange {
-	a := awstypes.PortRange{}
+func expandPortRange(tfMap map[string]interface{}) *awstypes.PortRange {
+	apiObject := &awstypes.PortRange{}
 
-	a.MinRange = aws.Int32(int32(tfMap["min_range"].(int)))
+	apiObject.MinRange = aws.Int32(int32(tfMap["min_range"].(int)))
+	apiObject.MaxRange = aws.Int32(int32(tfMap["max_range"].(int)))
 
-	a.MaxRange = aws.Int32(int32(tfMap["max_range"].(int)))
-
-	return a
+	return apiObject
 }
 
-func expandPermittedPublicSecurityGroupRuleRanges(tfList []interface{}) []awstypes.PortRange {
+func expandPortRanges(tfList []interface{}) []awstypes.PortRange {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var s []awstypes.PortRange
+	var apiObjects []awstypes.PortRange
 
-	for _, r := range tfList {
-		m, ok := r.(map[string]interface{})
-
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
 		if !ok {
 			continue
 		}
 
-		a := expandPermittedPublicSecurityGroupRuleRange(m)
-
-		s = append(s, a)
+		apiObjects = append(apiObjects, *expandPortRange(tfMap))
 	}
 
-	return s
+	return apiObjects
 }
