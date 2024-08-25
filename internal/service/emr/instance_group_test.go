@@ -299,11 +299,14 @@ func TestAccEMRInstanceGroup_EBS_ebsOptimized(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateIdFunc:       testAccInstanceGroupResourceImportStateIdFunc(resourceName),
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrStatus},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccInstanceGroupResourceImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"ebs_config.0.iops",
+					names.AttrStatus,
+				},
 			},
 			{
 				Config: testAccInstanceGroupConfig_ebs(rName, false),

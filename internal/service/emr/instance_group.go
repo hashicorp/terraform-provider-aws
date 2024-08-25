@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/emr"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/emr/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -174,11 +175,11 @@ func resourceInstanceGroupCreate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if v, ok := d.GetOk("configurations_json"); ok {
-		info, err := structure.NormalizeJsonString(v)
+		v, err := structure.NormalizeJsonString(v)
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
-		groupConfig.Configurations, err = expandConfigurationJSON(info)
+		groupConfig.Configurations, err = expandConfigurationJSON(v)
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
@@ -273,11 +274,11 @@ func resourceInstanceGroupUpdate(ctx context.Context, d *schema.ResourceData, me
 
 		if d.HasChange("configurations_json") {
 			if v, ok := d.GetOk("configurations_json"); ok {
-				info, err := structure.NormalizeJsonString(v)
+				v, err := structure.NormalizeJsonString(v)
 				if err != nil {
 					return sdkdiag.AppendFromErr(diags, err)
 				}
-				groupConfig.Configurations, err = expandConfigurationJSON(info)
+				groupConfig.Configurations, err = expandConfigurationJSON(v)
 				if err != nil {
 					return sdkdiag.AppendFromErr(diags, err)
 				}
@@ -341,6 +342,10 @@ func resourceInstanceGroupDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	_, err := conn.ModifyInstanceGroups(ctx, input)
+
+	if tfawserr.ErrMessageContains(err, errCodeValidationException, "instance group may only be modified when the cluster is running or waiting") {
+		return diags
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting EMR Instance Group (%s): %s", d.Id(), err)
