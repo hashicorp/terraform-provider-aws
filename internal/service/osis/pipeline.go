@@ -527,6 +527,13 @@ type cloudWatchLogDestinationModel struct {
 }
 
 type vpcOptionsModel struct {
-	SecurityGroupIDs fwtypes.SetValueOf[types.String] `tfsdk:"security_group_ids"`
-	SubnetIDs        fwtypes.SetValueOf[types.String] `tfsdk:"subnet_ids"`
+	SecurityGroupIDs      fwtypes.SetValueOf[types.String]                           `tfsdk:"security_group_ids"`
+	SubnetIDs             fwtypes.SetValueOf[types.String]                           `tfsdk:"subnet_ids"`
+	VpcAttachmentOptions  fwtypes.ListNestedObjectValueOf[vpcAttachmentOptionsModel] `tfsdk:"vpc_attachment_options"`
+	VpcEndpointManagement types.String                                               `tfsdk:"vpc_endpoint_management"`
+}
+
+type vpcAttachmentOptionsModel struct {
+	AttachToVpc types.Bool   `tfsdk:"attach_to_vpc"`
+	CidrBlock   types.String `tfsdk:"cidr_block"`
 }
