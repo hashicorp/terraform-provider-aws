@@ -731,7 +731,7 @@ resource "aws_osis_pipeline" "test" {
     vpc_attachment_options = {
         attach_to_vpc = false
         cidr_block = "10.0.1.0/24"
-	}
+    }
     vpc_endpoint_management = "CUSTOMER"
   }
 }
