@@ -728,11 +728,11 @@ resource "aws_osis_pipeline" "test" {
   vpc_options {
     security_group_ids = [aws_security_group.test.id]
     subnet_ids         = [aws_subnet.test.id]
-	vpc_attachment_options = {
+    vpc_attachment_options = {
 		attach_to_vpc = false
 		cidr_block = "10.0.1.0/24"
 	}
-	vpc_endpoint_management = "CUSTOMER"
+    vpc_endpoint_management = "CUSTOMER"
   }
 }
 `, rName)
