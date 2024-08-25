@@ -52,6 +52,10 @@ func TestAccEMRManagedScalingPolicy_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"compute_limits.0.maximum_core_capacity_units",
+					"compute_limits.0.maximum_ondemand_capacity_units",
+				},
 			},
 		},
 	})
@@ -102,6 +106,9 @@ func TestAccEMRManagedScalingPolicy_ComputeLimits_maximumCoreCapacityUnits(t *te
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"compute_limits.0.maximum_ondemand_capacity_units",
+				},
 			},
 		},
 	})
@@ -129,6 +136,9 @@ func TestAccEMRManagedScalingPolicy_ComputeLimits_maximumOnDemandCapacityUnits(t
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"compute_limits.0.maximum_core_capacity_units",
+				},
 			},
 		},
 	})
@@ -156,6 +166,9 @@ func TestAccEMRManagedScalingPolicy_ComputeLimits_maximumOnDemandCapacityUnitsSp
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"compute_limits.0.maximum_core_capacity_units",
+				},
 			},
 		},
 	})

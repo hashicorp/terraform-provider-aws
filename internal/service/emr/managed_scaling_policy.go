@@ -145,6 +145,7 @@ func resourceManagedScalingPolicyDelete(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
+	log.Printf("[INFO] Deleting EMR Managed Scaling Policy: %s", d.Id())
 	_, err := conn.RemoveManagedScalingPolicy(ctx, &emr.RemoveManagedScalingPolicyInput{
 		ClusterId: aws.String(d.Id()),
 	})
