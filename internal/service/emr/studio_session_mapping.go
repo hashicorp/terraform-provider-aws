@@ -95,6 +95,7 @@ func resourceStudioSessionMappingCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	_, err := conn.CreateStudioSessionMapping(ctx, input)
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EMR Studio Session Mapping: %s", err)
 	}
@@ -120,11 +121,11 @@ func resourceStudioSessionMappingRead(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "reading EMR Studio Session Mapping (%s): %s", d.Id(), err)
 	}
 
-	d.Set("identity_type", mapping.IdentityType)
 	d.Set("identity_id", mapping.IdentityId)
 	d.Set("identity_name", mapping.IdentityName)
-	d.Set("studio_id", mapping.StudioId)
+	d.Set("identity_type", mapping.IdentityType)
 	d.Set("session_policy_arn", mapping.SessionPolicyArn)
+	d.Set("studio_id", mapping.StudioId)
 
 	return diags
 }
@@ -151,6 +152,7 @@ func resourceStudioSessionMappingUpdate(ctx context.Context, d *schema.ResourceD
 	}
 
 	_, err = conn.UpdateStudioSessionMapping(ctx, input)
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating EMR Studio Session Mapping (%s): %s", d.Id(), err)
 	}

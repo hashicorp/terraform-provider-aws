@@ -128,25 +128,22 @@ func TestAccEMRStudioSessionMapping_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckStudioSessionMappingExists(ctx context.Context, resourceName string, studio *awstypes.SessionMappingDetail) resource.TestCheckFunc {
+func testAccCheckStudioSessionMappingExists(ctx context.Context, n string, v *awstypes.SessionMappingDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRClient(ctx)
 
 		output, err := tfemr.FindStudioSessionMappingByIDOrName(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		if output == nil {
-			return fmt.Errorf("EMR Studio (%s) not found", rs.Primary.ID)
-		}
-
-		*studio = *output
+		*v = *output
 
 		return nil
 	}
@@ -162,6 +159,7 @@ func testAccCheckStudioSessionMappingDestroy(ctx context.Context) resource.TestC
 			}
 
 			_, err := tfemr.FindStudioSessionMappingByIDOrName(ctx, conn, rs.Primary.ID)
+
 			if tfresource.NotFound(err) {
 				continue
 			}
@@ -170,8 +168,9 @@ func testAccCheckStudioSessionMappingDestroy(ctx context.Context) resource.TestC
 				return err
 			}
 
-			return fmt.Errorf("EMR Studio %s still exists", rs.Primary.ID)
+			return fmt.Errorf("EMR Studio Session Mapping %s still exists", rs.Primary.ID)
 		}
+
 		return nil
 	}
 }
