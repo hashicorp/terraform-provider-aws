@@ -362,7 +362,6 @@ func findEnabledControls(ctx context.Context, conn *controltower.Client, input *
 		}
 
 		for _, v := range page.EnabledControls {
-			v := v
 			if v := &v; filter(v) {
 				output = append(output, v)
 			}
