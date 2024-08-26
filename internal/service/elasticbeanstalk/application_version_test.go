@@ -125,14 +125,14 @@ func TestAccElasticBeanstalkApplicationVersion_BeanstalkApp_process(t *testing.T
 		CheckDestroy:             testAccCheckApplicationVersionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccApplicationVersionConfig_process(sdkacctest.RandInt(), "true"),
+				Config: testAccApplicationVersionConfig_process(sdkacctest.RandInt(), acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationVersionExists(ctx, resourceName, &appVersion),
 					testAccCheckApplicationVersionMatchStatus(&appVersion, awstypes.ApplicationVersionStatusProcessed),
 				),
 			},
 			{
-				Config: testAccApplicationVersionConfig_process(sdkacctest.RandInt(), "false"),
+				Config: testAccApplicationVersionConfig_process(sdkacctest.RandInt(), acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationVersionExists(ctx, resourceName, &appVersion),
 					testAccCheckApplicationVersionMatchStatus(&appVersion, awstypes.ApplicationVersionStatusUnprocessed),
