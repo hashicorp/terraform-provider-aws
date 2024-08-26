@@ -30,7 +30,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Application",
 		},
 		{
-			Factory:  DataSourceHostedZone,
+			Factory:  dataSourceHostedZone,
 			TypeName: "aws_elastic_beanstalk_hosted_zone",
 		},
 		{

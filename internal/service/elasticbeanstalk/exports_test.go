@@ -12,4 +12,5 @@ var (
 	FindApplicationByName                 = findApplicationByName
 	FindApplicationVersionByTwoPartKey    = findApplicationVersionByTwoPartKey
 	FindConfigurationSettingsByTwoPartKey = findConfigurationSettingsByTwoPartKey
+	HostedZoneIDs                         = hostedZoneIDs
 )
