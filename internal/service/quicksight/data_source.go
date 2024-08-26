@@ -8,11 +8,13 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,6 +23,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+const secretPropagationTimeout = 2 * time.Minute
 
 // @SDKResource("aws_quicksight_data_source", name="Data Source")
 // @Tags(identifierAttribute="arn")
@@ -652,9 +656,21 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 		params.VpcConnectionProperties = expandDataSourceVPCConnectionProperties(v.([]interface{}))
 	}
 
-	_, err := conn.CreateDataSourceWithContext(ctx, params)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating QuickSight Data Source: %s", err)
+	errRetry := retry.RetryContext(ctx, secretPropagationTimeout, func() *retry.RetryError {
+		_, err := conn.CreateDataSourceWithContext(ctx, params)
+		if tfawserr.ErrMessageContains(err, quicksight.ErrCodeResourceNotFoundException, "does not exist") {
+			return retry.RetryableError(err)
+		}
+
+		if err != nil {
+			return retry.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if errRetry != nil {
+		return sdkdiag.AppendErrorf(diags, "creating QuickSight Data Source: %s", errRetry)
 	}
 
 	d.SetId(fmt.Sprintf("%s/%s", awsAccountId, id))

@@ -238,6 +238,38 @@ func TestAccQuickSightDataSource_name(t *testing.T) {
 	})
 }
 
+func TestAccQuickSightDataSource_secretArn(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dataSource quicksight.DataSource
+	resourceName := "aws_quicksight_data_source.test"
+	// rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceConfig_secret_arn(rId, "SNOWFLAKE"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
+					resource.TestCheckResourceAttr(resourceName, "data_source_id", rId),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "quicksight", fmt.Sprintf("datasource/%s", rId)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, "SNOWFLAKE"),
+					resource.TestCheckResourceAttr(resourceName, "credentials.#", acctest.Ct1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckDataSourceExists(ctx context.Context, resourceName string, dataSource *quicksight.DataSource) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -590,4 +622,32 @@ resource "aws_quicksight_data_source" "test" {
   type = "S3"
 }
 `, rId))
+}
+
+func testAccDataSourceConfig_secret_arn(rId, rName string) string {
+	return fmt.Sprintf(`
+	data "aws_partition" "current" {}
+resource "aws_secretsmanager_secret" "test" {
+  name = %[1]q
+}
+
+resource "aws_quicksight_data_source" "test" {
+  data_source_id = %[1]q
+  name           = %[2]q
+
+  credentials {
+    secret_arn = aws_secretsmanager_secret.test.arn
+  }
+
+  parameters {
+    snowflake {
+      database = "SNOWFLAKE"
+      host = "%[1]s.snowflakecomputing.com"
+      warehouse = "SNOWFLAKE_WH"
+    }
+  }
+
+  type = "SNOWFLAKE"
+}
+`, rId, rName)
 }
