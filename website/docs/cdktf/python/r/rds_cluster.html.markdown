@@ -539,7 +539,10 @@ load-balanced across replicas
 
 ### master_user_secret
 
-The `master_user_secret` configuration block supports the following attributes:
+~> **NOTE:** The `master_user_secret` block is a list. To reference elements, use [index notation](https://developer.hashicorp.com/terraform/language/expressions/types#indices-and-attributes). For example:<br><br>
+`aws_rds_cluster.this.master_user_secret[0].secret_arn`
+
+The `master_user_secret` block supports the following attributes:
 
 * `kms_key_id` - Amazon Web Services KMS key identifier that is used to encrypt the secret.
 * `secret_arn` - Amazon Resource Name (ARN) of the secret.
@@ -579,4 +582,4 @@ Using `terraform import`, import RDS Clusters using the `cluster_identifier`. Fo
 % terraform import aws_rds_cluster.aurora_cluster aurora-prod-cluster
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-d70df5756840581dbadef1fa8179389ff2481c8133dbe538ab98788b7a72b917 -->
+<!-- cache-key: cdktf-0.20.1 input-fd0f2801e13541087366ff4a8d61c553cb565d5ba6dedf2aee6185a683a9c589 -->
