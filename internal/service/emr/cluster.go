@@ -1701,58 +1701,40 @@ func flattenEC2InstanceAttributes(apiObject *awstypes.Ec2InstanceAttributes) []i
 	return tfList
 }
 
+// Dirty hack to avoid any backwards compatibility issues with the AWS SDK for Go v2 migration.
+// Reach down into the SDK and use the same serialization function that the SDK uses.
+//
+//go:linkname serializeAutoScalingPolicy github.com/aws/aws-sdk-go-v2/service/emr.awsAwsjson11_serializeDocumentAutoScalingPolicy
+func serializeAutoScalingPolicy(v *awstypes.AutoScalingPolicy, value smithyjson.Value) error
+
 func flattenAutoScalingPolicyDescription(apiObject *awstypes.AutoScalingPolicyDescription) (string, error) {
 	if apiObject == nil {
 		return "", nil
 	}
 
-	// AutoScalingPolicy has an additional Status field and null values that are causing a new hashcode to be generated
-	// for `instance_group`.
-	// We are purposefully omitting that field and the null values here when we flatten the autoscaling policy string
-	// for the statefile.
 	for i, rule := range apiObject.Rules {
-		for j, dimension := range rule.Trigger.CloudWatchAlarmDefinition.Dimensions {
-			if aws.ToString(dimension.Key) == "JobFlowId" {
-				apiObject.Rules[i].Trigger.CloudWatchAlarmDefinition.Dimensions = slices.Delete(apiObject.Rules[i].Trigger.CloudWatchAlarmDefinition.Dimensions, j, j+1)
-			}
+		dimensions := rule.Trigger.CloudWatchAlarmDefinition.Dimensions
+		dimensions = slices.DeleteFunc(dimensions, func(v awstypes.MetricDimension) bool {
+			return aws.ToString(v.Key) == "JobFlowId"
+		})
+		if len(dimensions) == 0 {
+			dimensions = nil
 		}
-		if len(apiObject.Rules[i].Trigger.CloudWatchAlarmDefinition.Dimensions) == 0 {
-			apiObject.Rules[i].Trigger.CloudWatchAlarmDefinition.Dimensions = nil
-		}
+		apiObject.Rules[i].Trigger.CloudWatchAlarmDefinition.Dimensions = dimensions
 	}
 
-	tmpAutoScalingPolicy := awstypes.AutoScalingPolicy{
+	autoScalingPolicy := &awstypes.AutoScalingPolicy{
 		Constraints: apiObject.Constraints,
 		Rules:       apiObject.Rules,
 	}
-	autoscalingPolicyConstraintsString, err := tfjson.EncodeToString(tmpAutoScalingPolicy.Constraints)
-	if err != nil {
-		return "", fmt.Errorf("parsing EMR Cluster Instance Groups AutoScalingPolicy Constraints: %w", err)
-	}
+	jsonEncoder := smithyjson.NewEncoder()
+	err := serializeAutoScalingPolicy(autoScalingPolicy, jsonEncoder.Value)
 
-	autoscalingPolicyRulesBytes, err := tfjson.EncodeToBytes(tmpAutoScalingPolicy.Rules)
-	if err != nil {
-		return "", fmt.Errorf("parsing EMR Cluster Instance Groups AutoScalingPolicy Rules: %w", err)
-	}
-
-	var rules []map[string]interface{}
-	if err := tfjson.DecodeFromBytes(autoscalingPolicyRulesBytes, &rules); err != nil {
-		return "", err
-	}
-
-	var cleanRules []map[string]interface{}
-	for _, rule := range rules {
-		cleanRules = append(cleanRules, removeNil(rule))
-	}
-
-	autoscalingPolicyRulesString, err := tfjson.EncodeToString(cleanRules)
 	if err != nil {
 		return "", err
 	}
 
-	autoscalingPolicyString := fmt.Sprintf("{\"Constraints\":%s,\"Rules\":%s}", autoscalingPolicyConstraintsString, autoscalingPolicyRulesString)
-
-	return autoscalingPolicyString, nil
+	return jsonEncoder.String(), nil
 }
 
 func flattenCoreInstanceGroup(apiObject *awstypes.InstanceGroup) ([]interface{}, error) {
@@ -2418,25 +2400,6 @@ func resourceInstanceTypeHashConfig(v interface{}) int {
 		buf.WriteString(fmt.Sprintf("%f-", v.(float64)))
 	}
 	return create.StringHashcode(buf.String())
-}
-
-func removeNil(data map[string]interface{}) map[string]interface{} {
-	withoutNil := make(map[string]interface{})
-
-	for k, v := range data {
-		if v == nil {
-			continue
-		}
-
-		switch v := v.(type) {
-		case map[string]interface{}:
-			withoutNil[k] = removeNil(v)
-		default:
-			withoutNil[k] = v
-		}
-	}
-
-	return withoutNil
 }
 
 func expandAutoTerminationPolicy(tfList []interface{}) *awstypes.AutoTerminationPolicy {
