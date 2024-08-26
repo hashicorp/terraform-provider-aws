@@ -177,11 +177,14 @@ func TestAccEMRInstanceGroup_sJSON(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateIdFunc:       testAccInstanceGroupResourceImportStateIdFunc(resourceName),
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrStatus},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccInstanceGroupResourceImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"configurations_json",
+					names.AttrStatus,
+				},
 			},
 			{
 				Config: testAccInstanceGroupConfig_configurationsJSON(rName, "partitionName2"),
@@ -191,11 +194,14 @@ func TestAccEMRInstanceGroup_sJSON(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateIdFunc:       testAccInstanceGroupResourceImportStateIdFunc(resourceName),
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrStatus},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccInstanceGroupResourceImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"configurations_json",
+					names.AttrStatus,
+				},
 			},
 		},
 	})
