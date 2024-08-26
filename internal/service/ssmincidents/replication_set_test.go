@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssmincidents_test
 
 import (
@@ -5,12 +8,12 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"regexp"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/YakDriver/regexache"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -19,13 +22,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testReplicationSet_basic(t *testing.T) {
+func testAccReplicationSet_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	ctx := context.Background()
-
+	ctx := acctest.Context(t)
 	resourceName := "aws_ssmincidents_replication_set.test"
 	region1 := acctest.Region()
 	region2 := acctest.AlternateRegion()
@@ -36,24 +38,24 @@ func testReplicationSet_basic(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 			acctest.PreCheckPartitionHasService(t, names.SSMIncidentsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicationSetDestroy,
+		CheckDestroy:             testAccCheckReplicationSetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationSetConfig_basicTwoRegion(region1, region2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationSetExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "region.#", "2"),
+					testAccCheckReplicationSetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "region.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "region.*", map[string]string{
-						"name":        region1,
-						"kms_key_arn": "DefaultKey",
+						names.AttrName:      region1,
+						names.AttrKMSKeyARN: "DefaultKey",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "region.*", map[string]string{
-						"name":        region2,
-						"kms_key_arn": "DefaultKey",
+						names.AttrName:      region2,
+						names.AttrKMSKeyARN: "DefaultKey",
 					}),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", regexp.MustCompile(`replication-set\/+.`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", regexache.MustCompile(`replication-set\/+.`)),
 				),
 			},
 			{
@@ -65,13 +67,12 @@ func testReplicationSet_basic(t *testing.T) {
 	})
 }
 
-func testReplicationSet_updateRegionsWithoutCMK(t *testing.T) {
+func testAccReplicationSet_updateRegionsWithoutCMK(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	ctx := context.Background()
-
+	ctx := acctest.Context(t)
 	resourceName := "aws_ssmincidents_replication_set.test"
 	region1 := acctest.Region()
 	region2 := acctest.AlternateRegion()
@@ -82,21 +83,21 @@ func testReplicationSet_updateRegionsWithoutCMK(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 			acctest.PreCheckPartitionHasService(t, names.SSMIncidentsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
-		CheckDestroy:             testAccCheckReplicationSetDestroy,
+		CheckDestroy:             testAccCheckReplicationSetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationSetConfig_basicOneRegion(region1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationSetExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "region.#", "1"),
+					testAccCheckReplicationSetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "region.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "region.*", map[string]string{
-						"name":        region1,
-						"kms_key_arn": "DefaultKey",
+						names.AttrName:      region1,
+						names.AttrKMSKeyARN: "DefaultKey",
 					}),
 
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", regexp.MustCompile(`replication-set\/+.`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", regexache.MustCompile(`replication-set\/+.`)),
 				),
 			},
 			{
@@ -108,18 +109,18 @@ func testReplicationSet_updateRegionsWithoutCMK(t *testing.T) {
 			{
 				Config: testAccReplicationSetConfig_basicTwoRegion(region1, region2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationSetExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "region.#", "2"),
+					testAccCheckReplicationSetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "region.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "region.*", map[string]string{
-						"name":        region1,
-						"kms_key_arn": "DefaultKey",
+						names.AttrName:      region1,
+						names.AttrKMSKeyARN: "DefaultKey",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "region.*", map[string]string{
-						"name":        region2,
-						"kms_key_arn": "DefaultKey",
+						names.AttrName:      region2,
+						names.AttrKMSKeyARN: "DefaultKey",
 					}),
 
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", regexp.MustCompile(`replication-set\/+.`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", regexache.MustCompile(`replication-set\/+.`)),
 				),
 			},
 			{
@@ -131,14 +132,14 @@ func testReplicationSet_updateRegionsWithoutCMK(t *testing.T) {
 			{
 				Config: testAccReplicationSetConfig_basicOneRegion(region1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationSetExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "region.#", "1"),
+					testAccCheckReplicationSetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "region.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "region.*", map[string]string{
-						"name":        region1,
-						"kms_key_arn": "DefaultKey",
+						names.AttrName:      region1,
+						names.AttrKMSKeyARN: "DefaultKey",
 					}),
 
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", regexp.MustCompile(`replication-set\/+.`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", regexache.MustCompile(`replication-set\/+.`)),
 				),
 			},
 			{
@@ -151,13 +152,12 @@ func testReplicationSet_updateRegionsWithoutCMK(t *testing.T) {
 	})
 }
 
-func testReplicationSet_updateRegionsWithCMK(t *testing.T) {
+func testAccReplicationSet_updateRegionsWithCMK(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	ctx := context.Background()
-
+	ctx := acctest.Context(t)
 	resourceName := "aws_ssmincidents_replication_set.test"
 
 	resource.Test(t, resource.TestCase{
@@ -166,19 +166,19 @@ func testReplicationSet_updateRegionsWithCMK(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 			acctest.PreCheckPartitionHasService(t, names.SSMIncidentsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
-		CheckDestroy:             testAccCheckReplicationSetDestroy,
+		CheckDestroy:             testAccCheckReplicationSetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationSetConfig_oneRegionWithCMK(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationSetExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "region.#", "1"),
+					testAccCheckReplicationSetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "region.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "region.*", map[string]string{
-						"name": acctest.Region(),
+						names.AttrName: acctest.Region(),
 					}),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", regexp.MustCompile(`replication-set\/+.`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", regexache.MustCompile(`replication-set\/+.`)),
 				),
 			},
 			{
@@ -190,15 +190,15 @@ func testReplicationSet_updateRegionsWithCMK(t *testing.T) {
 			{
 				Config: testAccReplicationSetConfig_twoRegionWithCMK(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationSetExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "region.#", "2"),
+					testAccCheckReplicationSetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "region.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "region.*", map[string]string{
-						"name": acctest.Region(),
+						names.AttrName: acctest.Region(),
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "region.*", map[string]string{
-						"name": acctest.AlternateRegion(),
+						names.AttrName: acctest.AlternateRegion(),
 					}),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", regexp.MustCompile(`replication-set\/+.`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", regexache.MustCompile(`replication-set\/+.`)),
 				),
 			},
 			{
@@ -210,12 +210,12 @@ func testReplicationSet_updateRegionsWithCMK(t *testing.T) {
 			{
 				Config: testAccReplicationSetConfig_oneRegionWithCMK(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationSetExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "region.#", "1"),
+					testAccCheckReplicationSetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "region.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "region.*", map[string]string{
-						"name": acctest.Region(),
+						names.AttrName: acctest.Region(),
 					}),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", regexp.MustCompile(`replication-set\/+.`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", regexache.MustCompile(`replication-set\/+.`)),
 				),
 			},
 			{
@@ -228,13 +228,12 @@ func testReplicationSet_updateRegionsWithCMK(t *testing.T) {
 	})
 }
 
-func testReplicationSet_updateTags(t *testing.T) {
+func testAccReplicationSet_updateTags(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	ctx := context.Background()
-
+	ctx := acctest.Context(t)
 	resourceName := "aws_ssmincidents_replication_set.test"
 
 	rKey1 := sdkacctest.RandString(26)
@@ -258,9 +257,9 @@ func testReplicationSet_updateTags(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMIncidentsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicationSetDestroy,
+		CheckDestroy:             testAccCheckReplicationSetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -268,12 +267,12 @@ func testReplicationSet_updateTags(t *testing.T) {
 					testAccReplicationSetConfig_oneTag(rKey1, rVal1Ini),
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationSetExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					testAccCheckReplicationSetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey1, rVal1Ini),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "tags_all."+rProviderKey1, rProviderVal1Ini),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", regexp.MustCompile(`replication-set\/+.`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", regexache.MustCompile(`replication-set\/+.`)),
 				),
 			},
 			{
@@ -287,12 +286,12 @@ func testReplicationSet_updateTags(t *testing.T) {
 					testAccReplicationSetConfig_oneTag(rKey1, rVal1Updated),
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationSetExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					testAccCheckReplicationSetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey1, rVal1Updated),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "tags_all."+rProviderKey1, rProviderVal1Upd),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", regexp.MustCompile(`replication-set\/+.`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", regexache.MustCompile(`replication-set\/+.`)),
 				),
 			},
 			{
@@ -306,14 +305,14 @@ func testReplicationSet_updateTags(t *testing.T) {
 					testAccReplicationSetConfig_twoTags(rKey2, rVal2, rKey3, rVal3),
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationSetExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					testAccCheckReplicationSetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey2, rVal2),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey3, rVal3),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct4),
 					resource.TestCheckResourceAttr(resourceName, "tags_all."+rProviderKey2, rProviderVal2),
 					resource.TestCheckResourceAttr(resourceName, "tags_all."+rProviderKey3, rProviderVal3),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", regexp.MustCompile(`replication-set\/+.`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", regexache.MustCompile(`replication-set\/+.`)),
 				),
 			},
 			{
@@ -325,13 +324,12 @@ func testReplicationSet_updateTags(t *testing.T) {
 	})
 }
 
-func testReplicationSet_updateEmptyTags(t *testing.T) {
+func testAccReplicationSet_updateEmptyTags(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	ctx := context.Background()
-
+	ctx := acctest.Context(t)
 	resourceName := "aws_ssmincidents_replication_set.test"
 
 	rKey1 := sdkacctest.RandString(26)
@@ -342,17 +340,17 @@ func testReplicationSet_updateEmptyTags(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMIncidentsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicationSetDestroy,
+		CheckDestroy:             testAccCheckReplicationSetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationSetConfig_oneTag(rKey1, ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationSetExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					testAccCheckReplicationSetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey1, ""),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", regexp.MustCompile(`replication-set\/+.`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", regexache.MustCompile(`replication-set\/+.`)),
 				),
 			},
 			{
@@ -363,11 +361,11 @@ func testReplicationSet_updateEmptyTags(t *testing.T) {
 			{
 				Config: testAccReplicationSetConfig_twoTags(rKey1, "", rKey2, ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationSetExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					testAccCheckReplicationSetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey1, ""),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey2, ""),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", regexp.MustCompile(`replication-set\/+.`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", regexache.MustCompile(`replication-set\/+.`)),
 				),
 			},
 			{
@@ -378,23 +376,22 @@ func testReplicationSet_updateEmptyTags(t *testing.T) {
 			{
 				Config: testAccReplicationSetConfig_oneTag(rKey1, ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationSetExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					testAccCheckReplicationSetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey1, ""),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", regexp.MustCompile(`replication-set\/+.`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", regexache.MustCompile(`replication-set\/+.`)),
 				),
 			},
 		},
 	})
 }
 
-func testReplicationSet_disappears(t *testing.T) {
+func testAccReplicationSet_disappears(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	ctx := context.Background()
-
+	ctx := acctest.Context(t)
 	resourceName := "aws_ssmincidents_replication_set.test"
 	region1 := acctest.Region()
 	region2 := acctest.AlternateRegion()
@@ -404,14 +401,14 @@ func testReplicationSet_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMIncidentsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicationSetDestroy,
+		CheckDestroy:             testAccCheckReplicationSetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationSetConfig_basicTwoRegion(region1, region2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationSetExists(resourceName),
+					testAccCheckReplicationSetExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssmincidents.ResourceReplicationSet(),
 						resourceName),
 				),
@@ -421,38 +418,37 @@ func testReplicationSet_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckReplicationSetDestroy(s *terraform.State) error {
-	client := acctest.Provider.Meta().(*conns.AWSClient).SSMIncidentsClient()
-	context := context.Background()
+func testAccCheckReplicationSetDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client := acctest.Provider.Meta().(*conns.AWSClient).SSMIncidentsClient(ctx)
 
-	for _, resource := range s.RootModule().Resources {
-		if resource.Type != "aws_ssmincidents_replication_set" {
-			continue
+		for _, resource := range s.RootModule().Resources {
+			if resource.Type != "aws_ssmincidents_replication_set" {
+				continue
+			}
+
+			log.Printf("Checking Deletion of replication set resource: %s with ID: %s \n", resource.Type, resource.Primary.ID)
+
+			_, err := tfssmincidents.FindReplicationSetByID(ctx, client, resource.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				log.Printf("Replication Resource correctly returns NotFound Error... \n")
+				continue
+			}
+
+			if err != nil {
+				return create.Error(names.SSMIncidents, create.ErrActionCheckingDestroyed, tfssmincidents.ResNameReplicationSet, resource.Primary.ID,
+					errors.New("expected resource not found error, received an unexpected error"))
+			}
+
+			return create.Error(names.SSMIncidents, create.ErrActionCheckingDestroyed, tfssmincidents.ResNameReplicationSet, resource.Primary.ID, errors.New("not destroyed"))
 		}
 
-		log.Printf("Checking Deletion of replication set resource: %s with ID: %s \n", resource.Type, resource.Primary.ID)
-
-		_, err := tfssmincidents.FindReplicationSetByID(context, client, resource.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			log.Printf("Replication Resource correctly returns NotFound Error... \n")
-			continue
-		}
-
-		log.Printf("Replication Set Resource has incorrect Error\n")
-
-		if err != nil {
-			return create.Error(names.SSMIncidents, create.ErrActionCheckingDestroyed, tfssmincidents.ResNameReplicationSet, resource.Primary.ID,
-				errors.New("expected resource not found error, received an unexpected error"))
-		}
-
-		return create.Error(names.SSMIncidents, create.ErrActionCheckingDestroyed, tfssmincidents.ResNameReplicationSet, resource.Primary.ID, errors.New("not destroyed"))
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckReplicationSetExists(name string) resource.TestCheckFunc {
+func testAccCheckReplicationSetExists(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		resource, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -463,10 +459,9 @@ func testAccCheckReplicationSetExists(name string) resource.TestCheckFunc {
 			return create.Error(names.SSMIncidents, create.ErrActionCheckingExistence, tfssmincidents.ResNameReplicationSet, name, errors.New("not set"))
 		}
 
-		client := acctest.Provider.Meta().(*conns.AWSClient).SSMIncidentsClient()
-		context := context.Background()
+		client := acctest.Provider.Meta().(*conns.AWSClient).SSMIncidentsClient(ctx)
 
-		_, err := tfssmincidents.FindReplicationSetByID(context, client, resource.Primary.ID)
+		_, err := tfssmincidents.FindReplicationSetByID(ctx, client, resource.Primary.ID)
 
 		if err != nil {
 			return create.Error(names.SSMIncidents, create.ErrActionCheckingExistence, tfssmincidents.ResNameReplicationSet, resource.Primary.ID, err)
@@ -526,24 +521,24 @@ resource "aws_ssmincidents_replication_set" "test" {
 `, tag1Key, tag1Val, tag2Key, tag2Val, acctest.Region())
 }
 
-func testAccReplicationSetConfigBaseKeyDefaultRegion() string {
+func testAccReplicationSetConfig_baseKeyDefaultRegion() string {
 	return `
 resource "aws_kms_key" "default" {}
 `
 }
 
-func testAccReplicationSetConfigBaseKeyAlternateRegion() string {
-	return acctest.ConfigMultipleRegionProvider(2) + `
+func testAccReplicationSetConfig_baseKeyAlternateRegion() string {
+	return acctest.ConfigCompose(acctest.ConfigMultipleRegionProvider(2), `
 resource "aws_kms_key" "alternate" {
   provider = awsalternate
 }
-`
+`)
 }
 
 func testAccReplicationSetConfig_oneRegionWithCMK() string {
 	return acctest.ConfigCompose(
-		testAccReplicationSetConfigBaseKeyDefaultRegion(),
-		testAccReplicationSetConfigBaseKeyAlternateRegion(),
+		testAccReplicationSetConfig_baseKeyDefaultRegion(),
+		testAccReplicationSetConfig_baseKeyAlternateRegion(),
 		fmt.Sprintf(`
 resource "aws_ssmincidents_replication_set" "test" {
   region {
@@ -556,8 +551,8 @@ resource "aws_ssmincidents_replication_set" "test" {
 
 func testAccReplicationSetConfig_twoRegionWithCMK() string {
 	return acctest.ConfigCompose(
-		testAccReplicationSetConfigBaseKeyDefaultRegion(),
-		testAccReplicationSetConfigBaseKeyAlternateRegion(),
+		testAccReplicationSetConfig_baseKeyDefaultRegion(),
+		testAccReplicationSetConfig_baseKeyAlternateRegion(),
 		fmt.Sprintf(`
 resource "aws_ssmincidents_replication_set" "test" {
   region {

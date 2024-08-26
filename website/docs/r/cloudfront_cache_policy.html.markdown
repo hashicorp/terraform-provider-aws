@@ -3,19 +3,14 @@ subcategory: "CloudFront"
 layout: "aws"
 page_title: "AWS: aws_cloudfront_cache_policy"
 description: |-
-  Provides a cache policy for a CloudFront ditribution. When it’s attached to a cache behavior,
-  the cache policy determines the values that CloudFront includes in the cache key. These
-  values can include HTTP headers, cookies, and URL query strings. CloudFront uses the cache
-  key to find an object in its cache that it can return to the viewer. It also determines the
-  default, minimum, and maximum time to live (TTL) values that you want objects to stay in the
-  CloudFront cache.
+  Use the `aws_cloudfront_cache_policy` resource to manage cache policies for CloudFront distributions. This resource allows you to attach cache policies to cache behaviors, which determine the values included in the cache key, such as HTTP headers, cookies, and URL query strings. CloudFront uses the cache key to locate cached objects and return them to viewers. Additionally, the cache policy sets the default, minimum, and maximum time to live (TTL) values for objects in the CloudFront cache.
 ---
 
 # Resource: aws_cloudfront_cache_policy
 
 ## Example Usage
 
-The following example below creates a CloudFront cache policy.
+Use the `aws_cloudfront_cache_policy` resource to create a cache policy for CloudFront.
 
 ```terraform
 resource "aws_cloudfront_cache_policy" "example" {
@@ -49,53 +44,62 @@ resource "aws_cloudfront_cache_policy" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
-* `name` - (Required) A unique name to identify the cache policy.
-* `min_ttl` - (Required) The minimum amount of time, in seconds, that you want objects to stay in the CloudFront cache before CloudFront sends another request to the origin to see if the object has been updated.
-* `max_ttl` - (Optional) The maximum amount of time, in seconds, that objects stay in the CloudFront cache before CloudFront sends another request to the origin to see if the object has been updated.
-* `default_ttl` - (Optional) The default amount of time, in seconds, that you want objects to stay in the CloudFront cache before CloudFront sends another request to the origin to see if the object has been updated.
-* `comment` - (Optional) A comment to describe the cache policy.
-* `parameters_in_cache_key_and_forwarded_to_origin` - (Required) The HTTP headers, cookies, and URL query strings to include in the cache key. See [Parameters In Cache Key And Forwarded To Origin](#parameters-in-cache-key-and-forwarded-to-origin) for more information.
+* `name` - (Required) Unique name used to identify the cache policy.
+* `min_ttl` - (Required) Minimum amount of time, in seconds, that objects should remain in the CloudFront cache before a new request is sent to the origin to check for updates.
+* `max_ttl` - (Optional) Maximum amount of time, in seconds, that objects stay in the CloudFront cache before CloudFront sends another request to the origin to see if the object has been updated.
+* `default_ttl` - (Optional) Amount of time, in seconds, that objects are allowed to remain in the CloudFront cache before CloudFront sends a new request to the origin server to check if the object has been updated.
+* `comment` - (Optional) Description for the cache policy.
+* `parameters_in_cache_key_and_forwarded_to_origin` - (Required) Configuration for including HTTP headers, cookies, and URL query strings in the cache key. For more information, refer to the [Parameters In Cache Key And Forwarded To Origin](#parameters-in-cache-key-and-forwarded-to-origin) section.
 
 ### Parameters In Cache Key And Forwarded To Origin
 
-* `cookies_config` - (Required) Object that determines whether any cookies in viewer requests (and if so, which cookies) are included in the cache key and automatically included in requests that CloudFront sends to the origin. See [Cookies Config](#cookies-config) for more information.
-* `headers_config` - (Required) Object that determines whether any HTTP headers (and if so, which headers) are included in the cache key and automatically included in requests that CloudFront sends to the origin. See [Headers Config](#headers-config) for more information.
-* `query_strings_config` - (Required) Object that determines whether any URL query strings in viewer requests (and if so, which query strings) are included in the cache key and automatically included in requests that CloudFront sends to the origin. See [Query String Config](#query-string-config) for more information.
-* `enable_accept_encoding_brotli` - (Optional) A flag that can affect whether the Accept-Encoding HTTP header is included in the cache key and included in requests that CloudFront sends to the origin.
-* `enable_accept_encoding_gzip` - (Optional) A flag that can affect whether the Accept-Encoding HTTP header is included in the cache key and included in requests that CloudFront sends to the origin.
+* `cookies_config` - (Required) Whether any cookies in viewer requests are included in the cache key and automatically included in requests that CloudFront sends to the origin. See [Cookies Config](#cookies-config) for more information.
+* `headers_config` - (Required) Whether any HTTP headers are included in the cache key and automatically included in requests that CloudFront sends to the origin. See [Headers Config](#headers-config) for more information.
+* `query_strings_config` - (Required) Whether any URL query strings in viewer requests are included in the cache key. It also automatically includes these query strings in requests that CloudFront sends to the origin. Please refer to the [Query String Config](#query-string-config) for more information.
+* `enable_accept_encoding_brotli` - (Optional) Flag determines whether the Accept-Encoding HTTP header is included in the cache key and in requests that CloudFront sends to the origin.
+* `enable_accept_encoding_gzip` - (Optional) Whether the Accept-Encoding HTTP header is included in the cache key and in requests sent to the origin by CloudFront.
 
 ### Cookies Config
 
-* `cookie_behavior` - (Required) Determines whether any cookies in viewer requests are included in the cache key and automatically included in requests that CloudFront sends to the origin. Valid values are `none`, `whitelist`, `allExcept`, `all`.
+* `cookie_behavior` - (Required) Whether any cookies in viewer requests are included in the cache key and automatically included in requests that CloudFront sends to the origin. Valid values for `cookie_behavior` are `none`, `whitelist`, `allExcept`, and `all`.
 * `cookies` - (Optional) Object that contains a list of cookie names. See [Items](#items) for more information.
 
 ### Headers Config
 
-* `header_behavior` - (Required) Determines whether any HTTP headers are included in the cache key and automatically included in requests that CloudFront sends to the origin. Valid values are `none`, `whitelist`.
-* `headers` - (Optional) Object that contains a list of header names. See [Items](#items) for more information.
+* `header_behavior` - (Required) Whether any HTTP headers are included in the cache key and automatically included in requests that CloudFront sends to the origin. Valid values for `header_behavior` are `none` and `whitelist`.
+* `headers` - (Optional) Object contains a list of header names. See [Items](#items) for more information.
 
 ### Query String Config
 
-* `query_string_behavior` - (Required) Determines whether any URL query strings in viewer requests are included in the cache key and automatically included in requests that CloudFront sends to the origin. Valid values are `none`, `whitelist`, `allExcept`, `all`.
-* `query_strings` - (Optional) Object that contains a list of query string names. See [Items](#items) for more information.
+* `query_string_behavior` - (Required) Whether URL query strings in viewer requests are included in the cache key and automatically included in requests that CloudFront sends to the origin. Valid values for `query_string_behavior` are `none`, `whitelist`, `allExcept`, and `all`.
+* `query_strings` - (Optional) Configuration parameter that contains a list of query string names. See [Items](#items) for more information.
 
 ### Items
 
-* `items` - (Required) A list of item names (cookies, headers, or query strings).
+* `items` - (Required) List of item names, such as cookies, headers, or query strings.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
-* `etag` - The current version of the cache policy.
-* `id` - The identifier for the cache policy.
+* `etag` - Current version of the cache policy.
+* `id` - Identifier for the cache policy.
 
 ## Import
 
-Cloudfront Cache Policies can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudFront cache policies using the `id` of the cache policy. For example:
 
+```terraform
+import {
+  to = aws_cloudfront_cache_policy.policy
+  id = "658327ea-f89d-4fab-a63d-7e88639e58f6"
+}
 ```
-$ terraform import aws_cloudfront_cache_policy.policy 658327ea-f89d-4fab-a63d-7e88639e58f6
+
+Using `terraform import`, import CloudFront cache policies using the `id` of the cache policy. For example:
+
+```console
+% terraform import aws_cloudfront_cache_policy.policy 658327ea-f89d-4fab-a63d-7e88639e58f6
 ```

@@ -1,7 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
 	"testing"
+
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestCompareActualEngineVersion(t *testing.T) {
@@ -86,10 +91,10 @@ func TestCompareActualEngineVersion(t *testing.T) {
 
 			r := ResourceCluster()
 			d := r.Data(nil)
-			d.Set("engine_version", test.configuredVersion)
+			d.Set(names.AttrEngineVersion, test.configuredVersion)
 			compareActualEngineVersion(d, test.configuredVersion, test.actualVersion, test.pendingVersion)
 
-			if want, got := test.expectedEngineVersion, d.Get("engine_version"); got != want {
+			if want, got := test.expectedEngineVersion, d.Get(names.AttrEngineVersion); got != want {
 				t.Errorf("unexpected engine_version; want: %q, got: %q", want, got)
 			}
 			if want, got := test.expectedEngineVersionActual, d.Get("engine_version_actual"); got != want {

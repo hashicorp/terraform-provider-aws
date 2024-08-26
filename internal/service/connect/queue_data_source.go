@@ -1,28 +1,39 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/connect"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/connect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_connect_queue")
-func DataSourceQueue() *schema.Resource {
+// @SDKDataSource("aws_connect_queue", name="Queue")
+// @Tags
+func dataSourceQueue() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceQueueRead,
+
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -30,7 +41,7 @@ func DataSourceQueue() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
@@ -39,11 +50,11 @@ func DataSourceQueue() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"name", "queue_id"},
+				ExactlyOneOf: []string{names.AttrName, "queue_id"},
 			},
 			"outbound_caller_config": {
 				Type:     schema.TypeList,
@@ -69,107 +80,110 @@ func DataSourceQueue() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"queue_id", "name"},
+				ExactlyOneOf: []string{"queue_id", names.AttrName},
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func dataSourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
-	instanceID := d.Get("instance_id").(string)
-
+	instanceID := d.Get(names.AttrInstanceID).(string)
 	input := &connect.DescribeQueueInput{
 		InstanceId: aws.String(instanceID),
 	}
 
 	if v, ok := d.GetOk("queue_id"); ok {
 		input.QueueId = aws.String(v.(string))
-	} else if v, ok := d.GetOk("name"); ok {
+	} else if v, ok := d.GetOk(names.AttrName); ok {
 		name := v.(string)
-		queueSummary, err := dataSourceGetQueueSummaryByName(ctx, conn, instanceID, name)
+		queueSummary, err := findQueueSummaryByTwoPartKey(ctx, conn, instanceID, name)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error finding Connect Queue Summary by name (%s): %w", name, err))
-		}
-
-		if queueSummary == nil {
-			return diag.FromErr(fmt.Errorf("error finding Connect Queue Summary by name (%s): not found", name))
+			return sdkdiag.AppendErrorf(diags, "reading Connect Queue (%s) summary: %s", name, err)
 		}
 
 		input.QueueId = queueSummary.Id
 	}
 
-	resp, err := conn.DescribeQueueWithContext(ctx, input)
+	queue, err := findQueue(ctx, conn, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect Queue: %w", err))
+		return sdkdiag.AppendErrorf(diags, "reading Connect Queue: %s", err)
 	}
 
-	if resp == nil || resp.Queue == nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect Queue: empty response"))
-	}
-
-	queue := resp.Queue
-
-	d.Set("arn", queue.QueueArn)
-	d.Set("description", queue.Description)
+	queueID := aws.ToString(queue.QueueId)
+	id := queueCreateResourceID(instanceID, queueID)
+	d.SetId(id)
+	d.Set(names.AttrARN, queue.QueueArn)
+	d.Set(names.AttrDescription, queue.Description)
 	d.Set("hours_of_operation_id", queue.HoursOfOperationId)
 	d.Set("max_contacts", queue.MaxContacts)
-	d.Set("name", queue.Name)
-	d.Set("queue_id", queue.QueueId)
-	d.Set("status", queue.Status)
-
+	d.Set(names.AttrName, queue.Name)
 	if err := d.Set("outbound_caller_config", flattenOutboundCallerConfig(queue.OutboundCallerConfig)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting outbound_caller_config: %s", err))
+		return sdkdiag.AppendErrorf(diags, "setting outbound_caller_config: %s", err)
 	}
+	d.Set("queue_id", queueID)
+	d.Set(names.AttrStatus, queue.Status)
 
-	if err := d.Set("tags", KeyValueTags(ctx, queue.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags: %s", err))
-	}
+	setTagsOut(ctx, queue.Tags)
 
-	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(queue.QueueId)))
-
-	return nil
+	return diags
 }
 
-func dataSourceGetQueueSummaryByName(ctx context.Context, conn *connect.Connect, instanceID, name string) (*connect.QueueSummary, error) {
-	var result *connect.QueueSummary
-
+func findQueueSummaryByTwoPartKey(ctx context.Context, conn *connect.Client, instanceID, name string) (*awstypes.QueueSummary, error) {
+	const maxResults = 60
 	input := &connect.ListQueuesInput{
 		InstanceId: aws.String(instanceID),
-		MaxResults: aws.Int64(ListQueuesMaxResults),
+		MaxResults: aws.Int32(maxResults),
 	}
 
-	err := conn.ListQueuesPagesWithContext(ctx, input, func(page *connect.ListQueuesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, qs := range page.QueueSummaryList {
-			if qs == nil {
-				continue
-			}
-
-			if aws.StringValue(qs.Name) == name {
-				result = qs
-				return false
-			}
-		}
-
-		return !lastPage
+	return findQueueSummary(ctx, conn, input, func(v *awstypes.QueueSummary) bool {
+		return aws.ToString(v.Name) == name
 	})
+}
+
+func findQueueSummary(ctx context.Context, conn *connect.Client, input *connect.ListQueuesInput, filter tfslices.Predicate[*awstypes.QueueSummary]) (*awstypes.QueueSummary, error) {
+	output, err := findQueueSummaries(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return result, nil
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findQueueSummaries(ctx context.Context, conn *connect.Client, input *connect.ListQueuesInput, filter tfslices.Predicate[*awstypes.QueueSummary]) ([]awstypes.QueueSummary, error) {
+	var output []awstypes.QueueSummary
+
+	pages := connect.NewListQueuesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.QueueSummaryList {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
+	}
+
+	return output, nil
 }

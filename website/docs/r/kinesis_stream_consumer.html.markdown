@@ -30,14 +30,14 @@ resource "aws_kinesis_stream_consumer" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required, Forces new resource) Name of the stream consumer.
 * `stream_arn` – (Required, Forces new resource) Amazon Resource Name (ARN) of the data stream the consumer is registered with.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the stream consumer.
 * `creation_timestamp` - Approximate timestamp in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) of when the stream consumer was created.
@@ -45,10 +45,19 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Kinesis Stream Consumers can be imported using the Amazon Resource Name (ARN) e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Kinesis Stream Consumers using the Amazon Resource Name (ARN). For example:
 
+```terraform
+import {
+  to = aws_kinesis_stream_consumer.example
+  id = "arn:aws:kinesis:us-west-2:123456789012:stream/example/consumer/example:1616044553"
+}
 ```
-$ terraform import aws_kinesis_stream_consumer.example arn:aws:kinesis:us-west-2:123456789012:stream/example/consumer/example:1616044553
+
+Using `terraform import`, import Kinesis Stream Consumers using the Amazon Resource Name (ARN). For example:
+
+```console
+% terraform import aws_kinesis_stream_consumer.example arn:aws:kinesis:us-west-2:123456789012:stream/example/consumer/example:1616044553
 ```
 
 [1]: https://docs.aws.amazon.com/streams/latest/dev/amazon-kinesis-consumers.html

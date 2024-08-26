@@ -1,18 +1,22 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package opensearch
 
 import (
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/opensearchservice"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearch/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func expandAdvancedSecurityOptions(m []interface{}) *opensearchservice.AdvancedSecurityOptionsInput_ {
-	config := opensearchservice.AdvancedSecurityOptionsInput_{}
+func expandAdvancedSecurityOptions(m []interface{}) *awstypes.AdvancedSecurityOptionsInput {
+	config := awstypes.AdvancedSecurityOptionsInput{}
 	group := m[0].(map[string]interface{})
 
-	if advancedSecurityEnabled, ok := group["enabled"]; ok {
+	if advancedSecurityEnabled, ok := group[names.AttrEnabled]; ok {
 		config.Enabled = aws.Bool(advancedSecurityEnabled.(bool))
 
 		if advancedSecurityEnabled.(bool) {
@@ -26,7 +30,7 @@ func expandAdvancedSecurityOptions(m []interface{}) *opensearchservice.AdvancedS
 
 			if v, ok := group["master_user_options"].([]interface{}); ok {
 				if len(v) > 0 && v[0] != nil {
-					muo := opensearchservice.MasterUserOptions{}
+					muo := awstypes.MasterUserOptions{}
 					masterUserOptions := v[0].(map[string]interface{})
 
 					if v, ok := masterUserOptions["master_user_arn"].(string); ok && v != "" {
@@ -41,7 +45,7 @@ func expandAdvancedSecurityOptions(m []interface{}) *opensearchservice.AdvancedS
 						muo.MasterUserPassword = aws.String(v)
 					}
 
-					config.SetMasterUserOptions(&muo)
+					config.MasterUserOptions = &muo
 				}
 			}
 		}
@@ -50,51 +54,56 @@ func expandAdvancedSecurityOptions(m []interface{}) *opensearchservice.AdvancedS
 	return &config
 }
 
-func expandAutoTuneOptions(tfMap map[string]interface{}) *opensearchservice.AutoTuneOptions {
+func expandAutoTuneOptions(tfMap map[string]interface{}) *awstypes.AutoTuneOptions {
 	if tfMap == nil {
 		return nil
 	}
 
-	options := &opensearchservice.AutoTuneOptions{}
+	options := &awstypes.AutoTuneOptions{}
 
 	autoTuneOptionsInput := expandAutoTuneOptionsInput(tfMap)
 
 	options.DesiredState = autoTuneOptionsInput.DesiredState
 	options.MaintenanceSchedules = autoTuneOptionsInput.MaintenanceSchedules
+	options.UseOffPeakWindow = autoTuneOptionsInput.UseOffPeakWindow
 
-	options.RollbackOnDisable = aws.String(tfMap["rollback_on_disable"].(string))
+	if v, ok := tfMap["rollback_on_disable"].(string); ok && v != "" {
+		options.RollbackOnDisable = awstypes.RollbackOnDisable(v)
+	}
 
 	return options
 }
 
-func expandAutoTuneOptionsInput(tfMap map[string]interface{}) *opensearchservice.AutoTuneOptionsInput_ {
+func expandAutoTuneOptionsInput(tfMap map[string]interface{}) *awstypes.AutoTuneOptionsInput {
 	if tfMap == nil {
 		return nil
 	}
 
-	options := &opensearchservice.AutoTuneOptionsInput_{}
+	options := &awstypes.AutoTuneOptionsInput{}
 
-	options.DesiredState = aws.String(tfMap["desired_state"].(string))
+	options.DesiredState = awstypes.AutoTuneDesiredState(tfMap["desired_state"].(string))
 
 	if v, ok := tfMap["maintenance_schedule"].(*schema.Set); ok && v.Len() > 0 {
 		options.MaintenanceSchedules = expandAutoTuneMaintenanceSchedules(v.List())
 	}
 
+	options.UseOffPeakWindow = aws.Bool(tfMap["use_off_peak_window"].(bool))
+
 	return options
 }
 
-func expandAutoTuneMaintenanceSchedules(tfList []interface{}) []*opensearchservice.AutoTuneMaintenanceSchedule {
-	var autoTuneMaintenanceSchedules []*opensearchservice.AutoTuneMaintenanceSchedule
+func expandAutoTuneMaintenanceSchedules(tfList []interface{}) []awstypes.AutoTuneMaintenanceSchedule {
+	var autoTuneMaintenanceSchedules []awstypes.AutoTuneMaintenanceSchedule
 
 	for _, tfMapRaw := range tfList {
 		tfMap, _ := tfMapRaw.(map[string]interface{})
 
-		autoTuneMaintenanceSchedule := &opensearchservice.AutoTuneMaintenanceSchedule{}
+		autoTuneMaintenanceSchedule := awstypes.AutoTuneMaintenanceSchedule{}
 
 		startAt, _ := time.Parse(time.RFC3339, tfMap["start_at"].(string))
 		autoTuneMaintenanceSchedule.StartAt = aws.Time(startAt)
 
-		if v, ok := tfMap["duration"].([]interface{}); ok {
+		if v, ok := tfMap[names.AttrDuration].([]interface{}); ok {
 			autoTuneMaintenanceSchedule.Duration = expandAutoTuneMaintenanceScheduleDuration(v[0].(map[string]interface{}))
 		}
 
@@ -106,28 +115,28 @@ func expandAutoTuneMaintenanceSchedules(tfList []interface{}) []*opensearchservi
 	return autoTuneMaintenanceSchedules
 }
 
-func expandAutoTuneMaintenanceScheduleDuration(tfMap map[string]interface{}) *opensearchservice.Duration {
-	autoTuneMaintenanceScheduleDuration := &opensearchservice.Duration{
-		Value: aws.Int64(int64(tfMap["value"].(int))),
-		Unit:  aws.String(tfMap["unit"].(string)),
+func expandAutoTuneMaintenanceScheduleDuration(tfMap map[string]interface{}) *awstypes.Duration {
+	autoTuneMaintenanceScheduleDuration := &awstypes.Duration{
+		Value: aws.Int64(int64(tfMap[names.AttrValue].(int))),
+		Unit:  awstypes.TimeUnit(tfMap[names.AttrUnit].(string)),
 	}
 
 	return autoTuneMaintenanceScheduleDuration
 }
 
-func expandESSAMLOptions(data []interface{}) *opensearchservice.SAMLOptionsInput_ {
+func expandESSAMLOptions(data []interface{}) *awstypes.SAMLOptionsInput {
 	if len(data) == 0 {
 		return nil
 	}
 
 	if data[0] == nil {
-		return &opensearchservice.SAMLOptionsInput_{}
+		return &awstypes.SAMLOptionsInput{}
 	}
 
-	options := opensearchservice.SAMLOptionsInput_{}
+	options := awstypes.SAMLOptionsInput{}
 	group := data[0].(map[string]interface{})
 
-	if SAMLEnabled, ok := group["enabled"]; ok {
+	if SAMLEnabled, ok := group[names.AttrEnabled]; ok {
 		options.Enabled = aws.Bool(SAMLEnabled.(bool))
 
 		if SAMLEnabled.(bool) {
@@ -142,7 +151,7 @@ func expandESSAMLOptions(data []interface{}) *opensearchservice.SAMLOptionsInput
 				options.RolesKey = aws.String(v)
 			}
 			if v, ok := group["session_timeout_minutes"].(int); ok {
-				options.SessionTimeoutMinutes = aws.Int64(int64(v))
+				options.SessionTimeoutMinutes = aws.Int32(int32(v))
 			}
 			if v, ok := group["subject_key"].(string); ok {
 				options.SubjectKey = aws.String(v)
@@ -153,61 +162,113 @@ func expandESSAMLOptions(data []interface{}) *opensearchservice.SAMLOptionsInput
 	return &options
 }
 
-func expandSAMLOptionsIdp(l []interface{}) *opensearchservice.SAMLIdp {
+func expandSAMLOptionsIdp(l []interface{}) *awstypes.SAMLIdp {
 	if len(l) == 0 {
 		return nil
 	}
 
 	if l[0] == nil {
-		return &opensearchservice.SAMLIdp{}
+		return &awstypes.SAMLIdp{}
 	}
 
 	m := l[0].(map[string]interface{})
 
-	return &opensearchservice.SAMLIdp{
+	return &awstypes.SAMLIdp{
 		EntityId:        aws.String(m["entity_id"].(string)),
 		MetadataContent: aws.String(m["metadata_content"].(string)),
 	}
 }
 
-func flattenAdvancedSecurityOptions(advancedSecurityOptions *opensearchservice.AdvancedSecurityOptions) []map[string]interface{} {
+func expandOffPeakWindowOptions(tfMap map[string]interface{}) *awstypes.OffPeakWindowOptions {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.OffPeakWindowOptions{}
+
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
+		apiObject.Enabled = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["off_peak_window"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.OffPeakWindow = expandOffPeakWindow(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandOffPeakWindow(tfMap map[string]interface{}) *awstypes.OffPeakWindow {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.OffPeakWindow{}
+
+	if v, ok := tfMap["window_start_time"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.WindowStartTime = expandWindowStartTime(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandWindowStartTime(tfMap map[string]interface{}) *awstypes.WindowStartTime {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.WindowStartTime{}
+
+	if v, ok := tfMap["hours"].(int); ok {
+		apiObject.Hours = int64(v)
+	}
+
+	if v, ok := tfMap["minutes"].(int); ok {
+		apiObject.Minutes = int64(v)
+	}
+
+	return apiObject
+}
+
+func flattenAdvancedSecurityOptions(advancedSecurityOptions *awstypes.AdvancedSecurityOptions) []map[string]interface{} {
 	if advancedSecurityOptions == nil {
 		return []map[string]interface{}{}
 	}
 
 	m := map[string]interface{}{}
-	m["enabled"] = aws.BoolValue(advancedSecurityOptions.Enabled)
+	m[names.AttrEnabled] = aws.ToBool(advancedSecurityOptions.Enabled)
 
-	if aws.BoolValue(advancedSecurityOptions.Enabled) && advancedSecurityOptions.AnonymousAuthEnabled != nil {
-		m["anonymous_auth_enabled"] = aws.BoolValue(advancedSecurityOptions.AnonymousAuthEnabled)
+	if aws.ToBool(advancedSecurityOptions.Enabled) && advancedSecurityOptions.AnonymousAuthEnabled != nil {
+		m["anonymous_auth_enabled"] = aws.ToBool(advancedSecurityOptions.AnonymousAuthEnabled)
 	}
 
-	if aws.BoolValue(advancedSecurityOptions.Enabled) && advancedSecurityOptions.InternalUserDatabaseEnabled != nil {
-		m["internal_user_database_enabled"] = aws.BoolValue(advancedSecurityOptions.InternalUserDatabaseEnabled)
+	if aws.ToBool(advancedSecurityOptions.Enabled) && advancedSecurityOptions.InternalUserDatabaseEnabled != nil {
+		m["internal_user_database_enabled"] = aws.ToBool(advancedSecurityOptions.InternalUserDatabaseEnabled)
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func flattenAutoTuneOptions(autoTuneOptions *opensearchservice.AutoTuneOptions) map[string]interface{} {
+func flattenAutoTuneOptions(autoTuneOptions *awstypes.AutoTuneOptions) map[string]interface{} {
 	if autoTuneOptions == nil {
 		return nil
 	}
 
 	m := map[string]interface{}{}
 
-	m["desired_state"] = aws.StringValue(autoTuneOptions.DesiredState)
+	m["desired_state"] = autoTuneOptions.DesiredState
 
 	if v := autoTuneOptions.MaintenanceSchedules; v != nil {
 		m["maintenance_schedule"] = flattenAutoTuneMaintenanceSchedules(v)
 	}
 
-	m["rollback_on_disable"] = aws.StringValue(autoTuneOptions.RollbackOnDisable)
+	m["rollback_on_disable"] = autoTuneOptions.RollbackOnDisable
+
+	m["use_off_peak_window"] = aws.ToBool(autoTuneOptions.UseOffPeakWindow)
 
 	return m
 }
 
-func flattenAutoTuneMaintenanceSchedules(autoTuneMaintenanceSchedules []*opensearchservice.AutoTuneMaintenanceSchedule) []interface{} {
+func flattenAutoTuneMaintenanceSchedules(autoTuneMaintenanceSchedules []awstypes.AutoTuneMaintenanceSchedule) []interface{} {
 	if len(autoTuneMaintenanceSchedules) == 0 {
 		return nil
 	}
@@ -217,11 +278,11 @@ func flattenAutoTuneMaintenanceSchedules(autoTuneMaintenanceSchedules []*opensea
 	for _, autoTuneMaintenanceSchedule := range autoTuneMaintenanceSchedules {
 		m := map[string]interface{}{}
 
-		m["start_at"] = aws.TimeValue(autoTuneMaintenanceSchedule.StartAt).Format(time.RFC3339)
+		m["start_at"] = aws.ToTime(autoTuneMaintenanceSchedule.StartAt).Format(time.RFC3339)
 
-		m["duration"] = []interface{}{flattenAutoTuneMaintenanceScheduleDuration(autoTuneMaintenanceSchedule.Duration)}
+		m[names.AttrDuration] = []interface{}{flattenAutoTuneMaintenanceScheduleDuration(autoTuneMaintenanceSchedule.Duration)}
 
-		m["cron_expression_for_recurrence"] = aws.StringValue(autoTuneMaintenanceSchedule.CronExpressionForRecurrence)
+		m["cron_expression_for_recurrence"] = aws.ToString(autoTuneMaintenanceSchedule.CronExpressionForRecurrence)
 
 		tfList = append(tfList, m)
 	}
@@ -229,32 +290,32 @@ func flattenAutoTuneMaintenanceSchedules(autoTuneMaintenanceSchedules []*opensea
 	return tfList
 }
 
-func flattenAutoTuneMaintenanceScheduleDuration(autoTuneMaintenanceScheduleDuration *opensearchservice.Duration) map[string]interface{} {
+func flattenAutoTuneMaintenanceScheduleDuration(autoTuneMaintenanceScheduleDuration *awstypes.Duration) map[string]interface{} {
 	m := map[string]interface{}{}
 
-	m["value"] = aws.Int64Value(autoTuneMaintenanceScheduleDuration.Value)
-	m["unit"] = aws.StringValue(autoTuneMaintenanceScheduleDuration.Unit)
+	m[names.AttrValue] = aws.ToInt64(autoTuneMaintenanceScheduleDuration.Value)
+	m[names.AttrUnit] = autoTuneMaintenanceScheduleDuration.Unit
 
 	return m
 }
 
-func flattenESSAMLOptions(d *schema.ResourceData, samlOptions *opensearchservice.SAMLOptionsOutput_) []interface{} {
+func flattenESSAMLOptions(d *schema.ResourceData, samlOptions *awstypes.SAMLOptionsOutput) []interface{} {
 	if samlOptions == nil {
 		return nil
 	}
 
 	m := map[string]interface{}{
-		"enabled": aws.BoolValue(samlOptions.Enabled),
-		"idp":     flattenESSAMLIdpOptions(samlOptions.Idp),
+		names.AttrEnabled: aws.ToBool(samlOptions.Enabled),
+		"idp":             flattenESSAMLIdpOptions(samlOptions.Idp),
 	}
 
-	m["roles_key"] = aws.StringValue(samlOptions.RolesKey)
-	m["session_timeout_minutes"] = aws.Int64Value(samlOptions.SessionTimeoutMinutes)
-	m["subject_key"] = aws.StringValue(samlOptions.SubjectKey)
+	m["roles_key"] = aws.ToString(samlOptions.RolesKey)
+	m["session_timeout_minutes"] = aws.ToInt32(samlOptions.SessionTimeoutMinutes)
+	m["subject_key"] = aws.ToString(samlOptions.SubjectKey)
 
 	// samlOptions.master_backend_role and samlOptions.master_user_name will be added to the
 	// all_access role in kibana's security manager.  These values cannot be read or
-	// modified by the opensearchservice API.  So, we ignore it on read and let persist
+	// modified by the opensearch API.  So, we ignore it on read and let persist
 	// the value already in the state.
 	m["master_backend_role"] = d.Get("saml_options.0.master_backend_role").(string)
 	m["master_user_name"] = d.Get("saml_options.0.master_user_name").(string)
@@ -262,14 +323,14 @@ func flattenESSAMLOptions(d *schema.ResourceData, samlOptions *opensearchservice
 	return []interface{}{m}
 }
 
-func flattenESSAMLIdpOptions(SAMLIdp *opensearchservice.SAMLIdp) []interface{} {
+func flattenESSAMLIdpOptions(SAMLIdp *awstypes.SAMLIdp) []interface{} {
 	if SAMLIdp == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"entity_id":        aws.StringValue(SAMLIdp.EntityId),
-		"metadata_content": aws.StringValue(SAMLIdp.MetadataContent),
+		"entity_id":        aws.ToString(SAMLIdp.EntityId),
+		"metadata_content": aws.ToString(SAMLIdp.MetadataContent),
 	}
 
 	return []interface{}{m}
@@ -288,33 +349,78 @@ func getMasterUserOptions(d *schema.ResourceData) []interface{} {
 	return []interface{}{}
 }
 
-func expandLogPublishingOptions(m *schema.Set) map[string]*opensearchservice.LogPublishingOption {
-	options := make(map[string]*opensearchservice.LogPublishingOption)
+func expandLogPublishingOptions(m *schema.Set) map[string]awstypes.LogPublishingOption {
+	options := make(map[string]awstypes.LogPublishingOption)
 
 	for _, vv := range m.List() {
 		lo := vv.(map[string]interface{})
-		options[lo["log_type"].(string)] = &opensearchservice.LogPublishingOption{
-			CloudWatchLogsLogGroupArn: aws.String(lo["cloudwatch_log_group_arn"].(string)),
-			Enabled:                   aws.Bool(lo["enabled"].(bool)),
+		options[lo["log_type"].(string)] = awstypes.LogPublishingOption{
+			CloudWatchLogsLogGroupArn: aws.String(lo[names.AttrCloudWatchLogGroupARN].(string)),
+			Enabled:                   aws.Bool(lo[names.AttrEnabled].(bool)),
 		}
 	}
 
 	return options
 }
 
-func flattenLogPublishingOptions(o map[string]*opensearchservice.LogPublishingOption) []map[string]interface{} {
+func flattenLogPublishingOptions(o map[string]awstypes.LogPublishingOption) []map[string]interface{} {
 	m := make([]map[string]interface{}, 0)
 	for logType, val := range o {
 		mm := map[string]interface{}{
-			"log_type": logType,
-			"enabled":  aws.BoolValue(val.Enabled),
+			"log_type":        logType,
+			names.AttrEnabled: aws.ToBool(val.Enabled),
 		}
 
 		if val.CloudWatchLogsLogGroupArn != nil {
-			mm["cloudwatch_log_group_arn"] = aws.StringValue(val.CloudWatchLogsLogGroupArn)
+			mm[names.AttrCloudWatchLogGroupARN] = aws.ToString(val.CloudWatchLogsLogGroupArn)
 		}
 
 		m = append(m, mm)
 	}
 	return m
+}
+
+func flattenOffPeakWindowOptions(apiObject *awstypes.OffPeakWindowOptions) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Enabled; v != nil {
+		tfMap[names.AttrEnabled] = aws.ToBool(v)
+	}
+
+	if v := apiObject.OffPeakWindow; v != nil {
+		tfMap["off_peak_window"] = []interface{}{flattenOffPeakWindow(v)}
+	}
+
+	return tfMap
+}
+
+func flattenOffPeakWindow(apiObject *awstypes.OffPeakWindow) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.WindowStartTime; v != nil {
+		tfMap["window_start_time"] = []interface{}{flattenWindowStartTime(v)}
+	}
+
+	return tfMap
+}
+
+func flattenWindowStartTime(apiObject *awstypes.WindowStartTime) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"hours":   apiObject.Hours,
+		"minutes": apiObject.Minutes,
+	}
+
+	return tfMap
 }

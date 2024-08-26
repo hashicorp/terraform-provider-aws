@@ -33,7 +33,7 @@ resource "aws_appintegrations_data_integration" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `description` - (Optional) Specifies the description of the Data Integration.
 * `kms_key` - (Required) Specifies the KMS key Amazon Resource Name (ARN) for the Data Integration.
@@ -48,9 +48,9 @@ A `schedule_config` block supports the following arguments:
 * `object` - (Required) The name of the object to pull from the data source. Examples of objects in Salesforce include `Case`, `Account`, or `Lead`.
 * `schedule_expression` - (Required) How often the data should be pulled from data source. Examples include `rate(1 hour)`, `rate(3 hours)`, `rate(1 day)`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the Data Integration.
 * `id` - The identifier of the Data Integration.
@@ -58,8 +58,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Amazon AppIntegrations Data Integrations can be imported using the `id` e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Amazon AppIntegrations Data Integrations using the `id`. For example:
 
+```terraform
+import {
+  to = aws_appintegrations_data_integration.example
+  id = "12345678-1234-1234-1234-123456789123"
+}
 ```
-$ terraform import aws_appintegrations_data_integration.example 12345678-1234-1234-1234-123456789123
+
+Using `terraform import`, import Amazon AppIntegrations Data Integrations using the `id`. For example:
+
+```console
+% terraform import aws_appintegrations_data_integration.example 12345678-1234-1234-1234-123456789123
 ```

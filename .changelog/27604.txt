@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_ses_active_receipt_rule_set: Support import
+```

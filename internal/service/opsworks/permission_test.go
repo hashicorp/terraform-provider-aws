@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package opsworks_test
 
 import (
@@ -5,24 +8,27 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/opsworks"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/opsworks/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfopsworks "github.com/hashicorp/terraform-provider-aws/internal/service/opsworks"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccOpsWorksPermission_basic(t *testing.T) {
+	acctest.Skip(t, "skipping test; Amazon OpsWorks has been deprecated and will be removed in the next major release")
+
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_permission.test"
-	var opsperm opsworks.Permission
+	var opsperm awstypes.Permission
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.OpsWorks) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
@@ -30,8 +36,8 @@ func TestAccOpsWorksPermission_basic(t *testing.T) {
 				Config: testAccPermissionConfig_create(rName, true, true, "iam_only"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName, &opsperm),
-					resource.TestCheckResourceAttr(resourceName, "allow_ssh", "true"),
-					resource.TestCheckResourceAttr(resourceName, "allow_sudo", "true"),
+					resource.TestCheckResourceAttr(resourceName, "allow_ssh", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "allow_sudo", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "level", "iam_only"),
 				),
 			},
@@ -39,8 +45,8 @@ func TestAccOpsWorksPermission_basic(t *testing.T) {
 				Config: testAccPermissionConfig_create(rName, true, false, "iam_only"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName, &opsperm),
-					resource.TestCheckResourceAttr(resourceName, "allow_ssh", "true"),
-					resource.TestCheckResourceAttr(resourceName, "allow_sudo", "false"),
+					resource.TestCheckResourceAttr(resourceName, "allow_ssh", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "allow_sudo", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "level", "iam_only"),
 				),
 			},
@@ -48,8 +54,8 @@ func TestAccOpsWorksPermission_basic(t *testing.T) {
 				Config: testAccPermissionConfig_create(rName, false, false, "deny"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName, &opsperm),
-					resource.TestCheckResourceAttr(resourceName, "allow_ssh", "false"),
-					resource.TestCheckResourceAttr(resourceName, "allow_sudo", "false"),
+					resource.TestCheckResourceAttr(resourceName, "allow_ssh", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "allow_sudo", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "level", "deny"),
 				),
 			},
@@ -57,8 +63,8 @@ func TestAccOpsWorksPermission_basic(t *testing.T) {
 				Config: testAccPermissionConfig_create(rName, false, false, "show"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName, &opsperm),
-					resource.TestCheckResourceAttr(resourceName, "allow_ssh", "false"),
-					resource.TestCheckResourceAttr(resourceName, "allow_sudo", "false"),
+					resource.TestCheckResourceAttr(resourceName, "allow_ssh", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "allow_sudo", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "level", "show"),
 				),
 			},
@@ -68,14 +74,16 @@ func TestAccOpsWorksPermission_basic(t *testing.T) {
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/4804
 func TestAccOpsWorksPermission_self(t *testing.T) {
+	acctest.Skip(t, "skipping test; Amazon OpsWorks has been deprecated and will be removed in the next major release")
+
 	ctx := acctest.Context(t)
-	var opsperm opsworks.Permission
+	var opsperm awstypes.Permission
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_permission.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.OpsWorks) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
@@ -83,23 +91,23 @@ func TestAccOpsWorksPermission_self(t *testing.T) {
 				Config: testAccPermissionConfig_self(rName, true, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName, &opsperm),
-					resource.TestCheckResourceAttr(resourceName, "allow_ssh", "true"),
-					resource.TestCheckResourceAttr(resourceName, "allow_sudo", "true"),
+					resource.TestCheckResourceAttr(resourceName, "allow_ssh", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "allow_sudo", acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccPermissionConfig_self(rName, true, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName, &opsperm),
-					resource.TestCheckResourceAttr(resourceName, "allow_ssh", "true"),
-					resource.TestCheckResourceAttr(resourceName, "allow_sudo", "false"),
+					resource.TestCheckResourceAttr(resourceName, "allow_ssh", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "allow_sudo", acctest.CtFalse),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckPermissionExists(ctx context.Context, n string, v *opsworks.Permission) resource.TestCheckFunc {
+func testAccCheckPermissionExists(ctx context.Context, n string, v *awstypes.Permission) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -110,7 +118,7 @@ func testAccCheckPermissionExists(ctx context.Context, n string, v *opsworks.Per
 			return fmt.Errorf("No OpsWorks Layer ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksClient(ctx)
 
 		output, err := tfopsworks.FindPermissionByTwoPartKey(ctx, conn, rs.Primary.Attributes["user_arn"], rs.Primary.Attributes["stack_id"])
 

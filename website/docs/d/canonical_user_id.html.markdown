@@ -28,9 +28,9 @@ output "canonical_user_id" {
 
 There are no arguments available for this data source.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - Canonical user ID associated with the AWS account.
 

@@ -34,12 +34,12 @@ data "aws_mq_broker" "by_name" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `broker_id` - (Optional) Unique id of the mq broker.
 * `broker_name` - (Optional) Unique name of the mq broker.
 
-## Attributes Reference
+## Attribute Reference
 
 See the [`aws_mq_broker` resource](/docs/providers/aws/r/mq_broker.html) for details on the returned attributes.
 They are identical except for user password, which is not returned when describing broker.

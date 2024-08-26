@@ -1,23 +1,34 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/connect"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/connect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_connect_contact_flow_module")
-func DataSourceContactFlowModule() *schema.Resource {
+// @SDKDataSource("aws_connect_contact_flow_module", name="Contact Flow Module")
+// @Tags
+func dataSourceContactFlowModule() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceContactFlowModuleRead,
+
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -25,125 +36,128 @@ func DataSourceContactFlowModule() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"contact_flow_module_id", "name"},
+				ExactlyOneOf: []string{"contact_flow_module_id", names.AttrName},
 			},
-			"content": {
+			names.AttrContent: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"name", "contact_flow_module_id"},
+				ExactlyOneOf: []string{names.AttrName, "contact_flow_module_id"},
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func dataSourceContactFlowModuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
-	instanceID := d.Get("instance_id").(string)
-
+	instanceID := d.Get(names.AttrInstanceID).(string)
 	input := &connect.DescribeContactFlowModuleInput{
 		InstanceId: aws.String(instanceID),
 	}
 
 	if v, ok := d.GetOk("contact_flow_module_id"); ok {
 		input.ContactFlowModuleId = aws.String(v.(string))
-	} else if v, ok := d.GetOk("name"); ok {
+	} else if v, ok := d.GetOk(names.AttrName); ok {
 		name := v.(string)
-		contactFlowModuleSummary, err := dataSourceGetContactFlowModuleSummaryByName(ctx, conn, instanceID, name)
+		contactFlowModuleSummary, err := findContactFlowModuleSummaryByTwoPartKey(ctx, conn, instanceID, name)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error finding Connect Contact Flow Module Summary by name (%s): %w", name, err))
-		}
-
-		if contactFlowModuleSummary == nil {
-			return diag.FromErr(fmt.Errorf("error finding Connect Contact Flow Module Summary by name (%s): not found", name))
+			return sdkdiag.AppendErrorf(diags, "reading Connect Contact Flow Module (%s) summary: %s", name, err)
 		}
 
 		input.ContactFlowModuleId = contactFlowModuleSummary.Id
 	}
 
-	resp, err := conn.DescribeContactFlowModuleWithContext(ctx, input)
+	contactFlowModule, err := findContactFlowModule(ctx, conn, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect Contact Flow Module: %w", err))
+		return sdkdiag.AppendErrorf(diags, "reading Connect Contact Flow Module: %s", err)
 	}
 
-	if resp == nil || resp.ContactFlowModule == nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect Contact Flow Module: empty response"))
-	}
+	contactFlowModuleID := aws.ToString(contactFlowModule.Id)
+	d.SetId(contactFlowModuleCreateResourceID(instanceID, contactFlowModuleID))
+	d.Set(names.AttrARN, contactFlowModule.Arn)
+	d.Set("contact_flow_module_id", contactFlowModuleID)
+	d.Set(names.AttrContent, contactFlowModule.Content)
+	d.Set(names.AttrDescription, contactFlowModule.Description)
+	d.Set(names.AttrName, contactFlowModule.Name)
+	d.Set(names.AttrState, contactFlowModule.State)
+	d.Set(names.AttrStatus, contactFlowModule.Status)
 
-	contactFlowModule := resp.ContactFlowModule
+	setTagsOut(ctx, contactFlowModule.Tags)
 
-	d.Set("arn", contactFlowModule.Arn)
-	d.Set("contact_flow_module_id", contactFlowModule.Id)
-	d.Set("content", contactFlowModule.Content)
-	d.Set("description", contactFlowModule.Description)
-	d.Set("name", contactFlowModule.Name)
-	d.Set("state", contactFlowModule.State)
-	d.Set("status", contactFlowModule.Status)
-
-	if err := d.Set("tags", KeyValueTags(ctx, contactFlowModule.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags: %s", err))
-	}
-
-	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(contactFlowModule.Id)))
-
-	return nil
+	return diags
 }
 
-func dataSourceGetContactFlowModuleSummaryByName(ctx context.Context, conn *connect.Connect, instanceID, name string) (*connect.ContactFlowModuleSummary, error) {
-	var result *connect.ContactFlowModuleSummary
-
+func findContactFlowModuleSummaryByTwoPartKey(ctx context.Context, conn *connect.Client, instanceID, name string) (*awstypes.ContactFlowModuleSummary, error) {
+	const maxResults = 60
 	input := &connect.ListContactFlowModulesInput{
 		InstanceId: aws.String(instanceID),
-		MaxResults: aws.Int64(ListContactFlowModulesMaxResults),
+		MaxResults: aws.Int32(maxResults),
 	}
 
-	err := conn.ListContactFlowModulesPagesWithContext(ctx, input, func(page *connect.ListContactFlowModulesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, cf := range page.ContactFlowModulesSummaryList {
-			if cf == nil {
-				continue
-			}
-
-			if aws.StringValue(cf.Name) == name {
-				result = cf
-				return false
-			}
-		}
-
-		return !lastPage
+	return findContactFlowModuleSummary(ctx, conn, input, func(v *awstypes.ContactFlowModuleSummary) bool {
+		return aws.ToString(v.Name) == name
 	})
+}
+
+func findContactFlowModuleSummary(ctx context.Context, conn *connect.Client, input *connect.ListContactFlowModulesInput, filter tfslices.Predicate[*awstypes.ContactFlowModuleSummary]) (*awstypes.ContactFlowModuleSummary, error) {
+	output, err := findContactFlowModuleSummaries(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return result, nil
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findContactFlowModuleSummaries(ctx context.Context, conn *connect.Client, input *connect.ListContactFlowModulesInput, filter tfslices.Predicate[*awstypes.ContactFlowModuleSummary]) ([]awstypes.ContactFlowModuleSummary, error) {
+	var output []awstypes.ContactFlowModuleSummary
+
+	pages := connect.NewListContactFlowModulesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.ContactFlowModulesSummaryList {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
+	}
+
+	return output, nil
 }

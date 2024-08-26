@@ -1,14 +1,20 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sqs_test
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/sqs"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSQSQueueDataSource_basic(t *testing.T) {
@@ -19,40 +25,17 @@ func TestAccSQSQueueDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sqs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SQSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccQueueDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccQueueCheckDataSource(datasourceName, resourceName),
-					resource.TestCheckResourceAttr(datasourceName, "tags.%", "0"),
 				),
-			},
-		},
-	})
-}
-
-func TestAccSQSQueueDataSource_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix("tf_acc_test_")
-	resourceName := "aws_sqs_queue.test"
-	datasourceName := "data.aws_sqs_queue.by_name"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sqs.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccQueueDataSourceConfig_tags(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccQueueCheckDataSource(datasourceName, resourceName),
-					resource.TestCheckResourceAttr(datasourceName, "tags.%", "3"),
-					resource.TestCheckResourceAttr(datasourceName, "tags.Environment", "Production"),
-					resource.TestCheckResourceAttr(datasourceName, "tags.Foo", "Bar"),
-					resource.TestCheckResourceAttr(datasourceName, "tags.Empty", ""),
-				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(datasourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
 			},
 		},
 	})
@@ -71,8 +54,8 @@ func testAccQueueCheckDataSource(datasourceName, resourceName string) resource.T
 		}
 
 		attrNames := []string{
-			"arn",
-			"name",
+			names.AttrARN,
+			names.AttrName,
 		}
 
 		for _, attrName := range attrNames {
@@ -98,24 +81,6 @@ resource "aws_sqs_queue" "wrong" {
 
 resource "aws_sqs_queue" "test" {
   name = "%[1]s"
-}
-
-data "aws_sqs_queue" "by_name" {
-  name = aws_sqs_queue.test.name
-}
-`, rName)
-}
-
-func testAccQueueDataSourceConfig_tags(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_sqs_queue" "test" {
-  name = "%[1]s"
-
-  tags = {
-    Environment = "Production"
-    Foo         = "Bar"
-    Empty       = ""
-  }
 }
 
 data "aws_sqs_queue" "by_name" {

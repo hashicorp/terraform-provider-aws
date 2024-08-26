@@ -1,30 +1,41 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect
 
 import (
 	"context"
-	"fmt"
+	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/connect"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/connect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_connect_prompt")
-func DataSourcePrompt() *schema.Resource {
+// @SDKDataSource("aws_connect_prompt", name="Prompt")
+func dataSourcePrompt() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePromptRead,
+
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -37,61 +48,83 @@ func DataSourcePrompt() *schema.Resource {
 }
 
 func dataSourcePromptRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
-	instanceID := d.Get("instance_id").(string)
-	name := d.Get("name").(string)
-
-	promptSummary, err := dataSourceGetPromptSummaryByName(ctx, conn, instanceID, name)
+	instanceID := d.Get(names.AttrInstanceID).(string)
+	name := d.Get(names.AttrName).(string)
+	promptSummary, err := findPromptSummaryByTwoPartKey(ctx, conn, instanceID, name)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error finding Connect Prompt Summary by name (%s): %w", name, err))
+		return sdkdiag.AppendErrorf(diags, "reading Connect Prompt (%s) summary: %s", name, err)
 	}
 
-	if promptSummary == nil {
-		return diag.FromErr(fmt.Errorf("error finding Connect Prompt Summary by name (%s): not found", name))
-	}
+	promptID := aws.ToString(promptSummary.Id)
+	id := promptCreateResourceID(instanceID, promptID)
+	d.SetId(id)
+	d.Set(names.AttrARN, promptSummary.Arn)
+	d.Set(names.AttrInstanceID, instanceID)
+	d.Set(names.AttrName, promptSummary.Name)
+	d.Set("prompt_id", promptID)
 
-	d.Set("arn", promptSummary.Arn)
-	d.Set("instance_id", instanceID)
-	d.Set("prompt_id", promptSummary.Id)
-	d.Set("name", promptSummary.Name)
-
-	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(promptSummary.Id)))
-
-	return nil
+	return diags
 }
 
-func dataSourceGetPromptSummaryByName(ctx context.Context, conn *connect.Connect, instanceID, name string) (*connect.PromptSummary, error) {
-	var result *connect.PromptSummary
+const promptResourceIDSeparator = ":"
 
+func promptCreateResourceID(instanceID, promptID string) string {
+	parts := []string{instanceID, promptID}
+	id := strings.Join(parts, promptResourceIDSeparator)
+
+	return id
+}
+
+func findPromptSummaryByTwoPartKey(ctx context.Context, conn *connect.Client, instanceID, name string) (*awstypes.PromptSummary, error) {
+	const maxResults = 60
 	input := &connect.ListPromptsInput{
 		InstanceId: aws.String(instanceID),
-		MaxResults: aws.Int64(ListPromptsMaxResults),
+		MaxResults: aws.Int32(maxResults),
 	}
 
-	err := conn.ListPromptsPagesWithContext(ctx, input, func(page *connect.ListPromptsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, cf := range page.PromptSummaryList {
-			if cf == nil {
-				continue
-			}
-
-			if aws.StringValue(cf.Name) == name {
-				result = cf
-				return false
-			}
-		}
-
-		return !lastPage
+	return findPromptSummary(ctx, conn, input, func(v *awstypes.PromptSummary) bool {
+		return aws.ToString(v.Name) == name
 	})
+}
+
+func findPromptSummary(ctx context.Context, conn *connect.Client, input *connect.ListPromptsInput, filter tfslices.Predicate[*awstypes.PromptSummary]) (*awstypes.PromptSummary, error) {
+	output, err := findPromptSummaries(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return result, nil
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findPromptSummaries(ctx context.Context, conn *connect.Client, input *connect.ListPromptsInput, filter tfslices.Predicate[*awstypes.PromptSummary]) ([]awstypes.PromptSummary, error) {
+	var output []awstypes.PromptSummary
+
+	pages := connect.NewListPromptsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.PromptSummaryList {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
+	}
+
+	return output, nil
 }

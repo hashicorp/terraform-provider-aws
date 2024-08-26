@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_api_gateway_account: Add `api_key_version` and `features` attributes
+```
+
+```release-note:bug
+resource/aws_api_gateway_account: Allow setting `cloudwatch_role_arn` to an empty value and set it correctly on Read, allowing its value to be determined on import
+```

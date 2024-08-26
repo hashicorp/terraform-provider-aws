@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package errs
 
 import (
@@ -73,4 +76,23 @@ func As[T error](err error) (T, bool) {
 	var as T
 	ok := errors.As(err, &as)
 	return as, ok
+}
+
+var _ ErrorWithErrorMessage = &ErrorWithMessage{}
+
+// ErrorWithMessage is a simple error type that implements the errorMessager
+type ErrorWithMessage struct {
+	error
+}
+
+func (e *ErrorWithMessage) ErrorMessage() string {
+	if e == nil || e.error == nil {
+		return ""
+	}
+	return e.Error()
+}
+
+// NewErrorWithMessage returns a new ErrorWithMessage
+func NewErrorWithMessage(err error) *ErrorWithMessage {
+	return &ErrorWithMessage{error: err}
 }

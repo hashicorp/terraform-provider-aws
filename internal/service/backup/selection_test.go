@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package backup_test
 
 import (
@@ -5,14 +8,15 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/backup"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/backup"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfbackup "github.com/hashicorp/terraform-provider-aws/internal/service/backup"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccBackupSelection_basic(t *testing.T) {
@@ -23,7 +27,7 @@ func TestAccBackupSelection_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, backup.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSelectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -51,7 +55,7 @@ func TestAccBackupSelection_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, backup.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSelectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -76,7 +80,7 @@ func TestAccBackupSelection_Disappears_backupPlan(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, backup.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSelectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -101,7 +105,7 @@ func TestAccBackupSelection_withTags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, backup.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSelectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -109,7 +113,7 @@ func TestAccBackupSelection_withTags(t *testing.T) {
 				Config: testAccSelectionConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSelectionExists(ctx, resourceName, &selection1),
-					resource.TestCheckResourceAttr(resourceName, "selection_tag.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "selection_tag.#", acctest.Ct2),
 				),
 			},
 			{
@@ -130,7 +134,7 @@ func TestAccBackupSelection_conditionsWithTags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, backup.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSelectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -138,11 +142,11 @@ func TestAccBackupSelection_conditionsWithTags(t *testing.T) {
 				Config: testAccSelectionConfig_conditionsTags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSelectionExists(ctx, resourceName, &selection1),
-					resource.TestCheckResourceAttr(resourceName, "condition.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "condition.0.string_equals.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "condition.0.string_like.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "condition.0.string_not_equals.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "condition.0.string_not_like.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "condition.0.string_equals.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "condition.0.string_like.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "condition.0.string_not_equals.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "condition.0.string_not_like.#", acctest.Ct1),
 				),
 			},
 			{
@@ -163,7 +167,7 @@ func TestAccBackupSelection_withResources(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, backup.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSelectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -171,7 +175,7 @@ func TestAccBackupSelection_withResources(t *testing.T) {
 				Config: testAccSelectionConfig_resources(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSelectionExists(ctx, resourceName, &selection1),
-					resource.TestCheckResourceAttr(resourceName, "resources.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "resources.#", acctest.Ct2),
 				),
 			},
 			{
@@ -192,7 +196,7 @@ func TestAccBackupSelection_withNotResources(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, backup.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSelectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -200,7 +204,7 @@ func TestAccBackupSelection_withNotResources(t *testing.T) {
 				Config: testAccSelectionConfig_notResources(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSelectionExists(ctx, resourceName, &selection1),
-					resource.TestCheckResourceAttr(resourceName, "not_resources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "not_resources.#", acctest.Ct1),
 				),
 			},
 			{
@@ -221,7 +225,7 @@ func TestAccBackupSelection_updateTag(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, backup.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSelectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -250,7 +254,7 @@ func TestAccBackupSelection_updateTag(t *testing.T) {
 
 func testAccCheckSelectionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_backup_selection" {
 				continue
@@ -261,7 +265,7 @@ func testAccCheckSelectionDestroy(ctx context.Context) resource.TestCheckFunc {
 				SelectionId:  aws.String(rs.Primary.ID),
 			}
 
-			resp, err := conn.GetBackupSelectionWithContext(ctx, input)
+			resp, err := conn.GetBackupSelection(ctx, input)
 
 			if err == nil {
 				if *resp.SelectionId == rs.Primary.ID {
@@ -281,14 +285,14 @@ func testAccCheckSelectionExists(ctx context.Context, name string, selection *ba
 			return fmt.Errorf("not found: %s, %v", name, s.RootModule().Resources)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
 
 		input := &backup.GetBackupSelectionInput{
 			BackupPlanId: aws.String(rs.Primary.Attributes["plan_id"]),
 			SelectionId:  aws.String(rs.Primary.ID),
 		}
 
-		output, err := conn.GetBackupSelectionWithContext(ctx, input)
+		output, err := conn.GetBackupSelection(ctx, input)
 
 		if err != nil {
 			return err

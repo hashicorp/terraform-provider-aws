@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package vpclattice
 
 import (
@@ -15,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -34,7 +38,7 @@ func ResourceResourcePolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"policy": {
+			names.AttrPolicy: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateFunc:     validation.StringIsJSON,
@@ -44,7 +48,7 @@ func ResourceResourcePolicy() *schema.Resource {
 					return json
 				},
 			},
-			"resource_arn": {
+			names.AttrResourceARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -59,13 +63,14 @@ const (
 )
 
 func resourceResourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).VPCLatticeClient()
-	resourceArn := d.Get("resource_arn").(string)
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
+	resourceArn := d.Get(names.AttrResourceARN).(string)
 
-	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
 
 	if err != nil {
-		return diag.Errorf("policy (%s) is invalid JSON: %s", policy, err)
+		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policy, err)
 	}
 
 	in := &vpclattice.PutResourcePolicyInput{
@@ -76,16 +81,17 @@ func resourceResourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta
 	_, err = conn.PutResourcePolicy(ctx, in)
 
 	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameResourcePolicy, d.Get("policy").(string), err)
+		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionCreating, ResNameResourcePolicy, d.Get(names.AttrPolicy).(string), err)
 	}
 
 	d.SetId(resourceArn)
 
-	return resourceResourcePolicyRead(ctx, d, meta)
+	return append(diags, resourceResourcePolicyRead(ctx, d, meta)...)
 }
 
 func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).VPCLatticeClient()
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	resourceArn := d.Id()
 
@@ -93,32 +99,33 @@ func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, met
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] VPCLattice ResourcePolicy (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionReading, ResNameResourcePolicy, d.Id(), err)
+		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionReading, ResNameResourcePolicy, d.Id(), err)
 	}
 
 	if policy == nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionReading, ResNameResourcePolicy, d.Id(), err)
+		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionReading, ResNameResourcePolicy, d.Id(), err)
 	}
 
-	d.Set("resource_arn", resourceArn)
+	d.Set(names.AttrResourceARN, resourceArn)
 
-	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.ToString(policy.Policy))
+	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), aws.ToString(policy.Policy))
 
 	if err != nil {
-		return diag.Errorf("setting policy %s: %s", aws.ToString(policy.Policy), err)
+		return sdkdiag.AppendErrorf(diags, "setting policy %s: %s", aws.ToString(policy.Policy), err)
 	}
 
-	d.Set("policy", policyToSet)
+	d.Set(names.AttrPolicy, policyToSet)
 
-	return nil
+	return diags
 }
 
 func resourceResourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).VPCLatticeClient()
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	log.Printf("[INFO] Deleting VPCLattice ResourcePolicy: %s", d.Id())
 	_, err := conn.DeleteResourcePolicy(ctx, &vpclattice.DeleteResourcePolicyInput{
@@ -128,13 +135,13 @@ func resourceResourcePolicyDelete(ctx context.Context, d *schema.ResourceData, m
 	if err != nil {
 		var nfe *types.ResourceNotFoundException
 		if errors.As(err, &nfe) {
-			return nil
+			return diags
 		}
 
-		return create.DiagError(names.VPCLattice, create.ErrActionDeleting, ResNameResourcePolicy, d.Id(), err)
+		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionDeleting, ResNameResourcePolicy, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func findResourcePolicyByID(ctx context.Context, conn *vpclattice.Client, id string) (*vpclattice.GetResourcePolicyOutput, error) {

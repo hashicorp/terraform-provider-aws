@@ -1,17 +1,20 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package meta_test
 
 import (
 	"fmt"
 	"net"
-	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfmeta "github.com/hashicorp/terraform-provider-aws/internal/service/meta"
 )
@@ -49,8 +52,8 @@ func TestAccMetaIPRangesDataSource_none(t *testing.T) {
 			{
 				Config: testAccIPRangesDataSourceConfig_none,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "cidr_blocks.#", "0"),
-					resource.TestCheckResourceAttr(dataSourceName, "ipv6_cidr_blocks.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "cidr_blocks.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "ipv6_cidr_blocks.#", acctest.Ct0),
 				),
 			},
 		},
@@ -123,9 +126,9 @@ func testAccIPRangesCheckAttributes(n string) resource.TestCheckFunc {
 		}
 
 		var (
-			regionMember      = regexp.MustCompile(`regions\.\d+`)
+			regionMember      = regexache.MustCompile(`regions\.\d+`)
 			regions, services int
-			serviceMember     = regexp.MustCompile(`services\.\d+`)
+			serviceMember     = regexache.MustCompile(`services\.\d+`)
 		)
 
 		for k, v := range a {

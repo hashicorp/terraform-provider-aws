@@ -1,25 +1,31 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package opsworks_test
 
 import (
 	"context"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/opsworks"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/opsworks/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccOpsWorksHAProxyLayer_basic(t *testing.T) {
+	acctest.Skip(t, "skipping test; Amazon OpsWorks has been deprecated and will be removed in the next major release")
+
 	ctx := acctest.Context(t)
-	var v opsworks.Layer
+	var v awstypes.Layer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_haproxy_layer.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.OpsWorks) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckHAProxyLayerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -29,8 +35,8 @@ func TestAccOpsWorksHAProxyLayer_basic(t *testing.T) {
 					testAccCheckLayerExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "healthcheck_method", "OPTIONS"),
 					resource.TestCheckResourceAttr(resourceName, "healthcheck_url", "/"),
-					resource.TestCheckResourceAttr(resourceName, "name", "HAProxy"),
-					resource.TestCheckResourceAttr(resourceName, "stats_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, "HAProxy"),
+					resource.TestCheckResourceAttr(resourceName, "stats_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "stats_password"),
 					resource.TestCheckResourceAttr(resourceName, "stats_url", "/haproxy?stats"),
 					resource.TestCheckResourceAttr(resourceName, "stats_user", "opsworks"),

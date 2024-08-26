@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package releases
 
 import (
@@ -18,6 +21,7 @@ import (
 type Versions struct {
 	Product     product.Product
 	Constraints version.Constraints
+	Enterprise  *EnterpriseOptions // require enterprise version if set (leave nil for OSS)
 
 	ListTimeout time.Duration
 
@@ -42,6 +46,10 @@ func (v *Versions) List(ctx context.Context) ([]src.Source, error) {
 		return nil, fmt.Errorf("invalid product name: %q", v.Product.Name)
 	}
 
+	if err := validateEnterpriseOptions(v.Enterprise); err != nil {
+		return nil, err
+	}
+
 	timeout := defaultListTimeout
 	if v.ListTimeout > 0 {
 		timeout = v.ListTimeout
@@ -58,10 +66,17 @@ func (v *Versions) List(ctx context.Context) ([]src.Source, error) {
 	versions := pvs.AsSlice()
 	sort.Stable(versions)
 
+	expectedMetadata := enterpriseVersionMetadata(v.Enterprise)
+
 	installables := make([]src.Source, 0)
 	for _, pv := range versions {
 		if !v.Constraints.Check(pv.Version) {
 			// skip version which doesn't match constraint
+			continue
+		}
+
+		if pv.Version.Metadata() != expectedMetadata {
+			// skip version which doesn't match required metadata for enterprise or OSS versions
 			continue
 		}
 
@@ -73,6 +88,13 @@ func (v *Versions) List(ctx context.Context) ([]src.Source, error) {
 
 			ArmoredPublicKey:         v.Install.ArmoredPublicKey,
 			SkipChecksumVerification: v.Install.SkipChecksumVerification,
+		}
+
+		if v.Enterprise != nil {
+			ev.Enterprise = &EnterpriseOptions{
+				Meta:       v.Enterprise.Meta,
+				LicenseDir: v.Enterprise.LicenseDir,
+			}
 		}
 
 		installables = append(installables, ev)

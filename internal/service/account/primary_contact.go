@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package account
 
 import (
 	"context"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/account"
 	"github.com/aws/aws-sdk-go-v2/service/account/types"
@@ -14,8 +17,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_account_primary_contact")
@@ -31,7 +36,7 @@ func resourcePrimaryContact() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"account_id": {
+			names.AttrAccountID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -73,7 +78,7 @@ func resourcePrimaryContact() *schema.Resource {
 			"phone_number": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[\s0-9()+-]+$`), "must be a valid phone number"),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[+][0-9\s()-]+$`), "must be a valid phone number"),
 			},
 			"postal_code": {
 				Type:     schema.TypeString,
@@ -92,7 +97,9 @@ func resourcePrimaryContact() *schema.Resource {
 }
 
 func resourcePrimaryContactPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AccountClient()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).AccountClient(ctx)
 
 	id := "default"
 	input := &account.PutContactInformationInput{
@@ -106,7 +113,7 @@ func resourcePrimaryContactPut(ctx context.Context, d *schema.ResourceData, meta
 		},
 	}
 
-	if v, ok := d.GetOk("account_id"); ok {
+	if v, ok := d.GetOk(names.AttrAccountID); ok {
 		id = v.(string)
 		input.AccountId = aws.String(id)
 	}
@@ -138,32 +145,34 @@ func resourcePrimaryContactPut(ctx context.Context, d *schema.ResourceData, meta
 	_, err := conn.PutContactInformation(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Account Primary Contact (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "creating Account Primary Contact (%s): %s", id, err)
 	}
 
 	if d.IsNewResource() {
 		d.SetId(id)
 	}
 
-	return resourcePrimaryContactRead(ctx, d, meta)
+	return append(diags, resourcePrimaryContactRead(ctx, d, meta)...)
 }
 
 func resourcePrimaryContactRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AccountClient()
+	var diags diag.Diagnostics
 
-	contactInformation, err := findContactInformation(ctx, conn, d.Get("account_id").(string))
+	conn := meta.(*conns.AWSClient).AccountClient(ctx)
+
+	contactInformation, err := findContactInformation(ctx, conn, d.Get(names.AttrAccountID).(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Account Primary Contact (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Account Primary Contact (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Account Primary Contact (%s): %s", d.Id(), err)
 	}
 
-	d.Set("account_id", d.Get("account_id"))
+	d.Set(names.AttrAccountID, d.Get(names.AttrAccountID))
 	d.Set("address_line_1", contactInformation.AddressLine1)
 	d.Set("address_line_2", contactInformation.AddressLine2)
 	d.Set("address_line_3", contactInformation.AddressLine3)
@@ -177,7 +186,7 @@ func resourcePrimaryContactRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("state_or_region", contactInformation.StateOrRegion)
 	d.Set("website_url", contactInformation.WebsiteUrl)
 
-	return nil
+	return diags
 }
 
 func findContactInformation(ctx context.Context, conn *account.Client, accountID string) (*types.ContactInformation, error) {

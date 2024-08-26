@@ -41,15 +41,15 @@ resource "aws_codedeploy_app" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the application.
 * `compute_platform` - (Optional) The compute platform can either be `ECS`, `Lambda`, or `Server`. Default is `Server`.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the CodeDeploy application.
 * `application_id` - The application ID.
@@ -61,8 +61,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CodeDeploy Applications can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeDeploy Applications using the `name`. For example:
 
+```terraform
+import {
+  to = aws_codedeploy_app.example
+  id = "my-application"
+}
 ```
-$ terraform import aws_codedeploy_app.example my-application
+
+Using `terraform import`, import CodeDeploy Applications using the `name`. For example:
+
+```console
+% terraform import aws_codedeploy_app.example my-application
 ```

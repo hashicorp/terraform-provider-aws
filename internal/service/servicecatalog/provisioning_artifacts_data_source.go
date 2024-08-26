@@ -1,19 +1,24 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package servicecatalog
 
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/servicecatalog"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_servicecatalog_provisioning_artifacts")
-func DataSourceProvisioningArtifacts() *schema.Resource {
+// @SDKDataSource("aws_servicecatalog_provisioning_artifacts", name="Provisioning Artifacts")
+func dataSourceProvisioningArtifacts() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceProvisioningArtifactsRead,
 
@@ -24,9 +29,9 @@ func DataSourceProvisioningArtifacts() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"accept_language": {
 				Type:         schema.TypeString,
-				Default:      AcceptLanguageEnglish,
+				Default:      acceptLanguageEnglish,
 				Optional:     true,
-				ValidateFunc: validation.StringInSlice(AcceptLanguage_Values(), false),
+				ValidateFunc: validation.StringInSlice(acceptLanguage_Values(), false),
 			},
 			"product_id": {
 				Type:     schema.TypeString,
@@ -41,11 +46,11 @@ func DataSourceProvisioningArtifacts() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						"created_time": {
+						names.AttrCreatedTime: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"description": {
+						names.AttrDescription: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -53,15 +58,15 @@ func DataSourceProvisioningArtifacts() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -74,7 +79,7 @@ func DataSourceProvisioningArtifacts() *schema.Resource {
 
 func dataSourceProvisioningArtifactsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 	productID := d.Get("product_id").(string)
 	input := &servicecatalog.ListProvisioningArtifactsInput{
@@ -82,7 +87,7 @@ func dataSourceProvisioningArtifactsRead(ctx context.Context, d *schema.Resource
 		ProductId:      aws.String(productID),
 	}
 
-	output, err := conn.ListProvisioningArtifactsWithContext(ctx, input)
+	output, err := conn.ListProvisioningArtifacts(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing Service Catalog Provisioning Artifacts: %s", err)
@@ -93,10 +98,10 @@ func dataSourceProvisioningArtifactsRead(ctx context.Context, d *schema.Resource
 		return sdkdiag.AppendErrorf(diags, "setting provisioning_artifact_details: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func flattenProvisioningArtifactDetails(apiObjects []*servicecatalog.ProvisioningArtifactDetail) []interface{} {
+func flattenProvisioningArtifactDetails(apiObjects []awstypes.ProvisioningArtifactDetail) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -104,43 +109,35 @@ func flattenProvisioningArtifactDetails(apiObjects []*servicecatalog.Provisionin
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
 		tfList = append(tfList, flattenProvisioningArtifactDetail(apiObject))
 	}
 
 	return tfList
 }
 
-func flattenProvisioningArtifactDetail(apiObject *servicecatalog.ProvisioningArtifactDetail) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
+func flattenProvisioningArtifactDetail(apiObject awstypes.ProvisioningArtifactDetail) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if apiObject.Active != nil {
-		tfMap["active"] = aws.BoolValue(apiObject.Active)
+		tfMap["active"] = aws.ToBool(apiObject.Active)
 	}
 	if apiObject.CreatedTime != nil {
-		tfMap["created_time"] = aws.TimeValue(apiObject.CreatedTime).String()
+		tfMap[names.AttrCreatedTime] = aws.ToTime(apiObject.CreatedTime).String()
 	}
 	if apiObject.Description != nil {
-		tfMap["description"] = aws.StringValue(apiObject.Description)
+		tfMap[names.AttrDescription] = aws.ToString(apiObject.Description)
 	}
-	if apiObject.Guidance != nil {
-		tfMap["guidance"] = aws.StringValue(apiObject.Guidance)
-	}
+
+	tfMap["guidance"] = string(apiObject.Guidance)
+
 	if apiObject.Id != nil {
-		tfMap["id"] = aws.StringValue(apiObject.Id)
+		tfMap[names.AttrID] = aws.ToString(apiObject.Id)
 	}
 	if apiObject.Name != nil {
-		tfMap["name"] = aws.StringValue(apiObject.Name)
+		tfMap[names.AttrName] = aws.ToString(apiObject.Name)
 	}
-	if apiObject.Type != nil {
-		tfMap["type"] = aws.StringValue(apiObject.Type)
-	}
+
+	tfMap[names.AttrType] = string(apiObject.Type)
 
 	return tfMap
 }

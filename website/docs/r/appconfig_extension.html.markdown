@@ -52,7 +52,7 @@ resource "aws_appconfig_extension" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) A name for the extension. Each extension name in your account must be unique. Extension versions use the same name.
 * `description` - (Optional) Information about the extension.
@@ -84,9 +84,9 @@ The `parameter` configuration block supports configuring any number of the follo
 * `required` - (Required) Determines if a parameter value must be specified in the extension association.
 * `description` - (Optional) Information about the parameter.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the AppConfig Extension.
 * `id` - AppConfig Extension ID.
@@ -94,8 +94,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-AppConfig Extensions can be imported using their extension ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AppConfig Extensions using their extension ID. For example:
 
+```terraform
+import {
+  to = aws_appconfig_extension.example
+  id = "71rxuzt"
+}
 ```
-$ terraform import aws_appconfig_extension.example 71rxuzt
+
+Using `terraform import`, import AppConfig Extensions using their extension ID. For example:
+
+```console
+% terraform import aws_appconfig_extension.example 71rxuzt
 ```

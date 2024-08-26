@@ -47,7 +47,7 @@ resource "aws_vpc_endpoint_connection_notification" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `vpc_endpoint_service_id` - (Optional) The ID of the VPC Endpoint Service to receive notifications for.
 * `vpc_endpoint_id` - (Optional) The ID of the VPC Endpoint to receive notifications for.
@@ -56,9 +56,9 @@ The following arguments are supported:
 
 ~> **NOTE:** One of `vpc_endpoint_service_id` or `vpc_endpoint_id` must be specified.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the VPC connection notification.
 * `state` - The state of the notification.
@@ -66,8 +66,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-VPC Endpoint connection notifications can be imported using the `VPC endpoint connection notification id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC Endpoint connection notifications using the VPC endpoint connection notification `id`. For example:
 
+```terraform
+import {
+  to = aws_vpc_endpoint_connection_notification.foo
+  id = "vpce-nfn-09e6ed3b4efba2263"
+}
 ```
-$ terraform import aws_vpc_endpoint_connection_notification.foo vpce-nfn-09e6ed3b4efba2263
+
+Using `terraform import`, import VPC Endpoint connection notifications using the VPC endpoint connection notification `id`. For example:
+
+```console
+% terraform import aws_vpc_endpoint_connection_notification.foo vpce-nfn-09e6ed3b4efba2263
 ```

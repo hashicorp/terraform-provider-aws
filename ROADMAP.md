@@ -1,80 +1,86 @@
-# Roadmap:  February 2023 - April 2023
+# Roadmap:  Feb 2024 - Apr 2024
 
 Every few months, the team will highlight areas of focus for our work and upcoming research.
 
 We select items for inclusion in the roadmap from the Top Community Issues, [Core Services](https://hashicorp.github.io/terraform-provider-aws/core-services/), and internal priorities. Where community sourced contributions exist we will work with the authors to review and merge their work. Where this does not exist or the original contributors are not available we will create the resources and implementation ourselves.
 
-Each weekly release will include necessary tasks that lead to the completion of the stated goals as well as community pull requests, enhancements, and features that are not highlighted in the roadmap. To view all the items we've prioritized for this quarter, please see the [Roadmap milestone](https://github.com/hashicorp/terraform-provider-aws/milestone/138).
+Each weekly release will include necessary tasks that lead to the completion of the stated goals as well as community pull requests, enhancements, and features that are not highlighted in the roadmap.
 
 This roadmap does not describe all the work that will be included within this timeframe, but it does describe our focus. We will include other work as events occur.
 
-In the period spanning August to October 2022, 808 Pull Requests were opened in the provider and 783 were closed/merged, adding support for the following (among many others):
+In the period spanning Nov to Jan 2024 the AWS Provider added support for the following (among many others):
 
-- AWS Audit Manager
-- Lambda SnapStart
-- RDS: Blue/Green Deployments
+- Amazon S3 Express
+- Amazon S3 Access Controls
+- Amazon DocDB Elastic Cluster
+- Amazon EBS Fast Snapshot Restore
+- Amazon Bedrock
 
-From February - April 2023, we will be prioritizing the following areas of work:
+From Feb - April 2024, we will be prioritizing the following areas of work:
 
-## New Services  
+## New Services
 
-### AWS Quicksight
+### AWS Resource Explorer Search
 
-Issue: [#10990]([https://github.com/hashicorp/terraform-provider-aws/issues/17981](https://github.com/hashicorp/terraform-provider-aws/issues/10990))
+Issue: [#36033](https://github.com/hashicorp/terraform-provider-aws/issues/36033)
 
-[AWS Quicksight](https://aws.amazon.com/quicksight/) has a serverless architecture that automatically scales to hundreds of thousands of users without the need to set up, configure, or manage your own servers. It also ensures that your users don’t have to deal with slow dashboards during peak hours, when multiple business intelligence (BI) users are accessing the same dashboards or datasets. And with pay-per-session pricing, you pay only when your users access the dashboards or reports, which makes it cost effective for deployments with many users. QuickSight is also built with robust security, governance, and global collaboration features for your enterprise workloads.
+[Resource Explorer](https://aws.amazon.com/resourceexplorer/) Use AWS Resource Explorer to more easily search for and discover your resources across AWS Regions and accounts, such as Amazon Elastic Compute Cloud (Amazon EC2) instances, Amazon Kinesis streams, and Amazon DynamoDB tables..
 
-Support for AWS Quicksight may include:
-
-New Resource(s):
-
-- `aws_quicksight_iam_policy_assignment`
-- `aws_quicksight_data_set`
-- `aws_quicksight_ingestion`
-- `aws_quicksight_template`
-- `aws_quicksight_dashboard`
-- `aws_quicksight_template_alias`
-
-### AWS Recycle Bin
-
-Issue: [#23160](https://github.com/hashicorp/terraform-provider-aws/issues/23160)
-
-[AWS Recycle Bin](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/recycle-bin.html) is a data recovery feature that enables you to restore accidentally deleted Amazon EBS snapshots and EBS-backed AMIs. When using Recycle Bin, if your resources are deleted, they are retained in the Recycle Bin for a time period that you specify before being permanently deleted.
-
-Support for AWS Recycle Bin may include:
+Support for additional Resource explorer resources may include:
 
 New Resource(s):
 
-- `aws_recycle_bin_rule`
+- `aws_resourceexplorer2_search`
 
-### AWS Directory Service “Trust”
+### Amazon Verified Permissions
 
-Issue: [#11901](https://github.com/hashicorp/terraform-provider-aws/issues/11901)
+Issue: [#32158](https://github.com/hashicorp/terraform-provider-aws/issues/32158)
 
-Easily integrate AWS Managed Microsoft AD with your existing AD by using AD trust relationships. Using trusts enables you to use your existing Active Directory to control which AD users can access your AWS resources.
+[Amazon Verified Permissions](https://aws.amazon.com/verified-permissions/) helps developers build more secure applications faster by externalizing authorization and centralizing policy management. They can also align application access with Zero Trust principles.
 
-Support for AWS Director Service "Trust" may include:
+Support for Amazon Verified Permissions may include:
 
 New Resource(s):
 
-- `aws_directory_service_directory_trust`
+- `aws_verifiedpermissions_policy`
+- `aws_verifiedpermissions_identity_source`
+
+### Amazon Security Lake
+
+Issue: [#29376](https://github.com/hashicorp/terraform-provider-aws/issues/29376)
+
+[Amazon Security Lake](https://aws.amazon.com/security-lake/) automatically centralizes security data from AWS environments, SaaS providers, on premises, and cloud sources into a purpose-built data lake stored in your account. With Security Lake, you can get a more complete understanding of your security data across your entire organization. You can also improve the protection of your workloads, applications, and data.
+
+Support for Amazon Security Lake may include:
+
+New Resource(s):
+
+- `aws_security_lake_aws_log_source`
+- `aws_security_lake_custom_log_source`
+- `aws_security_lake_subscriber`
+
+### Amazon DevOps Guru
+
+Issue: [#17919](https://github.com/hashicorp/terraform-provider-aws/issues/17919)
+
+[Amazon DevOps Guru](https://aws.amazon.com/security-lake/) uses ML to detect abnormal operating patterns so you can identify operational issues before they impact your customers.
+
+Support for Amazon DevOps Guru may include:
+
+New Resource(s):
+
+- `aws_devopsguru_notification_channel`
+- `aws_devopsguru_resource_collection`
 
 ## Enhancements to Existing Services
 
 This quarter most of our efforts will be focused on enhancements and stability improvements of our core services, rather than adding brand new services to the provider. The following list comprises the items most important to the community.
 
-- [Resource Identifiers and Tags for VPC Security Group Rules](https://github.com/hashicorp/terraform-provider-aws/issues/20104)
-- [Better Lambda error](https://github.com/hashicorp/terraform-provider-aws/issues/13709)
-- [AssumeRoleTokenProviderNotSetError when using assume_role with mfa enabled](https://github.com/hashicorp/terraform-provider-aws/issues/10491)
-- [Proposal: Add support Object-level logging in the existing trail for resource 'aws_s3_bucket'](https://github.com/hashicorp/terraform-provider-aws/issues/9459)
-- [Proposal: Add support Object-level logging in the existing trail for resource 'aws_s3_bucket'](https://github.com/hashicorp/terraform-provider-aws/issues/9459)
-- [Add support for elasticsearch outbound connection and relevant accepter](https://github.com/hashicorp/terraform-provider-aws/pull/22988)
-- [Add support for Route 53 IP Based Routing Policy](https://github.com/hashicorp/terraform-provider-aws/issues/25321)
-- [Add ability to query ECR repository for most recently pushed image](https://github.com/hashicorp/terraform-provider-aws/issues/12798)
-
-### Default Tags
-
-[#17829](https://github.com/hashicorp/terraform-provider-aws/issues/17829) added the `default_tags` block to allow practitioners to tags at the provider level. This allows configured resources capable of assigning tags to have them inherit those as well as be able to specify them at the resource level. This has proven extremely popular with the community, however it comes with a number of significant caveats ([#18311](https://github.com/hashicorp/terraform-provider-aws/issues/18311), [#19583](https://github.com/hashicorp/terraform-provider-aws/issues/19583), [#19204](https://github.com/hashicorp/terraform-provider-aws/issues/19204)) for use which have resulted from limitations in the provider SDK we use. New functionality in the [terraform-plugin-sdk](https://github.com/hashicorp/terraform-plugin-sdk) and [terraform-plugin-framework](https://github.com/hashicorp/terraform-plugin-framework) should allow us to temper these caveats. This quarter we plan to begin the development of this feature, based on the research completed last quarter by the engineering team.
+- [Add in Security Hub Automation Rules](https://github.com/hashicorp/terraform-provider-aws/issues/32210)
+- [aws rds modify-certificates](https://github.com/hashicorp/terraform-provider-aws/issues/33196)
+- [Add EKS cluster IAM access management API resources](https://github.com/hashicorp/terraform-provider-aws/issues/34982)
+- [Support for AWS Shield Advance Subscriptions](https://github.com/hashicorp/terraform-provider-aws/issues/21430)
+- [Add resources for ComputeOptimizer Recommendation Preferences](https://github.com/hashicorp/terraform-provider-aws/issues/23945)
 
 ## Disclosures
 

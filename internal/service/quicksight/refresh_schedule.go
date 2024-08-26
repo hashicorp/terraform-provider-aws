@@ -1,13 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package quicksight
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -25,8 +28,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -56,8 +59,8 @@ func (r *resourceRefreshSchedule) Metadata(_ context.Context, _ resource.Metadat
 func (r *resourceRefreshSchedule) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
-			"aws_account_id": schema.StringAttribute{
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrAWSAccountID: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -71,7 +74,7 @@ func (r *resourceRefreshSchedule) Schema(ctx context.Context, req resource.Schem
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"schedule_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -80,7 +83,7 @@ func (r *resourceRefreshSchedule) Schema(ctx context.Context, req resource.Schem
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"schedule": schema.ListNestedBlock{
+			names.AttrSchedule: schema.ListNestedBlock{
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 					listvalidator.IsRequired(),
@@ -109,7 +112,7 @@ func (r *resourceRefreshSchedule) Schema(ctx context.Context, req resource.Schem
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"interval": schema.StringAttribute{
+									names.AttrInterval: schema.StringAttribute{
 										Required: true,
 										Validators: []validator.String{
 											stringvalidator.OneOf(quicksight.RefreshInterval_Values()...),
@@ -137,7 +140,7 @@ func (r *resourceRefreshSchedule) Schema(ctx context.Context, req resource.Schem
 												"day_of_month": schema.StringAttribute{
 													Optional: true,
 													Validators: []validator.String{
-														stringvalidator.RegexMatches(regexp.MustCompile(dayOfMonthRegex), "day of month must match regex: "+dayOfMonthRegex),
+														stringvalidator.RegexMatches(regexache.MustCompile(dayOfMonthRegex), "day of month must match regex: "+dayOfMonthRegex),
 														stringvalidator.ConflictsWith(
 															path.MatchRelative().AtParent().AtName("day_of_week"),
 														),
@@ -198,7 +201,7 @@ var (
 		"day_of_week":  types.StringType,
 	}
 	refreshFrequencyAttrTypes = map[string]attr.Type{
-		"interval": types.StringType,
+		names.AttrInterval: types.StringType,
 		"refresh_on_day": types.ListType{
 			ElemType: types.ObjectType{
 				AttrTypes: refreshOnDayAttrTypes,
@@ -219,7 +222,7 @@ var (
 )
 
 func (r *resourceRefreshSchedule) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().QuickSightConn()
+	conn := r.Meta().QuickSightConn(ctx)
 
 	var plan resourceRefreshScheduleData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -274,7 +277,7 @@ func (r *resourceRefreshSchedule) Create(ctx context.Context, req resource.Creat
 }
 
 func (r *resourceRefreshSchedule) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().QuickSightConn()
+	conn := r.Meta().QuickSightConn(ctx)
 
 	var state resourceRefreshScheduleData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -299,7 +302,7 @@ func (r *resourceRefreshSchedule) Read(ctx context.Context, req resource.ReadReq
 }
 
 func (r *resourceRefreshSchedule) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().QuickSightConn()
+	conn := r.Meta().QuickSightConn(ctx)
 
 	var config, plan, state resourceRefreshScheduleData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
@@ -370,7 +373,7 @@ func (r *resourceRefreshSchedule) Update(ctx context.Context, req resource.Updat
 }
 
 func (r *resourceRefreshSchedule) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().QuickSightConn()
+	conn := r.Meta().QuickSightConn(ctx)
 
 	var state resourceRefreshScheduleData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -403,7 +406,7 @@ func (r *resourceRefreshSchedule) Delete(ctx context.Context, req resource.Delet
 }
 
 func (r *resourceRefreshSchedule) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func (r *resourceRefreshSchedule) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
@@ -419,7 +422,7 @@ func (r *resourceRefreshSchedule) ValidateConfig(ctx context.Context, req resour
 		return
 	}
 
-	basePath := path.Root("schedule").AtName("schedule_frequency").AtName("refresh_on_day")
+	basePath := path.Root(names.AttrSchedule).AtName("schedule_frequency").AtName("refresh_on_day")
 
 	switch *apiObj.ScheduleFrequency.Interval {
 	case quicksight.RefreshIntervalWeekly:
@@ -620,10 +623,10 @@ func flattenRefreshFrequency(ctx context.Context, apiObject *quicksight.RefreshF
 	diags.Append(d...)
 
 	refreshFrequencyAttrs := map[string]attr.Value{
-		"interval":        flex.StringToFramework(ctx, apiObject.Interval),
-		"time_of_the_day": flex.StringToFramework(ctx, apiObject.TimeOfTheDay),
-		"timezone":        flex.StringToFramework(ctx, apiObject.Timezone),
-		"refresh_on_day":  refreshOnDay,
+		names.AttrInterval: flex.StringToFramework(ctx, apiObject.Interval),
+		"time_of_the_day":  flex.StringToFramework(ctx, apiObject.TimeOfTheDay),
+		"timezone":         flex.StringToFramework(ctx, apiObject.Timezone),
+		"refresh_on_day":   refreshOnDay,
 	}
 
 	objVal, d := types.ObjectValue(refreshFrequencyAttrTypes, refreshFrequencyAttrs)

@@ -82,7 +82,7 @@ EOT
 
 ~> **Note:** If both `template_body` and `template_s3_uri` are specified, AWS Config uses the `template_s3_uri` and ignores the `template_body`.
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required, Forces new resource) The name of the conformance pack. Must begin with a letter and contain from 1 to 256 alphanumeric characters and hyphens.
 * `delivery_s3_bucket` - (Optional) Amazon S3 bucket where AWS Config stores conformance pack templates. Maximum length of 63.
@@ -98,16 +98,25 @@ The `input_parameter` configuration block supports the following arguments:
 * `parameter_name` - (Required) The input key.
 * `parameter_value` - (Required) The input value.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the conformance pack.
 
 ## Import
 
-Config Conformance Packs can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Config Conformance Packs using the `name`. For example:
 
+```terraform
+import {
+  to = aws_config_conformance_pack.example
+  id = "example"
+}
 ```
-$ terraform import aws_config_conformance_pack.example example
+
+Using `terraform import`, import Config Conformance Packs using the `name`. For example:
+
+```console
+% terraform import aws_config_conformance_pack.example example
 ```

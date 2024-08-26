@@ -1,15 +1,18 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ds_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfds "github.com/hashicorp/terraform-provider-aws/internal/service/ds"
@@ -30,7 +33,7 @@ func TestAccDSTrust_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckDirectoryService(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.DSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTrustDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -38,15 +41,15 @@ func TestAccDSTrust_basic(t *testing.T) {
 				Config: testAccTrustConfig_basic(rName, domainName, domainNameOther),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrustExists(ctx, resourceName, &v),
-					resource.TestMatchResourceAttr(resourceName, "id", regexp.MustCompile(`^t-\w{10}`)),
-					resource.TestCheckResourceAttr(resourceName, "conditional_forwarder_ip_addrs.#", "2"),
-					resource.TestCheckResourceAttrPair(resourceName, "directory_id", "aws_directory_service_directory.test", "id"),
+					resource.TestMatchResourceAttr(resourceName, names.AttrID, regexache.MustCompile(`^t-\w{10}`)),
+					resource.TestCheckResourceAttr(resourceName, "conditional_forwarder_ip_addrs.#", acctest.Ct2),
+					resource.TestCheckResourceAttrPair(resourceName, "directory_id", "aws_directory_service_directory.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "remote_domain_name", domainNameOther),
 					resource.TestCheckResourceAttr(resourceName, "selective_auth", string(awstypes.SelectiveAuthDisabled)),
 					resource.TestCheckResourceAttr(resourceName, "trust_direction", string(awstypes.TrustDirectionTwoWay)),
 					resource.TestCheckResourceAttr(resourceName, "trust_password", "Some0therPassword"),
 					resource.TestCheckResourceAttr(resourceName, "trust_type", string(awstypes.TrustTypeForest)),
-					resource.TestCheckResourceAttr(resourceName, "delete_associated_conditional_forwarder", "false"),
+					resource.TestCheckResourceAttr(resourceName, "delete_associated_conditional_forwarder", acctest.CtFalse),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_date_time"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "last_updated_date_time"),
 					resource.TestCheckResourceAttr(resourceName, "trust_state", string(awstypes.TrustStateVerifyFailed)),
@@ -68,6 +71,35 @@ func TestAccDSTrust_basic(t *testing.T) {
 	})
 }
 
+func TestAccDSTrust_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.Trust
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_directory_service_trust.test"
+	domainName := acctest.RandomDomainName()
+	domainNameOther := acctest.RandomDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckDirectoryService(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTrustDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTrustConfig_basic(rName, domainName, domainNameOther),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTrustExists(ctx, resourceName, &v),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfds.ResourceTrust, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccDSTrust_Domain_TrailingPeriod(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Trust
@@ -81,7 +113,7 @@ func TestAccDSTrust_Domain_TrailingPeriod(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckDirectoryService(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.DSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTrustDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -120,7 +152,7 @@ func TestAccDSTrust_twoWayBasic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckDirectoryService(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.DSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTrustDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -164,7 +196,7 @@ func TestAccDSTrust_oneWayBasic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckDirectoryService(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.DSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTrustDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -207,7 +239,7 @@ func TestAccDSTrust_SelectiveAuth(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckDirectoryService(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.DSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTrustDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -264,7 +296,7 @@ func TestAccDSTrust_twoWaySelectiveAuth(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckDirectoryService(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.DSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTrustDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -321,7 +353,7 @@ func TestAccDSTrust_TrustType(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckDirectoryService(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.DSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTrustDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -360,7 +392,7 @@ func TestAccDSTrust_TrustTypeSpecifyDefault(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckDirectoryService(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.DSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTrustDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -392,7 +424,7 @@ func TestAccDSTrust_ConditionalForwarderIPs(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckDirectoryService(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.DSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTrustDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -400,7 +432,7 @@ func TestAccDSTrust_ConditionalForwarderIPs(t *testing.T) {
 				Config: testAccTrustConfig_basic(rName, domainName, domainNameOther),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrustExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "conditional_forwarder_ip_addrs.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "conditional_forwarder_ip_addrs.#", acctest.Ct2),
 				),
 			},
 			{
@@ -417,7 +449,7 @@ func TestAccDSTrust_ConditionalForwarderIPs(t *testing.T) {
 				Config: testAccTrustConfig_ConditionalForwarderIPs(rName, domainName, domainNameOther),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrustExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "conditional_forwarder_ip_addrs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "conditional_forwarder_ip_addrs.#", acctest.Ct1),
 				),
 			},
 			{
@@ -447,7 +479,7 @@ func TestAccDSTrust_deleteAssociatedConditionalForwarder(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckDirectoryService(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.DSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTrustDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -455,9 +487,9 @@ func TestAccDSTrust_deleteAssociatedConditionalForwarder(t *testing.T) {
 				Config: testAccTrustConfig_deleteAssociatedConditionalForwarder(rName, domainName, domainNameOther),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrustExists(ctx, resourceName, &v),
-					resource.TestMatchResourceAttr(resourceName, "id", regexp.MustCompile(`^t-\w{10}`)),
-					resource.TestCheckResourceAttr(resourceName, "conditional_forwarder_ip_addrs.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "delete_associated_conditional_forwarder", "true"),
+					resource.TestMatchResourceAttr(resourceName, names.AttrID, regexache.MustCompile(`^t-\w{10}`)),
+					resource.TestCheckResourceAttr(resourceName, "conditional_forwarder_ip_addrs.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "delete_associated_conditional_forwarder", acctest.CtTrue),
 				),
 			},
 			{
@@ -485,9 +517,9 @@ func testAccCheckTrustExists(ctx context.Context, n string, v *awstypes.Trust) r
 			return fmt.Errorf("No Directory Service Trust ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DSClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DSClient(ctx)
 
-		output, err := tfds.FindTrustByID(ctx, conn, rs.Primary.Attributes["directory_id"], rs.Primary.ID)
+		output, err := tfds.FindTrustByTwoPartKey(ctx, conn, rs.Primary.Attributes["directory_id"], rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -501,14 +533,14 @@ func testAccCheckTrustExists(ctx context.Context, n string, v *awstypes.Trust) r
 
 func testAccCheckTrustDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DSClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_directory_service_trust" {
 				continue
 			}
 
-			_, err := tfds.FindTrustByID(ctx, conn, rs.Primary.Attributes["directory_id"], rs.Primary.ID)
+			_, err := tfds.FindTrustByTwoPartKey(ctx, conn, rs.Primary.Attributes["directory_id"], rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package storagegateway_test
 
 import (
@@ -5,17 +8,16 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/storagegateway"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestDecodeCacheID(t *testing.T) {
+func TestCacheParseResourceID(t *testing.T) {
 	t.Parallel()
 
 	var testCases = []struct {
@@ -57,7 +59,7 @@ func TestDecodeCacheID(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		gatewayARN, diskID, err := tfstoragegateway.DecodeCacheID(tc.Input)
+		gatewayARN, diskID, err := tfstoragegateway.CacheParseResourceID(tc.Input)
 		if tc.ErrCount == 0 && err != nil {
 			t.Fatalf("expected %q not to trigger an error, received: %s", tc.Input, err)
 		}
@@ -81,18 +83,17 @@ func TestAccStorageGatewayCache_fileGateway(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		// Storage Gateway API does not support removing caches,
-		// but we want to ensure other resources are removed.
-		CheckDestroy: testAccCheckGatewayDestroy(ctx),
+		// Storage Gateway API does not support removing caches.
+		CheckDestroy: acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCacheConfig_fileGateway(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCacheExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "disk_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", gatewayResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", gatewayResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -112,18 +113,16 @@ func TestAccStorageGatewayCache_tapeAndVolumeGateway(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		// Storage Gateway API does not support removing caches,
-		// but we want to ensure other resources are removed.
-		CheckDestroy: testAccCheckGatewayDestroy(ctx),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCacheConfig_tapeAndVolumeGateway(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCacheExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "disk_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", gatewayResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", gatewayResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -135,53 +134,33 @@ func TestAccStorageGatewayCache_tapeAndVolumeGateway(t *testing.T) {
 	})
 }
 
-func testAccCheckCacheExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckCacheExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayClient(ctx)
 
-		gatewayARN, diskID, err := tfstoragegateway.DecodeCacheID(rs.Primary.ID)
+		gatewayARN, diskID, err := tfstoragegateway.CacheParseResourceID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		input := &storagegateway.DescribeCacheInput{
-			GatewayARN: aws.String(gatewayARN),
-		}
-
-		output, err := conn.DescribeCacheWithContext(ctx, input)
-
-		if err != nil {
-			return fmt.Errorf("error reading Storage Gateway cache: %s", err)
-		}
-
-		if output == nil || len(output.DiskIds) == 0 {
-			return fmt.Errorf("Storage Gateway cache %q not found", rs.Primary.ID)
-		}
-
-		for _, existingDiskID := range output.DiskIds {
-			if aws.StringValue(existingDiskID) == diskID {
-				return nil
-			}
-		}
-
-		return fmt.Errorf("Storage Gateway cache %q not found", rs.Primary.ID)
+		return tfstoragegateway.FindCacheByTwoPartKey(ctx, conn, gatewayARN, diskID)
 	}
 }
 
 func testAccCacheConfig_fileGateway(rName string) string {
-	return testAccGatewayConfig_typeFileS3(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGatewayConfig_typeFileS3(rName), fmt.Sprintf(`
 resource "aws_ebs_volume" "test" {
   availability_zone = aws_instance.test.availability_zone
   size              = "10"
   type              = "gp2"
 
   tags = {
-    Name = %q
+    Name = %[1]q
   }
 }
 
@@ -211,18 +190,18 @@ resource "aws_storagegateway_cache" "test" {
   disk_id     = data.aws_storagegateway_local_disk.test.id
   gateway_arn = aws_storagegateway_gateway.test.arn
 }
-`, rName)
+`, rName))
 }
 
 func testAccCacheConfig_tapeAndVolumeGateway(rName string) string {
-	return testAccGatewayConfig_typeCached(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGatewayConfig_typeCached(rName), fmt.Sprintf(`
 resource "aws_ebs_volume" "test" {
   availability_zone = aws_instance.test.availability_zone
   size              = "10"
   type              = "gp2"
 
   tags = {
-    Name = %q
+    Name = %[1]q
   }
 }
 
@@ -252,5 +231,5 @@ resource "aws_storagegateway_cache" "test" {
   disk_id     = data.aws_storagegateway_local_disk.test.id
   gateway_arn = aws_storagegateway_gateway.test.arn
 }
-`, rName)
+`, rName))
 }

@@ -1,16 +1,19 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssmcontacts_test
 
 import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testContactChannelDataSource_basic(t *testing.T) {
+func testAccContactChannelDataSource_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -25,7 +28,7 @@ func testContactChannelDataSource_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccContactPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -34,10 +37,10 @@ func testContactChannelDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "activation_status", contactChannelResourceName, "activation_status"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "delivery_address.#", contactChannelResourceName, "delivery_address.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "delivery_address.0.simple_address", contactChannelResourceName, "delivery_address.0.simple_address"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "name", contactChannelResourceName, "name"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "type", contactChannelResourceName, "type"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, contactChannelResourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrType, contactChannelResourceName, names.AttrType),
 					resource.TestCheckResourceAttrPair(dataSourceName, "contact_id", contactChannelResourceName, "contact_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", contactChannelResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, contactChannelResourceName, names.AttrARN),
 				),
 			},
 		},

@@ -28,20 +28,27 @@ The following arguments are required:
 * `destination_arn` - (Required) Amazon Resource Name (ARN) of the log destination.
 * `resource_identifier` - (Required) The ID or Amazon Resource Identifier (ARN) of the service network or service. You must use the ARN if the resources specified in the operation are in different accounts.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the access log subscription.
 * `arn` - Amazon Resource Name (ARN) of the access log subscription.
-* `resource_identifier` - ID of the service network or service.
 * `resource_arn` - Amazon Resource Name (ARN) of the service network or service.
-* `destination_arn` - Amazon Resource Name (ARN) of the log destination.
 
 ## Import
 
-VPC Lattice Access Log Subscription can be imported using the access log subscription ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC Lattice Access Log Subscription using the access log subscription ID. For example:
 
+```terraform
+import {
+  to = aws_vpclattice_access_log_subscription.example
+  id = "rft-8012925589"
+}
 ```
-$ terraform import aws_vpclattice_access_log_subscription.example rft-8012925589
+
+Using `terraform import`, import VPC Lattice Access Log Subscription using the access log subscription ID. For example:
+
+```console
+% terraform import aws_vpclattice_access_log_subscription.example rft-8012925589
 ```

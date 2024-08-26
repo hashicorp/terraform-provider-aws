@@ -62,7 +62,7 @@ resource "aws_ses_event_destination" "sns" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the event destination
 * `configuration_set_name` - (Required) The name of the configuration set
@@ -89,18 +89,26 @@ The following arguments are supported:
 
 * `topic_arn` - (Required) The ARN of the SNS topic
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The SES event destination name.
 * `arn` - The SES event destination ARN.
 
 ## Import
 
-SES event destinations can be imported using `configuration_set_name` together with the event destination's `name`,
-e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SES event destinations using `configuration_set_name` together with the event destination's `name`. For example:
 
+```terraform
+import {
+  to = aws_ses_event_destination.sns
+  id = "some-configuration-set-test/event-destination-sns"
+}
 ```
-$ terraform import aws_ses_event_destination.sns some-configuration-set-test/event-destination-sns
+
+Using `terraform import`, import SES event destinations using `configuration_set_name` together with the event destination's `name`. For example:
+
+```console
+% terraform import aws_ses_event_destination.sns some-configuration-set-test/event-destination-sns
 ```

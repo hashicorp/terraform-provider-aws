@@ -1,0 +1,24 @@
+```release-note:breaking-change
+resource/aws_rds_cluster: `snapshot_identifier` change now properly forces replacement
+```
+
+```release-note:breaking-change
+resource/aws_docdb_cluster: `snapshot_identifier` change now properly forces replacement
+```
+
+```release-note:breaking-change
+resource/aws_neptune_cluster: `snapshot_identifier` change now properly forces replacement
+```
+
+```release-note:note
+resource/aws_rds_cluster: Changes to the `snapshot_identifier` attribute will now trigger a replacement, rather than an in-place update. This corrects the previous behavior which resulted in a successful apply, but did not actually restore the cluster from the designated snapshot.
+```
+
+```release-note:note
+resource/aws_docdb_cluster: Changes to the `snapshot_identifier` attribute will now trigger a replacement, rather than an in-place update. This corrects the previous behavior which resulted in a successful apply, but did not actually restore the cluster from the designated snapshot.
+```
+
+```release-note:note
+resource/aws_neptune_cluster: Changes to the `snapshot_identifier` attribute will now trigger a replacement, rather than an in-place update. This corrects the previous behavior which resulted in a successful apply, but did not actually restore the cluster from the designated snapshot.
+```
+

@@ -1,14 +1,17 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package eks_test
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/eks"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEKSClusterAuthDataSource_basic(t *testing.T) {
@@ -17,13 +20,13 @@ func TestAccEKSClusterAuthDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterAuthDataSourceConfig_basic,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceResourceName, "name", "foobar"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceResourceName, names.AttrName, "foobar"),
 					resource.TestCheckResourceAttrSet(dataSourceResourceName, "token"),
 					testAccCheckClusterAuthToken(dataSourceResourceName),
 				),
@@ -43,7 +46,7 @@ func testAccCheckClusterAuthToken(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No resource ID is set")
 		}
 
-		name := rs.Primary.Attributes["name"]
+		name := rs.Primary.Attributes[names.AttrName]
 		tok := rs.Primary.Attributes["token"]
 		verifier := tfeks.NewVerifier(name)
 		identity, err := verifier.Verify(tok)

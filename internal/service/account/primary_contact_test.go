@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package account_test
 
 import (
@@ -5,9 +8,9 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfaccount "github.com/hashicorp/terraform-provider-aws/internal/service/account"
@@ -22,7 +25,7 @@ func testAccPrimaryContact_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AccountEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AccountServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
@@ -30,7 +33,7 @@ func testAccPrimaryContact_basic(t *testing.T) {
 				Config: testAccPrimaryConfig_basic(rName1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPrimaryContactExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "account_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAccountID, ""),
 					resource.TestCheckResourceAttr(resourceName, "address_line_1", "123 Any Street"),
 					resource.TestCheckResourceAttr(resourceName, "city", "Seattle"),
 					resource.TestCheckResourceAttr(resourceName, "company_name", "Example Corp, Inc."),
@@ -52,7 +55,7 @@ func testAccPrimaryContact_basic(t *testing.T) {
 				Config: testAccPrimaryConfig_basic(rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPrimaryContactExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "account_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAccountID, ""),
 					resource.TestCheckResourceAttr(resourceName, "address_line_1", "123 Any Street"),
 					resource.TestCheckResourceAttr(resourceName, "city", "Seattle"),
 					resource.TestCheckResourceAttr(resourceName, "company_name", "Example Corp, Inc."),
@@ -80,9 +83,9 @@ func testAccCheckPrimaryContactExists(ctx context.Context, n string) resource.Te
 			return fmt.Errorf("No Account Primary Contact ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AccountClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AccountClient(ctx)
 
-		_, err := tfaccount.FindContactInformation(ctx, conn, rs.Primary.Attributes["account_id"])
+		_, err := tfaccount.FindContactInformation(ctx, conn, rs.Primary.Attributes[names.AttrAccountID])
 
 		return err
 	}

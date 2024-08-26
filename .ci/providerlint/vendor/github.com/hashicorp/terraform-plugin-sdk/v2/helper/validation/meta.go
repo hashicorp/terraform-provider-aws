@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package validation
 
 import (
@@ -42,6 +45,18 @@ func All(validators ...schema.SchemaValidateFunc) schema.SchemaValidateFunc {
 	}
 }
 
+// AllDiag returns a SchemaValidateDiagFunc which tests if the provided value
+// passes all provided SchemaValidateDiagFunc
+func AllDiag(validators ...schema.SchemaValidateDiagFunc) schema.SchemaValidateDiagFunc {
+	return func(i interface{}, k cty.Path) diag.Diagnostics {
+		var diags diag.Diagnostics
+		for _, validator := range validators {
+			diags = append(diags, validator(i, k)...)
+		}
+		return diags
+	}
+}
+
 // Any returns a SchemaValidateFunc which tests if the provided value
 // passes any of the provided SchemaValidateFunc
 func Any(validators ...schema.SchemaValidateFunc) schema.SchemaValidateFunc {
@@ -57,6 +72,22 @@ func Any(validators ...schema.SchemaValidateFunc) schema.SchemaValidateFunc {
 			allErrors = append(allErrors, validatorErrors...)
 		}
 		return allWarnings, allErrors
+	}
+}
+
+// AnyDiag returns a SchemaValidateDiagFunc which tests if the provided value
+// passes any of the provided SchemaValidateDiagFunc
+func AnyDiag(validators ...schema.SchemaValidateDiagFunc) schema.SchemaValidateDiagFunc {
+	return func(i interface{}, k cty.Path) diag.Diagnostics {
+		var diags diag.Diagnostics
+		for _, validator := range validators {
+			validatorDiags := validator(i, k)
+			if len(validatorDiags) == 0 {
+				return diag.Diagnostics{}
+			}
+			diags = append(diags, validatorDiags...)
+		}
+		return diags
 	}
 }
 

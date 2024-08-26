@@ -34,15 +34,15 @@ data "aws_connect_user_hierarchy_group" "example" {
 
 ~> **NOTE:** `instance_id` and one of either `name` or `hierarchy_group_id` is required.
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `hierarchy_group_id` - (Optional) Returns information on a specific hierarchy group by hierarchy group id
 * `instance_id` - (Required) Reference to the hosting Amazon Connect Instance
 * `name` - (Optional) Returns information on a specific hierarchy group by name
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all of the arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the hierarchy group.
 * `hierarchy_path` - Block that contains information about the levels in the hierarchy group. The `hierarchy_path` block is documented below.

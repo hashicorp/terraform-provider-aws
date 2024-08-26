@@ -1,24 +1,28 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift
 
 import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/redshift"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/redshift"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_redshift_authentication_profile")
-func ResourceAuthenticationProfile() *schema.Resource {
+// @SDKResource("aws_redshift_authentication_profile", name="Authentication Profile")
+func resourceAuthenticationProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAuthenticationProfileCreate,
 		ReadWithoutTimeout:   resourceAuthenticationProfileRead,
@@ -51,7 +55,7 @@ func ResourceAuthenticationProfile() *schema.Resource {
 
 func resourceAuthenticationProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
 	authProfileName := d.Get("authentication_profile_name").(string)
 
@@ -60,22 +64,23 @@ func resourceAuthenticationProfileCreate(ctx context.Context, d *schema.Resource
 		AuthenticationProfileContent: aws.String(d.Get("authentication_profile_content").(string)),
 	}
 
-	out, err := conn.CreateAuthenticationProfileWithContext(ctx, &input)
+	out, err := conn.CreateAuthenticationProfile(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Redshift Authentication Profile (%s): %s", authProfileName, err)
 	}
 
-	d.SetId(aws.StringValue(out.AuthenticationProfileName))
+	d.SetId(aws.ToString(out.AuthenticationProfileName))
 
 	return append(diags, resourceAuthenticationProfileRead(ctx, d, meta)...)
 }
 
 func resourceAuthenticationProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
-	out, err := FindAuthenticationProfileByID(ctx, conn, d.Id())
+	out, err := findAuthenticationProfileByID(ctx, conn, d.Id())
+
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift Authentication Profile (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -94,14 +99,14 @@ func resourceAuthenticationProfileRead(ctx context.Context, d *schema.ResourceDa
 
 func resourceAuthenticationProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
 	input := &redshift.ModifyAuthenticationProfileInput{
 		AuthenticationProfileName:    aws.String(d.Id()),
 		AuthenticationProfileContent: aws.String(d.Get("authentication_profile_content").(string)),
 	}
 
-	_, err := conn.ModifyAuthenticationProfileWithContext(ctx, input)
+	_, err := conn.ModifyAuthenticationProfile(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "modifying Redshift Authentication Profile (%s): %s", d.Id(), err)
@@ -112,17 +117,17 @@ func resourceAuthenticationProfileUpdate(ctx context.Context, d *schema.Resource
 
 func resourceAuthenticationProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
 	deleteInput := redshift.DeleteAuthenticationProfileInput{
 		AuthenticationProfileName: aws.String(d.Id()),
 	}
 
 	log.Printf("[DEBUG] Deleting Redshift Authentication Profile: %s", d.Id())
-	_, err := conn.DeleteAuthenticationProfileWithContext(ctx, &deleteInput)
+	_, err := conn.DeleteAuthenticationProfile(ctx, &deleteInput)
 
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, redshift.ErrCodeAuthenticationProfileNotFoundFault) {
+		if errs.IsA[*awstypes.AuthenticationProfileNotFoundFault](err) {
 			return diags
 		}
 		return sdkdiag.AppendErrorf(diags, "deleting Redshift Authentication Profile (%s): %s", d.Id(), err)

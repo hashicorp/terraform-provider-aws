@@ -36,9 +36,9 @@ The following arguments are optional:
 * `wait_for_completion` - (Optional) If enabled, the resource will wait for the Network Insights Analysis status to change to `succeeded` or `failed`. Setting this to `false` will skip the process. Default: `true`.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `alternate_path_hints` - Potential intermediate components of a feasible path. Described below.
 * `arn` - ARN of the Network Insights Analysis.
@@ -60,8 +60,17 @@ The `alternate_path_hints` object supports the following:
 
 ## Import
 
-Network Insights Analyses can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Network Insights Analyzes using the `id`. For example:
 
+```terraform
+import {
+  to = aws_ec2_network_insights_analysis.test
+  id = "nia-0462085c957f11a55"
+}
 ```
-$ terraform import aws_ec2_network_insights_analysis.test nia-0462085c957f11a55
+
+Using `terraform import`, import Network Insights Analyzes using the `id`. For example:
+
+```console
+% terraform import aws_ec2_network_insights_analysis.test nia-0462085c957f11a55
 ```

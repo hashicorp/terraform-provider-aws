@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package tags
 
 import (
@@ -1428,6 +1431,15 @@ func TestKeyValueTagsMap(t *testing.T) {
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
+			},
+		},
+		{
+			name: "empty_value",
+			tags: New(ctx, map[string]*string{
+				"key1": testStringPtr(""),
+			}),
+			want: map[string]string{
+				"key1": "",
 			},
 		},
 		{

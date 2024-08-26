@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package logs_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/YakDriver/regexache"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -26,7 +29,7 @@ func TestAccLogsDataProtectionPolicyDocumentDataSource_basic(t *testing.T) {
 				Config: testAccDataProtectionPolicyDocumentDataSourceConfig_basic(logGroupName, targetName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrEquivalentJSON(
-						"data.aws_cloudwatch_log_data_protection_policy_document.test", "json",
+						"data.aws_cloudwatch_log_data_protection_policy_document.test", names.AttrJSON,
 						testAccDataProtectionPolicyDocumentDataSourceConfig_basic_expectedJSON(targetName)),
 				),
 			},
@@ -48,7 +51,7 @@ func TestAccLogsDataProtectionPolicyDocumentDataSource_empty(t *testing.T) {
 				Config: testAccDataProtectionPolicyDocumentDataSourceConfig_empty(logGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrEquivalentJSON(
-						"data.aws_cloudwatch_log_data_protection_policy_document.test", "json",
+						"data.aws_cloudwatch_log_data_protection_policy_document.test", names.AttrJSON,
 						testAccDataProtectionPolicyDocumentDataSourceConfig_empty_expectedJSON),
 				),
 			},
@@ -66,7 +69,7 @@ func TestAccLogsDataProtectionPolicyDocumentDataSource_errorOnBadOrderOfStatemen
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataProtectionPolicyDocumentDataSourceConfig_errorOnBadOrderOfStatements,
-				ExpectError: regexp.MustCompile(`the first policy statement must contain only the audit operation`),
+				ExpectError: regexache.MustCompile(`the first policy statement must contain only the audit operation`),
 			},
 		},
 	})
@@ -82,7 +85,7 @@ func TestAccLogsDataProtectionPolicyDocumentDataSource_errorOnNoOperation(t *tes
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataProtectionPolicyDocumentDataSourceConfig_errorOnNoOperation,
-				ExpectError: regexp.MustCompile(`the second policy statement must contain only the deidentify operation`),
+				ExpectError: regexache.MustCompile(`the second policy statement must contain only the deidentify operation`),
 			},
 		},
 	})
@@ -169,9 +172,9 @@ resource "aws_kinesis_firehose_delivery_stream" "audit" {
   depends_on = [aws_iam_role_policy.firehose]
 
   name        = %[2]q
-  destination = "s3"
+  destination = "extended_s3"
 
-  s3_configuration {
+  extended_s3_configuration {
     role_arn   = aws_iam_role.firehose.arn
     bucket_arn = aws_s3_bucket.audit.arn
   }

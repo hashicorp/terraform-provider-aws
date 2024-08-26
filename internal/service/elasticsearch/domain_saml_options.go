@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elasticsearch
 
 import (
@@ -5,18 +8,21 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	elasticsearch "github.com/aws/aws-sdk-go-v2/service/elasticsearchservice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticsearchservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_elasticsearch_domain_saml_options")
-func ResourceDomainSAMLOptions() *schema.Resource {
+// @SDKResource("aws_elasticsearch_domain_saml_options", name="Domain SAML Options")
+func resourceDomainSAMLOptions() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDomainSAMLOptionsPut,
 		ReadWithoutTimeout:   resourceDomainSAMLOptionsRead,
@@ -24,10 +30,7 @@ func ResourceDomainSAMLOptions() *schema.Resource {
 		DeleteWithoutTimeout: resourceDomainSAMLOptionsDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				d.Set("domain_name", d.Id())
-				return []*schema.ResourceData{d}, nil
-			},
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -36,7 +39,7 @@ func ResourceDomainSAMLOptions() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"domain_name": {
+			names.AttrDomainName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -47,7 +50,7 @@ func ResourceDomainSAMLOptions() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  true,
@@ -104,20 +107,44 @@ func ResourceDomainSAMLOptions() *schema.Resource {
 		},
 	}
 }
-func domainSamlOptionsDiffSupress(k, old, new string, d *schema.ResourceData) bool {
-	if v, ok := d.Get("saml_options").([]interface{}); ok && len(v) > 0 {
-		if enabled, ok := v[0].(map[string]interface{})["enabled"].(bool); ok && !enabled {
-			return true
-		}
+
+func resourceDomainSAMLOptionsPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElasticsearchClient(ctx)
+
+	domainName := d.Get(names.AttrDomainName).(string)
+	input := &elasticsearch.UpdateElasticsearchDomainConfigInput{
+		AdvancedSecurityOptions: &awstypes.AdvancedSecurityOptionsInput{
+			SAMLOptions: expandESSAMLOptions(d.Get("saml_options").([]interface{})),
+		},
+		DomainName: aws.String(domainName),
 	}
-	return false
+
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ValidationException](ctx, propagationTimeout,
+		func() (interface{}, error) {
+			return conn.UpdateElasticsearchDomainConfig(ctx, input)
+		}, "A change/update is in progress")
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting Elasticsearch Domain SAML Options (%s): %s", d.Id(), err)
+	}
+
+	if d.IsNewResource() {
+		d.SetId(domainName)
+	}
+
+	if _, err := waitDomainConfigUpdated(ctx, conn, d.Get(names.AttrDomainName).(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Elasticsearch Domain (%s) Config update: %s", d.Id(), err)
+	}
+
+	return append(diags, resourceDomainSAMLOptionsRead(ctx, d, meta)...)
 }
 
 func resourceDomainSAMLOptionsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticsearchConn()
+	conn := meta.(*conns.AWSClient).ElasticsearchClient(ctx)
 
-	ds, err := FindDomainByName(ctx, conn, d.Get("domain_name").(string))
+	output, err := findDomainSAMLOptionByDomainName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Elasticsearch Domain SAML Options (%s) not found, removing from state", d.Id())
@@ -129,66 +156,58 @@ func resourceDomainSAMLOptionsRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "reading Elasticsearch Domain SAML Options (%s): %s", d.Id(), err)
 	}
 
-	log.Printf("[DEBUG] Received Elasticsearch domain: %s", ds)
-
-	options := ds.AdvancedSecurityOptions.SAMLOptions
-
-	if err := d.Set("saml_options", flattenESSAMLOptions(d, options)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting saml_options for Elasticsearch Configuration: %s", err)
+	d.Set(names.AttrDomainName, d.Id())
+	if err := d.Set("saml_options", flattenSAMLOptionsOutput(d, output)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting saml_options: %s", err)
 	}
 
 	return diags
-}
-
-func resourceDomainSAMLOptionsPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticsearchConn()
-
-	domainName := d.Get("domain_name").(string)
-	config := elasticsearch.AdvancedSecurityOptionsInput{}
-	config.SetSAMLOptions(expandESSAMLOptions(d.Get("saml_options").([]interface{})))
-
-	log.Printf("[DEBUG] Updating Elasticsearch domain SAML Options %s", config)
-
-	_, err := conn.UpdateElasticsearchDomainConfigWithContext(ctx, &elasticsearch.UpdateElasticsearchDomainConfigInput{
-		DomainName:              aws.String(domainName),
-		AdvancedSecurityOptions: &config,
-	})
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting Elasticsearch Domain SAML Options (%s): %s", d.Id(), err)
-	}
-
-	d.SetId(domainName)
-
-	if err := waitForDomainUpdate(ctx, conn, d.Get("domain_name").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting Elasticsearch Domain SAML Options (%s): waiting for completion: %s", d.Id(), err)
-	}
-
-	return append(diags, resourceDomainSAMLOptionsRead(ctx, d, meta)...)
 }
 
 func resourceDomainSAMLOptionsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticsearchConn()
+	conn := meta.(*conns.AWSClient).ElasticsearchClient(ctx)
 
-	domainName := d.Get("domain_name").(string)
-	config := elasticsearch.AdvancedSecurityOptionsInput{}
-	config.SetSAMLOptions(nil)
-
-	_, err := conn.UpdateElasticsearchDomainConfigWithContext(ctx, &elasticsearch.UpdateElasticsearchDomainConfigInput{
-		DomainName:              aws.String(domainName),
-		AdvancedSecurityOptions: &config,
+	log.Printf("[DEBUG] Deleting Elasticsearch Domain SAML Options: %s", d.Id())
+	_, err := conn.UpdateElasticsearchDomainConfig(ctx, &elasticsearch.UpdateElasticsearchDomainConfigInput{
+		AdvancedSecurityOptions: &awstypes.AdvancedSecurityOptionsInput{},
+		DomainName:              aws.String(d.Id()),
 	})
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "Domain is being deleted") {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Elasticsearch Domain SAML Options (%s): %s", d.Id(), err)
 	}
 
-	log.Printf("[DEBUG] Waiting for Elasticsearch domain SAML Options %q to be deleted", d.Get("domain_name").(string))
-
-	if err := waitForDomainUpdate(ctx, conn, d.Get("domain_name").(string), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Elasticsearch Domain SAML Options (%s): waiting for completion: %s", d.Id(), err)
+	if _, err := waitDomainConfigUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Elasticsearch Domain (%s) Config update: %s", d.Id(), err)
 	}
 
 	return diags
+}
+
+func domainSamlOptionsDiffSupress(k, old, new string, d *schema.ResourceData) bool {
+	if v, ok := d.Get("saml_options").([]interface{}); ok && len(v) > 0 {
+		if enabled, ok := v[0].(map[string]interface{})[names.AttrEnabled].(bool); ok && !enabled {
+			return true
+		}
+	}
+	return false
+}
+
+func findDomainSAMLOptionByDomainName(ctx context.Context, conn *elasticsearch.Client, name string) (*awstypes.SAMLOptionsOutput, error) {
+	output, err := findDomainByName(ctx, conn, name)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output.AdvancedSecurityOptions == nil || output.AdvancedSecurityOptions.SAMLOptions == nil {
+		return nil, tfresource.NewEmptyResultError(name)
+	}
+
+	return output.AdvancedSecurityOptions.SAMLOptions, nil
 }

@@ -1,20 +1,27 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package pinpoint
 
 import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/pinpoint"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/pinpoint"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpoint/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_pinpoint_baidu_channel")
-func ResourceBaiduChannel() *schema.Resource {
+// @SDKResource("aws_pinpoint_baidu_channel", name="Baidu Channel")
+func resourceBaiduChannel() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBaiduChannelUpsert,
 		ReadWithoutTimeout:   resourceBaiduChannelRead,
@@ -25,12 +32,12 @@ func ResourceBaiduChannel() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"application_id": {
+			names.AttrApplicationID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"enabled": {
+			names.AttrEnabled: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
@@ -40,7 +47,7 @@ func ResourceBaiduChannel() *schema.Resource {
 				Required:  true,
 				Sensitive: true,
 			},
-			"secret_key": {
+			names.AttrSecretKey: {
 				Type:      schema.TypeString,
 				Required:  true,
 				Sensitive: true,
@@ -51,22 +58,22 @@ func ResourceBaiduChannel() *schema.Resource {
 
 func resourceBaiduChannelUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).PinpointConn()
+	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
-	applicationId := d.Get("application_id").(string)
+	applicationId := d.Get(names.AttrApplicationID).(string)
 
-	params := &pinpoint.BaiduChannelRequest{}
+	params := &awstypes.BaiduChannelRequest{}
 
-	params.Enabled = aws.Bool(d.Get("enabled").(bool))
+	params.Enabled = aws.Bool(d.Get(names.AttrEnabled).(bool))
 	params.ApiKey = aws.String(d.Get("api_key").(string))
-	params.SecretKey = aws.String(d.Get("secret_key").(string))
+	params.SecretKey = aws.String(d.Get(names.AttrSecretKey).(string))
 
 	req := pinpoint.UpdateBaiduChannelInput{
 		ApplicationId:       aws.String(applicationId),
 		BaiduChannelRequest: params,
 	}
 
-	_, err := conn.UpdateBaiduChannelWithContext(ctx, &req)
+	_, err := conn.UpdateBaiduChannel(ctx, &req)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Pinpoint Baidu Channel for application %s: %s", applicationId, err)
 	}
@@ -78,25 +85,24 @@ func resourceBaiduChannelUpsert(ctx context.Context, d *schema.ResourceData, met
 
 func resourceBaiduChannelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).PinpointConn()
+	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
 	log.Printf("[INFO] Reading Pinpoint Baidu Channel for application %s", d.Id())
 
-	output, err := conn.GetBaiduChannelWithContext(ctx, &pinpoint.GetBaiduChannelInput{
-		ApplicationId: aws.String(d.Id()),
-	})
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
-			log.Printf("[WARN] Pinpoint Baidu Channel for application %s not found, removing from state", d.Id())
-			d.SetId("")
-			return diags
-		}
+	output, err := findBaiduChannelByApplicationId(ctx, conn, d.Id())
 
-		return sdkdiag.AppendErrorf(diags, "getting Pinpoint Baidu Channel for application %s: %s", d.Id(), err)
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Pinpoint Baidu Channel (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
 	}
 
-	d.Set("application_id", output.BaiduChannelResponse.ApplicationId)
-	d.Set("enabled", output.BaiduChannelResponse.Enabled)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Pinpoint Baidu Channel (%s): %s", d.Id(), err)
+	}
+
+	d.Set(names.AttrApplicationID, output.ApplicationId)
+	d.Set(names.AttrEnabled, output.Enabled)
 	// ApiKey and SecretKey are never returned
 
 	return diags
@@ -104,14 +110,14 @@ func resourceBaiduChannelRead(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceBaiduChannelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).PinpointConn()
+	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Pinpoint Baidu Channel for application %s", d.Id())
-	_, err := conn.DeleteBaiduChannelWithContext(ctx, &pinpoint.DeleteBaiduChannelInput{
+	_, err := conn.DeleteBaiduChannel(ctx, &pinpoint.DeleteBaiduChannelInput{
 		ApplicationId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
 	}
 
@@ -119,4 +125,27 @@ func resourceBaiduChannelDelete(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "deleting Pinpoint Baidu Channel for application %s: %s", d.Id(), err)
 	}
 	return diags
+}
+
+func findBaiduChannelByApplicationId(ctx context.Context, conn *pinpoint.Client, applicationId string) (*awstypes.BaiduChannelResponse, error) {
+	input := &pinpoint.GetBaiduChannelInput{
+		ApplicationId: aws.String(applicationId),
+	}
+
+	output, err := conn.GetBaiduChannel(ctx, input)
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.BaiduChannelResponse == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.BaiduChannelResponse, nil
 }

@@ -31,22 +31,31 @@ resource "aws_lightsail_lb_stickiness_policy" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `lb_name` - (Required) The name of the load balancer to which you want to enable session stickiness.
 * `cookie_duration` - (Required) The cookie duration in seconds. This determines the length of the session stickiness.
 * `enabled` - (Required) - The Session Stickiness state of the load balancer. `true` to activate session stickiness or `false` to deactivate session stickiness.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name used for this load balancer (matches `lb_name`).
 
 ## Import
 
-`aws_lightsail_lb_stickiness_policy` can be imported by using the `lb_name` attribute, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_lightsail_lb_stickiness_policy` using the `lb_name` attribute. For example:
 
+```terraform
+import {
+  to = aws_lightsail_lb_stickiness_policy.test
+  id = "example-load-balancer"
+}
 ```
-$ terraform import aws_lightsail_lb_stickiness_policy.test example-load-balancer
+
+Using `terraform import`, import `aws_lightsail_lb_stickiness_policy` using the `lb_name` attribute. For example:
+
+```console
+% terraform import aws_lightsail_lb_stickiness_policy.test example-load-balancer
 ```

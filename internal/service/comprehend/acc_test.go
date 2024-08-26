@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package comprehend_test
 
 import (
@@ -12,7 +15,7 @@ import (
 )
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ComprehendClient()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ComprehendClient(ctx)
 
 	input := &comprehend.ListEntityRecognizersInput{}
 

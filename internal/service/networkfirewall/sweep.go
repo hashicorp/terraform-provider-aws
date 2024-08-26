@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package networkfirewall
 
@@ -7,14 +7,14 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/networkfirewall"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_networkfirewall_firewall_policy", &resource.Sweeper{
 		Name: "aws_networkfirewall_firewall_policy",
 		F:    sweepFirewallPolicies,
@@ -47,40 +47,37 @@ func init() {
 
 func sweepFirewallPolicies(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).NetworkFirewallConn()
+	conn := client.NetworkFirewallClient(ctx)
 	input := &networkfirewall.ListFirewallPoliciesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListFirewallPoliciesPagesWithContext(ctx, input, func(page *networkfirewall.ListFirewallPoliciesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := networkfirewall.NewListFirewallPoliciesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping NetworkFirewall Firewall Policy sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing NetworkFirewall Firewall Policies (%s): %w", region, err)
 		}
 
 		for _, v := range page.FirewallPolicies {
-			r := ResourceFirewallPolicy()
+			r := resourceFirewallPolicy()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.Arn))
+			d.SetId(aws.ToString(v.Arn))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping NetworkFirewall Firewall Policy sweep for %s: %s", region, err)
-		return nil
 	}
 
-	if err != nil {
-		return fmt.Errorf("error listing NetworkFirewall Firewall Policies (%s): %w", region, err)
-	}
-
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping NetworkFirewall Firewall Policies (%s): %w", region, err)
@@ -91,40 +88,37 @@ func sweepFirewallPolicies(region string) error {
 
 func sweepFirewalls(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).NetworkFirewallConn()
+	conn := client.NetworkFirewallClient(ctx)
 	input := &networkfirewall.ListFirewallsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListFirewallsPagesWithContext(ctx, input, func(page *networkfirewall.ListFirewallsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := networkfirewall.NewListFirewallsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping NetworkFirewall Firewall sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing NetworkFirewall Firewalls (%s): %w", region, err)
 		}
 
 		for _, v := range page.Firewalls {
-			r := ResourceFirewall()
+			r := resourceFirewall()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.FirewallArn))
+			d.SetId(aws.ToString(v.FirewallArn))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping NetworkFirewall Firewall sweep for %s: %s", region, err)
-		return nil
 	}
 
-	if err != nil {
-		return fmt.Errorf("error listing NetworkFirewall Firewalls (%s): %w", region, err)
-	}
-
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping NetworkFirewall Firewalls (%s): %w", region, err)
@@ -135,40 +129,37 @@ func sweepFirewalls(region string) error {
 
 func sweepLoggingConfigurations(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).NetworkFirewallConn()
+	conn := client.NetworkFirewallClient(ctx)
 	input := &networkfirewall.ListFirewallsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListFirewallsPagesWithContext(ctx, input, func(page *networkfirewall.ListFirewallsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := networkfirewall.NewListFirewallsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping NetworkFirewall Logging Configuration sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing NetworkFirewall Firewalls (%s): %w", region, err)
 		}
 
 		for _, v := range page.Firewalls {
-			r := ResourceLoggingConfiguration()
+			r := resourceLoggingConfiguration()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.FirewallArn))
+			d.SetId(aws.ToString(v.FirewallArn))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping NetworkFirewall Logging Configuration sweep for %s: %s", region, err)
-		return nil
 	}
 
-	if err != nil {
-		return fmt.Errorf("error listing NetworkFirewall Firewalls (%s): %w", region, err)
-	}
-
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping NetworkFirewall Logging Configurations (%s): %w", region, err)
@@ -179,40 +170,37 @@ func sweepLoggingConfigurations(region string) error {
 
 func sweepRuleGroups(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).NetworkFirewallConn()
+	conn := client.NetworkFirewallClient(ctx)
 	input := &networkfirewall.ListRuleGroupsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListRuleGroupsPagesWithContext(ctx, input, func(page *networkfirewall.ListRuleGroupsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := networkfirewall.NewListRuleGroupsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping NetworkFirewall Rule Group sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing NetworkFirewall Rule Groups (%s): %w", region, err)
 		}
 
 		for _, v := range page.RuleGroups {
-			r := ResourceRuleGroup()
+			r := resourceRuleGroup()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.Arn))
+			d.SetId(aws.ToString(v.Arn))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping NetworkFirewall Rule Group sweep for %s: %s", region, err)
-		return nil
 	}
 
-	if err != nil {
-		return fmt.Errorf("error listing NetworkFirewall Rule Groups (%s): %w", region, err)
-	}
-
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping NetworkFirewall Rule Groups (%s): %w", region, err)

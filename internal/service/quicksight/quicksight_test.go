@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package quicksight_test
 
 import (
@@ -11,8 +14,8 @@ func TestAccQuickSight_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"AccountSubscription": {
-			"basic":      testAccAccountSubscription_basic,
-			"disappears": testAccAccountSubscription_disappears,
+			acctest.CtBasic:      testAccAccountSubscription_basic,
+			acctest.CtDisappears: testAccAccountSubscription_disappears,
 		},
 	}
 
