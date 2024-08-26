@@ -10,56 +10,58 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_elastic_beanstalk_configuration_template")
-func ResourceConfigurationTemplate() *schema.Resource {
+// @SDKResource("aws_elastic_beanstalk_configuration_template", name="Configuration Template")
+func resourceConfigurationTemplate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfigurationTemplateCreate,
 		ReadWithoutTimeout:   resourceConfigurationTemplateRead,
 		UpdateWithoutTimeout: resourceConfigurationTemplateUpdate,
 		DeleteWithoutTimeout: resourceConfigurationTemplateDelete,
 
-		Schema: map[string]*schema.Schema{
-			"application": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"environment_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"setting": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     settingSchema(),
-				Set:      optionSettingValueHash,
-			},
-			"solution_stack_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"application": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"environment_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"setting": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem:     settingSchema(),
+					Set:      optionSettingValueHash,
+				},
+				"solution_stack_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }
@@ -71,7 +73,6 @@ func resourceConfigurationTemplateCreate(ctx context.Context, d *schema.Resource
 	name := d.Get(names.AttrName).(string)
 	input := &elasticbeanstalk.CreateConfigurationTemplateInput{
 		ApplicationName: aws.String(d.Get("application").(string)),
-		OptionSettings:  gatherOptionSettings(d),
 		TemplateName:    aws.String(name),
 	}
 
@@ -81,6 +82,10 @@ func resourceConfigurationTemplateCreate(ctx context.Context, d *schema.Resource
 
 	if attr, ok := d.GetOk("environment_id"); ok {
 		input.EnvironmentId = aws.String(attr.(string))
+	}
+
+	if v, ok := d.GetOk("setting"); ok && v.(*schema.Set).Len() > 0 {
+		input.OptionSettings = expandConfigurationOptionSettings(v.(*schema.Set))
 	}
 
 	if attr, ok := d.GetOk("solution_stack_name"); ok {
@@ -102,7 +107,7 @@ func resourceConfigurationTemplateRead(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkClient(ctx)
 
-	settings, err := FindConfigurationSettingsByTwoPartKey(ctx, conn, d.Get("application").(string), d.Id())
+	settings, err := findConfigurationSettingsByTwoPartKey(ctx, conn, d.Get("application").(string), d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Elastic Beanstalk Configuration Template (%s) not found, removing from state", d.Id())
@@ -142,18 +147,8 @@ func resourceConfigurationTemplateUpdate(ctx context.Context, d *schema.Resource
 
 	if d.HasChange("setting") {
 		o, n := d.GetChange("setting")
-		if o == nil {
-			o = new(schema.Set)
-		}
-		if n == nil {
-			n = new(schema.Set)
-		}
-
-		os := o.(*schema.Set)
-		ns := n.(*schema.Set)
-
-		rm := extractOptionSettings(os.Difference(ns))
-		add := extractOptionSettings(ns.Difference(os))
+		os, ns := o.(*schema.Set), n.(*schema.Set)
+		add, del := expandConfigurationOptionSettings(ns.Difference(os)), expandConfigurationOptionSettings(os.Difference(ns))
 
 		// Additions and removals of options are done in a single API call, so we
 		// can't do our normal "remove these" and then later "add these", re-adding
@@ -164,10 +159,9 @@ func resourceConfigurationTemplateUpdate(ctx context.Context, d *schema.Resource
 		// difference, and we build up a slice of settings not found in the "add"
 		// set
 		var remove []awstypes.ConfigurationOptionSetting
-		for _, r := range rm {
+		for _, r := range del {
 			for _, a := range add {
-				if aws.ToString(r.Namespace) == aws.ToString(a.Namespace) &&
-					aws.ToString(r.OptionName) == aws.ToString(a.OptionName) {
+				if aws.ToString(r.Namespace) == aws.ToString(a.Namespace) && aws.ToString(r.OptionName) == aws.ToString(a.OptionName) {
 					continue
 				}
 				remove = append(remove, r)
@@ -180,10 +174,10 @@ func resourceConfigurationTemplateUpdate(ctx context.Context, d *schema.Resource
 			TemplateName:    aws.String(d.Id()),
 		}
 
-		for _, elem := range remove {
+		for _, v := range remove {
 			input.OptionsToRemove = append(input.OptionsToRemove, awstypes.OptionSpecification{
-				Namespace:  elem.Namespace,
-				OptionName: elem.OptionName,
+				Namespace:  v.Namespace,
+				OptionName: v.OptionName,
 			})
 		}
 
@@ -207,11 +201,9 @@ func resourceConfigurationTemplateDelete(ctx context.Context, d *schema.Resource
 		TemplateName:    aws.String(d.Id()),
 	})
 
-	errInvalidParameter := &invalidParameterValueError{err}
-
-	if errs.IsAErrorMessageContains[*invalidParameterValueError](errInvalidParameter, "No Configuration Template named") ||
-		errs.IsAErrorMessageContains[*invalidParameterValueError](errInvalidParameter, "No Application named") ||
-		errs.IsAErrorMessageContains[*invalidParameterValueError](errInvalidParameter, "No Platform named") {
+	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "No Configuration Template named") ||
+		tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "No Application named") ||
+		tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "No Platform named") {
 		return diags
 	}
 
@@ -222,19 +214,31 @@ func resourceConfigurationTemplateDelete(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func FindConfigurationSettingsByTwoPartKey(ctx context.Context, conn *elasticbeanstalk.Client, applicationName, templateName string) (*awstypes.ConfigurationSettingsDescription, error) {
+func findConfigurationSettingsByTwoPartKey(ctx context.Context, conn *elasticbeanstalk.Client, applicationName, templateName string) (*awstypes.ConfigurationSettingsDescription, error) {
 	input := &elasticbeanstalk.DescribeConfigurationSettingsInput{
 		ApplicationName: aws.String(applicationName),
 		TemplateName:    aws.String(templateName),
 	}
 
+	return findConfigurationSettings(ctx, conn, input)
+}
+
+func findConfigurationSettings(ctx context.Context, conn *elasticbeanstalk.Client, input *elasticbeanstalk.DescribeConfigurationSettingsInput) (*awstypes.ConfigurationSettingsDescription, error) {
+	output, err := findConfigurationSettingses(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findConfigurationSettingses(ctx context.Context, conn *elasticbeanstalk.Client, input *elasticbeanstalk.DescribeConfigurationSettingsInput) ([]awstypes.ConfigurationSettingsDescription, error) {
 	output, err := conn.DescribeConfigurationSettings(ctx, input)
 
-	errInvalidParameter := &invalidParameterValueError{err}
-
-	if errs.IsAErrorMessageContains[*invalidParameterValueError](errInvalidParameter, "No Configuration Template named") ||
-		errs.IsAErrorMessageContains[*invalidParameterValueError](errInvalidParameter, "No Application named") ||
-		errs.IsAErrorMessageContains[*invalidParameterValueError](errInvalidParameter, "No Platform named") {
+	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "No Configuration Template named") ||
+		tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "No Application named") ||
+		tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "No Platform named") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -245,33 +249,9 @@ func FindConfigurationSettingsByTwoPartKey(ctx context.Context, conn *elasticbea
 		return nil, err
 	}
 
-	if output == nil || len(output.ConfigurationSettings) == 0 {
+	if output == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	if count := len(output.ConfigurationSettings); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return &output.ConfigurationSettings[0], nil
-}
-
-func gatherOptionSettings(d *schema.ResourceData) []awstypes.ConfigurationOptionSetting {
-	optionSettingsSet, ok := d.Get("setting").(*schema.Set)
-	if !ok || optionSettingsSet == nil {
-		optionSettingsSet = new(schema.Set)
-	}
-
-	return extractOptionSettings(optionSettingsSet)
-}
-
-type invalidParameterValueError struct {
-	error
-}
-
-func (e *invalidParameterValueError) ErrorMessage() string {
-	if e == nil || e.error == nil {
-		return ""
-	}
-	return e.Error()
+	return output.ConfigurationSettings, nil
 }
