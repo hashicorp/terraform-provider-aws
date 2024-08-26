@@ -124,12 +124,12 @@ linters:
     - asciicheck
     - containedctx
     - contextcheck
+    - copyloopvar
     - dogsled
     - durationcheck
     - errcheck
     - errname
     - errorlint
-    - exportloopref
     - goconst
     - gocritic
     - gofmt
@@ -160,10 +160,17 @@ linters:
     # - thelper
 
 linters-settings:
+  copyloopvar:
+    check-alias: true
   dogsled:
     max-blank-identifiers: 3
   errcheck:
-    ignore: github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema:ForceNew|Set,fmt:.*,io:Close
+    ignore: github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema:ForceNew|Set,io:Close
+    # "ignore" is deprecated but "exclude-functions" doesn't seem to work or the syntax is non-obvious.
+    # https://github.com/kisielk/errcheck#excluding-functions
+    #exclude-functions:
+    #  - (github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema.ResourceData).Set
+    #  - io:Close
   errorlint:
     errorf: false
   goconst:
@@ -173,10 +180,10 @@ linters-settings:
     enabled-tags:
       - diagnostic
     disabled-tags:
-      - style
-      - performance
       - experimental
       - opinionated
+      - performance
+      - style
   mnd:
     checks:
       - argument
@@ -221,7 +228,7 @@ linters-settings:
       - tparallel
       - unparam
   predeclared:
-    ignore: cap,close,copy,delete,len,new
+    ignore: cap,close,copy,delete,len,new,min,max
   revive:
     # Recommended configuration.
     # See https://github.com/mgechev/revive#recommended-configuration.
