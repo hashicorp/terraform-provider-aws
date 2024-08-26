@@ -8,9 +8,11 @@ var (
 	ResourceApplication           = resourceApplication
 	ResourceApplicationVersion    = resourceApplicationVersion
 	ResourceConfigurationTemplate = resourceConfigurationTemplate
+	ResourceEnvironment           = resourceEnvironment
 
 	FindApplicationByName                 = findApplicationByName
 	FindApplicationVersionByTwoPartKey    = findApplicationVersionByTwoPartKey
 	FindConfigurationSettingsByTwoPartKey = findConfigurationSettingsByTwoPartKey
+	FindEnvironmentByID                   = findEnvironmentByID
 	HostedZoneIDs                         = hostedZoneIDs
 )

@@ -65,7 +65,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Configuration Template",
 		},
 		{
-			Factory:  ResourceEnvironment,
+			Factory:  resourceEnvironment,
 			TypeName: "aws_elastic_beanstalk_environment",
 			Name:     "Environment",
 			Tags: &types.ServicePackageResourceTags{

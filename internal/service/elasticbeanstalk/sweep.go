@@ -83,7 +83,7 @@ func sweepEnvironments(region string) error {
 		}
 
 		for _, v := range page.Environments {
-			r := ResourceEnvironment()
+			r := resourceEnvironment()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.EnvironmentId))
 			d.Set("poll_interval", "10s")
