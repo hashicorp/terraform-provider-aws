@@ -4,45 +4,45 @@
 package quicksight
 
 import (
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/quicksight/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
-func expandResourcePermissions(tfList []interface{}) []types.ResourcePermission {
-	permissions := make([]types.ResourcePermission, len(tfList))
+func expandResourcePermissions(tfList []interface{}) []*quicksight.ResourcePermission {
+	permissions := make([]*quicksight.ResourcePermission, len(tfList))
 
 	for i, tfListRaw := range tfList {
 		tfMap := tfListRaw.(map[string]interface{})
 
-		permission := &types.ResourcePermission{
-			Actions:   flex.ExpandStringValueSet(tfMap["actions"].(*schema.Set)),
+		permission := &quicksight.ResourcePermission{
+			Actions:   flex.ExpandStringSet(tfMap["actions"].(*schema.Set)),
 			Principal: aws.String(tfMap["principal"].(string)),
 		}
 
-		permissions[i] = *permission
+		permissions[i] = permission
 	}
 	return permissions
 }
 
-func DiffPermissions(o, n []interface{}) ([]types.ResourcePermission, []types.ResourcePermission) {
+func DiffPermissions(o, n []interface{}) ([]*quicksight.ResourcePermission, []*quicksight.ResourcePermission) {
 	old := expandResourcePermissions(o)
 	new := expandResourcePermissions(n)
 
-	var toGrant, toRevoke []types.ResourcePermission
+	var toGrant, toRevoke []*quicksight.ResourcePermission
 
 	for _, op := range old {
 		found := false
 
 		for _, np := range new {
-			if aws.ToString(np.Principal) != aws.ToString(op.Principal) {
+			if aws.StringValue(np.Principal) != aws.StringValue(op.Principal) {
 				continue
 			}
 
 			found = true
-			newActions := flex.FlattenStringValueSet(np.Actions)
-			oldActions := flex.FlattenStringValueSet(op.Actions)
+			newActions := flex.FlattenStringSet(np.Actions)
+			oldActions := flex.FlattenStringSet(op.Actions)
 
 			if newActions.Equal(oldActions) {
 				break
@@ -51,15 +51,15 @@ func DiffPermissions(o, n []interface{}) ([]types.ResourcePermission, []types.Re
 			toRemove := oldActions.Difference(newActions)
 
 			if toRemove.Len() > 0 {
-				toRevoke = append(toRevoke, types.ResourcePermission{
-					Actions:   flex.ExpandStringValueSet(toRemove),
+				toRevoke = append(toRevoke, &quicksight.ResourcePermission{
+					Actions:   flex.ExpandStringSet(toRemove),
 					Principal: np.Principal,
 				})
 			}
 
 			if newActions.Len() > 0 {
-				toGrant = append(toGrant, types.ResourcePermission{
-					Actions:   flex.ExpandStringValueSet(newActions),
+				toGrant = append(toGrant, &quicksight.ResourcePermission{
+					Actions:   flex.ExpandStringSet(newActions),
 					Principal: np.Principal,
 				})
 			}
@@ -74,7 +74,7 @@ func DiffPermissions(o, n []interface{}) ([]types.ResourcePermission, []types.Re
 		found := false
 
 		for _, op := range old {
-			if aws.ToString(np.Principal) == aws.ToString(op.Principal) {
+			if aws.StringValue(np.Principal) == aws.StringValue(op.Principal) {
 				found = true
 				break
 			}
@@ -88,7 +88,7 @@ func DiffPermissions(o, n []interface{}) ([]types.ResourcePermission, []types.Re
 	return toGrant, toRevoke
 }
 
-func flattenPermissions(perms []types.ResourcePermission) []interface{} {
+func flattenPermissions(perms []*quicksight.ResourcePermission) []interface{} {
 	if len(perms) == 0 {
 		return []interface{}{}
 	}
@@ -96,18 +96,18 @@ func flattenPermissions(perms []types.ResourcePermission) []interface{} {
 	values := make([]interface{}, 0)
 
 	for _, p := range perms {
-		if p.Actions == nil && p.Principal == nil {
+		if p == nil {
 			continue
 		}
 
 		perm := make(map[string]interface{})
 
 		if p.Principal != nil {
-			perm["principal"] = p.Principal
+			perm["principal"] = aws.StringValue(p.Principal)
 		}
 
 		if p.Actions != nil {
-			perm["actions"] = p.Actions
+			perm["actions"] = flex.FlattenStringList(p.Actions)
 		}
 
 		values = append(values, perm)

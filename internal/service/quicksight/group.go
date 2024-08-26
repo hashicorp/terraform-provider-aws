@@ -10,14 +10,13 @@ import (
 	"strings"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/quicksight"
-	"github.com/aws/aws-sdk-go-v2/service/quicksight/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/quicksight"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
@@ -67,9 +66,9 @@ func ResourceGroup() *schema.Resource {
 					Optional: true,
 					ForceNew: true,
 					Default:  DefaultGroupNamespace,
-					ValidateDiagFunc: validation.AllDiag(
-						validation.ToDiagFunc(validation.StringLenBetween(1, 63)),
-						validation.ToDiagFunc(validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "must contain only alphanumeric characters, hyphens, underscores, and periods")),
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 63),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "must contain only alphanumeric characters, hyphens, underscores, and periods"),
 					),
 				},
 			}
@@ -79,7 +78,7 @@ func ResourceGroup() *schema.Resource {
 
 func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountID := meta.(*conns.AWSClient).AccountID
 	namespace := d.Get("namespace").(string)
@@ -98,19 +97,19 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		createOpts.Description = aws.String(v.(string))
 	}
 
-	resp, err := conn.CreateGroup(ctx, createOpts)
+	resp, err := conn.CreateGroupWithContext(ctx, createOpts)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating QuickSight Group: %s", err)
 	}
 
-	d.SetId(fmt.Sprintf("%s/%s/%s", awsAccountID, namespace, aws.ToString(resp.Group.GroupName)))
+	d.SetId(fmt.Sprintf("%s/%s/%s", awsAccountID, namespace, aws.StringValue(resp.Group.GroupName)))
 
 	return append(diags, resourceGroupRead(ctx, d, meta)...)
 }
 
 func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountID, namespace, groupName, err := GroupParseID(d.Id())
 	if err != nil {
@@ -123,8 +122,8 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		GroupName:    aws.String(groupName),
 	}
 
-	resp, err := conn.DescribeGroup(ctx, descOpts)
-	if !d.IsNewResource() && errs.IsA[*types.ResourceNotFoundException](err) {
+	resp, err := conn.DescribeGroupWithContext(ctx, descOpts)
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] QuickSight Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -144,7 +143,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountID, namespace, groupName, err := GroupParseID(d.Id())
 	if err != nil {
@@ -161,7 +160,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		updateOpts.Description = aws.String(v.(string))
 	}
 
-	_, err = conn.UpdateGroup(ctx, updateOpts)
+	_, err = conn.UpdateGroupWithContext(ctx, updateOpts)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating QuickSight Group %s: %s", d.Id(), err)
 	}
@@ -171,7 +170,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountID, namespace, groupName, err := GroupParseID(d.Id())
 	if err != nil {
@@ -184,8 +183,8 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		GroupName:    aws.String(groupName),
 	}
 
-	if _, err := conn.DeleteGroup(ctx, deleteOpts); err != nil {
-		if errs.IsA[*types.ResourceNotFoundException](err) {
+	if _, err := conn.DeleteGroupWithContext(ctx, deleteOpts); err != nil {
+		if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
 			return diags
 		}
 		return sdkdiag.AppendErrorf(diags, "deleting QuickSight Group %s: %s", d.Id(), err)

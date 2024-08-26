@@ -9,18 +9,16 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/quicksight"
-	"github.com/aws/aws-sdk-go-v2/service/quicksight/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/quicksight"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -67,7 +65,7 @@ func ResourceAccountSubscription() *schema.Resource {
 					Type:         schema.TypeString,
 					Required:     true,
 					ForceNew:     true,
-					ValidateDiagFunc: enum.Validate[types.AuthenticationMethodOption](),
+					ValidateFunc: validation.StringInSlice(quicksight.AuthenticationMethodOption_Values(), false),
 				},
 				"author_group": {
 					Type:     schema.TypeList,
@@ -81,7 +79,7 @@ func ResourceAccountSubscription() *schema.Resource {
 					Optional:     true,
 					Computed:     true,
 					ForceNew:     true,
-					ValidateDiagFunc: validation.ToDiagFunc(verify.ValidAccountID),
+					ValidateFunc: verify.ValidAccountID,
 				},
 				"contact_number": {
 					Type:     schema.TypeString,
@@ -97,7 +95,7 @@ func ResourceAccountSubscription() *schema.Resource {
 					Type:         schema.TypeString,
 					Required:     true,
 					ForceNew:     true,
-					ValidateDiagFunc: enum.Validate[types.Edition](),
+					ValidateFunc: validation.StringInSlice(quicksight.Edition_Values(), false),
 				},
 				"email_address": {
 					Type:     schema.TypeString,
@@ -141,7 +139,7 @@ const (
 )
 
 func resourceAccountSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId := meta.(*conns.AWSClient).AccountID
 	if v, ok := d.GetOk("aws_account_id"); ok {
@@ -151,8 +149,8 @@ func resourceAccountSubscriptionCreate(ctx context.Context, d *schema.ResourceDa
 	in := &quicksight.CreateAccountSubscriptionInput{
 		AwsAccountId:         aws.String(awsAccountId),
 		AccountName:          aws.String(d.Get("account_name").(string)),
-		AuthenticationMethod: types.AuthenticationMethodOption((d.Get("authentication_method").(string))),
-		Edition:              types.Edition((d.Get("edition").(string))),
+		AuthenticationMethod: aws.String(d.Get("authentication_method").(string)),
+		Edition:              aws.String(d.Get("edition").(string)),
 		NotificationEmail:    aws.String(d.Get("notification_email").(string)),
 	}
 
@@ -161,15 +159,15 @@ func resourceAccountSubscriptionCreate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if v, ok := d.GetOk("admin_group"); ok && len(v.([]interface{})) > 0 {
-		in.AdminGroup = flex.ExpandStringValueList(v.([]interface{}))
+		in.AdminGroup = flex.ExpandStringList(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("author_group"); ok && len(v.([]interface{})) > 0 {
-		in.AuthorGroup = flex.ExpandStringValueList(v.([]interface{}))
+		in.AuthorGroup = flex.ExpandStringList(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("reader_group"); ok && len(v.([]interface{})) > 0 {
-		in.ReaderGroup = flex.ExpandStringValueList(v.([]interface{}))
+		in.ReaderGroup = flex.ExpandStringList(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("contact_number"); ok {
@@ -196,7 +194,7 @@ func resourceAccountSubscriptionCreate(ctx context.Context, d *schema.ResourceDa
 		in.Realm = aws.String(v.(string))
 	}
 
-	out, err := conn.CreateAccountSubscription(ctx, in)
+	out, err := conn.CreateAccountSubscriptionWithContext(ctx, in)
 	if err != nil {
 		return create.DiagError(names.QuickSight, create.ErrActionCreating, ResNameAccountSubscription, d.Get("account_name").(string), err)
 	}
@@ -215,7 +213,7 @@ func resourceAccountSubscriptionCreate(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceAccountSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	out, err := FindAccountSubscriptionByID(ctx, conn, d.Id())
 
@@ -225,7 +223,7 @@ func resourceAccountSubscriptionRead(ctx context.Context, d *schema.ResourceData
 		return nil
 	}
 	// Ressource is logically deleted with UNSUBSCRIBED status
-	if !d.IsNewResource() && *out.AccountSubscriptionStatus == statusUnsuscribed {
+	if !d.IsNewResource() && aws.StringValue(out.AccountSubscriptionStatus) == statusUnsuscribed {
 		log.Printf("[WARN] QuickSight AccountSubscription (%s) unsuscribed, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -244,15 +242,15 @@ func resourceAccountSubscriptionRead(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceAccountSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	log.Printf("[INFO] Deleting QuickSight AccountSubscription %s", d.Id())
 
-	_, err := conn.DeleteAccountSubscription(ctx, &quicksight.DeleteAccountSubscriptionInput{
+	_, err := conn.DeleteAccountSubscriptionWithContext(ctx, &quicksight.DeleteAccountSubscriptionInput{
 		AwsAccountId: aws.String(d.Id()),
 	})
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 
@@ -276,7 +274,7 @@ const (
 	statusUnsuscribed             = "UNSUBSCRIBED"
 )
 
-func waitAccountSubscriptionCreated(ctx context.Context, conn *quicksight.Client, id string, timeout time.Duration) (*types.AccountInfo, error) {
+func waitAccountSubscriptionCreated(ctx context.Context, conn *quicksight.QuickSight, id string, timeout time.Duration) (*quicksight.AccountInfo, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{statusSignupAttemptInProgress},
 		Target:                    []string{statusCreated, statusOk},
@@ -287,14 +285,14 @@ func waitAccountSubscriptionCreated(ctx context.Context, conn *quicksight.Client
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*types.AccountInfo); ok {
+	if out, ok := outputRaw.(*quicksight.AccountInfo); ok {
 		return out, err
 	}
 
 	return nil, err
 }
 
-func waitAccountSubscriptionDeleted(ctx context.Context, conn *quicksight.Client, id string, timeout time.Duration) (*types.AccountInfo, error) {
+func waitAccountSubscriptionDeleted(ctx context.Context, conn *quicksight.QuickSight, id string, timeout time.Duration) (*quicksight.AccountInfo, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{statusCreated, statusOk, statusUnsuscribeInProgress},
 		Target:  []string{statusUnsuscribed},
@@ -303,14 +301,14 @@ func waitAccountSubscriptionDeleted(ctx context.Context, conn *quicksight.Client
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*types.AccountInfo); ok {
+	if out, ok := outputRaw.(*quicksight.AccountInfo); ok {
 		return out, err
 	}
 
 	return nil, err
 }
 
-func statusAccountSubscription(ctx context.Context, conn *quicksight.Client, id string) retry.StateRefreshFunc {
+func statusAccountSubscription(ctx context.Context, conn *quicksight.QuickSight, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		out, err := FindAccountSubscriptionByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
@@ -325,13 +323,12 @@ func statusAccountSubscription(ctx context.Context, conn *quicksight.Client, id 
 	}
 }
 
-func FindAccountSubscriptionByID(ctx context.Context, conn *quicksight.Client, id string) (*types.AccountInfo, error) {
+func FindAccountSubscriptionByID(ctx context.Context, conn *quicksight.QuickSight, id string) (*quicksight.AccountInfo, error) {
 	in := &quicksight.DescribeAccountSubscriptionInput{
 		AwsAccountId: aws.String(id),
 	}
-	out, err := conn.DescribeAccountSubscription(ctx, in)
-
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	out, err := conn.DescribeAccountSubscriptionWithContext(ctx, in)
+	if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,

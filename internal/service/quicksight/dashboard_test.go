@@ -9,15 +9,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/quicksight/types"
+	"github.com/aws/aws-sdk-go/service/quicksight"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -25,7 +24,7 @@ import (
 func TestAccQuickSightDashboard_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var dashboard types.Dashboard
+	var dashboard quicksight.Dashboard
 	resourceName := "aws_quicksight_dashboard.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -44,7 +43,7 @@ func TestAccQuickSightDashboard_basic(t *testing.T) {
 					testAccCheckDashboardExists(ctx, resourceName, &dashboard),
 					resource.TestCheckResourceAttr(resourceName, "dashboard_id", rId),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", flex.StringValueToFramework(ctx, types.ResourceStatusCreationSuccessful).String()),
+					resource.TestCheckResourceAttr(resourceName, "status", quicksight.ResourceStatusCreationSuccessful),
 				),
 			},
 			{
@@ -59,7 +58,7 @@ func TestAccQuickSightDashboard_basic(t *testing.T) {
 func TestAccQuickSightDashboard_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var dashboard types.Dashboard
+	var dashboard quicksight.Dashboard
 	resourceName := "aws_quicksight_dashboard.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -87,7 +86,7 @@ func TestAccQuickSightDashboard_disappears(t *testing.T) {
 func TestAccQuickSightDashboard_sourceEntity(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var dashboard types.Dashboard
+	var dashboard quicksight.Dashboard
 	resourceName := "aws_quicksight_dashboard.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -108,7 +107,7 @@ func TestAccQuickSightDashboard_sourceEntity(t *testing.T) {
 					testAccCheckDashboardExists(ctx, resourceName, &dashboard),
 					resource.TestCheckResourceAttr(resourceName, "dashboard_id", rId),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", flex.StringValueToFramework(ctx, types.ResourceStatusCreationSuccessful).String()),
+					resource.TestCheckResourceAttr(resourceName, "status", quicksight.ResourceStatusCreationSuccessful),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "source_entity.0.source_template.0.arn", "quicksight", fmt.Sprintf("template/%s", sourceId)),
 				),
 			},
@@ -125,7 +124,7 @@ func TestAccQuickSightDashboard_sourceEntity(t *testing.T) {
 func TestAccQuickSightDashboard_updateVersionNumber(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var dashboard types.Dashboard
+	var dashboard quicksight.Dashboard
 	resourceName := "aws_quicksight_dashboard.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -145,7 +144,7 @@ func TestAccQuickSightDashboard_updateVersionNumber(t *testing.T) {
 					testAccCheckDashboardExists(ctx, resourceName, &dashboard),
 					resource.TestCheckResourceAttr(resourceName, "dashboard_id", rId),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", flex.StringValueToFramework(ctx, types.ResourceStatusCreationSuccessful).String()),
+					resource.TestCheckResourceAttr(resourceName, "status", quicksight.ResourceStatusCreationSuccessful),
 					resource.TestCheckResourceAttr(resourceName, "version_number", "1"),
 				),
 			},
@@ -155,7 +154,7 @@ func TestAccQuickSightDashboard_updateVersionNumber(t *testing.T) {
 					testAccCheckDashboardExists(ctx, resourceName, &dashboard),
 					resource.TestCheckResourceAttr(resourceName, "dashboard_id", rId),
 					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
-					resource.TestCheckResourceAttr(resourceName, "status", flex.StringValueToFramework(ctx, types.ResourceStatusCreationSuccessful).String()),
+					resource.TestCheckResourceAttr(resourceName, "status", quicksight.ResourceStatusCreationSuccessful),
 					resource.TestCheckResourceAttr(resourceName, "version_number", "2"),
 				),
 			},
@@ -166,7 +165,7 @@ func TestAccQuickSightDashboard_updateVersionNumber(t *testing.T) {
 func TestAccQuickSightDashboard_dashboardSpecificConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var dashboard types.Dashboard
+	var dashboard quicksight.Dashboard
 	resourceName := "aws_quicksight_dashboard.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -185,7 +184,7 @@ func TestAccQuickSightDashboard_dashboardSpecificConfig(t *testing.T) {
 					testAccCheckDashboardExists(ctx, resourceName, &dashboard),
 					resource.TestCheckResourceAttr(resourceName, "dashboard_id", rId),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "dashboard_publish_options.0.ad_hoc_filtering_option.0.availability_status", flex.StringValueToFramework(ctx, types.StatusDisabled).String()),
+					resource.TestCheckResourceAttr(resourceName, "dashboard_publish_options.0.ad_hoc_filtering_option.0.availability_status", quicksight.StatusDisabled),
 				),
 			},
 			{
@@ -200,7 +199,7 @@ func TestAccQuickSightDashboard_dashboardSpecificConfig(t *testing.T) {
 
 func testAccCheckDashboardDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_quicksight_dashboard" {
@@ -209,7 +208,7 @@ func testAccCheckDashboardDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			output, err := tfquicksight.FindDashboardByID(ctx, conn, rs.Primary.ID)
 			if err != nil {
-				if errs.IsA[*types.ResourceNotFoundException](err) {
+				if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
 					return nil
 				}
 				return err
@@ -224,7 +223,7 @@ func testAccCheckDashboardDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckDashboardExists(ctx context.Context, name string, dashboard *types.Dashboard) resource.TestCheckFunc {
+func testAccCheckDashboardExists(ctx context.Context, name string, dashboard *quicksight.Dashboard) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -235,7 +234,7 @@ func testAccCheckDashboardExists(ctx context.Context, name string, dashboard *ty
 			return create.Error(names.QuickSight, create.ErrActionCheckingExistence, tfquicksight.ResNameDashboard, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
 		output, err := tfquicksight.FindDashboardByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {

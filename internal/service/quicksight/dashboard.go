@@ -11,16 +11,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/quicksight"
-	"github.com/aws/aws-sdk-go-v2/service/quicksight/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/quicksight"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	quicksightschema "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight/schema"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -54,11 +53,11 @@ func ResourceDashboard() *schema.Resource {
 					Computed: true,
 				},
 				"aws_account_id": {
-					Type:             schema.TypeString,
-					Optional:         true,
-					Computed:         true,
-					ForceNew:         true,
-					ValidateDiagFunc: validation.ToDiagFunc(verify.ValidAccountID),
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidAccountID,
 				},
 				"created_time": {
 					Type:     schema.TypeString,
@@ -80,9 +79,9 @@ func ResourceDashboard() *schema.Resource {
 					Computed: true,
 				},
 				"name": {
-					Type:             schema.TypeString,
-					Required:         true,
-					ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 2048)),
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 2048),
 				},
 				"parameters": quicksightschema.ParametersSchema(),
 				"permissions": {
@@ -100,9 +99,9 @@ func ResourceDashboard() *schema.Resource {
 								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
 							"principal": {
-								Type:             schema.TypeString,
-								Required:         true,
-								ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 256)),
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 256),
 							},
 						},
 					},
@@ -123,9 +122,9 @@ func ResourceDashboard() *schema.Resource {
 					Optional: true,
 				},
 				"version_description": {
-					Type:             schema.TypeString,
-					Required:         true,
-					ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 512)),
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 512),
 				},
 				"version_number": {
 					Type:     schema.TypeInt,
@@ -143,7 +142,7 @@ const (
 )
 
 func resourceDashboardCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId := meta.(*conns.AWSClient).AccountID
 	if v, ok := d.GetOk("aws_account_id"); ok {
@@ -184,7 +183,7 @@ func resourceDashboardCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.Permissions = expandResourcePermissions(v.List())
 	}
 
-	_, err := conn.CreateDashboard(ctx, input)
+	_, err := conn.CreateDashboardWithContext(ctx, input)
 	if err != nil {
 		return create.DiagError(names.QuickSight, create.ErrActionCreating, ResNameDashboard, d.Get("name").(string), err)
 	}
@@ -197,7 +196,7 @@ func resourceDashboardCreate(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceDashboardRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId, dashboardId, err := ParseDashboardId(d.Id())
 	if err != nil {
@@ -227,7 +226,7 @@ func resourceDashboardRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("version_description", out.Version.Description)
 	d.Set("version_number", out.Version.VersionNumber)
 
-	descResp, err := conn.DescribeDashboardDefinition(ctx, &quicksight.DescribeDashboardDefinitionInput{
+	descResp, err := conn.DescribeDashboardDefinitionWithContext(ctx, &quicksight.DescribeDashboardDefinitionInput{
 		AwsAccountId:  aws.String(awsAccountId),
 		DashboardId:   aws.String(dashboardId),
 		VersionNumber: out.Version.VersionNumber,
@@ -245,7 +244,7 @@ func resourceDashboardRead(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.Errorf("setting dashboard_publish_options: %s", err)
 	}
 
-	permsResp, err := conn.DescribeDashboardPermissions(ctx, &quicksight.DescribeDashboardPermissionsInput{
+	permsResp, err := conn.DescribeDashboardPermissionsWithContext(ctx, &quicksight.DescribeDashboardPermissionsInput{
 		AwsAccountId: aws.String(awsAccountId),
 		DashboardId:  aws.String(dashboardId),
 	})
@@ -262,7 +261,7 @@ func resourceDashboardRead(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceDashboardUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId, dashboardId, err := ParseDashboardId(d.Id())
 	if err != nil {
@@ -293,7 +292,7 @@ func resourceDashboardUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 
 		log.Printf("[DEBUG] Updating QuickSight Dashboard (%s): %#v", d.Id(), in)
-		out, err := conn.UpdateDashboard(ctx, in)
+		out, err := conn.UpdateDashboardWithContext(ctx, in)
 		if err != nil {
 			return create.DiagError(names.QuickSight, create.ErrActionUpdating, ResNameDashboard, d.Id(), err)
 		}
@@ -305,9 +304,9 @@ func resourceDashboardUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		publishVersion := &quicksight.UpdateDashboardPublishedVersionInput{
 			AwsAccountId:  aws.String(awsAccountId),
 			DashboardId:   aws.String(dashboardId),
-			VersionNumber: extractVersionFromARN(*out.VersionArn),
+			VersionNumber: extractVersionFromARN(aws.StringValue(out.VersionArn)),
 		}
-		_, err = conn.UpdateDashboardPublishedVersion(ctx, publishVersion)
+		_, err = conn.UpdateDashboardPublishedVersionWithContext(ctx, publishVersion)
 		if err != nil {
 			return create.DiagError(names.QuickSight, create.ErrActionUpdating, ResNameDashboard, d.Id(), err)
 		}
@@ -333,7 +332,7 @@ func resourceDashboardUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			params.RevokePermissions = toRevoke
 		}
 
-		_, err = conn.UpdateDashboardPermissions(ctx, params)
+		_, err = conn.UpdateDashboardPermissionsWithContext(ctx, params)
 
 		if err != nil {
 			return diag.Errorf("updating QuickSight Dashboard (%s) permissions: %s", dashboardId, err)
@@ -344,7 +343,7 @@ func resourceDashboardUpdate(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceDashboardDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId, dashboardId, err := ParseDashboardId(d.Id())
 	if err != nil {
@@ -352,12 +351,12 @@ func resourceDashboardDelete(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	log.Printf("[INFO] Deleting QuickSight Dashboard %s", d.Id())
-	_, err = conn.DeleteDashboard(ctx, &quicksight.DeleteDashboardInput{
+	_, err = conn.DeleteDashboardWithContext(ctx, &quicksight.DeleteDashboardInput{
 		AwsAccountId: aws.String(awsAccountId),
 		DashboardId:  aws.String(dashboardId),
 	})
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 
@@ -368,7 +367,7 @@ func resourceDashboardDelete(ctx context.Context, d *schema.ResourceData, meta i
 	return nil
 }
 
-func FindDashboardByID(ctx context.Context, conn *quicksight.Client, id string) (*types.Dashboard, error) {
+func FindDashboardByID(ctx context.Context, conn *quicksight.QuickSight, id string) (*quicksight.Dashboard, error) {
 	awsAccountId, dashboardId, err := ParseDashboardId(id)
 	if err != nil {
 		return nil, err
@@ -379,8 +378,9 @@ func FindDashboardByID(ctx context.Context, conn *quicksight.Client, id string) 
 		DashboardId:  aws.String(dashboardId),
 	}
 
-	out, err := conn.DescribeDashboard(ctx, descOpts)
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	out, err := conn.DescribeDashboardWithContext(ctx, descOpts)
+
+	if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: descOpts,

@@ -9,13 +9,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/quicksight"
-	"github.com/aws/aws-sdk-go-v2/service/quicksight/types"
-	"github.com/aws/smithy-go"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -26,19 +23,19 @@ const (
 )
 
 // waitCreated waits for a DataSource to return CREATION_SUCCESSFUL
-func waitCreated(ctx context.Context, conn *quicksight.Client, accountId, dataSourceId string) (*types.DataSource, error) {
+func waitCreated(ctx context.Context, conn *quicksight.QuickSight, accountId, dataSourceId string) (*quicksight.DataSource, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(types.ResourceStatusCreationInProgress),
-		Target:  enum.Slice(types.ResourceStatusCreationSuccessful),
+		Pending: []string{quicksight.ResourceStatusCreationInProgress},
+		Target:  []string{quicksight.ResourceStatusCreationSuccessful},
 		Refresh: status(ctx, conn, accountId, dataSourceId),
 		Timeout: dataSourceCreateTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*types.DataSource); ok {
-		if status, errorInfo := output.Status, output.ErrorInfo; status == types.ResourceStatusCreationFailed && errorInfo != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", flex.StringValueToFramework(ctx, errorInfo.Type).String(), aws.ToString(errorInfo.Message)))
+	if output, ok := outputRaw.(*quicksight.DataSource); ok {
+		if status, errorInfo := aws.StringValue(output.Status), output.ErrorInfo; status == quicksight.ResourceStatusCreationFailed && errorInfo != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(errorInfo.Type), aws.StringValue(errorInfo.Message)))
 		}
 
 		return output, err
@@ -48,19 +45,19 @@ func waitCreated(ctx context.Context, conn *quicksight.Client, accountId, dataSo
 }
 
 // waitUpdated waits for a DataSource to return UPDATE_SUCCESSFUL
-func waitUpdated(ctx context.Context, conn *quicksight.Client, accountId, dataSourceId string) (*types.DataSource, error) {
+func waitUpdated(ctx context.Context, conn *quicksight.QuickSight, accountId, dataSourceId string) (*quicksight.DataSource, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(types.ResourceStatusUpdateInProgress),
-		Target:  enum.Slice(types.ResourceStatusUpdateSuccessful),
+		Pending: []string{quicksight.ResourceStatusUpdateInProgress},
+		Target:  []string{quicksight.ResourceStatusUpdateSuccessful},
 		Refresh: status(ctx, conn, accountId, dataSourceId),
 		Timeout: dataSourceUpdateTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*types.DataSource); ok {
-		if status, errorInfo := output.Status, output.ErrorInfo; status == types.ResourceStatusUpdateFailed && errorInfo != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", flex.StringValueToFramework(ctx, errorInfo.Type).String(), aws.ToString(errorInfo.Message)))
+	if output, ok := outputRaw.(*quicksight.DataSource); ok {
+		if status, errorInfo := aws.StringValue(output.Status), output.ErrorInfo; status == quicksight.ResourceStatusUpdateFailed && errorInfo != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(errorInfo.Type), aws.StringValue(errorInfo.Message)))
 		}
 
 		return output, err
@@ -69,10 +66,10 @@ func waitUpdated(ctx context.Context, conn *quicksight.Client, accountId, dataSo
 	return nil, err
 }
 
-func waitTemplateCreated(ctx context.Context, conn *quicksight.Client, id string, timeout time.Duration) (*types.Template, error) {
+func waitTemplateCreated(ctx context.Context, conn *quicksight.QuickSight, id string, timeout time.Duration) (*quicksight.Template, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(types.ResourceStatusCreationInProgress),
-		Target:                    enum.Slice(types.ResourceStatusCreationSuccessful),
+		Pending:                   []string{quicksight.ResourceStatusCreationInProgress},
+		Target:                    []string{quicksight.ResourceStatusCreationSuccessful},
 		Refresh:                   statusTemplate(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -80,17 +77,17 @@ func waitTemplateCreated(ctx context.Context, conn *quicksight.Client, id string
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*types.Template); ok {
-		if status, apiErrors := out.Version.Status, out.Version.Errors; status == types.ResourceStatusCreationFailed {
+	if out, ok := outputRaw.(*quicksight.Template); ok {
+		if status, apiErrors := aws.StringValue(out.Version.Status), out.Version.Errors; status == quicksight.ResourceStatusCreationFailed && apiErrors != nil {
 			var errs []error
+
 			for _, apiError := range apiErrors {
-				genericSmithyError := &smithy.GenericAPIError{
-					Code:    flex.StringValueToFramework(ctx, apiError.Type).String(),
-					Message: aws.ToString(apiError.Message),
-					Fault:   0,
+				if apiError == nil {
+					continue
 				}
-				errs = append(errs, genericSmithyError)
+				errs = append(errs, awserr.New(aws.StringValue(apiError.Type), aws.StringValue(apiError.Message), nil))
 			}
+
 			tfresource.SetLastError(err, errors.Join(errs...))
 		}
 
@@ -100,10 +97,10 @@ func waitTemplateCreated(ctx context.Context, conn *quicksight.Client, id string
 	return nil, err
 }
 
-func waitTemplateUpdated(ctx context.Context, conn *quicksight.Client, id string, timeout time.Duration) (*types.Template, error) {
+func waitTemplateUpdated(ctx context.Context, conn *quicksight.QuickSight, id string, timeout time.Duration) (*quicksight.Template, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(types.ResourceStatusUpdateInProgress, types.ResourceStatusCreationInProgress),
-		Target:                    enum.Slice(types.ResourceStatusUpdateSuccessful, types.ResourceStatusCreationSuccessful),
+		Pending:                   []string{quicksight.ResourceStatusUpdateInProgress, quicksight.ResourceStatusCreationInProgress},
+		Target:                    []string{quicksight.ResourceStatusUpdateSuccessful, quicksight.ResourceStatusCreationSuccessful},
 		Refresh:                   statusTemplate(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -111,17 +108,18 @@ func waitTemplateUpdated(ctx context.Context, conn *quicksight.Client, id string
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*types.Template); ok {
-		if status, apiErrors := out.Version.Status, out.Version.Errors; status == types.ResourceStatusCreationFailed {
+	if out, ok := outputRaw.(*quicksight.Template); ok {
+		if status, apiErrors := aws.StringValue(out.Version.Status), out.Version.Errors; status == quicksight.ResourceStatusCreationFailed && apiErrors != nil {
 			var errs []error
+
 			for _, apiError := range apiErrors {
-				genericSmithyError := &smithy.GenericAPIError{
-					Code:    flex.StringValueToFramework(ctx, apiError.Type).String(),
-					Message: aws.ToString(apiError.Message),
-					Fault:   0,
+				if apiError == nil {
+					continue
 				}
-				errs = append(errs, genericSmithyError)
+
+				errs = append(errs, awserr.New(aws.StringValue(apiError.Type), aws.StringValue(apiError.Message), nil))
 			}
+
 			tfresource.SetLastError(err, errors.Join(errs...))
 		}
 
@@ -131,10 +129,10 @@ func waitTemplateUpdated(ctx context.Context, conn *quicksight.Client, id string
 	return nil, err
 }
 
-func waitDashboardCreated(ctx context.Context, conn *quicksight.Client, id string, timeout time.Duration) (*types.Dashboard, error) {
+func waitDashboardCreated(ctx context.Context, conn *quicksight.QuickSight, id string, timeout time.Duration) (*quicksight.Dashboard, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(types.ResourceStatusCreationInProgress),
-		Target:                    enum.Slice(types.ResourceStatusCreationSuccessful),
+		Pending:                   []string{quicksight.ResourceStatusCreationInProgress},
+		Target:                    []string{quicksight.ResourceStatusCreationSuccessful},
 		Refresh:                   statusDashboard(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -142,17 +140,18 @@ func waitDashboardCreated(ctx context.Context, conn *quicksight.Client, id strin
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*types.Dashboard); ok {
-		if status, apiErrors := out.Version.Status, out.Version.Errors; status == types.ResourceStatusCreationFailed {
+	if out, ok := outputRaw.(*quicksight.Dashboard); ok {
+		if status, apiErrors := aws.StringValue(out.Version.Status), out.Version.Errors; status == quicksight.ResourceStatusCreationFailed && apiErrors != nil {
 			var errs []error
+
 			for _, apiError := range apiErrors {
-				genericSmithyError := &smithy.GenericAPIError{
-					Code:    flex.StringValueToFramework(ctx, apiError.Type).String(),
-					Message: aws.ToString(apiError.Message),
-					Fault:   0,
+				if apiError == nil {
+					continue
 				}
-				errs = append(errs, genericSmithyError)
+
+				errs = append(errs, awserr.New(aws.StringValue(apiError.Type), aws.StringValue(apiError.Message), nil))
 			}
+
 			tfresource.SetLastError(err, errors.Join(errs...))
 		}
 
@@ -162,10 +161,10 @@ func waitDashboardCreated(ctx context.Context, conn *quicksight.Client, id strin
 	return nil, err
 }
 
-func waitDashboardUpdated(ctx context.Context, conn *quicksight.Client, id string, timeout time.Duration) (*types.Dashboard, error) {
+func waitDashboardUpdated(ctx context.Context, conn *quicksight.QuickSight, id string, timeout time.Duration) (*quicksight.Dashboard, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(types.ResourceStatusUpdateInProgress, types.ResourceStatusCreationInProgress),
-		Target:                    enum.Slice(types.ResourceStatusUpdateSuccessful, types.ResourceStatusCreationSuccessful),
+		Pending:                   []string{quicksight.ResourceStatusUpdateInProgress, quicksight.ResourceStatusCreationInProgress},
+		Target:                    []string{quicksight.ResourceStatusUpdateSuccessful, quicksight.ResourceStatusCreationSuccessful},
 		Refresh:                   statusDashboard(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -173,17 +172,18 @@ func waitDashboardUpdated(ctx context.Context, conn *quicksight.Client, id strin
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*types.Dashboard); ok {
-		if status, apiErrors := out.Version.Status, out.Version.Errors; status == types.ResourceStatusCreationFailed {
+	if out, ok := outputRaw.(*quicksight.Dashboard); ok {
+		if status, apiErrors := aws.StringValue(out.Version.Status), out.Version.Errors; status == quicksight.ResourceStatusCreationFailed && apiErrors != nil {
 			var errs []error
+
 			for _, apiError := range apiErrors {
-				genericSmithyError := &smithy.GenericAPIError{
-					Code:    flex.StringValueToFramework(ctx, apiError.Type).String(),
-					Message: aws.ToString(apiError.Message),
-					Fault:   0,
+				if apiError == nil {
+					continue
 				}
-				errs = append(errs, genericSmithyError)
+
+				errs = append(errs, awserr.New(aws.StringValue(apiError.Type), aws.StringValue(apiError.Message), nil))
 			}
+
 			tfresource.SetLastError(err, errors.Join(errs...))
 		}
 
@@ -193,10 +193,10 @@ func waitDashboardUpdated(ctx context.Context, conn *quicksight.Client, id strin
 	return nil, err
 }
 
-func waitAnalysisCreated(ctx context.Context, conn *quicksight.Client, id string, timeout time.Duration) (*types.Analysis, error) {
+func waitAnalysisCreated(ctx context.Context, conn *quicksight.QuickSight, id string, timeout time.Duration) (*quicksight.Analysis, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(types.ResourceStatusCreationInProgress),
-		Target:                    enum.Slice(types.ResourceStatusCreationSuccessful),
+		Pending:                   []string{quicksight.ResourceStatusCreationInProgress},
+		Target:                    []string{quicksight.ResourceStatusCreationSuccessful},
 		Refresh:                   statusAnalysis(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -204,17 +204,18 @@ func waitAnalysisCreated(ctx context.Context, conn *quicksight.Client, id string
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*types.Analysis); ok {
-		if status, apiErrors := out.Status, out.Errors; status == types.ResourceStatusCreationFailed && apiErrors != nil {
+	if out, ok := outputRaw.(*quicksight.Analysis); ok {
+		if status, apiErrors := aws.StringValue(out.Status), out.Errors; status == quicksight.ResourceStatusCreationFailed && apiErrors != nil {
 			var errs []error
+
 			for _, apiError := range apiErrors {
-				genericSmithyError := &smithy.GenericAPIError{
-					Code:    flex.StringValueToFramework(ctx, apiError.Type).String(),
-					Message: aws.ToString(apiError.Message),
-					Fault:   0,
+				if apiError == nil {
+					continue
 				}
-				errs = append(errs, genericSmithyError)
+
+				errs = append(errs, awserr.New(aws.StringValue(apiError.Type), aws.StringValue(apiError.Message), nil))
 			}
+
 			tfresource.SetLastError(err, errors.Join(errs...))
 		}
 
@@ -224,10 +225,10 @@ func waitAnalysisCreated(ctx context.Context, conn *quicksight.Client, id string
 	return nil, err
 }
 
-func waitAnalysisUpdated(ctx context.Context, conn *quicksight.Client, id string, timeout time.Duration) (*types.Analysis, error) {
+func waitAnalysisUpdated(ctx context.Context, conn *quicksight.QuickSight, id string, timeout time.Duration) (*quicksight.Analysis, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(types.ResourceStatusUpdateInProgress, types.ResourceStatusCreationInProgress),
-		Target:                    enum.Slice(types.ResourceStatusUpdateSuccessful, types.ResourceStatusCreationSuccessful),
+		Pending:                   []string{quicksight.ResourceStatusUpdateInProgress, quicksight.ResourceStatusCreationInProgress},
+		Target:                    []string{quicksight.ResourceStatusUpdateSuccessful, quicksight.ResourceStatusCreationSuccessful},
 		Refresh:                   statusAnalysis(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -235,17 +236,18 @@ func waitAnalysisUpdated(ctx context.Context, conn *quicksight.Client, id string
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*types.Analysis); ok {
-		if status, apiErrors := out.Status, out.Errors; status == types.ResourceStatusCreationFailed && apiErrors != nil {
+	if out, ok := outputRaw.(*quicksight.Analysis); ok {
+		if status, apiErrors := aws.StringValue(out.Status), out.Errors; status == quicksight.ResourceStatusCreationFailed && apiErrors != nil {
 			var errs []error
+
 			for _, apiError := range apiErrors {
-				genericSmithyError := &smithy.GenericAPIError{
-					Code:    flex.StringValueToFramework(ctx, apiError.Type).String(),
-					Message: aws.ToString(apiError.Message),
-					Fault:   0,
+				if apiError == nil {
+					continue
 				}
-				errs = append(errs, genericSmithyError)
+
+				errs = append(errs, awserr.New(aws.StringValue(apiError.Type), aws.StringValue(apiError.Message), nil))
 			}
+
 			tfresource.SetLastError(err, errors.Join(errs...))
 		}
 
@@ -255,10 +257,10 @@ func waitAnalysisUpdated(ctx context.Context, conn *quicksight.Client, id string
 	return nil, err
 }
 
-func waitThemeCreated(ctx context.Context, conn *quicksight.Client, id string, timeout time.Duration) (*types.Theme, error) {
+func waitThemeCreated(ctx context.Context, conn *quicksight.QuickSight, id string, timeout time.Duration) (*quicksight.Theme, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(types.ResourceStatusCreationInProgress),
-		Target:                    enum.Slice(types.ResourceStatusCreationSuccessful),
+		Pending:                   []string{quicksight.ResourceStatusCreationInProgress},
+		Target:                    []string{quicksight.ResourceStatusCreationSuccessful},
 		Refresh:                   statusTheme(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -266,17 +268,18 @@ func waitThemeCreated(ctx context.Context, conn *quicksight.Client, id string, t
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*types.Theme); ok {
-		if status, apiErrors := out.Version.Status, out.Version.Errors; status == types.ResourceStatusCreationFailed {
+	if out, ok := outputRaw.(*quicksight.Theme); ok {
+		if status, apiErrors := aws.StringValue(out.Version.Status), out.Version.Errors; status == quicksight.ResourceStatusCreationFailed && apiErrors != nil {
 			var errs []error
+
 			for _, apiError := range apiErrors {
-				genericSmithyError := &smithy.GenericAPIError{
-					Code:    flex.StringValueToFramework(ctx, apiError.Type).String(),
-					Message: aws.ToString(apiError.Message),
-					Fault:   0,
+				if apiError == nil {
+					continue
 				}
-				errs = append(errs, genericSmithyError)
+
+				errs = append(errs, awserr.New(aws.StringValue(apiError.Type), aws.StringValue(apiError.Message), nil))
 			}
+
 			tfresource.SetLastError(err, errors.Join(errs...))
 		}
 
@@ -286,10 +289,10 @@ func waitThemeCreated(ctx context.Context, conn *quicksight.Client, id string, t
 	return nil, err
 }
 
-func waitThemeUpdated(ctx context.Context, conn *quicksight.Client, id string, timeout time.Duration) (*types.Theme, error) {
+func waitThemeUpdated(ctx context.Context, conn *quicksight.QuickSight, id string, timeout time.Duration) (*quicksight.Theme, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(types.ResourceStatusUpdateInProgress, types.ResourceStatusCreationInProgress),
-		Target:                    enum.Slice(types.ResourceStatusUpdateSuccessful, types.ResourceStatusCreationSuccessful),
+		Pending:                   []string{quicksight.ResourceStatusUpdateInProgress, quicksight.ResourceStatusCreationInProgress},
+		Target:                    []string{quicksight.ResourceStatusUpdateSuccessful, quicksight.ResourceStatusCreationSuccessful},
 		Refresh:                   statusTheme(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -297,17 +300,18 @@ func waitThemeUpdated(ctx context.Context, conn *quicksight.Client, id string, t
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*types.Theme); ok {
-		if status, apiErrors := out.Version.Status, out.Version.Errors; status == types.ResourceStatusCreationFailed {
+	if out, ok := outputRaw.(*quicksight.Theme); ok {
+		if status, apiErrors := aws.StringValue(out.Version.Status), out.Version.Errors; status == quicksight.ResourceStatusCreationFailed && apiErrors != nil {
 			var errs []error
+
 			for _, apiError := range apiErrors {
-				genericSmithyError := &smithy.GenericAPIError{
-					Code:    flex.StringValueToFramework(ctx, apiError.Type).String(),
-					Message: aws.ToString(apiError.Message),
-					Fault:   0,
+				if apiError == nil {
+					continue
 				}
-				errs = append(errs, genericSmithyError)
+
+				errs = append(errs, awserr.New(aws.StringValue(apiError.Type), aws.StringValue(apiError.Message), nil))
 			}
+
 			tfresource.SetLastError(err, errors.Join(errs...))
 		}
 

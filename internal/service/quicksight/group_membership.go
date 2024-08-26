@@ -10,14 +10,13 @@ import (
 	"strings"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/quicksight"
-	"github.com/aws/aws-sdk-go-v2/service/quicksight/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/quicksight"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
 // @SDKResource("aws_quicksight_group_membership", name="Group Membership")
@@ -58,9 +57,9 @@ func ResourceGroupMembership() *schema.Resource {
 					Optional: true,
 					ForceNew: true,
 					Default:  "default",
-					ValidateDiagFunc: validation.AllDiag(
-						validation.ToDiagFunc(validation.StringLenBetween(1, 63)),
-						validation.ToDiagFunc(validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "must contain only alphanumeric characters, hyphens, underscores, and periods")),
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 63),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "must contain only alphanumeric characters, hyphens, underscores, and periods"),
 					),
 				},
 			}
@@ -69,7 +68,7 @@ func ResourceGroupMembership() *schema.Resource {
 }
 
 func resourceGroupMembershipCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountID := meta.(*conns.AWSClient).AccountID
 	namespace := d.Get("namespace").(string)
@@ -87,18 +86,18 @@ func resourceGroupMembershipCreate(ctx context.Context, d *schema.ResourceData, 
 		Namespace:    aws.String(namespace),
 	}
 
-	resp, err := conn.CreateGroupMembership(ctx, createOpts)
+	resp, err := conn.CreateGroupMembershipWithContext(ctx, createOpts)
 	if err != nil {
 		return diag.Errorf("adding QuickSight user (%s) to group (%s): %s", memberName, groupName, err)
 	}
 
-	d.SetId(fmt.Sprintf("%s/%s/%s/%s", awsAccountID, namespace, groupName, aws.ToString(resp.GroupMember.MemberName)))
+	d.SetId(fmt.Sprintf("%s/%s/%s/%s", awsAccountID, namespace, groupName, aws.StringValue(resp.GroupMember.MemberName)))
 
 	return resourceGroupMembershipRead(ctx, d, meta)
 }
 
 func resourceGroupMembershipRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountID, namespace, groupName, userName, err := GroupMembershipParseID(d.Id())
 	if err != nil {
@@ -131,7 +130,7 @@ func resourceGroupMembershipRead(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceGroupMembershipDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountID, namespace, groupName, userName, err := GroupMembershipParseID(d.Id())
 	if err != nil {
@@ -145,8 +144,8 @@ func resourceGroupMembershipDelete(ctx context.Context, d *schema.ResourceData, 
 		GroupName:    aws.String(groupName),
 	}
 
-	if _, err := conn.DeleteGroupMembership(ctx, deleteOpts); err != nil {
-		if errs.IsA[*types.ResourceNotFoundException](err) {
+	if _, err := conn.DeleteGroupMembershipWithContext(ctx, deleteOpts); err != nil {
+		if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
 			return nil
 		}
 		return diag.Errorf("deleting QuickSight User-group membership %s: %s", d.Id(), err)

@@ -11,17 +11,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/quicksight"
-	"github.com/aws/aws-sdk-go-v2/service/quicksight/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/quicksight"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -55,11 +53,11 @@ func ResourceFolder() *schema.Resource {
 				Computed: true,
 			},
 			"aws_account_id": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: validation.ToDiagFunc(verify.ValidAccountID),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidAccountID,
 			},
 			"created_time": {
 				Type:     schema.TypeString,
@@ -69,9 +67,9 @@ func ResourceFolder() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-				ValidateDiagFunc: validation.AllDiag(
-					validation.ToDiagFunc(validation.NoZeroValues),
-					validation.ToDiagFunc(validation.StringLenBetween(1, 2048)),
+				ValidateFunc: validation.All(
+					validation.NoZeroValues,
+					validation.StringLenBetween(1, 2048),
 				),
 			},
 			"folder_path": {
@@ -82,10 +80,10 @@ func ResourceFolder() *schema.Resource {
 				},
 			},
 			"folder_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          types.FolderTypeShared,
-				ValidateDiagFunc: enum.Validate[types.FolderType](),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      quicksight.FolderTypeShared,
+				ValidateFunc: validation.StringInSlice(quicksight.FolderType_Values(), false),
 			},
 			"last_updated_time": {
 				Type:     schema.TypeString,
@@ -94,16 +92,16 @@ func ResourceFolder() *schema.Resource {
 			"name": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ValidateDiagFunc: validation.AllDiag(
-					validation.ToDiagFunc(validation.NoZeroValues),
-					validation.ToDiagFunc(validation.StringLenBetween(1, 200)),
+				ValidateFunc: validation.All(
+					validation.NoZeroValues,
+					validation.StringLenBetween(1, 200),
 				),
 			},
 			"parent_folder_arn": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 			"permissions": {
 				Type:     schema.TypeList,
@@ -120,9 +118,9 @@ func ResourceFolder() *schema.Resource {
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"principal": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 256)),
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringLenBetween(1, 256),
 						},
 					},
 				},
@@ -139,7 +137,7 @@ const (
 )
 
 func resourceFolderCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId := meta.(*conns.AWSClient).AccountID
 	if v, ok := d.GetOk("aws_account_id"); ok {
@@ -158,7 +156,7 @@ func resourceFolderCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if v, ok := d.GetOk("folder_type"); ok {
-		in.FolderType = types.FolderType(v.(string))
+		in.FolderType = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("parent_folder_arn"); ok {
@@ -169,7 +167,7 @@ func resourceFolderCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		in.Permissions = expandResourcePermissions(v.([]interface{}))
 	}
 
-	out, err := conn.CreateFolder(ctx, in)
+	out, err := conn.CreateFolderWithContext(ctx, in)
 	if err != nil {
 		return create.DiagError(names.QuickSight, create.ErrActionCreating, ResNameFolder, d.Get("name").(string), err)
 	}
@@ -182,7 +180,7 @@ func resourceFolderCreate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceFolderRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId, folderId, err := ParseFolderId(d.Id())
 	if err != nil {
@@ -212,11 +210,11 @@ func resourceFolderRead(ctx context.Context, d *schema.ResourceData, meta interf
 		d.Set("parent_folder_arn", out.FolderPath[len(out.FolderPath)-1])
 	}
 
-	if err := d.Set("folder_path", flex.FlattenStringValueList(out.FolderPath)); err != nil {
+	if err := d.Set("folder_path", flex.FlattenStringList(out.FolderPath)); err != nil {
 		return diag.Errorf("setting folder_path: %s", err)
 	}
 
-	permsResp, err := conn.DescribeFolderPermissions(ctx, &quicksight.DescribeFolderPermissionsInput{
+	permsResp, err := conn.DescribeFolderPermissionsWithContext(ctx, &quicksight.DescribeFolderPermissionsInput{
 		AwsAccountId: aws.String(awsAccountId),
 		FolderId:     aws.String(folderId),
 	})
@@ -232,7 +230,7 @@ func resourceFolderRead(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceFolderUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId, folderId, err := ParseFolderId(d.Id())
 	if err != nil {
@@ -247,7 +245,7 @@ func resourceFolderUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 
 		log.Printf("[DEBUG] Updating QuickSight Folder (%s): %#v", d.Id(), in)
-		_, err = conn.UpdateFolder(ctx, in)
+		_, err = conn.UpdateFolderWithContext(ctx, in)
 		if err != nil {
 			return create.DiagError(names.QuickSight, create.ErrActionUpdating, ResNameFolder, d.Id(), err)
 		}
@@ -273,7 +271,7 @@ func resourceFolderUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			params.RevokePermissions = toRevoke
 		}
 
-		_, err = conn.UpdateFolderPermissions(ctx, params)
+		_, err = conn.UpdateFolderPermissionsWithContext(ctx, params)
 
 		if err != nil {
 			return diag.Errorf("updating QuickSight Folder (%s) permissions: %s", folderId, err)
@@ -284,7 +282,7 @@ func resourceFolderUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceFolderDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	log.Printf("[INFO] Deleting QuickSight Folder %s", d.Id())
 
@@ -293,12 +291,12 @@ func resourceFolderDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		return diag.FromErr(err)
 	}
 
-	_, err = conn.DeleteFolder(ctx, &quicksight.DeleteFolderInput{
+	_, err = conn.DeleteFolderWithContext(ctx, &quicksight.DeleteFolderInput{
 		AwsAccountId: aws.String(awsAccountId),
 		FolderId:     aws.String(folderId),
 	})
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 
@@ -309,7 +307,7 @@ func resourceFolderDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	return nil
 }
 
-func FindFolderByID(ctx context.Context, conn *quicksight.Client, id string) (*types.Folder, error) {
+func FindFolderByID(ctx context.Context, conn *quicksight.QuickSight, id string) (*quicksight.Folder, error) {
 	awsAccountId, folderId, err := ParseFolderId(id)
 	if err != nil {
 		return nil, err
@@ -320,9 +318,9 @@ func FindFolderByID(ctx context.Context, conn *quicksight.Client, id string) (*t
 		FolderId:     aws.String(folderId),
 	}
 
-	out, err := conn.DescribeFolder(ctx, descOpts)
+	out, err := conn.DescribeFolderWithContext(ctx, descOpts)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: descOpts,

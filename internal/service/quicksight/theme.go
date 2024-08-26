@@ -11,16 +11,15 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/quicksight"
-	"github.com/aws/aws-sdk-go-v2/service/quicksight/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/quicksight"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -54,11 +53,11 @@ func ResourceTheme() *schema.Resource {
 					Computed: true,
 				},
 				"aws_account_id": {
-					Type:             schema.TypeString,
-					Optional:         true,
-					Computed:         true,
-					ForceNew:         true,
-					ValidateDiagFunc: validation.ToDiagFunc(verify.ValidAccountID),
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidAccountID,
 				},
 				"base_theme_id": {
 					Type:     schema.TypeString,
@@ -82,14 +81,14 @@ func ResourceTheme() *schema.Resource {
 											MinItems: 8, // Colors size needs to be in the range between 8 and 20
 											MaxItems: 20,
 											Elem: &schema.Schema{
-												Type:             schema.TypeString,
-												ValidateDiagFunc: validation.ToDiagFunc(validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
+												Type:         schema.TypeString,
+												ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
 											},
 										},
 										"empty_fill_color": {
-											Type:             schema.TypeString,
-											Optional:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
 										},
 										"min_max_gradient": {
 											Type:     schema.TypeList,
@@ -97,8 +96,8 @@ func ResourceTheme() *schema.Resource {
 											MinItems: 2, // MinMaxGradient size needs to be 2
 											MaxItems: 2,
 											Elem: &schema.Schema{
-												Type:             schema.TypeString,
-												ValidateDiagFunc: validation.ToDiagFunc(validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
+												Type:         schema.TypeString,
+												ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
 											},
 										},
 									},
@@ -199,84 +198,84 @@ func ResourceTheme() *schema.Resource {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"accent": {
-											Type:             schema.TypeString,
-											Optional:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
 										},
 										"accent_foreground": {
-											Type:             schema.TypeString,
-											Optional:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
 										},
 										"danger": {
-											Type:             schema.TypeString,
-											Optional:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
 										},
 										"danger_foreground": {
-											Type:             schema.TypeString,
-											Optional:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
 										},
 										"dimension": {
-											Type:             schema.TypeString,
-											Optional:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
 										},
 										"dimension_foreground": {
-											Type:             schema.TypeString,
-											Optional:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
 										},
 										"measure": {
-											Type:             schema.TypeString,
-											Optional:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
 										},
 										"measure_foreground": {
-											Type:             schema.TypeString,
-											Optional:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
 										},
 										"primary_background": {
-											Type:             schema.TypeString,
-											Optional:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
 										},
 										"primary_foreground": {
-											Type:             schema.TypeString,
-											Optional:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
 										},
 										"secondary_background": {
-											Type:             schema.TypeString,
-											Optional:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
 										},
 										"secondary_foreground": {
-											Type:             schema.TypeString,
-											Optional:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
 										},
 										"success": {
-											Type:             schema.TypeString,
-											Optional:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
 										},
 										"success_foreground": {
-											Type:             schema.TypeString,
-											Optional:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
 										},
 										"warning": {
-											Type:             schema.TypeString,
-											Optional:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
 										},
 										"warning_foreground": {
-											Type:             schema.TypeString,
-											Optional:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
 										},
 									},
 								},
@@ -298,9 +297,9 @@ func ResourceTheme() *schema.Resource {
 					Computed: true,
 				},
 				"name": {
-					Type:             schema.TypeString,
-					Required:         true,
-					ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 2048)),
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 2048),
 				},
 				"permissions": {
 					Type:     schema.TypeList,
@@ -317,9 +316,9 @@ func ResourceTheme() *schema.Resource {
 								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
 							"principal": {
-								Type:             schema.TypeString,
-								Required:         true,
-								ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 256)),
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 256),
 							},
 						},
 					},
@@ -331,9 +330,9 @@ func ResourceTheme() *schema.Resource {
 				names.AttrTags:    tftags.TagsSchema(),
 				names.AttrTagsAll: tftags.TagsSchemaComputed(),
 				"version_description": {
-					Type:             schema.TypeString,
-					Optional:         true,
-					ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 512)),
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 512),
 				},
 				"version_number": {
 					Type:     schema.TypeInt,
@@ -351,7 +350,7 @@ const (
 )
 
 func resourceThemeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId := meta.(*conns.AWSClient).AccountID
 	if v, ok := d.GetOk("aws_account_id"); ok {
@@ -381,7 +380,7 @@ func resourceThemeCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.Permissions = expandResourcePermissions(v.([]interface{}))
 	}
 
-	_, err := conn.CreateTheme(ctx, input)
+	_, err := conn.CreateThemeWithContext(ctx, input)
 	if err != nil {
 		return create.DiagError(names.QuickSight, create.ErrActionCreating, ResNameTheme, d.Get("name").(string), err)
 	}
@@ -394,7 +393,7 @@ func resourceThemeCreate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceThemeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId, themeId, err := ParseThemeId(d.Id())
 	if err != nil {
@@ -428,7 +427,7 @@ func resourceThemeRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return diag.Errorf("setting configuration: %s", err)
 	}
 
-	permsResp, err := conn.DescribeThemePermissions(ctx, &quicksight.DescribeThemePermissionsInput{
+	permsResp, err := conn.DescribeThemePermissionsWithContext(ctx, &quicksight.DescribeThemePermissionsInput{
 		AwsAccountId: aws.String(awsAccountId),
 		ThemeId:      aws.String(themeId),
 	})
@@ -445,7 +444,7 @@ func resourceThemeRead(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func resourceThemeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId, themeId, err := ParseThemeId(d.Id())
 	if err != nil {
@@ -465,7 +464,7 @@ func resourceThemeUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 
 		log.Printf("[DEBUG] Updating QuickSight Theme (%s): %#v", d.Id(), in)
-		_, err := conn.UpdateTheme(ctx, in)
+		_, err := conn.UpdateThemeWithContext(ctx, in)
 		if err != nil {
 			return create.DiagError(names.QuickSight, create.ErrActionUpdating, ResNameTheme, d.Id(), err)
 		}
@@ -495,7 +494,7 @@ func resourceThemeUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			params.RevokePermissions = toRevoke
 		}
 
-		_, err = conn.UpdateThemePermissions(ctx, params)
+		_, err = conn.UpdateThemePermissionsWithContext(ctx, params)
 
 		if err != nil {
 			return diag.Errorf("updating QuickSight Theme (%s) permissions: %s", themeId, err)
@@ -506,7 +505,7 @@ func resourceThemeUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceThemeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId, themeId, err := ParseThemeId(d.Id())
 	if err != nil {
@@ -519,9 +518,9 @@ func resourceThemeDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	log.Printf("[INFO] Deleting QuickSight Theme %s", d.Id())
-	_, err = conn.DeleteTheme(ctx, input)
+	_, err = conn.DeleteThemeWithContext(ctx, input)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 
@@ -532,7 +531,7 @@ func resourceThemeDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	return nil
 }
 
-func FindThemeByID(ctx context.Context, conn *quicksight.Client, id string) (*types.Theme, error) {
+func FindThemeByID(ctx context.Context, conn *quicksight.QuickSight, id string) (*quicksight.Theme, error) {
 	awsAccountId, themeId, err := ParseThemeId(id)
 	if err != nil {
 		return nil, err
@@ -543,9 +542,9 @@ func FindThemeByID(ctx context.Context, conn *quicksight.Client, id string) (*ty
 		ThemeId:      aws.String(themeId),
 	}
 
-	out, err := conn.DescribeTheme(ctx, descOpts)
+	out, err := conn.DescribeThemeWithContext(ctx, descOpts)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: descOpts,
@@ -575,7 +574,7 @@ func createThemeId(awsAccountID, themeId string) string {
 	return fmt.Sprintf("%s,%s", awsAccountID, themeId)
 }
 
-func expandThemeConfiguration(tfList []interface{}) *types.ThemeConfiguration {
+func expandThemeConfiguration(tfList []interface{}) *quicksight.ThemeConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -585,7 +584,7 @@ func expandThemeConfiguration(tfList []interface{}) *types.ThemeConfiguration {
 		return nil
 	}
 
-	config := &types.ThemeConfiguration{}
+	config := &quicksight.ThemeConfiguration{}
 
 	if v, ok := tfMap["data_color_palette"].([]interface{}); ok && len(v) > 0 {
 		config.DataColorPalette = expandDataColorPalette(v)
@@ -603,7 +602,7 @@ func expandThemeConfiguration(tfList []interface{}) *types.ThemeConfiguration {
 	return config
 }
 
-func expandDataColorPalette(tfList []interface{}) *types.DataColorPalette {
+func expandDataColorPalette(tfList []interface{}) *quicksight.DataColorPalette {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -613,22 +612,22 @@ func expandDataColorPalette(tfList []interface{}) *types.DataColorPalette {
 		return nil
 	}
 
-	config := &types.DataColorPalette{}
+	config := &quicksight.DataColorPalette{}
 
 	if v, ok := tfMap["colors"].([]interface{}); ok {
-		config.Colors = flex.ExpandStringValueList(v)
+		config.Colors = flex.ExpandStringList(v)
 	}
 	if v, ok := tfMap["empty_fill_color"].(string); ok && v != "" {
 		config.EmptyFillColor = aws.String(v)
 	}
 	if v, ok := tfMap["min_max_gradient"].([]interface{}); ok {
-		config.MinMaxGradient = flex.ExpandStringValueList(v)
+		config.MinMaxGradient = flex.ExpandStringList(v)
 	}
 
 	return config
 }
 
-func expandSheetStyle(tfList []interface{}) *types.SheetStyle {
+func expandSheetStyle(tfList []interface{}) *quicksight.SheetStyle {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -638,7 +637,7 @@ func expandSheetStyle(tfList []interface{}) *types.SheetStyle {
 		return nil
 	}
 
-	config := &types.SheetStyle{}
+	config := &quicksight.SheetStyle{}
 
 	if v, ok := tfMap["tile"].([]interface{}); ok && len(v) > 0 {
 		config.Tile = expandTileStyle(v)
@@ -650,7 +649,7 @@ func expandSheetStyle(tfList []interface{}) *types.SheetStyle {
 	return config
 }
 
-func expandTileStyle(tfList []interface{}) *types.TileStyle {
+func expandTileStyle(tfList []interface{}) *quicksight.TileStyle {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -660,7 +659,7 @@ func expandTileStyle(tfList []interface{}) *types.TileStyle {
 		return nil
 	}
 
-	config := &types.TileStyle{}
+	config := &quicksight.TileStyle{}
 
 	if v, ok := tfMap["border"].([]interface{}); ok && len(v) > 0 {
 		config.Border = expandBorderStyle(v)
@@ -669,7 +668,7 @@ func expandTileStyle(tfList []interface{}) *types.TileStyle {
 	return config
 }
 
-func expandBorderStyle(tfList []interface{}) *types.BorderStyle {
+func expandBorderStyle(tfList []interface{}) *quicksight.BorderStyle {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -679,7 +678,7 @@ func expandBorderStyle(tfList []interface{}) *types.BorderStyle {
 		return nil
 	}
 
-	config := &types.BorderStyle{}
+	config := &quicksight.BorderStyle{}
 
 	if v, ok := tfMap["show"].(bool); ok {
 		config.Show = aws.Bool(v)
@@ -688,7 +687,7 @@ func expandBorderStyle(tfList []interface{}) *types.BorderStyle {
 	return config
 }
 
-func expandTileLayoutStyle(tfList []interface{}) *types.TileLayoutStyle {
+func expandTileLayoutStyle(tfList []interface{}) *quicksight.TileLayoutStyle {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -698,7 +697,7 @@ func expandTileLayoutStyle(tfList []interface{}) *types.TileLayoutStyle {
 		return nil
 	}
 
-	config := &types.TileLayoutStyle{}
+	config := &quicksight.TileLayoutStyle{}
 
 	if v, ok := tfMap["gutter"].([]interface{}); ok && len(v) > 0 {
 		config.Gutter = expandGutterStyle(v)
@@ -710,7 +709,7 @@ func expandTileLayoutStyle(tfList []interface{}) *types.TileLayoutStyle {
 	return config
 }
 
-func expandGutterStyle(tfList []interface{}) *types.GutterStyle {
+func expandGutterStyle(tfList []interface{}) *quicksight.GutterStyle {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -720,7 +719,7 @@ func expandGutterStyle(tfList []interface{}) *types.GutterStyle {
 		return nil
 	}
 
-	config := &types.GutterStyle{}
+	config := &quicksight.GutterStyle{}
 
 	if v, ok := tfMap["show"].(bool); ok {
 		config.Show = aws.Bool(v)
@@ -729,7 +728,7 @@ func expandGutterStyle(tfList []interface{}) *types.GutterStyle {
 	return config
 }
 
-func expandMarginStyle(tfList []interface{}) *types.MarginStyle {
+func expandMarginStyle(tfList []interface{}) *quicksight.MarginStyle {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -739,7 +738,7 @@ func expandMarginStyle(tfList []interface{}) *types.MarginStyle {
 		return nil
 	}
 
-	config := &types.MarginStyle{}
+	config := &quicksight.MarginStyle{}
 
 	if v, ok := tfMap["show"].(bool); ok {
 		config.Show = aws.Bool(v)
@@ -748,7 +747,7 @@ func expandMarginStyle(tfList []interface{}) *types.MarginStyle {
 	return config
 }
 
-func expandTypography(tfList []interface{}) *types.Typography {
+func expandTypography(tfList []interface{}) *quicksight.Typography {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -758,7 +757,7 @@ func expandTypography(tfList []interface{}) *types.Typography {
 		return nil
 	}
 
-	config := &types.Typography{}
+	config := &quicksight.Typography{}
 
 	if v, ok := tfMap["font_families"].([]interface{}); ok && len(v) > 0 {
 		config.FontFamilies = expandFontFamilies(v)
@@ -766,12 +765,12 @@ func expandTypography(tfList []interface{}) *types.Typography {
 	return config
 }
 
-func expandFontFamilies(tfList []interface{}) []types.Font {
+func expandFontFamilies(tfList []interface{}) []*quicksight.Font {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var configs []types.Font
+	var configs []*quicksight.Font
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
 		if !ok {
@@ -783,18 +782,18 @@ func expandFontFamilies(tfList []interface{}) []types.Font {
 			continue
 		}
 
-		configs = append(configs, *font)
+		configs = append(configs, font)
 	}
 
 	return configs
 }
 
-func expandFont(tfMap map[string]interface{}) *types.Font {
+func expandFont(tfMap map[string]interface{}) *quicksight.Font {
 	if tfMap == nil {
 		return nil
 	}
 
-	font := &types.Font{}
+	font := &quicksight.Font{}
 
 	if v, ok := tfMap["font_family"].(string); ok && v != "" {
 		font.FontFamily = aws.String(v)
@@ -803,7 +802,7 @@ func expandFont(tfMap map[string]interface{}) *types.Font {
 	return font
 }
 
-func expandUIColorPalette(tfList []interface{}) *types.UIColorPalette {
+func expandUIColorPalette(tfList []interface{}) *quicksight.UIColorPalette {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -813,7 +812,7 @@ func expandUIColorPalette(tfList []interface{}) *types.UIColorPalette {
 		return nil
 	}
 
-	config := &types.UIColorPalette{}
+	config := &quicksight.UIColorPalette{}
 
 	if v, ok := tfMap["accent"].(string); ok && v != "" {
 		config.Accent = aws.String(v)
@@ -867,7 +866,7 @@ func expandUIColorPalette(tfList []interface{}) *types.UIColorPalette {
 	return config
 }
 
-func flattenThemeConfiguration(apiObject *types.ThemeConfiguration) []interface{} {
+func flattenThemeConfiguration(apiObject *quicksight.ThemeConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -889,26 +888,26 @@ func flattenThemeConfiguration(apiObject *types.ThemeConfiguration) []interface{
 	return []interface{}{tfMap}
 }
 
-func flattenDataColorPalette(apiObject *types.DataColorPalette) []interface{} {
+func flattenDataColorPalette(apiObject *quicksight.DataColorPalette) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 	if apiObject.Colors != nil {
-		tfMap["colors"] = flex.FlattenStringValueList(apiObject.Colors)
+		tfMap["colors"] = flex.FlattenStringList(apiObject.Colors)
 	}
 	if apiObject.EmptyFillColor != nil {
-		tfMap["empty_fill_color"] = aws.ToString(apiObject.EmptyFillColor)
+		tfMap["empty_fill_color"] = aws.StringValue(apiObject.EmptyFillColor)
 	}
 	if apiObject.MinMaxGradient != nil {
-		tfMap["min_max_gradient"] = flex.FlattenStringValueList(apiObject.MinMaxGradient)
+		tfMap["min_max_gradient"] = flex.FlattenStringList(apiObject.MinMaxGradient)
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenSheetStyle(apiObject *types.SheetStyle) []interface{} {
+func flattenSheetStyle(apiObject *quicksight.SheetStyle) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -924,7 +923,7 @@ func flattenSheetStyle(apiObject *types.SheetStyle) []interface{} {
 	return []interface{}{tfMap}
 }
 
-func flattenTileStyle(apiObject *types.TileStyle) []interface{} {
+func flattenTileStyle(apiObject *quicksight.TileStyle) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -937,20 +936,20 @@ func flattenTileStyle(apiObject *types.TileStyle) []interface{} {
 	return []interface{}{tfMap}
 }
 
-func flattenBorderStyle(apiObject *types.BorderStyle) []interface{} {
+func flattenBorderStyle(apiObject *quicksight.BorderStyle) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 	if apiObject.Show != nil {
-		tfMap["show"] = aws.ToBool(apiObject.Show)
+		tfMap["show"] = aws.BoolValue(apiObject.Show)
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenTileLayoutStyle(apiObject *types.TileLayoutStyle) []interface{} {
+func flattenTileLayoutStyle(apiObject *quicksight.TileLayoutStyle) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -966,33 +965,33 @@ func flattenTileLayoutStyle(apiObject *types.TileLayoutStyle) []interface{} {
 	return []interface{}{tfMap}
 }
 
-func flattenGutterStyle(apiObject *types.GutterStyle) []interface{} {
+func flattenGutterStyle(apiObject *quicksight.GutterStyle) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 	if apiObject.Show != nil {
-		tfMap["show"] = aws.ToBool(apiObject.Show)
+		tfMap["show"] = aws.BoolValue(apiObject.Show)
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenMarginStyle(apiObject *types.MarginStyle) []interface{} {
+func flattenMarginStyle(apiObject *quicksight.MarginStyle) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 	if apiObject.Show != nil {
-		tfMap["show"] = aws.ToBool(apiObject.Show)
+		tfMap["show"] = aws.BoolValue(apiObject.Show)
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenTypography(apiObject *types.Typography) []interface{} {
+func flattenTypography(apiObject *quicksight.Typography) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1005,16 +1004,20 @@ func flattenTypography(apiObject *types.Typography) []interface{} {
 	return []interface{}{tfMap}
 }
 
-func flattenFonts(apiObject []types.Font) []interface{} {
+func flattenFonts(apiObject []*quicksight.Font) []interface{} {
 	if len(apiObject) == 0 {
 		return nil
 	}
 
 	var tfList []interface{}
 	for _, font := range apiObject {
+		if font == nil {
+			continue
+		}
+
 		tfMap := map[string]interface{}{}
 		if font.FontFamily != nil {
-			tfMap["font_family"] = aws.ToString(font.FontFamily)
+			tfMap["font_family"] = aws.StringValue(font.FontFamily)
 		}
 		tfList = append(tfList, tfMap)
 	}
@@ -1022,59 +1025,59 @@ func flattenFonts(apiObject []types.Font) []interface{} {
 	return tfList
 }
 
-func flattenUIColorPalette(apiObject *types.UIColorPalette) []interface{} {
+func flattenUIColorPalette(apiObject *quicksight.UIColorPalette) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 	if apiObject.Accent != nil {
-		tfMap["accent"] = aws.ToString(apiObject.Accent)
+		tfMap["accent"] = aws.StringValue(apiObject.Accent)
 	}
 	if apiObject.AccentForeground != nil {
-		tfMap["accent_foreground"] = aws.ToString(apiObject.AccentForeground)
+		tfMap["accent_foreground"] = aws.StringValue(apiObject.AccentForeground)
 	}
 	if apiObject.Danger != nil {
-		tfMap["danger"] = aws.ToString(apiObject.Danger)
+		tfMap["danger"] = aws.StringValue(apiObject.Danger)
 	}
 	if apiObject.DangerForeground != nil {
-		tfMap["danger_foreground"] = aws.ToString(apiObject.DangerForeground)
+		tfMap["danger_foreground"] = aws.StringValue(apiObject.DangerForeground)
 	}
 	if apiObject.Dimension != nil {
-		tfMap["dimension"] = aws.ToString(apiObject.Dimension)
+		tfMap["dimension"] = aws.StringValue(apiObject.Dimension)
 	}
 	if apiObject.DimensionForeground != nil {
-		tfMap["dimension_foreground"] = aws.ToString(apiObject.DimensionForeground)
+		tfMap["dimension_foreground"] = aws.StringValue(apiObject.DimensionForeground)
 	}
 	if apiObject.Measure != nil {
-		tfMap["measure"] = aws.ToString(apiObject.Measure)
+		tfMap["measure"] = aws.StringValue(apiObject.Measure)
 	}
 	if apiObject.MeasureForeground != nil {
-		tfMap["measure_foreground"] = aws.ToString(apiObject.MeasureForeground)
+		tfMap["measure_foreground"] = aws.StringValue(apiObject.MeasureForeground)
 	}
 	if apiObject.PrimaryBackground != nil {
-		tfMap["primary_background"] = aws.ToString(apiObject.PrimaryBackground)
+		tfMap["primary_background"] = aws.StringValue(apiObject.PrimaryBackground)
 	}
 	if apiObject.PrimaryForeground != nil {
-		tfMap["primary_foreground"] = aws.ToString(apiObject.PrimaryForeground)
+		tfMap["primary_foreground"] = aws.StringValue(apiObject.PrimaryForeground)
 	}
 	if apiObject.SecondaryBackground != nil {
-		tfMap["secondary_background"] = aws.ToString(apiObject.SecondaryBackground)
+		tfMap["secondary_background"] = aws.StringValue(apiObject.SecondaryBackground)
 	}
 	if apiObject.SecondaryForeground != nil {
-		tfMap["secondary_foreground"] = aws.ToString(apiObject.SecondaryForeground)
+		tfMap["secondary_foreground"] = aws.StringValue(apiObject.SecondaryForeground)
 	}
 	if apiObject.Success != nil {
-		tfMap["success"] = aws.ToString(apiObject.Success)
+		tfMap["success"] = aws.StringValue(apiObject.Success)
 	}
 	if apiObject.SuccessForeground != nil {
-		tfMap["success_foreground"] = aws.ToString(apiObject.SuccessForeground)
+		tfMap["success_foreground"] = aws.StringValue(apiObject.SuccessForeground)
 	}
 	if apiObject.Warning != nil {
-		tfMap["warning"] = aws.ToString(apiObject.Warning)
+		tfMap["warning"] = aws.StringValue(apiObject.Warning)
 	}
 	if apiObject.WarningForeground != nil {
-		tfMap["warning_foreground"] = aws.ToString(apiObject.WarningForeground)
+		tfMap["warning_foreground"] = aws.StringValue(apiObject.WarningForeground)
 	}
 
 	return []interface{}{tfMap}

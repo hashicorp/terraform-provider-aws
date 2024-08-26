@@ -8,21 +8,21 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/quicksight/types"
+	"github.com/aws/aws-sdk-go/service/quicksight"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccQuickSightRefreshSchedule_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var schedule types.RefreshSchedule
+	var schedule quicksight.RefreshSchedule
 	resourceName := "aws_quicksight_refresh_schedule.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -60,7 +60,7 @@ func TestAccQuickSightRefreshSchedule_basic(t *testing.T) {
 
 func TestAccQuickSightRefreshSchedule_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var schedule types.RefreshSchedule
+	var schedule quicksight.RefreshSchedule
 	resourceName := "aws_quicksight_refresh_schedule.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -86,7 +86,7 @@ func TestAccQuickSightRefreshSchedule_disappears(t *testing.T) {
 
 func TestAccQuickSightRefreshSchedule_weeklyRefresh(t *testing.T) {
 	ctx := acctest.Context(t)
-	var schedule types.RefreshSchedule
+	var schedule quicksight.RefreshSchedule
 	resourceName := "aws_quicksight_refresh_schedule.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -123,7 +123,7 @@ func TestAccQuickSightRefreshSchedule_weeklyRefresh(t *testing.T) {
 
 func TestAccQuickSightRefreshSchedule_monthlyRefresh(t *testing.T) {
 	ctx := acctest.Context(t)
-	var schedule types.RefreshSchedule
+	var schedule quicksight.RefreshSchedule
 	resourceName := "aws_quicksight_refresh_schedule.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -158,14 +158,14 @@ func TestAccQuickSightRefreshSchedule_monthlyRefresh(t *testing.T) {
 	})
 }
 
-func testAccCheckRefreshScheduleExists(ctx context.Context, resourceName string, schedule *types.RefreshSchedule) resource.TestCheckFunc {
+func testAccCheckRefreshScheduleExists(ctx context.Context, resourceName string, schedule *quicksight.RefreshSchedule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
 		_, output, err := tfquicksight.FindRefreshScheduleByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.QuickSight, create.ErrActionCheckingExistence, tfquicksight.ResNameRefreshSchedule, rs.Primary.ID, err)
@@ -179,7 +179,7 @@ func testAccCheckRefreshScheduleExists(ctx context.Context, resourceName string,
 
 func testAccCheckRefreshScheduleDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_quicksight_refresh_schedule" {
 				continue
@@ -187,7 +187,7 @@ func testAccCheckRefreshScheduleDestroy(ctx context.Context) resource.TestCheckF
 
 			_, output, err := tfquicksight.FindRefreshScheduleByID(ctx, conn, rs.Primary.ID)
 			if err != nil {
-				if errs.IsA[*types.ResourceNotFoundException](err) {
+				if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
 					return nil
 				}
 				return err

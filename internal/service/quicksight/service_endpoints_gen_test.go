@@ -4,9 +4,9 @@ package quicksight_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"maps"
+	"net/url"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -14,9 +14,7 @@ import (
 	"testing"
 
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	quicksight_sdkv2 "github.com/aws/aws-sdk-go-v2/service/quicksight"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	quicksight_sdkv1 "github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/aws/smithy-go/middleware"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
@@ -205,71 +203,33 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 		},
 	}
 
-	t.Run("v1", func(t *testing.T) {
-		for name, testcase := range testcases { //nolint:paralleltest // uses t.Setenv
-			testcase := testcase
+	for name, testcase := range testcases { //nolint:paralleltest // uses t.Setenv
+		testcase := testcase
 
-			t.Run(name, func(t *testing.T) {
-				testEndpointCase(t, region, testcase, callServiceV1)
-			})
-		}
-	})
-
-	t.Run("v2", func(t *testing.T) {
-		for name, testcase := range testcases { //nolint:paralleltest // uses t.Setenv
-			testcase := testcase
-
-			t.Run(name, func(t *testing.T) {
-				testEndpointCase(t, region, testcase, callServiceV2)
-			})
-		}
-	})
+		t.Run(name, func(t *testing.T) {
+			testEndpointCase(t, region, testcase, callService)
+		})
+	}
 }
 
 func defaultEndpoint(region string) string {
-	r := quicksight_sdkv2.NewDefaultEndpointResolverV2()
+	r := endpoints.DefaultResolver()
 
-	ep, err := r.ResolveEndpoint(context.Background(), quicksight_sdkv2.EndpointParameters{
-		Region: aws_sdkv2.String(region),
-	})
+	ep, err := r.EndpointFor(quicksight_sdkv1.EndpointsID, region)
 	if err != nil {
 		return err.Error()
 	}
 
-	if ep.URI.Path == "" {
-		ep.URI.Path = "/"
+	url, _ := url.Parse(ep.URL)
+
+	if url.Path == "" {
+		url.Path = "/"
 	}
 
-	return ep.URI.String()
+	return url.String()
 }
 
-func callServiceV2(ctx context.Context, t *testing.T, meta *conns.AWSClient) string {
-	t.Helper()
-
-	var endpoint string
-
-	client := meta.QuickSightClient(ctx)
-
-	_, err := client.ListDashboards(ctx, &quicksight_sdkv2.ListDashboardsInput{
-		AwsAccountId: aws_sdkv1.String("123456789012"),
-	},
-		func(opts *quicksight_sdkv2.Options) {
-			opts.APIOptions = append(opts.APIOptions,
-				addRetrieveEndpointURLMiddleware(t, &endpoint),
-				addCancelRequestMiddleware(),
-			)
-		},
-	)
-	if err == nil {
-		t.Fatal("Expected an error, got none")
-	} else if !errors.Is(err, errCancelOperation) {
-		t.Fatalf("Unexpected error: %s", err)
-	}
-
-	return endpoint
-}
-
-func callServiceV1(ctx context.Context, t *testing.T, meta *conns.AWSClient) string {
+func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) string {
 	t.Helper()
 
 	client := meta.QuickSightConn(ctx)

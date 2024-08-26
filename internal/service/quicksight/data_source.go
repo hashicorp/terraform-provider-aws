@@ -9,15 +9,13 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/quicksight"
-	"github.com/aws/aws-sdk-go-v2/service/quicksight/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/quicksight"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -44,11 +42,11 @@ func ResourceDataSource() *schema.Resource {
 				},
 
 				"aws_account_id": {
-					Type:             schema.TypeString,
-					Optional:         true,
-					Computed:         true,
-					ForceNew:         true,
-					ValidateDiagFunc: validation.ToDiagFunc(verify.ValidAccountID),
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidAccountID,
 				},
 
 				"credentials": {
@@ -58,10 +56,10 @@ func ResourceDataSource() *schema.Resource {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"copy_source_arn": {
-								Type:             schema.TypeString,
-								Optional:         true,
-								ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
-								ConflictsWith:    []string{"credentials.0.credential_pair"},
+								Type:          schema.TypeString,
+								Optional:      true,
+								ValidateFunc:  verify.ValidARN,
+								ConflictsWith: []string{"credentials.0.credential_pair"},
 							},
 							"credential_pair": {
 								Type:     schema.TypeList,
@@ -72,18 +70,18 @@ func ResourceDataSource() *schema.Resource {
 										"password": {
 											Type:     schema.TypeString,
 											Required: true,
-											ValidateDiagFunc: validation.AllDiag(
-												validation.ToDiagFunc(validation.NoZeroValues),
-												validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
+											ValidateFunc: validation.All(
+												validation.NoZeroValues,
+												validation.StringLenBetween(1, 1024),
 											),
 											Sensitive: true,
 										},
 										"username": {
 											Type:     schema.TypeString,
 											Required: true,
-											ValidateDiagFunc: validation.AllDiag(
-												validation.ToDiagFunc(validation.NoZeroValues),
-												validation.ToDiagFunc(validation.StringLenBetween(1, 64)),
+											ValidateFunc: validation.All(
+												validation.NoZeroValues,
+												validation.StringLenBetween(1, 64),
 											),
 											Sensitive: true,
 										},
@@ -104,9 +102,9 @@ func ResourceDataSource() *schema.Resource {
 				"name": {
 					Type:     schema.TypeString,
 					Required: true,
-					ValidateDiagFunc: validation.AllDiag(
-						validation.ToDiagFunc(validation.NoZeroValues),
-						validation.ToDiagFunc(validation.StringLenBetween(1, 128)),
+					ValidateFunc: validation.All(
+						validation.NoZeroValues,
+						validation.StringLenBetween(1, 128),
 					),
 				},
 
@@ -124,9 +122,9 @@ func ResourceDataSource() *schema.Resource {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"domain": {
-											Type:             schema.TypeString,
-											Required:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.NoZeroValues),
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.NoZeroValues,
 										},
 									},
 								},
@@ -138,9 +136,9 @@ func ResourceDataSource() *schema.Resource {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"work_group": {
-											Type:             schema.TypeString,
-											Optional:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.NoZeroValues),
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.NoZeroValues,
 										},
 									},
 								},
@@ -152,19 +150,19 @@ func ResourceDataSource() *schema.Resource {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"database": {
-											Type:             schema.TypeString,
-											Required:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.NoZeroValues),
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.NoZeroValues,
 										},
 										"host": {
-											Type:             schema.TypeString,
-											Required:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.NoZeroValues),
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.NoZeroValues,
 										},
 										"port": {
-											Type:             schema.TypeInt,
-											Required:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(1)),
+											Type:         schema.TypeInt,
+											Required:     true,
+											ValidateFunc: validation.IntAtLeast(1),
 										},
 									},
 								},
@@ -176,19 +174,19 @@ func ResourceDataSource() *schema.Resource {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"database": {
-											Type:             schema.TypeString,
-											Required:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.NoZeroValues),
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.NoZeroValues,
 										},
 										"host": {
-											Type:             schema.TypeString,
-											Required:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.NoZeroValues),
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.NoZeroValues,
 										},
 										"port": {
-											Type:             schema.TypeInt,
-											Required:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(1)),
+											Type:         schema.TypeInt,
+											Required:     true,
+											ValidateFunc: validation.IntAtLeast(1),
 										},
 									},
 								},
@@ -200,9 +198,9 @@ func ResourceDataSource() *schema.Resource {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"data_set_name": {
-											Type:             schema.TypeString,
-											Required:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.NoZeroValues),
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.NoZeroValues,
 										},
 									},
 								},
@@ -214,9 +212,9 @@ func ResourceDataSource() *schema.Resource {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"site_base_url": {
-											Type:             schema.TypeString,
-											Required:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.NoZeroValues),
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.NoZeroValues,
 										},
 									},
 								},
@@ -228,19 +226,19 @@ func ResourceDataSource() *schema.Resource {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"database": {
-											Type:             schema.TypeString,
-											Required:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.NoZeroValues),
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.NoZeroValues,
 										},
 										"host": {
-											Type:             schema.TypeString,
-											Required:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.NoZeroValues),
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.NoZeroValues,
 										},
 										"port": {
-											Type:             schema.TypeInt,
-											Required:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(1)),
+											Type:         schema.TypeInt,
+											Required:     true,
+											ValidateFunc: validation.IntAtLeast(1),
 										},
 									},
 								},
@@ -252,19 +250,19 @@ func ResourceDataSource() *schema.Resource {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"database": {
-											Type:             schema.TypeString,
-											Required:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.NoZeroValues),
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.NoZeroValues,
 										},
 										"host": {
-											Type:             schema.TypeString,
-											Required:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.NoZeroValues),
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.NoZeroValues,
 										},
 										"port": {
-											Type:             schema.TypeInt,
-											Required:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(1)),
+											Type:         schema.TypeInt,
+											Required:     true,
+											ValidateFunc: validation.IntAtLeast(1),
 										},
 									},
 								},
@@ -276,19 +274,19 @@ func ResourceDataSource() *schema.Resource {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"database": {
-											Type:             schema.TypeString,
-											Required:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.NoZeroValues),
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.NoZeroValues,
 										},
 										"host": {
-											Type:             schema.TypeString,
-											Required:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.NoZeroValues),
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.NoZeroValues,
 										},
 										"port": {
-											Type:             schema.TypeInt,
-											Required:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(1)),
+											Type:         schema.TypeInt,
+											Required:     true,
+											ValidateFunc: validation.IntAtLeast(1),
 										},
 									},
 								},
@@ -300,19 +298,19 @@ func ResourceDataSource() *schema.Resource {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"database": {
-											Type:             schema.TypeString,
-											Required:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.NoZeroValues),
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.NoZeroValues,
 										},
 										"host": {
-											Type:             schema.TypeString,
-											Required:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.NoZeroValues),
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.NoZeroValues,
 										},
 										"port": {
-											Type:             schema.TypeInt,
-											Required:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(1)),
+											Type:         schema.TypeInt,
+											Required:     true,
+											ValidateFunc: validation.IntAtLeast(1),
 										},
 									},
 								},
@@ -324,19 +322,19 @@ func ResourceDataSource() *schema.Resource {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"catalog": {
-											Type:             schema.TypeString,
-											Required:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.NoZeroValues),
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.NoZeroValues,
 										},
 										"host": {
-											Type:             schema.TypeString,
-											Required:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.NoZeroValues),
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.NoZeroValues,
 										},
 										"port": {
-											Type:             schema.TypeInt,
-											Required:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(1)),
+											Type:         schema.TypeInt,
+											Required:     true,
+											ValidateFunc: validation.IntAtLeast(1),
 										},
 									},
 								},
@@ -348,14 +346,14 @@ func ResourceDataSource() *schema.Resource {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"database": {
-											Type:             schema.TypeString,
-											Required:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.NoZeroValues),
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.NoZeroValues,
 										},
 										"instance_id": {
-											Type:             schema.TypeString,
-											Required:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.NoZeroValues),
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.NoZeroValues,
 										},
 									},
 								},
@@ -367,14 +365,14 @@ func ResourceDataSource() *schema.Resource {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"cluster_id": {
-											Type:             schema.TypeString,
-											Optional:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.NoZeroValues),
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.NoZeroValues,
 										},
 										"database": {
-											Type:             schema.TypeString,
-											Required:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.NoZeroValues),
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.NoZeroValues,
 										},
 										"host": {
 											Type:     schema.TypeString,
@@ -400,14 +398,14 @@ func ResourceDataSource() *schema.Resource {
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
 													"bucket": {
-														Type:             schema.TypeString,
-														Required:         true,
-														ValidateDiagFunc: validation.ToDiagFunc(validation.NoZeroValues),
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.NoZeroValues,
 													},
 													"key": {
-														Type:             schema.TypeString,
-														Required:         true,
-														ValidateDiagFunc: validation.ToDiagFunc(validation.NoZeroValues),
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.NoZeroValues,
 													},
 												},
 											},
@@ -422,9 +420,9 @@ func ResourceDataSource() *schema.Resource {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"site_base_url": {
-											Type:             schema.TypeString,
-											Required:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.NoZeroValues),
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.NoZeroValues,
 										},
 									},
 								},
@@ -436,19 +434,19 @@ func ResourceDataSource() *schema.Resource {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"database": {
-											Type:             schema.TypeString,
-											Required:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.NoZeroValues),
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.NoZeroValues,
 										},
 										"host": {
-											Type:             schema.TypeString,
-											Required:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.NoZeroValues),
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.NoZeroValues,
 										},
 										"warehouse": {
-											Type:             schema.TypeString,
-											Required:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.NoZeroValues),
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.NoZeroValues,
 										},
 									},
 								},
@@ -460,14 +458,14 @@ func ResourceDataSource() *schema.Resource {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"host": {
-											Type:             schema.TypeString,
-											Required:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.NoZeroValues),
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.NoZeroValues,
 										},
 										"port": {
-											Type:             schema.TypeInt,
-											Required:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(1)),
+											Type:         schema.TypeInt,
+											Required:     true,
+											ValidateFunc: validation.IntAtLeast(1),
 										},
 									},
 								},
@@ -479,19 +477,19 @@ func ResourceDataSource() *schema.Resource {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"database": {
-											Type:             schema.TypeString,
-											Required:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.NoZeroValues),
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.NoZeroValues,
 										},
 										"host": {
-											Type:             schema.TypeString,
-											Required:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.NoZeroValues),
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.NoZeroValues,
 										},
 										"port": {
-											Type:             schema.TypeInt,
-											Required:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(1)),
+											Type:         schema.TypeInt,
+											Required:     true,
+											ValidateFunc: validation.IntAtLeast(1),
 										},
 									},
 								},
@@ -503,19 +501,19 @@ func ResourceDataSource() *schema.Resource {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"database": {
-											Type:             schema.TypeString,
-											Required:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.NoZeroValues),
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.NoZeroValues,
 										},
 										"host": {
-											Type:             schema.TypeString,
-											Required:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.NoZeroValues),
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.NoZeroValues,
 										},
 										"port": {
-											Type:             schema.TypeInt,
-											Required:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(1)),
+											Type:         schema.TypeInt,
+											Required:     true,
+											ValidateFunc: validation.IntAtLeast(1),
 										},
 									},
 								},
@@ -527,14 +525,14 @@ func ResourceDataSource() *schema.Resource {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"max_rows": {
-											Type:             schema.TypeInt,
-											Required:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(1)),
+											Type:         schema.TypeInt,
+											Required:     true,
+											ValidateFunc: validation.IntAtLeast(1),
 										},
 										"query": {
-											Type:             schema.TypeString,
-											Required:         true,
-											ValidateDiagFunc: validation.ToDiagFunc(validation.NoZeroValues),
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.NoZeroValues,
 										},
 									},
 								},
@@ -558,9 +556,9 @@ func ResourceDataSource() *schema.Resource {
 								MaxItems: 16,
 							},
 							"principal": {
-								Type:             schema.TypeString,
-								Required:         true,
-								ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
 							},
 						},
 					},
@@ -584,10 +582,10 @@ func ResourceDataSource() *schema.Resource {
 				names.AttrTagsAll: tftags.TagsSchemaComputed(),
 
 				"type": {
-					Type:             schema.TypeString,
-					Required:         true,
-					ForceNew:         true,
-					ValidateDiagFunc: enum.Validate[types.DataSourceType](),
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringInSlice(quicksight.DataSourceType_Values(), false),
 				},
 
 				"vpc_connection_properties": {
@@ -597,9 +595,9 @@ func ResourceDataSource() *schema.Resource {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"vpc_connection_arn": {
-								Type:             schema.TypeString,
-								Required:         true,
-								ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
 							},
 						},
 					},
@@ -612,7 +610,7 @@ func ResourceDataSource() *schema.Resource {
 }
 
 func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId := meta.(*conns.AWSClient).AccountID
 	id := d.Get("data_source_id").(string)
@@ -627,7 +625,7 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 		DataSourceParameters: expandDataSourceParameters(d.Get("parameters").([]interface{})),
 		Name:                 aws.String(d.Get("name").(string)),
 		Tags:                 getTagsIn(ctx),
-		Type:                 types.DataSourceType(d.Get("type").(string)),
+		Type:                 aws.String(d.Get("type").(string)),
 	}
 
 	if v, ok := d.GetOk("credentials"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -646,7 +644,7 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 		params.VpcConnectionProperties = expandDataSourceVPCConnectionProperties(v.([]interface{}))
 	}
 
-	_, err := conn.CreateDataSource(ctx, params)
+	_, err := conn.CreateDataSourceWithContext(ctx, params)
 	if err != nil {
 		return diag.Errorf("creating QuickSight Data Source: %s", err)
 	}
@@ -661,7 +659,7 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId, dataSourceId, err := ParseDataSourceID(d.Id())
 	if err != nil {
@@ -673,9 +671,9 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta in
 		DataSourceId: aws.String(dataSourceId),
 	}
 
-	output, err := conn.DescribeDataSource(ctx, descOpts)
+	output, err := conn.DescribeDataSourceWithContext(ctx, descOpts)
 
-	if !d.IsNewResource() && errs.IsA[*types.ResourceNotFoundException](err) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] QuickSight Data Source (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -710,7 +708,7 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta in
 		return diag.Errorf("setting vpc_connection_properties: %s", err)
 	}
 
-	permsResp, err := conn.DescribeDataSourcePermissions(ctx, &quicksight.DescribeDataSourcePermissionsInput{
+	permsResp, err := conn.DescribeDataSourcePermissionsWithContext(ctx, &quicksight.DescribeDataSourcePermissionsInput{
 		AwsAccountId: aws.String(awsAccountId),
 		DataSourceId: aws.String(dataSourceId),
 	})
@@ -727,7 +725,7 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	if d.HasChangesExcept("permission", "tags", "tags_all") {
 		awsAccountId, dataSourceId, err := ParseDataSourceID(d.Id())
@@ -757,7 +755,7 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			params.VpcConnectionProperties = expandDataSourceVPCConnectionProperties(v.([]interface{}))
 		}
 
-		_, err = conn.UpdateDataSource(ctx, params)
+		_, err = conn.UpdateDataSourceWithContext(ctx, params)
 
 		if err != nil {
 			return diag.Errorf("updating QuickSight Data Source (%s): %s", d.Id(), err)
@@ -793,7 +791,7 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			params.RevokePermissions = toRevoke
 		}
 
-		_, err = conn.UpdateDataSourcePermissions(ctx, params)
+		_, err = conn.UpdateDataSourcePermissionsWithContext(ctx, params)
 
 		if err != nil {
 			return diag.Errorf("updating QuickSight Data Source (%s) permissions: %s", dataSourceId, err)
@@ -804,7 +802,7 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceDataSourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId, dataSourceId, err := ParseDataSourceID(d.Id())
 	if err != nil {
@@ -816,9 +814,9 @@ func resourceDataSourceDelete(ctx context.Context, d *schema.ResourceData, meta 
 		DataSourceId: aws.String(dataSourceId),
 	}
 
-	_, err = conn.DeleteDataSource(ctx, deleteOpts)
+	_, err = conn.DeleteDataSourceWithContext(ctx, deleteOpts)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 
@@ -829,7 +827,7 @@ func resourceDataSourceDelete(ctx context.Context, d *schema.ResourceData, meta 
 	return nil
 }
 
-func expandDataSourceCredentials(tfList []interface{}) *types.DataSourceCredentials {
+func expandDataSourceCredentials(tfList []interface{}) *quicksight.DataSourceCredentials {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -840,7 +838,7 @@ func expandDataSourceCredentials(tfList []interface{}) *types.DataSourceCredenti
 		return nil
 	}
 
-	credentials := &types.DataSourceCredentials{}
+	credentials := &quicksight.DataSourceCredentials{}
 
 	if v, ok := tfMap["copy_source_arn"].(string); ok && v != "" {
 		credentials.CopySourceArn = aws.String(v)
@@ -853,12 +851,12 @@ func expandDataSourceCredentials(tfList []interface{}) *types.DataSourceCredenti
 	return credentials
 }
 
-func expandDataSourceCredentialPair(tfList []interface{}) *types.CredentialPair {
+func expandDataSourceCredentialPair(tfList []interface{}) *quicksight.CredentialPair {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	credentialPair := &types.CredentialPair{}
+	credentialPair := &quicksight.CredentialPair{}
 
 	tfMap, ok := tfList[0].(map[string]interface{})
 
@@ -877,7 +875,7 @@ func expandDataSourceCredentialPair(tfList []interface{}) *types.CredentialPair 
 	return credentialPair
 }
 
-func expandDataSourceParameters(tfList []interface{}) types.DataSourceParameters {
+func expandDataSourceParameters(tfList []interface{}) *quicksight.DataSourceParameters {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -888,19 +886,19 @@ func expandDataSourceParameters(tfList []interface{}) types.DataSourceParameters
 		return nil
 	}
 
-	var dataSourceParams types.DataSourceParameters
+	dataSourceParams := &quicksight.DataSourceParameters{}
 
 	if v, ok := tfMap["amazon_elasticsearch"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		m, ok := v[0].(map[string]interface{})
 
 		if ok {
-			ps := &types.AmazonElasticsearchParameters{}
+			ps := &quicksight.AmazonElasticsearchParameters{}
 
 			if v, ok := m["domain"].(string); ok && v != "" {
 				ps.Domain = aws.String(v)
 			}
 
-			dataSourceParams = &types.DataSourceParametersMemberAmazonElasticsearchParameters{Value: *ps}
+			dataSourceParams.AmazonElasticsearchParameters = ps
 		}
 	}
 
@@ -908,12 +906,12 @@ func expandDataSourceParameters(tfList []interface{}) types.DataSourceParameters
 		m, ok := v[0].(map[string]interface{})
 
 		if ok {
-			ps := &types.AthenaParameters{}
+			ps := &quicksight.AthenaParameters{}
 			if v, ok := m["work_group"].(string); ok && v != "" {
 				ps.WorkGroup = aws.String(v)
 			}
 
-			dataSourceParams = &types.DataSourceParametersMemberAthenaParameters{Value: *ps}
+			dataSourceParams.AthenaParameters = ps
 		}
 	}
 
@@ -921,7 +919,7 @@ func expandDataSourceParameters(tfList []interface{}) types.DataSourceParameters
 		m, ok := v[0].(map[string]interface{})
 
 		if ok {
-			ps := &types.AuroraParameters{}
+			ps := &quicksight.AuroraParameters{}
 			if v, ok := m["database"].(string); ok && v != "" {
 				ps.Database = aws.String(v)
 			}
@@ -929,10 +927,10 @@ func expandDataSourceParameters(tfList []interface{}) types.DataSourceParameters
 				ps.Host = aws.String(v)
 			}
 			if v, ok := m["port"].(int); ok {
-				ps.Port = aws.Int32(int32(v))
+				ps.Port = aws.Int64(int64(v))
 			}
 
-			dataSourceParams = &types.DataSourceParametersMemberAuroraParameters{Value: *ps}
+			dataSourceParams.AuroraParameters = ps
 		}
 	}
 
@@ -940,7 +938,7 @@ func expandDataSourceParameters(tfList []interface{}) types.DataSourceParameters
 		m, ok := v[0].(map[string]interface{})
 
 		if ok {
-			ps := &types.AuroraPostgreSqlParameters{}
+			ps := &quicksight.AuroraPostgreSqlParameters{}
 			if v, ok := m["database"].(string); ok && v != "" {
 				ps.Database = aws.String(v)
 			}
@@ -948,10 +946,10 @@ func expandDataSourceParameters(tfList []interface{}) types.DataSourceParameters
 				ps.Host = aws.String(v)
 			}
 			if v, ok := m["port"].(int); ok {
-				ps.Port = aws.Int32(int32(v))
+				ps.Port = aws.Int64(int64(v))
 			}
 
-			dataSourceParams = &types.DataSourceParametersMemberAuroraPostgreSqlParameters{Value: *ps}
+			dataSourceParams.AuroraPostgreSqlParameters = ps
 		}
 	}
 
@@ -959,12 +957,12 @@ func expandDataSourceParameters(tfList []interface{}) types.DataSourceParameters
 		m, ok := v[0].(map[string]interface{})
 
 		if ok {
-			ps := &types.AwsIotAnalyticsParameters{}
+			ps := &quicksight.AwsIotAnalyticsParameters{}
 			if v, ok := m["data_set_name"].(string); ok && v != "" {
 				ps.DataSetName = aws.String(v)
 			}
 
-			dataSourceParams = &types.DataSourceParametersMemberAwsIotAnalyticsParameters{Value: *ps}
+			dataSourceParams.AwsIotAnalyticsParameters = ps
 		}
 	}
 
@@ -972,12 +970,12 @@ func expandDataSourceParameters(tfList []interface{}) types.DataSourceParameters
 		m, ok := v[0].(map[string]interface{})
 
 		if ok {
-			ps := &types.JiraParameters{}
+			ps := &quicksight.JiraParameters{}
 			if v, ok := m["site_base_url"].(string); ok && v != "" {
 				ps.SiteBaseUrl = aws.String(v)
 			}
 
-			dataSourceParams = &types.DataSourceParametersMemberJiraParameters{Value: *ps}
+			dataSourceParams.JiraParameters = ps
 		}
 	}
 
@@ -985,7 +983,7 @@ func expandDataSourceParameters(tfList []interface{}) types.DataSourceParameters
 		m, ok := v[0].(map[string]interface{})
 
 		if ok {
-			ps := &types.MariaDbParameters{}
+			ps := &quicksight.MariaDbParameters{}
 			if v, ok := m["database"].(string); ok && v != "" {
 				ps.Database = aws.String(v)
 			}
@@ -993,10 +991,10 @@ func expandDataSourceParameters(tfList []interface{}) types.DataSourceParameters
 				ps.Host = aws.String(v)
 			}
 			if v, ok := m["port"].(int); ok {
-				ps.Port = aws.Int32(int32(v))
+				ps.Port = aws.Int64(int64(v))
 			}
 
-			dataSourceParams = &types.DataSourceParametersMemberMariaDbParameters{Value: *ps}
+			dataSourceParams.MariaDbParameters = ps
 		}
 	}
 
@@ -1004,7 +1002,7 @@ func expandDataSourceParameters(tfList []interface{}) types.DataSourceParameters
 		m, ok := v[0].(map[string]interface{})
 
 		if ok {
-			ps := &types.MySqlParameters{}
+			ps := &quicksight.MySqlParameters{}
 			if v, ok := m["database"].(string); ok && v != "" {
 				ps.Database = aws.String(v)
 			}
@@ -1012,10 +1010,10 @@ func expandDataSourceParameters(tfList []interface{}) types.DataSourceParameters
 				ps.Host = aws.String(v)
 			}
 			if v, ok := m["port"].(int); ok {
-				ps.Port = aws.Int32(int32(v))
+				ps.Port = aws.Int64(int64(v))
 			}
 
-			dataSourceParams = &types.DataSourceParametersMemberMySqlParameters{Value: *ps}
+			dataSourceParams.MySqlParameters = ps
 		}
 	}
 
@@ -1023,7 +1021,7 @@ func expandDataSourceParameters(tfList []interface{}) types.DataSourceParameters
 		m, ok := v[0].(map[string]interface{})
 
 		if ok {
-			ps := &types.OracleParameters{}
+			ps := &quicksight.OracleParameters{}
 			if v, ok := m["database"].(string); ok && v != "" {
 				ps.Database = aws.String(v)
 			}
@@ -1031,10 +1029,10 @@ func expandDataSourceParameters(tfList []interface{}) types.DataSourceParameters
 				ps.Host = aws.String(v)
 			}
 			if v, ok := m["port"].(int); ok {
-				ps.Port = aws.Int32(int32(v))
+				ps.Port = aws.Int64(int64(v))
 			}
 
-			dataSourceParams = &types.DataSourceParametersMemberOracleParameters{Value: *ps}
+			dataSourceParams.OracleParameters = ps
 		}
 	}
 
@@ -1042,7 +1040,7 @@ func expandDataSourceParameters(tfList []interface{}) types.DataSourceParameters
 		m, ok := v[0].(map[string]interface{})
 
 		if ok {
-			ps := &types.PostgreSqlParameters{}
+			ps := &quicksight.PostgreSqlParameters{}
 			if v, ok := m["database"].(string); ok && v != "" {
 				ps.Database = aws.String(v)
 			}
@@ -1050,17 +1048,17 @@ func expandDataSourceParameters(tfList []interface{}) types.DataSourceParameters
 				ps.Host = aws.String(v)
 			}
 			if v, ok := m["port"].(int); ok {
-				ps.Port = aws.Int32(int32(v))
+				ps.Port = aws.Int64(int64(v))
 			}
 
-			dataSourceParams = &types.DataSourceParametersMemberPostgreSqlParameters{Value: *ps}
+			dataSourceParams.PostgreSqlParameters = ps
 		}
 	}
 	if v := tfMap["presto"].([]interface{}); ok && len(v) > 0 && v != nil {
 		m, ok := v[0].(map[string]interface{})
 
 		if ok {
-			ps := &types.PrestoParameters{}
+			ps := &quicksight.PrestoParameters{}
 			if v, ok := m["catalog"].(string); ok && v != "" {
 				ps.Catalog = aws.String(v)
 			}
@@ -1068,10 +1066,10 @@ func expandDataSourceParameters(tfList []interface{}) types.DataSourceParameters
 				ps.Host = aws.String(v)
 			}
 			if v, ok := m["port"].(int); ok {
-				ps.Port = aws.Int32(int32(v))
+				ps.Port = aws.Int64(int64(v))
 			}
 
-			dataSourceParams = &types.DataSourceParametersMemberPrestoParameters{Value: *ps}
+			dataSourceParams.PrestoParameters = ps
 		}
 	}
 
@@ -1079,7 +1077,7 @@ func expandDataSourceParameters(tfList []interface{}) types.DataSourceParameters
 		m, ok := v[0].(map[string]interface{})
 
 		if ok {
-			ps := &types.RdsParameters{}
+			ps := &quicksight.RdsParameters{}
 
 			if v, ok := m["database"].(string); ok && v != "" {
 				ps.Database = aws.String(v)
@@ -1088,7 +1086,7 @@ func expandDataSourceParameters(tfList []interface{}) types.DataSourceParameters
 				ps.InstanceId = aws.String(v)
 			}
 
-			dataSourceParams = &types.DataSourceParametersMemberRdsParameters{Value: *ps}
+			dataSourceParams.RdsParameters = ps
 		}
 	}
 
@@ -1096,7 +1094,7 @@ func expandDataSourceParameters(tfList []interface{}) types.DataSourceParameters
 		m, ok := v[0].(map[string]interface{})
 
 		if ok {
-			ps := &types.RedshiftParameters{}
+			ps := &quicksight.RedshiftParameters{}
 			if v, ok := m["cluster_id"].(string); ok && v != "" {
 				ps.ClusterId = aws.String(v)
 			}
@@ -1107,10 +1105,10 @@ func expandDataSourceParameters(tfList []interface{}) types.DataSourceParameters
 				ps.Host = aws.String(v)
 			}
 			if v, ok := m["port"].(int); ok {
-				ps.Port = int32(v)
+				ps.Port = aws.Int64(int64(v))
 			}
 
-			dataSourceParams = &types.DataSourceParametersMemberRedshiftParameters{Value: *ps}
+			dataSourceParams.RedshiftParameters = ps
 		}
 	}
 
@@ -1118,11 +1116,11 @@ func expandDataSourceParameters(tfList []interface{}) types.DataSourceParameters
 		m, ok := v[0].(map[string]interface{})
 
 		if ok {
-			ps := &types.S3Parameters{}
+			ps := &quicksight.S3Parameters{}
 			if v, ok := m["manifest_file_location"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 				lm, ok := v[0].(map[string]interface{})
 				if ok {
-					loc := &types.ManifestFileLocation{}
+					loc := &quicksight.ManifestFileLocation{}
 
 					if v, ok := lm["bucket"].(string); ok && v != "" {
 						loc.Bucket = aws.String(v)
@@ -1136,7 +1134,7 @@ func expandDataSourceParameters(tfList []interface{}) types.DataSourceParameters
 				}
 			}
 
-			dataSourceParams = &types.DataSourceParametersMemberS3Parameters{Value: *ps}
+			dataSourceParams.S3Parameters = ps
 		}
 	}
 
@@ -1144,12 +1142,12 @@ func expandDataSourceParameters(tfList []interface{}) types.DataSourceParameters
 		m, ok := v[0].(map[string]interface{})
 
 		if ok {
-			ps := &types.ServiceNowParameters{}
+			ps := &quicksight.ServiceNowParameters{}
 			if v, ok := m["site_base_url"].(string); ok && v != "" {
 				ps.SiteBaseUrl = aws.String(v)
 			}
 
-			dataSourceParams = &types.DataSourceParametersMemberServiceNowParameters{Value: *ps}
+			dataSourceParams.ServiceNowParameters = ps
 		}
 	}
 
@@ -1157,7 +1155,7 @@ func expandDataSourceParameters(tfList []interface{}) types.DataSourceParameters
 		m, ok := v[0].(map[string]interface{})
 
 		if ok {
-			ps := &types.SnowflakeParameters{}
+			ps := &quicksight.SnowflakeParameters{}
 
 			if v, ok := m["database"].(string); ok && v != "" {
 				ps.Database = aws.String(v)
@@ -1169,7 +1167,7 @@ func expandDataSourceParameters(tfList []interface{}) types.DataSourceParameters
 				ps.Warehouse = aws.String(v)
 			}
 
-			dataSourceParams = &types.DataSourceParametersMemberSnowflakeParameters{Value: *ps}
+			dataSourceParams.SnowflakeParameters = ps
 		}
 	}
 
@@ -1177,16 +1175,16 @@ func expandDataSourceParameters(tfList []interface{}) types.DataSourceParameters
 		m, ok := v[0].(map[string]interface{})
 
 		if ok {
-			ps := &types.SparkParameters{}
+			ps := &quicksight.SparkParameters{}
 
 			if v, ok := m["host"].(string); ok && v != "" {
 				ps.Host = aws.String(v)
 			}
 			if v, ok := m["port"].(int); ok {
-				ps.Port = aws.Int32(int32(v))
+				ps.Port = aws.Int64(int64(v))
 			}
 
-			dataSourceParams = &types.DataSourceParametersMemberSparkParameters{Value: *ps}
+			dataSourceParams.SparkParameters = ps
 		}
 	}
 
@@ -1194,7 +1192,7 @@ func expandDataSourceParameters(tfList []interface{}) types.DataSourceParameters
 		m, ok := v[0].(map[string]interface{})
 
 		if ok {
-			ps := &types.SqlServerParameters{}
+			ps := &quicksight.SqlServerParameters{}
 
 			if v, ok := m["database"].(string); ok && v != "" {
 				ps.Database = aws.String(v)
@@ -1203,10 +1201,10 @@ func expandDataSourceParameters(tfList []interface{}) types.DataSourceParameters
 				ps.Host = aws.String(v)
 			}
 			if v, ok := m["port"].(int); ok {
-				ps.Port = aws.Int32(int32(v))
+				ps.Port = aws.Int64(int64(v))
 			}
 
-			dataSourceParams = &types.DataSourceParametersMemberSqlServerParameters{Value: *ps}
+			dataSourceParams.SqlServerParameters = ps
 		}
 	}
 
@@ -1214,7 +1212,7 @@ func expandDataSourceParameters(tfList []interface{}) types.DataSourceParameters
 		m, ok := v[0].(map[string]interface{})
 
 		if ok {
-			ps := &types.TeradataParameters{}
+			ps := &quicksight.TeradataParameters{}
 
 			if v, ok := m["database"].(string); ok && v != "" {
 				ps.Database = aws.String(v)
@@ -1223,10 +1221,10 @@ func expandDataSourceParameters(tfList []interface{}) types.DataSourceParameters
 				ps.Host = aws.String(v)
 			}
 			if v, ok := m["port"].(int); ok {
-				ps.Port = aws.Int32(int32(v))
+				ps.Port = aws.Int64(int64(v))
 			}
 
-			dataSourceParams = &types.DataSourceParametersMemberTeradataParameters{Value: *ps}
+			dataSourceParams.TeradataParameters = ps
 		}
 	}
 
@@ -1234,23 +1232,23 @@ func expandDataSourceParameters(tfList []interface{}) types.DataSourceParameters
 		m, ok := v[0].(map[string]interface{})
 
 		if ok {
-			ps := &types.TwitterParameters{}
+			ps := &quicksight.TwitterParameters{}
 
 			if v, ok := m["max_rows"].(int); ok {
-				ps.MaxRows = aws.Int32(int32(v))
+				ps.MaxRows = aws.Int64(int64(v))
 			}
 			if v, ok := m["query"].(string); ok && v != "" {
 				ps.Query = aws.String(v)
 			}
 
-			dataSourceParams = &types.DataSourceParametersMemberTwitterParameters{Value: *ps}
+			dataSourceParams.TwitterParameters = ps
 		}
 	}
 
 	return dataSourceParams
 }
 
-func expandDataSourceSSLProperties(tfList []interface{}) *types.SslProperties {
+func expandDataSourceSSLProperties(tfList []interface{}) *quicksight.SslProperties {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1260,16 +1258,16 @@ func expandDataSourceSSLProperties(tfList []interface{}) *types.SslProperties {
 		return nil
 	}
 
-	props := &types.SslProperties{}
+	props := &quicksight.SslProperties{}
 
 	if v, ok := tfMap["disable_ssl"].(bool); ok {
-		props.DisableSsl = v
+		props.DisableSsl = aws.Bool(v)
 	}
 
 	return props
 }
 
-func expandDataSourceVPCConnectionProperties(tfList []interface{}) *types.VpcConnectionProperties {
+func expandDataSourceVPCConnectionProperties(tfList []interface{}) *quicksight.VpcConnectionProperties {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -1280,7 +1278,7 @@ func expandDataSourceVPCConnectionProperties(tfList []interface{}) *types.VpcCon
 		return nil
 	}
 
-	props := &types.VpcConnectionProperties{}
+	props := &quicksight.VpcConnectionProperties{}
 
 	if v, ok := tfMap["vpc_connection_arn"].(string); ok && v != "" {
 		props.VpcConnectionArn = aws.String(v)
@@ -1289,220 +1287,239 @@ func expandDataSourceVPCConnectionProperties(tfList []interface{}) *types.VpcCon
 	return props
 }
 
-func flattenParameters(parameters types.DataSourceParameters) []interface{} {
+func flattenParameters(parameters *quicksight.DataSourceParameters) []interface{} {
 	if parameters == nil {
 		return []interface{}{}
 	}
 
 	var params []interface{}
 
-	switch parameters := parameters.(type) {
-
-	case *types.DataSourceParametersMemberAmazonElasticsearchParameters:
+	if parameters.AmazonElasticsearchParameters != nil {
 		params = append(params, map[string]interface{}{
 			"amazon_elasticsearch": []interface{}{
 				map[string]interface{}{
-					"domain": parameters.Value.Domain,
+					"domain": parameters.AmazonElasticsearchParameters.Domain,
 				},
 			},
 		})
+	}
 
-	case *types.DataSourceParametersMemberAthenaParameters:
+	if parameters.AthenaParameters != nil {
 		params = append(params, map[string]interface{}{
 			"athena": []interface{}{
 				map[string]interface{}{
-					"work_group": parameters.Value.WorkGroup,
+					"work_group": parameters.AthenaParameters.WorkGroup,
 				},
 			},
 		})
+	}
 
-	case *types.DataSourceParametersMemberAuroraParameters:
+	if parameters.AuroraParameters != nil {
 		params = append(params, map[string]interface{}{
 			"aurora": []interface{}{
 				map[string]interface{}{
-					"database": parameters.Value.Database,
-					"host":     parameters.Value.Host,
-					"port":     parameters.Value.Port,
+					"database": parameters.AuroraParameters.Database,
+					"host":     parameters.AuroraParameters.Host,
+					"port":     parameters.AuroraParameters.Port,
 				},
 			},
 		})
+	}
 
-	case *types.DataSourceParametersMemberAuroraPostgreSqlParameters:
+	if parameters.AuroraPostgreSqlParameters != nil {
 		params = append(params, map[string]interface{}{
 			"aurora_postgresql": []interface{}{
 				map[string]interface{}{
-					"database": parameters.Value.Database,
-					"host":     parameters.Value.Host,
-					"port":     parameters.Value.Port,
+					"database": parameters.AuroraPostgreSqlParameters.Database,
+					"host":     parameters.AuroraPostgreSqlParameters.Host,
+					"port":     parameters.AuroraPostgreSqlParameters.Port,
 				},
 			},
 		})
+	}
 
-	case *types.DataSourceParametersMemberAwsIotAnalyticsParameters:
+	if parameters.AwsIotAnalyticsParameters != nil {
 		params = append(params, map[string]interface{}{
 			"aws_iot_analytics": []interface{}{
 				map[string]interface{}{
-					"data_set_name": parameters.Value.DataSetName,
+					"data_set_name": parameters.AwsIotAnalyticsParameters.DataSetName,
 				},
 			},
 		})
+	}
 
-	case *types.DataSourceParametersMemberJiraParameters:
+	if parameters.JiraParameters != nil {
 		params = append(params, map[string]interface{}{
 			"jira": []interface{}{
 				map[string]interface{}{
-					"site_base_url": parameters.Value.SiteBaseUrl,
+					"site_base_url": parameters.JiraParameters.SiteBaseUrl,
 				},
 			},
 		})
+	}
 
-	case *types.DataSourceParametersMemberMariaDbParameters:
+	if parameters.MariaDbParameters != nil {
 		params = append(params, map[string]interface{}{
 			"maria_db": []interface{}{
 				map[string]interface{}{
-					"database": parameters.Value.Database,
-					"host":     parameters.Value.Host,
-					"port":     parameters.Value.Port},
+					"database": parameters.MariaDbParameters.Database,
+					"host":     parameters.MariaDbParameters.Host,
+					"port":     parameters.MariaDbParameters.Port,
+				},
 			},
 		})
+	}
 
-	case *types.DataSourceParametersMemberMySqlParameters:
+	if parameters.MySqlParameters != nil {
 		params = append(params, map[string]interface{}{
 			"mysql": []interface{}{
 				map[string]interface{}{
-					"database": parameters.Value.Database,
-					"host":     parameters.Value.Host,
-					"port":     parameters.Value.Port,
+					"database": parameters.MySqlParameters.Database,
+					"host":     parameters.MySqlParameters.Host,
+					"port":     parameters.MySqlParameters.Port,
 				},
 			},
 		})
+	}
 
-	case *types.DataSourceParametersMemberOracleParameters:
+	if parameters.OracleParameters != nil {
 		params = append(params, map[string]interface{}{
 			"oracle": []interface{}{
 				map[string]interface{}{
-					"database": parameters.Value.Database,
-					"host":     parameters.Value.Host,
-					"port":     parameters.Value.Port,
+					"database": parameters.OracleParameters.Database,
+					"host":     parameters.OracleParameters.Host,
+					"port":     parameters.OracleParameters.Port,
 				},
 			},
 		})
+	}
 
-	case *types.DataSourceParametersMemberPostgreSqlParameters:
+	if parameters.PostgreSqlParameters != nil {
 		params = append(params, map[string]interface{}{
 			"postgresql": []interface{}{
 				map[string]interface{}{
-					"database": parameters.Value.Database,
-					"host":     parameters.Value.Host,
-					"port":     parameters.Value.Port},
+					"database": parameters.PostgreSqlParameters.Database,
+					"host":     parameters.PostgreSqlParameters.Host,
+					"port":     parameters.PostgreSqlParameters.Port,
+				},
 			},
 		})
+	}
 
-	case *types.DataSourceParametersMemberPrestoParameters:
+	if parameters.PrestoParameters != nil {
 		params = append(params, map[string]interface{}{
 			"presto": []interface{}{
 				map[string]interface{}{
-					"catalog": parameters.Value.Catalog,
-					"host":    parameters.Value.Host,
-					"port":    parameters.Value.Port,
+					"catalog": parameters.PrestoParameters.Catalog,
+					"host":    parameters.PrestoParameters.Host,
+					"port":    parameters.PrestoParameters.Port,
 				},
 			},
 		})
+	}
 
-	case *types.DataSourceParametersMemberRdsParameters:
+	if parameters.RdsParameters != nil {
 		params = append(params, map[string]interface{}{
 			"rds": []interface{}{
 				map[string]interface{}{
-					"database":    parameters.Value.Database,
-					"instance_id": parameters.Value.InstanceId,
+					"database":    parameters.RdsParameters.Database,
+					"instance_id": parameters.RdsParameters.InstanceId,
 				},
 			},
 		})
+	}
 
-	case *types.DataSourceParametersMemberRedshiftParameters:
+	if parameters.RedshiftParameters != nil {
 		params = append(params, map[string]interface{}{
 			"redshift": []interface{}{
 				map[string]interface{}{
-					"cluster_id": parameters.Value.ClusterId,
-					"database":   parameters.Value.Database,
-					"host":       parameters.Value.Host,
-					"port":       parameters.Value.Port,
+					"cluster_id": parameters.RedshiftParameters.ClusterId,
+					"database":   parameters.RedshiftParameters.Database,
+					"host":       parameters.RedshiftParameters.Host,
+					"port":       parameters.RedshiftParameters.Port,
 				},
 			},
 		})
+	}
 
-	case *types.DataSourceParametersMemberS3Parameters:
+	if parameters.S3Parameters != nil {
 		params = append(params, map[string]interface{}{
 			"s3": []interface{}{
 				map[string]interface{}{
 					"manifest_file_location": []interface{}{
 						map[string]interface{}{
-							"bucket": parameters.Value.ManifestFileLocation.Bucket,
-							"key":    parameters.Value.ManifestFileLocation.Key,
+							"bucket": parameters.S3Parameters.ManifestFileLocation.Bucket,
+							"key":    parameters.S3Parameters.ManifestFileLocation.Key,
 						},
 					},
 				},
 			},
 		})
+	}
 
-	case *types.DataSourceParametersMemberServiceNowParameters:
+	if parameters.ServiceNowParameters != nil {
 		params = append(params, map[string]interface{}{
 			"service_now": []interface{}{
 				map[string]interface{}{
-					"site_base_url": parameters.Value.SiteBaseUrl,
+					"site_base_url": parameters.ServiceNowParameters.SiteBaseUrl,
 				},
 			},
 		})
+	}
 
-	case *types.DataSourceParametersMemberSnowflakeParameters:
+	if parameters.SnowflakeParameters != nil {
 		params = append(params, map[string]interface{}{
 			"snowflake": []interface{}{
 				map[string]interface{}{
-					"database":  parameters.Value.Database,
-					"host":      parameters.Value.Host,
-					"warehouse": parameters.Value.Warehouse,
+					"database":  parameters.SnowflakeParameters.Database,
+					"host":      parameters.SnowflakeParameters.Host,
+					"warehouse": parameters.SnowflakeParameters.Warehouse,
 				},
 			},
 		})
+	}
 
-	case *types.DataSourceParametersMemberSparkParameters:
+	if parameters.SparkParameters != nil {
 		params = append(params, map[string]interface{}{
 			"spark": []interface{}{
 				map[string]interface{}{
-					"host": parameters.Value.Host,
-					"port": parameters.Value.Port,
+					"host": parameters.SparkParameters.Host,
+					"port": parameters.SparkParameters.Port,
 				},
 			},
 		})
+	}
 
-	case *types.DataSourceParametersMemberSqlServerParameters:
+	if parameters.SqlServerParameters != nil {
 		params = append(params, map[string]interface{}{
 			"sql_server": []interface{}{
 				map[string]interface{}{
-					"database": parameters.Value.Database,
-					"host":     parameters.Value.Host,
-					"port":     parameters.Value.Port,
+					"database": parameters.SqlServerParameters.Database,
+					"host":     parameters.SqlServerParameters.Host,
+					"port":     parameters.SqlServerParameters.Port,
 				},
 			},
 		})
+	}
 
-	case *types.DataSourceParametersMemberTeradataParameters:
+	if parameters.TeradataParameters != nil {
 		params = append(params, map[string]interface{}{
 			"teradata": []interface{}{
 				map[string]interface{}{
-					"database": parameters.Value.Database,
-					"host":     parameters.Value.Host,
-					"port":     parameters.Value.Port,
+					"database": parameters.TeradataParameters.Database,
+					"host":     parameters.TeradataParameters.Host,
+					"port":     parameters.TeradataParameters.Port,
 				},
 			},
 		})
+	}
 
-	case *types.DataSourceParametersMemberTwitterParameters:
+	if parameters.TwitterParameters != nil {
 		params = append(params, map[string]interface{}{
 			"twitter": []interface{}{
 				map[string]interface{}{
-					"max_rows": parameters.Value.MaxRows,
-					"query":    parameters.Value.Query,
+					"max_rows": parameters.TwitterParameters.MaxRows,
+					"query":    parameters.TwitterParameters.Query,
 				},
 			},
 		})
@@ -1511,19 +1528,21 @@ func flattenParameters(parameters types.DataSourceParameters) []interface{} {
 	return params
 }
 
-func flattenSSLProperties(props *types.SslProperties) []interface{} {
+func flattenSSLProperties(props *quicksight.SslProperties) []interface{} {
 	if props == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{}
 
-	m["disable_ssl"] = props.DisableSsl
+	if props.DisableSsl != nil {
+		m["disable_ssl"] = aws.BoolValue(props.DisableSsl)
+	}
 
 	return []interface{}{m}
 }
 
-func flattenVPCConnectionProperties(props *types.VpcConnectionProperties) []interface{} {
+func flattenVPCConnectionProperties(props *quicksight.VpcConnectionProperties) []interface{} {
 	if props == nil {
 		return []interface{}{}
 	}
@@ -1531,7 +1550,7 @@ func flattenVPCConnectionProperties(props *types.VpcConnectionProperties) []inte
 	m := map[string]interface{}{}
 
 	if props.VpcConnectionArn != nil {
-		m["vpc_connection_arn"] = aws.ToString(props.VpcConnectionArn)
+		m["vpc_connection_arn"] = aws.StringValue(props.VpcConnectionArn)
 	}
 
 	return []interface{}{m}

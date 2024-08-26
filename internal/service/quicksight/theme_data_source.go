@@ -7,11 +7,10 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/quicksight"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -31,10 +30,10 @@ func DataSourceTheme() *schema.Resource {
 					Computed: true,
 				},
 				"aws_account_id": {
-					Type:             schema.TypeString,
-					Optional:         true,
-					Computed:         true,
-					ValidateDiagFunc: validation.ToDiagFunc(verify.ValidAccountID),
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: verify.ValidAccountID,
 				},
 				"base_theme_id": {
 					Type:     schema.TypeString,
@@ -282,7 +281,7 @@ const (
 )
 
 func dataSourceThemeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId := meta.(*conns.AWSClient).AccountID
 	if v, ok := d.GetOk("aws_account_id"); ok {
@@ -314,7 +313,7 @@ func dataSourceThemeRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.Errorf("setting configuration: %s", err)
 	}
 
-	permsResp, err := conn.DescribeThemePermissions(ctx, &quicksight.DescribeThemePermissionsInput{
+	permsResp, err := conn.DescribeThemePermissionsWithContext(ctx, &quicksight.DescribeThemePermissionsInput{
 		AwsAccountId: aws.String(awsAccountId),
 		ThemeId:      aws.String(themeId),
 	})

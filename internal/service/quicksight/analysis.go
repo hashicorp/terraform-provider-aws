@@ -10,16 +10,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/quicksight"
-	"github.com/aws/aws-sdk-go-v2/service/quicksight/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/quicksight"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	quicksightschema "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight/schema"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -62,11 +61,11 @@ func ResourceAnalysis() *schema.Resource {
 					Computed: true,
 				},
 				"aws_account_id": {
-					Type:             schema.TypeString,
-					Optional:         true,
-					Computed:         true,
-					ForceNew:         true,
-					ValidateDiagFunc: validation.ToDiagFunc(verify.ValidAccountID),
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidAccountID,
 				},
 				"created_time": {
 					Type:     schema.TypeString,
@@ -87,9 +86,9 @@ func ResourceAnalysis() *schema.Resource {
 					Computed: true,
 				},
 				"name": {
-					Type:             schema.TypeString,
-					Required:         true,
-					ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 2048)),
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 2048),
 				},
 				"parameters": quicksightschema.ParametersSchema(),
 				"permissions": {
@@ -107,9 +106,9 @@ func ResourceAnalysis() *schema.Resource {
 								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
 							"principal": {
-								Type:             schema.TypeString,
-								Required:         true,
-								ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 256)),
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 256),
 							},
 						},
 					},
@@ -118,9 +117,9 @@ func ResourceAnalysis() *schema.Resource {
 					Type:     schema.TypeInt,
 					Optional: true,
 					Default:  30,
-					ValidateDiagFunc: validation.AnyDiag(
-						validation.ToDiagFunc(validation.IntBetween(recoveryWindowInDaysMin, recoveryWindowInDaysMax)),
-						validation.ToDiagFunc(validation.IntInSlice([]int{0})),
+					ValidateFunc: validation.Any(
+						validation.IntBetween(recoveryWindowInDaysMin, recoveryWindowInDaysMax),
+						validation.IntInSlice([]int{0}),
 					),
 				},
 				"source_entity": quicksightschema.AnalysisSourceEntitySchema(),
@@ -146,7 +145,7 @@ const (
 )
 
 func resourceAnalysisCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId := meta.(*conns.AWSClient).AccountID
 	if v, ok := d.GetOk("aws_account_id"); ok {
@@ -179,7 +178,7 @@ func resourceAnalysisCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.Permissions = expandResourcePermissions(v.List())
 	}
 
-	_, err := conn.CreateAnalysis(ctx, input)
+	_, err := conn.CreateAnalysisWithContext(ctx, input)
 	if err != nil {
 		return create.DiagError(names.QuickSight, create.ErrActionCreating, ResNameAnalysis, d.Get("name").(string), err)
 	}
@@ -192,7 +191,7 @@ func resourceAnalysisCreate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceAnalysisRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId, analysisId, err := ParseAnalysisId(d.Id())
 	if err != nil {
@@ -208,7 +207,7 @@ func resourceAnalysisRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	// Ressource is logically deleted with DELETED status
-	if !d.IsNewResource() && out.Status == types.ResourceStatusDeleted {
+	if !d.IsNewResource() && aws.StringValue(out.Status) == quicksight.ResourceStatusDeleted {
 		log.Printf("[WARN] QuickSight Analysis (%s) deleted, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -226,7 +225,7 @@ func resourceAnalysisRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("status", out.Status)
 	d.Set("analysis_id", out.AnalysisId)
 
-	descResp, err := conn.DescribeAnalysisDefinition(ctx, &quicksight.DescribeAnalysisDefinitionInput{
+	descResp, err := conn.DescribeAnalysisDefinitionWithContext(ctx, &quicksight.DescribeAnalysisDefinitionInput{
 		AwsAccountId: aws.String(awsAccountId),
 		AnalysisId:   aws.String(analysisId),
 	})
@@ -239,7 +238,7 @@ func resourceAnalysisRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return diag.Errorf("setting definition: %s", err)
 	}
 
-	permsResp, err := conn.DescribeAnalysisPermissions(ctx, &quicksight.DescribeAnalysisPermissionsInput{
+	permsResp, err := conn.DescribeAnalysisPermissionsWithContext(ctx, &quicksight.DescribeAnalysisPermissionsInput{
 		AwsAccountId: aws.String(awsAccountId),
 		AnalysisId:   aws.String(analysisId),
 	})
@@ -256,7 +255,7 @@ func resourceAnalysisRead(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceAnalysisUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId, analysisId, err := ParseAnalysisId(d.Id())
 	if err != nil {
@@ -282,7 +281,7 @@ func resourceAnalysisUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		log.Printf("[DEBUG] Updating QuickSight Analysis (%s): %#v", d.Id(), in)
-		_, err := conn.UpdateAnalysis(ctx, in)
+		_, err := conn.UpdateAnalysisWithContext(ctx, in)
 		if err != nil {
 			return create.DiagError(names.QuickSight, create.ErrActionUpdating, ResNameAnalysis, d.Id(), err)
 		}
@@ -312,7 +311,7 @@ func resourceAnalysisUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			params.RevokePermissions = toRevoke
 		}
 
-		_, err = conn.UpdateAnalysisPermissions(ctx, params)
+		_, err = conn.UpdateAnalysisPermissionsWithContext(ctx, params)
 
 		if err != nil {
 			return diag.Errorf("updating QuickSight Analysis (%s) permissions: %s", analysisId, err)
@@ -323,7 +322,7 @@ func resourceAnalysisUpdate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceAnalysisDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId, analysisId, err := ParseAnalysisId(d.Id())
 	if err != nil {
@@ -337,15 +336,15 @@ func resourceAnalysisDelete(ctx context.Context, d *schema.ResourceData, meta in
 
 	recoveryWindowInDays := d.Get("recovery_window_in_days").(int)
 	if recoveryWindowInDays == 0 {
-		input.ForceDeleteWithoutRecovery = true
+		input.ForceDeleteWithoutRecovery = aws.Bool(true)
 	} else {
 		input.RecoveryWindowInDays = aws.Int64(int64(recoveryWindowInDays))
 	}
 
 	log.Printf("[INFO] Deleting QuickSight Analysis %s", d.Id())
-	_, err = conn.DeleteAnalysis(ctx, input)
+	_, err = conn.DeleteAnalysisWithContext(ctx, input)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 
@@ -356,7 +355,7 @@ func resourceAnalysisDelete(ctx context.Context, d *schema.ResourceData, meta in
 	return nil
 }
 
-func FindAnalysisByID(ctx context.Context, conn *quicksight.Client, id string) (*types.Analysis, error) {
+func FindAnalysisByID(ctx context.Context, conn *quicksight.QuickSight, id string) (*quicksight.Analysis, error) {
 	awsAccountId, analysisId, err := ParseAnalysisId(id)
 	if err != nil {
 		return nil, err
@@ -367,9 +366,9 @@ func FindAnalysisByID(ctx context.Context, conn *quicksight.Client, id string) (
 		AnalysisId:   aws.String(analysisId),
 	}
 
-	out, err := conn.DescribeAnalysis(ctx, descOpts)
+	out, err := conn.DescribeAnalysisWithContext(ctx, descOpts)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: descOpts,
