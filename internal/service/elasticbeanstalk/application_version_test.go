@@ -6,6 +6,7 @@ package elasticbeanstalk_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk/types"
@@ -191,7 +192,7 @@ func testAccCheckApplicationVersionExists(ctx context.Context, n string, v *awst
 
 func testAccCheckApplicationVersionMatchStatus(v *awstypes.ApplicationVersionDescription, status awstypes.ApplicationVersionStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if v.Status != status {
+		if !strings.EqualFold(string(v.Status), string(status)) {
 			return fmt.Errorf("Elastic Beanstalk Application Version status %s does not match to expected status %s", v.Status, status)
 		}
 
