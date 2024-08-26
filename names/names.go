@@ -59,6 +59,7 @@ const (
 	CloudSearchEndpointID                  = "cloudsearch"
 	CloudWatchEndpointID                   = "monitoring"
 	CodeArtifactEndpointID                 = "codeartifact"
+	CodeConnectionsEndpointID              = "codeconnections"
 	CodeGuruReviewerEndpointID             = "codeguru-reviewer"
 	CodeStarConnectionsEndpointID          = "codestar-connections"
 	CognitoIdentityEndpointID              = "cognito-identity"
