@@ -5,7 +5,9 @@ package elasticbeanstalk
 
 // Exports for use in tests only.
 var (
-	ResourceApplication = resourceApplication
+	ResourceApplication        = resourceApplication
+	ResourceApplicationVersion = resourceApplicationVersion
 
-	FindApplicationByName = findApplicationByName
+	FindApplicationByName              = findApplicationByName
+	FindApplicationVersionByTwoPartKey = findApplicationVersionByTwoPartKey
 )

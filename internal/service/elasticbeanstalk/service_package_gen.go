@@ -52,7 +52,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceApplicationVersion,
+			Factory:  resourceApplicationVersion,
 			TypeName: "aws_elastic_beanstalk_application_version",
 			Name:     "Application Version",
 			Tags: &types.ServicePackageResourceTags{

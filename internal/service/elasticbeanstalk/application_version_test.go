@@ -6,18 +6,16 @@ package elasticbeanstalk_test
 import (
 	"context"
 	"fmt"
-	"log"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfelasticbeanstalk "github.com/hashicorp/terraform-provider-aws/internal/service/elasticbeanstalk"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -130,14 +128,14 @@ func TestAccElasticBeanstalkApplicationVersion_BeanstalkApp_process(t *testing.T
 				Config: testAccApplicationVersionConfig_process(sdkacctest.RandInt(), "true"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationVersionExists(ctx, resourceName, &appVersion),
-					testAccCheckApplicationVersionMatchStatus(ctx, resourceName, "PROCESSED", &appVersion),
+					testAccCheckApplicationVersionMatchStatus(&appVersion, awstypes.ApplicationVersionStatusProcessed),
 				),
 			},
 			{
 				Config: testAccApplicationVersionConfig_process(sdkacctest.RandInt(), "false"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationVersionExists(ctx, resourceName, &appVersion),
-					testAccCheckApplicationVersionMatchStatus(ctx, resourceName, "UNPROCESSED", &appVersion),
+					testAccCheckApplicationVersionMatchStatus(&appVersion, awstypes.ApplicationVersionStatusUnprocessed),
 				),
 			},
 		},
@@ -153,90 +151,48 @@ func testAccCheckApplicationVersionDestroy(ctx context.Context) resource.TestChe
 				continue
 			}
 
-			describeApplicationVersionOpts := &elasticbeanstalk.DescribeApplicationVersionsInput{
-				ApplicationName: aws.String(rs.Primary.Attributes["application"]),
-				VersionLabels:   []string{rs.Primary.ID},
-			}
-			resp, err := conn.DescribeApplicationVersions(ctx, describeApplicationVersionOpts)
-			if err == nil {
-				if len(resp.ApplicationVersions) > 0 {
-					return fmt.Errorf("Elastic Beanstalk Application Verson still exists.")
-				}
+			_, err := tfelasticbeanstalk.FindApplicationVersionByTwoPartKey(ctx, conn, rs.Primary.Attributes["application"], rs.Primary.ID)
 
-				return nil
+			if tfresource.NotFound(err) {
+				continue
 			}
-			if !tfawserr.ErrCodeEquals(err, "InvalidParameterValue") {
+
+			if err != nil {
 				return err
 			}
+
+			return fmt.Errorf("Elastic Beanstalk Application Version %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckApplicationVersionExists(ctx context.Context, n string, app *awstypes.ApplicationVersionDescription) resource.TestCheckFunc {
+func testAccCheckApplicationVersionExists(ctx context.Context, n string, v *awstypes.ApplicationVersionDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("Elastic Beanstalk Application Version is not set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkClient(ctx)
-		describeApplicationVersionOpts := &elasticbeanstalk.DescribeApplicationVersionsInput{
-			ApplicationName: aws.String(rs.Primary.Attributes["application"]),
-			VersionLabels:   []string{rs.Primary.ID},
-		}
 
-		log.Printf("[DEBUG] Elastic Beanstalk Application Version TEST describe opts: %v", describeApplicationVersionOpts)
+		output, err := tfelasticbeanstalk.FindApplicationVersionByTwoPartKey(ctx, conn, rs.Primary.Attributes["application"], rs.Primary.ID)
 
-		resp, err := conn.DescribeApplicationVersions(ctx, describeApplicationVersionOpts)
 		if err != nil {
 			return err
 		}
-		if len(resp.ApplicationVersions) == 0 {
-			return fmt.Errorf("Elastic Beanstalk Application Version not found.")
-		}
 
-		*app = resp.ApplicationVersions[0]
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccCheckApplicationVersionMatchStatus(ctx context.Context, n string, status awstypes.ApplicationVersionStatus, app *awstypes.ApplicationVersionDescription) resource.TestCheckFunc {
+func testAccCheckApplicationVersionMatchStatus(v *awstypes.ApplicationVersionDescription, status awstypes.ApplicationVersionStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("Elastic Beanstalk Application Version is not set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkClient(ctx)
-		describeApplicationVersionOpts := &elasticbeanstalk.DescribeApplicationVersionsInput{
-			ApplicationName: aws.String(rs.Primary.Attributes["application"]),
-			VersionLabels:   []string{rs.Primary.ID},
-		}
-
-		resp, err := conn.DescribeApplicationVersions(ctx, describeApplicationVersionOpts)
-		if err != nil {
-			return err
-		}
-
-		if len(resp.ApplicationVersions) == 0 {
-			return fmt.Errorf("Elastic Beanstalk Application Version not found.")
-		}
-
-		*app = resp.ApplicationVersions[0]
-
-		if app.Status != status {
-			return fmt.Errorf("Elastic Beanstalk Application Version status %s does not match to expected status %s.", app.Status, status)
+		if v.Status != status {
+			return fmt.Errorf("Elastic Beanstalk Application Version status %s does not match to expected status %s", v.Status, status)
 		}
 
 		return nil

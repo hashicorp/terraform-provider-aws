@@ -659,6 +659,36 @@ func FindEnvironmentByID(ctx context.Context, conn *elasticbeanstalk.Client, id 
 	return &environment, nil
 }
 
+func findEnvironment(ctx context.Context, conn *elasticbeanstalk.Client, input *elasticbeanstalk.DescribeEnvironmentsInput) (*awstypes.EnvironmentDescription, error) {
+	output, err := findEnvironments(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findEnvironments(ctx context.Context, conn *elasticbeanstalk.Client, input *elasticbeanstalk.DescribeEnvironmentsInput) ([]awstypes.EnvironmentDescription, error) {
+	var output []awstypes.EnvironmentDescription
+
+	err := describeEnvironmentsPages(ctx, conn, input, func(page *elasticbeanstalk.DescribeEnvironmentsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		output = append(output, page.Environments...)
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
 func findEnvironmentErrorsByID(ctx context.Context, conn *elasticbeanstalk.Client, id string, since time.Time) error {
 	input := &elasticbeanstalk.DescribeEventsInput{
 		EnvironmentId: aws.String(id),
