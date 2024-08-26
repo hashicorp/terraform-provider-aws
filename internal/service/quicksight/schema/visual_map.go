@@ -4,11 +4,10 @@
 package schema
 
 import (
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/quicksight/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 )
 
 func geospatialMapStyleOptionsSchema() *schema.Schema {
@@ -19,7 +18,7 @@ func geospatialMapStyleOptionsSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"base_map_style": stringSchema(false, enum.Validate[types.BaseMapStyleType]()),
+				"base_map_style": stringSchema(false, validation.StringInSlice(quicksight.BaseMapStyleType_Values(), false)),
 			},
 		},
 	}
@@ -41,35 +40,35 @@ func geospatialWindowOptionsSchema() *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"east": {
-								Type:             schema.TypeFloat,
-								Required:         true,
-								ValidateDiagFunc: validation.ToDiagFunc(validation.FloatBetween(-1800, 1800)),
+								Type:         schema.TypeFloat,
+								Required:     true,
+								ValidateFunc: validation.FloatBetween(-1800, 1800),
 							},
 							"north": {
-								Type:             schema.TypeFloat,
-								Required:         true,
-								ValidateDiagFunc: validation.ToDiagFunc(validation.FloatBetween(-90, 90)),
+								Type:         schema.TypeFloat,
+								Required:     true,
+								ValidateFunc: validation.FloatBetween(-90, 90),
 							},
 							"south": {
-								Type:             schema.TypeFloat,
-								Required:         true,
-								ValidateDiagFunc: validation.ToDiagFunc(validation.FloatBetween(-90, 90)),
+								Type:         schema.TypeFloat,
+								Required:     true,
+								ValidateFunc: validation.FloatBetween(-90, 90),
 							},
 							"west": {
-								Type:             schema.TypeFloat,
-								Required:         true,
-								ValidateDiagFunc: validation.ToDiagFunc(validation.FloatBetween(-1800, 1800)),
+								Type:         schema.TypeFloat,
+								Required:     true,
+								ValidateFunc: validation.FloatBetween(-1800, 1800),
 							},
 						},
 					},
 				},
-				"map_zoom_mode": stringSchema(false, enum.Validate[types.MapZoomMode]()),
+				"map_zoom_mode": stringSchema(false, validation.StringInSlice(quicksight.MapZoomMode_Values(), false)),
 			},
 		},
 	}
 }
 
-func expandGeospatialMapStyleOptions(tfList []interface{}) *types.GeospatialMapStyleOptions {
+func expandGeospatialMapStyleOptions(tfList []interface{}) *quicksight.GeospatialMapStyleOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -79,16 +78,16 @@ func expandGeospatialMapStyleOptions(tfList []interface{}) *types.GeospatialMapS
 		return nil
 	}
 
-	options := &types.GeospatialMapStyleOptions{}
+	options := &quicksight.GeospatialMapStyleOptions{}
 
 	if v, ok := tfMap["base_map_style"].(string); ok && v != "" {
-		options.BaseMapStyle = types.BaseMapStyleType(v)
+		options.BaseMapStyle = aws.String(v)
 	}
 
 	return options
 }
 
-func expandGeospatialWindowOptions(tfList []interface{}) *types.GeospatialWindowOptions {
+func expandGeospatialWindowOptions(tfList []interface{}) *quicksight.GeospatialWindowOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -98,10 +97,10 @@ func expandGeospatialWindowOptions(tfList []interface{}) *types.GeospatialWindow
 		return nil
 	}
 
-	options := &types.GeospatialWindowOptions{}
+	options := &quicksight.GeospatialWindowOptions{}
 
 	if v, ok := tfMap["map_zoom_mode"].(string); ok && v != "" {
-		options.MapZoomMode = types.MapZoomMode(v)
+		options.MapZoomMode = aws.String(v)
 	}
 	if v, ok := tfMap["bounds"].([]interface{}); ok && len(v) > 0 {
 		options.Bounds = expandGeospatialCoordinateBounds(v)
@@ -110,7 +109,7 @@ func expandGeospatialWindowOptions(tfList []interface{}) *types.GeospatialWindow
 	return options
 }
 
-func expandGeospatialCoordinateBounds(tfList []interface{}) *types.GeospatialCoordinateBounds {
+func expandGeospatialCoordinateBounds(tfList []interface{}) *quicksight.GeospatialCoordinateBounds {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -120,7 +119,7 @@ func expandGeospatialCoordinateBounds(tfList []interface{}) *types.GeospatialCoo
 		return nil
 	}
 
-	config := &types.GeospatialCoordinateBounds{}
+	config := &quicksight.GeospatialCoordinateBounds{}
 
 	if v, ok := tfMap["east"].(float64); ok {
 		config.East = aws.Float64(v)
@@ -138,19 +137,20 @@ func expandGeospatialCoordinateBounds(tfList []interface{}) *types.GeospatialCoo
 	return config
 }
 
-func flattenGeospatialMapStyleOptions(apiObject *types.GeospatialMapStyleOptions) []interface{} {
+func flattenGeospatialMapStyleOptions(apiObject *quicksight.GeospatialMapStyleOptions) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-
-	tfMap["base_map_style"] = types.BaseMapStyleType(apiObject.BaseMapStyle)
+	if apiObject.BaseMapStyle != nil {
+		tfMap["base_map_style"] = aws.StringValue(apiObject.BaseMapStyle)
+	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenGeospatialWindowOptions(apiObject *types.GeospatialWindowOptions) []interface{} {
+func flattenGeospatialWindowOptions(apiObject *quicksight.GeospatialWindowOptions) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -159,29 +159,30 @@ func flattenGeospatialWindowOptions(apiObject *types.GeospatialWindowOptions) []
 	if apiObject.Bounds != nil {
 		tfMap["bounds"] = flattenGeospatialCoordinateBounds(apiObject.Bounds)
 	}
-
-	tfMap["map_zoom_mode"] = types.MapZoomMode(apiObject.MapZoomMode)
+	if apiObject.MapZoomMode != nil {
+		tfMap["map_zoom_mode"] = aws.StringValue(apiObject.MapZoomMode)
+	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenGeospatialCoordinateBounds(apiObject *types.GeospatialCoordinateBounds) []interface{} {
+func flattenGeospatialCoordinateBounds(apiObject *quicksight.GeospatialCoordinateBounds) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 	if apiObject.East != nil {
-		tfMap["east"] = aws.ToFloat64(apiObject.East)
+		tfMap["east"] = aws.Float64Value(apiObject.East)
 	}
 	if apiObject.North != nil {
-		tfMap["north"] = aws.ToFloat64(apiObject.North)
+		tfMap["north"] = aws.Float64Value(apiObject.North)
 	}
 	if apiObject.South != nil {
-		tfMap["south"] = aws.ToFloat64(apiObject.South)
+		tfMap["south"] = aws.Float64Value(apiObject.South)
 	}
 	if apiObject.West != nil {
-		tfMap["west"] = aws.ToFloat64(apiObject.West)
+		tfMap["west"] = aws.Float64Value(apiObject.West)
 	}
 
 	return []interface{}{tfMap}

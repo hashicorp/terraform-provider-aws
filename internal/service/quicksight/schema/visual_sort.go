@@ -4,11 +4,10 @@
 package schema
 
 import (
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/quicksight/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 )
 
 const fieldSortOptionsMaxItems100 = 100
@@ -36,7 +35,7 @@ func columnSortSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"direction":            stringSchema(true, enum.Validate[types.SortDirection]()),
+				"direction":            stringSchema(true, validation.StringInSlice(quicksight.SortDirection_Values(), false)),
 				"sort_by":              columnSchema(true),               // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 				"aggregation_function": aggregationFunctionSchema(false), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AggregationFunction.html
 			},
@@ -52,19 +51,19 @@ func fieldSortSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"direction": stringSchema(true, enum.Validate[types.SortDirection]()),
-				"field_id":  stringSchema(true, validation.ToDiagFunc(validation.StringLenBetween(1, 512))),
+				"direction": stringSchema(true, validation.StringInSlice(quicksight.SortDirection_Values(), false)),
+				"field_id":  stringSchema(true, validation.StringLenBetween(1, 512)),
 			},
 		},
 	}
 }
 
-func expandFieldSortOptionsList(tfList []interface{}) []types.FieldSortOptions {
+func expandFieldSortOptionsList(tfList []interface{}) []*quicksight.FieldSortOptions {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var options []types.FieldSortOptions
+	var options []*quicksight.FieldSortOptions
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
 		if !ok {
@@ -76,18 +75,18 @@ func expandFieldSortOptionsList(tfList []interface{}) []types.FieldSortOptions {
 			continue
 		}
 
-		options = append(options, *opts)
+		options = append(options, opts)
 	}
 
 	return options
 }
 
-func expandFieldSortOptions(tfMap map[string]interface{}) *types.FieldSortOptions {
+func expandFieldSortOptions(tfMap map[string]interface{}) *quicksight.FieldSortOptions {
 	if tfMap == nil {
 		return nil
 	}
 
-	options := &types.FieldSortOptions{}
+	options := &quicksight.FieldSortOptions{}
 
 	if v, ok := tfMap["column_sort"].([]interface{}); ok && len(v) > 0 {
 		options.ColumnSort = expandColumnSort(v)
@@ -99,7 +98,7 @@ func expandFieldSortOptions(tfMap map[string]interface{}) *types.FieldSortOption
 	return options
 }
 
-func expandColumnSort(tfList []interface{}) *types.ColumnSort {
+func expandColumnSort(tfList []interface{}) *quicksight.ColumnSort {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -109,10 +108,10 @@ func expandColumnSort(tfList []interface{}) *types.ColumnSort {
 		return nil
 	}
 
-	config := &types.ColumnSort{}
+	config := &quicksight.ColumnSort{}
 
 	if v, ok := tfMap["direction"].(string); ok && v != "" {
-		config.Direction = types.SortDirection(v)
+		config.Direction = aws.String(v)
 	}
 	if v, ok := tfMap["sort_by"].([]interface{}); ok && len(v) > 0 {
 		config.SortBy = expandColumnIdentifier(v)
@@ -124,7 +123,7 @@ func expandColumnSort(tfList []interface{}) *types.ColumnSort {
 	return config
 }
 
-func expandFieldSort(tfList []interface{}) *types.FieldSort {
+func expandFieldSort(tfList []interface{}) *quicksight.FieldSort {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -134,10 +133,10 @@ func expandFieldSort(tfList []interface{}) *types.FieldSort {
 		return nil
 	}
 
-	config := &types.FieldSort{}
+	config := &quicksight.FieldSort{}
 
 	if v, ok := tfMap["direction"].(string); ok && v != "" {
-		config.Direction = types.SortDirection(v)
+		config.Direction = aws.String(v)
 	}
 	if v, ok := tfMap["field_id"].(string); ok && v != "" {
 		config.FieldId = aws.String(v)

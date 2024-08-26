@@ -5,11 +5,10 @@ package schema
 
 import (
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/quicksight/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 )
 
 func geospatialMapVisualSchema() *schema.Schema {
@@ -82,7 +81,7 @@ func geospatialMapVisualSchema() *schema.Schema {
 																	MaxItems: 1,
 																	Elem: &schema.Resource{
 																		Schema: map[string]*schema.Schema{
-																			"color": stringSchema(false, validation.ToDiagFunc(validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""))),
+																			"color": stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
 																		},
 																	},
 																},
@@ -92,7 +91,7 @@ func geospatialMapVisualSchema() *schema.Schema {
 												},
 											},
 										},
-										"selected_point_style": stringSchema(false, enum.Validate[types.GeospatialSelectedPointStyle]()),
+										"selected_point_style": stringSchema(false, validation.StringInSlice(quicksight.GeospatialSelectedPointStyle_Values(), false)),
 									},
 								},
 							},
@@ -110,7 +109,7 @@ func geospatialMapVisualSchema() *schema.Schema {
 	}
 }
 
-func expandGeospatialMapVisual(tfList []interface{}) *types.GeospatialMapVisual {
+func expandGeospatialMapVisual(tfList []interface{}) *quicksight.GeospatialMapVisual {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -120,7 +119,7 @@ func expandGeospatialMapVisual(tfList []interface{}) *types.GeospatialMapVisual 
 		return nil
 	}
 
-	visual := &types.GeospatialMapVisual{}
+	visual := &quicksight.GeospatialMapVisual{}
 
 	if v, ok := tfMap["visual_id"].(string); ok && v != "" {
 		visual.VisualId = aws.String(v)
@@ -144,7 +143,7 @@ func expandGeospatialMapVisual(tfList []interface{}) *types.GeospatialMapVisual 
 	return visual
 }
 
-func expandGeospatialMapConfiguration(tfList []interface{}) *types.GeospatialMapConfiguration {
+func expandGeospatialMapConfiguration(tfList []interface{}) *quicksight.GeospatialMapConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -154,7 +153,7 @@ func expandGeospatialMapConfiguration(tfList []interface{}) *types.GeospatialMap
 		return nil
 	}
 
-	config := &types.GeospatialMapConfiguration{}
+	config := &quicksight.GeospatialMapConfiguration{}
 
 	if v, ok := tfMap["field_wells"].([]interface{}); ok && len(v) > 0 {
 		config.FieldWells = expandGeospatialMapFieldWells(v)
@@ -181,7 +180,7 @@ func expandGeospatialMapConfiguration(tfList []interface{}) *types.GeospatialMap
 	return config
 }
 
-func expandGeospatialMapFieldWells(tfList []interface{}) *types.GeospatialMapFieldWells {
+func expandGeospatialMapFieldWells(tfList []interface{}) *quicksight.GeospatialMapFieldWells {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -191,7 +190,7 @@ func expandGeospatialMapFieldWells(tfList []interface{}) *types.GeospatialMapFie
 		return nil
 	}
 
-	config := &types.GeospatialMapFieldWells{}
+	config := &quicksight.GeospatialMapFieldWells{}
 
 	if v, ok := tfMap["geospatial_map_aggregated_field_wells"].([]interface{}); ok && len(v) > 0 {
 		config.GeospatialMapAggregatedFieldWells = expandGeospatialMapAggregatedFieldWells(v)
@@ -200,7 +199,7 @@ func expandGeospatialMapFieldWells(tfList []interface{}) *types.GeospatialMapFie
 	return config
 }
 
-func expandGeospatialMapAggregatedFieldWells(tfList []interface{}) *types.GeospatialMapAggregatedFieldWells {
+func expandGeospatialMapAggregatedFieldWells(tfList []interface{}) *quicksight.GeospatialMapAggregatedFieldWells {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -210,7 +209,7 @@ func expandGeospatialMapAggregatedFieldWells(tfList []interface{}) *types.Geospa
 		return nil
 	}
 
-	config := &types.GeospatialMapAggregatedFieldWells{}
+	config := &quicksight.GeospatialMapAggregatedFieldWells{}
 
 	if v, ok := tfMap["colors"].([]interface{}); ok && len(v) > 0 {
 		config.Colors = expandDimensionFields(v)
@@ -225,7 +224,7 @@ func expandGeospatialMapAggregatedFieldWells(tfList []interface{}) *types.Geospa
 	return config
 }
 
-func expandGeospatialPointStyleOptions(tfList []interface{}) *types.GeospatialPointStyleOptions {
+func expandGeospatialPointStyleOptions(tfList []interface{}) *quicksight.GeospatialPointStyleOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -235,10 +234,10 @@ func expandGeospatialPointStyleOptions(tfList []interface{}) *types.GeospatialPo
 		return nil
 	}
 
-	config := &types.GeospatialPointStyleOptions{}
+	config := &quicksight.GeospatialPointStyleOptions{}
 
 	if v, ok := tfMap["selected_point_style"].(string); ok && v != "" {
-		config.SelectedPointStyle = types.GeospatialSelectedPointStyle(v)
+		config.SelectedPointStyle = aws.String(v)
 	}
 	if v, ok := tfMap["cluster_marker_configuration"].([]interface{}); ok && len(v) > 0 {
 		config.ClusterMarkerConfiguration = expandClusterMarkerConfiguration(v)
@@ -247,7 +246,7 @@ func expandGeospatialPointStyleOptions(tfList []interface{}) *types.GeospatialPo
 	return config
 }
 
-func expandClusterMarkerConfiguration(tfList []interface{}) *types.ClusterMarkerConfiguration {
+func expandClusterMarkerConfiguration(tfList []interface{}) *quicksight.ClusterMarkerConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -257,7 +256,7 @@ func expandClusterMarkerConfiguration(tfList []interface{}) *types.ClusterMarker
 		return nil
 	}
 
-	config := &types.ClusterMarkerConfiguration{}
+	config := &quicksight.ClusterMarkerConfiguration{}
 
 	if v, ok := tfMap["cluster_marker"].([]interface{}); ok && len(v) > 0 {
 		config.ClusterMarker = expandClusterMarker(v)
@@ -266,7 +265,7 @@ func expandClusterMarkerConfiguration(tfList []interface{}) *types.ClusterMarker
 	return config
 }
 
-func expandClusterMarker(tfList []interface{}) *types.ClusterMarker {
+func expandClusterMarker(tfList []interface{}) *quicksight.ClusterMarker {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -276,7 +275,7 @@ func expandClusterMarker(tfList []interface{}) *types.ClusterMarker {
 		return nil
 	}
 
-	config := &types.ClusterMarker{}
+	config := &quicksight.ClusterMarker{}
 
 	if v, ok := tfMap["simple_cluster_marker"].([]interface{}); ok && len(v) > 0 {
 		config.SimpleClusterMarker = expandSimpleClusterMarker(v)
@@ -285,7 +284,7 @@ func expandClusterMarker(tfList []interface{}) *types.ClusterMarker {
 	return config
 }
 
-func expandSimpleClusterMarker(tfList []interface{}) *types.SimpleClusterMarker {
+func expandSimpleClusterMarker(tfList []interface{}) *quicksight.SimpleClusterMarker {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -295,7 +294,7 @@ func expandSimpleClusterMarker(tfList []interface{}) *types.SimpleClusterMarker 
 		return nil
 	}
 
-	config := &types.SimpleClusterMarker{}
+	config := &quicksight.SimpleClusterMarker{}
 
 	if v, ok := tfMap["color"].(string); ok && v != "" {
 		config.Color = aws.String(v)
@@ -303,13 +302,13 @@ func expandSimpleClusterMarker(tfList []interface{}) *types.SimpleClusterMarker 
 	return config
 }
 
-func flattenGeospatialMapVisual(apiObject *types.GeospatialMapVisual) []interface{} {
+func flattenGeospatialMapVisual(apiObject *quicksight.GeospatialMapVisual) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{
-		"visual_id": aws.ToString(apiObject.VisualId),
+		"visual_id": aws.StringValue(apiObject.VisualId),
 	}
 	if apiObject.Actions != nil {
 		tfMap["actions"] = flattenVisualCustomAction(apiObject.Actions)
@@ -330,7 +329,7 @@ func flattenGeospatialMapVisual(apiObject *types.GeospatialMapVisual) []interfac
 	return []interface{}{tfMap}
 }
 
-func flattenGeospatialMapConfiguration(apiObject *types.GeospatialMapConfiguration) []interface{} {
+func flattenGeospatialMapConfiguration(apiObject *quicksight.GeospatialMapConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -361,7 +360,7 @@ func flattenGeospatialMapConfiguration(apiObject *types.GeospatialMapConfigurati
 	return []interface{}{tfMap}
 }
 
-func flattenGeospatialMapFieldWells(apiObject *types.GeospatialMapFieldWells) []interface{} {
+func flattenGeospatialMapFieldWells(apiObject *quicksight.GeospatialMapFieldWells) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -374,7 +373,7 @@ func flattenGeospatialMapFieldWells(apiObject *types.GeospatialMapFieldWells) []
 	return []interface{}{tfMap}
 }
 
-func flattenGeospatialMapAggregatedFieldWells(apiObject *types.GeospatialMapAggregatedFieldWells) []interface{} {
+func flattenGeospatialMapAggregatedFieldWells(apiObject *quicksight.GeospatialMapAggregatedFieldWells) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -393,7 +392,7 @@ func flattenGeospatialMapAggregatedFieldWells(apiObject *types.GeospatialMapAggr
 	return []interface{}{tfMap}
 }
 
-func flattenGeospatialPointStyleOptions(apiObject *types.GeospatialPointStyleOptions) []interface{} {
+func flattenGeospatialPointStyleOptions(apiObject *quicksight.GeospatialPointStyleOptions) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -406,7 +405,7 @@ func flattenGeospatialPointStyleOptions(apiObject *types.GeospatialPointStyleOpt
 	return []interface{}{tfMap}
 }
 
-func flattenClusterMarkerConfiguration(apiObject *types.ClusterMarkerConfiguration) []interface{} {
+func flattenClusterMarkerConfiguration(apiObject *quicksight.ClusterMarkerConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -419,7 +418,7 @@ func flattenClusterMarkerConfiguration(apiObject *types.ClusterMarkerConfigurati
 	return []interface{}{tfMap}
 }
 
-func flattenClusterMarker(apiObject *types.ClusterMarker) []interface{} {
+func flattenClusterMarker(apiObject *quicksight.ClusterMarker) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -432,14 +431,14 @@ func flattenClusterMarker(apiObject *types.ClusterMarker) []interface{} {
 	return []interface{}{tfMap}
 }
 
-func flattenSimpleClusterMarker(apiObject *types.SimpleClusterMarker) []interface{} {
+func flattenSimpleClusterMarker(apiObject *quicksight.SimpleClusterMarker) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 	if apiObject.Color != nil {
-		tfMap["color"] = aws.ToString(apiObject.Color)
+		tfMap["color"] = aws.StringValue(apiObject.Color)
 	}
 
 	return []interface{}{tfMap}

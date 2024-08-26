@@ -4,8 +4,8 @@
 package schema
 
 import (
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/quicksight/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -81,7 +81,7 @@ func treeMapVisualSchema() *schema.Schema {
 	}
 }
 
-func expandTreeMapVisual(tfList []interface{}) *types.TreeMapVisual {
+func expandTreeMapVisual(tfList []interface{}) *quicksight.TreeMapVisual {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -91,7 +91,7 @@ func expandTreeMapVisual(tfList []interface{}) *types.TreeMapVisual {
 		return nil
 	}
 
-	visual := &types.TreeMapVisual{}
+	visual := &quicksight.TreeMapVisual{}
 
 	if v, ok := tfMap["visual_id"].(string); ok && v != "" {
 		visual.VisualId = aws.String(v)
@@ -115,7 +115,7 @@ func expandTreeMapVisual(tfList []interface{}) *types.TreeMapVisual {
 	return visual
 }
 
-func expandTreeMapConfiguration(tfList []interface{}) *types.TreeMapConfiguration {
+func expandTreeMapConfiguration(tfList []interface{}) *quicksight.TreeMapConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -125,7 +125,7 @@ func expandTreeMapConfiguration(tfList []interface{}) *types.TreeMapConfiguratio
 		return nil
 	}
 
-	config := &types.TreeMapConfiguration{}
+	config := &quicksight.TreeMapConfiguration{}
 
 	if v, ok := tfMap["color_label_options"].([]interface{}); ok && len(v) > 0 {
 		config.ColorLabelOptions = expandChartAxisLabelOptions(v)
@@ -158,7 +158,7 @@ func expandTreeMapConfiguration(tfList []interface{}) *types.TreeMapConfiguratio
 	return config
 }
 
-func expandTreeMapFieldWells(tfList []interface{}) *types.TreeMapFieldWells {
+func expandTreeMapFieldWells(tfList []interface{}) *quicksight.TreeMapFieldWells {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -168,7 +168,7 @@ func expandTreeMapFieldWells(tfList []interface{}) *types.TreeMapFieldWells {
 		return nil
 	}
 
-	config := &types.TreeMapFieldWells{}
+	config := &quicksight.TreeMapFieldWells{}
 
 	if v, ok := tfMap["tree_map_aggregated_field_wells"].([]interface{}); ok && len(v) > 0 {
 		config.TreeMapAggregatedFieldWells = expandTreeMapAggregatedFieldWells(v)
@@ -177,7 +177,7 @@ func expandTreeMapFieldWells(tfList []interface{}) *types.TreeMapFieldWells {
 	return config
 }
 
-func expandTreeMapAggregatedFieldWells(tfList []interface{}) *types.TreeMapAggregatedFieldWells {
+func expandTreeMapAggregatedFieldWells(tfList []interface{}) *quicksight.TreeMapAggregatedFieldWells {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -187,7 +187,7 @@ func expandTreeMapAggregatedFieldWells(tfList []interface{}) *types.TreeMapAggre
 		return nil
 	}
 
-	config := &types.TreeMapAggregatedFieldWells{}
+	config := &quicksight.TreeMapAggregatedFieldWells{}
 
 	if v, ok := tfMap["colors"].([]interface{}); ok && len(v) > 0 {
 		config.Colors = expandMeasureFields(v)
@@ -202,7 +202,7 @@ func expandTreeMapAggregatedFieldWells(tfList []interface{}) *types.TreeMapAggre
 	return config
 }
 
-func expandTreeMapSortConfiguration(tfList []interface{}) *types.TreeMapSortConfiguration {
+func expandTreeMapSortConfiguration(tfList []interface{}) *quicksight.TreeMapSortConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -212,7 +212,7 @@ func expandTreeMapSortConfiguration(tfList []interface{}) *types.TreeMapSortConf
 		return nil
 	}
 
-	config := &types.TreeMapSortConfiguration{}
+	config := &quicksight.TreeMapSortConfiguration{}
 
 	if v, ok := tfMap["tree_map_group_items_limit_configuration"].([]interface{}); ok && len(v) > 0 {
 		config.TreeMapGroupItemsLimitConfiguration = expandItemsLimitConfiguration(v)
@@ -224,13 +224,13 @@ func expandTreeMapSortConfiguration(tfList []interface{}) *types.TreeMapSortConf
 	return config
 }
 
-func flattenTreeMapVisual(apiObject *types.TreeMapVisual) []interface{} {
+func flattenTreeMapVisual(apiObject *quicksight.TreeMapVisual) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{
-		"visual_id": aws.ToString(apiObject.VisualId),
+		"visual_id": aws.StringValue(apiObject.VisualId),
 	}
 	if apiObject.Actions != nil {
 		tfMap["actions"] = flattenVisualCustomAction(apiObject.Actions)
@@ -251,7 +251,7 @@ func flattenTreeMapVisual(apiObject *types.TreeMapVisual) []interface{} {
 	return []interface{}{tfMap}
 }
 
-func flattenTreeMapConfiguration(apiObject *types.TreeMapConfiguration) []interface{} {
+func flattenTreeMapConfiguration(apiObject *quicksight.TreeMapConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -288,7 +288,7 @@ func flattenTreeMapConfiguration(apiObject *types.TreeMapConfiguration) []interf
 	return []interface{}{tfMap}
 }
 
-func flattenTreeMapFieldWells(apiObject *types.TreeMapFieldWells) []interface{} {
+func flattenTreeMapFieldWells(apiObject *quicksight.TreeMapFieldWells) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -301,7 +301,7 @@ func flattenTreeMapFieldWells(apiObject *types.TreeMapFieldWells) []interface{} 
 	return []interface{}{tfMap}
 }
 
-func flattenTreeMapAggregatedFieldWells(apiObject *types.TreeMapAggregatedFieldWells) []interface{} {
+func flattenTreeMapAggregatedFieldWells(apiObject *quicksight.TreeMapAggregatedFieldWells) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -320,7 +320,7 @@ func flattenTreeMapAggregatedFieldWells(apiObject *types.TreeMapAggregatedFieldW
 	return []interface{}{tfMap}
 }
 
-func flattenTreeMapSortConfiguration(apiObject *types.TreeMapSortConfiguration) []interface{} {
+func flattenTreeMapSortConfiguration(apiObject *quicksight.TreeMapSortConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}

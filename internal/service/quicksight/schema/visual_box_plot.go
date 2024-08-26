@@ -4,11 +4,10 @@
 package schema
 
 import (
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/quicksight/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -36,8 +35,8 @@ func boxPlotVisualSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"all_data_points_visibility": stringSchema(false, enum.Validate[types.Visibility]()),
-										"outlier_visibility":         stringSchema(false, enum.Validate[types.Visibility]()),
+										"all_data_points_visibility": stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
+										"outlier_visibility":         stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
 										"style_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_BoxPlotStyleOptions.html
 											Type:     schema.TypeList,
 											Optional: true,
@@ -45,7 +44,7 @@ func boxPlotVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"fill_style": stringSchema(false, enum.Validate[types.BoxPlotFillStyle]()),
+													"fill_style": stringSchema(false, validation.StringInSlice(quicksight.BoxPlotFillStyle_Values(), false)),
 												},
 											},
 										},
@@ -115,9 +114,9 @@ func paginationConfigurationSchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"page_number": {
-					Type:             schema.TypeInt,
-					Required:         true,
-					ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(0)),
+					Type:         schema.TypeInt,
+					Required:     true,
+					ValidateFunc: validation.IntAtLeast(0),
 				},
 				"page_size": {
 					Type:     schema.TypeInt,
@@ -128,7 +127,7 @@ func paginationConfigurationSchema() *schema.Schema {
 	}
 }
 
-func expandBoxPlotVisual(tfList []interface{}) *types.BoxPlotVisual {
+func expandBoxPlotVisual(tfList []interface{}) *quicksight.BoxPlotVisual {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -138,7 +137,7 @@ func expandBoxPlotVisual(tfList []interface{}) *types.BoxPlotVisual {
 		return nil
 	}
 
-	visual := &types.BoxPlotVisual{}
+	visual := &quicksight.BoxPlotVisual{}
 
 	if v, ok := tfMap["visual_id"].(string); ok && v != "" {
 		visual.VisualId = aws.String(v)
@@ -162,7 +161,7 @@ func expandBoxPlotVisual(tfList []interface{}) *types.BoxPlotVisual {
 	return visual
 }
 
-func expandBoxPlotChartConfiguration(tfList []interface{}) *types.BoxPlotChartConfiguration {
+func expandBoxPlotChartConfiguration(tfList []interface{}) *quicksight.BoxPlotChartConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -172,7 +171,7 @@ func expandBoxPlotChartConfiguration(tfList []interface{}) *types.BoxPlotChartCo
 		return nil
 	}
 
-	config := &types.BoxPlotChartConfiguration{}
+	config := &quicksight.BoxPlotChartConfiguration{}
 
 	if v, ok := tfMap["box_plot_options"].([]interface{}); ok && len(v) > 0 {
 		config.BoxPlotOptions = expandBoxPlotOptions(v)
@@ -211,7 +210,7 @@ func expandBoxPlotChartConfiguration(tfList []interface{}) *types.BoxPlotChartCo
 	return config
 }
 
-func expandBoxPlotOptions(tfList []interface{}) *types.BoxPlotOptions {
+func expandBoxPlotOptions(tfList []interface{}) *quicksight.BoxPlotOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -221,13 +220,13 @@ func expandBoxPlotOptions(tfList []interface{}) *types.BoxPlotOptions {
 		return nil
 	}
 
-	options := &types.BoxPlotOptions{}
+	options := &quicksight.BoxPlotOptions{}
 
 	if v, ok := tfMap["all_data_points_visibility"].(string); ok && v != "" {
-		options.AllDataPointsVisibility = types.Visibility(v)
+		options.AllDataPointsVisibility = aws.String(v)
 	}
 	if v, ok := tfMap["outlier_visibility"].(string); ok && v != "" {
-		options.OutlierVisibility = types.Visibility(v)
+		options.OutlierVisibility = aws.String(v)
 	}
 	if v, ok := tfMap["style_options"].([]interface{}); ok && len(v) > 0 {
 		options.StyleOptions = expandBoxPlotStyleOptions(v)
@@ -236,7 +235,7 @@ func expandBoxPlotOptions(tfList []interface{}) *types.BoxPlotOptions {
 	return options
 }
 
-func expandBoxPlotStyleOptions(tfList []interface{}) *types.BoxPlotStyleOptions {
+func expandBoxPlotStyleOptions(tfList []interface{}) *quicksight.BoxPlotStyleOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -246,16 +245,16 @@ func expandBoxPlotStyleOptions(tfList []interface{}) *types.BoxPlotStyleOptions 
 		return nil
 	}
 
-	options := &types.BoxPlotStyleOptions{}
+	options := &quicksight.BoxPlotStyleOptions{}
 
 	if v, ok := tfMap["fill_style"].(string); ok && v != "" {
-		options.FillStyle = types.BoxPlotFillStyle(v)
+		options.FillStyle = aws.String(v)
 	}
 
 	return options
 }
 
-func expandBoxPlotFieldWells(tfList []interface{}) *types.BoxPlotFieldWells {
+func expandBoxPlotFieldWells(tfList []interface{}) *quicksight.BoxPlotFieldWells {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -265,7 +264,7 @@ func expandBoxPlotFieldWells(tfList []interface{}) *types.BoxPlotFieldWells {
 		return nil
 	}
 
-	config := &types.BoxPlotFieldWells{}
+	config := &quicksight.BoxPlotFieldWells{}
 
 	if v, ok := tfMap["box_plot_aggregated_field_wells"].([]interface{}); ok && len(v) > 0 {
 		config.BoxPlotAggregatedFieldWells = expandBoxPlotAggregatedFieldWells(v)
@@ -274,7 +273,7 @@ func expandBoxPlotFieldWells(tfList []interface{}) *types.BoxPlotFieldWells {
 	return config
 }
 
-func expandBoxPlotAggregatedFieldWells(tfList []interface{}) *types.BoxPlotAggregatedFieldWells {
+func expandBoxPlotAggregatedFieldWells(tfList []interface{}) *quicksight.BoxPlotAggregatedFieldWells {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -284,7 +283,7 @@ func expandBoxPlotAggregatedFieldWells(tfList []interface{}) *types.BoxPlotAggre
 		return nil
 	}
 
-	config := &types.BoxPlotAggregatedFieldWells{}
+	config := &quicksight.BoxPlotAggregatedFieldWells{}
 
 	if v, ok := tfMap["group_by"].([]interface{}); ok && len(v) > 0 {
 		config.GroupBy = expandDimensionFields(v)
@@ -296,7 +295,7 @@ func expandBoxPlotAggregatedFieldWells(tfList []interface{}) *types.BoxPlotAggre
 	return config
 }
 
-func expandBoxPlotSortConfiguration(tfList []interface{}) *types.BoxPlotSortConfiguration {
+func expandBoxPlotSortConfiguration(tfList []interface{}) *quicksight.BoxPlotSortConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -306,7 +305,7 @@ func expandBoxPlotSortConfiguration(tfList []interface{}) *types.BoxPlotSortConf
 		return nil
 	}
 
-	config := &types.BoxPlotSortConfiguration{}
+	config := &quicksight.BoxPlotSortConfiguration{}
 
 	if v, ok := tfMap["category_sort"].([]interface{}); ok && len(v) > 0 {
 		config.CategorySort = expandFieldSortOptionsList(v)
@@ -318,7 +317,7 @@ func expandBoxPlotSortConfiguration(tfList []interface{}) *types.BoxPlotSortConf
 	return config
 }
 
-func expandPaginationConfiguration(tfList []interface{}) *types.PaginationConfiguration {
+func expandPaginationConfiguration(tfList []interface{}) *quicksight.PaginationConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -328,7 +327,7 @@ func expandPaginationConfiguration(tfList []interface{}) *types.PaginationConfig
 		return nil
 	}
 
-	config := &types.PaginationConfiguration{}
+	config := &quicksight.PaginationConfiguration{}
 
 	if v, ok := tfMap["page_number"].(int); ok {
 		config.PageNumber = aws.Int64(int64(v))
@@ -340,13 +339,13 @@ func expandPaginationConfiguration(tfList []interface{}) *types.PaginationConfig
 	return config
 }
 
-func flattenBoxPlotVisual(apiObject *types.BoxPlotVisual) []interface{} {
+func flattenBoxPlotVisual(apiObject *quicksight.BoxPlotVisual) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{
-		"visual_id": aws.ToString(apiObject.VisualId),
+		"visual_id": aws.StringValue(apiObject.VisualId),
 	}
 	if apiObject.Actions != nil {
 		tfMap["actions"] = flattenVisualCustomAction(apiObject.Actions)
@@ -367,7 +366,7 @@ func flattenBoxPlotVisual(apiObject *types.BoxPlotVisual) []interface{} {
 	return []interface{}{tfMap}
 }
 
-func flattenBoxPlotChartConfiguration(apiObject *types.BoxPlotChartConfiguration) []interface{} {
+func flattenBoxPlotChartConfiguration(apiObject *quicksight.BoxPlotChartConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -410,16 +409,18 @@ func flattenBoxPlotChartConfiguration(apiObject *types.BoxPlotChartConfiguration
 	return []interface{}{tfMap}
 }
 
-func flattenBoxPlotOptions(apiObject *types.BoxPlotOptions) []interface{} {
+func flattenBoxPlotOptions(apiObject *quicksight.BoxPlotOptions) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-	tfMap["all_data_points_visibility"] = types.Visibility(apiObject.AllDataPointsVisibility)
-
-	tfMap["outlier_visibility"] = types.Visibility(apiObject.OutlierVisibility)
-
+	if apiObject.AllDataPointsVisibility != nil {
+		tfMap["all_data_points_visibility"] = aws.StringValue(apiObject.AllDataPointsVisibility)
+	}
+	if apiObject.OutlierVisibility != nil {
+		tfMap["outlier_visibility"] = aws.StringValue(apiObject.OutlierVisibility)
+	}
 	if apiObject.StyleOptions != nil {
 		tfMap["style_options"] = flattenBoxPlotStyleOptions(apiObject.StyleOptions)
 	}
@@ -427,19 +428,20 @@ func flattenBoxPlotOptions(apiObject *types.BoxPlotOptions) []interface{} {
 	return []interface{}{tfMap}
 }
 
-func flattenBoxPlotStyleOptions(apiObject *types.BoxPlotStyleOptions) []interface{} {
+func flattenBoxPlotStyleOptions(apiObject *quicksight.BoxPlotStyleOptions) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-
-	tfMap["fill_style"] = types.BoxPlotFillStyle(apiObject.FillStyle)
+	if apiObject.FillStyle != nil {
+		tfMap["fill_style"] = aws.StringValue(apiObject.FillStyle)
+	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenBoxPlotFieldWells(apiObject *types.BoxPlotFieldWells) []interface{} {
+func flattenBoxPlotFieldWells(apiObject *quicksight.BoxPlotFieldWells) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -452,7 +454,7 @@ func flattenBoxPlotFieldWells(apiObject *types.BoxPlotFieldWells) []interface{} 
 	return []interface{}{tfMap}
 }
 
-func flattenBoxPlotAggregatedFieldWells(apiObject *types.BoxPlotAggregatedFieldWells) []interface{} {
+func flattenBoxPlotAggregatedFieldWells(apiObject *quicksight.BoxPlotAggregatedFieldWells) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -468,7 +470,7 @@ func flattenBoxPlotAggregatedFieldWells(apiObject *types.BoxPlotAggregatedFieldW
 	return []interface{}{tfMap}
 }
 
-func flattenBoxPlotSortConfiguration(apiObject *types.BoxPlotSortConfiguration) []interface{} {
+func flattenBoxPlotSortConfiguration(apiObject *quicksight.BoxPlotSortConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -484,17 +486,17 @@ func flattenBoxPlotSortConfiguration(apiObject *types.BoxPlotSortConfiguration) 
 	return []interface{}{tfMap}
 }
 
-func flattenPaginationConfiguration(apiObject *types.PaginationConfiguration) []interface{} {
+func flattenPaginationConfiguration(apiObject *quicksight.PaginationConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 	if apiObject.PageNumber != nil {
-		tfMap["page_number"] = aws.ToInt64(apiObject.PageNumber)
+		tfMap["page_number"] = aws.Int64Value(apiObject.PageNumber)
 	}
 	if apiObject.PageSize != nil {
-		tfMap["page_size"] = aws.ToInt64(apiObject.PageSize)
+		tfMap["page_size"] = aws.Int64Value(apiObject.PageSize)
 	}
 
 	return []interface{}{tfMap}

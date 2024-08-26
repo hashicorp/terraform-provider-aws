@@ -4,8 +4,8 @@
 package schema
 
 import (
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/quicksight/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -82,7 +82,7 @@ func scatterPlotVisualSchema() *schema.Schema {
 	}
 }
 
-func expandScatterPlotVisual(tfList []interface{}) *types.ScatterPlotVisual {
+func expandScatterPlotVisual(tfList []interface{}) *quicksight.ScatterPlotVisual {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -92,7 +92,7 @@ func expandScatterPlotVisual(tfList []interface{}) *types.ScatterPlotVisual {
 		return nil
 	}
 
-	visual := &types.ScatterPlotVisual{}
+	visual := &quicksight.ScatterPlotVisual{}
 
 	if v, ok := tfMap["visual_id"].(string); ok && v != "" {
 		visual.VisualId = aws.String(v)
@@ -116,7 +116,7 @@ func expandScatterPlotVisual(tfList []interface{}) *types.ScatterPlotVisual {
 	return visual
 }
 
-func expandScatterPlotConfiguration(tfList []interface{}) *types.ScatterPlotConfiguration {
+func expandScatterPlotConfiguration(tfList []interface{}) *quicksight.ScatterPlotConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -126,7 +126,7 @@ func expandScatterPlotConfiguration(tfList []interface{}) *types.ScatterPlotConf
 		return nil
 	}
 
-	config := &types.ScatterPlotConfiguration{}
+	config := &quicksight.ScatterPlotConfiguration{}
 
 	if v, ok := tfMap["data_labels"].([]interface{}); ok && len(v) > 0 {
 		config.DataLabels = expandDataLabelOptions(v)
@@ -159,7 +159,7 @@ func expandScatterPlotConfiguration(tfList []interface{}) *types.ScatterPlotConf
 	return config
 }
 
-func expandScatterPlotFieldWells(tfList []interface{}) *types.ScatterPlotFieldWells {
+func expandScatterPlotFieldWells(tfList []interface{}) *quicksight.ScatterPlotFieldWells {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -169,7 +169,7 @@ func expandScatterPlotFieldWells(tfList []interface{}) *types.ScatterPlotFieldWe
 		return nil
 	}
 
-	config := &types.ScatterPlotFieldWells{}
+	config := &quicksight.ScatterPlotFieldWells{}
 
 	if v, ok := tfMap["scatter_plot_categorically_aggregated_field_wells"].([]interface{}); ok && len(v) > 0 {
 		config.ScatterPlotCategoricallyAggregatedFieldWells = expandScatterPlotCategoricallyAggregatedFieldWells(v)
@@ -181,7 +181,7 @@ func expandScatterPlotFieldWells(tfList []interface{}) *types.ScatterPlotFieldWe
 	return config
 }
 
-func expandScatterPlotCategoricallyAggregatedFieldWells(tfList []interface{}) *types.ScatterPlotCategoricallyAggregatedFieldWells {
+func expandScatterPlotCategoricallyAggregatedFieldWells(tfList []interface{}) *quicksight.ScatterPlotCategoricallyAggregatedFieldWells {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -191,7 +191,7 @@ func expandScatterPlotCategoricallyAggregatedFieldWells(tfList []interface{}) *t
 		return nil
 	}
 
-	config := &types.ScatterPlotCategoricallyAggregatedFieldWells{}
+	config := &quicksight.ScatterPlotCategoricallyAggregatedFieldWells{}
 
 	if v, ok := tfMap["category"].([]interface{}); ok && len(v) > 0 {
 		config.Category = expandDimensionFields(v)
@@ -209,7 +209,7 @@ func expandScatterPlotCategoricallyAggregatedFieldWells(tfList []interface{}) *t
 	return config
 }
 
-func expandScatterPlotUnaggregatedFieldWells(tfList []interface{}) *types.ScatterPlotUnaggregatedFieldWells {
+func expandScatterPlotUnaggregatedFieldWells(tfList []interface{}) *quicksight.ScatterPlotUnaggregatedFieldWells {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -219,7 +219,7 @@ func expandScatterPlotUnaggregatedFieldWells(tfList []interface{}) *types.Scatte
 		return nil
 	}
 
-	config := &types.ScatterPlotUnaggregatedFieldWells{}
+	config := &quicksight.ScatterPlotUnaggregatedFieldWells{}
 
 	if v, ok := tfMap["size"].([]interface{}); ok && len(v) > 0 {
 		config.Size = expandMeasureFields(v)
@@ -234,13 +234,13 @@ func expandScatterPlotUnaggregatedFieldWells(tfList []interface{}) *types.Scatte
 	return config
 }
 
-func flattenScatterPlotVisual(apiObject *types.ScatterPlotVisual) []interface{} {
+func flattenScatterPlotVisual(apiObject *quicksight.ScatterPlotVisual) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{
-		"visual_id": aws.ToString(apiObject.VisualId),
+		"visual_id": aws.StringValue(apiObject.VisualId),
 	}
 	if apiObject.Actions != nil {
 		tfMap["actions"] = flattenVisualCustomAction(apiObject.Actions)
@@ -261,7 +261,7 @@ func flattenScatterPlotVisual(apiObject *types.ScatterPlotVisual) []interface{} 
 	return []interface{}{tfMap}
 }
 
-func flattenScatterPlotConfiguration(apiObject *types.ScatterPlotConfiguration) []interface{} {
+func flattenScatterPlotConfiguration(apiObject *quicksight.ScatterPlotConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -298,7 +298,7 @@ func flattenScatterPlotConfiguration(apiObject *types.ScatterPlotConfiguration) 
 	return []interface{}{tfMap}
 }
 
-func flattenScatterPlotFieldWells(apiObject *types.ScatterPlotFieldWells) []interface{} {
+func flattenScatterPlotFieldWells(apiObject *quicksight.ScatterPlotFieldWells) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -314,7 +314,7 @@ func flattenScatterPlotFieldWells(apiObject *types.ScatterPlotFieldWells) []inte
 	return []interface{}{tfMap}
 }
 
-func flattenScatterPlotCategoricallyAggregatedFieldWells(apiObject *types.ScatterPlotCategoricallyAggregatedFieldWells) []interface{} {
+func flattenScatterPlotCategoricallyAggregatedFieldWells(apiObject *quicksight.ScatterPlotCategoricallyAggregatedFieldWells) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -336,7 +336,7 @@ func flattenScatterPlotCategoricallyAggregatedFieldWells(apiObject *types.Scatte
 	return []interface{}{tfMap}
 }
 
-func flattenScatterPlotUnaggregatedFieldWells(apiObject *types.ScatterPlotUnaggregatedFieldWells) []interface{} {
+func flattenScatterPlotUnaggregatedFieldWells(apiObject *quicksight.ScatterPlotUnaggregatedFieldWells) []interface{} {
 	if apiObject == nil {
 		return nil
 	}

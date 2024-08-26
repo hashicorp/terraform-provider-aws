@@ -4,11 +4,10 @@
 package schema
 
 import (
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/quicksight/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
@@ -29,9 +28,9 @@ func filterControlsSchema() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"filter_control_id": idSchema(),
 							"source_filter_id":  idSchema(),
-							"title":             stringSchema(true, validation.ToDiagFunc(validation.StringLenBetween(1, 2048))),
+							"title":             stringSchema(true, validation.StringLenBetween(1, 2048)),
 							"display_options":   dateTimePickerControlDisplayOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimePickerControlDisplayOptions.html
-							"type":              stringSchema(false, enum.Validate[types.SheetControlDateTimePickerType]()),
+							"type":              stringSchema(false, validation.StringInSlice(quicksight.SheetControlDateTimePickerType_Values(), false)),
 						},
 					},
 				},
@@ -44,11 +43,11 @@ func filterControlsSchema() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"filter_control_id":               idSchema(),
 							"source_filter_id":                idSchema(),
-							"title":                           stringSchema(true, validation.ToDiagFunc(validation.StringLenBetween(1, 2048))),
+							"title":                           stringSchema(true, validation.StringLenBetween(1, 2048)),
 							"cascading_control_configuration": cascadingControlConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CascadingControlConfiguration.html
 							"display_options":                 dropDownControlDisplayOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DropDownControlDisplayOptions.html
 							"selectable_values":               filterSelectableValuesSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterSelectableValues.html
-							"type":                            stringSchema(false, enum.Validate[types.SheetControlListType]()),
+							"type":                            stringSchema(false, validation.StringInSlice(quicksight.SheetControlListType_Values(), false)),
 						},
 					},
 				},
@@ -61,11 +60,11 @@ func filterControlsSchema() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"filter_control_id":               idSchema(),
 							"source_filter_id":                idSchema(),
-							"title":                           stringSchema(true, validation.ToDiagFunc(validation.StringLenBetween(1, 2048))),
+							"title":                           stringSchema(true, validation.StringLenBetween(1, 2048)),
 							"cascading_control_configuration": cascadingControlConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CascadingControlConfiguration.html
 							"display_options":                 listControlDisplayOptionsSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ListControlDisplayOptions.html
 							"selectable_values":               filterSelectableValuesSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterSelectableValues.html
-							"type":                            stringSchema(false, enum.Validate[types.SheetControlListType]()),
+							"type":                            stringSchema(false, validation.StringInSlice(quicksight.SheetControlListType_Values(), false)),
 						},
 					},
 				},
@@ -78,7 +77,7 @@ func filterControlsSchema() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"filter_control_id": idSchema(),
 							"source_filter_id":  idSchema(),
-							"title":             stringSchema(true, validation.ToDiagFunc(validation.StringLenBetween(1, 2048))),
+							"title":             stringSchema(true, validation.StringLenBetween(1, 2048)),
 							"display_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RelativeDateTimeControlDisplayOptions.html
 								Type:     schema.TypeList,
 								Optional: true,
@@ -86,7 +85,7 @@ func filterControlsSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"date_time_format": stringSchema(false, validation.ToDiagFunc(validation.StringLenBetween(1, 128))),
+										"date_time_format": stringSchema(false, validation.StringLenBetween(1, 128)),
 										"title_options":    labelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LabelOptions.html
 									},
 								},
@@ -103,7 +102,7 @@ func filterControlsSchema() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"filter_control_id": idSchema(),
 							"source_filter_id":  idSchema(),
-							"title":             stringSchema(true, validation.ToDiagFunc(validation.StringLenBetween(1, 2048))),
+							"title":             stringSchema(true, validation.StringLenBetween(1, 2048)),
 							"maximum_value": {
 								Type:     schema.TypeFloat,
 								Required: true,
@@ -117,7 +116,7 @@ func filterControlsSchema() *schema.Schema {
 								Required: true,
 							},
 							"display_options": sliderControlDisplayOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SliderControlDisplayOptions.html
-							"type":            stringSchema(false, enum.Validate[types.SheetControlSliderType]()),
+							"type":            stringSchema(false, validation.StringInSlice(quicksight.SheetControlSliderType_Values(), false)),
 						},
 					},
 				},
@@ -130,8 +129,8 @@ func filterControlsSchema() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"filter_control_id": idSchema(),
 							"source_filter_id":  idSchema(),
-							"title":             stringSchema(true, validation.ToDiagFunc(validation.StringLenBetween(1, 2048))),
-							"delimiter":         stringSchema(false, validation.ToDiagFunc(validation.StringLenBetween(1, 2048))),
+							"title":             stringSchema(true, validation.StringLenBetween(1, 2048)),
+							"delimiter":         stringSchema(false, validation.StringLenBetween(1, 2048)),
 							"display_options":   textAreaControlDisplayOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TextAreaControlDisplayOptions.html
 						},
 					},
@@ -145,7 +144,7 @@ func filterControlsSchema() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"filter_control_id": idSchema(),
 							"source_filter_id":  idSchema(),
-							"title":             stringSchema(true, validation.ToDiagFunc(validation.StringLenBetween(1, 2048))),
+							"title":             stringSchema(true, validation.StringLenBetween(1, 2048)),
 							"display_options":   textFieldControlDisplayOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TextFieldControlDisplayOptions.html
 						},
 					},
@@ -207,7 +206,7 @@ func dateTimePickerControlDisplayOptionsSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"date_time_format": stringSchema(false, validation.ToDiagFunc(validation.StringLenBetween(1, 128))),
+				"date_time_format": stringSchema(false, validation.StringLenBetween(1, 128)),
 				"title_options":    labelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LabelOptions.html
 			},
 		},
@@ -229,7 +228,7 @@ func listControlDisplayOptionsSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"visibility": stringSchema(false, enum.Validate[types.Visibility]()),
+							"visibility": stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
 						},
 					},
 				},
@@ -276,7 +275,7 @@ func selectAllOptionsSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"visibility": stringSchema(false, enum.Validate[types.Visibility]()),
+				"visibility": stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
 			},
 		},
 	}
@@ -305,18 +304,18 @@ func placeholderOptionsSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"visibility": stringSchema(false, enum.Validate[types.Visibility]()),
+				"visibility": stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
 			},
 		},
 	}
 }
 
-func expandFilterControl(tfMap map[string]interface{}) *types.FilterControl {
+func expandFilterControl(tfMap map[string]interface{}) *quicksight.FilterControl {
 	if tfMap == nil {
 		return nil
 	}
 
-	control := &types.FilterControl{}
+	control := &quicksight.FilterControl{}
 
 	if v, ok := tfMap["date_time_picker"].([]interface{}); ok && len(v) > 0 {
 		control.DateTimePicker = expandFilterDateTimePickerControl(v)
@@ -342,7 +341,7 @@ func expandFilterControl(tfMap map[string]interface{}) *types.FilterControl {
 	return control
 }
 
-func expandFilterDateTimePickerControl(tfList []interface{}) *types.FilterDateTimePickerControl {
+func expandFilterDateTimePickerControl(tfList []interface{}) *quicksight.FilterDateTimePickerControl {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -352,7 +351,7 @@ func expandFilterDateTimePickerControl(tfList []interface{}) *types.FilterDateTi
 		return nil
 	}
 
-	control := &types.FilterDateTimePickerControl{}
+	control := &quicksight.FilterDateTimePickerControl{}
 
 	if v, ok := tfMap["filter_control_id"].(string); ok && v != "" {
 		control.FilterControlId = aws.String(v)
@@ -364,7 +363,7 @@ func expandFilterDateTimePickerControl(tfList []interface{}) *types.FilterDateTi
 		control.Title = aws.String(v)
 	}
 	if v, ok := tfMap["type"].(string); ok && v != "" {
-		control.Type = types.SheetControlDateTimePickerType(v)
+		control.Type = aws.String(v)
 	}
 	if v, ok := tfMap["display_options"].([]interface{}); ok && len(v) > 0 {
 		control.DisplayOptions = expandDateTimePickerControlDisplayOptions(v)
@@ -373,7 +372,7 @@ func expandFilterDateTimePickerControl(tfList []interface{}) *types.FilterDateTi
 	return control
 }
 
-func expandDateTimePickerControlDisplayOptions(tfList []interface{}) *types.DateTimePickerControlDisplayOptions {
+func expandDateTimePickerControlDisplayOptions(tfList []interface{}) *quicksight.DateTimePickerControlDisplayOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -383,7 +382,7 @@ func expandDateTimePickerControlDisplayOptions(tfList []interface{}) *types.Date
 		return nil
 	}
 
-	options := &types.DateTimePickerControlDisplayOptions{}
+	options := &quicksight.DateTimePickerControlDisplayOptions{}
 
 	if v, ok := tfMap["date_time_format"].(string); ok && v != "" {
 		options.DateTimeFormat = aws.String(v)
@@ -395,7 +394,7 @@ func expandDateTimePickerControlDisplayOptions(tfList []interface{}) *types.Date
 	return options
 }
 
-func expandFilterDropDownControl(tfList []interface{}) *types.FilterDropDownControl {
+func expandFilterDropDownControl(tfList []interface{}) *quicksight.FilterDropDownControl {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -405,7 +404,7 @@ func expandFilterDropDownControl(tfList []interface{}) *types.FilterDropDownCont
 		return nil
 	}
 
-	control := &types.FilterDropDownControl{}
+	control := &quicksight.FilterDropDownControl{}
 
 	if v, ok := tfMap["filter_control_id"].(string); ok && v != "" {
 		control.FilterControlId = aws.String(v)
@@ -417,7 +416,7 @@ func expandFilterDropDownControl(tfList []interface{}) *types.FilterDropDownCont
 		control.Title = aws.String(v)
 	}
 	if v, ok := tfMap["type"].(string); ok && v != "" {
-		control.Type = types.SheetControlListType(v)
+		control.Type = aws.String(v)
 	}
 	if v, ok := tfMap["cascading_control_configuration"].([]interface{}); ok && len(v) > 0 {
 		control.CascadingControlConfiguration = expandCascadingControlConfiguration(v)
@@ -432,7 +431,7 @@ func expandFilterDropDownControl(tfList []interface{}) *types.FilterDropDownCont
 	return control
 }
 
-func expandCascadingControlConfiguration(tfList []interface{}) *types.CascadingControlConfiguration {
+func expandCascadingControlConfiguration(tfList []interface{}) *quicksight.CascadingControlConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -442,7 +441,7 @@ func expandCascadingControlConfiguration(tfList []interface{}) *types.CascadingC
 		return nil
 	}
 
-	config := &types.CascadingControlConfiguration{}
+	config := &quicksight.CascadingControlConfiguration{}
 
 	if v, ok := tfMap["source_controls"].([]interface{}); ok && len(v) > 0 {
 		config.SourceControls = expandCascadingControlSources(v)
@@ -451,12 +450,12 @@ func expandCascadingControlConfiguration(tfList []interface{}) *types.CascadingC
 	return config
 }
 
-func expandCascadingControlSources(tfList []interface{}) []types.CascadingControlSource {
+func expandCascadingControlSources(tfList []interface{}) []*quicksight.CascadingControlSource {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var sources []types.CascadingControlSource
+	var sources []*quicksight.CascadingControlSource
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
 		if !ok {
@@ -468,18 +467,18 @@ func expandCascadingControlSources(tfList []interface{}) []types.CascadingContro
 			continue
 		}
 
-		sources = append(sources, *source)
+		sources = append(sources, source)
 	}
 
 	return sources
 }
 
-func expandCascadingControlSource(tfMap map[string]interface{}) *types.CascadingControlSource {
+func expandCascadingControlSource(tfMap map[string]interface{}) *quicksight.CascadingControlSource {
 	if tfMap == nil {
 		return nil
 	}
 
-	source := &types.CascadingControlSource{}
+	source := &quicksight.CascadingControlSource{}
 
 	if v, ok := tfMap["source_sheet_control_id"].(string); ok && v != "" {
 		source.SourceSheetControlId = aws.String(v)
@@ -491,7 +490,7 @@ func expandCascadingControlSource(tfMap map[string]interface{}) *types.Cascading
 	return source
 }
 
-func expandDropDownControlDisplayOptions(tfList []interface{}) *types.DropDownControlDisplayOptions {
+func expandDropDownControlDisplayOptions(tfList []interface{}) *quicksight.DropDownControlDisplayOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -501,7 +500,7 @@ func expandDropDownControlDisplayOptions(tfList []interface{}) *types.DropDownCo
 		return nil
 	}
 
-	options := &types.DropDownControlDisplayOptions{}
+	options := &quicksight.DropDownControlDisplayOptions{}
 
 	if v, ok := tfMap["select_all_options"].([]interface{}); ok && len(v) > 0 {
 		options.SelectAllOptions = expandListControlSelectAllOptions(v)
@@ -513,7 +512,7 @@ func expandDropDownControlDisplayOptions(tfList []interface{}) *types.DropDownCo
 	return options
 }
 
-func expandListControlSelectAllOptions(tfList []interface{}) *types.ListControlSelectAllOptions {
+func expandListControlSelectAllOptions(tfList []interface{}) *quicksight.ListControlSelectAllOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -523,16 +522,16 @@ func expandListControlSelectAllOptions(tfList []interface{}) *types.ListControlS
 		return nil
 	}
 
-	options := &types.ListControlSelectAllOptions{}
+	options := &quicksight.ListControlSelectAllOptions{}
 
 	if v, ok := tfMap["visibility"].(string); ok && v != "" {
-		options.Visibility = types.Visibility(v)
+		options.Visibility = aws.String(v)
 	}
 
 	return options
 }
 
-func expandFilterSelectableValues(tfList []interface{}) *types.FilterSelectableValues {
+func expandFilterSelectableValues(tfList []interface{}) *quicksight.FilterSelectableValues {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -542,16 +541,16 @@ func expandFilterSelectableValues(tfList []interface{}) *types.FilterSelectableV
 		return nil
 	}
 
-	values := &types.FilterSelectableValues{}
+	values := &quicksight.FilterSelectableValues{}
 
 	if v, ok := tfMap["values"].([]interface{}); ok {
-		values.Values = flex.ExpandStringValueList(v)
+		values.Values = flex.ExpandStringList(v)
 	}
 
 	return values
 }
 
-func expandFilterListControl(tfList []interface{}) *types.FilterListControl {
+func expandFilterListControl(tfList []interface{}) *quicksight.FilterListControl {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -561,7 +560,7 @@ func expandFilterListControl(tfList []interface{}) *types.FilterListControl {
 		return nil
 	}
 
-	control := &types.FilterListControl{}
+	control := &quicksight.FilterListControl{}
 
 	if v, ok := tfMap["filter_control_id"].(string); ok && v != "" {
 		control.FilterControlId = aws.String(v)
@@ -573,7 +572,7 @@ func expandFilterListControl(tfList []interface{}) *types.FilterListControl {
 		control.Title = aws.String(v)
 	}
 	if v, ok := tfMap["type"].(string); ok && v != "" {
-		control.Type = types.SheetControlListType(v)
+		control.Type = aws.String(v)
 	}
 	if v, ok := tfMap["cascading_control_configuration"].([]interface{}); ok && len(v) > 0 {
 		control.CascadingControlConfiguration = expandCascadingControlConfiguration(v)
@@ -588,7 +587,7 @@ func expandFilterListControl(tfList []interface{}) *types.FilterListControl {
 	return control
 }
 
-func expandListControlDisplayOptions(tfList []interface{}) *types.ListControlDisplayOptions {
+func expandListControlDisplayOptions(tfList []interface{}) *quicksight.ListControlDisplayOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -598,7 +597,7 @@ func expandListControlDisplayOptions(tfList []interface{}) *types.ListControlDis
 		return nil
 	}
 
-	options := &types.ListControlDisplayOptions{}
+	options := &quicksight.ListControlDisplayOptions{}
 
 	if v, ok := tfMap["select_all_options"].([]interface{}); ok && len(v) > 0 {
 		options.SelectAllOptions = expandListControlSelectAllOptions(v)
@@ -613,7 +612,7 @@ func expandListControlDisplayOptions(tfList []interface{}) *types.ListControlDis
 	return options
 }
 
-func expandListControlSearchOptions(tfList []interface{}) *types.ListControlSearchOptions {
+func expandListControlSearchOptions(tfList []interface{}) *quicksight.ListControlSearchOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -623,16 +622,16 @@ func expandListControlSearchOptions(tfList []interface{}) *types.ListControlSear
 		return nil
 	}
 
-	options := &types.ListControlSearchOptions{}
+	options := &quicksight.ListControlSearchOptions{}
 
 	if v, ok := tfMap["visibility"].(string); ok && v != "" {
-		options.Visibility = types.Visibility(v)
+		options.Visibility = aws.String(v)
 	}
 
 	return options
 }
 
-func expandFilterRelativeDateTimeControl(tfList []interface{}) *types.FilterRelativeDateTimeControl {
+func expandFilterRelativeDateTimeControl(tfList []interface{}) *quicksight.FilterRelativeDateTimeControl {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -642,7 +641,7 @@ func expandFilterRelativeDateTimeControl(tfList []interface{}) *types.FilterRela
 		return nil
 	}
 
-	control := &types.FilterRelativeDateTimeControl{}
+	control := &quicksight.FilterRelativeDateTimeControl{}
 
 	if v, ok := tfMap["filter_control_id"].(string); ok && v != "" {
 		control.FilterControlId = aws.String(v)
@@ -660,7 +659,7 @@ func expandFilterRelativeDateTimeControl(tfList []interface{}) *types.FilterRela
 	return control
 }
 
-func expandRelativeDateTimeControlDisplayOptions(tfList []interface{}) *types.RelativeDateTimeControlDisplayOptions {
+func expandRelativeDateTimeControlDisplayOptions(tfList []interface{}) *quicksight.RelativeDateTimeControlDisplayOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -670,7 +669,7 @@ func expandRelativeDateTimeControlDisplayOptions(tfList []interface{}) *types.Re
 		return nil
 	}
 
-	options := &types.RelativeDateTimeControlDisplayOptions{}
+	options := &quicksight.RelativeDateTimeControlDisplayOptions{}
 
 	if v, ok := tfMap["date_time_format"].(string); ok && v != "" {
 		options.DateTimeFormat = aws.String(v)
@@ -682,7 +681,7 @@ func expandRelativeDateTimeControlDisplayOptions(tfList []interface{}) *types.Re
 	return options
 }
 
-func expandFilterSliderControl(tfList []interface{}) *types.FilterSliderControl {
+func expandFilterSliderControl(tfList []interface{}) *quicksight.FilterSliderControl {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -692,7 +691,7 @@ func expandFilterSliderControl(tfList []interface{}) *types.FilterSliderControl 
 		return nil
 	}
 
-	control := &types.FilterSliderControl{}
+	control := &quicksight.FilterSliderControl{}
 
 	if v, ok := tfMap["filter_control_id"].(string); ok && v != "" {
 		control.FilterControlId = aws.String(v)
@@ -704,16 +703,16 @@ func expandFilterSliderControl(tfList []interface{}) *types.FilterSliderControl 
 		control.Title = aws.String(v)
 	}
 	if v, ok := tfMap["type"].(string); ok && v != "" {
-		control.Type = types.SheetControlSliderType(v)
+		control.Type = aws.String(v)
 	}
 	if v, ok := tfMap["maximum_value"].(float64); ok {
-		control.MaximumValue = v
+		control.MaximumValue = aws.Float64(v)
 	}
 	if v, ok := tfMap["minimum_value"].(float64); ok {
-		control.MinimumValue = v
+		control.MinimumValue = aws.Float64(v)
 	}
 	if v, ok := tfMap["step_size"].(float64); ok {
-		control.StepSize = v
+		control.StepSize = aws.Float64(v)
 	}
 	if v, ok := tfMap["display_options"].([]interface{}); ok && len(v) > 0 {
 		control.DisplayOptions = expandSliderControlDisplayOptions(v)
@@ -722,7 +721,7 @@ func expandFilterSliderControl(tfList []interface{}) *types.FilterSliderControl 
 	return control
 }
 
-func expandSliderControlDisplayOptions(tfList []interface{}) *types.SliderControlDisplayOptions {
+func expandSliderControlDisplayOptions(tfList []interface{}) *quicksight.SliderControlDisplayOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -732,7 +731,7 @@ func expandSliderControlDisplayOptions(tfList []interface{}) *types.SliderContro
 		return nil
 	}
 
-	options := &types.SliderControlDisplayOptions{}
+	options := &quicksight.SliderControlDisplayOptions{}
 
 	if v, ok := tfMap["title_options"].([]interface{}); ok && len(v) > 0 {
 		options.TitleOptions = expandLabelOptions(v)
@@ -741,7 +740,7 @@ func expandSliderControlDisplayOptions(tfList []interface{}) *types.SliderContro
 	return options
 }
 
-func expandFilterTextAreaControl(tfList []interface{}) *types.FilterTextAreaControl {
+func expandFilterTextAreaControl(tfList []interface{}) *quicksight.FilterTextAreaControl {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -751,7 +750,7 @@ func expandFilterTextAreaControl(tfList []interface{}) *types.FilterTextAreaCont
 		return nil
 	}
 
-	control := &types.FilterTextAreaControl{}
+	control := &quicksight.FilterTextAreaControl{}
 
 	if v, ok := tfMap["filter_control_id"].(string); ok && v != "" {
 		control.FilterControlId = aws.String(v)
@@ -772,7 +771,7 @@ func expandFilterTextAreaControl(tfList []interface{}) *types.FilterTextAreaCont
 	return control
 }
 
-func expandTextAreaControlDisplayOptions(tfList []interface{}) *types.TextAreaControlDisplayOptions {
+func expandTextAreaControlDisplayOptions(tfList []interface{}) *quicksight.TextAreaControlDisplayOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -782,7 +781,7 @@ func expandTextAreaControlDisplayOptions(tfList []interface{}) *types.TextAreaCo
 		return nil
 	}
 
-	options := &types.TextAreaControlDisplayOptions{}
+	options := &quicksight.TextAreaControlDisplayOptions{}
 
 	if v, ok := tfMap["placeholder_options"].([]interface{}); ok && len(v) > 0 {
 		options.PlaceholderOptions = expandTextControlPlaceholderOptions(v)
@@ -794,7 +793,7 @@ func expandTextAreaControlDisplayOptions(tfList []interface{}) *types.TextAreaCo
 	return options
 }
 
-func expandTextControlPlaceholderOptions(tfList []interface{}) *types.TextControlPlaceholderOptions {
+func expandTextControlPlaceholderOptions(tfList []interface{}) *quicksight.TextControlPlaceholderOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -804,16 +803,16 @@ func expandTextControlPlaceholderOptions(tfList []interface{}) *types.TextContro
 		return nil
 	}
 
-	options := &types.TextControlPlaceholderOptions{}
+	options := &quicksight.TextControlPlaceholderOptions{}
 
 	if v, ok := tfMap["visibility"].(string); ok && v != "" {
-		options.Visibility = types.Visibility(v)
+		options.Visibility = aws.String(v)
 	}
 
 	return options
 }
 
-func expandFilterTextFieldControl(tfList []interface{}) *types.FilterTextFieldControl {
+func expandFilterTextFieldControl(tfList []interface{}) *quicksight.FilterTextFieldControl {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -823,7 +822,7 @@ func expandFilterTextFieldControl(tfList []interface{}) *types.FilterTextFieldCo
 		return nil
 	}
 
-	control := &types.FilterTextFieldControl{}
+	control := &quicksight.FilterTextFieldControl{}
 
 	if v, ok := tfMap["filter_control_id"].(string); ok && v != "" {
 		control.FilterControlId = aws.String(v)
@@ -841,7 +840,7 @@ func expandFilterTextFieldControl(tfList []interface{}) *types.FilterTextFieldCo
 	return control
 }
 
-func expandTextFieldControlDisplayOptions(tfList []interface{}) *types.TextFieldControlDisplayOptions {
+func expandTextFieldControlDisplayOptions(tfList []interface{}) *quicksight.TextFieldControlDisplayOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -851,7 +850,7 @@ func expandTextFieldControlDisplayOptions(tfList []interface{}) *types.TextField
 		return nil
 	}
 
-	options := &types.TextFieldControlDisplayOptions{}
+	options := &quicksight.TextFieldControlDisplayOptions{}
 
 	if v, ok := tfMap["placeholder_options"].([]interface{}); ok && len(v) > 0 {
 		options.PlaceholderOptions = expandTextControlPlaceholderOptions(v)
@@ -863,12 +862,12 @@ func expandTextFieldControlDisplayOptions(tfList []interface{}) *types.TextField
 	return options
 }
 
-func expandParameterControl(tfMap map[string]interface{}) *types.ParameterControl {
+func expandParameterControl(tfMap map[string]interface{}) *quicksight.ParameterControl {
 	if tfMap == nil {
 		return nil
 	}
 
-	control := &types.ParameterControl{}
+	control := &quicksight.ParameterControl{}
 
 	if v, ok := tfMap["date_time_picker"].([]interface{}); ok && len(v) > 0 {
 		control.DateTimePicker = expandParameterDateTimePickerControl(v)
@@ -892,7 +891,7 @@ func expandParameterControl(tfMap map[string]interface{}) *types.ParameterContro
 	return control
 }
 
-func expandParameterDateTimePickerControl(tfList []interface{}) *types.ParameterDateTimePickerControl {
+func expandParameterDateTimePickerControl(tfList []interface{}) *quicksight.ParameterDateTimePickerControl {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -902,7 +901,7 @@ func expandParameterDateTimePickerControl(tfList []interface{}) *types.Parameter
 		return nil
 	}
 
-	control := &types.ParameterDateTimePickerControl{}
+	control := &quicksight.ParameterDateTimePickerControl{}
 
 	if v, ok := tfMap["parameter_control_id"].(string); ok && v != "" {
 		control.ParameterControlId = aws.String(v)
@@ -920,7 +919,7 @@ func expandParameterDateTimePickerControl(tfList []interface{}) *types.Parameter
 	return control
 }
 
-func expandParameterDropDownControl(tfList []interface{}) *types.ParameterDropDownControl {
+func expandParameterDropDownControl(tfList []interface{}) *quicksight.ParameterDropDownControl {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -930,7 +929,7 @@ func expandParameterDropDownControl(tfList []interface{}) *types.ParameterDropDo
 		return nil
 	}
 
-	control := &types.ParameterDropDownControl{}
+	control := &quicksight.ParameterDropDownControl{}
 
 	if v, ok := tfMap["parameter_control_id"].(string); ok && v != "" {
 		control.ParameterControlId = aws.String(v)
@@ -942,7 +941,7 @@ func expandParameterDropDownControl(tfList []interface{}) *types.ParameterDropDo
 		control.Title = aws.String(v)
 	}
 	if v, ok := tfMap["type"].(string); ok && v != "" {
-		control.Type = types.SheetControlListType(v)
+		control.Type = aws.String(v)
 	}
 	if v, ok := tfMap["cascading_control_configuration"].([]interface{}); ok && len(v) > 0 {
 		control.CascadingControlConfiguration = expandCascadingControlConfiguration(v)
@@ -957,7 +956,7 @@ func expandParameterDropDownControl(tfList []interface{}) *types.ParameterDropDo
 	return control
 }
 
-func expandParameterListControl(tfList []interface{}) *types.ParameterListControl {
+func expandParameterListControl(tfList []interface{}) *quicksight.ParameterListControl {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -967,7 +966,7 @@ func expandParameterListControl(tfList []interface{}) *types.ParameterListContro
 		return nil
 	}
 
-	control := &types.ParameterListControl{}
+	control := &quicksight.ParameterListControl{}
 
 	if v, ok := tfMap["parameter_control_id"].(string); ok && v != "" {
 		control.ParameterControlId = aws.String(v)
@@ -979,7 +978,7 @@ func expandParameterListControl(tfList []interface{}) *types.ParameterListContro
 		control.Title = aws.String(v)
 	}
 	if v, ok := tfMap["type"].(string); ok && v != "" {
-		control.Type = types.SheetControlListType(v)
+		control.Type = aws.String(v)
 	}
 	if v, ok := tfMap["cascading_control_configuration"].([]interface{}); ok && len(v) > 0 {
 		control.CascadingControlConfiguration = expandCascadingControlConfiguration(v)
@@ -994,7 +993,7 @@ func expandParameterListControl(tfList []interface{}) *types.ParameterListContro
 	return control
 }
 
-func expandParameterSliderControl(tfList []interface{}) *types.ParameterSliderControl {
+func expandParameterSliderControl(tfList []interface{}) *quicksight.ParameterSliderControl {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -1004,7 +1003,7 @@ func expandParameterSliderControl(tfList []interface{}) *types.ParameterSliderCo
 		return nil
 	}
 
-	control := &types.ParameterSliderControl{}
+	control := &quicksight.ParameterSliderControl{}
 
 	if v, ok := tfMap["parameter_control_id"].(string); ok && v != "" {
 		control.ParameterControlId = aws.String(v)
@@ -1016,13 +1015,13 @@ func expandParameterSliderControl(tfList []interface{}) *types.ParameterSliderCo
 		control.Title = aws.String(v)
 	}
 	if v, ok := tfMap["maximum_value"].(float64); ok {
-		control.MaximumValue = v
+		control.MaximumValue = aws.Float64(v)
 	}
 	if v, ok := tfMap["minimum_value"].(float64); ok {
-		control.MinimumValue = v
+		control.MinimumValue = aws.Float64(v)
 	}
 	if v, ok := tfMap["step_size"].(float64); ok {
-		control.StepSize = v
+		control.StepSize = aws.Float64(v)
 	}
 	if v, ok := tfMap["display_options"].([]interface{}); ok && len(v) > 0 {
 		control.DisplayOptions = expandSliderControlDisplayOptions(v)
@@ -1031,7 +1030,7 @@ func expandParameterSliderControl(tfList []interface{}) *types.ParameterSliderCo
 	return control
 }
 
-func expandParameterTextAreaControl(tfList []interface{}) *types.ParameterTextAreaControl {
+func expandParameterTextAreaControl(tfList []interface{}) *quicksight.ParameterTextAreaControl {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -1041,7 +1040,7 @@ func expandParameterTextAreaControl(tfList []interface{}) *types.ParameterTextAr
 		return nil
 	}
 
-	control := &types.ParameterTextAreaControl{}
+	control := &quicksight.ParameterTextAreaControl{}
 
 	if v, ok := tfMap["parameter_control_id"].(string); ok && v != "" {
 		control.ParameterControlId = aws.String(v)
@@ -1062,7 +1061,7 @@ func expandParameterTextAreaControl(tfList []interface{}) *types.ParameterTextAr
 	return control
 }
 
-func expandParameterTextFieldControl(tfList []interface{}) *types.ParameterTextFieldControl {
+func expandParameterTextFieldControl(tfList []interface{}) *quicksight.ParameterTextFieldControl {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -1072,7 +1071,7 @@ func expandParameterTextFieldControl(tfList []interface{}) *types.ParameterTextF
 		return nil
 	}
 
-	control := &types.ParameterTextFieldControl{}
+	control := &quicksight.ParameterTextFieldControl{}
 
 	if v, ok := tfMap["parameter_control_id"].(string); ok && v != "" {
 		control.ParameterControlId = aws.String(v)
@@ -1090,13 +1089,16 @@ func expandParameterTextFieldControl(tfList []interface{}) *types.ParameterTextF
 	return control
 }
 
-func flattenFilterControls(apiObject []types.FilterControl) []interface{} {
+func flattenFilterControls(apiObject []*quicksight.FilterControl) []interface{} {
 	if len(apiObject) == 0 {
 		return nil
 	}
 
 	var tfList []interface{}
 	for _, config := range apiObject {
+		if config == nil {
+			continue
+		}
 
 		tfMap := map[string]interface{}{}
 		if config.DateTimePicker != nil {
@@ -1126,32 +1128,34 @@ func flattenFilterControls(apiObject []types.FilterControl) []interface{} {
 	return tfList
 }
 
-func flattenFilterDateTimePickerControl(apiObject *types.FilterDateTimePickerControl) []interface{} {
+func flattenFilterDateTimePickerControl(apiObject *quicksight.FilterDateTimePickerControl) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{
-		"filter_control_id": aws.ToString(apiObject.FilterControlId),
-		"source_filter_id":  aws.ToString(apiObject.SourceFilterId),
-		"title":             aws.ToString(apiObject.Title),
+		"filter_control_id": aws.StringValue(apiObject.FilterControlId),
+		"source_filter_id":  aws.StringValue(apiObject.SourceFilterId),
+		"title":             aws.StringValue(apiObject.Title),
 	}
 	if apiObject.DisplayOptions != nil {
 		tfMap["display_options"] = flattenDateTimePickerControlDisplayOptions(apiObject.DisplayOptions)
 	}
-	tfMap["type"] = types.SheetControlDateTimePickerType(apiObject.Type)
+	if apiObject.Type != nil {
+		tfMap["type"] = aws.StringValue(apiObject.Type)
+	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenDateTimePickerControlDisplayOptions(apiObject *types.DateTimePickerControlDisplayOptions) []interface{} {
+func flattenDateTimePickerControlDisplayOptions(apiObject *quicksight.DateTimePickerControlDisplayOptions) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 	if apiObject.DateTimeFormat != nil {
-		tfMap["date_time_format"] = aws.ToString(apiObject.DateTimeFormat)
+		tfMap["date_time_format"] = aws.StringValue(apiObject.DateTimeFormat)
 	}
 	if apiObject.TitleOptions != nil {
 		tfMap["title_options"] = flattenLabelOptions(apiObject.TitleOptions)
@@ -1160,37 +1164,43 @@ func flattenDateTimePickerControlDisplayOptions(apiObject *types.DateTimePickerC
 	return []interface{}{tfMap}
 }
 
-func flattenLabelOptions(apiObject *types.LabelOptions) []interface{} {
+func flattenLabelOptions(apiObject *quicksight.LabelOptions) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 	if apiObject.CustomLabel != nil {
-		tfMap["custom_label"] = aws.ToString(apiObject.CustomLabel)
+		tfMap["custom_label"] = aws.StringValue(apiObject.CustomLabel)
 	}
 	if apiObject.FontConfiguration != nil {
 		tfMap["font_configuration"] = flattenFontConfiguration(apiObject.FontConfiguration)
 	}
-	tfMap["visibility"] = types.Visibility(apiObject.Visibility)
+	if apiObject.Visibility != nil {
+		tfMap["visibility"] = aws.StringValue(apiObject.Visibility)
+	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenFontConfiguration(apiObject *types.FontConfiguration) []interface{} {
+func flattenFontConfiguration(apiObject *quicksight.FontConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 	if apiObject.FontColor != nil {
-		tfMap["font_color"] = aws.ToString(apiObject.FontColor)
+		tfMap["font_color"] = aws.StringValue(apiObject.FontColor)
 	}
-	tfMap["font_decoration"] = types.FontDecoration(apiObject.FontDecoration)
+	if apiObject.FontDecoration != nil {
+		tfMap["font_decoration"] = aws.StringValue(apiObject.FontDecoration)
+	}
 	if apiObject.FontSize != nil {
 		tfMap["font_size"] = flattenFontSize(apiObject.FontSize)
 	}
-	tfMap["font_style"] = types.FontStyle(apiObject.FontStyle)
+	if apiObject.FontStyle != nil {
+		tfMap["font_style"] = aws.StringValue(apiObject.FontStyle)
+	}
 	if apiObject.FontWeight != nil {
 		tfMap["font_weight"] = flattenFontWeight(apiObject.FontWeight)
 	}
@@ -1198,37 +1208,41 @@ func flattenFontConfiguration(apiObject *types.FontConfiguration) []interface{} 
 	return []interface{}{tfMap}
 }
 
-func flattenFontSize(apiObject *types.FontSize) []interface{} {
-	if apiObject == nil {
+func flattenFontSize(apiObject *quicksight.FontSize) []interface{} {
+	if apiObject == nil || apiObject.Relative == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-	tfMap["relative"] = types.RelativeFontSize(apiObject.Relative)
+	if apiObject.Relative != nil {
+		tfMap["relative"] = aws.StringValue(apiObject.Relative)
+	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenFontWeight(apiObject *types.FontWeight) []interface{} {
-	if apiObject == nil {
+func flattenFontWeight(apiObject *quicksight.FontWeight) []interface{} {
+	if apiObject == nil || apiObject.Name == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-	tfMap["name"] = types.FontWeightName(apiObject.Name)
+	if apiObject.Name != nil {
+		tfMap["name"] = aws.StringValue(apiObject.Name)
+	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenFilterDropDownControl(apiObject *types.FilterDropDownControl) []interface{} {
+func flattenFilterDropDownControl(apiObject *quicksight.FilterDropDownControl) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{
-		"filter_control_id": aws.ToString(apiObject.FilterControlId),
-		"source_filter_id":  aws.ToString(apiObject.SourceFilterId),
-		"title":             aws.ToString(apiObject.Title),
+		"filter_control_id": aws.StringValue(apiObject.FilterControlId),
+		"source_filter_id":  aws.StringValue(apiObject.SourceFilterId),
+		"title":             aws.StringValue(apiObject.Title),
 	}
 	if apiObject.CascadingControlConfiguration != nil {
 		tfMap["cascading_control_configuration"] = flattenCascadingControlConfiguration(apiObject.CascadingControlConfiguration)
@@ -1239,12 +1253,14 @@ func flattenFilterDropDownControl(apiObject *types.FilterDropDownControl) []inte
 	if apiObject.SelectableValues != nil {
 		tfMap["selectable_values"] = flattenFilterSelectableValues(apiObject.SelectableValues)
 	}
-	tfMap["type"] = types.SheetControlListType(apiObject.Type)
+	if apiObject.Type != nil {
+		tfMap["type"] = aws.StringValue(apiObject.Type)
+	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenCascadingControlConfiguration(apiObject *types.CascadingControlConfiguration) []interface{} {
+func flattenCascadingControlConfiguration(apiObject *quicksight.CascadingControlConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1257,19 +1273,23 @@ func flattenCascadingControlConfiguration(apiObject *types.CascadingControlConfi
 	return []interface{}{tfMap}
 }
 
-func flattenCascadingControlSource(apiObject []types.CascadingControlSource) []interface{} {
+func flattenCascadingControlSource(apiObject []*quicksight.CascadingControlSource) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	var tfList []interface{}
 	for _, config := range apiObject {
+		if config == nil {
+			continue
+		}
+
 		tfMap := map[string]interface{}{}
 		if config.ColumnToMatch != nil {
 			tfMap["column_to_match"] = flattenColumnIdentifier(config.ColumnToMatch)
 		}
 		if config.SourceSheetControlId != nil {
-			tfMap["source_sheet_control_id"] = aws.ToString(config.SourceSheetControlId)
+			tfMap["source_sheet_control_id"] = aws.StringValue(config.SourceSheetControlId)
 		}
 		tfList = append(tfList, tfMap)
 	}
@@ -1277,7 +1297,7 @@ func flattenCascadingControlSource(apiObject []types.CascadingControlSource) []i
 	return tfList
 }
 
-func flattenDropDownControlDisplayOptions(apiObject *types.DropDownControlDisplayOptions) []interface{} {
+func flattenDropDownControlDisplayOptions(apiObject *quicksight.DropDownControlDisplayOptions) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1293,39 +1313,41 @@ func flattenDropDownControlDisplayOptions(apiObject *types.DropDownControlDispla
 	return []interface{}{tfMap}
 }
 
-func flattenListControlSelectAllOptions(apiObject *types.ListControlSelectAllOptions) []interface{} {
+func flattenListControlSelectAllOptions(apiObject *quicksight.ListControlSelectAllOptions) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-	tfMap["visibility"] = types.Visibility(apiObject.Visibility)
+	if apiObject.Visibility != nil {
+		tfMap["visibility"] = aws.StringValue(apiObject.Visibility)
+	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenFilterSelectableValues(apiObject *types.FilterSelectableValues) []interface{} {
+func flattenFilterSelectableValues(apiObject *quicksight.FilterSelectableValues) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 	if apiObject.Values != nil {
-		tfMap["values"] = apiObject.Values
+		tfMap["values"] = flex.FlattenStringList(apiObject.Values)
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenFilterListControl(apiObject *types.FilterListControl) []interface{} {
+func flattenFilterListControl(apiObject *quicksight.FilterListControl) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{
-		"filter_control_id": aws.ToString(apiObject.FilterControlId),
-		"source_filter_id":  aws.ToString(apiObject.SourceFilterId),
-		"title":             aws.ToString(apiObject.Title),
+		"filter_control_id": aws.StringValue(apiObject.FilterControlId),
+		"source_filter_id":  aws.StringValue(apiObject.SourceFilterId),
+		"title":             aws.StringValue(apiObject.Title),
 	}
 	if apiObject.CascadingControlConfiguration != nil {
 		tfMap["cacading_control_configuration"] = flattenCascadingControlConfiguration(apiObject.CascadingControlConfiguration)
@@ -1336,12 +1358,14 @@ func flattenFilterListControl(apiObject *types.FilterListControl) []interface{} 
 	if apiObject.SelectableValues != nil {
 		tfMap["selectable_values"] = flattenFilterSelectableValues(apiObject.SelectableValues)
 	}
-	tfMap["type"] = types.SheetControlListType(apiObject.Type)
+	if apiObject.Type != nil {
+		tfMap["type"] = aws.StringValue(apiObject.Type)
+	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenListControlDisplayOptions(apiObject *types.ListControlDisplayOptions) []interface{} {
+func flattenListControlDisplayOptions(apiObject *quicksight.ListControlDisplayOptions) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1360,26 +1384,28 @@ func flattenListControlDisplayOptions(apiObject *types.ListControlDisplayOptions
 	return []interface{}{tfMap}
 }
 
-func flattenListControlSearchOptions(apiObject *types.ListControlSearchOptions) []interface{} {
+func flattenListControlSearchOptions(apiObject *quicksight.ListControlSearchOptions) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-	tfMap["visibility"] = types.Visibility(apiObject.Visibility)
+	if apiObject.Visibility != nil {
+		tfMap["visibility"] = aws.StringValue(apiObject.Visibility)
+	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenFilterRelativeDateTimeControl(apiObject *types.FilterRelativeDateTimeControl) []interface{} {
+func flattenFilterRelativeDateTimeControl(apiObject *quicksight.FilterRelativeDateTimeControl) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{
-		"filter_control_id": aws.ToString(apiObject.FilterControlId),
-		"source_filter_id":  aws.ToString(apiObject.SourceFilterId),
-		"title":             aws.ToString(apiObject.Title),
+		"filter_control_id": aws.StringValue(apiObject.FilterControlId),
+		"source_filter_id":  aws.StringValue(apiObject.SourceFilterId),
+		"title":             aws.StringValue(apiObject.Title),
 	}
 	if apiObject.DisplayOptions != nil {
 		tfMap["display_options"] = flattenRelativeDateTimeControlDisplayOptions(apiObject.DisplayOptions)
@@ -1388,14 +1414,14 @@ func flattenFilterRelativeDateTimeControl(apiObject *types.FilterRelativeDateTim
 	return []interface{}{tfMap}
 }
 
-func flattenRelativeDateTimeControlDisplayOptions(apiObject *types.RelativeDateTimeControlDisplayOptions) []interface{} {
+func flattenRelativeDateTimeControlDisplayOptions(apiObject *quicksight.RelativeDateTimeControlDisplayOptions) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 	if apiObject.DateTimeFormat != nil {
-		tfMap["date_time_format"] = aws.ToString(apiObject.DateTimeFormat)
+		tfMap["date_time_format"] = aws.StringValue(apiObject.DateTimeFormat)
 	}
 	if apiObject.TitleOptions != nil {
 		tfMap["title_options"] = flattenLabelOptions(apiObject.TitleOptions)
@@ -1404,28 +1430,30 @@ func flattenRelativeDateTimeControlDisplayOptions(apiObject *types.RelativeDateT
 	return []interface{}{tfMap}
 }
 
-func flattenFilterSliderControl(apiObject *types.FilterSliderControl) []interface{} {
+func flattenFilterSliderControl(apiObject *quicksight.FilterSliderControl) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{
-		"filter_control_id": aws.ToString(apiObject.FilterControlId),
-		"source_filter_id":  aws.ToString(apiObject.SourceFilterId),
-		"title":             aws.ToString(apiObject.Title),
-		"maximum_value":     apiObject.MaximumValue,
-		"minimum_value":     apiObject.MinimumValue,
-		"step_size":         apiObject.StepSize,
+		"filter_control_id": aws.StringValue(apiObject.FilterControlId),
+		"source_filter_id":  aws.StringValue(apiObject.SourceFilterId),
+		"title":             aws.StringValue(apiObject.Title),
+		"maximum_value":     aws.Float64Value(apiObject.MaximumValue),
+		"minimum_value":     aws.Float64Value(apiObject.MinimumValue),
+		"step_size":         aws.Float64Value(apiObject.StepSize),
 	}
 	if apiObject.DisplayOptions != nil {
 		tfMap["display_options"] = flattenSliderControlDisplayOptions(apiObject.DisplayOptions)
 	}
-	tfMap["type"] = types.SheetControlSliderType(apiObject.Type)
+	if apiObject.Type != nil {
+		tfMap["type"] = aws.StringValue(apiObject.Type)
+	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenSliderControlDisplayOptions(apiObject *types.SliderControlDisplayOptions) []interface{} {
+func flattenSliderControlDisplayOptions(apiObject *quicksight.SliderControlDisplayOptions) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1438,18 +1466,18 @@ func flattenSliderControlDisplayOptions(apiObject *types.SliderControlDisplayOpt
 	return []interface{}{tfMap}
 }
 
-func flattenFilterTextAreaControl(apiObject *types.FilterTextAreaControl) []interface{} {
+func flattenFilterTextAreaControl(apiObject *quicksight.FilterTextAreaControl) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{
-		"filter_control_id": aws.ToString(apiObject.FilterControlId),
-		"source_filter_id":  aws.ToString(apiObject.SourceFilterId),
-		"title":             aws.ToString(apiObject.Title),
+		"filter_control_id": aws.StringValue(apiObject.FilterControlId),
+		"source_filter_id":  aws.StringValue(apiObject.SourceFilterId),
+		"title":             aws.StringValue(apiObject.Title),
 	}
 	if apiObject.Delimiter != nil {
-		tfMap["delimiter"] = apiObject.Delimiter
+		tfMap["delimiter"] = aws.StringValue(apiObject.Delimiter)
 	}
 	if apiObject.DisplayOptions != nil {
 		tfMap["display_options"] = flattenTextAreaControlDisplayOptions(apiObject.DisplayOptions)
@@ -1458,7 +1486,7 @@ func flattenFilterTextAreaControl(apiObject *types.FilterTextAreaControl) []inte
 	return []interface{}{tfMap}
 }
 
-func flattenTextAreaControlDisplayOptions(apiObject *types.TextAreaControlDisplayOptions) []interface{} {
+func flattenTextAreaControlDisplayOptions(apiObject *quicksight.TextAreaControlDisplayOptions) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1474,26 +1502,28 @@ func flattenTextAreaControlDisplayOptions(apiObject *types.TextAreaControlDispla
 	return []interface{}{tfMap}
 }
 
-func flattenTextControlPlaceholderOptions(apiObject *types.TextControlPlaceholderOptions) []interface{} {
+func flattenTextControlPlaceholderOptions(apiObject *quicksight.TextControlPlaceholderOptions) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-	tfMap["visibility"] = types.Visibility(apiObject.Visibility)
+	if apiObject.Visibility != nil {
+		tfMap["visibility"] = aws.StringValue(apiObject.Visibility)
+	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenFilterTextFieldControl(apiObject *types.FilterTextFieldControl) []interface{} {
+func flattenFilterTextFieldControl(apiObject *quicksight.FilterTextFieldControl) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{
-		"filter_control_id": aws.ToString(apiObject.FilterControlId),
-		"source_filter_id":  aws.ToString(apiObject.SourceFilterId),
-		"title":             aws.ToString(apiObject.Title),
+		"filter_control_id": aws.StringValue(apiObject.FilterControlId),
+		"source_filter_id":  aws.StringValue(apiObject.SourceFilterId),
+		"title":             aws.StringValue(apiObject.Title),
 	}
 	if apiObject.DisplayOptions != nil {
 		tfMap["display_options"] = flattenTextFieldControlDisplayOptions(apiObject.DisplayOptions)
@@ -1502,7 +1532,7 @@ func flattenFilterTextFieldControl(apiObject *types.FilterTextFieldControl) []in
 	return []interface{}{tfMap}
 }
 
-func flattenTextFieldControlDisplayOptions(apiObject *types.TextFieldControlDisplayOptions) []interface{} {
+func flattenTextFieldControlDisplayOptions(apiObject *quicksight.TextFieldControlDisplayOptions) []interface{} {
 	if apiObject == nil {
 		return nil
 	}

@@ -4,8 +4,8 @@
 package schema
 
 import (
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/quicksight/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -95,7 +95,7 @@ func waterfallVisualSchema() *schema.Schema {
 	}
 }
 
-func expandWaterfallVisual(tfList []interface{}) *types.WaterfallVisual {
+func expandWaterfallVisual(tfList []interface{}) *quicksight.WaterfallVisual {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -105,7 +105,7 @@ func expandWaterfallVisual(tfList []interface{}) *types.WaterfallVisual {
 		return nil
 	}
 
-	visual := &types.WaterfallVisual{}
+	visual := &quicksight.WaterfallVisual{}
 
 	if v, ok := tfMap["visual_id"].(string); ok && v != "" {
 		visual.VisualId = aws.String(v)
@@ -129,7 +129,7 @@ func expandWaterfallVisual(tfList []interface{}) *types.WaterfallVisual {
 	return visual
 }
 
-func expandWaterfallChartConfiguration(tfList []interface{}) *types.WaterfallChartConfiguration {
+func expandWaterfallChartConfiguration(tfList []interface{}) *quicksight.WaterfallChartConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -139,7 +139,7 @@ func expandWaterfallChartConfiguration(tfList []interface{}) *types.WaterfallCha
 		return nil
 	}
 
-	config := &types.WaterfallChartConfiguration{}
+	config := &quicksight.WaterfallChartConfiguration{}
 
 	if v, ok := tfMap["category_axis_display_options"].([]interface{}); ok && len(v) > 0 {
 		config.CategoryAxisDisplayOptions = expandAxisDisplayOptions(v)
@@ -175,7 +175,7 @@ func expandWaterfallChartConfiguration(tfList []interface{}) *types.WaterfallCha
 	return config
 }
 
-func expandWaterfallChartFieldWells(tfList []interface{}) *types.WaterfallChartFieldWells {
+func expandWaterfallChartFieldWells(tfList []interface{}) *quicksight.WaterfallChartFieldWells {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -185,7 +185,7 @@ func expandWaterfallChartFieldWells(tfList []interface{}) *types.WaterfallChartF
 		return nil
 	}
 
-	config := &types.WaterfallChartFieldWells{}
+	config := &quicksight.WaterfallChartFieldWells{}
 
 	if v, ok := tfMap["waterfall_chart_aggregated_field_wells"].([]interface{}); ok && len(v) > 0 {
 		config.WaterfallChartAggregatedFieldWells = expandWaterfallChartAggregatedFieldWells(v)
@@ -194,7 +194,7 @@ func expandWaterfallChartFieldWells(tfList []interface{}) *types.WaterfallChartF
 	return config
 }
 
-func expandWaterfallChartAggregatedFieldWells(tfList []interface{}) *types.WaterfallChartAggregatedFieldWells {
+func expandWaterfallChartAggregatedFieldWells(tfList []interface{}) *quicksight.WaterfallChartAggregatedFieldWells {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -204,7 +204,7 @@ func expandWaterfallChartAggregatedFieldWells(tfList []interface{}) *types.Water
 		return nil
 	}
 
-	config := &types.WaterfallChartAggregatedFieldWells{}
+	config := &quicksight.WaterfallChartAggregatedFieldWells{}
 
 	if v, ok := tfMap["breakdowns"].([]interface{}); ok && len(v) > 0 {
 		config.Breakdowns = expandDimensionFields(v)
@@ -219,7 +219,7 @@ func expandWaterfallChartAggregatedFieldWells(tfList []interface{}) *types.Water
 	return config
 }
 
-func expandWaterfallChartSortConfiguration(tfList []interface{}) *types.WaterfallChartSortConfiguration {
+func expandWaterfallChartSortConfiguration(tfList []interface{}) *quicksight.WaterfallChartSortConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -229,7 +229,7 @@ func expandWaterfallChartSortConfiguration(tfList []interface{}) *types.Waterfal
 		return nil
 	}
 
-	config := &types.WaterfallChartSortConfiguration{}
+	config := &quicksight.WaterfallChartSortConfiguration{}
 
 	if v, ok := tfMap["breakdown_items_limit"].([]interface{}); ok && len(v) > 0 {
 		config.BreakdownItemsLimit = expandItemsLimitConfiguration(v)
@@ -241,7 +241,7 @@ func expandWaterfallChartSortConfiguration(tfList []interface{}) *types.Waterfal
 	return config
 }
 
-func expandWaterfallChartOptions(tfList []interface{}) *types.WaterfallChartOptions {
+func expandWaterfallChartOptions(tfList []interface{}) *quicksight.WaterfallChartOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -251,7 +251,7 @@ func expandWaterfallChartOptions(tfList []interface{}) *types.WaterfallChartOpti
 		return nil
 	}
 
-	options := &types.WaterfallChartOptions{}
+	options := &quicksight.WaterfallChartOptions{}
 
 	if v, ok := tfMap["total_bar_label"].(string); ok && v != "" {
 		options.TotalBarLabel = aws.String(v)
@@ -260,13 +260,13 @@ func expandWaterfallChartOptions(tfList []interface{}) *types.WaterfallChartOpti
 	return options
 }
 
-func flattenWaterfallVisual(apiObject *types.WaterfallVisual) []interface{} {
+func flattenWaterfallVisual(apiObject *quicksight.WaterfallVisual) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{
-		"visual_id": aws.ToString(apiObject.VisualId),
+		"visual_id": aws.StringValue(apiObject.VisualId),
 	}
 	if apiObject.Actions != nil {
 		tfMap["actions"] = flattenVisualCustomAction(apiObject.Actions)
@@ -287,7 +287,7 @@ func flattenWaterfallVisual(apiObject *types.WaterfallVisual) []interface{} {
 	return []interface{}{tfMap}
 }
 
-func flattenWaterfallChartConfiguration(apiObject *types.WaterfallChartConfiguration) []interface{} {
+func flattenWaterfallChartConfiguration(apiObject *quicksight.WaterfallChartConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -327,7 +327,7 @@ func flattenWaterfallChartConfiguration(apiObject *types.WaterfallChartConfigura
 	return []interface{}{tfMap}
 }
 
-func flattenWaterfallChartFieldWells(apiObject *types.WaterfallChartFieldWells) []interface{} {
+func flattenWaterfallChartFieldWells(apiObject *quicksight.WaterfallChartFieldWells) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -340,7 +340,7 @@ func flattenWaterfallChartFieldWells(apiObject *types.WaterfallChartFieldWells) 
 	return []interface{}{tfMap}
 }
 
-func flattenWaterfallChartAggregatedFieldWells(apiObject *types.WaterfallChartAggregatedFieldWells) []interface{} {
+func flattenWaterfallChartAggregatedFieldWells(apiObject *quicksight.WaterfallChartAggregatedFieldWells) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -359,7 +359,7 @@ func flattenWaterfallChartAggregatedFieldWells(apiObject *types.WaterfallChartAg
 	return []interface{}{tfMap}
 }
 
-func flattenWaterfallChartSortConfiguration(apiObject *types.WaterfallChartSortConfiguration) []interface{} {
+func flattenWaterfallChartSortConfiguration(apiObject *quicksight.WaterfallChartSortConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -375,14 +375,14 @@ func flattenWaterfallChartSortConfiguration(apiObject *types.WaterfallChartSortC
 	return []interface{}{tfMap}
 }
 
-func flattenWaterfallChartOptions(apiObject *types.WaterfallChartOptions) []interface{} {
+func flattenWaterfallChartOptions(apiObject *quicksight.WaterfallChartOptions) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 	if apiObject.TotalBarLabel != nil {
-		tfMap["total_bar_label"] = aws.ToString(apiObject.TotalBarLabel)
+		tfMap["total_bar_label"] = aws.StringValue(apiObject.TotalBarLabel)
 	}
 
 	return []interface{}{tfMap}

@@ -5,11 +5,10 @@ package schema
 
 import (
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/quicksight/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -38,13 +37,13 @@ func funnelChartVisualSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"category_label_visibility": stringSchema(false, enum.Validate[types.Visibility]()),
-										"label_color":               stringSchema(false, validation.ToDiagFunc(validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""))),
+										"category_label_visibility": stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
+										"label_color":               stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
 										"label_font_configuration":  fontConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontConfiguration.html
-										"measure_data_label_style":  stringSchema(false, enum.Validate[types.FunnelChartMeasureDataLabelStyle]()),
-										"measure_label_visibility":  stringSchema(false, enum.Validate[types.Visibility]()),
-										"position":                  stringSchema(false, enum.Validate[types.DataLabelPosition]()),
-										"visibility":                stringSchema(false, enum.Validate[types.Visibility]()),
+										"measure_data_label_style":  stringSchema(false, validation.StringInSlice(quicksight.FunnelChartMeasureDataLabelStyle_Values(), false)),
+										"measure_label_visibility":  stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
+										"position":                  stringSchema(false, validation.StringInSlice(quicksight.DataLabelPosition_Values(), false)),
+										"visibility":                stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
 									},
 								},
 							},
@@ -97,7 +96,7 @@ func funnelChartVisualSchema() *schema.Schema {
 	}
 }
 
-func expandFunnelChartVisual(tfList []interface{}) *types.FunnelChartVisual {
+func expandFunnelChartVisual(tfList []interface{}) *quicksight.FunnelChartVisual {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -107,7 +106,7 @@ func expandFunnelChartVisual(tfList []interface{}) *types.FunnelChartVisual {
 		return nil
 	}
 
-	visual := &types.FunnelChartVisual{}
+	visual := &quicksight.FunnelChartVisual{}
 
 	if v, ok := tfMap["visual_id"].(string); ok && v != "" {
 		visual.VisualId = aws.String(v)
@@ -131,7 +130,7 @@ func expandFunnelChartVisual(tfList []interface{}) *types.FunnelChartVisual {
 	return visual
 }
 
-func expandFunnelChartConfiguration(tfList []interface{}) *types.FunnelChartConfiguration {
+func expandFunnelChartConfiguration(tfList []interface{}) *quicksight.FunnelChartConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -141,7 +140,7 @@ func expandFunnelChartConfiguration(tfList []interface{}) *types.FunnelChartConf
 		return nil
 	}
 
-	config := &types.FunnelChartConfiguration{}
+	config := &quicksight.FunnelChartConfiguration{}
 
 	if v, ok := tfMap["category_label_options"].([]interface{}); ok && len(v) > 0 {
 		config.CategoryLabelOptions = expandChartAxisLabelOptions(v)
@@ -168,7 +167,7 @@ func expandFunnelChartConfiguration(tfList []interface{}) *types.FunnelChartConf
 	return config
 }
 
-func expandFunnelChartFieldWells(tfList []interface{}) *types.FunnelChartFieldWells {
+func expandFunnelChartFieldWells(tfList []interface{}) *quicksight.FunnelChartFieldWells {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -178,7 +177,7 @@ func expandFunnelChartFieldWells(tfList []interface{}) *types.FunnelChartFieldWe
 		return nil
 	}
 
-	config := &types.FunnelChartFieldWells{}
+	config := &quicksight.FunnelChartFieldWells{}
 
 	if v, ok := tfMap["funnel_chart_aggregated_field_wells"].([]interface{}); ok && len(v) > 0 {
 		config.FunnelChartAggregatedFieldWells = expandFunnelChartAggregatedFieldWells(v)
@@ -187,7 +186,7 @@ func expandFunnelChartFieldWells(tfList []interface{}) *types.FunnelChartFieldWe
 	return config
 }
 
-func expandFunnelChartAggregatedFieldWells(tfList []interface{}) *types.FunnelChartAggregatedFieldWells {
+func expandFunnelChartAggregatedFieldWells(tfList []interface{}) *quicksight.FunnelChartAggregatedFieldWells {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -197,7 +196,7 @@ func expandFunnelChartAggregatedFieldWells(tfList []interface{}) *types.FunnelCh
 		return nil
 	}
 
-	config := &types.FunnelChartAggregatedFieldWells{}
+	config := &quicksight.FunnelChartAggregatedFieldWells{}
 
 	if v, ok := tfMap["category"].([]interface{}); ok && len(v) > 0 {
 		config.Category = expandDimensionFields(v)
@@ -209,7 +208,7 @@ func expandFunnelChartAggregatedFieldWells(tfList []interface{}) *types.FunnelCh
 	return config
 }
 
-func expandFunnelChartSortConfiguration(tfList []interface{}) *types.FunnelChartSortConfiguration {
+func expandFunnelChartSortConfiguration(tfList []interface{}) *quicksight.FunnelChartSortConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -219,7 +218,7 @@ func expandFunnelChartSortConfiguration(tfList []interface{}) *types.FunnelChart
 		return nil
 	}
 
-	config := &types.FunnelChartSortConfiguration{}
+	config := &quicksight.FunnelChartSortConfiguration{}
 
 	if v, ok := tfMap["category_items_limit"].([]interface{}); ok && len(v) > 0 {
 		config.CategoryItemsLimit = expandItemsLimitConfiguration(v)
@@ -231,7 +230,7 @@ func expandFunnelChartSortConfiguration(tfList []interface{}) *types.FunnelChart
 	return config
 }
 
-func expandFunnelChartDataLabelOptions(tfList []interface{}) *types.FunnelChartDataLabelOptions {
+func expandFunnelChartDataLabelOptions(tfList []interface{}) *quicksight.FunnelChartDataLabelOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -241,25 +240,25 @@ func expandFunnelChartDataLabelOptions(tfList []interface{}) *types.FunnelChartD
 		return nil
 	}
 
-	options := &types.FunnelChartDataLabelOptions{}
+	options := &quicksight.FunnelChartDataLabelOptions{}
 
 	if v, ok := tfMap["category_label_visibility"].(string); ok && v != "" {
-		options.CategoryLabelVisibility = types.Visibility(v)
+		options.CategoryLabelVisibility = aws.String(v)
 	}
 	if v, ok := tfMap["label_color"].(string); ok && v != "" {
 		options.LabelColor = aws.String(v)
 	}
 	if v, ok := tfMap["measure_data_label_style"].(string); ok && v != "" {
-		options.MeasureDataLabelStyle = types.FunnelChartMeasureDataLabelStyle(v)
+		options.MeasureDataLabelStyle = aws.String(v)
 	}
 	if v, ok := tfMap["measure_label_visibility"].(string); ok && v != "" {
-		options.MeasureLabelVisibility = types.Visibility(v)
+		options.MeasureLabelVisibility = aws.String(v)
 	}
 	if v, ok := tfMap["position"].(string); ok && v != "" {
-		options.Position = types.DataLabelPosition(v)
+		options.Position = aws.String(v)
 	}
 	if v, ok := tfMap["visibility"].(string); ok && v != "" {
-		options.Visibility = types.Visibility(v)
+		options.Visibility = aws.String(v)
 	}
 	if v, ok := tfMap["label_font_configuration"].([]interface{}); ok && len(v) > 0 {
 		options.LabelFontConfiguration = expandFontConfiguration(v)
@@ -268,13 +267,13 @@ func expandFunnelChartDataLabelOptions(tfList []interface{}) *types.FunnelChartD
 	return options
 }
 
-func flattenFunnelChartVisual(apiObject *types.FunnelChartVisual) []interface{} {
+func flattenFunnelChartVisual(apiObject *quicksight.FunnelChartVisual) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{
-		"visual_id": aws.ToString(apiObject.VisualId),
+		"visual_id": aws.StringValue(apiObject.VisualId),
 	}
 	if apiObject.Actions != nil {
 		tfMap["actions"] = flattenVisualCustomAction(apiObject.Actions)
@@ -295,7 +294,7 @@ func flattenFunnelChartVisual(apiObject *types.FunnelChartVisual) []interface{} 
 	return []interface{}{tfMap}
 }
 
-func flattenFunnelChartConfiguration(apiObject *types.FunnelChartConfiguration) []interface{} {
+func flattenFunnelChartConfiguration(apiObject *quicksight.FunnelChartConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -326,34 +325,38 @@ func flattenFunnelChartConfiguration(apiObject *types.FunnelChartConfiguration) 
 	return []interface{}{tfMap}
 }
 
-func flattenFunnelChartDataLabelOptions(apiObject *types.FunnelChartDataLabelOptions) []interface{} {
+func flattenFunnelChartDataLabelOptions(apiObject *quicksight.FunnelChartDataLabelOptions) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-
-	tfMap["category_label_visibility"] = types.Visibility(apiObject.CategoryLabelVisibility)
-
+	if apiObject.CategoryLabelVisibility != nil {
+		tfMap["category_label_visibility"] = aws.StringValue(apiObject.CategoryLabelVisibility)
+	}
 	if apiObject.LabelColor != nil {
-		tfMap["label_color"] = aws.ToString(apiObject.LabelColor)
+		tfMap["label_color"] = aws.StringValue(apiObject.LabelColor)
 	}
 	if apiObject.LabelFontConfiguration != nil {
 		tfMap["label_font_configuration"] = flattenFontConfiguration(apiObject.LabelFontConfiguration)
 	}
-
-	tfMap["measure_data_label_style"] = types.FunnelChartMeasureDataLabelStyle(apiObject.MeasureDataLabelStyle)
-
-	tfMap["measure_label_visibility"] = types.Visibility(apiObject.MeasureLabelVisibility)
-
-	tfMap["position"] = types.DataLabelPosition(apiObject.Position)
-
-	tfMap["visibility"] = types.Visibility(apiObject.Visibility)
+	if apiObject.MeasureDataLabelStyle != nil {
+		tfMap["measure_data_label_style"] = aws.StringValue(apiObject.MeasureDataLabelStyle)
+	}
+	if apiObject.MeasureLabelVisibility != nil {
+		tfMap["measure_label_visibility"] = aws.StringValue(apiObject.MeasureLabelVisibility)
+	}
+	if apiObject.Position != nil {
+		tfMap["position"] = aws.StringValue(apiObject.Position)
+	}
+	if apiObject.Visibility != nil {
+		tfMap["visibility"] = aws.StringValue(apiObject.Visibility)
+	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenFunnelChartFieldWells(apiObject *types.FunnelChartFieldWells) []interface{} {
+func flattenFunnelChartFieldWells(apiObject *quicksight.FunnelChartFieldWells) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -366,7 +369,7 @@ func flattenFunnelChartFieldWells(apiObject *types.FunnelChartFieldWells) []inte
 	return []interface{}{tfMap}
 }
 
-func flattenFunnelChartAggregatedFieldWells(apiObject *types.FunnelChartAggregatedFieldWells) []interface{} {
+func flattenFunnelChartAggregatedFieldWells(apiObject *quicksight.FunnelChartAggregatedFieldWells) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -382,7 +385,7 @@ func flattenFunnelChartAggregatedFieldWells(apiObject *types.FunnelChartAggregat
 	return []interface{}{tfMap}
 }
 
-func flattenFunnelChartSortConfiguration(apiObject *types.FunnelChartSortConfiguration) []interface{} {
+func flattenFunnelChartSortConfiguration(apiObject *quicksight.FunnelChartSortConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
