@@ -25,8 +25,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceApplication,
+			Factory:  dataSourceApplication,
 			TypeName: "aws_elastic_beanstalk_application",
+			Name:     "Application",
 		},
 		{
 			Factory:  DataSourceHostedZone,
@@ -43,7 +44,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceApplication,
+			Factory:  resourceApplication,
 			TypeName: "aws_elastic_beanstalk_application",
 			Name:     "Application",
 			Tags: &types.ServicePackageResourceTags{
