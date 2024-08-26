@@ -1579,9 +1579,7 @@ func findBootstrapActions(ctx context.Context, conn *emr.Client, input *emr.List
 			return nil, err
 		}
 
-		for _, v := range page.BootstrapActions {
-			output = append(output, v)
-		}
+		output = append(output, page.BootstrapActions...)
 	}
 
 	return output, nil
@@ -1605,10 +1603,11 @@ func findStepSummaries(ctx context.Context, conn *emr.Client, input *emr.ListSte
 			return nil, err
 		}
 
-		for _, v := range page.Steps {
-			output = append(output, v)
-		}
+		output = append(output, page.Steps...)
 	}
+
+	// ListSteps returns steps in reverse order (newest first).
+	slices.Reverse(output)
 
 	return output, nil
 }
