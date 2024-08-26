@@ -7,25 +7,22 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/quicksight"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccQuickSightUser_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var user quicksight.User
+	var user awstypes.User
 	rName1 := "tfacctest" + sdkacctest.RandString(10)
 	resourceName1 := "aws_quicksight_user." + rName1
 	rName2 := "tfacctest" + sdkacctest.RandString(10)
@@ -59,7 +56,7 @@ func TestAccQuickSightUser_basic(t *testing.T) {
 
 func TestAccQuickSightUser_withInvalidFormattedEmailStillWorks(t *testing.T) {
 	ctx := acctest.Context(t)
-	var user quicksight.User
+	var user awstypes.User
 	rName := "tfacctest" + sdkacctest.RandString(10)
 	resourceName := "aws_quicksight_user." + rName
 
@@ -95,7 +92,7 @@ func TestAccQuickSightUser_withNamespace(t *testing.T) {
 		t.Skipf("Environment variable %s is not set", key)
 	}
 
-	var user quicksight.User
+	var user awstypes.User
 	rName := "tfacctest" + sdkacctest.RandString(10)
 	resourceName := "aws_quicksight_user." + rName
 
@@ -118,7 +115,7 @@ func TestAccQuickSightUser_withNamespace(t *testing.T) {
 
 func TestAccQuickSightUser_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var user quicksight.User
+	var user awstypes.User
 	rName := "tfacctest" + sdkacctest.RandString(10)
 	resourceName := "aws_quicksight_user." + rName
 
@@ -132,7 +129,7 @@ func TestAccQuickSightUser_disappears(t *testing.T) {
 				Config: testAccUserConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
-					testAccCheckUserDisappears(ctx, &user),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfquicksight.ResourceUser(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -140,11 +137,11 @@ func TestAccQuickSightUser_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckUserExists(ctx context.Context, resourceName string, user *quicksight.User) resource.TestCheckFunc {
+func testAccCheckUserExists(ctx context.Context, n string, v *awstypes.User) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		awsAccountID, namespace, userName, err := tfquicksight.UserParseID(rs.Primary.ID)
@@ -152,25 +149,15 @@ func testAccCheckUserExists(ctx context.Context, resourceName string, user *quic
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightClient(ctx)
 
-		input := &quicksight.DescribeUserInput{
-			AwsAccountId: aws.String(awsAccountID),
-			Namespace:    aws.String(namespace),
-			UserName:     aws.String(userName),
-		}
-
-		output, err := conn.DescribeUserWithContext(ctx, input)
+		output, err := tfquicksight.FindUserByThreePartKey(ctx, conn, awsAccountID, namespace, userName)
 
 		if err != nil {
 			return err
 		}
 
-		if output == nil || output.User == nil {
-			return fmt.Errorf("QuickSight User (%s) not found", rs.Primary.ID)
-		}
-
-		*user = *output.User
+		*v = *output
 
 		return nil
 	}
@@ -178,7 +165,8 @@ func testAccCheckUserExists(ctx context.Context, resourceName string, user *quic
 
 func testAccCheckUserDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightClient(ctx)
+
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_quicksight_user" {
 				continue
@@ -189,12 +177,9 @@ func testAccCheckUserDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			_, err = conn.DescribeUserWithContext(ctx, &quicksight.DescribeUserInput{
-				AwsAccountId: aws.String(awsAccountID),
-				Namespace:    aws.String(namespace),
-				UserName:     aws.String(userName),
-			})
-			if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
+			_, err = tfquicksight.FindUserByThreePartKey(ctx, conn, awsAccountID, namespace, userName)
+
+			if tfresource.NotFound(err) {
 				continue
 			}
 
@@ -202,32 +187,7 @@ func testAccCheckUserDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			return fmt.Errorf("QuickSight User '%s' was not deleted properly", rs.Primary.ID)
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckUserDisappears(ctx context.Context, v *quicksight.User) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
-
-		arn, err := arn.Parse(aws.StringValue(v.Arn))
-		if err != nil {
-			return err
-		}
-
-		parts := strings.SplitN(arn.Resource, "/", 3)
-
-		input := &quicksight.DeleteUserInput{
-			AwsAccountId: aws.String(arn.AccountID),
-			Namespace:    aws.String(parts[1]),
-			UserName:     v.UserName,
-		}
-
-		if _, err := conn.DeleteUserWithContext(ctx, input); err != nil {
-			return err
+			return fmt.Errorf("QuickSight User (%s) still exists", rs.Primary.ID)
 		}
 
 		return nil

@@ -12,8 +12,10 @@ var (
 	ResourceNamespace           = newResourceNamespace
 	ResourceRefreshSchedule     = newResourceRefreshSchedule
 	ResourceTemplateAlias       = newResourceTemplateAlias
+	ResourceUser                = resourceUser
 	ResourceVPCConnection       = newVPCConnectionResource
 
 	FindAccountSubscriptionByID = findAccountSubscriptionByID
+	FindUserByThreePartKey      = findUserByThreePartKey
 	FindVPCConnectionByID       = findVPCConnectionByID
 )
