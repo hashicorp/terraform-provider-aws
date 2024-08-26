@@ -4,6 +4,15 @@ FEATURES:
 
 * **New Resource:** `aws_glue_catalog_table_optimizer` ([#38052](https://github.com/hashicorp/terraform-provider-aws/issues/38052))
 
+ENHANCEMENTS:
+
+* resource/aws_elasticsearch_domain: Treat `SUCCEEDED_WITH_ISSUES` status as success when upgrading cluster ([#38086](https://github.com/hashicorp/terraform-provider-aws/issues/38086))
+
+BUG FIXES:
+
+* resource/aws_elasticsearch_domain_policy: Change `domain_name` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) ([#38086](https://github.com/hashicorp/terraform-provider-aws/issues/38086))
+* resource/aws_gamelift_game_server_group: Fix crash while reading server group with a nil auto scaling group ARN ([#39022](https://github.com/hashicorp/terraform-provider-aws/issues/39022))
+
 ## 5.64.0 (August 22, 2024)
 
 ENHANCEMENTS:
