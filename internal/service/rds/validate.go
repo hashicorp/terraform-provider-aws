@@ -8,7 +8,24 @@ import (
 	"strings"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 )
+
+func validDBClusterARN(v any, k string, arn arn.ARN) (ws []string, errors []error) {
+	if !(arn.Service == "rds" && strings.HasPrefix(arn.Resource, "cluster:")) {
+		errors = append(errors, fmt.Errorf(
+			"%q must be a valid DB cluster ARN: %q", k, v))
+	}
+	return
+}
+
+func validDBInstanceARN(v any, k string, arn arn.ARN) (ws []string, errors []error) {
+	if !(arn.Service == "rds" && strings.HasPrefix(arn.Resource, "db:")) {
+		errors = append(errors, fmt.Errorf(
+			"%q must be a valid DB instance ARN: %q", k, v))
+	}
+	return
+}
 
 func validEventSubscriptionName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
@@ -46,6 +63,44 @@ func validEventSubscriptionNamePrefix(v interface{}, k string) (ws []string, err
 	if len(value) > 229 {
 		errors = append(errors, fmt.Errorf(
 			"%q cannot be longer than 229 characters", k))
+	}
+	return
+}
+
+func validIdentifier(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexache.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only lowercase alphanumeric characters and hyphens allowed in %q", k))
+	}
+	if !regexache.MustCompile(`^[a-z]`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"first character of %q must be a letter", k))
+	}
+	if regexache.MustCompile(`--`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot contain two consecutive hyphens", k))
+	}
+	if regexache.MustCompile(`-$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot end with a hyphen", k))
+	}
+	return
+}
+
+func validIdentifierPrefix(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexache.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only lowercase alphanumeric characters and hyphens allowed in %q", k))
+	}
+	if !regexache.MustCompile(`^[a-z]`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"first character of %q must be a letter", k))
+	}
+	if regexache.MustCompile(`--`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot contain two consecutive hyphens", k))
 	}
 	return
 }
@@ -168,44 +223,6 @@ func validSubnetGroupNamePrefix(v interface{}, k string) (ws []string, errors []
 	if len(value) > 229 {
 		errors = append(errors, fmt.Errorf(
 			"%q cannot be longer than 229 characters", k))
-	}
-	return
-}
-
-func validIdentifier(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if !regexache.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"only lowercase alphanumeric characters and hyphens allowed in %q", k))
-	}
-	if !regexache.MustCompile(`^[a-z]`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"first character of %q must be a letter", k))
-	}
-	if regexache.MustCompile(`--`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"%q cannot contain two consecutive hyphens", k))
-	}
-	if regexache.MustCompile(`-$`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"%q cannot end with a hyphen", k))
-	}
-	return
-}
-
-func validIdentifierPrefix(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if !regexache.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"only lowercase alphanumeric characters and hyphens allowed in %q", k))
-	}
-	if !regexache.MustCompile(`^[a-z]`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"first character of %q must be a letter", k))
-	}
-	if regexache.MustCompile(`--`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"%q cannot contain two consecutive hyphens", k))
 	}
 	return
 }

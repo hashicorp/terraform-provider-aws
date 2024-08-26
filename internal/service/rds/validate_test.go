@@ -7,9 +7,68 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func TestValidDBClusterARN(t *testing.T) {
+	t.Parallel()
+
+	validARNs := []string{
+		"arn:aws:rds:us-east-2:123456789012:cluster:my-aurora-cluster-1",
+	}
+	for _, v := range validARNs {
+		arn, _ := arn.Parse(v)
+		_, errors := validDBClusterARN(v, names.AttrResourceARN, arn)
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid RDS Cluster ARN: %q", v, errors)
+		}
+	}
+
+	invalidARNs := []string{
+		"arn:aws:rds:us-east-2:123456789012:db:my-mysql-instance-1",
+		"arn:aws:rds:us-east-2:123456789012:1cluster:my-aurora-cluster-1",
+		"arn:aws:rds:us-east-2:123456789012:cluster1:my-aurora-cluster-1",
+		"arn:aws:ec2:us-east-2:123456789012:cluster:my-aurora-cluster-1",
+	}
+	for _, v := range invalidARNs {
+		arn, _ := arn.Parse(v)
+		_, errors := validDBClusterARN(v, names.AttrResourceARN, arn)
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid RDS Cluster ARN", v)
+		}
+	}
+}
+
+func TestValidDBInstanceARN(t *testing.T) {
+	t.Parallel()
+
+	validARNs := []string{
+		"arn:aws:rds:us-east-2:123456789012:db:my-mysql-instance-1",
+	}
+	for _, v := range validARNs {
+		arn, _ := arn.Parse(v)
+		_, errors := validDBInstanceARN(v, names.AttrResourceARN, arn)
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid RDS Database ARN: %q", v, errors)
+		}
+	}
+
+	invalidARNs := []string{
+		"arn:aws:rds:us-east-2:123456789012:cluster:my-aurora-cluster-1",
+		"arn:aws:rds:us-east-2:123456789012:1db:my-mysql-instance-1",
+		"arn:aws:rds:us-east-2:123456789012:db1:my-mysql-instance-1",
+		"arn:aws:ec2:us-east-2:123456789012:db:my-mysql-instance-1",
+	}
+	for _, v := range invalidARNs {
+		arn, _ := arn.Parse(v)
+		_, errors := validDBInstanceARN(v, names.AttrResourceARN, arn)
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid RDS Database ARN", v)
+		}
+	}
+}
 
 func TestValidEventSubscriptionName(t *testing.T) {
 	t.Parallel()
