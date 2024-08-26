@@ -201,7 +201,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 
 	err := awsbaseConfig.VerifyAccountIDAllowed(accountID)
 	if err != nil {
-		return nil, sdkdiag.AppendErrorf(diags, err.Error())
+		return nil, sdkdiag.AppendErrorf(diags, "%s", err.Error())
 	}
 
 	dnsSuffix := "amazonaws.com"
