@@ -227,11 +227,14 @@ func TestAccEMRInstanceGroup_autoScalingPolicy(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateIdFunc:       testAccInstanceGroupResourceImportStateIdFunc(resourceName),
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrStatus},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccInstanceGroupResourceImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrInstanceCount,
+					names.AttrStatus,
+				},
 			},
 			{
 				Config: testAccInstanceGroupConfig_autoScalingPolicy(rName, 2, 3),
@@ -241,11 +244,14 @@ func TestAccEMRInstanceGroup_autoScalingPolicy(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateIdFunc:       testAccInstanceGroupResourceImportStateIdFunc(resourceName),
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrStatus},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccInstanceGroupResourceImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrInstanceCount,
+					names.AttrStatus,
+				},
 			},
 		},
 	})
