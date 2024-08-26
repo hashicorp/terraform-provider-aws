@@ -60,8 +60,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceConfigurationTemplate,
+			Factory:  resourceConfigurationTemplate,
 			TypeName: "aws_elastic_beanstalk_configuration_template",
+			Name:     "Configuration Template",
 		},
 		{
 			Factory:  ResourceEnvironment,

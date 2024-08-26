@@ -227,7 +227,7 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 	input := &elasticbeanstalk.CreateEnvironmentInput{
 		ApplicationName: aws.String(d.Get("application").(string)),
 		EnvironmentName: aws.String(name),
-		OptionSettings:  extractOptionSettings(d.Get("setting").(*schema.Set)),
+		OptionSettings:  expandConfigurationOptionSettings(d.Get("setting").(*schema.Set)),
 		Tags:            getTagsIn(ctx),
 	}
 
@@ -333,7 +333,11 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	applicationName := aws.ToString(env.ApplicationName)
 	environmentName := aws.ToString(env.EnvironmentName)
-	configurationSettings, err := findConfigurationSettingsByTwoPartKey(ctx, conn, applicationName, environmentName)
+	input := &elasticbeanstalk.DescribeConfigurationSettingsInput{
+		ApplicationName: aws.String(applicationName),
+		EnvironmentName: aws.String(environmentName),
+	}
+	configurationSettings, err := findConfigurationSettings(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Elastic Beanstalk Environment (%s) configuration settings: %s", d.Id(), err)
@@ -486,8 +490,8 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 			os := o.(*schema.Set)
 			ns := n.(*schema.Set)
 
-			rm := extractOptionSettings(os.Difference(ns))
-			add := extractOptionSettings(ns.Difference(os))
+			rm := expandConfigurationOptionSettings(os.Difference(ns))
+			add := expandConfigurationOptionSettings(ns.Difference(os))
 
 			// Additions and removals of options are done in a single API call, so we
 			// can't do our normal "remove these" and then later "add these", re-adding
@@ -698,9 +702,9 @@ func findEnvironmentErrorsByID(ctx context.Context, conn *elasticbeanstalk.Clien
 	var output []awstypes.EventDescription
 
 	pages := elasticbeanstalk.NewDescribeEventsPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
+
 		if err != nil {
 			return err
 		}
@@ -729,29 +733,6 @@ func findEnvironmentErrorsByID(ctx context.Context, conn *elasticbeanstalk.Clien
 	}
 
 	return errors.Join(errs...)
-}
-
-func findConfigurationSettingsByTwoPartKey(ctx context.Context, conn *elasticbeanstalk.Client, applicationName, environmentName string) (*awstypes.ConfigurationSettingsDescription, error) {
-	input := &elasticbeanstalk.DescribeConfigurationSettingsInput{
-		ApplicationName: aws.String(applicationName),
-		EnvironmentName: aws.String(environmentName),
-	}
-
-	output, err := conn.DescribeConfigurationSettings(ctx, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || len(output.ConfigurationSettings) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output.ConfigurationSettings); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return &output.ConfigurationSettings[0], nil
 }
 
 func statusEnvironment(ctx context.Context, conn *elasticbeanstalk.Client, id string) retry.StateRefreshFunc {
@@ -846,26 +827,29 @@ func sortValues(v string) string {
 	return strings.Join(values, ",")
 }
 
-func extractOptionSettings(s *schema.Set) []awstypes.ConfigurationOptionSetting {
-	settings := []awstypes.ConfigurationOptionSetting{}
+func expandConfigurationOptionSettings(tfSet *schema.Set) []awstypes.ConfigurationOptionSetting {
+	apiObjects := []awstypes.ConfigurationOptionSetting{}
 
-	if s != nil {
-		for _, setting := range s.List() {
-			optionSetting := awstypes.ConfigurationOptionSetting{
-				Namespace:  aws.String(setting.(map[string]interface{})[names.AttrNamespace].(string)),
-				OptionName: aws.String(setting.(map[string]interface{})[names.AttrName].(string)),
-				Value:      aws.String(setting.(map[string]interface{})[names.AttrValue].(string)),
+	if tfSet != nil {
+		for _, tfMapRaw := range tfSet.List() {
+			tfMap := tfMapRaw.(map[string]interface{})
+			apiObject := awstypes.ConfigurationOptionSetting{
+				Namespace:  aws.String(tfMap[names.AttrNamespace].(string)),
+				OptionName: aws.String(tfMap[names.AttrName].(string)),
+				Value:      aws.String(tfMap[names.AttrValue].(string)),
 			}
-			if aws.ToString(optionSetting.Namespace) == "aws:autoscaling:scheduledaction" {
-				if v, ok := setting.(map[string]interface{})["resource"].(string); ok && v != "" {
-					optionSetting.ResourceName = aws.String(v)
+
+			if aws.ToString(apiObject.Namespace) == "aws:autoscaling:scheduledaction" {
+				if v, ok := tfMap["resource"].(string); ok && v != "" {
+					apiObject.ResourceName = aws.String(v)
 				}
 			}
-			settings = append(settings, optionSetting)
+
+			apiObjects = append(apiObjects, apiObject)
 		}
 	}
 
-	return settings
+	return apiObjects
 }
 
 func dropGeneratedSecurityGroup(ctx context.Context, conn *ec2.Client, settingValue string) string {
