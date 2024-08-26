@@ -33,7 +33,7 @@ func TestAccQuickSightTemplateAlias_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, quicksight.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.QuickSightEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -69,7 +69,7 @@ func TestAccQuickSightTemplateAlias_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, quicksight.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.QuickSightEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

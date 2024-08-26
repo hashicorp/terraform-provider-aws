@@ -85,7 +85,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceAccountSubscription,
+			Factory:  resourceAccountSubscription,
 			TypeName: "aws_quicksight_account_subscription",
 			Name:     "Account Subscription",
 		},

@@ -5,6 +5,7 @@ package quicksight
 
 // Exports for use in tests only.
 var (
+	ResourceAccountSubscription = resourceAccountSubscription
 	ResourceFolderMembership    = newResourceFolderMembership
 	ResourceIAMPolicyAssignment = newResourceIAMPolicyAssignment
 	ResourceIngestion           = newResourceIngestion
@@ -12,4 +13,6 @@ var (
 	ResourceRefreshSchedule     = newResourceRefreshSchedule
 	ResourceTemplateAlias       = newResourceTemplateAlias
 	ResourceVPCConnection       = newResourceVPCConnection
+
+	FindAccountSubscriptionByID = findAccountSubscriptionByID
 )
