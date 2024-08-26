@@ -7209,7 +7209,7 @@ service "quicksight" {
 
   sdk {
     id             = "QuickSight"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
