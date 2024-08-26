@@ -132,7 +132,7 @@ The following arguments are optional:
 * `post_confirmation` - (Optional) Post-confirmation AWS Lambda trigger.
 * `pre_authentication` - (Optional) Pre-authentication AWS Lambda trigger.
 * `pre_sign_up` - (Optional) Pre-registration AWS Lambda trigger.
-* `pre_token_generation` - (Optional) Allow to customize identity token claims before token generation. Set this parameter for legacy purposes; for new instances of pre token generation triggers, set the LambdaArn of `pre_token_generation_config`.
+* `pre_token_generation` - (Optional) Allow to customize identity token claims before token generation. Set this parameter for legacy purposes; for new instances of pre token generation triggers, set the lambda_arn of `pre_token_generation_config`.
 * `pre_token_generation_config` - (Optional) Allow to customize access tokens. See [pre_token_configuration_type](#pre_token_configuration_type)
 * `user_migration` - (Optional) User migration Lambda config type.
 * `verify_auth_challenge_response` - (Optional) Verifies the authentication challenge response.
@@ -152,8 +152,8 @@ The following arguments are optional:
 
 #### pre_token_configuration_type
 
-* `lambdaArn` - (Required) The Lambda Amazon Resource Name of the Lambda function that Amazon Cognito triggers to customize access tokens. If you also set an ARN in `PreTokenGeneration`, its value must be identical to this one.
-* `lambdaVersion` - (Required) The Lambda version represents the signature of the "version" attribute in the "event" information Amazon Cognito passes to your pre Token Generation Lambda function. The supported values are `V1_0`, `V2_0`.
+* `lambda_arn` - (Required) The Lambda Amazon Resource Name of the Lambda function that Amazon Cognito triggers to customize access tokens. If you also set an ARN in `pre_token_generation`, its value must be identical to this one.
+* `lambda_version` - (Required) The Lambda version represents the signature of the "version" attribute in the "event" information Amazon Cognito passes to your pre Token Generation Lambda function. The supported values are `V1_0`, `V2_0`.
 
 ### password_policy
 

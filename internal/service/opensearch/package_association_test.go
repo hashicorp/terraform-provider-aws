@@ -35,8 +35,8 @@ func TestAccOpenSearchPackageAssociation_basic(t *testing.T) {
 				Config: testAccPackageAssociationConfig_basic(pkgName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPackageAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "domain_name", domainResourceName, "domain_name"),
-					resource.TestCheckResourceAttrPair(resourceName, "package_id", packageResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDomainName, domainResourceName, names.AttrDomainName),
+					resource.TestCheckResourceAttrPair(resourceName, "package_id", packageResourceName, names.AttrID),
 				),
 			},
 		},
@@ -74,9 +74,9 @@ func testAccCheckPackageAssociationExists(ctx context.Context, n string) resourc
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchClient(ctx)
 
-		_, err := tfopensearch.FindPackageAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["domain_name"], rs.Primary.Attributes["package_id"])
+		_, err := tfopensearch.FindPackageAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrDomainName], rs.Primary.Attributes["package_id"])
 
 		return err
 	}
@@ -89,9 +89,9 @@ func testAccCheckPackageAssociationDestroy(ctx context.Context) resource.TestChe
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchClient(ctx)
 
-			_, err := tfopensearch.FindPackageAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["domain_name"], rs.Primary.Attributes["package_id"])
+			_, err := tfopensearch.FindPackageAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrDomainName], rs.Primary.Attributes["package_id"])
 
 			if tfresource.NotFound(err) {
 				continue

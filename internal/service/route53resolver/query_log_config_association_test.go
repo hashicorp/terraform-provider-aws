@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/route53resolver"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/route53resolver/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,7 +21,7 @@ import (
 
 func TestAccRoute53ResolverQueryLogConfigAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v route53resolver.ResolverQueryLogConfigAssociation
+	var v awstypes.ResolverQueryLogConfigAssociation
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53_resolver_query_log_config_association.test"
 	queryLogConfigResourceName := "aws_route53_resolver_query_log_config.test"
@@ -37,8 +37,8 @@ func TestAccRoute53ResolverQueryLogConfigAssociation_basic(t *testing.T) {
 				Config: testAccQueryLogConfigAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueryLogConfigAssociationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "resolver_query_log_config_id", queryLogConfigResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_id", vpcResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "resolver_query_log_config_id", queryLogConfigResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceID, vpcResourceName, names.AttrID),
 				),
 			},
 			{
@@ -52,7 +52,7 @@ func TestAccRoute53ResolverQueryLogConfigAssociation_basic(t *testing.T) {
 
 func TestAccRoute53ResolverQueryLogConfigAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v route53resolver.ResolverQueryLogConfigAssociation
+	var v awstypes.ResolverQueryLogConfigAssociation
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53_resolver_query_log_config_association.test"
 
@@ -76,7 +76,7 @@ func TestAccRoute53ResolverQueryLogConfigAssociation_disappears(t *testing.T) {
 
 func testAccCheckQueryLogConfigAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_route53_resolver_query_log_config_association" {
@@ -100,7 +100,7 @@ func testAccCheckQueryLogConfigAssociationDestroy(ctx context.Context) resource.
 	}
 }
 
-func testAccCheckQueryLogConfigAssociationExists(ctx context.Context, n string, v *route53resolver.ResolverQueryLogConfigAssociation) resource.TestCheckFunc {
+func testAccCheckQueryLogConfigAssociationExists(ctx context.Context, n string, v *awstypes.ResolverQueryLogConfigAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -111,7 +111,7 @@ func testAccCheckQueryLogConfigAssociationExists(ctx context.Context, n string, 
 			return fmt.Errorf("No Route53 Resolver Query Log Config Association ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverClient(ctx)
 
 		output, err := tfroute53resolver.FindResolverQueryLogConfigAssociationByID(ctx, conn, rs.Primary.ID)
 

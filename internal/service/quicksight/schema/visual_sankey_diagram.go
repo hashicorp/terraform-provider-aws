@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func sankeyDiagramVisualSchema() *schema.Schema {
@@ -18,8 +19,8 @@ func sankeyDiagramVisualSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"visual_id": idSchema(),
-				"actions":   visualCustomActionsSchema(customActionsMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
+				"visual_id":       idSchema(),
+				names.AttrActions: visualCustomActionsSchema(customActionsMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
 				"chart_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SankeyDiagramChartConfiguration.html
 					Type:     schema.TypeList,
 					Optional: true,
@@ -42,9 +43,9 @@ func sankeyDiagramVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"destination": dimensionFieldSchema(dimensionsFieldMaxItems200), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
-													"source":      dimensionFieldSchema(dimensionsFieldMaxItems200), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
-													"weight":      measureFieldSchema(measureFieldsMaxItems200),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
+													names.AttrDestination: dimensionFieldSchema(dimensionsFieldMaxItems200), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
+													names.AttrSource:      dimensionFieldSchema(dimensionsFieldMaxItems200), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
+													names.AttrWeight:      measureFieldSchema(measureFieldsMaxItems200),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
 												},
 											},
 										},
@@ -90,7 +91,7 @@ func expandSankeyDiagramVisual(tfList []interface{}) *quicksight.SankeyDiagramVi
 	if v, ok := tfMap["visual_id"].(string); ok && v != "" {
 		visual.VisualId = aws.String(v)
 	}
-	if v, ok := tfMap["actions"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrActions].([]interface{}); ok && len(v) > 0 {
 		visual.Actions = expandVisualCustomActions(v)
 	}
 	if v, ok := tfMap["chart_configuration"].([]interface{}); ok && len(v) > 0 {
@@ -162,13 +163,13 @@ func expandSankeyDiagramAggregatedFieldWells(tfList []interface{}) *quicksight.S
 
 	config := &quicksight.SankeyDiagramAggregatedFieldWells{}
 
-	if v, ok := tfMap["destination"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrDestination].([]interface{}); ok && len(v) > 0 {
 		config.Destination = expandDimensionFields(v)
 	}
-	if v, ok := tfMap["source"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrSource].([]interface{}); ok && len(v) > 0 {
 		config.Source = expandDimensionFields(v)
 	}
-	if v, ok := tfMap["weight"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrWeight].([]interface{}); ok && len(v) > 0 {
 		config.Weight = expandMeasureFields(v)
 	}
 
@@ -209,7 +210,7 @@ func flattenSankeyDiagramVisual(apiObject *quicksight.SankeyDiagramVisual) []int
 		"visual_id": aws.StringValue(apiObject.VisualId),
 	}
 	if apiObject.Actions != nil {
-		tfMap["actions"] = flattenVisualCustomAction(apiObject.Actions)
+		tfMap[names.AttrActions] = flattenVisualCustomAction(apiObject.Actions)
 	}
 	if apiObject.ChartConfiguration != nil {
 		tfMap["chart_configuration"] = flattenSankeyDiagramChartConfiguration(apiObject.ChartConfiguration)
@@ -263,13 +264,13 @@ func flattenSankeyDiagramAggregatedFieldWells(apiObject *quicksight.SankeyDiagra
 
 	tfMap := map[string]interface{}{}
 	if apiObject.Destination != nil {
-		tfMap["destination"] = flattenDimensionFields(apiObject.Destination)
+		tfMap[names.AttrDestination] = flattenDimensionFields(apiObject.Destination)
 	}
 	if apiObject.Source != nil {
-		tfMap["source"] = flattenDimensionFields(apiObject.Source)
+		tfMap[names.AttrSource] = flattenDimensionFields(apiObject.Source)
 	}
 	if apiObject.Weight != nil {
-		tfMap["weight"] = flattenMeasureFields(apiObject.Weight)
+		tfMap[names.AttrWeight] = flattenMeasureFields(apiObject.Weight)
 	}
 
 	return []interface{}{tfMap}

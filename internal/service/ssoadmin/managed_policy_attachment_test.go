@@ -39,7 +39,7 @@ func TestAccSSOAdminManagedPolicyAttachment_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "managed_policy_arn", regexache.MustCompile(`policy/AlexaForBusinessDeviceSetup`)),
 					resource.TestCheckResourceAttr(resourceName, "managed_policy_name", "AlexaForBusinessDeviceSetup"),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_arn", permissionSetResourceName, "instance_arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "permission_set_arn", permissionSetResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "permission_set_arn", permissionSetResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -77,7 +77,7 @@ func TestAccSSOAdminManagedPolicyAttachment_forceNew(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "managed_policy_arn", regexache.MustCompile(`policy/AmazonCognitoReadOnly`)),
 					resource.TestCheckResourceAttr(resourceName, "managed_policy_name", "AmazonCognitoReadOnly"),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_arn", permissionSetResourceName, "instance_arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "permission_set_arn", permissionSetResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "permission_set_arn", permissionSetResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -164,7 +164,7 @@ func TestAccSSOAdminManagedPolicyAttachment_multipleManagedPolicies(t *testing.T
 					resource.TestMatchResourceAttr(otherResourceName, "managed_policy_arn", regexache.MustCompile(`policy/AmazonDynamoDBReadOnlyAccess`)),
 					resource.TestCheckResourceAttr(otherResourceName, "managed_policy_name", "AmazonDynamoDBReadOnlyAccess"),
 					resource.TestCheckResourceAttrPair(otherResourceName, "instance_arn", permissionSetResourceName, "instance_arn"),
-					resource.TestCheckResourceAttrPair(otherResourceName, "permission_set_arn", permissionSetResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(otherResourceName, "permission_set_arn", permissionSetResourceName, names.AttrARN),
 				),
 			},
 			{

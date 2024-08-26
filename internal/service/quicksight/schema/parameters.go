@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ParametersSchema() *schema.Schema {
@@ -30,8 +31,8 @@ func ParametersSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"name": stringSchema(true, validation.StringMatch(regexache.MustCompile(`.*\S.*`), "")),
-							"values": {
+							names.AttrName: stringSchema(true, validation.StringMatch(regexache.MustCompile(`.*\S.*`), "")),
+							names.AttrValues: {
 								Type:     schema.TypeList,
 								MinItems: 1,
 								Required: true,
@@ -50,8 +51,8 @@ func ParametersSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"name": stringSchema(true, validation.StringMatch(regexache.MustCompile(`.*\S.*`), "")),
-							"values": {
+							names.AttrName: stringSchema(true, validation.StringMatch(regexache.MustCompile(`.*\S.*`), "")),
+							names.AttrValues: {
 								Type:     schema.TypeList,
 								MinItems: 1,
 								Required: true,
@@ -69,8 +70,8 @@ func ParametersSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"name": stringSchema(true, validation.StringMatch(regexache.MustCompile(`.*\S.*`), "")),
-							"values": {
+							names.AttrName: stringSchema(true, validation.StringMatch(regexache.MustCompile(`.*\S.*`), "")),
+							names.AttrValues: {
 								Type:     schema.TypeList,
 								MinItems: 1,
 								Required: true,
@@ -88,8 +89,8 @@ func ParametersSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"name": stringSchema(true, validation.StringMatch(regexache.MustCompile(`.*\S.*`), "")),
-							"values": {
+							names.AttrName: stringSchema(true, validation.StringMatch(regexache.MustCompile(`.*\S.*`), "")),
+							names.AttrValues: {
 								Type:     schema.TypeList,
 								MinItems: 1,
 								Required: true,
@@ -163,10 +164,10 @@ func expandDateTimeParameter(tfMap map[string]interface{}) *quicksight.DateTimeP
 
 	parameter := &quicksight.DateTimeParameter{}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		parameter.Name = aws.String(v)
 	}
-	if v, ok := tfMap["values"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrValues].([]interface{}); ok && len(v) > 0 {
 		parameter.Values = flex.ExpandStringTimeList(v, time.RFC3339)
 	}
 
@@ -203,10 +204,10 @@ func expandDecimalParameter(tfMap map[string]interface{}) *quicksight.DecimalPar
 
 	parameter := &quicksight.DecimalParameter{}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		parameter.Name = aws.String(v)
 	}
-	if v, ok := tfMap["values"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrValues].([]interface{}); ok && len(v) > 0 {
 		parameter.Values = flex.ExpandFloat64List(v)
 	}
 
@@ -243,10 +244,10 @@ func expandIntegerParameter(tfMap map[string]interface{}) *quicksight.IntegerPar
 
 	parameter := &quicksight.IntegerParameter{}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		parameter.Name = aws.String(v)
 	}
-	if v, ok := tfMap["values"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrValues].([]interface{}); ok && len(v) > 0 {
 		parameter.Values = flex.ExpandInt64List(v)
 	}
 
@@ -283,10 +284,10 @@ func expandStringParameter(tfMap map[string]interface{}) *quicksight.StringParam
 
 	parameter := &quicksight.StringParameter{}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		parameter.Name = aws.String(v)
 	}
-	if v, ok := tfMap["values"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrValues].([]interface{}); ok && len(v) > 0 {
 		parameter.Values = flex.ExpandStringList(v)
 	}
 

@@ -83,7 +83,7 @@ This configuration block supports the following attributes:
 
 This configuration block supports the following attributes:
 
-* `name` - (Required) A unique name for the field. Field names must begin with a letter and be at least 3 and no more than 64 characters long. The allowed characters are: `a`-`z` (lower-case letters), `0`-`9`, and `_` (underscore). The name `score` is reserved and cannot be used as a field name.
+* `name` - (Required) A unique name for the field. Field names must begin with a letter and be at least 1 and no more than 64 characters long. The allowed characters are: `a`-`z` (lower-case letters), `0`-`9`, and `_` (underscore). The name `score` is reserved and cannot be used as a field name.
 * `type` - (Required) The field type. Valid values: `date`, `date-array`, `double`, `double-array`, `int`, `int-array`, `literal`, `literal-array`, `text`, `text-array`.
 * `analysis_scheme` - (Optional) The analysis scheme you want to use for a `text` field. The analysis scheme specifies the language-specific text processing options that are used during indexing.
 * `default_value` - (Optional) The default value for the field. This value is used when no value is specified for the field in the document data.
@@ -136,4 +136,4 @@ Using `terraform import`, import CloudSearch Domains using the `name`. For examp
 % terraform import aws_cloudsearch_domain.example example-domain
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-df7fa25a0a776188ea2cf1cb4023457fb311e8f2073fe09ae64b76245200a9e4 -->
+<!-- cache-key: cdktf-0.20.1 input-ceae2d1756852153a56b7559bc1249bcbdcd21cd8eb1c3b3095494c7547dd974 -->

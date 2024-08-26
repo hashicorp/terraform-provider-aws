@@ -49,4 +49,5 @@ var (
 	FindSSHPublicKeyByThreePartKey      = findSSHPublicKeyByThreePartKey
 	FindUserByName                      = findUserByName
 	FindVirtualMFADeviceBySerialNumber  = findVirtualMFADeviceBySerialNumber
+	SESSMTPPasswordFromSecretKeySigV4   = sesSMTPPasswordFromSecretKeySigV4
 )

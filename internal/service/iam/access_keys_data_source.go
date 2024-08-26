@@ -8,11 +8,12 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go/service/iam"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_iam_access_keys", name="Access Keys")
@@ -33,7 +34,7 @@ func dataSourceAccessKeys() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"status": {
+						names.AttrStatus: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -51,7 +52,7 @@ func dataSourceAccessKeys() *schema.Resource {
 func dataSourceAccessKeysRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	username := d.Get("user").(string)
 	output, err := findAccessKeysByUser(ctx, conn, username)
@@ -68,7 +69,7 @@ func dataSourceAccessKeysRead(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func flattenAccessKeys(apiObjects []*iam.AccessKeyMetadata) []interface{} {
+func flattenAccessKeys(apiObjects []awstypes.AccessKeyMetadata) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -76,7 +77,7 @@ func flattenAccessKeys(apiObjects []*iam.AccessKeyMetadata) []interface{} {
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
+		if apiObject == (awstypes.AccessKeyMetadata{}) {
 			continue
 		}
 		tfList = append(tfList, flattenAccessKey(apiObject))
@@ -85,8 +86,8 @@ func flattenAccessKeys(apiObjects []*iam.AccessKeyMetadata) []interface{} {
 	return tfList
 }
 
-func flattenAccessKey(apiObject *iam.AccessKeyMetadata) map[string]interface{} {
-	if apiObject == nil {
+func flattenAccessKey(apiObject awstypes.AccessKeyMetadata) map[string]interface{} {
+	if apiObject == (awstypes.AccessKeyMetadata{}) {
 		return nil
 	}
 
@@ -98,8 +99,8 @@ func flattenAccessKey(apiObject *iam.AccessKeyMetadata) map[string]interface{} {
 	if v := apiObject.CreateDate; v != nil {
 		m["create_date"] = aws.ToTime(v).Format(time.RFC3339)
 	}
-	if v := apiObject.Status; v != nil {
-		m["status"] = aws.ToString(v)
+	if v := apiObject.Status; v != "" {
+		m[names.AttrStatus] = v
 	}
 
 	return m

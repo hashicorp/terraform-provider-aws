@@ -23,7 +23,7 @@ func TestAccLambdaCodeSigningConfigDataSource_basic(t *testing.T) {
 			{
 				Config: testAccCodeSigningConfigDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "allowed_publishers.0.signing_profile_version_arns.#", resourceName, "allowed_publishers.0.signing_profile_version_arns.#"),
 				),
 			},
@@ -43,7 +43,7 @@ func TestAccLambdaCodeSigningConfigDataSource_policyID(t *testing.T) {
 			{
 				Config: testAccCodeSigningConfigDataSourceConfig_policy,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "allowed_publishers.0.signing_profile_version_arns.#", resourceName, "allowed_publishers.0.signing_profile_version_arns.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "policies", resourceName, "policies"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "config_id", resourceName, "config_id"),
@@ -65,9 +65,9 @@ func TestAccLambdaCodeSigningConfigDataSource_description(t *testing.T) {
 			{
 				Config: testAccCodeSigningConfigDataSourceConfig_description,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "allowed_publishers.0.signing_profile_version_arns.#", resourceName, "allowed_publishers.0.signing_profile_version_arns.#"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
 				),
 			},
 		},

@@ -85,6 +85,9 @@ func SuppressEquivalentJSONOrYAMLDiffs(k, old, new string, d *schema.ResourceDat
 }
 
 func NormalizeJSONOrYAMLString(templateString interface{}) (string, error) {
+	if v, ok := templateString.(string); ok {
+		templateString = strings.ReplaceAll(v, "\r\n", "\n")
+	}
 	if looksLikeJSONString(templateString) {
 		return structure.NormalizeJsonString(templateString.(string))
 	}
