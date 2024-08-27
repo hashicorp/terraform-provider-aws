@@ -151,6 +151,7 @@ func resourceManagedScalingPolicyDelete(ctx context.Context, d *schema.ResourceD
 	})
 
 	if tfawserr.ErrMessageContains(err, errCodeValidationException, "A job flow that is shutting down, terminated, or finished may not be modified") ||
+		tfawserr.ErrMessageContains(err, errCodeValidationException, "is not valid") ||
 		errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "does not exist") {
 		return diags
 	}
@@ -174,6 +175,7 @@ func findManagedScalingPolicy(ctx context.Context, conn *emr.Client, input *emr.
 	output, err := conn.GetManagedScalingPolicy(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, errCodeValidationException, "A job flow that is shutting down, terminated, or finished may not be modified") ||
+		tfawserr.ErrMessageContains(err, errCodeValidationException, "is not valid") ||
 		errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "does not exist") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
