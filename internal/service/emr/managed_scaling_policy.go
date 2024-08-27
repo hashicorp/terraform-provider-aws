@@ -115,12 +115,6 @@ func resourceManagedScalingPolicyRead(d *schema.ResourceData, meta interface{}) 
 		d.SetId("")
 		return nil
 	}
-	
-	if tfawserr.ErrMessageContains(err, "ValidationException", "is not valid") {
-		log.Printf("[WARN] EMR Cluster (%s) not found", d.Id())
-		d.SetId("")
-		return nil
-	}
 
 	if tfawserr.ErrMessageContains(err, "InvalidRequestException", "does not exist") {
 		log.Printf("[WARN] EMR Managed Scaling Policy (%s) not found, removing from state", d.Id())
@@ -158,13 +152,7 @@ func resourceManagedScalingPolicyDelete(d *schema.ResourceData, meta interface{}
 	if tfawserr.ErrMessageContains(err, "ValidationException", "A job flow that is shutting down, terminated, or finished may not be modified") {
 		return nil
 	}
-	
-	if tfawserr.ErrMessageContains(err, "ValidationException", "is not valid") {
-		log.Printf("[WARN] EMR Cluster (%s) not found", d.Id())
-		d.SetId("")
-		return nil
-	}
-	
+
 	if tfawserr.ErrMessageContains(err, "InvalidRequestException", "does not exist") {
 		return nil
 	}
