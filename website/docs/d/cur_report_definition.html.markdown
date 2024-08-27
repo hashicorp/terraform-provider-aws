@@ -24,13 +24,15 @@ data "aws_cur_report_definition" "report_definition" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
-* `report_name` - (Required) The name of the report definition to match.
+* `report_name` - (Required) Name of the report definition to match.
 
-## Attributes Reference
+## Attribute Reference
 
-* `time_unit` - The frequency on which report data are measured and displayed.
+This data source exports the following attributes in addition to the arguments above:
+
+* `time_unit` - Frequency on which report data are measured and displayed.
 * `format` - Preferred compression format for report.
 * `compression` - Preferred format for report.
 * `additional_schema_elements` - A list of schema elements.
@@ -40,3 +42,4 @@ The following arguments are supported:
 * `additional_artifacts` - A list of additional artifacts.
 * `refresh_closed_reports` - If true reports are updated after they have been finalized.
 * `report_versioning` - Overwrite the previous version of each report or to deliver the report in addition to the previous versions.
+* `tags` - Map of key-value pairs assigned to the resource.

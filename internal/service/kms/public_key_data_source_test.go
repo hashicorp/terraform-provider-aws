@@ -1,35 +1,40 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kms_test
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/kms"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccKMSPublicKeyDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_kms_key.test"
 	datasourceName := "data.aws_kms_public_key.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPublicKeyDataSourceConfig(rName),
+				Config: testAccPublicKeyDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccPublicKeyCheckDataSource(datasourceName),
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, "customer_master_key_spec", resourceName, "customer_master_key_spec"),
-					resource.TestCheckResourceAttrPair(datasourceName, "key_id", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrKeyID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, "key_usage", resourceName, "key_usage"),
-					resource.TestCheckResourceAttrSet(datasourceName, "public_key"),
+					resource.TestCheckResourceAttrSet(datasourceName, names.AttrPublicKey),
+					resource.TestCheckResourceAttrSet(datasourceName, "public_key_pem"),
 				),
 			},
 		},
@@ -37,24 +42,26 @@ func TestAccKMSPublicKeyDataSource_basic(t *testing.T) {
 }
 
 func TestAccKMSPublicKeyDataSource_encrypt(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_kms_key.test"
 	datasourceName := "data.aws_kms_public_key.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPublicKeyEncryptDataSourceConfig(rName),
+				Config: testAccPublicKeyDataSourceConfig_encrypt(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccPublicKeyCheckDataSource(datasourceName),
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(datasourceName, "key_id", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrKeyID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, "customer_master_key_spec", resourceName, "customer_master_key_spec"),
 					resource.TestCheckResourceAttrPair(datasourceName, "key_usage", resourceName, "key_usage"),
-					resource.TestCheckResourceAttrSet(datasourceName, "public_key"),
+					resource.TestCheckResourceAttrSet(datasourceName, names.AttrPublicKey),
+					resource.TestCheckResourceAttrSet(datasourceName, "public_key_pem"),
 				),
 			},
 		},
@@ -72,7 +79,7 @@ func testAccPublicKeyCheckDataSource(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccPublicKeyDataSourceConfig(rName string) string {
+func testAccPublicKeyDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description              = %[1]q
@@ -87,7 +94,7 @@ data "aws_kms_public_key" "test" {
 `, rName)
 }
 
-func testAccPublicKeyEncryptDataSourceConfig(rName string) string {
+func testAccPublicKeyDataSourceConfig_encrypt(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description              = %[1]q

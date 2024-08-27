@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_instance: Allow updates to `user_data` and `user_data_base64` without forcing resource replacement
+```

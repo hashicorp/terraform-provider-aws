@@ -71,20 +71,21 @@ data "aws_iam_policy_document" "sns_topic_policy" {
 
 There are no arguments available for this data source.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) of the organization.
-* `feature_set` - The FeatureSet of the organization.
-* `id` - The ID of the organization.
-* `master_account_arn` - The Amazon Resource Name (ARN) of the account that is designated as the master account for the organization.
+* `arn` - ARN of the organization.
+* `feature_set` - FeatureSet of the organization.
+* `id` - ID of the organization.
+* `master_account_arn` - ARN of the account that is designated as the master account for the organization.
 * `master_account_email` - The email address that is associated with the AWS account that is designated as the master account for the organization.
-* `master_account_id` - The unique identifier (ID) of the master account of an organization.
+* `master_account_id` - Unique identifier (ID) of the master account of an organization.
+* `master_account_name` - Name of the master account of an organization.
 
-### Master Account Attributes Reference
+### Master Account or Delegated Administrator Attribute Reference
 
-If the account is the master account for the organization, the following attributes are also exported:
+If the account is the master account or a delegated administrator for the organization, the following attributes are also exported:
 
 * `accounts` - List of organization accounts including the master account. For a list excluding the master account, see the `non_master_accounts` attribute. All elements have these attributes:
     * `arn` - ARN of the account

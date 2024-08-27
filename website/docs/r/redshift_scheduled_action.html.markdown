@@ -13,46 +13,41 @@ description: |-
 ### Pause Cluster Action
 
 ```terraform
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["scheduler.redshift.amazonaws.com"]
+    }
+
+    actions = ["sts:AssumeRole"]
+  }
+}
+
 resource "aws_iam_role" "example" {
   name               = "redshift_scheduled_action"
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": [
-          "scheduler.redshift.amazonaws.com"
-        ]
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
-EOF
+
+data "aws_iam_policy_document" "example" {
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "redshift:PauseCluster",
+      "redshift:ResumeCluster",
+      "redshift:ResizeCluster",
+    ]
+
+    resources = ["*"]
+  }
 }
 
 resource "aws_iam_policy" "example" {
   name   = "redshift_scheduled_action"
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-      {
-          "Sid": "VisualEditor0",
-          "Effect": "Allow",
-          "Action": [
-              "redshift:PauseCluster",
-              "redshift:ResumeCluster",
-              "redshift:ResizeCluster"
-          ],
-          "Resource": "*"
-      }
-  ]
-}
-EOF
+  policy = data.aws_iam_policy_document.example.json
 }
 
 resource "aws_iam_role_policy_attachment" "example" {
@@ -94,7 +89,7 @@ resource "aws_redshift_scheduled_action" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The scheduled action name.
 * `description` - (Optional) The description of the scheduled action.
@@ -129,16 +124,25 @@ The following arguments are supported:
 
 * `cluster_identifier` - (Required) The identifier of the cluster to be resumed.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The Redshift Scheduled Action name.
 
 ## Import
 
-Redshift Scheduled Action can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Redshift Scheduled Action using the `name`. For example:
 
+```terraform
+import {
+  to = aws_redshift_scheduled_action.example
+  id = "tf-redshift-scheduled-action"
+}
 ```
-$ terraform import aws_redshift_scheduled_action.example tf-redshift-scheduled-action
+
+Using `terraform import`, import Redshift Scheduled Action using the `name`. For example:
+
+```console
+% terraform import aws_redshift_scheduled_action.example tf-redshift-scheduled-action
 ```

@@ -1,0 +1,7 @@
+```release-note:breaking-change
+resource/aws_ec2_client_vpn_endpoint: The `status` attribute has been removed
+```
+
+```release-note:breaking-change
+resource/aws_ec2_client_vpn_network_association: The `status` attribute has been removed
+```

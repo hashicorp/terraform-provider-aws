@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_sagemaker_domain: Add `domain_settings.r_studio_server_pro_domain_settings`, `default_user_settings.canvas_app_settings.model_register_settings`, and `default_user_settings.r_studio_server_pro_app_settings` arguments
+```

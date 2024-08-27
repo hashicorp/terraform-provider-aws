@@ -1,47 +1,59 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package securityhub
 
 import (
+	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/securityhub"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/securityhub"
+	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceActionTarget() *schema.Resource {
+// @SDKResource("aws_securityhub_action_target", name="Action Target")
+func resourceActionTarget() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceActionTargetCreate,
-		Read:   resourceActionTargetRead,
-		Update: resourceActionTargetUpdate,
-		Delete: resourceActionTargetDelete,
+		CreateWithoutTimeout: resourceActionTargetCreate,
+		ReadWithoutTimeout:   resourceActionTargetRead,
+		UpdateWithoutTimeout: resourceActionTargetUpdate,
+		DeleteWithoutTimeout: resourceActionTargetDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"identifier": {
+			names.AttrIdentifier: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 20),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9]+$`), "must contain only alphanumeric characters"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]+$`), "must contain only alphanumeric characters"),
 				),
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.All(
@@ -52,117 +64,142 @@ func ResourceActionTarget() *schema.Resource {
 	}
 }
 
-func resourceActionTargetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
-	description := d.Get("description").(string)
-	name := d.Get("name").(string)
-	identifier := d.Get("identifier").(string)
+func resourceActionTargetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	log.Printf("[DEBUG] Creating Security Hub custom action target %s", identifier)
-
-	resp, err := conn.CreateActionTarget(&securityhub.CreateActionTargetInput{
-		Description: aws.String(description),
-		Id:          aws.String(identifier),
-		Name:        aws.String(name),
-	})
-
-	if err != nil {
-		return fmt.Errorf("Error creating Security Hub custom action target %s: %s", identifier, err)
+	id := d.Get(names.AttrIdentifier).(string)
+	input := &securityhub.CreateActionTargetInput{
+		Description: aws.String(d.Get(names.AttrDescription).(string)),
+		Id:          aws.String(id),
+		Name:        aws.String(d.Get(names.AttrName).(string)),
 	}
 
-	d.SetId(aws.StringValue(resp.ActionTargetArn))
+	output, err := conn.CreateActionTarget(ctx, input)
 
-	return resourceActionTargetRead(d, meta)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating Security Hub Action Target (%s): %s", id, err)
+	}
+
+	d.SetId(aws.ToString(output.ActionTargetArn))
+
+	return append(diags, resourceActionTargetRead(ctx, d, meta)...)
 }
 
-func resourceActionTargetParseIdentifier(identifier string) (string, error) {
-	parts := strings.Split(identifier, "/")
+func resourceActionTargetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
+
+	actionTargetIdentifier, err := actionTargetParseID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	output, err := findActionTargetByARN(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Security Hub Action Target %s not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Security Hub Action Target (%s): %s", d.Id(), err)
+	}
+
+	d.Set(names.AttrARN, output.ActionTargetArn)
+	d.Set(names.AttrDescription, output.Description)
+	d.Set(names.AttrIdentifier, actionTargetIdentifier)
+	d.Set(names.AttrName, output.Name)
+
+	return diags
+}
+
+func resourceActionTargetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
+
+	input := &securityhub.UpdateActionTargetInput{
+		ActionTargetArn: aws.String(d.Id()),
+		Description:     aws.String(d.Get(names.AttrDescription).(string)),
+		Name:            aws.String(d.Get(names.AttrName).(string)),
+	}
+
+	if _, err := conn.UpdateActionTarget(ctx, input); err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating Security Hub Action Target (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func resourceActionTargetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
+
+	log.Printf("[DEBUG] Deleting Security Hub Action Target: %s", d.Id())
+	_, err := conn.DeleteActionTarget(ctx, &securityhub.DeleteActionTargetInput{
+		ActionTargetArn: aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting Security Hub Action Target (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func actionTargetParseID(arn string) (string, error) {
+	parts := strings.Split(arn, "/")
 
 	if len(parts) != 3 {
-		return "", fmt.Errorf("Expected Security Hub Custom action ARN, received: %s", identifier)
+		return "", fmt.Errorf("expected Security Hub Custom action ARN, received: %s", arn)
 	}
 
 	return parts[2], nil
 }
 
-func resourceActionTargetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
-
-	log.Printf("[DEBUG] Reading Security Hub custom action targets to find %s", d.Id())
-
-	actionTargetIdentifier, err := resourceActionTargetParseIdentifier(d.Id())
-
-	if err != nil {
-		return err
-	}
-
-	actionTarget, err := ActionTargetCheckExists(conn, d.Id())
-
-	if err != nil {
-		return fmt.Errorf("Error reading Security Hub custom action targets to find %s: %s", d.Id(), err)
-	}
-
-	if actionTarget == nil {
-		log.Printf("[WARN] Security Hub custom action target (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	d.Set("identifier", actionTargetIdentifier)
-	d.Set("description", actionTarget.Description)
-	d.Set("arn", actionTarget.ActionTargetArn)
-	d.Set("name", actionTarget.Name)
-
-	return nil
-}
-
-func resourceActionTargetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
-
-	input := &securityhub.UpdateActionTargetInput{
-		ActionTargetArn: aws.String(d.Id()),
-		Description:     aws.String(d.Get("description").(string)),
-		Name:            aws.String(d.Get("name").(string)),
-	}
-	if _, err := conn.UpdateActionTarget(input); err != nil {
-		return fmt.Errorf("error updating Security Hub Action Target (%s): %w", d.Id(), err)
-	}
-	return nil
-}
-
-func ActionTargetCheckExists(conn *securityhub.SecurityHub, actionTargetArn string) (*securityhub.ActionTarget, error) {
+func findActionTargetByARN(ctx context.Context, conn *securityhub.Client, arn string) (*types.ActionTarget, error) {
 	input := &securityhub.DescribeActionTargetsInput{
-		ActionTargetArns: aws.StringSlice([]string{actionTargetArn}),
+		ActionTargetArns: []string{arn},
 	}
-	var found *securityhub.ActionTarget = nil
-	err := conn.DescribeActionTargetsPages(input, func(page *securityhub.DescribeActionTargetsOutput, lastPage bool) bool {
-		for _, actionTarget := range page.ActionTargets {
-			if aws.StringValue(actionTarget.ActionTargetArn) == actionTargetArn {
-				found = actionTarget
-				return false
-			}
-		}
-		return !lastPage
-	})
+
+	return findActionTarget(ctx, conn, input)
+}
+
+func findActionTarget(ctx context.Context, conn *securityhub.Client, input *securityhub.DescribeActionTargetsInput) (*types.ActionTarget, error) {
+	output, err := findActionTargets(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return found, nil
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func resourceActionTargetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
-	log.Printf("[DEBUG] Deleting Security Hub custom action target %s", d.Id())
+func findActionTargets(ctx context.Context, conn *securityhub.Client, input *securityhub.DescribeActionTargetsInput) ([]types.ActionTarget, error) {
+	var output []types.ActionTarget
 
-	_, err := conn.DeleteActionTarget(&securityhub.DeleteActionTargetInput{
-		ActionTargetArn: aws.String(d.Id()),
-	})
+	pages := securityhub.NewDescribeActionTargetsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-	if err != nil {
-		return fmt.Errorf("Error deleting Security Hub custom action target %s: %s", d.Id(), err)
+		if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, errCodeInvalidAccessException, "not subscribed to AWS Security Hub") {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.ActionTargets...)
 	}
 
-	return nil
+	return output, nil
 }

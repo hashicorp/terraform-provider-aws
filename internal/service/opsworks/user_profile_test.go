@@ -1,66 +1,85 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package opsworks_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/service/opsworks"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfopsworks "github.com/hashicorp/terraform-provider-aws/internal/service/opsworks"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccOpsWorksUserProfile_basic(t *testing.T) {
-	rName := fmt.Sprintf("test-user-%d", sdkacctest.RandInt())
-	updateRName := fmt.Sprintf("test-user-%d", sdkacctest.RandInt())
+	acctest.Skip(t, "skipping test; Amazon OpsWorks has been deprecated and will be removed in the next major release")
+
+	ctx := acctest.Context(t)
+	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_opsworks_user_profile.test"
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserProfileDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.OpsWorks) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserProfileCreate(rName),
+				Config: testAccUserProfileConfig_create(rName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserProfileExists(
-						"aws_opsworks_user_profile.user", rName),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_user_profile.user", "ssh_public_key", "",
-					),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_user_profile.user", "ssh_username", rName,
-					),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_user_profile.user", "allow_self_management", "false",
-					),
+					testAccCheckUserProfileExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "ssh_public_key", ""),
+					resource.TestCheckResourceAttr(resourceName, "ssh_username", rName1),
+					resource.TestCheckResourceAttr(resourceName, "allow_self_management", acctest.CtFalse),
 				),
 			},
 			{
-				Config: testAccUserProfileUpdate(rName, updateRName),
+				Config: testAccUserProfileConfig_update(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserProfileExists(
-						"aws_opsworks_user_profile.user", updateRName),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_user_profile.user", "ssh_public_key", "",
-					),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_user_profile.user", "ssh_username", updateRName,
-					),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_user_profile.user", "allow_self_management", "false",
-					),
+					testAccCheckUserProfileExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "ssh_public_key", ""),
+					resource.TestCheckResourceAttr(resourceName, "ssh_username", rName2),
+					resource.TestCheckResourceAttr(resourceName, "allow_self_management", acctest.CtFalse),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckUserProfileExists(
-	n, username string) resource.TestCheckFunc {
+func TestAccOpsWorksUserProfile_disappears(t *testing.T) {
+	acctest.Skip(t, "skipping test; Amazon OpsWorks has been deprecated and will be removed in the next major release")
+
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_opsworks_user_profile.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.OpsWorks) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserProfileDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserProfileConfig_create(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserProfileExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfopsworks.ResourceUserProfile(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccCheckUserProfileExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -68,100 +87,72 @@ func testAccCheckUserProfileExists(
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
+			return fmt.Errorf("No OpsWorks User Profile ID is set")
 		}
 
-		if _, ok := rs.Primary.Attributes["user_arn"]; !ok {
-			return fmt.Errorf("User Profile user arn is missing, should be set.")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
+		_, err := tfopsworks.FindUserProfileByARN(ctx, conn, rs.Primary.ID)
 
-		params := &opsworks.DescribeUserProfilesInput{
-			IamUserArns: []*string{aws.String(rs.Primary.Attributes["user_arn"])},
-		}
-		resp, err := conn.DescribeUserProfiles(params)
+		return err
+	}
+}
 
-		if err != nil {
-			return err
-		}
+func testAccCheckUserProfileDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksClient(ctx)
 
-		if v := len(resp.UserProfiles); v != 1 {
-			return fmt.Errorf("Expected 1 response returned, got %d", v)
-		}
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_opsworks_user_profile" {
+				continue
+			}
 
-		opsuserprofile := *resp.UserProfiles[0]
+			_, err := tfopsworks.FindUserProfileByARN(ctx, conn, rs.Primary.ID)
 
-		if *opsuserprofile.AllowSelfManagement {
-			return fmt.Errorf("Unnexpected allowSelfManagement: %t",
-				*opsuserprofile.AllowSelfManagement)
-		}
+			if tfresource.NotFound(err) {
+				continue
+			}
 
-		if *opsuserprofile.Name != username {
-			return fmt.Errorf("Unnexpected name: %s", *opsuserprofile.Name)
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("OpsWorks User Profile %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckUserProfileDestroy(s *terraform.State) error {
-	client := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_opsworks_user_profile" {
-			continue
-		}
-
-		req := &opsworks.DescribeUserProfilesInput{
-			IamUserArns: []*string{aws.String(rs.Primary.Attributes["user_arn"])},
-		}
-		resp, err := client.DescribeUserProfiles(req)
-
-		if err == nil {
-			if len(resp.UserProfiles) > 0 {
-				return fmt.Errorf("OpsWorks User Profiles still exist.")
-			}
-		}
-
-		if awserr, ok := err.(awserr.Error); ok {
-			if awserr.Code() != "ResourceNotFoundException" {
-				return err
-			}
-		}
-	}
-	return nil
-}
-
-func testAccUserProfileCreate(rn string) string {
+func testAccUserProfileConfig_create(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_opsworks_user_profile" "user" {
-  user_arn     = aws_iam_user.user.arn
-  ssh_username = aws_iam_user.user.name
+resource "aws_opsworks_user_profile" "test" {
+  user_arn     = aws_iam_user.test1.arn
+  ssh_username = aws_iam_user.test1.name
 }
 
-resource "aws_iam_user" "user" {
-  name = "%s"
+resource "aws_iam_user" "test1" {
+  name = %[1]q
   path = "/"
 }
-`, rn)
+`, rName)
 }
 
-func testAccUserProfileUpdate(rn, updateRn string) string {
+func testAccUserProfileConfig_update(rName1, rName2 string) string {
 	return fmt.Sprintf(`
-resource "aws_opsworks_user_profile" "user" {
-  user_arn     = aws_iam_user.new-user.arn
-  ssh_username = aws_iam_user.new-user.name
+resource "aws_opsworks_user_profile" "test" {
+  user_arn     = aws_iam_user.test2.arn
+  ssh_username = aws_iam_user.test2.name
 }
 
-resource "aws_iam_user" "user" {
-  name = "%s"
+resource "aws_iam_user" "test1" {
+  name = %[1]q
   path = "/"
 }
 
-resource "aws_iam_user" "new-user" {
-  name = "%s"
+resource "aws_iam_user" "test2" {
+  name = %[2]q
   path = "/"
 }
-`, rn, updateRn)
+`, rName1, rName2)
 }

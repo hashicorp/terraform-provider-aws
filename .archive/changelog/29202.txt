@@ -1,0 +1,15 @@
+```release-note:bug
+resource/aws_elb: Fix errors caused by multiple security groups with the same name but different owners
+```
+
+```release-note:bug
+data-source/aws_elb: Fix errors caused by multiple security groups with the same name but different owners
+```
+
+```release-note:bug
+resource/aws_emr_cluster: Fix errors caused by multiple security groups with the same name but different owners
+```
+
+```release-note:bug
+resource/aws_globalaccelerator_endpoint_group: Fix errors caused by multiple security groups with the same name but different owners
+```

@@ -1,17 +1,22 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package schemas_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/schemas"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/aws/aws-sdk-go-v2/service/schemas"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfschemas "github.com/hashicorp/terraform-provider-aws/internal/service/schemas"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -59,37 +64,97 @@ const (
             "format": "date-time"
           }
         }
-	  }
-	}
+      }
+    }
   }
+}
+`
+
+	testAccJSONSchemaContent = `
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/product.schema.json",
+  "title": "Event",
+  "description": "An generic example",
+  "type": "object",
+  "properties": {
+    "name": {
+      "description": "The unique identifier for a product",
+      "type": "string"
+    },
+    "created_at": {
+      "description": "Date-time format",
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [ "name" ]
 }
 `
 )
 
-func TestAccSchemasSchema_basic(t *testing.T) {
+func TestAccSchemasSchema_openAPI3(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v schemas.DescribeSchemaOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_schemas_schema.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(schemas.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, schemas.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSchemaDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.SchemasEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchemasServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSchemaDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSchemaConfig(rName),
+				Config: testAccSchemaConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSchemasSchemaExists(resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "schemas", fmt.Sprintf("schema/%s/%s", rName, rName)),
-					resource.TestCheckResourceAttrSet(resourceName, "content"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					testAccCheckSchemaExists(ctx, resourceName, &v),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "schemas", fmt.Sprintf("schema/%s/%s", rName, rName)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrContent),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "registry_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "type", "OpenApi3"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "OpenApi3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct1),
+					resource.TestCheckResourceAttrSet(resourceName, "version_created_date"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSchemasSchema_jsonSchemaDraftv4(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v schemas.DescribeSchemaOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_schemas_schema.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.SchemasEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchemasServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSchemaDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSchemaConfig_jsonSchema(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSchemaExists(ctx, resourceName, &v),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "schemas", fmt.Sprintf("schema/%s/%s", rName, rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrContent, testAccJSONSchemaContent),
+					resource.TestCheckResourceAttrSet(resourceName, "last_modified"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "registry_name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "JSONSchemaDraft4"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "version_created_date"),
 				),
 			},
@@ -103,21 +168,22 @@ func TestAccSchemasSchema_basic(t *testing.T) {
 }
 
 func TestAccSchemasSchema_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v schemas.DescribeSchemaOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_schemas_schema.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(schemas.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, schemas.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSchemaDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.SchemasEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchemasServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSchemaDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSchemaConfig(rName),
+				Config: testAccSchemaConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSchemasSchemaExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfschemas.ResourceSchema(), resourceName),
+					testAccCheckSchemaExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfschemas.ResourceSchema(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -126,23 +192,24 @@ func TestAccSchemasSchema_disappears(t *testing.T) {
 }
 
 func TestAccSchemasSchema_contentDescription(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v schemas.DescribeSchemaOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_schemas_schema.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(schemas.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, schemas.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSchemaDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.SchemasEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchemasServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSchemaDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSchemaContentDescriptionConfig(rName, testAccSchemaContent, "description1"),
+				Config: testAccSchemaConfig_contentDescription(rName, testAccSchemaContent, "description1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSchemasSchemaExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "content", testAccSchemaContent),
-					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
-					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					testAccCheckSchemaExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrContent, testAccSchemaContent),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct1),
 				),
 			},
 			{
@@ -151,20 +218,20 @@ func TestAccSchemasSchema_contentDescription(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSchemaContentDescriptionConfig(rName, testAccSchemaContentUpdated, "description2"),
+				Config: testAccSchemaConfig_contentDescription(rName, testAccSchemaContentUpdated, "description2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSchemasSchemaExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "content", testAccSchemaContentUpdated),
-					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
-					resource.TestCheckResourceAttr(resourceName, "version", "2"),
+					testAccCheckSchemaExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrContent, testAccSchemaContentUpdated),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct2),
 				),
 			},
 			{
-				Config: testAccSchemaConfig(rName),
+				Config: testAccSchemaConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSchemasSchemaExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttr(resourceName, "version", "3"),
+					testAccCheckSchemaExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct3),
 				),
 			},
 		},
@@ -172,22 +239,23 @@ func TestAccSchemasSchema_contentDescription(t *testing.T) {
 }
 
 func TestAccSchemasSchema_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v schemas.DescribeSchemaOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_schemas_schema.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(schemas.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, schemas.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSchemaDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.SchemasEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchemasServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSchemaDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSchemaTags1Config(rName, "key1", "value1"),
+				Config: testAccSchemaConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSchemasSchemaExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					testAccCheckSchemaExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -196,76 +264,62 @@ func TestAccSchemasSchema_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSchemaTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccSchemaConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSchemasSchemaExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					testAccCheckSchemaExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccSchemaTags1Config(rName, "key2", "value2"),
+				Config: testAccSchemaConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSchemasSchemaExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					testAccCheckSchemaExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckSchemaDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasConn
+func testAccCheckSchemaDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasClient(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_schemas_schema" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_schemas_schema" {
+				continue
+			}
+
+			_, err := tfschemas.FindSchemaByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes["registry_name"])
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("EventBridge Schemas Schema %s still exists", rs.Primary.ID)
 		}
 
-		name, registryName, err := tfschemas.SchemaParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		_, err = tfschemas.FindSchemaByNameAndRegistryName(conn, name, registryName)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("EventBridge Schemas Schema %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckSchemasSchemaExists(n string, v *schemas.DescribeSchemaOutput) resource.TestCheckFunc {
+func testAccCheckSchemaExists(ctx context.Context, n string, v *schemas.DescribeSchemaOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EventBridge Schemas Schema ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasClient(ctx)
 
-		name, registryName, err := tfschemas.SchemaParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasConn
-
-		output, err := tfschemas.FindSchemaByNameAndRegistryName(conn, name, registryName)
+		output, err := tfschemas.FindSchemaByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes["registry_name"])
 
 		if err != nil {
 			return err
@@ -277,7 +331,7 @@ func testAccCheckSchemasSchemaExists(n string, v *schemas.DescribeSchemaOutput) 
 	}
 }
 
-func testAccSchemaConfig(rName string) string {
+func testAccSchemaConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_schemas_registry" "test" {
   name = %[1]q
@@ -292,7 +346,22 @@ resource "aws_schemas_schema" "test" {
 `, rName, testAccSchemaContent)
 }
 
-func testAccSchemaContentDescriptionConfig(rName, content, description string) string {
+func testAccSchemaConfig_jsonSchema(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_schemas_registry" "test" {
+  name = %[1]q
+}
+
+resource "aws_schemas_schema" "test" {
+  name          = %[1]q
+  registry_name = aws_schemas_registry.test.name
+  type          = "JSONSchemaDraft4"
+  content       = %[2]q
+}
+`, rName, testAccJSONSchemaContent)
+}
+
+func testAccSchemaConfig_contentDescription(rName, content, description string) string {
 	return fmt.Sprintf(`
 resource "aws_schemas_registry" "test" {
   name = %[1]q
@@ -308,7 +377,7 @@ resource "aws_schemas_schema" "test" {
 `, rName, content, description)
 }
 
-func testAccSchemaTags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccSchemaConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_schemas_registry" "test" {
   name = %[1]q
@@ -327,7 +396,7 @@ resource "aws_schemas_schema" "test" {
 `, rName, testAccSchemaContent, tagKey1, tagValue1)
 }
 
-func testAccSchemaTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccSchemaConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`	
 resource "aws_schemas_registry" "test" {
   name = %[1]q

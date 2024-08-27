@@ -1,42 +1,46 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package waf_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/waf"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/YakDriver/regexache"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccWAFRuleDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_waf_rule.wafrule"
 	datasourceName := "data.aws_waf_rule.wafrule"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(waf.EndpointsID, t) },
-		ErrorCheck: acctest.ErrorCheck(t, waf.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.WAFEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccRuleDataSourceConfig_NonExistent,
-				ExpectError: regexp.MustCompile(`WAF Rules not found`),
+				Config:      testAccRuleDataSourceConfig_nonExistent,
+				ExpectError: regexache.MustCompile(`no matching WAF Rule found`),
 			},
 			{
-				Config: testAccRuleDataSourceConfig_Name(name),
+				Config: testAccRuleDataSourceConfig_name(name),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
 				),
 			},
 		},
 	})
 }
 
-func testAccRuleDataSourceConfig_Name(name string) string {
+func testAccRuleDataSourceConfig_name(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_rule" "wafrule" {
   name        = %[1]q
@@ -49,7 +53,7 @@ data "aws_waf_rule" "wafrule" {
 `, name)
 }
 
-const testAccRuleDataSourceConfig_NonExistent = `
+const testAccRuleDataSourceConfig_nonExistent = `
 data "aws_waf_rule" "wafrule" {
   name = "tf-acc-test-does-not-exist"
 }

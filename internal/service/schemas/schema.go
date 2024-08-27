@@ -1,199 +1,180 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package schemas
 
 import (
+	"context"
 	"fmt"
 	"log"
-	"regexp"
+	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/schemas"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/schemas"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/schemas/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceSchema() *schema.Resource {
+// @SDKResource("aws_schemas_schema", name="Schema")
+// @Tags(identifierAttribute="arn")
+func resourceSchema() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSchemaCreate,
-		Read:   resourceSchemaRead,
-		Update: resourceSchemaUpdate,
-		Delete: resourceSchemaDelete,
+		CreateWithoutTimeout: resourceSchemaCreate,
+		ReadWithoutTimeout:   resourceSchemaRead,
+		UpdateWithoutTimeout: resourceSchemaUpdate,
+		DeleteWithoutTimeout: resourceSchemaDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"content": {
+			names.AttrContent: {
 				Type:             schema.TypeString,
 				Required:         true,
 				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
 			},
-
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
 			},
-
 			"last_modified": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 385),
-					validation.StringMatch(regexp.MustCompile(`^[\.\-_A-Za-z@]+`), ""),
+					validation.StringMatch(regexache.MustCompile(`^[A-Za-z_.@-]+`), ""),
 				),
 			},
-
 			"registry_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-
-			"type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(schemas.Type_Values(), true),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			names.AttrType: {
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.Type](),
 			},
-
-			"version": {
+			names.AttrVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"version_created_date": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceSchemaCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SchemasConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceSchemaCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SchemasClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	registryName := d.Get("registry_name").(string)
 	input := &schemas.CreateSchemaInput{
-		Content:      aws.String(d.Get("content").(string)),
+		Content:      aws.String(d.Get(names.AttrContent).(string)),
 		RegistryName: aws.String(registryName),
 		SchemaName:   aws.String(name),
-		Type:         aws.String(d.Get("type").(string)),
+		Tags:         getTagsIn(ctx),
+		Type:         awstypes.Type(d.Get(names.AttrType).(string)),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	id := SchemaCreateResourceID(name, registryName)
-
-	log.Printf("[DEBUG] Creating EventBridge Schemas Schema: %s", input)
-	_, err := conn.CreateSchema(input)
+	id := schemaCreateResourceID(name, registryName)
+	_, err := conn.CreateSchema(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating EventBridge Schemas Schema (%s): %w", id, err)
+		return sdkdiag.AppendErrorf(diags, "creating EventBridge Schemas Schema (%s): %s", id, err)
 	}
 
 	d.SetId(id)
 
-	return resourceSchemaRead(d, meta)
+	return append(diags, resourceSchemaRead(ctx, d, meta)...)
 }
 
-func resourceSchemaRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SchemasConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceSchemaRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SchemasClient(ctx)
 
-	name, registryName, err := SchemaParseResourceID(d.Id())
-
+	name, registryName, err := schemaParseResourceID(d.Id())
 	if err != nil {
-		return fmt.Errorf("error parsing EventBridge Schemas Schema ID: %w", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	output, err := FindSchemaByNameAndRegistryName(conn, name, registryName)
+	output, err := findSchemaByTwoPartKey(ctx, conn, name, registryName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EventBridge Schemas Schema (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EventBridge Schemas Schema (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EventBridge Schemas Schema (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", output.SchemaArn)
-	d.Set("content", output.Content)
-	d.Set("description", output.Description)
+	d.Set(names.AttrARN, output.SchemaArn)
+	d.Set(names.AttrContent, output.Content)
+	d.Set(names.AttrDescription, output.Description)
 	if output.LastModified != nil {
-		d.Set("last_modified", aws.TimeValue(output.LastModified).Format(time.RFC3339))
+		d.Set("last_modified", aws.ToTime(output.LastModified).Format(time.RFC3339))
 	} else {
 		d.Set("last_modified", nil)
 	}
-	d.Set("name", output.SchemaName)
+	d.Set(names.AttrName, output.SchemaName)
 	d.Set("registry_name", registryName)
-	d.Set("type", output.Type)
-	d.Set("version", output.SchemaVersion)
+	d.Set(names.AttrType, output.Type)
+	d.Set(names.AttrVersion, output.SchemaVersion)
 	if output.VersionCreatedDate != nil {
-		d.Set("version_created_date", aws.TimeValue(output.VersionCreatedDate).Format(time.RFC3339))
+		d.Set("version_created_date", aws.ToTime(output.VersionCreatedDate).Format(time.RFC3339))
 	} else {
 		d.Set("version_created_date", nil)
 	}
 
-	tags, err := ListTags(conn, d.Get("arn").(string))
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for EventBridge Schemas Schema (%s): %w", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceSchemaUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SchemasConn
+func resourceSchemaUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SchemasClient(ctx)
 
-	if d.HasChanges("content", "description", "type") {
-		name, registryName, err := SchemaParseResourceID(d.Id())
-
+	if d.HasChanges(names.AttrContent, names.AttrDescription, names.AttrType) {
+		name, registryName, err := schemaParseResourceID(d.Id())
 		if err != nil {
-			return fmt.Errorf("error parsing EventBridge Schemas Schema ID: %w", err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
 		input := &schemas.UpdateSchemaInput{
@@ -201,55 +182,92 @@ func resourceSchemaUpdate(d *schema.ResourceData, meta interface{}) error {
 			SchemaName:   aws.String(name),
 		}
 
-		if d.HasChanges("content", "type") {
-			input.Content = aws.String(d.Get("content").(string))
-			input.Type = aws.String(d.Get("type").(string))
+		if d.HasChanges(names.AttrContent, names.AttrType) {
+			input.Content = aws.String(d.Get(names.AttrContent).(string))
+			input.Type = awstypes.Type(d.Get(names.AttrType).(string))
 		}
 
-		if d.HasChange("description") {
-			input.Description = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
-		log.Printf("[DEBUG] Updating EventBridge Schemas Schema: %s", input)
-		_, err = conn.UpdateSchema(input)
+		_, err = conn.UpdateSchema(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error updating EventBridge Schemas Schema (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating EventBridge Schemas Schema (%s): %s", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %w", err)
-		}
-	}
-
-	return resourceSchemaRead(d, meta)
+	return append(diags, resourceSchemaRead(ctx, d, meta)...)
 }
 
-func resourceSchemaDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SchemasConn
+func resourceSchemaDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SchemasClient(ctx)
 
-	name, registryName, err := SchemaParseResourceID(d.Id())
-
+	name, registryName, err := schemaParseResourceID(d.Id())
 	if err != nil {
-		return fmt.Errorf("error parsing EventBridge Schemas Schema ID: %w", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	log.Printf("[INFO] Deleting EventBridge Schemas Schema (%s)", d.Id())
-	_, err = conn.DeleteSchema(&schemas.DeleteSchemaInput{
+	_, err = conn.DeleteSchema(ctx, &schemas.DeleteSchemaInput{
 		RegistryName: aws.String(registryName),
 		SchemaName:   aws.String(name),
 	})
 
-	if tfawserr.ErrCodeEquals(err, schemas.ErrCodeNotFoundException) {
-		return nil
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting EventBridge Schemas Schema (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting EventBridge Schemas Schema (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
+}
+
+const schemaResourceIDSeparator = "/"
+
+func schemaCreateResourceID(schemaName, registryName string) string {
+	parts := []string{schemaName, registryName}
+	id := strings.Join(parts, schemaResourceIDSeparator)
+
+	return id
+}
+
+func schemaParseResourceID(id string) (string, string, error) {
+	parts := strings.Split(id, schemaResourceIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected SCHEMA_NAME%[2]sREGISTRY_NAME", id, schemaResourceIDSeparator)
+}
+
+func findSchemaByTwoPartKey(ctx context.Context, conn *schemas.Client, name, registryName string) (*schemas.DescribeSchemaOutput, error) {
+	input := &schemas.DescribeSchemaInput{
+		RegistryName: aws.String(registryName),
+		SchemaName:   aws.String(name),
+	}
+
+	output, err := conn.DescribeSchema(ctx, input)
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }

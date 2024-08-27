@@ -1,14 +1,19 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker
 
 import (
 	"fmt"
-	"regexp"
+
+	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 )
 
 func validEnvironment(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(map[string]interface{})
 	for envK, envV := range value {
-		if !regexp.MustCompile(`^[0-9A-Za-z_]+$`).MatchString(envK) {
+		if !regexache.MustCompile(`^[0-9A-Za-z_]+$`).MatchString(envK) {
 			errors = append(errors, fmt.Errorf(
 				"only alphanumeric characters and underscore allowed in %q: %q",
 				k, envK))
@@ -21,7 +26,7 @@ func validEnvironment(v interface{}, k string) (ws []string, errors []error) {
 			errors = append(errors, fmt.Errorf(
 				"%q cannot be longer than 1024 characters: %q", k, envV.(string)))
 		}
-		if regexp.MustCompile(`^[0-9]`).MatchString(envK) {
+		if regexache.MustCompile(`^[0-9]`).MatchString(envK) {
 			errors = append(errors, fmt.Errorf(
 				"%q cannot begin with a digit: %q", k, envK))
 		}
@@ -31,7 +36,7 @@ func validEnvironment(v interface{}, k string) (ws []string, errors []error) {
 
 func validImage(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-	if !regexp.MustCompile(`[\S]+`).MatchString(value) {
+	if !regexache.MustCompile(`[\S]+`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"no whitespace allowed in %q: %q",
 			k, value))
@@ -45,7 +50,7 @@ func validImage(v interface{}, k string) (ws []string, errors []error) {
 
 func validModelDataURL(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-	if !regexp.MustCompile(`^(https|s3)://([^/]+)/?(.*)$`).MatchString(value) {
+	if !regexache.MustCompile(`^(https|s3)://([^/]+)/?(.*)$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"%q must be a valid path: %q",
 			k, value))
@@ -54,7 +59,7 @@ func validModelDataURL(v interface{}, k string) (ws []string, errors []error) {
 		errors = append(errors, fmt.Errorf(
 			"%q cannot be longer than 1024 characters: %q", k, value))
 	}
-	if !regexp.MustCompile(`^(https|s3)://`).MatchString(value) {
+	if !regexache.MustCompile(`^(https|s3)://`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"%q must be a path that starts with either s3 or https: %q", k, value))
 	}
@@ -63,7 +68,7 @@ func validModelDataURL(v interface{}, k string) (ws []string, errors []error) {
 
 func validName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-	if !regexp.MustCompile(`^[0-9A-Za-z-]+$`).MatchString(value) {
+	if !regexache.MustCompile(`^[0-9A-Za-z-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"only alphanumeric characters and hyphens allowed in %q: %q",
 			k, value))
@@ -72,7 +77,26 @@ func validName(v interface{}, k string) (ws []string, errors []error) {
 		errors = append(errors, fmt.Errorf(
 			"%q cannot be longer than 63 characters: %q", k, value))
 	}
-	if regexp.MustCompile(`^-`).MatchString(value) {
+	if regexache.MustCompile(`^-`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot begin with a hyphen: %q", k, value))
+	}
+	return
+}
+
+func validPrefix(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexache.MustCompile(`^[0-9A-Za-z-]+$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only alphanumeric characters and hyphens allowed in %q: %q",
+			k, value))
+	}
+	maxLength := 63 - id.UniqueIDSuffixLength
+	if len(value) > maxLength {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot be longer than %d characters: %q", k, maxLength, value))
+	}
+	if regexache.MustCompile(`^-`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"%q cannot begin with a hyphen: %q", k, value))
 	}

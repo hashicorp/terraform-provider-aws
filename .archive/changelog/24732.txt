@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_ec2_fleet: Add `launch_template_config.override.instance_requirements` argument
+```
+
+```release-note:enhancement
+resource/aws_ec2_fleet: Add support for `capacity-optimized` and `capacity-optimized-prioritized` values for `spot_options.allocation_strategy`
+```
+
+```release-note:enhancement
+resource/aws_ec2_fleet: Add `arn` attribute
+```

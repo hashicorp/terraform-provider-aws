@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package pinpoint
 
@@ -7,14 +7,14 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/pinpoint"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/pinpoint"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_pinpoint_app", &resource.Sweeper{
 		Name: "aws_pinpoint_app",
 		F:    sweepApps,
@@ -22,18 +22,19 @@ func init() {
 }
 
 func sweepApps(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).PinpointConn
+	conn := client.PinpointClient(ctx)
 
 	input := &pinpoint.GetAppsInput{}
 
 	for {
-		output, err := conn.GetApps(input)
+		output, err := conn.GetApps(ctx, input)
 		if err != nil {
-			if sweep.SkipSweepError(err) {
+			if awsv2.SkipSweepError(err) {
 				log.Printf("[WARN] Skipping Pinpoint app sweep for %s: %s", region, err)
 				return nil
 			}
@@ -46,10 +47,10 @@ func sweepApps(region string) error {
 		}
 
 		for _, item := range output.ApplicationsResponse.Item {
-			name := aws.StringValue(item.Name)
+			name := aws.ToString(item.Name)
 
 			log.Printf("[INFO] Deleting Pinpoint app %s", name)
-			_, err := conn.DeleteApp(&pinpoint.DeleteAppInput{
+			_, err := conn.DeleteApp(ctx, &pinpoint.DeleteAppInput{
 				ApplicationId: item.Id,
 			})
 			if err != nil {

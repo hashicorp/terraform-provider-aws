@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_networkmanager_core_network: Add `base_policy_regions` argument
+```
+
+```release-note:note
+resource/aws_networkmanager_core_network: The `base_policy_region` argument is being deprecated in favor of the new `base_policy_regions` argument.
+```

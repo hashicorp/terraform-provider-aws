@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_elasticache_replication_group: Update regex pattern to target specific Redis V6 versions through the `engine_version` attribute
+```
+
+```release-note:bug
+resource/aws_elasticache_cluster: Update regex pattern to target specific Redis V6 versions through the `engine_version` attribute
+```

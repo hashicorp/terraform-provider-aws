@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dynamodb
 
 import (
@@ -14,13 +17,13 @@ func resourceTableMigrateState(
 	switch v {
 	case 0:
 		log.Println("[INFO] Found AWS DynamoDB Table State v0; migrating to v1")
-		return migrateDynamoDBStateV0toV1(is)
+		return migrateStateV0toV1(is)
 	default:
 		return is, fmt.Errorf("Unexpected schema version: %d", v)
 	}
 }
 
-func migrateDynamoDBStateV0toV1(is *terraform.InstanceState) (*terraform.InstanceState, error) {
+func migrateStateV0toV1(is *terraform.InstanceState) (*terraform.InstanceState, error) {
 	if is.Empty() {
 		log.Println("[DEBUG] Empty InstanceState; nothing to migrate.")
 		return is, nil
@@ -29,7 +32,7 @@ func migrateDynamoDBStateV0toV1(is *terraform.InstanceState) (*terraform.Instanc
 	log.Printf("[DEBUG] DynamoDB Table Attributes before Migration: %#v", is.Attributes)
 
 	prefix := "global_secondary_index"
-	entity := ResourceTable()
+	entity := resourceTable()
 
 	// Read old keys
 	reader := &schema.MapFieldReader{

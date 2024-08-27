@@ -1,28 +1,42 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dms
 
 import (
+	"context"
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	dms "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceReplicationSubnetGroup() *schema.Resource {
+// @SDKResource("aws_dms_replication_subnet_group", name="Replication Subnet Group")
+// @Tags(identifierAttribute="replication_subnet_group_arn")
+func resourceReplicationSubnetGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceReplicationSubnetGroupCreate,
-		Read:   resourceReplicationSubnetGroupRead,
-		Update: resourceReplicationSubnetGroupUpdate,
-		Delete: resourceReplicationSubnetGroupDelete,
+		CreateWithoutTimeout: resourceReplicationSubnetGroupCreate,
+		ReadWithoutTimeout:   resourceReplicationSubnetGroupRead,
+		UpdateWithoutTimeout: resourceReplicationSubnetGroupUpdate,
+		DeleteWithoutTimeout: resourceReplicationSubnetGroupDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -40,15 +54,15 @@ func ResourceReplicationSubnetGroup() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validReplicationSubnetGroupID,
 			},
-			"subnet_ids": {
+			names.AttrSubnetIDs: {
 				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
+				MinItems: 2,
 				Required: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
-			"vpc_id": {
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -58,48 +72,44 @@ func ResourceReplicationSubnetGroup() *schema.Resource {
 	}
 }
 
-func resourceReplicationSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceReplicationSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
-	request := &dms.CreateReplicationSubnetGroupInput{
-		ReplicationSubnetGroupIdentifier:  aws.String(d.Get("replication_subnet_group_id").(string)),
+	replicationSubnetGroupID := d.Get("replication_subnet_group_id").(string)
+	input := &dms.CreateReplicationSubnetGroupInput{
 		ReplicationSubnetGroupDescription: aws.String(d.Get("replication_subnet_group_description").(string)),
-		SubnetIds:                         flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
-		Tags:                              Tags(tags.IgnoreAWS()),
+		ReplicationSubnetGroupIdentifier:  aws.String(replicationSubnetGroupID),
+		SubnetIds:                         flex.ExpandStringValueSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
+		Tags:                              getTagsIn(ctx),
 	}
 
-	log.Println("[DEBUG] DMS create replication subnet group:", request)
-
-	_, err := conn.CreateReplicationSubnetGroup(request)
-	if err != nil {
-		return err
-	}
-
-	d.SetId(d.Get("replication_subnet_group_id").(string))
-	return resourceReplicationSubnetGroupRead(d, meta)
-}
-
-func resourceReplicationSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-
-	response, err := conn.DescribeReplicationSubnetGroups(&dms.DescribeReplicationSubnetGroupsInput{
-		Filters: []*dms.Filter{
-			{
-				Name:   aws.String("replication-subnet-group-id"),
-				Values: []*string{aws.String(d.Id())}, // Must use d.Id() to work with import.
-			},
-		},
+	_, err := tfresource.RetryWhenIsA[*awstypes.AccessDeniedFault](ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.CreateReplicationSubnetGroup(ctx, input)
 	})
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "creating DMS Replication Subnet Group (%s): %s", replicationSubnetGroupID, err)
 	}
-	if len(response.ReplicationSubnetGroups) == 0 {
+
+	d.SetId(replicationSubnetGroupID)
+
+	return append(diags, resourceReplicationSubnetGroupRead(ctx, d, meta)...)
+}
+
+func resourceReplicationSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DMSClient(ctx)
+
+	group, err := findReplicationSubnetGroupByID(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] DMS Replication Subnet Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading DMS Replication Subnet Group (%s): %s", d.Id(), err)
 	}
 
 	// The AWS API for DMS subnet groups does not return the ARN which is required to
@@ -112,90 +122,106 @@ func resourceReplicationSubnetGroupRead(d *schema.ResourceData, meta interface{}
 		Resource:  fmt.Sprintf("subgrp:%s", d.Id()),
 	}.String()
 	d.Set("replication_subnet_group_arn", arn)
+	d.Set("replication_subnet_group_description", group.ReplicationSubnetGroupDescription)
+	d.Set("replication_subnet_group_id", group.ReplicationSubnetGroupIdentifier)
+	subnetIDs := tfslices.ApplyToAll(group.Subnets, func(sn awstypes.Subnet) string {
+		return aws.ToString(sn.SubnetIdentifier)
+	})
+	d.Set(names.AttrSubnetIDs, subnetIDs)
+	d.Set(names.AttrVPCID, group.VpcId)
 
-	err = resourceReplicationSubnetGroupSetState(d, response.ReplicationSubnetGroups[0])
-	if err != nil {
-		return err
-	}
-
-	tags, err := ListTags(conn, arn)
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for DMS Replication Subnet Group (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceReplicationSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
+func resourceReplicationSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
-	// Updates to subnet groups are only valid when sending SubnetIds even if there are no
-	// changes to SubnetIds.
-	request := &dms.ModifyReplicationSubnetGroupInput{
-		ReplicationSubnetGroupIdentifier: aws.String(d.Get("replication_subnet_group_id").(string)),
-		SubnetIds:                        flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
-	}
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+		// Updates to subnet groups are only valid when sending SubnetIds even if there are no
+		// changes to SubnetIds.
+		input := &dms.ModifyReplicationSubnetGroupInput{
+			ReplicationSubnetGroupIdentifier: aws.String(d.Get("replication_subnet_group_id").(string)),
+			SubnetIds:                        flex.ExpandStringValueSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
+		}
 
-	if d.HasChange("replication_subnet_group_description") {
-		request.ReplicationSubnetGroupDescription = aws.String(d.Get("replication_subnet_group_description").(string))
-	}
+		if d.HasChange("replication_subnet_group_description") {
+			input.ReplicationSubnetGroupDescription = aws.String(d.Get("replication_subnet_group_description").(string))
+		}
 
-	if d.HasChange("tags_all") {
-		arn := d.Get("replication_subnet_group_arn").(string)
-		o, n := d.GetChange("tags_all")
+		_, err := conn.ModifyReplicationSubnetGroup(ctx, input)
 
-		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating DMS Replication Subnet Group (%s) tags: %s", arn, err)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating DMS Replication Subnet Group (%s): %s", d.Id(), err)
 		}
 	}
 
-	log.Println("[DEBUG] DMS update replication subnet group:", request)
+	return append(diags, resourceReplicationSubnetGroupRead(ctx, d, meta)...)
+}
 
-	_, err := conn.ModifyReplicationSubnetGroup(request)
+func resourceReplicationSubnetGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DMSClient(ctx)
+
+	log.Printf("[DEBUG] Deleting DMS Replication Subnet Group: %s", d.Id())
+	_, err := conn.DeleteReplicationSubnetGroup(ctx, &dms.DeleteReplicationSubnetGroupInput{
+		ReplicationSubnetGroupIdentifier: aws.String(d.Id()),
+	})
+
+	if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
+		return diags
+	}
+
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting DMS Replication Subnet Group (%s): %s", d.Id(), err)
 	}
 
-	return resourceReplicationSubnetGroupRead(d, meta)
+	return diags
 }
 
-func resourceReplicationSubnetGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
-
-	request := &dms.DeleteReplicationSubnetGroupInput{
-		ReplicationSubnetGroupIdentifier: aws.String(d.Get("replication_subnet_group_id").(string)),
+func findReplicationSubnetGroupByID(ctx context.Context, conn *dms.Client, id string) (*awstypes.ReplicationSubnetGroup, error) {
+	input := &dms.DescribeReplicationSubnetGroupsInput{
+		Filters: []awstypes.Filter{
+			{
+				Name:   aws.String("replication-subnet-group-id"),
+				Values: []string{id},
+			},
+		},
 	}
 
-	log.Printf("[DEBUG] DMS delete replication subnet group: %#v", request)
-
-	_, err := conn.DeleteReplicationSubnetGroup(request)
-	return err
+	return findReplicationSubnetGroup(ctx, conn, input)
 }
 
-func resourceReplicationSubnetGroupSetState(d *schema.ResourceData, group *dms.ReplicationSubnetGroup) error {
-	d.SetId(aws.StringValue(group.ReplicationSubnetGroupIdentifier))
+func findReplicationSubnetGroup(ctx context.Context, conn *dms.Client, input *dms.DescribeReplicationSubnetGroupsInput) (*awstypes.ReplicationSubnetGroup, error) {
+	output, err := findReplicationSubnetGroups(ctx, conn, input)
 
-	subnet_ids := []string{}
-	for _, subnet := range group.Subnets {
-		subnet_ids = append(subnet_ids, aws.StringValue(subnet.SubnetIdentifier))
+	if err != nil {
+		return nil, err
 	}
 
-	d.Set("replication_subnet_group_description", group.ReplicationSubnetGroupDescription)
-	d.Set("replication_subnet_group_id", group.ReplicationSubnetGroupIdentifier)
-	d.Set("subnet_ids", subnet_ids)
-	d.Set("vpc_id", group.VpcId)
+	return tfresource.AssertSingleValueResult(output)
+}
 
-	return nil
+func findReplicationSubnetGroups(ctx context.Context, conn *dms.Client, input *dms.DescribeReplicationSubnetGroupsInput) ([]awstypes.ReplicationSubnetGroup, error) {
+	var output []awstypes.ReplicationSubnetGroup
+
+	pages := dms.NewDescribeReplicationSubnetGroupsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.ReplicationSubnetGroups...)
+	}
+
+	return output, nil
 }

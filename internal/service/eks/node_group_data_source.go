@@ -1,30 +1,39 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package eks
 
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceNodeGroup() *schema.Resource {
+// @SDKDataSource("aws_eks_node_group")
+func dataSourceNodeGroup() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceNodeGroupRead,
+		ReadWithoutTimeout: dataSourceNodeGroupRead,
 
 		Schema: map[string]*schema.Schema{
 			"ami_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"cluster_name": {
+			"capacity_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrClusterName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.NoZeroValues,
@@ -42,6 +51,26 @@ func DataSourceNodeGroup() *schema.Resource {
 				Type:     schema.TypeMap,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			names.AttrLaunchTemplate: {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrID: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrName: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrVersion: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"node_group_name": {
 				Type:         schema.TypeString,
@@ -73,7 +102,7 @@ func DataSourceNodeGroup() *schema.Resource {
 					},
 				},
 			},
-			"resources": {
+			names.AttrResources: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -83,7 +112,7 @@ func DataSourceNodeGroup() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -117,17 +146,37 @@ func DataSourceNodeGroup() *schema.Resource {
 					},
 				},
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"subnet_ids": {
+			names.AttrSubnetIDs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags": tftags.TagsSchemaComputed(),
-			"version": {
+			names.AttrTags: tftags.TagsSchemaComputed(),
+			"taints": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrKey: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrValue: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"effect": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			names.AttrVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -136,57 +185,57 @@ func DataSourceNodeGroup() *schema.Resource {
 }
 
 func dataSourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EKSConn
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	clusterName := d.Get("cluster_name").(string)
+	clusterName := d.Get(names.AttrClusterName).(string)
 	nodeGroupName := d.Get("node_group_name").(string)
 	id := NodeGroupCreateResourceID(clusterName, nodeGroupName)
-	nodeGroup, err := FindNodegroupByClusterNameAndNodegroupName(conn, clusterName, nodeGroupName)
+	nodeGroup, err := findNodegroupByTwoPartKey(ctx, conn, clusterName, nodeGroupName)
 
 	if err != nil {
-		return diag.Errorf("error reading EKS Node Group (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "reading EKS Node Group (%s): %s", id, err)
 	}
 
 	d.SetId(id)
-
 	d.Set("ami_type", nodeGroup.AmiType)
-	d.Set("arn", nodeGroup.NodegroupArn)
-	d.Set("cluster_name", nodeGroup.ClusterName)
+	d.Set(names.AttrARN, nodeGroup.NodegroupArn)
+	d.Set("capacity_type", nodeGroup.CapacityType)
+	d.Set(names.AttrClusterName, nodeGroup.ClusterName)
 	d.Set("disk_size", nodeGroup.DiskSize)
 	d.Set("instance_types", nodeGroup.InstanceTypes)
 	d.Set("labels", nodeGroup.Labels)
+	if err := d.Set(names.AttrLaunchTemplate, flattenLaunchTemplateSpecification(nodeGroup.LaunchTemplate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting launch_template: %s", err)
+	}
 	d.Set("node_group_name", nodeGroup.NodegroupName)
 	d.Set("node_role_arn", nodeGroup.NodeRole)
 	d.Set("release_version", nodeGroup.ReleaseVersion)
-
-	if err := d.Set("remote_access", flattenEksRemoteAccessConfig(nodeGroup.RemoteAccess)); err != nil {
-		return diag.Errorf("error setting remote_access: %s", err)
+	if err := d.Set("remote_access", flattenRemoteAccessConfig(nodeGroup.RemoteAccess)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting remote_access: %s", err)
 	}
-
-	if err := d.Set("resources", flattenEksNodeGroupResources(nodeGroup.Resources)); err != nil {
-		return diag.Errorf("error setting resources: %s", err)
+	if err := d.Set(names.AttrResources, flattenNodeGroupResources(nodeGroup.Resources)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting resources: %s", err)
 	}
-
 	if nodeGroup.ScalingConfig != nil {
-		if err := d.Set("scaling_config", []interface{}{flattenEksNodeGroupScalingConfig(nodeGroup.ScalingConfig)}); err != nil {
-			return diag.Errorf("error setting scaling_config: %s", err)
+		if err := d.Set("scaling_config", []interface{}{flattenNodeGroupScalingConfig(nodeGroup.ScalingConfig)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting scaling_config: %s", err)
 		}
 	} else {
 		d.Set("scaling_config", nil)
 	}
+	d.Set(names.AttrStatus, nodeGroup.Status)
+	d.Set(names.AttrSubnetIDs, nodeGroup.Subnets)
+	if err := d.Set("taints", flattenTaints(nodeGroup.Taints)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting taints: %s", err)
+	}
+	d.Set(names.AttrVersion, nodeGroup.Version)
 
-	d.Set("status", nodeGroup.Status)
-
-	if err := d.Set("subnet_ids", aws.StringValueSlice(nodeGroup.Subnets)); err != nil {
-		return diag.Errorf("error setting subnets: %s", err)
+	if err := d.Set(names.AttrTags, KeyValueTags(ctx, nodeGroup.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	if err := d.Set("tags", KeyValueTags(nodeGroup.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting tags: %s", err)
-	}
-
-	d.Set("version", nodeGroup.Version)
-
-	return nil
+	return diags
 }

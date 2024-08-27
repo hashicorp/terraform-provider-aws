@@ -1,120 +1,161 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package emr
 
 import (
+	"context"
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/emr"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/emr"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/emr/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceSecurityConfiguration() *schema.Resource {
+// @SDKResource("aws_emr_security_configuration", name="Security Configuration")
+func resourceSecurityConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSecurityConfigurationCreate,
-		Read:   resourceSecurityConfigurationRead,
-		Delete: resourceSecurityConfigurationDelete,
+		CreateWithoutTimeout: resourceSecurityConfigurationCreate,
+		ReadWithoutTimeout:   resourceSecurityConfigurationRead,
+		DeleteWithoutTimeout: resourceSecurityConfigurationDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validation.StringLenBetween(0, 10280),
-			},
-			"name_prefix": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"name"},
-				ValidateFunc:  validation.StringLenBetween(0, 10280-resource.UniqueIDSuffixLength),
-			},
-
-			"configuration": {
+			names.AttrConfiguration: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringIsJSON,
 			},
-
-			"creation_date": {
+			names.AttrCreationDate: {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			names.AttrName: {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{names.AttrNamePrefix},
+				ValidateFunc:  validation.StringLenBetween(0, 10280),
+			},
+			names.AttrNamePrefix: {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{names.AttrName},
+				ValidateFunc:  validation.StringLenBetween(0, 10280-id.UniqueIDSuffixLength),
 			},
 		},
 	}
 }
 
-func resourceSecurityConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRConn
+func resourceSecurityConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
-	var emrSCName string
-	if v, ok := d.GetOk("name"); ok {
-		emrSCName = v.(string)
-	} else {
-		if v, ok := d.GetOk("name_prefix"); ok {
-			emrSCName = resource.PrefixedUniqueId(v.(string))
-		} else {
-			emrSCName = resource.PrefixedUniqueId("tf-emr-sc-")
-		}
+	name := create.NewNameGenerator(
+		create.WithConfiguredName(d.Get(names.AttrName).(string)),
+		create.WithConfiguredPrefix(d.Get(names.AttrNamePrefix).(string)),
+		create.WithDefaultPrefix("tf-emr-sc-"),
+	).Generate()
+	input := &emr.CreateSecurityConfigurationInput{
+		Name:                  aws.String(name),
+		SecurityConfiguration: aws.String(d.Get(names.AttrConfiguration).(string)),
 	}
 
-	resp, err := conn.CreateSecurityConfiguration(&emr.CreateSecurityConfigurationInput{
-		Name:                  aws.String(emrSCName),
-		SecurityConfiguration: aws.String(d.Get("configuration").(string)),
-	})
+	output, err := conn.CreateSecurityConfiguration(ctx, input)
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "creating EMR Security Configuration (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(resp.Name))
-	return resourceSecurityConfigurationRead(d, meta)
+	d.SetId(aws.ToString(output.Name))
+
+	return append(diags, resourceSecurityConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceSecurityConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRConn
+func resourceSecurityConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
-	resp, err := conn.DescribeSecurityConfiguration(&emr.DescribeSecurityConfigurationInput{
-		Name: aws.String(d.Id()),
-	})
-	if err != nil {
-		if tfawserr.ErrMessageContains(err, "InvalidRequestException", "does not exist") {
-			log.Printf("[WARN] EMR Security Configuration (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
+	output, err := findSecurityConfigurationByName(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EMR Security Configuration (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
 	}
 
-	d.Set("creation_date", aws.TimeValue(resp.CreationDateTime).Format(time.RFC3339))
-	d.Set("name", resp.Name)
-	d.Set("configuration", resp.SecurityConfiguration)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading EMR Security Configuration (%s): %s", d.Id(), err)
+	}
 
-	return nil
+	d.Set(names.AttrConfiguration, output.SecurityConfiguration)
+	d.Set(names.AttrCreationDate, aws.ToTime(output.CreationDateTime).Format(time.RFC3339))
+	d.Set(names.AttrName, output.Name)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(output.Name)))
+
+	return diags
 }
 
-func resourceSecurityConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRConn
+func resourceSecurityConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
-	_, err := conn.DeleteSecurityConfiguration(&emr.DeleteSecurityConfigurationInput{
+	log.Printf("[INFO] Deleting EMR Security Configuration: %s", d.Id())
+	_, err := conn.DeleteSecurityConfiguration(ctx, &emr.DeleteSecurityConfigurationInput{
 		Name: aws.String(d.Id()),
 	})
-	if err != nil {
-		if tfawserr.ErrMessageContains(err, "InvalidRequestException", "does not exist") {
-			return nil
-		}
-		return err
+
+	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "does not exist") {
+		return diags
 	}
 
-	return nil
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting EMR Security Configuration (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func findSecurityConfigurationByName(ctx context.Context, conn *emr.Client, name string) (*emr.DescribeSecurityConfigurationOutput, error) {
+	input := &emr.DescribeSecurityConfigurationInput{
+		Name: aws.String(name),
+	}
+
+	output, err := conn.DescribeSecurityConfiguration(ctx, input)
+
+	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "does not exist") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, err
 }

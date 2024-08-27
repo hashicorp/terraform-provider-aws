@@ -1,109 +1,123 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sfn
 
 import (
-	"fmt"
-	"log"
+	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sfn"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/sfn"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/sfn/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceActivity() *schema.Resource {
+// @SDKDataSource("aws_sfn_activity", name="Activity")
+func dataSourceActivity() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceActivityRead,
+		ReadWithoutTimeout: dataSourceActivityRead,
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 				Optional: true,
 				ExactlyOneOf: []string{
-					"arn",
-					"name",
+					names.AttrARN,
+					names.AttrName,
 				},
 			},
-			"arn": {
+			names.AttrCreationDate: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 				Optional: true,
 				ExactlyOneOf: []string{
-					"arn",
-					"name",
+					names.AttrARN,
+					names.AttrName,
 				},
-			},
-			"creation_date": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 		},
 	}
 }
 
-func dataSourceActivityRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*conns.AWSClient)
-	conn := client.SFNConn
-	log.Print("[DEBUG] Reading Step Function Activity")
+func dataSourceActivityRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SFNClient(ctx)
 
-	if nm, ok := d.GetOk("name"); ok {
-		name := nm.(string)
-		var acts []*sfn.ActivityListItem
+	if v, ok := d.GetOk(names.AttrName); ok {
+		name := v.(string)
 
-		err := conn.ListActivitiesPages(&sfn.ListActivitiesInput{}, func(page *sfn.ListActivitiesOutput, lastPage bool) bool {
-			for _, a := range page.Activities {
-				if name == aws.StringValue(a.Name) {
-					acts = append(acts, a)
-				}
+		output, err := findActivityByName(ctx, conn, name)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "listing Step Functions Activities: %s", err)
+		}
+		if n := len(output); n == 0 {
+			return sdkdiag.AppendErrorf(diags, "no Step Functions Activities matched")
+		} else if n > 1 {
+			return sdkdiag.AppendErrorf(diags, "%d Step Functions Activities matched; use additional constraints to reduce matches to a single Activity", n)
+		}
+
+		activity := output[0]
+
+		arn := aws.ToString(activity.ActivityArn)
+		d.SetId(arn)
+		d.Set(names.AttrARN, arn)
+		d.Set(names.AttrCreationDate, activity.CreationDate.Format(time.RFC3339))
+		d.Set(names.AttrName, activity.Name)
+	} else if v, ok := d.GetOk(names.AttrARN); ok {
+		arn := v.(string)
+		activity, err := findActivityByARN(ctx, conn, arn)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading Step Functions Activity (%s): %s", arn, err)
+		}
+
+		arn = aws.ToString(activity.ActivityArn)
+		d.SetId(arn)
+		d.Set(names.AttrARN, arn)
+		d.Set(names.AttrCreationDate, activity.CreationDate.Format(time.RFC3339))
+		d.Set(names.AttrName, activity.Name)
+	}
+
+	return diags
+}
+
+func findActivityByName(ctx context.Context, conn *sfn.Client, name string) ([]awstypes.ActivityListItem, error) {
+	var output []awstypes.ActivityListItem
+
+	pages := sfn.NewListActivitiesPaginator(conn, &sfn.ListActivitiesInput{})
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.ActivityDoesNotExist](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: name,
 			}
-			return !lastPage
-		})
+		}
 
 		if err != nil {
-			return fmt.Errorf("Error listing activities: %w", err)
+			return nil, err
 		}
 
-		if len(acts) == 0 {
-			return fmt.Errorf("No activity found with name %s in this region", name)
-		}
-
-		if len(acts) > 1 {
-			return fmt.Errorf("Found more than 1 activity with name %s in this region", name)
-		}
-
-		act := acts[0]
-
-		d.SetId(aws.StringValue(act.ActivityArn))
-		d.Set("name", act.Name)
-		d.Set("arn", act.ActivityArn)
-		if err := d.Set("creation_date", act.CreationDate.Format(time.RFC3339)); err != nil {
-			log.Printf("[DEBUG] Error setting creation_date: %s", err)
+		for _, v := range page.Activities {
+			if name == aws.ToString(v.Name) {
+				output = append(output, v)
+			}
 		}
 	}
 
-	if rnm, ok := d.GetOk("arn"); ok {
-		arn := rnm.(string)
-		params := &sfn.DescribeActivityInput{
-			ActivityArn: aws.String(arn),
-		}
-
-		act, err := conn.DescribeActivity(params)
-		if err != nil {
-			return fmt.Errorf("Error describing activities: %w", err)
-		}
-
-		if act == nil {
-			return fmt.Errorf("No activity found with arn %s in this region", arn)
-		}
-
-		d.SetId(aws.StringValue(act.ActivityArn))
-		d.Set("name", act.Name)
-		d.Set("arn", act.ActivityArn)
-		if err := d.Set("creation_date", act.CreationDate.Format(time.RFC3339)); err != nil {
-			log.Printf("[DEBUG] Error setting creation_date: %s", err)
-		}
-	}
-
-	return nil
+	return output, nil
 }

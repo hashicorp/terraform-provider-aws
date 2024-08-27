@@ -1,42 +1,55 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
-	"fmt"
-	"log"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/rds/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceSubnetGroup() *schema.Resource {
+// @SDKDataSource("aws_db_subnet_group", name="DB Subnet Group")
+func dataSourceSubnetGroup() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceSubnetGroupRead,
+		ReadWithoutTimeout: dataSourceSubnetGroupRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"subnet_ids": {
+			names.AttrSubnetIDs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"vpc_id": {
+			"supported_network_types": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -44,46 +57,26 @@ func DataSourceSubnetGroup() *schema.Resource {
 	}
 }
 
-func dataSourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+func dataSourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
-	name := d.Get("name").(string)
+	v, err := findDBSubnetGroupByName(ctx, conn, d.Get(names.AttrName).(string))
 
-	opts := &rds.DescribeDBSubnetGroupsInput{
-		DBSubnetGroupName: aws.String(name),
-	}
-
-	log.Printf("[DEBUG] Reading DB SubnetGroup: %s", name)
-
-	resp, err := conn.DescribeDBSubnetGroups(opts)
 	if err != nil {
-		return fmt.Errorf("error reading DB SubnetGroup (%s): %w", name, err)
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("RDS DB Subnet Group", err))
 	}
 
-	if resp == nil || resp.DBSubnetGroups == nil {
-		return fmt.Errorf("error reading DB SubnetGroup (%s): empty response", name)
-	}
-	if len(resp.DBSubnetGroups) > 1 {
-		return fmt.Errorf("Your query returned more than one result. Please try a more specific search criteria.")
-	}
+	d.SetId(aws.ToString(v.DBSubnetGroupName))
+	d.Set(names.AttrARN, v.DBSubnetGroupArn)
+	d.Set(names.AttrDescription, v.DBSubnetGroupDescription)
+	d.Set(names.AttrName, v.DBSubnetGroupName)
+	d.Set(names.AttrStatus, v.SubnetGroupStatus)
+	d.Set(names.AttrSubnetIDs, tfslices.ApplyToAll(v.Subnets, func(v types.Subnet) string {
+		return aws.ToString(v.SubnetIdentifier)
+	}))
+	d.Set("supported_network_types", v.SupportedNetworkTypes)
+	d.Set(names.AttrVPCID, v.VpcId)
 
-	dbSubnetGroup := resp.DBSubnetGroups[0]
-
-	d.SetId(aws.StringValue(dbSubnetGroup.DBSubnetGroupName))
-	d.Set("arn", dbSubnetGroup.DBSubnetGroupArn)
-	d.Set("description", dbSubnetGroup.DBSubnetGroupDescription)
-	d.Set("name", dbSubnetGroup.DBSubnetGroupName)
-	d.Set("status", dbSubnetGroup.SubnetGroupStatus)
-
-	subnets := make([]string, 0, len(dbSubnetGroup.Subnets))
-	for _, v := range dbSubnetGroup.Subnets {
-		subnets = append(subnets, aws.StringValue(v.SubnetIdentifier))
-	}
-	if err := d.Set("subnet_ids", subnets); err != nil {
-		return fmt.Errorf("error setting subnet_ids: %w", err)
-	}
-
-	d.Set("vpc_id", dbSubnetGroup.VpcId)
-
-	return nil
+	return diags
 }

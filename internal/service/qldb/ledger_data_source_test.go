@@ -1,58 +1,58 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package qldb_test
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/qldb"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccQLDBLedgerDataSource_basic(t *testing.T) {
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(7)) // QLDB name cannot be longer than 32 characters
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_qldb_ledger.test"
+	datasourceName := "data.aws_qldb_ledger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(qldb.EndpointsID, t) },
-		ErrorCheck: acctest.ErrorCheck(t, qldb.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.QLDBEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.QLDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLedgerDataSourceConfig(rName),
+				Config: testAccLedgerDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair("data.aws_qldb_ledger.by_name", "arn", "aws_qldb_ledger.tf_test", "arn"),
-					resource.TestCheckResourceAttrPair("data.aws_qldb_ledger.by_name", "deletion_protection", "aws_qldb_ledger.tf_test", "deletion_protection"),
-					resource.TestCheckResourceAttrPair("data.aws_qldb_ledger.by_name", "name", "aws_qldb_ledger.tf_test", "name"),
-					resource.TestCheckResourceAttrPair("data.aws_qldb_ledger.by_name", "permissions_mode", "aws_qldb_ledger.tf_test", "permissions_mode"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDeletionProtection, resourceName, names.AttrDeletionProtection),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrKMSKey, resourceName, names.AttrKMSKey),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(datasourceName, "permissions_mode", resourceName, "permissions_mode"),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 				),
 			},
 		},
 	})
 }
 
-func testAccLedgerDataSourceConfig(rName string) string {
+func testAccLedgerDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_qldb_ledger" "tf_wrong1" {
-  name                = "%[1]s1"
+resource "aws_qldb_ledger" "test" {
+  name                = %[1]q
   permissions_mode    = "STANDARD"
   deletion_protection = false
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
-resource "aws_qldb_ledger" "tf_test" {
-  name                = "%[1]s2"
-  permissions_mode    = "STANDARD"
-  deletion_protection = false
-}
-
-resource "aws_qldb_ledger" "tf_wrong2" {
-  name                = "%[1]s3"
-  permissions_mode    = "STANDARD"
-  deletion_protection = false
-}
-
-data "aws_qldb_ledger" "by_name" {
-  name = aws_qldb_ledger.tf_test.name
+data "aws_qldb_ledger" "test" {
+  name = aws_qldb_ledger.test.id
 }
 `, rName)
 }

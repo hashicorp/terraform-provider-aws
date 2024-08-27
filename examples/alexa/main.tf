@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 terraform {
   required_version = ">= 0.12"
 }
@@ -21,7 +24,7 @@ resource "aws_lambda_function" "default" {
   function_name    = "terraform_lambda_alexa_example"
   role             = aws_iam_role.default.arn
   handler          = "lambda_function.lambda_handler"
-  runtime          = "python3.6"
+  runtime          = "python3.9"
 }
 
 resource "aws_iam_role" "default" {

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package pgpkeys
 
 import (
@@ -7,11 +10,13 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/keybase/go-crypto/openpgp"
-	"github.com/keybase/go-crypto/openpgp/packet"
+	"github.com/ProtonMail/go-crypto/openpgp"
+	"github.com/ProtonMail/go-crypto/openpgp/packet"
 )
 
 func TestFetchKeybasePubkeys(t *testing.T) {
+	t.Parallel()
+
 	testset := []string{"keybase:jefferai", "keybase:hashicorp"}
 	ret, err := FetchKeybasePubkeys(testset)
 	if err != nil {

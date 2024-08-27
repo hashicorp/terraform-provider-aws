@@ -16,12 +16,12 @@ Provides a CloudWatch Metric Alarm resource.
 resource "aws_cloudwatch_metric_alarm" "foobar" {
   alarm_name                = "terraform-test-foobar5"
   comparison_operator       = "GreaterThanOrEqualToThreshold"
-  evaluation_periods        = "2"
+  evaluation_periods        = 2
   metric_name               = "CPUUtilization"
   namespace                 = "AWS/EC2"
-  period                    = "120"
+  period                    = 120
   statistic                 = "Average"
-  threshold                 = "80"
+  threshold                 = 80
   alarm_description         = "This metric monitors ec2 cpu utilization"
   insufficient_data_actions = []
 }
@@ -41,12 +41,12 @@ resource "aws_autoscaling_policy" "bat" {
 resource "aws_cloudwatch_metric_alarm" "bat" {
   alarm_name          = "terraform-test-foobar5"
   comparison_operator = "GreaterThanOrEqualToThreshold"
-  evaluation_periods  = "2"
+  evaluation_periods  = 2
   metric_name         = "CPUUtilization"
   namespace           = "AWS/EC2"
-  period              = "120"
+  period              = 120
   statistic           = "Average"
-  threshold           = "80"
+  threshold           = 80
 
   dimensions = {
     AutoScalingGroupName = aws_autoscaling_group.bar.name
@@ -63,8 +63,8 @@ resource "aws_cloudwatch_metric_alarm" "bat" {
 resource "aws_cloudwatch_metric_alarm" "foobar" {
   alarm_name                = "terraform-test-foobar"
   comparison_operator       = "GreaterThanOrEqualToThreshold"
-  evaluation_periods        = "2"
-  threshold                 = "10"
+  evaluation_periods        = 2
+  threshold                 = 10
   alarm_description         = "Request error rate has exceeded 10%"
   insufficient_data_actions = []
 
@@ -81,7 +81,7 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
     metric {
       metric_name = "RequestCount"
       namespace   = "AWS/ApplicationELB"
-      period      = "120"
+      period      = 120
       stat        = "Sum"
       unit        = "Count"
 
@@ -97,7 +97,7 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
     metric {
       metric_name = "HTTPCode_ELB_5XX_Count"
       namespace   = "AWS/ApplicationELB"
-      period      = "120"
+      period      = 120
       stat        = "Sum"
       unit        = "Count"
 
@@ -113,7 +113,7 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
 resource "aws_cloudwatch_metric_alarm" "xx_anomaly_detection" {
   alarm_name                = "terraform-test-foobar"
   comparison_operator       = "GreaterThanUpperThreshold"
-  evaluation_periods        = "2"
+  evaluation_periods        = 2
   threshold_metric_id       = "e1"
   alarm_description         = "This metric monitors ec2 cpu utilization"
   insufficient_data_actions = []
@@ -131,7 +131,7 @@ resource "aws_cloudwatch_metric_alarm" "xx_anomaly_detection" {
     metric {
       metric_name = "CPUUtilization"
       namespace   = "AWS/EC2"
-      period      = "120"
+      period      = 120
       stat        = "Average"
       unit        = "Count"
 
@@ -149,10 +149,10 @@ resource "aws_cloudwatch_metric_alarm" "xx_anomaly_detection" {
 resource "aws_cloudwatch_metric_alarm" "nlb_healthyhosts" {
   alarm_name          = "alarmname"
   comparison_operator = "LessThanThreshold"
-  evaluation_periods  = "1"
+  evaluation_periods  = 1
   metric_name         = "HealthyHostCount"
   namespace           = "AWS/NetworkELB"
-  period              = "60"
+  period              = 60
   statistic           = "Average"
   threshold           = var.logstash_servers_count
   alarm_description   = "Number of healthy nodes in Target Group"
@@ -174,7 +174,7 @@ You must choose one or the other
 See [related part of AWS Docs](https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_PutMetricAlarm.html)
 for details about valid values.
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `alarm_name` - (Required) The descriptive name for the alarm. This name must be unique within the user's AWS account
 * `comparison_operator` - (Required) The arithmetic operation to use when comparing the specified Statistic and Threshold. The specified Statistic value is used as the first operand. Either of the following is supported: `GreaterThanOrEqualToThreshold`, `GreaterThanThreshold`, `LessThanThreshold`, `LessThanOrEqualToThreshold`. Additionally, the values  `LessThanLowerOrGreaterThanUpperThreshold`, `LessThanLowerThreshold`, and `GreaterThanUpperThreshold` are used only for alarms based on anomaly detection models.
@@ -184,6 +184,7 @@ The following arguments are supported:
 * `namespace` - (Optional) The namespace for the alarm's associated metric. See docs for the [list of namespaces](https://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/aws-namespaces.html).
   See docs for [supported metrics](https://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/CW_Support_For_AWS.html).
 * `period` - (Optional) The period in seconds over which the specified `statistic` is applied.
+  Valid values are `10`, `30`, or any multiple of `60`.
 * `statistic` - (Optional) The statistic to apply to the alarm's associated metric.
    Either of the following is supported: `SampleCount`, `Average`, `Sum`, `Minimum`, `Maximum`
 * `threshold` - (Optional) The value against which the specified statistic is compared. This parameter is required for alarms based on static thresholds, but should not be used for alarms based on anomaly detection models.
@@ -198,14 +199,12 @@ The following arguments are supported:
 * `unit` - (Optional) The unit for the alarm's associated metric.
 * `extended_statistic` - (Optional) The percentile statistic for the metric associated with the alarm. Specify a value between p0.0 and p100.
 * `treat_missing_data` - (Optional) Sets how this alarm is to handle missing data points. The following values are supported: `missing`, `ignore`, `breaching` and `notBreaching`. Defaults to `missing`.
-* `evaluate_low_sample_count_percentiles` - (Optional) Used only for alarms
-based on percentiles. If you specify `ignore`, the alarm state will not
-change during periods with too few data points to be statistically significant.
-If you specify `evaluate` or omit this parameter, the alarm will always be
-evaluated and possibly change state no matter how many data points are available.
+* `evaluate_low_sample_count_percentiles` - (Optional) Used only for alarms based on percentiles.
+  If you specify `ignore`, the alarm state will not change during periods with too few data points to be statistically significant.
+  If you specify `evaluate` or omit this parameter, the alarm will always be evaluated and possibly change state no matter how many data points are available.
 The following values are supported: `ignore`, and `evaluate`.
 * `metric_query` (Optional) Enables you to create an alarm based on a metric math expression. You may specify at most 20.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ~> **NOTE:**  If you specify at least one `metric_query`, you may not specify a `metric_name`, `namespace`, `period` or `statistic`. If you do not specify a `metric_query`, you must specify each of these (although you may use `extended_statistic` instead of `statistic`).
 
@@ -217,8 +216,11 @@ The following values are supported: `ignore`, and `evaluate`.
 * `account_id` - (Optional) The ID of the account where the metrics are located, if this is a cross-account alarm.
 * `expression` - (Optional) The math expression to be performed on the returned data, if this object is performing a math expression. This expression can use the id of the other metrics to refer to those metrics, and can also use the id of other expressions to use the result of those expressions. For more information about metric math expressions, see Metric Math Syntax and Functions in the [Amazon CloudWatch User Guide](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/using-metric-math.html#metric-math-syntax).
 * `label` - (Optional) A human-readable label for this metric or expression. This is especially useful if this is an expression, so that you know what the value represents.
-* `return_data` (Optional) Specify exactly one `metric_query` to be `true` to use that `metric_query` result as the alarm.
-* `metric` (Optional) The metric to be returned, along with statistics, period, and units. Use this parameter only if this object is retrieving a metric and not performing a math expression on returned data.
+* `metric` - (Optional) The metric to be returned, along with statistics, period, and units. Use this parameter only if this object is retrieving a metric and not performing a math expression on returned data.
+* `period` - (Optional) Granularity in seconds of returned data points.
+  For metrics with regular resolution, valid values are any multiple of `60`.
+  For high-resolution metrics, valid values are `1`, `5`, `10`, `30`, or any multiple of `60`.
+* `return_data` - (Optional) Specify exactly one `metric_query` to be `true` to use that `metric_query` result as the alarm.
 
 ~> **NOTE:**  You must specify either `metric` or `expression`. Not both.
 
@@ -229,24 +231,34 @@ The following values are supported: `ignore`, and `evaluate`.
   See docs for [supported metrics](https://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/CW_Support_For_AWS.html).
 * `namespace` - (Required) The namespace for this metric. See docs for the [list of namespaces](https://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/aws-namespaces.html).
   See docs for [supported metrics](https://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/CW_Support_For_AWS.html).
-* `period` - (Required) The period in seconds over which the specified `stat` is applied.
+* `period` - (Required) Granularity in seconds of returned data points.
+  For metrics with regular resolution, valid values are any multiple of `60`.
+  For high-resolution metrics, valid values are `1`, `5`, `10`, `30`, or any multiple of `60`.
 * `stat` - (Required) The statistic to apply to this metric.
    See docs for [supported statistics](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Statistics-definitions.html).
 * `unit` - (Optional) The unit for this metric.
 
+## Attribute Reference
 
-## Attributes Reference
-
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the CloudWatch Metric Alarm.
 * `id` - The ID of the health check.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-CloudWatch Metric Alarm can be imported using the `alarm_name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch Metric Alarm using the `alarm_name`. For example:
 
+```terraform
+import {
+  to = aws_cloudwatch_metric_alarm.test
+  id = "alarm-12345"
+}
 ```
-$ terraform import aws_cloudwatch_metric_alarm.test alarm-12345
+
+Using `terraform import`, import CloudWatch Metric Alarm using the `alarm_name`. For example:
+
+```console
+% terraform import aws_cloudwatch_metric_alarm.test alarm-12345
 ```

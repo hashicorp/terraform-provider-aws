@@ -1,68 +1,89 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package qldb
 
 import (
-	"fmt"
-	"log"
-	"regexp"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/qldb"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceLedger() *schema.Resource {
+// @SDKDataSource("aws_qldb_ledger")
+func dataSourceLedger() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceLedgerRead,
+		ReadWithoutTimeout: dataSourceLedgerRead,
+
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"name": {
+			names.AttrDeletionProtection: {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			names.AttrKMSKey: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 32),
-					validation.StringMatch(regexp.MustCompile(`^[A-Za-z0-9_-]+`), "must contain only alphanumeric characters, underscores, and hyphens"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+`), "must contain only alphanumeric characters, underscores, and hyphens"),
 				),
 			},
-
 			"permissions_mode": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"deletion_protection": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
-func dataSourceLedgerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).QLDBConn
+func dataSourceLedgerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).QLDBClient(ctx)
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	target := d.Get("name")
-
-	req := &qldb.DescribeLedgerInput{
-		Name: aws.String(target.(string)),
-	}
-
-	log.Printf("[DEBUG] Reading QLDB Ledger: %s", req)
-	resp, err := conn.DescribeLedger(req)
+	name := d.Get(names.AttrName).(string)
+	ledger, err := findLedgerByName(ctx, conn, name)
 
 	if err != nil {
-		return fmt.Errorf("Error describing ledger: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading QLDB Ledger (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(resp.Name))
-	d.Set("arn", resp.Arn)
-	d.Set("deletion_protection", resp.DeletionProtection)
-	d.Set("permissions_mode", resp.PermissionsMode)
+	d.SetId(aws.ToString(ledger.Name))
+	d.Set(names.AttrARN, ledger.Arn)
+	d.Set(names.AttrDeletionProtection, ledger.DeletionProtection)
+	if ledger.EncryptionDescription != nil {
+		d.Set(names.AttrKMSKey, ledger.EncryptionDescription.KmsKeyArn)
+	} else {
+		d.Set(names.AttrKMSKey, nil)
+	}
+	d.Set(names.AttrName, ledger.Name)
+	d.Set("permissions_mode", ledger.PermissionsMode)
 
-	return nil
+	tags, err := listTags(ctx, conn, d.Get(names.AttrARN).(string))
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "listing tags for QLDB Ledger (%s): %s", d.Id(), err)
+	}
+
+	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
+	}
+
+	return diags
 }

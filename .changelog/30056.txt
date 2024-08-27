@@ -1,0 +1,11 @@
+```release-note:bug    
+resource/aws_lightsail_domain_entry: Moved the error handling of an improperly formatted ID to be before attempting to access the id_parts. This will cause a proper empty resource message instead of a panic when ID is not properly formed.
+```
+
+```release-note:bug    
+resource/aws_lightsail_instance: Added a check to ensure that the availability_zone value is within the current region of the provider.
+```
+
+```release-note:bug    
+resource/aws_lightsail_domain_entry: Allow for the domain entry to begin with an underscore.
+```

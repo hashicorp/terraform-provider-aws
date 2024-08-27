@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package memorydb
 
@@ -8,14 +8,14 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/memorydb"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/memorydb"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_memorydb_acl", &resource.Sweeper{
 		Name: "aws_memorydb_acl",
 		F:    sweepACLs,
@@ -63,46 +63,45 @@ func init() {
 }
 
 func sweepACLs(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).MemoryDBConn
+	conn := client.MemoryDBClient(ctx)
 	input := &memorydb.DescribeACLsInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = describeACLsPages(conn, input, func(page *memorydb.DescribeACLsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := memorydb.NewDescribeACLsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping MemoryDB ACL sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing MemoryDB ACLs (%s): %w", region, err)
 		}
 
 		for _, v := range page.ACLs {
-			id := aws.StringValue(v.Name)
+			id := aws.ToString(v.Name)
 
 			if id == "open-access" {
+				log.Printf("[INFO] Skipping MemoryDB ACL %s", id)
 				continue // The open-access ACL cannot be deleted.
 			}
 
-			r := ResourceACL()
+			r := resourceACL()
 			d := r.Data(nil)
 			d.SetId(id)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping MemoryDB ACL sweep for %s: %s", region, err)
-		return nil
 	}
 
-	if err != nil {
-		return fmt.Errorf("error listing MemoryDB ACLs (%s): %w", region, err)
-	}
-
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping MemoryDB ACLs (%s): %w", region, err)
@@ -112,40 +111,38 @@ func sweepACLs(region string) error {
 }
 
 func sweepClusters(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).MemoryDBConn
+	conn := client.MemoryDBClient(ctx)
 	input := &memorydb.DescribeClustersInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = describeClustersPages(conn, input, func(page *memorydb.DescribeClustersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := memorydb.NewDescribeClustersPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping MemoryDB Cluster sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing MemoryDB Clusters (%s): %w", region, err)
 		}
 
 		for _, v := range page.Clusters {
-			r := ResourceCluster()
+			r := resourceCluster()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.Name))
+			d.SetId(aws.ToString(v.Name))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping MemoryDB Cluster sweep for %s: %s", region, err)
-		return nil
 	}
 
-	if err != nil {
-		return fmt.Errorf("error listing MemoryDB Clusters (%s): %w", region, err)
-	}
-
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping MemoryDB Clusters (%s): %w", region, err)
@@ -155,46 +152,45 @@ func sweepClusters(region string) error {
 }
 
 func sweepParameterGroups(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).MemoryDBConn
+	conn := client.MemoryDBClient(ctx)
 	input := &memorydb.DescribeParameterGroupsInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = describeParameterGroupsPages(conn, input, func(page *memorydb.DescribeParameterGroupsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := memorydb.NewDescribeParameterGroupsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping MemoryDB Parameter Group sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing MemoryDB Parameter Groups (%s): %w", region, err)
 		}
 
 		for _, v := range page.ParameterGroups {
-			id := aws.StringValue(v.Name)
+			id := aws.ToString(v.Name)
 
 			if strings.HasPrefix(id, "default.") {
+				log.Printf("[INFO] Skipping MemoryDB Parameter Group %s", id)
 				continue // Default parameter groups cannot be deleted.
 			}
 
-			r := ResourceParameterGroup()
+			r := resourceParameterGroup()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.Name))
+			d.SetId(aws.ToString(v.Name))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping MemoryDB Parameter Group sweep for %s: %s", region, err)
-		return nil
 	}
 
-	if err != nil {
-		return fmt.Errorf("error listing MemoryDB Parameter Groups (%s): %w", region, err)
-	}
-
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping MemoryDB Parameter Groups (%s): %w", region, err)
@@ -204,40 +200,38 @@ func sweepParameterGroups(region string) error {
 }
 
 func sweepSnapshots(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).MemoryDBConn
+	conn := client.MemoryDBClient(ctx)
 	input := &memorydb.DescribeSnapshotsInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = describeSnapshotsPages(conn, input, func(page *memorydb.DescribeSnapshotsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := memorydb.NewDescribeSnapshotsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping MemoryDB Snapshot sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing MemoryDB Snapshots (%s): %w", region, err)
 		}
 
 		for _, v := range page.Snapshots {
-			r := ResourceSnapshot()
+			r := resourceSnapshot()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.Name))
+			d.SetId(aws.ToString(v.Name))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping MemoryDB Snapshot sweep for %s: %s", region, err)
-		return nil
 	}
 
-	if err != nil {
-		return fmt.Errorf("error listing MemoryDB Snapshots (%s): %w", region, err)
-	}
-
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping MemoryDB Snapshots (%s): %w", region, err)
@@ -247,46 +241,45 @@ func sweepSnapshots(region string) error {
 }
 
 func sweepSubnetGroups(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).MemoryDBConn
+	conn := client.MemoryDBClient(ctx)
 	input := &memorydb.DescribeSubnetGroupsInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = describeSubnetGroupsPages(conn, input, func(page *memorydb.DescribeSubnetGroupsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := memorydb.NewDescribeSubnetGroupsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping MemoryDB Subnet Group sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing MemoryDB Subnet Groups (%s): %w", region, err)
 		}
 
 		for _, v := range page.SubnetGroups {
-			id := aws.StringValue(v.Name)
+			id := aws.ToString(v.Name)
 
 			if id == "default" {
+				log.Printf("[INFO] Skipping MemoryDB Subnet Group %s", id)
 				continue // The default subnet group cannot be deleted.
 			}
 
-			r := ResourceSubnetGroup()
+			r := resourceSubnetGroup()
 			d := r.Data(nil)
 			d.SetId(id)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping MemoryDB Subnet Group sweep for %s: %s", region, err)
-		return nil
 	}
 
-	if err != nil {
-		return fmt.Errorf("error listing MemoryDB Subnet Groups (%s): %w", region, err)
-	}
-
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping MemoryDB Subnet Groups (%s): %w", region, err)
@@ -296,46 +289,45 @@ func sweepSubnetGroups(region string) error {
 }
 
 func sweepUsers(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).MemoryDBConn
+	conn := client.MemoryDBClient(ctx)
 	input := &memorydb.DescribeUsersInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = describeUsersPages(conn, input, func(page *memorydb.DescribeUsersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := memorydb.NewDescribeUsersPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping MemoryDB User sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing MemoryDB Users (%s): %w", region, err)
 		}
 
 		for _, v := range page.Users {
-			id := aws.StringValue(v.Name)
+			id := aws.ToString(v.Name)
 
 			if id == "default" {
+				log.Printf("[INFO] Skipping MemoryDB User %s", id)
 				continue // The default user cannot be deleted.
 			}
 
-			r := ResourceUser()
+			r := resourceUser()
 			d := r.Data(nil)
 			d.SetId(id)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping MemoryDB User sweep for %s: %s", region, err)
-		return nil
 	}
 
-	if err != nil {
-		return fmt.Errorf("error listing MemoryDB Users (%s): %w", region, err)
-	}
-
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping MemoryDB Users (%s): %w", region, err)

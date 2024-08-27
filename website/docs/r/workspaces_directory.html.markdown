@@ -145,12 +145,12 @@ resource "aws_workspaces_ip_group" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `directory_id` - (Required) The directory identifier for registration in WorkSpaces service.
 * `subnet_ids` - (Optional) The identifiers of the subnets where the directory resides.
 * `ip_group_ids` - The identifiers of the IP access control groups associated with the directory.
-* `tags` – (Optional) A map of tags assigned to the WorkSpaces directory. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` – (Optional) A map of tags assigned to the WorkSpaces directory. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `self_service_permissions` – (Optional) Permissions to enable or disable self-service capabilities. Defined below.
 * `workspace_access_properties` – (Optional) Specifies which devices and operating systems users can use to access their WorkSpaces. Defined below.
 * `workspace_creation_properties` – (Optional) Default properties that are used for creating WorkSpaces. Defined below.
@@ -184,9 +184,9 @@ The following arguments are supported:
 * `enable_maintenance_mode` – (Optional) Indicates whether maintenance mode is enabled for your WorkSpaces. For more information, see [WorkSpace Maintenance](https://docs.aws.amazon.com/workspaces/latest/adminguide/workspace-maintenance.html)..
 * `user_enabled_as_local_administrator` – (Optional) Indicates whether users are local administrators of their WorkSpaces.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The WorkSpaces directory identifier.
 * `alias` - The directory alias.
@@ -197,13 +197,22 @@ In addition to all arguments above, the following attributes are exported:
 * `iam_role_id` - The identifier of the IAM role. This is the role that allows Amazon WorkSpaces to make calls to other services, such as Amazon EC2, on your behalf.
 * `ip_group_ids` - The identifiers of the IP access control groups associated with the directory.
 * `registration_code` - The registration code for the directory. This is the code that users enter in their Amazon WorkSpaces client application to connect to the directory.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `workspace_security_group_id` - The identifier of the security group that is assigned to new WorkSpaces.
 
 ## Import
 
-Workspaces directory can be imported using the directory ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Workspaces directory using the directory ID. For example:
 
+```terraform
+import {
+  to = aws_workspaces_directory.main
+  id = "d-4444444444"
+}
 ```
-$ terraform import aws_workspaces_directory.main d-4444444444
+
+Using `terraform import`, import Workspaces directory using the directory ID. For example:
+
+```console
+% terraform import aws_workspaces_directory.main d-4444444444
 ```

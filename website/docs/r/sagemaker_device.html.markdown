@@ -1,14 +1,14 @@
 ---
-subcategory: "Sagemaker"
+subcategory: "SageMaker"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_device"
 description: |-
-  Provides a Sagemaker Device resource.
+  Provides a SageMaker Device resource.
 ---
 
 # Resource: aws_sagemaker_device
 
-Provides a Sagemaker Device resource.
+Provides a SageMaker Device resource.
 
 ## Example Usage
 
@@ -26,10 +26,9 @@ resource "aws_sagemaker_device" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `device_fleet_name` - (Required) The name of the Device Fleet.
-* `role_arn` - (Required) The Amazon Resource Name (ARN) that has access to AWS Internet of Things (IoT).
 * `device` - (Required) The device to register with SageMaker Edge Manager. See [Device](#device) details below.
 
 ### Device
@@ -38,17 +37,26 @@ The following arguments are supported:
 * `device_name` - (Optional) The name of the device.
 * `iot_thing_name` - (Optional) Amazon Web Services Internet of Things (IoT) object name.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The id is constructed from `device-fleet-name/device-name`.
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this Device.
 
 ## Import
 
-Sagemaker Devices can be imported using the `device-fleet-name/device-name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker Devices using the `device-fleet-name/device-name`. For example:
 
+```terraform
+import {
+  to = aws_sagemaker_device.example
+  id = "my-fleet/my-device"
+}
 ```
-$ terraform import aws_sagemaker_device.example my-fleet/my-device
+
+Using `terraform import`, import SageMaker Devices using the `device-fleet-name/device-name`. For example:
+
+```console
+% terraform import aws_sagemaker_device.example my-fleet/my-device
 ```

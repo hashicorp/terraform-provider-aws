@@ -1,48 +1,53 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package opsworks
 
 import (
-	"github.com/aws/aws-sdk-go/service/opsworks"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/opsworks/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func ResourceRailsAppLayer() *schema.Resource {
+// @SDKResource("aws_opsworks_rails_app_layer", name="Rails App Layer")
+// @Tags(identifierAttribute="arn")
+func resourceRailsAppLayer() *schema.Resource {
 	layerType := &opsworksLayerType{
-		TypeName:         opsworks.LayerTypeRailsApp,
+		TypeName:         awstypes.LayerTypeRailsApp,
 		DefaultLayerName: "Rails App Server",
 
 		Attributes: map[string]*opsworksLayerTypeAttribute{
-			"ruby_version": {
-				AttrName: opsworks.LayerAttributesKeysRubyVersion,
-				Type:     schema.TypeString,
-				Default:  "2.0.0",
-			},
 			"app_server": {
-				AttrName: opsworks.LayerAttributesKeysRailsStack,
+				AttrName: awstypes.LayerAttributesKeysRailsStack,
 				Type:     schema.TypeString,
 				Default:  "apache_passenger",
 			},
-			"passenger_version": {
-				AttrName: opsworks.LayerAttributesKeysPassengerVersion,
+			"bundler_version": {
+				AttrName: awstypes.LayerAttributesKeysBundlerVersion,
 				Type:     schema.TypeString,
-				Default:  "4.0.46",
-			},
-			"rubygems_version": {
-				AttrName: opsworks.LayerAttributesKeysRubygemsVersion,
-				Type:     schema.TypeString,
-				Default:  "2.2.2",
+				Default:  "1.5.3",
 			},
 			"manage_bundler": {
-				AttrName: opsworks.LayerAttributesKeysManageBundler,
+				AttrName: awstypes.LayerAttributesKeysManageBundler,
 				Type:     schema.TypeBool,
 				Default:  true,
 			},
-			"bundler_version": {
-				AttrName: opsworks.LayerAttributesKeysBundlerVersion,
+			"passenger_version": {
+				AttrName: awstypes.LayerAttributesKeysPassengerVersion,
 				Type:     schema.TypeString,
-				Default:  "1.5.3",
+				Default:  "4.0.46",
+			},
+			"ruby_version": {
+				AttrName: awstypes.LayerAttributesKeysRubyVersion,
+				Type:     schema.TypeString,
+				Default:  "2.0.0",
+			},
+			"rubygems_version": {
+				AttrName: awstypes.LayerAttributesKeysRubygemsVersion,
+				Type:     schema.TypeString,
+				Default:  "2.2.2",
 			},
 		},
 	}
 
-	return layerType.SchemaResource()
+	return layerType.resourceSchema()
 }

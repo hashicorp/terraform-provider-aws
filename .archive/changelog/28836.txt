@@ -1,0 +1,19 @@
+```release-note:bug
+resource/aws_iam_group_policy: Improve refresh to avoid unnecessary diffs in `policy`
+```
+
+```release-note:bug
+resource/aws_iam_policy: Improve refresh to avoid unnecessary diffs in `policy`, `tags`
+```
+
+```release-note:bug
+resource/aws_iam_role: Improve refresh to avoid unnecessary diffs in `inline_policy.*.policy`, `tags`
+```
+
+```release-note:bug
+resource/aws_iam_role_policy: Improve refresh to avoid unnecessary diffs in `policy`
+```
+
+```release-note:bug
+resource/aws_iam_user_policy: Improve refresh to avoid unnecessary diffs in `policy`
+```

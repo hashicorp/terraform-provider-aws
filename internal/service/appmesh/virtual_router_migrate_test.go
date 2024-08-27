@@ -1,13 +1,20 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appmesh_test
 
 import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfappmesh "github.com/hashicorp/terraform-provider-aws/internal/service/appmesh"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestVirtualRouterMigrateState(t *testing.T) {
+	t.Parallel()
+
 	cases := map[string]struct {
 		StateVersion int
 		Attributes   map[string]string
@@ -17,25 +24,25 @@ func TestVirtualRouterMigrateState(t *testing.T) {
 		"v0_1-emptySpec": {
 			StateVersion: 0,
 			Attributes: map[string]string{
-				"name":   "svcb",
-				"spec.#": "1",
+				names.AttrName: "svcb",
+				"spec.#":       acctest.Ct1,
 			},
 			Expected: map[string]string{
-				"name":   "svcb",
-				"spec.#": "1",
+				names.AttrName: "svcb",
+				"spec.#":       acctest.Ct1,
 			},
 		},
 		"v0_1-nonEmptySpec": {
 			StateVersion: 0,
 			Attributes: map[string]string{
-				"name":                           "svcb",
-				"spec.#":                         "1",
-				"spec.0.service_names.#":         "1",
+				names.AttrName:                   "svcb",
+				"spec.#":                         acctest.Ct1,
+				"spec.0.service_names.#":         acctest.Ct1,
 				"spec.0.service_names.423761483": "serviceb.simpleapp.local",
 			},
 			Expected: map[string]string{
-				"name":   "svcb",
-				"spec.#": "1",
+				names.AttrName: "svcb",
+				"spec.#":       acctest.Ct1,
 			},
 		},
 	}

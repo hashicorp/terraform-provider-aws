@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_autoscaling_policy: Add `metrics` to the `target_tracking_configuration.customized_metric_specification` configuration block in support of [metric math](https://docs.aws.amazon.com/autoscaling/ec2/userguide/ec2-auto-scaling-target-tracking-metric-math.html)
+```

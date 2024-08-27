@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sqs
 
 import (
@@ -5,6 +8,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func QueuePolicyMigrateState(
@@ -12,14 +16,13 @@ func QueuePolicyMigrateState(
 	switch v {
 	case 0:
 		log.Println("[INFO] Found AWS SQS Query Policy State v0; migrating to v1")
-		return migrateSqsQueuePolicyStateV0toV1(is)
+		return migrateQueuePolicyStateV0toV1(is)
 	default:
 		return is, fmt.Errorf("Unexpected schema version: %d", v)
 	}
 }
 
-func migrateSqsQueuePolicyStateV0toV1(is *terraform.InstanceState) (*terraform.InstanceState, error) {
-
+func migrateQueuePolicyStateV0toV1(is *terraform.InstanceState) (*terraform.InstanceState, error) {
 	if is.Empty() {
 		log.Println("[DEBUG] Empty InstanceState; nothing to migrate.")
 
@@ -28,11 +31,10 @@ func migrateSqsQueuePolicyStateV0toV1(is *terraform.InstanceState) (*terraform.I
 
 	log.Printf("[DEBUG] Attributes before migration: %#v", is.Attributes)
 
-	is.Attributes["id"] = is.Attributes["queue_url"]
+	is.Attributes[names.AttrID] = is.Attributes["queue_url"]
 	is.ID = is.Attributes["queue_url"]
 
 	log.Printf("[DEBUG] Attributes after migration: %#v, new id: %s", is.Attributes, is.Attributes["queue_url"])
 
 	return is, nil
-
 }

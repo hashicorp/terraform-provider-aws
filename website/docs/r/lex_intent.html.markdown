@@ -1,5 +1,5 @@
 ---
-subcategory: "Lex"
+subcategory: "Lex Model Building"
 layout: "aws"
 page_title: "AWS: aws_lex_intent"
 description: |-
@@ -117,7 +117,7 @@ resource "aws_lex_intent" "order_flowers_intent" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `conclusion_statement` - (Optional) The statement that you want Amazon Lex to convey to the user
 after the intent is successfully fulfilled by the Lambda function. This element is relevant only if
@@ -178,7 +178,7 @@ documented below under [statement](#statement).
 Describes how the intent is fulfilled after the user provides all of the information required for the intent.
 
 * `type` - (Required) How the intent should be fulfilled, either by running a Lambda function or by
-returning the slot data to the client application.
+returning the slot data to the client application. Type can be either `ReturnIntent` or `CodeHook`, as documented [here](https://docs.aws.amazon.com/lex/latest/dg/API_FulfillmentActivity.html).
 * `code_hook` - (Optional) A description of the Lambda function that is run to fulfill the intent.
 Required if type is CodeHook. Attributes are documented under [code_hook](#code_hook).
 
@@ -240,18 +240,9 @@ Attributes are documented under [message](#message). Must contain between 1 and 
 slot values into the response card. For more information, see
 [Example: Using a Response Card](https://docs.aws.amazon.com/lex/latest/dg/ex-resp-card.html). Must be less than or equal to 50000 characters in length.
 
-### Timeouts
+## Attribute Reference
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) for certain actions:
-
-* `create` - (Defaults to 1 min) Used when creating the intent
-* `update` - (Defaults to 1 min) Used when updating the intent
-* `delete` - (Defaults to 5 mins) Used when deleting the intent
-
-
-## Attributes Reference
-
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the Lex intent.
 * `checksum` - Checksum identifying the version of the intent that was created. The checksum is not
@@ -260,10 +251,27 @@ included as an argument because the resource will add it automatically when upda
 * `last_updated_date` - The date when the $LATEST version of this intent was updated.
 * `version` - The version of the bot.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `1m`)
+* `update` - (Default `1m`)
+* `delete` - (Default `5m`)
+
 ## Import
 
-Intents can be imported using their name.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import intents using their name. For example:
 
+```terraform
+import {
+  to = aws_lex_intent.order_flowers_intent
+  id = "OrderFlowers"
+}
 ```
-$ terraform import aws_lex_intent.order_flowers_intent OrderFlowers
+
+Using `terraform import`, import intents using their name. For example:
+
+```console
+% terraform import aws_lex_intent.order_flowers_intent OrderFlowers
 ```

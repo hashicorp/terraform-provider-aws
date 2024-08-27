@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_image_builder_image_recipe: Fix regression in 4.3.0 whereby Windows-based images wouldn't build because of the newly introduced `systems_manager_agent.uninstall_after_build` argument.
+```

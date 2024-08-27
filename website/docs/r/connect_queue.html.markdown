@@ -11,8 +11,6 @@ description: |-
 Provides an Amazon Connect Queue resource. For more information see
 [Amazon Connect: Getting Started](https://docs.aws.amazon.com/connect/latest/adminguide/amazon-connect-get-started.html)
 
-~> **NOTE:** Due to The behaviour of Amazon Connect you cannot delete queues.
-
 ## Example Usage
 
 ### Basic
@@ -58,7 +56,7 @@ resource "aws_connect_queue" "test" {
   description           = "Example Description"
   hours_of_operation_id = "12345678-1234-1234-1234-123456789012"
 
-  outbound_caller_config = {
+  outbound_caller_config {
     outbound_caller_id_name      = "example"
     outbound_caller_id_number_id = "12345678-abcd-1234-abcd-123456789012"
     outbound_flow_id             = "87654321-defg-1234-defg-987654321234"
@@ -72,7 +70,7 @@ resource "aws_connect_queue" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `description` - (Optional) Specifies the description of the Queue.
 * `hours_of_operation_id` - (Required) Specifies the identifier of the Hours of Operation.
@@ -82,7 +80,7 @@ The following arguments are supported:
 * `outbound_caller_config` - (Required) A block that defines the outbound caller ID name, number, and outbound whisper flow. The Outbound Caller Config block is documented below.
 * `quick_connect_ids` - (Optional) Specifies a list of quick connects ids that determine the quick connects available to agents who are working the queue.
 * `status` - (Optional) Specifies the description of the Queue. Valid values are `ENABLED`, `DISABLED`.
-* `tags` - (Optional) Tags to apply to the Queue. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Tags to apply to the Queue. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 A `outbound_caller_config` block supports the following arguments:
 
@@ -90,19 +88,28 @@ A `outbound_caller_config` block supports the following arguments:
 * `outbound_caller_id_number_id` - (Optional) Specifies the caller ID number.
 * `outbound_flow_id` - (Optional) Specifies outbound whisper flow to be used during an outbound call.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the Queue.
 * `queue_id` - The identifier for the Queue.
 * `id` - The identifier of the hosting Amazon Connect Instance and identifier of the Queue separated by a colon (`:`).
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-Amazon Connect Queues can be imported using the `instance_id` and `queue_id` separated by a colon (`:`), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Amazon Connect Queues using the `instance_id` and `queue_id` separated by a colon (`:`). For example:
 
+```terraform
+import {
+  to = aws_connect_queue.example
+  id = "f1288a1f-6193-445a-b47e-af739b2:c1d4e5f6-1b3c-1b3c-1b3c-c1d4e5f6c1d4e5"
+}
 ```
-$ terraform import aws_connect_queue.example f1288a1f-6193-445a-b47e-af739b2:c1d4e5f6-1b3c-1b3c-1b3c-c1d4e5f6c1d4e5
+
+Using `terraform import`, import Amazon Connect Queues using the `instance_id` and `queue_id` separated by a colon (`:`). For example:
+
+```console
+% terraform import aws_connect_queue.example f1288a1f-6193-445a-b47e-af739b2:c1d4e5f6-1b3c-1b3c-1b3c-c1d4e5f6c1d4e5
 ```

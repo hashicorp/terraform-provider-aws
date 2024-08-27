@@ -1,62 +1,71 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package opsworks_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/service/opsworks"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/opsworks/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfopsworks "github.com/hashicorp/terraform-provider-aws/internal/service/opsworks"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccOpsWorksInstance_basic(t *testing.T) {
-	stackName := fmt.Sprintf("tf-%d", sdkacctest.RandInt())
-	var opsinst opsworks.Instance
-	resourceName := "aws_opsworks_instance.tf-acc"
+	acctest.Skip(t, "skipping test; Amazon OpsWorks has been deprecated and will be removed in the next major release")
+
+	ctx := acctest.Context(t)
+	var opsinst awstypes.Instance
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_opsworks_instance.test"
 	dataSourceName := "data.aws_availability_zones.available"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.OpsWorks) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceCreateConfig(stackName),
+				Config: testAccInstanceConfig_create(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resourceName, &opsinst),
+					testAccCheckInstanceExists(ctx, resourceName, &opsinst),
 					testAccCheckInstanceAttributes(&opsinst),
 					resource.TestCheckResourceAttr(resourceName, "hostname", "tf-acc1"),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.micro"),
-					resource.TestCheckResourceAttr(resourceName, "state", "stopped"),
-					resource.TestCheckResourceAttr(resourceName, "layer_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "install_updates_on_boot", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "t2.micro"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "stopped"),
+					resource.TestCheckResourceAttr(resourceName, "layer_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "install_updates_on_boot", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "architecture", "x86_64"),
 					resource.TestCheckResourceAttr(resourceName, "tenancy", "default"),
-					resource.TestCheckResourceAttr(resourceName, "os", "Amazon Linux 2016.09"),                       // inherited from opsworks_stack_test
-					resource.TestCheckResourceAttr(resourceName, "root_device_type", "ebs"),                          // inherited from opsworks_stack_test
-					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", dataSourceName, "names.0"), // inherited from opsworks_stack_test
+					resource.TestCheckResourceAttr(resourceName, "os", "Amazon Linux 2016.09"),                              // inherited from opsworks_stack_test
+					resource.TestCheckResourceAttr(resourceName, "root_device_type", "ebs"),                                 // inherited from opsworks_stack_test
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAvailabilityZone, dataSourceName, "names.0"), // inherited from opsworks_stack_test
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"state"}, //state is something we pass to the API and get back as status :(
+				ImportStateVerifyIgnore: []string{names.AttrState}, //state is something we pass to the API and get back as status :(
 			},
 			{
-				Config: testAccInstanceUpdateConfig(stackName),
+				Config: testAccInstanceConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resourceName, &opsinst),
+					testAccCheckInstanceExists(ctx, resourceName, &opsinst),
 					testAccCheckInstanceAttributes(&opsinst),
 					resource.TestCheckResourceAttr(resourceName, "hostname", "tf-acc1"),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.small"),
-					resource.TestCheckResourceAttr(resourceName, "layer_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "t2.small"),
+					resource.TestCheckResourceAttr(resourceName, "layer_ids.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "os", "Amazon Linux 2015.09"),
 					resource.TestCheckResourceAttr(resourceName, "tenancy", "default"),
 				),
@@ -66,20 +75,23 @@ func TestAccOpsWorksInstance_basic(t *testing.T) {
 }
 
 func TestAccOpsWorksInstance_updateHostNameForceNew(t *testing.T) {
-	stackName := fmt.Sprintf("tf-%d", sdkacctest.RandInt())
-	resourceName := "aws_opsworks_instance.tf-acc"
-	var before, after opsworks.Instance
+	acctest.Skip(t, "skipping test; Amazon OpsWorks has been deprecated and will be removed in the next major release")
+
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_opsworks_instance.test"
+	var before, after awstypes.Instance
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.OpsWorks) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceCreateConfig(stackName),
+				Config: testAccInstanceConfig_create(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resourceName, &before),
+					testAccCheckInstanceExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "hostname", "tf-acc1"),
 				),
 			},
@@ -87,12 +99,12 @@ func TestAccOpsWorksInstance_updateHostNameForceNew(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"state"},
+				ImportStateVerifyIgnore: []string{names.AttrState},
 			},
 			{
-				Config: testAccInstanceUpdateHostNameConfig(stackName),
+				Config: testAccInstanceConfig_updateHostName(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resourceName, &after),
+					testAccCheckInstanceExists(ctx, resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "hostname", "tf-acc2"),
 					testAccCheckInstanceRecreated(t, &before, &after),
 				),
@@ -101,8 +113,7 @@ func TestAccOpsWorksInstance_updateHostNameForceNew(t *testing.T) {
 	})
 }
 
-func testAccCheckInstanceRecreated(t *testing.T,
-	before, after *opsworks.Instance) resource.TestCheckFunc {
+func testAccCheckInstanceRecreated(t *testing.T, before, after *awstypes.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if *before.InstanceId == *after.InstanceId {
 			t.Fatalf("Expected change of OpsWorks Instance IDs, but both were %s", *before.InstanceId)
@@ -111,8 +122,31 @@ func testAccCheckInstanceRecreated(t *testing.T,
 	}
 }
 
-func testAccCheckInstanceExists(
-	n string, opsinst *opsworks.Instance) resource.TestCheckFunc {
+func testAccCheckInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksClient(ctx)
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_opsworks_instance" {
+				continue
+			}
+			_, err := tfopsworks.FindInstanceByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("OpsWorks Instance %s still exists", rs.Primary.ID)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckInstanceExists(ctx context.Context, n string, opsinst *awstypes.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -123,84 +157,51 @@ func testAccCheckInstanceExists(
 			return fmt.Errorf("No Opsworks Instance is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksClient(ctx)
 
-		params := &opsworks.DescribeInstancesInput{
-			InstanceIds: []*string{&rs.Primary.ID},
-		}
-		resp, err := conn.DescribeInstances(params)
+		output, err := tfopsworks.FindInstanceByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if v := len(resp.Instances); v != 1 {
-			return fmt.Errorf("Expected 1 request returned, got %d", v)
-		}
-
-		*opsinst = *resp.Instances[0]
+		*opsinst = *output
 
 		return nil
 	}
 }
 
-func testAccCheckInstanceAttributes(
-	opsinst *opsworks.Instance) resource.TestCheckFunc {
+func testAccCheckInstanceAttributes(opsinst *awstypes.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// Depending on the timing, the state could be requested or stopped
-		if *opsinst.Status != "stopped" && *opsinst.Status != "requested" {
+		if aws.ToString(opsinst.Status) != "stopped" && aws.ToString(opsinst.Status) != "requested" {
 			return fmt.Errorf("Unexpected request status: %s", *opsinst.Status)
 		}
-		if *opsinst.Architecture != "x86_64" {
-			return fmt.Errorf("Unexpected architecture: %s", *opsinst.Architecture)
+		if opsinst.Architecture != awstypes.ArchitectureX8664 {
+			return fmt.Errorf("Unexpected architecture: %s", opsinst.Architecture)
 		}
 		if *opsinst.Tenancy != "default" {
 			return fmt.Errorf("Unexpected tenancy: %s", *opsinst.Tenancy)
 		}
-		if *opsinst.InfrastructureClass != "ec2" {
-			return fmt.Errorf("Unexpected infrastructure class: %s", *opsinst.InfrastructureClass)
+		if aws.ToString(opsinst.InfrastructureClass) != "ec2" {
+			return fmt.Errorf("Unexpected infrastructure class: %s", aws.ToString(opsinst.InfrastructureClass))
 		}
-		if *opsinst.RootDeviceType != "ebs" {
-			return fmt.Errorf("Unexpected root device type: %s", *opsinst.RootDeviceType)
+		if opsinst.RootDeviceType != awstypes.RootDeviceTypeEbs {
+			return fmt.Errorf("Unexpected root device type: %s", opsinst.RootDeviceType)
 		}
-		if *opsinst.VirtualizationType != "hvm" {
-			return fmt.Errorf("Unexpected virtualization type: %s", *opsinst.VirtualizationType)
+		if opsinst.VirtualizationType != awstypes.VirtualizationTypeHvm {
+			return fmt.Errorf("Unexpected virtualization type: %s", opsinst.VirtualizationType)
 		}
 		return nil
 	}
 }
 
-func testAccCheckInstanceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_opsworks_instance" {
-			continue
-		}
-		req := &opsworks.DescribeInstancesInput{
-			InstanceIds: []*string{
-				aws.String(rs.Primary.ID),
-			},
-		}
-
-		_, err := conn.DescribeInstances(req)
-		if err != nil {
-			if awserr, ok := err.(awserr.Error); ok {
-				if awserr.Code() == "ResourceNotFoundException" {
-					// not found, good to go
-					return nil
-				}
-			}
-			return err
-		}
-	}
-
-	return fmt.Errorf("Fall through error on OpsWorks instance test")
-}
-
-func testAccInstanceUpdateHostNameConfig(name string) string {
-	return fmt.Sprintf(`
+func testAccInstanceConfig_updateHostName(rName string) string {
+	return acctest.ConfigCompose(
+		testAccStackConfig_vpcCreate(rName),
+		fmt.Sprintf(`
 resource "aws_security_group" "tf-ops-acc-web" {
-  name = "%s-web"
+  name = "%[1]s-web"
 
   ingress {
     from_port   = 80
@@ -211,7 +212,7 @@ resource "aws_security_group" "tf-ops-acc-web" {
 }
 
 resource "aws_security_group" "tf-ops-acc-php" {
-  name = "%s-php"
+  name = "%[1]s-php"
 
   ingress {
     from_port   = 8080
@@ -221,42 +222,42 @@ resource "aws_security_group" "tf-ops-acc-php" {
   }
 }
 
-resource "aws_opsworks_static_web_layer" "tf-acc" {
-  stack_id = aws_opsworks_stack.tf-acc.id
+resource "aws_opsworks_static_web_layer" "test" {
+  stack_id = aws_opsworks_stack.test.id
 
   custom_security_group_ids = [
     aws_security_group.tf-ops-acc-web.id,
   ]
 }
 
-resource "aws_opsworks_php_app_layer" "tf-acc" {
-  stack_id = aws_opsworks_stack.tf-acc.id
+resource "aws_opsworks_php_app_layer" "test" {
+  stack_id = aws_opsworks_stack.test.id
 
   custom_security_group_ids = [
     aws_security_group.tf-ops-acc-php.id,
   ]
 }
 
-resource "aws_opsworks_instance" "tf-acc" {
-  stack_id = aws_opsworks_stack.tf-acc.id
+resource "aws_opsworks_instance" "test" {
+  stack_id = aws_opsworks_stack.test.id
 
   layer_ids = [
-    aws_opsworks_static_web_layer.tf-acc.id,
+    aws_opsworks_static_web_layer.test.id,
   ]
 
   instance_type = "t2.micro"
   state         = "stopped"
   hostname      = "tf-acc2"
 }
-
-%s
-`, name, name, testAccStackVPCCreateConfig(name))
+`, rName))
 }
 
-func testAccInstanceCreateConfig(name string) string {
-	return fmt.Sprintf(`
+func testAccInstanceConfig_create(rName string) string {
+	return acctest.ConfigCompose(
+		testAccStackConfig_vpcCreate(rName),
+		fmt.Sprintf(`
 resource "aws_security_group" "tf-ops-acc-web" {
-  name = "%s-web"
+  name = "%[1]s-web"
 
   ingress {
     from_port   = 80
@@ -267,7 +268,7 @@ resource "aws_security_group" "tf-ops-acc-web" {
 }
 
 resource "aws_security_group" "tf-ops-acc-php" {
-  name = "%s-php"
+  name = "%[1]s-php"
 
   ingress {
     from_port   = 8080
@@ -277,42 +278,42 @@ resource "aws_security_group" "tf-ops-acc-php" {
   }
 }
 
-resource "aws_opsworks_static_web_layer" "tf-acc" {
-  stack_id = aws_opsworks_stack.tf-acc.id
+resource "aws_opsworks_static_web_layer" "test" {
+  stack_id = aws_opsworks_stack.test.id
 
   custom_security_group_ids = [
     aws_security_group.tf-ops-acc-web.id,
   ]
 }
 
-resource "aws_opsworks_php_app_layer" "tf-acc" {
-  stack_id = aws_opsworks_stack.tf-acc.id
+resource "aws_opsworks_php_app_layer" "test" {
+  stack_id = aws_opsworks_stack.test.id
 
   custom_security_group_ids = [
     aws_security_group.tf-ops-acc-php.id,
   ]
 }
 
-resource "aws_opsworks_instance" "tf-acc" {
-  stack_id = aws_opsworks_stack.tf-acc.id
+resource "aws_opsworks_instance" "test" {
+  stack_id = aws_opsworks_stack.test.id
 
   layer_ids = [
-    aws_opsworks_static_web_layer.tf-acc.id,
+    aws_opsworks_static_web_layer.test.id,
   ]
 
   instance_type = "t2.micro"
   state         = "stopped"
   hostname      = "tf-acc1"
 }
-
-%s
-`, name, name, testAccStackVPCCreateConfig(name))
+`, rName))
 }
 
-func testAccInstanceUpdateConfig(name string) string {
-	return fmt.Sprintf(`
+func testAccInstanceConfig_update(rName string) string {
+	return acctest.ConfigCompose(
+		testAccStackConfig_vpcCreate(rName),
+		fmt.Sprintf(`
 resource "aws_security_group" "tf-ops-acc-web" {
-  name = "%s-web"
+  name = "%[1]s-web"
 
   ingress {
     from_port   = 80
@@ -323,7 +324,7 @@ resource "aws_security_group" "tf-ops-acc-web" {
 }
 
 resource "aws_security_group" "tf-ops-acc-php" {
-  name = "%s-php"
+  name = "%[1]s-php"
 
   ingress {
     from_port   = 8080
@@ -333,28 +334,28 @@ resource "aws_security_group" "tf-ops-acc-php" {
   }
 }
 
-resource "aws_opsworks_static_web_layer" "tf-acc" {
-  stack_id = aws_opsworks_stack.tf-acc.id
+resource "aws_opsworks_static_web_layer" "test" {
+  stack_id = aws_opsworks_stack.test.id
 
   custom_security_group_ids = [
     aws_security_group.tf-ops-acc-web.id,
   ]
 }
 
-resource "aws_opsworks_php_app_layer" "tf-acc" {
-  stack_id = aws_opsworks_stack.tf-acc.id
+resource "aws_opsworks_php_app_layer" "test" {
+  stack_id = aws_opsworks_stack.test.id
 
   custom_security_group_ids = [
     aws_security_group.tf-ops-acc-php.id,
   ]
 }
 
-resource "aws_opsworks_instance" "tf-acc" {
-  stack_id = aws_opsworks_stack.tf-acc.id
+resource "aws_opsworks_instance" "test" {
+  stack_id = aws_opsworks_stack.test.id
 
   layer_ids = [
-    aws_opsworks_static_web_layer.tf-acc.id,
-    aws_opsworks_php_app_layer.tf-acc.id,
+    aws_opsworks_static_web_layer.test.id,
+    aws_opsworks_php_app_layer.test.id,
   ]
 
   instance_type = "t2.small"
@@ -366,7 +367,5 @@ resource "aws_opsworks_instance" "tf-acc" {
     update = "15s"
   }
 }
-
-%s
-`, name, name, testAccStackVPCCreateConfig(name))
+`, rName))
 }

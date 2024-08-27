@@ -1,22 +1,29 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package imagebuilder
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKDataSource("aws_imagebuilder_component")
 func DataSourceComponent() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceComponentRead,
+		ReadWithoutTimeout: dataSourceComponentRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -33,23 +40,23 @@ func DataSourceComponent() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"encrypted": {
+			names.AttrEncrypted: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner": {
+			names.AttrOwner: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -62,12 +69,12 @@ func DataSourceComponent() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags": tftags.TagsSchemaComputed(),
-			"type": {
+			names.AttrTags: tftags.TagsSchemaComputed(),
+			names.AttrType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"version": {
+			names.AttrVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -75,48 +82,49 @@ func DataSourceComponent() *schema.Resource {
 	}
 }
 
-func dataSourceComponentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+func dataSourceComponentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &imagebuilder.GetComponentInput{}
 
-	if v, ok := d.GetOk("arn"); ok {
+	if v, ok := d.GetOk(names.AttrARN); ok {
 		input.ComponentBuildVersionArn = aws.String(v.(string))
 	}
 
-	output, err := conn.GetComponent(input)
+	output, err := conn.GetComponentWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error getting Image Builder Component: %w", err)
+		return sdkdiag.AppendErrorf(diags, "getting Image Builder Component: %s", err)
 	}
 
 	if output == nil || output.Component == nil {
-		return fmt.Errorf("error getting Image Builder Component: empty result")
+		return sdkdiag.AppendErrorf(diags, "getting Image Builder Component: empty result")
 	}
 
 	component := output.Component
 
 	d.SetId(aws.StringValue(component.Arn))
 
-	d.Set("arn", component.Arn)
+	d.Set(names.AttrARN, component.Arn)
 	d.Set("change_description", component.ChangeDescription)
 	d.Set("data", component.Data)
 	d.Set("date_created", component.DateCreated)
-	d.Set("description", component.Description)
-	d.Set("encrypted", component.Encrypted)
-	d.Set("kms_key_id", component.KmsKeyId)
-	d.Set("name", component.Name)
-	d.Set("owner", component.Owner)
+	d.Set(names.AttrDescription, component.Description)
+	d.Set(names.AttrEncrypted, component.Encrypted)
+	d.Set(names.AttrKMSKeyID, component.KmsKeyId)
+	d.Set(names.AttrName, component.Name)
+	d.Set(names.AttrOwner, component.Owner)
 	d.Set("platform", component.Platform)
 	d.Set("supported_os_versions", aws.StringValueSlice(component.SupportedOsVersions))
 
-	if err := d.Set("tags", KeyValueTags(component.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+	if err := d.Set(names.AttrTags, KeyValueTags(ctx, component.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	d.Set("type", component.Type)
-	d.Set("version", component.Version)
+	d.Set(names.AttrType, component.Type)
+	d.Set(names.AttrVersion, component.Version)
 
-	return nil
+	return diags
 }

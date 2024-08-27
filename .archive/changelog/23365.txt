@@ -1,0 +1,27 @@
+```release-note:enhancement
+data-source/aws_launch_template: Add `capacity_reservation_specification`, `cpu_options`, `elastic_inference_accelerator` and `license_specification` attributes
+```
+
+```release-note:enhancement
+resource/aws_launch_template: Add `ipv4_prefixes`, `ipv4_prefix_count`, `ipv6_prefixes` and `ipv6_prefix_count` arguments to the `network_interfaces` configuration block
+```
+
+```release-note:enhancement
+data-source/aws_launch_template: Add `ipv4_prefixes`, `ipv4_prefix_count`, `ipv6_prefixes` and `ipv6_prefix_count` attributes to the `network_interfaces` configuration block
+```
+
+```release-note:enhancement
+resource/aws_launch_template: Add `capacity_reservation_resource_group_arn` argument to the `capacity_reservation_specification.capacity_reservation_target` configuration block
+```
+
+```release-note:enhancement
+data-source/aws_launch_template: Add `capacity_reservation_resource_group_arn` attribute to the `capacity_reservation_specification.capacity_reservation_target` configuration block
+```
+
+```release-note:enhancement
+resource/aws_launch_template: Add `private_dns_name_options` argument
+```
+
+```release-note:enhancement
+data-source/aws_launch_template: Add `private_dns_name_options` attribute
+```
