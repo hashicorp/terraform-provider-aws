@@ -116,8 +116,8 @@ issues:
     - linters:
         - tparallel
       text: "TestAcc"
-  max-per-linter: 0
-  max-same-issues: 0
+  max-issues-per-linter: 10
+  max-same-issues: 3
 
 linters:
   disable-all: true

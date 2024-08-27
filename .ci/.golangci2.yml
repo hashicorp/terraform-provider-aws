@@ -1,10 +1,8 @@
 # IMPORTANT: Only add linters whose names start with letters A-M here.
 # Linters starting with N-Z should be placed in .golangci3.yml.
 issues:
-  max-per-linter: 10
-  max-same-issues: 2
-  concurrency: 4
-  go: '1.22.6'
+  max-issues-per-linter: 10
+  max-same-issues: 3
 
 linters:
   disable-all: true
