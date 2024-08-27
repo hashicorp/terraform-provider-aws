@@ -1,4 +1,7 @@
 ```release-note:bug
-resource/aws_neptune_cluster: Default cluster parameter group changed to be a computed value when a cluster parameter group is not provided.
-resource/aws_neptune_cluster_instance: Default instance parameter group changed to be a computed value when a instance parameter group is not provided.
+resource/aws_neptune_cluster: Mark `neptune_cluster_parameter_group_name` as Computed
+```
+
+```release-note:bug
+resource/aws_neptune_cluster_instance: Mark `neptune_parameter_group_name` as Computed
 ```
