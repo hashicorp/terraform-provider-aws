@@ -34,7 +34,7 @@ linters-settings:
   dogsled:
     max-blank-identifiers: 3
   errcheck:
-    ignore: github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema:Set
+    ignore: github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema:ForceNew|Set
     # "ignore" is deprecated but "exclude-functions" doesn't seem to work or the syntax is non-obvious.
     # https://github.com/kisielk/errcheck#excluding-functions
     # Under exclude-functions are the various attempts at getting it to work, all of which result in d.Set being linted everywhere.
