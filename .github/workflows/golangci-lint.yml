@@ -72,7 +72,7 @@ jobs:
           # Trigger garbage collection more frequently to reduce the likelihood
           # of OOM errors.
           # ref: https://golangci-lint.run/product/performance/
-          GOGC: "120"
+          GOGC: "150"
   golangci-lintc:
     name: 3 of 3
     needs: [golangci-linta]
@@ -100,4 +100,4 @@ jobs:
           # Trigger garbage collection more frequently to reduce the likelihood
           # of OOM errors.
           # ref: https://golangci-lint.run/product/performance/
-          GOGC: "100"
+          GOGC: "150"
