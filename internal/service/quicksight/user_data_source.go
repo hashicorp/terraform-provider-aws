@@ -7,8 +7,6 @@ import (
 	"context"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -82,13 +80,8 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 	namespace := d.Get(names.AttrNamespace).(string)
 	userName := d.Get(names.AttrUserName).(string)
 	id := userCreateResourceID(awsAccountID, namespace, userName)
-	input := &quicksight.DescribeUserInput{
-		AwsAccountId: aws.String(awsAccountID),
-		Namespace:    aws.String(namespace),
-		UserName:     aws.String(userName),
-	}
 
-	user, err := findUser(ctx, conn, input)
+	user, err := findUserByThreePartKey(ctx, conn, awsAccountID, namespace, userName)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading QuickSight User (%s): %s", id, err)

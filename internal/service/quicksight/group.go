@@ -160,7 +160,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	_, err = conn.UpdateGroup(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating QuickSight Group %s: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating QuickSight Group (%s): %s", d.Id(), err)
 	}
 
 	return append(diags, resourceGroupRead(ctx, d, meta)...)
@@ -186,7 +186,7 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting QuickSight Group %s: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting QuickSight Group (%s): %s", d.Id(), err)
 	}
 
 	return diags

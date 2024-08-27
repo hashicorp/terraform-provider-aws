@@ -65,7 +65,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Data Set",
 		},
 		{
-			Factory:  DataSourceGroup,
+			Factory:  dataSourceGroup,
 			TypeName: "aws_quicksight_group",
 			Name:     "Group",
 		},
@@ -135,7 +135,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Group",
 		},
 		{
-			Factory:  ResourceGroupMembership,
+			Factory:  resourceGroupMembership,
 			TypeName: "aws_quicksight_group_membership",
 			Name:     "Group Membership",
 		},
