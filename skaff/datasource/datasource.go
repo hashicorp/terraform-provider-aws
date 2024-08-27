@@ -14,7 +14,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/names/data"
 	"github.com/hashicorp/terraform-provider-aws/skaff/convert"
 )
 
@@ -69,32 +69,22 @@ func Create(dsName, snakeName string, comments, force, v2, pluginFramework, tags
 
 	snakeName = convert.ToSnakeCase(dsName, snakeName)
 
-	s, err := names.ProviderNameUpper(servicePackage)
+	service, err := data.LookupService(servicePackage)
 	if err != nil {
-		return fmt.Errorf("error getting service connection name: %w", err)
-	}
-
-	sn, err := names.FullHumanFriendly(servicePackage)
-	if err != nil {
-		return fmt.Errorf("error getting AWS service name: %w", err)
-	}
-
-	hf, err := names.HumanFriendly(servicePackage)
-	if err != nil {
-		return fmt.Errorf("error getting human-friendly name: %w", err)
+		return fmt.Errorf("error looking up service package data for %q: %w", servicePackage, err)
 	}
 
 	templateData := TemplateData{
 		DataSource:           dsName,
 		DataSourceLower:      strings.ToLower(dsName),
 		DataSourceSnake:      snakeName,
-		HumanFriendlyService: hf,
+		HumanFriendlyService: service.HumanFriendly(),
 		IncludeComments:      comments,
 		IncludeTags:          tags,
 		ServicePackage:       servicePackage,
-		Service:              s,
-		ServiceLower:         strings.ToLower(s),
-		AWSServiceName:       sn,
+		Service:              service.ProviderNameUpper(),
+		ServiceLower:         strings.ToLower(service.ProviderNameUpper()),
+		AWSServiceName:       service.FullHumanFriendly(),
 		AWSGoSDKV2:           v2,
 		PluginFramework:      pluginFramework,
 		HumanDataSourceName:  convert.ToHumanResName(dsName),
