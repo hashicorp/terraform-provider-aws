@@ -71,8 +71,8 @@ jobs:
         env:
           # Trigger garbage collection more frequently to reduce the likelihood
           # of OOM errors.
-          # ref: https://golangci-lint.run/usage/performance/#memory-usage
-          GOGC: "30"
+          # ref: https://golangci-lint.run/product/performance/
+          GOGC: "3000"
   golangci-lintc:
     name: 3 of 3
     needs: [golangci-linta]
@@ -99,5 +99,5 @@ jobs:
         env:
           # Trigger garbage collection more frequently to reduce the likelihood
           # of OOM errors.
-          # ref: https://golangci-lint.run/usage/performance/#memory-usage
-          GOGC: "30"
+          # ref: https://golangci-lint.run/product/performance/
+          GOGC: "5"
