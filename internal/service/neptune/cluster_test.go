@@ -1124,47 +1124,43 @@ resource "aws_neptune_cluster" "test" {
 func testAccClusterConfig_kmsKey(rName string) string {
 	return acctest.ConfigCompose(testAccClusterConfig_base(), fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
-
+data "aws_partition" "current" {}
 data "aws_region" "current" {}
 
 resource "aws_iam_role" "kms_admin" {
-	assume_role_policy = jsonencode({
-			Version = "2012-10-17"
-			Statement = [
-				{
-					Effect = "Allow"
-					Principal = {
-						AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
-					}
-					Action = "sts:AssumeRole"
-				}
-			]
-	})
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Principal = {
+        AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+      }
+      Action = "sts:AssumeRole"
+    }]
+  })
 
-	managed_policy_arns = [ "arn:aws:iam::aws:policy/NeptuneFullAccess" ]
+  managed_policy_arns = ["arn:${data.aws_partition.current.partition}:iam::aws:policy/NeptuneFullAccess"]
 
-	inline_policy {
-		name = "kms-perms-for-neptune"
-		policy = jsonencode({
-			Version = "2012-10-17"
-			Statement = [
-			{
-				Action = [
-					"kms:Encrypt",
-					"kms:Decrypt",
-					"kms:GenerateDataKey",
-					"kms:ReEncryptTo",
-					"kms:GenerateDataKeyWithoutPlaintext",
-					"kms:CreateGrant",
-					"kms:ReEncryptFrom",
-					"kms:DescribeKey"
-				]
-				Effect   = "Allow"
-				Resource = "*"
-			},
-			]
-		})
-	}
+  inline_policy {
+    name = "kms-perms-for-neptune"
+    policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [{
+        Action = [
+          "kms:Encrypt",
+          "kms:Decrypt",
+          "kms:GenerateDataKey",
+          "kms:ReEncryptTo",
+          "kms:GenerateDataKeyWithoutPlaintext",
+          "kms:CreateGrant",
+          "kms:ReEncryptFrom",
+          "kms:DescribeKey"
+        ]
+        Effect   = "Allow"
+        Resource = "*"
+      }]
+    })
+  }
 }
 
 resource "aws_kms_key" "test" {
@@ -1179,7 +1175,7 @@ resource "aws_kms_key" "test" {
       "Sid": "Enable Permissions for root principal",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        "AWS": "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
       },
       "Action": "kms:*",
       "Resource": "*"
@@ -1225,16 +1221,15 @@ resource "aws_kms_key" "test" {
     }
   ]
 }
- POLICY
-
+POLICY
 }
 
 resource "aws_neptune_cluster" "test" {
-  cluster_identifier                   = %[1]q
-  availability_zones                   = local.availability_zone_names
-  storage_encrypted                    = true
-  kms_key_arn                          = aws_kms_key.test.arn
-  skip_final_snapshot                  = true
+  cluster_identifier  = %[1]q
+  availability_zones  = local.availability_zone_names
+  storage_encrypted   = true
+  kms_key_arn         = aws_kms_key.test.arn
+  skip_final_snapshot = true
 }
 `, rName))
 }
@@ -1437,47 +1432,43 @@ resource "aws_neptune_cluster_instance" "secondary" {
 func testAccClusterConfig_restoreFromSnapshot(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
-
+data "aws_partition" "current" {}
 data "aws_region" "current" {}
 
 resource "aws_iam_role" "kms_admin" {
-	assume_role_policy = jsonencode({
-			Version = "2012-10-17"
-			Statement = [
-				{
-					Effect = "Allow"
-					Principal = {
-						AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
-					}
-					Action = "sts:AssumeRole"
-				}
-			]
-	})
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Principal = {
+        AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+      }
+      Action = "sts:AssumeRole"
+    }]
+  })
 
-	managed_policy_arns = [ "arn:aws:iam::aws:policy/NeptuneFullAccess" ]
+  managed_policy_arns = ["arn:${data.aws_partition.current.partition}:iam::aws:policy/NeptuneFullAccess"]
 
-	inline_policy {
-		name = "kms-perms-for-neptune"
-		policy = jsonencode({
-			Version = "2012-10-17"
-			Statement = [
-			{
-				Action = [
-					"kms:Encrypt",
-					"kms:Decrypt",
-					"kms:GenerateDataKey",
-					"kms:ReEncryptTo",
-					"kms:GenerateDataKeyWithoutPlaintext",
-					"kms:CreateGrant",
-					"kms:ReEncryptFrom",
-					"kms:DescribeKey"
-				]
-				Effect   = "Allow"
-				Resource = "*"
-			},
-			]
-		})
-	}
+  inline_policy {
+    name = "kms-perms-for-neptune"
+    policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [{
+        Action = [
+          "kms:Encrypt",
+          "kms:Decrypt",
+          "kms:GenerateDataKey",
+          "kms:ReEncryptTo",
+          "kms:GenerateDataKeyWithoutPlaintext",
+          "kms:CreateGrant",
+          "kms:ReEncryptFrom",
+          "kms:DescribeKey"
+        ]
+        Effect   = "Allow"
+        Resource = "*"
+      }]
+    })
+  }
 }
 
 resource "aws_kms_key" "test1" {
@@ -1492,7 +1483,7 @@ resource "aws_kms_key" "test1" {
       "Sid": "Enable Permissions for root principal",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        "AWS": "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
       },
       "Action": "kms:*",
       "Resource": "*"
@@ -1538,8 +1529,7 @@ resource "aws_kms_key" "test1" {
     }
   ]
 }
- POLICY
-
+POLICY
 }
 
 resource "aws_kms_key" "test2" {
@@ -1554,7 +1544,7 @@ resource "aws_kms_key" "test2" {
       "Sid": "Enable Permissions for root principal",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        "AWS": "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
       },
       "Action": "kms:*",
       "Resource": "*"
@@ -1600,8 +1590,7 @@ resource "aws_kms_key" "test2" {
     }
   ]
 }
- POLICY
-
+POLICY
 }
 
 resource "aws_default_vpc" "test" {}
