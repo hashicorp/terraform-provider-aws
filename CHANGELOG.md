@@ -1,5 +1,9 @@
 ## 5.65.0 (Unreleased)
 
+NOTES:
+
+* provider: Updates to Go 1.23. We do not expect this change to impact most users. For macOS, Go 1.23 requires macOS 11 Big Sur or later; support for previous versions has been discontinued. ([#38999](https://github.com/hashicorp/terraform-provider-aws/issues/38999))
+
 FEATURES:
 
 * **New Resource:** `aws_glue_catalog_table_optimizer` ([#38052](https://github.com/hashicorp/terraform-provider-aws/issues/38052))
@@ -13,12 +17,16 @@ ENHANCEMENTS:
 * resource/aws_cognito_user_pool: Add `password_policy.password_history_size` argument ([#39043](https://github.com/hashicorp/terraform-provider-aws/issues/39043))
 * resource/aws_elastic_beanstalk_application_version: Add `process` argument ([#25468](https://github.com/hashicorp/terraform-provider-aws/issues/25468))
 * resource/aws_elasticsearch_domain: Treat `SUCCEEDED_WITH_ISSUES` status as success when upgrading cluster ([#38086](https://github.com/hashicorp/terraform-provider-aws/issues/38086))
+* resource/aws_emr_cluster: Support `io2` as a valid value for `ebs_config.type` ([#37740](https://github.com/hashicorp/terraform-provider-aws/issues/37740))
+* resource/aws_emr_instance_fleet: Support `io2` as a valid value for `instance_type_configs.ebs_config.type` ([#37740](https://github.com/hashicorp/terraform-provider-aws/issues/37740))
+* resource/aws_emr_instance_group: Support `io2` as a valid value for `instance_type_configs.ebs_config.type` ([#37740](https://github.com/hashicorp/terraform-provider-aws/issues/37740))
 
 BUG FIXES:
 
 * resource/aws_amplify_app: Fix crash updating `auto_branch_creation_config` ([#39041](https://github.com/hashicorp/terraform-provider-aws/issues/39041))
 * resource/aws_elasticsearch_domain_policy: Change `domain_name` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) ([#38086](https://github.com/hashicorp/terraform-provider-aws/issues/38086))
 * resource/aws_elbv2_listener: Fix crash when reading forward actions not configured in state ([#39039](https://github.com/hashicorp/terraform-provider-aws/issues/39039))
+* resource/aws_emr_instance_group: Properly send an `instance_count` value of `0` on create when configured ([#37740](https://github.com/hashicorp/terraform-provider-aws/issues/37740))
 * resource/aws_gamelift_game_server_group: Fix crash while reading server group with a nil auto scaling group ARN ([#39022](https://github.com/hashicorp/terraform-provider-aws/issues/39022))
 * resource/aws_lakeformation_permissions: Fix error when revoking `data_cells_filter` permissions ([#39026](https://github.com/hashicorp/terraform-provider-aws/issues/39026))
 * resource/aws_neptune_cluster: Mark `neptune_cluster_parameter_group_name` as Computed ([#38980](https://github.com/hashicorp/terraform-provider-aws/issues/38980))
