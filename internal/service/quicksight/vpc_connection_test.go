@@ -139,7 +139,7 @@ func testAccCheckVPCConnectionExists(ctx context.Context, n string, v *awstypes.
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightClient(ctx)
 
-		output, err := tfquicksight.FindVPCConnectionByID(ctx, conn, rs.Primary.ID)
+		output, err := tfquicksight.FindVPCConnectionByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAWSAccountID], rs.Primary.Attributes["vpc_connection_id"])
 
 		if err != nil {
 			return err
@@ -159,7 +159,7 @@ func testAccCheckVPCConnectionDestroy(ctx context.Context) resource.TestCheckFun
 				continue
 			}
 
-			_, err := tfquicksight.FindVPCConnectionByID(ctx, conn, rs.Primary.ID)
+			_, err := tfquicksight.FindVPCConnectionByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAWSAccountID], rs.Primary.Attributes["vpc_connection_id"])
 
 			if tfresource.NotFound(err) {
 				continue

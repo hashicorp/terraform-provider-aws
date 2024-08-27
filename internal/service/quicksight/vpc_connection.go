@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -49,6 +48,7 @@ func newVPCConnectionResource(_ context.Context) (resource.ResourceWithConfigure
 type vpcConnectionResource struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
+	framework.WithImportByID
 }
 
 func (r *vpcConnectionResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -168,16 +168,15 @@ func (r *vpcConnectionResource) Create(ctx context.Context, req resource.CreateR
 	if plan.AWSAccountID.IsUnknown() || plan.AWSAccountID.IsNull() {
 		plan.AWSAccountID = types.StringValue(r.Meta().AccountID)
 	}
-	plan.ID = types.StringValue(createVPCConnectionID(plan.AWSAccountID.ValueString(), plan.VPCConnectionID.ValueString()))
-
+	awsAccountID, vpcConnectionID := flex.StringValueFromFramework(ctx, plan.AWSAccountID), flex.StringValueFromFramework(ctx, plan.VPCConnectionID)
 	in := &quicksight.CreateVPCConnectionInput{
-		AwsAccountId:     aws.String(plan.AWSAccountID.ValueString()),
-		VPCConnectionId:  aws.String(plan.VPCConnectionID.ValueString()),
+		AwsAccountId:     aws.String(awsAccountID),
 		Name:             aws.String(plan.Name.ValueString()),
 		RoleArn:          aws.String(plan.RoleArn.ValueString()),
 		SecurityGroupIds: flex.ExpandFrameworkStringValueSet(ctx, plan.SecurityGroupIds),
 		SubnetIds:        flex.ExpandFrameworkStringValueSet(ctx, plan.SubnetIds),
 		Tags:             getTagsIn(ctx),
+		VPCConnectionId:  aws.String(vpcConnectionID),
 	}
 
 	if !plan.DnsResolvers.IsNull() {
@@ -202,8 +201,10 @@ func (r *vpcConnectionResource) Create(ctx context.Context, req resource.CreateR
 		return
 	}
 
+	plan.ID = flex.StringValueToFramework(ctx, vpcConnectionCreateResourceID(awsAccountID, vpcConnectionID))
+
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	waitOut, err := waitVPCConnectionCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
+	waitOut, err := waitVPCConnectionCreated(ctx, conn, awsAccountID, vpcConnectionID, createTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.QuickSight, create.ErrActionWaitingForCreation, ResNameVPCConnection, plan.Name.String(), err),
@@ -227,7 +228,16 @@ func (r *vpcConnectionResource) Read(ctx context.Context, req resource.ReadReque
 		return
 	}
 
-	out, err := findVPCConnectionByID(ctx, conn, state.ID.ValueString())
+	awsAccountID, vpcConnectionID, err := vpcConnectionParseResourceID(state.ID.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.QuickSight, create.ErrActionReading, ResNameVPCConnection, state.ID.String(), nil),
+			err.Error(),
+		)
+		return
+	}
+
+	out, err := findVPCConnectionByTwoPartKey(ctx, conn, awsAccountID, vpcConnectionID)
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
@@ -244,16 +254,6 @@ func (r *vpcConnectionResource) Read(ctx context.Context, req resource.ReadReque
 		return
 	}
 
-	// To support import, parse the ID for the component keys and set
-	// individual values in state
-	awsAccountID, vpcConnectionID, err := ParseVPCConnectionID(state.ID.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QuickSight, create.ErrActionReading, ResNameVPCConnection, state.ID.String(), nil),
-			err.Error(),
-		)
-		return
-	}
 	state.AWSAccountID = flex.StringValueToFramework(ctx, awsAccountID)
 	state.VPCConnectionID = flex.StringValueToFramework(ctx, vpcConnectionID)
 	state.ARN = flex.StringToFramework(ctx, out.Arn)
@@ -281,18 +281,27 @@ func (r *vpcConnectionResource) Update(ctx context.Context, req resource.UpdateR
 		return
 	}
 
+	awsAccountID, vpcConnectionID, err := vpcConnectionParseResourceID(plan.ID.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.QuickSight, create.ErrActionUpdating, ResNameVPCConnection, plan.ID.String(), nil),
+			err.Error(),
+		)
+		return
+	}
+
 	if !plan.Name.Equal(state.Name) ||
 		!plan.DnsResolvers.Equal(state.DnsResolvers) ||
 		!plan.RoleArn.Equal(state.RoleArn) ||
 		!plan.SecurityGroupIds.Equal(state.SecurityGroupIds) ||
 		!plan.SubnetIds.Equal(state.SubnetIds) {
 		in := quicksight.UpdateVPCConnectionInput{
-			AwsAccountId:     aws.String(plan.AWSAccountID.ValueString()),
-			VPCConnectionId:  aws.String(plan.VPCConnectionID.ValueString()),
+			AwsAccountId:     aws.String(awsAccountID),
 			Name:             aws.String(plan.Name.ValueString()),
 			RoleArn:          aws.String(plan.RoleArn.ValueString()),
 			SecurityGroupIds: flex.ExpandFrameworkStringValueSet(ctx, plan.SecurityGroupIds),
 			SubnetIds:        flex.ExpandFrameworkStringValueSet(ctx, plan.SubnetIds),
+			VPCConnectionId:  aws.String(vpcConnectionID),
 		}
 
 		if !plan.DnsResolvers.IsNull() {
@@ -316,7 +325,7 @@ func (r *vpcConnectionResource) Update(ctx context.Context, req resource.UpdateR
 		}
 
 		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-		_, err = waitVPCConnectionUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
+		_, err = waitVPCConnectionUpdated(ctx, conn, awsAccountID, vpcConnectionID, updateTimeout)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.QuickSight, create.ErrActionWaitingForUpdate, ResNameVPCConnection, plan.ID.String(), err),
@@ -343,12 +352,19 @@ func (r *vpcConnectionResource) Delete(ctx context.Context, req resource.DeleteR
 		return
 	}
 
-	in := &quicksight.DeleteVPCConnectionInput{
-		AwsAccountId:    aws.String(state.AWSAccountID.ValueString()),
-		VPCConnectionId: aws.String(state.VPCConnectionID.ValueString()),
+	awsAccountID, vpcConnectionID, err := vpcConnectionParseResourceID(state.ID.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.QuickSight, create.ErrActionDeleting, ResNameVPCConnection, state.ID.String(), nil),
+			err.Error(),
+		)
+		return
 	}
 
-	_, err := conn.DeleteVPCConnection(ctx, in)
+	_, err = conn.DeleteVPCConnection(ctx, &quicksight.DeleteVPCConnectionInput{
+		AwsAccountId:    aws.String(awsAccountID),
+		VPCConnectionId: aws.String(vpcConnectionID),
+	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -367,7 +383,7 @@ func (r *vpcConnectionResource) Delete(ctx context.Context, req resource.DeleteR
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitVPCConnectionDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
+	_, err = waitVPCConnectionDeleted(ctx, conn, awsAccountID, vpcConnectionID, deleteTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.QuickSight, create.ErrActionWaitingForDeletion, ResNameVPCConnection, state.ID.String(), err),
@@ -377,41 +393,38 @@ func (r *vpcConnectionResource) Delete(ctx context.Context, req resource.DeleteR
 	}
 }
 
-func (r *vpcConnectionResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
-
 func (r *vpcConnectionResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	r.SetTagsAll(ctx, req, resp)
 }
 
-func findVPCConnectionByID(ctx context.Context, conn *quicksight.Client, id string) (*awstypes.VPCConnection, error) {
-	awsAccountID, vpcConnectionId, err := ParseVPCConnectionID(id)
-	if err != nil {
-		return nil, err
-	}
-
-	in := &quicksight.DescribeVPCConnectionInput{
+func findVPCConnectionByTwoPartKey(ctx context.Context, conn *quicksight.Client, awsAccountID, vpcConnectionID string) (*awstypes.VPCConnection, error) {
+	input := &quicksight.DescribeVPCConnectionInput{
 		AwsAccountId:    aws.String(awsAccountID),
-		VPCConnectionId: aws.String(vpcConnectionId),
+		VPCConnectionId: aws.String(vpcConnectionID),
 	}
 
-	out, err := conn.DescribeVPCConnection(ctx, in)
+	return findVPCConnection(ctx, conn, input)
+}
+
+func findVPCConnection(ctx context.Context, conn *quicksight.Client, input *quicksight.DescribeVPCConnectionInput) (*awstypes.VPCConnection, error) {
+	output, err := conn.DescribeVPCConnection(ctx, input)
+
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
-			LastRequest: in,
+			LastRequest: input,
 		}
 	}
 
 	if err != nil {
 		return nil, err
 	}
-	if out == nil || out.VPCConnection == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+
+	if output == nil || output.VPCConnection == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return out.VPCConnection, nil
+	return output.VPCConnection, nil
 }
 
 func retryVPCConnectionCreate(ctx context.Context, conn *quicksight.Client, in *quicksight.CreateVPCConnectionInput) (*quicksight.CreateVPCConnectionOutput, error) {
@@ -433,16 +446,17 @@ func retryVPCConnectionCreate(ctx context.Context, conn *quicksight.Client, in *
 	return output, err
 }
 
-func waitVPCConnectionCreated(ctx context.Context, conn *quicksight.Client, id string, timeout time.Duration) (*awstypes.VPCConnection, error) {
+func waitVPCConnectionCreated(ctx context.Context, conn *quicksight.Client, awsAccountID, vpcConnectionID string, timeout time.Duration) (*awstypes.VPCConnection, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.VPCConnectionResourceStatusCreationInProgress),
 		Target:     enum.Slice(awstypes.VPCConnectionResourceStatusCreationSuccessful),
-		Refresh:    statusVPCConnection(ctx, conn, id),
+		Refresh:    statusVPCConnection(ctx, conn, awsAccountID, vpcConnectionID),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
 	if output, ok := outputRaw.(*awstypes.VPCConnection); ok {
 		return output, err
 	}
@@ -450,16 +464,17 @@ func waitVPCConnectionCreated(ctx context.Context, conn *quicksight.Client, id s
 	return nil, err
 }
 
-func waitVPCConnectionUpdated(ctx context.Context, conn *quicksight.Client, id string, timeout time.Duration) (*awstypes.VPCConnection, error) {
+func waitVPCConnectionUpdated(ctx context.Context, conn *quicksight.Client, awsAccountID, vpcConnectionID string, timeout time.Duration) (*awstypes.VPCConnection, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.VPCConnectionResourceStatusUpdateInProgress),
 		Target:     enum.Slice(awstypes.VPCConnectionResourceStatusUpdateSuccessful),
-		Refresh:    statusVPCConnection(ctx, conn, id),
+		Refresh:    statusVPCConnection(ctx, conn, awsAccountID, vpcConnectionID),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
 	if output, ok := outputRaw.(*awstypes.VPCConnection); ok {
 		return output, err
 	}
@@ -467,16 +482,17 @@ func waitVPCConnectionUpdated(ctx context.Context, conn *quicksight.Client, id s
 	return nil, err
 }
 
-func waitVPCConnectionDeleted(ctx context.Context, conn *quicksight.Client, id string, timeout time.Duration) (*awstypes.VPCConnection, error) {
+func waitVPCConnectionDeleted(ctx context.Context, conn *quicksight.Client, awsAccountID, vpcConnectionID string, timeout time.Duration) (*awstypes.VPCConnection, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.VPCConnectionResourceStatusDeletionInProgress),
 		Target:     enum.Slice(awstypes.VPCConnectionResourceStatusDeleted),
-		Refresh:    statusVPCConnection(ctx, conn, id),
+		Refresh:    statusVPCConnection(ctx, conn, awsAccountID, vpcConnectionID),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
 	if output, ok := outputRaw.(*awstypes.VPCConnection); ok {
 		return output, err
 	}
@@ -484,9 +500,9 @@ func waitVPCConnectionDeleted(ctx context.Context, conn *quicksight.Client, id s
 	return nil, err
 }
 
-func statusVPCConnection(ctx context.Context, conn *quicksight.Client, id string) retry.StateRefreshFunc {
+func statusVPCConnection(ctx context.Context, conn *quicksight.Client, awsAccountID, vpcConnectionID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findVPCConnectionByID(ctx, conn, id)
+		output, err := findVPCConnectionByTwoPartKey(ctx, conn, awsAccountID, vpcConnectionID)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -500,16 +516,23 @@ func statusVPCConnection(ctx context.Context, conn *quicksight.Client, id string
 	}
 }
 
-func ParseVPCConnectionID(id string) (string, string, error) {
-	parts := strings.SplitN(id, ",", 2)
-	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		return "", "", fmt.Errorf("unexpected format of ID (%s), expected AWS_ACCOUNT_ID,VPC_CONNECTION_ID", id)
-	}
-	return parts[0], parts[1], nil
+const vpcConnectionResourceIDSeparator = ","
+
+func vpcConnectionCreateResourceID(awsAccountID, vpcConnectionID string) string {
+	parts := []string{awsAccountID, vpcConnectionID}
+	id := strings.Join(parts, vpcConnectionResourceIDSeparator)
+
+	return id
 }
 
-func createVPCConnectionID(awsAccountID, vpcConnectionID string) string {
-	return strings.Join([]string{awsAccountID, vpcConnectionID}, ",")
+func vpcConnectionParseResourceID(id string) (string, string, error) {
+	parts := strings.SplitN(id, vpcConnectionResourceIDSeparator, 2)
+
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", "", fmt.Errorf("unexpected format of ID (%[1]s), expected AWS_ACCOUNT_ID%[2]sVPC_CONNECTION_ID", id, vpcConnectionResourceIDSeparator)
+	}
+
+	return parts[0], parts[1], nil
 }
 
 type resourceVPCConnectionData struct {

@@ -15,7 +15,7 @@ var (
 	ResourceUser                = resourceUser
 	ResourceVPCConnection       = newVPCConnectionResource
 
-	FindAccountSubscriptionByID = findAccountSubscriptionByID
-	FindUserByThreePartKey      = findUserByThreePartKey
-	FindVPCConnectionByID       = findVPCConnectionByID
+	FindAccountSubscriptionByID   = findAccountSubscriptionByID
+	FindUserByThreePartKey        = findUserByThreePartKey
+	FindVPCConnectionByTwoPartKey = findVPCConnectionByTwoPartKey
 )
