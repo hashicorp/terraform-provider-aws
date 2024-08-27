@@ -4,7 +4,7 @@ issues:
   max-per-linter: 10
   max-same-issues: 2
   concurrency: 4
-  go: 1.23
+  go: '1.22.6'
 
 linters:
   disable-all: true
