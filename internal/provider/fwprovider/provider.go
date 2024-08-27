@@ -474,38 +474,40 @@ func (p *fwprovider) EphemeralResources(ctx context.Context) []func() ephemeral.
 	var ephemeralResources []func() ephemeral.EphemeralResource
 
 	for n, sp := range p.Primary.Meta().(*conns.AWSClient).ServicePackages {
-		servicePackageName := sp.ServicePackageName()
+		if data, ok := sp.(conns.ServicePackageWithEphemeralResources); ok {
+			servicePackageName := sp.ServicePackageName()
 
-		for _, v := range sp.EphemeralResources(ctx) {
-			v := v
-			inner, err := v.Factory(ctx)
+			for _, v := range data.EphemeralResources(ctx) {
+				v := v
+				inner, err := v.Factory(ctx)
 
-			if err != nil {
-				tflog.Warn(ctx, "creating ephemeral resource", map[string]interface{}{
-					"service_package_name": n,
-					"error":                err.Error(),
-				})
+				if err != nil {
+					tflog.Warn(ctx, "creating ephemeral resource", map[string]interface{}{
+						"service_package_name": n,
+						"error":                err.Error(),
+					})
 
-				continue
-			}
-
-			//metadataResponse := ephemeral.MetadataResponse{}
-			//inner.Metadata(ctx, ephemeral.MetadataRequest{}, &metadataResponse)
-			//typeName := metadataResponse.TypeName
-
-			// bootstrapContext is run on all wrapped methods before any interceptors.
-			bootstrapContext := func(ctx context.Context, meta *conns.AWSClient) context.Context {
-				ctx = conns.NewEphemeralResourceContext(ctx, servicePackageName, v.Name)
-				if meta != nil {
-					ctx = meta.RegisterLogger(ctx)
+					continue
 				}
 
-				return ctx
-			}
+				//metadataResponse := ephemeral.MetadataResponse{}
+				//inner.Metadata(ctx, ephemeral.MetadataRequest{}, &metadataResponse)
+				//typeName := metadataResponse.TypeName
 
-			ephemeralResources = append(ephemeralResources, func() ephemeral.EphemeralResource {
-				return newWrappedEphemeralResource(bootstrapContext, inner, nil)
-			})
+				// bootstrapContext is run on all wrapped methods before any interceptors.
+				bootstrapContext := func(ctx context.Context, meta *conns.AWSClient) context.Context {
+					ctx = conns.NewEphemeralResourceContext(ctx, servicePackageName, v.Name)
+					if meta != nil {
+						ctx = meta.RegisterLogger(ctx)
+					}
+
+					return ctx
+				}
+
+				ephemeralResources = append(ephemeralResources, func() ephemeral.EphemeralResource {
+					return newWrappedEphemeralResource(bootstrapContext, inner, nil)
+				})
+			}
 		}
 	}
 

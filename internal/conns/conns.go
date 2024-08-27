@@ -12,12 +12,19 @@ import (
 // ServicePackage is the minimal interface exported from each AWS service package.
 // Its methods return the Plugin SDK and Framework resources and data sources implemented in the package.
 type ServicePackage interface {
-	EphemeralResources(context.Context) []*types.ServicePackageEphemeralResource
+	// EphemeralResources(context.Context) []*types.ServicePackageEphemeralResource
 	FrameworkDataSources(context.Context) []*types.ServicePackageFrameworkDataSource
 	FrameworkResources(context.Context) []*types.ServicePackageFrameworkResource
 	SDKDataSources(context.Context) []*types.ServicePackageSDKDataSource
 	SDKResources(context.Context) []*types.ServicePackageSDKResource
 	ServicePackageName() string
+}
+
+// ServicePackageWithEphemeralResources is an interface that extends ServicePackage with ephemeral resources.
+// Ephemeral resources are resources that are not part of the Terraform state, but are used to create other resources.
+type ServicePackageWithEphemeralResources interface {
+	ServicePackage
+	EphemeralResources(context.Context) []*types.ServicePackageEphemeralResource
 }
 
 type (
