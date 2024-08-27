@@ -350,7 +350,7 @@ data "aws_neptune_orderable_db_instance" "test" {
 
 resource "aws_neptune_parameter_group" "test" {
   name   = %[1]q
-  family = join("", ["neptune",split(".",aws_neptune_cluster.test.engine_version)[0],".",split(".",aws_neptune_cluster.test.engine_version)[1]])
+  family = join("", ["neptune", split(".", aws_neptune_cluster.test.engine_version)[0], ".", split(".", aws_neptune_cluster.test.engine_version)[1]])
 
   parameter {
     name  = "neptune_query_timeout"
