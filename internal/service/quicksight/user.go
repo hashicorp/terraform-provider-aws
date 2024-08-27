@@ -26,7 +26,7 @@ import (
 )
 
 const (
-	DefaultUserNamespace = "default"
+	defaultUserNamespace = "default"
 )
 
 // @SDKResource("aws_quicksight_user", name="User")
@@ -73,7 +73,7 @@ func resourceUser() *schema.Resource {
 					Type:     schema.TypeString,
 					Optional: true,
 					ForceNew: true,
-					Default:  DefaultUserNamespace,
+					Default:  defaultUserNamespace,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 63),
 						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "must contain only alphanumeric characters, hyphens, underscores, and periods"),

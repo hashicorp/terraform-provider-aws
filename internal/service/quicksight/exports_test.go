@@ -7,6 +7,7 @@ package quicksight
 var (
 	ResourceAccountSubscription = resourceAccountSubscription
 	ResourceFolderMembership    = newResourceFolderMembership
+	ResourceGroup               = resourceGroup
 	ResourceIAMPolicyAssignment = newResourceIAMPolicyAssignment
 	ResourceIngestion           = newResourceIngestion
 	ResourceNamespace           = newResourceNamespace
@@ -15,7 +16,10 @@ var (
 	ResourceUser                = resourceUser
 	ResourceVPCConnection       = newVPCConnectionResource
 
+	DefaultGroupNamespace         = defaultGroupNamespace
+	DefaultUserNamespace          = defaultUserNamespace
 	FindAccountSubscriptionByID   = findAccountSubscriptionByID
+	FindGroupByThreePartKey       = findGroupByThreePartKey
 	FindUserByThreePartKey        = findUserByThreePartKey
 	FindVPCConnectionByTwoPartKey = findVPCConnectionByTwoPartKey
 )

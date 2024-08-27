@@ -279,7 +279,7 @@ func sweepGroups(region string) error {
 
 	input := &quicksight.ListGroupsInput{
 		AwsAccountId: aws.String(awsAccountId),
-		Namespace:    aws.String(DefaultUserNamespace),
+		Namespace:    aws.String(defaultUserNamespace),
 	}
 
 	out, err := conn.ListGroupsWithContext(ctx, input)
@@ -291,7 +291,7 @@ func sweepGroups(region string) error {
 
 		r := ResourceGroup()
 		d := r.Data(nil)
-		d.SetId(fmt.Sprintf("%s/%s/%s", awsAccountId, DefaultUserNamespace, groupname))
+		d.SetId(fmt.Sprintf("%s/%s/%s", awsAccountId, defaultUserNamespace, groupname))
 
 		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 	}
@@ -377,7 +377,7 @@ func sweepUsers(region string) error {
 
 	input := &quicksight.ListUsersInput{
 		AwsAccountId: aws.String(awsAccountId),
-		Namespace:    aws.String(DefaultUserNamespace),
+		Namespace:    aws.String(defaultUserNamespace),
 	}
 
 	out, err := conn.ListUsersWithContext(ctx, input)
@@ -389,7 +389,7 @@ func sweepUsers(region string) error {
 
 		r := ResourceUser()
 		d := r.Data(nil)
-		d.SetId(fmt.Sprintf("%s/%s/%s", awsAccountId, DefaultUserNamespace, username))
+		d.SetId(fmt.Sprintf("%s/%s/%s", awsAccountId, defaultUserNamespace, username))
 
 		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 	}
