@@ -1614,7 +1614,7 @@ resource "aws_neptune_cluster_snapshot" "test" {
 }
 
 resource "aws_neptune_cluster_parameter_group" "test" {
-  family = join( "", ["neptune",split(".",aws_neptune_cluster_snapshot.test.engine_version)[0],".",split(".",aws_neptune_cluster_snapshot.test.engine_version)[1]])
+  family = join("", ["neptune",split(".",aws_neptune_cluster_snapshot.test.engine_version)[0],".",split(".",aws_neptune_cluster_snapshot.test.engine_version)[1]])
   name   = %[1]q
 
   parameter {
