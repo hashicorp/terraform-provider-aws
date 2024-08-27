@@ -57,6 +57,9 @@ func testAccDirectory_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "iam_role_id", iamRoleDataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "ip_group_ids.#", acctest.Ct0),
 					resource.TestCheckResourceAttrSet(resourceName, "registration_code"),
+					resource.TestCheckResourceAttr(resourceName, "saml_properties.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "saml_properties.0.relay_state_parameter_name", "RelayState"),
+					resource.TestCheckResourceAttr(resourceName, "saml_properties.0.status", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.change_compute_type", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.increase_volume_size", acctest.CtFalse),
@@ -209,6 +212,84 @@ func testAccDirectory_tags(t *testing.T) {
 					testAccCheckDirectoryExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+		},
+	})
+}
+
+func testAccDirectory_SamlProperties(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.WorkspaceDirectory
+	rName := sdkacctest.RandString(8)
+
+	resourceName := "aws_workspaces_directory.main"
+
+	domain := acctest.RandomDomainName()
+	rspn := sdkacctest.RandString(8)
+	arspn := sdkacctest.RandString(8)
+	uau := fmt.Sprintf("https://%s/", acctest.RandomDomainName())
+	auau := fmt.Sprintf("https://%s/", acctest.RandomDomainName())
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDirectory(ctx, t)
+			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
+			acctest.PreCheckHasIAMRole(ctx, t, "workspaces_DefaultRole")
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(workspaces.ServiceID)),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDirectoryDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDirectoryConfig_samlPropertiesFull(rName, domain, rspn, uau),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDirectoryExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "saml_properties.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "saml_properties.0.relay_state_parameter_name", rspn),
+					resource.TestCheckResourceAttr(resourceName, "saml_properties.0.user_access_url", uau),
+					resource.TestCheckResourceAttr(resourceName, "saml_properties.0.status", "ENABLED"),
+				),
+			},
+			{
+				Config: testAccDirectoryConfig_samlPropertiesRSPN(rName, domain, arspn),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDirectoryExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "saml_properties.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "saml_properties.0.relay_state_parameter_name", arspn),
+					resource.TestCheckResourceAttr(resourceName, "saml_properties.0.user_access_url", ""),
+					resource.TestCheckResourceAttr(resourceName, "saml_properties.0.status", "DISABLED"),
+				),
+			},
+			{
+				Config: testAccDirectoryConfig_samlPropertiesUAU(rName, domain, auau),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDirectoryExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "saml_properties.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "saml_properties.0.relay_state_parameter_name", "RelayState"),
+					resource.TestCheckResourceAttr(resourceName, "saml_properties.0.user_access_url", auau),
+					resource.TestCheckResourceAttr(resourceName, "saml_properties.0.status", "ENABLED_WITH_DIRECTORY_LOGIN_FALLBACK"),
+				),
+			},
+			{
+				Config: testAccDirectoryConfig_samlPropertiesFull(rName, domain, rspn, uau),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDirectoryExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "saml_properties.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "saml_properties.0.relay_state_parameter_name", rspn),
+					resource.TestCheckResourceAttr(resourceName, "saml_properties.0.user_access_url", uau),
+					resource.TestCheckResourceAttr(resourceName, "saml_properties.0.status", "ENABLED"),
+				),
+			},
+			{
+				Config: testAccDirectoryConfig_samlPropertiesEmpty(rName, domain),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDirectoryExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "saml_properties.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "saml_properties.0.relay_state_parameter_name", "RelayState"),
+					resource.TestCheckResourceAttr(resourceName, "saml_properties.0.user_access_url", ""),
+					resource.TestCheckResourceAttr(resourceName, "saml_properties.0.status", "DISABLED"),
 				),
 			},
 		},
@@ -424,6 +505,80 @@ func testAccDirectory_ipGroupIDs(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestExpandSAMLProperties(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		input    []interface{}
+		expected *types.SamlProperties
+	}{
+		// Empty
+		{
+			input:    []interface{}{},
+			expected: nil,
+		},
+		// Full
+		{
+			input: []interface{}{
+				map[string]interface{}{
+					"relay_state_parameter_name": "LinkState",
+					"status":                     "ENABLED",
+					"user_access_url":            "https://directory.example.com/",
+				},
+			},
+			expected: &types.SamlProperties{
+				RelayStateParameterName: aws.String("LinkState"),
+				Status:                  types.SamlStatusEnumEnabled,
+				UserAccessUrl:           aws.String("https://directory.example.com/"),
+			},
+		},
+	}
+
+	for _, c := range cases {
+		actual := tfworkspaces.ExpandSAMLProperties(c.input)
+		if !reflect.DeepEqual(actual, c.expected) {
+			t.Fatalf("expected\n\n%#+v\n\ngot\n\n%#+v", c.expected, actual)
+		}
+	}
+}
+
+func TestFlattenSAMLProperties(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		input    *types.SamlProperties
+		expected []interface{}
+	}{
+		// Empty
+		{
+			input:    nil,
+			expected: []interface{}{},
+		},
+		// Full
+		{
+			input: &types.SamlProperties{
+				RelayStateParameterName: aws.String("LinkState"),
+				Status:                  types.SamlStatusEnumEnabled,
+				UserAccessUrl:           aws.String("https://directory.example.com/"),
+			},
+			expected: []interface{}{
+				map[string]interface{}{
+					"relay_state_parameter_name": "LinkState",
+					"status":                     "ENABLED",
+					"user_access_url":            "https://directory.example.com/",
+				},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		actual := tfworkspaces.FlattenSAMLProperties(c.input)
+		if !reflect.DeepEqual(actual, c.expected) {
+			t.Fatalf("expected\n\n%#+v\n\ngot\n\n%#+v", c.expected, actual)
+		}
+	}
 }
 
 func TestExpandSelfServicePermissions(t *testing.T) {
@@ -844,6 +999,81 @@ resource "aws_workspaces_directory" "main" {
 
 data "aws_iam_role" "workspaces-default" {
   name = "workspaces_DefaultRole"
+}
+`, rName))
+}
+
+func testAccDirectoryConfig_samlPropertiesFull(rName, domain, rspn, uau string) string {
+	return acctest.ConfigCompose(
+		testAccDirectoryConfig_Prerequisites(rName, domain),
+		fmt.Sprintf(`
+resource "aws_workspaces_directory" "main" {
+  directory_id = aws_directory_service_directory.main.id
+
+  saml_properties {
+    relay_state_parameter_name = "%[2]s"
+    user_access_url = "%[3]s"
+    status = "ENABLED"
+  }
+
+  tags = {
+    Name = "tf-testacc-workspaces-directory-%[1]s"
+  }
+}
+`, rName, rspn, uau))
+}
+
+func testAccDirectoryConfig_samlPropertiesRSPN(rName, domain, rspn string) string {
+	return acctest.ConfigCompose(
+		testAccDirectoryConfig_Prerequisites(rName, domain),
+		fmt.Sprintf(`
+resource "aws_workspaces_directory" "main" {
+  directory_id = aws_directory_service_directory.main.id
+
+  saml_properties {
+    relay_state_parameter_name = "%[2]s"
+    status = "DISABLED"
+  }
+
+  tags = {
+    Name = "tf-testacc-workspaces-directory-%[1]s"
+  }
+}
+`, rName, rspn))
+}
+
+func testAccDirectoryConfig_samlPropertiesUAU(rName, domain, uau string) string {
+	return acctest.ConfigCompose(
+		testAccDirectoryConfig_Prerequisites(rName, domain),
+		fmt.Sprintf(`
+resource "aws_workspaces_directory" "main" {
+  directory_id = aws_directory_service_directory.main.id
+
+  saml_properties {
+    user_access_url = "%[2]s"
+    status = "ENABLED_WITH_DIRECTORY_LOGIN_FALLBACK"
+  }
+
+  tags = {
+    Name = "tf-testacc-workspaces-directory-%[1]s"
+  }
+}
+`, rName, uau))
+}
+
+func testAccDirectoryConfig_samlPropertiesEmpty(rName, domain string) string {
+	return acctest.ConfigCompose(
+		testAccDirectoryConfig_Prerequisites(rName, domain),
+		fmt.Sprintf(`
+resource "aws_workspaces_directory" "main" {
+  directory_id = aws_directory_service_directory.main.id
+
+  saml_properties {
+  }
+
+  tags = {
+    Name = "tf-testacc-workspaces-directory-%[1]s"
+  }
 }
 `, rName))
 }
