@@ -1671,7 +1671,7 @@ func flattenEC2InstanceAttributes(apiObject *awstypes.Ec2InstanceAttributes) []i
 	if apiObject.Ec2SubnetId != nil {
 		tfMap[names.AttrSubnetID] = aws.ToString(apiObject.Ec2SubnetId)
 	}
-	if apiObject.RequestedEc2SubnetIds != nil && len(apiObject.RequestedEc2SubnetIds) > 0 {
+	if len(apiObject.RequestedEc2SubnetIds) > 0 {
 		tfMap[names.AttrSubnetIDs] = flex.FlattenStringValueSet(apiObject.RequestedEc2SubnetIds)
 	}
 	if apiObject.IamInstanceProfile != nil {

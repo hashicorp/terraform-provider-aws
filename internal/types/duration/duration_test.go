@@ -75,7 +75,6 @@ func TestParse(t *testing.T) {
 	}
 
 	for name, tc := range testcases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -103,7 +102,7 @@ func TestSub(t *testing.T) {
 	now := time.Now()
 	tz, err := time.LoadLocation("America/Vancouver")
 	if err != nil {
-		t.Fatalf(err.Error())
+		t.Fatal(err)
 	}
 
 	testcases := map[string]struct {
@@ -149,7 +148,6 @@ func TestSub(t *testing.T) {
 	}
 
 	for name, tc := range testcases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
