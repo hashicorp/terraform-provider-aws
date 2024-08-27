@@ -6,7 +6,7 @@ issues:
 
 linters:
   disable-all: true
-  enable: 
+  enable:
     # !! only add a-m linters here, n-z linters go in .golangci3.yml
     - asasalint
     - asciicheck
