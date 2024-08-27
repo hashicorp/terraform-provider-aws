@@ -144,14 +144,9 @@ func testAccCheckUserExists(ctx context.Context, n string, v *awstypes.User) res
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		awsAccountID, namespace, userName, err := tfquicksight.UserParseID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightClient(ctx)
 
-		output, err := tfquicksight.FindUserByThreePartKey(ctx, conn, awsAccountID, namespace, userName)
+		output, err := tfquicksight.FindUserByThreePartKey(ctx, conn, rs.Primary.Attributes[names.AttrAWSAccountID], rs.Primary.Attributes[names.AttrNamespace], rs.Primary.Attributes[names.AttrUserName])
 
 		if err != nil {
 			return err
@@ -172,12 +167,7 @@ func testAccCheckUserDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			awsAccountID, namespace, userName, err := tfquicksight.UserParseID(rs.Primary.ID)
-			if err != nil {
-				return err
-			}
-
-			_, err = tfquicksight.FindUserByThreePartKey(ctx, conn, awsAccountID, namespace, userName)
+			_, err := tfquicksight.FindUserByThreePartKey(ctx, conn, rs.Primary.Attributes[names.AttrAWSAccountID], rs.Primary.Attributes[names.AttrNamespace], rs.Primary.Attributes[names.AttrUserName])
 
 			if tfresource.NotFound(err) {
 				continue

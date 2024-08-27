@@ -141,7 +141,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "registering QuickSight User (%s): %s", email, err)
 	}
 
-	d.SetId(fmt.Sprintf("%s/%s/%s", awsAccountID, namespace, aws.ToString(output.User.UserName)))
+	d.SetId(userCreateResourceID(awsAccountID, namespace, aws.ToString(output.User.UserName)))
 
 	return append(diags, resourceUserRead(ctx, d, meta)...)
 }
@@ -150,7 +150,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
-	awsAccountID, namespace, userName, err := UserParseID(d.Id())
+	awsAccountID, namespace, userName, err := userParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -181,7 +181,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
-	awsAccountID, namespace, userName, err := UserParseID(d.Id())
+	awsAccountID, namespace, userName, err := userParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -207,7 +207,7 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
-	awsAccountID, namespace, userName, err := UserParseID(d.Id())
+	awsAccountID, namespace, userName, err := userParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -229,11 +229,22 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func UserParseID(id string) (string, string, string, error) {
-	parts := strings.SplitN(id, "/", 3)
+const userResourceIDSeparator = "/"
+
+func userCreateResourceID(awsAccountID, namespace, userName string) string {
+	parts := []string{awsAccountID, namespace, userName}
+	id := strings.Join(parts, userResourceIDSeparator)
+
+	return id
+}
+
+func userParseResourceID(id string) (string, string, string, error) {
+	parts := strings.SplitN(id, userResourceIDSeparator, 3)
+
 	if len(parts) < 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" {
-		return "", "", "", fmt.Errorf("unexpected format of ID (%s), expected AWS_ACCOUNT_ID/NAMESPACE/USER_NAME", id)
+		return "", "", "", fmt.Errorf("unexpected format of ID (%[1]s), expected AWS_ACCOUNT_ID%[2]sNAMESPACE%[2]sUSER_NAME", id, userResourceIDSeparator)
 	}
+
 	return parts[0], parts[1], parts[2], nil
 }
 
