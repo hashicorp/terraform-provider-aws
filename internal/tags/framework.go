@@ -28,6 +28,7 @@ func TagsAttributeComputedOnly() schema.Attribute {
 
 func TagsAttributeRequired() schema.Attribute {
 	return schema.MapAttribute{
+		CustomType:  MapType,
 		ElementType: types.StringType,
 		Required:    true,
 	}
