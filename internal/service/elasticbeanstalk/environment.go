@@ -5,6 +5,7 @@ package elasticbeanstalk
 
 import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -106,7 +107,7 @@ func resourceEnvironment() *schema.Resource {
 					Type:     schema.TypeSet,
 					Computed: true,
 					Elem:     settingSchema(),
-					Set:      optionSettingValueHash,
+					Set:      hashSettingsValue,
 				},
 				"application": {
 					Type:     schema.TypeString,
@@ -179,7 +180,7 @@ func resourceEnvironment() *schema.Resource {
 					Type:     schema.TypeSet,
 					Optional: true,
 					Elem:     settingSchema(),
-					Set:      optionSettingValueHash,
+					Set:      hashSettingsValue,
 				},
 				"solution_stack_name": {
 					Type:          schema.TypeString,
@@ -757,27 +758,29 @@ func waitEnvironmentDeleted(ctx context.Context, conn *elasticbeanstalk.Client, 
 	return nil, err
 }
 
-// we use the following two functions to allow us to split out defaults
-// as they become overridden from within the template
-func optionSettingValueHash(v interface{}) int {
-	rd := v.(map[string]interface{})
-	namespace := rd[names.AttrNamespace].(string)
-	optionName := rd[names.AttrName].(string)
+func hashSettingsValue(v interface{}) int {
+	tfMap := v.(map[string]interface{})
+	var str strings.Builder
+
+	str.WriteString(tfMap[names.AttrNamespace].(string))
+	str.WriteRune(':')
+	str.WriteString(tfMap[names.AttrName].(string))
 	var resourceName string
-	if v, ok := rd["resource"].(string); ok {
+	if v, ok := tfMap["resource"].(string); ok {
 		resourceName = v
 	}
-	value, _ := rd[names.AttrValue].(string)
-	value, _ = structure.NormalizeJsonString(value)
-	hk := fmt.Sprintf("%s:%s%s=%s", namespace, optionName, resourceName, sortValues(value))
-	log.Printf("[DEBUG] Elastic Beanstalk optionSettingValueHash(%#v): %s: hk=%s,hc=%d", v, optionName, hk, create.StringHashcode(hk))
-	return create.StringHashcode(hk)
-}
+	str.WriteString(resourceName)
+	str.WriteRune('=')
+	if value := tfMap[names.AttrValue].(string); json.Valid([]byte(value)) {
+		value, _ = structure.NormalizeJsonString(value)
+		str.WriteString(value)
+	} else {
+		values := strings.Split(value, ",")
+		sort.Strings(values)
+		str.WriteString(strings.Join(values, ","))
+	}
 
-func sortValues(v string) string {
-	values := strings.Split(v, ",")
-	sort.Strings(values)
-	return strings.Join(values, ",")
+	return create.StringHashcode(str.String())
 }
 
 func expandConfigurationOptionSettings(tfList []interface{}) []awstypes.ConfigurationOptionSetting {

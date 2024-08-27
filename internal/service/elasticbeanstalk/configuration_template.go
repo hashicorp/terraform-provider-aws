@@ -54,7 +54,7 @@ func resourceConfigurationTemplate() *schema.Resource {
 					Optional: true,
 					Computed: true,
 					Elem:     settingSchema(),
-					Set:      optionSettingValueHash,
+					Set:      hashSettingsValue,
 				},
 				"solution_stack_name": {
 					Type:     schema.TypeString,
