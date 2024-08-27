@@ -298,10 +298,6 @@ func testAccCheckClusterInstanceExists(ctx context.Context, n string, v *awstype
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Neptune Cluster Instance ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneClient(ctx)
 
 		output, err := tfneptune.FindDBInstanceByID(ctx, conn, rs.Primary.ID)
@@ -367,10 +363,10 @@ resource "aws_neptune_parameter_group" "test" {
 func testAccClusterInstanceConfig_base(rName string) string {
 	return acctest.ConfigCompose(testAccClusterInstanceConfig_baseSansCluster(rName), acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_neptune_cluster" "test" {
-  cluster_identifier                   = %[1]q
-  availability_zones                   = slice(data.aws_availability_zones.available.names, 0, min(3, length(data.aws_availability_zones.available.names)))
-  engine                               = "neptune"
-  skip_final_snapshot                  = true
+  cluster_identifier  = %[1]q
+  availability_zones  = slice(data.aws_availability_zones.available.names, 0, min(3, length(data.aws_availability_zones.available.names)))
+  engine              = "neptune"
+  skip_final_snapshot = true
 }
 `, rName))
 }
@@ -493,9 +489,9 @@ resource "aws_neptune_subnet_group" "test" {
 }
 
 resource "aws_neptune_cluster" "test" {
-  cluster_identifier                   = %[1]q
-  neptune_subnet_group_name            = aws_neptune_subnet_group.test.name
-  skip_final_snapshot                  = true
+  cluster_identifier        = %[1]q
+  neptune_subnet_group_name = aws_neptune_subnet_group.test.name
+  skip_final_snapshot       = true
 }
 `, rName))
 }

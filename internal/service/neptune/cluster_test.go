@@ -721,10 +721,6 @@ func testAccCheckClusterExistsWithProvider(ctx context.Context, n string, v *aws
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Neptune Cluster ID is set")
-		}
-
 		conn := providerF().Meta().(*conns.AWSClient).NeptuneClient(ctx)
 
 		output, err := tfneptune.FindDBClusterByID(ctx, conn, rs.Primary.ID)
@@ -791,10 +787,10 @@ locals {
 func testAccClusterConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccClusterConfig_base(), fmt.Sprintf(`
 resource "aws_neptune_cluster" "test" {
-  cluster_identifier                   = %[1]q
-  availability_zones                   = local.availability_zone_names
-  engine                               = "neptune"
-  skip_final_snapshot                  = true
+  cluster_identifier  = %[1]q
+  availability_zones  = local.availability_zone_names
+  engine              = "neptune"
+  skip_final_snapshot = true
 }
 `, rName))
 }
@@ -802,8 +798,8 @@ resource "aws_neptune_cluster" "test" {
 func testAccClusterConfig_identifierGenerated() string {
 	return `
 resource "aws_neptune_cluster" "test" {
-  engine                               = "neptune"
-  skip_final_snapshot                  = true
+  engine              = "neptune"
+  skip_final_snapshot = true
 }
 `
 }
@@ -811,9 +807,9 @@ resource "aws_neptune_cluster" "test" {
 func testAccClusterConfig_identifierPrefix(prefix string) string {
 	return fmt.Sprintf(`
 resource "aws_neptune_cluster" "test" {
-  cluster_identifier_prefix            = %[1]q
-  engine                               = "neptune"
-  skip_final_snapshot                  = true
+  cluster_identifier_prefix = %[1]q
+  engine                    = "neptune"
+  skip_final_snapshot       = true
 }
 `, prefix)
 }
@@ -821,10 +817,10 @@ resource "aws_neptune_cluster" "test" {
 func testAccClusterConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccClusterConfig_base(), fmt.Sprintf(`
 resource "aws_neptune_cluster" "test" {
-  cluster_identifier                   = %[1]q
-  availability_zones                   = local.availability_zone_names
-  engine                               = "neptune"
-  skip_final_snapshot                  = true
+  cluster_identifier  = %[1]q
+  availability_zones  = local.availability_zone_names
+  engine              = "neptune"
+  skip_final_snapshot = true
 
   tags = {
     %[2]q = %[3]q
@@ -836,10 +832,10 @@ resource "aws_neptune_cluster" "test" {
 func testAccClusterConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(testAccClusterConfig_base(), fmt.Sprintf(`
 resource "aws_neptune_cluster" "test" {
-  cluster_identifier                   = %[1]q
-  availability_zones                   = local.availability_zone_names
-  engine                               = "neptune"
-  skip_final_snapshot                  = true
+  cluster_identifier  = %[1]q
+  availability_zones  = local.availability_zone_names
+  engine              = "neptune"
+  skip_final_snapshot = true
 
   tags = {
     %[2]q = %[3]q
@@ -852,11 +848,11 @@ resource "aws_neptune_cluster" "test" {
 func testAccClusterConfig_copyTags(rName string, copy bool) string {
 	return acctest.ConfigCompose(testAccClusterConfig_base(), fmt.Sprintf(`
 resource "aws_neptune_cluster" "test" {
-  cluster_identifier                   = %[1]q
-  availability_zones                   = local.availability_zone_names
-  engine                               = "neptune"
-  skip_final_snapshot                  = true
-  copy_tags_to_snapshot                = %[2]t
+  cluster_identifier    = %[1]q
+  availability_zones    = local.availability_zone_names
+  engine                = "neptune"
+  skip_final_snapshot   = true
+  copy_tags_to_snapshot = %[2]t
 }
 `, rName, copy))
 }
@@ -864,11 +860,11 @@ resource "aws_neptune_cluster" "test" {
 func testAccClusterConfig_deleteProtection(rName string, isProtected bool) string {
 	return acctest.ConfigCompose(testAccClusterConfig_base(), fmt.Sprintf(`
 resource "aws_neptune_cluster" "test" {
-  cluster_identifier                   = %[1]q
-  availability_zones                   = local.availability_zone_names
-  engine                               = "neptune"
-  skip_final_snapshot                  = true
-  deletion_protection                  = %[2]t
+  cluster_identifier  = %[1]q
+  availability_zones  = local.availability_zone_names
+  engine              = "neptune"
+  skip_final_snapshot = true
+  deletion_protection = %[2]t
 }
 `, rName, isProtected))
 }
@@ -876,9 +872,9 @@ resource "aws_neptune_cluster" "test" {
 func testAccClusterConfig_serverlessConfiguration(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_neptune_cluster" "test" {
-  cluster_identifier_prefix            = %[1]q
-  engine                               = "neptune"
-  skip_final_snapshot                  = true
+  cluster_identifier_prefix = %[1]q
+  engine                    = "neptune"
+  skip_final_snapshot       = true
 
   serverless_v2_scaling_configuration {
     min_capacity = 4.5
@@ -891,9 +887,9 @@ resource "aws_neptune_cluster" "test" {
 func testAccClusterConfig_finalSnapshot(rName string) string {
 	return acctest.ConfigCompose(testAccClusterConfig_base(), fmt.Sprintf(`
 resource "aws_neptune_cluster" "test" {
-  cluster_identifier                   = %[1]q
-  availability_zones                   = local.availability_zone_names
-  final_snapshot_identifier            = %[1]q
+  cluster_identifier        = %[1]q
+  availability_zones        = local.availability_zone_names
+  final_snapshot_identifier = %[1]q
 }
 `, rName))
 }
@@ -975,9 +971,9 @@ EOF
 }
 
 resource "aws_neptune_cluster" "test" {
-  cluster_identifier                   = %[1]q
-  availability_zones                   = local.availability_zone_names
-  skip_final_snapshot                  = true
+  cluster_identifier  = %[1]q
+  availability_zones  = local.availability_zone_names
+  skip_final_snapshot = true
 
   depends_on = [aws_iam_role.test, aws_iam_role.test-2]
 }
@@ -1305,11 +1301,11 @@ data "aws_neptune_orderable_db_instance" "test" {
 }
 
 resource "aws_neptune_cluster_instance" "test" {
-  identifier                   = %[1]q
-  cluster_identifier           = aws_neptune_cluster.test.id
-  apply_immediately            = true
-  instance_class               = data.aws_neptune_orderable_db_instance.test.instance_class
-  promotion_tier               = "3"
+  identifier         = %[1]q
+  cluster_identifier = aws_neptune_cluster.test.id
+  apply_immediately  = true
+  instance_class     = data.aws_neptune_orderable_db_instance.test.instance_class
+  promotion_tier     = "3"
 }
 `, rName))
 }
@@ -1361,18 +1357,18 @@ resource "aws_neptune_global_cluster" "test" {
 }
 
 resource "aws_neptune_cluster" "primary" {
-  cluster_identifier                   = %[2]q
-  skip_final_snapshot                  = true
-  global_cluster_identifier            = aws_neptune_global_cluster.test.id
-  engine                               = aws_neptune_global_cluster.test.engine
-  engine_version                       = aws_neptune_global_cluster.test.engine_version
+  cluster_identifier        = %[2]q
+  skip_final_snapshot       = true
+  global_cluster_identifier = aws_neptune_global_cluster.test.id
+  engine                    = aws_neptune_global_cluster.test.engine
+  engine_version            = aws_neptune_global_cluster.test.engine_version
 }
 
 resource "aws_neptune_cluster_instance" "primary" {
-  identifier                   = %[2]q
-  cluster_identifier           = aws_neptune_cluster.primary.id
-  instance_class               = "db.r6g.large"
-  engine_version               = aws_neptune_global_cluster.test.engine_version
+  identifier         = %[2]q
+  cluster_identifier = aws_neptune_cluster.primary.id
+  instance_class     = "db.r6g.large"
+  engine_version     = aws_neptune_global_cluster.test.engine_version
 }
 
 resource "aws_vpc" "alternate" {
@@ -1402,15 +1398,14 @@ resource "aws_neptune_subnet_group" "alternate" {
   subnet_ids = aws_subnet.alternate[*].id
 }
 
-
 resource "aws_neptune_cluster" "secondary" {
-  provider                             = "awsalternate"
-  cluster_identifier                   = %[3]q
-  skip_final_snapshot                  = true
-  neptune_subnet_group_name            = aws_neptune_subnet_group.alternate.name
-  global_cluster_identifier            = aws_neptune_global_cluster.test.id
-  engine                               = aws_neptune_global_cluster.test.engine
-  engine_version                       = aws_neptune_global_cluster.test.engine_version
+  provider                  = "awsalternate"
+  cluster_identifier        = %[3]q
+  skip_final_snapshot       = true
+  neptune_subnet_group_name = aws_neptune_subnet_group.alternate.name
+  global_cluster_identifier = aws_neptune_global_cluster.test.id
+  engine                    = aws_neptune_global_cluster.test.engine
+  engine_version            = aws_neptune_global_cluster.test.engine_version
 
   depends_on = [aws_neptune_cluster_instance.primary]
 
@@ -1420,11 +1415,11 @@ resource "aws_neptune_cluster" "secondary" {
 }
 
 resource "aws_neptune_cluster_instance" "secondary" {
-  provider                     = "awsalternate"
-  identifier                   = %[3]q
-  cluster_identifier           = aws_neptune_cluster.secondary.id
-  engine_version               = aws_neptune_global_cluster.test.engine_version
-  instance_class               = "db.r6g.large"
+  provider           = "awsalternate"
+  identifier         = %[3]q
+  cluster_identifier = aws_neptune_cluster.secondary.id
+  engine_version     = aws_neptune_global_cluster.test.engine_version
+  instance_class     = "db.r6g.large"
 }
 `, rNameGlobal, rNamePrimary, rNameSecondary))
 }
@@ -1607,10 +1602,10 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_neptune_cluster" "source" {
-  cluster_identifier                   = "%[1]s-src"
-  skip_final_snapshot                  = true
-  storage_encrypted                    = true
-  kms_key_arn                          = aws_kms_key.test1.arn
+  cluster_identifier  = "%[1]s-src"
+  skip_final_snapshot = true
+  storage_encrypted   = true
+  kms_key_arn         = aws_kms_key.test1.arn
 }
 
 resource "aws_neptune_cluster_snapshot" "test" {
@@ -1648,12 +1643,12 @@ resource "aws_neptune_cluster" "test" {
 func testAccClusterConfig_storageType(rName, storageType string) string {
 	return acctest.ConfigCompose(testAccClusterConfig_base(), fmt.Sprintf(`
 resource "aws_neptune_cluster" "test" {
-  cluster_identifier                   = %[1]q
-  availability_zones                   = local.availability_zone_names
-  engine                               = "neptune"
-  skip_final_snapshot                  = true
-  storage_type                         = %[2]q
-  apply_immediately                    = true
+  cluster_identifier  = %[1]q
+  availability_zones  = local.availability_zone_names
+  engine              = "neptune"
+  skip_final_snapshot = true
+  storage_type        = %[2]q
+  apply_immediately   = true
 }
 `, rName, storageType))
 }
