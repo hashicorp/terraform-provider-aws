@@ -1,6 +1,8 @@
 # V006
 
-The V006 analyzer reports usage of the deprecated [ValidateListUniqueStrings](https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/helper/validation#ValidateListUniqueStrings) validation function that should be replaced with [ListOfUniqueStrings](https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/helper/validation#ListOfUniqueStrings).
+_This terraform-plugin-sdk (v1) analyzer has been removed in tfproviderlint v0.30.0._
+
+The V006 analyzer reports usage of the deprecated [ValidateListUniqueStrings](https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation#ValidateListUniqueStrings) validation function that should be replaced with [ListOfUniqueStrings](https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation#ListOfUniqueStrings).
 
 ## Flagged Code
 

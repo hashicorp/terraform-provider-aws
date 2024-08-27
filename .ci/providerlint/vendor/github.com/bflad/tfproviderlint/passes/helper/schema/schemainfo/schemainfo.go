@@ -14,7 +14,7 @@ import (
 
 var Analyzer = &analysis.Analyzer{
 	Name: "schemainfo",
-	Doc:  "find github.com/hashicorp/terraform-plugin-sdk/helper/schema.Schema literals for later passes",
+	Doc:  "find github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema.Schema literals for later passes",
 	Requires: []*analysis.Analyzer{
 		inspect.Analyzer,
 		schemamapcompositelit.Analyzer,

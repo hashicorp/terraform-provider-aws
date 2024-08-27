@@ -1,6 +1,8 @@
 # V003
 
-The V003 analyzer reports usage of the deprecated [IPRange](https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/helper/validation#IPRange) validation function that should be replaced with [IsIPv4Range](https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/helper/validation#IsIPv4Range).
+_This terraform-plugin-sdk (v1) analyzer has been removed in tfproviderlint v0.30.0._
+
+The V003 analyzer reports usage of the deprecated [IPRange](https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation#IPRange) validation function that should be replaced with [IsIPv4Range](https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation#IsIPv4Range).
 
 ## Flagged Code
 

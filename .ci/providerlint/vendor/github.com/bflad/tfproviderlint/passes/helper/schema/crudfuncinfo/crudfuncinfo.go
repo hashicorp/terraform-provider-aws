@@ -12,7 +12,7 @@ import (
 
 var Analyzer = &analysis.Analyzer{
 	Name: "crudfuncinfo",
-	Doc:  "find github.com/hashicorp/terraform-plugin-sdk/helper/schema CreateFunc, CreateContextFunc, ReadFunc, ReadContextFunc, UpdateFunc, UpdateContextFunc, DeleteFunc, and DeleteContextFunc declarations for later passes",
+	Doc:  "find github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema CreateFunc, CreateContextFunc, ReadFunc, ReadContextFunc, UpdateFunc, UpdateContextFunc, DeleteFunc, and DeleteContextFunc declarations for later passes",
 	Requires: []*analysis.Analyzer{
 		inspect.Analyzer,
 	},
