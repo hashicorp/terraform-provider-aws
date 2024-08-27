@@ -16,6 +16,7 @@ var (
 	ResourceOpenIDConnectProvider     = resourceOpenIDConnectProvider
 	ResourcePolicy                    = resourcePolicy
 	ResourcePolicyAttachment          = resourcePolicyAttachment
+	ResourceRolePoliciesLock          = newResourceRolePoliciesExclusive
 	ResourceRolePolicy                = resourceRolePolicy
 	ResourceRolePolicyAttachment      = resourceRolePolicyAttachment
 	ResourceSAMLProvider              = resourceSAMLProvider
@@ -44,6 +45,7 @@ var (
 	FindInstanceProfileByName           = findInstanceProfileByName
 	FindOpenIDConnectProviderByARN      = findOpenIDConnectProviderByARN
 	FindPolicyByARN                     = findPolicyByARN
+	FindRolePoliciesByName              = findRolePoliciesByName
 	FindSAMLProviderByARN               = findSAMLProviderByARN
 	FindServerCertificateByName         = findServerCertificateByName
 	FindSSHPublicKeyByThreePartKey      = findSSHPublicKeyByThreePartKey
