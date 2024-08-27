@@ -53,6 +53,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 {{- if .IncludeTags }}
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 {{- end }}
@@ -132,6 +133,11 @@ func (d *dataSource{{ .DataSource }}) Schema(ctx context.Context, req datasource
 		},
 		Blocks: map[string]schema.Block{
 			"complex_argument": schema.ListNestedBlock{
+				{{- if .IncludeComments }}
+				// TIP: ==== CUSTOM TYPES ====
+				// Use a custom type to identify the model type of the tested object
+				{{- end }}
+				CustomType: fwtypes.NewListNestedObjectTypeOf[complexArgumentModel](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						{{- if .IncludeComments }}
@@ -176,7 +182,7 @@ func (d *dataSource{{ .DataSource }}) Read(ctx context.Context, req datasource.R
 	{{ if .IncludeComments }}
 	// TIP: -- 2. Fetch the config
 	{{- end }}
-	var data dataSource{{ .DataSource }}Data
+	var data dataSource{{ .DataSource }}Model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -192,31 +198,16 @@ func (d *dataSource{{ .DataSource }}) Read(ctx context.Context, req datasource.R
 		)
 		return
 	}
-	{{ if .IncludeComments }}
+
+	{{ if .IncludeComments -}}
 	// TIP: -- 4. Set the ID, arguments, and attributes
-	//
-	// For simple data types (i.e., schema.StringAttribute, schema.BoolAttribute,
-	// schema.Int64Attribute, and schema.Float64Attribue), simply setting the  
-	// appropriate data struct field is sufficient. The flex package implements
-	// helpers for converting between Go and Plugin-Framework types seamlessly. No 
-	// error or nil checking is necessary.
-	//
-	// However, there are some situations where more handling is needed such as
-	// complex data types (e.g., schema.ListAttribute, schema.SetAttribute). In 
-	// these cases the flatten function may have a diagnostics return value, which
-	// should be appended to resp.Diagnostics.
 	{{- end }}
-	data.ARN = flex.StringToFramework(ctx, out.Arn)
-	data.ID = flex.StringToFramework(ctx, out.{{ .DataSource }}Id)
-	data.Name = flex.StringToFramework(ctx, out.{{ .DataSource }}Name)
-	data.Type = flex.StringToFramework(ctx, out.{{ .DataSource }}Type)
-	{{ if .IncludeComments }}
-	// TIP: Setting a complex type.
-	{{- end }}
-	complexArgument, diag := flattenComplexArgument(ctx, out.ComplexArgument)
-	resp.Diagnostics.Append(diag...)
-	data.ComplexArgument = complexArgument
-	{{ if .IncludeComments }}
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	{{ if .IncludeComments -}}
 	// TIP: -- 5. Set the tags
 	{{- end }}
 	{{- if .IncludeTags }}
@@ -224,7 +215,8 @@ func (d *dataSource{{ .DataSource }}) Read(ctx context.Context, req datasource.R
 	tags := KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 	data.Tags = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.Map())
 	{{- end }}
-	{{ if .IncludeComments }}
+
+	{{ if .IncludeComments -}}
 	// TIP: -- 6. Set the state
 	{{- end }}
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -244,19 +236,19 @@ func (d *dataSource{{ .DataSource }}) Read(ctx context.Context, req datasource.R
 // See more:
 // https://developer.hashicorp.com/terraform/plugin/framework/handling-data/accessing-values
 {{- end }}
-type dataSource{{ .DataSource }}Data struct {
-	ARN             types.String   `tfsdk:"arn"`
-	ComplexArgument types.List     `tfsdk:"complex_argument"`
-	Description     types.String   `tfsdk:"description"`
-	ID              types.String   `tfsdk:"id"`
-	Name            types.String   `tfsdk:"name"`
+type dataSource{{ .DataSource }}Model struct {
+	ARN             types.String                                          `tfsdk:"arn"`
+	ComplexArgument fwtypes.ListNestedObjectValueOf[complexArgumentModel] `tfsdk:"complex_argument"`
+	Description     types.String                                          `tfsdk:"description"`
+	ID              types.String                                          `tfsdk:"id"`
+	Name            types.String                                          `tfsdk:"name"`
 	{{- if .IncludeTags }}
-	Tags            types.Map      `tfsdk:"tags"`
+	Tags            types.Map                                             `tfsdk:"tags"`
 	{{- end }}
-	Type            types.String   `tfsdk:"type"`
+	Type            types.String                                          `tfsdk:"type"`
 }
 
-type complexArgumentData struct {
+type complexArgumentModel struct {
 	NestedRequired types.String `tfsdk:"nested_required"`
 	NestedOptional types.String `tfsdk:"nested_optional"`
 }
