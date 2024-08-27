@@ -14,7 +14,6 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-provider-aws/skaff/convert"
 )
 
@@ -26,8 +25,6 @@ var functionTestTmpl string
 
 //go:embed websitedoc.tmpl
 var websiteTmpl string
-
-var snakeCaseRegex = regexache.MustCompile(`[a-z0-9_]*`)
 
 type TemplateData struct {
 	Function        string
