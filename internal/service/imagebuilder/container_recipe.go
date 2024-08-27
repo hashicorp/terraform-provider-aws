@@ -195,7 +195,7 @@ func ResourceContainerRecipe() *schema.Resource {
 										Optional: true,
 										ForceNew: true,
 									},
-									"virtual_name": {
+									names.AttrVirtualName: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ForceNew:     true,

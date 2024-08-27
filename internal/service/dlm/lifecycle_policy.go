@@ -251,7 +251,7 @@ func resourceLifecyclePolicy() *schema.Resource {
 													Computed:         true,
 													ValidateDiagFunc: enum.Validate[awstypes.IntervalUnitValues](),
 												},
-												"location": {
+												names.AttrLocation: {
 													Type:             schema.TypeString,
 													Optional:         true,
 													Computed:         true,
@@ -1049,7 +1049,7 @@ func expandCreateRule(cfg []interface{}) *awstypes.CreateRule {
 		createRule.Interval = aws.Int32(int32(v))
 	}
 
-	if v, ok := c["location"].(string); ok && v != "" {
+	if v, ok := c[names.AttrLocation].(string); ok && v != "" {
 		createRule.Location = awstypes.LocationValues(v)
 	}
 
@@ -1081,7 +1081,7 @@ func flattenCreateRule(createRule *awstypes.CreateRule) []map[string]interface{}
 
 	result["interval_unit"] = string(createRule.IntervalUnit)
 
-	result["location"] = string(createRule.Location)
+	result[names.AttrLocation] = string(createRule.Location)
 
 	if createRule.CronExpression != nil {
 		result["cron_expression"] = aws.ToString(createRule.CronExpression)

@@ -78,7 +78,7 @@ func (r *automationRuleResource) Schema(ctx context.Context, request resource.Sc
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"actions": schema.SetNestedBlock{
+			names.AttrActions: schema.SetNestedBlock{
 				CustomType: fwtypes.NewSetNestedObjectTypeOf[automationRulesActionModel](ctx),
 				Validators: []validator.Set{
 					setvalidator.IsRequired(),

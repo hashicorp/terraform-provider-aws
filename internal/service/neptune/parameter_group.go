@@ -9,15 +9,16 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/neptune"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/neptune"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/neptune/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -27,12 +28,14 @@ import (
 )
 
 const (
-	dbParameterGroupMaxParamsBulkEdit = 20
+	dbParameterGroupMaxParamsBulkEdit            = 20
+	dbParameterGroupDeleteRetryTimeout           = 3 * time.Minute
+	dbParameterGroupParametersDeleteRetryTimeout = 30 * time.Second
 )
 
 // @SDKResource("aws_neptune_parameter_group", name="Parameter Group")
 // @Tags(identifierAttribute="arn")
-func ResourceParameterGroup() *schema.Resource {
+func resourceParameterGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceParameterGroupCreate,
 		ReadWithoutTimeout:   resourceParameterGroupRead,
@@ -81,10 +84,10 @@ func ResourceParameterGroup() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"apply_method": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      neptune.ApplyMethodPendingReboot,
-							ValidateFunc: validation.StringInSlice(neptune.ApplyMethod_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          awstypes.ApplyMethodPendingReboot,
+							ValidateDiagFunc: enum.Validate[awstypes.ApplyMethod](),
 						},
 						names.AttrName: {
 							Type:     schema.TypeString,
@@ -107,7 +110,7 @@ func ResourceParameterGroup() *schema.Resource {
 
 func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
+	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
 	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &neptune.CreateDBParameterGroupInput{
@@ -117,13 +120,13 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 		Tags:                   getTagsIn(ctx),
 	}
 
-	output, err := conn.CreateDBParameterGroupWithContext(ctx, input)
+	output, err := conn.CreateDBParameterGroup(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Neptune Parameter Group (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.DBParameterGroup.DBParameterGroupName))
+	d.SetId(aws.ToString(output.DBParameterGroup.DBParameterGroupName))
 
 	if v, ok := d.GetOk(names.AttrParameter); ok && v.(*schema.Set).Len() > 0 {
 		if err := addDBParameterGroupParameters(ctx, conn, d.Id(), expandParameters(v.(*schema.Set).List())); err != nil {
@@ -136,9 +139,9 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
+	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
-	dbParameterGroup, err := FindDBParameterGroupByName(ctx, conn, d.Id())
+	dbParameterGroup, err := findDBParameterGroupByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Neptune Parameter Group (%s) not found, removing from state", d.Id())
@@ -154,7 +157,7 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set(names.AttrDescription, dbParameterGroup.Description)
 	d.Set(names.AttrFamily, dbParameterGroup.DBParameterGroupFamily)
 	d.Set(names.AttrName, dbParameterGroup.DBParameterGroupName)
-	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(dbParameterGroup.DBParameterGroupName)))
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(dbParameterGroup.DBParameterGroupName)))
 
 	// Only include user customized parameters as there's hundreds of system/default ones.
 	input := &neptune.DescribeDBParametersInput{
@@ -177,7 +180,7 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
+	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
 	if d.HasChange(names.AttrParameter) {
 		o, n := d.GetChange(names.AttrParameter)
@@ -202,16 +205,16 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceParameterGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
+	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Neptune Parameter Group: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 3*time.Minute, func() (interface{}, error) {
-		return conn.DeleteDBParameterGroupWithContext(ctx, &neptune.DeleteDBParameterGroupInput{
+	_, err := tfresource.RetryWhenIsA[*awstypes.InvalidDBParameterGroupStateFault](ctx, dbParameterGroupDeleteRetryTimeout, func() (interface{}, error) {
+		return conn.DeleteDBParameterGroup(ctx, &neptune.DeleteDBParameterGroupInput{
 			DBParameterGroupName: aws.String(d.Id()),
 		})
-	}, neptune.ErrCodeInvalidDBParameterGroupStateFault)
+	})
 
-	if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBParameterGroupNotFoundFault) {
+	if errs.IsA[*awstypes.DBParameterGroupNotFoundFault](err) {
 		return diags
 	}
 
@@ -222,14 +225,14 @@ func resourceParameterGroupDelete(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func addDBParameterGroupParameters(ctx context.Context, conn *neptune.Neptune, name string, parameters []*neptune.Parameter) error { // We can only modify 20 parameters at a time, so chunk them until we've got them all.
+func addDBParameterGroupParameters(ctx context.Context, conn *neptune.Client, name string, parameters []awstypes.Parameter) error { // We can only modify 20 parameters at a time, so chunk them until we've got them all.
 	for _, chunk := range tfslices.Chunks(parameters, dbParameterGroupMaxParamsBulkEdit) {
 		input := &neptune.ModifyDBParameterGroupInput{
 			DBParameterGroupName: aws.String(name),
 			Parameters:           chunk,
 		}
 
-		_, err := conn.ModifyDBParameterGroupWithContext(ctx, input)
+		_, err := conn.ModifyDBParameterGroup(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("modifying Neptune Parameter Group (%s): %w", name, err)
@@ -239,16 +242,16 @@ func addDBParameterGroupParameters(ctx context.Context, conn *neptune.Neptune, n
 	return nil
 }
 
-func delDBParameterGroupParameters(ctx context.Context, conn *neptune.Neptune, name string, parameters []*neptune.Parameter) error { // We can only modify 20 parameters at a time, so chunk them until we've got them all.
+func delDBParameterGroupParameters(ctx context.Context, conn *neptune.Client, name string, parameters []awstypes.Parameter) error { // We can only modify 20 parameters at a time, so chunk them until we've got them all.
 	for _, chunk := range tfslices.Chunks(parameters, dbParameterGroupMaxParamsBulkEdit) {
 		input := &neptune.ResetDBParameterGroupInput{
 			DBParameterGroupName: aws.String(name),
 			Parameters:           chunk,
 		}
 
-		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 30*time.Second, func() (interface{}, error) {
-			return conn.ResetDBParameterGroupWithContext(ctx, input)
-		}, neptune.ErrCodeInvalidDBParameterGroupStateFault, "has pending changes")
+		_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidDBParameterGroupStateFault](ctx, dbParameterGroupParametersDeleteRetryTimeout, func() (interface{}, error) {
+			return conn.ResetDBParameterGroup(ctx, input)
+		}, "has pending changes")
 
 		if err != nil {
 			return fmt.Errorf("resetting Neptune Parameter Group (%s): %w", name, err)
@@ -258,7 +261,7 @@ func delDBParameterGroupParameters(ctx context.Context, conn *neptune.Neptune, n
 	return nil
 }
 
-func FindDBParameterGroupByName(ctx context.Context, conn *neptune.Neptune, name string) (*neptune.DBParameterGroup, error) {
+func findDBParameterGroupByName(ctx context.Context, conn *neptune.Client, name string) (*awstypes.DBParameterGroup, error) {
 	input := &neptune.DescribeDBParameterGroupsInput{
 		DBParameterGroupName: aws.String(name),
 	}
@@ -269,7 +272,7 @@ func FindDBParameterGroupByName(ctx context.Context, conn *neptune.Neptune, name
 	}
 
 	// Eventual consistency check.
-	if aws.StringValue(output.DBParameterGroupName) != name {
+	if aws.ToString(output.DBParameterGroupName) != name {
 		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
@@ -278,73 +281,60 @@ func FindDBParameterGroupByName(ctx context.Context, conn *neptune.Neptune, name
 	return output, nil
 }
 
-func findDBParameterGroup(ctx context.Context, conn *neptune.Neptune, input *neptune.DescribeDBParameterGroupsInput) (*neptune.DBParameterGroup, error) {
+func findDBParameterGroup(ctx context.Context, conn *neptune.Client, input *neptune.DescribeDBParameterGroupsInput) (*awstypes.DBParameterGroup, error) {
 	output, err := findDBParameterGroups(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findDBParameterGroups(ctx context.Context, conn *neptune.Neptune, input *neptune.DescribeDBParameterGroupsInput) ([]*neptune.DBParameterGroup, error) {
-	var output []*neptune.DBParameterGroup
+func findDBParameterGroups(ctx context.Context, conn *neptune.Client, input *neptune.DescribeDBParameterGroupsInput) ([]awstypes.DBParameterGroup, error) {
+	var output []awstypes.DBParameterGroup
 
-	err := conn.DescribeDBParameterGroupsPagesWithContext(ctx, input, func(page *neptune.DescribeDBParameterGroupsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
+	pages := neptune.NewDescribeDBParameterGroupsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-		for _, v := range page.DBParameterGroups {
-			if v != nil {
-				output = append(output, v)
+		if errs.IsA[*awstypes.DBParameterGroupNotFoundFault](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
 			}
 		}
 
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBParameterGroupNotFoundFault) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		if err != nil {
+			return nil, err
 		}
-	}
 
-	if err != nil {
-		return nil, err
+		output = append(output, page.DBParameterGroups...)
 	}
 
 	return output, nil
 }
 
-func findDBParameters(ctx context.Context, conn *neptune.Neptune, input *neptune.DescribeDBParametersInput) ([]*neptune.Parameter, error) {
-	var output []*neptune.Parameter
+func findDBParameters(ctx context.Context, conn *neptune.Client, input *neptune.DescribeDBParametersInput) ([]awstypes.Parameter, error) {
+	var output []awstypes.Parameter
 
-	err := conn.DescribeDBParametersPagesWithContext(ctx, input, func(page *neptune.DescribeDBParametersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
+	pages := neptune.NewDescribeDBParametersPaginator(conn, input)
 
-		for _, v := range page.Parameters {
-			if v != nil {
-				output = append(output, v)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.DBParameterGroupNotFoundFault](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
 			}
 		}
 
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBParameterGroupNotFoundFault) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		if err != nil {
+			return nil, err
 		}
-	}
 
-	if err != nil {
-		return nil, err
+		output = append(output, page.Parameters...)
 	}
 
 	return output, nil

@@ -19,7 +19,6 @@ import (
 	cloudformationtypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
-	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -303,7 +302,7 @@ func TestAccS3Bucket_Basic_acceleration(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -645,29 +644,29 @@ func TestAccS3Bucket_Manage_lifecycleBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.expiration.0.date", ""),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.expiration.0.expired_object_delete_marker", acctest.CtFalse),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lifecycle_rule.0.transition.*", map[string]string{
-						"date":          "",
-						"days":          "30",
-						"storage_class": "STANDARD_IA",
+						"date":                 "",
+						"days":                 "30",
+						names.AttrStorageClass: "STANDARD_IA",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lifecycle_rule.0.transition.*", map[string]string{
-						"date":          "",
-						"days":          "60",
-						"storage_class": "INTELLIGENT_TIERING",
+						"date":                 "",
+						"days":                 "60",
+						names.AttrStorageClass: "INTELLIGENT_TIERING",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lifecycle_rule.0.transition.*", map[string]string{
-						"date":          "",
-						"days":          "90",
-						"storage_class": "ONEZONE_IA",
+						"date":                 "",
+						"days":                 "90",
+						names.AttrStorageClass: "ONEZONE_IA",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lifecycle_rule.0.transition.*", map[string]string{
-						"date":          "",
-						"days":          "120",
-						"storage_class": "GLACIER",
+						"date":                 "",
+						"days":                 "120",
+						names.AttrStorageClass: "GLACIER",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lifecycle_rule.0.transition.*", map[string]string{
-						"date":          "",
-						"days":          "210",
-						"storage_class": "DEEP_ARCHIVE",
+						"date":                 "",
+						"days":                 "210",
+						names.AttrStorageClass: "DEEP_ARCHIVE",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.1.id", "id2"),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.1.prefix", "path2/"),
@@ -687,14 +686,14 @@ func TestAccS3Bucket_Manage_lifecycleBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.4.tags.tagKey", "tagValue"),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.4.tags.terraform", "hashicorp"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lifecycle_rule.4.transition.*", map[string]string{
-						"days":          acctest.Ct0,
-						"storage_class": "GLACIER",
+						"days":                 acctest.Ct0,
+						names.AttrStorageClass: "GLACIER",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.5.id", "id6"),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.5.tags.tagKey", "tagValue"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lifecycle_rule.5.transition.*", map[string]string{
-						"days":          acctest.Ct0,
-						"storage_class": "GLACIER",
+						"days":                 acctest.Ct0,
+						names.AttrStorageClass: "GLACIER",
 					}),
 				),
 			},
@@ -3056,6 +3055,9 @@ func testAccBucketConfig_ReplicationBase(bucketName string) string {
 		acctest.ConfigMultipleRegionProvider(2),
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
+data "aws_service_principal" "current" {
+  service_name = "s3"
+}
 
 resource "aws_iam_role" "role" {
   name = %[1]q
@@ -3067,7 +3069,7 @@ resource "aws_iam_role" "role" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "s3.${data.aws_partition.current.dns_suffix}"
+        "Service": "${data.aws_service_principal.current.name}"
       },
       "Effect": "Allow",
       "Sid": ""
@@ -3580,6 +3582,10 @@ resource "aws_s3_bucket" "source" {
 
 func testAccBucketConfig_replicationV2SameRegionNoTags(rName string) string {
 	return fmt.Sprintf(`
+data "aws_service_principal" "current" {
+  service_name = "s3"
+}
+
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -3590,7 +3596,7 @@ resource "aws_iam_role" "test" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "s3.amazonaws.com"
+        "Service": "${data.aws_service_principal.current.name}"
       },
       "Effect": "Allow",
       "Sid": ""

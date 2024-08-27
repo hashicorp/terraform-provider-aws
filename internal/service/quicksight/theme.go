@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -292,7 +293,7 @@ func ResourceTheme() *schema.Resource {
 					Required: true,
 					ForceNew: true,
 				},
-				"last_updated_time": {
+				names.AttrLastUpdatedTime: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -308,7 +309,7 @@ func ResourceTheme() *schema.Resource {
 					MaxItems: 64,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"actions": {
+							names.AttrActions: {
 								Type:     schema.TypeSet,
 								Required: true,
 								MinItems: 1,
@@ -350,6 +351,7 @@ const (
 )
 
 func resourceThemeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId := meta.(*conns.AWSClient).AccountID
@@ -382,22 +384,23 @@ func resourceThemeCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	_, err := conn.CreateThemeWithContext(ctx, input)
 	if err != nil {
-		return create.DiagError(names.QuickSight, create.ErrActionCreating, ResNameTheme, d.Get(names.AttrName).(string), err)
+		return create.AppendDiagError(diags, names.QuickSight, create.ErrActionCreating, ResNameTheme, d.Get(names.AttrName).(string), err)
 	}
 
 	if _, err := waitThemeCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.DiagError(names.QuickSight, create.ErrActionWaitingForCreation, ResNameTheme, d.Id(), err)
+		return create.AppendDiagError(diags, names.QuickSight, create.ErrActionWaitingForCreation, ResNameTheme, d.Id(), err)
 	}
 
-	return resourceThemeRead(ctx, d, meta)
+	return append(diags, resourceThemeRead(ctx, d, meta)...)
 }
 
 func resourceThemeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId, themeId, err := ParseThemeId(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	out, err := FindThemeByID(ctx, conn, d.Id())
@@ -405,18 +408,18 @@ func resourceThemeRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] QuickSight Theme (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.QuickSight, create.ErrActionReading, ResNameTheme, d.Id(), err)
+		return create.AppendDiagError(diags, names.QuickSight, create.ErrActionReading, ResNameTheme, d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, out.Arn)
 	d.Set(names.AttrAWSAccountID, awsAccountId)
 	d.Set("base_theme_id", out.Version.BaseThemeId)
 	d.Set(names.AttrCreatedTime, out.CreatedTime.Format(time.RFC3339))
-	d.Set("last_updated_time", out.LastUpdatedTime.Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedTime, out.LastUpdatedTime.Format(time.RFC3339))
 	d.Set(names.AttrName, out.Name)
 	d.Set(names.AttrStatus, out.Version.Status)
 	d.Set("theme_id", out.ThemeId)
@@ -424,7 +427,7 @@ func resourceThemeRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("version_number", out.Version.VersionNumber)
 
 	if err := d.Set(names.AttrConfiguration, flattenThemeConfiguration(out.Version.Configuration)); err != nil {
-		return diag.Errorf("setting configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting configuration: %s", err)
 	}
 
 	permsResp, err := conn.DescribeThemePermissionsWithContext(ctx, &quicksight.DescribeThemePermissionsInput{
@@ -433,22 +436,23 @@ func resourceThemeRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	})
 
 	if err != nil {
-		return diag.Errorf("describing QuickSight Theme (%s) Permissions: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "describing QuickSight Theme (%s) Permissions: %s", d.Id(), err)
 	}
 
 	if err := d.Set(names.AttrPermissions, flattenPermissions(permsResp.Permissions)); err != nil {
-		return diag.Errorf("setting permissions: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting permissions: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceThemeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId, themeId, err := ParseThemeId(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	if d.HasChangesExcept(names.AttrPermissions, names.AttrTags, names.AttrTagsAll) {
@@ -466,11 +470,11 @@ func resourceThemeUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		log.Printf("[DEBUG] Updating QuickSight Theme (%s): %#v", d.Id(), in)
 		_, err := conn.UpdateThemeWithContext(ctx, in)
 		if err != nil {
-			return create.DiagError(names.QuickSight, create.ErrActionUpdating, ResNameTheme, d.Id(), err)
+			return create.AppendDiagError(diags, names.QuickSight, create.ErrActionUpdating, ResNameTheme, d.Id(), err)
 		}
 
 		if _, err := waitThemeUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return create.DiagError(names.QuickSight, create.ErrActionWaitingForUpdate, ResNameTheme, d.Id(), err)
+			return create.AppendDiagError(diags, names.QuickSight, create.ErrActionWaitingForUpdate, ResNameTheme, d.Id(), err)
 		}
 	}
 
@@ -497,19 +501,20 @@ func resourceThemeUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		_, err = conn.UpdateThemePermissionsWithContext(ctx, params)
 
 		if err != nil {
-			return diag.Errorf("updating QuickSight Theme (%s) permissions: %s", themeId, err)
+			return sdkdiag.AppendErrorf(diags, "updating QuickSight Theme (%s) permissions: %s", themeId, err)
 		}
 	}
 
-	return resourceThemeRead(ctx, d, meta)
+	return append(diags, resourceThemeRead(ctx, d, meta)...)
 }
 
 func resourceThemeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId, themeId, err := ParseThemeId(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input := &quicksight.DeleteThemeInput{
@@ -521,14 +526,14 @@ func resourceThemeDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	_, err = conn.DeleteThemeWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.QuickSight, create.ErrActionDeleting, ResNameTheme, d.Id(), err)
+		return create.AppendDiagError(diags, names.QuickSight, create.ErrActionDeleting, ResNameTheme, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindThemeByID(ctx context.Context, conn *quicksight.QuickSight, id string) (*quicksight.Theme, error) {

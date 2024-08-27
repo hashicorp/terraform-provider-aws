@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/devicefarm"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/devicefarm/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,8 +23,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_devicefarm_upload")
-func ResourceUpload() *schema.Resource {
+// @SDKResource("aws_devicefarm_upload", name="Upload")
+func resourceUpload() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUploadCreate,
 		ReadWithoutTimeout:   resourceUploadRead,
@@ -106,7 +107,7 @@ func resourceUploadRead(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
-	upload, err := FindUploadByARN(ctx, conn, d.Id())
+	upload, err := findUploadByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DeviceFarm Upload (%s) not found, removing from state", d.Id())
@@ -180,4 +181,28 @@ func resourceUploadDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	return diags
+}
+
+func findUploadByARN(ctx context.Context, conn *devicefarm.Client, arn string) (*awstypes.Upload, error) {
+	input := &devicefarm.GetUploadInput{
+		Arn: aws.String(arn),
+	}
+	output, err := conn.GetUpload(ctx, input)
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Upload == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Upload, nil
 }

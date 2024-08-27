@@ -101,7 +101,7 @@ func TestAccAPIGatewayDeployment_Disappears_restAPI(t *testing.T) {
 				Config: testAccDeploymentConfig_stageName(rName, stageName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
-					testAccCheckRestAPIExists(ctx, restApiResourceName, &restApi),
+					testAccCheckRESTAPIExists(ctx, restApiResourceName, &restApi),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceRestAPI(), restApiResourceName),
 				),
 				ExpectNonEmptyPlan: true,

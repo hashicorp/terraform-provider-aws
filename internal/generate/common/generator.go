@@ -7,10 +7,13 @@ import (
 	"bytes"
 	"fmt"
 	"go/format"
+	"maps"
 	"os"
 	"path"
 	"strings"
 	"text/template"
+	"unicode"
+	"unicode/utf8"
 
 	"github.com/hashicorp/cli"
 	"golang.org/x/text/cases"
@@ -56,7 +59,7 @@ type Destination interface {
 	CreateDirectories() error
 	Write() error
 	WriteBytes(body []byte) error
-	WriteTemplate(templateName, templateBody string, templateData any) error
+	WriteTemplate(templateName, templateBody string, templateData any, funcMaps ...template.FuncMap) error
 	WriteTemplateSet(templates *template.Template, templateData any) error
 }
 
@@ -127,8 +130,8 @@ func (d *baseDestination) WriteBytes(body []byte) error {
 	return err
 }
 
-func (d *baseDestination) WriteTemplate(templateName, templateBody string, templateData any) error {
-	body, err := parseTemplate(templateName, templateBody, templateData)
+func (d *baseDestination) WriteTemplate(templateName, templateBody string, templateData any, funcMaps ...template.FuncMap) error {
+	body, err := parseTemplate(templateName, templateBody, templateData, funcMaps...)
 
 	if err != nil {
 		return err
@@ -142,9 +145,21 @@ func (d *baseDestination) WriteTemplate(templateName, templateBody string, templ
 	return d.WriteBytes(body)
 }
 
-func parseTemplate(templateName, templateBody string, templateData any) ([]byte, error) {
+func parseTemplate(templateName, templateBody string, templateData any, funcMaps ...template.FuncMap) ([]byte, error) {
 	funcMap := template.FuncMap{
+		// FirstUpper returns a string with the first character as upper case.
+		"FirstUpper": func(s string) string {
+			if s == "" {
+				return ""
+			}
+			r, n := utf8.DecodeRuneInString(s)
+			return string(unicode.ToUpper(r)) + s[n:]
+		},
+		// Title returns a string with the first character of each word as upper case.
 		"Title": cases.Title(language.Und, cases.NoLower).String,
+	}
+	for _, v := range funcMaps {
+		maps.Copy(funcMap, v) // Extras overwrite defaults.
 	}
 	tmpl, err := template.New(templateName).Funcs(funcMap).Parse(templateBody)
 

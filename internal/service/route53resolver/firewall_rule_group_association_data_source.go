@@ -6,15 +6,16 @@ package route53resolver
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_route53_resolver_firewall_rule_group_association")
-func DataSourceFirewallRuleGroupAssociation() *schema.Resource {
+// @SDKDataSource("aws_route53_resolver_firewall_rule_group_association", name="Firewall Rule Group Association")
+func dataSourceFirewallRuleGroupAssociation() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRuleGroupAssociationRead,
 
@@ -76,16 +77,17 @@ func DataSourceFirewallRuleGroupAssociation() *schema.Resource {
 }
 
 func dataSourceRuleGroupAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
 	id := d.Get("firewall_rule_group_association_id").(string)
-	ruleGroupAssociation, err := FindFirewallRuleGroupAssociationByID(ctx, conn, id)
+	ruleGroupAssociation, err := findFirewallRuleGroupAssociationByID(ctx, conn, id)
 
 	if err != nil {
-		return diag.Errorf("reading Route53 Resolver Firewall Rule Group Association (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "reading Route53 Resolver Firewall Rule Group Association (%s): %s", id, err)
 	}
 
-	d.SetId(aws.StringValue(ruleGroupAssociation.Id))
+	d.SetId(aws.ToString(ruleGroupAssociation.Id))
 	d.Set(names.AttrARN, ruleGroupAssociation.Arn)
 	d.Set(names.AttrCreationTime, ruleGroupAssociation.CreationTime)
 	d.Set("creator_request_id", ruleGroupAssociation.CreatorRequestId)
@@ -100,5 +102,5 @@ func dataSourceRuleGroupAssociationRead(ctx context.Context, d *schema.ResourceD
 	d.Set(names.AttrStatusMessage, ruleGroupAssociation.StatusMessage)
 	d.Set(names.AttrVPCID, ruleGroupAssociation.VpcId)
 
-	return nil
+	return diags
 }

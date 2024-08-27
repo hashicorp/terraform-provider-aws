@@ -9,9 +9,9 @@ import (
 	"log"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -113,9 +113,9 @@ func (h *instanceHandler) precondition(ctx context.Context, d *schema.ResourceDa
 		input.BackupRetentionPeriod = aws.Int32(int32(d.Get("backup_retention_period").(int)))
 	}
 
-	if d.HasChange("deletion_protection") {
+	if d.HasChange(names.AttrDeletionProtection) {
 		needsPreConditions = true
-		input.DeletionProtection = aws.Bool(d.Get("deletion_protection").(bool))
+		input.DeletionProtection = aws.Bool(d.Get(names.AttrDeletionProtection).(bool))
 	}
 
 	if needsPreConditions {

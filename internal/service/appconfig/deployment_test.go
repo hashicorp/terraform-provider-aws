@@ -131,51 +131,6 @@ func TestAccAppConfigDeployment_predefinedStrategy(t *testing.T) {
 	})
 }
 
-func TestAccAppConfigDeployment_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_appconfig_deployment.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AppConfigServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckDestroyNoop,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDeploymentConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccDeploymentConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccDeploymentConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-		},
-	})
-}
-
 func TestAccAppConfigDeployment_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -360,39 +315,6 @@ resource "aws_appconfig_deployment" "test"{
   environment_id           = aws_appconfig_environment.test.environment_id
 }
 `, rName, strategy))
-}
-
-func testAccDeploymentConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccDeploymentConfig_base(rName), fmt.Sprintf(`
-resource "aws_appconfig_deployment" "test"{
-  application_id           = aws_appconfig_application.test.id
-  configuration_profile_id = aws_appconfig_configuration_profile.test.configuration_profile_id
-  configuration_version    = aws_appconfig_hosted_configuration_version.test.version_number
-  deployment_strategy_id   = aws_appconfig_deployment_strategy.test.id
-  environment_id           = aws_appconfig_environment.test.environment_id
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1))
-}
-
-func testAccDeploymentConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccDeploymentConfig_base(rName), fmt.Sprintf(`
-resource "aws_appconfig_deployment" "test"{
-  application_id           = aws_appconfig_application.test.id
-  configuration_profile_id = aws_appconfig_configuration_profile.test.configuration_profile_id
-  configuration_version    = aws_appconfig_hosted_configuration_version.test.version_number
-  deployment_strategy_id   = aws_appconfig_deployment_strategy.test.id
-  environment_id           = aws_appconfig_environment.test.environment_id
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccDeploymentConfig_multiple(rName string, n int) string {

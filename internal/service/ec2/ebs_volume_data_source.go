@@ -21,8 +21,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ebs_volume")
-func DataSourceEBSVolume() *schema.Resource {
+// @SDKDataSource("aws_ebs_volume", name="EBS Volume")
+// @Tags
+// @Testing(tagsTest=false)
+func dataSourceEBSVolume() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEBSVolumeRead,
 
@@ -93,11 +95,10 @@ func DataSourceEBSVolume() *schema.Resource {
 func dataSourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeVolumesInput{}
 
-	input.Filters = append(input.Filters, newCustomFilterListV2(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
@@ -105,7 +106,7 @@ func dataSourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 		input.Filters = nil
 	}
 
-	output, err := findEBSVolumesV2(ctx, conn, input)
+	output, err := findEBSVolumes(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EBS Volumes: %s", err)
@@ -153,9 +154,7 @@ func dataSourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("volume_id", volume.VolumeId)
 	d.Set(names.AttrVolumeType, volume.VolumeType)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, volume.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOut(ctx, volume.Tags)
 
 	return diags
 }

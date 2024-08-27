@@ -11,15 +11,17 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -32,13 +34,14 @@ const (
 	botAliasDeleteTimeout = 5 * time.Minute
 )
 
-// @SDKResource("aws_lex_bot_alias")
-func ResourceBotAlias() *schema.Resource {
+// @SDKResource("aws_lex_bot_alias", name="Bot Alias")
+func resourceBotAlias() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBotAliasCreate,
 		ReadWithoutTimeout:   resourceBotAliasRead,
 		UpdateWithoutTimeout: resourceBotAliasUpdate,
 		DeleteWithoutTimeout: resourceBotAliasDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceBotAliasImport,
 		},
@@ -125,7 +128,7 @@ var validBotAliasName = validation.All(
 
 func resourceBotAliasCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LexModelsConn(ctx)
+	conn := meta.(*conns.AWSClient).LexModelsClient(ctx)
 
 	botName := d.Get("bot_name").(string)
 	botAliasName := d.Get(names.AttrName).(string)
@@ -147,14 +150,16 @@ func resourceBotAliasCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
-		output, err := conn.PutBotAliasWithContext(ctx, input)
+		output, err := conn.PutBotAlias(ctx, input)
 
-		input.Checksum = output.Checksum
+		if output != nil {
+			input.Checksum = output.Checksum
+		}
 		// IAM eventual consistency
-		if tfawserr.ErrMessageContains(err, lexmodelbuildingservice.ErrCodeBadRequestException, "Lex can't access your IAM role") {
+		if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "Lex can't access your IAM role") {
 			return retry.RetryableError(err)
 		}
-		if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeConflictException) {
+		if errs.IsA[*awstypes.ConflictException](err) {
 			return retry.RetryableError(fmt.Errorf("%q bot alias still creating, another operation is pending: %w", id, err))
 		}
 		if err != nil {
@@ -164,7 +169,7 @@ func resourceBotAliasCreate(ctx context.Context, d *schema.ResourceData, meta in
 		return nil
 	})
 	if tfresource.TimedOut(err) { // nosemgrep:ci.helper-schema-TimeoutError-check-doesnt-return-output
-		_, err = conn.PutBotAliasWithContext(ctx, input)
+		_, err = conn.PutBotAlias(ctx, input)
 	}
 
 	if err != nil {
@@ -178,13 +183,13 @@ func resourceBotAliasCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceBotAliasRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LexModelsConn(ctx)
+	conn := meta.(*conns.AWSClient).LexModelsClient(ctx)
 
-	resp, err := conn.GetBotAliasWithContext(ctx, &lexmodelbuildingservice.GetBotAliasInput{
+	resp, err := conn.GetBotAlias(ctx, &lexmodelbuildingservice.GetBotAliasInput{
 		BotName: aws.String(d.Get("bot_name").(string)),
 		Name:    aws.String(d.Get(names.AttrName).(string)),
 	})
-	if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		log.Printf("[WARN] Bot alias (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -219,7 +224,7 @@ func resourceBotAliasRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceBotAliasUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LexModelsConn(ctx)
+	conn := meta.(*conns.AWSClient).LexModelsClient(ctx)
 
 	input := &lexmodelbuildingservice.PutBotAliasInput{
 		BotName:    aws.String(d.Get("bot_name").(string)),
@@ -241,13 +246,13 @@ func resourceBotAliasUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *retry.RetryError {
-		_, err := conn.PutBotAliasWithContext(ctx, input)
+		_, err := conn.PutBotAlias(ctx, input)
 
 		// IAM eventual consistency
-		if tfawserr.ErrMessageContains(err, lexmodelbuildingservice.ErrCodeBadRequestException, "Lex can't access your IAM role") {
+		if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "Lex can't access your IAM role") {
 			return retry.RetryableError(err)
 		}
-		if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeConflictException) {
+		if errs.IsA[*awstypes.ConflictException](err) {
 			return retry.RetryableError(fmt.Errorf("%q bot alias still updating", d.Id()))
 		}
 		if err != nil {
@@ -258,7 +263,7 @@ func resourceBotAliasUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	})
 
 	if tfresource.TimedOut(err) {
-		_, err = conn.PutBotAliasWithContext(ctx, input)
+		_, err = conn.PutBotAlias(ctx, input)
 	}
 
 	if err != nil {
@@ -270,38 +275,28 @@ func resourceBotAliasUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceBotAliasDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LexModelsConn(ctx)
+	conn := meta.(*conns.AWSClient).LexModelsClient(ctx)
 
-	botName := d.Get("bot_name").(string)
-	botAliasName := d.Get(names.AttrName).(string)
+	botAliasName, botName := d.Get(names.AttrName).(string), d.Get("bot_name").(string)
 
-	input := &lexmodelbuildingservice.DeleteBotAliasInput{
-		BotName: aws.String(botName),
-		Name:    aws.String(botAliasName),
-	}
-
-	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *retry.RetryError {
-		_, err := conn.DeleteBotAliasWithContext(ctx, input)
-
-		if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeConflictException) {
-			return retry.RetryableError(fmt.Errorf("%q: bot alias still deleting", d.Id()))
-		}
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
+	log.Printf("[DEBUG] Deleting Lex Model Bot Alias: %s", d.Id())
+	_, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+		return conn.DeleteBotAlias(ctx, &lexmodelbuildingservice.DeleteBotAliasInput{
+			BotName: aws.String(botName),
+			Name:    aws.String(botAliasName),
+		})
 	})
 
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteBotAliasWithContext(ctx, input)
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return diags
 	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Lex Model Bot Alias (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitBotAliasDeleted(ctx, conn, botAliasName, botName); err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Lex Model Bot Alias (%s): waiting for completion: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Lex Model Bot Alias (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
@@ -322,9 +317,9 @@ func resourceBotAliasImport(ctx context.Context, d *schema.ResourceData, _ inter
 var logSettings = &schema.Resource{
 	Schema: map[string]*schema.Schema{
 		names.AttrDestination: {
-			Type:         schema.TypeString,
-			Required:     true,
-			ValidateFunc: validation.StringInSlice(lexmodelbuildingservice.Destination_Values(), false),
+			Type:             schema.TypeString,
+			Required:         true,
+			ValidateDiagFunc: enum.Validate[awstypes.Destination](),
 		},
 		names.AttrKMSKeyARN: {
 			Type:     schema.TypeString,
@@ -335,9 +330,9 @@ var logSettings = &schema.Resource{
 			),
 		},
 		"log_type": {
-			Type:         schema.TypeString,
-			Required:     true,
-			ValidateFunc: validation.StringInSlice(lexmodelbuildingservice.LogType_Values(), false),
+			Type:             schema.TypeString,
+			Required:         true,
+			ValidateDiagFunc: enum.Validate[awstypes.LogType](),
 		},
 		names.AttrResourceARN: {
 			Type:     schema.TypeString,
@@ -354,29 +349,29 @@ var logSettings = &schema.Resource{
 	},
 }
 
-func flattenConversationLogs(response *lexmodelbuildingservice.ConversationLogsResponse) (flattened []map[string]interface{}) {
+func flattenConversationLogs(response *awstypes.ConversationLogsResponse) (flattened []map[string]interface{}) {
 	return []map[string]interface{}{
 		{
-			names.AttrIAMRoleARN: aws.StringValue(response.IamRoleArn),
+			names.AttrIAMRoleARN: aws.ToString(response.IamRoleArn),
 			"log_settings":       flattenLogSettings(response.LogSettings),
 		},
 	}
 }
 
-func expandConversationLogs(rawObject interface{}) (*lexmodelbuildingservice.ConversationLogsRequest, error) {
+func expandConversationLogs(rawObject interface{}) (*awstypes.ConversationLogsRequest, error) {
 	request := rawObject.([]interface{})[0].(map[string]interface{})
 
 	logSettings, err := expandLogSettings(request["log_settings"].(*schema.Set).List())
 	if err != nil {
 		return nil, err
 	}
-	return &lexmodelbuildingservice.ConversationLogsRequest{
+	return &awstypes.ConversationLogsRequest{
 		IamRoleArn:  aws.String(request[names.AttrIAMRoleARN].(string)),
 		LogSettings: logSettings,
 	}, nil
 }
 
-func flattenLogSettings(responses []*lexmodelbuildingservice.LogSettingsResponse) (flattened []map[string]interface{}) {
+func flattenLogSettings(responses []awstypes.LogSettingsResponse) (flattened []map[string]interface{}) {
 	for _, response := range responses {
 		flattened = append(flattened, map[string]interface{}{
 			names.AttrDestination: response.Destination,
@@ -389,8 +384,8 @@ func flattenLogSettings(responses []*lexmodelbuildingservice.LogSettingsResponse
 	return
 }
 
-func expandLogSettings(rawValues []interface{}) ([]*lexmodelbuildingservice.LogSettingsRequest, error) {
-	requests := make([]*lexmodelbuildingservice.LogSettingsRequest, 0, len(rawValues))
+func expandLogSettings(rawValues []interface{}) ([]awstypes.LogSettingsRequest, error) {
+	requests := make([]awstypes.LogSettingsRequest, 0, len(rawValues))
 
 	for _, rawValue := range rawValues {
 		value, ok := rawValue.(map[string]interface{})
@@ -398,14 +393,14 @@ func expandLogSettings(rawValues []interface{}) ([]*lexmodelbuildingservice.LogS
 			continue
 		}
 		destination := value[names.AttrDestination].(string)
-		request := &lexmodelbuildingservice.LogSettingsRequest{
-			Destination: aws.String(destination),
-			LogType:     aws.String(value["log_type"].(string)),
+		request := awstypes.LogSettingsRequest{
+			Destination: awstypes.Destination(destination),
+			LogType:     awstypes.LogType(value["log_type"].(string)),
 			ResourceArn: aws.String(value[names.AttrResourceARN].(string)),
 		}
 
 		if v, ok := value[names.AttrKMSKeyARN]; ok && v != "" {
-			if destination != lexmodelbuildingservice.DestinationS3 {
+			if destination != string(awstypes.DestinationS3) {
 				return nil, fmt.Errorf("`kms_key_arn` cannot be specified when `destination` is %q", destination)
 			}
 			request.KmsKeyArn = aws.String(value[names.AttrKMSKeyARN].(string))

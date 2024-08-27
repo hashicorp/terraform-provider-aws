@@ -192,7 +192,7 @@ This resource supports the following arguments:
 * `defaultAction` - (Required) Default action block for the default listener rule. Default action blocks are defined below.
 * `name` - (Required, Forces new resource) Name of the listener. A listener name must be unique within a service. Valid characters are a-z, 0-9, and hyphens (-). You can't use a hyphen as the first or last character, or immediately after another hyphen.
 * `port` - (Optional, Forces new resource) Listener port. You can specify a value from 1 to 65535. If `port` is not specified and `protocol` is HTTP, the value will default to 80. If `port` is not specified and `protocol` is HTTPS, the value will default to 443.
-* `protocol` - (Required, Forces new resource) Protocol for the listener. Supported values are `HTTP` or `HTTPS`
+* `protocol` - (Required, Forces new resource) Protocol for the listener. Supported values are `HTTP`, `HTTPS` or `TLS_PASSTHROUGH`
 * `serviceArn` - (Optional) Amazon Resource Name (ARN) of the VPC Lattice service. You must include either the `serviceArn` or `serviceIdentifier` arguments.
 * `serviceIdentifier` - (Optional) ID of the VPC Lattice service. You must include either the `serviceArn` or `serviceIdentifier` arguments.
 -> **NOTE:** You must specify one of the following arguments: `serviceArn` or `serviceIdentifier`.
@@ -268,4 +268,4 @@ Using `terraform import`, import VPC Lattice Listener using the `listenerId` of 
 % terraform import aws_vpclattice_listener.example svc-1a2b3c4d/listener-987654321
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-30b06ae48c24856c6518209e02f75d55700f5368998f22e96c0fb3c67ef9e186 -->
+<!-- cache-key: cdktf-0.20.1 input-0ca5580988bfab04426823395a214bb0c694d578482a69ab5e89b8239757477e -->

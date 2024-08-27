@@ -9,9 +9,10 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/rds"
+	"github.com/aws/aws-sdk-go-v2/service/rds/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -28,7 +29,7 @@ func TestAccRDSClusterInstance_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var v rds.DBInstance
+	var v types.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster_instance.test"
 
@@ -83,7 +84,7 @@ func TestAccRDSClusterInstance_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var v rds.DBInstance
+	var v types.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster_instance.test"
 
@@ -111,7 +112,7 @@ func TestAccRDSClusterInstance_identifierGenerated(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var v rds.DBInstance
+	var v types.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster_instance.test"
 
@@ -147,7 +148,7 @@ func TestAccRDSClusterInstance_identifierPrefix(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var v rds.DBInstance
+	var v types.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster_instance.test"
 
@@ -183,7 +184,7 @@ func TestAccRDSClusterInstance_tags(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var v rds.DBInstance
+	var v types.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster_instance.test"
 
@@ -236,7 +237,7 @@ func TestAccRDSClusterInstance_isAlreadyBeingDeleted(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var v rds.DBInstance
+	var v types.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster_instance.test"
 
@@ -255,12 +256,12 @@ func TestAccRDSClusterInstance_isAlreadyBeingDeleted(t *testing.T) {
 			{
 				PreConfig: func() {
 					// Get Database Instance into deleting state
-					conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
+					conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
 					input := &rds.DeleteDBInstanceInput{
 						DBInstanceIdentifier: aws.String(rName),
 						SkipFinalSnapshot:    aws.Bool(true),
 					}
-					_, err := conn.DeleteDBInstanceWithContext(ctx, input)
+					_, err := conn.DeleteDBInstance(ctx, input)
 					if err != nil {
 						t.Fatalf("error deleting Database Instance: %s", err)
 					}
@@ -278,7 +279,7 @@ func TestAccRDSClusterInstance_az(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var v rds.DBInstance
+	var v types.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster_instance.test"
 	availabilityZonesDataSourceName := "data.aws_availability_zones.available"
@@ -314,7 +315,7 @@ func TestAccRDSClusterInstance_kmsKey(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var v rds.DBInstance
+	var v types.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	kmsKeyResourceName := "aws_kms_key.test"
 	resourceName := "aws_rds_cluster_instance.test"
@@ -350,7 +351,7 @@ func TestAccRDSClusterInstance_publiclyAccessible(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var v rds.DBInstance
+	var v types.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster_instance.test"
 
@@ -407,7 +408,7 @@ func TestAccRDSClusterInstance_copyTagsToSnapshot(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var v rds.DBInstance
+	var v types.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster_instance.test"
 
@@ -449,7 +450,7 @@ func TestAccRDSClusterInstance_caCertificateIdentifier(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var v rds.DBInstance
+	var v types.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster_instance.test"
 	certificateDataSourceName := "data.aws_rds_certificate.latest"
@@ -485,7 +486,7 @@ func TestAccRDSClusterInstance_monitoringInterval(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var v rds.DBInstance
+	var v types.DBInstance
 	resourceName := "aws_rds_cluster_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -493,7 +494,7 @@ func TestAccRDSClusterInstance_monitoringInterval(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterInstanceConfig_monitoringInterval(rName, 30),
@@ -541,7 +542,7 @@ func TestAccRDSClusterInstance_MonitoringRoleARN_enabledToDisabled(t *testing.T)
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var v rds.DBInstance
+	var v types.DBInstance
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_rds_cluster_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -550,7 +551,7 @@ func TestAccRDSClusterInstance_MonitoringRoleARN_enabledToDisabled(t *testing.T)
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterInstanceConfig_monitoringRoleARN(rName),
@@ -584,7 +585,7 @@ func TestAccRDSClusterInstance_MonitoringRoleARN_enabledToRemoved(t *testing.T) 
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var v rds.DBInstance
+	var v types.DBInstance
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_rds_cluster_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -593,7 +594,7 @@ func TestAccRDSClusterInstance_MonitoringRoleARN_enabledToRemoved(t *testing.T) 
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterInstanceConfig_monitoringRoleARN(rName),
@@ -626,7 +627,7 @@ func TestAccRDSClusterInstance_MonitoringRoleARN_removedToEnabled(t *testing.T) 
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var v rds.DBInstance
+	var v types.DBInstance
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_rds_cluster_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -635,7 +636,7 @@ func TestAccRDSClusterInstance_MonitoringRoleARN_removedToEnabled(t *testing.T) 
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterInstanceConfig_monitoringRoleARNRemoved(rName),
@@ -668,7 +669,7 @@ func TestAccRDSClusterInstance_PerformanceInsightsEnabled_auroraMySQL1(t *testin
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var v rds.DBInstance
+	var v types.DBInstance
 	resourceName := "aws_rds_cluster_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	engine := "aurora-mysql"
@@ -704,7 +705,7 @@ func TestAccRDSClusterInstance_PerformanceInsightsEnabled_auroraPostgresql(t *te
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var v rds.DBInstance
+	var v types.DBInstance
 	resourceName := "aws_rds_cluster_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	engine := "aurora-postgresql"
@@ -740,7 +741,7 @@ func TestAccRDSClusterInstance_PerformanceInsightsKMSKeyID_auroraMySQL1(t *testi
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var v rds.DBInstance
+	var v types.DBInstance
 	kmsKeyResourceName := "aws_kms_key.test"
 	resourceName := "aws_rds_cluster_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -778,7 +779,7 @@ func TestAccRDSClusterInstance_PerformanceInsightsKMSKeyIDAuroraMySQL1_defaultKe
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var v rds.DBInstance
+	var v types.DBInstance
 	resourceName := "aws_rds_cluster_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	engine := "aurora-mysql"
@@ -818,7 +819,7 @@ func TestAccRDSClusterInstance_performanceInsightsRetentionPeriod(t *testing.T) 
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var v rds.DBInstance
+	var v types.DBInstance
 	resourceName := "aws_rds_cluster_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -873,7 +874,7 @@ func TestAccRDSClusterInstance_PerformanceInsightsKMSKeyID_auroraPostgresql(t *t
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var v rds.DBInstance
+	var v types.DBInstance
 	kmsKeyResourceName := "aws_kms_key.test"
 	resourceName := "aws_rds_cluster_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -911,7 +912,7 @@ func TestAccRDSClusterInstance_PerformanceInsightsKMSKeyIDAuroraPostgresql_defau
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var v rds.DBInstance
+	var v types.DBInstance
 	resourceName := "aws_rds_cluster_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	engine := "aurora-postgresql"
@@ -946,14 +947,14 @@ func TestAccRDSClusterInstance_PerformanceInsightsKMSKeyIDAuroraPostgresql_defau
 }
 
 func testAccPerformanceInsightsDefaultVersionPreCheck(ctx context.Context, t *testing.T, engine string) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
 
 	input := &rds.DescribeDBEngineVersionsInput{
 		DefaultOnly: aws.Bool(true),
 		Engine:      aws.String(engine),
 	}
 
-	result, err := conn.DescribeDBEngineVersionsWithContext(ctx, input)
+	result, err := conn.DescribeDBEngineVersions(ctx, input)
 	if err != nil {
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
@@ -962,11 +963,11 @@ func testAccPerformanceInsightsDefaultVersionPreCheck(ctx context.Context, t *te
 		t.Fatalf("unexpected PreCheck error, no default version for engine: %s", engine)
 	}
 
-	testAccPerformanceInsightsPreCheck(ctx, t, engine, aws.StringValue(result.DBEngineVersions[0].EngineVersion))
+	testAccPerformanceInsightsPreCheck(ctx, t, engine, aws.ToString(result.DBEngineVersions[0].EngineVersion))
 }
 
 func testAccPerformanceInsightsPreCheck(ctx context.Context, t *testing.T, engine string, engineVersion string) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
 
 	input := &rds.DescribeOrderableDBInstanceOptionsInput{
 		Engine:        aws.String(engine),
@@ -974,26 +975,25 @@ func testAccPerformanceInsightsPreCheck(ctx context.Context, t *testing.T, engin
 	}
 
 	supportsPerformanceInsights := false
-	err := conn.DescribeOrderableDBInstanceOptionsPagesWithContext(ctx, input, func(resp *rds.DescribeOrderableDBInstanceOptionsOutput, lastPage bool) bool {
-		for _, instanceOption := range resp.OrderableDBInstanceOptions {
-			if instanceOption == nil {
-				continue
-			}
+	pages := rds.NewDescribeOrderableDBInstanceOptionsPaginator(conn, input)
+Pages:
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-			if aws.BoolValue(instanceOption.SupportsPerformanceInsights) {
+		if tfawserr.ErrCodeEquals(err, "InvalidParameterCombination") {
+			t.Skipf("RDS Performance Insights not supported, skipping acceptance test")
+		}
+
+		if err != nil {
+			t.Fatalf("unexpected PreCheck error: %s", err)
+		}
+
+		for _, instanceOption := range page.OrderableDBInstanceOptions {
+			if aws.ToBool(instanceOption.SupportsPerformanceInsights) {
 				supportsPerformanceInsights = true
-				return false // stop processing pages
+				break Pages
 			}
 		}
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, "InvalidParameterCombination") {
-		t.Skipf("RDS Performance Insights not supported, skipping acceptance test")
-	}
-
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 
 	if !supportsPerformanceInsights {
@@ -1001,18 +1001,14 @@ func testAccPerformanceInsightsPreCheck(ctx context.Context, t *testing.T, engin
 	}
 }
 
-func testAccCheckClusterInstanceExists(ctx context.Context, n string, v *rds.DBInstance) resource.TestCheckFunc {
+func testAccCheckClusterInstanceExists(ctx context.Context, n string, v *types.DBInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No RDS Cluster Instance ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
 
 		output, err := tfrds.FindDBInstanceByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
@@ -1027,7 +1023,7 @@ func testAccCheckClusterInstanceExists(ctx context.Context, n string, v *rds.DBI
 
 func testAccCheckClusterInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_rds_cluster_instance" {
