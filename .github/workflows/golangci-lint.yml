@@ -41,7 +41,7 @@ jobs:
             awk '{print $2}'
           )" >> $GITHUB_OUTPUT
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@aaa42aa0628b4ae2578232a66b541047968fac86 # v3.7.1
+        uses: golangci/golangci-lint-action@aaa42aa0628b4ae2578232a66b541047968fac86 # v6.1.0
         with:
           version: "${{ steps.golangci-lint-version.outputs.version }}"
           args: --config .ci/.golangci.yml
@@ -64,7 +64,7 @@ jobs:
             awk '{print $2}'
           )" >> $GITHUB_OUTPUT
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@aaa42aa0628b4ae2578232a66b541047968fac86 # v3.7.1
+        uses: golangci/golangci-lint-action@aaa42aa0628b4ae2578232a66b541047968fac86 # v6.1.0
         with:
           version: "${{ steps.golangci-lint-version.outputs.version }}"
           args: --config .ci/.golangci2.yml
@@ -72,7 +72,7 @@ jobs:
           # Trigger garbage collection more frequently to reduce the likelihood
           # of OOM errors.
           # ref: https://golangci-lint.run/usage/performance/#memory-usage
-          GOGC: "50"
+          GOGC: "30"
   golangci-lintc:
     name: 3 of 3
     needs: [golangci-linta]
@@ -92,7 +92,7 @@ jobs:
             awk '{print $2}'
           )" >> $GITHUB_OUTPUT
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@aaa42aa0628b4ae2578232a66b541047968fac86 # v3.7.1
+        uses: golangci/golangci-lint-action@aaa42aa0628b4ae2578232a66b541047968fac86 # v6.1.0
         with:
           version: "${{ steps.golangci-lint-version.outputs.version }}"
           args: --config .ci/.golangci3.yml
@@ -100,4 +100,4 @@ jobs:
           # Trigger garbage collection more frequently to reduce the likelihood
           # of OOM errors.
           # ref: https://golangci-lint.run/usage/performance/#memory-usage
-          GOGC: "50"
+          GOGC: "30"
