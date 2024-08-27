@@ -15,7 +15,7 @@ import (
 
 // See https://docs.aws.amazon.com/general/latest/gr/elasticbeanstalk.html
 
-var HostedZoneIDs = map[string]string{
+var hostedZoneIDs = map[string]string{
 	names.AFSouth1RegionID:     "Z1EI3BVKMKK4AM",
 	names.APSoutheast1RegionID: "Z16FZ9L249IFLT",
 	names.APSoutheast2RegionID: "Z2PCDNR3VC2G1N",
@@ -45,7 +45,7 @@ var HostedZoneIDs = map[string]string{
 }
 
 // @SDKDataSource("aws_elastic_beanstalk_hosted_zone")
-func DataSourceHostedZone() *schema.Resource {
+func dataSourceHostedZone() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceHostedZoneRead,
 
@@ -65,13 +65,13 @@ func dataSourceHostedZoneRead(ctx context.Context, d *schema.ResourceData, meta 
 		region = v.(string)
 	}
 
-	zoneID, ok := HostedZoneIDs[region]
-
+	zoneID, ok := hostedZoneIDs[region]
 	if !ok {
-		return sdkdiag.AppendErrorf(diags, "Unsupported region: %s", region)
+		return sdkdiag.AppendErrorf(diags, "unsupported Elastic Beanstalk Region (%s)", region)
 	}
 
 	d.SetId(zoneID)
 	d.Set(names.AttrRegion, region)
+
 	return diags
 }

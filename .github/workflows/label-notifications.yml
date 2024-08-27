@@ -1,4 +1,4 @@
-name: Handle Regressions
+name: Handle Label Notifications
 permissions: {}
 
 on:
@@ -12,8 +12,8 @@ on:
 
 jobs:
   process:
-    name: Process Regression
-    if: github.event.label.name == 'regression'
+    name: Process Label
+    if: github.event.label.name == 'regression' || github.event.label.name == 'crash'
     runs-on: ubuntu-latest
 
     env:
@@ -34,7 +34,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": ":warning: The following has been labeled as a regression:"
+                    "text": ":warning: The following has been labeled as a ${{ github.event.label.name }}:"
                   }
                 },
                 {

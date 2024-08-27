@@ -764,6 +764,50 @@ func TestAccOpenSearchDomain_VPC_internetToVPCEndpoint(t *testing.T) {
 	})
 }
 
+func TestAccOpenSearchDomain_VPC_ipAddressType(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var domain awstypes.DomainStatus
+	rName := testAccRandomDomainName()
+	resourceName := "aws_opensearch_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_vpcIPAddressType(rName, "dualstack"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestMatchResourceAttr(resourceName, "dashboard_endpoint_v2", regexache.MustCompile(`.+?\.on\.aws\/_dashboards`)),
+					resource.TestMatchResourceAttr(resourceName, "endpoint_v2", regexache.MustCompile(`.+?\.on\.aws`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "dualstack"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     rName,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDomainConfig_vpcIPAddressType(rName, "ipv4"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckNoResourceAttr(resourceName, "dashboard_endpoint_v2"),
+					resource.TestCheckNoResourceAttr(resourceName, "endpoint_v2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "ipv4"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccOpenSearchDomain_ipAddressType(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -784,8 +828,8 @@ func TestAccOpenSearchDomain_ipAddressType(t *testing.T) {
 				Config: testAccDomainConfig_ipAddressType(rName, "dualstack"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestMatchResourceAttr(resourceName, "dashboard_endpoint", regexache.MustCompile(`.*(opensearch|es)\..*/_dashboards`)),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
+					resource.TestMatchResourceAttr(resourceName, "dashboard_endpoint_v2", regexache.MustCompile(`.+?\.on\.aws\/_dashboards`)),
+					resource.TestMatchResourceAttr(resourceName, "endpoint_v2", regexache.MustCompile(`.+?\.on\.aws`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "dualstack"),
 				),
 			},
@@ -799,8 +843,8 @@ func TestAccOpenSearchDomain_ipAddressType(t *testing.T) {
 				Config: testAccDomainConfig_ipAddressType(rName, "ipv4"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestMatchResourceAttr(resourceName, "dashboard_endpoint", regexache.MustCompile(`.*(opensearch|es)\..*/_dashboards`)),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
+					resource.TestCheckNoResourceAttr(resourceName, "dashboard_endpoint_v2"),
+					resource.TestCheckNoResourceAttr(resourceName, "endpoint_v2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "ipv4"),
 				),
 			},
@@ -3136,6 +3180,72 @@ resource "aws_opensearch_domain" "test" {
   }
 }
 `, rName))
+}
+
+func testAccDomainConfig_vpcIPAddressType(rName, ipAddressType string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptIn(),
+		fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block                       = "192.168.0.0/22"
+  assign_generated_ipv6_cidr_block = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = "192.168.0.0/24"
+  ipv6_cidr_block   = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 4, 0)
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test2" {
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[1]
+  cidr_block        = "192.168.1.0/24"
+  ipv6_cidr_block   = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 4, 1)
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test" {
+  vpc_id = aws_vpc.test.id
+}
+
+resource "aws_security_group" "test2" {
+  vpc_id = aws_vpc.test.id
+}
+
+resource "aws_opensearch_domain" "test" {
+  domain_name     = %[1]q
+  ip_address_type = %[2]q
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+
+  cluster_config {
+    instance_count         = 2
+    zone_awareness_enabled = true
+    instance_type          = "t2.small.search"
+  }
+
+  vpc_options {
+    security_group_ids = [aws_security_group.test.id, aws_security_group.test2.id]
+    subnet_ids         = [aws_subnet.test.id, aws_subnet.test2.id]
+  }
+}
+`, rName, ipAddressType))
 }
 
 func testAccDomainConfig_vpcUpdate1(rName string) string {

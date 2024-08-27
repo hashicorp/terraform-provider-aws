@@ -3446,7 +3446,7 @@ service "elasticsearch" {
 
   sdk {
     id             = "Elasticsearch Service"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -3762,7 +3762,7 @@ service "emr" {
 
   sdk {
     id             = "EMR"
-    client_version = [1, 2]
+    client_version = [2]
   }
 
   names {

@@ -1020,7 +1020,7 @@ func flattenLbForwardAction(d *schema.ResourceData, attrName string, i int, awsA
 	}
 
 	if rawState := d.GetRawState(); rawState.IsKnown() && !rawState.IsNull() {
-		if defaultActions := rawState.GetAttr(attrName); defaultActions.LengthInt() > 0 {
+		if defaultActions := rawState.GetAttr(attrName); defaultActions.IsKnown() && !defaultActions.IsNull() && defaultActions.LengthInt() > 0 {
 			flattenLbForwardActionOneOf(defaultActions, i, awsAction, actionMap)
 			return
 		}

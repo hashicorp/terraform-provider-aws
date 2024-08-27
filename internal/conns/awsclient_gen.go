@@ -97,6 +97,7 @@ import (
 	elasticbeanstalk_sdkv2 "github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk"
 	elasticloadbalancing_sdkv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
 	elasticloadbalancingv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
+	elasticsearchservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/elasticsearchservice"
 	elastictranscoder_sdkv2 "github.com/aws/aws-sdk-go-v2/service/elastictranscoder"
 	emr_sdkv2 "github.com/aws/aws-sdk-go-v2/service/emr"
 	emrcontainers_sdkv2 "github.com/aws/aws-sdk-go-v2/service/emrcontainers"
@@ -240,8 +241,6 @@ import (
 	workspaces_sdkv2 "github.com/aws/aws-sdk-go-v2/service/workspaces"
 	workspacesweb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/workspacesweb"
 	xray_sdkv2 "github.com/aws/aws-sdk-go-v2/service/xray"
-	elasticsearchservice_sdkv1 "github.com/aws/aws-sdk-go/service/elasticsearchservice"
-	emr_sdkv1 "github.com/aws/aws-sdk-go/service/emr"
 	imagebuilder_sdkv1 "github.com/aws/aws-sdk-go/service/imagebuilder"
 	quicksight_sdkv1 "github.com/aws/aws-sdk-go/service/quicksight"
 	simpledb_sdkv1 "github.com/aws/aws-sdk-go/service/simpledb"
@@ -609,10 +608,6 @@ func (c *AWSClient) ELBV2Client(ctx context.Context) *elasticloadbalancingv2_sdk
 	return errs.Must(client[*elasticloadbalancingv2_sdkv2.Client](ctx, c, names.ELBV2, make(map[string]any)))
 }
 
-func (c *AWSClient) EMRConn(ctx context.Context) *emr_sdkv1.EMR {
-	return errs.Must(conn[*emr_sdkv1.EMR](ctx, c, names.EMR, make(map[string]any)))
-}
-
 func (c *AWSClient) EMRClient(ctx context.Context) *emr_sdkv2.Client {
 	return errs.Must(client[*emr_sdkv2.Client](ctx, c, names.EMR, make(map[string]any)))
 }
@@ -637,8 +632,8 @@ func (c *AWSClient) ElasticTranscoderClient(ctx context.Context) *elastictransco
 	return errs.Must(client[*elastictranscoder_sdkv2.Client](ctx, c, names.ElasticTranscoder, make(map[string]any)))
 }
 
-func (c *AWSClient) ElasticsearchConn(ctx context.Context) *elasticsearchservice_sdkv1.ElasticsearchService {
-	return errs.Must(conn[*elasticsearchservice_sdkv1.ElasticsearchService](ctx, c, names.Elasticsearch, make(map[string]any)))
+func (c *AWSClient) ElasticsearchClient(ctx context.Context) *elasticsearchservice_sdkv2.Client {
+	return errs.Must(client[*elasticsearchservice_sdkv2.Client](ctx, c, names.Elasticsearch, make(map[string]any)))
 }
 
 func (c *AWSClient) EventsClient(ctx context.Context) *eventbridge_sdkv2.Client {
