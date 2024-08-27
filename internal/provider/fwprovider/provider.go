@@ -475,10 +475,9 @@ func (p *fwprovider) EphemeralResources(ctx context.Context) []func() ephemeral.
 
 	for n, sp := range p.Primary.Meta().(*conns.AWSClient).ServicePackages {
 		if data, ok := sp.(conns.ServicePackageWithEphemeralResources); ok {
-			servicePackageName := sp.ServicePackageName()
+			servicePackageName := data.ServicePackageName()
 
 			for _, v := range data.EphemeralResources(ctx) {
-				v := v
 				inner, err := v.Factory(ctx)
 
 				if err != nil {

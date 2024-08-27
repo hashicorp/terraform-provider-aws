@@ -26,6 +26,7 @@ import (
 
 type servicePackage struct {}
 
+{{- if .EphemeralResources }}
 func (p *servicePackage) EphemeralResources(ctx context.Context) []*types.ServicePackageEphemeralResource {
 	return []*types.ServicePackageEphemeralResource {
 {{- range .EphemeralResources }}
@@ -38,6 +39,7 @@ func (p *servicePackage) EphemeralResources(ctx context.Context) []*types.Servic
 {{- end }}
 	}
 }
+{{- end }}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource {
