@@ -56,10 +56,7 @@ func (r *vpcConnectionResource) Metadata(_ context.Context, req resource.Metadat
 }
 
 const (
-	ResNameVPCConnection = "VPC Connection"
-	vpcConnectionIdRegex = "[\\w\\-]+"
-	subnetIdRegex        = "^subnet-[0-9a-z]*$"
-	securityGroupIdRegex = "^sg-[0-9a-z]*$"
+	resNameVPCConnection = "VPC Connection"
 )
 
 func (r *vpcConnectionResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -83,7 +80,7 @@ func (r *vpcConnectionResource) Schema(ctx context.Context, req resource.SchemaR
 				Validators: []validator.String{
 					stringvalidator.All(
 						stringvalidator.LengthAtMost(1000),
-						stringvalidator.RegexMatches(regexache.MustCompile(vpcConnectionIdRegex), "VPC Connection ID must match regex: "+vpcConnectionIdRegex),
+						stringvalidator.RegexMatches(regexache.MustCompile(`[\\w\\-]+`), ""),
 					),
 				},
 			},
@@ -107,7 +104,7 @@ func (r *vpcConnectionResource) Schema(ctx context.Context, req resource.SchemaR
 					setvalidator.ValueStringsAre(
 						stringvalidator.All(
 							stringvalidator.LengthAtMost(255),
-							stringvalidator.RegexMatches(regexache.MustCompile(securityGroupIdRegex), "Security group ID must match regex: "+securityGroupIdRegex),
+							stringvalidator.RegexMatches(regexache.MustCompile(`^sg-[0-9a-z]*$`), ""),
 						),
 					),
 				},
@@ -120,7 +117,7 @@ func (r *vpcConnectionResource) Schema(ctx context.Context, req resource.SchemaR
 					setvalidator.ValueStringsAre(
 						stringvalidator.All(
 							stringvalidator.LengthAtMost(255),
-							stringvalidator.RegexMatches(regexache.MustCompile(subnetIdRegex), "Subnet ID must match regex: "+subnetIdRegex),
+							stringvalidator.RegexMatches(regexache.MustCompile(`^subnet-[0-9a-z]*$`), ""),
 						),
 					),
 				},
@@ -187,7 +184,7 @@ func (r *vpcConnectionResource) Create(ctx context.Context, req resource.CreateR
 	out, err := retryVPCConnectionCreate(ctx, conn, in)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QuickSight, create.ErrActionCreating, ResNameVPCConnection, plan.Name.String(), err),
+			create.ProblemStandardMessage(names.QuickSight, create.ErrActionCreating, resNameVPCConnection, plan.Name.String(), err),
 			err.Error(),
 		)
 		return
@@ -195,7 +192,7 @@ func (r *vpcConnectionResource) Create(ctx context.Context, req resource.CreateR
 
 	if out == nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QuickSight, create.ErrActionCreating, ResNameVPCConnection, plan.Name.String(), nil),
+			create.ProblemStandardMessage(names.QuickSight, create.ErrActionCreating, resNameVPCConnection, plan.Name.String(), nil),
 			errors.New("empty output").Error(),
 		)
 		return
@@ -207,7 +204,7 @@ func (r *vpcConnectionResource) Create(ctx context.Context, req resource.CreateR
 	waitOut, err := waitVPCConnectionCreated(ctx, conn, awsAccountID, vpcConnectionID, createTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QuickSight, create.ErrActionWaitingForCreation, ResNameVPCConnection, plan.Name.String(), err),
+			create.ProblemStandardMessage(names.QuickSight, create.ErrActionWaitingForCreation, resNameVPCConnection, plan.Name.String(), err),
 			err.Error(),
 		)
 		return
@@ -231,7 +228,7 @@ func (r *vpcConnectionResource) Read(ctx context.Context, req resource.ReadReque
 	awsAccountID, vpcConnectionID, err := vpcConnectionParseResourceID(state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QuickSight, create.ErrActionReading, ResNameVPCConnection, state.ID.String(), nil),
+			create.ProblemStandardMessage(names.QuickSight, create.ErrActionReading, resNameVPCConnection, state.ID.String(), nil),
 			err.Error(),
 		)
 		return
@@ -244,7 +241,7 @@ func (r *vpcConnectionResource) Read(ctx context.Context, req resource.ReadReque
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QuickSight, create.ErrActionReading, ResNameVPCConnection, state.ID.String(), err),
+			create.ProblemStandardMessage(names.QuickSight, create.ErrActionReading, resNameVPCConnection, state.ID.String(), err),
 			err.Error(),
 		)
 		return
@@ -284,7 +281,7 @@ func (r *vpcConnectionResource) Update(ctx context.Context, req resource.UpdateR
 	awsAccountID, vpcConnectionID, err := vpcConnectionParseResourceID(plan.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QuickSight, create.ErrActionUpdating, ResNameVPCConnection, plan.ID.String(), nil),
+			create.ProblemStandardMessage(names.QuickSight, create.ErrActionUpdating, resNameVPCConnection, plan.ID.String(), nil),
 			err.Error(),
 		)
 		return
@@ -311,14 +308,14 @@ func (r *vpcConnectionResource) Update(ctx context.Context, req resource.UpdateR
 		out, err := conn.UpdateVPCConnection(ctx, &in)
 		if err != nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.QuickSight, create.ErrActionUpdating, ResNameVPCConnection, plan.ID.String(), nil),
+				create.ProblemStandardMessage(names.QuickSight, create.ErrActionUpdating, resNameVPCConnection, plan.ID.String(), nil),
 				err.Error(),
 			)
 			return
 		}
 		if out == nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.QuickSight, create.ErrActionUpdating, ResNameVPCConnection, plan.ID.String(), nil),
+				create.ProblemStandardMessage(names.QuickSight, create.ErrActionUpdating, resNameVPCConnection, plan.ID.String(), nil),
 				errors.New("empty output").Error(),
 			)
 			return
@@ -328,7 +325,7 @@ func (r *vpcConnectionResource) Update(ctx context.Context, req resource.UpdateR
 		_, err = waitVPCConnectionUpdated(ctx, conn, awsAccountID, vpcConnectionID, updateTimeout)
 		if err != nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.QuickSight, create.ErrActionWaitingForUpdate, ResNameVPCConnection, plan.ID.String(), err),
+				create.ProblemStandardMessage(names.QuickSight, create.ErrActionWaitingForUpdate, resNameVPCConnection, plan.ID.String(), err),
 				err.Error(),
 			)
 			return
@@ -355,7 +352,7 @@ func (r *vpcConnectionResource) Delete(ctx context.Context, req resource.DeleteR
 	awsAccountID, vpcConnectionID, err := vpcConnectionParseResourceID(state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QuickSight, create.ErrActionDeleting, ResNameVPCConnection, state.ID.String(), nil),
+			create.ProblemStandardMessage(names.QuickSight, create.ErrActionDeleting, resNameVPCConnection, state.ID.String(), nil),
 			err.Error(),
 		)
 		return
@@ -376,7 +373,7 @@ func (r *vpcConnectionResource) Delete(ctx context.Context, req resource.DeleteR
 
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QuickSight, create.ErrActionDeleting, ResNameVPCConnection, state.ID.String(), err),
+			create.ProblemStandardMessage(names.QuickSight, create.ErrActionDeleting, resNameVPCConnection, state.ID.String(), err),
 			err.Error(),
 		)
 		return
@@ -386,7 +383,7 @@ func (r *vpcConnectionResource) Delete(ctx context.Context, req resource.DeleteR
 	_, err = waitVPCConnectionDeleted(ctx, conn, awsAccountID, vpcConnectionID, deleteTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QuickSight, create.ErrActionWaitingForDeletion, ResNameVPCConnection, state.ID.String(), err),
+			create.ProblemStandardMessage(names.QuickSight, create.ErrActionWaitingForDeletion, resNameVPCConnection, state.ID.String(), err),
 			err.Error(),
 		)
 		return

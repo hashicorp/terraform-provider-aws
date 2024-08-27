@@ -9,7 +9,7 @@ var (
 	ResourceFolderMembership    = newResourceFolderMembership
 	ResourceGroup               = resourceGroup
 	ResourceGroupMembership     = resourceGroupMembership
-	ResourceIAMPolicyAssignment = newResourceIAMPolicyAssignment
+	ResourceIAMPolicyAssignment = newIAMPolicyAssignmentResource
 	ResourceIngestion           = newResourceIngestion
 	ResourceNamespace           = newResourceNamespace
 	ResourceRefreshSchedule     = newResourceRefreshSchedule
@@ -17,11 +17,13 @@ var (
 	ResourceUser                = resourceUser
 	ResourceVPCConnection       = newVPCConnectionResource
 
-	DefaultGroupNamespace            = defaultGroupNamespace
-	DefaultUserNamespace             = defaultUserNamespace
-	FindAccountSubscriptionByID      = findAccountSubscriptionByID
-	FindGroupByThreePartKey          = findGroupByThreePartKey
-	FindGroupMembershipByFourPartKey = findGroupMembershipByFourPartKey
-	FindUserByThreePartKey           = findUserByThreePartKey
-	FindVPCConnectionByTwoPartKey    = findVPCConnectionByTwoPartKey
+	DefaultGroupNamespace                 = defaultGroupNamespace
+	DefaultIAMPolicyAssignmentNamespace   = defaultIAMPolicyAssignmentNamespace
+	DefaultUserNamespace                  = defaultUserNamespace
+	FindAccountSubscriptionByID           = findAccountSubscriptionByID
+	FindGroupByThreePartKey               = findGroupByThreePartKey
+	FindGroupMembershipByFourPartKey      = findGroupMembershipByFourPartKey
+	FindIAMPolicyAssignmentByThreePartKey = findIAMPolicyAssignmentByThreePartKey
+	FindUserByThreePartKey                = findUserByThreePartKey
+	FindVPCConnectionByTwoPartKey         = findVPCConnectionByTwoPartKey
 )
