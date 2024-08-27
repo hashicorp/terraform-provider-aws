@@ -52,8 +52,6 @@ import (
 {{- end }}
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -68,6 +66,7 @@ import (
 {{- end }}
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 {{- if .IncludeTags }}
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 {{- end }}
@@ -198,6 +197,11 @@ func (r *resource{{ .Resource }}) Schema(ctx context.Context, req resource.Schem
 		Blocks: map[string]schema.Block{
 			"complex_argument": schema.ListNestedBlock{
 				{{- if .IncludeComments }}
+				// TIP: ==== CUSTOM TYPES ====
+				// Use a custom type to identify the model type of the tested object
+				{{- end }}
+				CustomType: fwtypes.NewListNestedObjectTypeOf[complexArgumentModel](ctx),
+				{{- if .IncludeComments }}
 				// TIP: ==== LIST VALIDATORS ====
 				// List and set validators take the place of MaxItems and MinItems in 
 				// Plugin-Framework based resources. Use listvalidator.SizeAtLeast(1) to
@@ -258,53 +262,32 @@ func (r *resource{{ .Resource }}) Create(ctx context.Context, req resource.Creat
 	{{ if .IncludeComments }}
 	// TIP: -- 2. Fetch the plan
 	{{- end }}
-	var plan resource{{ .Resource }}Data
+	var plan resource{{ .Resource }}Model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	{{ if .IncludeComments }}
-	// TIP: -- 3. Populate a create input structure
+
+	{{ if .IncludeComments -}}
+	// TIP: -- 3. Populate a Create input structure
 	{{- end }}
-	in := &{{ .ServicePackage }}.Create{{ .Resource }}Input{
-		{{- if .IncludeComments }}
-		// TIP: Mandatory or fields that will always be present can be set when
-		// you create the Input structure. (Replace these with real fields.)
-		{{- end }}
-		{{ .Resource }}Name: aws.String(plan.Name.ValueString()),
-		{{ .Resource }}Type: aws.String(plan.Type.ValueString()),
-		{{- if .IncludeTags }}
-		Tags:             getTagsIn(ctx),
-		{{- end }}
+	var input {{ .ServicePackage }}.Create{{ .Resource }}Input
+	// TIP: Using a field name prefix allows mapping fields such as `ID` to `TestId`
+	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Test"))...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
+	{{ if .IncludeTags -}}
+	input.Tags = getTagsIn(ctx)
+	{{- end }}
 
-	if !plan.Description.IsNull() {
-		{{- if .IncludeComments }}
-		// TIP: Optional fields should be set based on whether or not they are
-		// used.
-		{{- end }}
-		in.Description = aws.String(plan.Description.ValueString())
-	}
-	if !plan.ComplexArgument.IsNull() {
-		{{- if .IncludeComments }}
-		// TIP: Use an expander to assign a complex argument. The elements must be
-		// deserialized into the appropriate struct before being passed to the expander.
-		{{- end }}
-		var tfList []complexArgumentData
-		resp.Diagnostics.Append(plan.ComplexArgument.ElementsAs(ctx, &tfList, false)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		in.ComplexArgument = expandComplexArgument(tfList)
-	}
-	{{ if .IncludeComments }}
-	// TIP: -- 4. Call the AWS create function
+	{{ if .IncludeComments -}}
+	// TIP: -- 4. Call the AWS Create function
 	{{- end }}
 	{{- if .AWSGoSDKV2 }}
-	out, err := conn.Create{{ .Resource }}(ctx, in)
+	out, err := conn.Create{{ .Resource }}(ctx, &input)
 	{{- else }}
-	out, err := conn.Create{{ .Resource }}WithContext(ctx, in)
+	out, err := conn.Create{{ .Resource }}WithContext(ctx, &input)
 	{{- end }}
 	if err != nil {
 		{{- if .IncludeComments }}
@@ -324,12 +307,16 @@ func (r *resource{{ .Resource }}) Create(ctx context.Context, req resource.Creat
 		)
 		return
 	}
-	{{ if .IncludeComments }}
-	// TIP: -- 5. Using the output from the create function, set the minimum attributes
+
+	{{ if .IncludeComments -}}
+	// TIP: -- 5. Using the output from the create function, set attributes
 	{{- end }}
-	plan.ARN = flex.StringToFramework(ctx, out.{{ .Resource }}.Arn)
-	plan.ID = flex.StringToFramework(ctx, out.{{ .Resource }}.{{ .Resource }}Id)
-	{{ if .IncludeComments }}
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	{{ if .IncludeComments -}}
 	// TIP: -- 6. Use a waiter to wait for create to complete
 	{{- end }}
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
@@ -368,7 +355,7 @@ func (r *resource{{ .Resource }}) Read(ctx context.Context, req resource.ReadReq
 	{{ if .IncludeComments }}
 	// TIP: -- 2. Fetch the state
 	{{- end }}
-	var state resource{{ .Resource }}Data
+	var state resource{{ .Resource }}Model
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -394,28 +381,11 @@ func (r *resource{{ .Resource }}) Read(ctx context.Context, req resource.ReadReq
 	}
 	{{ if .IncludeComments }}
 	// TIP: -- 5. Set the arguments and attributes
-	//
-	// For simple data types (i.e., schema.StringAttribute, schema.BoolAttribute,
-	// schema.Int64Attribute, and schema.Float64Attribue), simply setting the  
-	// appropriate data struct field is sufficient. The flex package implements
-	// helpers for converting between Go and Plugin-Framework types seamlessly. No 
-	// error or nil checking is necessary.
-	//
-	// However, there are some situations where more handling is needed such as
-	// complex data types (e.g., schema.ListAttribute, schema.SetAttribute). In 
-	// these cases the flatten function may have a diagnostics return value, which
-	// should be appended to resp.Diagnostics.
 	{{- end }}
-	state.ARN = flex.StringToFramework(ctx, out.Arn)
-	state.ID = flex.StringToFramework(ctx, out.{{ .Resource }}Id)
-	state.Name = flex.StringToFramework(ctx, out.{{ .Resource }}Name)
-	state.Type = flex.StringToFramework(ctx, out.{{ .Resource }}Type)
-	{{ if .IncludeComments }}
-	// TIP: Setting a complex type.
-	{{- end }}
-	complexArgument, d := flattenComplexArgument(ctx, out.ComplexArgument)
-	resp.Diagnostics.Append(d...)
-	state.ComplexArgument = complexArgument
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 	{{ if .IncludeComments }}
 	// TIP: -- 6. Set the state
 	{{- end }}
@@ -453,7 +423,7 @@ func (r *resource{{ .Resource }}) Update(ctx context.Context, req resource.Updat
 	{{ if .IncludeComments }}
 	// TIP: -- 2. Fetch the plan
 	{{- end }}
-	var plan, state resource{{ .Resource }}Data
+	var plan, state resource{{ .Resource }}Model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -467,43 +437,18 @@ func (r *resource{{ .Resource }}) Update(ctx context.Context, req resource.Updat
 		!plan.ComplexArgument.Equal(state.ComplexArgument) ||
 		!plan.Type.Equal(state.Type) {
 
-		in := &{{ .ServicePackage }}.Update{{ .Resource }}Input{
-			{{- if .IncludeComments }}
-			// TIP: Mandatory or fields that will always be present can be set when
-			// you create the Input structure. (Replace these with real fields.)
-			{{- end }}
-			{{ .Resource }}Id:   aws.String(plan.ID.ValueString()),
-			{{ .Resource }}Name: aws.String(plan.Name.ValueString()),
-			{{ .Resource }}Type: aws.String(plan.Type.ValueString()),
-		}
-
-		if !plan.Description.IsNull() {
-			{{- if .IncludeComments }}
-			// TIP: Optional fields should be set based on whether or not they are
-			// used.
-			{{- end }}
-			in.Description = aws.String(plan.Description.ValueString())
-		}
-		if !plan.ComplexArgument.IsNull() {
-			{{- if .IncludeComments }}
-			// TIP: Use an expander to assign a complex argument. The elements must be
-			// deserialized into the appropriate struct before being passed to the expander.
-			{{- end }}
-			var tfList []complexArgumentData
-			resp.Diagnostics.Append(plan.ComplexArgument.ElementsAs(ctx, &tfList, false)...)
-			if resp.Diagnostics.HasError() {
-				return
-			}
-
-			in.ComplexArgument = expandComplexArgument(tfList)
+		var input {{ .ServicePackage }}.Update{{ .Resource }}Input{
+		resp.Diagnostics.Append(flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Test"))...)
+		if resp.Diagnostics.HasError() {
+			return
 		}
 		{{ if .IncludeComments }}
 		// TIP: -- 4. Call the AWS modify/update function
 		{{- end }}
 		{{- if .AWSGoSDKV2 }}
-		out, err := conn.Update{{ .Resource }}(ctx, in)
+		out, err := conn.Update{{ .Resource }}(ctx, &input)
 		{{- else }}
-		out, err := conn.Update{{ .Resource }}WithContext(ctx, in)
+		out, err := conn.Update{{ .Resource }}WithContext(ctx, &input)
 		{{- end }}
 		if err != nil {
 			resp.Diagnostics.AddError(
@@ -522,11 +467,13 @@ func (r *resource{{ .Resource }}) Update(ctx context.Context, req resource.Updat
 		{{ if .IncludeComments }}
 		// TIP: Using the output from the update function, re-set any computed attributes
 		{{- end }}
-		plan.ARN = flex.StringToFramework(ctx, out.{{ .Resource }}.Arn)
-		plan.ID = flex.StringToFramework(ctx, out.{{ .Resource }}.{{ .Resource }}Id)
+		resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	}
 
-	{{ if .IncludeComments }}
+	{{ if .IncludeComments -}}
 	// TIP: -- 5. Use a waiter to wait for update to complete
 	{{- end }}
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
@@ -539,7 +486,7 @@ func (r *resource{{ .Resource }}) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
-	{{ if .IncludeComments }}
+	{{ if .IncludeComments -}}
 	// TIP: -- 6. Save the request plan to response state
 	{{- end }}
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
@@ -571,7 +518,7 @@ func (r *resource{{ .Resource }}) Delete(ctx context.Context, req resource.Delet
 	{{ if .IncludeComments }}
 	// TIP: -- 2. Fetch the state
 	{{- end }}
-	var state resource{{ .Resource }}Data
+	var state resource{{ .Resource }}Model
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -579,16 +526,16 @@ func (r *resource{{ .Resource }}) Delete(ctx context.Context, req resource.Delet
 	{{ if .IncludeComments }}
 	// TIP: -- 3. Populate a delete input structure
 	{{- end }}
-	in := &{{ .ServiceLower }}.Delete{{ .Resource }}Input{
-		{{ .Resource }}Id: aws.String(state.ID.ValueString()),
+	input := {{ .ServiceLower }}.Delete{{ .Resource }}Input{
+		{{ .Resource }}Id: state.ID.ValueStringPointer(),
 	}
 	{{ if .IncludeComments }}
 	// TIP: -- 4. Call the AWS delete function
 	{{- end }}
 	{{- if .AWSGoSDKV2 }}
-	_, err := conn.Delete{{ .Resource }}(ctx, in)
+	_, err := conn.Delete{{ .Resource }}(ctx, &input)
 	{{- else }}
-	_, err := conn.Delete{{ .Resource }}WithContext(ctx, in)
+	_, err := conn.Delete{{ .Resource }}WithContext(ctx, &input)
 	{{- end }}
 	{{- if .IncludeComments }}
 	// TIP: On rare occassions, the API returns a not found error after deleting a
@@ -636,7 +583,7 @@ func (r *resource{{ .Resource }}) ImportState(ctx context.Context, req resource.
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-{{- if .IncludeTags }}
+{{ if .IncludeTags -}}
 func (r *resource{{ .Resource }}) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
 	r.SetTagsAll(ctx, request, response)
 }
@@ -818,163 +765,6 @@ func find{{ .Resource }}ByID(ctx context.Context, conn *{{ .ServiceLower }}.{{ .
 	return out.{{ .Resource }}, nil
 }
 {{ if .IncludeComments }}
-// TIP: ==== FLEX ====
-// Flatteners and expanders ("flex" functions) help handle complex data
-// types. Flatteners take an API data type and return the equivalent Plugin-Framework 
-// type. In other words, flatteners translate from AWS -> Terraform.
-//
-// On the other hand, expanders take a Terraform data structure and return
-// something that you can send to the AWS API. In other words, expanders
-// translate from Terraform -> AWS.
-//
-// See more:
-// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/
-{{- end }}
-{{- if .AWSGoSDKV2 }}
-func flattenComplexArgument(ctx context.Context, apiObject *awstypes.ComplexArgument) (types.List, diag.Diagnostics) {
-{{- else }}
-func flattenComplexArgument(ctx context.Context, apiObject *{{ .ServiceLower }}.ComplexArgument) (types.List, diag.Diagnostics) {
-{{- end }}
-	var diags diag.Diagnostics
-	elemType := types.ObjectType{AttrTypes: complexArgumentAttrTypes}
-
-	if apiObject == nil {
-		return types.ListNull(elemType), diags
-	}
-
-	obj := map[string]attr.Value{
-		"nested_required": flex.StringValueToFramework(ctx, apiObject.NestedRequired),
-		"nested_optional": flex.StringValueToFramework(ctx, apiObject.NestedOptional),
-	}
-	objVal, d := types.ObjectValue(complexArgumentAttrTypes, obj)
-	diags.Append(d...)
-
-	listVal, d := types.ListValue(elemType, []attr.Value{objVal})
-	diags.Append(d...)
-
-	return listVal, diags
-}
-{{ if .IncludeComments }}
-// TIP: Often the AWS API will return a slice of structures in response to a
-// request for information. Sometimes you will have set criteria (e.g., the ID)
-// that means you'll get back a one-length slice. This plural function works
-// brilliantly for that situation too.
-{{- end }}
-{{- if .AWSGoSDKV2 }}
-func flattenComplexArguments(ctx context.Context, apiObjects []*awstypes.ComplexArgument) (types.List, diag.Diagnostics) {
-{{- else }}
-func flattenComplexArguments(ctx context.Context, apiObjects []*{{ .ServiceLower }}.ComplexArgument) (types.List, diag.Diagnostics) {
-{{- end }}
-	var diags diag.Diagnostics
-	elemType := types.ObjectType{AttrTypes: complexArgumentAttrTypes}
-
-	if len(apiObjects) == 0 {
-		return types.ListNull(elemType), diags
-	}
-
-	elems := []attr.Value{}
-	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
-		obj := map[string]attr.Value{
-			"nested_required": flex.StringValueToFramework(ctx, apiObject.NestedRequired),
-			"nested_optional": flex.StringValueToFramework(ctx, apiObject.NestedOptional),
-		}
-		objVal, d := types.ObjectValue(complexArgumentAttrTypes, obj)
-		diags.Append(d...)
-
-		elems = append(elems, objVal)
-	}
-
-	listVal, d := types.ListValue(elemType, elems)
-	diags.Append(d...)
-
-	return listVal, diags
-}
-{{ if .IncludeComments }}
-// TIP: Remember, as mentioned above, expanders take a Terraform data structure
-// and return something that you can send to the AWS API. In other words,
-// expanders translate from Terraform -> AWS.
-//
-// See more:
-// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/
-{{- end }}
-{{- if .AWSGoSDKV2 }}
-func expandComplexArgument(tfList []complexArgumentData) *awstypes.ComplexArgument {
-{{- else }}
-func expandComplexArgument(tfList []complexArgumentData) *{{ .ServiceLower }}.ComplexArgument {
-{{- end }}
-	if len(tfList) == 0 {
-		return nil
-	}
-
-	tfObj := tfList[0]
-{{- if .AWSGoSDKV2 }}
-	apiObject := &awstypes.ComplexArgument{
-{{- else }}
-	apiObject := &{{ .ServiceLower }}.ComplexArgument{
-{{- end }}
-		NestedRequired: aws.String(tfObj.NestedRequired.ValueString()),
-	}
-	if !tfObj.NestedOptional.IsNull() {
-		apiObject.NestedOptional = aws.String(tfObj.NestedOptional.ValueString())
-	}
-
-	return apiObject
-}
-{{ if .IncludeComments }}
-// TIP: Even when you have a list with max length of 1, this plural function
-// works brilliantly. However, if the AWS API takes a structure rather than a
-// slice of structures, you will not need it.
-{{- end }}
-func expandComplexArguments(tfList []complexArgumentData) []*{{ .ServiceLower }}.ComplexArgument {
-	{{- if .IncludeComments }}
-	// TIP: The AWS API can be picky about whether you send a nil or zero-
-	// length for an argument that should be cleared. For example, in some
-	// cases, if you send a nil value, the AWS API interprets that as "make no
-	// changes" when what you want to say is "remove everything." Sometimes
-	// using a zero-length list will cause an error.
-	//
-	// As a result, here are two options. Usually, option 1, nil, will work as
-	// expected, clearing the field. But, test going from something to nothing
-	// to make sure it works. If not, try the second option.
-	{{- end }}
-	{{- if .IncludeComments }}
-	// TIP: Option 1: Returning nil for zero-length list
-	{{- end }}
-    if len(tfList) == 0 {
-        return nil
-    }
-
-{{- if .AWSGoSDKV2 }}
-    var apiObject []*awstypes.ComplexArgument
-{{- else }}
-    var apiObject []*{{ .ServiceLower }}.ComplexArgument
-{{- end }}
-	{{- if .IncludeComments }}
-	// TIP: Option 2: Return zero-length list for zero-length list. If option 1 does
-	// not work, after testing going from something to nothing (if that is
-	// possible), uncomment out the next line and remove option 1.
-	//
-	{{- end }}
-	// apiObject := make([]*{{ .ServiceLower }}.ComplexArgument, 0)
-
-	for _, tfObj := range tfList {
-		item := &{{ .ServiceLower }}.ComplexArgument{
-			NestedRequired: aws.String(tfObj.NestedRequired.ValueString()),
-		}
-		if !tfObj.NestedOptional.IsNull() {
-			item.NestedOptional = aws.String(tfObj.NestedOptional.ValueString())
-		}
-
-		apiObject = append(apiObject, item)
-	}
-
-	return apiObject
-}
-{{ if .IncludeComments }}
 // TIP: ==== DATA STRUCTURES ====
 // With Terraform Plugin-Framework configurations are deserialized into
 // Go types, providing type safety without the need for type assertions.
@@ -988,26 +778,21 @@ func expandComplexArguments(tfList []complexArgumentData) []*{{ .ServiceLower }}
 // See more:
 // https://developer.hashicorp.com/terraform/plugin/framework/handling-data/accessing-values
 {{- end }}
-type resource{{ .Resource }}Data struct {
-	ARN             types.String   `tfsdk:"arn"`
-	ComplexArgument types.List     `tfsdk:"complex_argument"`
-	Description     types.String   `tfsdk:"description"`
-	ID              types.String   `tfsdk:"id"`
-	Name            types.String   `tfsdk:"name"`
+type resource{{ .Resource }}Model struct {
+	ARN             types.String                                          `tfsdk:"arn"`
+	ComplexArgument fwtypes.ListNestedObjectValueOf[complexArgumentModel] `tfsdk:"complex_argument"`
+	Description     types.String                                          `tfsdk:"description"`
+	ID              types.String                                          `tfsdk:"id"`
+	Name            types.String                                          `tfsdk:"name"`
 	{{- if .IncludeTags }}
-	Tags            types.Map      `tfsdk:"tags"`
-	TagsAll         types.Map      `tfsdk:"tags_all"`
+	Tags            types.Map                                             `tfsdk:"tags"`
+	TagsAll         types.Map                                             `tfsdk:"tags_all"`
 	{{- end }}
-	Timeouts        timeouts.Value `tfsdk:"timeouts"`
-	Type            types.String   `tfsdk:"type"`
+	Timeouts        timeouts.Value                                        `tfsdk:"timeouts"`
+	Type            types.String                                          `tfsdk:"type"`
 }
 
-type complexArgumentData struct {
+type complexArgumentModel struct {
 	NestedRequired types.String `tfsdk:"nested_required"`
 	NestedOptional types.String `tfsdk:"nested_optional"`
-}
-
-var complexArgumentAttrTypes = map[string]attr.Type{
-	"nested_required": types.StringType,
-	"nested_optional": types.StringType,
 }
