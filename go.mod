@@ -269,14 +269,14 @@ require (
 	github.com/hashicorp/go-version v1.7.0
 	github.com/hashicorp/hcl/v2 v2.21.0
 	github.com/hashicorp/terraform-json v0.22.1
-	github.com/hashicorp/terraform-plugin-framework v1.11.1-0.20240814123734-745ce700e44d
+	github.com/hashicorp/terraform-plugin-framework v1.11.1-0.20240827191424-76c9cadc9705
 	github.com/hashicorp/terraform-plugin-framework-jsontypes v0.1.0
 	github.com/hashicorp/terraform-plugin-framework-timeouts v0.4.1
 	github.com/hashicorp/terraform-plugin-framework-timetypes v0.5.0
 	github.com/hashicorp/terraform-plugin-framework-validators v0.13.0
-	github.com/hashicorp/terraform-plugin-go v0.23.1-0.20240821193454-bd78dc50f0e7
+	github.com/hashicorp/terraform-plugin-go v0.23.1-0.20240827183355-145d7bc53a3f
 	github.com/hashicorp/terraform-plugin-log v0.9.0
-	github.com/hashicorp/terraform-plugin-mux v0.16.1-0.20240821192738-f65ff7bbfd9a
+	github.com/hashicorp/terraform-plugin-mux v0.16.1-0.20240827184009-e68d049036ab
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.34.0
 	github.com/hashicorp/terraform-plugin-testing v1.10.0
 	github.com/jmespath/go-jmespath v0.4.0
