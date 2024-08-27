@@ -10,6 +10,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
 	"github.com/hashicorp/terraform-plugin-framework/function"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
@@ -27,6 +28,7 @@ import (
 
 var _ provider.Provider = &fwprovider{}
 var _ provider.ProviderWithFunctions = &fwprovider{}
+var _ provider.ProviderWithEphemeralResources = &fwprovider{}
 
 // New returns a new, initialized Terraform Plugin Framework-style provider instance.
 // The provider instance is fully configured once the `Configure` method has been called.
@@ -460,6 +462,60 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 	}
 
 	return resources
+}
+
+// EphemeralResources returns a slice of functions to instantiate each Ephemeral Resource
+// implementation.
+//
+// The resource type name is determined by the Ephemeral Resource implementing
+// the Metadata method. All resources must have unique names.
+func (p *fwprovider) EphemeralResources(ctx context.Context) []func() ephemeral.EphemeralResource {
+	var errs []error
+	var ephemeralResources []func() ephemeral.EphemeralResource
+
+	for n, sp := range p.Primary.Meta().(*conns.AWSClient).ServicePackages {
+		servicePackageName := sp.ServicePackageName()
+
+		for _, v := range sp.EphemeralResources(ctx) {
+			v := v
+			inner, err := v.Factory(ctx)
+
+			if err != nil {
+				tflog.Warn(ctx, "creating ephemeral resource", map[string]interface{}{
+					"service_package_name": n,
+					"error":                err.Error(),
+				})
+
+				continue
+			}
+
+			//metadataResponse := ephemeral.MetadataResponse{}
+			//inner.Metadata(ctx, ephemeral.MetadataRequest{}, &metadataResponse)
+			//typeName := metadataResponse.TypeName
+
+			// bootstrapContext is run on all wrapped methods before any interceptors.
+			bootstrapContext := func(ctx context.Context, meta *conns.AWSClient) context.Context {
+				ctx = conns.NewEphemeralResourceContext(ctx, servicePackageName, v.Name)
+				if meta != nil {
+					ctx = meta.RegisterLogger(ctx)
+				}
+
+				return ctx
+			}
+
+			ephemeralResources = append(ephemeralResources, func() ephemeral.EphemeralResource {
+				return newWrappedEphemeralResource(bootstrapContext, inner, nil)
+			})
+		}
+	}
+
+	if err := errors.Join(errs...); err != nil {
+		tflog.Warn(ctx, "registering ephemeral resources", map[string]interface{}{
+			"error": err.Error(),
+		})
+	}
+
+	return ephemeralResources
 }
 
 // Functions returns a slice of functions to instantiate each Function

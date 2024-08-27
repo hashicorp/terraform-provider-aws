@@ -10,7 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -23,10 +22,6 @@ import (
 // @FrameworkDataSource(name="Access Policy")
 func newDataSourceAccessPolicy(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceAccessPolicy{}, nil
-}
-
-func testing() ephemeral.EphemeralResourceWithConfigure {
-	return nil
 }
 
 const (

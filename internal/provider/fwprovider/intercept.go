@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	fwtypes "github.com/hashicorp/terraform-plugin-framework/types"
@@ -44,6 +45,12 @@ func (s dataSourceInterceptors) read() []dataSourceInterceptorReadFunc {
 		return e.read
 	})
 }
+
+type ephemeralResourceInterceptor interface {
+	// TODO implement me
+}
+
+type ephemeralResourceInterceptors []ephemeralResourceInterceptor
 
 type resourceCRUDRequest interface {
 	resource.CreateRequest | resource.ReadRequest | resource.UpdateRequest | resource.DeleteRequest
@@ -236,6 +243,45 @@ func (w *wrappedDataSource) Configure(ctx context.Context, request datasource.Co
 	}
 	ctx = w.bootstrapContext(ctx, w.meta)
 	w.inner.Configure(ctx, request, response)
+}
+
+type wrappedEphemeralResource struct {
+	// bootstrapContext is run on all wrapped methods before any interceptors.
+	bootstrapContext contextFunc
+	inner            ephemeral.EphemeralResourceWithConfigure
+	meta             *conns.AWSClient
+	interceptors     ephemeralResourceInterceptors
+}
+
+func (w wrappedEphemeralResource) Metadata(ctx context.Context, request ephemeral.MetadataRequest, response *ephemeral.MetadataResponse) {
+	ctx = w.bootstrapContext(ctx, w.meta)
+	w.inner.Metadata(ctx, request, response)
+}
+
+func (w wrappedEphemeralResource) Schema(ctx context.Context, request ephemeral.SchemaRequest, response *ephemeral.SchemaResponse) {
+	ctx = w.bootstrapContext(ctx, w.meta)
+	w.inner.Schema(ctx, request, response)
+}
+
+func (w wrappedEphemeralResource) Open(ctx context.Context, request ephemeral.OpenRequest, response *ephemeral.OpenResponse) {
+	ctx = w.bootstrapContext(ctx, w.meta)
+	w.inner.Open(ctx, request, response)
+}
+
+func (w wrappedEphemeralResource) Configure(ctx context.Context, request ephemeral.ConfigureRequest, response *ephemeral.ConfigureResponse) {
+	if v, ok := request.ProviderData.(*conns.AWSClient); ok {
+		w.meta = v
+	}
+	ctx = w.bootstrapContext(ctx, w.meta)
+	w.inner.Configure(ctx, request, response)
+}
+
+func newWrappedEphemeralResource(bootstrapContext contextFunc, inner ephemeral.EphemeralResourceWithConfigure, interceptors ephemeralResourceInterceptors) ephemeral.EphemeralResourceWithConfigure {
+	return &wrappedEphemeralResource{
+		bootstrapContext: bootstrapContext,
+		inner:            inner,
+		interceptors:     interceptors,
+	}
 }
 
 // tagsDataSourceInterceptor implements transparent tagging for data sources.

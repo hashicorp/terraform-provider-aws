@@ -12,6 +12,7 @@ import (
 // ServicePackage is the minimal interface exported from each AWS service package.
 // Its methods return the Plugin SDK and Framework resources and data sources implemented in the package.
 type ServicePackage interface {
+	EphemeralResources(context.Context) []*types.ServicePackageEphemeralResource
 	FrameworkDataSources(context.Context) []*types.ServicePackageFrameworkDataSource
 	FrameworkResources(context.Context) []*types.ServicePackageFrameworkResource
 	SDKDataSources(context.Context) []*types.ServicePackageSDKDataSource
@@ -29,9 +30,10 @@ var (
 
 // InContext represents the resource information kept in Context.
 type InContext struct {
-	IsDataSource       bool   // Data source?
-	ResourceName       string // Friendly resource name, e.g. "Subnet"
-	ServicePackageName string // Canonical name defined as a constant in names package
+	IsDataSource        bool   // Data source?
+	IsEphemeralResource bool   // Ephemeral resource?
+	ResourceName        string // Friendly resource name, e.g. "Subnet"
+	ServicePackageName  string // Canonical name defined as a constant in names package
 }
 
 func NewDataSourceContext(ctx context.Context, servicePackageName, resourceName string) context.Context {
@@ -39,6 +41,16 @@ func NewDataSourceContext(ctx context.Context, servicePackageName, resourceName 
 		IsDataSource:       true,
 		ResourceName:       resourceName,
 		ServicePackageName: servicePackageName,
+	}
+
+	return context.WithValue(ctx, contextKey, &v)
+}
+
+func NewEphemeralResourceContext(ctx context.Context, servicePackageName, resourceName string) context.Context {
+	v := InContext{
+		IsEphemeralResource: true,
+		ResourceName:        resourceName,
+		ServicePackageName:  servicePackageName,
 	}
 
 	return context.WithValue(ctx, contextKey, &v)
