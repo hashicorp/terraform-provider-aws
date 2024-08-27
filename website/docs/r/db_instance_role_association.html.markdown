@@ -23,7 +23,7 @@ resource "aws_db_instance_role_association" "example" {
   feature_name           = "S3_INTEGRATION"
   role_arn               = aws_iam_role.example.arn
 
-  # Only necessary where the instance identifier is a known string value; ensuring recreation when the instance is replaced.
+  # Only necessary where the instance identifier is a known string value; ensuring recreation when the instance is replaced. Requires Terraform 1.2 or later.
   lifecycle {
     replace_triggered_by = [
       aws_db_instance.example.id
