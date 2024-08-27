@@ -275,7 +275,6 @@ func findWebhooks(ctx context.Context, conn *codepipeline.Client, input *codepip
 		}
 
 		for _, v := range page.Webhooks {
-			v := v
 			if v := &v; filter(v) {
 				output = append(output, v)
 			}

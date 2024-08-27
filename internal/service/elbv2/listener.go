@@ -523,11 +523,11 @@ func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Listener (%s): %s", d.Id(), err)
 	}
 
-	if listener.AlpnPolicy != nil && len(listener.AlpnPolicy) == 1 {
+	if len(listener.AlpnPolicy) == 1 {
 		d.Set("alpn_policy", listener.AlpnPolicy[0])
 	}
 	d.Set(names.AttrARN, listener.ListenerArn)
-	if listener.Certificates != nil && len(listener.Certificates) == 1 {
+	if len(listener.Certificates) == 1 {
 		d.Set(names.AttrCertificateARN, listener.Certificates[0].CertificateArn)
 	}
 	sort.Slice(listener.DefaultActions, func(i, j int) bool {

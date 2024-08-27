@@ -185,8 +185,9 @@ func resourceInstanceGroupCreate(ctx context.Context, d *schema.ResourceData, me
 		}
 	}
 
-	if v, ok := d.GetOk(names.AttrInstanceCount); ok {
-		groupConfig.InstanceCount = aws.Int32(int32(v.(int)))
+	if v := d.GetRawConfig().GetAttr(names.AttrInstanceCount); v.IsKnown() && !v.IsNull() {
+		v, _ := v.AsBigFloat().Int64()
+		groupConfig.InstanceCount = aws.Int32(int32(v))
 	} else {
 		groupConfig.InstanceCount = aws.Int32(1)
 	}

@@ -47,8 +47,6 @@ func TestAccNetworkManagerVPCAttachment_basic(t *testing.T) {
 	}
 
 	for name, testcase := range testcases { //nolint:paralleltest // false positive
-		testcase := testcase
-
 		t.Run(name, func(t *testing.T) {
 			ctx := acctest.Context(t)
 			var v awstypes.VpcAttachment
@@ -115,8 +113,6 @@ func TestAccNetworkManagerVPCAttachment_Attached_basic(t *testing.T) {
 	}
 
 	for name, testcase := range testcases { //nolint:paralleltest // false positive
-		testcase := testcase
-
 		t.Run(name, func(t *testing.T) {
 			ctx := acctest.Context(t)
 			var v awstypes.VpcAttachment
@@ -182,8 +178,6 @@ func TestAccNetworkManagerVPCAttachment_disappears(t *testing.T) {
 	}
 
 	for name, testcase := range testcases { //nolint:paralleltest // false positive
-		testcase := testcase
-
 		t.Run(name, func(t *testing.T) {
 			ctx := acctest.Context(t)
 			var v awstypes.VpcAttachment
@@ -235,8 +229,6 @@ func TestAccNetworkManagerVPCAttachment_Attached_disappears(t *testing.T) { // n
 	}
 
 	for name, testcase := range testcases { //nolint:paralleltest // false positive
-		testcase := testcase
-
 		t.Run(name, func(t *testing.T) {
 			ctx := acctest.Context(t)
 			var v awstypes.VpcAttachment
@@ -377,8 +369,6 @@ func TestAccNetworkManagerVPCAttachment_update(t *testing.T) {
 	}
 
 	for name, testcase := range testcases { //nolint:paralleltest // false positive
-		testcase := testcase
-
 		t.Run(name, func(t *testing.T) {
 			ctx := acctest.Context(t)
 			var v1, v2, v3, v4 awstypes.VpcAttachment
@@ -463,8 +453,6 @@ func TestAccNetworkManagerVPCAttachment_Attached_update(t *testing.T) {
 	}
 
 	for name, testcase := range testcases { //nolint:paralleltest // false positive
-		testcase := testcase
-
 		t.Run(name, func(t *testing.T) {
 			ctx := acctest.Context(t)
 			var v1, v2, v3, v4 awstypes.VpcAttachment

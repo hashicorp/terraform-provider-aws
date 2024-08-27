@@ -48,7 +48,6 @@ func TestIsIsolatedPartition(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.input, func(t *testing.T) {
 			t.Parallel()
 
@@ -93,7 +92,6 @@ func TestIsIsolatedRegion(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.input, func(t *testing.T) {
 			t.Parallel()
 
@@ -142,7 +140,6 @@ func TestIsStandardPartition(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.input, func(t *testing.T) {
 			t.Parallel()
 
@@ -187,7 +184,6 @@ func TestIsStandardRegion(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.input, func(t *testing.T) {
 			t.Parallel()
 

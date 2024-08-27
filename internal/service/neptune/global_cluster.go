@@ -248,7 +248,7 @@ func resourceGlobalClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 					return sdkdiag.AppendErrorf(diags, "modifying Neptune Cluster (%s) engine version: %s", clusterID, err)
 				}
 
-				if _, err := waitDBClusterAvailable(ctx, conn, clusterID, d.Timeout(schema.TimeoutUpdate)); err != nil {
+				if _, err := waitDBClusterAvailable(ctx, conn, clusterID, false, d.Timeout(schema.TimeoutUpdate)); err != nil {
 					return sdkdiag.AppendErrorf(diags, "waiting for Neptune Cluster (%s) update: %s", clusterID, err)
 				}
 			}
