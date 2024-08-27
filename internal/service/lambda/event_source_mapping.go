@@ -199,6 +199,10 @@ func resourceEventSourceMapping() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[awstypes.FunctionResponseType](),
 				},
 			},
+			names.AttrKMSKeyARN: {
+				Type: schema.TypeString,
+				Optional: true,
+			}
 			"last_modified": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -412,6 +416,12 @@ func resourceEventSourceMappingCreate(ctx context.Context, d *schema.ResourceDat
 		input.FunctionResponseTypes = flex.ExpandStringyValueSet[awstypes.FunctionResponseType](v.(*schema.Set))
 	}
 
+	if v, ok := d.GetOk(names.AttrKMSKeyARN); ok {
+		v := v.(string)
+
+		input.KMSKeyArn = aws.String(v)
+	}
+
 	if v, ok := d.GetOk("maximum_batching_window_in_seconds"); ok {
 		input.MaximumBatchingWindowInSeconds = aws.Int32(int32(v.(int)))
 	}
@@ -545,6 +555,9 @@ func resourceEventSourceMappingRead(ctx context.Context, d *schema.ResourceData,
 		d.Set("last_modified", aws.ToTime(output.LastModified).Format(time.RFC3339))
 	} else {
 		d.Set("last_modified", nil)
+	}
+	if output.KMSKeyArn != nil {
+		d.Set(names.AttrKMSKeyARN, output.KMSKeyArn)
 	}
 	d.Set("last_processing_result", output.LastProcessingResult)
 	d.Set("maximum_batching_window_in_seconds", output.MaximumBatchingWindowInSeconds)
