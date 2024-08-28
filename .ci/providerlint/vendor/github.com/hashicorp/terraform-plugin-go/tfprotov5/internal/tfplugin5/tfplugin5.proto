@@ -1,9 +1,9 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-// Terraform Plugin RPC protocol version 5.5
+// Terraform Plugin RPC protocol version 5.6
 //
-// This file defines version 5.5 of the RPC protocol. To implement a plugin
+// This file defines version 5.6 of the RPC protocol. To implement a plugin
 // against this protocol, copy this definition into your own codebase and
 // use protoc to generate stubs for your target language.
 //
@@ -41,10 +41,13 @@ message Diagnostic {
     string summary = 2;
     string detail = 3;
     AttributePath attribute = 4;
+}
 
-    // function_argument is the positional function argument for aligning
-    // configuration source.
-    optional int64 function_argument = 5;
+message FunctionError {
+    string text = 1;
+    // The optional function_argument records the index position of the
+    // argument which caused the error.
+    optional int64 function_argument = 2;
 }
 
 message AttributePath {
@@ -152,6 +155,16 @@ message ServerCapabilities {
     bool move_resource_state = 3;
 }
 
+// ClientCapabilities allows Terraform to publish information regarding
+// supported protocol features. This is used to indicate availability of
+// certain forward-compatible changes which may be optional in a major
+// protocol version, but cannot be tested for directly.
+message ClientCapabilities {
+    // The deferral_allowed capability signals that the client is able to
+    // handle deferred responses from the provider.
+    bool deferral_allowed = 1;
+}
+
 message Function {
     // parameters is the ordered list of positional function parameters.
     repeated Parameter parameters = 1;
@@ -206,6 +219,25 @@ message Function {
         // type is the type constraint for the function result.
         bytes type = 1;
     }
+}
+
+// Deferred is a message that indicates that change is deferred for a reason.
+message Deferred {
+    // Reason is the reason for deferring the change.
+    enum Reason {
+        // UNKNOWN is the default value, and should not be used.
+        UNKNOWN = 0;
+        // RESOURCE_CONFIG_UNKNOWN is used when the config is partially unknown and the real
+        // values need to be known before the change can be planned.
+        RESOURCE_CONFIG_UNKNOWN = 1;
+        // PROVIDER_CONFIG_UNKNOWN is used when parts of the provider configuration
+        // are unknown, e.g. the provider configuration is only known after the apply is done.
+        PROVIDER_CONFIG_UNKNOWN = 2;
+        // ABSENT_PREREQ is used when a hard dependency has not been satisfied.
+        ABSENT_PREREQ = 3;
+    }
+    // reason is the reason for deferring the change.
+    Reason reason = 1;
 }
 
 service Provider {
@@ -364,6 +396,7 @@ message Configure {
     message Request {
         string terraform_version = 1;
         DynamicValue config = 2;
+        ClientCapabilities client_capabilities = 3;
     }
     message Response {
         repeated Diagnostic diagnostics = 1;
@@ -384,11 +417,15 @@ message ReadResource {
         DynamicValue current_state = 2;
         bytes private = 3;
         DynamicValue provider_meta = 4;
+        ClientCapabilities client_capabilities = 5;
     }
     message Response {
         DynamicValue new_state = 1;
         repeated Diagnostic diagnostics = 2;
         bytes private = 3;
+        // deferred is set if the provider is deferring the change. If set the caller
+        // needs to handle the deferral.
+        Deferred deferred = 4;
     }
 }
 
@@ -400,6 +437,7 @@ message PlanResourceChange {
         DynamicValue config = 4;
         bytes prior_private = 5;
         DynamicValue provider_meta = 6;
+        ClientCapabilities client_capabilities = 7;
     }
 
     message Response {
@@ -421,6 +459,9 @@ message PlanResourceChange {
         //     ==== THIS MUST BE LEFT UNSET IN ALL OTHER SDKS ====
         //     ====              DO NOT USE THIS              ====
         bool legacy_type_system = 5;
+        // deferred is set if the provider is deferring the change. If set the caller
+        // needs to handle the deferral.
+        Deferred deferred = 6;
     }
 }
 
@@ -457,6 +498,7 @@ message ImportResourceState {
     message Request {
         string type_name = 1;
         string id = 2;
+        ClientCapabilities client_capabilities = 3;
     }
 
     message ImportedResource {
@@ -468,6 +510,9 @@ message ImportResourceState {
     message Response {
         repeated ImportedResource imported_resources = 1;
         repeated Diagnostic diagnostics = 2;
+        // deferred is set if the provider is deferring the change. If set the caller
+        // needs to handle the deferral.
+        Deferred deferred = 3;
     }
 }
 
@@ -512,10 +557,14 @@ message ReadDataSource {
         string type_name = 1;
         DynamicValue config = 2;
         DynamicValue provider_meta = 3;
+        ClientCapabilities client_capabilities = 4;
     }
     message Response {
         DynamicValue state = 1;
         repeated Diagnostic diagnostics = 2;
+        // deferred is set if the provider is deferring the change. If set the caller
+        // needs to handle the deferral.
+        Deferred deferred = 3;
     }
 }
 
@@ -580,7 +629,7 @@ message CallFunction {
         // result is result value after running the function logic.
         DynamicValue result = 1;
 
-        // diagnostics is any warnings or errors from the function logic.
-        repeated Diagnostic diagnostics = 2;
+        // error is any error from the function logic.
+        FunctionError error = 2;
     }
 }

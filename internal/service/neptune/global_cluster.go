@@ -9,21 +9,23 @@ import (
 	"slices"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/neptune"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/neptune"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/neptune/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_neptune_global_cluster")
-func ResourceGlobalCluster() *schema.Resource {
+// @SDKResource("aws_neptune_global_cluster", name="Global Cluster")
+func resourceGlobalCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGlobalClusterCreate,
 		ReadWithoutTimeout:   resourceGlobalClusterRead,
@@ -43,24 +45,24 @@ func ResourceGlobalCluster() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"deletion_protection": {
+			names.AttrDeletionProtection: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-			"engine": {
+			names.AttrEngine: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"engine", "source_db_cluster_identifier"},
+				ExactlyOneOf: []string{names.AttrEngine, "source_db_cluster_identifier"},
 				ValidateFunc: validation.StringInSlice(engine_Values(), false),
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -96,13 +98,13 @@ func ResourceGlobalCluster() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"engine", "source_db_cluster_identifier"},
+				ExactlyOneOf: []string{names.AttrEngine, "source_db_cluster_identifier"},
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"storage_encrypted": {
+			names.AttrStorageEncrypted: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
@@ -115,22 +117,22 @@ func ResourceGlobalCluster() *schema.Resource {
 func resourceGlobalClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
+	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
 	globalClusterID := d.Get("global_cluster_identifier").(string)
 	input := &neptune.CreateGlobalClusterInput{
 		GlobalClusterIdentifier: aws.String(globalClusterID),
 	}
 
-	if v, ok := d.GetOk("deletion_protection"); ok {
+	if v, ok := d.GetOk(names.AttrDeletionProtection); ok {
 		input.DeletionProtection = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk("engine"); ok {
+	if v, ok := d.GetOk(names.AttrEngine); ok {
 		input.Engine = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("engine_version"); ok {
+	if v, ok := d.GetOk(names.AttrEngineVersion); ok {
 		input.EngineVersion = aws.String(v.(string))
 	}
 
@@ -138,17 +140,17 @@ func resourceGlobalClusterCreate(ctx context.Context, d *schema.ResourceData, me
 		input.SourceDBClusterIdentifier = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("storage_encrypted"); ok {
+	if v, ok := d.GetOk(names.AttrStorageEncrypted); ok {
 		input.StorageEncrypted = aws.Bool(v.(bool))
 	}
 
-	output, err := conn.CreateGlobalClusterWithContext(ctx, input)
+	output, err := conn.CreateGlobalCluster(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Neptune Global Cluster (%s): %s", globalClusterID, err)
 	}
 
-	d.SetId(aws.StringValue(output.GlobalCluster.GlobalClusterIdentifier))
+	d.SetId(aws.ToString(output.GlobalCluster.GlobalClusterIdentifier))
 
 	if _, err := waitGlobalClusterCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Neptune Global Cluster (%s) create: %s", d.Id(), err)
@@ -160,9 +162,9 @@ func resourceGlobalClusterCreate(ctx context.Context, d *schema.ResourceData, me
 func resourceGlobalClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
+	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
-	globalCluster, err := FindGlobalClusterByID(ctx, conn, d.Id())
+	globalCluster, err := findGlobalClusterByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Neptune Global Cluster (%s) not found, removing from state", d.Id())
@@ -174,16 +176,16 @@ func resourceGlobalClusterRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "reading Neptune Global Cluster (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", globalCluster.GlobalClusterArn)
-	d.Set("deletion_protection", globalCluster.DeletionProtection)
-	d.Set("engine", globalCluster.Engine)
-	d.Set("engine_version", globalCluster.EngineVersion)
+	d.Set(names.AttrARN, globalCluster.GlobalClusterArn)
+	d.Set(names.AttrDeletionProtection, globalCluster.DeletionProtection)
+	d.Set(names.AttrEngine, globalCluster.Engine)
+	d.Set(names.AttrEngineVersion, globalCluster.EngineVersion)
 	d.Set("global_cluster_identifier", globalCluster.GlobalClusterIdentifier)
 	if err := d.Set("global_cluster_members", flattenGlobalClusterMembers(globalCluster.GlobalClusterMembers)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting global_cluster_members: %s", err)
 	}
 	d.Set("global_cluster_resource_id", globalCluster.GlobalClusterResourceId)
-	d.Set("storage_encrypted", globalCluster.StorageEncrypted)
+	d.Set(names.AttrStorageEncrypted, globalCluster.StorageEncrypted)
 
 	return diags
 }
@@ -191,17 +193,17 @@ func resourceGlobalClusterRead(ctx context.Context, d *schema.ResourceData, meta
 func resourceGlobalClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
+	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
-	if d.HasChange("deletion_protection") {
+	if d.HasChange(names.AttrDeletionProtection) {
 		input := &neptune.ModifyGlobalClusterInput{
-			DeletionProtection:      aws.Bool(d.Get("deletion_protection").(bool)),
+			DeletionProtection:      aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
 			GlobalClusterIdentifier: aws.String(d.Id()),
 		}
 
-		_, err := conn.ModifyGlobalClusterWithContext(ctx, input)
+		_, err := conn.ModifyGlobalCluster(ctx, input)
 
-		if tfawserr.ErrCodeEquals(err, neptune.ErrCodeGlobalClusterNotFoundFault) {
+		if errs.IsA[*awstypes.GlobalClusterNotFoundFault](err) {
 			return diags
 		}
 
@@ -214,8 +216,8 @@ func resourceGlobalClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 		}
 	}
 
-	if d.HasChange("engine_version") {
-		engineVersion := d.Get("engine_version").(string)
+	if d.HasChange(names.AttrEngineVersion) {
+		engineVersion := d.Get(names.AttrEngineVersion).(string)
 
 		for _, tfMapRaw := range d.Get("global_cluster_members").(*schema.Set).List() {
 			tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -231,7 +233,7 @@ func resourceGlobalClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 					return sdkdiag.AppendErrorf(diags, "reading Neptune Cluster (%s): %s", clusterARN, err)
 				}
 
-				clusterID := aws.StringValue(cluster.DBClusterIdentifier)
+				clusterID := aws.ToString(cluster.DBClusterIdentifier)
 				input := &neptune.ModifyDBClusterInput{
 					ApplyImmediately:    aws.Bool(true),
 					DBClusterIdentifier: aws.String(clusterID),
@@ -239,14 +241,14 @@ func resourceGlobalClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 				}
 
 				_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
-					return conn.ModifyDBClusterWithContext(ctx, input)
-				}, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions")
+					return conn.ModifyDBCluster(ctx, input)
+				}, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
 
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "modifying Neptune Cluster (%s) engine version: %s", clusterID, err)
 				}
 
-				if _, err := waitDBClusterAvailable(ctx, conn, clusterID, d.Timeout(schema.TimeoutUpdate)); err != nil {
+				if _, err := waitDBClusterAvailable(ctx, conn, clusterID, false, d.Timeout(schema.TimeoutUpdate)); err != nil {
 					return sdkdiag.AppendErrorf(diags, "waiting for Neptune Cluster (%s) update: %s", clusterID, err)
 				}
 			}
@@ -259,7 +261,7 @@ func resourceGlobalClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 func resourceGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
+	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
 	// Remove any members from the global cluster.
 	for _, tfMapRaw := range d.Get("global_cluster_members").(*schema.Set).List() {
@@ -277,13 +279,13 @@ func resourceGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	log.Printf("[DEBUG] Deleting Neptune Global Cluster: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
-		return conn.DeleteGlobalClusterWithContext(ctx, &neptune.DeleteGlobalClusterInput{
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidGlobalClusterStateFault](ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+		return conn.DeleteGlobalCluster(ctx, &neptune.DeleteGlobalClusterInput{
 			GlobalClusterIdentifier: aws.String(d.Id()),
 		})
-	}, neptune.ErrCodeInvalidGlobalClusterStateFault, "is not empty")
+	}, "is not empty")
 
-	if tfawserr.ErrCodeEquals(err, neptune.ErrCodeGlobalClusterNotFoundFault) {
+	if errs.IsA[*awstypes.GlobalClusterNotFoundFault](err) {
 		return diags
 	}
 
@@ -298,17 +300,17 @@ func resourceGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func FindGlobalClusterByID(ctx context.Context, conn *neptune.Neptune, id string) (*neptune.GlobalCluster, error) {
+func findGlobalClusterByID(ctx context.Context, conn *neptune.Client, id string) (*awstypes.GlobalCluster, error) {
 	input := &neptune.DescribeGlobalClustersInput{
 		GlobalClusterIdentifier: aws.String(id),
 	}
-	output, err := findGlobalCluster(ctx, conn, input, tfslices.PredicateTrue[*neptune.GlobalCluster]())
+	output, err := findGlobalCluster(ctx, conn, input, tfslices.PredicateTrue[awstypes.GlobalCluster]())
 
 	if err != nil {
 		return nil, err
 	}
 
-	if status := aws.StringValue(output.Status); status == globalClusterStatusDeleted {
+	if status := aws.ToString(output.Status); status == globalClusterStatusDeleted {
 		return nil, &retry.NotFoundError{
 			Message:     status,
 			LastRequest: input,
@@ -316,7 +318,7 @@ func FindGlobalClusterByID(ctx context.Context, conn *neptune.Neptune, id string
 	}
 
 	// Eventual consistency check.
-	if aws.StringValue(output.GlobalClusterIdentifier) != id {
+	if aws.ToString(output.GlobalClusterIdentifier) != id {
 		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
@@ -325,60 +327,57 @@ func FindGlobalClusterByID(ctx context.Context, conn *neptune.Neptune, id string
 	return output, nil
 }
 
-func findGlobalClusterByClusterARN(ctx context.Context, conn *neptune.Neptune, arn string) (*neptune.GlobalCluster, error) {
+func findGlobalClusterByClusterARN(ctx context.Context, conn *neptune.Client, arn string) (*awstypes.GlobalCluster, error) {
 	input := &neptune.DescribeGlobalClustersInput{}
 
-	return findGlobalCluster(ctx, conn, input, func(v *neptune.GlobalCluster) bool {
-		return slices.ContainsFunc(v.GlobalClusterMembers, func(v *neptune.GlobalClusterMember) bool {
-			return aws.StringValue(v.DBClusterArn) == arn
+	return findGlobalCluster(ctx, conn, input, func(v awstypes.GlobalCluster) bool {
+		return slices.ContainsFunc(v.GlobalClusterMembers, func(v awstypes.GlobalClusterMember) bool {
+			return aws.ToString(v.DBClusterArn) == arn
 		})
 	})
 }
 
-func findGlobalCluster(ctx context.Context, conn *neptune.Neptune, input *neptune.DescribeGlobalClustersInput, filter tfslices.Predicate[*neptune.GlobalCluster]) (*neptune.GlobalCluster, error) {
+func findGlobalCluster(ctx context.Context, conn *neptune.Client, input *neptune.DescribeGlobalClustersInput, filter tfslices.Predicate[awstypes.GlobalCluster]) (*awstypes.GlobalCluster, error) {
 	output, err := findGlobalClusters(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findGlobalClusters(ctx context.Context, conn *neptune.Neptune, input *neptune.DescribeGlobalClustersInput, filter tfslices.Predicate[*neptune.GlobalCluster]) ([]*neptune.GlobalCluster, error) {
-	var output []*neptune.GlobalCluster
+func findGlobalClusters(ctx context.Context, conn *neptune.Client, input *neptune.DescribeGlobalClustersInput, filter tfslices.Predicate[awstypes.GlobalCluster]) ([]awstypes.GlobalCluster, error) {
+	var output []awstypes.GlobalCluster
 
-	err := conn.DescribeGlobalClustersPagesWithContext(ctx, input, func(page *neptune.DescribeGlobalClustersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
+	pages := neptune.NewDescribeGlobalClustersPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-		for _, v := range page.GlobalClusters {
-			if v != nil && filter(v) {
-				output = append(output, v)
+		if errs.IsA[*awstypes.GlobalClusterNotFoundFault](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
 			}
 		}
 
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, neptune.ErrCodeGlobalClusterNotFoundFault) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		if err != nil {
+			return nil, err
 		}
-	}
 
-	if err != nil {
-		return nil, err
+		for _, v := range page.GlobalClusters {
+			if filter(v) {
+				output = append(output, v)
+			}
+		}
 	}
 
 	return output, nil
 }
 
-func statusGlobalCluster(ctx context.Context, conn *neptune.Neptune, id string) retry.StateRefreshFunc {
+func statusGlobalCluster(ctx context.Context, conn *neptune.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindGlobalClusterByID(ctx, conn, id)
+		output, err := findGlobalClusterByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -388,11 +387,11 @@ func statusGlobalCluster(ctx context.Context, conn *neptune.Neptune, id string) 
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.Status), nil
+		return output, aws.ToString(output.Status), nil
 	}
 }
 
-func waitGlobalClusterCreated(ctx context.Context, conn *neptune.Neptune, id string, timeout time.Duration) (*neptune.GlobalCluster, error) {
+func waitGlobalClusterCreated(ctx context.Context, conn *neptune.Client, id string, timeout time.Duration) (*awstypes.GlobalCluster, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{globalClusterStatusCreating},
 		Target:  []string{globalClusterStatusAvailable},
@@ -402,14 +401,14 @@ func waitGlobalClusterCreated(ctx context.Context, conn *neptune.Neptune, id str
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*neptune.GlobalCluster); ok {
+	if output, ok := outputRaw.(*awstypes.GlobalCluster); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitGlobalClusterUpdated(ctx context.Context, conn *neptune.Neptune, id string, timeout time.Duration) (*neptune.GlobalCluster, error) {
+func waitGlobalClusterUpdated(ctx context.Context, conn *neptune.Client, id string, timeout time.Duration) (*awstypes.GlobalCluster, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{globalClusterStatusModifying, globalClusterStatusUpgrading},
 		Target:  []string{globalClusterStatusAvailable},
@@ -420,14 +419,14 @@ func waitGlobalClusterUpdated(ctx context.Context, conn *neptune.Neptune, id str
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*neptune.GlobalCluster); ok {
+	if output, ok := outputRaw.(*awstypes.GlobalCluster); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitGlobalClusterDeleted(ctx context.Context, conn *neptune.Neptune, id string, timeout time.Duration) (*neptune.GlobalCluster, error) {
+func waitGlobalClusterDeleted(ctx context.Context, conn *neptune.Client, id string, timeout time.Duration) (*awstypes.GlobalCluster, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:        []string{globalClusterStatusAvailable, globalClusterStatusDeleting},
 		Target:         []string{},
@@ -438,14 +437,14 @@ func waitGlobalClusterDeleted(ctx context.Context, conn *neptune.Neptune, id str
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*neptune.GlobalCluster); ok {
+	if output, ok := outputRaw.(*awstypes.GlobalCluster); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func flattenGlobalClusterMembers(apiObjects []*neptune.GlobalClusterMember) []interface{} {
+func flattenGlobalClusterMembers(apiObjects []awstypes.GlobalClusterMember) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -454,8 +453,8 @@ func flattenGlobalClusterMembers(apiObjects []*neptune.GlobalClusterMember) []in
 
 	for _, apiObject := range apiObjects {
 		tfMap := map[string]interface{}{
-			"db_cluster_arn": aws.StringValue(apiObject.DBClusterArn),
-			"is_writer":      aws.BoolValue(apiObject.IsWriter),
+			"db_cluster_arn": aws.ToString(apiObject.DBClusterArn),
+			"is_writer":      aws.ToBool(apiObject.IsWriter),
 		}
 
 		tfList = append(tfList, tfMap)

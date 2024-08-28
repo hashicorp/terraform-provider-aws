@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/batch"
+	"github.com/aws/aws-sdk-go-v2/service/batch"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -29,11 +29,11 @@ func TestAccECSTag_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckTagDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTagConfig_basic(rName, "key1", "value1"),
+				Config: testAccTagConfig_basic(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
-					resource.TestCheckResourceAttr(resourceName, "value", "value1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKey, acctest.CtKey1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, acctest.CtValue1),
 				),
 			},
 			{
@@ -57,7 +57,7 @@ func TestAccECSTag_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckTagDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTagConfig_basic(rName, "key1", "value1"),
+				Config: testAccTagConfig_basic(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfecs.ResourceTag(), resourceName),
@@ -107,11 +107,11 @@ func TestAccECSTag_value(t *testing.T) {
 		CheckDestroy:             testAccCheckTagDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTagConfig_basic(rName, "key1", "value1"),
+				Config: testAccTagConfig_basic(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
-					resource.TestCheckResourceAttr(resourceName, "value", "value1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKey, acctest.CtKey1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, acctest.CtValue1),
 				),
 			},
 			{
@@ -120,11 +120,11 @@ func TestAccECSTag_value(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTagConfig_basic(rName, "key1", "value1updated"),
+				Config: testAccTagConfig_basic(rName, acctest.CtKey1, acctest.CtValue1Updated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
-					resource.TestCheckResourceAttr(resourceName, "value", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKey, acctest.CtKey1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, acctest.CtValue1Updated),
 				),
 			},
 		},
@@ -190,11 +190,11 @@ resource "aws_ecs_tag" "test" {
 }
 
 func testAccPreCheckBatch(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).BatchClient(ctx)
 
 	input := &batch.DescribeComputeEnvironmentsInput{}
 
-	_, err := conn.DescribeComputeEnvironmentsWithContext(ctx, input)
+	_, err := conn.DescribeComputeEnvironments(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

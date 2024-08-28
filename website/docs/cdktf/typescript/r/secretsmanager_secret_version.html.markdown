@@ -108,8 +108,8 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `secretId` - (Required) Specifies the secret to which you want to add a new version. You can specify either the Amazon Resource Name (ARN) or the friendly name of the secret. The secret must already exist.
-* `secretString` - (Optional) Specifies text data that you want to encrypt and store in this version of the secret. This is required if secret_binary is not set.
-* `secretBinary` - (Optional) Specifies binary data that you want to encrypt and store in this version of the secret. This is required if secret_string is not set. Needs to be encoded to base64.
+* `secretString` - (Optional) Specifies text data that you want to encrypt and store in this version of the secret. This is required if `secretBinary` is not set.
+* `secretBinary` - (Optional) Specifies binary data that you want to encrypt and store in this version of the secret. This is required if `secretString` is not set. Needs to be encoded to base64.
 * `versionStages` - (Optional) Specifies a list of staging labels that are attached to this version of the secret. A staging label must be unique to a single version of the secret. If you specify a staging label that's already associated with a different version of the same secret then that staging label is automatically removed from the other version and attached to this version. If you do not specify a value, then AWS Secrets Manager automatically moves the staging label `AWSCURRENT` to this new version on creation.
 
 ~> **NOTE:** If `versionStages` is configured, you must include the `AWSCURRENT` staging label if this secret version is the only version or if the label is currently present on this secret version, otherwise Terraform will show a perpetual difference.
@@ -154,4 +154,4 @@ Using `terraform import`, import `aws_secretsmanager_secret_version` using the s
 % terraform import aws_secretsmanager_secret_version.example 'arn:aws:secretsmanager:us-east-1:123456789012:secret:example-123456|xxxxx-xxxxxxx-xxxxxxx-xxxxx'
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-5f65f3c5e87dc3ce9fac6b2ac4088089f1f88f7a6df546f616bc7e3d7b3fd19d -->
+<!-- cache-key: cdktf-0.20.1 input-5c6bef052ca1ac5532b5d2f27ef3e3ecee610c7ccc1c059c28a37372c9855304 -->

@@ -5,22 +5,25 @@ package route53
 
 import (
 	"context"
-	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/route53"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/route53"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_route53_query_log")
-func ResourceQueryLog() *schema.Resource {
+// @SDKResource("aws_route53_query_log", name="Query Logging Config")
+func resourceQueryLog() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceQueryLogCreate,
 		ReadWithoutTimeout:   resourceQueryLogRead,
@@ -31,11 +34,11 @@ func ResourceQueryLog() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"cloudwatch_log_group_arn": {
+			names.AttrCloudWatchLogGroupARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -51,66 +54,94 @@ func ResourceQueryLog() *schema.Resource {
 }
 
 func resourceQueryLogCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
 	input := &route53.CreateQueryLoggingConfigInput{
-		CloudWatchLogsLogGroupArn: aws.String(d.Get("cloudwatch_log_group_arn").(string)),
+		CloudWatchLogsLogGroupArn: aws.String(d.Get(names.AttrCloudWatchLogGroupARN).(string)),
 		HostedZoneId:              aws.String(d.Get("zone_id").(string)),
 	}
 
-	output, err := conn.CreateQueryLoggingConfigWithContext(ctx, input)
+	output, err := conn.CreateQueryLoggingConfig(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Route53 Query Logging Config: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Route53 Query Logging Config: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.QueryLoggingConfig.Id))
+	d.SetId(aws.ToString(output.QueryLoggingConfig.Id))
 
-	return resourceQueryLogRead(ctx, d, meta)
+	return append(diags, resourceQueryLogRead(ctx, d, meta)...)
 }
 
 func resourceQueryLogRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
-	output, err := FindQueryLoggingConfigByID(ctx, conn, d.Id())
+	output, err := findQueryLoggingConfigByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Route53 Query Logging Config %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Route53 Query Logging Config (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Route53 Query Logging Config (%s): %s", d.Id(), err)
 	}
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "route53",
-		Resource:  fmt.Sprintf("queryloggingconfig/%s", d.Id()),
+		Resource:  "queryloggingconfig/" + d.Id(),
 	}.String()
-	d.Set("arn", arn)
-	d.Set("cloudwatch_log_group_arn", output.CloudWatchLogsLogGroupArn)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrCloudWatchLogGroupARN, output.CloudWatchLogsLogGroupArn)
 	d.Set("zone_id", output.HostedZoneId)
 
-	return nil
+	return diags
 }
 
 func resourceQueryLogDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
 	log.Printf("[DEBUG] Deleting Route53 Query Logging Config: %s", d.Id())
-	_, err := conn.DeleteQueryLoggingConfigWithContext(ctx, &route53.DeleteQueryLoggingConfigInput{
+	_, err := conn.DeleteQueryLoggingConfig(ctx, &route53.DeleteQueryLoggingConfigInput{
 		Id: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchQueryLoggingConfig) {
-		return nil
+	if errs.IsA[*awstypes.NoSuchQueryLoggingConfig](err) {
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Route53 Query Logging Config (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Route53 Query Logging Config (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
+}
+
+func findQueryLoggingConfigByID(ctx context.Context, conn *route53.Client, id string) (*awstypes.QueryLoggingConfig, error) {
+	input := &route53.GetQueryLoggingConfigInput{
+		Id: aws.String(id),
+	}
+
+	output, err := conn.GetQueryLoggingConfig(ctx, input)
+
+	if errs.IsA[*awstypes.NoSuchQueryLoggingConfig](err) || errs.IsA[*awstypes.NoSuchHostedZone](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.QueryLoggingConfig == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.QueryLoggingConfig, nil
 }

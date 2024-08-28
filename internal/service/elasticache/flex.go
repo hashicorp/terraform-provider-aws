@@ -4,73 +4,72 @@
 package elasticache
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/elasticache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func flattenSecurityGroupIDs(securityGroups []*elasticache.SecurityGroupMembership) []string {
-	result := make([]string, 0, len(securityGroups))
-	for _, sg := range securityGroups {
-		if sg.SecurityGroupId != nil {
-			result = append(result, *sg.SecurityGroupId)
-		}
-	}
-	return result
+func flattenSecurityGroupIDs(apiObjects []awstypes.SecurityGroupMembership) []string {
+	return tfslices.ApplyToAll(apiObjects, func(v awstypes.SecurityGroupMembership) string {
+		return aws.ToString(v.SecurityGroupId)
+	})
 }
 
-func flattenLogDeliveryConfigurations(logDeliveryConfiguration []*elasticache.LogDeliveryConfiguration) []map[string]interface{} {
-	if len(logDeliveryConfiguration) == 0 {
+func flattenLogDeliveryConfigurations(apiObjects []awstypes.LogDeliveryConfiguration) []interface{} {
+	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var logDeliveryConfigurations []map[string]interface{}
-	for _, v := range logDeliveryConfiguration {
-		logDeliveryConfig := make(map[string]interface{})
+	var tfList []interface{}
 
-		switch aws.StringValue(v.DestinationType) {
-		case elasticache.DestinationTypeKinesisFirehose:
-			logDeliveryConfig["destination"] = aws.StringValue(v.DestinationDetails.KinesisFirehoseDetails.DeliveryStream)
-		case elasticache.DestinationTypeCloudwatchLogs:
-			logDeliveryConfig["destination"] = aws.StringValue(v.DestinationDetails.CloudWatchLogsDetails.LogGroup)
+	for _, apiObject := range apiObjects {
+		tfMap := make(map[string]interface{})
+
+		switch apiObject.DestinationType {
+		case awstypes.DestinationTypeKinesisFirehose:
+			tfMap[names.AttrDestination] = aws.ToString(apiObject.DestinationDetails.KinesisFirehoseDetails.DeliveryStream)
+		case awstypes.DestinationTypeCloudWatchLogs:
+			tfMap[names.AttrDestination] = aws.ToString(apiObject.DestinationDetails.CloudWatchLogsDetails.LogGroup)
 		}
+		tfMap["destination_type"] = apiObject.DestinationType
+		tfMap["log_format"] = apiObject.LogFormat
+		tfMap["log_type"] = apiObject.LogType
 
-		logDeliveryConfig["destination_type"] = aws.StringValue(v.DestinationType)
-		logDeliveryConfig["log_format"] = aws.StringValue(v.LogFormat)
-		logDeliveryConfig["log_type"] = aws.StringValue(v.LogType)
-		logDeliveryConfigurations = append(logDeliveryConfigurations, logDeliveryConfig)
+		tfList = append(tfList, tfMap)
 	}
 
-	return logDeliveryConfigurations
+	return tfList
 }
 
-func expandEmptyLogDeliveryConfigurations(v map[string]interface{}) elasticache.LogDeliveryConfigurationRequest {
-	logDeliveryConfigurationRequest := elasticache.LogDeliveryConfigurationRequest{}
-	logDeliveryConfigurationRequest.SetEnabled(false)
-	logDeliveryConfigurationRequest.SetLogType(v["log_type"].(string))
+func expandEmptyLogDeliveryConfigurationRequest(tfMap map[string]interface{}) awstypes.LogDeliveryConfigurationRequest {
+	apiObject := awstypes.LogDeliveryConfigurationRequest{}
 
-	return logDeliveryConfigurationRequest
+	apiObject.Enabled = aws.Bool(false)
+	apiObject.LogType = awstypes.LogType(tfMap["log_type"].(string))
+
+	return apiObject
 }
 
-func expandLogDeliveryConfigurations(v map[string]interface{}) elasticache.LogDeliveryConfigurationRequest {
-	logDeliveryConfigurationRequest := elasticache.LogDeliveryConfigurationRequest{}
+func expandLogDeliveryConfigurationRequests(v map[string]interface{}) awstypes.LogDeliveryConfigurationRequest {
+	apiObject := awstypes.LogDeliveryConfigurationRequest{}
 
-	logDeliveryConfigurationRequest.LogType = aws.String(v["log_type"].(string))
-	logDeliveryConfigurationRequest.DestinationType = aws.String(v["destination_type"].(string))
-	logDeliveryConfigurationRequest.LogFormat = aws.String(v["log_format"].(string))
-	destinationDetails := elasticache.DestinationDetails{}
-
-	switch v["destination_type"].(string) {
-	case elasticache.DestinationTypeCloudwatchLogs:
-		destinationDetails.CloudWatchLogsDetails = &elasticache.CloudWatchLogsDestinationDetails{
-			LogGroup: aws.String(v["destination"].(string)),
+	destinationType := awstypes.DestinationType(v["destination_type"].(string))
+	apiObject.DestinationType = destinationType
+	destinationDetails := &awstypes.DestinationDetails{}
+	switch destinationType {
+	case awstypes.DestinationTypeCloudWatchLogs:
+		destinationDetails.CloudWatchLogsDetails = &awstypes.CloudWatchLogsDestinationDetails{
+			LogGroup: aws.String(v[names.AttrDestination].(string)),
 		}
-	case elasticache.DestinationTypeKinesisFirehose:
-		destinationDetails.KinesisFirehoseDetails = &elasticache.KinesisFirehoseDestinationDetails{
-			DeliveryStream: aws.String(v["destination"].(string)),
+	case awstypes.DestinationTypeKinesisFirehose:
+		destinationDetails.KinesisFirehoseDetails = &awstypes.KinesisFirehoseDestinationDetails{
+			DeliveryStream: aws.String(v[names.AttrDestination].(string)),
 		}
 	}
+	apiObject.DestinationDetails = destinationDetails
+	apiObject.LogType = awstypes.LogType(v["log_type"].(string))
+	apiObject.LogFormat = awstypes.LogFormat(v["log_format"].(string))
 
-	logDeliveryConfigurationRequest.DestinationDetails = &destinationDetails
-
-	return logDeliveryConfigurationRequest
+	return apiObject
 }

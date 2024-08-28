@@ -48,12 +48,6 @@ jobs:
           GH_TOKEN: ${{ steps.token.outputs.token }}
         run: gh issue edit ${{ env.ISSUE_URL }} --add-label prioritized
 
-      - name: 'Add prioritized to regressions'
-        if: github.event.label.name == 'regression'
-        env:
-          GH_TOKEN: ${{ steps.token.outputs.token }}
-        run: gh issue edit ${{ env.ISSUE_URL }} --add-label prioritized
-
       - name: 'Remove unnecessary labels on closure'
         if: github.event.action == 'closed'
         env:
@@ -111,21 +105,6 @@ jobs:
           PROJECT_ITEM_ID=$(gh project item-add ${{ env.PROJECT_NUMBER }} --owner "hashicorp" --url ${{ env.ITEM_URL }} --format json | jq '.id')
           gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.VIEW_FIELD_ID }} --single-select-option-id ${{ vars.team_project_view_working_board }}
 
-      - name: 'Labeled Regression'
-        if: github.event.label.name == 'regression'
-        env:
-          GH_TOKEN: ${{ steps.token.outputs.token }}
-        run: |
-          PROJECT_ITEM_ID=$(gh project item-add ${{ env.PROJECT_NUMBER }} --owner "hashicorp" --url ${{ env.ITEM_URL }} --format json | jq '.id')
-          gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.VIEW_FIELD_ID }} --single-select-option-id ${{ vars.team_project_view_working_board }}
-
-          gh api graphql -F itemId="$PROJECT_ITEM_ID" -F projectId=${{ env.PROJECT_ID }} -f query='
-          mutation($itemId:ID!, $projectId:ID!) {
-            updateProjectV2ItemPosition(input:{itemId:$itemId, projectId:$projectId}) {
-              clientMutationId
-            }
-          }'
-
       - name: 'Labeled Engineering Initiative'
         if: github.event.label.name == 'engineering-initiative'
         env:
@@ -156,3 +135,18 @@ jobs:
 
             * If you are interested in working on this issue, please leave a comment.
             * If this would be your first contribution, please review the [contribution guide](https://hashicorp.github.io/terraform-provider-aws/).
+
+  closed_issue_comment:
+    name: 'Closed Issue Comment'
+    if: github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Add comment on closed issues'
+        uses: peter-evans/create-or-update-comment@71345be0265236311c031f5c7866368bd1eff043 # v4.0.0
+        with:
+          issue-number: ${{ github.event.issue.number }}
+          body: |
+            > [!WARNING]
+            > This issue has been closed, meaning that any additional comments are hard for our team to see. Please assume that the maintainers will not see them.
+            >
+            > Ongoing conversations amongst community members are welcome, however, the issue will be locked after 30 days. Moving conversations to another venue, such as the [AWS Provider forum](https://discuss.hashicorp.com/c/terraform-providers/tf-aws/33), is recommended. If you have additional concerns, please open a new issue, referencing this one where needed.

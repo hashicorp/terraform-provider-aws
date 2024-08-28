@@ -8,9 +8,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -128,14 +129,14 @@ func TestAccIAMRolePolicyAttachment_Disappears_role(t *testing.T) {
 
 func testAccCheckRolePolicyAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iam_role_policy_attachment" {
 				continue
 			}
 
-			_, err := tfiam.FindAttachedRolePolicyByTwoPartKey(ctx, conn, rs.Primary.Attributes["role"], rs.Primary.Attributes["policy_arn"])
+			_, err := tfiam.FindAttachedRolePolicyByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrRole], rs.Primary.Attributes["policy_arn"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -159,9 +160,9 @@ func testAccCheckRolePolicyAttachmentExists(ctx context.Context, n string) resou
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
-		_, err := tfiam.FindAttachedRolePolicyByTwoPartKey(ctx, conn, rs.Primary.Attributes["role"], rs.Primary.Attributes["policy_arn"])
+		_, err := tfiam.FindAttachedRolePolicyByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrRole], rs.Primary.Attributes["policy_arn"])
 
 		return err
 	}
@@ -169,12 +170,12 @@ func testAccCheckRolePolicyAttachmentExists(ctx context.Context, n string) resou
 
 func testAccCheckRolePolicyAttachmentCount(ctx context.Context, roleName string, want int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
 		input := &iam.ListAttachedRolePoliciesInput{
 			RoleName: aws.String(roleName),
 		}
-		output, err := tfiam.FindAttachedRolePolicies(ctx, conn, input, tfslices.PredicateTrue[*iam.AttachedPolicy]())
+		output, err := tfiam.FindAttachedRolePolicies(ctx, conn, input, tfslices.PredicateTrue[awstypes.AttachedPolicy]())
 
 		if err != nil {
 			return err
@@ -195,7 +196,7 @@ func testAccRolePolicyAttachmentImportStateIdFunc(resourceName string) resource.
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["role"], rs.Primary.Attributes["policy_arn"]), nil
+		return fmt.Sprintf("%s/%s", rs.Primary.Attributes[names.AttrRole], rs.Primary.Attributes["policy_arn"]), nil
 	}
 }
 

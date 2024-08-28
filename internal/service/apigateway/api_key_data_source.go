@@ -7,21 +7,23 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_api_gateway_api_key")
-func DataSourceAPIKey() *schema.Resource {
+// @SDKDataSource("aws_api_gateway_api_key", name="API Key")
+// @Tags
+func dataSourceAPIKey() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAPIKeyRead,
 
 		Schema: map[string]*schema.Schema{
-			"created_date": {
+			names.AttrCreatedDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -29,28 +31,28 @@ func DataSourceAPIKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"enabled": {
+			names.AttrEnabled: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"id": {
+			names.AttrID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"last_updated_date": {
+			names.AttrLastUpdatedDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
-			"value": {
+			names.AttrTags: tftags.TagsSchemaComputed(),
+			names.AttrValue: {
 				Type:      schema.TypeString,
 				Computed:  true,
 				Sensitive: true,
@@ -61,28 +63,25 @@ func DataSourceAPIKey() *schema.Resource {
 
 func dataSourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	id := d.Get("id").(string)
-	apiKey, err := FindAPIKeyByID(ctx, conn, id)
+	id := d.Get(names.AttrID).(string)
+	apiKey, err := findAPIKeyByID(ctx, conn, id)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway API Key (%s): %s", id, err)
 	}
 
-	d.SetId(aws.StringValue(apiKey.Id))
-	d.Set("created_date", aws.TimeValue(apiKey.CreatedDate).Format(time.RFC3339))
+	d.SetId(aws.ToString(apiKey.Id))
+	d.Set(names.AttrCreatedDate, aws.ToTime(apiKey.CreatedDate).Format(time.RFC3339))
 	d.Set("customer_id", apiKey.CustomerId)
-	d.Set("description", apiKey.Description)
-	d.Set("enabled", apiKey.Enabled)
-	d.Set("last_updated_date", aws.TimeValue(apiKey.LastUpdatedDate).Format(time.RFC3339))
-	d.Set("name", apiKey.Name)
-	d.Set("value", apiKey.Value)
+	d.Set(names.AttrDescription, apiKey.Description)
+	d.Set(names.AttrEnabled, apiKey.Enabled)
+	d.Set(names.AttrLastUpdatedDate, aws.ToTime(apiKey.LastUpdatedDate).Format(time.RFC3339))
+	d.Set(names.AttrName, apiKey.Name)
+	d.Set(names.AttrValue, apiKey.Value)
 
-	if err := d.Set("tags", KeyValueTags(ctx, apiKey.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOut(ctx, apiKey.Tags)
 
 	return diags
 }

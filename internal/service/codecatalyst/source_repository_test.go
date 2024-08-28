@@ -43,7 +43,7 @@ func TestAccCodeCatalystSourceRepository_basic(t *testing.T) {
 				Config: testAccSourceRepositoryConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSourceRepositoryExists(ctx, resourceName, &sourcerepository),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "space_name", "tf-cc-aws-provider"),
 					resource.TestCheckResourceAttr(resourceName, "project_name", "tf-cc"),
 				),

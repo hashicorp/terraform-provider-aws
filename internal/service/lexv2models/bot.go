@@ -27,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -63,21 +64,21 @@ func (r *resourceBot) Metadata(_ context.Context, req resource.MetadataRequest, 
 func (r *resourceBot) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
-			"description": schema.StringAttribute{
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"idle_session_ttl_in_seconds": schema.Int64Attribute{
 				Required: true,
 			},
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"role_arn": schema.StringAttribute{
+			names.AttrRoleARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
 			},
@@ -87,7 +88,7 @@ func (r *resourceBot) Schema(ctx context.Context, req resource.SchemaRequest, re
 				ElementType: types.StringType,
 				Optional:    true,
 			},
-			"type": schema.StringAttribute{
+			names.AttrType: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				Validators: []validator.String{
@@ -108,13 +109,13 @@ func (r *resourceBot) Schema(ctx context.Context, req resource.SchemaRequest, re
 						"alias_name": schema.StringAttribute{
 							Required: true,
 						},
-						"id": schema.StringAttribute{
+						names.AttrID: schema.StringAttribute{
 							Required: true,
 						},
-						"name": schema.StringAttribute{
+						names.AttrName: schema.StringAttribute{
 							Required: true,
 						},
-						"version": schema.StringAttribute{
+						names.AttrVersion: schema.StringAttribute{
 							Required: true,
 						},
 					},
@@ -132,7 +133,7 @@ func (r *resourceBot) Schema(ctx context.Context, req resource.SchemaRequest, re
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
@@ -370,8 +371,8 @@ func (r *resourceBot) Delete(ctx context.Context, req resource.DeleteRequest, re
 
 	_, err := conn.DeleteBot(ctx, in)
 	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) ||
+			errs.IsAErrorMessageContains[*awstypes.PreconditionFailedException](err, "does not exist") {
 			return
 		}
 		resp.Diagnostics.AddError(
@@ -397,7 +398,7 @@ func (r *resourceBot) ModifyPlan(ctx context.Context, req resource.ModifyPlanReq
 }
 
 func (r *resourceBot) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func waitBotCreated(ctx context.Context, conn *lexmodelsv2.Client, id string, timeout time.Duration) (*lexmodelsv2.DescribeBotOutput, error) {
@@ -474,8 +475,7 @@ func FindBotByID(ctx context.Context, conn *lexmodelsv2.Client, id string) (*lex
 
 	out, err := conn.DescribeBot(ctx, in)
 	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
@@ -523,11 +523,11 @@ func flattenMembers(ctx context.Context, apiObject []awstypes.BotMember) (types.
 	elems := []attr.Value{}
 	for _, source := range apiObject {
 		obj := map[string]attr.Value{
-			"alias_name": flex.StringToFramework(ctx, source.BotMemberAliasName),
-			"alias_id":   flex.StringToFramework(ctx, source.BotMemberAliasId),
-			"id":         flex.StringToFramework(ctx, source.BotMemberId),
-			"name":       flex.StringToFramework(ctx, source.BotMemberName),
-			"version":    flex.StringToFramework(ctx, source.BotMemberVersion),
+			"alias_name":      flex.StringToFramework(ctx, source.BotMemberAliasName),
+			"alias_id":        flex.StringToFramework(ctx, source.BotMemberAliasId),
+			names.AttrID:      flex.StringToFramework(ctx, source.BotMemberId),
+			names.AttrName:    flex.StringToFramework(ctx, source.BotMemberName),
+			names.AttrVersion: flex.StringToFramework(ctx, source.BotMemberVersion),
 		}
 		objVal, d := types.ObjectValue(botMembersAttrTypes, obj)
 		diags.Append(d...)
@@ -627,9 +627,9 @@ var dataPrivacyAttrTypes = map[string]attr.Type{
 }
 
 var botMembersAttrTypes = map[string]attr.Type{
-	"alias_id":   types.StringType,
-	"alias_name": types.StringType,
-	"id":         types.StringType,
-	"name":       types.StringType,
-	"version":    types.StringType,
+	"alias_id":        types.StringType,
+	"alias_name":      types.StringType,
+	names.AttrID:      types.StringType,
+	names.AttrName:    types.StringType,
+	names.AttrVersion: types.StringType,
 }

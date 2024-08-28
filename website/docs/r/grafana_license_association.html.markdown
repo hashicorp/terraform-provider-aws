@@ -47,8 +47,9 @@ resource "aws_iam_role" "assume" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `grafana_token` - (Optional) A token from Grafana Labs that ties your AWS account with a Grafana Labs account.
 * `license_type` - (Required) The type of license for the workspace license association. Valid values are `ENTERPRISE` and `ENTERPRISE_FREE_TRIAL`.
 * `workspace_id` - (Required) The workspace id.
 

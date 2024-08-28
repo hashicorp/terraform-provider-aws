@@ -132,7 +132,6 @@ func Test{{ .DataSource }}ExampleUnitTest(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
 			t.Parallel()
 			got, err := tf{{ .ServicePackage }}.FunctionFromDataSource(testCase.Input)
@@ -186,7 +185,7 @@ func TestAcc{{ .Service }}{{ .DataSource }}DataSource_basic(t *testing.T) {
 			testAccPreCheck(ctx, t)
 		},
 		{{- if .AWSGoSDKV2 }}
-		ErrorCheck:               acctest.ErrorCheck(t, names.{{ .Service }}EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.{{ .Service }}ServiceID),
 		{{- else }}
 		ErrorCheck:               acctest.ErrorCheck(t, {{ .ServicePackage }}.EndpointsID),
 		{{- end }}

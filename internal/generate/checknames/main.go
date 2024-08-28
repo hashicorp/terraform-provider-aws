@@ -8,6 +8,7 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -16,7 +17,6 @@ import (
 	"regexp"
 	"strings"
 
-	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
 )
 
@@ -72,22 +72,14 @@ func main() {
 			log.Fatalf("in service data, line %d, for service %s, if Exclude is blank, either AWSCLIV2CommandNoDashes or GoV2Package must have values", i+lineOffset, l.HumanFriendly())
 		}
 
-		if l.ProviderPackageActual() != "" && l.ProviderPackageCorrect() == "" {
-			log.Fatalf("in service data, line %d, for service %s, ProviderPackageActual can't be non-blank if ProviderPackageCorrect is blank", i+lineOffset, l.HumanFriendly())
-		}
-
-		if l.ProviderPackageActual() == "" && l.ProviderPackageCorrect() == "" && !l.Exclude() {
-			log.Fatalf("in service data, line %d, for service %s, ProviderPackageActual and ProviderPackageCorrect cannot both be blank unless Exclude is non-blank", i+lineOffset, l.HumanFriendly())
-		}
-
-		if l.ProviderPackageCorrect() != "" && l.ProviderPackageActual() == l.ProviderPackageCorrect() {
-			log.Fatalf("in service data, line %d, for service %s, ProviderPackageActual should only be used if different from ProviderPackageCorrect", i+lineOffset, l.HumanFriendly())
-		}
-
 		packageToUse := l.ProviderPackageCorrect()
 
 		if l.ProviderPackageActual() != "" {
 			packageToUse = l.ProviderPackageActual()
+		}
+
+		if l.ResourcePrefixCorrect() != "" && l.ResourcePrefixCorrect() != fmt.Sprintf("aws_%s_", l.ProviderPackageCorrect()) {
+			log.Fatalf("in service data, line %d, for service %s, ResourcePrefixCorrect should be aws_<package>_, where <package> is ProviderPackageCorrect", i+lineOffset, l.HumanFriendly())
 		}
 
 		if p := l.Aliases(); len(p) > 0 && packageToUse != "" {
@@ -112,10 +104,6 @@ func main() {
 
 		if l.ResourcePrefixCorrect() == "" && !l.Exclude() {
 			log.Fatalf("in service data, line %d, for service %s, ResourcePrefixCorrect must have a value if Exclude is blank", i+lineOffset, l.HumanFriendly())
-		}
-
-		if l.ResourcePrefixCorrect() != "" && l.ResourcePrefixCorrect() != fmt.Sprintf("aws_%s_", l.ProviderPackageCorrect()) {
-			log.Fatalf("in service data, line %d, for service %s, ResourcePrefixCorrect should be aws_<package>_, where <package> is ProviderPackageCorrect", i+lineOffset, l.HumanFriendly())
 		}
 
 		if l.ResourcePrefixCorrect() != "" && l.ResourcePrefixActual() == l.ResourcePrefixCorrect() {
@@ -168,13 +156,13 @@ func main() {
 		}
 
 		deprecatedEnvVar := l.DeprecatedEnvVar() != ""
-		tfAwsEnvVar := l.TfAwsEnvVar() != ""
+		tfAwsEnvVar := l.TFAWSEnvVar() != ""
 		if deprecatedEnvVar != tfAwsEnvVar {
-			log.Fatalf("in service data, line %d, for service %s, either both DeprecatedEnvVar and TfAwsEnvVar must be specified or neither can be", i+lineOffset, l.HumanFriendly())
+			log.Fatalf("in service data, line %d, for service %s, either both DeprecatedEnvVar and TFAWSEnvVar must be specified or neither can be", i+lineOffset, l.HumanFriendly())
 		}
 
-		if l.SdkId() == "" && !l.Exclude() {
-			log.Fatalf("in service data, line %d, for service %s, SdkId is required unless Exclude is set", i+lineOffset, l.HumanFriendly())
+		if l.SDKID() == "" && !l.Exclude() {
+			log.Fatalf("in service data, line %d, for service %s, SDKID is required unless Exclude is set", i+lineOffset, l.HumanFriendly())
 		}
 
 		if l.EndpointAPICall() == "" && !l.NotImplemented() && !l.Exclude() {
@@ -239,7 +227,7 @@ func checkDocDir(dir string, prefixes []DocPrefix) error {
 		log.Fatalf("reading directory (%s): %s", dir, err)
 	}
 
-	var errs error
+	var errs []error
 	for _, fh := range fs {
 		if fh.IsDir() {
 			continue
@@ -252,11 +240,11 @@ func checkDocDir(dir string, prefixes []DocPrefix) error {
 		allDocs++
 
 		if err := checkDocFile(dir, fh.Name(), prefixes); err != nil {
-			errs = multierror.Append(errs, err)
+			errs = append(errs, err)
 		}
 	}
 
-	return errs
+	return errors.Join(errs...)
 }
 
 func checkDocFile(dir, name string, prefixes []DocPrefix) error {

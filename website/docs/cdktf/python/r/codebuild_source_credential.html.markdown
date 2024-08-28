@@ -12,8 +12,7 @@ description: |-
 
 Provides a CodeBuild Source Credentials Resource.
 
-~> **NOTE:**
-[Codebuild only allows a single credential per given server type in a given region](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_codebuild.GitHubSourceCredentials.html). Therefore, when you define `aws_codebuild_source_credential`, [`aws_codebuild_project` resource](/docs/providers/aws/r/codebuild_project.html) defined in the same module will use it.
+~> **NOTE:** [Codebuild only allows a single credential per given server type in a given region](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_codebuild.GitHubSourceCredentials.html). Therefore, when you define `aws_codebuild_source_credential`, [`aws_codebuild_project` resource](/docs/providers/aws/r/codebuild_project.html) defined in the same module will use it.
 
 ## Example Usage
 
@@ -99,4 +98,4 @@ Using `terraform import`, import CodeBuild Source Credential using the CodeBuild
 % terraform import aws_codebuild_source_credential.example arn:aws:codebuild:us-west-2:123456789:token:github
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-1d3035420b7bbe8f89436bdbdcd040691cc3649bd4b17947a90be506a262d9cb -->
+<!-- cache-key: cdktf-0.20.1 input-b603a4805a973804a9dd8cabdb5d135ca29e91d96e47df880b31a356734f9145 -->
