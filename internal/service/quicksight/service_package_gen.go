@@ -21,6 +21,10 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
+			Factory: newFolderMembershipResource,
+			Name:    "Folder Membership",
+		},
+		{
 			Factory: newIAMPolicyAssignmentResource,
 			Name:    "IAM Policy Assignment",
 		},
@@ -38,10 +42,6 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 		{
 			Factory: newRefreshScheduleResource,
 			Name:    "Refresh Schedule",
-		},
-		{
-			Factory: newResourceFolderMembership,
-			Name:    "Folder Membership",
 		},
 		{
 			Factory: newResourceTemplateAlias,
