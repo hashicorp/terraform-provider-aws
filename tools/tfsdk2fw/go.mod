@@ -55,10 +55,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/backup v1.36.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/batch v1.44.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.5.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/bedrock v1.15.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/bedrock v1.16.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.17.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.25.5 // indirect
-	github.com/aws/aws-sdk-go-v2/service/chatbot v1.4.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/chatbot v1.5.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/chime v1.32.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.18.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.17.4 // indirect
@@ -203,7 +203,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.7.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/pinpoint v1.32.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.14.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/polly v1.42.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/polly v1.43.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.30.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.11.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.23.4 // indirect
