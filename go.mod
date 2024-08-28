@@ -83,10 +83,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/dataexchange v1.30.4
 	github.com/aws/aws-sdk-go-v2/service/datapipeline v1.23.4
 	github.com/aws/aws-sdk-go-v2/service/datasync v1.40.5
-	github.com/aws/aws-sdk-go-v2/service/datazone v1.17.2
+	github.com/aws/aws-sdk-go-v2/service/datazone v1.18.0
 	github.com/aws/aws-sdk-go-v2/service/dax v1.21.5
 	github.com/aws/aws-sdk-go-v2/service/detective v1.29.4
-	github.com/aws/aws-sdk-go-v2/service/devicefarm v1.25.3
+	github.com/aws/aws-sdk-go-v2/service/devicefarm v1.26.0
 	github.com/aws/aws-sdk-go-v2/service/devopsguru v1.32.4
 	github.com/aws/aws-sdk-go-v2/service/directconnect v1.27.7
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.27.4
@@ -130,7 +130,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.25.4
 	github.com/aws/aws-sdk-go-v2/service/inspector v1.23.4
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.30.0
-	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.16.5
+	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.17.0
 	github.com/aws/aws-sdk-go-v2/service/iot v1.55.4
 	github.com/aws/aws-sdk-go-v2/service/iotanalytics v1.24.4
 	github.com/aws/aws-sdk-go-v2/service/iotevents v1.25.4

@@ -100,10 +100,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/dataexchange v1.30.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/datapipeline v1.23.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/datasync v1.40.5 // indirect
-	github.com/aws/aws-sdk-go-v2/service/datazone v1.17.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/datazone v1.18.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dax v1.21.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/detective v1.29.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/devicefarm v1.25.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/devicefarm v1.26.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/devopsguru v1.32.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/directconnect v1.27.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.27.4 // indirect
@@ -152,7 +152,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.9.17 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.11.18 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.17.16 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.16.5 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.17.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/iot v1.55.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/iotanalytics v1.24.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/iotevents v1.25.4 // indirect
