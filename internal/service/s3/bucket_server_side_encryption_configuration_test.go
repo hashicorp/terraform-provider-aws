@@ -455,7 +455,7 @@ func TestAccS3BucketServerSideEncryptionConfiguration_directoryBucket(t *testing
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccBucketServerSideEncryptionConfigurationConfig_directoryBucket(rName),
-				ExpectError: regexache.MustCompile(`directory buckets are not supported`),
+				ExpectError: regexache.MustCompile(`MethodNotAllowed: The specified method is not allowed against this resource`),
 			},
 		},
 	})
