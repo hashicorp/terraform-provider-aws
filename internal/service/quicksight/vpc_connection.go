@@ -200,8 +200,7 @@ func (r *vpcConnectionResource) Create(ctx context.Context, req resource.CreateR
 
 	plan.ID = flex.StringValueToFramework(ctx, vpcConnectionCreateResourceID(awsAccountID, vpcConnectionID))
 
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	waitOut, err := waitVPCConnectionCreated(ctx, conn, awsAccountID, vpcConnectionID, createTimeout)
+	waitOut, err := waitVPCConnectionCreated(ctx, conn, awsAccountID, vpcConnectionID, r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.QuickSight, create.ErrActionWaitingForCreation, resNameVPCConnection, plan.Name.String(), err),
@@ -321,8 +320,7 @@ func (r *vpcConnectionResource) Update(ctx context.Context, req resource.UpdateR
 			return
 		}
 
-		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-		_, err = waitVPCConnectionUpdated(ctx, conn, awsAccountID, vpcConnectionID, updateTimeout)
+		_, err = waitVPCConnectionUpdated(ctx, conn, awsAccountID, vpcConnectionID, r.UpdateTimeout(ctx, plan.Timeouts))
 		if err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.QuickSight, create.ErrActionWaitingForUpdate, resNameVPCConnection, plan.ID.String(), err),
@@ -379,8 +377,7 @@ func (r *vpcConnectionResource) Delete(ctx context.Context, req resource.DeleteR
 		return
 	}
 
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitVPCConnectionDeleted(ctx, conn, awsAccountID, vpcConnectionID, deleteTimeout)
+	_, err = waitVPCConnectionDeleted(ctx, conn, awsAccountID, vpcConnectionID, r.DeleteTimeout(ctx, state.Timeouts))
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.QuickSight, create.ErrActionWaitingForDeletion, resNameVPCConnection, state.ID.String(), err),

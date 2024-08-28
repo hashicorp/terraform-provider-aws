@@ -11,7 +11,7 @@ var (
 	ResourceGroupMembership     = resourceGroupMembership
 	ResourceIAMPolicyAssignment = newIAMPolicyAssignmentResource
 	ResourceIngestion           = newResourceIngestion
-	ResourceNamespace           = newResourceNamespace
+	ResourceNamespace           = newNamespaceResource
 	ResourceRefreshSchedule     = newResourceRefreshSchedule
 	ResourceTemplateAlias       = newResourceTemplateAlias
 	ResourceUser                = resourceUser
@@ -24,6 +24,7 @@ var (
 	FindGroupByThreePartKey               = findGroupByThreePartKey
 	FindGroupMembershipByFourPartKey      = findGroupMembershipByFourPartKey
 	FindIAMPolicyAssignmentByThreePartKey = findIAMPolicyAssignmentByThreePartKey
+	FindNamespaceByTwoPartKey             = findNamespaceByTwoPartKey
 	FindUserByThreePartKey                = findUserByThreePartKey
 	FindVPCConnectionByTwoPartKey         = findVPCConnectionByTwoPartKey
 )
