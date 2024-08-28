@@ -323,7 +323,7 @@ func resourceDashboardUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		o := oraw.(*schema.Set)
 		n := nraw.(*schema.Set)
 
-		toGrant, toRevoke := DiffPermissions(o.List(), n.List())
+		toGrant, toRevoke := diffPermissions(o.List(), n.List())
 
 		params := &quicksight.UpdateDashboardPermissionsInput{
 			AwsAccountId: aws.String(awsAccountId),

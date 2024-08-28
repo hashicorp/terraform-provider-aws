@@ -260,7 +260,7 @@ func resourceFolderUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		o := oraw.([]interface{})
 		n := nraw.([]interface{})
 
-		toGrant, toRevoke := DiffPermissions(o, n)
+		toGrant, toRevoke := diffPermissions(o, n)
 
 		params := &quicksight.UpdateFolderPermissionsInput{
 			AwsAccountId: aws.String(awsAccountId),

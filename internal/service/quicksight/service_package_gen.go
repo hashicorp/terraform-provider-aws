@@ -90,7 +90,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Account Subscription",
 		},
 		{
-			Factory:  ResourceAnalysis,
+			Factory:  resourceAnalysis,
 			TypeName: "aws_quicksight_analysis",
 			Name:     "Analysis",
 			Tags: &types.ServicePackageResourceTags{

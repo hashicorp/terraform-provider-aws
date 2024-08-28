@@ -6,6 +6,7 @@ package quicksight
 // Exports for use in tests only.
 var (
 	ResourceAccountSubscription = resourceAccountSubscription
+	ResourceAnalysis            = resourceAnalysis
 	ResourceFolderMembership    = newFolderMembershipResource
 	ResourceGroup               = resourceGroup
 	ResourceGroupMembership     = resourceGroupMembership
@@ -21,6 +22,7 @@ var (
 	DefaultIAMPolicyAssignmentNamespace   = defaultIAMPolicyAssignmentNamespace
 	DefaultUserNamespace                  = defaultUserNamespace
 	FindAccountSubscriptionByID           = findAccountSubscriptionByID
+	FindAnalysisByTwoPartKey              = findAnalysisByTwoPartKey
 	FindFolderMembershipByFourPartKey     = findFolderMembershipByFourPartKey
 	FindGroupByThreePartKey               = findGroupByThreePartKey
 	FindGroupMembershipByFourPartKey      = findGroupMembershipByFourPartKey

@@ -175,6 +175,7 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
+	log.Printf("[INFO] Deleting QuickSight Group: %s", d.Id())
 	_, err = conn.DeleteGroup(ctx, &quicksight.DeleteGroupInput{
 		AwsAccountId: aws.String(awsAccountID),
 		GroupName:    aws.String(groupName),

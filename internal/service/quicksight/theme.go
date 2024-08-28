@@ -483,7 +483,7 @@ func resourceThemeUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		o := oraw.([]interface{})
 		n := nraw.([]interface{})
 
-		toGrant, toRevoke := DiffPermissions(o, n)
+		toGrant, toRevoke := diffPermissions(o, n)
 
 		params := &quicksight.UpdateThemePermissionsInput{
 			AwsAccountId: aws.String(awsAccountId),

@@ -600,7 +600,7 @@ func testAccCheckDataSetDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccDataSetConfigBase(rId string, rName string) string {
+func testAccDataSetConfig_base(rId string, rName string) string {
 	return acctest.ConfigCompose(
 		testAccBaseDataSourceConfig(rName),
 		fmt.Sprintf(`
@@ -624,7 +624,7 @@ resource "aws_quicksight_data_source" "test" {
 
 func testAccDataSetConfigBasic(rId, rName string) string {
 	return acctest.ConfigCompose(
-		testAccDataSetConfigBase(rId, rName),
+		testAccDataSetConfig_base(rId, rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_data_set" "test" {
   data_set_id = %[1]q
@@ -650,7 +650,7 @@ resource "aws_quicksight_data_set" "test" {
 
 func testAccDataSetConfigColumnGroups(rId, rName string) string {
 	return acctest.ConfigCompose(
-		testAccDataSetConfigBase(rId, rName),
+		testAccDataSetConfig_base(rId, rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_data_set" "test" {
   data_set_id = %[1]q
@@ -698,7 +698,7 @@ resource "aws_quicksight_data_set" "test" {
 
 func testAccDataSetConfigColumnLevelPermissionRules(rId, rName string) string {
 	return acctest.ConfigCompose(
-		testAccDataSetConfigBase(rId, rName),
+		testAccDataSetConfig_base(rId, rName),
 		testAccDataSource_UserConfig(rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_data_set" "test" {
@@ -729,7 +729,7 @@ resource "aws_quicksight_data_set" "test" {
 
 func testAccDataSetConfigDataSetUsageConfiguration(rId, rName string) string {
 	return acctest.ConfigCompose(
-		testAccDataSetConfigBase(rId, rName),
+		testAccDataSetConfig_base(rId, rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_data_set" "test" {
   data_set_id = %[1]q
@@ -759,7 +759,7 @@ resource "aws_quicksight_data_set" "test" {
 
 func testAccDataSetConfigFieldFolders(rId, rName string) string {
 	return acctest.ConfigCompose(
-		testAccDataSetConfigBase(rId, rName),
+		testAccDataSetConfig_base(rId, rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_data_set" "test" {
   data_set_id = %[1]q
@@ -790,7 +790,7 @@ resource "aws_quicksight_data_set" "test" {
 
 func testAccDataSetConfigLogicalTableMap(rId, rName string) string {
 	return acctest.ConfigCompose(
-		testAccDataSetConfigBase(rId, rName),
+		testAccDataSetConfig_base(rId, rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_data_set" "test" {
   data_set_id = %[1]q
@@ -821,7 +821,7 @@ resource "aws_quicksight_data_set" "test" {
 
 func testAccDataSetConfigUpdateLogicalTableMap(rId, rName string) string {
 	return acctest.ConfigCompose(
-		testAccDataSetConfigBase(rId, rName),
+		testAccDataSetConfig_base(rId, rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_data_set" "test" {
   data_set_id = %[1]q
@@ -861,7 +861,7 @@ resource "aws_quicksight_data_set" "test" {
 
 func testAccDataSetConfigPermissions(rId, rName string) string {
 	return acctest.ConfigCompose(
-		testAccDataSetConfigBase(rId, rName),
+		testAccDataSetConfig_base(rId, rName),
 		testAccDataSource_UserConfig(rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_data_set" "test" {
@@ -898,7 +898,7 @@ resource "aws_quicksight_data_set" "test" {
 
 func testAccDataSetConfigUpdatePermissions(rId, rName string) string {
 	return acctest.ConfigCompose(
-		testAccDataSetConfigBase(rId, rName),
+		testAccDataSetConfig_base(rId, rName),
 		testAccDataSource_UserConfig(rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_data_set" "test" {
@@ -940,7 +940,7 @@ resource "aws_quicksight_data_set" "test" {
 
 func testAccDataSetConfigPermissionsMultiple(rId, rName string, count int) string {
 	return acctest.ConfigCompose(
-		testAccDataSetConfigBase(rId, rName),
+		testAccDataSetConfig_base(rId, rName),
 		testAccDataSource_UserConfigMultiple(rName, count),
 		fmt.Sprintf(`
 resource "aws_quicksight_data_set" "test" {
@@ -981,7 +981,7 @@ resource "aws_quicksight_data_set" "test" {
 
 func testAccDataSetConfigRowLevelPermissionTagConfiguration(rId, rName string) string {
 	return acctest.ConfigCompose(
-		testAccDataSetConfigBase(rId, rName),
+		testAccDataSetConfig_base(rId, rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_data_set" "test" {
   data_set_id = %[1]q
@@ -1101,7 +1101,7 @@ resource "aws_quicksight_data_set" "test" {
 
 func testAccDataSetConfigTags1(rId, rName, key1, value1 string) string {
 	return acctest.ConfigCompose(
-		testAccDataSetConfigBase(rId, rName),
+		testAccDataSetConfig_base(rId, rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_data_set" "test" {
   data_set_id = %[1]q
@@ -1130,7 +1130,7 @@ resource "aws_quicksight_data_set" "test" {
 
 func testAccDataSetConfigTags2(rId, rName, key1, value1, key2, value2 string) string {
 	return acctest.ConfigCompose(
-		testAccDataSetConfigBase(rId, rName),
+		testAccDataSetConfig_base(rId, rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_data_set" "test" {
   data_set_id = %[1]q
@@ -1160,7 +1160,7 @@ resource "aws_quicksight_data_set" "test" {
 
 func testAccDataSetConfigNoPhysicalTableMap(rId, rName string) string {
 	return acctest.ConfigCompose(
-		testAccDataSetConfigBase(rId, rName),
+		testAccDataSetConfig_base(rId, rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_data_set" "left" {
   data_set_id = "%[1]s-left"

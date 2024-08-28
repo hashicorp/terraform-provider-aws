@@ -4,6 +4,8 @@
 package schema
 
 import (
+	"fmt"
+
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/quicksight"
@@ -121,12 +123,28 @@ func stringOptionalComputedSchema(validateFunc schema.SchemaValidateFunc) *schem
 	}
 }
 
-func stringSchema(required bool, validateFunc schema.SchemaValidateFunc) *schema.Schema {
+func stringSchema(required bool, validateFunc any) *schema.Schema {
+	switch v := validateFunc.(type) {
+	case schema.SchemaValidateDiagFunc:
+		return &schema.Schema{
+			Type:             schema.TypeString,
+			Required:         required,
+			Optional:         !required,
+			ValidateDiagFunc: v,
+		}
+	case schema.SchemaValidateFunc:
+		return stringSchema(required, validation.ToDiagFunc(v))
+	default:
+		panic(fmt.Sprintf("unsupported validateFunc type: %T", v))
+	}
+}
+
+func xyzzy(required bool, validateFunc schema.SchemaValidateDiagFunc) *schema.Schema {
 	return &schema.Schema{
-		Type:         schema.TypeString,
-		Required:     required,
-		Optional:     !required,
-		ValidateFunc: validateFunc,
+		Type:             schema.TypeString,
+		Required:         required,
+		Optional:         !required,
+		ValidateDiagFunc: validateFunc,
 	}
 }
 

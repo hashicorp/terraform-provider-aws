@@ -780,7 +780,7 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		o := oraw.(*schema.Set).List()
 		n := nraw.(*schema.Set).List()
 
-		toGrant, toRevoke := DiffPermissions(o, n)
+		toGrant, toRevoke := diffPermissions(o, n)
 
 		params := &quicksight.UpdateDataSourcePermissionsInput{
 			AwsAccountId: aws.String(awsAccountId),
