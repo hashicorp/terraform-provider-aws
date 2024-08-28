@@ -167,11 +167,7 @@ func provisionDanglingEni(ctx context.Context, t *types.Cluster) resource.TestCh
 			},
 		})
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
