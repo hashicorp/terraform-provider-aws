@@ -298,7 +298,7 @@ func resourceTaskDefinition() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"configure_at_launch": {
+						"configured_at_launch": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Computed: true,
@@ -951,7 +951,7 @@ func expandVolumes(configured []interface{}) []awstypes.Volume {
 			}
 		}
 
-		if v, ok := data["configure_at_launch"].(bool); ok {
+		if v, ok := data["configured_at_launch"].(bool); ok {
 			l.ConfiguredAtLaunch = aws.Bool(v)
 		}
 
@@ -1088,7 +1088,7 @@ func flattenVolumes(list []awstypes.Volume) []map[string]interface{} {
 		}
 
 		if volume.ConfiguredAtLaunch != nil {
-			l["configure_at_launch"] = aws.ToBool(volume.ConfiguredAtLaunch)
+			l["configured_at_launch"] = aws.ToBool(volume.ConfiguredAtLaunch)
 		}
 
 		if volume.DockerVolumeConfiguration != nil {

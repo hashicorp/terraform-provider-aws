@@ -178,7 +178,7 @@ func TestAccECSTaskDefinition_configuredAtLaunch(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "volume.0.configure_at_launch", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "volume.0.configured_at_launch", acctest.CtTrue),
 				),
 			},
 			{

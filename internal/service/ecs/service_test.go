@@ -2229,7 +2229,7 @@ TASK_DEFINITION
 
   volume {
     name                = "vol1"
-    configure_at_launch = true
+    configured_at_launch = true
   }
 }
 
