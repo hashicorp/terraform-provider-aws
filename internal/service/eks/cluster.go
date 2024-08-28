@@ -766,7 +766,7 @@ func handleDanglingEnis(ctx context.Context, d *schema.ResourceData, meta interf
 					Values: []string{vpcId},
 				},
 				{
-					Name:   aws.String("status"),
+					Name:   aws.String(names.AttrStatus),
 					Values: []string{"available"},
 				},
 				{
