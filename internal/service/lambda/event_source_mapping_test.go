@@ -90,8 +90,6 @@ func TestAccLambdaEventSourceMapping_KMSKeyArn(t *testing.T) {
 	var conf lambda.GetEventSourceMappingOutput
 	resourceName := "aws_lambda_event_source_mapping.test"
 	functionResourceName := "aws_lambda_function.test"
-	functionResourceNameUpdated := "aws_lambda_function.test_update"
-	eventSourceResourceName := "aws_kinesis_stream.test"
 	kmsKeyResourceName := "aws_kms_key.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -104,7 +102,8 @@ func TestAccLambdaEventSourceMapping_KMSKeyArn(t *testing.T) {
 			{
 				Config: testAccEventSourceMappingConfig_kinesisKMSKeyArn(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "event_source_arn", eventSourceResourceName, names.AttrARN),
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttrPair(resourceName, "event_source_arn", "aws_kinesis_stream.test", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, kmsKeyResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "starting_position", "LATEST"),
@@ -113,7 +112,8 @@ func TestAccLambdaEventSourceMapping_KMSKeyArn(t *testing.T) {
 			{
 				Config: testAccEventSourceMappingConfig_sqsKMSKeyArn(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "event_source_arn", eventSourceResourceName, names.AttrARN),
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttrPair(resourceName, "event_source_arn", "aws_sqs_queue.test", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, kmsKeyResourceName, names.AttrARN),
 				),
@@ -121,7 +121,8 @@ func TestAccLambdaEventSourceMapping_KMSKeyArn(t *testing.T) {
 			{
 				Config: testAccEventSourceMappingConfig_dynamoDBKMSKeyArn(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "event_source_arn", eventSourceResourceName, names.AttrARN),
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttrPair(resourceName, "event_source_arn", "aws_dynamodb_table.test", names.AttrStreamARN),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, kmsKeyResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "starting_position", "LATEST"),
@@ -2026,11 +2027,11 @@ POLICY
 }
 
 resource "aws_lambda_event_source_mapping" "test" {
-  enabled			= true
-  event_source_arn	= aws_kinesis_stream.test.arn
-  function_name		= aws_lambda_function.test.arn
-  starting_position	= "LATEST"
-  kms_key_arn		= aws_kms_key.test.arn
+  enabled           = true
+  event_source_arn  = aws_kinesis_stream.test.arn
+  function_name     = aws_lambda_function.test.arn
+  starting_position = "LATEST"
+  kms_key_arn       = aws_kms_key.test.arn
 }
 `, rName))
 }
@@ -2060,10 +2061,10 @@ POLICY
 }
 
 resource "aws_lambda_event_source_mapping" "test" {
-  enabled			= true
-  event_source_arn	= aws_sqs_queue.test.arn
-  function_name		= aws_lambda_function.test.arn
-  kms_key_arn		= aws_kms_key.test.arn
+  enabled          = true
+  event_source_arn = aws_sqs_queue.test.arn
+  function_name    = aws_lambda_function.test.arn
+  kms_key_arn      = aws_kms_key.test.arn
 }
 `, rName))
 }
@@ -2093,11 +2094,11 @@ POLICY
 }
 
 resource "aws_lambda_event_source_mapping" "test" {
-  enabled			= true
-  event_source_arn	= aws_dynamodb_table.test.stream_arn
-  function_name		= aws_lambda_function.test.arn
-  starting_position	= "LATEST"
-  kms_key_arn		= aws_kms_key.test.arn
+  enabled           = true
+  event_source_arn  = aws_dynamodb_table.test.stream_arn
+  function_name     = aws_lambda_function.test.arn
+  starting_position = "LATEST"
+  kms_key_arn       = aws_kms_key.test.arn
 }
 `, rName))
 }
