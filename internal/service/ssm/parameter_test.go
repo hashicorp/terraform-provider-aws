@@ -1053,7 +1053,8 @@ func TestAccSSMParameter_Secure_keyUpdate(t *testing.T) {
 	})
 }
 
-func TestAccSSMParameter_importByARN(t *testing.T) { //lintignore:AT002
+// lintignore:AT002
+func TestAccSSMParameter_importByARN(t *testing.T) {
 	ctx := acctest.Context(t)
 	var param awstypes.Parameter
 	name := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
