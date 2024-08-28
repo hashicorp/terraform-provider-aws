@@ -200,7 +200,7 @@ func resourceEventSourceMapping() *schema.Resource {
 				},
 			},
 			names.AttrKMSKeyARN: {
-				Type: schema.TypeString,
+				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"last_modified": {
