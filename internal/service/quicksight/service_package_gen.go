@@ -44,7 +44,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:    "Refresh Schedule",
 		},
 		{
-			Factory: newResourceTemplateAlias,
+			Factory: newTemplateAliasResource,
 			Name:    "Template Alias",
 		},
 		{

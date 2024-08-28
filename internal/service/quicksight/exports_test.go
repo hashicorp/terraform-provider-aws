@@ -13,7 +13,7 @@ var (
 	ResourceIngestion           = newIngestionResource
 	ResourceNamespace           = newNamespaceResource
 	ResourceRefreshSchedule     = newRefreshScheduleResource
-	ResourceTemplateAlias       = newResourceTemplateAlias
+	ResourceTemplateAlias       = newTemplateAliasResource
 	ResourceUser                = resourceUser
 	ResourceVPCConnection       = newVPCConnectionResource
 
@@ -28,6 +28,7 @@ var (
 	FindIngestionByThreePartKey           = findIngestionByThreePartKey
 	FindNamespaceByTwoPartKey             = findNamespaceByTwoPartKey
 	FindRefreshScheduleByThreePartKey     = findRefreshScheduleByThreePartKey
+	FindTemplateAliasByThreePartKey       = findTemplateAliasByThreePartKey
 	FindUserByThreePartKey                = findUserByThreePartKey
 	FindVPCConnectionByTwoPartKey         = findVPCConnectionByTwoPartKey
 )
