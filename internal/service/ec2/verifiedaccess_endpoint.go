@@ -187,7 +187,6 @@ func resourceVerifiedAccessEndpoint() *schema.Resource {
 
 func resourceVerifiedAccessEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.CreateVerifiedAccessEndpointInput{
@@ -242,7 +241,6 @@ func resourceVerifiedAccessEndpointCreate(ctx context.Context, d *schema.Resourc
 
 func resourceVerifiedAccessEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	ep, err := findVerifiedAccessEndpointByID(ctx, conn, d.Id())
@@ -330,13 +328,15 @@ func resourceVerifiedAccessEndpointUpdate(ctx context.Context, d *schema.Resourc
 	}
 
 	if d.HasChange("policy_document") {
-		policyDocument := d.Get("policy_document").(string)
 		input := &ec2.ModifyVerifiedAccessEndpointPolicyInput{
-			PolicyEnabled:            aws.Bool(policyDocument != ""),
 			VerifiedAccessEndpointId: aws.String(d.Id()),
 		}
-		if policyDocument != "" {
-			input.PolicyDocument = aws.String(policyDocument)
+
+		if v := d.Get("policy_document").(string); v != "" {
+			input.PolicyEnabled = aws.Bool(true)
+			input.PolicyDocument = aws.String(v)
+		} else {
+			input.PolicyEnabled = aws.Bool(false)
 		}
 
 		_, err := conn.ModifyVerifiedAccessEndpointPolicy(ctx, input)
@@ -351,7 +351,6 @@ func resourceVerifiedAccessEndpointUpdate(ctx context.Context, d *schema.Resourc
 
 func resourceVerifiedAccessEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[INFO] Deleting Verified Access Endpoint: %s", d.Id())
