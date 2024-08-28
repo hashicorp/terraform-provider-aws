@@ -1174,7 +1174,7 @@ resource "aws_eks_cluster" "test" {
 }
 
 resource "aws_security_group" "node_sg" {
-  name = "%[1]s-node-sg"
+  name   = "%[1]s-node-sg"
   vpc_id = aws_vpc.test.id
 }
 `, rName))
