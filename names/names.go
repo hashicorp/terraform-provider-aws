@@ -53,6 +53,7 @@ const (
 	ChimeSDKMediaPipelinesEndpointID       = "media-pipelines-chime"
 	ChimeSDKVoiceEndpointID                = "voice-chime"
 	Cloud9EndpointID                       = "cloud9"
+	CloudControlEndpointID                 = "cloudcontrol"
 	CloudFormationEndpointID               = "cloudformation"
 	CloudFrontEndpointID                   = "cloudfront"
 	CloudSearchEndpointID                  = "cloudsearch"
@@ -63,6 +64,7 @@ const (
 	CognitoIdentityEndpointID              = "cognito-identity"
 	ComprehendEndpointID                   = "comprehend"
 	ConfigServiceEndpointID                = "config"
+	ConnectEndpointID                      = "connect"
 	DataExchangeEndpointID                 = "dataexchange"
 	DataPipelineEndpointID                 = "datapipeline"
 	DetectiveEndpointID                    = "api.detective"
@@ -76,6 +78,7 @@ const (
 	EKSEndpointID                          = "eks"
 	ELBEndpointID                          = "elasticloadbalancing"
 	EMREndpointID                          = "elasticmapreduce"
+	ElasticsearchEndpointID                = "es"
 	ElasticTranscoderEndpointID            = "elastictranscoder"
 	ElastiCacheEndpointID                  = "elasticache"
 	EventsEndpointID                       = "events"
@@ -94,10 +97,12 @@ const (
 	KendraEndpointID                       = "kendra"
 	KinesisVideoEndpointID                 = "kinesisvideo"
 	LambdaEndpointID                       = "lambda"
+	LexModelBuildingServiceEndpointID      = "models.lex"
 	LexV2ModelsEndpointID                  = "models-v2-lex"
 	LocationEndpointID                     = "location"
 	M2EndpointID                           = "m2"
 	MQEndpointID                           = "mq"
+	Macie2EndpointID                       = "macie2"
 	MediaConvertEndpointID                 = "mediaconvert"
 	MediaLiveEndpointID                    = "medialive"
 	ObservabilityAccessManagerEndpointID   = "oam"
@@ -163,6 +168,7 @@ const (
 	APSoutheast2RegionID = "ap-southeast-2" // Asia Pacific (Sydney).
 	APSoutheast3RegionID = "ap-southeast-3" // Asia Pacific (Jakarta).
 	APSoutheast4RegionID = "ap-southeast-4" // Asia Pacific (Melbourne).
+	APSoutheast5RegionID = "ap-southeast-5" // Asia Pacific (Malaysia).
 	CACentral1RegionID   = "ca-central-1"   // Canada (Central).
 	CAWest1RegionID      = "ca-west-1"      // Canada West (Calgary).
 	EUCentral1RegionID   = "eu-central-1"   // Europe (Frankfurt).
@@ -213,6 +219,7 @@ var allRegionIDs = []string{
 	APSoutheast2RegionID,
 	APSoutheast3RegionID,
 	APSoutheast4RegionID,
+	APSoutheast5RegionID,
 	CACentral1RegionID,
 	CAWest1RegionID,
 	EUCentral1RegionID,
@@ -313,7 +320,7 @@ func IsOptInRegion(region string) bool {
 	switch region {
 	case AFSouth1RegionID,
 		APEast1RegionID, APSouth2RegionID,
-		APSoutheast3RegionID, APSoutheast4RegionID,
+		APSoutheast3RegionID, APSoutheast4RegionID, APSoutheast5RegionID,
 		CAWest1RegionID,
 		EUCentral2RegionID,
 		EUSouth1RegionID, EUSouth2RegionID,

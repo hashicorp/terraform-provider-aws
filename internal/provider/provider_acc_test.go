@@ -11,10 +11,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	awsmiddleware "github.com/aws/aws-sdk-go-v2/aws/middleware"
 	sts_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sts"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/smithy-go/middleware"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -518,10 +517,10 @@ func TestAccProvider_Region_c2s(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProviderConfig_region(endpoints.UsIsoEast1RegionID),
+				Config: testAccProviderConfig_region(names.USISOEast1RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDNSSuffix(ctx, t, &provider, "c2s.ic.gov"),
-					testAccCheckPartition(ctx, t, &provider, endpoints.AwsIsoPartitionID),
+					testAccCheckPartition(ctx, t, &provider, names.ISOPartitionID),
 					testAccCheckReverseDNSPrefix(ctx, t, &provider, "gov.ic.c2s"),
 				),
 				PlanOnly: true,
@@ -541,10 +540,10 @@ func TestAccProvider_Region_china(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProviderConfig_region(endpoints.CnNorthwest1RegionID),
+				Config: testAccProviderConfig_region(names.CNNorthwest1RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDNSSuffix(ctx, t, &provider, "amazonaws.com.cn"),
-					testAccCheckPartition(ctx, t, &provider, endpoints.AwsCnPartitionID),
+					testAccCheckPartition(ctx, t, &provider, names.ChinaPartitionID),
 					testAccCheckReverseDNSPrefix(ctx, t, &provider, "cn.com.amazonaws"),
 				),
 				PlanOnly: true,
@@ -564,10 +563,10 @@ func TestAccProvider_Region_commercial(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProviderConfig_region(endpoints.UsWest2RegionID),
+				Config: testAccProviderConfig_region(names.USWest2RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDNSSuffix(ctx, t, &provider, "amazonaws.com"),
-					testAccCheckPartition(ctx, t, &provider, endpoints.AwsPartitionID),
+					testAccCheckPartition(ctx, t, &provider, names.StandardPartitionID),
 					testAccCheckReverseDNSPrefix(ctx, t, &provider, "com.amazonaws"),
 				),
 				PlanOnly: true,
@@ -587,10 +586,10 @@ func TestAccProvider_Region_govCloud(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProviderConfig_region(endpoints.UsGovWest1RegionID),
+				Config: testAccProviderConfig_region(names.USGovWest1RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDNSSuffix(ctx, t, &provider, "amazonaws.com"),
-					testAccCheckPartition(ctx, t, &provider, endpoints.AwsUsGovPartitionID),
+					testAccCheckPartition(ctx, t, &provider, names.USGovCloudPartitionID),
 					testAccCheckReverseDNSPrefix(ctx, t, &provider, "com.amazonaws"),
 				),
 				PlanOnly: true,
@@ -610,10 +609,10 @@ func TestAccProvider_Region_sc2s(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProviderConfig_region(endpoints.UsIsobEast1RegionID),
+				Config: testAccProviderConfig_region(names.USISOBEast1RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDNSSuffix(ctx, t, &provider, "sc2s.sgov.gov"),
-					testAccCheckPartition(ctx, t, &provider, endpoints.AwsIsoBPartitionID),
+					testAccCheckPartition(ctx, t, &provider, names.ISOBPartitionID),
 					testAccCheckReverseDNSPrefix(ctx, t, &provider, "gov.sgov.sc2s"),
 				),
 				PlanOnly: true,
@@ -633,10 +632,10 @@ func TestAccProvider_Region_stsRegion(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProviderConfig_stsRegion(endpoints.UsEast1RegionID, endpoints.UsWest2RegionID),
+				Config: testAccProviderConfig_stsRegion(names.USEast1RegionID, names.USWest2RegionID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRegion(ctx, t, &provider, endpoints.UsEast1RegionID),
-					testAccCheckSTSRegion(ctx, t, &provider, endpoints.UsWest2RegionID),
+					testAccCheckRegion(ctx, t, &provider, names.USEast1RegionID),
+					testAccCheckSTSRegion(ctx, t, &provider, names.USWest2RegionID),
 				),
 				PlanOnly: true,
 			},
@@ -951,7 +950,7 @@ func testAccCheckProviderDefaultTags_Tags(ctx context.Context, t *testing.T, p *
 			var found bool
 
 			for _, actualElement := range actualTags {
-				if aws.StringValue(actualElement.Value) == expectedElement {
+				if aws.ToString(actualElement.Value) == expectedElement {
 					found = true
 					break
 				}
@@ -966,7 +965,7 @@ func testAccCheckProviderDefaultTags_Tags(ctx context.Context, t *testing.T, p *
 			var found bool
 
 			for _, expectedElement := range expectedTags {
-				if aws.StringValue(actualElement.Value) == expectedElement {
+				if aws.ToString(actualElement.Value) == expectedElement {
 					found = true
 					break
 				}

@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/neptune"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/neptune/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -22,7 +22,7 @@ import (
 
 func TestAccNeptuneClusterParameterGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v neptune.DBClusterParameterGroup
+	var v awstypes.DBClusterParameterGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_cluster_parameter_group.test"
 
@@ -56,7 +56,7 @@ func TestAccNeptuneClusterParameterGroup_basic(t *testing.T) {
 
 func TestAccNeptuneClusterParameterGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v neptune.DBClusterParameterGroup
+	var v awstypes.DBClusterParameterGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_cluster_parameter_group.test"
 
@@ -80,7 +80,7 @@ func TestAccNeptuneClusterParameterGroup_disappears(t *testing.T) {
 
 func TestAccNeptuneClusterParameterGroup_nameGenerated(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v neptune.DBClusterParameterGroup
+	var v awstypes.DBClusterParameterGroup
 	resourceName := "aws_neptune_cluster_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -108,7 +108,7 @@ func TestAccNeptuneClusterParameterGroup_nameGenerated(t *testing.T) {
 
 func TestAccNeptuneClusterParameterGroup_namePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v neptune.DBClusterParameterGroup
+	var v awstypes.DBClusterParameterGroup
 	resourceName := "aws_neptune_cluster_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -136,7 +136,7 @@ func TestAccNeptuneClusterParameterGroup_namePrefix(t *testing.T) {
 
 func TestAccNeptuneClusterParameterGroup_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v neptune.DBClusterParameterGroup
+	var v awstypes.DBClusterParameterGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_cluster_parameter_group.test"
 
@@ -182,7 +182,7 @@ func TestAccNeptuneClusterParameterGroup_tags(t *testing.T) {
 
 func TestAccNeptuneClusterParameterGroup_description(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v neptune.DBClusterParameterGroup
+	var v awstypes.DBClusterParameterGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_cluster_parameter_group.test"
 
@@ -210,7 +210,7 @@ func TestAccNeptuneClusterParameterGroup_description(t *testing.T) {
 
 func TestAccNeptuneClusterParameterGroup_parameter(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v neptune.DBClusterParameterGroup
+	var v awstypes.DBClusterParameterGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_cluster_parameter_group.test"
 
@@ -257,7 +257,7 @@ func TestAccNeptuneClusterParameterGroup_parameter(t *testing.T) {
 // and returns successfully as no changes being applied.
 func TestAccNeptuneClusterParameterGroup_parameterDefault(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v neptune.DBClusterParameterGroup
+	var v awstypes.DBClusterParameterGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_cluster_parameter_group.test"
 
@@ -286,7 +286,7 @@ func TestAccNeptuneClusterParameterGroup_parameterDefault(t *testing.T) {
 
 func testAccCheckClusterParameterGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_neptune_cluster_parameter_group" {
@@ -310,14 +310,14 @@ func testAccCheckClusterParameterGroupDestroy(ctx context.Context) resource.Test
 	}
 }
 
-func testAccCheckClusterParameterGroupExists(ctx context.Context, n string, v *neptune.DBClusterParameterGroup) resource.TestCheckFunc {
+func testAccCheckClusterParameterGroupExists(ctx context.Context, n string, v *awstypes.DBClusterParameterGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneClient(ctx)
 
 		output, err := tfneptune.FindDBClusterParameterGroupByName(ctx, conn, rs.Primary.ID)
 

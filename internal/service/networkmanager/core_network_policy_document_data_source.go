@@ -19,8 +19,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_networkmanager_core_network_policy_document")
-func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
+// @SDKDataSource("aws_networkmanager_core_network_policy_document", name="Core Network Policy Document")
+func dataSourceCoreNetworkPolicyDocument() *schema.Resource {
 	setOfString := &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,

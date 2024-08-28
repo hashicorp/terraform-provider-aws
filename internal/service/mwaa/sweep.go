@@ -44,8 +44,7 @@ func sweepEnvironment(region string) error {
 			return fmt.Errorf("error retrieving MWAA Environment: %s", err)
 		}
 
-		for _, environment := range page.Environments {
-			name := environment
+		for _, name := range page.Environments {
 			r := ResourceEnvironment()
 			d := r.Data(nil)
 			d.SetId(name)

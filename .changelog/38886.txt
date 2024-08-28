@@ -1,0 +1,6 @@
+```release-note:bug
+provider: Fix crash when flattening string pointer slices with nil items
+```
+```release-note:bug
+resource/aws_quicksight_data_set: Fix crash when setting `logical_table_map.data_transforms.project_operation.projected_columns` with null list elements
+```

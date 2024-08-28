@@ -14,7 +14,7 @@ func TestAccSSMIncidents_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]map[string]func(t *testing.T){
-		"Replication Set Resource Tests": {
+		"ReplicationSet": {
 			acctest.CtBasic:      testAccReplicationSet_basic,
 			"updateDefaultKey":   testAccReplicationSet_updateRegionsWithoutCMK,
 			"updateCMK":          testAccReplicationSet_updateRegionsWithCMK,
@@ -22,10 +22,10 @@ func TestAccSSMIncidents_serial(t *testing.T) {
 			"updateEmptyTags":    testAccReplicationSet_updateEmptyTags,
 			acctest.CtDisappears: testAccReplicationSet_disappears,
 		},
-		"Replication Set Data Source Tests": {
+		"ReplicationSetDataSource": {
 			acctest.CtBasic: testAccReplicationSetDataSource_basic,
 		},
-		"Response Plan Resource Tests": {
+		"ResponsePlan": {
 			acctest.CtBasic:          testAccResponsePlan_basic,
 			"update":                 testAccResponsePlan_updateRequiredFields,
 			"updateTags":             testAccResponsePlan_updateTags,
@@ -37,7 +37,7 @@ func TestAccSSMIncidents_serial(t *testing.T) {
 			"engagement":             testAccResponsePlan_engagement,
 			"action":                 testAccResponsePlan_action,
 		},
-		"Response Plan Data Source Tests": {
+		"ResponsePlanDataSource": {
 			acctest.CtBasic: testAccResponsePlanDataSource_basic,
 		},
 	}

@@ -135,7 +135,6 @@ func TestRuleParseResourceID(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
 			t.Parallel()
 
@@ -179,7 +178,6 @@ func TestRuleEventPatternJSONDecoder(t *testing.T) {
 	}
 
 	for name, test := range tests {
-		name, test := name, test
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -806,8 +804,6 @@ func TestAccEventsRule_migrateV0(t *testing.T) {
 	}
 
 	for name, testcase := range testcases { //nolint:paralleltest
-		testcase := testcase
-
 		t.Run(name, func(t *testing.T) {
 			ctx := acctest.Context(t)
 			var v eventbridge.DescribeRuleOutput
@@ -878,8 +874,6 @@ func TestAccEventsRule_migrateV0_Equivalent(t *testing.T) {
 	}
 
 	for name, testcase := range testcases { //nolint:paralleltest
-		testcase := testcase
-
 		t.Run(name, func(t *testing.T) {
 			ctx := acctest.Context(t)
 			rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
