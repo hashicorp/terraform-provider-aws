@@ -85,7 +85,7 @@ func TestAccLambdaEventSourceMapping_Kinesis_basic(t *testing.T) {
 	})
 }
 
-func TestAccLambdaEventSourceMapping_KMSKeyArn(t *testing.T) {
+func TestAccLambdaEventSourceMapping_KMSKeyARN(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf lambda.GetEventSourceMappingOutput
 	resourceName := "aws_lambda_event_source_mapping.test"
@@ -100,7 +100,7 @@ func TestAccLambdaEventSourceMapping_KMSKeyArn(t *testing.T) {
 		CheckDestroy:             testAccCheckEventSourceMappingDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEventSourceMappingConfig_kinesisKMSKeyArn(rName),
+				Config: testAccEventSourceMappingConfig_kinesisKeyARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "event_source_arn", "aws_kinesis_stream.test", names.AttrARN),
@@ -110,7 +110,7 @@ func TestAccLambdaEventSourceMapping_KMSKeyArn(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccEventSourceMappingConfig_sqsKMSKeyArn(rName),
+				Config: testAccEventSourceMappingConfig_sqsKMSKeyARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "event_source_arn", "aws_sqs_queue.test", names.AttrARN),
@@ -119,7 +119,7 @@ func TestAccLambdaEventSourceMapping_KMSKeyArn(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccEventSourceMappingConfig_dynamoDBKMSKeyArn(rName),
+				Config: testAccEventSourceMappingConfig_dynamoDBKMSKeyARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "event_source_arn", "aws_dynamodb_table.test", names.AttrStreamARN),
@@ -2002,7 +2002,7 @@ resource "aws_docdb_cluster" "test" {
 `, rName))
 }
 
-func testAccEventSourceMappingConfig_kinesisKMSKeyArn(rName string) string {
+func testAccEventSourceMappingConfig_kinesisKeyARN(rName string) string {
 	return acctest.ConfigCompose(testAccEventSourceMappingConfig_kinesisBase(rName), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description = "%[1]s"
@@ -2036,7 +2036,7 @@ resource "aws_lambda_event_source_mapping" "test" {
 `, rName))
 }
 
-func testAccEventSourceMappingConfig_sqsKMSKeyArn(rName string) string {
+func testAccEventSourceMappingConfig_sqsKMSKeyARN(rName string) string {
 	return acctest.ConfigCompose(testAccEventSourceMappingConfig_sqsBase(rName), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description = "%[1]s"
@@ -2069,7 +2069,7 @@ resource "aws_lambda_event_source_mapping" "test" {
 `, rName))
 }
 
-func testAccEventSourceMappingConfig_dynamoDBKMSKeyArn(rName string) string {
+func testAccEventSourceMappingConfig_dynamoDBKMSKeyARN(rName string) string {
 	return acctest.ConfigCompose(testAccEventSourceMappingConfig_dynamoDBBase(rName), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description = "%[1]s"
