@@ -155,7 +155,7 @@ func (r *resourceFolderMembership) Read(ctx context.Context, req resource.ReadRe
 	awsAccountID, folderID, memberType, _, err := ParseFolderMembershipID(state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QuickSight, create.ErrActionSetting, ResNameIngestion, state.ID.String(), nil),
+			create.ProblemStandardMessage(names.QuickSight, create.ErrActionSetting, ResNameFolderMembership, state.ID.String(), nil),
 			err.Error(),
 		)
 		return

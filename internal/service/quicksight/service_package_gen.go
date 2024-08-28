@@ -25,6 +25,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:    "IAM Policy Assignment",
 		},
 		{
+			Factory: newIngestionResource,
+			Name:    "Ingestion",
+		},
+		{
 			Factory: newNamespaceResource,
 			Name:    "Namespace",
 			Tags: &types.ServicePackageResourceTags{
@@ -32,16 +36,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			},
 		},
 		{
+			Factory: newRefreshScheduleResource,
+			Name:    "Refresh Schedule",
+		},
+		{
 			Factory: newResourceFolderMembership,
 			Name:    "Folder Membership",
-		},
-		{
-			Factory: newResourceIngestion,
-			Name:    "Ingestion",
-		},
-		{
-			Factory: newResourceRefreshSchedule,
-			Name:    "Refresh Schedule",
 		},
 		{
 			Factory: newResourceTemplateAlias,
