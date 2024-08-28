@@ -556,9 +556,7 @@ func resourceEventSourceMappingRead(ctx context.Context, d *schema.ResourceData,
 	} else {
 		d.Set("last_modified", nil)
 	}
-	if output.KMSKeyArn != nil {
-		d.Set(names.AttrKMSKeyARN, output.KMSKeyArn)
-	}
+	d.Set(names.AttrKMSKeyARN, output.KMSKeyArn)
 	d.Set("last_processing_result", output.LastProcessingResult)
 	d.Set("maximum_batching_window_in_seconds", output.MaximumBatchingWindowInSeconds)
 	d.Set("maximum_record_age_in_seconds", output.MaximumRecordAgeInSeconds)
