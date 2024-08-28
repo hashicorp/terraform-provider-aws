@@ -540,8 +540,7 @@ const testAccPolicyDocumentBasicExpectedJSON = `{
         "a"
       ]
     }
-  ],
-  "network-function-groups": []
+  ]
 }`
 
 // lintignore:AWSAT003

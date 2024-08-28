@@ -371,6 +371,43 @@ func TestAccCognitoIDPUserPool_withEmailVerificationMessage(t *testing.T) {
 	})
 }
 
+func TestAccCognitoIDPUserPool_passwordHistorySize(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pool awstypes.UserPoolType
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cognito_user_pool.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPoolDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserPoolConfig_passwordHistorySize(rName, 24),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolExists(ctx, resourceName, &pool),
+					resource.TestCheckResourceAttr(resourceName, "password_policy.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "password_policy.0.password_history_size", "24"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccUserPoolConfig_passwordHistorySize(rName, 0),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolExists(ctx, resourceName, &pool),
+					resource.TestCheckResourceAttr(resourceName, "password_policy.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "password_policy.0.password_history_size", acctest.Ct0),
+				),
+			},
+		},
+	})
+}
+
 func TestAccCognitoIDPUserPool_MFA_sms(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pool awstypes.UserPoolType
@@ -2146,6 +2183,23 @@ resource "aws_cognito_user_pool" "test" {
   }
 }
 `, rName, enabled)
+}
+
+func testAccUserPoolConfig_passwordHistorySize(rName string, passwordHistorySize int) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+
+  password_policy {
+    minimum_length        = 6
+    password_history_size = %[2]d
+  }
+
+  user_pool_add_ons {
+    advanced_security_mode = "ENFORCED"
+  }
+}
+`, rName, passwordHistorySize)
 }
 
 func testAccUserPoolConfig_smsAuthenticationMessage(rName, smsAuthenticationMessage string) string {

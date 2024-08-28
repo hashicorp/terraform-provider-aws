@@ -257,9 +257,8 @@ func FindPartitionIndexByName(ctx context.Context, conn *glue.Client, id string)
 	}
 
 	for _, partInd := range output.PartitionIndexDescriptorList {
-		index := partInd
 		if aws.ToString(partInd.IndexName) == partIndex {
-			result = &index
+			result = &partInd
 			break
 		}
 	}

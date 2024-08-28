@@ -183,7 +183,7 @@ resource "aws_pipes_pipe" "example" {
   }
 
   target_parameters {
-    sqs_queue {
+    sqs_queue_parameters {
       message_deduplication_id = "example-dedupe"
       message_group_id         = "example-group"
     }

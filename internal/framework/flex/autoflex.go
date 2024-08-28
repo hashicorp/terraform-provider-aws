@@ -16,12 +16,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
-type AutoFlexCtxKey string
+type fieldNamePrefixCtxKey string
 
 const (
-	FieldNamePrefixRecurse AutoFlexCtxKey = "FIELD_NAME_PREFIX_RECURSE"
+	fieldNamePrefixRecurse fieldNamePrefixCtxKey = "FIELD_NAME_PREFIX_RECURSE"
+	fieldNameSuffixRecurse fieldNamePrefixCtxKey = "FIELD_NAME_SUFFIX_RECURSE"
 
-	MapBlockKey = "MapBlockKey"
+	mapBlockKeyFieldName = "MapBlockKey"
 )
 
 // Expand  = TF -->  AWS
@@ -34,31 +35,37 @@ type autoFlexer interface {
 }
 
 // autoFlexValues returns the underlying `reflect.Value`s of `from` and `to`.
-func autoFlexValues(_ context.Context, from, to any) (reflect.Value, reflect.Value, diag.Diagnostics) {
+func autoFlexValues(ctx context.Context, from, to any) (context.Context, reflect.Value, reflect.Value, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	valFrom, valTo := reflect.ValueOf(from), reflect.ValueOf(to)
-	if kind := valFrom.Kind(); kind == reflect.Ptr {
+	if kind := valFrom.Kind(); kind == reflect.Pointer {
 		valFrom = valFrom.Elem()
 	}
 
+	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourceType, fullTypeName(valueType(valFrom)))
+	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetType, fullTypeName(valueType(valTo)))
+
 	kind := valTo.Kind()
 	switch kind {
-	case reflect.Ptr:
+	case reflect.Pointer:
 		if valTo.IsNil() {
-			diags.AddError("AutoFlEx", "Target cannot be nil")
-			return reflect.Value{}, reflect.Value{}, diags
+			tflog.SubsystemError(ctx, subsystemName, "Target is nil")
+			diags.Append(diagConvertingTargetIsNil(valTo.Type()))
+			return ctx, reflect.Value{}, reflect.Value{}, diags
 		}
 		valTo = valTo.Elem()
-		return valFrom, valTo, diags
+		return ctx, valFrom, valTo, diags
 
 	case reflect.Invalid:
-		diags.AddError("AutoFlEx", "Target cannot be nil")
-		return reflect.Value{}, reflect.Value{}, diags
+		tflog.SubsystemError(ctx, subsystemName, "Target is nil")
+		diags.Append(diagConvertingTargetIsNil(nil))
+		return ctx, reflect.Value{}, reflect.Value{}, diags
 
 	default:
-		diags.AddError("AutoFlEx", fmt.Sprintf("target (%T): %s, want pointer", to, kind))
-		return reflect.Value{}, reflect.Value{}, diags
+		tflog.SubsystemError(ctx, subsystemName, "Target is not a pointer")
+		diags.Append(diagConvertingTargetIsNotPointer(valTo.Type()))
+		return ctx, reflect.Value{}, reflect.Value{}, diags
 	}
 }
 
@@ -71,38 +78,40 @@ func autoFlexConvertStruct(ctx context.Context, sourcePath path.Path, from any, 
 	var diags diag.Diagnostics
 
 	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourcePath, sourcePath.String())
-	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourceType, fullTypeName(reflect.TypeOf(from)))
 	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetPath, targetPath.String())
-	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetType, fullTypeName(reflect.TypeOf(to)))
 
-	valFrom, valTo, d := autoFlexValues(ctx, from, to)
+	ctx, valFrom, valTo, d := autoFlexValues(ctx, from, to)
 	diags.Append(d...)
 	if diags.HasError() {
 		return diags
 	}
 
+	// TODO: this only applies when Expanding
 	if fromExpander, ok := valFrom.Interface().(Expander); ok {
 		tflog.SubsystemInfo(ctx, subsystemName, "Source implements flex.Expander")
 		diags.Append(expandExpander(ctx, fromExpander, valTo)...)
 		return diags
 	}
 
+	// TODO: this only applies when Expanding
 	if fromTypedExpander, ok := valFrom.Interface().(TypedExpander); ok {
 		tflog.SubsystemInfo(ctx, subsystemName, "Source implements flex.TypedExpander")
 		diags.Append(expandTypedExpander(ctx, fromTypedExpander, valTo)...)
 		return diags
 	}
 
+	// TODO: this only applies when Expanding
 	if valTo.Kind() == reflect.Interface {
-		tflog.SubsystemInfo(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
+		tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
 			"from": valFrom.Type(),
 			"to":   valTo.Kind(),
 		})
 		return diags
 	}
 
+	// TODO: this only applies when Flattening
 	if toFlattener, ok := to.(Flattener); ok {
-		tflog.SubsystemInfo(ctx, subsystemName, "Source implements flex.Flattener")
+		tflog.SubsystemInfo(ctx, subsystemName, "Target implements flex.Flattener")
 		diags.Append(flattenFlattener(ctx, valFrom, toFlattener)...)
 		return diags
 	}
@@ -120,9 +129,9 @@ func autoFlexConvertStruct(ctx context.Context, sourcePath path.Path, from any, 
 			})
 			continue
 		}
-		if fieldName == MapBlockKey {
+		if fieldName == mapBlockKeyFieldName {
 			tflog.SubsystemTrace(ctx, subsystemName, "Skipping map block key", map[string]any{
-				logAttrKeySourceFieldname: MapBlockKey,
+				logAttrKeySourceFieldname: mapBlockKeyFieldName,
 			})
 			continue
 		}
@@ -151,8 +160,7 @@ func autoFlexConvertStruct(ctx context.Context, sourcePath path.Path, from any, 
 
 		diags.Append(flexer.convert(ctx, sourcePath.AtName(fieldName), valFrom.Field(i), targetPath.AtName(toFieldName), toFieldVal)...)
 		if diags.HasError() {
-			diags.AddError("AutoFlEx", fmt.Sprintf("convert (%s)", fieldName))
-			return diags
+			break
 		}
 	}
 
@@ -203,16 +211,29 @@ func findFieldFuzzy(ctx context.Context, fieldNameFrom string, valTo, valFrom re
 		}
 	}
 
-	// fourth precedence is using resource prefix
+	// fourth precedence is using field name prefix
 	if v := opts.fieldNamePrefix; v != "" {
 		v = strings.ReplaceAll(v, " ", "")
-		if ctx.Value(FieldNamePrefixRecurse) == nil {
+		if ctx.Value(fieldNamePrefixRecurse) == nil {
 			// so it will only recurse once
-			ctx = context.WithValue(ctx, FieldNamePrefixRecurse, true)
+			ctx = context.WithValue(ctx, fieldNamePrefixRecurse, true)
 			if strings.HasPrefix(fieldNameFrom, v) {
 				return findFieldFuzzy(ctx, strings.TrimPrefix(fieldNameFrom, v), valTo, valFrom, flexer)
 			}
 			return findFieldFuzzy(ctx, v+fieldNameFrom, valTo, valFrom, flexer)
+		}
+	}
+
+	// fifth precedence is using field name suffix
+	if v := opts.fieldNameSuffix; v != "" {
+		v = strings.ReplaceAll(v, " ", "")
+		if ctx.Value(fieldNameSuffixRecurse) == nil {
+			// so it will only recurse once
+			ctx = context.WithValue(ctx, fieldNameSuffixRecurse, true)
+			if strings.HasSuffix(fieldNameFrom, v) {
+				return findFieldFuzzy(ctx, strings.TrimSuffix(fieldNameFrom, v), valTo, valFrom, flexer)
+			}
+			return findFieldFuzzy(ctx, fieldNameFrom+v, valTo, valFrom, flexer)
 		}
 	}
 
@@ -231,4 +252,31 @@ type valueWithElementsAs interface {
 
 	Elements() []attr.Value
 	ElementsAs(context.Context, any, bool) diag.Diagnostics
+}
+
+func diagConvertingTargetIsNil(targetType reflect.Type) diag.ErrorDiagnostic {
+	return diag.NewErrorDiagnostic(
+		"Incompatible Types",
+		"An unexpected error occurred while converting configuration. "+
+			"This is always an error in the provider. "+
+			"Please report the following to the provider developer:\n\n"+
+			fmt.Sprintf("Target of type %q is nil", fullTypeName(targetType)),
+	)
+}
+
+func diagConvertingTargetIsNotPointer(targetType reflect.Type) diag.ErrorDiagnostic {
+	return diag.NewErrorDiagnostic(
+		"Incompatible Types",
+		"An unexpected error occurred while converting configuration. "+
+			"This is always an error in the provider. "+
+			"Please report the following to the provider developer:\n\n"+
+			fmt.Sprintf("Target type %q is not a pointer", fullTypeName(targetType)),
+	)
+}
+
+func valueType(v reflect.Value) reflect.Type {
+	if v.Kind() == reflect.Invalid {
+		return nil
+	}
+	return v.Type()
 }

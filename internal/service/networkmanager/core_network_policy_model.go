@@ -14,7 +14,7 @@ type coreNetworkPolicyDocument struct {
 	Version                  string                                     `json:"version,omitempty"`
 	CoreNetworkConfiguration *coreNetworkPolicyCoreNetworkConfiguration `json:"core-network-configuration"`
 	Segments                 []*coreNetworkPolicySegment                `json:"segments"`
-	NetworkFunctionGroups    []*coreNetworkPolicyNetworkFunctionGroup   `json:"network-function-groups"`
+	NetworkFunctionGroups    []*coreNetworkPolicyNetworkFunctionGroup   `json:"network-function-groups,omitempty"`
 	SegmentActions           []*coreNetworkPolicySegmentAction          `json:"segment-actions,omitempty"`
 	AttachmentPolicies       []*coreNetworkPolicyAttachmentPolicy       `json:"attachment-policies,omitempty"`
 }

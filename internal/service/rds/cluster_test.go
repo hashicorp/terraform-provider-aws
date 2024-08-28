@@ -12,10 +12,9 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -64,7 +63,7 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 
 func TestAccRDSCluster_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster rds.DBCluster
+	var dbCluster types.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
@@ -110,7 +109,7 @@ func TestAccRDSCluster_basic(t *testing.T) {
 
 func TestAccRDSCluster_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster rds.DBCluster
+	var dbCluster types.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
@@ -134,7 +133,7 @@ func TestAccRDSCluster_disappears(t *testing.T) {
 
 func TestAccRDSCluster_identifierGenerated(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v rds.DBCluster
+	var v types.DBCluster
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -158,7 +157,7 @@ func TestAccRDSCluster_identifierGenerated(t *testing.T) {
 
 func TestAccRDSCluster_identifierPrefix(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v rds.DBCluster
+	var v types.DBCluster
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -182,7 +181,7 @@ func TestAccRDSCluster_identifierPrefix(t *testing.T) {
 
 func TestAccRDSCluster_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster1, dbCluster2, dbCluster3 rds.DBCluster
+	var dbCluster1, dbCluster2, dbCluster3 types.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
@@ -228,7 +227,7 @@ func TestAccRDSCluster_allowMajorVersionUpgrade(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbCluster1, dbCluster2 rds.DBCluster
+	var dbCluster1, dbCluster2 types.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 	dataSourceName := "data.aws_rds_engine_version.test"
@@ -269,7 +268,7 @@ func TestAccRDSCluster_allowMajorVersionUpgradeNoApplyImmediately(t *testing.T) 
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbCluster1, dbCluster2 rds.DBCluster
+	var dbCluster1, dbCluster2 types.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 	dataSourceName := "data.aws_rds_engine_version.test"
@@ -310,7 +309,7 @@ func TestAccRDSCluster_allowMajorVersionUpgradeWithCustomParametersApplyImm(t *t
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbCluster1, dbCluster2 rds.DBCluster
+	var dbCluster1, dbCluster2 types.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
@@ -348,7 +347,7 @@ func TestAccRDSCluster_allowMajorVersionUpgradeWithCustomParameters(t *testing.T
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbCluster1, dbCluster2 rds.DBCluster
+	var dbCluster1, dbCluster2 types.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
@@ -387,7 +386,7 @@ func TestAccRDSCluster_onlyMajorVersion(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbCluster1 rds.DBCluster
+	var dbCluster1 types.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 	dataSourceName := "data.aws_rds_engine_version.test"
@@ -434,7 +433,7 @@ func TestAccRDSCluster_minorVersion(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbCluster1, dbCluster2 rds.DBCluster
+	var dbCluster1, dbCluster2 types.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
@@ -466,7 +465,7 @@ func TestAccRDSCluster_minorVersion(t *testing.T) {
 
 func TestAccRDSCluster_availabilityZones(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster rds.DBCluster
+	var dbCluster types.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
@@ -488,7 +487,7 @@ func TestAccRDSCluster_availabilityZones(t *testing.T) {
 
 func TestAccRDSCluster_availabilityZones_caCertificateIdentifier(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster rds.DBCluster
+	var dbCluster types.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
@@ -516,7 +515,7 @@ func TestAccRDSCluster_storageTypeIo1(t *testing.T) {
 	}
 
 	ctx := acctest.Context(t)
-	var dbCluster rds.DBCluster
+	var dbCluster types.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
@@ -543,7 +542,7 @@ func TestAccRDSCluster_storageTypeIo2(t *testing.T) {
 	}
 
 	ctx := acctest.Context(t)
-	var dbCluster rds.DBCluster
+	var dbCluster types.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
@@ -571,7 +570,7 @@ func TestAccRDSCluster_storageTypeAuroraReturnsBlank(t *testing.T) {
 	}
 
 	ctx := acctest.Context(t)
-	var dbCluster1 rds.DBCluster
+	var dbCluster1 types.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	storageTypeAurora := "aurora"
 	storageTypeEmpty := ""
@@ -600,7 +599,7 @@ func TestAccRDSCluster_storageTypeAuroraIopt1(t *testing.T) {
 	}
 
 	ctx := acctest.Context(t)
-	var dbCluster rds.DBCluster
+	var dbCluster types.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	storageType := "aurora-iopt1"
 	resourceName := "aws_rds_cluster.test"
@@ -628,7 +627,7 @@ func TestAccRDSCluster_storageTypeAuroraUpdateAuroraIopt1(t *testing.T) {
 	}
 
 	ctx := acctest.Context(t)
-	var dbCluster1, dbCluster2 rds.DBCluster
+	var dbCluster1, dbCluster2 types.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	storageTypeEmpty := ""
 	storageTypeAuroraIOPT1 := "aurora-iopt1"
@@ -665,7 +664,7 @@ func TestAccRDSCluster_allocatedStorage(t *testing.T) {
 	}
 
 	ctx := acctest.Context(t)
-	var dbCluster rds.DBCluster
+	var dbCluster types.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
@@ -693,7 +692,7 @@ func TestAccRDSCluster_storageTypeAuroraIopt1UpdateAurora(t *testing.T) {
 	}
 
 	ctx := acctest.Context(t)
-	var dbCluster1, dbCluster2 rds.DBCluster
+	var dbCluster1, dbCluster2 types.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	storageTypeAuroraIOPT1 := "aurora-iopt1"
 	storageTypeAurora := "aurora"
@@ -731,7 +730,7 @@ func TestAccRDSCluster_iops(t *testing.T) {
 	}
 
 	ctx := acctest.Context(t)
-	var dbCluster rds.DBCluster
+	var dbCluster types.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
@@ -758,7 +757,7 @@ func TestAccRDSCluster_dbClusterInstanceClass(t *testing.T) {
 	}
 
 	ctx := acctest.Context(t)
-	var dbCluster rds.DBCluster
+	var dbCluster types.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
@@ -788,7 +787,7 @@ func TestAccRDSCluster_dbClusterInstanceClass(t *testing.T) {
 
 func TestAccRDSCluster_backtrackWindow(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster rds.DBCluster
+	var dbCluster types.DBCluster
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -817,7 +816,7 @@ func TestAccRDSCluster_backtrackWindow(t *testing.T) {
 
 func TestAccRDSCluster_dbSubnetGroupName(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster rds.DBCluster
+	var dbCluster types.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
@@ -843,7 +842,7 @@ func TestAccRDSCluster_pointInTimeRestore(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var sourceDBCluster, dbCluster rds.DBCluster
+	var sourceDBCluster, dbCluster types.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceResourceName := "aws_rds_cluster.test"
 	resourceName := "aws_rds_cluster.restore"
@@ -872,7 +871,7 @@ func TestAccRDSCluster_pointInTimeRestoreViaResourceID(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var sourceDBCluster, dbCluster rds.DBCluster
+	var sourceDBCluster, dbCluster types.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceResourceName := "aws_rds_cluster.test"
 	resourceName := "aws_rds_cluster.restore"
@@ -901,7 +900,7 @@ func TestAccRDSCluster_PointInTimeRestore_enabledCloudWatchLogsExports(t *testin
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var sourceDBCluster, dbCluster rds.DBCluster
+	var sourceDBCluster, dbCluster types.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceResourceName := "aws_rds_cluster.test"
 	resourceName := "aws_rds_cluster.restore"
@@ -927,7 +926,7 @@ func TestAccRDSCluster_PointInTimeRestore_enabledCloudWatchLogsExports(t *testin
 
 func TestAccRDSCluster_takeFinalSnapshot(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v rds.DBCluster
+	var v types.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
@@ -972,7 +971,7 @@ func TestAccRDSCluster_domain(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbCluster rds.DBCluster
+	var dbCluster types.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
@@ -998,7 +997,7 @@ func TestAccRDSCluster_domain(t *testing.T) {
 
 func TestAccRDSCluster_EnabledCloudWatchLogsExports_mySQL(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster1, dbCluster2, dbCluster3 rds.DBCluster
+	var dbCluster1, dbCluster2, dbCluster3 types.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
@@ -1043,7 +1042,7 @@ func TestAccRDSCluster_EnabledCloudWatchLogsExports_postgresql(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbCluster1, dbCluster2 rds.DBCluster
+	var dbCluster1, dbCluster2 types.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
@@ -1076,7 +1075,7 @@ func TestAccRDSCluster_EnabledCloudWatchLogsExports_postgresql(t *testing.T) {
 
 func TestAccRDSCluster_updateIAMRoles(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v rds.DBCluster
+	var v types.DBCluster
 	ri := sdkacctest.RandInt()
 	resourceName := "aws_rds_cluster.test"
 
@@ -1114,7 +1113,7 @@ func TestAccRDSCluster_updateIAMRoles(t *testing.T) {
 
 func TestAccRDSCluster_kmsKey(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster1 rds.DBCluster
+	var dbCluster1 types.DBCluster
 	kmsKeyResourceName := "aws_kms_key.foo"
 	resourceName := "aws_rds_cluster.test"
 
@@ -1141,7 +1140,7 @@ func TestAccRDSCluster_networkType(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbCluster rds.DBCluster
+	var dbCluster types.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
@@ -1171,7 +1170,7 @@ func TestAccRDSCluster_networkType(t *testing.T) {
 
 func TestAccRDSCluster_encrypted(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v rds.DBCluster
+	var v types.DBCluster
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1193,7 +1192,7 @@ func TestAccRDSCluster_encrypted(t *testing.T) {
 
 func TestAccRDSCluster_copyTagsToSnapshot(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v rds.DBCluster
+	var v types.DBCluster
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_rds_cluster.test"
 
@@ -1230,7 +1229,7 @@ func TestAccRDSCluster_copyTagsToSnapshot(t *testing.T) {
 
 func TestAccRDSCluster_copyTagsToSnapshot_restorePointInTime(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v rds.DBCluster
+	var v types.DBCluster
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_rds_cluster.test"
 	resourceName2 := "aws_rds_cluster.clone"
@@ -1267,8 +1266,8 @@ func TestAccRDSCluster_ReplicationSourceIdentifier_kmsKeyID(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var primaryCluster rds.DBCluster
-	var replicaCluster rds.DBCluster
+	var primaryCluster types.DBCluster
+	var replicaCluster types.DBCluster
 	resourceName := "aws_rds_cluster.test"
 	resourceName2 := "aws_rds_cluster.alternate"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1299,7 +1298,7 @@ func TestAccRDSCluster_ReplicationSourceIdentifier_kmsKeyID(t *testing.T) {
 
 func TestAccRDSCluster_backupsUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v rds.DBCluster
+	var v types.DBCluster
 	resourceName := "aws_rds_cluster.test"
 
 	ri := sdkacctest.RandInt()
@@ -1339,7 +1338,7 @@ func TestAccRDSCluster_backupsUpdate(t *testing.T) {
 
 func TestAccRDSCluster_iamAuth(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v rds.DBCluster
+	var v types.DBCluster
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1362,7 +1361,7 @@ func TestAccRDSCluster_iamAuth(t *testing.T) {
 
 func TestAccRDSCluster_deletionProtection(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster1 rds.DBCluster
+	var dbCluster1 types.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
@@ -1396,7 +1395,7 @@ func TestAccRDSCluster_engineMode(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbCluster1, dbCluster2 rds.DBCluster
+	var dbCluster1, dbCluster2 types.DBCluster
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
@@ -1436,7 +1435,7 @@ func TestAccRDSCluster_engineVersion(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbCluster rds.DBCluster
+	var dbCluster types.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 	dataSourceName := "data.aws_rds_engine_version.test"
@@ -1470,7 +1469,7 @@ func TestAccRDSCluster_engineVersionWithPrimaryInstance(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbCluster rds.DBCluster
+	var dbCluster types.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 	dataSourceName := "data.aws_rds_engine_version.test"
@@ -1504,7 +1503,7 @@ func TestAccRDSCluster_engineVersionWithPrimaryInstance(t *testing.T) {
 
 func TestAccRDSCluster_GlobalClusterIdentifierEngineMode_global(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster1 rds.DBCluster
+	var dbCluster1 types.DBCluster
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	globalClusterResourceName := "aws_rds_global_cluster.test"
@@ -1529,7 +1528,7 @@ func TestAccRDSCluster_GlobalClusterIdentifierEngineMode_global(t *testing.T) {
 
 func TestAccRDSCluster_GlobalClusterIdentifierEngineModeGlobal_add(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster1 rds.DBCluster
+	var dbCluster1 types.DBCluster
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
@@ -1557,7 +1556,7 @@ func TestAccRDSCluster_GlobalClusterIdentifierEngineModeGlobal_add(t *testing.T)
 
 func TestAccRDSCluster_GlobalClusterIdentifierEngineModeGlobal_remove(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster1 rds.DBCluster
+	var dbCluster1 types.DBCluster
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	globalClusterResourceName := "aws_rds_global_cluster.test"
@@ -1589,7 +1588,7 @@ func TestAccRDSCluster_GlobalClusterIdentifierEngineModeGlobal_remove(t *testing
 
 func TestAccRDSCluster_GlobalClusterIdentifierEngineModeGlobal_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster1 rds.DBCluster
+	var dbCluster1 types.DBCluster
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	globalClusterResourceName1 := "aws_rds_global_cluster.test.0"
@@ -1619,7 +1618,7 @@ func TestAccRDSCluster_GlobalClusterIdentifierEngineModeGlobal_update(t *testing
 
 func TestAccRDSCluster_GlobalClusterIdentifierEngineMode_provisioned(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster1 rds.DBCluster
+	var dbCluster1 types.DBCluster
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	globalClusterResourceName := "aws_rds_global_cluster.test"
@@ -1650,7 +1649,7 @@ func TestAccRDSCluster_GlobalClusterIdentifier_primarySecondaryClusters(t *testi
 	}
 
 	var providers []*schema.Provider
-	var primaryDbCluster, secondaryDbCluster rds.DBCluster
+	var primaryDbCluster, secondaryDbCluster types.DBCluster
 
 	rNameGlobal := sdkacctest.RandomWithPrefix("tf-acc-test-global")
 	rNamePrimary := sdkacctest.RandomWithPrefix("tf-acc-test-primary")
@@ -1688,7 +1687,7 @@ func TestAccRDSCluster_GlobalClusterIdentifier_replicationSourceIdentifier(t *te
 	}
 
 	var providers []*schema.Provider
-	var primaryDbCluster, secondaryDbCluster rds.DBCluster
+	var primaryDbCluster, secondaryDbCluster types.DBCluster
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceNamePrimary := "aws_rds_cluster.primary"
@@ -1723,7 +1722,7 @@ func TestAccRDSCluster_GlobalClusterIdentifier_secondaryClustersWriteForwarding(
 	}
 
 	var providers []*schema.Provider
-	var primaryDbCluster, secondaryDbCluster rds.DBCluster
+	var primaryDbCluster, secondaryDbCluster types.DBCluster
 
 	rNameGlobal := sdkacctest.RandomWithPrefix("tf-acc-test-global")
 	rNamePrimary := sdkacctest.RandomWithPrefix("tf-acc-test-primary")
@@ -1756,7 +1755,7 @@ func TestAccRDSCluster_GlobalClusterIdentifier_secondaryClustersWriteForwarding(
 
 func TestAccRDSCluster_ManagedMasterPassword_managed(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster rds.DBCluster
+	var dbCluster types.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
@@ -1788,7 +1787,7 @@ func TestAccRDSCluster_ManagedMasterPassword_managed(t *testing.T) {
 
 func TestAccRDSCluster_ManagedMasterPassword_managedSpecificKMSKey(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster rds.DBCluster
+	var dbCluster types.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
@@ -1824,7 +1823,7 @@ func TestAccRDSCluster_ManagedMasterPassword_convertToManaged(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbCluster1, dbCluster2 rds.DBCluster
+	var dbCluster1, dbCluster2 types.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
@@ -1860,7 +1859,7 @@ func TestAccRDSCluster_ManagedMasterPassword_convertToManaged(t *testing.T) {
 
 func TestAccRDSCluster_port(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster1, dbCluster2 rds.DBCluster
+	var dbCluster1, dbCluster2 types.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
@@ -1894,7 +1893,7 @@ func TestAccRDSCluster_scaling(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbCluster rds.DBCluster
+	var dbCluster types.DBCluster
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
@@ -1941,7 +1940,7 @@ func TestAccRDSCluster_serverlessV2ScalingConfiguration(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbCluster rds.DBCluster
+	var dbCluster types.DBCluster
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
@@ -1977,7 +1976,7 @@ func TestAccRDSCluster_serverlessV2ScalingConfiguration(t *testing.T) {
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/11698
 func TestAccRDSCluster_Scaling_defaultMinCapacity(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster rds.DBCluster
+	var dbCluster types.DBCluster
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
@@ -2010,7 +2009,7 @@ func TestAccRDSCluster_snapshotIdentifier(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbCluster, sourceDbCluster rds.DBCluster
+	var dbCluster, sourceDbCluster types.DBCluster
 	var dbClusterSnapshot types.DBClusterSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2042,7 +2041,7 @@ func TestAccRDSCluster_SnapshotIdentifier_deletionProtection(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbCluster, sourceDbCluster rds.DBCluster
+	var dbCluster, sourceDbCluster types.DBCluster
 	var dbClusterSnapshot types.DBClusterSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2085,7 +2084,7 @@ func TestAccRDSCluster_SnapshotIdentifierEngineMode_provisioned(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbCluster, sourceDbCluster rds.DBCluster
+	var dbCluster, sourceDbCluster types.DBCluster
 	var dbClusterSnapshot types.DBClusterSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2119,7 +2118,7 @@ func TestAccRDSCluster_SnapshotIdentifierEngineMode_serverless(t *testing.T) {
 
 	ctx := acctest.Context(t)
 
-	var dbCluster, sourceDbCluster rds.DBCluster
+	var dbCluster, sourceDbCluster types.DBCluster
 	var dbClusterSnapshot types.DBClusterSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2153,7 +2152,7 @@ func TestAccRDSCluster_SnapshotIdentifierEngineVersion_different(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbCluster, sourceDbCluster rds.DBCluster
+	var dbCluster, sourceDbCluster types.DBCluster
 	var dbClusterSnapshot types.DBClusterSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2188,7 +2187,7 @@ func TestAccRDSCluster_SnapshotIdentifierEngineVersion_equal(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbCluster, sourceDbCluster rds.DBCluster
+	var dbCluster, sourceDbCluster types.DBCluster
 	var dbClusterSnapshot types.DBClusterSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2222,7 +2221,7 @@ func TestAccRDSCluster_SnapshotIdentifier_kmsKeyID(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbCluster, sourceDbCluster rds.DBCluster
+	var dbCluster, sourceDbCluster types.DBCluster
 	var dbClusterSnapshot types.DBClusterSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2256,7 +2255,7 @@ func TestAccRDSCluster_SnapshotIdentifier_masterPassword(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbCluster, sourceDbCluster rds.DBCluster
+	var dbCluster, sourceDbCluster types.DBCluster
 	var dbClusterSnapshot types.DBClusterSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2289,7 +2288,7 @@ func TestAccRDSCluster_SnapshotIdentifier_masterUsername(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbCluster, sourceDbCluster rds.DBCluster
+	var dbCluster, sourceDbCluster types.DBCluster
 	var dbClusterSnapshot types.DBClusterSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2324,7 +2323,7 @@ func TestAccRDSCluster_SnapshotIdentifier_preferredBackupWindow(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbCluster, sourceDbCluster rds.DBCluster
+	var dbCluster, sourceDbCluster types.DBCluster
 	var dbClusterSnapshot types.DBClusterSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2357,7 +2356,7 @@ func TestAccRDSCluster_SnapshotIdentifier_preferredMaintenanceWindow(t *testing.
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbCluster, sourceDbCluster rds.DBCluster
+	var dbCluster, sourceDbCluster types.DBCluster
 	var dbClusterSnapshot types.DBClusterSnapshot
 
 	// This config is version agnostic. Use it as a model for fixing version errors
@@ -2393,7 +2392,7 @@ func TestAccRDSCluster_SnapshotIdentifier_tags(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbCluster, sourceDbCluster rds.DBCluster
+	var dbCluster, sourceDbCluster types.DBCluster
 	var dbClusterSnapshot types.DBClusterSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2427,7 +2426,7 @@ func TestAccRDSCluster_SnapshotIdentifier_vpcSecurityGroupIDs(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbCluster, sourceDbCluster rds.DBCluster
+	var dbCluster, sourceDbCluster types.DBCluster
 	var dbClusterSnapshot types.DBClusterSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2463,7 +2462,7 @@ func TestAccRDSCluster_SnapshotIdentifierVPCSecurityGroupIDs_tags(t *testing.T) 
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbCluster, sourceDbCluster rds.DBCluster
+	var dbCluster, sourceDbCluster types.DBCluster
 	var dbClusterSnapshot types.DBClusterSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2497,7 +2496,7 @@ func TestAccRDSCluster_SnapshotIdentifier_encryptedRestore(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbCluster, sourceDbCluster rds.DBCluster
+	var dbCluster, sourceDbCluster types.DBCluster
 	var dbClusterSnapshot types.DBClusterSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2532,7 +2531,7 @@ func TestAccRDSCluster_enableHTTPEndpoint(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbCluster rds.DBCluster
+	var dbCluster types.DBCluster
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
@@ -2557,6 +2556,13 @@ func TestAccRDSCluster_enableHTTPEndpoint(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enable_http_endpoint", acctest.CtFalse),
 				),
 			},
+			{
+				Config: testAccClusterConfig_enableHTTPEndpoint(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "enable_http_endpoint", acctest.CtTrue),
+				),
+			},
 		},
 	})
 }
@@ -2564,7 +2570,7 @@ func TestAccRDSCluster_enableHTTPEndpoint(t *testing.T) {
 func TestAccRDSCluster_enableHTTPEndpointProvisioned(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var dbCluster rds.DBCluster
+	var dbCluster types.DBCluster
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
@@ -2582,13 +2588,27 @@ func TestAccRDSCluster_enableHTTPEndpointProvisioned(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enable_http_endpoint", acctest.CtTrue),
 				),
 			},
+			{
+				Config: testAccClusterConfig_enableHTTPEndpointProvisioned(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "enable_http_endpoint", acctest.CtFalse),
+				),
+			},
+			{
+				Config: testAccClusterConfig_enableHTTPEndpointProvisioned(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "enable_http_endpoint", acctest.CtTrue),
+				),
+			},
 		},
 	})
 }
 
 func TestAccRDSCluster_password(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster rds.DBCluster
+	var dbCluster types.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
@@ -2618,7 +2638,7 @@ func TestAccRDSCluster_password(t *testing.T) {
 
 func TestAccRDSCluster_NoDeleteAutomatedBackups(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster rds.DBCluster
+	var dbCluster types.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
@@ -2645,14 +2665,14 @@ func TestAccRDSCluster_NoDeleteAutomatedBackups(t *testing.T) {
 			case <-time.After(backupWindowLength):
 				return nil
 			case <-ticker.C:
-				conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
-				output, _ := conn.DescribeDBClusterSnapshotsWithContext(ctx, &rds.DescribeDBClusterSnapshotsInput{
+				conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
+				output, _ := conn.DescribeDBClusterSnapshots(ctx, &rds.DescribeDBClusterSnapshotsInput{
 					DBClusterIdentifier: aws.String(rName),
 					SnapshotType:        aws.String("automated"),
 				})
 				if output != nil && len(output.DBClusterSnapshots) > 0 {
 					snapshot := output.DBClusterSnapshots[0]
-					if aws.StringValue(snapshot.Status) == "available" {
+					if aws.ToString(snapshot.Status) == "available" {
 						return nil
 					}
 				}
@@ -2679,7 +2699,7 @@ func TestAccRDSCluster_NoDeleteAutomatedBackups(t *testing.T) {
 
 func TestAccRDSCluster_engineLifecycleSupport_disabled(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster rds.DBCluster
+	var dbCluster types.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
@@ -2711,7 +2731,7 @@ func TestAccRDSCluster_performanceInsightsEnabled(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbCluster rds.DBCluster
+	var dbCluster types.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
@@ -2745,7 +2765,7 @@ func TestAccRDSCluster_performanceInsightsKMSKeyID(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbCluster rds.DBCluster
+	var dbCluster types.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 	kmsKeyResourceName := "aws_kms_key.test"
@@ -2773,7 +2793,7 @@ func TestAccRDSCluster_performanceInsightsRetentionPeriod(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbCluster rds.DBCluster
+	var dbCluster types.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
@@ -2802,13 +2822,13 @@ func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 
 func testAccCheckClusterAutomatedBackupsDelete(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_rds_cluster" {
 				continue
 			}
-			describeOutput, err := conn.DescribeDBClusterSnapshotsWithContext(ctx, &rds.DescribeDBClusterSnapshotsInput{
+			describeOutput, err := conn.DescribeDBClusterSnapshots(ctx, &rds.DescribeDBClusterSnapshotsInput{
 				DBClusterIdentifier: aws.String(rs.Primary.Attributes[names.AttrClusterIdentifier]),
 				SnapshotType:        aws.String("automated"),
 			})
@@ -2820,7 +2840,7 @@ func testAccCheckClusterAutomatedBackupsDelete(ctx context.Context) resource.Tes
 				return fmt.Errorf("Automated backup for %s not found", rs.Primary.Attributes[names.AttrClusterIdentifier])
 			}
 
-			_, err = conn.DeleteDBClusterAutomatedBackupWithContext(ctx, &rds.DeleteDBClusterAutomatedBackupInput{
+			_, err = conn.DeleteDBClusterAutomatedBackup(ctx, &rds.DeleteDBClusterAutomatedBackupInput{
 				DbClusterResourceId: aws.String(rs.Primary.Attributes["cluster_resource_id"]),
 			})
 			if err != nil {
@@ -2834,7 +2854,7 @@ func testAccCheckClusterAutomatedBackupsDelete(ctx context.Context) resource.Tes
 
 func testAccCheckClusterDestroyWithProvider(ctx context.Context) acctest.TestCheckWithProviderFunc {
 	return func(s *terraform.State, provider *schema.Provider) error {
-		conn := provider.Meta().(*conns.AWSClient).RDSConn(ctx)
+		conn := provider.Meta().(*conns.AWSClient).RDSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_rds_cluster" {
@@ -2860,8 +2880,7 @@ func testAccCheckClusterDestroyWithProvider(ctx context.Context) acctest.TestChe
 
 func testAccCheckClusterDestroyWithFinalSnapshot(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn1 := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
-		conn2 := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_rds_cluster" {
@@ -2869,12 +2888,12 @@ func testAccCheckClusterDestroyWithFinalSnapshot(ctx context.Context) resource.T
 			}
 
 			finalSnapshotID := rs.Primary.Attributes[names.AttrFinalSnapshotIdentifier]
-			_, err := tfrds.FindDBClusterSnapshotByID(ctx, conn2, finalSnapshotID)
+			_, err := tfrds.FindDBClusterSnapshotByID(ctx, conn, finalSnapshotID)
 			if err != nil {
 				return err
 			}
 
-			_, err = conn2.DeleteDBClusterSnapshot(ctx, &rds_sdkv2.DeleteDBClusterSnapshotInput{
+			_, err = conn.DeleteDBClusterSnapshot(ctx, &rds.DeleteDBClusterSnapshotInput{
 				DBClusterSnapshotIdentifier: aws.String(finalSnapshotID),
 			})
 
@@ -2882,7 +2901,7 @@ func testAccCheckClusterDestroyWithFinalSnapshot(ctx context.Context) resource.T
 				return err
 			}
 
-			_, err = tfrds.FindDBClusterByID(ctx, conn1, rs.Primary.ID)
+			_, err = tfrds.FindDBClusterByID(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -2899,22 +2918,18 @@ func testAccCheckClusterDestroyWithFinalSnapshot(ctx context.Context) resource.T
 	}
 }
 
-func testAccCheckClusterExists(ctx context.Context, n string, v *rds.DBCluster) resource.TestCheckFunc {
+func testAccCheckClusterExists(ctx context.Context, n string, v *types.DBCluster) resource.TestCheckFunc {
 	return testAccCheckClusterExistsWithProvider(ctx, n, v, func() *schema.Provider { return acctest.Provider })
 }
 
-func testAccCheckClusterExistsWithProvider(ctx context.Context, n string, v *rds.DBCluster, providerF func() *schema.Provider) resource.TestCheckFunc {
+func testAccCheckClusterExistsWithProvider(ctx context.Context, n string, v *types.DBCluster, providerF func() *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No RDS Cluster ID is set")
-		}
-
-		conn := providerF().Meta().(*conns.AWSClient).RDSConn(ctx)
+		conn := providerF().Meta().(*conns.AWSClient).RDSClient(ctx)
 
 		output, err := tfrds.FindDBClusterByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
@@ -2927,9 +2942,9 @@ func testAccCheckClusterExistsWithProvider(ctx context.Context, n string, v *rds
 	}
 }
 
-func testAccCheckClusterRecreated(i, j *rds.DBCluster) resource.TestCheckFunc {
+func testAccCheckClusterRecreated(i, j *types.DBCluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.TimeValue(i.ClusterCreateTime).Equal(aws.TimeValue(j.ClusterCreateTime)) {
+		if aws.ToTime(i.ClusterCreateTime).Equal(aws.ToTime(j.ClusterCreateTime)) {
 			return errors.New("RDS Cluster was not recreated")
 		}
 
@@ -2937,9 +2952,9 @@ func testAccCheckClusterRecreated(i, j *rds.DBCluster) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckClusterNotRecreated(i, j *rds.DBCluster) resource.TestCheckFunc {
+func testAccCheckClusterNotRecreated(i, j *types.DBCluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if !aws.TimeValue(i.ClusterCreateTime).Equal(aws.TimeValue(j.ClusterCreateTime)) {
+		if !aws.ToTime(i.ClusterCreateTime).Equal(aws.ToTime(j.ClusterCreateTime)) {
 			return errors.New("RDS Cluster was recreated")
 		}
 
@@ -2949,7 +2964,7 @@ func testAccCheckClusterNotRecreated(i, j *rds.DBCluster) resource.TestCheckFunc
 
 func TestAccRDSCluster_localWriteForwarding(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster rds.DBCluster
+	var dbCluster types.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
