@@ -164,7 +164,7 @@ func (d *acceleratorDataSource) Read(ctx context.Context, request datasource.Rea
 		return
 	}
 
-	data.Tags = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
+	data.Tags = tftags.FlattenStringValueMap(ctx, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -235,5 +235,5 @@ type acceleratorDataSourceModel struct {
 	IpAddressType    types.String `tfsdk:"ip_address_type"`
 	IpSets           types.List   `tfsdk:"ip_sets"`
 	Name             types.String `tfsdk:"name"`
-	Tags             types.Map    `tfsdk:"tags"`
+	Tags             tftags.Map   `tfsdk:"tags"`
 }
