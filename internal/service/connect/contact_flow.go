@@ -9,17 +9,21 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/connect"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/connect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfio "github.com/hashicorp/terraform-provider-aws/internal/io"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -28,16 +32,19 @@ const contactFlowMutexKey = `aws_connect_contact_flow`
 
 // @SDKResource("aws_connect_contact_flow", name="Contact Flow")
 // @Tags(identifierAttribute="arn")
-func ResourceContactFlow() *schema.Resource {
+func resourceContactFlow() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceContactFlowCreate,
 		ReadWithoutTimeout:   resourceContactFlowRead,
 		UpdateWithoutTimeout: resourceContactFlowUpdate,
 		DeleteWithoutTimeout: resourceContactFlowDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		CustomizeDiff: verify.SetTagsDiff,
+
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -83,11 +90,11 @@ func ResourceContactFlow() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			names.AttrType: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      connect.ContactFlowTypeContactFlow,
-				ValidateFunc: validation.StringInSlice(connect.ContactFlowType_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				Default:          awstypes.ContactFlowTypeContactFlow,
+				ValidateDiagFunc: enum.Validate[awstypes.ContactFlowType](),
 			},
 		},
 	}
@@ -95,17 +102,15 @@ func ResourceContactFlow() *schema.Resource {
 
 func resourceContactFlowCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
-	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
 	instanceID := d.Get(names.AttrInstanceID).(string)
 	name := d.Get(names.AttrName).(string)
-
 	input := &connect.CreateContactFlowInput{
 		Name:       aws.String(name),
 		InstanceId: aws.String(instanceID),
 		Tags:       getTagsIn(ctx),
-		Type:       aws.String(d.Get(names.AttrType).(string)),
+		Type:       awstypes.ContactFlowType(d.Get(names.AttrType).(string)),
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -113,135 +118,121 @@ func resourceContactFlowCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("filename"); ok {
-		filename := v.(string)
+		v := v.(string)
 		// Grab an exclusive lock so that we're only reading one contact flow into
 		// memory at a time.
 		// See https://github.com/hashicorp/terraform/issues/9364
 		conns.GlobalMutexKV.Lock(contactFlowMutexKey)
 		defer conns.GlobalMutexKV.Unlock(contactFlowMutexKey)
 
-		file, err := tfio.ReadFileContents(filename)
+		contents, err := tfio.ReadFileContents(v)
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 
-		input.Content = aws.String(string(file))
+		input.Content = aws.String(string(contents))
 	} else if v, ok := d.GetOk(names.AttrContent); ok {
 		input.Content = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateContactFlowWithContext(ctx, input)
+	output, err := conn.CreateContactFlow(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Connect Contact Flow (%s): %s", name, err)
 	}
 
-	if output == nil {
-		return sdkdiag.AppendErrorf(diags, "creating Connect Contact Flow (%s): empty output", name)
-	}
-
-	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(output.ContactFlowId)))
+	id := contactFlowCreateResourceID(instanceID, aws.ToString(output.ContactFlowId))
+	d.SetId(id)
 
 	return append(diags, resourceContactFlowRead(ctx, d, meta)...)
 }
 
 func resourceContactFlowRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
-	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
-
-	instanceID, contactFlowID, err := ContactFlowParseID(d.Id())
-
+	instanceID, contactFlowID, err := contactFlowParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	resp, err := conn.DescribeContactFlowWithContext(ctx, &connect.DescribeContactFlowInput{
-		ContactFlowId: aws.String(contactFlowID),
-		InstanceId:    aws.String(instanceID),
-	})
+	contactFlow, err := findContactFlowByTwoPartKey(ctx, conn, instanceID, contactFlowID)
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Connect Contact Flow (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting Connect Contact Flow (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Connect Contact Flow (%s): %s", d.Id(), err)
 	}
 
-	if resp == nil || resp.ContactFlow == nil {
-		return sdkdiag.AppendErrorf(diags, "getting Connect Contact Flow (%s): empty response", d.Id())
-	}
-
-	d.Set(names.AttrARN, resp.ContactFlow.Arn)
-	d.Set("contact_flow_id", resp.ContactFlow.Id)
+	d.Set(names.AttrARN, contactFlow.Arn)
+	d.Set("contact_flow_id", contactFlow.Id)
+	d.Set(names.AttrContent, contactFlow.Content)
+	d.Set(names.AttrDescription, contactFlow.Description)
 	d.Set(names.AttrInstanceID, instanceID)
-	d.Set(names.AttrName, resp.ContactFlow.Name)
-	d.Set(names.AttrDescription, resp.ContactFlow.Description)
-	d.Set(names.AttrType, resp.ContactFlow.Type)
-	d.Set(names.AttrContent, resp.ContactFlow.Content)
+	d.Set(names.AttrName, contactFlow.Name)
+	d.Set(names.AttrType, contactFlow.Type)
 
-	setTagsOut(ctx, resp.ContactFlow.Tags)
+	setTagsOut(ctx, contactFlow.Tags)
 
 	return diags
 }
 
 func resourceContactFlowUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
-	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
-
-	instanceID, contactFlowID, err := ContactFlowParseID(d.Id())
-
+	instanceID, contactFlowID, err := contactFlowParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if d.HasChanges(names.AttrName, names.AttrDescription) {
-		updateMetadataInput := &connect.UpdateContactFlowNameInput{
+	if d.HasChanges(names.AttrDescription, names.AttrName) {
+		input := &connect.UpdateContactFlowNameInput{
 			ContactFlowId: aws.String(contactFlowID),
+			Description:   aws.String(d.Get(names.AttrDescription).(string)),
 			InstanceId:    aws.String(instanceID),
 			Name:          aws.String(d.Get(names.AttrName).(string)),
-			Description:   aws.String(d.Get(names.AttrDescription).(string)),
 		}
 
-		_, updateMetadataInputErr := conn.UpdateContactFlowNameWithContext(ctx, updateMetadataInput)
+		_, err := conn.UpdateContactFlowName(ctx, input)
 
-		if updateMetadataInputErr != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Connect Contact Flow (%s): %s", d.Id(), updateMetadataInputErr)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Connect Contact Flow (%s): %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChanges(names.AttrContent, "content_hash", "filename") {
-		updateContentInput := &connect.UpdateContactFlowContentInput{
+		input := &connect.UpdateContactFlowContentInput{
 			ContactFlowId: aws.String(contactFlowID),
 			InstanceId:    aws.String(instanceID),
 		}
 
 		if v, ok := d.GetOk("filename"); ok {
-			filename := v.(string)
+			v := v.(string)
 			// Grab an exclusive lock so that we're only reading one contact flow into
 			// memory at a time.
 			// See https://github.com/hashicorp/terraform/issues/9364
 			conns.GlobalMutexKV.Lock(contactFlowMutexKey)
 			defer conns.GlobalMutexKV.Unlock(contactFlowMutexKey)
 
-			file, err := tfio.ReadFileContents(filename)
+			contents, err := tfio.ReadFileContents(v)
 			if err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
 
-			updateContentInput.Content = aws.String(string(file))
+			input.Content = aws.String(string(contents))
 		} else if v, ok := d.GetOk(names.AttrContent); ok {
-			updateContentInput.Content = aws.String(v.(string))
+			input.Content = aws.String(v.(string))
 		}
 
-		_, updateContentInputErr := conn.UpdateContactFlowContentWithContext(ctx, updateContentInput)
+		_, err := conn.UpdateContactFlowContent(ctx, input)
 
-		if updateContentInputErr != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Connect Contact Flow content (%s): %s", d.Id(), updateContentInputErr)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Connect Contact Flow content (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -250,37 +241,75 @@ func resourceContactFlowUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceContactFlowDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
-	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
-
-	instanceID, contactFlowID, err := ContactFlowParseID(d.Id())
-
+	instanceID, contactFlowID, err := contactFlowParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	log.Printf("[DEBUG] Deleting Connect Contact Flow : %s", contactFlowID)
-
-	input := &connect.DeleteContactFlowInput{
+	log.Printf("[DEBUG] Deleting Connect Contact Flow: %s", d.Id())
+	_, err = conn.DeleteContactFlow(ctx, &connect.DeleteContactFlowInput{
 		ContactFlowId: aws.String(contactFlowID),
 		InstanceId:    aws.String(instanceID),
+	})
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
 	}
 
-	_, deleteContactFlowErr := conn.DeleteContactFlowWithContext(ctx, input)
-
-	if deleteContactFlowErr != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Connect Contact Flow (%s): %s", d.Id(), deleteContactFlowErr)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting Connect Contact Flow (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func ContactFlowParseID(id string) (string, string, error) {
-	parts := strings.SplitN(id, ":", 2)
+const contactFlowResourceIDSeparator = ":"
+
+func contactFlowCreateResourceID(instanceID, contactFlowID string) string {
+	parts := []string{instanceID, contactFlowID}
+	id := strings.Join(parts, contactFlowResourceIDSeparator)
+
+	return id
+}
+
+func contactFlowParseResourceID(id string) (string, string, error) {
+	parts := strings.SplitN(id, contactFlowResourceIDSeparator, 2)
 
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		return "", "", fmt.Errorf("unexpected format of ID (%s), expected instanceID:contactFlowID", id)
+		return "", "", fmt.Errorf("unexpected format of ID (%[1]s), expected instanceID%[2]scontactFlowID", id, contactFlowResourceIDSeparator)
 	}
 
 	return parts[0], parts[1], nil
+}
+
+func findContactFlowByTwoPartKey(ctx context.Context, conn *connect.Client, instanceID, contactFlowID string) (*awstypes.ContactFlow, error) {
+	input := &connect.DescribeContactFlowInput{
+		ContactFlowId: aws.String(contactFlowID),
+		InstanceId:    aws.String(instanceID),
+	}
+
+	return findContactFlow(ctx, conn, input)
+}
+
+func findContactFlow(ctx context.Context, conn *connect.Client, input *connect.DescribeContactFlowInput) (*awstypes.ContactFlow, error) {
+	output, err := conn.DescribeContactFlow(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.ContactFlow == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.ContactFlow, nil
 }

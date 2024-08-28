@@ -9,21 +9,23 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/opensearchservice"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/opensearch"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearch/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_opensearch_package_association")
-func ResourcePackageAssociation() *schema.Resource {
+// @SDKResource("aws_opensearch_package_association", name="Package Association")
+func resourcePackageAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePackageAssociationCreate,
 		ReadWithoutTimeout:   resourcePackageAssociationRead,
@@ -59,17 +61,17 @@ func ResourcePackageAssociation() *schema.Resource {
 
 func resourcePackageAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
+	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
 
 	domainName := d.Get(names.AttrDomainName).(string)
 	packageID := d.Get("package_id").(string)
 	id := fmt.Sprintf("%s-%s", domainName, packageID)
-	input := &opensearchservice.AssociatePackageInput{
+	input := &opensearch.AssociatePackageInput{
 		DomainName: aws.String(domainName),
 		PackageID:  aws.String(packageID),
 	}
 
-	_, err := conn.AssociatePackageWithContext(ctx, input)
+	_, err := conn.AssociatePackage(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating OpenSearch Package Association (%s): %s", id, err)
@@ -86,11 +88,11 @@ func resourcePackageAssociationCreate(ctx context.Context, d *schema.ResourceDat
 
 func resourcePackageAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
+	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
 
 	domainName := d.Get(names.AttrDomainName).(string)
 	packageID := d.Get("package_id").(string)
-	pkgAssociation, err := FindPackageAssociationByTwoPartKey(ctx, conn, domainName, packageID)
+	pkgAssociation, err := findPackageAssociationByTwoPartKey(ctx, conn, domainName, packageID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] OpenSearch Package Association (%s) not found, removing from state", d.Id())
@@ -111,17 +113,17 @@ func resourcePackageAssociationRead(ctx context.Context, d *schema.ResourceData,
 
 func resourcePackageAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
+	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
 
 	log.Printf("[DEBUG] Deleting OpenSearch Package Association: %s", d.Id())
 	domainName := d.Get(names.AttrDomainName).(string)
 	packageID := d.Get("package_id").(string)
-	_, err := conn.DissociatePackageWithContext(ctx, &opensearchservice.DissociatePackageInput{
+	_, err := conn.DissociatePackage(ctx, &opensearch.DissociatePackageInput{
 		DomainName: aws.String(domainName),
 		PackageID:  aws.String(packageID),
 	})
 
-	if tfawserr.ErrCodeEquals(err, opensearchservice.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "Package is not associated to this domain") {
 		return diags
 	}
 
@@ -136,61 +138,58 @@ func resourcePackageAssociationDelete(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func FindPackageAssociationByTwoPartKey(ctx context.Context, conn *opensearchservice.OpenSearchService, domainName, packageID string) (*opensearchservice.DomainPackageDetails, error) {
-	input := &opensearchservice.ListPackagesForDomainInput{
+func findPackageAssociationByTwoPartKey(ctx context.Context, conn *opensearch.Client, domainName, packageID string) (*awstypes.DomainPackageDetails, error) {
+	input := &opensearch.ListPackagesForDomainInput{
 		DomainName: aws.String(domainName),
 	}
-	filter := func(v *opensearchservice.DomainPackageDetails) bool {
-		return aws.StringValue(v.PackageID) == packageID
+	filter := func(v awstypes.DomainPackageDetails) bool {
+		return aws.ToString(v.PackageID) == packageID
 	}
 
 	return findPackageAssociation(ctx, conn, input, filter)
 }
 
-func findPackageAssociation(ctx context.Context, conn *opensearchservice.OpenSearchService, input *opensearchservice.ListPackagesForDomainInput, filter tfslices.Predicate[*opensearchservice.DomainPackageDetails]) (*opensearchservice.DomainPackageDetails, error) {
+func findPackageAssociation(ctx context.Context, conn *opensearch.Client, input *opensearch.ListPackagesForDomainInput, filter tfslices.Predicate[awstypes.DomainPackageDetails]) (*awstypes.DomainPackageDetails, error) {
 	output, err := findPackageAssociations(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findPackageAssociations(ctx context.Context, conn *opensearchservice.OpenSearchService, input *opensearchservice.ListPackagesForDomainInput, filter tfslices.Predicate[*opensearchservice.DomainPackageDetails]) ([]*opensearchservice.DomainPackageDetails, error) {
-	var output []*opensearchservice.DomainPackageDetails
+func findPackageAssociations(ctx context.Context, conn *opensearch.Client, input *opensearch.ListPackagesForDomainInput, filter tfslices.Predicate[awstypes.DomainPackageDetails]) ([]awstypes.DomainPackageDetails, error) {
+	var output []awstypes.DomainPackageDetails
 
-	err := conn.ListPackagesForDomainPagesWithContext(ctx, input, func(page *opensearchservice.ListPackagesForDomainOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
+	pages := opensearch.NewListPackagesForDomainPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-		for _, v := range page.DomainPackageDetailsList {
-			if v != nil && filter(v) {
-				output = append(output, v)
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
 			}
 		}
 
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, opensearchservice.ErrCodeResourceNotFoundException) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		if err != nil {
+			return nil, err
 		}
-	}
 
-	if err != nil {
-		return nil, err
+		for _, v := range page.DomainPackageDetailsList {
+			if filter(v) {
+				output = append(output, v)
+			}
+		}
 	}
 
 	return output, nil
 }
 
-func statusPackageAssociation(ctx context.Context, conn *opensearchservice.OpenSearchService, domainName, packageID string) retry.StateRefreshFunc {
+func statusPackageAssociation(ctx context.Context, conn *opensearch.Client, domainName, packageID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindPackageAssociationByTwoPartKey(ctx, conn, domainName, packageID)
+		output, err := findPackageAssociationByTwoPartKey(ctx, conn, domainName, packageID)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -200,14 +199,14 @@ func statusPackageAssociation(ctx context.Context, conn *opensearchservice.OpenS
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.DomainPackageStatus), nil
+		return output, string(output.DomainPackageStatus), nil
 	}
 }
 
-func waitPackageAssociationCreated(ctx context.Context, conn *opensearchservice.OpenSearchService, domainName, packageID string, timeout time.Duration) (*opensearchservice.DomainPackageDetails, error) {
+func waitPackageAssociationCreated(ctx context.Context, conn *opensearch.Client, domainName, packageID string, timeout time.Duration) (*awstypes.DomainPackageDetails, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{opensearchservice.DomainPackageStatusAssociating},
-		Target:  []string{opensearchservice.DomainPackageStatusActive},
+		Pending: enum.Slice(awstypes.DomainPackageStatusAssociating),
+		Target:  enum.Slice(awstypes.DomainPackageStatusActive),
 		Refresh: statusPackageAssociation(ctx, conn, domainName, packageID),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
@@ -215,9 +214,9 @@ func waitPackageAssociationCreated(ctx context.Context, conn *opensearchservice.
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*opensearchservice.DomainPackageDetails); ok {
-		if status, details := aws.StringValue(output.DomainPackageStatus), output.ErrorDetails; status == opensearchservice.DomainPackageStatusAssociationFailed && details != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(details.ErrorType), aws.StringValue(details.ErrorMessage)))
+	if output, ok := outputRaw.(*awstypes.DomainPackageDetails); ok {
+		if status, details := output.DomainPackageStatus, output.ErrorDetails; status == awstypes.DomainPackageStatusAssociationFailed && details != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(details.ErrorType), aws.ToString(details.ErrorMessage)))
 		}
 
 		return output, err
@@ -226,9 +225,9 @@ func waitPackageAssociationCreated(ctx context.Context, conn *opensearchservice.
 	return nil, err
 }
 
-func waitPackageAssociationDeleted(ctx context.Context, conn *opensearchservice.OpenSearchService, domainName, packageID string, timeout time.Duration) (*opensearchservice.DomainPackageDetails, error) {
+func waitPackageAssociationDeleted(ctx context.Context, conn *opensearch.Client, domainName, packageID string, timeout time.Duration) (*awstypes.DomainPackageDetails, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{opensearchservice.DomainPackageStatusDissociating},
+		Pending: enum.Slice(awstypes.DomainPackageStatusDissociating),
 		Target:  []string{},
 		Refresh: statusPackageAssociation(ctx, conn, domainName, packageID),
 		Timeout: timeout,
@@ -237,9 +236,9 @@ func waitPackageAssociationDeleted(ctx context.Context, conn *opensearchservice.
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*opensearchservice.DomainPackageDetails); ok {
-		if status, details := aws.StringValue(output.DomainPackageStatus), output.ErrorDetails; status == opensearchservice.DomainPackageStatusDissociationFailed && details != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(details.ErrorType), aws.StringValue(details.ErrorMessage)))
+	if output, ok := outputRaw.(*awstypes.DomainPackageDetails); ok {
+		if status, details := output.DomainPackageStatus, output.ErrorDetails; status == awstypes.DomainPackageStatusDissociationFailed && details != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(details.ErrorType), aws.ToString(details.ErrorMessage)))
 		}
 
 		return output, err

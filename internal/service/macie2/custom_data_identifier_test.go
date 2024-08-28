@@ -9,14 +9,15 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/macie2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/macie2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/macie2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfmacie2 "github.com/hashicorp/terraform-provider-aws/internal/service/macie2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -229,10 +230,10 @@ func testAccCheckCustomDataIdentifierExists(ctx context.Context, resourceName st
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Client(ctx)
 		input := &macie2.GetCustomDataIdentifierInput{Id: aws.String(rs.Primary.ID)}
 
-		resp, err := conn.GetCustomDataIdentifierWithContext(ctx, input)
+		resp, err := conn.GetCustomDataIdentifier(ctx, input)
 
 		if err != nil {
 			return err
@@ -250,7 +251,7 @@ func testAccCheckCustomDataIdentifierExists(ctx context.Context, resourceName st
 
 func testAccCheckCustomDataIdentifierDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_macie2_custom_data_identifier" {
@@ -258,10 +259,10 @@ func testAccCheckCustomDataIdentifierDestroy(ctx context.Context) resource.TestC
 			}
 
 			input := &macie2.GetCustomDataIdentifierInput{Id: aws.String(rs.Primary.ID)}
-			resp, err := conn.GetCustomDataIdentifierWithContext(ctx, input)
+			resp, err := conn.GetCustomDataIdentifier(ctx, input)
 
-			if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
-				tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") {
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) ||
+				errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Macie is not enabled") {
 				continue
 			}
 

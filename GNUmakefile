@@ -308,18 +308,24 @@ go-misspell: ## [CI] Provider Checks / misspell
 	@echo "make: Provider Checks / misspell..."
 	@misspell -error -source auto -i "littel,ceasar" internal/
 
-golangci-lint: golangci-lint1 golangci-lint2 ## [CI] All golangci-lint Checks
+golangci-lint: golangci-lint1 golangci-lint2 golangci-lint3 ## [CI] All golangci-lint Checks
 
-golangci-lint1: ## [CI] golangci-lint Checks / 1 of 2
-	@echo "make: golangci-lint Checks / 1 of 2..."
+golangci-lint1: ## [CI] golangci-lint Checks / 1 of 3
+	@echo "make: golangci-lint Checks / 1 of 3..."
 	@golangci-lint run \
 		--config .ci/.golangci.yml \
 		$(TEST)
 
-golangci-lint2: ## [CI] golangci-lint Checks / 2 of 2
-	@echo "make: golangci-lint Checks / 2 of 2..."
+golangci-lint2: ## [CI] golangci-lint Checks / 2 of 3
+	@echo "make: golangci-lint Checks / 2 of 3..."
 	@golangci-lint run \
 		--config .ci/.golangci2.yml \
+		$(TEST)
+
+golangci-lint3: ## [CI] golangci-lint Checks / 3 of 3
+	@echo "make: golangci-lint Checks / 3 of 3..."
+	@golangci-lint run \
+		--config .ci/.golangci3.yml \
 		$(TEST)
 
 help: ## Display this help

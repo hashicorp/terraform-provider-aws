@@ -197,7 +197,7 @@ func resourceStreamDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KinesisVideoClient(ctx)
 
-	log.Printf("[DEBUG] Deleting Kinesis Vide Stream: %s", d.Id())
+	log.Printf("[DEBUG] Deleting Kinesis Video Stream: %s", d.Id())
 	_, err := conn.DeleteStream(ctx, &kinesisvideo.DeleteStreamInput{
 		CurrentVersion: aws.String(d.Get(names.AttrVersion).(string)),
 		StreamARN:      aws.String(d.Id()),

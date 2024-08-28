@@ -2359,7 +2359,7 @@ service "connect" {
 
   sdk {
     id             = "Connect"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -3446,7 +3446,7 @@ service "elasticsearch" {
 
   sdk {
     id             = "Elasticsearch Service"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -3762,7 +3762,7 @@ service "emr" {
 
   sdk {
     id             = "EMR"
-    client_version = [1, 2]
+    client_version = [2]
   }
 
   names {
@@ -5412,7 +5412,7 @@ service "lexmodels" {
 
   sdk {
     id             = "Lex Model Building Service"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -5755,7 +5755,7 @@ service "macie2" {
 
   sdk {
     id             = "Macie2"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -6373,7 +6373,7 @@ service "neptune" {
 
   sdk {
     id             = "Neptune"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -6471,7 +6471,7 @@ service "networkmanager" {
 
   sdk {
     id             = "NetworkManager"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -6563,7 +6563,7 @@ service "opensearch" {
 
   sdk {
     id             = "OpenSearch"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -6644,7 +6644,7 @@ service "opsworks" {
 
   sdk {
     id             = "OpsWorks"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -6733,7 +6733,7 @@ service "outposts" {
 
   sdk {
     id             = "Outposts"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -9523,7 +9523,7 @@ service "worklink" {
 
   sdk {
     id             = "WorkLink"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {

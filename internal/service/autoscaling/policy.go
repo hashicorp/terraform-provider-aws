@@ -1137,7 +1137,7 @@ func flattenPredictiveScalingConfig(predictiveScalingConfig *awstypes.Predictive
 	if predictiveScalingConfig == nil {
 		return nil
 	}
-	if predictiveScalingConfig.MetricSpecifications != nil && len(predictiveScalingConfig.MetricSpecifications) > 0 {
+	if len(predictiveScalingConfig.MetricSpecifications) > 0 {
 		predictiveScalingConfigFlat["metric_specification"] = flattenPredictiveScalingMetricSpecifications(predictiveScalingConfig.MetricSpecifications)
 	}
 	predictiveScalingConfigFlat[names.AttrMode] = string(predictiveScalingConfig.Mode)

@@ -8,21 +8,20 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/connect"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccQuickConnect_phoneNumber(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v connect.DescribeQuickConnectOutput
+	var v awstypes.QuickConnect
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_quick_connect.test"
@@ -102,7 +101,7 @@ func testAccQuickConnect_phoneNumber(t *testing.T) {
 
 func testAccQuickConnect_updateTags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v connect.DescribeQuickConnectOutput
+	var v awstypes.QuickConnect
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	phone_number := "+12345678912"
@@ -153,7 +152,7 @@ func testAccQuickConnect_updateTags(t *testing.T) {
 
 func testAccQuickConnect_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v connect.DescribeQuickConnectOutput
+	var v awstypes.QuickConnect
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_quick_connect.test"
@@ -176,35 +175,22 @@ func testAccQuickConnect_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckQuickConnectExists(ctx context.Context, resourceName string, function *connect.DescribeQuickConnectOutput) resource.TestCheckFunc {
+func testAccCheckQuickConnectExists(ctx context.Context, n string, v *awstypes.QuickConnect) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Connect Quick Connect not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("Connect Quick Connect ID not set")
-		}
-		instanceID, quickConnectID, err := tfconnect.QuickConnectParseID(rs.Primary.ID)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectClient(ctx)
+
+		output, err := tfconnect.FindQuickConnectByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrInstanceID], rs.Primary.Attributes["quick_connect_id"])
 
 		if err != nil {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
-
-		params := &connect.DescribeQuickConnectInput{
-			QuickConnectId: aws.String(quickConnectID),
-			InstanceId:     aws.String(instanceID),
-		}
-
-		getFunction, err := conn.DescribeQuickConnectWithContext(ctx, params)
-		if err != nil {
-			return err
-		}
-
-		*function = *getFunction
+		*v = *output
 
 		return nil
 	}
@@ -217,28 +203,19 @@ func testAccCheckQuickConnectDestroy(ctx context.Context) resource.TestCheckFunc
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectClient(ctx)
 
-			instanceID, quickConnectID, err := tfconnect.QuickConnectParseID(rs.Primary.ID)
+			_, err := tfconnect.FindQuickConnectByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrInstanceID], rs.Primary.Attributes["quick_connect_id"])
 
-			if err != nil {
-				return err
-			}
-
-			params := &connect.DescribeQuickConnectInput{
-				QuickConnectId: aws.String(quickConnectID),
-				InstanceId:     aws.String(instanceID),
-			}
-
-			_, err = conn.DescribeQuickConnectWithContext(ctx, params)
-
-			if tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
 			if err != nil {
 				return err
 			}
+
+			return fmt.Errorf("Connect Quick Connect %s still exists", rs.Primary.ID)
 		}
 
 		return nil

@@ -456,11 +456,13 @@ func resourceAppUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 		}
 
 		if d.HasChange("auto_branch_creation_config") {
-			input.AutoBranchCreationConfig = expandAutoBranchCreationConfig(d.Get("auto_branch_creation_config").([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.Get("auto_branch_creation_config").([]interface{}); ok && len(v) > 0 && v[0] != nil {
+				input.AutoBranchCreationConfig = expandAutoBranchCreationConfig(v[0].(map[string]interface{}))
 
-			if d.HasChange("auto_branch_creation_config.0.environment_variables") {
-				if v := d.Get("auto_branch_creation_config.0.environment_variables").(map[string]interface{}); len(v) == 0 {
-					input.AutoBranchCreationConfig.EnvironmentVariables = map[string]string{"": ""}
+				if d.HasChange("auto_branch_creation_config.0.environment_variables") {
+					if v, ok := d.Get("auto_branch_creation_config.0.environment_variables").(map[string]interface{}); ok && len(v) == 0 {
+						input.AutoBranchCreationConfig.EnvironmentVariables = map[string]string{"": ""}
+					}
 				}
 			}
 		}

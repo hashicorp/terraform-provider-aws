@@ -9,32 +9,39 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/connect"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/connect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_connect_user", name="User")
 // @Tags(identifierAttribute="arn")
-func ResourceUser() *schema.Resource {
+func resourceUser() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserCreate,
 		ReadWithoutTimeout:   resourceUserRead,
 		UpdateWithoutTimeout: resourceUserUpdate,
 		DeleteWithoutTimeout: resourceUserDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		CustomizeDiff: verify.SetTagsDiff,
+
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -110,16 +117,16 @@ func ResourceUser() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validDeskPhoneNumber,
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								if v := d.Get("phone_config.0.phone_type").(string); v == connect.PhoneTypeDeskPhone {
+								if v := awstypes.PhoneType(d.Get("phone_config.0.phone_type").(string)); v == awstypes.PhoneTypeDeskPhone {
 									return false
 								}
 								return true
 							},
 						},
 						"phone_type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(connect.PhoneType_Values(), false),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.PhoneType](),
 						},
 					},
 				},
@@ -149,16 +156,15 @@ func ResourceUser() *schema.Resource {
 
 func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
-	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
 	instanceID := d.Get(names.AttrInstanceID).(string)
 	name := d.Get(names.AttrName).(string)
 	input := &connect.CreateUserInput{
 		InstanceId:         aws.String(instanceID),
-		PhoneConfig:        expandPhoneConfig(d.Get("phone_config").([]interface{})),
+		PhoneConfig:        expandUserPhoneConfig(d.Get("phone_config").([]interface{})),
 		RoutingProfileId:   aws.String(d.Get("routing_profile_id").(string)),
-		SecurityProfileIds: flex.ExpandStringSet(d.Get("security_profile_ids").(*schema.Set)),
+		SecurityProfileIds: flex.ExpandStringValueSet(d.Get("security_profile_ids").(*schema.Set)),
 		Tags:               getTagsIn(ctx),
 		Username:           aws.String(name),
 	}
@@ -172,89 +178,71 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if v, ok := d.GetOk("identity_info"); ok {
-		input.IdentityInfo = expandIdentityInfo(v.([]interface{}))
+		input.IdentityInfo = expandUserIdentityInfo(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk(names.AttrPassword); ok {
 		input.Password = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateUserWithContext(ctx, input)
+	output, err := conn.CreateUser(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Connect User (%s): %s", name, err)
 	}
 
-	if output == nil {
-		return sdkdiag.AppendErrorf(diags, "creating Connect User (%s): empty output", name)
-	}
-
-	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(output.UserId)))
+	id := userCreateResourceID(instanceID, aws.ToString(output.UserId))
+	d.SetId(id)
 
 	return append(diags, resourceUserRead(ctx, d, meta)...)
 }
 
 func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
-	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
-
-	instanceID, userID, err := UserParseID(d.Id())
-
+	instanceID, userID, err := userParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	resp, err := conn.DescribeUserWithContext(ctx, &connect.DescribeUserInput{
-		InstanceId: aws.String(instanceID),
-		UserId:     aws.String(userID),
-	})
+	user, err := findUserByTwoPartKey(ctx, conn, instanceID, userID)
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Connect User (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting Connect User (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Connect User (%s): %s", d.Id(), err)
 	}
-
-	if resp == nil || resp.User == nil {
-		return sdkdiag.AppendErrorf(diags, "getting Connect User (%s): empty response", d.Id())
-	}
-
-	user := resp.User
 
 	d.Set(names.AttrARN, user.Arn)
 	d.Set("directory_user_id", user.DirectoryUserId)
 	d.Set("hierarchy_group_id", user.HierarchyGroupId)
-	d.Set(names.AttrInstanceID, instanceID)
-	d.Set(names.AttrName, user.Username)
-	d.Set("routing_profile_id", user.RoutingProfileId)
-	d.Set("security_profile_ids", flex.FlattenStringSet(user.SecurityProfileIds))
-	d.Set("user_id", user.Id)
-
-	if err := d.Set("identity_info", flattenIdentityInfo(user.IdentityInfo)); err != nil {
+	if err := d.Set("identity_info", flattenUserIdentityInfo(user.IdentityInfo)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting identity_info: %s", err)
 	}
-
-	if err := d.Set("phone_config", flattenPhoneConfig(user.PhoneConfig)); err != nil {
+	d.Set(names.AttrInstanceID, instanceID)
+	d.Set(names.AttrName, user.Username)
+	if err := d.Set("phone_config", flattenUserPhoneConfig(user.PhoneConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting phone_config: %s", err)
 	}
+	d.Set("routing_profile_id", user.RoutingProfileId)
+	d.Set("security_profile_ids", user.SecurityProfileIds)
+	d.Set("user_id", user.Id)
 
-	setTagsOut(ctx, resp.User.Tags)
+	setTagsOut(ctx, user.Tags)
 
 	return diags
 }
 
 func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
-	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
-
-	instanceID, userID, err := UserParseID(d.Id())
-
+	instanceID, userID, err := userParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -277,25 +265,25 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			input.HierarchyGroupId = aws.String(v.(string))
 		}
 
-		_, err = conn.UpdateUserHierarchyWithContext(ctx, input)
+		_, err = conn.UpdateUserHierarchy(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating User hierarchy_group_id (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Connect User (%s) HierarchyGroupId: %s", d.Id(), err)
 		}
 	}
 
 	// updates to identity_info
 	if d.HasChange("identity_info") {
 		input := &connect.UpdateUserIdentityInfoInput{
-			IdentityInfo: expandIdentityInfo(d.Get("identity_info").([]interface{})),
+			IdentityInfo: expandUserIdentityInfo(d.Get("identity_info").([]interface{})),
 			InstanceId:   aws.String(instanceID),
 			UserId:       aws.String(userID),
 		}
 
-		_, err = conn.UpdateUserIdentityInfoWithContext(ctx, input)
+		_, err = conn.UpdateUserIdentityInfo(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating User identity_info (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Connect User (%s) IdentityInfo: %s", d.Id(), err)
 		}
 	}
 
@@ -303,14 +291,14 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	if d.HasChange("phone_config") {
 		input := &connect.UpdateUserPhoneConfigInput{
 			InstanceId:  aws.String(instanceID),
-			PhoneConfig: expandPhoneConfig(d.Get("phone_config").([]interface{})),
+			PhoneConfig: expandUserPhoneConfig(d.Get("phone_config").([]interface{})),
 			UserId:      aws.String(userID),
 		}
 
-		_, err = conn.UpdateUserPhoneConfigWithContext(ctx, input)
+		_, err = conn.UpdateUserPhoneConfig(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating User phone_config (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Connect User (%s) PhoneConfig: %s", d.Id(), err)
 		}
 	}
 
@@ -322,10 +310,10 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			UserId:           aws.String(userID),
 		}
 
-		_, err = conn.UpdateUserRoutingProfileWithContext(ctx, input)
+		_, err = conn.UpdateUserRoutingProfile(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating User routing_profile_id (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Connect User (%s) RoutingProfileId: %s", d.Id(), err)
 		}
 	}
 
@@ -333,14 +321,14 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	if d.HasChange("security_profile_ids") {
 		input := &connect.UpdateUserSecurityProfilesInput{
 			InstanceId:         aws.String(instanceID),
-			SecurityProfileIds: flex.ExpandStringSet(d.Get("security_profile_ids").(*schema.Set)),
+			SecurityProfileIds: flex.ExpandStringValueSet(d.Get("security_profile_ids").(*schema.Set)),
 			UserId:             aws.String(userID),
 		}
 
-		_, err = conn.UpdateUserSecurityProfilesWithContext(ctx, input)
+		_, err = conn.UpdateUserSecurityProfiles(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating User security_profile_ids (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Connect User (%s) SecurityProfileIds: %s", d.Id(), err)
 		}
 	}
 
@@ -349,135 +337,171 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
-	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
-
-	instanceID, userID, err := UserParseID(d.Id())
-
+	instanceID, userID, err := userParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	_, err = conn.DeleteUserWithContext(ctx, &connect.DeleteUserInput{
+	log.Printf("[DEBUG] Deleting Connect User: %s", d.Id())
+	_, err = conn.DeleteUser(ctx, &connect.DeleteUserInput{
 		InstanceId: aws.String(instanceID),
 		UserId:     aws.String(userID),
 	})
 
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
+	}
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting User (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Connect User (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func UserParseID(id string) (string, string, error) {
-	parts := strings.SplitN(id, ":", 2)
+const userResourceIDSeparator = ":"
+
+func userCreateResourceID(instanceID, userID string) string {
+	parts := []string{instanceID, userID}
+	id := strings.Join(parts, userResourceIDSeparator)
+
+	return id
+}
+
+func userParseResourceID(id string) (string, string, error) {
+	parts := strings.SplitN(id, userResourceIDSeparator, 2)
 
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		return "", "", fmt.Errorf("unexpected format of ID (%s), expected instanceID:userID", id)
+		return "", "", fmt.Errorf("unexpected format of ID (%[1]s), expected instanceID%[2]suserID", id, userResourceIDSeparator)
 	}
 
 	return parts[0], parts[1], nil
 }
 
-func expandIdentityInfo(identityInfo []interface{}) *connect.UserIdentityInfo {
-	if len(identityInfo) == 0 || identityInfo[0] == nil {
+func findUserByTwoPartKey(ctx context.Context, conn *connect.Client, instanceID, userID string) (*awstypes.User, error) {
+	input := &connect.DescribeUserInput{
+		InstanceId: aws.String(instanceID),
+		UserId:     aws.String(userID),
+	}
+
+	return findUser(ctx, conn, input)
+}
+
+func findUser(ctx context.Context, conn *connect.Client, input *connect.DescribeUserInput) (*awstypes.User, error) {
+	output, err := conn.DescribeUser(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.User == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.User, nil
+}
+
+func expandUserIdentityInfo(tfList []interface{}) *awstypes.UserIdentityInfo {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := identityInfo[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]interface{})
 	if !ok {
 		return nil
 	}
 
-	result := &connect.UserIdentityInfo{}
+	apiObject := &awstypes.UserIdentityInfo{}
 
 	if v, ok := tfMap[names.AttrEmail].(string); ok && v != "" {
-		result.Email = aws.String(v)
+		apiObject.Email = aws.String(v)
 	}
 
 	if v, ok := tfMap["first_name"].(string); ok && v != "" {
-		result.FirstName = aws.String(v)
+		apiObject.FirstName = aws.String(v)
 	}
 
 	if v, ok := tfMap["last_name"].(string); ok && v != "" {
-		result.LastName = aws.String(v)
+		apiObject.LastName = aws.String(v)
 	}
 
-	return result
+	return apiObject
 }
 
-func expandPhoneConfig(phoneConfig []interface{}) *connect.UserPhoneConfig {
-	if len(phoneConfig) == 0 || phoneConfig[0] == nil {
+func expandUserPhoneConfig(tfList []interface{}) *awstypes.UserPhoneConfig {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := phoneConfig[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]interface{})
 	if !ok {
 		return nil
 	}
 
-	result := &connect.UserPhoneConfig{
-		PhoneType: aws.String(tfMap["phone_type"].(string)),
+	apiObject := &awstypes.UserPhoneConfig{
+		PhoneType: awstypes.PhoneType(tfMap["phone_type"].(string)),
 	}
 
 	if v, ok := tfMap["after_contact_work_time_limit"].(int); ok && v >= 0 {
-		result.AfterContactWorkTimeLimit = aws.Int64(int64(v))
+		apiObject.AfterContactWorkTimeLimit = int32(v)
 	}
 
 	if v, ok := tfMap["auto_accept"].(bool); ok {
-		result.AutoAccept = aws.Bool(v)
+		apiObject.AutoAccept = v
 	}
 
 	if v, ok := tfMap["desk_phone_number"].(string); ok && v != "" {
-		result.DeskPhoneNumber = aws.String(v)
+		apiObject.DeskPhoneNumber = aws.String(v)
 	}
 
-	return result
+	return apiObject
 }
 
-func flattenIdentityInfo(identityInfo *connect.UserIdentityInfo) []interface{} {
-	if identityInfo == nil {
+func flattenUserIdentityInfo(apiObject *awstypes.UserIdentityInfo) []interface{} {
+	if apiObject == nil {
 		return []interface{}{}
 	}
 
-	values := map[string]interface{}{}
+	tfMap := map[string]interface{}{}
 
-	if v := identityInfo.Email; v != nil {
-		values[names.AttrEmail] = aws.StringValue(v)
+	if v := apiObject.Email; v != nil {
+		tfMap[names.AttrEmail] = aws.ToString(v)
 	}
 
-	if v := identityInfo.FirstName; v != nil {
-		values["first_name"] = aws.StringValue(v)
+	if v := apiObject.FirstName; v != nil {
+		tfMap["first_name"] = aws.ToString(v)
 	}
 
-	if v := identityInfo.LastName; v != nil {
-		values["last_name"] = aws.StringValue(v)
+	if v := apiObject.LastName; v != nil {
+		tfMap["last_name"] = aws.ToString(v)
 	}
 
-	return []interface{}{values}
+	return []interface{}{tfMap}
 }
 
-func flattenPhoneConfig(phoneConfig *connect.UserPhoneConfig) []interface{} {
-	if phoneConfig == nil {
+func flattenUserPhoneConfig(apiObject *awstypes.UserPhoneConfig) []interface{} {
+	if apiObject == nil {
 		return []interface{}{}
 	}
 
-	values := map[string]interface{}{
-		"phone_type": aws.StringValue(phoneConfig.PhoneType),
+	tfMap := map[string]interface{}{
+		"after_contact_work_time_limit": apiObject.AfterContactWorkTimeLimit,
+		"auto_accept":                   apiObject.AutoAccept,
+		"phone_type":                    apiObject.PhoneType,
 	}
 
-	if v := phoneConfig.AfterContactWorkTimeLimit; v != nil {
-		values["after_contact_work_time_limit"] = aws.Int64Value(v)
+	if v := apiObject.DeskPhoneNumber; v != nil {
+		tfMap["desk_phone_number"] = aws.ToString(v)
 	}
 
-	if v := phoneConfig.AutoAccept; v != nil {
-		values["auto_accept"] = aws.BoolValue(v)
-	}
-
-	if v := phoneConfig.DeskPhoneNumber; v != nil {
-		values["desk_phone_number"] = aws.StringValue(v)
-	}
-
-	return []interface{}{values}
+	return []interface{}{tfMap}
 }
