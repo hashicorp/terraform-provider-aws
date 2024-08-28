@@ -24,7 +24,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.27.31 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.30 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.12 // indirect
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.15 // indirect
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.16 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.16 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.16 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.1 // indirect
@@ -37,7 +37,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/amplify v1.24.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/apigateway v1.25.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/apigatewayv2 v1.22.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/appconfig v1.31.5 // indirect
+	github.com/aws/aws-sdk-go-v2/service/appconfig v1.32.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/appfabric v1.9.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/appflow v1.43.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/appintegrations v1.28.1 // indirect
@@ -112,7 +112,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.11.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/drs v1.28.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.34.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.176.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.177.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.32.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.25.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.45.2 // indirect
@@ -212,7 +212,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/rds v1.82.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.46.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.27.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.21.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.21.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/rekognition v1.43.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/resiliencehub v1.24.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.12.4 // indirect
@@ -226,7 +226,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/route53recoveryreadiness v1.19.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/route53resolver v1.30.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/rum v1.19.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.60.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.61.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.46.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.26.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.154.0 // indirect
@@ -257,7 +257,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/storagegateway v1.31.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.30.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/swf v1.25.5 // indirect
-	github.com/aws/aws-sdk-go-v2/service/synthetics v1.26.5 // indirect
+	github.com/aws/aws-sdk-go-v2/service/synthetics v1.26.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.2.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.27.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.39.4 // indirect
@@ -269,7 +269,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.51.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.32.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/worklink v1.22.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/workspaces v1.46.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/workspaces v1.46.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.21.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/xray v1.27.5 // indirect
 	github.com/aws/smithy-go v1.20.4 // indirect
@@ -354,7 +354,7 @@ require (
 	golang.org/x/tools v0.24.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240827150818-7e3bb234dfed // indirect
-	google.golang.org/grpc v1.65.0 // indirect
+	google.golang.org/grpc v1.66.0 // indirect
 	google.golang.org/protobuf v1.34.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
