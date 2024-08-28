@@ -183,6 +183,10 @@ copyright: ## [CI] Copyright Checks / add headers check
 	@copywrite headers
 
 deps-check: clean-tidy ## [CI] Dependency Checks / go_mod
+	@echo "----------------------------------------------------------------------go.mod"
+	cat go.mod
+	@echo "----------------------------------------------------------------------go.sum"
+	cat go.sum
 	@echo "make: Dependency Checks / go_mod..."
 	@git diff --exit-code -- go.mod go.sum || \
 		(echo; echo "Unexpected difference in go.mod/go.sum files. Run 'go mod tidy' command or revert any go.mod/go.sum changes and commit."; exit 1)
