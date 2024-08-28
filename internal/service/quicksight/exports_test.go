@@ -7,6 +7,7 @@ package quicksight
 var (
 	ResourceAccountSubscription = resourceAccountSubscription
 	ResourceAnalysis            = resourceAnalysis
+	ResourceDashboard           = resourceDashboard
 	ResourceFolderMembership    = newFolderMembershipResource
 	ResourceGroup               = resourceGroup
 	ResourceGroupMembership     = resourceGroupMembership
@@ -18,11 +19,13 @@ var (
 	ResourceUser                = resourceUser
 	ResourceVPCConnection       = newVPCConnectionResource
 
+	DashboardLatestVersion                = dashboardLatestVersion
 	DefaultGroupNamespace                 = defaultGroupNamespace
 	DefaultIAMPolicyAssignmentNamespace   = defaultIAMPolicyAssignmentNamespace
 	DefaultUserNamespace                  = defaultUserNamespace
 	FindAccountSubscriptionByID           = findAccountSubscriptionByID
 	FindAnalysisByTwoPartKey              = findAnalysisByTwoPartKey
+	FindDashboardByThreePartKey           = findDashboardByThreePartKey
 	FindFolderMembershipByFourPartKey     = findFolderMembershipByFourPartKey
 	FindGroupByThreePartKey               = findGroupByThreePartKey
 	FindGroupMembershipByFourPartKey      = findGroupMembershipByFourPartKey

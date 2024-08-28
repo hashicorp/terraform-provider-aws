@@ -487,10 +487,7 @@ func waitAnalysisCreated(ctx context.Context, conn *quicksight.Client, awsAccoun
 
 	if output, ok := outputRaw.(*awstypes.Analysis); ok {
 		if status, apiErrors := output.Status, output.Errors; status == awstypes.ResourceStatusCreationFailed && apiErrors != nil {
-			errs := tfslices.ApplyToAll(apiErrors, func(v awstypes.AnalysisError) error {
-				return fmt.Errorf("%s: %s", v.Type, aws.ToString(v.Message))
-			})
-			tfresource.SetLastError(err, errors.Join(errs...))
+			tfresource.SetLastError(err, analysisError(apiErrors))
 		}
 
 		return output, err
@@ -511,14 +508,19 @@ func waitAnalysisUpdated(ctx context.Context, conn *quicksight.Client, awsAccoun
 
 	if output, ok := outputRaw.(*awstypes.Analysis); ok {
 		if status, apiErrors := output.Status, output.Errors; status == awstypes.ResourceStatusUpdateFailed && apiErrors != nil {
-			errs := tfslices.ApplyToAll(apiErrors, func(v awstypes.AnalysisError) error {
-				return fmt.Errorf("%s: %s", v.Type, aws.ToString(v.Message))
-			})
-			tfresource.SetLastError(err, errors.Join(errs...))
+			tfresource.SetLastError(err, analysisError(apiErrors))
 		}
 
 		return output, err
 	}
 
 	return nil, err
+}
+
+func analysisError(apiObjects []awstypes.AnalysisError) error {
+	errs := tfslices.ApplyToAll(apiObjects, func(v awstypes.AnalysisError) error {
+		return fmt.Errorf("%s: %s", v.Type, aws.ToString(v.Message))
+	})
+
+	return errors.Join(errs...)
 }
