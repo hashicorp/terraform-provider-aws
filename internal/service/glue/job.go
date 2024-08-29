@@ -115,6 +115,10 @@ func ResourceJob() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"job_run_queuing_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			names.AttrMaxCapacity: {
 				Type:          schema.TypeFloat,
 				Optional:      true,
@@ -229,6 +233,10 @@ func resourceJobCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.GlueVersion = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("job_run_queuing_enabled"); ok {
+		input.JobRunQueuingEnabled = aws.Bool(v.(bool))
+	}
+
 	if v, ok := d.GetOk(names.AttrMaxCapacity); ok {
 		input.MaxCapacity = aws.Float64(v.(float64))
 	}
@@ -313,6 +321,7 @@ func resourceJobRead(ctx context.Context, d *schema.ResourceData, meta interface
 		return sdkdiag.AppendErrorf(diags, "setting execution_property: %s", err)
 	}
 	d.Set("glue_version", job.GlueVersion)
+	d.Set("job_run_queuing_enabled", job.JobRunQueuingEnabled)
 	d.Set("maintenance_window", job.MaintenanceWindow)
 	d.Set(names.AttrMaxCapacity, job.MaxCapacity)
 	d.Set("max_retries", job.MaxRetries)
@@ -364,6 +373,10 @@ func resourceJobUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 		if v, ok := d.GetOk("glue_version"); ok {
 			jobUpdate.GlueVersion = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("job_run_queuing_enabled"); ok {
+			jobUpdate.JobRunQueuingEnabled = aws.Bool(v.(bool))
 		}
 
 		if v, ok := d.GetOk("maintenance_window"); ok {
