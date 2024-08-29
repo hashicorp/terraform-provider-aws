@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -121,6 +122,38 @@ func TestAccQuickSightRefreshSchedule_weeklyRefresh(t *testing.T) {
 	})
 }
 
+func TestAccQuickSightRefreshSchedule_invalidWeeklyRefresh(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	sId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRefreshScheduleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRefreshScheduleConfig_WeeklyRefresh_NoRefreshOnDay(rId, rName, sId),
+				ExpectError: fwdiag.ExpectAttributeRequiredWhenError(
+					"schedule[0].schedule_frequency[0].refresh_on_day[0].day_of_week",
+					"schedule[0].schedule_frequency[0].interval",
+					quicksight.RefreshIntervalWeekly,
+				),
+			},
+			{
+				Config: testAccRefreshScheduleConfig_WeeklyRefresh_NoDayOfWeek(rId, rName, sId),
+				ExpectError: fwdiag.ExpectAttributeRequiredWhenError(
+					"schedule[0].schedule_frequency[0].refresh_on_day[0].day_of_week",
+					"schedule[0].schedule_frequency[0].interval",
+					quicksight.RefreshIntervalWeekly,
+				),
+			},
+		},
+	})
+}
+
 func TestAccQuickSightRefreshSchedule_monthlyRefresh(t *testing.T) {
 	ctx := acctest.Context(t)
 	var schedule quicksight.RefreshSchedule
@@ -153,6 +186,86 @@ func TestAccQuickSightRefreshSchedule_monthlyRefresh(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccQuickSightRefreshSchedule_invalidMonthlyRefresh(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	sId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRefreshScheduleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRefreshScheduleConfig_MonthlyRefresh_NoRefreshOnDay(rId, rName, sId),
+				ExpectError: fwdiag.ExpectAttributeRequiredWhenError(
+					"schedule[0].schedule_frequency[0].refresh_on_day[0].day_of_month",
+					"schedule[0].schedule_frequency[0].interval",
+					quicksight.RefreshIntervalMonthly,
+				),
+			},
+			{
+				Config: testAccRefreshScheduleConfig_MonthlyRefresh_NoDayOfMonth(rId, rName, sId),
+				ExpectError: fwdiag.ExpectAttributeRequiredWhenError(
+					"schedule[0].schedule_frequency[0].refresh_on_day[0].day_of_month",
+					"schedule[0].schedule_frequency[0].interval",
+					quicksight.RefreshIntervalMonthly,
+				),
+			},
+		},
+	})
+}
+
+func TestAccQuickSightRefreshSchedule_invalidRefreshInterval(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	sId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRefreshScheduleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRefreshScheduleConfig_InvalidRefreshInterval(rId, rName, sId, quicksight.RefreshIntervalDaily),
+				ExpectError: fwdiag.ExpectAttributeConflictsWhenError(
+					"schedule[0].schedule_frequency[0].refresh_on_day",
+					"schedule[0].schedule_frequency[0].interval",
+					quicksight.RefreshIntervalDaily,
+				),
+			},
+			{
+				Config: testAccRefreshScheduleConfig_InvalidRefreshInterval(rId, rName, sId, quicksight.RefreshIntervalHourly),
+				ExpectError: fwdiag.ExpectAttributeConflictsWhenError(
+					"schedule[0].schedule_frequency[0].refresh_on_day",
+					"schedule[0].schedule_frequency[0].interval",
+					quicksight.RefreshIntervalHourly,
+				),
+			},
+			{
+				Config: testAccRefreshScheduleConfig_InvalidRefreshInterval(rId, rName, sId, quicksight.RefreshIntervalMinute30),
+				ExpectError: fwdiag.ExpectAttributeConflictsWhenError(
+					"schedule[0].schedule_frequency[0].refresh_on_day",
+					"schedule[0].schedule_frequency[0].interval",
+					quicksight.RefreshIntervalMinute30,
+				),
+			},
+			{
+				Config: testAccRefreshScheduleConfig_InvalidRefreshInterval(rId, rName, sId, quicksight.RefreshIntervalMinute15),
+				ExpectError: fwdiag.ExpectAttributeConflictsWhenError(
+					"schedule[0].schedule_frequency[0].refresh_on_day",
+					"schedule[0].schedule_frequency[0].interval",
+					quicksight.RefreshIntervalMinute15,
+				),
 			},
 		},
 	})
@@ -283,6 +396,42 @@ resource "aws_quicksight_refresh_schedule" "test" {
 `, sId))
 }
 
+func testAccRefreshScheduleConfig_WeeklyRefresh_NoRefreshOnDay(rId, rName, sId string) string {
+	return acctest.ConfigCompose(
+		testAccBaseRefreshScheduleConfig(rId, rName),
+		fmt.Sprintf(`
+resource "aws_quicksight_refresh_schedule" "test" {
+  data_set_id = aws_quicksight_data_set.test.data_set_id
+  schedule_id = %[1]q
+  schedule {
+    refresh_type = "FULL_REFRESH"
+    schedule_frequency {
+      interval = "WEEKLY"
+    }
+  }
+}
+`, sId))
+}
+
+func testAccRefreshScheduleConfig_WeeklyRefresh_NoDayOfWeek(rId, rName, sId string) string {
+	return acctest.ConfigCompose(
+		testAccBaseRefreshScheduleConfig(rId, rName),
+		fmt.Sprintf(`
+resource "aws_quicksight_refresh_schedule" "test" {
+  data_set_id = aws_quicksight_data_set.test.data_set_id
+  schedule_id = %[1]q
+  schedule {
+    refresh_type = "FULL_REFRESH"
+    schedule_frequency {
+      interval = "WEEKLY"
+      refresh_on_day {
+      }
+    }
+  }
+}
+`, sId))
+}
+
 func testAccRefreshScheduleConfigMonthlyRefresh(rId, rName, sId string) string {
 	return acctest.ConfigCompose(
 		testAccBaseRefreshScheduleConfig(rId, rName),
@@ -301,4 +450,59 @@ resource "aws_quicksight_refresh_schedule" "test" {
   }
 }
 `, sId))
+}
+
+func testAccRefreshScheduleConfig_MonthlyRefresh_NoRefreshOnDay(rId, rName, sId string) string {
+	return acctest.ConfigCompose(
+		testAccBaseRefreshScheduleConfig(rId, rName),
+		fmt.Sprintf(`
+resource "aws_quicksight_refresh_schedule" "test" {
+  data_set_id = aws_quicksight_data_set.test.data_set_id
+  schedule_id = %[1]q
+  schedule {
+    refresh_type = "FULL_REFRESH"
+    schedule_frequency {
+      interval = "MONTHLY"
+    }
+  }
+}
+`, sId))
+}
+
+func testAccRefreshScheduleConfig_MonthlyRefresh_NoDayOfMonth(rId, rName, sId string) string {
+	return acctest.ConfigCompose(
+		testAccBaseRefreshScheduleConfig(rId, rName),
+		fmt.Sprintf(`
+resource "aws_quicksight_refresh_schedule" "test" {
+  data_set_id = aws_quicksight_data_set.test.data_set_id
+  schedule_id = %[1]q
+  schedule {
+    refresh_type = "FULL_REFRESH"
+    schedule_frequency {
+      interval = "MONTHLY"
+      refresh_on_day {
+      }
+    }
+  }
+}
+`, sId))
+}
+
+func testAccRefreshScheduleConfig_InvalidRefreshInterval(rId, rName, sId, interval string) string {
+	return acctest.ConfigCompose(
+		testAccBaseRefreshScheduleConfig(rId, rName),
+		fmt.Sprintf(`
+resource "aws_quicksight_refresh_schedule" "test" {
+  data_set_id = aws_quicksight_data_set.test.data_set_id
+  schedule_id = %[1]q
+  schedule {
+    refresh_type = "FULL_REFRESH"
+    schedule_frequency {
+      interval = %[2]q
+      refresh_on_day {
+      }
+    }
+  }
+}
+`, sId, interval))
 }
