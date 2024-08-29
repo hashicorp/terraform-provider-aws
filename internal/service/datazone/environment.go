@@ -26,8 +26,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -60,15 +61,49 @@ func (r *resourceEnvironment) Metadata(_ context.Context, req resource.MetadataR
 func (r *resourceEnvironment) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			names.AttrCreatedAt: schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"created_by": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"custom_parameters": schema.ListAttribute{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[resourceCustomParameterData](ctx),
+				Computed:   true,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"deployment_parameters": schema.ListAttribute{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[resourceDeploymentPropertiesData](ctx),
+				Computed:   true,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"description": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"domain_identifier": schema.StringAttribute{
+				Required: true,
 			},
 			"environment_account_identifier": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"environment_account_region": schema.StringAttribute{
@@ -76,29 +111,15 @@ func (r *resourceEnvironment) Schema(ctx context.Context, req resource.SchemaReq
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
-			},
-			names.AttrCreatedAt: schema.StringAttribute{
-				CustomType: timetypes.RFC3339Type{},
-				Computed:   true,
-			},
-			"created_by": schema.StringAttribute{
-				Computed: true,
-			},
-			"custom_parameters": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[resourceCustomParameterData](ctx),
-				Computed:   true,
-			},
-			"deployment_parameters": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[resourceDeploymentPropertiesData](ctx), // double cehck this
-				Computed:   true,
-			},
-			"domain_identifier": schema.StringAttribute{
-				Required: true,
 			},
 			"environment_actions": schema.ListAttribute{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[resourceEnvironmentActionData](ctx),
 				Computed:   true,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"environment_blueprint_identifier": schema.StringAttribute{
 				Optional: true,
@@ -114,12 +135,13 @@ func (r *resourceEnvironment) Schema(ctx context.Context, req resource.SchemaReq
 				CustomType: fwtypes.ListOfStringType,
 				Optional:   true,
 			},
-			"id": schema.StringAttribute{ // fix this i forgot
-				Computed: true,
-			},
+			"id": framework.IDAttribute(),
 			"last_deployment": schema.ListAttribute{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[resourceLastDeployment](ctx),
 				Computed:   true,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"name": schema.StringAttribute{
 				Required: true,
@@ -132,6 +154,9 @@ func (r *resourceEnvironment) Schema(ctx context.Context, req resource.SchemaReq
 			},
 			"provider_environment": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"provisioned_resources": schema.ListAttribute{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[resourceProvisionedResourcesData](ctx),
@@ -139,14 +164,6 @@ func (r *resourceEnvironment) Schema(ctx context.Context, req resource.SchemaReq
 			},
 			"provisioning_properties": schema.ListAttribute{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[resourceProvisionPropertiesData](ctx),
-				Computed:   true,
-			},
-			"status": schema.StringAttribute{
-				CustomType: fwtypes.StringEnumType[awstypes.EnvironmentStatus](),
-				Computed:   true,
-			},
-			"updated_at": schema.StringAttribute{
-				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 			},
 		},
@@ -178,28 +195,22 @@ func (r *resourceEnvironment) Schema(ctx context.Context, req resource.SchemaReq
 
 func (r *resourceEnvironment) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
+
 	var plan resourceEnvironmentData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	fmt.Printf("plan: %v\n", plan)
-	fmt.Printf("plan.DomainIdentifier: %v\n", plan.DomainIdentifier)
-	fmt.Printf("plan.ProjectIdentifier: %v\n", plan.ProjectIdentifier)
-	fmt.Printf("plan.EnvironmentProfileIdentifier: %v\n", plan.EnvironmentProfileIdentifier)
-	fmt.Printf("plan.EnvironmentBlueprintId: %v\n", plan.EnvironmentBlueprintId)
-	fmt.Printf("plan.AwsAccountId: %v\n", plan.AwsAccountId)
-	fmt.Printf("plan.AwsAccountRegion: %v\n", plan.AwsAccountRegion)
-	fmt.Printf("plan.Name: %v\n", plan.Name)
 
-	option := flex.WithIgnoredFieldNames([]string{"UserParameters", "CustomParameters"})
 	in := &datazone.CreateEnvironmentInput{}
-	resp.Diagnostics.Append(flex.Expand(ctx, &plan, in)...)
+	resp.Diagnostics.Append(fwflex.Expand(ctx, &plan, in)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	out, err := conn.CreateEnvironment(ctx, in)
+
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.DataZone, create.ErrActionCreating, ResNameEnvironment, plan.Name.String(), err),
@@ -207,6 +218,7 @@ func (r *resourceEnvironment) Create(ctx context.Context, req resource.CreateReq
 		)
 		return
 	}
+
 	if out == nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.DataZone, create.ErrActionCreating, ResNameEnvironment, plan.Name.String(), nil),
@@ -215,16 +227,22 @@ func (r *resourceEnvironment) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan, option)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	resp.Diagnostics.Append(flex.Flatten(ctx, out.UserParameters, &plan.CustomParameters)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	state := plan
+	state.Id = fwflex.StringToFramework(ctx, out.Id)
+
+	//resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan, flex.WithIgnoredFieldNames([]string{"UserParameters", "CustomParameters"}))...)
+	//if resp.Diagnostics.HasError() {
+	//	return
+	//}
+	//
+	//resp.Diagnostics.Append(flex.Flatten(ctx, out.UserParameters, &plan.CustomParameters)...)
+	//if resp.Diagnostics.HasError() {
+	//	return
+	//}
+	//
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitEnvironmentCreated(ctx, conn, plan.DomainIdentifier.ValueString(), plan.Id.ValueString(), createTimeout)
+	output, err := waitEnvironmentCreated(ctx, conn, state.DomainIdentifier.ValueString(), state.Id.ValueString(), createTimeout)
+
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.DataZone, create.ErrActionWaitingForCreation, ResNameEnvironment, plan.Name.String(), err),
@@ -233,22 +251,32 @@ func (r *resourceEnvironment) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, output, &state)...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
+
 func (r *resourceEnvironment) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
 	var state resourceEnvironmentData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	out, err := findEnvironmentByID(ctx, conn, state.DomainIdentifier.ValueString(), state.Id.ValueString())
 	if tfresource.NotFound(err) {
+		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
+
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.DataZone, create.ErrActionSetting, ResNameEnvironment, state.Id.String(), err),
@@ -256,7 +284,9 @@ func (r *resourceEnvironment) Read(ctx context.Context, req resource.ReadRequest
 		)
 		return
 	}
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
+
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &state)...)
+
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -279,10 +309,12 @@ func (r *resourceEnvironment) Update(ctx context.Context, req resource.UpdateReq
 		!plan.GlossaryTerms.Equal(state.GlossaryTerms) {
 
 		in := &datazone.UpdateEnvironmentInput{}
-		resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
+		resp.Diagnostics.Append(fwflex.Expand(ctx, plan, in)...)
+
 		if resp.Diagnostics.HasError() {
 			return
 		}
+
 		out, err := conn.UpdateEnvironment(ctx, in)
 		if err != nil {
 			resp.Diagnostics.AddError(
@@ -291,6 +323,7 @@ func (r *resourceEnvironment) Update(ctx context.Context, req resource.UpdateReq
 			)
 			return
 		}
+
 		if out == nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.DataZone, create.ErrActionUpdating, ResNameEnvironment, plan.Id.String(), nil),
@@ -299,16 +332,16 @@ func (r *resourceEnvironment) Update(ctx context.Context, req resource.UpdateReq
 			return
 		}
 
-	}
+		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
+		_, err = waitEnvironmentUpdated(ctx, conn, plan.DomainIdentifier.ValueString(), plan.Id.ValueString(), updateTimeout)
 
-	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	_, err := waitEnvironmentUpdated(ctx, conn, plan.DomainIdentifier.ValueString(), plan.Id.ValueString(), updateTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionWaitingForUpdate, ResNameEnvironment, plan.Id.String(), err),
-			err.Error(),
-		)
-		return
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.DataZone, create.ErrActionWaitingForUpdate, ResNameEnvironment, plan.Id.String(), err),
+				err.Error(),
+			)
+			return
+		}
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
@@ -319,6 +352,7 @@ func (r *resourceEnvironment) Delete(ctx context.Context, req resource.DeleteReq
 
 	var state resourceEnvironmentData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -329,10 +363,12 @@ func (r *resourceEnvironment) Delete(ctx context.Context, req resource.DeleteReq
 	}
 
 	_, err := conn.DeleteEnvironment(ctx, in)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
+
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
-		}
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.DataZone, create.ErrActionDeleting, ResNameEnvironment, state.Id.String(), err),
 			err.Error(),
@@ -340,9 +376,9 @@ func (r *resourceEnvironment) Delete(ctx context.Context, req resource.DeleteReq
 		return
 	}
 
-	// TIP: -- 5. Use a waiter to wait for delete to complete
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
 	_, err = waitEnvironmentDeleted(ctx, conn, state.DomainIdentifier.ValueString(), state.Id.ValueString(), deleteTimeout)
+	
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.DataZone, create.ErrActionWaitingForDeletion, ResNameEnvironment, state.Id.String(), err),
@@ -429,21 +465,22 @@ func statusEnvironment(ctx context.Context, conn *datazone.Client, domainId stri
 	}
 }
 
-func findEnvironmentByID(ctx context.Context, conn *datazone.Client, domainId string, id string) (*datazone.GetEnvironmentOutput, error) {
+func findEnvironmentByID(ctx context.Context, conn *datazone.Client, domainId, id string) (*datazone.GetEnvironmentOutput, error) {
 	in := &datazone.GetEnvironmentInput{
 		DomainIdentifier: aws.String(domainId),
 		Identifier:       aws.String(id),
 	}
 
 	out, err := conn.GetEnvironment(ctx, in)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
 
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
