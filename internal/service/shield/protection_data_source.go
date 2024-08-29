@@ -38,13 +38,15 @@ func (d *dataSourceProtection) Schema(ctx context.Context, req datasource.Schema
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrResourceARN: schema.StringAttribute{
-				Optional: true,
-			},
+			names.AttrID:  framework.IDAttribute(),
 			"protection_id": schema.StringAttribute{
 				Optional: true,
+				Computed: true,
 			},
-			names.AttrID: framework.IDAttribute(),
+			names.AttrResourceARN: schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -73,16 +75,16 @@ func (d *dataSourceProtection) Read(ctx context.Context, req datasource.ReadRequ
 	}
 
 	data.ARN = flex.StringToFramework(ctx, out.ProtectionArn)
-	data.ResourceArn = flex.StringToFramework(ctx, out.ResourceArn)
 	data.ID = flex.StringToFramework(ctx, out.Id)
 	data.ProtectionId = flex.StringToFramework(ctx, out.Id)
+	data.ResourceArn = flex.StringToFramework(ctx, out.ResourceArn)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 type dataSourceProtectionData struct {
 	ARN          types.String `tfsdk:"arn"`
-	ResourceArn  types.String `tfsdk:"resource_arn"`
-	ProtectionId types.String `tfsdk:"protection_id"`
 	ID           types.String `tfsdk:"id"`
+	ProtectionId types.String `tfsdk:"protection_id"`
+	ResourceArn  types.String `tfsdk:"resource_arn"`
 }
