@@ -70,7 +70,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Group",
 		},
 		{
-			Factory:  DataSourceTheme,
+			Factory:  dataSourceTheme,
 			TypeName: "aws_quicksight_theme",
 			Name:     "Theme",
 		},
