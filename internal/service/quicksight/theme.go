@@ -306,28 +306,7 @@ func resourceTheme() *schema.Resource {
 					Required:     true,
 					ValidateFunc: validation.StringLenBetween(1, 2048),
 				},
-				names.AttrPermissions: {
-					Type:     schema.TypeList,
-					Optional: true,
-					MinItems: 1,
-					MaxItems: 64,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							names.AttrActions: {
-								Type:     schema.TypeSet,
-								Required: true,
-								MinItems: 1,
-								MaxItems: 16,
-								Elem:     &schema.Schema{Type: schema.TypeString},
-							},
-							names.AttrPrincipal: {
-								Type:         schema.TypeString,
-								Required:     true,
-								ValidateFunc: validation.StringLenBetween(1, 256),
-							},
-						},
-					},
-				},
+				names.AttrPermissions: quicksightschema.PermissionsSchema(),
 				names.AttrStatus: {
 					Type:     schema.TypeString,
 					Computed: true,
@@ -372,8 +351,8 @@ func resourceThemeCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.Configuration = expandThemeConfiguration(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk(names.AttrPermissions); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Permissions = quicksightschema.ExpandResourcePermissions(v.([]interface{}))
+	if v, ok := d.Get(names.AttrPermissions).(*schema.Set); ok && v.Len() > 0 {
+		input.Permissions = quicksightschema.ExpandResourcePermissions(v.List())
 	}
 
 	if v, ok := d.GetOk("version_description"); ok {
@@ -477,8 +456,8 @@ func resourceThemeUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if d.HasChange(names.AttrPermissions) {
 		o, n := d.GetChange(names.AttrPermissions)
-		os, ns := o.([]interface{}), n.([]interface{})
-		toGrant, toRevoke := quicksightschema.DiffPermissions(os, ns)
+		os, ns := o.(*schema.Set), n.(*schema.Set)
+		toGrant, toRevoke := quicksightschema.DiffPermissions(os.List(), ns.List())
 
 		input := &quicksight.UpdateThemePermissionsInput{
 			AwsAccountId: aws.String(awsAccountID),

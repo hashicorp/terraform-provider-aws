@@ -7,9 +7,35 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func PermissionsSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeSet,
+		Optional: true,
+		MinItems: 1,
+		MaxItems: 64,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				names.AttrActions: {
+					Type:     schema.TypeSet,
+					Required: true,
+					MinItems: 1,
+					MaxItems: 16,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrPrincipal: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 256),
+				},
+			},
+		},
+	}
+}
 
 func ExpandResourcePermissions(tfList []interface{}) []awstypes.ResourcePermission {
 	apiObjects := make([]awstypes.ResourcePermission, len(tfList))

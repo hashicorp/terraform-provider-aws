@@ -87,30 +87,9 @@ func resourceDashboard() *schema.Resource {
 					Required:     true,
 					ValidateFunc: validation.StringLenBetween(1, 2048),
 				},
-				names.AttrParameters: quicksightschema.ParametersSchema(),
-				names.AttrPermissions: {
-					Type:     schema.TypeSet,
-					Optional: true,
-					MinItems: 1,
-					MaxItems: 64,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							names.AttrActions: {
-								Type:     schema.TypeSet,
-								Required: true,
-								MinItems: 1,
-								MaxItems: 16,
-								Elem:     &schema.Schema{Type: schema.TypeString},
-							},
-							names.AttrPrincipal: {
-								Type:         schema.TypeString,
-								Required:     true,
-								ValidateFunc: validation.StringLenBetween(1, 256),
-							},
-						},
-					},
-				},
-				"source_entity": quicksightschema.DashboardSourceEntitySchema(),
+				names.AttrParameters:  quicksightschema.ParametersSchema(),
+				names.AttrPermissions: quicksightschema.PermissionsSchema(),
+				"source_entity":       quicksightschema.DashboardSourceEntitySchema(),
 				"source_entity_arn": {
 					Type:     schema.TypeString,
 					Computed: true,

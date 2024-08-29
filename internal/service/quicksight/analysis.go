@@ -88,29 +88,8 @@ func resourceAnalysis() *schema.Resource {
 					Required:     true,
 					ValidateFunc: validation.StringLenBetween(1, 2048),
 				},
-				names.AttrParameters: quicksightschema.ParametersSchema(),
-				names.AttrPermissions: {
-					Type:     schema.TypeSet,
-					Optional: true,
-					MinItems: 1,
-					MaxItems: 64,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							names.AttrActions: {
-								Type:     schema.TypeSet,
-								Required: true,
-								MinItems: 1,
-								MaxItems: 16,
-								Elem:     &schema.Schema{Type: schema.TypeString},
-							},
-							names.AttrPrincipal: {
-								Type:         schema.TypeString,
-								Required:     true,
-								ValidateFunc: validation.StringLenBetween(1, 256),
-							},
-						},
-					},
-				},
+				names.AttrParameters:  quicksightschema.ParametersSchema(),
+				names.AttrPermissions: quicksightschema.PermissionsSchema(),
 				"recovery_window_in_days": {
 					Type:     schema.TypeInt,
 					Optional: true,
