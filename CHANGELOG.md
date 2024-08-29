@@ -32,6 +32,7 @@ BUG FIXES:
 * resource/aws_elbv2_listener: Fix crash when reading forward actions not configured in state ([#39039](https://github.com/hashicorp/terraform-provider-aws/issues/39039))
 * resource/aws_emr_instance_group: Properly send an `instance_count` value of `0` on create when configured ([#37740](https://github.com/hashicorp/terraform-provider-aws/issues/37740))
 * resource/aws_gamelift_game_server_group: Fix crash while reading server group with a nil auto scaling group ARN ([#39022](https://github.com/hashicorp/terraform-provider-aws/issues/39022))
+* resource/aws_guardduty_invite_accepter: Fix `BadRequestException: The request is rejected because an invalid or out-of-range value is specified as an input parameter` errors on resource Create ([#39084](https://github.com/hashicorp/terraform-provider-aws/issues/39084))
 * resource/aws_lakeformation_permissions: Fix error when revoking `data_cells_filter` permissions ([#39026](https://github.com/hashicorp/terraform-provider-aws/issues/39026))
 * resource/aws_neptune_cluster: Mark `neptune_cluster_parameter_group_name` as Computed ([#38980](https://github.com/hashicorp/terraform-provider-aws/issues/38980))
 * resource/aws_neptune_cluster_instance: Mark `neptune_parameter_group_name` as Computed ([#38980](https://github.com/hashicorp/terraform-provider-aws/issues/38980))
