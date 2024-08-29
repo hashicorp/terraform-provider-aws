@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"strconv"
 
 	"github.com/YakDriver/regexache"
@@ -253,8 +254,17 @@ func dataSourceCoreNetworkPolicyDocument() *schema.Resource {
 										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"edge_sets": setOfString,
-												"use_edge": {
+												"edge_sets": {
+													Type: schema.TypeSet,
+													Elem: &schema.Schema{
+														Type: schema.TypeSet,
+														Elem: &schema.Schema{
+															Type: schema.TypeString,
+														},
+													},
+													Optional: true,
+												},
+												"use_edge_location": {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
@@ -526,11 +536,16 @@ func expandCoreNetworkPolicySegmentActions(tfList []interface{}) ([]*coreNetwork
 						apiObject := &coreNetworkPolicySegmentActionViaEdgeOverride{}
 
 						if v := tfMap["edge_sets"].(*schema.Set).List(); len(v) > 0 {
-							apiObject.EdgeSets = coreNetworkPolicyExpandStringList(v)
+							var edgeSets [][]string
+							for _, esRaw := range v {
+								es := esRaw.(*schema.Set)
+								edgeSets = append(edgeSets, flex.ExpandStringValueSet(es))
+							}
+							apiObject.EdgeSets = edgeSets
 						}
 
-						if v, ok := tfMap["use_edge"]; ok {
-							apiObject.UseEdge = v.(string)
+						if v, ok := tfMap["use_edge_location"]; ok {
+							apiObject.UseEdgeLocation = v.(string)
 						}
 
 						apiObjects = append(apiObjects, apiObject)
