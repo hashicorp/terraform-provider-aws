@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package quicksight
+package schema
 
 import (
 	"github.com/aws/aws-sdk-go-v2/aws"
