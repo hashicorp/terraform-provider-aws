@@ -1968,8 +1968,7 @@ func drainWarmPool(ctx context.Context, conn *autoscaling.Client, name string, t
 func findELBInstanceStates(ctx context.Context, conn *elasticloadbalancing.Client, g *awstypes.AutoScalingGroup) (map[string]map[string]string, error) {
 	instanceStates := make(map[string]map[string]string)
 
-	for _, v := range g.LoadBalancerNames {
-		lbName := v
+	for _, lbName := range g.LoadBalancerNames {
 		input := &elasticloadbalancing.DescribeInstanceHealthInput{
 			LoadBalancerName: aws.String(lbName),
 		}
@@ -2002,8 +2001,7 @@ func findELBInstanceStates(ctx context.Context, conn *elasticloadbalancing.Clien
 func findELBV2InstanceStates(ctx context.Context, conn *elasticloadbalancingv2.Client, g *awstypes.AutoScalingGroup) (map[string]map[string]string, error) {
 	instanceStates := make(map[string]map[string]string)
 
-	for _, v := range g.TargetGroupARNs {
-		targetGroupARN := v
+	for _, targetGroupARN := range g.TargetGroupARNs {
 		input := &elasticloadbalancingv2.DescribeTargetHealthInput{
 			TargetGroupArn: aws.String(targetGroupARN),
 		}

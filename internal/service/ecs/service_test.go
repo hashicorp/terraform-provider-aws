@@ -50,7 +50,6 @@ func Test_GetRoleNameFromARN(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			if got := tfecs.RoleNameFromARN(tt.arn); got != tt.want {
@@ -76,7 +75,6 @@ func TestClustereNameFromARN(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			if got := tfecs.ClusterNameFromARN(tt.arn); got != tt.want {

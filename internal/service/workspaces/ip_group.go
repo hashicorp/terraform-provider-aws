@@ -157,8 +157,7 @@ func resourceIPGroupDelete(ctx context.Context, d *schema.ResourceData, meta int
 			diags = sdkdiag.AppendErrorf(diags, "describing WorkSpaces Directories: %s", err)
 		}
 		for _, dir := range out.Directories {
-			for _, ipg := range dir.IpGroupIds {
-				groupID := ipg
+			for _, groupID := range dir.IpGroupIds {
 				if groupID == d.Id() {
 					found = true
 					log.Printf("[DEBUG] WorkSpaces IP Group (%s) associated with WorkSpaces Directory (%s), disassociating", groupID, aws.ToString(dir.DirectoryId))
