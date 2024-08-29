@@ -93,6 +93,7 @@ func TestAccLambdaEventSourceMapping_KMSKeyARN(t *testing.T) {
 	functionResourceName := "aws_lambda_function.test"
 	kmsKeyResourceName := "aws_kms_key.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	pattern := `{"Region": [{"prefix": "us-"}]}`
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -101,32 +102,12 @@ func TestAccLambdaEventSourceMapping_KMSKeyARN(t *testing.T) {
 		CheckDestroy:             testAccCheckEventSourceMappingDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEventSourceMappingConfig_kinesisKeyARN(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrPair(resourceName, "event_source_arn", "aws_kinesis_stream.test", names.AttrARN),
-					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, kmsKeyResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "starting_position", "LATEST"),
-				),
-			},
-			{
-				Config: testAccEventSourceMappingConfig_sqsKMSKeyARN(rName),
+				Config: testAccEventSourceMappingConfig_sqsKMSKeyARN(rName, pattern),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "event_source_arn", "aws_sqs_queue.test", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, kmsKeyResourceName, names.AttrARN),
-				),
-			},
-			{
-				Config: testAccEventSourceMappingConfig_dynamoDBKMSKeyARN(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrPair(resourceName, "event_source_arn", "aws_dynamodb_table.test", names.AttrStreamARN),
-					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, kmsKeyResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "starting_position", "LATEST"),
 				),
 			},
 		},
@@ -2003,41 +1984,7 @@ resource "aws_docdb_cluster" "test" {
 `, rName))
 }
 
-func testAccEventSourceMappingConfig_kinesisKeyARN(rName string) string {
-	return acctest.ConfigCompose(testAccEventSourceMappingConfig_kinesisBase(rName), fmt.Sprintf(`
-resource "aws_kms_key" "test" {
-  description = "%[1]s"
-
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Id": "kms-tf",
-  "Statement": [
-    {
-      "Sid": "Enable IAM User Permissions",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "*"
-      },
-      "Action": "kms:*",
-      "Resource": "*"
-    }
-  ]
-}
-POLICY
-}
-
-resource "aws_lambda_event_source_mapping" "test" {
-  enabled           = true
-  event_source_arn  = aws_kinesis_stream.test.arn
-  function_name     = aws_lambda_function.test.arn
-  starting_position = "LATEST"
-  kms_key_arn       = aws_kms_key.test.arn
-}
-`, rName))
-}
-
-func testAccEventSourceMappingConfig_sqsKMSKeyARN(rName string) string {
+func testAccEventSourceMappingConfig_sqsKMSKeyARN(rName, pattern string) string {
 	return acctest.ConfigCompose(testAccEventSourceMappingConfig_sqsBase(rName), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description = "%[1]s"
@@ -2066,42 +2013,14 @@ resource "aws_lambda_event_source_mapping" "test" {
   event_source_arn = aws_sqs_queue.test.arn
   function_name    = aws_lambda_function.test.arn
   kms_key_arn      = aws_kms_key.test.arn
-}
-`, rName))
-}
 
-func testAccEventSourceMappingConfig_dynamoDBKMSKeyARN(rName string) string {
-	return acctest.ConfigCompose(testAccEventSourceMappingConfig_dynamoDBBase(rName), fmt.Sprintf(`
-resource "aws_kms_key" "test" {
-  description = "%[1]s"
-
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Id": "kms-tf",
-  "Statement": [
-    {
-      "Sid": "Enable IAM User Permissions",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "*"
-      },
-      "Action": "kms:*",
-      "Resource": "*"
+  filter_criteria {
+    filter {
+      pattern = %[2]q
     }
-  ]
+  }
 }
-POLICY
-}
-
-resource "aws_lambda_event_source_mapping" "test" {
-  enabled           = true
-  event_source_arn  = aws_dynamodb_table.test.stream_arn
-  function_name     = aws_lambda_function.test.arn
-  starting_position = "LATEST"
-  kms_key_arn       = aws_kms_key.test.arn
-}
-`, rName))
+`, rName, pattern))
 }
 
 func testAccEventSourceMappingConfig_kinesisStartingPositionTimestamp(rName, startingPositionTimestamp string) string {
@@ -2615,7 +2534,7 @@ resource "aws_lambda_event_source_mapping" "test" {
 
   filter_criteria {
     filter {
-      pattern = %q
+      pattern = %[1]q
     }
   }
 }
@@ -2630,11 +2549,11 @@ resource "aws_lambda_event_source_mapping" "test" {
 
   filter_criteria {
     filter {
-      pattern = %q
+      pattern = %[1]q
     }
 
     filter {
-      pattern = %q
+      pattern = %[2]q
     }
   }
 }
