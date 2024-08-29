@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/redshift"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func TestAccRedshiftClusterSnapshot_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.Snapshot
+	var v awstypes.Snapshot
 	resourceName := "aws_redshift_cluster_snapshot.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -41,7 +41,7 @@ func TestAccRedshiftClusterSnapshot_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrClusterIdentifier, rName),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_identifier", rName),
 					resource.TestCheckResourceAttr(resourceName, "manual_snapshot_retention_period", "-1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -56,8 +56,8 @@ func TestAccRedshiftClusterSnapshot_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "redshift", regexache.MustCompile(`snapshot:.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrClusterIdentifier, rName),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_identifier", rName),
-					resource.TestCheckResourceAttr(resourceName, "manual_snapshot_retention_period", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "manual_snapshot_retention_period", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 		},
@@ -66,7 +66,7 @@ func TestAccRedshiftClusterSnapshot_basic(t *testing.T) {
 
 func TestAccRedshiftClusterSnapshot_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.Snapshot
+	var v awstypes.Snapshot
 	resourceName := "aws_redshift_cluster_snapshot.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -80,7 +80,7 @@ func TestAccRedshiftClusterSnapshot_tags(t *testing.T) {
 				Config: testAccClusterSnapshotConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterSnapshotExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -93,7 +93,7 @@ func TestAccRedshiftClusterSnapshot_tags(t *testing.T) {
 				Config: testAccClusterSnapshotConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterSnapshotExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -102,7 +102,7 @@ func TestAccRedshiftClusterSnapshot_tags(t *testing.T) {
 				Config: testAccClusterSnapshotConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterSnapshotExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -112,7 +112,7 @@ func TestAccRedshiftClusterSnapshot_tags(t *testing.T) {
 
 func TestAccRedshiftClusterSnapshot_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.Snapshot
+	var v awstypes.Snapshot
 	resourceName := "aws_redshift_cluster_snapshot.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -134,7 +134,7 @@ func TestAccRedshiftClusterSnapshot_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckClusterSnapshotExists(ctx context.Context, n string, v *redshift.Snapshot) resource.TestCheckFunc {
+func testAccCheckClusterSnapshotExists(ctx context.Context, n string, v *awstypes.Snapshot) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -145,7 +145,7 @@ func testAccCheckClusterSnapshotExists(ctx context.Context, n string, v *redshif
 			return fmt.Errorf("No Redshift Cluster Snapshot is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
 
 		out, err := tfredshift.FindClusterSnapshotByID(ctx, conn, rs.Primary.ID)
 
@@ -161,7 +161,7 @@ func testAccCheckClusterSnapshotExists(ctx context.Context, n string, v *redshif
 
 func testAccCheckClusterSnapshotDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_redshift_cluster_snapshot" {

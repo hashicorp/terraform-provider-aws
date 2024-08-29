@@ -9,8 +9,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -25,10 +25,10 @@ func TestAccSageMakerFeatureGroup_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		"basic":                         testAccFeatureGroup_basic,
+		acctest.CtBasic:                 testAccFeatureGroup_basic,
 		"storageType":                   testAccFeatureGroup_storageType,
-		names.AttrDescription:           testAccFeatureGroup_description,
-		"disappears":                    TestAccSageMakerFeatureGroup_disappears,
+		"description":                   testAccFeatureGroup_description,
+		acctest.CtDisappears:            TestAccSageMakerFeatureGroup_disappears,
 		"multipleFeatures":              testAccFeatureGroup_multipleFeatures,
 		"offlineConfig_basic":           testAccFeatureGroup_offlineConfig_basic,
 		"offlineConfig_format":          testAccFeatureGroup_offlineConfig_format,
@@ -36,7 +36,7 @@ func TestAccSageMakerFeatureGroup_serial(t *testing.T) {
 		"offlineConfig_providedCatalog": TestAccSageMakerFeatureGroup_Offline_providedCatalog,
 		"onlineConfigSecurityConfig":    testAccFeatureGroup_onlineConfigSecurityConfig,
 		"onlineConfig_TTLDuration":      testAccFeatureGroup_onlineConfigTTLDuration,
-		names.AttrTags:                  testAccFeatureGroup_tags,
+		"tags":                          testAccFeatureGroup_tags,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -61,13 +61,13 @@ func testAccFeatureGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "feature_group_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "event_time_feature_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "record_identifier_feature_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "online_store_config.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "online_store_config.0.enable_online_store", "true"),
-					resource.TestCheckResourceAttr(resourceName, "feature_definition.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "online_store_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "online_store_config.0.enable_online_store", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "feature_definition.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "feature_definition.0.feature_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "feature_definition.0.feature_type", "String"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("feature-group/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "offline_store_config.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "offline_store_config.#", acctest.Ct0),
 				),
 			},
 			{
@@ -95,7 +95,7 @@ func testAccFeatureGroup_storageType(t *testing.T) {
 				Config: testAccFeatureGroupConfig_storageType(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFeatureGroupExists(ctx, resourceName, &featureGroup),
-					resource.TestCheckResourceAttr(resourceName, "feature_definition.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "feature_definition.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "feature_definition.0.feature_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "feature_definition.0.feature_type", "String"),
 					resource.TestCheckResourceAttr(resourceName, "online_store_config.0.storage_type", "InMemory"),
@@ -156,7 +156,7 @@ func testAccFeatureGroup_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFeatureGroupExists(ctx, resourceName, &featureGroup),
 					resource.TestCheckResourceAttr(resourceName, "feature_group_name", rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -170,7 +170,7 @@ func testAccFeatureGroup_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFeatureGroupExists(ctx, resourceName, &featureGroup),
 					resource.TestCheckResourceAttr(resourceName, "feature_group_name", rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -180,7 +180,7 @@ func testAccFeatureGroup_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFeatureGroupExists(ctx, resourceName, &featureGroup),
 					resource.TestCheckResourceAttr(resourceName, "feature_group_name", rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -205,7 +205,7 @@ func testAccFeatureGroup_multipleFeatures(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFeatureGroupExists(ctx, resourceName, &featureGroup),
 					resource.TestCheckResourceAttr(resourceName, "feature_group_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "feature_definition.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "feature_definition.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "feature_definition.0.feature_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "feature_definition.0.feature_type", "String"),
 					resource.TestCheckResourceAttr(resourceName, "feature_definition.1.feature_name", fmt.Sprintf("%s-2", rName)),
@@ -238,9 +238,9 @@ func testAccFeatureGroup_onlineConfigSecurityConfig(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFeatureGroupExists(ctx, resourceName, &featureGroup),
 					resource.TestCheckResourceAttr(resourceName, "feature_group_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "online_store_config.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "online_store_config.0.enable_online_store", "true"),
-					resource.TestCheckResourceAttr(resourceName, "online_store_config.0.security_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "online_store_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "online_store_config.0.enable_online_store", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "online_store_config.0.security_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "online_store_config.0.security_config.0.kms_key_id", "aws_kms_key.test", names.AttrARN),
 				),
 			},
@@ -269,10 +269,10 @@ func testAccFeatureGroup_onlineConfigTTLDuration(t *testing.T) {
 				Config: testAccFeatureGroupConfig_TTLDuration(rName, "Seconds"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFeatureGroupExists(ctx, resourceName, &featureGroup1),
-					resource.TestCheckResourceAttr(resourceName, "online_store_config.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "online_store_config.0.ttl_duration.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "online_store_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "online_store_config.0.ttl_duration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "online_store_config.0.ttl_duration.0.unit", "Seconds"),
-					resource.TestCheckResourceAttr(resourceName, "online_store_config.0.ttl_duration.0.value", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "online_store_config.0.ttl_duration.0.value", acctest.Ct1),
 				),
 			},
 			{
@@ -285,15 +285,15 @@ func testAccFeatureGroup_onlineConfigTTLDuration(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFeatureGroupExists(ctx, resourceName, &featureGroup2),
 					func(*terraform.State) error {
-						if !aws.TimeValue(featureGroup1.CreationTime).Equal(aws.TimeValue(featureGroup1.CreationTime)) {
+						if !aws.ToTime(featureGroup1.CreationTime).Equal(aws.ToTime(featureGroup1.CreationTime)) {
 							return errors.New("SageMaker Feature Group was recreated")
 						}
 						return nil
 					},
-					resource.TestCheckResourceAttr(resourceName, "online_store_config.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "online_store_config.0.ttl_duration.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "online_store_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "online_store_config.0.ttl_duration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "online_store_config.0.ttl_duration.0.unit", "Minutes"),
-					resource.TestCheckResourceAttr(resourceName, "online_store_config.0.ttl_duration.0.value", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "online_store_config.0.ttl_duration.0.value", acctest.Ct1),
 				),
 			},
 		},
@@ -317,11 +317,11 @@ func testAccFeatureGroup_offlineConfig_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFeatureGroupExists(ctx, resourceName, &featureGroup),
 					resource.TestCheckResourceAttr(resourceName, "feature_group_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "offline_store_config.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.disable_glue_table_creation", "true"),
-					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.s3_storage_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "offline_store_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.disable_glue_table_creation", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.s3_storage_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.s3_storage_config.0.s3_uri", fmt.Sprintf("s3://%s/prefix/", rName)),
-					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.data_catalog_config.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.data_catalog_config.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.table_format", "Glue"),
 				),
 			},
@@ -351,11 +351,11 @@ func testAccFeatureGroup_offlineConfig_format(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFeatureGroupExists(ctx, resourceName, &featureGroup),
 					resource.TestCheckResourceAttr(resourceName, "feature_group_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "offline_store_config.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.disable_glue_table_creation", "false"),
-					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.s3_storage_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "offline_store_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.disable_glue_table_creation", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.s3_storage_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.s3_storage_config.0.s3_uri", fmt.Sprintf("s3://%s/prefix/", rName)),
-					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.data_catalog_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.data_catalog_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.table_format", "Iceberg"),
 				),
 			},
@@ -385,11 +385,11 @@ func testAccFeatureGroup_offlineConfig_createCatalog(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFeatureGroupExists(ctx, resourceName, &featureGroup),
 					resource.TestCheckResourceAttr(resourceName, "feature_group_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "offline_store_config.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.disable_glue_table_creation", "false"),
-					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.s3_storage_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "offline_store_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.disable_glue_table_creation", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.s3_storage_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.s3_storage_config.0.s3_uri", fmt.Sprintf("s3://%s/prefix/", rName)),
-					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.data_catalog_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.data_catalog_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.data_catalog_config.0.catalog", "AwsDataCatalog"),
 					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.data_catalog_config.0.database", "sagemaker_featurestore"),
 					resource.TestCheckResourceAttrSet(resourceName, "offline_store_config.0.data_catalog_config.0.table_name"),
@@ -422,11 +422,11 @@ func TestAccSageMakerFeatureGroup_Offline_providedCatalog(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFeatureGroupExists(ctx, resourceName, &featureGroup),
 					resource.TestCheckResourceAttr(resourceName, "feature_group_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "offline_store_config.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.disable_glue_table_creation", "true"),
-					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.s3_storage_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "offline_store_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.disable_glue_table_creation", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.s3_storage_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.s3_storage_config.0.s3_uri", fmt.Sprintf("s3://%s/prefix/", rName)),
-					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.data_catalog_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.data_catalog_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "offline_store_config.0.data_catalog_config.0.catalog", glueTableResourceName, names.AttrCatalogID),
 					resource.TestCheckResourceAttrPair(resourceName, "offline_store_config.0.data_catalog_config.0.database", glueTableResourceName, names.AttrDatabaseName),
 					resource.TestCheckResourceAttrPair(resourceName, "offline_store_config.0.data_catalog_config.0.table_name", glueTableResourceName, names.AttrName),
@@ -467,7 +467,7 @@ func TestAccSageMakerFeatureGroup_disappears(t *testing.T) {
 
 func testAccCheckFeatureGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sagemaker_feature_group" {
@@ -502,7 +502,7 @@ func testAccCheckFeatureGroupExists(ctx context.Context, n string, v *sagemaker.
 			return fmt.Errorf("No SageMaker Feature Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
 
 		output, err := tfsagemaker.FindFeatureGroupByName(ctx, conn, rs.Primary.ID)
 
@@ -764,7 +764,12 @@ resource "aws_sagemaker_feature_group" "test" {
     }
   }
 
-  depends_on = [aws_iam_role_policy_attachment.test]
+  depends_on = [aws_iam_role_policy_attachment.test, aws_iam_role_policy_attachment.test2]
+}
+
+resource "aws_iam_role_policy_attachment" "test2" {
+  role       = aws_iam_role.test.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonSageMakerFeatureStoreAccess"
 }
 `, rName, format))
 }

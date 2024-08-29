@@ -73,6 +73,10 @@ func testAccCheckBucketPolicyMatch(nameFirst, keyFirst, nameSecond, keySecond st
 
 func testAccDataSourceBucketPolicyConfig_base(rName string) string {
 	return fmt.Sprintf(`
+data "aws_service_principal" "current" {
+  service_name = "lambda"
+}
+
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
@@ -98,7 +102,7 @@ data "aws_iam_policy_document" "test" {
 
     principals {
       type        = "Service"
-      identifiers = ["lambda.amazonaws.com"]
+      identifiers = ["${data.aws_service_principal.current.name}"]
     }
   }
 }

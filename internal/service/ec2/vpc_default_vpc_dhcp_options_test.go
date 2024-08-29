@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -17,8 +17,8 @@ func TestAccVPCDefaultVPCDHCPOptions_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		"basic":              testAccDefaultVPCDHCPOptions_basic,
-		names.AttrOwner:      testAccDefaultVPCDHCPOptions_owner,
+		acctest.CtBasic:      testAccDefaultVPCDHCPOptions_basic,
+		"owner":              testAccDefaultVPCDHCPOptions_owner,
 		"v4.20.0_regression": testAccDefaultVPCDHCPOptions_v420Regression,
 	}
 
@@ -27,7 +27,7 @@ func TestAccVPCDefaultVPCDHCPOptions_serial(t *testing.T) {
 
 func testAccDefaultVPCDHCPOptions_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var d ec2.DhcpOptions
+	var d awstypes.DhcpOptions
 	resourceName := "aws_default_vpc_dhcp_options.test"
 
 	resource.Test(t, resource.TestCase{
@@ -44,7 +44,7 @@ func testAccDefaultVPCDHCPOptions_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrDomainName),
 					resource.TestCheckResourceAttr(resourceName, "domain_name_servers", "AmazonProvidedDNS"),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Default DHCP Option Set"),
 				),
 			},
@@ -54,7 +54,7 @@ func testAccDefaultVPCDHCPOptions_basic(t *testing.T) {
 
 func testAccDefaultVPCDHCPOptions_owner(t *testing.T) {
 	ctx := acctest.Context(t)
-	var d ec2.DhcpOptions
+	var d awstypes.DhcpOptions
 	resourceName := "aws_default_vpc_dhcp_options.test"
 
 	resource.Test(t, resource.TestCase{
@@ -71,7 +71,7 @@ func testAccDefaultVPCDHCPOptions_owner(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrDomainName),
 					resource.TestCheckResourceAttr(resourceName, "domain_name_servers", "AmazonProvidedDNS"),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Default DHCP Option Set"),
 				),
 			},
@@ -83,7 +83,7 @@ func testAccDefaultVPCDHCPOptions_owner(t *testing.T) {
 // Don't forget to unset TF_CLI_CONFIG_FILE.
 func testAccDefaultVPCDHCPOptions_v420Regression(t *testing.T) {
 	ctx := acctest.Context(t)
-	var d ec2.DhcpOptions
+	var d awstypes.DhcpOptions
 	resourceName := "aws_default_vpc_dhcp_options.test"
 
 	resource.Test(t, resource.TestCase{

@@ -26,7 +26,7 @@ func TestAccLicenseManagerReceivedLicensesDataSource_basic(t *testing.T) {
 			{
 				Config: testAccReceivedLicensesDataSourceConfig_arns(licenseARN),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceName, "arns.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(datasourceName, "arns.#", acctest.Ct1),
 				),
 			},
 		},
@@ -45,7 +45,7 @@ func TestAccLicenseManagerReceivedLicensesDataSource_empty(t *testing.T) {
 			{
 				Config: testAccReceivedLicensesDataSourceConfig_empty(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceName, "arns.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(datasourceName, "arns.#", acctest.Ct0),
 				),
 			},
 		},

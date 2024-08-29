@@ -164,8 +164,8 @@ The following arguments are optional:
 
 ### Input Settings
 
-* `audio_selectors` - (Optional) Used to select the audio stream to decode for inputs that have multiple. See [Audio Selectors](#audio-selectors) for more details.
-* `caption_selectors` - (Optional) Used to select the caption input to use for inputs that have multiple available. See [Caption Selectors](#caption-selectors) for more details.
+* `audioSelector` - (Optional) Used to select the audio stream to decode for inputs that have multiple. See [Audio Selectors](#audio-selectors) for more details.
+* `captionSelector` - (Optional) Used to select the caption input to use for inputs that have multiple available. See [Caption Selectors](#caption-selectors) for more details.
 * `deblockFilter` - (Optional) Enable or disable the deblock filter when filtering.
 * `denoiseFilter` - (Optional) Enable or disable the denoise filter when filtering.
 * `filterStrength` - (Optional) Adjusts the magnitude of filtering from 1 (minimal) to 5 (strongest).
@@ -826,4 +826,4 @@ Using `terraform import`, import MediaLive Channel using the `channelId`. For ex
 % terraform import aws_medialive_channel.example 1234567
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-74341f1b3001e468e6237cff5071e851800520aa41a122d507a8a2dfa13afb15 -->
+<!-- cache-key: cdktf-0.20.1 input-6f35c6a1bbf589049ab28f3a0305defb739be70f1415e2fba48e986109eecf3e -->

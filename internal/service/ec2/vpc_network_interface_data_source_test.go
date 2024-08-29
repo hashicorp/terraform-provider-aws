@@ -27,8 +27,8 @@ func TestAccVPCNetworkInterfaceDataSource_basic(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfaceDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceName, "private_ips.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(datasourceName, "security_groups.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(datasourceName, "private_ips.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(datasourceName, "security_groups.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(datasourceName, "private_ip", resourceName, "private_ip"),
 					resource.TestCheckResourceAttrSet(datasourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
@@ -58,8 +58,8 @@ func TestAccVPCNetworkInterfaceDataSource_filters(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfaceDataSourceConfig_filters(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceName, "private_ips.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(datasourceName, "security_groups.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(datasourceName, "private_ips.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(datasourceName, "security_groups.#", acctest.Ct1),
 				),
 			},
 		},
@@ -84,7 +84,7 @@ func TestAccVPCNetworkInterfaceDataSource_carrierIPAssociation(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfaceDataSourceConfig_carrierIPAssociation(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceName, "association.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(datasourceName, "association.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(datasourceName, "association.0.allocation_id", eipResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(datasourceName, "association.0.association_id", eipAssociationResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(datasourceName, "association.0.carrier_ip", eipResourceName, "carrier_ip"),
@@ -92,11 +92,11 @@ func TestAccVPCNetworkInterfaceDataSource_carrierIPAssociation(t *testing.T) {
 					acctest.CheckResourceAttrAccountID(datasourceName, "association.0.ip_owner_id"),
 					resource.TestCheckResourceAttr(datasourceName, "association.0.public_dns_name", ""),
 					resource.TestCheckResourceAttr(datasourceName, "association.0.public_ip", ""),
-					resource.TestCheckResourceAttr(datasourceName, "attachment.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(datasourceName, "attachment.#", acctest.Ct0),
 					resource.TestCheckResourceAttrSet(datasourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttr(datasourceName, "interface_type", "interface"),
-					resource.TestCheckResourceAttr(datasourceName, "ipv6_addresses.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(datasourceName, "ipv6_addresses.#", acctest.Ct0),
 					resource.TestCheckResourceAttrSet(datasourceName, "mac_address"),
 					resource.TestCheckResourceAttr(datasourceName, "outpost_arn", ""),
 					acctest.CheckResourceAttrAccountID(datasourceName, names.AttrOwnerID),
@@ -133,7 +133,7 @@ func TestAccVPCNetworkInterfaceDataSource_publicIPAssociation(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfaceDataSourceConfig_publicIPAssociation(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceName, "association.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(datasourceName, "association.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(datasourceName, "association.0.allocation_id", eipResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(datasourceName, "association.0.association_id", eipAssociationResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(datasourceName, "association.0.carrier_ip", ""),
@@ -142,11 +142,11 @@ func TestAccVPCNetworkInterfaceDataSource_publicIPAssociation(t *testing.T) {
 					// Public DNS name is not set by the EC2 API.
 					resource.TestCheckResourceAttr(datasourceName, "association.0.public_dns_name", ""),
 					resource.TestCheckResourceAttrPair(datasourceName, "association.0.public_ip", eipResourceName, "public_ip"),
-					resource.TestCheckResourceAttr(datasourceName, "attachment.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(datasourceName, "attachment.#", acctest.Ct0),
 					resource.TestCheckResourceAttrSet(datasourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttr(datasourceName, "interface_type", "interface"),
-					resource.TestCheckResourceAttr(datasourceName, "ipv6_addresses.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(datasourceName, "ipv6_addresses.#", acctest.Ct0),
 					resource.TestCheckResourceAttrSet(datasourceName, "mac_address"),
 					resource.TestCheckResourceAttr(datasourceName, "outpost_arn", ""),
 					acctest.CheckResourceAttrAccountID(datasourceName, names.AttrOwnerID),
@@ -180,15 +180,15 @@ func TestAccVPCNetworkInterfaceDataSource_attachment(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfaceDataSourceConfig_attachment(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceName, "association.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(datasourceName, "attachment.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(datasourceName, "attachment.0.device_index", acctest.CtOne),
+					resource.TestCheckResourceAttr(datasourceName, "association.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(datasourceName, "attachment.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(datasourceName, "attachment.0.device_index", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(datasourceName, "attachment.0.instance_id", instanceResourceName, names.AttrID),
 					acctest.CheckResourceAttrAccountID(datasourceName, "attachment.0.instance_owner_id"),
 					resource.TestCheckResourceAttrSet(datasourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttr(datasourceName, "interface_type", "interface"),
-					resource.TestCheckResourceAttr(datasourceName, "ipv6_addresses.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(datasourceName, "ipv6_addresses.#", acctest.Ct0),
 					resource.TestCheckResourceAttrSet(datasourceName, "mac_address"),
 					resource.TestCheckResourceAttr(datasourceName, "outpost_arn", ""),
 					acctest.CheckResourceAttrAccountID(datasourceName, names.AttrOwnerID),

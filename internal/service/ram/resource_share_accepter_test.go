@@ -57,7 +57,7 @@ func TestAccRAMResourceShareAccepter_basic(t *testing.T) {
 					acctest.CheckResourceAttrAccountID(resourceName, "receiver_account_id"),
 					resource.TestMatchResourceAttr(resourceName, "sender_account_id", regexache.MustCompile(`\d{12}`)),
 					resource.TestCheckResourceAttr(resourceName, "share_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "resources.%", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "resources.%", acctest.Ct0),
 				),
 			},
 			{
@@ -122,7 +122,7 @@ func TestAccRAMResourceShareAccepter_resourceAssociation(t *testing.T) {
 					acctest.CheckResourceAttrAccountID(resourceName, "receiver_account_id"),
 					resource.TestMatchResourceAttr(resourceName, "sender_account_id", regexache.MustCompile(`\d{12}`)),
 					resource.TestCheckResourceAttr(resourceName, "share_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "resources.%", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "resources.%", acctest.Ct0),
 				),
 			},
 		},

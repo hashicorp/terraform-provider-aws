@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/redshift"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,7 +21,7 @@ import (
 
 func TestAccRedshiftParameterGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.ClusterParameterGroup
+	var v awstypes.ClusterParameterGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_redshift_parameter_group.test"
 
@@ -39,10 +39,10 @@ func TestAccRedshiftParameterGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "redshift-1.0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.CtThree),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct3),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "require_ssl",
-						names.AttrValue: "true",
+						names.AttrValue: acctest.CtTrue,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "query_group",
@@ -50,9 +50,9 @@ func TestAccRedshiftParameterGroup_basic(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "enable_user_activity_logging",
-						names.AttrValue: "true",
+						names.AttrValue: acctest.CtTrue,
 					}),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -66,7 +66,7 @@ func TestAccRedshiftParameterGroup_basic(t *testing.T) {
 
 func TestAccRedshiftParameterGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.ClusterParameterGroup
+	var v awstypes.ClusterParameterGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_redshift_parameter_group.test"
 
@@ -90,7 +90,7 @@ func TestAccRedshiftParameterGroup_disappears(t *testing.T) {
 
 func TestAccRedshiftParameterGroup_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.ClusterParameterGroup
+	var v awstypes.ClusterParameterGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_redshift_parameter_group.test"
 
@@ -108,8 +108,8 @@ func TestAccRedshiftParameterGroup_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "redshift-1.0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -125,10 +125,10 @@ func TestAccRedshiftParameterGroup_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "redshift-1.0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.CtThree),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct3),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "require_ssl",
-						names.AttrValue: "true",
+						names.AttrValue: acctest.CtTrue,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "query_group",
@@ -136,9 +136,9 @@ func TestAccRedshiftParameterGroup_update(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "enable_user_activity_logging",
-						names.AttrValue: "true",
+						names.AttrValue: acctest.CtTrue,
 					}),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 		},
@@ -147,7 +147,7 @@ func TestAccRedshiftParameterGroup_update(t *testing.T) {
 
 func TestAccRedshiftParameterGroup_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.ClusterParameterGroup
+	var v awstypes.ClusterParameterGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_redshift_parameter_group.test"
 
@@ -162,7 +162,7 @@ func TestAccRedshiftParameterGroup_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test parameter group for terraform"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -175,7 +175,7 @@ func TestAccRedshiftParameterGroup_tags(t *testing.T) {
 				Config: testAccParameterGroupConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -184,7 +184,7 @@ func TestAccRedshiftParameterGroup_tags(t *testing.T) {
 				Config: testAccParameterGroupConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -194,7 +194,7 @@ func TestAccRedshiftParameterGroup_tags(t *testing.T) {
 
 func testAccCheckParameterGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_redshift_parameter_group" {
@@ -218,7 +218,7 @@ func testAccCheckParameterGroupDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckParameterGroupExists(ctx context.Context, n string, v *redshift.ClusterParameterGroup) resource.TestCheckFunc {
+func testAccCheckParameterGroupExists(ctx context.Context, n string, v *awstypes.ClusterParameterGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -229,7 +229,7 @@ func testAccCheckParameterGroupExists(ctx context.Context, n string, v *redshift
 			return fmt.Errorf("No Redshift Parameter Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
 
 		output, err := tfredshift.FindParameterGroupByName(ctx, conn, rs.Primary.ID)
 

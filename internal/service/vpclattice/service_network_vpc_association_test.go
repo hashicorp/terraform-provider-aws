@@ -142,7 +142,7 @@ func TestAccVPCLatticeServiceNetworkVPCAssociation_full(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile("servicenetworkvpcassociation/.+$")),
 					resource.TestCheckResourceAttrSet(resourceName, "service_network_identifier"),
 					resource.TestCheckResourceAttrSet(resourceName, "vpc_identifier"),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct1),
 				),
 			},
 			{
@@ -174,7 +174,7 @@ func TestAccVPCLatticeServiceNetworkVPCAssociation_tags(t *testing.T) {
 				Config: testAccServiceNetworkVPCAssociationConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceNetworkVPCAssociationExists(ctx, resourceName, &servicenetworkvpcasc1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -187,7 +187,7 @@ func TestAccVPCLatticeServiceNetworkVPCAssociation_tags(t *testing.T) {
 				Config: testAccServiceNetworkVPCAssociationConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceNetworkVPCAssociationExists(ctx, resourceName, &servicenetworkvpcasc2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -196,7 +196,7 @@ func TestAccVPCLatticeServiceNetworkVPCAssociation_tags(t *testing.T) {
 				Config: testAccServiceNetworkVPCAssociationConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceNetworkVPCAssociationExists(ctx, resourceName, &service3),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},

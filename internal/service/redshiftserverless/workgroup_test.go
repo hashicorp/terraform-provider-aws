@@ -36,7 +36,7 @@ func TestAccRedshiftServerlessWorkgroup_basic(t *testing.T) {
 					testAccCheckWorkgroupExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "redshift-serverless", regexache.MustCompile("workgroup/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "namespace_name", rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttrSet(resourceName, "workgroup_id"),
 					resource.TestCheckResourceAttr(resourceName, "workgroup_name", rName),
 				),
@@ -68,14 +68,14 @@ func TestAccRedshiftServerlessWorkgroup_baseAndMaxCapacityAndPubliclyAccessible(
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkgroupExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "base_capacity", "128"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrMaxCapacity, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMaxCapacity, acctest.Ct0),
 				),
 			},
 			{
 				Config: testAccWorkgroupConfig_baseCapacity(rName, 256),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "base_capacity", "256"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrMaxCapacity, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMaxCapacity, acctest.Ct0),
 				),
 			},
 			{
@@ -97,7 +97,7 @@ func TestAccRedshiftServerlessWorkgroup_baseAndMaxCapacityAndPubliclyAccessible(
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "base_capacity", "512"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMaxCapacity, "5632"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, acctest.CtFalse),
 				),
 			},
 			{
@@ -105,14 +105,14 @@ func TestAccRedshiftServerlessWorkgroup_baseAndMaxCapacityAndPubliclyAccessible(
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "base_capacity", "128"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMaxCapacity, "256"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccWorkgroupConfig_baseCapacity(rName, 128),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "base_capacity", "128"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrMaxCapacity, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMaxCapacity, acctest.Ct0),
 				),
 			},
 		},
@@ -141,7 +141,7 @@ func TestAccRedshiftServerlessWorkgroup_configParameters(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
 						"parameter_key":   "enable_user_activity_logging",
-						"parameter_value": "true",
+						"parameter_value": acctest.CtTrue,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
 						"parameter_key":   "query_group",
@@ -157,19 +157,19 @@ func TestAccRedshiftServerlessWorkgroup_configParameters(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
 						"parameter_key":   "auto_mv",
-						"parameter_value": "true",
+						"parameter_value": acctest.CtTrue,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
 						"parameter_key":   "enable_case_sensitive_identifier",
-						"parameter_value": "false",
+						"parameter_value": acctest.CtFalse,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
 						"parameter_key":   "require_ssl",
-						"parameter_value": "false",
+						"parameter_value": acctest.CtFalse,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
 						"parameter_key":   "use_fips_ssl",
-						"parameter_value": "false",
+						"parameter_value": acctest.CtFalse,
 					}),
 				),
 			},
@@ -189,7 +189,7 @@ func TestAccRedshiftServerlessWorkgroup_configParameters(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
 						"parameter_key":   "enable_user_activity_logging",
-						"parameter_value": "true",
+						"parameter_value": acctest.CtTrue,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
 						"parameter_key":   "query_group",
@@ -205,19 +205,19 @@ func TestAccRedshiftServerlessWorkgroup_configParameters(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
 						"parameter_key":   "auto_mv",
-						"parameter_value": "true",
+						"parameter_value": acctest.CtTrue,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
 						"parameter_key":   "enable_case_sensitive_identifier",
-						"parameter_value": "false",
+						"parameter_value": acctest.CtFalse,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
 						"parameter_key":   "require_ssl",
-						"parameter_value": "false",
+						"parameter_value": acctest.CtFalse,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
 						"parameter_key":   "use_fips_ssl",
-						"parameter_value": "false",
+						"parameter_value": acctest.CtFalse,
 					}),
 				),
 			},
@@ -240,7 +240,7 @@ func TestAccRedshiftServerlessWorkgroup_tags(t *testing.T) {
 				Config: testAccWorkgroupConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkgroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -252,7 +252,7 @@ func TestAccRedshiftServerlessWorkgroup_tags(t *testing.T) {
 			{
 				Config: testAccWorkgroupConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -261,7 +261,7 @@ func TestAccRedshiftServerlessWorkgroup_tags(t *testing.T) {
 				Config: testAccWorkgroupConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkgroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -321,7 +321,7 @@ func TestAccRedshiftServerlessWorkgroup_port(t *testing.T) {
 
 func testAccCheckWorkgroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_redshiftserverless_workgroup" {
@@ -355,7 +355,7 @@ func testAccCheckWorkgroupExists(ctx context.Context, name string) resource.Test
 			return fmt.Errorf("Redshift Serverless Workgroup ID is not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
 		_, err := tfredshiftserverless.FindWorkgroupByName(ctx, conn, rs.Primary.ID)
 
@@ -403,6 +403,7 @@ resource "aws_redshiftserverless_workgroup" "test" {
   workgroup_name = %[1]q
   base_capacity  = %[2]d
 }
+
 `, rName, baseCapacity)
 }
 

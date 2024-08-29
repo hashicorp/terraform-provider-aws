@@ -22,9 +22,9 @@ func TestAccNetworkManagerConnection_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		"basic":               testAccConnection_basic,
-		"disappears":          testAccConnection_disappears,
-		names.AttrTags:        testAccConnection_tags,
+		acctest.CtBasic:       testAccConnection_basic,
+		acctest.CtDisappears:  testAccConnection_disappears,
+		"tags":                testAccConnection_tags,
 		"descriptionAndLinks": testAccConnection_descriptionAndLinks,
 	}
 
@@ -50,7 +50,7 @@ func testAccConnection_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "connected_link_id", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "link_id", ""),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -101,7 +101,7 @@ func testAccConnection_tags(t *testing.T) {
 				Config: testAccConnectionConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -115,7 +115,7 @@ func testAccConnection_tags(t *testing.T) {
 				Config: testAccConnectionConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -124,7 +124,7 @@ func testAccConnection_tags(t *testing.T) {
 				Config: testAccConnectionConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -175,7 +175,7 @@ func testAccConnection_descriptionAndLinks(t *testing.T) {
 
 func testAccCheckConnectionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_networkmanager_device" {
@@ -210,7 +210,7 @@ func testAccCheckConnectionExists(ctx context.Context, n string) resource.TestCh
 			return fmt.Errorf("No Network Manager Connection ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerClient(ctx)
 
 		_, err := tfnetworkmanager.FindConnectionByTwoPartKey(ctx, conn, rs.Primary.Attributes["global_network_id"], rs.Primary.ID)
 

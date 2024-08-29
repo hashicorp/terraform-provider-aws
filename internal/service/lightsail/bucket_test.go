@@ -49,10 +49,10 @@ func TestAccLightsailBucket_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrRegion),
 					resource.TestCheckResourceAttrSet(resourceName, "support_code"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrURL),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrForceDelete),
-					resource.TestCheckResourceAttr(resourceName, names.AttrForceDelete, "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrForceDelete, acctest.CtFalse),
 				),
 			},
 			{
@@ -156,7 +156,7 @@ func TestAccLightsailBucket_tags(t *testing.T) {
 				Config: testAccBucketConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -172,7 +172,7 @@ func TestAccLightsailBucket_tags(t *testing.T) {
 				Config: testAccBucketConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -181,8 +181,60 @@ func TestAccLightsailBucket_tags(t *testing.T) {
 				Config: testAccBucketConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLightsailBucket_keyOnlyTags(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_lightsail_bucket.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketConfig_tags1(rName, acctest.CtKey1, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDelete,
+				},
+			},
+			{
+				Config: testAccBucketConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, ""),
+				),
+			},
+			{
+				Config: testAccBucketConfig_tags1(rName, acctest.CtKey2, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, ""),
 				),
 			},
 		},
@@ -261,7 +313,7 @@ func TestAccLightsailBucket_forceDelete(t *testing.T) {
 				Config: testAccBucketConfig_forceDelete(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrForceDelete, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrForceDelete, acctest.CtTrue),
 				),
 			},
 			{
@@ -285,7 +337,7 @@ resource "aws_lightsail_bucket" "test" {
 `, rName)
 }
 
-func testAccBucketConfig_bundleId(rName string, rBundleId string) string {
+func testAccBucketConfig_bundleId(rName, rBundleId string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_bucket" "test" {
   name      = %[1]q
@@ -294,7 +346,7 @@ resource "aws_lightsail_bucket" "test" {
 `, rName, rBundleId)
 }
 
-func testAccBucketConfig_tags1(rName string, tagKey1, tagValue1 string) string {
+func testAccBucketConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_bucket" "test" {
   name      = %[1]q

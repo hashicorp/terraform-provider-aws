@@ -44,9 +44,9 @@ func TestAccEKSAccessEntry_basic(t *testing.T) {
 					testAccCheckAccessEntryExists(ctx, resourceName, &accessentry),
 					resource.TestCheckResourceAttrSet(resourceName, "access_entry_arn"),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
-					resource.TestCheckResourceAttr(resourceName, "kubernetes_groups.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "kubernetes_groups.#", acctest.Ct0),
 					acctest.CheckResourceAttrRFC3339(resourceName, "modified_at"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "STANDARD"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrUserName),
 				),
@@ -146,7 +146,7 @@ func TestAccEKSAccessEntry_tags(t *testing.T) {
 				Config: testAccAccessEntryConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessEntryExists(ctx, resourceName, &accessentry),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -159,7 +159,7 @@ func TestAccEKSAccessEntry_tags(t *testing.T) {
 				Config: testAccAccessEntryConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessEntryExists(ctx, resourceName, &accessentry),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -168,7 +168,7 @@ func TestAccEKSAccessEntry_tags(t *testing.T) {
 				Config: testAccAccessEntryConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessEntryExists(ctx, resourceName, &accessentry),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -236,7 +236,7 @@ func TestAccEKSAccessEntry_username(t *testing.T) {
 				Config: testAccAccessEntryConfig_username(rName, "user1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessEntryExists(ctx, resourceName, &accessentry),
-					resource.TestCheckResourceAttr(resourceName, "kubernetes_groups.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "kubernetes_groups.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "kubernetes_groups.*", "ae-test"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "STANDARD"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, "user1"),
@@ -251,7 +251,7 @@ func TestAccEKSAccessEntry_username(t *testing.T) {
 				Config: testAccAccessEntryConfig_username(rName, "user2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessEntryExists(ctx, resourceName, &accessentry),
-					resource.TestCheckResourceAttr(resourceName, "kubernetes_groups.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "kubernetes_groups.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "kubernetes_groups.*", "ae-test"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "STANDARD"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, "user2"),

@@ -71,7 +71,7 @@ func testAccSMSPreferences_almostAll(t *testing.T) {
 				Config: testAccSMSPreferencesConfig_almostAll,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "default_sms_type", "Transactional"),
-					resource.TestCheckResourceAttr(resourceName, "monthly_spend_limit", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "monthly_spend_limit", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "usage_report_s3_bucket", "some-bucket"),
 				),
 			},

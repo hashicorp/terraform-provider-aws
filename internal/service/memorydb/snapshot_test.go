@@ -40,7 +40,7 @@ func TestAccMemoryDBSnapshot_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "cluster_configuration.0.name", "aws_memorydb_cluster.test", names.AttrName),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "cluster_configuration.0.node_type", "aws_memorydb_cluster.test", "node_type"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "cluster_configuration.0.num_shards", "aws_memorydb_cluster.test", "num_shards"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "cluster_configuration.0.parameter_group_name", "aws_memorydb_cluster.test", "parameter_group_name"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "cluster_configuration.0.parameter_group_name", "aws_memorydb_cluster.test", names.AttrParameterGroupName),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "cluster_configuration.0.port", "aws_memorydb_cluster.test", names.AttrPort),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "cluster_configuration.0.snapshot_retention_limit", "aws_memorydb_cluster.test", "snapshot_retention_limit"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "cluster_configuration.0.snapshot_window", "aws_memorydb_cluster.test", "snapshot_window"),
@@ -50,7 +50,7 @@ func TestAccMemoryDBSnapshot_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyARN, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSource, "manual"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tags.Test", "test"),
 				),
 			},
@@ -174,8 +174,8 @@ func TestAccMemoryDBSnapshot_update_tags(t *testing.T) {
 				Config: testAccSnapshotConfig_tags0(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -187,10 +187,10 @@ func TestAccMemoryDBSnapshot_update_tags(t *testing.T) {
 				Config: testAccSnapshotConfig_tags2(rName, "Key1", acctest.CtValue1, "Key2", acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", acctest.CtValue2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.Key1", acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.Key2", acctest.CtValue2),
 				),
@@ -204,9 +204,9 @@ func TestAccMemoryDBSnapshot_update_tags(t *testing.T) {
 				Config: testAccSnapshotConfig_tags1(rName, "Key1", acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", acctest.CtValue1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.Key1", acctest.CtValue1),
 				),
 			},
@@ -219,8 +219,8 @@ func TestAccMemoryDBSnapshot_update_tags(t *testing.T) {
 				Config: testAccSnapshotConfig_tags0(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -234,7 +234,7 @@ func TestAccMemoryDBSnapshot_update_tags(t *testing.T) {
 
 func testAccCheckSnapshotDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_memorydb_snapshot" {
@@ -269,7 +269,7 @@ func testAccCheckSnapshotExists(ctx context.Context, n string) resource.TestChec
 			return fmt.Errorf("No MemoryDB Snapshot ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBClient(ctx)
 
 		_, err := tfmemorydb.FindSnapshotByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 

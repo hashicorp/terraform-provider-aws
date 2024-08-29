@@ -38,8 +38,8 @@ func TestAccKafkaConfiguration_basic(t *testing.T) {
 					testAccCheckConfigurationExists(ctx, resourceName, &configuration1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "kafka", regexache.MustCompile(`configuration/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "kafka_versions.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "latest_revision", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "kafka_versions.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "latest_revision", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestMatchResourceAttr(resourceName, "server_properties", regexache.MustCompile(`auto.create.topics.enable = true`)),
 				),
@@ -106,7 +106,7 @@ func TestAccKafkaConfiguration_description(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationExists(ctx, resourceName, &configuration2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
-					resource.TestCheckResourceAttr(resourceName, "latest_revision", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "latest_revision", acctest.Ct2),
 				),
 			},
 		},
@@ -129,7 +129,7 @@ func TestAccKafkaConfiguration_kafkaVersions(t *testing.T) {
 				Config: testAccConfigurationConfig_versions(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationExists(ctx, resourceName, &configuration1),
-					resource.TestCheckResourceAttr(resourceName, "kafka_versions.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "kafka_versions.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemAttr(resourceName, "kafka_versions.*", "2.6.0"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "kafka_versions.*", "2.7.0"),
 				),
@@ -173,7 +173,7 @@ func TestAccKafkaConfiguration_serverProperties(t *testing.T) {
 				Config: testAccConfigurationConfig_serverProperties(rName, serverProperty2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationExists(ctx, resourceName, &configuration2),
-					resource.TestCheckResourceAttr(resourceName, "latest_revision", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "latest_revision", acctest.Ct2),
 					resource.TestMatchResourceAttr(resourceName, "server_properties", regexache.MustCompile(serverProperty2)),
 				),
 			},

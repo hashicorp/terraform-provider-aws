@@ -30,6 +30,10 @@ func dataSourceCluster() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"bootstrap_cluster_creator_admin_permissions": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -155,6 +159,18 @@ func dataSourceCluster() *schema.Resource {
 				Computed: true,
 			},
 			names.AttrTags: tftags.TagsSchemaComputed(),
+			"upgrade_policy": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"support_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			names.AttrVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -245,6 +261,9 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("platform_version", cluster.PlatformVersion)
 	d.Set(names.AttrRoleARN, cluster.RoleArn)
 	d.Set(names.AttrStatus, cluster.Status)
+	if err := d.Set("upgrade_policy", flattenUpgradePolicy(cluster.UpgradePolicy)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting upgrade_policy: %s", err)
+	}
 	d.Set(names.AttrVersion, cluster.Version)
 	if err := d.Set(names.AttrVPCConfig, flattenVPCConfigResponse(cluster.ResourcesVpcConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)

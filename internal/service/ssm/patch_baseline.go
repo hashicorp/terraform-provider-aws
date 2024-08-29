@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -32,6 +33,7 @@ import (
 
 // @SDKResource("aws_ssm_patch_baseline", name="Patch Baseline")
 // @Tags(identifierAttribute="id", resourceType="PatchBaseline")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ssm;ssm.GetPatchBaselineOutput")
 func resourcePatchBaseline() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePatchBaselineCreate,
@@ -317,7 +319,7 @@ func resourcePatchBaselineRead(ctx context.Context, d *schema.ResourceData, meta
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
-	jsonString := string(jsonDoc)
+	jsonString := string(tfjson.RemoveEmptyFields(jsonDoc))
 
 	if err := d.Set("approval_rule", flattenPatchRuleGroup(output.ApprovalRules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting approval_rule: %s", err)

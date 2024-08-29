@@ -63,7 +63,7 @@ func TestAccAutoScalingLaunchConfigurationDataSource_securityGroups(t *testing.T
 			{
 				Config: testAccLaunchConfigurationDataSourceConfig_securityGroups(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceName, "security_groups.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(datasourceName, "security_groups.#", acctest.Ct1),
 				),
 			},
 		},

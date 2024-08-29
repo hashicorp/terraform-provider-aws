@@ -10,15 +10,14 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -40,11 +39,11 @@ func testAccSpace_basic(t *testing.T) {
 					testAccCheckSpaceExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "space_name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_id", "aws_sagemaker_domain.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "space_settings.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "space_sharing_settings.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "ownership_settings.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "space_sharing_settings.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "ownership_settings.#", acctest.Ct0),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`space/.+`)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttrSet(resourceName, "home_efs_file_system_uid"),
 				),
 			},
@@ -73,7 +72,7 @@ func testAccSpace_tags(t *testing.T) {
 				Config: testAccSpaceConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSpaceExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -86,7 +85,7 @@ func testAccSpace_tags(t *testing.T) {
 				Config: testAccSpaceConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSpaceExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -95,7 +94,7 @@ func testAccSpace_tags(t *testing.T) {
 				Config: testAccSpaceConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSpaceExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -119,9 +118,9 @@ func testAccSpace_customFileSystem(t *testing.T) {
 				Config: testAccSpaceConfig_customFileConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSpaceExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "space_settings.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "space_settings.0.custom_file_system.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "space_settings.0.custom_file_system.0.efs_file_system.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.0.custom_file_system.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.0.custom_file_system.0.efs_file_system.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "space_settings.0.custom_file_system.0.efs_file_system.0.file_system_id", "aws_efs_file_system.test", names.AttrID),
 				),
 			},
@@ -150,9 +149,9 @@ func testAccSpace_kernelGatewayAppSettings(t *testing.T) {
 				Config: testAccSpaceConfig_kernelGatewayAppSettings(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSpaceExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "space_settings.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "space_settings.0.kernel_gateway_app_settings.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "space_settings.0.kernel_gateway_app_settings.0.default_resource_spec.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.0.kernel_gateway_app_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.0.kernel_gateway_app_settings.0.default_resource_spec.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "space_settings.0.kernel_gateway_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.micro"),
 				),
 			},
@@ -181,10 +180,10 @@ func testAccSpace_kernelGatewayAppSettings_lifecycleconfig(t *testing.T) {
 				Config: testAccSpaceConfig_kernelGatewayAppSettingsLifecycle(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSpaceExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "space_settings.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "space_settings.0.kernel_gateway_app_settings.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "space_settings.0.kernel_gateway_app_settings.0.lifecycle_config_arns.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "space_settings.0.kernel_gateway_app_settings.0.default_resource_spec.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.0.kernel_gateway_app_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.0.kernel_gateway_app_settings.0.lifecycle_config_arns.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.0.kernel_gateway_app_settings.0.default_resource_spec.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "space_settings.0.kernel_gateway_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.micro"),
 					resource.TestCheckResourceAttrPair(resourceName, "space_settings.0.kernel_gateway_app_settings.0.default_resource_spec.0.lifecycle_config_arn", "aws_sagemaker_studio_lifecycle_config.test", names.AttrARN),
 				),
@@ -219,10 +218,10 @@ func testAccSpace_kernelGatewayAppSettings_imageconfig(t *testing.T) {
 				Config: testAccSpaceConfig_kernelGatewayAppSettingsImage(rName, baseImage),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSpaceExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "space_settings.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "space_settings.0.kernel_gateway_app_settings.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "space_settings.0.kernel_gateway_app_settings.0.lifecycle_config_arns.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "space_settings.0.kernel_gateway_app_settings.0.default_resource_spec.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.0.kernel_gateway_app_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.0.kernel_gateway_app_settings.0.lifecycle_config_arns.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.0.kernel_gateway_app_settings.0.default_resource_spec.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "space_settings.0.kernel_gateway_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.micro"),
 					resource.TestCheckResourceAttrPair(resourceName, "space_settings.0.kernel_gateway_app_settings.0.default_resource_spec.0.sagemaker_image_version_arn", "aws_sagemaker_image_version.test", names.AttrARN),
 				),
@@ -252,14 +251,14 @@ func testAccSpace_storageSettings(t *testing.T) {
 				Config: testAccSpaceConfig_storageSettings(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSpaceExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "space_settings.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "space_settings.0.app_type", "CodeEditor"),
-					resource.TestCheckResourceAttr(resourceName, "space_settings.0.space_storage_settings.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "space_settings.0.space_storage_settings.0.ebs_storage_settings.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "space_settings.0.space_storage_settings.0.ebs_storage_settings.0.ebs_volume_size_in_gb", "10"),
-					resource.TestCheckResourceAttr(resourceName, "space_sharing_settings.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.0.space_storage_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.0.space_storage_settings.0.ebs_storage_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.0.space_storage_settings.0.ebs_storage_settings.0.ebs_volume_size_in_gb", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "space_sharing_settings.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "space_sharing_settings.0.sharing_type", "Private"),
-					resource.TestCheckResourceAttr(resourceName, "ownership_settings.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "ownership_settings.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "ownership_settings.0.owner_user_profile_name", "aws_sagemaker_user_profile.test", "user_profile_name"),
 				),
 			},
@@ -288,9 +287,9 @@ func testAccSpace_codeEditorAppSettings(t *testing.T) {
 				Config: testAccSpaceConfig_codeEditorAppSettings(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSpaceExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "space_settings.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "space_settings.0.code_editor_app_settings.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "space_settings.0.code_editor_app_settings.0.default_resource_spec.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.0.code_editor_app_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.0.code_editor_app_settings.0.default_resource_spec.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "space_settings.0.code_editor_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.micro"),
 				),
 			},
@@ -319,14 +318,14 @@ func testAccSpace_jupyterLabAppSettings(t *testing.T) {
 				Config: testAccSpaceConfig_jupyterLabAppSettings(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSpaceExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "space_settings.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "space_settings.0.app_type", "JupyterLab"),
-					resource.TestCheckResourceAttr(resourceName, "space_settings.0.jupyter_lab_app_settings.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "space_settings.0.jupyter_lab_app_settings.0.default_resource_spec.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.0.jupyter_lab_app_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.0.jupyter_lab_app_settings.0.default_resource_spec.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "space_settings.0.jupyter_lab_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.micro"),
-					resource.TestCheckResourceAttr(resourceName, "space_sharing_settings.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "space_sharing_settings.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "space_sharing_settings.0.sharing_type", "Private"),
-					resource.TestCheckResourceAttr(resourceName, "ownership_settings.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "ownership_settings.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "ownership_settings.0.owner_user_profile_name", "aws_sagemaker_user_profile.test", "user_profile_name"),
 				),
 			},
@@ -355,9 +354,9 @@ func testAccSpace_jupyterServerAppSettings(t *testing.T) {
 				Config: testAccSpaceConfig_jupyterServerAppSettings(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSpaceExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "space_settings.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "space_settings.0.jupyter_server_app_settings.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "space_settings.0.jupyter_server_app_settings.0.default_resource_spec.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.0.jupyter_server_app_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.0.jupyter_server_app_settings.0.default_resource_spec.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "space_settings.0.jupyter_server_app_settings.0.default_resource_spec.0.instance_type", "system"),
 				),
 			},
@@ -396,7 +395,7 @@ func testAccSpace_disappears(t *testing.T) {
 
 func testAccCheckSpaceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sagemaker_space" {
@@ -406,20 +405,17 @@ func testAccCheckSpaceDestroy(ctx context.Context) resource.TestCheckFunc {
 			domainID := rs.Primary.Attributes["domain_id"]
 			spaceName := rs.Primary.Attributes["space_name"]
 
-			space, err := tfsagemaker.FindSpaceByName(ctx, conn, domainID, spaceName)
+			_, err := tfsagemaker.FindSpaceByName(ctx, conn, domainID, spaceName)
 
-			if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
 			if err != nil {
-				return fmt.Errorf("reading SageMaker Space (%s): %w", rs.Primary.ID, err)
+				return err
 			}
 
-			spaceArn := aws.StringValue(space.SpaceArn)
-			if spaceArn == rs.Primary.ID {
-				return fmt.Errorf("SageMaker Space %q still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("SageMaker Space %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -437,7 +433,7 @@ func testAccCheckSpaceExists(ctx context.Context, n string, space *sagemaker.Des
 			return fmt.Errorf("No sagmaker domain ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
 
 		domainID := rs.Primary.Attributes["domain_id"]
 		spaceName := rs.Primary.Attributes["space_name"]

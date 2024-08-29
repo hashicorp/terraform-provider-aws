@@ -31,11 +31,11 @@ func TestValidResolverName(t *testing.T) {
 			ErrCount: 1,
 		},
 		{
-			Value:    acctest.CtOne,
+			Value:    acctest.Ct1,
 			ErrCount: 1,
 		},
 		{
-			Value:    "10",
+			Value:    acctest.Ct10,
 			ErrCount: 0,
 		},
 		{

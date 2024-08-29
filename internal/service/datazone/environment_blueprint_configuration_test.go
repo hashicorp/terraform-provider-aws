@@ -42,7 +42,7 @@ func TestAccDataZoneEnvironmentBlueprintConfiguration_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentBlueprintConfigurationExists(ctx, resourceName, &environmentblueprintconfiguration),
 					resource.TestCheckResourceAttrSet(resourceName, "environment_blueprint_id"),
-					resource.TestCheckResourceAttr(resourceName, "enabled_regions.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "enabled_regions.#", acctest.Ct0),
 				),
 			},
 			{
@@ -105,7 +105,7 @@ func TestAccDataZoneEnvironmentBlueprintConfiguration_enabled_regions(t *testing
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentBlueprintConfigurationExists(ctx, resourceName, &environmentblueprintconfiguration),
 					resource.TestCheckResourceAttrSet(resourceName, "environment_blueprint_id"),
-					resource.TestCheckResourceAttr(resourceName, "enabled_regions.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "enabled_regions.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "enabled_regions.0", names.USEast1RegionID),
 				),
 			},
@@ -121,7 +121,7 @@ func TestAccDataZoneEnvironmentBlueprintConfiguration_enabled_regions(t *testing
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentBlueprintConfigurationExists(ctx, resourceName, &environmentblueprintconfiguration),
 					resource.TestCheckResourceAttrSet(resourceName, "environment_blueprint_id"),
-					resource.TestCheckResourceAttr(resourceName, "enabled_regions.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "enabled_regions.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "enabled_regions.0", names.APSoutheast2RegionID),
 				),
 			},
@@ -247,8 +247,8 @@ func TestAccDataZoneEnvironmentBlueprintConfiguration_regional_parameters(t *tes
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentBlueprintConfigurationExists(ctx, resourceName, &environmentblueprintconfiguration),
 					resource.TestCheckResourceAttrSet(resourceName, "environment_blueprint_id"),
-					resource.TestCheckResourceAttr(resourceName, "regional_parameters.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("regional_parameters.%s.%%", names.USWest2RegionID), acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "regional_parameters.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("regional_parameters.%s.%%", names.USWest2RegionID), acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("regional_parameters.%s.key1", names.USWest2RegionID), acctest.CtValue1),
 				),
 			},
@@ -264,8 +264,8 @@ func TestAccDataZoneEnvironmentBlueprintConfiguration_regional_parameters(t *tes
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentBlueprintConfigurationExists(ctx, resourceName, &environmentblueprintconfiguration),
 					resource.TestCheckResourceAttrSet(resourceName, "environment_blueprint_id"),
-					resource.TestCheckResourceAttr(resourceName, "regional_parameters.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("regional_parameters.%s.%%", names.USWest2RegionID), acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "regional_parameters.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("regional_parameters.%s.%%", names.USWest2RegionID), acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("regional_parameters.%s.key2", names.USWest2RegionID), acctest.CtValue2),
 				),
 			},

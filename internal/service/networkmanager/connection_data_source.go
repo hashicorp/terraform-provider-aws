@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_networkmanager_connection")
-func DataSourceConnection() *schema.Resource {
+// @SDKDataSource("aws_networkmanager_connection", name="Connection")
+func dataSourceConnection() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceConnectionRead,
 
@@ -32,7 +32,7 @@ func DataSourceConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"connection_id": {
+			names.AttrConnectionID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -60,12 +60,12 @@ func DataSourceConnection() *schema.Resource {
 func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
+	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	globalNetworkID := d.Get("global_network_id").(string)
-	connectionID := d.Get("connection_id").(string)
-	connection, err := FindConnectionByTwoPartKey(ctx, conn, globalNetworkID, connectionID)
+	connectionID := d.Get(names.AttrConnectionID).(string)
+	connection, err := findConnectionByTwoPartKey(ctx, conn, globalNetworkID, connectionID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Network Manager Connection (%s): %s", connectionID, err)
@@ -75,7 +75,7 @@ func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrARN, connection.ConnectionArn)
 	d.Set("connected_device_id", connection.ConnectedDeviceId)
 	d.Set("connected_link_id", connection.ConnectedLinkId)
-	d.Set("connection_id", connection.ConnectionId)
+	d.Set(names.AttrConnectionID, connection.ConnectionId)
 	d.Set(names.AttrDescription, connection.Description)
 	d.Set("device_id", connection.DeviceId)
 	d.Set("global_network_id", connection.GlobalNetworkId)

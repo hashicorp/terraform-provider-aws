@@ -26,8 +26,8 @@ func TestAccCognitoIDPUserPoolClientsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccUserPoolClientsDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceName, "client_ids.#", acctest.CtThree),
-					resource.TestCheckResourceAttr(datasourceName, "client_names.#", acctest.CtThree),
+					resource.TestCheckResourceAttr(datasourceName, "client_ids.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(datasourceName, "client_names.#", acctest.Ct3),
 				),
 			},
 		},

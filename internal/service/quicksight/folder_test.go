@@ -103,7 +103,7 @@ func TestAccQuickSightFolder_permissions(t *testing.T) {
 				Config: testAccFolderConfig_permissions(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFolderExists(ctx, resourceName, &folder),
-					resource.TestCheckResourceAttr(resourceName, "permissions.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", acctest.Ct1),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "permissions.*", map[string]*regexp.Regexp{
 						names.AttrPrincipal: regexache.MustCompile(fmt.Sprintf(`user/default/%s`, rName)),
 					}),
@@ -119,7 +119,7 @@ func TestAccQuickSightFolder_permissions(t *testing.T) {
 				Config: testAccFolderConfig_permissionsUpdate(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFolderExists(ctx, resourceName, &folder),
-					resource.TestCheckResourceAttr(resourceName, "permissions.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", acctest.Ct1),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "permissions.*", map[string]*regexp.Regexp{
 						names.AttrPrincipal: regexache.MustCompile(fmt.Sprintf(`user/default/%s`, rName)),
 					}),
@@ -142,7 +142,7 @@ func TestAccQuickSightFolder_permissions(t *testing.T) {
 				Config: testAccFolderConfig_basic(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFolderExists(ctx, resourceName, &folder),
-					resource.TestCheckResourceAttr(resourceName, "permission.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "permission.#", acctest.Ct0),
 				),
 			},
 		},
@@ -169,7 +169,7 @@ func TestAccQuickSightFolder_tags(t *testing.T) {
 				Config: testAccFolderConfig_tags1(rId, rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFolderExists(ctx, resourceName, &folder),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -182,7 +182,7 @@ func TestAccQuickSightFolder_tags(t *testing.T) {
 				Config: testAccFolderConfig_tags2(rId, rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFolderExists(ctx, resourceName, &folder),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -191,7 +191,7 @@ func TestAccQuickSightFolder_tags(t *testing.T) {
 				Config: testAccFolderConfig_tags1(rId, rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFolderExists(ctx, resourceName, &folder),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},

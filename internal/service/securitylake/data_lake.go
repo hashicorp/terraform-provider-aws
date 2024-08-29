@@ -135,7 +135,7 @@ func (r *dataLakeResource) Schema(ctx context.Context, request resource.SchemaRe
 												"days": schema.Int64Attribute{
 													Optional: true,
 												},
-												"storage_class": schema.StringAttribute{
+												names.AttrStorageClass: schema.StringAttribute{
 													Optional: true,
 												},
 											},
@@ -395,7 +395,6 @@ func findDataLakes(ctx context.Context, conn *securitylake.Client, input *securi
 	}
 
 	for _, v := range output.DataLakes {
-		v := v
 		if v := &v; filter(v) {
 			dataLakes = append(dataLakes, v)
 		}

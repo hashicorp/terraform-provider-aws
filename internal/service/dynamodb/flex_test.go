@@ -36,10 +36,10 @@ func TestExpandTableItemAttributes(t *testing.T) {
 		"BOOL": {
 			input: `{"true":{"BOOL":true},"false":{"BOOL":false}}`,
 			expected: map[string]awstypes.AttributeValue{
-				"true": &awstypes.AttributeValueMemberBOOL{
+				acctest.CtTrue: &awstypes.AttributeValueMemberBOOL{
 					Value: true,
 				},
-				"false": &awstypes.AttributeValueMemberBOOL{
+				acctest.CtFalse: &awstypes.AttributeValueMemberBOOL{
 					Value: false,
 				},
 			},
@@ -64,7 +64,7 @@ func TestExpandTableItemAttributes(t *testing.T) {
 				"attr": &awstypes.AttributeValueMemberL{
 					Value: []awstypes.AttributeValue{
 						&awstypes.AttributeValueMemberS{Value: "one"},
-						&awstypes.AttributeValueMemberN{Value: acctest.CtTwo},
+						&awstypes.AttributeValueMemberN{Value: acctest.Ct2},
 					},
 				},
 			},
@@ -75,7 +75,7 @@ func TestExpandTableItemAttributes(t *testing.T) {
 				"attr": &awstypes.AttributeValueMemberM{
 					Value: map[string]awstypes.AttributeValue{
 						"one": &awstypes.AttributeValueMemberS{Value: "one"},
-						"two": &awstypes.AttributeValueMemberN{Value: acctest.CtTwo},
+						"two": &awstypes.AttributeValueMemberN{Value: acctest.Ct2},
 					},
 				},
 			},
@@ -123,7 +123,6 @@ func TestExpandTableItemAttributes(t *testing.T) {
 	}
 
 	for name, tc := range cases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -189,10 +188,10 @@ func TestFlattenTableItemAttributes(t *testing.T) {
 		},
 		"BOOL": {
 			attrs: map[string]awstypes.AttributeValue{
-				"true": &awstypes.AttributeValueMemberBOOL{
+				acctest.CtTrue: &awstypes.AttributeValueMemberBOOL{
 					Value: true,
 				},
-				"false": &awstypes.AttributeValueMemberBOOL{
+				acctest.CtFalse: &awstypes.AttributeValueMemberBOOL{
 					Value: false,
 				},
 			},
@@ -217,7 +216,7 @@ func TestFlattenTableItemAttributes(t *testing.T) {
 				"attr": &awstypes.AttributeValueMemberL{
 					Value: []awstypes.AttributeValue{
 						&awstypes.AttributeValueMemberS{Value: "one"},
-						&awstypes.AttributeValueMemberN{Value: acctest.CtTwo},
+						&awstypes.AttributeValueMemberN{Value: acctest.Ct2},
 					},
 				},
 			},
@@ -228,7 +227,7 @@ func TestFlattenTableItemAttributes(t *testing.T) {
 				"attr": &awstypes.AttributeValueMemberM{
 					Value: map[string]awstypes.AttributeValue{
 						"one": &awstypes.AttributeValueMemberS{Value: "one"},
-						"two": &awstypes.AttributeValueMemberN{Value: acctest.CtTwo},
+						"two": &awstypes.AttributeValueMemberN{Value: acctest.Ct2},
 					},
 				},
 			},
@@ -277,7 +276,6 @@ func TestFlattenTableItemAttributes(t *testing.T) {
 	}
 
 	for name, tc := range cases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 

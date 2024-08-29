@@ -44,7 +44,7 @@ func TestAccEvidentlySegment_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedTime),
 					resource.TestCheckResourceAttrSet(resourceName, "experiment_count"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrID, "evidently", fmt.Sprintf("segment/%s", rName)),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_time"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedTime),
 					resource.TestCheckResourceAttrSet(resourceName, "launch_count"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "pattern", pattern),
@@ -145,7 +145,7 @@ func TestAccEvidentlySegment_tags(t *testing.T) {
 				Config: testAccSegmentConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSegmentExists(ctx, resourceName, &segment),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -158,7 +158,7 @@ func TestAccEvidentlySegment_tags(t *testing.T) {
 				Config: testAccSegmentConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSegmentExists(ctx, resourceName, &segment),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -172,7 +172,7 @@ func TestAccEvidentlySegment_tags(t *testing.T) {
 				Config: testAccSegmentConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSegmentExists(ctx, resourceName, &segment),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},

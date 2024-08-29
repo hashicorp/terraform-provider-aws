@@ -37,17 +37,17 @@ func TestAccLicenseManagerGrant_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"grant": {
-			"basic":        testAccGrant_basic,
-			"disappears":   testAccGrant_disappears,
-			names.AttrName: testAccGrant_name,
+			acctest.CtBasic:      testAccGrant_basic,
+			acctest.CtDisappears: testAccGrant_disappears,
+			acctest.CtName:       testAccGrant_name,
 		},
 		"grant_accepter": {
-			"basic":      testAccGrantAccepter_basic,
-			"disappears": testAccGrantAccepter_disappears,
+			acctest.CtBasic:      testAccGrantAccepter_basic,
+			acctest.CtDisappears: testAccGrantAccepter_disappears,
 		},
 		"grant_data_source": {
-			"basic": testAccGrantsDataSource_basic,
-			"empty": testAccGrantsDataSource_noMatch,
+			acctest.CtBasic: testAccGrantsDataSource_basic,
+			"empty":         testAccGrantsDataSource_noMatch,
 		},
 	}
 
@@ -83,7 +83,7 @@ func testAccGrant_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "parent_arn"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPrincipal, principal),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "PENDING_ACCEPT"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct1),
 				),
 			},
 			{
@@ -166,29 +166,17 @@ func testAccCheckGrantExists(ctx context.Context, n string) resource.TestCheckFu
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No License Manager License Configuration ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LicenseManagerClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LicenseManagerConn(ctx)
+		_, err := tflicensemanager.FindGrantByARN(ctx, conn, rs.Primary.ID)
 
-		out, err := tflicensemanager.FindGrantByARN(ctx, conn, rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		if out == nil {
-			return fmt.Errorf("Grant %q does not exist", rs.Primary.ID)
-		}
-
-		return nil
+		return err
 	}
 }
 
 func testAccCheckGrantDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LicenseManagerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LicenseManagerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_licensemanager_grant" {

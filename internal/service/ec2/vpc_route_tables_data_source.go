@@ -7,8 +7,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_route_tables")
-func DataSourceRouteTables() *schema.Resource {
+// @SDKDataSource("aws_route_tables", name="Route Tables")
+func dataSourceRouteTables() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRouteTablesRead,
 
@@ -44,7 +44,7 @@ func DataSourceRouteTables() *schema.Resource {
 
 func dataSourceRouteTablesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeRouteTablesInput{}
 
@@ -68,7 +68,7 @@ func dataSourceRouteTablesRead(ctx context.Context, d *schema.ResourceData, meta
 		input.Filters = nil
 	}
 
-	output, err := FindRouteTables(ctx, conn, input)
+	output, err := findRouteTables(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Route Tables: %s", err)
@@ -77,7 +77,7 @@ func dataSourceRouteTablesRead(ctx context.Context, d *schema.ResourceData, meta
 	var routeTableIDs []string
 
 	for _, v := range output {
-		routeTableIDs = append(routeTableIDs, aws.StringValue(v.RouteTableId))
+		routeTableIDs = append(routeTableIDs, aws.ToString(v.RouteTableId))
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)

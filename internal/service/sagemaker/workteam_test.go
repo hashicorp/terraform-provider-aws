@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/sagemaker"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func testAccWorkteam_cognitoConfig(t *testing.T) {
 	ctx := acctest.Context(t)
-	var workteam sagemaker.Workteam
+	var workteam awstypes.Workteam
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_workteam.test"
 
@@ -39,13 +39,13 @@ func testAccWorkteam_cognitoConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "workteam_name", rName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`workteam/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
-					resource.TestCheckResourceAttr(resourceName, "member_definition.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "member_definition.0.cognito_member_definition.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "member_definition.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "member_definition.0.cognito_member_definition.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "member_definition.0.cognito_member_definition.0.client_id", "aws_cognito_user_pool_client.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "member_definition.0.cognito_member_definition.0.user_pool", "aws_cognito_user_pool.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "member_definition.0.cognito_member_definition.0.user_group", "aws_cognito_user_group.test", names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "subdomain"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -61,12 +61,12 @@ func testAccWorkteam_cognitoConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "workteam_name", rName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`workteam/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
-					resource.TestCheckResourceAttr(resourceName, "member_definition.#", acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "member_definition.0.cognito_member_definition.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "member_definition.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "member_definition.0.cognito_member_definition.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "member_definition.0.cognito_member_definition.0.client_id", "aws_cognito_user_pool_client.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "member_definition.0.cognito_member_definition.0.user_pool", "aws_cognito_user_pool.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "member_definition.0.cognito_member_definition.0.user_group", "aws_cognito_user_group.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "member_definition.1.cognito_member_definition.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "member_definition.1.cognito_member_definition.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "member_definition.1.cognito_member_definition.0.client_id", "aws_cognito_user_pool_client.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "member_definition.1.cognito_member_definition.0.user_pool", "aws_cognito_user_pool.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "member_definition.1.cognito_member_definition.0.user_group", "aws_cognito_user_group.test2", names.AttrID),
@@ -80,8 +80,8 @@ func testAccWorkteam_cognitoConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "workteam_name", rName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`workteam/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
-					resource.TestCheckResourceAttr(resourceName, "member_definition.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "member_definition.0.cognito_member_definition.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "member_definition.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "member_definition.0.cognito_member_definition.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "member_definition.0.cognito_member_definition.0.client_id", "aws_cognito_user_pool_client.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "member_definition.0.cognito_member_definition.0.user_pool", "aws_cognito_user_pool.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "member_definition.0.cognito_member_definition.0.user_group", "aws_cognito_user_group.test", names.AttrID),
@@ -94,7 +94,7 @@ func testAccWorkteam_cognitoConfig(t *testing.T) {
 
 func testAccWorkteam_oidcConfig(t *testing.T) {
 	ctx := acctest.Context(t)
-	var workteam sagemaker.Workteam
+	var workteam awstypes.Workteam
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_workteam.test"
 
@@ -110,9 +110,9 @@ func testAccWorkteam_oidcConfig(t *testing.T) {
 					testAccCheckWorkteamExists(ctx, resourceName, &workteam),
 					resource.TestCheckResourceAttr(resourceName, "workteam_name", rName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`workteam/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "member_definition.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "member_definition.0.oidc_member_definition.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "member_definition.0.oidc_member_definition.0.groups.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "member_definition.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "member_definition.0.oidc_member_definition.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "member_definition.0.oidc_member_definition.0.groups.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "member_definition.0.oidc_member_definition.0.groups.*", rName),
 				),
 			},
@@ -128,9 +128,9 @@ func testAccWorkteam_oidcConfig(t *testing.T) {
 					testAccCheckWorkteamExists(ctx, resourceName, &workteam),
 					resource.TestCheckResourceAttr(resourceName, "workteam_name", rName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`workteam/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "member_definition.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "member_definition.0.oidc_member_definition.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "member_definition.0.oidc_member_definition.0.groups.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "member_definition.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "member_definition.0.oidc_member_definition.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "member_definition.0.oidc_member_definition.0.groups.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemAttr(resourceName, "member_definition.0.oidc_member_definition.0.groups.*", rName),
 					resource.TestCheckTypeSetElemAttr(resourceName, "member_definition.0.oidc_member_definition.0.groups.*", "test"),
 				),
@@ -141,9 +141,9 @@ func testAccWorkteam_oidcConfig(t *testing.T) {
 					testAccCheckWorkteamExists(ctx, resourceName, &workteam),
 					resource.TestCheckResourceAttr(resourceName, "workteam_name", rName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`workteam/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "member_definition.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "member_definition.0.oidc_member_definition.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "member_definition.0.oidc_member_definition.0.groups.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "member_definition.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "member_definition.0.oidc_member_definition.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "member_definition.0.oidc_member_definition.0.groups.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "member_definition.0.oidc_member_definition.0.groups.*", rName)),
 			},
 		},
@@ -152,7 +152,7 @@ func testAccWorkteam_oidcConfig(t *testing.T) {
 
 func testAccWorkteam_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var workteam sagemaker.Workteam
+	var workteam awstypes.Workteam
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_workteam.test"
 
@@ -166,7 +166,7 @@ func testAccWorkteam_tags(t *testing.T) {
 				Config: testAccWorkteamConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkteamExists(ctx, resourceName, &workteam),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -180,7 +180,7 @@ func testAccWorkteam_tags(t *testing.T) {
 				Config: testAccWorkteamConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkteamExists(ctx, resourceName, &workteam),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -189,7 +189,7 @@ func testAccWorkteam_tags(t *testing.T) {
 				Config: testAccWorkteamConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkteamExists(ctx, resourceName, &workteam),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -199,7 +199,7 @@ func testAccWorkteam_tags(t *testing.T) {
 
 func testAccWorkteam_notificationConfig(t *testing.T) {
 	ctx := acctest.Context(t)
-	var workteam sagemaker.Workteam
+	var workteam awstypes.Workteam
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_workteam.test"
 
@@ -216,7 +216,7 @@ func testAccWorkteam_notificationConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "workteam_name", rName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`workteam/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
-					resource.TestCheckResourceAttr(resourceName, "notification_configuration.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "notification_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "notification_configuration.0.notification_topic_arn", "aws_sns_topic.test", names.AttrARN),
 				),
 			},
@@ -233,7 +233,7 @@ func testAccWorkteam_notificationConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "workteam_name", rName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`workteam/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
-					resource.TestCheckResourceAttr(resourceName, "notification_configuration.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "notification_configuration.#", acctest.Ct1),
 				),
 			},
 			{
@@ -243,8 +243,56 @@ func testAccWorkteam_notificationConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "workteam_name", rName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`workteam/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
-					resource.TestCheckResourceAttr(resourceName, "notification_configuration.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "notification_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "notification_configuration.0.notification_topic_arn", "aws_sns_topic.test", names.AttrARN),
+				),
+			},
+		},
+	})
+}
+
+func testAccWorkteam_workerAccessConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var workteam awstypes.Workteam
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_workteam.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkteamDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkteamConfig_workerAccessConfiguration(rName, "Enabled"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkteamExists(ctx, resourceName, &workteam),
+					resource.TestCheckResourceAttr(resourceName, "workteam_name", rName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`workteam/.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
+					resource.TestCheckResourceAttr(resourceName, "worker_access_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "worker_access_configuration.0.s3_presign.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "worker_access_configuration.0.s3_presign.0.iam_policy_constraints.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "worker_access_configuration.0.s3_presign.0.iam_policy_constraints.0.source_ip", "Enabled"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"workforce_name"},
+			},
+			{
+				Config: testAccWorkteamConfig_workerAccessConfiguration(rName, "Disabled"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkteamExists(ctx, resourceName, &workteam),
+					resource.TestCheckResourceAttr(resourceName, "workteam_name", rName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`workteam/.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
+					resource.TestCheckResourceAttr(resourceName, "worker_access_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "worker_access_configuration.0.s3_presign.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "worker_access_configuration.0.s3_presign.0.iam_policy_constraints.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "worker_access_configuration.0.s3_presign.0.iam_policy_constraints.0.source_ip", "Disabled"),
 				),
 			},
 		},
@@ -253,7 +301,7 @@ func testAccWorkteam_notificationConfig(t *testing.T) {
 
 func testAccWorkteam_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var workteam sagemaker.Workteam
+	var workteam awstypes.Workteam
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_workteam.test"
 
@@ -277,7 +325,7 @@ func testAccWorkteam_disappears(t *testing.T) {
 
 func testAccCheckWorkteamDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sagemaker_workteam" {
@@ -301,7 +349,7 @@ func testAccCheckWorkteamDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckWorkteamExists(ctx context.Context, n string, workteam *sagemaker.Workteam) resource.TestCheckFunc {
+func testAccCheckWorkteamExists(ctx context.Context, n string, workteam *awstypes.Workteam) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -312,7 +360,7 @@ func testAccCheckWorkteamExists(ctx context.Context, n string, workteam *sagemak
 			return fmt.Errorf("No SageMaker Workteam ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
 
 		output, err := tfsagemaker.FindWorkteamByName(ctx, conn, rs.Primary.ID)
 
@@ -503,6 +551,30 @@ resource "aws_sagemaker_workteam" "test" {
   }
 }
 `, rName))
+}
+
+func testAccWorkteamConfig_workerAccessConfiguration(rName, status string) string {
+	return acctest.ConfigCompose(testAccWorkteamOIDCBaseConfig(rName), fmt.Sprintf(`
+resource "aws_sagemaker_workteam" "test" {
+  workteam_name  = %[1]q
+  workforce_name = aws_sagemaker_workforce.test.id
+  description    = %[1]q
+
+  member_definition {
+    oidc_member_definition {
+      groups = [%[1]q]
+    }
+  }
+
+  worker_access_configuration {
+    s3_presign {
+      iam_policy_constraints {
+        source_ip = %[2]q
+      }
+    }
+  }
+}
+`, rName, status))
 }
 
 func testAccWorkteamConfig_tags1(rName, tagKey1, tagValue1 string) string {

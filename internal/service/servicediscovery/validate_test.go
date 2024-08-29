@@ -18,7 +18,7 @@ func TestValidNamespaceName(t *testing.T) {
 	validNames := []string{
 		"ValidName",
 		"V_-.dN01e",
-		acctest.CtZero,
+		acctest.Ct0,
 		".",
 		"-",
 		"_",

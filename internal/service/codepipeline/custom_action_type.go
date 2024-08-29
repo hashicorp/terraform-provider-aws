@@ -374,7 +374,6 @@ func findActionTypes(ctx context.Context, conn *codepipeline.Client, input *code
 		}
 
 		for _, v := range page.ActionTypes {
-			v := v
 			if v := &v; filter(v) {
 				output = append(output, v)
 			}

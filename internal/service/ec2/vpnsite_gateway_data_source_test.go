@@ -35,7 +35,7 @@ func TestAccSiteVPNGatewayDataSource_unattached(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceNameByTags, names.AttrID, resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(dataSourceNameByAsn, names.AttrID, resourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(dataSourceNameById, names.AttrState),
-					resource.TestCheckResourceAttr(dataSourceNameByTags, acctest.CtTagsPercent, acctest.CtThree),
+					resource.TestCheckResourceAttr(dataSourceNameByTags, acctest.CtTagsPercent, acctest.Ct3),
 					resource.TestCheckNoResourceAttr(dataSourceNameById, "attached_vpc_id"),
 					resource.TestCheckResourceAttr(dataSourceNameByAsn, "amazon_side_asn", "4294967293"),
 				),

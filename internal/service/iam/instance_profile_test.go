@@ -39,7 +39,7 @@ func TestAccIAMInstanceProfile_basic(t *testing.T) {
 					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "iam", fmt.Sprintf("instance-profile/%s", rName)),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, "aws_iam_role.test", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{

@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testContactChannel_basic(t *testing.T) {
+func testAccContactChannel_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -71,7 +71,7 @@ func testContactChannel_basic(t *testing.T) {
 	})
 }
 
-func testContactChannel_disappears(t *testing.T) {
+func testAccContactChannel_disappears(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -101,7 +101,7 @@ func testContactChannel_disappears(t *testing.T) {
 	})
 }
 
-func testContactChannel_contactID(t *testing.T) {
+func testAccContactChannel_contactID(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -153,7 +153,7 @@ func testContactChannel_contactID(t *testing.T) {
 	})
 }
 
-func testContactChannel_deliveryAddress(t *testing.T) {
+func testAccContactChannel_deliveryAddress(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -209,14 +209,14 @@ func testContactChannel_deliveryAddress(t *testing.T) {
 	})
 }
 
-func testContactChannel_name(t *testing.T) {
+func testAccContactChannel_name(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
 	ctx := acctest.Context(t)
-	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix + acctest.CtOne)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix + acctest.CtTwo)
+	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix + acctest.Ct1)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix + acctest.Ct2)
 	contactResourceName := "aws_ssmcontacts_contact.test"
 	channelResourceName := "aws_ssmcontacts_contact_channel.test"
 
@@ -259,7 +259,7 @@ func testContactChannel_name(t *testing.T) {
 	})
 }
 
-func testContactChannel_type(t *testing.T) {
+func testAccContactChannel_type(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}

@@ -104,7 +104,7 @@ func TestAccEMRReleaseLabels_empty(t *testing.T) {
 			{
 				Config: testAccReleaseLabelsDataSourceConfig_empty(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceResourceName, "release_labels.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(dataSourceResourceName, "release_labels.#", acctest.Ct0),
 				),
 			},
 		},

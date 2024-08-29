@@ -55,7 +55,7 @@ func testAccTransitGatewayRouteTableAssociationsDataSource_filter(t *testing.T, 
 			{
 				Config: testAccTransitGatewayRouteTableAssociationsDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "ids.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(dataSourceName, "ids.#", acctest.Ct1),
 				),
 			},
 		},

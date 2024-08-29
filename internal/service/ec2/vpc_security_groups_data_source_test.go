@@ -26,9 +26,9 @@ func TestAccVPCSecurityGroupsDataSource_tag(t *testing.T) {
 			{
 				Config: testAccVPCSecurityGroupsDataSourceConfig_tag(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "arns.#", acctest.CtThree),
-					resource.TestCheckResourceAttr(dataSourceName, "ids.#", acctest.CtThree),
-					resource.TestCheckResourceAttr(dataSourceName, "vpc_ids.#", acctest.CtThree),
+					resource.TestCheckResourceAttr(dataSourceName, "arns.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(dataSourceName, "ids.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(dataSourceName, "vpc_ids.#", acctest.Ct3),
 				),
 			},
 		},
@@ -48,9 +48,9 @@ func TestAccVPCSecurityGroupsDataSource_filter(t *testing.T) {
 			{
 				Config: testAccVPCSecurityGroupsDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "arns.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(dataSourceName, "ids.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(dataSourceName, "vpc_ids.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(dataSourceName, "arns.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "vpc_ids.#", acctest.Ct1),
 				),
 			},
 		},
@@ -70,9 +70,9 @@ func TestAccVPCSecurityGroupsDataSource_empty(t *testing.T) {
 			{
 				Config: testAccVPCSecurityGroupsDataSourceConfig_empty(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "arns.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(dataSourceName, "ids.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(dataSourceName, "vpc_ids.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(dataSourceName, "arns.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "ids.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "vpc_ids.#", acctest.Ct0),
 				),
 			},
 		},

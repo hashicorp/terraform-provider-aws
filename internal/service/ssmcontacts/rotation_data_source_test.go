@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testRotationDataSource_basic(t *testing.T) {
+func testAccRotationDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	if testing.Short() {
@@ -65,7 +65,7 @@ func testRotationDataSource_basic(t *testing.T) {
 	})
 }
 
-func testRotationDataSource_dailySettings(t *testing.T) {
+func testAccRotationDataSource_dailySettings(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	if testing.Short() {
@@ -97,7 +97,7 @@ func testRotationDataSource_dailySettings(t *testing.T) {
 	})
 }
 
-func testRotationDataSource_monthlySettings(t *testing.T) {
+func testAccRotationDataSource_monthlySettings(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	if testing.Short() {

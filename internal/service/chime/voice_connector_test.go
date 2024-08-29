@@ -42,7 +42,7 @@ func testAccVoiceConnector_basic(t *testing.T) {
 					testAccCheckVoiceConnectorExists(ctx, resourceName, voiceConnector),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("vc-%s", vcName)),
 					resource.TestCheckResourceAttrSet(resourceName, "aws_region"),
-					resource.TestCheckResourceAttr(resourceName, "require_encryption", "true"),
+					resource.TestCheckResourceAttr(resourceName, "require_encryption", acctest.CtTrue),
 				),
 			},
 			{
@@ -104,13 +104,13 @@ func testAccVoiceConnector_update(t *testing.T) {
 					testAccCheckVoiceConnectorExists(ctx, resourceName, voiceConnector),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("vc-%s", vcName)),
 					resource.TestCheckResourceAttrSet(resourceName, "aws_region"),
-					resource.TestCheckResourceAttr(resourceName, "require_encryption", "true"),
+					resource.TestCheckResourceAttr(resourceName, "require_encryption", acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccVoiceConnectorConfig_updated(vcName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "require_encryption", "false"),
+					resource.TestCheckResourceAttr(resourceName, "require_encryption", acctest.CtFalse),
 				),
 			},
 			{
@@ -143,7 +143,7 @@ func testAccVoiceConnector_tags(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorExists(ctx, resourceName, voiceConnector),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("vc-%s", vcName)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -157,7 +157,7 @@ func testAccVoiceConnector_tags(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorExists(ctx, resourceName, voiceConnector),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("vc-%s", vcName)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -167,7 +167,7 @@ func testAccVoiceConnector_tags(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorExists(ctx, resourceName, voiceConnector),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("vc-%s", vcName)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},

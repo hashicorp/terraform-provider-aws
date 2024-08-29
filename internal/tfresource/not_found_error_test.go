@@ -79,7 +79,6 @@ func TestEmptyResultErrorIs(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -160,7 +159,6 @@ func TestTooManyResultsErrorIs(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -185,7 +183,7 @@ func TestAssertSinglePtrResult(t *testing.T) {
 	testCases := []struct {
 		name   string
 		input  []*x
-		fs     []FoundFunc[x]
+		fs     []foundFunc[x]
 		output *x
 		err    bool
 	}{
@@ -216,19 +214,18 @@ func TestAssertSinglePtrResult(t *testing.T) {
 		{
 			name:   "single non-nil input, with found",
 			input:  []*x{x1},
-			fs:     []FoundFunc[x]{func(v *x) bool { return v.A == 1 }},
+			fs:     []foundFunc[x]{func(v *x) bool { return v.A == 1 }},
 			output: x1,
 		},
 		{
 			name:  "single non-nil input, with not found",
 			input: []*x{x1},
-			fs:    []FoundFunc[x]{func(v *x) bool { return v.A == 2 }},
+			fs:    []foundFunc[x]{func(v *x) bool { return v.A == 2 }},
 			err:   true,
 		},
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 

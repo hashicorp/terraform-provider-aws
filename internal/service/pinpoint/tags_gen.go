@@ -5,9 +5,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/pinpoint"
-	"github.com/aws/aws-sdk-go/service/pinpoint/pinpointiface"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/pinpoint"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpoint/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
@@ -19,12 +19,12 @@ import (
 // listTags lists pinpoint service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func listTags(ctx context.Context, conn pinpointiface.PinpointAPI, identifier string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn *pinpoint.Client, identifier string, optFns ...func(*pinpoint.Options)) (tftags.KeyValueTags, error) {
 	input := &pinpoint.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForResourceWithContext(ctx, input)
+	output, err := conn.ListTagsForResource(ctx, input, optFns...)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
@@ -36,7 +36,7 @@ func listTags(ctx context.Context, conn pinpointiface.PinpointAPI, identifier st
 // ListTags lists pinpoint service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := listTags(ctx, meta.(*conns.AWSClient).PinpointConn(ctx), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).PinpointClient(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -49,21 +49,21 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 	return nil
 }
 
-// map[string]*string handling
+// map[string]string handling
 
 // Tags returns pinpoint service tags.
-func Tags(tags tftags.KeyValueTags) map[string]*string {
-	return aws.StringMap(tags.Map())
+func Tags(tags tftags.KeyValueTags) map[string]string {
+	return tags.Map()
 }
 
 // KeyValueTags creates tftags.KeyValueTags from pinpoint service tags.
-func KeyValueTags(ctx context.Context, tags map[string]*string) tftags.KeyValueTags {
+func KeyValueTags(ctx context.Context, tags map[string]string) tftags.KeyValueTags {
 	return tftags.New(ctx, tags)
 }
 
 // getTagsIn returns pinpoint service tags from Context.
 // nil is returned if there are no input tags.
-func getTagsIn(ctx context.Context) map[string]*string {
+func getTagsIn(ctx context.Context) map[string]string {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -74,7 +74,7 @@ func getTagsIn(ctx context.Context) map[string]*string {
 }
 
 // setTagsOut sets pinpoint service tags in Context.
-func setTagsOut(ctx context.Context, tags map[string]*string) {
+func setTagsOut(ctx context.Context, tags map[string]string) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = option.Some(KeyValueTags(ctx, tags))
 	}
@@ -83,7 +83,7 @@ func setTagsOut(ctx context.Context, tags map[string]*string) {
 // updateTags updates pinpoint service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func updateTags(ctx context.Context, conn pinpointiface.PinpointAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn *pinpoint.Client, identifier string, oldTagsMap, newTagsMap any, optFns ...func(*pinpoint.Options)) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -94,10 +94,10 @@ func updateTags(ctx context.Context, conn pinpointiface.PinpointAPI, identifier 
 	if len(removedTags) > 0 {
 		input := &pinpoint.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     removedTags.Keys(),
 		}
 
-		_, err := conn.UntagResourceWithContext(ctx, input)
+		_, err := conn.UntagResource(ctx, input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -109,10 +109,10 @@ func updateTags(ctx context.Context, conn pinpointiface.PinpointAPI, identifier 
 	if len(updatedTags) > 0 {
 		input := &pinpoint.TagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagsModel:   &pinpoint.TagsModel{Tags: Tags(updatedTags.IgnoreAWS())},
+			TagsModel:   &awstypes.TagsModel{Tags: Tags(updatedTags.IgnoreAWS())},
 		}
 
-		_, err := conn.TagResourceWithContext(ctx, input)
+		_, err := conn.TagResource(ctx, input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
@@ -125,5 +125,5 @@ func updateTags(ctx context.Context, conn pinpointiface.PinpointAPI, identifier 
 // UpdateTags updates pinpoint service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return updateTags(ctx, meta.(*conns.AWSClient).PinpointConn(ctx), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).PinpointClient(ctx), identifier, oldTags, newTags)
 }

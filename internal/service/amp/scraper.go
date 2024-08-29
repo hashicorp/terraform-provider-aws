@@ -34,8 +34,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Scraper")
+// @FrameworkResource("aws_prometheus_scraper", name="Scraper")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/amp/types;types.ScraperDescription")
 func newScraperResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &scraperResource{}
 
@@ -490,6 +491,7 @@ func waitScraperDeleted(ctx context.Context, conn *amp.Client, id string, timeou
 		Target:  []string{},
 		Refresh: statusScraper(ctx, conn, id),
 		Timeout: timeout,
+		Delay:   8 * time.Minute,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

@@ -98,12 +98,12 @@ func setTagsOut(ctx context.Context, tags []awstypes.Tag) {
 }
 
 // createTags creates kinesis service tags for new resources.
-func createTags(ctx context.Context, conn *kinesis.Client, identifier string, tags []awstypes.Tag) error {
+func createTags(ctx context.Context, conn *kinesis.Client, identifier string, tags []awstypes.Tag, optFns ...func(*kinesis.Options)) error {
 	if len(tags) == 0 {
 		return nil
 	}
 
-	return updateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
+	return updateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags), optFns...)
 }
 
 // updateTags updates kinesis service tags.

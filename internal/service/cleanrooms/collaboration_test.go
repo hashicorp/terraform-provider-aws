@@ -44,10 +44,10 @@ func TestAccCleanRoomsCollaboration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, TEST_DESCRIPTION),
 					resource.TestCheckResourceAttr(resourceName, "query_log_status", TEST_QUERY_LOG_STATUS),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "data_encryption_metadata.*", map[string]string{
-						"allow_clear_text": "true",
-						"allow_duplicates": "true",
-						"allow_joins_on_columns_with_different_names": "true",
-						"preserve_nulls": "false",
+						"allow_clear_text": acctest.CtTrue,
+						"allow_duplicates": acctest.CtTrue,
+						"allow_joins_on_columns_with_different_names": acctest.CtTrue,
+						"preserve_nulls": acctest.CtFalse,
 					}),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "cleanrooms", regexache.MustCompile(`collaboration:*`)),
 					testCheckCreatorMember(ctx, resourceName),
@@ -221,10 +221,10 @@ func TestAccCleanRoomsCollaboration_dataEncryptionSettings(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCollaborationRecreated(resourceName, &collaboration),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "data_encryption_metadata.*", map[string]string{
-						"allow_clear_text": "true",
-						"allow_duplicates": "true",
-						"allow_joins_on_columns_with_different_names": "true",
-						"preserve_nulls": "true",
+						"allow_clear_text": acctest.CtTrue,
+						"allow_duplicates": acctest.CtTrue,
+						"allow_joins_on_columns_with_different_names": acctest.CtTrue,
+						"preserve_nulls": acctest.CtTrue,
 					}),
 				),
 			},
@@ -232,7 +232,7 @@ func TestAccCleanRoomsCollaboration_dataEncryptionSettings(t *testing.T) {
 				Config: testAccCollaborationConfig_noDataEncryptionSettings(TEST_NAME, TEST_DESCRIPTION, TEST_TAG),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCollaborationRecreated(resourceName, &collaboration),
-					resource.TestCheckResourceAttr(resourceName, "data_encryption_metadata.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "data_encryption_metadata.#", acctest.Ct0),
 				),
 			},
 			{
@@ -264,15 +264,15 @@ func TestAccCleanRoomsCollaboration_updateMemberAbilities(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "member.0.account_id", "123456789012"),
 					resource.TestCheckResourceAttr(resourceName, "member.0.display_name", "OtherMember"),
 					resource.TestCheckResourceAttr(resourceName, "member.0.status", "INVITED"),
-					resource.TestCheckResourceAttr(resourceName, "member.0.member_abilities.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "member.0.member_abilities.#", acctest.Ct0),
 				),
 			},
 			{
 				Config: testAccCollaborationConfig_swapMemberAbilities(TEST_NAME, TEST_DESCRIPTION, TEST_TAG),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCollaborationRecreated(resourceName, &collaboration),
-					resource.TestCheckResourceAttr(resourceName, "creator_member_abilities.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "member.0.member_abilities.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "creator_member_abilities.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "member.0.member_abilities.#", acctest.Ct2),
 				),
 			},
 			{

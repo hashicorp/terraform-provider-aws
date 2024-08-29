@@ -91,7 +91,7 @@ func TestAccQuickSightNamespace_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNamespaceExists(ctx, resourceName, &namespace),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamespace, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -105,7 +105,7 @@ func TestAccQuickSightNamespace_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNamespaceExists(ctx, resourceName, &namespace),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamespace, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -115,7 +115,7 @@ func TestAccQuickSightNamespace_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNamespaceExists(ctx, resourceName, &namespace),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamespace, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},

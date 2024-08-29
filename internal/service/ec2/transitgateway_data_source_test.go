@@ -53,26 +53,29 @@ func TestAccTransitGatewayDataSource_serial(t *testing.T) {
 			"IDDifferentAccount":     testAccTransitGatewayPeeringAttachmentDataSource_ID_differentAccount,
 			"Tags":                   testAccTransitGatewayPeeringAttachmentDataSource_Tags,
 		},
+		"PeeringAttachments": {
+			"Filter": testAccTransitGatewayPeeringAttachmentsDataSource_Filter,
+		},
 		"RouteTable": {
 			"Filter": testAccTransitGatewayRouteTableDataSource_Filter,
 			"ID":     testAccTransitGatewayRouteTableDataSource_ID,
 		},
 		"RouteTables": {
-			"basic":  testAccTransitGatewayRouteTablesDataSource_basic,
-			"Filter": testAccTransitGatewayRouteTablesDataSource_filter,
-			"Tags":   testAccTransitGatewayRouteTablesDataSource_tags,
-			"Empty":  testAccTransitGatewayRouteTablesDataSource_empty,
+			acctest.CtBasic: testAccTransitGatewayRouteTablesDataSource_basic,
+			"Filter":        testAccTransitGatewayRouteTablesDataSource_filter,
+			"Tags":          testAccTransitGatewayRouteTablesDataSource_tags,
+			"Empty":         testAccTransitGatewayRouteTablesDataSource_empty,
 		},
 		"RouteTableAssociations": {
-			"Filter": testAccTransitGatewayRouteTableAssociationsDataSource_filter,
-			"basic":  testAccTransitGatewayRouteTableAssociationsDataSource_basic,
+			"Filter":        testAccTransitGatewayRouteTableAssociationsDataSource_filter,
+			acctest.CtBasic: testAccTransitGatewayRouteTableAssociationsDataSource_basic,
 		},
 		"RouteTablePropagations": {
-			"Filter": testAccTransitGatewayRouteTablePropagationsDataSource_filter,
-			"basic":  testAccTransitGatewayRouteTablePropagationsDataSource_basic,
+			"Filter":        testAccTransitGatewayRouteTablePropagationsDataSource_filter,
+			acctest.CtBasic: testAccTransitGatewayRouteTablePropagationsDataSource_basic,
 		},
 		"RouteTableRoutes": {
-			"basic": testAccTransitGatewayRouteTableRoutesDataSource_basic,
+			acctest.CtBasic: testAccTransitGatewayRouteTableRoutesDataSource_basic,
 		},
 		"VpcAttachment": {
 			"Filter": testAccTransitGatewayVPCAttachmentDataSource_Filter,

@@ -149,7 +149,7 @@ func TestAccRedshiftSnapshotCopy_retentionPeriod(t *testing.T) {
 					testAccCheckSnapshotCopyExists(ctx, resourceName, &snap),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrClusterIdentifier, clusterResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "destination_region", acctest.AlternateRegion()),
-					resource.TestCheckResourceAttr(resourceName, names.AttrRetentionPeriod, "10"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRetentionPeriod, acctest.Ct10),
 				),
 			},
 			{

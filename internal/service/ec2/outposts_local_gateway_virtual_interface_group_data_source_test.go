@@ -28,7 +28,7 @@ func TestAccEC2OutpostsLocalGatewayVirtualInterfaceGroupDataSource_filter(t *tes
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, names.AttrID, regexache.MustCompile(`^lgw-vif-grp-`)),
 					resource.TestMatchResourceAttr(dataSourceName, "local_gateway_id", regexache.MustCompile(`^lgw-`)),
-					resource.TestCheckResourceAttr(dataSourceName, "local_gateway_virtual_interface_ids.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(dataSourceName, "local_gateway_virtual_interface_ids.#", acctest.Ct2),
 				),
 			},
 		},
@@ -49,7 +49,7 @@ func TestAccEC2OutpostsLocalGatewayVirtualInterfaceGroupDataSource_localGatewayI
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, names.AttrID, regexache.MustCompile(`^lgw-vif-grp-`)),
 					resource.TestMatchResourceAttr(dataSourceName, "local_gateway_id", regexache.MustCompile(`^lgw-`)),
-					resource.TestCheckResourceAttr(dataSourceName, "local_gateway_virtual_interface_ids.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(dataSourceName, "local_gateway_virtual_interface_ids.#", acctest.Ct2),
 				),
 			},
 		},

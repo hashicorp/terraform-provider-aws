@@ -29,6 +29,7 @@ import (
 
 // @SDKResource("aws_db_event_subscription", name="Event Subscription")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func resourceEventSubscription() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEventSubscriptionCreate,
@@ -79,7 +80,7 @@ func resourceEventSubscription() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{names.AttrName},
-				ValidateFunc:  validEventSubscriptionName,
+				ValidateFunc:  validEventSubscriptionNamePrefix,
 			},
 			"sns_topic": {
 				Type:         schema.TypeString,
@@ -113,7 +114,7 @@ func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 		Enabled:          aws.Bool(d.Get(names.AttrEnabled).(bool)),
 		SnsTopicArn:      aws.String(d.Get("sns_topic").(string)),
 		SubscriptionName: aws.String(name),
-		Tags:             getTagsInV2(ctx),
+		Tags:             getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("event_categories"); ok && v.(*schema.Set).Len() > 0 {
