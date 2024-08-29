@@ -31,8 +31,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Replication Configuration Template")
+// @FrameworkResource("aws_drs_replication_configuration_template", name="Replication Configuration Template")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/drs/types;awstypes;awstypes.ReplicationConfigurationTemplate")
+// @Testing(serialize=true)
 func newReplicationConfigurationTemplateResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &replicationConfigurationTemplateResource{}
 
@@ -56,9 +58,7 @@ func (r *replicationConfigurationTemplateResource) Metadata(_ context.Context, r
 func (r *replicationConfigurationTemplateResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: schema.StringAttribute{
-				Computed: true,
-			},
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"associate_default_security_group": schema.BoolAttribute{
 				Required: true,
 			},
@@ -90,9 +90,7 @@ func (r *replicationConfigurationTemplateResource) Schema(ctx context.Context, r
 			"ebs_encryption_key_arn": schema.StringAttribute{
 				Optional: true,
 			},
-			names.AttrID: schema.StringAttribute{
-				Computed: true,
-			},
+			names.AttrID: framework.IDAttribute(),
 			"replication_server_instance_type": schema.StringAttribute{
 				Required: true,
 			},
@@ -104,7 +102,7 @@ func (r *replicationConfigurationTemplateResource) Schema(ctx context.Context, r
 				Required: true,
 			},
 
-			"staging_area_tags": tftags.TagsAttribute(),
+			"staging_area_tags": tftags.TagsAttributeRequired(),
 			names.AttrTags:      tftags.TagsAttribute(),
 			names.AttrTagsAll:   tftags.TagsAttributeComputedOnly(),
 
