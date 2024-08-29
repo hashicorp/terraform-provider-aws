@@ -6,6 +6,7 @@ NOTES:
 
 FEATURES:
 
+* **New Data Source:** `aws_shield_protection` ([#37524](https://github.com/hashicorp/terraform-provider-aws/issues/37524))
 * **New Resource:** `aws_glue_catalog_table_optimizer` ([#38052](https://github.com/hashicorp/terraform-provider-aws/issues/38052))
 
 ENHANCEMENTS:
@@ -20,6 +21,8 @@ ENHANCEMENTS:
 * resource/aws_emr_cluster: Support `io2` as a valid value for `ebs_config.type` ([#37740](https://github.com/hashicorp/terraform-provider-aws/issues/37740))
 * resource/aws_emr_instance_fleet: Support `io2` as a valid value for `instance_type_configs.ebs_config.type` ([#37740](https://github.com/hashicorp/terraform-provider-aws/issues/37740))
 * resource/aws_emr_instance_group: Support `io2` as a valid value for `instance_type_configs.ebs_config.type` ([#37740](https://github.com/hashicorp/terraform-provider-aws/issues/37740))
+* resource/aws_glue_job: Add `job_run_queuing_enabled` argument ([#39027](https://github.com/hashicorp/terraform-provider-aws/issues/39027))
+* resource/aws_lambda_event_source_mapping: Add `kms_key_arn` argument ([#39055](https://github.com/hashicorp/terraform-provider-aws/issues/39055))
 * resource/aws_verifiedaccess_endpoint: Set PolicyEnabled flag to `false` on update if `policy_document` is empty ([#38675](https://github.com/hashicorp/terraform-provider-aws/issues/38675))
 
 BUG FIXES:
@@ -29,6 +32,7 @@ BUG FIXES:
 * resource/aws_elbv2_listener: Fix crash when reading forward actions not configured in state ([#39039](https://github.com/hashicorp/terraform-provider-aws/issues/39039))
 * resource/aws_emr_instance_group: Properly send an `instance_count` value of `0` on create when configured ([#37740](https://github.com/hashicorp/terraform-provider-aws/issues/37740))
 * resource/aws_gamelift_game_server_group: Fix crash while reading server group with a nil auto scaling group ARN ([#39022](https://github.com/hashicorp/terraform-provider-aws/issues/39022))
+* resource/aws_guardduty_invite_accepter: Fix `BadRequestException: The request is rejected because an invalid or out-of-range value is specified as an input parameter` errors on resource Create ([#39084](https://github.com/hashicorp/terraform-provider-aws/issues/39084))
 * resource/aws_lakeformation_permissions: Fix error when revoking `data_cells_filter` permissions ([#39026](https://github.com/hashicorp/terraform-provider-aws/issues/39026))
 * resource/aws_neptune_cluster: Mark `neptune_cluster_parameter_group_name` as Computed ([#38980](https://github.com/hashicorp/terraform-provider-aws/issues/38980))
 * resource/aws_neptune_cluster_instance: Mark `neptune_parameter_group_name` as Computed ([#38980](https://github.com/hashicorp/terraform-provider-aws/issues/38980))

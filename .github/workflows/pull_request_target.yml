@@ -119,13 +119,6 @@ jobs:
   project:
     name: Maintainer Work Board
     runs-on: ubuntu-latest
-    env:
-      # Some gh project calls take the project's ID, some take the project's number
-      PROJECT_ID: "PVT_kwDOAAuecM4AF-7h"
-      PROJECT_NUMBER: "196"
-      STATUS_FIELD_ID: "PVTSSF_lADOAAuecM4AF-7hzgDcsQA"
-      VIEW_FIELD_ID: "PVTSSF_lADOAAuecM4AF-7hzgMRB34"
-
     steps:
       - name: Generate GitHub App Token
         id: token
@@ -137,7 +130,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         with:
-          sparse-checkout: .github/actions/community_check
+          sparse-checkout: .github/actions/
 
       - name: Community Check
         id: community_check
@@ -151,40 +144,39 @@ jobs:
         if: |
           github.event.action == 'opened'
           && steps.community_check.outputs.maintainer == 'true'
-        env:
-          GH_TOKEN: ${{ steps.token.outputs.token }}
-        run: |
-          # In order to update the item's Status field, we need to capture the project item id from the output
-          PROJECT_ITEM_ID=$(gh project item-add "$PROJECT_NUMBER" --owner "hashicorp" --url "$ISSUE_URL" --format json | jq '.id')
-          gh project item-edit --id "$PROJECT_ITEM_ID" --project-id "$PROJECT_ID" --field-id "$STATUS_FIELD_ID" --single-select-option-id ${{ vars.team_project_status_maintainer_pr }}
-          gh project item-edit --id "$PROJECT_ITEM_ID" --project-id "$PROJECT_ID" --field-id "$VIEW_FIELD_ID "--single-select-option-id ${{ vars.team_project_view_working_board }}
+        uses: ./.github/actions/team_working_board
+        with:
+          github_token: ${{ steps.token.outputs.token }}
+          item_url: ${{ github.event.pull_request.html_url }}
+          status: "Maintainer PR"
+          view: "working-board"
 
       - name: Assigned to Maintainers
         if: |
           github.event.action == 'assigned'
           && steps.community_check.outputs.maintainer == 'true'
-        env:
-          GH_TOKEN: ${{ steps.token.outputs.token }}
-        run: |
-          PROJECT_ITEM_ID=$(gh project item-add "$PROJECT_NUMBER" --owner "hashicorp" --url "$ISSUE_URL" --format json | jq '.id')
-          gh project item-edit --id "$PROJECT_ITEM_ID" --project-id "$PROJECT_ID" --field-id "$STATUS_FIELD_ID" --single-select-option-id ${{ vars.team_project_status_in_progress }}
-          gh project item-edit --id "$PROJECT_ITEM_ID" --project-id "$PROJECT_ID" --field-id "$VIEW_FIELD_ID" --single-select-option-id ${{ vars.team_project_view_working_board }}
+        uses: ./.github/actions/team_working_board
+        with:
+          github_token: ${{ steps.token.outputs.token }}
+          item_url: ${{ github.event.pull_request.html_url }}
+          status: "In Progress"
+          view: "working-board"
 
       - name: Labeled Prioritized
         if: github.event.label.name == 'prioritized'
-        env:
-          GH_TOKEN: ${{ steps.token.outputs.token }}
-        run: |
-          PROJECT_ITEM_ID=$(gh project item-add "$PROJECT_NUMBER" --owner "hashicorp" --url "$ISSUE_URL" --format json | jq '.id')
-          gh project item-edit --id "$PROJECT_ITEM_ID" --project-id "$PROJECT_ID" --field-id "$VIEW_FIELD_ID" --single-select-option-id ${{ vars.team_project_view_working_board }}
+        uses: ./.github/actions/team_working_board
+        with:
+          github_token: ${{ steps.token.outputs.token }}
+          item_url: ${{ github.event.pull_request.html_url }}
+          view: "working-board"
 
       - name: Labeled Engineering Initiative
         if: github.event.label.name == 'engineering-initiative'
-        env:
-          GH_TOKEN: ${{ steps.token.outputs.token }}
-        run: |
-          PROJECT_ITEM_ID=$(gh project item-add "$PROJECT_NUMBER" --owner "hashicorp" --url "$ISSUE_URL" --format json | jq '.id')
-          gh project item-edit --id "$PROJECT_ITEM_ID" --project-id "$PROJECT_ID" --field-id "$VIEW_FIELD_ID" --single-select-option-id ${{ vars.team_project_view_engineering_initiative }}
+        uses: ./.github/actions/team_working_board
+        with:
+          github_token: ${{ steps.token.outputs.token }}
+          item_url: ${{ github.event.pull_request.html_url }}
+          view: "engineering-initiative"
 
   add_to_milestone:
     name: Add Merged Pull Requests and Related Issues to Milestone

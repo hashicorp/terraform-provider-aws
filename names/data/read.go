@@ -5,6 +5,7 @@ package data
 
 import (
 	_ "embed"
+	"fmt"
 	"log"
 	"strings"
 
@@ -137,6 +138,14 @@ func (sr ServiceRecord) DocPrefix() []string {
 
 func (sr ServiceRecord) HumanFriendly() string {
 	return sr[colHumanFriendly]
+}
+
+func (sr ServiceRecord) FullHumanFriendly() string {
+	if sr.Brand() == "" {
+		return sr.HumanFriendly()
+	}
+
+	return fmt.Sprintf("%s %s", sr.Brand(), sr.HumanFriendly())
 }
 
 func (sr ServiceRecord) Brand() string {
