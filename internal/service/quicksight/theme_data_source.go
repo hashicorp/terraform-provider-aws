@@ -291,7 +291,7 @@ func dataSourceThemeRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	themeId := d.Get("theme_id").(string)
 
-	id := createThemeId(awsAccountId, themeId)
+	id := themeCreateResourceID(awsAccountId, themeId)
 
 	out, err := FindThemeByID(ctx, conn, id)
 

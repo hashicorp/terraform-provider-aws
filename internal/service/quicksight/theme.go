@@ -5,23 +5,26 @@ package quicksight
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/quicksight"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/quicksight"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -30,7 +33,7 @@ import (
 
 // @SDKResource("aws_quicksight_theme", name="Theme")
 // @Tags(identifierAttribute="arn")
-func ResourceTheme() *schema.Resource {
+func resourceTheme() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceThemeCreate,
 		ReadWithoutTimeout:   resourceThemeRead,
@@ -346,32 +349,22 @@ func ResourceTheme() *schema.Resource {
 	}
 }
 
-const (
-	ResNameTheme = "Theme"
-)
-
 func resourceThemeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
+	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
-	awsAccountId := meta.(*conns.AWSClient).AccountID
+	awsAccountID := meta.(*conns.AWSClient).AccountID
 	if v, ok := d.GetOk(names.AttrAWSAccountID); ok {
-		awsAccountId = v.(string)
+		awsAccountID = v.(string)
 	}
-	themeId := d.Get("theme_id").(string)
-
-	d.SetId(createThemeId(awsAccountId, themeId))
-
+	themeID := d.Get("theme_id").(string)
+	id := themeCreateResourceID(awsAccountID, themeID)
 	input := &quicksight.CreateThemeInput{
-		AwsAccountId: aws.String(awsAccountId),
-		ThemeId:      aws.String(themeId),
-		Name:         aws.String(d.Get(names.AttrName).(string)),
+		AwsAccountId: aws.String(awsAccountID),
 		BaseThemeId:  aws.String(d.Get("base_theme_id").(string)),
+		Name:         aws.String(d.Get(names.AttrName).(string)),
 		Tags:         getTagsIn(ctx),
-	}
-
-	if v, ok := d.GetOk("version_description"); ok {
-		input.VersionDescription = aws.String(v.(string))
+		ThemeId:      aws.String(themeID),
 	}
 
 	if v, ok := d.GetOk(names.AttrConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -382,13 +375,20 @@ func resourceThemeCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.Permissions = expandResourcePermissions(v.([]interface{}))
 	}
 
-	_, err := conn.CreateThemeWithContext(ctx, input)
-	if err != nil {
-		return create.AppendDiagError(diags, names.QuickSight, create.ErrActionCreating, ResNameTheme, d.Get(names.AttrName).(string), err)
+	if v, ok := d.GetOk("version_description"); ok {
+		input.VersionDescription = aws.String(v.(string))
 	}
 
-	if _, err := waitThemeCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.AppendDiagError(diags, names.QuickSight, create.ErrActionWaitingForCreation, ResNameTheme, d.Id(), err)
+	_, err := conn.CreateTheme(ctx, input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating QuickSight Theme (%s): %s", id, err)
+	}
+
+	d.SetId(id)
+
+	if _, err := waitThemeCreated(ctx, conn, awsAccountID, themeID, d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for QuickSight Theme (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceThemeRead(ctx, d, meta)...)
@@ -396,14 +396,14 @@ func resourceThemeCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceThemeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
+	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
-	awsAccountId, themeId, err := ParseThemeId(d.Id())
+	awsAccountID, themeID, err := themeParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	out, err := FindThemeByID(ctx, conn, d.Id())
+	theme, err := findThemeByTwoPartKey(ctx, conn, awsAccountID, themeID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] QuickSight Theme (%s) not found, removing from state", d.Id())
@@ -412,34 +412,30 @@ func resourceThemeRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.QuickSight, create.ErrActionReading, ResNameTheme, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading QuickSight Theme (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, out.Arn)
-	d.Set(names.AttrAWSAccountID, awsAccountId)
-	d.Set("base_theme_id", out.Version.BaseThemeId)
-	d.Set(names.AttrCreatedTime, out.CreatedTime.Format(time.RFC3339))
-	d.Set(names.AttrLastUpdatedTime, out.LastUpdatedTime.Format(time.RFC3339))
-	d.Set(names.AttrName, out.Name)
-	d.Set(names.AttrStatus, out.Version.Status)
-	d.Set("theme_id", out.ThemeId)
-	d.Set("version_description", out.Version.Description)
-	d.Set("version_number", out.Version.VersionNumber)
-
-	if err := d.Set(names.AttrConfiguration, flattenThemeConfiguration(out.Version.Configuration)); err != nil {
+	d.Set(names.AttrARN, theme.Arn)
+	d.Set(names.AttrAWSAccountID, awsAccountID)
+	d.Set("base_theme_id", theme.Version.BaseThemeId)
+	if err := d.Set(names.AttrConfiguration, flattenThemeConfiguration(theme.Version.Configuration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting configuration: %s", err)
 	}
+	d.Set(names.AttrCreatedTime, theme.CreatedTime.Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedTime, theme.LastUpdatedTime.Format(time.RFC3339))
+	d.Set(names.AttrName, theme.Name)
+	d.Set(names.AttrStatus, theme.Version.Status)
+	d.Set("theme_id", theme.ThemeId)
+	d.Set("version_description", theme.Version.Description)
+	d.Set("version_number", theme.Version.VersionNumber)
 
-	permsResp, err := conn.DescribeThemePermissionsWithContext(ctx, &quicksight.DescribeThemePermissionsInput{
-		AwsAccountId: aws.String(awsAccountId),
-		ThemeId:      aws.String(themeId),
-	})
+	permissions, err := findThemePermissionsByTwoPartKey(ctx, conn, awsAccountID, themeID)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "describing QuickSight Theme (%s) Permissions: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading QuickSight Theme (%s) permissions: %s", d.Id(), err)
 	}
 
-	if err := d.Set(names.AttrPermissions, flattenPermissions(permsResp.Permissions)); err != nil {
+	if err := d.Set(names.AttrPermissions, flattenPermissions(permissions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting permissions: %s", err)
 	}
 
@@ -448,60 +444,58 @@ func resourceThemeRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceThemeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
+	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
-	awsAccountId, themeId, err := ParseThemeId(d.Id())
+	awsAccountID, themeID, err := themeParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	if d.HasChangesExcept(names.AttrPermissions, names.AttrTags, names.AttrTagsAll) {
-		in := &quicksight.UpdateThemeInput{
-			AwsAccountId: aws.String(awsAccountId),
-			ThemeId:      aws.String(themeId),
+		input := &quicksight.UpdateThemeInput{
+			AwsAccountId: aws.String(awsAccountID),
 			BaseThemeId:  aws.String(d.Get("base_theme_id").(string)),
 			Name:         aws.String(d.Get(names.AttrName).(string)),
+			ThemeId:      aws.String(themeID),
 		}
 
 		if v, ok := d.GetOk(names.AttrConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			in.Configuration = expandThemeConfiguration(v.([]interface{}))
+			input.Configuration = expandThemeConfiguration(v.([]interface{}))
 		}
 
-		log.Printf("[DEBUG] Updating QuickSight Theme (%s): %#v", d.Id(), in)
-		_, err := conn.UpdateThemeWithContext(ctx, in)
+		_, err := conn.UpdateTheme(ctx, input)
+
 		if err != nil {
-			return create.AppendDiagError(diags, names.QuickSight, create.ErrActionUpdating, ResNameTheme, d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating QuickSight Theme (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitThemeUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return create.AppendDiagError(diags, names.QuickSight, create.ErrActionWaitingForUpdate, ResNameTheme, d.Id(), err)
+		if _, err := waitThemeUpdated(ctx, conn, awsAccountID, themeID, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for QuickSight Theme (%s) update: %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange(names.AttrPermissions) {
-		oraw, nraw := d.GetChange(names.AttrPermissions)
-		o := oraw.([]interface{})
-		n := nraw.([]interface{})
+		o, n := d.GetChange(names.AttrPermissions)
+		os, ns := o.([]interface{}), n.([]interface{})
+		toGrant, toRevoke := diffPermissions(os, ns)
 
-		toGrant, toRevoke := diffPermissions(o, n)
-
-		params := &quicksight.UpdateThemePermissionsInput{
-			AwsAccountId: aws.String(awsAccountId),
-			ThemeId:      aws.String(themeId),
+		input := &quicksight.UpdateThemePermissionsInput{
+			AwsAccountId: aws.String(awsAccountID),
+			ThemeId:      aws.String(themeID),
 		}
 
 		if len(toGrant) > 0 {
-			params.GrantPermissions = toGrant
+			input.GrantPermissions = toGrant
 		}
 
 		if len(toRevoke) > 0 {
-			params.RevokePermissions = toRevoke
+			input.RevokePermissions = toRevoke
 		}
 
-		_, err = conn.UpdateThemePermissionsWithContext(ctx, params)
+		_, err = conn.UpdateThemePermissions(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating QuickSight Theme (%s) permissions: %s", themeId, err)
+			return sdkdiag.AppendErrorf(diags, "updating QuickSight Theme (%s) permissions: %s", d.Id(), err)
 		}
 	}
 
@@ -510,49 +504,65 @@ func resourceThemeUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceThemeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
+	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
-	awsAccountId, themeId, err := ParseThemeId(d.Id())
+	awsAccountID, themeID, err := themeParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &quicksight.DeleteThemeInput{
-		AwsAccountId: aws.String(awsAccountId),
-		ThemeId:      aws.String(themeId),
-	}
+	log.Printf("[INFO] Deleting QuickSight Theme: %s", d.Id())
+	_, err = conn.DeleteTheme(ctx, &quicksight.DeleteThemeInput{
+		AwsAccountId: aws.String(awsAccountID),
+		ThemeId:      aws.String(themeID),
+	})
 
-	log.Printf("[INFO] Deleting QuickSight Theme %s", d.Id())
-	_, err = conn.DeleteThemeWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.QuickSight, create.ErrActionDeleting, ResNameTheme, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting QuickSight Theme (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func FindThemeByID(ctx context.Context, conn *quicksight.QuickSight, id string) (*quicksight.Theme, error) {
-	awsAccountId, themeId, err := ParseThemeId(id)
-	if err != nil {
-		return nil, err
+const themeResourceIDSeparator = ","
+
+func themeCreateResourceID(awsAccountID, themeID string) string {
+	parts := []string{awsAccountID, themeID}
+	id := strings.Join(parts, themeResourceIDSeparator)
+
+	return id
+}
+
+func themeParseResourceID(id string) (string, string, error) {
+	parts := strings.SplitN(id, themeResourceIDSeparator, 2)
+
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", "", fmt.Errorf("unexpected format of ID (%[1]s), expected AWS_ACCOUNT_ID%[2]sTHEME_ID", id, themeResourceIDSeparator)
 	}
 
-	descOpts := &quicksight.DescribeThemeInput{
-		AwsAccountId: aws.String(awsAccountId),
-		ThemeId:      aws.String(themeId),
+	return parts[0], parts[1], nil
+}
+
+func findThemeByTwoPartKey(ctx context.Context, conn *quicksight.Client, awsAccountID, themeID string) (*awstypes.Theme, error) {
+	input := &quicksight.DescribeThemeInput{
+		AwsAccountId: aws.String(awsAccountID),
+		ThemeId:      aws.String(themeID),
 	}
 
-	out, err := conn.DescribeThemeWithContext(ctx, descOpts)
+	return findTheme(ctx, conn, input)
+}
 
-	if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
+func findTheme(ctx context.Context, conn *quicksight.Client, input *quicksight.DescribeThemeInput) (*awstypes.Theme, error) {
+	output, err := conn.DescribeTheme(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
-			LastRequest: descOpts,
+			LastRequest: input,
 		}
 	}
 
@@ -560,26 +570,110 @@ func FindThemeByID(ctx context.Context, conn *quicksight.QuickSight, id string) 
 		return nil, err
 	}
 
-	if out == nil || out.Theme == nil {
-		return nil, tfresource.NewEmptyResultError(descOpts)
+	if output == nil || output.Theme == nil || output.Theme.Version == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return out.Theme, nil
+	return output.Theme, nil
 }
 
-func ParseThemeId(id string) (string, string, error) {
-	parts := strings.SplitN(id, ",", 2)
-	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		return "", "", fmt.Errorf("unexpected format of ID (%s), expected AWS_ACCOUNT_ID,TTHEME_ID", id)
+func findThemePermissionsByTwoPartKey(ctx context.Context, conn *quicksight.Client, awsAccountID, themeID string) ([]awstypes.ResourcePermission, error) {
+	input := &quicksight.DescribeThemePermissionsInput{
+		AwsAccountId: aws.String(awsAccountID),
+		ThemeId:      aws.String(themeID),
 	}
-	return parts[0], parts[1], nil
+
+	return findThemePermissions(ctx, conn, input)
 }
 
-func createThemeId(awsAccountID, themeId string) string {
-	return fmt.Sprintf("%s,%s", awsAccountID, themeId)
+func findThemePermissions(ctx context.Context, conn *quicksight.Client, input *quicksight.DescribeThemePermissionsInput) ([]awstypes.ResourcePermission, error) {
+	output, err := conn.DescribeThemePermissions(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Permissions, nil
 }
 
-func expandThemeConfiguration(tfList []interface{}) *quicksight.ThemeConfiguration {
+func statusTheme(ctx context.Context, conn *quicksight.Client, awsAccountID, themeID string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findThemeByTwoPartKey(ctx, conn, awsAccountID, themeID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Version.Status), nil
+	}
+}
+
+func waitThemeCreated(ctx context.Context, conn *quicksight.Client, awsAccountID, themeID string, timeout time.Duration) (*awstypes.Theme, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.ResourceStatusCreationInProgress),
+		Target:  enum.Slice(awstypes.ResourceStatusCreationSuccessful),
+		Refresh: statusTheme(ctx, conn, awsAccountID, themeID),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Theme); ok {
+		if status, apiErrors := output.Version.Status, output.Version.Errors; status == awstypes.ResourceStatusCreationFailed {
+			tfresource.SetLastError(err, themeError(apiErrors))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitThemeUpdated(ctx context.Context, conn *quicksight.Client, awsAccountID, themeID string, timeout time.Duration) (*awstypes.Theme, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.ResourceStatusUpdateInProgress, awstypes.ResourceStatusCreationInProgress),
+		Target:  enum.Slice(awstypes.ResourceStatusUpdateSuccessful, awstypes.ResourceStatusCreationSuccessful),
+		Refresh: statusTheme(ctx, conn, awsAccountID, themeID),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Theme); ok {
+		if status, apiErrors := output.Version.Status, output.Version.Errors; status == awstypes.ResourceStatusUpdateFailed {
+			tfresource.SetLastError(err, themeError(apiErrors))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func themeError(apiObjects []awstypes.ThemeError) error {
+	errs := tfslices.ApplyToAll(apiObjects, func(v awstypes.ThemeError) error {
+		return fmt.Errorf("%s: %s", v.Type, aws.ToString(v.Message))
+	})
+
+	return errors.Join(errs...)
+}
+
+func expandThemeConfiguration(tfList []interface{}) *awstypes.ThemeConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -589,25 +683,25 @@ func expandThemeConfiguration(tfList []interface{}) *quicksight.ThemeConfigurati
 		return nil
 	}
 
-	config := &quicksight.ThemeConfiguration{}
+	apiObject := &awstypes.ThemeConfiguration{}
 
 	if v, ok := tfMap["data_color_palette"].([]interface{}); ok && len(v) > 0 {
-		config.DataColorPalette = expandDataColorPalette(v)
+		apiObject.DataColorPalette = expandDataColorPalette(v)
 	}
 	if v, ok := tfMap["sheet"].([]interface{}); ok && len(v) > 0 {
-		config.Sheet = expandSheetStyle(v)
+		apiObject.Sheet = expandSheetStyle(v)
 	}
 	if v, ok := tfMap["typography"].([]interface{}); ok && len(v) > 0 {
-		config.Typography = expandTypography(v)
+		apiObject.Typography = expandTypography(v)
 	}
 	if v, ok := tfMap["ui_color_palette"].([]interface{}); ok && len(v) > 0 {
-		config.UIColorPalette = expandUIColorPalette(v)
+		apiObject.UIColorPalette = expandUIColorPalette(v)
 	}
 
-	return config
+	return apiObject
 }
 
-func expandDataColorPalette(tfList []interface{}) *quicksight.DataColorPalette {
+func expandDataColorPalette(tfList []interface{}) *awstypes.DataColorPalette {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -617,22 +711,22 @@ func expandDataColorPalette(tfList []interface{}) *quicksight.DataColorPalette {
 		return nil
 	}
 
-	config := &quicksight.DataColorPalette{}
+	apiObject := &awstypes.DataColorPalette{}
 
 	if v, ok := tfMap["colors"].([]interface{}); ok {
-		config.Colors = flex.ExpandStringList(v)
+		apiObject.Colors = flex.ExpandStringValueList(v)
 	}
 	if v, ok := tfMap["empty_fill_color"].(string); ok && v != "" {
-		config.EmptyFillColor = aws.String(v)
+		apiObject.EmptyFillColor = aws.String(v)
 	}
 	if v, ok := tfMap["min_max_gradient"].([]interface{}); ok {
-		config.MinMaxGradient = flex.ExpandStringList(v)
+		apiObject.MinMaxGradient = flex.ExpandStringValueList(v)
 	}
 
-	return config
+	return apiObject
 }
 
-func expandSheetStyle(tfList []interface{}) *quicksight.SheetStyle {
+func expandSheetStyle(tfList []interface{}) *awstypes.SheetStyle {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -642,19 +736,19 @@ func expandSheetStyle(tfList []interface{}) *quicksight.SheetStyle {
 		return nil
 	}
 
-	config := &quicksight.SheetStyle{}
+	apiObject := &awstypes.SheetStyle{}
 
 	if v, ok := tfMap["tile"].([]interface{}); ok && len(v) > 0 {
-		config.Tile = expandTileStyle(v)
+		apiObject.Tile = expandTileStyle(v)
 	}
 	if v, ok := tfMap["tile_layout"].([]interface{}); ok && len(v) > 0 {
-		config.TileLayout = expandTileLayoutStyle(v)
+		apiObject.TileLayout = expandTileLayoutStyle(v)
 	}
 
-	return config
+	return apiObject
 }
 
-func expandTileStyle(tfList []interface{}) *quicksight.TileStyle {
+func expandTileStyle(tfList []interface{}) *awstypes.TileStyle {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -664,16 +758,16 @@ func expandTileStyle(tfList []interface{}) *quicksight.TileStyle {
 		return nil
 	}
 
-	config := &quicksight.TileStyle{}
+	apiObject := &awstypes.TileStyle{}
 
 	if v, ok := tfMap["border"].([]interface{}); ok && len(v) > 0 {
-		config.Border = expandBorderStyle(v)
+		apiObject.Border = expandBorderStyle(v)
 	}
 
-	return config
+	return apiObject
 }
 
-func expandBorderStyle(tfList []interface{}) *quicksight.BorderStyle {
+func expandBorderStyle(tfList []interface{}) *awstypes.BorderStyle {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -683,16 +777,16 @@ func expandBorderStyle(tfList []interface{}) *quicksight.BorderStyle {
 		return nil
 	}
 
-	config := &quicksight.BorderStyle{}
+	apiObject := &awstypes.BorderStyle{}
 
 	if v, ok := tfMap["show"].(bool); ok {
-		config.Show = aws.Bool(v)
+		apiObject.Show = aws.Bool(v)
 	}
 
-	return config
+	return apiObject
 }
 
-func expandTileLayoutStyle(tfList []interface{}) *quicksight.TileLayoutStyle {
+func expandTileLayoutStyle(tfList []interface{}) *awstypes.TileLayoutStyle {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -702,19 +796,19 @@ func expandTileLayoutStyle(tfList []interface{}) *quicksight.TileLayoutStyle {
 		return nil
 	}
 
-	config := &quicksight.TileLayoutStyle{}
+	apiObject := &awstypes.TileLayoutStyle{}
 
 	if v, ok := tfMap["gutter"].([]interface{}); ok && len(v) > 0 {
-		config.Gutter = expandGutterStyle(v)
+		apiObject.Gutter = expandGutterStyle(v)
 	}
 	if v, ok := tfMap["margin"].([]interface{}); ok && len(v) > 0 {
-		config.Margin = expandMarginStyle(v)
+		apiObject.Margin = expandMarginStyle(v)
 	}
 
-	return config
+	return apiObject
 }
 
-func expandGutterStyle(tfList []interface{}) *quicksight.GutterStyle {
+func expandGutterStyle(tfList []interface{}) *awstypes.GutterStyle {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -724,16 +818,16 @@ func expandGutterStyle(tfList []interface{}) *quicksight.GutterStyle {
 		return nil
 	}
 
-	config := &quicksight.GutterStyle{}
+	apiObject := &awstypes.GutterStyle{}
 
 	if v, ok := tfMap["show"].(bool); ok {
-		config.Show = aws.Bool(v)
+		apiObject.Show = aws.Bool(v)
 	}
 
-	return config
+	return apiObject
 }
 
-func expandMarginStyle(tfList []interface{}) *quicksight.MarginStyle {
+func expandMarginStyle(tfList []interface{}) *awstypes.MarginStyle {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -743,16 +837,16 @@ func expandMarginStyle(tfList []interface{}) *quicksight.MarginStyle {
 		return nil
 	}
 
-	config := &quicksight.MarginStyle{}
+	apiObject := &awstypes.MarginStyle{}
 
 	if v, ok := tfMap["show"].(bool); ok {
-		config.Show = aws.Bool(v)
+		apiObject.Show = aws.Bool(v)
 	}
 
-	return config
+	return apiObject
 }
 
-func expandTypography(tfList []interface{}) *quicksight.Typography {
+func expandTypography(tfList []interface{}) *awstypes.Typography {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -762,52 +856,54 @@ func expandTypography(tfList []interface{}) *quicksight.Typography {
 		return nil
 	}
 
-	config := &quicksight.Typography{}
+	apiObject := &awstypes.Typography{}
 
 	if v, ok := tfMap["font_families"].([]interface{}); ok && len(v) > 0 {
-		config.FontFamilies = expandFontFamilies(v)
+		apiObject.FontFamilies = expandFonts(v)
 	}
-	return config
+
+	return apiObject
 }
 
-func expandFontFamilies(tfList []interface{}) []*quicksight.Font {
+func expandFonts(tfList []interface{}) []awstypes.Font {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var configs []*quicksight.Font
+	var apiObjects []awstypes.Font
+
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
 		if !ok {
 			continue
 		}
 
-		font := expandFont(tfMap)
-		if font == nil {
+		apiObject := expandFont(tfMap)
+		if apiObject == nil {
 			continue
 		}
 
-		configs = append(configs, font)
+		apiObjects = append(apiObjects, *apiObject)
 	}
 
-	return configs
+	return apiObjects
 }
 
-func expandFont(tfMap map[string]interface{}) *quicksight.Font {
+func expandFont(tfMap map[string]interface{}) *awstypes.Font {
 	if tfMap == nil {
 		return nil
 	}
 
-	font := &quicksight.Font{}
+	apiObject := &awstypes.Font{}
 
 	if v, ok := tfMap["font_family"].(string); ok && v != "" {
-		font.FontFamily = aws.String(v)
+		apiObject.FontFamily = aws.String(v)
 	}
 
-	return font
+	return apiObject
 }
 
-func expandUIColorPalette(tfList []interface{}) *quicksight.UIColorPalette {
+func expandUIColorPalette(tfList []interface{}) *awstypes.UIColorPalette {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -817,66 +913,67 @@ func expandUIColorPalette(tfList []interface{}) *quicksight.UIColorPalette {
 		return nil
 	}
 
-	config := &quicksight.UIColorPalette{}
+	apiObject := &awstypes.UIColorPalette{}
 
 	if v, ok := tfMap["accent"].(string); ok && v != "" {
-		config.Accent = aws.String(v)
+		apiObject.Accent = aws.String(v)
 	}
 	if v, ok := tfMap["accent_foreground"].(string); ok && v != "" {
-		config.AccentForeground = aws.String(v)
+		apiObject.AccentForeground = aws.String(v)
 	}
 	if v, ok := tfMap["danger"].(string); ok && v != "" {
-		config.Danger = aws.String(v)
+		apiObject.Danger = aws.String(v)
 	}
 	if v, ok := tfMap["danger_foreground"].(string); ok && v != "" {
-		config.DangerForeground = aws.String(v)
+		apiObject.DangerForeground = aws.String(v)
 	}
 	if v, ok := tfMap["dimension"].(string); ok && v != "" {
-		config.Dimension = aws.String(v)
+		apiObject.Dimension = aws.String(v)
 	}
 	if v, ok := tfMap["dimension_foreground"].(string); ok && v != "" {
-		config.DimensionForeground = aws.String(v)
+		apiObject.DimensionForeground = aws.String(v)
 	}
 	if v, ok := tfMap["measure"].(string); ok && v != "" {
-		config.Measure = aws.String(v)
+		apiObject.Measure = aws.String(v)
 	}
 	if v, ok := tfMap["measure_foreground"].(string); ok && v != "" {
-		config.MeasureForeground = aws.String(v)
+		apiObject.MeasureForeground = aws.String(v)
 	}
 	if v, ok := tfMap["primary_background"].(string); ok && v != "" {
-		config.PrimaryBackground = aws.String(v)
+		apiObject.PrimaryBackground = aws.String(v)
 	}
 	if v, ok := tfMap["primary_foreground"].(string); ok && v != "" {
-		config.PrimaryForeground = aws.String(v)
+		apiObject.PrimaryForeground = aws.String(v)
 	}
 	if v, ok := tfMap["secondary_background"].(string); ok && v != "" {
-		config.SecondaryBackground = aws.String(v)
+		apiObject.SecondaryBackground = aws.String(v)
 	}
 	if v, ok := tfMap["secondary_foreground"].(string); ok && v != "" {
-		config.SecondaryForeground = aws.String(v)
+		apiObject.SecondaryForeground = aws.String(v)
 	}
 	if v, ok := tfMap["success"].(string); ok && v != "" {
-		config.Success = aws.String(v)
+		apiObject.Success = aws.String(v)
 	}
 	if v, ok := tfMap["success_foreground"].(string); ok && v != "" {
-		config.SuccessForeground = aws.String(v)
+		apiObject.SuccessForeground = aws.String(v)
 	}
 	if v, ok := tfMap["warning"].(string); ok && v != "" {
-		config.Warning = aws.String(v)
+		apiObject.Warning = aws.String(v)
 	}
 	if v, ok := tfMap["warning_foreground"].(string); ok && v != "" {
-		config.WarningForeground = aws.String(v)
+		apiObject.WarningForeground = aws.String(v)
 	}
 
-	return config
+	return apiObject
 }
 
-func flattenThemeConfiguration(apiObject *quicksight.ThemeConfiguration) []interface{} {
+func flattenThemeConfiguration(apiObject *awstypes.ThemeConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
+
 	if apiObject.DataColorPalette != nil {
 		tfMap["data_color_palette"] = flattenDataColorPalette(apiObject.DataColorPalette)
 	}
@@ -893,31 +990,33 @@ func flattenThemeConfiguration(apiObject *quicksight.ThemeConfiguration) []inter
 	return []interface{}{tfMap}
 }
 
-func flattenDataColorPalette(apiObject *quicksight.DataColorPalette) []interface{} {
+func flattenDataColorPalette(apiObject *awstypes.DataColorPalette) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
+
 	if apiObject.Colors != nil {
-		tfMap["colors"] = flex.FlattenStringList(apiObject.Colors)
+		tfMap["colors"] = apiObject.Colors
 	}
 	if apiObject.EmptyFillColor != nil {
-		tfMap["empty_fill_color"] = aws.StringValue(apiObject.EmptyFillColor)
+		tfMap["empty_fill_color"] = aws.ToString(apiObject.EmptyFillColor)
 	}
 	if apiObject.MinMaxGradient != nil {
-		tfMap["min_max_gradient"] = flex.FlattenStringList(apiObject.MinMaxGradient)
+		tfMap["min_max_gradient"] = apiObject.MinMaxGradient
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenSheetStyle(apiObject *quicksight.SheetStyle) []interface{} {
+func flattenSheetStyle(apiObject *awstypes.SheetStyle) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
+
 	if apiObject.Tile != nil {
 		tfMap["tile"] = flattenTileStyle(apiObject.Tile)
 	}
@@ -928,12 +1027,13 @@ func flattenSheetStyle(apiObject *quicksight.SheetStyle) []interface{} {
 	return []interface{}{tfMap}
 }
 
-func flattenTileStyle(apiObject *quicksight.TileStyle) []interface{} {
+func flattenTileStyle(apiObject *awstypes.TileStyle) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
+
 	if apiObject.Border != nil {
 		tfMap["border"] = flattenBorderStyle(apiObject.Border)
 	}
@@ -941,25 +1041,27 @@ func flattenTileStyle(apiObject *quicksight.TileStyle) []interface{} {
 	return []interface{}{tfMap}
 }
 
-func flattenBorderStyle(apiObject *quicksight.BorderStyle) []interface{} {
+func flattenBorderStyle(apiObject *awstypes.BorderStyle) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
+
 	if apiObject.Show != nil {
-		tfMap["show"] = aws.BoolValue(apiObject.Show)
+		tfMap["show"] = aws.ToBool(apiObject.Show)
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenTileLayoutStyle(apiObject *quicksight.TileLayoutStyle) []interface{} {
+func flattenTileLayoutStyle(apiObject *awstypes.TileLayoutStyle) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
+
 	if apiObject.Gutter != nil {
 		tfMap["gutter"] = flattenGutterStyle(apiObject.Gutter)
 	}
@@ -970,38 +1072,41 @@ func flattenTileLayoutStyle(apiObject *quicksight.TileLayoutStyle) []interface{}
 	return []interface{}{tfMap}
 }
 
-func flattenGutterStyle(apiObject *quicksight.GutterStyle) []interface{} {
+func flattenGutterStyle(apiObject *awstypes.GutterStyle) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
+
 	if apiObject.Show != nil {
-		tfMap["show"] = aws.BoolValue(apiObject.Show)
+		tfMap["show"] = aws.ToBool(apiObject.Show)
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenMarginStyle(apiObject *quicksight.MarginStyle) []interface{} {
+func flattenMarginStyle(apiObject *awstypes.MarginStyle) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
+
 	if apiObject.Show != nil {
-		tfMap["show"] = aws.BoolValue(apiObject.Show)
+		tfMap["show"] = aws.ToBool(apiObject.Show)
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenTypography(apiObject *quicksight.Typography) []interface{} {
+func flattenTypography(apiObject *awstypes.Typography) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
+
 	if apiObject.FontFamilies != nil {
 		tfMap["font_families"] = flattenFonts(apiObject.FontFamilies)
 	}
@@ -1009,80 +1114,80 @@ func flattenTypography(apiObject *quicksight.Typography) []interface{} {
 	return []interface{}{tfMap}
 }
 
-func flattenFonts(apiObject []*quicksight.Font) []interface{} {
+func flattenFonts(apiObject []awstypes.Font) []interface{} {
 	if len(apiObject) == 0 {
 		return nil
 	}
 
 	var tfList []interface{}
-	for _, font := range apiObject {
-		if font == nil {
-			continue
+
+	for _, apiObject := range apiObject {
+		tfMap := map[string]interface{}{}
+
+		if apiObject.FontFamily != nil {
+			tfMap["font_family"] = aws.ToString(apiObject.FontFamily)
 		}
 
-		tfMap := map[string]interface{}{}
-		if font.FontFamily != nil {
-			tfMap["font_family"] = aws.StringValue(font.FontFamily)
-		}
 		tfList = append(tfList, tfMap)
 	}
 
 	return tfList
 }
 
-func flattenUIColorPalette(apiObject *quicksight.UIColorPalette) []interface{} {
+func flattenUIColorPalette(apiObject *awstypes.UIColorPalette) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
+
 	if apiObject.Accent != nil {
-		tfMap["accent"] = aws.StringValue(apiObject.Accent)
+		tfMap["accent"] = aws.ToString(apiObject.Accent)
 	}
 	if apiObject.AccentForeground != nil {
-		tfMap["accent_foreground"] = aws.StringValue(apiObject.AccentForeground)
+		tfMap["accent_foreground"] = aws.ToString(apiObject.AccentForeground)
 	}
 	if apiObject.Danger != nil {
-		tfMap["danger"] = aws.StringValue(apiObject.Danger)
+		tfMap["danger"] = aws.ToString(apiObject.Danger)
 	}
 	if apiObject.DangerForeground != nil {
-		tfMap["danger_foreground"] = aws.StringValue(apiObject.DangerForeground)
+		tfMap["danger_foreground"] = aws.ToString(apiObject.DangerForeground)
 	}
 	if apiObject.Dimension != nil {
-		tfMap["dimension"] = aws.StringValue(apiObject.Dimension)
+		tfMap["dimension"] = aws.ToString(apiObject.Dimension)
 	}
 	if apiObject.DimensionForeground != nil {
-		tfMap["dimension_foreground"] = aws.StringValue(apiObject.DimensionForeground)
+		tfMap["dimension_foreground"] = aws.ToString(apiObject.DimensionForeground)
 	}
 	if apiObject.Measure != nil {
-		tfMap["measure"] = aws.StringValue(apiObject.Measure)
+		tfMap["measure"] = aws.ToString(apiObject.Measure)
 	}
 	if apiObject.MeasureForeground != nil {
-		tfMap["measure_foreground"] = aws.StringValue(apiObject.MeasureForeground)
+		tfMap["measure_foreground"] = aws.ToString(apiObject.MeasureForeground)
 	}
 	if apiObject.PrimaryBackground != nil {
-		tfMap["primary_background"] = aws.StringValue(apiObject.PrimaryBackground)
+		tfMap["primary_background"] = aws.ToString(apiObject.PrimaryBackground)
 	}
 	if apiObject.PrimaryForeground != nil {
-		tfMap["primary_foreground"] = aws.StringValue(apiObject.PrimaryForeground)
+		tfMap["primary_foreground"] = aws.ToString(apiObject.PrimaryForeground)
 	}
 	if apiObject.SecondaryBackground != nil {
-		tfMap["secondary_background"] = aws.StringValue(apiObject.SecondaryBackground)
+		tfMap["secondary_background"] = aws.ToString(apiObject.SecondaryBackground)
 	}
 	if apiObject.SecondaryForeground != nil {
-		tfMap["secondary_foreground"] = aws.StringValue(apiObject.SecondaryForeground)
+		tfMap["secondary_foreground"] = aws.ToString(apiObject.SecondaryForeground)
 	}
 	if apiObject.Success != nil {
-		tfMap["success"] = aws.StringValue(apiObject.Success)
+		tfMap["success"] = aws.ToString(apiObject.Success)
 	}
 	if apiObject.SuccessForeground != nil {
-		tfMap["success_foreground"] = aws.StringValue(apiObject.SuccessForeground)
+		tfMap["success_foreground"] = aws.ToString(apiObject.SuccessForeground)
 	}
 	if apiObject.Warning != nil {
-		tfMap["warning"] = aws.StringValue(apiObject.Warning)
+		tfMap["warning"] = aws.ToString(apiObject.Warning)
 	}
 	if apiObject.WarningForeground != nil {
-		tfMap["warning_foreground"] = aws.StringValue(apiObject.WarningForeground)
+		tfMap["warning_foreground"] = aws.ToString(apiObject.WarningForeground)
 	}
 
 	return []interface{}{tfMap}

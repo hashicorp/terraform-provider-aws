@@ -16,6 +16,7 @@ var (
 	ResourceNamespace           = newNamespaceResource
 	ResourceRefreshSchedule     = newRefreshScheduleResource
 	ResourceTemplateAlias       = newTemplateAliasResource
+	ResourceTheme               = resourceTheme
 	ResourceUser                = resourceUser
 	ResourceVPCConnection       = newVPCConnectionResource
 
@@ -34,6 +35,7 @@ var (
 	FindNamespaceByTwoPartKey             = findNamespaceByTwoPartKey
 	FindRefreshScheduleByThreePartKey     = findRefreshScheduleByThreePartKey
 	FindTemplateAliasByThreePartKey       = findTemplateAliasByThreePartKey
+	FindThemeByTwoPartKey                 = findThemeByTwoPartKey
 	FindUserByThreePartKey                = findUserByThreePartKey
 	FindVPCConnectionByTwoPartKey         = findVPCConnectionByTwoPartKey
 )
