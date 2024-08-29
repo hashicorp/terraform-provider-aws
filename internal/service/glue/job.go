@@ -375,6 +375,10 @@ func resourceJobUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 			jobUpdate.GlueVersion = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("job_run_queuing_enabled"); ok {
+			jobUpdate.JobRunQueuingEnabled = aws.Bool(v.(bool))
+		}
+
 		if v, ok := d.GetOk("maintenance_window"); ok {
 			jobUpdate.MaintenanceWindow = aws.String(v.(string))
 		}
