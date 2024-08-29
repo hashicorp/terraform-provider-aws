@@ -18,16 +18,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/skaff/convert"
 )
 
-//go:embed resource.tmpl
+//go:embed resource.gtpl
 var resourceTmpl string
 
-//go:embed resourcefw.tmpl
+//go:embed resourcefw.gtpl
 var resourceFrameworkTmpl string
 
-//go:embed resourcetest.tmpl
+//go:embed resourcetest.gtpl
 var resourceTestTmpl string
 
-//go:embed websitedoc.tmpl
+//go:embed websitedoc.gtpl
 var websiteTmpl string
 
 type TemplateData struct {
