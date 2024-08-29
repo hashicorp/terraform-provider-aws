@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	quicksightschema "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight/schema"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -138,23 +139,7 @@ func DataSourceDataSet() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrPermissions: {
-					Type:     schema.TypeList,
-					Computed: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							names.AttrActions: {
-								Type:     schema.TypeSet,
-								Computed: true,
-								Elem:     &schema.Schema{Type: schema.TypeString},
-							},
-							names.AttrPrincipal: {
-								Type:     schema.TypeString,
-								Computed: true,
-							},
-						},
-					},
-				},
+				names.AttrPermissions: quicksightschema.PermissionsDataSourceSchema(),
 				"physical_table_map": {
 					Type:     schema.TypeSet,
 					Computed: true,

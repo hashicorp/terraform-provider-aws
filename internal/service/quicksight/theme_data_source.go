@@ -240,23 +240,7 @@ func dataSourceTheme() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrPermissions: {
-					Type:     schema.TypeList,
-					Computed: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							names.AttrActions: {
-								Type:     schema.TypeSet,
-								Computed: true,
-								Elem:     &schema.Schema{Type: schema.TypeString},
-							},
-							names.AttrPrincipal: {
-								Type:     schema.TypeString,
-								Computed: true,
-							},
-						},
-					},
-				},
+				names.AttrPermissions: quicksightschema.PermissionsDataSourceSchema(),
 				names.AttrStatus: {
 					Type:     schema.TypeString,
 					Computed: true,
