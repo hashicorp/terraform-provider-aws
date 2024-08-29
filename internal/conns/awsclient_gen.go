@@ -241,7 +241,6 @@ import (
 	workspaces_sdkv2 "github.com/aws/aws-sdk-go-v2/service/workspaces"
 	workspacesweb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/workspacesweb"
 	xray_sdkv2 "github.com/aws/aws-sdk-go-v2/service/xray"
-	emr_sdkv1 "github.com/aws/aws-sdk-go/service/emr"
 	imagebuilder_sdkv1 "github.com/aws/aws-sdk-go/service/imagebuilder"
 	quicksight_sdkv1 "github.com/aws/aws-sdk-go/service/quicksight"
 	simpledb_sdkv1 "github.com/aws/aws-sdk-go/service/simpledb"
@@ -607,10 +606,6 @@ func (c *AWSClient) ELBClient(ctx context.Context) *elasticloadbalancing_sdkv2.C
 
 func (c *AWSClient) ELBV2Client(ctx context.Context) *elasticloadbalancingv2_sdkv2.Client {
 	return errs.Must(client[*elasticloadbalancingv2_sdkv2.Client](ctx, c, names.ELBV2, make(map[string]any)))
-}
-
-func (c *AWSClient) EMRConn(ctx context.Context) *emr_sdkv1.EMR {
-	return errs.Must(conn[*emr_sdkv1.EMR](ctx, c, names.EMR, make(map[string]any)))
 }
 
 func (c *AWSClient) EMRClient(ctx context.Context) *emr_sdkv2.Client {

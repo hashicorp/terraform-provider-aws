@@ -2718,7 +2718,6 @@ func RunSerialTests1Level(t *testing.T, testCases map[string]func(*testing.T), d
 	t.Helper()
 
 	for name, tc := range testCases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			tc(t)
 			time.Sleep(d)
@@ -2731,7 +2730,6 @@ func RunSerialTests2Levels(t *testing.T, testCases map[string]map[string]func(*t
 	t.Helper()
 
 	for group, m := range testCases {
-		m := m
 		t.Run(group, func(t *testing.T) {
 			RunSerialTests1Level(t, m, d)
 		})
@@ -2743,9 +2741,7 @@ func RunLimitedConcurrencyTests2Levels(t *testing.T, semaphore tfsync.Semaphore,
 	t.Helper()
 
 	for group, m := range testCases {
-		m := m
 		for name, tc := range m {
-			tc := tc
 			t.Run(fmt.Sprintf("%s_%s", group, name), func(t *testing.T) {
 				t.Cleanup(func() {
 					if os.Getenv(resource.EnvTfAcc) != "" {

@@ -3016,7 +3016,6 @@ func findVPCEndpointConnectionByServiceIDAndVPCEndpointID(ctx context.Context, c
 		}
 
 		for _, v := range page.VpcEndpointConnections {
-			v := v
 			if aws.ToString(v.VpcEndpointId) == vpcEndpointID {
 				output = &v
 				break

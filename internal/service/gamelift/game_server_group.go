@@ -257,41 +257,45 @@ func resourceGameServerGroupRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "reading GameLift Game Server Group (%s): %s", d.Id(), err)
 	}
 
-	autoScalingGroupName := strings.Split(aws.ToString(gameServerGroup.AutoScalingGroupArn), "/")[1]
-	autoScalingGroup, err := tfautoscaling.FindGroupByName(ctx, autoscalingConn, autoScalingGroupName)
+	if asgArnParts := strings.Split(aws.ToString(gameServerGroup.AutoScalingGroupArn), "/"); len(asgArnParts) == 2 {
+		asgName := asgArnParts[1]
+		asg, err := tfautoscaling.FindGroupByName(ctx, autoscalingConn, asgName)
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Auto Scaling Group (%s): %s", autoScalingGroupName, err)
-	}
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading Auto Scaling Group (%s): %s", asgName, err)
+		}
 
-	autoScalingPolicy, err := tfautoscaling.FindScalingPolicyByTwoPartKey(ctx, autoscalingConn, autoScalingGroupName, d.Id())
+		asgPolicy, err := tfautoscaling.FindScalingPolicyByTwoPartKey(ctx, autoscalingConn, asgName, d.Id())
 
-	switch {
-	case tfresource.NotFound(err):
-	case err != nil:
-		return sdkdiag.AppendErrorf(diags, "reading Auto Scaling Policy (%s/%s): %s", autoScalingGroupName, d.Id(), err)
+		switch {
+		case tfresource.NotFound(err):
+		case err != nil:
+			return sdkdiag.AppendErrorf(diags, "reading Auto Scaling Policy (%s/%s): %s", asgName, d.Id(), err)
+		}
+
+		if asgPolicy != nil {
+			if err := d.Set("auto_scaling_policy", []interface{}{flattenGameServerGroupAutoScalingPolicy(asgPolicy)}); err != nil {
+				return sdkdiag.AppendErrorf(diags, "setting auto_scaling_policy: %s", err)
+			}
+		} else {
+			d.Set("auto_scaling_policy", nil)
+		}
+
+		if err := d.Set(names.AttrLaunchTemplate, flattenAutoScalingLaunchTemplateSpecification(asg.MixedInstancesPolicy.LaunchTemplate.LaunchTemplateSpecification)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting launch_template: %s", err)
+		}
+		d.Set("max_size", asg.MaxSize)
+		d.Set("min_size", asg.MinSize)
 	}
 
 	d.Set(names.AttrARN, gameServerGroup.GameServerGroupArn)
 	d.Set("auto_scaling_group_arn", gameServerGroup.AutoScalingGroupArn)
-	if autoScalingPolicy != nil {
-		if err := d.Set("auto_scaling_policy", []interface{}{flattenGameServerGroupAutoScalingPolicy(autoScalingPolicy)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting auto_scaling_policy: %s", err)
-		}
-	} else {
-		d.Set("auto_scaling_policy", nil)
-	}
 	d.Set("balancing_strategy", gameServerGroup.BalancingStrategy)
 	d.Set("game_server_group_name", gameServerGroup.GameServerGroupName)
 	d.Set("game_server_protection_policy", gameServerGroup.GameServerProtectionPolicy)
 	if err := d.Set("instance_definition", flattenInstanceDefinitions(gameServerGroup.InstanceDefinitions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting instance_definition: %s", err)
 	}
-	if err := d.Set(names.AttrLaunchTemplate, flattenAutoScalingLaunchTemplateSpecification(autoScalingGroup.MixedInstancesPolicy.LaunchTemplate.LaunchTemplateSpecification)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting launch_template: %s", err)
-	}
-	d.Set("max_size", autoScalingGroup.MaxSize)
-	d.Set("min_size", autoScalingGroup.MinSize)
 	d.Set(names.AttrRoleARN, gameServerGroup.RoleArn)
 
 	return diags

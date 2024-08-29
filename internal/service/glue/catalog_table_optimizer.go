@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -173,6 +174,12 @@ func (r *resourceCatalogTableOptimizer) Read(ctx context.Context, request resour
 	}
 
 	output, err := findCatalogTableOptimizer(ctx, conn, data.CatalogID.ValueString(), data.DatabaseName.ValueString(), data.TableName.ValueString(), data.Type.ValueString())
+
+	if tfresource.NotFound(err) {
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+		return
+	}
 
 	if err != nil {
 		id, _ := flex.FlattenResourceId([]string{

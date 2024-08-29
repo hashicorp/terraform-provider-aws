@@ -18,6 +18,10 @@ func SkipSweepError(err error) bool {
 		return dnsErr.IsNotFound
 	}
 
+	// Example: AccessDenied: The operation ListQueryLoggingConfigs is not available for the current AWS account ...
+	if tfawserr.ErrMessageContains(err, "AccessDenied", "is not available for the current AWS account") {
+		return true
+	}
 	// GovCloud has endpoints that respond with (no message provided):
 	// AccessDeniedException:
 	// Since acceptance test sweepers are best effort and this response is very common,
