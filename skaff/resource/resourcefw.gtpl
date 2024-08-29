@@ -272,8 +272,10 @@ func (r *resource{{ .Resource }}) Create(ctx context.Context, req resource.Creat
 	// TIP: -- 3. Populate a Create input structure
 	{{- end }}
 	var input {{ .ServicePackage }}.Create{{ .Resource }}Input
-	// TIP: Using a field name prefix allows mapping fields such as `ID` to `TestId`
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Test"))...)
+	{{ if .IncludeComments -}}
+	// TIP: Using a field name prefix allows mapping fields such as `ID` to `{{ .Resource }}Id`
+	{{- end }}
+	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("{{ .Resource }}"))...)
 	if resp.Diagnostics.HasError() {
 		return
 	}

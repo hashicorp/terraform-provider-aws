@@ -201,8 +201,9 @@ func (d *dataSource{{ .DataSource }}) Read(ctx context.Context, req datasource.R
 
 	{{ if .IncludeComments -}}
 	// TIP: -- 4. Set the ID, arguments, and attributes
+	// Using a field name prefix allows mapping fields such as `{{ .Resource }}Id` to `ID`
 	{{- end }}
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &data)...)
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &data, flex.WithFieldNamePrefix("{{ .Resource }}"))...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
