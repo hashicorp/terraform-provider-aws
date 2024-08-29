@@ -5,14 +5,7 @@ page_title: "AWS: aws_datazone_environment"
 description: |-
   Terraform resource for managing an AWS DataZone Environment.
 ---
-<!---
-TIP: A few guiding principles for writing documentation:
-1. Use simple language while avoiding jargon and figures of speech.
-2. Focus on brevity and clarity to keep a reader's attention.
-3. Use active voice and present tense whenever you can.
-4. Document your feature as it exists now; do not mention the future or past if you can help it.
-5. Use accessible and inclusive language.
---->`
+
 # Resource: aws_datazone_environment
 
 Terraform resource for managing an AWS DataZone Environment.
@@ -23,6 +16,28 @@ Terraform resource for managing an AWS DataZone Environment.
 
 ```terraform
 resource "aws_datazone_environment" "example" {
+  name                 = "example"
+  account_identifier   = data.aws_caller_identity.test.account_id
+  account_region       = data.aws_region.test.name
+  blueprint_identifier = aws_datazone_environment_blueprint_configuration.test.environment_blueprint_id
+  profile_identifier   = aws_datazone_environment_profile.test.id
+  project_identifier   = aws_datazone_project.test.id
+  domain_identifier    = aws_datazone_domain.test.id
+
+  user_parameters {
+    name  = "consumerGlueDbName"
+    value = "consumer"
+  }
+
+  user_parameters {
+    name  = "producerGlueDbName"
+    value = "producer"
+  }
+
+  user_parameters {
+    name  = "workgroupName"
+    value = "workgroup"
+  }
 }
 ```
 
@@ -47,9 +62,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
+* `create` - (Default `10m`)
+* `update` - (Default `10m`)
+* `delete` - (Default `10m`)
 
 ## Import
 
