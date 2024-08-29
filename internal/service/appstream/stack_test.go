@@ -429,7 +429,7 @@ resource "aws_appstream_stack" "test" {
   }
   user_settings {
     action         = "CLIPBOARD_COPY_TO_LOCAL_DEVICE"
-	maximum_length = 32
+    maximum_length = 32
     permission     = "ENABLED"
   }
   user_settings {
