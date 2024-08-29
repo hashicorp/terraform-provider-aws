@@ -5,11 +5,12 @@ package shield
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/shield"
+	"github.com/hashicorp/terraform-plugin-framework-validators/datasourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -37,8 +38,11 @@ func (d *dataSourceProtection) Metadata(_ context.Context, req datasource.Metada
 func (d *dataSourceProtection) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrID:  framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
+			names.AttrName: schema.StringAttribute{
+				Computed: true,
+			},
+			"protection_arn": framework.ARNAttributeComputedOnly(),
 			"protection_id": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
@@ -51,6 +55,15 @@ func (d *dataSourceProtection) Schema(ctx context.Context, req datasource.Schema
 	}
 }
 
+func (d *dataSourceProtection) ConfigValidators(ctx context.Context) []datasource.ConfigValidator {
+	return []datasource.ConfigValidator{
+		datasourcevalidator.ExactlyOneOf(
+			path.MatchRoot("protection_id"),
+			path.MatchRoot(names.AttrResourceARN),
+		),
+	}
+}
+
 func (d *dataSourceProtection) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().ShieldClient(ctx)
 
@@ -60,31 +73,37 @@ func (d *dataSourceProtection) Read(ctx context.Context, req datasource.ReadRequ
 		return
 	}
 
-	input := &shield.DescribeProtectionInput{
-		ProtectionId: data.ProtectionId.ValueStringPointer(),
-		ResourceArn:  data.ResourceArn.ValueStringPointer(),
+	input := &shield.DescribeProtectionInput{}
+	if !data.ProtectionID.IsNull() {
+		data.ID = types.StringValue(data.ProtectionID.ValueString())
+		input.ProtectionId = data.ProtectionID.ValueStringPointer()
+	} else {
+		data.ID = types.StringValue(data.ResourceARN.ValueString())
+		input.ResourceArn = data.ResourceARN.ValueStringPointer()
 	}
 
 	out, err := findProtection(ctx, conn, input)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Shield, create.ErrActionReading, DSNameProtection, fmt.Sprintf("%s%s", data.ID.String(), data.ResourceArn.String()), err),
+			create.ProblemStandardMessage(names.Shield, create.ErrActionReading, DSNameProtection, data.ID.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
-	data.ARN = flex.StringToFramework(ctx, out.ProtectionArn)
-	data.ID = flex.StringToFramework(ctx, out.Id)
-	data.ProtectionId = flex.StringToFramework(ctx, out.Id)
-	data.ResourceArn = flex.StringToFramework(ctx, out.ResourceArn)
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	data.ProtectionID = flex.StringToFramework(ctx, out.Id)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 type dataSourceProtectionData struct {
-	ARN          types.String `tfsdk:"arn"`
-	ID           types.String `tfsdk:"id"`
-	ProtectionId types.String `tfsdk:"protection_id"`
-	ResourceArn  types.String `tfsdk:"resource_arn"`
+	ID            types.String `tfsdk:"id"`
+	Name          types.String `tfsdk:"name"`
+	ProtectionARN types.String `tfsdk:"protection_arn"`
+	ProtectionID  types.String `tfsdk:"protection_id"`
+	ResourceARN   types.String `tfsdk:"resource_arn"`
 }

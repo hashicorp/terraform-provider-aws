@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -33,15 +34,19 @@ func TestAccShieldProtectionDataSource_basic(t *testing.T) {
 			{
 				Config: testAccProtectionDataSource_basicByARN(rName),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, protectionResourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "protection_id", protectionResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(dataSourceName, "resource_arn", protectionResourceName, "resource_arn"),
+					acctest.MatchResourceAttrGlobalARN(dataSourceName, "protection_arn", "shield", regexache.MustCompile(`protection/+.`)),
 				),
 			},
 			{
 				Config: testAccProtectionDataSource_basicById(rName),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, protectionResourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "protection_id", protectionResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(dataSourceName, "resource_arn", protectionResourceName, "resource_arn"),
+					acctest.MatchResourceAttrGlobalARN(dataSourceName, "protection_arn", "shield", regexache.MustCompile(`protection/+.`)),
 				),
 			},
 		},

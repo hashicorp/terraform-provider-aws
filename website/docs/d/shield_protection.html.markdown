@@ -16,21 +16,30 @@ Terraform data source for managing an AWS Shield Protection.
 
 ```terraform
 data "aws_shield_protection" "example" {
-  resource_arn = "arn:${data.aws_partition.current.partition}:route53:::hostedzone/${aws_route53_zone.test.zone_id}"
+  protection_id = "abc123"
+}
+```
+
+### By Resource ARN
+
+```terraform
+data "aws_shield_protection" "example" {
+  resource_arn = "arn:aws:globalaccelerator::012345678901:accelerator/1234abcd-abcd-1234-abcd-1234abcdefgh"
 }
 ```
 
 ## Argument Reference
 
+~> Exactly one of `protection_id` or `resource_arn` is required.
+
 The following arguments are optional:
 
-* `resource_arn` - (Optional) The ARN (Amazon Resource Name) of the resource to be protected.
-* `protection_id` - (Optional) The unique identifier (ID) for the Protection object.
+* `protection_id` - (Optional) Unique identifier for the protection.
+* `resource_arn` - (Optional) ARN (Amazon Resource Name) of the resource being protected.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `protection_id` - The unique identifier (ID) for the Protection object that is created.
-* `arn` - The ARN of the Protection.
-* `resource_arn` - The ARN (Amazon Resource Name) of the resource to be protected.
+* `name` - Name of the protection.
+* `protection_arn` - ARN of the protection.
