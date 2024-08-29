@@ -660,6 +660,10 @@ func resourceEventSourceMappingUpdate(ctx context.Context, d *schema.ResourceDat
 		input.FunctionResponseTypes = flex.ExpandStringyValueSet[awstypes.FunctionResponseType](d.Get("function_response_types").(*schema.Set))
 	}
 
+	if d.HasChange(names.AttrKMSKeyARN) {
+		input.KMSKeyArn = aws.String(d.Get(names.AttrKMSKeyARN).(string))
+	}
+
 	if d.HasChange("maximum_batching_window_in_seconds") {
 		input.MaximumBatchingWindowInSeconds = aws.Int32(int32(d.Get("maximum_batching_window_in_seconds").(int)))
 	}
