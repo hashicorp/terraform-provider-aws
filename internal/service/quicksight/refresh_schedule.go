@@ -413,23 +413,29 @@ func (r *resourceRefreshSchedule) ImportState(ctx context.Context, req resource.
 func (r *resourceRefreshSchedule) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
 	scheduleFrequencyPath := path.Root(names.AttrSchedule).AtListIndex(0).AtName("schedule_frequency").AtListIndex(0)
 
-	var state resourceRefreshScheduleData
-	resp.Diagnostics.Append(req.Config.Get(ctx, &state)...)
+	var scheduleFrequency refreshFrequencyData
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, scheduleFrequencyPath, &scheduleFrequency)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	apiObj, d := expandSchedule(ctx, "N/A", state)
-	resp.Diagnostics.Append(d...)
-	if resp.Diagnostics.HasError() {
+	if scheduleFrequency.Interval.IsUnknown() {
+		// Field is required, if it's unknown, the value is likely coming from a dynamic block and
+		// ValidateConfig will be called again later with the actual value.
 		return
 	}
 
 	refreshOnDayPath := scheduleFrequencyPath.AtName("refresh_on_day")
 
+	var refreshOnDay []refreshOnDayData
+	resp.Diagnostics.Append(scheduleFrequency.RefreshOnDay.ElementsAs(ctx, &refreshOnDay, false)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	switch interval := scheduleFrequency.Interval.ValueString(); interval {
 	case quicksight.RefreshIntervalWeekly:
-		if apiObj.ScheduleFrequency.RefreshOnDay == nil || apiObj.ScheduleFrequency.RefreshOnDay.DayOfWeek == nil {
+		if len(refreshOnDay) == 0 || refreshOnDay[0].DayOfWeek.IsNull() {
 			resp.Diagnostics.Append(fwdiag.NewAttributeRequiredWhenError(
 				refreshOnDayPath.AtListIndex(0).AtName("day_of_week"),
 				scheduleFrequencyPath.AtName("interval"),
@@ -437,7 +443,7 @@ func (r *resourceRefreshSchedule) ValidateConfig(ctx context.Context, req resour
 			))
 		}
 	case quicksight.RefreshIntervalMonthly:
-		if apiObj.ScheduleFrequency.RefreshOnDay == nil || apiObj.ScheduleFrequency.RefreshOnDay.DayOfMonth == nil {
+		if len(refreshOnDay) == 0 || refreshOnDay[0].DayOfMonth.IsNull() {
 			resp.Diagnostics.Append(fwdiag.NewAttributeRequiredWhenError(
 				refreshOnDayPath.AtListIndex(0).AtName("day_of_month"),
 				scheduleFrequencyPath.AtName("interval"),
@@ -446,7 +452,7 @@ func (r *resourceRefreshSchedule) ValidateConfig(ctx context.Context, req resour
 		}
 
 	default:
-		if apiObj.ScheduleFrequency.RefreshOnDay != nil {
+		if len(refreshOnDay) != 0 {
 			resp.Diagnostics.Append(fwdiag.NewAttributeConflictsWhenError(
 				refreshOnDayPath,
 				scheduleFrequencyPath.AtName("interval"),
