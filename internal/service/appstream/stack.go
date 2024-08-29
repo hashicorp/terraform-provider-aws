@@ -199,6 +199,7 @@ func ResourceStack() *schema.Resource {
 						"maximum_length": {
 							Type:         nullable.TypeNullableInt,
 							Optional:     true,
+							Default:      "",
 							ValidateFunc: nullable.ValidateTypeStringNullableIntBetween(1, 20971520),
 						},
 						"permission": {
