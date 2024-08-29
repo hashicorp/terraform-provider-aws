@@ -164,7 +164,7 @@ func resourceAnalysisCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if v, ok := d.Get(names.AttrPermissions).(*schema.Set); ok && v.Len() > 0 {
-		input.Permissions = expandResourcePermissions(v.List())
+		input.Permissions = quicksightschema.ExpandResourcePermissions(v.List())
 	}
 
 	if v, ok := d.GetOk("source_entity"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -231,7 +231,7 @@ func resourceAnalysisRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading QuickSight Analysis (%s) permissions: %s", d.Id(), err)
 	}
 
-	if err := d.Set(names.AttrPermissions, flattenPermissions(permissions)); err != nil {
+	if err := d.Set(names.AttrPermissions, quicksightschema.FlattenPermissions(permissions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting permissions: %s", err)
 	}
 
@@ -278,7 +278,7 @@ func resourceAnalysisUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	if d.HasChange(names.AttrPermissions) {
 		o, n := d.GetChange(names.AttrPermissions)
 		os, ns := o.(*schema.Set), n.(*schema.Set)
-		toGrant, toRevoke := diffPermissions(os.List(), ns.List())
+		toGrant, toRevoke := quicksightschema.DiffPermissions(os.List(), ns.List())
 
 		input := &quicksight.UpdateAnalysisPermissionsInput{
 			AnalysisId:   aws.String(analysisID),

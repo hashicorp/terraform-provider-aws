@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestDataSourcePermissionsDiff(t *testing.T) {
+func TestDiffPermissions(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
@@ -222,7 +222,7 @@ func TestDataSourcePermissionsDiff(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
-			toGrant, toRevoke := diffPermissions(testCase.oldPermissions, testCase.newPermissions)
+			toGrant, toRevoke := DiffPermissions(testCase.oldPermissions, testCase.newPermissions)
 			if diff := cmp.Diff(toGrant, testCase.expectedGrants, ignoreExportedOpts); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 			}

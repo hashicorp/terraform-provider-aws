@@ -175,7 +175,7 @@ func resourceDashboardCreate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if v, ok := d.Get(names.AttrPermissions).(*schema.Set); ok && v.Len() > 0 {
-		input.Permissions = expandResourcePermissions(v.List())
+		input.Permissions = quicksightschema.ExpandResourcePermissions(v.List())
 	}
 
 	if v, ok := d.GetOk("source_entity"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -253,7 +253,7 @@ func resourceDashboardRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "reading QuickSight Dashboard (%s) permissions: %s", d.Id(), err)
 	}
 
-	if err := d.Set(names.AttrPermissions, flattenPermissions(permissions)); err != nil {
+	if err := d.Set(names.AttrPermissions, quicksightschema.FlattenPermissions(permissions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting permissions: %s", err)
 	}
 
@@ -319,7 +319,7 @@ func resourceDashboardUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	if d.HasChange(names.AttrPermissions) {
 		o, n := d.GetChange(names.AttrPermissions)
 		os, ns := o.(*schema.Set), n.(*schema.Set)
-		toGrant, toRevoke := diffPermissions(os.List(), ns.List())
+		toGrant, toRevoke := quicksightschema.DiffPermissions(os.List(), ns.List())
 
 		input := &quicksight.UpdateDashboardPermissionsInput{
 			AwsAccountId: aws.String(awsAccountID),

@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	quicksightschema "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight/schema"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -372,7 +373,7 @@ func resourceThemeCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk(names.AttrPermissions); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Permissions = expandResourcePermissions(v.([]interface{}))
+		input.Permissions = quicksightschema.ExpandResourcePermissions(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("version_description"); ok {
@@ -435,7 +436,7 @@ func resourceThemeRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "reading QuickSight Theme (%s) permissions: %s", d.Id(), err)
 	}
 
-	if err := d.Set(names.AttrPermissions, flattenPermissions(permissions)); err != nil {
+	if err := d.Set(names.AttrPermissions, quicksightschema.FlattenPermissions(permissions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting permissions: %s", err)
 	}
 
@@ -477,7 +478,7 @@ func resourceThemeUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange(names.AttrPermissions) {
 		o, n := d.GetChange(names.AttrPermissions)
 		os, ns := o.([]interface{}), n.([]interface{})
-		toGrant, toRevoke := diffPermissions(os, ns)
+		toGrant, toRevoke := quicksightschema.DiffPermissions(os, ns)
 
 		input := &quicksight.UpdateThemePermissionsInput{
 			AwsAccountId: aws.String(awsAccountID),

@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func expandResourcePermissions(tfList []interface{}) []awstypes.ResourcePermission {
+func ExpandResourcePermissions(tfList []interface{}) []awstypes.ResourcePermission {
 	apiObjects := make([]awstypes.ResourcePermission, len(tfList))
 
 	for i, tfMapRaw := range tfList {
@@ -28,7 +28,7 @@ func expandResourcePermissions(tfList []interface{}) []awstypes.ResourcePermissi
 	return apiObjects
 }
 
-func flattenPermissions(apiObjects []awstypes.ResourcePermission) []interface{} {
+func FlattenPermissions(apiObjects []awstypes.ResourcePermission) []interface{} {
 	if len(apiObjects) == 0 {
 		return []interface{}{}
 	}
@@ -52,9 +52,9 @@ func flattenPermissions(apiObjects []awstypes.ResourcePermission) []interface{} 
 	return tfList
 }
 
-func diffPermissions(o, n []interface{}) ([]awstypes.ResourcePermission, []awstypes.ResourcePermission) {
-	old := expandResourcePermissions(o)
-	new := expandResourcePermissions(n)
+func DiffPermissions(o, n []interface{}) ([]awstypes.ResourcePermission, []awstypes.ResourcePermission) {
+	old := ExpandResourcePermissions(o)
+	new := ExpandResourcePermissions(n)
 
 	var toGrant, toRevoke []awstypes.ResourcePermission
 
