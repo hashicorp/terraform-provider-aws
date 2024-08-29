@@ -88,7 +88,7 @@ func (r *resourceEnvironment) Schema(ctx context.Context, req resource.SchemaReq
 					listplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -135,7 +135,7 @@ func (r *resourceEnvironment) Schema(ctx context.Context, req resource.SchemaReq
 				CustomType: fwtypes.ListOfStringType,
 				Optional:   true,
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"last_deployment": schema.ListAttribute{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[resourceLastDeployment](ctx),
 				Computed:   true,
@@ -143,7 +143,7 @@ func (r *resourceEnvironment) Schema(ctx context.Context, req resource.SchemaReq
 					listplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 			},
 			"project_identifier": schema.StringAttribute{
@@ -184,7 +184,7 @@ func (r *resourceEnvironment) Schema(ctx context.Context, req resource.SchemaReq
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,

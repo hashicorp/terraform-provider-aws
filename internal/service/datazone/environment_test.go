@@ -58,24 +58,24 @@ func TestAccDataZoneEnvironment_basic(t *testing.T) {
 				Config: testAccEnvironmentConfig_basic(rName, epName, dName, pName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
-					resource.TestCheckResourceAttr(resourceName, "description", "desc"),
-					resource.TestCheckResourceAttrPair(resourceName, "enviroment_account_identifier", callName, "account_id"), // fix
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "desc"),
+					resource.TestCheckResourceAttrPair(resourceName, "enviroment_account_identifier", callName, names.AttrAccountID), // fix
 					resource.TestCheckResourceAttrPair(resourceName, "environment_account_region", regionName, "help"),        // fix
-					resource.TestCheckResourceAttrSet(resourceName, "created_at"),                                             // fix
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),                                             // fix
 					resource.TestCheckResourceAttrSet(regionName, "created_by"),
 					//custom parameters
 					//deployment parameters
-					resource.TestCheckResourceAttrPair(resourceName, "domain_identifier", domainName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "environment_blueprint_identifier", blueName, "id"),     // check this
-					resource.TestCheckResourceAttrPair(resourceName, "environment_profile_identifier", envProfileName, "id"), // check this
+					resource.TestCheckResourceAttrPair(resourceName, "domain_identifier", domainName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "environment_blueprint_identifier", blueName, names.AttrID),     // check this
+					resource.TestCheckResourceAttrPair(resourceName, "environment_profile_identifier", envProfileName, names.AttrID), // check this
 					resource.TestCheckResourceAttr(resourceName, "glossary_terms.0", "glossary_term"),
-					resource.TestCheckResourceAttrSet(resourceName, "id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					// last deployment
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "project_identifier", projectName, "id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, "project_identifier", projectName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "provider_environment"),
 					// provisioned resources
-					resource.TestCheckResourceAttr(resourceName, "status", "ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
 				),
 			},
 			{ResourceName: resourceName,
@@ -131,7 +131,7 @@ func testAccCheckEnvironmentDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			_, err := tfdatazone.FindEnvironmentByID(ctx, conn, rs.Primary.Attributes["domain_identfier"], rs.Primary.Attributes["id"])
+			_, err := tfdatazone.FindEnvironmentByID(ctx, conn, rs.Primary.Attributes["domain_identfier"], rs.Primary.Attributes[names.AttrID])
 			if errs.IsA[*types.ResourceNotFoundException](err) {
 				return nil
 			}
@@ -158,7 +158,7 @@ func testAccCheckEnvironmentExists(ctx context.Context, name string, environment
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataZoneClient(ctx)
-		resp, err := tfdatazone.FindEnvironmentByID(ctx, conn, rs.Primary.Attributes["domain_identfier"], rs.Primary.Attributes["id"])
+		resp, err := tfdatazone.FindEnvironmentByID(ctx, conn, rs.Primary.Attributes["domain_identfier"], rs.Primary.Attributes[names.AttrID])
 
 		if err != nil {
 			return create.Error(names.DataZone, create.ErrActionCheckingExistence, tfdatazone.ResNameEnvironment, rs.Primary.ID, err)
