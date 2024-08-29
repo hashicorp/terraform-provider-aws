@@ -35,7 +35,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Refresh Schedule")
+// @FrameworkResource("aws_quicksight_refresh_schedule", name="Refresh Schedule")
 func newResourceRefreshSchedule(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceRefreshSchedule{}, nil
 }
@@ -438,7 +438,7 @@ func (r *resourceRefreshSchedule) ValidateConfig(ctx context.Context, req resour
 		if len(refreshOnDay) == 0 || refreshOnDay[0].DayOfWeek.IsNull() {
 			resp.Diagnostics.Append(fwdiag.NewAttributeRequiredWhenError(
 				refreshOnDayPath.AtListIndex(0).AtName("day_of_week"),
-				scheduleFrequencyPath.AtName("interval"),
+				scheduleFrequencyPath.AtName(names.AttrInterval),
 				interval,
 			))
 		}
@@ -446,7 +446,7 @@ func (r *resourceRefreshSchedule) ValidateConfig(ctx context.Context, req resour
 		if len(refreshOnDay) == 0 || refreshOnDay[0].DayOfMonth.IsNull() {
 			resp.Diagnostics.Append(fwdiag.NewAttributeRequiredWhenError(
 				refreshOnDayPath.AtListIndex(0).AtName("day_of_month"),
-				scheduleFrequencyPath.AtName("interval"),
+				scheduleFrequencyPath.AtName(names.AttrInterval),
 				interval,
 			))
 		}
@@ -455,7 +455,7 @@ func (r *resourceRefreshSchedule) ValidateConfig(ctx context.Context, req resour
 		if len(refreshOnDay) != 0 {
 			resp.Diagnostics.Append(fwdiag.NewAttributeConflictsWhenError(
 				refreshOnDayPath,
-				scheduleFrequencyPath.AtName("interval"),
+				scheduleFrequencyPath.AtName(names.AttrInterval),
 				interval,
 			))
 		}
