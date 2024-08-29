@@ -210,9 +210,10 @@ func resourceDashboardRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("source_entity_arn", dashboard.Version.SourceEntityArn)
 	d.Set(names.AttrStatus, dashboard.Version.Status)
 	d.Set("version_description", dashboard.Version.Description)
-	d.Set("version_number", dashboard.Version.VersionNumber)
+	version := aws.ToInt64(dashboard.Version.VersionNumber)
+	d.Set("version_number", version)
 
-	outputDDD, err := findDashboardDefinitionByThreePartKey(ctx, conn, awsAccountID, dashboardID, aws.ToInt64(dashboard.Version.VersionNumber))
+	outputDDD, err := findDashboardDefinitionByThreePartKey(ctx, conn, awsAccountID, dashboardID, version)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading QuickSight Dashboard (%s) definition: %s", d.Id(), err)
