@@ -38,9 +38,9 @@ import (
 func newResourceEnvironment(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceEnvironment{}
 
-	r.SetDefaultCreateTimeout(30 * time.Minute)
-	r.SetDefaultUpdateTimeout(30 * time.Minute)
-	r.SetDefaultDeleteTimeout(30 * time.Minute)
+	r.SetDefaultCreateTimeout(10 * time.Minute)
+	r.SetDefaultUpdateTimeout(10 * time.Minute)
+	r.SetDefaultDeleteTimeout(10 * time.Minute)
 
 	return r, nil
 }
@@ -61,6 +61,29 @@ func (r *resourceEnvironment) Metadata(_ context.Context, req resource.MetadataR
 func (r *resourceEnvironment) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"account_identifier": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"account_region": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"blueprint_identifier": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
 			names.AttrCreatedAt: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
@@ -74,61 +97,13 @@ func (r *resourceEnvironment) Schema(ctx context.Context, req resource.SchemaReq
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"custom_parameters": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[resourceCustomParameterData](ctx),
-				Computed:   true,
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"deployment_parameters": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[resourceDeploymentPropertiesData](ctx),
-				Computed:   true,
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.UseStateForUnknown(),
-				},
-			},
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 			"domain_identifier": schema.StringAttribute{
 				Required: true,
 			},
-			"environment_account_identifier": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"environment_account_region": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"environment_actions": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[resourceEnvironmentActionData](ctx),
-				Computed:   true,
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"environment_blueprint_identifier": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
-			"environment_profile_identifier": schema.StringAttribute{
+			"profile_identifier": schema.StringAttribute{
 				Required: true,
 			},
 			"glossary_terms": schema.ListAttribute{
@@ -161,10 +136,9 @@ func (r *resourceEnvironment) Schema(ctx context.Context, req resource.SchemaReq
 			"provisioned_resources": schema.ListAttribute{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[resourceProvisionedResourcesData](ctx),
 				Computed:   true,
-			},
-			"provisioning_properties": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[resourceProvisionPropertiesData](ctx),
-				Computed:   true,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -204,7 +178,7 @@ func (r *resourceEnvironment) Create(ctx context.Context, req resource.CreateReq
 	}
 
 	in := &datazone.CreateEnvironmentInput{}
-	resp.Diagnostics.Append(fwflex.Expand(ctx, &plan, in)...)
+	resp.Diagnostics.Append(fwflex.Expand(ctx, &plan, in, fwflex.WithFieldNamePrefix("Environment"))...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -230,16 +204,14 @@ func (r *resourceEnvironment) Create(ctx context.Context, req resource.CreateReq
 	state := plan
 	state.Id = fwflex.StringToFramework(ctx, out.Id)
 
-	//resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan, flex.WithIgnoredFieldNames([]string{"UserParameters", "CustomParameters"}))...)
-	//if resp.Diagnostics.HasError() {
-	//	return
-	//}
-	//
-	//resp.Diagnostics.Append(flex.Flatten(ctx, out.UserParameters, &plan.CustomParameters)...)
-	//if resp.Diagnostics.HasError() {
-	//	return
-	//}
-	//
+	// set partial state
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), out.Id)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("domain_identifier"), out.DomainId)...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	output, err := waitEnvironmentCreated(ctx, conn, state.DomainIdentifier.ValueString(), state.Id.ValueString(), createTimeout)
 
@@ -251,8 +223,7 @@ func (r *resourceEnvironment) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, output, &state)...)
-
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, output, &state, fwflex.WithIgnoredFieldNames([]string{"UserParameters"}))...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -285,7 +256,7 @@ func (r *resourceEnvironment) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &state)...)
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &state, fwflex.WithIgnoredFieldNamesAppend("UserParameters"))...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -296,7 +267,6 @@ func (r *resourceEnvironment) Read(ctx context.Context, req resource.ReadRequest
 func (r *resourceEnvironment) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
-	// TIP: -- 2. Fetch the plan
 	var plan, state resourceEnvironmentData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -314,6 +284,7 @@ func (r *resourceEnvironment) Update(ctx context.Context, req resource.UpdateReq
 		if resp.Diagnostics.HasError() {
 			return
 		}
+		in.Identifier = state.Id.ValueStringPointer()
 
 		out, err := conn.UpdateEnvironment(ctx, in)
 		if err != nil {
@@ -378,7 +349,7 @@ func (r *resourceEnvironment) Delete(ctx context.Context, req resource.DeleteReq
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
 	_, err = waitEnvironmentDeleted(ctx, conn, state.DomainIdentifier.ValueString(), state.Id.ValueString(), deleteTimeout)
-	
+
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.DataZone, create.ErrActionWaitingForDeletion, ResNameEnvironment, state.Id.String(), err),
@@ -389,11 +360,13 @@ func (r *resourceEnvironment) Delete(ctx context.Context, req resource.DeleteReq
 }
 
 func (r *resourceEnvironment) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	parts := strings.Split(req.ID, ":")
+	parts := strings.Split(req.ID, ",")
 
 	if len(parts) != 2 {
-		resp.Diagnostics.AddError("Resource Import Invalid ID", fmt.Sprintf(`Unexpected format for import ID (%s), use: "DomainIdentifier,Id"`, req.ID))
+		resp.Diagnostics.AddError("resource import invalid ID", fmt.Sprintf(`Unexpected format for import ID (%s), use: "DomainIdentifier,Id"`, req.ID))
+		return
 	}
+
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("domain_identifier"), parts[0])...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrIdentifier), parts[1])...)
 }
@@ -436,8 +409,8 @@ func waitEnvironmentUpdated(ctx context.Context, conn *datazone.Client, domainId
 
 func waitEnvironmentDeleted(ctx context.Context, conn *datazone.Client, domainId string, id string, timeout time.Duration) (*datazone.GetEnvironmentOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice[awstypes.EnvironmentStatus](awstypes.EnvironmentStatusDeleting, awstypes.EnvironmentStatusActive),
-		Target:  enum.Slice[awstypes.EnvironmentStatus](awstypes.EnvironmentStatusDeleted),
+		Pending: enum.Slice(awstypes.EnvironmentStatusDeleting, awstypes.EnvironmentStatusActive),
+		Target:  []string{},
 		Refresh: statusEnvironment(ctx, conn, domainId, id),
 		Timeout: timeout,
 	}
@@ -450,7 +423,7 @@ func waitEnvironmentDeleted(ctx context.Context, conn *datazone.Client, domainId
 	return nil, err
 }
 
-func statusEnvironment(ctx context.Context, conn *datazone.Client, domainId string, id string) retry.StateRefreshFunc {
+func statusEnvironment(ctx context.Context, conn *datazone.Client, domainId, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		out, err := findEnvironmentByID(ctx, conn, domainId, id)
 		if tfresource.NotFound(err) {
@@ -461,7 +434,7 @@ func statusEnvironment(ctx context.Context, conn *datazone.Client, domainId stri
 			return nil, "", err
 		}
 
-		return out, aws.ToString((*string)(&out.Status)), nil
+		return out, string(out.Status), nil
 	}
 }
 
@@ -492,55 +465,23 @@ func findEnvironmentByID(ctx context.Context, conn *datazone.Client, domainId, i
 }
 
 type resourceEnvironmentData struct {
-	AwsAccountId                 types.String                                                      `tfsdk:"environment_account_identifier"`
-	AwsAccountRegion             types.String                                                      `tfsdk:"environment_account_region"`
-	CreatedAt                    timetypes.RFC3339                                                 `tfsdk:"created_at"`
-	CreatedBy                    types.String                                                      `tfsdk:"created_by"`
-	CustomParameters             fwtypes.ListNestedObjectValueOf[resourceCustomParameterData]      `tfsdk:"custom_parameters"`
-	DeploymentParameters         fwtypes.ListNestedObjectValueOf[resourceDeploymentPropertiesData] `tfsdk:"deployment_parameters"`
-	Description                  types.String                                                      `tfsdk:"description"`
-	DomainIdentifier             types.String                                                      `tfsdk:"domain_identifier"`
-	EnvironmentActions           fwtypes.ListNestedObjectValueOf[resourceEnvironmentActionData]    `tfsdk:"environment_actions"`
-	EnvironmentBlueprintId       types.String                                                      `tfsdk:"environment_blueprint_identifier"`
-	EnvironmentProfileIdentifier types.String                                                      `tfsdk:"environment_profile_identifier"`
-	GlossaryTerms                fwtypes.ListValueOf[types.String]                                 `tfsdk:"glossary_terms"`
-	Id                           types.String                                                      `tfsdk:"id"`
-	LastDeployment               fwtypes.ListNestedObjectValueOf[resourceLastDeployment]           `tfsdk:"last_deployment"`
-	Name                         types.String                                                      `tfsdk:"name"`
-	ProjectIdentifier            types.String                                                      `tfsdk:"project_identifier"`
-	Provider                     types.String                                                      `tfsdk:"provider_environment"`
-	ProvisionedResources         fwtypes.ListNestedObjectValueOf[resourceProvisionedResourcesData] `tfsdk:"provisioned_resources"`
-	ProvisioningProperties       fwtypes.ListNestedObjectValueOf[resourceProvisionPropertiesData]  `tfsdk:"provisioning_properties"`
-	Status                       fwtypes.StringEnum[awstypes.EnvironmentStatus]                    `tfsdk:"status"`
-	Timeouts                     timeouts.Value                                                    `tfsdk:"timeouts"`
-	UpdatedAt                    timetypes.RFC3339                                                 `tfsdk:"updated_at"`
-	UserParameters               fwtypes.ListNestedObjectValueOf[resourceUserParametersData]       `tfsdk:"user_parameters"`
-}
-
-type resourceCustomParameterData struct {
-	DefaultValue types.String `tfsdk:"default_value"`
-	Description  types.String `tfsdk:"description"`
-	FieldType    types.String `tfsdk:"field_type"`
-	IsEditable   types.Bool   `tfsdk:"is_editable"`
-	IsOptional   types.Bool   `tfsdk:"is_optional"`
-	KeyName      types.String `tfsdk:"key_name"`
-}
-
-type resourceDeploymentPropertiesData struct {
-	EndTimeoutMinutes   types.Int64 `tfsdk:"is_optional"`
-	StartTimeoutMinutes types.Int64 `tfsdk:"key_name"`
-}
-
-type resourceEnvironmentActionData struct {
-	Auth       types.String                                            `tfsdk:"auth"`
-	Parameters fwtypes.ListNestedObjectValueOf[resourceParametersData] `tfsdk:"parameters"`
-	Type       types.String                                            `tfsdk:"type"`
-	// awstypes.ConfigurableActionTypeAuthorization???
-}
-
-type resourceParametersData struct {
-	Key   types.String `tfsdk:"key"`
-	Value types.String `tfsdk:"value"`
+	AccountIdentifier    types.String                                                      `tfsdk:"account_identifier"`
+	AccountRegion        types.String                                                      `tfsdk:"account_region"`
+	BlueprintId          types.String                                                      `tfsdk:"blueprint_identifier"`
+	CreatedAt            timetypes.RFC3339                                                 `tfsdk:"created_at"`
+	CreatedBy            types.String                                                      `tfsdk:"created_by"`
+	Description          types.String                                                      `tfsdk:"description"`
+	DomainIdentifier     types.String                                                      `tfsdk:"domain_identifier"`
+	ProfileIdentifier    types.String                                                      `tfsdk:"profile_identifier"`
+	GlossaryTerms        fwtypes.ListValueOf[types.String]                                 `tfsdk:"glossary_terms"`
+	Id                   types.String                                                      `tfsdk:"id"`
+	LastDeployment       fwtypes.ListNestedObjectValueOf[resourceLastDeployment]           `tfsdk:"last_deployment"`
+	Name                 types.String                                                      `tfsdk:"name"`
+	ProjectIdentifier    types.String                                                      `tfsdk:"project_identifier"`
+	Provider             types.String                                                      `tfsdk:"provider_environment"`
+	ProvisionedResources fwtypes.ListNestedObjectValueOf[resourceProvisionedResourcesData] `tfsdk:"provisioned_resources"`
+	Timeouts             timeouts.Value                                                    `tfsdk:"timeouts"`
+	UserParameters       fwtypes.ListNestedObjectValueOf[resourceUserParametersData]       `tfsdk:"user_parameters"`
 }
 
 type resourceLastDeployment struct {
@@ -562,14 +503,6 @@ type resourceProvisionedResourcesData struct {
 	Provider types.String `tfsdk:"provider"`
 	Type     types.String `tfsdk:"type"`
 	Value    types.String `tfsdk:"value"`
-}
-
-type resourceProvisionPropertiesData struct {
-	CloudFormation types.String `tfsdk:"cloud_formation"`
-}
-
-type resourceCloudFormationData struct {
-	template_url types.String `tfsdk:"template_url"`
 }
 
 type resourceUserParametersData struct {
