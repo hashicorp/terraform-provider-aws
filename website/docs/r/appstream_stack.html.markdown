@@ -25,12 +25,14 @@ resource "aws_appstream_stack" "example" {
   }
 
   user_settings {
-    action     = "CLIPBOARD_COPY_FROM_LOCAL_DEVICE"
-    permission = "ENABLED"
+    action         = "CLIPBOARD_COPY_FROM_LOCAL_DEVICE"
+    maximum_length = 256
+    permission     = "ENABLED"
   }
   user_settings {
-    action     = "CLIPBOARD_COPY_TO_LOCAL_DEVICE"
-    permission = "ENABLED"
+    action         = "CLIPBOARD_COPY_TO_LOCAL_DEVICE"
+    maximum_length = 256
+    permission     = "ENABLED"
   }
   user_settings {
     action     = "DOMAIN_PASSWORD_SIGNIN"
@@ -115,6 +117,7 @@ The following arguments are optional:
   Valid values are `CLIPBOARD_COPY_FROM_LOCAL_DEVICE`,  `CLIPBOARD_COPY_TO_LOCAL_DEVICE`, `FILE_UPLOAD`, `FILE_DOWNLOAD`, `PRINTING_TO_LOCAL_DEVICE`, `DOMAIN_PASSWORD_SIGNIN`, or `DOMAIN_SMART_CARD_SIGNIN`.
 * `permission` - (Required) Whether the action is enabled or disabled.
   Valid values are `ENABLED` or `DISABLED`.
+* `maximum_length` - (Optional) Specifies the number of characters that can be copied by end users from the local device to the remote session, and to the local device from the remote session. The value can be between 1 and 20,971,520 (20 MB)
 
 ### `streaming_experience_settings`
 

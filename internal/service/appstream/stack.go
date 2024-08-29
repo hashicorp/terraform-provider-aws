@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -195,6 +196,11 @@ func ResourceStack() *schema.Resource {
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.Action](),
 						},
+						"maximum_length": {
+							Type:         nullable.TypeNullableInt,
+							Optional:     true,
+							ValidateFunc: nullable.ValidateTypeStringNullableIntBetween(1, 20971520),
+						},
 						"permission": {
 							Type:             schema.TypeString,
 							Required:         true,
@@ -354,7 +360,7 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if err = d.Set("storage_connectors", flattenStorageConnectors(stack.StorageConnectors)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting storage_connectors: %s", err)
 	}
-	if err = d.Set("streaming_experience_settings", flattenStreaminExperienceSettings(stack.StreamingExperienceSettings)); err != nil {
+	if err = d.Set("streaming_experience_settings", flattenStreamingExperienceSettings(stack.StreamingExperienceSettings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting streaming_experience_settings: %s", err)
 	}
 	if err = d.Set("user_settings", flattenUserSettings(stack.UserSettings)); err != nil {
@@ -589,7 +595,7 @@ func expandStreamingExperienceSettings(tfList []interface{}) *awstypes.Streaming
 	return apiObject
 }
 
-func flattenStreaminExperienceSetting(apiObject *awstypes.StreamingExperienceSettings) map[string]interface{} {
+func flattenStreamingExperienceSetting(apiObject *awstypes.StreamingExperienceSettings) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -599,14 +605,14 @@ func flattenStreaminExperienceSetting(apiObject *awstypes.StreamingExperienceSet
 	}
 }
 
-func flattenStreaminExperienceSettings(apiObject *awstypes.StreamingExperienceSettings) []interface{} {
+func flattenStreamingExperienceSettings(apiObject *awstypes.StreamingExperienceSettings) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	var tfList []interface{}
 
-	tfList = append(tfList, flattenStreaminExperienceSetting(apiObject))
+	tfList = append(tfList, flattenStreamingExperienceSetting(apiObject))
 
 	return tfList
 }
@@ -683,6 +689,12 @@ func expandUserSetting(tfMap map[string]interface{}) awstypes.UserSetting {
 		Permission: awstypes.Permission(tfMap["permission"].(string)),
 	}
 
+	if v, ok := tfMap["maximum_length"].(string); ok {
+		if v, null, _ := nullable.Int(v).ValueInt32(); !null {
+			apiObject.MaximumLength = aws.Int32(v)
+		}
+	}
+
 	return apiObject
 }
 
@@ -711,6 +723,10 @@ func flattenUserSetting(apiObject awstypes.UserSetting) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 	tfMap[names.AttrAction] = string(apiObject.Action)
 	tfMap["permission"] = string(apiObject.Permission)
+
+	if v := apiObject.MaximumLength; v != nil {
+		tfMap["maximum_length"] = flex.Int32ToStringValue(v)
+	}
 
 	return tfMap
 }

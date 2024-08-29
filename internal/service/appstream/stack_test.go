@@ -118,6 +118,7 @@ func TestAccAppStreamStack_complete(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "redirect_url", ""),
 					resource.TestCheckResourceAttr(resourceName, "storage_connectors.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "user_settings.#", "7"),
+					resource.TestCheckResourceAttr(resourceName, "user_settings.1.maximum_length", "32"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct0),
 				),
@@ -427,8 +428,9 @@ resource "aws_appstream_stack" "test" {
     permission = "ENABLED"
   }
   user_settings {
-    action     = "CLIPBOARD_COPY_TO_LOCAL_DEVICE"
-    permission = "ENABLED"
+    action         = "CLIPBOARD_COPY_TO_LOCAL_DEVICE"
+	maximum_length = 32
+    permission     = "ENABLED"
   }
   user_settings {
     action     = "DOMAIN_PASSWORD_SIGNIN"
