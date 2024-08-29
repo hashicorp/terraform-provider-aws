@@ -173,7 +173,7 @@ func (r *refreshScheduleResource) Schema(ctx context.Context, req resource.Schem
 	}
 }
 
-type resourceRefreshScheduleData struct {
+type resourceRefreshScheduleModel struct {
 	ARN          types.String `tfsdk:"arn"`
 	AWSAccountID types.String `tfsdk:"aws_account_id"`
 	DataSetID    types.String `tfsdk:"data_set_id"`
@@ -182,20 +182,20 @@ type resourceRefreshScheduleData struct {
 	Schedule     types.List   `tfsdk:"schedule"`
 }
 
-type scheduleData struct {
+type scheduleModel struct {
 	RefreshType        types.String `tfsdk:"refresh_type"`
 	ScheduleFrequency  types.List   `tfsdk:"schedule_frequency"`
 	StartAfterDateTime types.String `tfsdk:"start_after_date_time"`
 }
 
-type refreshFrequencyData struct {
+type refreshFrequencyModel struct {
 	Interval     types.String `tfsdk:"interval"`
 	RefreshOnDay types.List   `tfsdk:"refresh_on_day"`
 	TimeOfTheDay types.String `tfsdk:"time_of_the_day"`
 	Timezone     types.String `tfsdk:"timezone"`
 }
 
-type refreshOnDayData struct {
+type refreshOnDayModel struct {
 	DayOfMonth types.String `tfsdk:"day_of_month"`
 	DayOfWeek  types.String `tfsdk:"day_of_week"`
 }
@@ -229,7 +229,7 @@ var (
 func (r *refreshScheduleResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().QuickSightClient(ctx)
 
-	var plan resourceRefreshScheduleData
+	var plan resourceRefreshScheduleModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -286,7 +286,7 @@ func (r *refreshScheduleResource) Create(ctx context.Context, req resource.Creat
 func (r *refreshScheduleResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().QuickSightClient(ctx)
 
-	var state resourceRefreshScheduleData
+	var state resourceRefreshScheduleModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -324,7 +324,7 @@ func (r *refreshScheduleResource) Read(ctx context.Context, req resource.ReadReq
 func (r *refreshScheduleResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().QuickSightClient(ctx)
 
-	var config, plan, state resourceRefreshScheduleData
+	var config, plan, state resourceRefreshScheduleModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -356,7 +356,7 @@ func (r *refreshScheduleResource) Update(ctx context.Context, req resource.Updat
 
 		// NOTE: Do not set StartAfterDateTime if not defined in config anymore or the value is unchanged
 
-		var configTfList, planTfList, stateTfList []scheduleData
+		var configTfList, planTfList, stateTfList []scheduleModel
 		resp.Diagnostics.Append(config.Schedule.ElementsAs(ctx, &configTfList, false)...)
 		resp.Diagnostics.Append(plan.Schedule.ElementsAs(ctx, &planTfList, false)...)
 		resp.Diagnostics.Append(state.Schedule.ElementsAs(ctx, &stateTfList, false)...)
@@ -404,7 +404,7 @@ func (r *refreshScheduleResource) Update(ctx context.Context, req resource.Updat
 func (r *refreshScheduleResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().QuickSightClient(ctx)
 
-	var state resourceRefreshScheduleData
+	var state resourceRefreshScheduleModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -440,7 +440,7 @@ func (r *refreshScheduleResource) Delete(ctx context.Context, req resource.Delet
 func (r *refreshScheduleResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
 	scheduleFrequencyPath := path.Root(names.AttrSchedule).AtListIndex(0).AtName("schedule_frequency").AtListIndex(0)
 
-	var scheduleFrequency refreshFrequencyData
+	var scheduleFrequency refreshFrequencyModel
 	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, scheduleFrequencyPath, &scheduleFrequency)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -454,7 +454,7 @@ func (r *refreshScheduleResource) ValidateConfig(ctx context.Context, req resour
 
 	refreshOnDayPath := scheduleFrequencyPath.AtName("refresh_on_day")
 
-	var refreshOnDay []refreshOnDayData
+	var refreshOnDay []refreshOnDayModel
 	resp.Diagnostics.Append(scheduleFrequency.RefreshOnDay.ElementsAs(ctx, &refreshOnDay, false)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -520,7 +520,7 @@ func findRefreshSchedule(ctx context.Context, conn *quicksight.Client, input *qu
 	return output.Arn, output.RefreshSchedule, nil
 }
 
-func (rd *resourceRefreshScheduleData) refreshFromRead(ctx context.Context, arn *string, out *awstypes.RefreshSchedule) diag.Diagnostics {
+func (rd *resourceRefreshScheduleModel) refreshFromRead(ctx context.Context, arn *string, out *awstypes.RefreshSchedule) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	if out == nil {
@@ -536,10 +536,10 @@ func (rd *resourceRefreshScheduleData) refreshFromRead(ctx context.Context, arn 
 	return diags
 }
 
-func expandSchedule(ctx context.Context, scheduleId string, plan resourceRefreshScheduleData) (*awstypes.RefreshSchedule, diag.Diagnostics) {
+func expandSchedule(ctx context.Context, scheduleId string, plan resourceRefreshScheduleModel) (*awstypes.RefreshSchedule, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
-	var tfList []scheduleData
+	var tfList []scheduleModel
 	diags.Append(plan.Schedule.ElementsAs(ctx, &tfList, false)...)
 	if diags.HasError() {
 		return nil, diags
@@ -565,9 +565,9 @@ func expandSchedule(ctx context.Context, scheduleId string, plan resourceRefresh
 	return in, diags
 }
 
-func expandRefreshFrequency(ctx context.Context, plan scheduleData) (*awstypes.RefreshFrequency, diag.Diagnostics) {
+func expandRefreshFrequency(ctx context.Context, plan scheduleModel) (*awstypes.RefreshFrequency, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	var tfList []refreshFrequencyData
+	var tfList []refreshFrequencyModel
 	diags.Append(plan.ScheduleFrequency.ElementsAs(ctx, &tfList, false)...)
 	if diags.HasError() || len(tfList) == 0 {
 		return nil, diags
@@ -591,9 +591,9 @@ func expandRefreshFrequency(ctx context.Context, plan scheduleData) (*awstypes.R
 	return freq, diags
 }
 
-func expandRefreshOnDayData(ctx context.Context, plan refreshFrequencyData) (*awstypes.ScheduleRefreshOnEntity, diag.Diagnostics) {
+func expandRefreshOnDayData(ctx context.Context, plan refreshFrequencyModel) (*awstypes.ScheduleRefreshOnEntity, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	var tfList []refreshOnDayData
+	var tfList []refreshOnDayModel
 	diags.Append(plan.RefreshOnDay.ElementsAs(ctx, &tfList, false)...)
 	if diags.HasError() || len(tfList) == 0 {
 		return nil, diags
