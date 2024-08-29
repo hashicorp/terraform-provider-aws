@@ -51,11 +51,11 @@ func resourceLoggingConfiguration() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"log_destination_config": {
-							// At most 2 configurations can exist,
-							// with 1 destination for FLOW logs and 1 for ALERT logs
+							// At most 3 configurations can exist,
+							// with 1 destination for FLOW logs and 1 for ALERT logs and 1 for TLS Logs
 							Type:     schema.TypeSet,
 							Required: true,
-							MaxItems: 2,
+							MaxItems: 3,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"log_destination": {

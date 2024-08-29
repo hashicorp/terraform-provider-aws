@@ -5,10 +5,11 @@ package pinpoint
 
 // Exports for use in tests only.
 var (
-	ResourceApp          = resourceApp
-	ResourceEmailChannel = resourceEmailChannel
-	ResourceEventStream  = resourceEventStream
-	ResourceSMSChannel   = resourceSMSChannel
+	ResourceApp           = resourceApp
+	ResourceEmailChannel  = resourceEmailChannel
+	ResourceEmailTemplate = newResourceEmailTemplate
+	ResourceEventStream   = resourceEventStream
+	ResourceSMSChannel    = resourceSMSChannel
 
 	FindADMChannelByApplicationId             = findADMChannelByApplicationId
 	FindAPNSChannelByApplicationId            = findAPNSChannelByApplicationId
@@ -21,4 +22,10 @@ var (
 	FindEventStreamByApplicationId            = findEventStreamByApplicationId
 	FindGCMChannelByApplicationId             = findGCMChannelByApplicationId
 	FindSMSChannelByApplicationId             = findSMSChannelByApplicationId
+	FindEmailTemplateByName                   = findEmailTemplateByName
+)
+
+const (
+	DefaultAuthenticationMethodKey   = defaultAuthenticationMethodKey
+	DefaultAuthenticationMethodToken = defaultAuthenticationMethodToken
 )

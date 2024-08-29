@@ -373,11 +373,23 @@ func infoSourceImplementsFlexTypedExpander(sourcePath string, sourceType reflect
 	}
 }
 
-func infoSourceImplementsFlexFlattener(sourcePath string, sourceType reflect.Type, targetPath string, targetType reflect.Type) map[string]any {
+func infoTargetImplementsFlexFlattener(sourcePath string, sourceType reflect.Type, targetPath string, targetType reflect.Type) map[string]any {
 	return map[string]any{
 		"@level":             hclog.Info.String(),
 		"@module":            logModule,
-		"@message":           "Source implements flex.Flattener",
+		"@message":           "Target implements flex.Flattener",
+		logAttrKeySourcePath: sourcePath,
+		logAttrKeySourceType: fullTypeName(sourceType),
+		logAttrKeyTargetPath: targetPath,
+		logAttrKeyTargetType: fullTypeName(targetType),
+	}
+}
+
+func infoSourceImplementsJSONStringer(sourcePath string, sourceType reflect.Type, targetPath string, targetType reflect.Type) map[string]any {
+	return map[string]any{
+		"@level":             hclog.Info.String(),
+		"@module":            logModule,
+		"@message":           "Source implements json.JSONStringer",
 		logAttrKeySourcePath: sourcePath,
 		logAttrKeySourceType: fullTypeName(sourceType),
 		logAttrKeyTargetPath: targetPath,

@@ -10,8 +10,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -1241,14 +1240,14 @@ func testAccDomain_efs(t *testing.T) {
 
 func testAccCheckDomainDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sagemaker_domain" {
 				continue
 			}
 
-			domain, err := tfsagemaker.FindDomainByName(ctx, conn, rs.Primary.ID)
+			_, err := tfsagemaker.FindDomainByName(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -1258,15 +1257,7 @@ func testAccCheckDomainDestroy(ctx context.Context) resource.TestCheckFunc {
 				return fmt.Errorf("reading SageMaker Domain (%s): %w", rs.Primary.ID, err)
 			}
 
-			domainArn := aws.StringValue(domain.DomainArn)
-			domainID, err := tfsagemaker.DecodeDomainID(domainArn)
-			if err != nil {
-				return err
-			}
-
-			if domainID == rs.Primary.ID {
-				return fmt.Errorf("sagemaker domain %q still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("sagemaker domain %q still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -1284,7 +1275,7 @@ func testAccCheckDomainExists(ctx context.Context, n string, codeRepo *sagemaker
 			return fmt.Errorf("No sagmaker domain ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
 		resp, err := tfsagemaker.FindDomainByName(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err

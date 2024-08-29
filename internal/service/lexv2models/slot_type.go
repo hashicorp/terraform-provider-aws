@@ -170,8 +170,8 @@ func (r *resourceSlotType) Schema(ctx context.Context, req resource.SchemaReques
 				CustomType: fwtypes.NewListNestedObjectTypeOf[SlotTypeValues](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
-						"slot_type_value": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[SlotTypeValue](ctx),
+						"sample_value": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[SampleValue](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									names.AttrValue: schema.StringAttribute{
@@ -481,13 +481,13 @@ type ExternalSourceSetting struct {
 	GrammarSlotTypeSetting fwtypes.ListNestedObjectValueOf[GrammarSlotTypeSetting] `tfsdk:"grammar_slot_type_setting"`
 }
 
-type SlotTypeValue struct {
+type SampleValue struct {
 	Value types.String `tfsdk:"value"`
 }
 
 type SlotTypeValues struct {
-	SlotTypeValues fwtypes.ListNestedObjectValueOf[SlotTypeValue] `tfsdk:"slot_type_values"`
-	Synonyms       fwtypes.ListNestedObjectValueOf[SlotTypeValue] `tfsdk:"synonyms"`
+	SampleValue fwtypes.ListNestedObjectValueOf[SampleValue] `tfsdk:"sample_value"`
+	Synonyms    fwtypes.ListNestedObjectValueOf[SampleValue] `tfsdk:"synonyms"`
 }
 
 type AdvancedRecognitionSetting struct {

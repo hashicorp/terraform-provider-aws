@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_networkmanager_global_network")
-func DataSourceGlobalNetwork() *schema.Resource {
+// @SDKDataSource("aws_networkmanager_global_network", name="Global Network")
+func dataSourceGlobalNetwork() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceGlobalNetworkRead,
 
@@ -40,11 +40,11 @@ func DataSourceGlobalNetwork() *schema.Resource {
 func dataSourceGlobalNetworkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
+	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	globalNetworkID := d.Get("global_network_id").(string)
-	globalNetwork, err := FindGlobalNetworkByID(ctx, conn, globalNetworkID)
+	globalNetwork, err := findGlobalNetworkByID(ctx, conn, globalNetworkID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Network Manager Global Network (%s): %s", globalNetworkID, err)

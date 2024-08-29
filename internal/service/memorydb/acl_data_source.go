@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_memorydb_acl")
-func DataSourceACL() *schema.Resource {
+// @SDKDataSource("aws_memorydb_acl", name="ACL")
+func dataSourceACL() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceACLRead,
 

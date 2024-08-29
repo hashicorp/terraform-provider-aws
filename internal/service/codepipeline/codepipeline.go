@@ -666,7 +666,6 @@ func expandPipelineDeclaration(d *schema.ResourceData) (*types.PipelineDeclarati
 				if region != "" {
 					return nil, errors.New("region cannot be set for a single-region CodePipeline Pipeline")
 				}
-				v := v
 				apiObject.ArtifactStore = &v
 			}
 

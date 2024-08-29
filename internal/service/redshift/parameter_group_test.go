@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/redshift"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,7 +21,7 @@ import (
 
 func TestAccRedshiftParameterGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.ClusterParameterGroup
+	var v awstypes.ClusterParameterGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_redshift_parameter_group.test"
 
@@ -66,7 +66,7 @@ func TestAccRedshiftParameterGroup_basic(t *testing.T) {
 
 func TestAccRedshiftParameterGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.ClusterParameterGroup
+	var v awstypes.ClusterParameterGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_redshift_parameter_group.test"
 
@@ -90,7 +90,7 @@ func TestAccRedshiftParameterGroup_disappears(t *testing.T) {
 
 func TestAccRedshiftParameterGroup_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.ClusterParameterGroup
+	var v awstypes.ClusterParameterGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_redshift_parameter_group.test"
 
@@ -147,7 +147,7 @@ func TestAccRedshiftParameterGroup_update(t *testing.T) {
 
 func TestAccRedshiftParameterGroup_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.ClusterParameterGroup
+	var v awstypes.ClusterParameterGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_redshift_parameter_group.test"
 
@@ -194,7 +194,7 @@ func TestAccRedshiftParameterGroup_tags(t *testing.T) {
 
 func testAccCheckParameterGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_redshift_parameter_group" {
@@ -218,7 +218,7 @@ func testAccCheckParameterGroupDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckParameterGroupExists(ctx context.Context, n string, v *redshift.ClusterParameterGroup) resource.TestCheckFunc {
+func testAccCheckParameterGroupExists(ctx context.Context, n string, v *awstypes.ClusterParameterGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -229,7 +229,7 @@ func testAccCheckParameterGroupExists(ctx context.Context, n string, v *redshift
 			return fmt.Errorf("No Redshift Parameter Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
 
 		output, err := tfredshift.FindParameterGroupByName(ctx, conn, rs.Primary.ID)
 

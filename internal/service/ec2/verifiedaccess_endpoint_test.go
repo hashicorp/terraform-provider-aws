@@ -242,6 +242,12 @@ func testAccVerifiedAccessEndpoint_policyDocument(t *testing.T, semaphore tfsync
 					resource.TestCheckResourceAttr(resourceName, "policy_document", policyDoc),
 				),
 			},
+			{
+				Config: testAccVerifiedAccessEndpointConfig_policyBase(rName, acctest.TLSPEMEscapeNewlines(key), acctest.TLSPEMEscapeNewlines(certificate)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
+				),
+			},
 		},
 	})
 }

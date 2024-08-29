@@ -86,18 +86,21 @@ func autoFlexConvertStruct(ctx context.Context, sourcePath path.Path, from any, 
 		return diags
 	}
 
+	// TODO: this only applies when Expanding
 	if fromExpander, ok := valFrom.Interface().(Expander); ok {
 		tflog.SubsystemInfo(ctx, subsystemName, "Source implements flex.Expander")
 		diags.Append(expandExpander(ctx, fromExpander, valTo)...)
 		return diags
 	}
 
+	// TODO: this only applies when Expanding
 	if fromTypedExpander, ok := valFrom.Interface().(TypedExpander); ok {
 		tflog.SubsystemInfo(ctx, subsystemName, "Source implements flex.TypedExpander")
 		diags.Append(expandTypedExpander(ctx, fromTypedExpander, valTo)...)
 		return diags
 	}
 
+	// TODO: this only applies when Expanding
 	if valTo.Kind() == reflect.Interface {
 		tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
 			"from": valFrom.Type(),
@@ -106,8 +109,9 @@ func autoFlexConvertStruct(ctx context.Context, sourcePath path.Path, from any, 
 		return diags
 	}
 
+	// TODO: this only applies when Flattening
 	if toFlattener, ok := to.(Flattener); ok {
-		tflog.SubsystemInfo(ctx, subsystemName, "Source implements flex.Flattener")
+		tflog.SubsystemInfo(ctx, subsystemName, "Target implements flex.Flattener")
 		diags.Append(flattenFlattener(ctx, valFrom, toFlattener)...)
 		return diags
 	}

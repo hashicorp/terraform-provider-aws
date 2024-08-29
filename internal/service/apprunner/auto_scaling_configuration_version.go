@@ -250,7 +250,6 @@ func findAutoScalingConfigurationSummaries(ctx context.Context, conn *apprunner.
 		}
 
 		for _, v := range page.AutoScalingConfigurationSummaryList {
-			v := v
 			if v := &v; filter(v) {
 				output = append(output, v)
 			}

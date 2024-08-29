@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/redshift"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,7 +21,7 @@ import (
 
 func TestAccRedshiftEndpointAuthorization_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.EndpointAuthorization
+	var v awstypes.EndpointAuthorization
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(18))
 	resourceName := "aws_redshift_endpoint_authorization.test"
 
@@ -57,7 +57,7 @@ func TestAccRedshiftEndpointAuthorization_basic(t *testing.T) {
 
 func TestAccRedshiftEndpointAuthorization_vpcs(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.EndpointAuthorization
+	var v awstypes.EndpointAuthorization
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(18))
 	resourceName := "aws_redshift_endpoint_authorization.test"
 
@@ -106,7 +106,7 @@ func TestAccRedshiftEndpointAuthorization_vpcs(t *testing.T) {
 
 func TestAccRedshiftEndpointAuthorization_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.EndpointAuthorization
+	var v awstypes.EndpointAuthorization
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(18))
 	resourceName := "aws_redshift_endpoint_authorization.test"
 
@@ -133,7 +133,7 @@ func TestAccRedshiftEndpointAuthorization_disappears(t *testing.T) {
 
 func TestAccRedshiftEndpointAuthorization_disappears_cluster(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.EndpointAuthorization
+	var v awstypes.EndpointAuthorization
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(18))
 	resourceName := "aws_redshift_endpoint_authorization.test"
 
@@ -160,7 +160,7 @@ func TestAccRedshiftEndpointAuthorization_disappears_cluster(t *testing.T) {
 
 func testAccCheckEndpointAuthorizationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_redshift_endpoint_authorization" {
@@ -184,7 +184,7 @@ func testAccCheckEndpointAuthorizationDestroy(ctx context.Context) resource.Test
 	}
 }
 
-func testAccCheckEndpointAuthorizationExists(ctx context.Context, n string, v *redshift.EndpointAuthorization) resource.TestCheckFunc {
+func testAccCheckEndpointAuthorizationExists(ctx context.Context, n string, v *awstypes.EndpointAuthorization) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -195,7 +195,7 @@ func testAccCheckEndpointAuthorizationExists(ctx context.Context, n string, v *r
 			return fmt.Errorf("No Redshift Endpoint Authorization ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
 
 		output, err := tfredshift.FindEndpointAuthorizationByID(ctx, conn, rs.Primary.ID)
 

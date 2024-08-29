@@ -1,14 +1,115 @@
-## 5.63.0 (Unreleased)
+## 5.65.0 (Unreleased)
+
+NOTES:
+
+* provider: Updates to Go 1.23. We do not expect this change to impact most users. For macOS, Go 1.23 requires macOS 11 Big Sur or later; support for previous versions has been discontinued. ([#38999](https://github.com/hashicorp/terraform-provider-aws/issues/38999))
+
+FEATURES:
+
+* **New Resource:** `aws_glue_catalog_table_optimizer` ([#38052](https://github.com/hashicorp/terraform-provider-aws/issues/38052))
+
+ENHANCEMENTS:
+
+* data-source/aws_elb_hosted_zone_id: Add hosted zone ID for `ap-southeast-5` AWS Region ([#39052](https://github.com/hashicorp/terraform-provider-aws/issues/39052))
+* data-source/aws_lb_hosted_zone_id: Add hosted zone IDs for `ap-southeast-5` AWS Region ([#39052](https://github.com/hashicorp/terraform-provider-aws/issues/39052))
+* data-source/aws_s3_bucket: Add hosted zone ID for `ap-southeast-5` AWS Region ([#39052](https://github.com/hashicorp/terraform-provider-aws/issues/39052))
+* provider: Support `ap-southeast-5` as a valid AWS Region ([#39049](https://github.com/hashicorp/terraform-provider-aws/issues/39049))
+* resource/aws_cognito_user_pool: Add `password_policy.password_history_size` argument ([#39043](https://github.com/hashicorp/terraform-provider-aws/issues/39043))
+* resource/aws_elastic_beanstalk_application_version: Add `process` argument ([#25468](https://github.com/hashicorp/terraform-provider-aws/issues/25468))
+* resource/aws_elasticsearch_domain: Treat `SUCCEEDED_WITH_ISSUES` status as success when upgrading cluster ([#38086](https://github.com/hashicorp/terraform-provider-aws/issues/38086))
+* resource/aws_emr_cluster: Support `io2` as a valid value for `ebs_config.type` ([#37740](https://github.com/hashicorp/terraform-provider-aws/issues/37740))
+* resource/aws_emr_instance_fleet: Support `io2` as a valid value for `instance_type_configs.ebs_config.type` ([#37740](https://github.com/hashicorp/terraform-provider-aws/issues/37740))
+* resource/aws_emr_instance_group: Support `io2` as a valid value for `instance_type_configs.ebs_config.type` ([#37740](https://github.com/hashicorp/terraform-provider-aws/issues/37740))
+* resource/aws_verifiedaccess_endpoint: Set PolicyEnabled flag to `false` on update if `policy_document` is empty ([#38675](https://github.com/hashicorp/terraform-provider-aws/issues/38675))
+
+BUG FIXES:
+
+* resource/aws_amplify_app: Fix crash updating `auto_branch_creation_config` ([#39041](https://github.com/hashicorp/terraform-provider-aws/issues/39041))
+* resource/aws_elasticsearch_domain_policy: Change `domain_name` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) ([#38086](https://github.com/hashicorp/terraform-provider-aws/issues/38086))
+* resource/aws_elbv2_listener: Fix crash when reading forward actions not configured in state ([#39039](https://github.com/hashicorp/terraform-provider-aws/issues/39039))
+* resource/aws_emr_instance_group: Properly send an `instance_count` value of `0` on create when configured ([#37740](https://github.com/hashicorp/terraform-provider-aws/issues/37740))
+* resource/aws_gamelift_game_server_group: Fix crash while reading server group with a nil auto scaling group ARN ([#39022](https://github.com/hashicorp/terraform-provider-aws/issues/39022))
+* resource/aws_lakeformation_permissions: Fix error when revoking `data_cells_filter` permissions ([#39026](https://github.com/hashicorp/terraform-provider-aws/issues/39026))
+* resource/aws_neptune_cluster: Mark `neptune_cluster_parameter_group_name` as Computed ([#38980](https://github.com/hashicorp/terraform-provider-aws/issues/38980))
+* resource/aws_neptune_cluster_instance: Mark `neptune_parameter_group_name` as Computed ([#38980](https://github.com/hashicorp/terraform-provider-aws/issues/38980))
+* resource/aws_ssm_parameter: Fix `ValidationException: Parameter ARN is not supported for this operation` errors when deleting resources imported by ARN ([#39067](https://github.com/hashicorp/terraform-provider-aws/issues/39067))
+
+## 5.64.0 (August 22, 2024)
+
+ENHANCEMENTS:
+
+* data-source/aws_opensearch_domain: Add `dashboard_endpoint_v2`, `domain_endpoint_v2_hosted_zone_id`, and `endpoint_v2` attributes ([#38456](https://github.com/hashicorp/terraform-provider-aws/issues/38456))
+* resource/aws_appautoscaling_target: Add `suspended_state` configuration block ([#38942](https://github.com/hashicorp/terraform-provider-aws/issues/38942))
+* resource/aws_dynamodb_table: Add `restore_source_table_arn` attribute ([#38953](https://github.com/hashicorp/terraform-provider-aws/issues/38953))
+* resource/aws_opensearch_domain: Add `dashboard_endpoint_v2`, `domain_endpoint_v2_hosted_zone_id`, and `endpoint_v2` attributes ([#38456](https://github.com/hashicorp/terraform-provider-aws/issues/38456))
+
+BUG FIXES:
+
+* resource/aws_bedrockagent_agent: Fixes consistency issues where only some prompts are overridden ([#38944](https://github.com/hashicorp/terraform-provider-aws/issues/38944))
+* resource/aws_cloudformation_stack_set_instance: Fix crash during construction of the `id` attribute when `deployment_targets` does not include organizational unit IDs. ([#38969](https://github.com/hashicorp/terraform-provider-aws/issues/38969))
+* resource/aws_glue_trigger: Fix crash when null `action` is configured ([#38994](https://github.com/hashicorp/terraform-provider-aws/issues/38994))
+* resource/aws_rds_cluster: Allow Web Service Data API (`enabled_http_endpoint`) to be enabled and disabled for `provisioned` engine mode and serverlessv2 ([#38997](https://github.com/hashicorp/terraform-provider-aws/issues/38997))
+
+## 5.63.1 (August 20, 2024)
+
+FEATURES:
+
+* **New Data Source:** `aws_route53_zones` ([#17457](https://github.com/hashicorp/terraform-provider-aws/issues/17457))
+* **New Data Source:** `aws_ssoadmin_permission_sets` ([#38741](https://github.com/hashicorp/terraform-provider-aws/issues/38741))
+
+ENHANCEMENTS:
+
+* data-source/aws_batch_job_queue: Add `job_state_time_limit_action` attribute ([#38784](https://github.com/hashicorp/terraform-provider-aws/issues/38784))
+* resource/aws_batch_job_definition: Add `ecs_properties` argument ([#37871](https://github.com/hashicorp/terraform-provider-aws/issues/37871))
+* resource/aws_batch_job_queue: Add `job_state_time_limit_action` argument ([#38784](https://github.com/hashicorp/terraform-provider-aws/issues/38784))
+
+BUG FIXES:
+
+* provider: Fix crash when flattening string pointer slices with nil items ([#38886](https://github.com/hashicorp/terraform-provider-aws/issues/38886))
+* resource/aws_datazone_project: Properly surface import `id` parsing errors ([#38924](https://github.com/hashicorp/terraform-provider-aws/issues/38924))
+* resource/aws_quicksight_data_set: Fix crash when setting `logical_table_map.data_transforms.project_operation.projected_columns` with null list elements ([#38886](https://github.com/hashicorp/terraform-provider-aws/issues/38886))
+* resource/aws_ses_configuration_set: Fix crash when `reputation_metrics_enabled` is set to `true` ([#38921](https://github.com/hashicorp/terraform-provider-aws/issues/38921))
+
+## 5.63.0 (August 15, 2024)
 
 FEATURES:
 
 * **New Data Source:** `aws_bedrockagent_agent_versions` ([#38792](https://github.com/hashicorp/terraform-provider-aws/issues/38792))
+* **New Resource:** `aws_bedrock_guardrail` ([#38757](https://github.com/hashicorp/terraform-provider-aws/issues/38757))
+* **New Resource:** `aws_cloudtrail_organization_delegated_admin_account` ([#38817](https://github.com/hashicorp/terraform-provider-aws/issues/38817))
+* **New Resource:** `aws_datazone_environment_profile` ([#35603](https://github.com/hashicorp/terraform-provider-aws/issues/35603))
+* **New Resource:** `aws_datazone_form_type` ([#38746](https://github.com/hashicorp/terraform-provider-aws/issues/38746))
+* **New Resource:** `aws_datazone_glossary_term` ([#38706](https://github.com/hashicorp/terraform-provider-aws/issues/38706))
+* **New Resource:** `aws_pinpoint_email_template` ([#33266](https://github.com/hashicorp/terraform-provider-aws/issues/33266))
+
+ENHANCEMENTS:
+
+* resource/aws_networkfirewall_logging_configuration: Change `logging_configuration.log_destination_config` `MaxItems` from `2` to `3` ([#38824](https://github.com/hashicorp/terraform-provider-aws/issues/38824))
 
 BUG FIXES:
 
+* data-source/aws_acm_certificate: Fix unreturned `sdkdiags.AppendErrorf` function calls ([#38854](https://github.com/hashicorp/terraform-provider-aws/issues/38854))
+* resource/aws_appstream_stack: Fix unreturned `sdkdiags.AppendErrorf` function calls ([#38854](https://github.com/hashicorp/terraform-provider-aws/issues/38854))
 * resource/aws_bedrockagent_agent_knowledge_base_association: Prepare agent when associating a knowledge base so it can be used ([#38799](https://github.com/hashicorp/terraform-provider-aws/issues/38799))
 * resource/aws_cloudwatch_event_connection: Fix various expander type assertions to prevent crashes ([#38800](https://github.com/hashicorp/terraform-provider-aws/issues/38800))
+* resource/aws_controltower_landing_zone: Fix unreturned `sdkdiags.AppendErrorf` function calls ([#38854](https://github.com/hashicorp/terraform-provider-aws/issues/38854))
+* resource/aws_db_event_subscription: Fix plan-time validation of `name` and `name_prefix` ([#38194](https://github.com/hashicorp/terraform-provider-aws/issues/38194))
+* resource/aws_ecs_cluster_capacity_providers: Fix unreturned `sdkdiags.AppendErrorf` function calls ([#38854](https://github.com/hashicorp/terraform-provider-aws/issues/38854))
+* resource/aws_ecs_service: Fix crash from nil `service_registries` item ([#38883](https://github.com/hashicorp/terraform-provider-aws/issues/38883))
+* resource/aws_ecs_task_definition: Fix perpetual `container_definitions` diffs on `healthCheck`'s default values ([#38872](https://github.com/hashicorp/terraform-provider-aws/issues/38872))
+* resource/aws_ecs_task_definition: Prevent lowercasing of the first character of JSON keys in `container_definitions.dockerLabels` ([#38804](https://github.com/hashicorp/terraform-provider-aws/issues/38804))
+* resource/aws_ecs_task_definition: Remove `null`s from `container_definition` array fields ([#38870](https://github.com/hashicorp/terraform-provider-aws/issues/38870))
 * resource/aws_elasticache_replication_group: Fix crash when setting `replicas_per_node_group` if node groups are empty ([#38797](https://github.com/hashicorp/terraform-provider-aws/issues/38797))
+* resource/aws_fms_policy: Fix unreturned `sdkdiags.AppendErrorf` function calls ([#38854](https://github.com/hashicorp/terraform-provider-aws/issues/38854))
+* resource/aws_grafana_workspace: Fix crash when empty `network_access_control` block is configured ([#38775](https://github.com/hashicorp/terraform-provider-aws/issues/38775))
+* resource/aws_grafana_workspace: Fix crash when empty `vpc_configuration` block is configured ([#38775](https://github.com/hashicorp/terraform-provider-aws/issues/38775))
+* resource/aws_iot_thing_group: Fix crash when empty `attribute_payload` block is configured ([#38776](https://github.com/hashicorp/terraform-provider-aws/issues/38776))
+* resource/aws_lexv2models_slot_type: Fix slot_type_values to have sample_value attribute ([#38856](https://github.com/hashicorp/terraform-provider-aws/issues/38856))
+* resource/aws_networkmanager_connect_peer: Set all `configuration.bgp_configurations` on Read ([#38798](https://github.com/hashicorp/terraform-provider-aws/issues/38798))
+* resource/aws_redshift_cluster: Set `encrypted` on snapshot restore, when enabled ([#38828](https://github.com/hashicorp/terraform-provider-aws/issues/38828))
+* resource/aws_rolesanywhere_profile: Fix unreturned `sdkdiags.AppendErrorf` function calls ([#38854](https://github.com/hashicorp/terraform-provider-aws/issues/38854))
+* resource/aws_rolesanywhere_trust_anchor: Fix unreturned `sdkdiags.AppendErrorf` function calls ([#38854](https://github.com/hashicorp/terraform-provider-aws/issues/38854))
+* resource/aws_s3_bucket_lifecycle_configuration: Fix unreturned `sdkdiags.AppendErrorf` function calls ([#38854](https://github.com/hashicorp/terraform-provider-aws/issues/38854))
 
 ## 5.62.0 (August  8, 2024)
 

@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_networkmanager_connection")
-func DataSourceConnection() *schema.Resource {
+// @SDKDataSource("aws_networkmanager_connection", name="Connection")
+func dataSourceConnection() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceConnectionRead,
 
@@ -60,12 +60,12 @@ func DataSourceConnection() *schema.Resource {
 func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
+	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	globalNetworkID := d.Get("global_network_id").(string)
 	connectionID := d.Get(names.AttrConnectionID).(string)
-	connection, err := FindConnectionByTwoPartKey(ctx, conn, globalNetworkID, connectionID)
+	connection, err := findConnectionByTwoPartKey(ctx, conn, globalNetworkID, connectionID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Network Manager Connection (%s): %s", connectionID, err)

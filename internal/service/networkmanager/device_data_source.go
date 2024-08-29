@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_networkmanager_device")
-func DataSourceDevice() *schema.Resource {
+// @SDKDataSource("aws_networkmanager_device", name="Device")
+func dataSourceDevice() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDeviceRead,
 
@@ -100,12 +100,12 @@ func DataSourceDevice() *schema.Resource {
 func dataSourceDeviceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
+	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	globalNetworkID := d.Get("global_network_id").(string)
 	deviceID := d.Get("device_id").(string)
-	device, err := FindDeviceByTwoPartKey(ctx, conn, globalNetworkID, deviceID)
+	device, err := findDeviceByTwoPartKey(ctx, conn, globalNetworkID, deviceID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Network Manager Device (%s): %s", deviceID, err)
