@@ -7,7 +7,7 @@ import (
 	"context"
 	"errors"
 	"log"
-	"reflect"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -200,8 +200,9 @@ func resourceEventSourceMapping() *schema.Resource {
 				},
 			},
 			names.AttrKMSKeyARN: {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 			"last_modified": {
 				Type:     schema.TypeString,
@@ -233,8 +234,8 @@ func resourceEventSourceMapping() *schema.Resource {
 			"parallelization_factor": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				ValidateFunc: validation.IntBetween(1, 10),
 				Computed:     true,
+				ValidateFunc: validation.IntBetween(1, 10),
 			},
 			"queues": {
 				Type:     schema.TypeList,
@@ -280,7 +281,7 @@ func resourceEventSourceMapping() *schema.Resource {
 									news := strings.Split(new, ",")
 									sort.Strings(news)
 
-									return reflect.DeepEqual(olds, news)
+									return slices.Equal(olds, news)
 								}
 
 								return old == new
@@ -417,9 +418,7 @@ func resourceEventSourceMappingCreate(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if v, ok := d.GetOk(names.AttrKMSKeyARN); ok {
-		v := v.(string)
-
-		input.KMSKeyArn = aws.String(v)
+		input.KMSKeyArn = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("maximum_batching_window_in_seconds"); ok {
@@ -551,12 +550,12 @@ func resourceEventSourceMappingRead(ctx context.Context, d *schema.ResourceData,
 	d.Set(names.AttrFunctionARN, output.FunctionArn)
 	d.Set("function_name", output.FunctionArn)
 	d.Set("function_response_types", output.FunctionResponseTypes)
+	d.Set(names.AttrKMSKeyARN, output.KMSKeyArn)
 	if output.LastModified != nil {
 		d.Set("last_modified", aws.ToTime(output.LastModified).Format(time.RFC3339))
 	} else {
 		d.Set("last_modified", nil)
 	}
-	d.Set(names.AttrKMSKeyARN, output.KMSKeyArn)
 	d.Set("last_processing_result", output.LastProcessingResult)
 	d.Set("maximum_batching_window_in_seconds", output.MaximumBatchingWindowInSeconds)
 	d.Set("maximum_record_age_in_seconds", output.MaximumRecordAgeInSeconds)
