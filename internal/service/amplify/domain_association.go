@@ -356,6 +356,7 @@ func waitDomainAssociationVerified(ctx context.Context, conn *amplify.Client, ap
 			types.DomainStatusInProgress,
 			types.DomainStatusPendingVerification,
 			types.DomainStatusAwaitingAppCname,
+			types.DomainStatusImportingCustomCertificate,
 		),
 		Target: enum.Slice(
 			types.DomainStatusPendingDeployment,
