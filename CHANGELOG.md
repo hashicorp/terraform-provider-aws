@@ -6,6 +6,7 @@ NOTES:
 
 FEATURES:
 
+* **New Data Source:** `aws_shield_protection` ([#37524](https://github.com/hashicorp/terraform-provider-aws/issues/37524))
 * **New Resource:** `aws_glue_catalog_table_optimizer` ([#38052](https://github.com/hashicorp/terraform-provider-aws/issues/38052))
 
 ENHANCEMENTS:
