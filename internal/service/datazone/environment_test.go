@@ -219,7 +219,7 @@ resource "aws_lakeformation_data_lake_settings" "test" {
   admins = [
     data.aws_iam_session_context.current.issuer_arn,
     aws_iam_role.test.arn,
-    ]
+  ]
 }
 
 resource "aws_datazone_domain" "test" {
@@ -250,7 +250,7 @@ data "aws_datazone_environment_blueprint" "test" {
 }
 
 resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
+  bucket        = %[1]q
   force_destroy = true
 }
 
@@ -287,15 +287,15 @@ resource "aws_datazone_environment_profile" "test" {
 func testAccEnvironmentConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccEnvironmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_datazone_environment" "test" {
-  name                             = %[1]q
-  description                      = "desc"
+  name                 = %[1]q
+  description          = "desc"
   account_identifier   = data.aws_caller_identity.test.account_id
   account_region       = data.aws_region.test.name
   blueprint_identifier = aws_datazone_environment_blueprint_configuration.test.environment_blueprint_id
   profile_identifier   = aws_datazone_environment_profile.test.id
-  glossary_terms                   = ["glossary_term"]
-  project_identifier               = aws_datazone_project.test.id
-  domain_identifier                = aws_datazone_domain.test.id
+  glossary_terms       = ["glossary_term"]
+  project_identifier   = aws_datazone_project.test.id
+  domain_identifier    = aws_datazone_domain.test.id
 
   user_parameters {
     name  = "consumerGlueDbName"
@@ -312,9 +312,9 @@ resource "aws_datazone_environment" "test" {
     value = "%[1]s-workgroup"
   }
 
-    depends_on = [
-      aws_lakeformation_data_lake_settings.test,
-    ]
+  depends_on = [
+    aws_lakeformation_data_lake_settings.test,
+  ]
 }
 `, rName))
 }
