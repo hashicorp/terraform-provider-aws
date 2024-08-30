@@ -6,9 +6,774 @@ package schema
 import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func DataSetColumnGroupsSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MinItems: 1,
+		MaxItems: 8,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"geo_spatial_column_group": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"columns": {
+								Type:     schema.TypeList,
+								Required: true,
+								MinItems: 1,
+								MaxItems: 16,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: validation.StringLenBetween(1, 128),
+								},
+							},
+							"country_code": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.GeoSpatialCountryCode](),
+							},
+							names.AttrName: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 64),
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func DataSetColumnLevelPermissionRulesSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		MinItems: 1,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"column_names": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MinItems: 1,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"principals": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MinItems: 1,
+					MaxItems: 100,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+			},
+		},
+	}
+}
+
+func DataSetUsageConfigurationSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Computed: true,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"disable_use_as_direct_query_source": {
+					Type:     schema.TypeBool,
+					Computed: true,
+					Optional: true,
+				},
+				"disable_use_as_imported_source": {
+					Type:     schema.TypeBool,
+					Computed: true,
+					Optional: true,
+				},
+			},
+		},
+	}
+}
+
+func DataSetFieldFoldersSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeSet,
+		Optional: true,
+		MaxItems: 1000,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"field_folders_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"columns": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 5000,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 500),
+				},
+			},
+		},
+	}
+}
+
+func DataSetLogicalTableMapSchema() *schema.Schema {
+	logicalTableMapSchema := func() *schema.Resource {
+		return &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				names.AttrAlias: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 64),
+				},
+				"data_transforms": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Optional: true,
+					MinItems: 1,
+					MaxItems: 2048,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"cast_column_type_operation": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"column_name": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 128),
+										},
+										names.AttrFormat: {
+											Type:         schema.TypeString,
+											Computed:     true,
+											Optional:     true,
+											ValidateFunc: validation.StringLenBetween(0, 32),
+										},
+										"new_column_type": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.ColumnDataType](),
+										},
+									},
+								},
+							},
+							"create_columns_operation": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"columns": {
+											Type:     schema.TypeList,
+											Required: true,
+											MinItems: 1,
+											MaxItems: 128,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"column_id": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringLenBetween(1, 64),
+													},
+													"column_name": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringLenBetween(1, 128),
+													},
+													names.AttrExpression: {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringLenBetween(1, 4096),
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							"filter_operation": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"condition_expression": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 4096),
+										},
+									},
+								},
+							},
+							"project_operation": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"projected_columns": {
+											Type:     schema.TypeList,
+											Required: true,
+											MinItems: 1,
+											MaxItems: 2000,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+									},
+								},
+							},
+							"rename_column_operation": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"column_name": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 128),
+										},
+										"new_column_name": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 128),
+										},
+									},
+								},
+							},
+							"tag_column_operation": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"column_name": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 128),
+										},
+										names.AttrTags: {
+											Type:     schema.TypeList,
+											Required: true,
+											MinItems: 1,
+											MaxItems: 16,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"column_description": {
+														Type:     schema.TypeList,
+														Computed: true,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"text": {
+																	Type:         schema.TypeString,
+																	Computed:     true,
+																	Optional:     true,
+																	ValidateFunc: validation.StringLenBetween(0, 500),
+																},
+															},
+														},
+													},
+													"column_geographic_role": {
+														Type:             schema.TypeString,
+														Computed:         true,
+														Optional:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.GeoSpatialDataRole](),
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							"untag_column_operation": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"column_name": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 128),
+										},
+										"tag_names": {
+											Type:     schema.TypeList,
+											Required: true,
+											Elem: &schema.Schema{
+												Type:             schema.TypeString,
+												ValidateDiagFunc: enum.Validate[awstypes.ColumnTagName](),
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				"logical_table_map_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrSource: {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"data_set_arn": {
+								Type:     schema.TypeString,
+								Computed: true,
+								Optional: true,
+							},
+							"join_instruction": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"left_join_key_properties": {
+											Type:     schema.TypeList,
+											Computed: true,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"unique_key": {
+														Type:     schema.TypeBool,
+														Computed: true,
+														Optional: true,
+													},
+												},
+											},
+										},
+										"left_operand": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 64),
+										},
+										"on_clause": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 512),
+										},
+										"right_join_key_properties": {
+											Type:     schema.TypeList,
+											Computed: true,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"unique_key": {
+														Type:     schema.TypeBool,
+														Computed: true,
+														Optional: true,
+													},
+												},
+											},
+										},
+										"right_operand": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 64),
+										},
+										names.AttrType: {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.JoinType](),
+										},
+									},
+								},
+							},
+							"physical_table_id": {
+								Type:         schema.TypeString,
+								Computed:     true,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(1, 64),
+							},
+						},
+					},
+				},
+			},
+		}
+	}
+
+	return &schema.Schema{
+		Type:     schema.TypeSet,
+		Optional: true,
+		Computed: true,
+		MaxItems: 64,
+		Elem:     logicalTableMapSchema(),
+	}
+}
+
+func DataSetOutputColumnsSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			},
+		},
+	}
+}
+
+func DataSetPhysicalTableMapSchema() *schema.Schema {
+	physicalTableMapSchema := func() *schema.Resource {
+		return &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"custom_sql": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"columns": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MinItems: 1,
+								MaxItems: 2048,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrName: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 128),
+										},
+										names.AttrType: {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.InputColumnDataType](),
+										},
+									},
+								},
+							},
+							"data_source_arn": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							names.AttrName: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 64),
+							},
+							"sql_query": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 65536),
+							},
+						},
+					},
+				},
+				"physical_table_map_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"relational_table": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"catalog": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(0, 256),
+							},
+							"data_source_arn": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"input_columns": {
+								Type:     schema.TypeList,
+								Required: true,
+								MinItems: 1,
+								MaxItems: 2048,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrName: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 128),
+										},
+										names.AttrType: {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.InputColumnDataType](),
+										},
+									},
+								},
+							},
+							names.AttrName: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 64),
+							},
+							names.AttrSchema: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+						},
+					},
+				},
+				"s3_source": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"data_source_arn": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"input_columns": {
+								Type:     schema.TypeList,
+								Required: true,
+								MinItems: 1,
+								MaxItems: 2048,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrName: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 128),
+										},
+										names.AttrType: {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.InputColumnDataType](),
+										},
+									},
+								},
+							},
+							"upload_settings": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"contains_header": {
+											Type:     schema.TypeBool,
+											Computed: true,
+											Optional: true,
+										},
+										"delimiter": {
+											Type:         schema.TypeString,
+											Computed:     true,
+											Optional:     true,
+											ValidateFunc: validation.StringLenBetween(1, 1),
+										},
+										names.AttrFormat: {
+											Type:             schema.TypeString,
+											Computed:         true,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.FileFormat](),
+										},
+										"start_from_row": {
+											Type:         schema.TypeInt,
+											Computed:     true,
+											Optional:     true,
+											ValidateFunc: validation.IntAtLeast(1),
+										},
+										"text_qualifier": {
+											Type:             schema.TypeString,
+											Computed:         true,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.TextQualifier](),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+	}
+
+	return &schema.Schema{
+		Type:     schema.TypeSet,
+		Optional: true,
+		MaxItems: 32,
+		Elem:     physicalTableMapSchema(),
+	}
+}
+
+func DataSetRowLevelPermissionDataSetSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"format_version": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.RowLevelPermissionFormatVersion](),
+				},
+				names.AttrNamespace: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 64),
+				},
+				"permission_policy": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.RowLevelPermissionPolicy](),
+				},
+				names.AttrStatus: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.Status](),
+				},
+			},
+		},
+	}
+}
+
+func DataSetRowLevelPermissionTagConfigurationSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				names.AttrStatus: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.Status](),
+				},
+				"tag_rules": {
+					Type:     schema.TypeList,
+					Required: true,
+					MinItems: 1,
+					MaxItems: 50,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"column_name": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.NoZeroValues,
+							},
+							"match_all_value": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(1, 256),
+							},
+							"tag_key": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 128),
+							},
+							"tag_multi_value_delimiter": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(1, 10),
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func DataSetRefreshPropertiesSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"refresh_configuration": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"incremental_refresh": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"lookback_window": {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"column_name": {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+													names.AttrSize: {
+														Type:     schema.TypeInt,
+														Required: true,
+													},
+													"size_unit": {
+														Type:             schema.TypeString,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.LookbackWindowSizeUnit](),
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
 
 func ExpandColumnGroups(tfList []interface{}) []awstypes.ColumnGroup {
 	if len(tfList) == 0 {
