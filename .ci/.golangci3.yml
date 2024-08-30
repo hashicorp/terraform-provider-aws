@@ -146,7 +146,7 @@ linters:
 linters-settings:
   nolintlint:
     allow-unused: false
-    allow-leading-space: true
+    allow-leading-space: false
     require-explanation: true
     require-specific: true
     allow-no-explanation:

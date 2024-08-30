@@ -122,7 +122,7 @@ type Map struct {
 	basetypes.MapValue
 }
 
-// nolint: contextcheck // To match attr.Value interface
+//nolint:contextcheck // To match attr.Value interface
 func (v Map) Equal(o attr.Value) bool {
 	other, ok := o.(Map)
 	if !ok {
