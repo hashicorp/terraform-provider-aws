@@ -284,7 +284,6 @@ func (r *resourceEnvironment) Update(ctx context.Context, req resource.UpdateReq
 	if !plan.Name.Equal(state.Name) ||
 		!plan.Description.Equal(state.Description) ||
 		!plan.GlossaryTerms.Equal(state.GlossaryTerms) {
-
 		in := &datazone.UpdateEnvironmentInput{}
 		resp.Diagnostics.Append(fwflex.Expand(ctx, plan, in)...)
 
