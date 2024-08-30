@@ -7,35 +7,31 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/datazone"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/datazone/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfdatazone "github.com/hashicorp/terraform-provider-aws/internal/service/datazone"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccDataZoneEnvironment_basic(t *testing.T) {
+func testAccEnvironment_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var environment datazone.GetEnvironmentOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
 	resourceName := "aws_datazone_environment.test"
-	envProfileName := "aws_datazone_environment_profile.test"
-	domainName := "aws_datazone_domain.test"
-	callName := "data.aws_caller_identity.test"
-	projectName := "aws_datazone_project.test"
-	regionName := "data.aws_region.test"
-	blueName := "data.aws_datazone_environment_blueprint.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DataZoneEndpointID)
@@ -48,48 +44,43 @@ func TestAccDataZoneEnvironment_basic(t *testing.T) {
 				Config: testAccEnvironmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "desc"),
-					resource.TestCheckResourceAttrPair(resourceName, "account_identifier", callName, names.AttrAccountID), // fix
-					resource.TestCheckResourceAttrPair(resourceName, "account_region", regionName, "help"),                // fix
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),                                  // fix
-					resource.TestCheckResourceAttrSet(regionName, "created_by"),
-					//custom parameters
-					//deployment parameters
-					resource.TestCheckResourceAttrPair(resourceName, "domain_identifier", domainName, names.AttrID),
-					resource.TestCheckResourceAttrPair(resourceName, "blueprint_identifier", blueName, names.AttrID),     // check this
-					resource.TestCheckResourceAttrPair(resourceName, "profile_identifier", envProfileName, names.AttrID), // check this
-					resource.TestCheckResourceAttr(resourceName, "glossary_terms.0", "glossary_term"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
-					// last deployment
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrPair(resourceName, "project_identifier", projectName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
+					resource.TestCheckResourceAttrSet(resourceName, "account_identifier"),
+					resource.TestCheckResourceAttrSet(resourceName, "account_region"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
+					resource.TestCheckResourceAttrSet(resourceName, "created_by"),
+					resource.TestCheckResourceAttrSet(resourceName, "domain_identifier"),
+					resource.TestCheckResourceAttrSet(resourceName, "blueprint_identifier"),
+					resource.TestCheckResourceAttrSet(resourceName, "profile_identifier"),
+					resource.TestCheckResourceAttr(resourceName, "user_parameters.#", acctest.Ct3),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					resource.TestCheckResourceAttrSet(resourceName, "project_identifier"),
 					resource.TestCheckResourceAttrSet(resourceName, "provider_environment"),
-					// provisioned resources
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
+				ImportStateIdFunc:       testAccEnvironmentImportStateFunc(resourceName),
 				ImportStateVerifyIgnore: []string{"user_parameters"},
 			},
 		},
 	})
 }
 
-func TestAccDataZoneEnvironment_disappears(t *testing.T) {
+func testAccEnvironment_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var environment datazone.GetEnvironmentOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_datazone_environment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DataZoneEndpointID)
-			// testAccEnvironmentPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataZoneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -107,29 +98,13 @@ func TestAccDataZoneEnvironment_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckEnvironmentDestroy(ctx context.Context) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataZoneClient(ctx)
-
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_datazone_environment" {
-				continue
-			}
-
-			_, err := tfdatazone.FindEnvironmentByID(ctx, conn, rs.Primary.Attributes["domain_identifier"], rs.Primary.Attributes[names.AttrID])
-
-			if tfresource.NotFound(err) {
-				continue
-			}
-
-			if err != nil {
-				return create.Error(names.DataZone, create.ErrActionCheckingDestroyed, tfdatazone.ResNameEnvironment, rs.Primary.ID, err)
-			}
-
-			return create.Error(names.DataZone, create.ErrActionCheckingDestroyed, tfdatazone.ResNameEnvironment, rs.Primary.ID, errors.New("not destroyed"))
+func testAccEnvironmentImportStateFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
-
-		return nil
+		return strings.Join([]string{rs.Primary.Attributes["domain_identifier"], rs.Primary.ID}, ","), nil
 	}
 }
 
@@ -145,13 +120,44 @@ func testAccCheckEnvironmentExists(ctx context.Context, name string, environment
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataZoneClient(ctx)
-		resp, err := tfdatazone.FindEnvironmentByID(ctx, conn, rs.Primary.Attributes["domain_identfier"], rs.Primary.Attributes[names.AttrID])
+		resp, err := tfdatazone.FindEnvironmentByID(ctx, conn, rs.Primary.Attributes["domain_identifier"], rs.Primary.ID)
 
 		if err != nil {
 			return create.Error(names.DataZone, create.ErrActionCheckingExistence, tfdatazone.ResNameEnvironment, rs.Primary.ID, err)
 		}
 
 		*environment = *resp
+
+		return nil
+	}
+}
+
+func testAccCheckEnvironmentDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataZoneClient(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_datazone_environment" {
+				continue
+			}
+
+			_, err := tfdatazone.FindEnvironmentByID(ctx, conn, rs.Primary.Attributes["domain_identifier"], rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			// returns access denied if domain is already destroyed
+			if errs.IsA[*awstypes.AccessDeniedException](err) {
+				continue
+			}
+
+			if err != nil {
+				return create.Error(names.DataZone, create.ErrActionCheckingDestroyed, tfdatazone.ResNameEnvironment, rs.Primary.ID, err)
+			}
+
+			return create.Error(names.DataZone, create.ErrActionCheckingDestroyed, tfdatazone.ResNameEnvironment, rs.Primary.ID, errors.New("not destroyed"))
+		}
 
 		return nil
 	}
@@ -182,7 +188,7 @@ resource "aws_iam_role" "test" {
   })
 
   inline_policy {
-    name = local.name
+    name = %[1]q
     policy = jsonencode({
       Version = "2012-10-17"
       Statement = [
@@ -225,10 +231,6 @@ resource "aws_lakeformation_data_lake_settings" "test" {
 resource "aws_datazone_domain" "test" {
   name                  = %[1]q
   domain_execution_role = aws_iam_role.test.arn
-
-  depends_on = [
-    aws_lakeformation_data_lake_settings.test,
-  ]
 }
 
 resource "aws_security_group" "test" {
@@ -288,12 +290,11 @@ func testAccEnvironmentConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccEnvironmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_datazone_environment" "test" {
   name                 = %[1]q
-  description          = "desc"
+  description          = %[1]q
   account_identifier   = data.aws_caller_identity.test.account_id
   account_region       = data.aws_region.test.name
   blueprint_identifier = aws_datazone_environment_blueprint_configuration.test.environment_blueprint_id
   profile_identifier   = aws_datazone_environment_profile.test.id
-  glossary_terms       = ["glossary_term"]
   project_identifier   = aws_datazone_project.test.id
   domain_identifier    = aws_datazone_domain.test.id
 

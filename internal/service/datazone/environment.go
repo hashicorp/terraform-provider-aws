@@ -256,11 +256,18 @@ func (r *resourceEnvironment) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &state, fwflex.WithIgnoredFieldNamesAppend("UserParameters"))...)
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &state, fwflex.WithIgnoredFieldNamesAppend("UserParameters"),
+		fwflex.WithFieldNamePrefix("Environment"),
+	)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	state.AccountIdentifier = fwflex.StringToFramework(ctx, out.AwsAccountId)
+	state.AccountRegion = fwflex.StringToFramework(ctx, out.AwsAccountRegion)
+	state.ProjectIdentifier = fwflex.StringToFramework(ctx, out.ProjectId)
+	state.ProfileIdentifier = fwflex.StringToFramework(ctx, out.EnvironmentProfileId)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -368,7 +375,7 @@ func (r *resourceEnvironment) ImportState(ctx context.Context, req resource.Impo
 	}
 
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("domain_identifier"), parts[0])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrIdentifier), parts[1])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), parts[1])...)
 }
 
 func waitEnvironmentCreated(ctx context.Context, conn *datazone.Client, domainId string, id string, timeout time.Duration) (*datazone.GetEnvironmentOutput, error) {
