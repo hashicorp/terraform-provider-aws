@@ -82,7 +82,7 @@ func waitEndpointInService(ctx context.Context, conn *sagemaker.Client, name str
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*sagemaker.DescribeEndpointOutput); ok {
-		if output.EndpointStatus == awstypes.EndpointStatusFailed {
+		if output.EndpointStatus == awstypes.EndpointStatusFailed || output.FailureReason != nil {
 			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
 		}
 
