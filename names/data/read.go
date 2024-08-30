@@ -62,10 +62,6 @@ func (sr ServiceRecord) ProviderPackage() string {
 	return sr.service.ProviderPackage
 }
 
-func (sr ServiceRecord) ProviderPackageActual() string {
-	return sr.service.ProviderPackage
-}
-
 func (sr ServiceRecord) ProviderPackageCorrect() string {
 	result := sr.service.ProviderPackage
 	if len(sr.service.ServiceProviderPackageCorrect) > 0 {
