@@ -242,7 +242,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/servicequotas v1.23.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ses v1.26.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.33.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sfn v1.30.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sfn v1.31.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/shield v1.27.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/signer v1.24.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sns v1.31.5 // indirect
@@ -266,7 +266,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.10.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/waf v1.23.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/wafregional v1.23.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.51.5 // indirect
+	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.52.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.32.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/worklink v1.22.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.46.1 // indirect
