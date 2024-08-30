@@ -206,7 +206,7 @@ func testAccCheckRefreshScheduleDestroy(ctx context.Context) resource.TestCheckF
 
 func testAccBaseRefreshScheduleConfig(rId, rName string) string {
 	return acctest.ConfigCompose(
-		testAccBaseDataSourceConfig(rName),
+		testAccDataSourceConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_data_source" "test" {
   data_source_id = %[1]q

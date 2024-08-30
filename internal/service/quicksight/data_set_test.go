@@ -11,21 +11,20 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/quicksight"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccQuickSightDataSet_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dataSet quicksight.DataSet
+	var dataSet awstypes.DataSet
 	resourceName := "aws_quicksight_data_set.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -62,7 +61,7 @@ func TestAccQuickSightDataSet_basic(t *testing.T) {
 
 func TestAccQuickSightDataSet_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dataSet quicksight.DataSet
+	var dataSet awstypes.DataSet
 	resourceName := "aws_quicksight_data_set.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -87,7 +86,7 @@ func TestAccQuickSightDataSet_disappears(t *testing.T) {
 
 func TestAccQuickSightDataSet_columnGroups(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dataSet quicksight.DataSet
+	var dataSet awstypes.DataSet
 	resourceName := "aws_quicksight_data_set.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -121,7 +120,7 @@ func TestAccQuickSightDataSet_columnGroups(t *testing.T) {
 
 func TestAccQuickSightDataSet_columnLevelPermissionRules(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dataSet quicksight.DataSet
+	var dataSet awstypes.DataSet
 	resourceName := "aws_quicksight_data_set.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -149,7 +148,7 @@ func TestAccQuickSightDataSet_columnLevelPermissionRules(t *testing.T) {
 
 func TestAccQuickSightDataSet_dataSetUsageConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dataSet quicksight.DataSet
+	var dataSet awstypes.DataSet
 	resourceName := "aws_quicksight_data_set.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -180,7 +179,7 @@ func TestAccQuickSightDataSet_dataSetUsageConfiguration(t *testing.T) {
 
 func TestAccQuickSightDataSet_fieldFolders(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dataSet quicksight.DataSet
+	var dataSet awstypes.DataSet
 	resourceName := "aws_quicksight_data_set.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -212,7 +211,7 @@ func TestAccQuickSightDataSet_fieldFolders(t *testing.T) {
 
 func TestAccQuickSightDataSet_logicalTableMap(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dataSet quicksight.DataSet
+	var dataSet awstypes.DataSet
 	resourceName := "aws_quicksight_data_set.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -264,7 +263,7 @@ func TestAccQuickSightDataSet_logicalTableMap(t *testing.T) {
 
 func TestAccQuickSightDataSet_permissions(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dataSet quicksight.DataSet
+	var dataSet awstypes.DataSet
 	resourceName := "aws_quicksight_data_set.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -333,7 +332,7 @@ func TestAccQuickSightDataSet_permissions(t *testing.T) {
 
 func TestAccQuickSightDataSet_permissionsMultiple(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dataSet quicksight.DataSet
+	var dataSet awstypes.DataSet
 	resourceName := "aws_quicksight_data_set.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -370,7 +369,7 @@ func TestAccQuickSightDataSet_permissionsMultiple(t *testing.T) {
 
 func TestAccQuickSightDataSet_rowLevelPermissionTagConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dataSet quicksight.DataSet
+	var dataSet awstypes.DataSet
 	resourceName := "aws_quicksight_data_set.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -391,7 +390,7 @@ func TestAccQuickSightDataSet_rowLevelPermissionTagConfiguration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "row_level_permission_tag_configuration.0.tag_rules.0.tag_key", "uniquetagkey"),
 					resource.TestCheckResourceAttr(resourceName, "row_level_permission_tag_configuration.0.tag_rules.0.match_all_value", "*"),
 					resource.TestCheckResourceAttr(resourceName, "row_level_permission_tag_configuration.0.tag_rules.0.tag_multi_value_delimiter", ","),
-					resource.TestCheckResourceAttr(resourceName, "row_level_permission_tag_configuration.0.status", quicksight.StatusEnabled),
+					resource.TestCheckResourceAttr(resourceName, "row_level_permission_tag_configuration.0.status", string(awstypes.StatusEnabled)),
 				),
 			},
 			{
@@ -415,7 +414,7 @@ func TestAccQuickSightDataSet_refreshProperties(t *testing.T) {
 		t.Skip("Environment variable QUICKSIGHT_ATHENA_TESTING_ENABLED is not set")
 	}
 
-	var dataSet quicksight.DataSet
+	var dataSet awstypes.DataSet
 	resourceName := "aws_quicksight_data_set.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -450,7 +449,7 @@ func TestAccQuickSightDataSet_refreshProperties(t *testing.T) {
 
 func TestAccQuickSightDataSet_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dataSet quicksight.DataSet
+	var dataSet awstypes.DataSet
 	resourceName := "aws_quicksight_data_set.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -497,7 +496,7 @@ func TestAccQuickSightDataSet_tags(t *testing.T) {
 
 func TestAccQuickSightDataSet_noPhysicalTableMap(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dataSet quicksight.DataSet
+	var dataSet awstypes.DataSet
 	resourceName := "aws_quicksight_data_set.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -535,34 +534,22 @@ func TestAccQuickSightDataSet_noPhysicalTableMap(t *testing.T) {
 	})
 }
 
-func testAccCheckDataSetExists(ctx context.Context, resourceName string, dataSet *quicksight.DataSet) resource.TestCheckFunc {
+func testAccCheckDataSetExists(ctx context.Context, n string, v *awstypes.DataSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		awsAccountID, dataSetId, err := tfquicksight.ParseDataSetID(rs.Primary.ID)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightClient(ctx)
+
+		output, err := tfquicksight.FindDataSetByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAWSAccountID], rs.Primary.Attributes["data_set_id"])
+
 		if err != nil {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
-
-		input := &quicksight.DescribeDataSetInput{
-			AwsAccountId: aws.String(awsAccountID),
-			DataSetId:    aws.String(dataSetId),
-		}
-
-		output, err := conn.DescribeDataSetWithContext(ctx, input)
-		if err != nil {
-			return err
-		}
-		if output == nil || output.DataSet == nil {
-			return fmt.Errorf("QuickSight Data Set (%s) not found", rs.Primary.ID)
-		}
-
-		*dataSet = *output.DataSet
+		*v = *output
 
 		return nil
 	}
@@ -570,30 +557,24 @@ func testAccCheckDataSetExists(ctx context.Context, resourceName string, dataSet
 
 func testAccCheckDataSetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightClient(ctx)
+
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_quicksight_data_set" {
 				continue
 			}
 
-			awsAccountID, dataSetId, err := tfquicksight.ParseDataSetID(rs.Primary.ID)
+			_, err := tfquicksight.FindDataSetByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAWSAccountID], rs.Primary.Attributes["data_set_id"])
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
 			if err != nil {
 				return err
 			}
 
-			output, err := conn.DescribeDataSetWithContext(ctx, &quicksight.DescribeDataSetInput{
-				AwsAccountId: aws.String(awsAccountID),
-				DataSetId:    aws.String(dataSetId),
-			})
-			if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
-				continue
-			}
-			if err != nil {
-				return err
-			}
-			if output != nil && output.DataSet != nil {
-				return fmt.Errorf("QuickSight Data Set (%s) still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("QuickSight Data Set (%s) still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -602,7 +583,7 @@ func testAccCheckDataSetDestroy(ctx context.Context) resource.TestCheckFunc {
 
 func testAccDataSetConfig_base(rId string, rName string) string {
 	return acctest.ConfigCompose(
-		testAccBaseDataSourceConfig(rName),
+		testAccDataSourceConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_data_source" "test" {
   data_source_id = %[1]q
@@ -1017,7 +998,7 @@ resource "aws_quicksight_data_set" "test" {
 func testAccDataSetConfigRefreshProperties(rId, rName string) string {
 	// NOTE: Must use Athena data source here as incremental refresh is not supported by S3
 	return acctest.ConfigCompose(
-		testAccBaseDataSourceConfig(rName),
+		testAccDataSourceConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[2]q

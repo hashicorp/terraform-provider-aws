@@ -284,7 +284,7 @@ func testAccCheckDataSourceDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccBaseDataSourceConfig(rName string) string {
+func testAccDataSourceConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -366,7 +366,7 @@ EOF
 
 func testAccDataSourceConfig_basic(rId, rName string) string {
 	return acctest.ConfigCompose(
-		testAccBaseDataSourceConfig(rName),
+		testAccDataSourceConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_data_source" "test" {
   data_source_id = %[1]q
@@ -388,7 +388,7 @@ resource "aws_quicksight_data_source" "test" {
 
 func testAccDataSourceConfig_tags1(rId, rName, key, value string) string {
 	return acctest.ConfigCompose(
-		testAccBaseDataSourceConfig(rName),
+		testAccDataSourceConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_data_source" "test" {
   data_source_id = %[1]q
@@ -414,7 +414,7 @@ resource "aws_quicksight_data_source" "test" {
 
 func testAccDataSourceConfig_tags2(rId, rName, key1, value1, key2, value2 string) string {
 	return acctest.ConfigCompose(
-		testAccBaseDataSourceConfig(rName),
+		testAccDataSourceConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_data_source" "test" {
   data_source_id = %[1]q
@@ -478,7 +478,7 @@ resource "aws_quicksight_user" "test" {
 
 func testAccDataSourceConfig_permissions(rId, rName string) string {
 	return acctest.ConfigCompose(
-		testAccBaseDataSourceConfig(rName),
+		testAccDataSourceConfig_base(rName),
 		testAccDataSource_UserConfig(rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_data_source" "test" {
@@ -511,7 +511,7 @@ resource "aws_quicksight_data_source" "test" {
 
 func testAccDataSourceConfig_updatePermissions(rId, rName string) string {
 	return acctest.ConfigCompose(
-		testAccBaseDataSourceConfig(rName),
+		testAccDataSourceConfig_base(rName),
 		testAccDataSource_UserConfig(rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_data_source" "test" {
@@ -547,7 +547,7 @@ resource "aws_quicksight_data_source" "test" {
 
 func testAccDataSourceConfig_updateName(rId, rName string) string {
 	return acctest.ConfigCompose(
-		testAccBaseDataSourceConfig(rName),
+		testAccDataSourceConfig_base(rName),
 		testAccDataSource_UserConfig(rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_data_source" "test" {
