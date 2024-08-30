@@ -42,7 +42,6 @@ This resource supports the following arguments:
 * `type` - (Required) Type of plugin. Valid value are `SERVICE_NOW`, `SALESFORCE`, `JIRA`, `ZENDESK` and `CUSTOM`
 * `custom_plugin_configuration` - (Required if `type` is `CUSTOM`) Custom plugin configuration.
 
-
 `auth_configuration` supports the following:
 
 * `basic_auth_configuration` - (Optional) Information about the basic authentication credentials used to configure a plugin. Conflicts with `oauth2_client_credential_configuration`
