@@ -114,7 +114,7 @@ func testAccEnvironment_update(t *testing.T) {
 		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentConfig_basic(rName),
+				Config: testAccEnvironmentConfig_update(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -133,7 +133,7 @@ func testAccEnvironment_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccEnvironmentConfig_basic(rNameUpdate),
+				Config: testAccEnvironmentConfig_update(rName, rNameUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdate),
@@ -272,6 +272,8 @@ resource "aws_lakeformation_data_lake_settings" "test" {
 resource "aws_datazone_domain" "test" {
   name                  = %[1]q
   domain_execution_role = aws_iam_role.test.arn
+
+  skip_deletion_check = true
 }
 
 resource "aws_security_group" "test" {
@@ -359,4 +361,38 @@ resource "aws_datazone_environment" "test" {
   ]
 }
 `, rName))
+}
+
+func testAccEnvironmentConfig_update(rName, rNameUpdated string) string {
+	return acctest.ConfigCompose(testAccEnvironmentConfig_base(rName), fmt.Sprintf(`
+resource "aws_datazone_environment" "test" {
+  name                 = %[2]q
+  description          = %[2]q
+  account_identifier   = data.aws_caller_identity.test.account_id
+  account_region       = data.aws_region.test.name
+  blueprint_identifier = aws_datazone_environment_blueprint_configuration.test.environment_blueprint_id
+  profile_identifier   = aws_datazone_environment_profile.test.id
+  project_identifier   = aws_datazone_project.test.id
+  domain_identifier    = aws_datazone_domain.test.id
+
+  user_parameters {
+    name  = "consumerGlueDbName"
+    value = "%[1]s-consumer"
+  }
+
+  user_parameters {
+    name  = "producerGlueDbName"
+    value = "%[1]s-producer"
+  }
+
+  user_parameters {
+    name  = "workgroupName"
+    value = "%[1]s-workgroup"
+  }
+
+  depends_on = [
+    aws_lakeformation_data_lake_settings.test,
+  ]
+}
+`, rName, rNameUpdated))
 }
