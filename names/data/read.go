@@ -20,16 +20,16 @@ type ServiceRecord struct {
 
 func (sr ServiceRecord) AWSCLIV2Command() string {
 	result := sr.service.Label
-	if len(sr.service.ServiceCli) > 0 {
-		result = sr.service.ServiceCli[0].AWSCLIV2Command
+	if sr.service.ServiceCli != nil {
+		result = sr.service.ServiceCli.AWSCLIV2Command
 	}
 	return result
 }
 
 func (sr ServiceRecord) AWSCLIV2CommandNoDashes() string {
 	result := sr.service.Label
-	if len(sr.service.ServiceCli) > 0 {
-		result = sr.service.ServiceCli[0].AWSCLIV2CommandNoDashes
+	if sr.service.ServiceCli != nil {
+		result = sr.service.ServiceCli.AWSCLIV2CommandNoDashes
 	}
 	return result
 }
@@ -44,16 +44,16 @@ func (sr ServiceRecord) GoPackageName(version int) string {
 
 func (sr ServiceRecord) GoV1Package() string {
 	result := sr.service.Label
-	if len(sr.service.ServiceGoPackages) > 0 {
-		result = sr.service.ServiceGoPackages[0].V1Package
+	if sr.service.ServiceGoPackages != nil {
+		result = sr.service.ServiceGoPackages.V1Package
 	}
 	return result
 }
 
 func (sr ServiceRecord) GoV2Package() string {
 	result := sr.service.Label
-	if len(sr.service.ServiceGoPackages) > 0 {
-		result = sr.service.ServiceGoPackages[0].V2Package
+	if sr.service.ServiceGoPackages != nil {
+		result = sr.service.ServiceGoPackages.V2Package
 	}
 	return result
 }
@@ -83,17 +83,14 @@ func (sr ServiceRecord) SplitPackageRealPackage() string {
 }
 
 func (sr ServiceRecord) Aliases() []string {
-	if len(sr.service.ServiceNames) > 0 && len(sr.service.ServiceNames[0].Aliases) > 0 {
-		return slices.Clone(sr.service.ServiceNames[0].Aliases)
+	if len(sr.service.ServiceNames.Aliases) > 0 {
+		return slices.Clone(sr.service.ServiceNames.Aliases)
 	}
 	return nil
 }
 
 func (sr ServiceRecord) ProviderNameUpper() string {
-	if len(sr.service.ServiceNames) > 0 {
-		return sr.service.ServiceNames[0].ProviderNameUpper
-	}
-	return "" // This should not happen
+	return sr.service.ServiceNames.ProviderNameUpper
 }
 
 func (sr ServiceRecord) ClientTypeName(version int) (s string) {
@@ -105,17 +102,17 @@ func (sr ServiceRecord) ClientTypeName(version int) (s string) {
 }
 
 func (sr ServiceRecord) GoV1ClientTypeName() string {
-	if len(sr.service.ServiceClient) > 0 {
-		return sr.service.ServiceClient[0].GoV1ClientTypeName
+	if sr.service.ServiceClient != nil {
+		return sr.service.ServiceClient.GoV1ClientTypeName
 	}
-	return "" // This should not happen
+	return ""
 }
 
 func (sr ServiceRecord) skipClientGenerate() bool {
-	if len(sr.service.ServiceClient) > 0 {
-		return sr.service.ServiceClient[0].SkipClientGenerate
+	if sr.service.ServiceClient != nil {
+		return sr.service.ServiceClient.SkipClientGenerate
 	}
-	return false // This should not happen
+	return false
 }
 
 func (sr ServiceRecord) GenerateClient() bool {
@@ -123,17 +120,11 @@ func (sr ServiceRecord) GenerateClient() bool {
 }
 
 func (sr ServiceRecord) ClientSDKV1() bool {
-	if len(sr.service.ServiceSDK) > 0 {
-		return slices.Contains(sr.service.ServiceSDK[0].Version, 1)
-	}
-	return false // This should not happen
+	return slices.Contains(sr.service.ServiceSDK.Version, 1)
 }
 
 func (sr ServiceRecord) ClientSDKV2() bool {
-	if len(sr.service.ServiceSDK) > 0 {
-		return slices.Contains(sr.service.ServiceSDK[0].Version, 2)
-	}
-	return false // This should not happen
+	return slices.Contains(sr.service.ServiceSDK.Version, 2)
 }
 
 // SDKVersion returns:
@@ -160,17 +151,11 @@ func (sr ServiceRecord) ResourcePrefix() string {
 }
 
 func (sr ServiceRecord) ResourcePrefixActual() string {
-	if len(sr.service.ServiceResourcePrefix) > 0 {
-		return sr.service.ServiceResourcePrefix[0].ResourcePrefixActual
-	}
-	return "" // This should not happen
+	return sr.service.ServiceResourcePrefix.ResourcePrefixActual
 }
 
 func (sr ServiceRecord) ResourcePrefixCorrect() string {
-	if len(sr.service.ServiceResourcePrefix) > 0 {
-		return sr.service.ServiceResourcePrefix[0].ResourcePrefixCorrect
-	}
-	return "" // This should not happen
+	return sr.service.ServiceResourcePrefix.ResourcePrefixCorrect
 }
 
 func (sr ServiceRecord) FilePrefix() string {
@@ -182,10 +167,7 @@ func (sr ServiceRecord) DocPrefix() []string {
 }
 
 func (sr ServiceRecord) HumanFriendly() string {
-	if len(sr.service.ServiceNames) > 0 {
-		return sr.service.ServiceNames[0].HumanFriendly
-	}
-	return "" // This should not happen
+	return sr.service.ServiceNames.HumanFriendly
 }
 
 func (sr ServiceRecord) FullHumanFriendly() string {
@@ -209,10 +191,10 @@ func (sr ServiceRecord) NotImplemented() bool {
 }
 
 func (sr ServiceRecord) EndpointOnly() bool {
-	if len(sr.service.ServiceEndpoints) > 0 {
-		return sr.service.ServiceEndpoints[0].EndpointOnly
+	if sr.service.ServiceEndpoints != nil {
+		return sr.service.ServiceEndpoints.EndpointOnly
 	}
-	return false // This should not happen
+	return false
 }
 
 func (sr ServiceRecord) AllowedSubcategory() bool {
@@ -220,24 +202,21 @@ func (sr ServiceRecord) AllowedSubcategory() bool {
 }
 
 func (sr ServiceRecord) DeprecatedEnvVar() string {
-	if len(sr.service.ServiceEnvVars) > 0 {
-		return sr.service.ServiceEnvVars[0].DeprecatedEnvVar
+	if sr.service.ServiceEnvVars != nil {
+		return sr.service.ServiceEnvVars.DeprecatedEnvVar
 	}
 	return ""
 }
 
 func (sr ServiceRecord) TFAWSEnvVar() string {
-	if len(sr.service.ServiceEnvVars) > 0 {
-		return sr.service.ServiceEnvVars[0].TFAWSEnvVar
+	if sr.service.ServiceEnvVars != nil {
+		return sr.service.ServiceEnvVars.TFAWSEnvVar
 	}
 	return ""
 }
 
 func (sr ServiceRecord) SDKID() string {
-	if len(sr.service.ServiceSDK) > 0 {
-		return sr.service.ServiceSDK[0].ID
-	}
-	return "" // This should not happen
+	return sr.service.ServiceSDK.ID
 }
 
 func (sr ServiceRecord) AWSServiceEnvVar() string {
@@ -249,21 +228,21 @@ func (sr ServiceRecord) AWSConfigParameter() string {
 }
 
 func (sr ServiceRecord) EndpointAPICall() string {
-	if len(sr.service.ServiceEndpoints) > 0 {
-		return sr.service.ServiceEndpoints[0].EndpointAPICall
+	if sr.service.ServiceEndpoints != nil {
+		return sr.service.ServiceEndpoints.EndpointAPICall
 	}
-	return "" // This should not happen
+	return ""
 }
 
 func (sr ServiceRecord) EndpointAPIParams() string {
-	if len(sr.service.ServiceEndpoints) > 0 {
-		return sr.service.ServiceEndpoints[0].EndpointAPIParams
+	if sr.service.ServiceEndpoints != nil {
+		return sr.service.ServiceEndpoints.EndpointAPIParams
 	}
-	return "" // This should not happen
+	return ""
 }
 
 func (sr ServiceRecord) EndpointOverrideRegion() string {
-	return sr.service.ServiceEndpoints[0].EndpointRegionOverride
+	return sr.service.ServiceEndpoints.EndpointRegionOverride
 }
 
 func (sr ServiceRecord) Note() string {
@@ -348,15 +327,15 @@ type EndpointInfo struct {
 }
 
 type Service struct {
-	Label                 string           `hcl:",label"`
-	ServiceCli            []CLIV2Command   `hcl:"cli_v2_command,block"`
-	ServiceGoPackages     []GoPackages     `hcl:"go_packages,block"`
-	ServiceSDK            []SDK            `hcl:"sdk,block"`
-	ServiceNames          []Names          `hcl:"names,block"`
-	ServiceClient         []Client         `hcl:"client,block"`
-	ServiceEnvVars        []EnvVar         `hcl:"env_var,block"`
-	ServiceEndpoints      []EndpointInfo   `hcl:"endpoint_info,block"`
-	ServiceResourcePrefix []ResourcePrefix `hcl:"resource_prefix,block"`
+	Label                 string         `hcl:",label"`
+	ServiceCli            *CLIV2Command  `hcl:"cli_v2_command,block"`
+	ServiceGoPackages     *GoPackages    `hcl:"go_packages,block"`
+	ServiceSDK            SDK            `hcl:"sdk,block"`
+	ServiceNames          Names          `hcl:"names,block"`
+	ServiceClient         *Client        `hcl:"client,block"`
+	ServiceEnvVars        *EnvVar        `hcl:"env_var,block"`
+	ServiceEndpoints      *EndpointInfo  `hcl:"endpoint_info,block"`
+	ServiceResourcePrefix ResourcePrefix `hcl:"resource_prefix,block"`
 
 	SubService []Service `hcl:"sub_service,block"`
 
