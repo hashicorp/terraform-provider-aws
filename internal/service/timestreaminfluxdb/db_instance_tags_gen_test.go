@@ -266,7 +266,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_null(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"tags.key1", // The canonical value returned by the AWS API is ""
+					acctest.CtTagsKey1, // The canonical value returned by the AWS API is ""
 					names.AttrBucket, names.AttrUsername, "organization", names.AttrPassword,
 				},
 			},
@@ -1615,7 +1615,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_nullOverlappingResourc
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"tags.key1", // The canonical value returned by the AWS API is ""
+					acctest.CtTagsKey1, // The canonical value returned by the AWS API is ""
 					names.AttrBucket, names.AttrUsername, "organization", names.AttrPassword,
 				},
 			},

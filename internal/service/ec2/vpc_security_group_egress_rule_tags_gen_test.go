@@ -254,7 +254,7 @@ func TestAccVPCSecurityGroupEgressRule_tags_null(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"tags.key1", // The canonical value returned by the AWS API is ""
+					acctest.CtTagsKey1, // The canonical value returned by the AWS API is ""
 				},
 			},
 		},
@@ -1542,7 +1542,7 @@ func TestAccVPCSecurityGroupEgressRule_tags_DefaultTags_nullOverlappingResourceT
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"tags.key1", // The canonical value returned by the AWS API is ""
+					acctest.CtTagsKey1, // The canonical value returned by the AWS API is ""
 				},
 			},
 		},

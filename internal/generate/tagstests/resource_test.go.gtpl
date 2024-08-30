@@ -71,7 +71,7 @@ plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), know
 {{ template "CommonImportBody" . }}
 {{ if eq .Implementation "framework" -}}
 	ImportStateVerifyIgnore: []string{
-        "tags.key1", // The canonical value returned by the AWS API is ""
+        acctest.CtTagsKey1, // The canonical value returned by the AWS API is ""
 		{{ if gt (len .ImportIgnore) 0 -}}
 		{{ range $i, $v := .ImportIgnore }}{{ $v }},{{ end }}
 		{{ end -}}

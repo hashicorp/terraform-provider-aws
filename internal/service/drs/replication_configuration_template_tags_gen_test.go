@@ -280,7 +280,7 @@ func testAccDRSReplicationConfigurationTemplate_tags_null(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"tags.key1", // The canonical value returned by the AWS API is ""
+					acctest.CtTagsKey1, // The canonical value returned by the AWS API is ""
 				},
 			},
 		},
@@ -1568,7 +1568,7 @@ func testAccDRSReplicationConfigurationTemplate_tags_DefaultTags_nullOverlapping
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"tags.key1", // The canonical value returned by the AWS API is ""
+					acctest.CtTagsKey1, // The canonical value returned by the AWS API is ""
 				},
 			},
 		},
