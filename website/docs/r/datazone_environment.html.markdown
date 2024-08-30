@@ -45,16 +45,21 @@ resource "aws_datazone_environment" "example" {
 
 The following arguments are required:
 
-* `example_arg` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `account_identifier` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
 
 The following arguments are optional:
 
-* `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `account_identifier` - (Optional) The ID of the Amazon Web Services account where the environment exists
+* `account_region` - (Optional) The Amazon Web Services region where the environment exists.
+* `blueprint_identifier` - (Optional) The blueprint with which the environment is created.
+* `descrioption` - (Optional) The description of the environment.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `created_at` - The time the environment was created.
+* `created_by` - The user who created the environment.
 * `arn` - ARN of the Environment. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
 * `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
 

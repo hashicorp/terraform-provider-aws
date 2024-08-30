@@ -390,6 +390,9 @@ func waitEnvironmentCreated(ctx context.Context, conn *datazone.Client, domainId
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*datazone.GetEnvironmentOutput); ok {
+		if status, deployment := out.Status, out.LastDeployment; status == awstypes.EnvironmentStatusCreateFailed && deployment != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", status, aws.ToString(deployment.FailureReason.Message)))
+		}
 		return out, err
 	}
 
@@ -408,6 +411,9 @@ func waitEnvironmentUpdated(ctx context.Context, conn *datazone.Client, domainId
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*datazone.GetEnvironmentOutput); ok {
+		if status, deployment := out.Status, out.LastDeployment; status == awstypes.EnvironmentStatusUpdateFailed && deployment != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", status, aws.ToString(deployment.FailureReason.Message)))
+		}
 		return out, err
 	}
 
@@ -424,6 +430,9 @@ func waitEnvironmentDeleted(ctx context.Context, conn *datazone.Client, domainId
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*datazone.GetEnvironmentOutput); ok {
+		if status, deployment := out.Status, out.LastDeployment; status == awstypes.EnvironmentStatusDeleteFailed && deployment != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", status, aws.ToString(deployment.FailureReason.Message)))
+		}
 		return out, err
 	}
 
@@ -453,7 +462,7 @@ func findEnvironmentByID(ctx context.Context, conn *datazone.Client, domainId, i
 
 	out, err := conn.GetEnvironment(ctx, in)
 
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsA[*awstypes.AccessDeniedException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,

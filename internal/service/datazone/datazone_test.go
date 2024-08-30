@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package datazone_test
 
 import (
@@ -13,6 +16,7 @@ func TestAccDataZone_serial(t *testing.T) {
 		"Environment": {
 			acctest.CtBasic:      testAccEnvironment_basic,
 			acctest.CtDisappears: testAccEnvironment_disappears,
+			"update":             testAccEnvironment_update,
 		},
 	}
 

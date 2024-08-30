@@ -11,14 +11,12 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/datazone"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/datazone/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfdatazone "github.com/hashicorp/terraform-provider-aws/internal/service/datazone"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -98,6 +96,54 @@ func testAccEnvironment_disappears(t *testing.T) {
 	})
 }
 
+func testAccEnvironment_update(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var environment datazone.GetEnvironmentOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rNameUpdate := fmt.Sprintf("%s-update", rName)
+	resourceName := "aws_datazone_environment.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.DataZoneEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataZoneServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEnvironmentConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
+					resource.TestCheckResourceAttrSet(resourceName, "account_identifier"),
+					resource.TestCheckResourceAttrSet(resourceName, "account_region"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
+					resource.TestCheckResourceAttrSet(resourceName, "created_by"),
+					resource.TestCheckResourceAttrSet(resourceName, "domain_identifier"),
+					resource.TestCheckResourceAttrSet(resourceName, "blueprint_identifier"),
+					resource.TestCheckResourceAttrSet(resourceName, "profile_identifier"),
+					resource.TestCheckResourceAttr(resourceName, "user_parameters.#", acctest.Ct3),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					resource.TestCheckResourceAttrSet(resourceName, "project_identifier"),
+					resource.TestCheckResourceAttrSet(resourceName, "provider_environment"),
+				),
+			},
+			{
+				Config: testAccEnvironmentConfig_basic(rNameUpdate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdate),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rNameUpdate),
+				),
+			},
+		},
+	})
+}
+
 func testAccEnvironmentImportStateFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -144,11 +190,6 @@ func testAccCheckEnvironmentDestroy(ctx context.Context) resource.TestCheckFunc 
 			_, err := tfdatazone.FindEnvironmentByID(ctx, conn, rs.Primary.Attributes["domain_identifier"], rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
-				continue
-			}
-
-			// returns access denied if domain is already destroyed
-			if errs.IsA[*awstypes.AccessDeniedException](err) {
 				continue
 			}
 
