@@ -19,7 +19,7 @@ type ServiceRecord struct {
 }
 
 func (sr ServiceRecord) AWSCLIV2Command() string {
-	result := sr.service.Label
+	result := sr.service.ProviderPackage
 	if sr.service.ServiceCli != nil {
 		result = sr.service.ServiceCli.AWSCLIV2Command
 	}
@@ -27,7 +27,7 @@ func (sr ServiceRecord) AWSCLIV2Command() string {
 }
 
 func (sr ServiceRecord) AWSCLIV2CommandNoDashes() string {
-	result := sr.service.Label
+	result := sr.service.ProviderPackage
 	if sr.service.ServiceCli != nil {
 		result = sr.service.ServiceCli.AWSCLIV2CommandNoDashes
 	}
@@ -43,7 +43,7 @@ func (sr ServiceRecord) GoPackageName(version int) string {
 }
 
 func (sr ServiceRecord) GoV1Package() string {
-	result := sr.service.Label
+	result := sr.service.ProviderPackage
 	if sr.service.ServiceGoPackages != nil {
 		result = sr.service.ServiceGoPackages.V1Package
 	}
@@ -51,7 +51,7 @@ func (sr ServiceRecord) GoV1Package() string {
 }
 
 func (sr ServiceRecord) GoV2Package() string {
-	result := sr.service.Label
+	result := sr.service.ProviderPackage
 	if sr.service.ServiceGoPackages != nil {
 		result = sr.service.ServiceGoPackages.V2Package
 	}
@@ -59,19 +59,15 @@ func (sr ServiceRecord) GoV2Package() string {
 }
 
 func (sr ServiceRecord) ProviderPackage() string {
-	pkg := sr.ProviderPackageCorrect()
-	if sr.ProviderPackageActual() != "" {
-		pkg = sr.ProviderPackageActual()
-	}
-	return pkg
+	return sr.service.ProviderPackage
 }
 
 func (sr ServiceRecord) ProviderPackageActual() string {
-	return sr.service.Label
+	return sr.service.ProviderPackage
 }
 
 func (sr ServiceRecord) ProviderPackageCorrect() string {
-	result := sr.service.Label
+	result := sr.service.ProviderPackage
 	if len(sr.service.ServiceProviderPackageCorrect) > 0 {
 		result = sr.service.ServiceProviderPackageCorrect
 	}
@@ -327,7 +323,7 @@ type EndpointInfo struct {
 }
 
 type Service struct {
-	Label                 string         `hcl:",label"`
+	ProviderPackage       string         `hcl:",label"`
 	ServiceCli            *CLIV2Command  `hcl:"cli_v2_command,block"`
 	ServiceGoPackages     *GoPackages    `hcl:"go_packages,block"`
 	ServiceSDK            SDK            `hcl:"sdk,block"`
