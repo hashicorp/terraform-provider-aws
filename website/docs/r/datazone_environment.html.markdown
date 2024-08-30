@@ -46,6 +46,10 @@ resource "aws_datazone_environment" "example" {
 The following arguments are required:
 
 * `account_identifier` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `domain_identifier` - (Required) The ID of the domain where the environment exists.
+* `name` - (Required) The name of the environment.
+* `profile_identifier` - (Required) The ID of the profile with which the environment is created.
+* `project_identifier` - (Required) The ID of the project where the environment exists.
 
 The following arguments are optional:
 
@@ -53,6 +57,13 @@ The following arguments are optional:
 * `account_region` - (Optional) The Amazon Web Services region where the environment exists.
 * `blueprint_identifier` - (Optional) The blueprint with which the environment is created.
 * `descrioption` - (Optional) The description of the environment.
+* `glossary_terms` - (Optional) The business glossary terms that can be used in this environment.
+* `user_parameters` - (Optional) The user parameters that are used in the environment. See [User Parameters](#user-parameters) for more information.
+
+### User Parameters
+
+* `name` - (Required) The name of an environment profile parameter.
+* `value` - (Required) The value of an environment profile parameter.
 
 ## Attribute Reference
 
@@ -60,8 +71,10 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `created_at` - The time the environment was created.
 * `created_by` - The user who created the environment.
-* `arn` - ARN of the Environment. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `id` - The ID of the environment.
+* `last_deployment` - The details of the last deployment of the environment.
+* `provider_environment` - The provider of the environment.
+* `provisioned_resource` - The provisioned resources of this environment
 
 ## Timeouts
 
@@ -73,17 +86,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DataZone Environment using the `domain_identifier`,`id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DataZone Environment using the `domain_identifier,id`. For example:
 
 ```terraform
 import {
   to = aws_datazone_environment.example
-  id = "environment-id-12345678"
+  id = "dzd_d2i7tzk3tnjjf4,5vpywijpwryec0"
 }
 ```
 
-Using `terraform import`, import DataZone Environment using the `example_id_arg`. For example:
+Using `terraform import`, import DataZone Environment using the `domain_idntifier,id`. For example:
 
 ```console
-% terraform import aws_datazone_environment.example environment-id-12345678
+% terraform import aws_datazone_environment.example dzd_d2i7tzk3tnjjf4,5vpywijpwryec0
 ```
