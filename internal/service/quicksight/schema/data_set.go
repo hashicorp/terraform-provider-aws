@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -56,6 +57,10 @@ func DataSetColumnGroupsSchema() *schema.Schema {
 	}
 }
 
+func DataSetColumnGroupsSchemaDataSourceSchema() *schema.Schema {
+	return sdkv2.DataSourcePropertyFromResourceProperty(DataSetColumnGroupsSchema())
+}
+
 func DataSetColumnLevelPermissionRulesSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
@@ -81,6 +86,10 @@ func DataSetColumnLevelPermissionRulesSchema() *schema.Schema {
 	}
 }
 
+func DataSetColumnLevelPermissionRulesSchemaDataSourceSchema() *schema.Schema {
+	return sdkv2.DataSourcePropertyFromResourceProperty(DataSetColumnLevelPermissionRulesSchema())
+}
+
 func DataSetUsageConfigurationSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
@@ -102,6 +111,10 @@ func DataSetUsageConfigurationSchema() *schema.Schema {
 			},
 		},
 	}
+}
+
+func DataSetUsageConfigurationSchemaDataSourceSchema() *schema.Schema {
+	return sdkv2.DataSourcePropertyFromResourceProperty(DataSetUsageConfigurationSchema())
 }
 
 func DataSetFieldFoldersSchema() *schema.Schema {
@@ -129,6 +142,10 @@ func DataSetFieldFoldersSchema() *schema.Schema {
 			},
 		},
 	}
+}
+
+func DataSetFieldFoldersSchemaDataSourceSchema() *schema.Schema {
+	return sdkv2.DataSourcePropertyFromResourceProperty(DataSetFieldFoldersSchema())
 }
 
 func DataSetLogicalTableMapSchema() *schema.Schema {
@@ -431,6 +448,10 @@ func DataSetLogicalTableMapSchema() *schema.Schema {
 	}
 }
 
+func DataSetLogicalTableMapSchemaDataSourceSchema() *schema.Schema {
+	return sdkv2.DataSourcePropertyFromResourceProperty(DataSetLogicalTableMapSchema())
+}
+
 func DataSetOutputColumnsSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
@@ -639,6 +660,10 @@ func DataSetPhysicalTableMapSchema() *schema.Schema {
 	}
 }
 
+func DataSetPhysicalTableMapSchemaDataSourceSchema() *schema.Schema {
+	return sdkv2.DataSourcePropertyFromResourceProperty(DataSetPhysicalTableMapSchema())
+}
+
 func DataSetRowLevelPermissionDataSetSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
@@ -674,6 +699,10 @@ func DataSetRowLevelPermissionDataSetSchema() *schema.Schema {
 			},
 		},
 	}
+}
+
+func DataSetRowLevelPermissionDataSetSchemaDataSourceSchema() *schema.Schema {
+	return sdkv2.DataSourcePropertyFromResourceProperty(DataSetRowLevelPermissionDataSetSchema())
 }
 
 func DataSetRowLevelPermissionTagConfigurationSchema() *schema.Schema {
@@ -721,6 +750,10 @@ func DataSetRowLevelPermissionTagConfigurationSchema() *schema.Schema {
 			},
 		},
 	}
+}
+
+func DataSetRowLevelPermissionTagConfigurationSchemaDataSourceSchema() *schema.Schema {
+	return sdkv2.DataSourcePropertyFromResourceProperty(DataSetRowLevelPermissionTagConfigurationSchema())
 }
 
 func DataSetRefreshPropertiesSchema() *schema.Schema {
