@@ -4,7 +4,6 @@
 package quicksight
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"log"
@@ -19,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -836,7 +834,7 @@ func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 		AwsAccountId:     aws.String(awsAccountID),
 		DataSetId:        aws.String(dataSetID),
 		ImportMode:       awstypes.DataSetImportMode(d.Get("import_mode").(string)),
-		PhysicalTableMap: expandPhysicalTableMap(d.Get("physical_table_map").(*schema.Set)),
+		PhysicalTableMap: expandPhysicalTableMap(d.Get("physical_table_map").(*schema.Set).List()),
 		Name:             aws.String(d.Get(names.AttrName).(string)),
 		Tags:             getTagsIn(ctx),
 	}
@@ -853,16 +851,16 @@ func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.DataSetUsageConfiguration = expandDataSetUsageConfiguration(v.([]interface{}))
 	}
 
-	if v, ok := d.Get("field_folders").(*schema.Set); ok && v.Len() > 0 {
-		input.FieldFolders = expandFieldFolders(v.List())
+	if v, ok := d.GetOk("field_folders"); ok && v.(*schema.Set).Len() != 0 {
+		input.FieldFolders = expandFieldFolders(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("logical_table_map"); ok && v.(*schema.Set).Len() != 0 {
-		input.LogicalTableMap = expandLogicalTableMap(v.(*schema.Set))
+		input.LogicalTableMap = expandLogicalTableMap(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.Get(names.AttrPermissions).(*schema.Set); ok && v.Len() > 0 {
-		input.Permissions = quicksightschema.ExpandResourcePermissions(v.List())
+	if v, ok := d.GetOk(names.AttrPermissions); ok && v.(*schema.Set).Len() != 0 {
+		input.Permissions = quicksightschema.ExpandResourcePermissions(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("row_level_permission_data_set"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -935,14 +933,14 @@ func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "setting field_folders: %s", err)
 	}
 	d.Set("import_mode", dataSet.ImportMode)
-	if err := d.Set("logical_table_map", flattenLogicalLogicalTableMap(dataSet.LogicalTableMap, logicalTableMapSchema())); err != nil {
+	if err := d.Set("logical_table_map", flattenLogicalLogicalTableMap(dataSet.LogicalTableMap)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting logical_table_map: %s", err)
 	}
 	d.Set(names.AttrName, dataSet.Name)
 	if err := d.Set("output_columns", flattenOutputColumns(dataSet.OutputColumns)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting output_columns: %s", err)
 	}
-	if err := d.Set("physical_table_map", flattenPhysicalTableMap(dataSet.PhysicalTableMap, physicalTableMapSchema())); err != nil {
+	if err := d.Set("physical_table_map", flattenPhysicalTableMap(dataSet.PhysicalTableMap)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting physical_table_map: %s", err)
 	}
 	if err := d.Set("row_level_permission_data_set", flattenRowLevelPermissionDataSet(dataSet.RowLevelPermissionDataSet)); err != nil {
@@ -995,9 +993,9 @@ func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			DataSetUsageConfiguration:          expandDataSetUsageConfiguration(d.Get("data_set_usage_configuration").([]interface{})),
 			FieldFolders:                       expandFieldFolders(d.Get("field_folders").(*schema.Set).List()),
 			ImportMode:                         awstypes.DataSetImportMode(d.Get("import_mode").(string)),
-			LogicalTableMap:                    expandLogicalTableMap(d.Get("logical_table_map").(*schema.Set)),
+			LogicalTableMap:                    expandLogicalTableMap(d.Get("logical_table_map").(*schema.Set).List()),
 			Name:                               aws.String(d.Get(names.AttrName).(string)),
-			PhysicalTableMap:                   expandPhysicalTableMap(d.Get("physical_table_map").(*schema.Set)),
+			PhysicalTableMap:                   expandPhysicalTableMap(d.Get("physical_table_map").(*schema.Set).List()),
 			RowLevelPermissionDataSet:          expandRowLevelPermissionDataSet(d.Get("row_level_permission_data_set").([]interface{})),
 			RowLevelPermissionTagConfiguration: expandRowLevelPermissionTagConfiguration(d.Get("row_level_permission_tag_configuration").([]interface{})),
 		}
@@ -1337,14 +1335,14 @@ func expandFieldFolders(tfList []interface{}) map[string]awstypes.FieldFolder {
 	return apiObjects
 }
 
-func expandLogicalTableMap(tfSet *schema.Set) map[string]awstypes.LogicalTable {
-	if tfSet.Len() == 0 {
+func expandLogicalTableMap(tfList []interface{}) map[string]awstypes.LogicalTable {
+	if len(tfList) == 0 {
 		return nil
 	}
 
 	apiObjects := make(map[string]awstypes.LogicalTable)
 
-	for _, tfMapRaw := range tfSet.List() {
+	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
 		if !ok {
 			continue
@@ -1762,10 +1760,10 @@ func expandUntagColumnOperation(tfList []interface{}) *awstypes.UntagColumnOpera
 	return apiObject
 }
 
-func expandPhysicalTableMap(tfSet *schema.Set) map[string]awstypes.PhysicalTable {
+func expandPhysicalTableMap(tfList []interface{}) map[string]awstypes.PhysicalTable {
 	apiObjects := make(map[string]awstypes.PhysicalTable)
 
-	for _, tfMapRaw := range tfSet.List() {
+	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
 		if !ok {
 			continue
@@ -2217,7 +2215,7 @@ func flattenDataSetUsageConfiguration(apiObject *awstypes.DataSetUsageConfigurat
 	return []interface{}{tfMap}
 }
 
-func flattenFieldFolders(apiObjects map[string]awstypes.FieldFolder) *schema.Set {
+func flattenFieldFolders(apiObjects map[string]awstypes.FieldFolder) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -2239,26 +2237,10 @@ func flattenFieldFolders(apiObjects map[string]awstypes.FieldFolder) *schema.Set
 		tfList = append(tfList, tfMap)
 	}
 
-	return schema.NewSet(fieldFoldersHash, tfList)
+	return tfList
 }
 
-func fieldFoldersHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	buf.WriteString(fmt.Sprintf("%s-", m["field_folders_id"].(string)))
-	if v, ok := m["columns"]; ok {
-		if sl, ok := v.([]string); ok {
-			buf.WriteString(fmt.Sprintf("%s-", sl))
-		}
-	}
-	if v, ok := m[names.AttrDescription]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-
-	return create.StringHashcode(buf.String())
-}
-
-func flattenLogicalLogicalTableMap(apiObjects map[string]awstypes.LogicalTable, resourceSchema *schema.Resource) *schema.Set {
+func flattenLogicalLogicalTableMap(apiObjects map[string]awstypes.LogicalTable) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -2283,7 +2265,7 @@ func flattenLogicalLogicalTableMap(apiObjects map[string]awstypes.LogicalTable, 
 		tfList = append(tfList, tfMap)
 	}
 
-	return schema.NewSet(schema.HashResource(resourceSchema), tfList)
+	return tfList
 }
 
 func flattenTransformOperations(apiObjects []awstypes.TransformOperation) []interface{} {
@@ -2554,7 +2536,7 @@ func flattenJoinKeyProperties(apiObject *awstypes.JoinKeyProperties) map[string]
 	return tfMap
 }
 
-func flattenPhysicalTableMap(apiObjects map[string]awstypes.PhysicalTable, resourceSchema *schema.Resource) *schema.Set {
+func flattenPhysicalTableMap(apiObjects map[string]awstypes.PhysicalTable) []interface{} {
 	var tfList []interface{}
 
 	for k, apiObject := range apiObjects {
@@ -2576,7 +2558,7 @@ func flattenPhysicalTableMap(apiObjects map[string]awstypes.PhysicalTable, resou
 		tfList = append(tfList, tfMap)
 	}
 
-	return schema.NewSet(schema.HashResource(resourceSchema), tfList)
+	return tfList
 }
 
 func flattenCustomSQL(apiObject *awstypes.CustomSql) []interface{} {

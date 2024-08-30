@@ -138,8 +138,8 @@ func resourceFolderCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.ParentFolderArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.Get(names.AttrPermissions).(*schema.Set); ok && v.Len() > 0 {
-		input.Permissions = quicksightschema.ExpandResourcePermissions(v.List())
+	if v, ok := d.GetOk(names.AttrPermissions); ok && v.(*schema.Set).Len() != 0 {
+		input.Permissions = quicksightschema.ExpandResourcePermissions(v.(*schema.Set).List())
 	}
 
 	_, err := conn.CreateFolder(ctx, input)

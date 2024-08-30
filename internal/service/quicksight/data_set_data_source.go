@@ -629,11 +629,11 @@ func dataSourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "setting field_folders: %s", err)
 	}
 	d.Set("import_mode", dataSet.ImportMode)
-	if err := d.Set("logical_table_map", flattenLogicalLogicalTableMap(dataSet.LogicalTableMap, logicalTableMapDataSourceSchema())); err != nil {
+	if err := d.Set("logical_table_map", flattenLogicalLogicalTableMap(dataSet.LogicalTableMap)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting logical_table_map: %s", err)
 	}
 	d.Set(names.AttrName, dataSet.Name)
-	if err := d.Set("physical_table_map", flattenPhysicalTableMap(dataSet.PhysicalTableMap, physicalTableMapDataSourceSchema())); err != nil {
+	if err := d.Set("physical_table_map", flattenPhysicalTableMap(dataSet.PhysicalTableMap)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting physical_table_map: %s", err)
 	}
 	if err := d.Set("row_level_permission_data_set", flattenRowLevelPermissionDataSet(dataSet.RowLevelPermissionDataSet)); err != nil {

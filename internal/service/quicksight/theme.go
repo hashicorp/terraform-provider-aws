@@ -130,8 +130,8 @@ func resourceThemeCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.Configuration = quicksightschema.ExpandThemeConfiguration(v.([]interface{}))
 	}
 
-	if v, ok := d.Get(names.AttrPermissions).(*schema.Set); ok && v.Len() > 0 {
-		input.Permissions = quicksightschema.ExpandResourcePermissions(v.List())
+	if v, ok := d.GetOk(names.AttrPermissions); ok && v.(*schema.Set).Len() != 0 {
+		input.Permissions = quicksightschema.ExpandResourcePermissions(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("version_description"); ok {
