@@ -111,7 +111,7 @@ func (sr ServiceRecord) GoV1ClientTypeName() string {
 	return "" // This should not happen
 }
 
-func (sr ServiceRecord) SkipClientGenerate() bool {
+func (sr ServiceRecord) skipClientGenerate() bool {
 	if len(sr.service.ServiceClient) > 0 {
 		return sr.service.ServiceClient[0].SkipClientGenerate
 	}
@@ -119,7 +119,7 @@ func (sr ServiceRecord) SkipClientGenerate() bool {
 }
 
 func (sr ServiceRecord) GenerateClient() bool {
-	return !sr.SkipClientGenerate()
+	return !sr.skipClientGenerate()
 }
 
 func (sr ServiceRecord) ClientSDKV1() bool {
