@@ -114,7 +114,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceDataSource,
+			Factory:  resourceDataSource,
 			TypeName: "aws_quicksight_data_source",
 			Name:     "Data Source",
 			Tags: &types.ServicePackageResourceTags{

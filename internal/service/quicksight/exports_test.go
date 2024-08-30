@@ -8,6 +8,7 @@ var (
 	ResourceAccountSubscription = resourceAccountSubscription
 	ResourceAnalysis            = resourceAnalysis
 	ResourceDashboard           = resourceDashboard
+	ResourceDataSource          = resourceDataSource
 	ResourceFolder              = resourceFolder
 	ResourceFolderMembership    = newFolderMembershipResource
 	ResourceGroup               = resourceGroup
@@ -29,6 +30,7 @@ var (
 	FindAccountSubscriptionByID           = findAccountSubscriptionByID
 	FindAnalysisByTwoPartKey              = findAnalysisByTwoPartKey
 	FindDashboardByThreePartKey           = findDashboardByThreePartKey
+	FindDataSourceByTwoPartKey            = findDataSourceByTwoPartKey
 	FindFolderByTwoPartKey                = findFolderByTwoPartKey
 	FindFolderMembershipByFourPartKey     = findFolderMembershipByFourPartKey
 	FindGroupByThreePartKey               = findGroupByThreePartKey

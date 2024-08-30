@@ -8,23 +8,29 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/quicksight"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/quicksight"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	quicksightschema "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight/schema"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_quicksight_data_source", name="Data Source")
 // @Tags(identifierAttribute="arn")
-func ResourceDataSource() *schema.Resource {
+func resourceDataSource() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDataSourceCreate,
 		ReadWithoutTimeout:   resourceDataSourceRead,
@@ -41,7 +47,6 @@ func ResourceDataSource() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-
 				names.AttrAWSAccountID: {
 					Type:         schema.TypeString,
 					Optional:     true,
@@ -49,7 +54,6 @@ func ResourceDataSource() *schema.Resource {
 					ForceNew:     true,
 					ValidateFunc: verify.ValidAccountID,
 				},
-
 				"credentials": {
 					Type:     schema.TypeList,
 					Optional: true,
@@ -93,13 +97,11 @@ func ResourceDataSource() *schema.Resource {
 						},
 					},
 				},
-
 				"data_source_id": {
 					Type:     schema.TypeString,
 					Required: true,
 					ForceNew: true,
 				},
-
 				names.AttrName: {
 					Type:     schema.TypeString,
 					Required: true,
@@ -108,7 +110,6 @@ func ResourceDataSource() *schema.Resource {
 						validation.StringLenBetween(1, 128),
 					),
 				},
-
 				names.AttrParameters: {
 					Type:     schema.TypeList,
 					Required: true,
@@ -541,30 +542,7 @@ func ResourceDataSource() *schema.Resource {
 						},
 					},
 				},
-
-				"permission": {
-					Type:     schema.TypeSet,
-					Optional: true,
-					MinItems: 1,
-					MaxItems: 64,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							names.AttrActions: {
-								Type:     schema.TypeSet,
-								Required: true,
-								Elem:     &schema.Schema{Type: schema.TypeString},
-								MinItems: 1,
-								MaxItems: 16,
-							},
-							names.AttrPrincipal: {
-								Type:         schema.TypeString,
-								Required:     true,
-								ValidateFunc: verify.ValidARN,
-							},
-						},
-					},
-				},
-
+				"permission": quicksightschema.PermissionsSchema(),
 				"ssl_properties": {
 					Type:     schema.TypeList,
 					Optional: true,
@@ -578,17 +556,14 @@ func ResourceDataSource() *schema.Resource {
 						},
 					},
 				},
-
 				names.AttrTags:    tftags.TagsSchema(),
 				names.AttrTagsAll: tftags.TagsSchemaComputed(),
-
 				names.AttrType: {
-					Type:         schema.TypeString,
-					Required:     true,
-					ForceNew:     true,
-					ValidateFunc: validation.StringInSlice(quicksight.DataSourceType_Values(), false),
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.DataSourceType](),
 				},
-
 				"vpc_connection_properties": {
 					Type:     schema.TypeList,
 					Optional: true,
@@ -612,49 +587,49 @@ func ResourceDataSource() *schema.Resource {
 
 func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
+	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
-	awsAccountId := meta.(*conns.AWSClient).AccountID
-	id := d.Get("data_source_id").(string)
-
+	awsAccountID := meta.(*conns.AWSClient).AccountID
 	if v, ok := d.GetOk(names.AttrAWSAccountID); ok {
-		awsAccountId = v.(string)
+		awsAccountID = v.(string)
 	}
-
-	params := &quicksight.CreateDataSourceInput{
-		AwsAccountId:         aws.String(awsAccountId),
-		DataSourceId:         aws.String(id),
+	dataSourceID := d.Get("data_source_id").(string)
+	id := dataSourceCreateResourceID(awsAccountID, dataSourceID)
+	input := &quicksight.CreateDataSourceInput{
+		AwsAccountId:         aws.String(awsAccountID),
+		DataSourceId:         aws.String(dataSourceID),
 		DataSourceParameters: expandDataSourceParameters(d.Get(names.AttrParameters).([]interface{})),
 		Name:                 aws.String(d.Get(names.AttrName).(string)),
 		Tags:                 getTagsIn(ctx),
-		Type:                 aws.String(d.Get(names.AttrType).(string)),
+		Type:                 awstypes.DataSourceType(d.Get(names.AttrType).(string)),
 	}
 
 	if v, ok := d.GetOk("credentials"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		params.Credentials = expandDataSourceCredentials(v.([]interface{}))
+		input.Credentials = expandDataSourceCredentials(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("permission"); ok && v.(*schema.Set).Len() > 0 {
-		params.Permissions = expandResourcePermissions(v.(*schema.Set).List())
+	if v, ok := d.Get(names.AttrPermissions).(*schema.Set); ok && v.Len() > 0 {
+		input.Permissions = quicksightschema.ExpandResourcePermissions(v.List())
 	}
 
 	if v, ok := d.GetOk("ssl_properties"); ok && len(v.([]interface{})) != 0 && v.([]interface{})[0] != nil {
-		params.SslProperties = expandDataSourceSSLProperties(v.([]interface{}))
+		input.SslProperties = expandDataSourceSSLProperties(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("vpc_connection_properties"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		params.VpcConnectionProperties = expandDataSourceVPCConnectionProperties(v.([]interface{}))
+		input.VpcConnectionProperties = expandVPCConnectionProperties(v.([]interface{}))
 	}
 
-	_, err := conn.CreateDataSourceWithContext(ctx, params)
+	_, err := conn.CreateDataSource(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating QuickSight Data Source: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating QuickSight Data Source (%s): %s", id, err)
 	}
 
-	d.SetId(fmt.Sprintf("%s/%s", awsAccountId, id))
+	d.SetId(id)
 
-	if _, err := waitCreated(ctx, conn, awsAccountId, id); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting from QuickSight Data Source (%s) creation: %s", d.Id(), err)
+	if _, err := waitDataSourceCreated(ctx, conn, awsAccountID, dataSourceID); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting from QuickSight Data Source (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceDataSourceRead(ctx, d, meta)...)
@@ -662,66 +637,48 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
+	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
-	awsAccountId, dataSourceId, err := ParseDataSourceID(d.Id())
+	awsAccountID, dataSourceID, err := dataSourceParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	descOpts := &quicksight.DescribeDataSourceInput{
-		AwsAccountId: aws.String(awsAccountId),
-		DataSourceId: aws.String(dataSourceId),
-	}
+	dataSource, err := findDataSourceByTwoPartKey(ctx, conn, awsAccountID, dataSourceID)
 
-	output, err := conn.DescribeDataSourceWithContext(ctx, descOpts)
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] QuickSight Data Source (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "describing QuickSight Data Source (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading QuickSight Data Source (%s): %s", d.Id(), err)
 	}
-
-	if output == nil || output.DataSource == nil {
-		return sdkdiag.AppendErrorf(diags, "describing QuickSight Data Source (%s): empty output", d.Id())
-	}
-
-	dataSource := output.DataSource
 
 	d.Set(names.AttrARN, dataSource.Arn)
-	d.Set(names.AttrAWSAccountID, awsAccountId)
+	d.Set(names.AttrAWSAccountID, awsAccountID)
 	d.Set("data_source_id", dataSource.DataSourceId)
 	d.Set(names.AttrName, dataSource.Name)
-
-	if err := d.Set(names.AttrParameters, flattenParameters(dataSource.DataSourceParameters)); err != nil {
+	if err := d.Set(names.AttrParameters, flattenDataSourceParameters(dataSource.DataSourceParameters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting parameters: %s", err)
 	}
-
 	if err := d.Set("ssl_properties", flattenSSLProperties(dataSource.SslProperties)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ssl_properties: %s", err)
 	}
-
 	d.Set(names.AttrType, dataSource.Type)
-
 	if err := d.Set("vpc_connection_properties", flattenVPCConnectionProperties(dataSource.VpcConnectionProperties)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting vpc_connection_properties: %s", err)
 	}
 
-	permsResp, err := conn.DescribeDataSourcePermissionsWithContext(ctx, &quicksight.DescribeDataSourcePermissionsInput{
-		AwsAccountId: aws.String(awsAccountId),
-		DataSourceId: aws.String(dataSourceId),
-	})
+	permissions, err := findDataSourcePermissionsByTwoPartKey(ctx, conn, awsAccountID, dataSourceID)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "describing QuickSight Data Source (%s) Permissions: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading QuickSight Data Source (%s) permissions: %s", d.Id(), err)
 	}
 
-	if err := d.Set("permission", flattenPermissions(permsResp.Permissions)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting permission: %s", err)
+	if err := d.Set(names.AttrPermissions, quicksightschema.FlattenPermissions(permissions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting permissions: %s", err)
 	}
 
 	return diags
@@ -729,76 +686,69 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
+	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
+
+	awsAccountID, dataSourceID, err := dataSourceParseResourceID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
 
 	if d.HasChangesExcept("permission", names.AttrTags, names.AttrTagsAll) {
-		awsAccountId, dataSourceId, err := ParseDataSourceID(d.Id())
-		if err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
-		}
-
-		params := &quicksight.UpdateDataSourceInput{
-			AwsAccountId: aws.String(awsAccountId),
-			DataSourceId: aws.String(dataSourceId),
+		input := &quicksight.UpdateDataSourceInput{
+			AwsAccountId: aws.String(awsAccountID),
+			DataSourceId: aws.String(dataSourceID),
 			Name:         aws.String(d.Get(names.AttrName).(string)),
 		}
 
-		if v, ok := d.GetOk(names.AttrParameters); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			params.DataSourceParameters = expandDataSourceParameters(v.([]interface{}))
+		if v, ok := d.GetOk("credentials"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.Credentials = expandDataSourceCredentials(v.([]interface{}))
 		}
 
-		if v, ok := d.GetOk("credentials"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			params.Credentials = expandDataSourceCredentials(v.([]interface{}))
+		if v, ok := d.GetOk(names.AttrParameters); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.DataSourceParameters = expandDataSourceParameters(v.([]interface{}))
 		}
 
 		if v, ok := d.GetOk("ssl_properties"); ok && len(v.([]interface{})) != 0 && v.([]interface{})[0] != nil {
-			params.SslProperties = expandDataSourceSSLProperties(v.([]interface{}))
+			input.SslProperties = expandDataSourceSSLProperties(v.([]interface{}))
 		}
 
 		if v, ok := d.GetOk("vpc_connection_properties"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			params.VpcConnectionProperties = expandDataSourceVPCConnectionProperties(v.([]interface{}))
+			input.VpcConnectionProperties = expandVPCConnectionProperties(v.([]interface{}))
 		}
 
-		_, err = conn.UpdateDataSourceWithContext(ctx, params)
+		_, err = conn.UpdateDataSource(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating QuickSight Data Source (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitUpdated(ctx, conn, awsAccountId, dataSourceId); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for QuickSight Data Source (%s) to update: %s", d.Id(), err)
+		if _, err := waitDataSourceUpdated(ctx, conn, awsAccountID, dataSourceID); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for QuickSight Data Source (%s) update: %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("permission") {
-		awsAccountId, dataSourceId, err := ParseDataSourceID(d.Id())
-		if err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
-		}
+		o, n := d.GetChange("permission")
+		os, ns := o.(*schema.Set), n.(*schema.Set)
+		toGrant, toRevoke := quicksightschema.DiffPermissions(os.List(), ns.List())
 
-		oraw, nraw := d.GetChange("permission")
-		o := oraw.(*schema.Set).List()
-		n := nraw.(*schema.Set).List()
-
-		toGrant, toRevoke := diffPermissions(o, n)
-
-		params := &quicksight.UpdateDataSourcePermissionsInput{
-			AwsAccountId: aws.String(awsAccountId),
-			DataSourceId: aws.String(dataSourceId),
+		input := &quicksight.UpdateDataSourcePermissionsInput{
+			AwsAccountId: aws.String(awsAccountID),
+			DataSourceId: aws.String(dataSourceID),
 		}
 
 		if len(toGrant) > 0 {
-			params.GrantPermissions = toGrant
+			input.GrantPermissions = toGrant
 		}
 
 		if len(toRevoke) > 0 {
-			params.RevokePermissions = toRevoke
+			input.RevokePermissions = toRevoke
 		}
 
-		_, err = conn.UpdateDataSourcePermissionsWithContext(ctx, params)
+		_, err = conn.UpdateDataSourcePermissions(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating QuickSight Data Source (%s) permissions: %s", dataSourceId, err)
+			return sdkdiag.AppendErrorf(diags, "updating QuickSight Data Source (%s) permissions: %s", d.Id(), err)
 		}
 	}
 
@@ -807,21 +757,20 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceDataSourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
+	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
-	awsAccountId, dataSourceId, err := ParseDataSourceID(d.Id())
+	awsAccountID, dataSourceID, err := dataSourceParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	deleteOpts := &quicksight.DeleteDataSourceInput{
-		AwsAccountId: aws.String(awsAccountId),
-		DataSourceId: aws.String(dataSourceId),
-	}
+	log.Printf("[INFO] Deleting QuickSight Data Source: %s", d.Id())
+	_, err = conn.DeleteDataSource(ctx, &quicksight.DeleteDataSourceInput{
+		AwsAccountId: aws.String(awsAccountID),
+		DataSourceId: aws.String(dataSourceID),
+	})
 
-	_, err = conn.DeleteDataSourceWithContext(ctx, deleteOpts)
-
-	if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -832,428 +781,710 @@ func resourceDataSourceDelete(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func expandDataSourceCredentials(tfList []interface{}) *quicksight.DataSourceCredentials {
+const dataSourceResourceIDSeparator = "/"
+
+func dataSourceCreateResourceID(awsAccountID, dataSourceID string) string {
+	parts := []string{awsAccountID, dataSourceID}
+	id := strings.Join(parts, dataSourceResourceIDSeparator)
+
+	return id
+}
+
+func dataSourceParseResourceID(id string) (string, string, error) {
+	parts := strings.SplitN(id, dataSourceResourceIDSeparator, 2)
+
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", "", fmt.Errorf("unexpected format of ID (%[1]s), expected AWS_ACCOUNT_ID%[2]sDATA_SOURCE_ID", id, dataSourceResourceIDSeparator)
+	}
+
+	return parts[0], parts[1], nil
+}
+
+func findDataSourceByTwoPartKey(ctx context.Context, conn *quicksight.Client, awsAccountID, dataSourceID string) (*awstypes.DataSource, error) {
+	input := &quicksight.DescribeDataSourceInput{
+		AwsAccountId: aws.String(awsAccountID),
+		DataSourceId: aws.String(dataSourceID),
+	}
+
+	return findDataSource(ctx, conn, input)
+}
+
+func findDataSource(ctx context.Context, conn *quicksight.Client, input *quicksight.DescribeDataSourceInput) (*awstypes.DataSource, error) {
+	output, err := conn.DescribeDataSource(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.DataSource == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.DataSource, nil
+}
+
+func findDataSourcePermissionsByTwoPartKey(ctx context.Context, conn *quicksight.Client, awsAccountID, dataSourceID string) ([]awstypes.ResourcePermission, error) {
+	input := &quicksight.DescribeDataSourcePermissionsInput{
+		AwsAccountId: aws.String(awsAccountID),
+		DataSourceId: aws.String(dataSourceID),
+	}
+
+	return findDataSourcePermissions(ctx, conn, input)
+}
+
+func findDataSourcePermissions(ctx context.Context, conn *quicksight.Client, input *quicksight.DescribeDataSourcePermissionsInput) ([]awstypes.ResourcePermission, error) {
+	output, err := conn.DescribeDataSourcePermissions(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Permissions, nil
+}
+
+func statusDataSource(ctx context.Context, conn *quicksight.Client, awsAccountID, dataSourceID string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findDataSourceByTwoPartKey(ctx, conn, awsAccountID, dataSourceID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status), nil
+	}
+}
+
+func waitDataSourceCreated(ctx context.Context, conn *quicksight.Client, awsAccountID, dataSourceID string) (*awstypes.DataSource, error) {
+	const (
+		timeout = 5 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.ResourceStatusCreationInProgress),
+		Target:  enum.Slice(awstypes.ResourceStatusCreationSuccessful),
+		Refresh: statusDataSource(ctx, conn, awsAccountID, dataSourceID),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.DataSource); ok {
+		if status, errorInfo := output.Status, output.ErrorInfo; status == awstypes.ResourceStatusCreationFailed {
+			tfresource.SetLastError(err, dataSourceError(errorInfo))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitDataSourceUpdated(ctx context.Context, conn *quicksight.Client, awsAccountID, dataSourceID string) (*awstypes.DataSource, error) {
+	const (
+		timeout = 5 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.ResourceStatusUpdateInProgress),
+		Target:  enum.Slice(awstypes.ResourceStatusUpdateSuccessful),
+		Refresh: statusDataSource(ctx, conn, awsAccountID, dataSourceID),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.DataSource); ok {
+		if status, errorInfo := output.Status, output.ErrorInfo; status == awstypes.ResourceStatusUpdateFailed {
+			tfresource.SetLastError(err, dataSourceError(errorInfo))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func dataSourceError(apiObject *awstypes.DataSourceErrorInfo) error {
+	if apiObject == nil {
+		return nil
+	}
+
+	return fmt.Errorf("%s: %s", apiObject.Type, aws.ToString(apiObject.Message))
+}
+
+func expandDataSourceCredentials(tfList []interface{}) *awstypes.DataSourceCredentials {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
 	tfMap, ok := tfList[0].(map[string]interface{})
-
 	if !ok {
 		return nil
 	}
 
-	credentials := &quicksight.DataSourceCredentials{}
+	apiObject := &awstypes.DataSourceCredentials{}
 
 	if v, ok := tfMap["copy_source_arn"].(string); ok && v != "" {
-		credentials.CopySourceArn = aws.String(v)
+		apiObject.CopySourceArn = aws.String(v)
 	}
 
 	if v, ok := tfMap["credential_pair"].([]interface{}); ok && len(v) > 0 {
-		credentials.CredentialPair = expandDataSourceCredentialPair(v)
+		apiObject.CredentialPair = expandDataSourceCredentialPair(v)
 	}
 
-	return credentials
+	return apiObject
 }
 
-func expandDataSourceCredentialPair(tfList []interface{}) *quicksight.CredentialPair {
+func expandDataSourceCredentialPair(tfList []interface{}) *awstypes.CredentialPair {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	credentialPair := &quicksight.CredentialPair{}
+	apiObject := &awstypes.CredentialPair{}
 
 	tfMap, ok := tfList[0].(map[string]interface{})
-
 	if !ok {
 		return nil
 	}
 
 	if v, ok := tfMap[names.AttrUsername].(string); ok && v != "" {
-		credentialPair.Username = aws.String(v)
+		apiObject.Username = aws.String(v)
 	}
 
 	if v, ok := tfMap[names.AttrPassword].(string); ok && v != "" {
-		credentialPair.Password = aws.String(v)
+		apiObject.Password = aws.String(v)
 	}
 
-	return credentialPair
+	return apiObject
 }
 
-func expandDataSourceParameters(tfList []interface{}) *quicksight.DataSourceParameters {
+func expandDataSourceParameters(tfList []interface{}) awstypes.DataSourceParameters {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
 	tfMap, ok := tfList[0].(map[string]interface{})
-
 	if !ok {
 		return nil
 	}
 
-	dataSourceParams := &quicksight.DataSourceParameters{}
+	var apiObject awstypes.DataSourceParameters
 
 	if v, ok := tfMap["amazon_elasticsearch"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		m, ok := v[0].(map[string]interface{})
+		if tfMap, ok := v[0].(map[string]interface{}); ok {
+			ps := &awstypes.DataSourceParametersMemberAmazonElasticsearchParameters{}
 
-		if ok {
-			ps := &quicksight.AmazonElasticsearchParameters{}
-
-			if v, ok := m[names.AttrDomain].(string); ok && v != "" {
-				ps.Domain = aws.String(v)
+			if v, ok := tfMap[names.AttrDomain].(string); ok && v != "" {
+				ps.Value.Domain = aws.String(v)
 			}
 
-			dataSourceParams.AmazonElasticsearchParameters = ps
+			apiObject = ps
 		}
 	}
 
 	if v := tfMap["athena"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		m, ok := v[0].(map[string]interface{})
+		if tfMap, ok := v[0].(map[string]interface{}); ok {
+			ps := &awstypes.DataSourceParametersMemberAthenaParameters{}
 
-		if ok {
-			ps := &quicksight.AthenaParameters{}
-			if v, ok := m["work_group"].(string); ok && v != "" {
-				ps.WorkGroup = aws.String(v)
+			if v, ok := tfMap["work_group"].(string); ok && v != "" {
+				ps.Value.WorkGroup = aws.String(v)
 			}
 
-			dataSourceParams.AthenaParameters = ps
+			apiObject = ps
 		}
 	}
 
 	if v := tfMap["aurora"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		m, ok := v[0].(map[string]interface{})
+		if tfMap, ok := v[0].(map[string]interface{}); ok {
+			ps := &awstypes.DataSourceParametersMemberAuroraParameters{}
 
-		if ok {
-			ps := &quicksight.AuroraParameters{}
-			if v, ok := m[names.AttrDatabase].(string); ok && v != "" {
-				ps.Database = aws.String(v)
+			if v, ok := tfMap[names.AttrDatabase].(string); ok && v != "" {
+				ps.Value.Database = aws.String(v)
 			}
-			if v, ok := m["host"].(string); ok && v != "" {
-				ps.Host = aws.String(v)
+			if v, ok := tfMap["host"].(string); ok && v != "" {
+				ps.Value.Host = aws.String(v)
 			}
-			if v, ok := m[names.AttrPort].(int); ok {
-				ps.Port = aws.Int64(int64(v))
+			if v, ok := tfMap[names.AttrPort].(int); ok {
+				ps.Value.Port = aws.Int32(int32(v))
 			}
 
-			dataSourceParams.AuroraParameters = ps
+			apiObject = ps
 		}
 	}
 
 	if v, ok := tfMap["aurora_postgresql"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		m, ok := v[0].(map[string]interface{})
+		if tfMap, ok := v[0].(map[string]interface{}); ok {
+			ps := &awstypes.DataSourceParametersMemberAuroraPostgreSqlParameters{}
 
-		if ok {
-			ps := &quicksight.AuroraPostgreSqlParameters{}
-			if v, ok := m[names.AttrDatabase].(string); ok && v != "" {
-				ps.Database = aws.String(v)
+			if v, ok := tfMap[names.AttrDatabase].(string); ok && v != "" {
+				ps.Value.Database = aws.String(v)
 			}
-			if v, ok := m["host"].(string); ok && v != "" {
-				ps.Host = aws.String(v)
+			if v, ok := tfMap["host"].(string); ok && v != "" {
+				ps.Value.Host = aws.String(v)
 			}
-			if v, ok := m[names.AttrPort].(int); ok {
-				ps.Port = aws.Int64(int64(v))
+			if v, ok := tfMap[names.AttrPort].(int); ok {
+				ps.Value.Port = aws.Int32(int32(v))
 			}
 
-			dataSourceParams.AuroraPostgreSqlParameters = ps
+			apiObject = ps
 		}
 	}
 
 	if v := tfMap["aws_iot_analytics"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		m, ok := v[0].(map[string]interface{})
+		if tfMap, ok := v[0].(map[string]interface{}); ok {
+			ps := &awstypes.DataSourceParametersMemberAwsIotAnalyticsParameters{}
 
-		if ok {
-			ps := &quicksight.AwsIotAnalyticsParameters{}
-			if v, ok := m["data_set_name"].(string); ok && v != "" {
-				ps.DataSetName = aws.String(v)
+			if v, ok := tfMap["data_set_name"].(string); ok && v != "" {
+				ps.Value.DataSetName = aws.String(v)
 			}
 
-			dataSourceParams.AwsIotAnalyticsParameters = ps
+			apiObject = ps
 		}
 	}
 
 	if v := tfMap["jira"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		m, ok := v[0].(map[string]interface{})
+		if tfMap, ok := v[0].(map[string]interface{}); ok {
+			ps := &awstypes.DataSourceParametersMemberJiraParameters{}
 
-		if ok {
-			ps := &quicksight.JiraParameters{}
-			if v, ok := m["site_base_url"].(string); ok && v != "" {
-				ps.SiteBaseUrl = aws.String(v)
+			if v, ok := tfMap["site_base_url"].(string); ok && v != "" {
+				ps.Value.SiteBaseUrl = aws.String(v)
 			}
 
-			dataSourceParams.JiraParameters = ps
+			apiObject = ps
 		}
 	}
 
 	if v := tfMap["maria_db"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		m, ok := v[0].(map[string]interface{})
+		if tfMap, ok := v[0].(map[string]interface{}); ok {
+			ps := &awstypes.DataSourceParametersMemberMariaDbParameters{}
 
-		if ok {
-			ps := &quicksight.MariaDbParameters{}
-			if v, ok := m[names.AttrDatabase].(string); ok && v != "" {
-				ps.Database = aws.String(v)
+			if v, ok := tfMap[names.AttrDatabase].(string); ok && v != "" {
+				ps.Value.Database = aws.String(v)
 			}
-			if v, ok := m["host"].(string); ok && v != "" {
-				ps.Host = aws.String(v)
+			if v, ok := tfMap["host"].(string); ok && v != "" {
+				ps.Value.Host = aws.String(v)
 			}
-			if v, ok := m[names.AttrPort].(int); ok {
-				ps.Port = aws.Int64(int64(v))
+			if v, ok := tfMap[names.AttrPort].(int); ok {
+				ps.Value.Port = aws.Int32(int32(v))
 			}
 
-			dataSourceParams.MariaDbParameters = ps
+			apiObject = ps
 		}
 	}
 
 	if v := tfMap["mysql"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		m, ok := v[0].(map[string]interface{})
+		if tfMap, ok := v[0].(map[string]interface{}); ok {
+			ps := &awstypes.DataSourceParametersMemberMySqlParameters{}
 
-		if ok {
-			ps := &quicksight.MySqlParameters{}
-			if v, ok := m[names.AttrDatabase].(string); ok && v != "" {
-				ps.Database = aws.String(v)
+			if v, ok := tfMap[names.AttrDatabase].(string); ok && v != "" {
+				ps.Value.Database = aws.String(v)
 			}
-			if v, ok := m["host"].(string); ok && v != "" {
-				ps.Host = aws.String(v)
+			if v, ok := tfMap["host"].(string); ok && v != "" {
+				ps.Value.Host = aws.String(v)
 			}
-			if v, ok := m[names.AttrPort].(int); ok {
-				ps.Port = aws.Int64(int64(v))
+			if v, ok := tfMap[names.AttrPort].(int); ok {
+				ps.Value.Port = aws.Int32(int32(v))
 			}
 
-			dataSourceParams.MySqlParameters = ps
+			apiObject = ps
 		}
 	}
 
 	if v := tfMap["oracle"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		m, ok := v[0].(map[string]interface{})
+		if tfMap, ok := v[0].(map[string]interface{}); ok {
+			ps := &awstypes.DataSourceParametersMemberOracleParameters{}
 
-		if ok {
-			ps := &quicksight.OracleParameters{}
-			if v, ok := m[names.AttrDatabase].(string); ok && v != "" {
-				ps.Database = aws.String(v)
+			if v, ok := tfMap[names.AttrDatabase].(string); ok && v != "" {
+				ps.Value.Database = aws.String(v)
 			}
-			if v, ok := m["host"].(string); ok && v != "" {
-				ps.Host = aws.String(v)
+			if v, ok := tfMap["host"].(string); ok && v != "" {
+				ps.Value.Host = aws.String(v)
 			}
-			if v, ok := m[names.AttrPort].(int); ok {
-				ps.Port = aws.Int64(int64(v))
+			if v, ok := tfMap[names.AttrPort].(int); ok {
+				ps.Value.Port = aws.Int32(int32(v))
 			}
 
-			dataSourceParams.OracleParameters = ps
+			apiObject = ps
 		}
 	}
 
 	if v := tfMap["postgresql"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		m, ok := v[0].(map[string]interface{})
+		if tfMap, ok := v[0].(map[string]interface{}); ok {
+			ps := &awstypes.DataSourceParametersMemberPostgreSqlParameters{}
 
-		if ok {
-			ps := &quicksight.PostgreSqlParameters{}
-			if v, ok := m[names.AttrDatabase].(string); ok && v != "" {
-				ps.Database = aws.String(v)
+			if v, ok := tfMap[names.AttrDatabase].(string); ok && v != "" {
+				ps.Value.Database = aws.String(v)
 			}
-			if v, ok := m["host"].(string); ok && v != "" {
-				ps.Host = aws.String(v)
+			if v, ok := tfMap["host"].(string); ok && v != "" {
+				ps.Value.Host = aws.String(v)
 			}
-			if v, ok := m[names.AttrPort].(int); ok {
-				ps.Port = aws.Int64(int64(v))
+			if v, ok := tfMap[names.AttrPort].(int); ok {
+				ps.Value.Port = aws.Int32(int32(v))
 			}
 
-			dataSourceParams.PostgreSqlParameters = ps
+			apiObject = ps
 		}
 	}
+
 	if v := tfMap["presto"].([]interface{}); ok && len(v) > 0 && v != nil {
-		m, ok := v[0].(map[string]interface{})
+		if tfMap, ok := v[0].(map[string]interface{}); ok {
+			ps := &awstypes.DataSourceParametersMemberPrestoParameters{}
 
-		if ok {
-			ps := &quicksight.PrestoParameters{}
-			if v, ok := m["catalog"].(string); ok && v != "" {
-				ps.Catalog = aws.String(v)
+			if v, ok := tfMap["catalog"].(string); ok && v != "" {
+				ps.Value.Catalog = aws.String(v)
 			}
-			if v, ok := m["host"].(string); ok && v != "" {
-				ps.Host = aws.String(v)
+			if v, ok := tfMap["host"].(string); ok && v != "" {
+				ps.Value.Host = aws.String(v)
 			}
-			if v, ok := m[names.AttrPort].(int); ok {
-				ps.Port = aws.Int64(int64(v))
+			if v, ok := tfMap[names.AttrPort].(int); ok {
+				ps.Value.Port = aws.Int32(int32(v))
 			}
 
-			dataSourceParams.PrestoParameters = ps
+			apiObject = ps
 		}
 	}
 
 	if v := tfMap["rds"].([]interface{}); ok && len(v) > 0 && v != nil {
-		m, ok := v[0].(map[string]interface{})
+		if tfMap, ok := v[0].(map[string]interface{}); ok {
+			ps := &awstypes.DataSourceParametersMemberRdsParameters{}
 
-		if ok {
-			ps := &quicksight.RdsParameters{}
-
-			if v, ok := m[names.AttrDatabase].(string); ok && v != "" {
-				ps.Database = aws.String(v)
+			if v, ok := tfMap[names.AttrDatabase].(string); ok && v != "" {
+				ps.Value.Database = aws.String(v)
 			}
-			if v, ok := m[names.AttrInstanceID].(string); ok && v != "" {
-				ps.InstanceId = aws.String(v)
+			if v, ok := tfMap[names.AttrInstanceID].(string); ok && v != "" {
+				ps.Value.InstanceId = aws.String(v)
 			}
 
-			dataSourceParams.RdsParameters = ps
+			apiObject = ps
 		}
 	}
 
 	if v := tfMap["redshift"].([]interface{}); ok && len(v) > 0 && v != nil {
-		m, ok := v[0].(map[string]interface{})
+		if tfMap, ok := v[0].(map[string]interface{}); ok {
+			ps := &awstypes.DataSourceParametersMemberRedshiftParameters{}
 
-		if ok {
-			ps := &quicksight.RedshiftParameters{}
-			if v, ok := m["cluster_id"].(string); ok && v != "" {
-				ps.ClusterId = aws.String(v)
+			if v, ok := tfMap["cluster_id"].(string); ok && v != "" {
+				ps.Value.ClusterId = aws.String(v)
 			}
-			if v, ok := m[names.AttrDatabase].(string); ok && v != "" {
-				ps.Database = aws.String(v)
+			if v, ok := tfMap[names.AttrDatabase].(string); ok && v != "" {
+				ps.Value.Database = aws.String(v)
 			}
-			if v, ok := m["host"].(string); ok && v != "" {
-				ps.Host = aws.String(v)
+			if v, ok := tfMap["host"].(string); ok && v != "" {
+				ps.Value.Host = aws.String(v)
 			}
-			if v, ok := m[names.AttrPort].(int); ok {
-				ps.Port = aws.Int64(int64(v))
+			if v, ok := tfMap[names.AttrPort].(int); ok {
+				ps.Value.Port = int32(v)
 			}
 
-			dataSourceParams.RedshiftParameters = ps
+			apiObject = ps
 		}
 	}
 
 	if v := tfMap["s3"].([]interface{}); ok && len(v) > 0 && v != nil {
-		m, ok := v[0].(map[string]interface{})
+		if tfMap, ok := v[0].(map[string]interface{}); ok {
+			ps := &awstypes.DataSourceParametersMemberS3Parameters{}
 
-		if ok {
-			ps := &quicksight.S3Parameters{}
-			if v, ok := m["manifest_file_location"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-				lm, ok := v[0].(map[string]interface{})
-				if ok {
-					loc := &quicksight.ManifestFileLocation{}
+			if v, ok := tfMap["manifest_file_location"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+				if tfMap, ok := v[0].(map[string]interface{}); ok {
+					apiObject := &awstypes.ManifestFileLocation{}
 
-					if v, ok := lm[names.AttrBucket].(string); ok && v != "" {
-						loc.Bucket = aws.String(v)
+					if v, ok := tfMap[names.AttrBucket].(string); ok && v != "" {
+						apiObject.Bucket = aws.String(v)
+					}
+					if v, ok := tfMap[names.AttrKey].(string); ok && v != "" {
+						apiObject.Key = aws.String(v)
 					}
 
-					if v, ok := lm[names.AttrKey].(string); ok && v != "" {
-						loc.Key = aws.String(v)
-					}
-
-					ps.ManifestFileLocation = loc
+					ps.Value.ManifestFileLocation = apiObject
 				}
 			}
 
-			dataSourceParams.S3Parameters = ps
+			apiObject = ps
 		}
 	}
 
 	if v := tfMap["service_now"].([]interface{}); ok && len(v) > 0 && v != nil {
-		m, ok := v[0].(map[string]interface{})
+		if tfMap, ok := v[0].(map[string]interface{}); ok {
+			ps := &awstypes.DataSourceParametersMemberServiceNowParameters{}
 
-		if ok {
-			ps := &quicksight.ServiceNowParameters{}
-			if v, ok := m["site_base_url"].(string); ok && v != "" {
-				ps.SiteBaseUrl = aws.String(v)
+			if v, ok := tfMap["site_base_url"].(string); ok && v != "" {
+				ps.Value.SiteBaseUrl = aws.String(v)
 			}
 
-			dataSourceParams.ServiceNowParameters = ps
+			apiObject = ps
 		}
 	}
 
 	if v := tfMap["snowflake"].([]interface{}); ok && len(v) > 0 && v != nil {
-		m, ok := v[0].(map[string]interface{})
+		if tfMap, ok := v[0].(map[string]interface{}); ok {
+			ps := &awstypes.DataSourceParametersMemberSnowflakeParameters{}
 
-		if ok {
-			ps := &quicksight.SnowflakeParameters{}
-
-			if v, ok := m[names.AttrDatabase].(string); ok && v != "" {
-				ps.Database = aws.String(v)
+			if v, ok := tfMap[names.AttrDatabase].(string); ok && v != "" {
+				ps.Value.Database = aws.String(v)
 			}
-			if v, ok := m["host"].(string); ok && v != "" {
-				ps.Host = aws.String(v)
+			if v, ok := tfMap["host"].(string); ok && v != "" {
+				ps.Value.Host = aws.String(v)
 			}
-			if v, ok := m["warehouse"].(string); ok && v != "" {
-				ps.Warehouse = aws.String(v)
+			if v, ok := tfMap["warehouse"].(string); ok && v != "" {
+				ps.Value.Warehouse = aws.String(v)
 			}
 
-			dataSourceParams.SnowflakeParameters = ps
+			apiObject = ps
 		}
 	}
 
 	if v := tfMap["spark"].([]interface{}); ok && len(v) > 0 && v != nil {
-		m, ok := v[0].(map[string]interface{})
+		if tfMap, ok := v[0].(map[string]interface{}); ok {
+			ps := &awstypes.DataSourceParametersMemberSparkParameters{}
 
-		if ok {
-			ps := &quicksight.SparkParameters{}
-
-			if v, ok := m["host"].(string); ok && v != "" {
-				ps.Host = aws.String(v)
+			if v, ok := tfMap["host"].(string); ok && v != "" {
+				ps.Value.Host = aws.String(v)
 			}
-			if v, ok := m[names.AttrPort].(int); ok {
-				ps.Port = aws.Int64(int64(v))
+			if v, ok := tfMap[names.AttrPort].(int); ok {
+				ps.Value.Port = aws.Int32(int32(v))
 			}
 
-			dataSourceParams.SparkParameters = ps
+			apiObject = ps
 		}
 	}
 
 	if v := tfMap["sql_server"].([]interface{}); ok && len(v) > 0 && v != nil {
-		m, ok := v[0].(map[string]interface{})
+		if tfMap, ok := v[0].(map[string]interface{}); ok {
+			ps := &awstypes.DataSourceParametersMemberSqlServerParameters{}
 
-		if ok {
-			ps := &quicksight.SqlServerParameters{}
-
-			if v, ok := m[names.AttrDatabase].(string); ok && v != "" {
-				ps.Database = aws.String(v)
+			if v, ok := tfMap[names.AttrDatabase].(string); ok && v != "" {
+				ps.Value.Database = aws.String(v)
 			}
-			if v, ok := m["host"].(string); ok && v != "" {
-				ps.Host = aws.String(v)
+			if v, ok := tfMap["host"].(string); ok && v != "" {
+				ps.Value.Host = aws.String(v)
 			}
-			if v, ok := m[names.AttrPort].(int); ok {
-				ps.Port = aws.Int64(int64(v))
+			if v, ok := tfMap[names.AttrPort].(int); ok {
+				ps.Value.Port = aws.Int32(int32(v))
 			}
 
-			dataSourceParams.SqlServerParameters = ps
+			apiObject = ps
 		}
 	}
 
 	if v := tfMap["teradata"].([]interface{}); ok && len(v) > 0 && v != nil {
-		m, ok := v[0].(map[string]interface{})
+		if tfMap, ok := v[0].(map[string]interface{}); ok {
+			ps := &awstypes.DataSourceParametersMemberTeradataParameters{}
 
-		if ok {
-			ps := &quicksight.TeradataParameters{}
-
-			if v, ok := m[names.AttrDatabase].(string); ok && v != "" {
-				ps.Database = aws.String(v)
+			if v, ok := tfMap[names.AttrDatabase].(string); ok && v != "" {
+				ps.Value.Database = aws.String(v)
 			}
-			if v, ok := m["host"].(string); ok && v != "" {
-				ps.Host = aws.String(v)
+			if v, ok := tfMap["host"].(string); ok && v != "" {
+				ps.Value.Host = aws.String(v)
 			}
-			if v, ok := m[names.AttrPort].(int); ok {
-				ps.Port = aws.Int64(int64(v))
+			if v, ok := tfMap[names.AttrPort].(int); ok {
+				ps.Value.Port = aws.Int32(int32(v))
 			}
 
-			dataSourceParams.TeradataParameters = ps
+			apiObject = ps
 		}
 	}
 
 	if v := tfMap["twitter"].([]interface{}); ok && len(v) > 0 && v != nil {
-		m, ok := v[0].(map[string]interface{})
+		if tfMap, ok := v[0].(map[string]interface{}); ok {
+			ps := &awstypes.DataSourceParametersMemberTwitterParameters{}
 
-		if ok {
-			ps := &quicksight.TwitterParameters{}
-
-			if v, ok := m["max_rows"].(int); ok {
-				ps.MaxRows = aws.Int64(int64(v))
+			if v, ok := tfMap["max_rows"].(int); ok {
+				ps.Value.MaxRows = aws.Int32(int32(v))
 			}
-			if v, ok := m["query"].(string); ok && v != "" {
-				ps.Query = aws.String(v)
+			if v, ok := tfMap["query"].(string); ok && v != "" {
+				ps.Value.Query = aws.String(v)
 			}
 
-			dataSourceParams.TwitterParameters = ps
+			apiObject = ps
 		}
 	}
 
-	return dataSourceParams
+	return apiObject
 }
 
-func expandDataSourceSSLProperties(tfList []interface{}) *quicksight.SslProperties {
+func flattenDataSourceParameters(apiObject awstypes.DataSourceParameters) []interface{} {
+	if apiObject == nil {
+		return []interface{}{}
+	}
+
+	tfMap := map[string]interface{}{}
+
+	switch v := apiObject.(type) {
+	case *awstypes.DataSourceParametersMemberAmazonElasticsearchParameters:
+		tfMap["amazon_elasticsearch"] = []interface{}{
+			map[string]interface{}{
+				names.AttrDomain: aws.ToString(v.Value.Domain),
+			},
+		}
+	case *awstypes.DataSourceParametersMemberAthenaParameters:
+		tfMap["athena"] = []interface{}{
+			map[string]interface{}{
+				"work_group": aws.ToString(v.Value.WorkGroup),
+			},
+		}
+	case *awstypes.DataSourceParametersMemberAuroraParameters:
+		tfMap["aurora"] = []interface{}{
+			map[string]interface{}{
+				names.AttrDatabase: aws.ToString(v.Value.Database),
+				"host":             aws.ToString(v.Value.Host),
+				names.AttrPort:     aws.ToInt32(v.Value.Port),
+			},
+		}
+	case *awstypes.DataSourceParametersMemberAuroraPostgreSqlParameters:
+		tfMap["aurora_postgresql"] = []interface{}{
+			map[string]interface{}{
+				names.AttrDatabase: aws.ToString(v.Value.Database),
+				"host":             aws.ToString(v.Value.Host),
+				names.AttrPort:     aws.ToInt32(v.Value.Port),
+			},
+		}
+	case *awstypes.DataSourceParametersMemberAwsIotAnalyticsParameters:
+		tfMap["aws_iot_analytics"] = []interface{}{
+			map[string]interface{}{
+				"data_set_name": aws.ToString(v.Value.DataSetName),
+			},
+		}
+	case *awstypes.DataSourceParametersMemberJiraParameters:
+		tfMap["jira"] = []interface{}{
+			map[string]interface{}{
+				"site_base_url": aws.ToString(v.Value.SiteBaseUrl),
+			},
+		}
+	case *awstypes.DataSourceParametersMemberMariaDbParameters:
+		tfMap["maria_db"] = []interface{}{
+			map[string]interface{}{
+				names.AttrDatabase: aws.ToString(v.Value.Database),
+				"host":             aws.ToString(v.Value.Host),
+				names.AttrPort:     aws.ToInt32(v.Value.Port),
+			},
+		}
+	case *awstypes.DataSourceParametersMemberMySqlParameters:
+		tfMap["mysql"] = []interface{}{
+			map[string]interface{}{
+				names.AttrDatabase: aws.ToString(v.Value.Database),
+				"host":             aws.ToString(v.Value.Host),
+				names.AttrPort:     aws.ToInt32(v.Value.Port),
+			},
+		}
+	case *awstypes.DataSourceParametersMemberOracleParameters:
+		tfMap["oracle"] = []interface{}{
+			map[string]interface{}{
+				names.AttrDatabase: aws.ToString(v.Value.Database),
+				"host":             aws.ToString(v.Value.Host),
+				names.AttrPort:     aws.ToInt32(v.Value.Port),
+			},
+		}
+	case *awstypes.DataSourceParametersMemberPostgreSqlParameters:
+		tfMap["postgresql"] = []interface{}{
+			map[string]interface{}{
+				names.AttrDatabase: aws.ToString(v.Value.Database),
+				"host":             aws.ToString(v.Value.Host),
+				names.AttrPort:     aws.ToInt32(v.Value.Port),
+			},
+		}
+	case *awstypes.DataSourceParametersMemberPrestoParameters:
+		tfMap["postgresql"] = []interface{}{
+			map[string]interface{}{
+				"catalog":      aws.ToString(v.Value.Catalog),
+				"host":         aws.ToString(v.Value.Host),
+				names.AttrPort: aws.ToInt32(v.Value.Port),
+			},
+		}
+	case *awstypes.DataSourceParametersMemberRdsParameters:
+		tfMap["rds"] = []interface{}{
+			map[string]interface{}{
+				names.AttrDatabase:   aws.ToString(v.Value.Database),
+				names.AttrInstanceID: aws.ToString(v.Value.InstanceId),
+			},
+		}
+	case *awstypes.DataSourceParametersMemberRedshiftParameters:
+		tfMap["redshift"] = []interface{}{
+			map[string]interface{}{
+				"cluster_id":       aws.ToString(v.Value.ClusterId),
+				names.AttrDatabase: aws.ToString(v.Value.Database),
+				"host":             aws.ToString(v.Value.Host),
+				names.AttrPort:     v.Value.Port,
+			},
+		}
+	case *awstypes.DataSourceParametersMemberS3Parameters:
+		tfMap["s3"] = []interface{}{
+			map[string]interface{}{
+				names.AttrBucket: aws.ToString(v.Value.ManifestFileLocation.Bucket),
+				names.AttrKey:    aws.ToString(v.Value.ManifestFileLocation.Key),
+			},
+		}
+	case *awstypes.DataSourceParametersMemberServiceNowParameters:
+		tfMap["service_now"] = []interface{}{
+			map[string]interface{}{
+				"site_base_url": aws.ToString(v.Value.SiteBaseUrl),
+			},
+		}
+	case *awstypes.DataSourceParametersMemberSnowflakeParameters:
+		tfMap["snowflake"] = []interface{}{
+			map[string]interface{}{
+				names.AttrDatabase: aws.ToString(v.Value.Database),
+				"host":             aws.ToString(v.Value.Host),
+				"warehouse":        aws.ToString(v.Value.Warehouse),
+			},
+		}
+	case *awstypes.DataSourceParametersMemberSparkParameters:
+		tfMap["snowflake"] = []interface{}{
+			map[string]interface{}{
+				"host":         aws.ToString(v.Value.Host),
+				names.AttrPort: aws.ToInt32(v.Value.Port),
+			},
+		}
+	case *awstypes.DataSourceParametersMemberSqlServerParameters:
+		tfMap["sql_server"] = []interface{}{
+			map[string]interface{}{
+				names.AttrDatabase: aws.ToString(v.Value.Database),
+				"host":             aws.ToString(v.Value.Host),
+				names.AttrPort:     v.Value.Port,
+			},
+		}
+	case *awstypes.DataSourceParametersMemberTeradataParameters:
+		tfMap["teradata"] = []interface{}{
+			map[string]interface{}{
+				names.AttrDatabase: aws.ToString(v.Value.Database),
+				"host":             aws.ToString(v.Value.Host),
+				names.AttrPort:     v.Value.Port,
+			},
+		}
+	case *awstypes.DataSourceParametersMemberTwitterParameters:
+		tfMap["teradata"] = []interface{}{
+			map[string]interface{}{
+				"max_rows": aws.ToInt32(v.Value.MaxRows),
+				"query":    aws.ToString(v.Value.Query),
+			},
+		}
+	default:
+		return nil
+	}
+
+	return []interface{}{tfMap}
+}
+
+func expandDataSourceSSLProperties(tfList []interface{}) *awstypes.SslProperties {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1263,308 +1494,56 @@ func expandDataSourceSSLProperties(tfList []interface{}) *quicksight.SslProperti
 		return nil
 	}
 
-	props := &quicksight.SslProperties{}
+	apiObject := &awstypes.SslProperties{}
 
 	if v, ok := tfMap["disable_ssl"].(bool); ok {
-		props.DisableSsl = aws.Bool(v)
+		apiObject.DisableSsl = v
 	}
 
-	return props
+	return apiObject
 }
 
-func expandDataSourceVPCConnectionProperties(tfList []interface{}) *quicksight.VpcConnectionProperties {
+func flattenSSLProperties(apiObject *awstypes.SslProperties) []interface{} {
+	if apiObject == nil {
+		return []interface{}{}
+	}
+
+	tfMap := map[string]interface{}{
+		"disable_ssl": apiObject.DisableSsl,
+	}
+
+	return []interface{}{tfMap}
+}
+
+func expandVPCConnectionProperties(tfList []interface{}) *awstypes.VpcConnectionProperties {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
 	tfMap, ok := tfList[0].(map[string]interface{})
-
 	if !ok {
 		return nil
 	}
 
-	props := &quicksight.VpcConnectionProperties{}
+	apiObject := &awstypes.VpcConnectionProperties{}
 
 	if v, ok := tfMap["vpc_connection_arn"].(string); ok && v != "" {
-		props.VpcConnectionArn = aws.String(v)
+		apiObject.VpcConnectionArn = aws.String(v)
 	}
 
-	return props
+	return apiObject
 }
 
-func flattenParameters(parameters *quicksight.DataSourceParameters) []interface{} {
-	if parameters == nil {
+func flattenVPCConnectionProperties(apiObject *awstypes.VpcConnectionProperties) []interface{} {
+	if apiObject == nil {
 		return []interface{}{}
 	}
 
-	var params []interface{}
+	tfMap := map[string]interface{}{}
 
-	if parameters.AmazonElasticsearchParameters != nil {
-		params = append(params, map[string]interface{}{
-			"amazon_elasticsearch": []interface{}{
-				map[string]interface{}{
-					names.AttrDomain: parameters.AmazonElasticsearchParameters.Domain,
-				},
-			},
-		})
+	if apiObject.VpcConnectionArn != nil {
+		tfMap["vpc_connection_arn"] = aws.ToString(apiObject.VpcConnectionArn)
 	}
 
-	if parameters.AthenaParameters != nil {
-		params = append(params, map[string]interface{}{
-			"athena": []interface{}{
-				map[string]interface{}{
-					"work_group": parameters.AthenaParameters.WorkGroup,
-				},
-			},
-		})
-	}
-
-	if parameters.AuroraParameters != nil {
-		params = append(params, map[string]interface{}{
-			"aurora": []interface{}{
-				map[string]interface{}{
-					names.AttrDatabase: parameters.AuroraParameters.Database,
-					"host":             parameters.AuroraParameters.Host,
-					names.AttrPort:     parameters.AuroraParameters.Port,
-				},
-			},
-		})
-	}
-
-	if parameters.AuroraPostgreSqlParameters != nil {
-		params = append(params, map[string]interface{}{
-			"aurora_postgresql": []interface{}{
-				map[string]interface{}{
-					names.AttrDatabase: parameters.AuroraPostgreSqlParameters.Database,
-					"host":             parameters.AuroraPostgreSqlParameters.Host,
-					names.AttrPort:     parameters.AuroraPostgreSqlParameters.Port,
-				},
-			},
-		})
-	}
-
-	if parameters.AwsIotAnalyticsParameters != nil {
-		params = append(params, map[string]interface{}{
-			"aws_iot_analytics": []interface{}{
-				map[string]interface{}{
-					"data_set_name": parameters.AwsIotAnalyticsParameters.DataSetName,
-				},
-			},
-		})
-	}
-
-	if parameters.JiraParameters != nil {
-		params = append(params, map[string]interface{}{
-			"jira": []interface{}{
-				map[string]interface{}{
-					"site_base_url": parameters.JiraParameters.SiteBaseUrl,
-				},
-			},
-		})
-	}
-
-	if parameters.MariaDbParameters != nil {
-		params = append(params, map[string]interface{}{
-			"maria_db": []interface{}{
-				map[string]interface{}{
-					names.AttrDatabase: parameters.MariaDbParameters.Database,
-					"host":             parameters.MariaDbParameters.Host,
-					names.AttrPort:     parameters.MariaDbParameters.Port,
-				},
-			},
-		})
-	}
-
-	if parameters.MySqlParameters != nil {
-		params = append(params, map[string]interface{}{
-			"mysql": []interface{}{
-				map[string]interface{}{
-					names.AttrDatabase: parameters.MySqlParameters.Database,
-					"host":             parameters.MySqlParameters.Host,
-					names.AttrPort:     parameters.MySqlParameters.Port,
-				},
-			},
-		})
-	}
-
-	if parameters.OracleParameters != nil {
-		params = append(params, map[string]interface{}{
-			"oracle": []interface{}{
-				map[string]interface{}{
-					names.AttrDatabase: parameters.OracleParameters.Database,
-					"host":             parameters.OracleParameters.Host,
-					names.AttrPort:     parameters.OracleParameters.Port,
-				},
-			},
-		})
-	}
-
-	if parameters.PostgreSqlParameters != nil {
-		params = append(params, map[string]interface{}{
-			"postgresql": []interface{}{
-				map[string]interface{}{
-					names.AttrDatabase: parameters.PostgreSqlParameters.Database,
-					"host":             parameters.PostgreSqlParameters.Host,
-					names.AttrPort:     parameters.PostgreSqlParameters.Port,
-				},
-			},
-		})
-	}
-
-	if parameters.PrestoParameters != nil {
-		params = append(params, map[string]interface{}{
-			"presto": []interface{}{
-				map[string]interface{}{
-					"catalog":      parameters.PrestoParameters.Catalog,
-					"host":         parameters.PrestoParameters.Host,
-					names.AttrPort: parameters.PrestoParameters.Port,
-				},
-			},
-		})
-	}
-
-	if parameters.RdsParameters != nil {
-		params = append(params, map[string]interface{}{
-			"rds": []interface{}{
-				map[string]interface{}{
-					names.AttrDatabase:   parameters.RdsParameters.Database,
-					names.AttrInstanceID: parameters.RdsParameters.InstanceId,
-				},
-			},
-		})
-	}
-
-	if parameters.RedshiftParameters != nil {
-		params = append(params, map[string]interface{}{
-			"redshift": []interface{}{
-				map[string]interface{}{
-					"cluster_id":       parameters.RedshiftParameters.ClusterId,
-					names.AttrDatabase: parameters.RedshiftParameters.Database,
-					"host":             parameters.RedshiftParameters.Host,
-					names.AttrPort:     parameters.RedshiftParameters.Port,
-				},
-			},
-		})
-	}
-
-	if parameters.S3Parameters != nil {
-		params = append(params, map[string]interface{}{
-			"s3": []interface{}{
-				map[string]interface{}{
-					"manifest_file_location": []interface{}{
-						map[string]interface{}{
-							names.AttrBucket: parameters.S3Parameters.ManifestFileLocation.Bucket,
-							names.AttrKey:    parameters.S3Parameters.ManifestFileLocation.Key,
-						},
-					},
-				},
-			},
-		})
-	}
-
-	if parameters.ServiceNowParameters != nil {
-		params = append(params, map[string]interface{}{
-			"service_now": []interface{}{
-				map[string]interface{}{
-					"site_base_url": parameters.ServiceNowParameters.SiteBaseUrl,
-				},
-			},
-		})
-	}
-
-	if parameters.SnowflakeParameters != nil {
-		params = append(params, map[string]interface{}{
-			"snowflake": []interface{}{
-				map[string]interface{}{
-					names.AttrDatabase: parameters.SnowflakeParameters.Database,
-					"host":             parameters.SnowflakeParameters.Host,
-					"warehouse":        parameters.SnowflakeParameters.Warehouse,
-				},
-			},
-		})
-	}
-
-	if parameters.SparkParameters != nil {
-		params = append(params, map[string]interface{}{
-			"spark": []interface{}{
-				map[string]interface{}{
-					"host":         parameters.SparkParameters.Host,
-					names.AttrPort: parameters.SparkParameters.Port,
-				},
-			},
-		})
-	}
-
-	if parameters.SqlServerParameters != nil {
-		params = append(params, map[string]interface{}{
-			"sql_server": []interface{}{
-				map[string]interface{}{
-					names.AttrDatabase: parameters.SqlServerParameters.Database,
-					"host":             parameters.SqlServerParameters.Host,
-					names.AttrPort:     parameters.SqlServerParameters.Port,
-				},
-			},
-		})
-	}
-
-	if parameters.TeradataParameters != nil {
-		params = append(params, map[string]interface{}{
-			"teradata": []interface{}{
-				map[string]interface{}{
-					names.AttrDatabase: parameters.TeradataParameters.Database,
-					"host":             parameters.TeradataParameters.Host,
-					names.AttrPort:     parameters.TeradataParameters.Port,
-				},
-			},
-		})
-	}
-
-	if parameters.TwitterParameters != nil {
-		params = append(params, map[string]interface{}{
-			"twitter": []interface{}{
-				map[string]interface{}{
-					"max_rows": parameters.TwitterParameters.MaxRows,
-					"query":    parameters.TwitterParameters.Query,
-				},
-			},
-		})
-	}
-
-	return params
-}
-
-func flattenSSLProperties(props *quicksight.SslProperties) []interface{} {
-	if props == nil {
-		return []interface{}{}
-	}
-
-	m := map[string]interface{}{}
-
-	if props.DisableSsl != nil {
-		m["disable_ssl"] = aws.BoolValue(props.DisableSsl)
-	}
-
-	return []interface{}{m}
-}
-
-func flattenVPCConnectionProperties(props *quicksight.VpcConnectionProperties) []interface{} {
-	if props == nil {
-		return []interface{}{}
-	}
-
-	m := map[string]interface{}{}
-
-	if props.VpcConnectionArn != nil {
-		m["vpc_connection_arn"] = aws.StringValue(props.VpcConnectionArn)
-	}
-
-	return []interface{}{m}
-}
-
-func ParseDataSourceID(id string) (string, string, error) {
-	parts := strings.SplitN(id, "/", 2)
-	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		return "", "", fmt.Errorf("unexpected format of ID (%s), expected AWS_ACCOUNT_ID/DATA_SOURCE_ID", id)
-	}
-	return parts[0], parts[1], nil
+	return []interface{}{tfMap}
 }
