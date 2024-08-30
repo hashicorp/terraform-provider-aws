@@ -615,31 +615,31 @@ func dataSourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.SetId(id)
 	d.Set(names.AttrARN, dataSet.Arn)
 	d.Set(names.AttrAWSAccountID, awsAccountID)
-	if err := d.Set("column_groups", flattenColumnGroups(dataSet.ColumnGroups)); err != nil {
+	if err := d.Set("column_groups", quicksightschema.FlattenColumnGroups(dataSet.ColumnGroups)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting column_groups: %s", err)
 	}
-	if err := d.Set("column_level_permission_rules", flattenColumnLevelPermissionRules(dataSet.ColumnLevelPermissionRules)); err != nil {
+	if err := d.Set("column_level_permission_rules", quicksightschema.FlattenColumnLevelPermissionRules(dataSet.ColumnLevelPermissionRules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting column_level_permission_rules: %s", err)
 	}
 	d.Set("data_set_id", dataSet.DataSetId)
-	if err := d.Set("data_set_usage_configuration", flattenDataSetUsageConfiguration(dataSet.DataSetUsageConfiguration)); err != nil {
+	if err := d.Set("data_set_usage_configuration", quicksightschema.FlattenDataSetUsageConfiguration(dataSet.DataSetUsageConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting data_set_usage_configuration: %s", err)
 	}
-	if err := d.Set("field_folders", flattenFieldFolders(dataSet.FieldFolders)); err != nil {
+	if err := d.Set("field_folders", quicksightschema.FlattenFieldFolders(dataSet.FieldFolders)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting field_folders: %s", err)
 	}
 	d.Set("import_mode", dataSet.ImportMode)
-	if err := d.Set("logical_table_map", flattenLogicalLogicalTableMap(dataSet.LogicalTableMap)); err != nil {
+	if err := d.Set("logical_table_map", quicksightschema.FlattenLogicalTableMap(dataSet.LogicalTableMap)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting logical_table_map: %s", err)
 	}
 	d.Set(names.AttrName, dataSet.Name)
-	if err := d.Set("physical_table_map", flattenPhysicalTableMap(dataSet.PhysicalTableMap)); err != nil {
+	if err := d.Set("physical_table_map", quicksightschema.FlattenPhysicalTableMap(dataSet.PhysicalTableMap)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting physical_table_map: %s", err)
 	}
-	if err := d.Set("row_level_permission_data_set", flattenRowLevelPermissionDataSet(dataSet.RowLevelPermissionDataSet)); err != nil {
+	if err := d.Set("row_level_permission_data_set", quicksightschema.FlattenRowLevelPermissionDataSet(dataSet.RowLevelPermissionDataSet)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting row_level_permission_data_set: %s", err)
 	}
-	if err := d.Set("row_level_permission_tag_configuration", flattenRowLevelPermissionTagConfiguration(dataSet.RowLevelPermissionTagConfiguration)); err != nil {
+	if err := d.Set("row_level_permission_tag_configuration", quicksightschema.FlattenRowLevelPermissionTagConfiguration(dataSet.RowLevelPermissionTagConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting row_level_permission_tag_configuration: %s", err)
 	}
 
