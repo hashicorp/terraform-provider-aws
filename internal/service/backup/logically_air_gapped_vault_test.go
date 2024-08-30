@@ -50,7 +50,7 @@ func TestAccBackupLAGVault_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
 			},
 		},
 	})
@@ -181,16 +181,6 @@ func testAccCheckLAGVaultExists(ctx context.Context, name string, logicallyairga
 		}
 
 		*logicallyairgappedvault = *resp
-
-		return nil
-	}
-}
-
-func testAccCheckLAGVaultNotRecreated(before, after *backup.DescribeBackupVaultOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.BackupVaultName), aws.ToString(after.BackupVaultName); before != after {
-			return create.Error(names.Backup, create.ErrActionCheckingNotRecreated, tfbackup.ResNameLogicallyAirGappedVault, before, errors.New("recreated"))
-		}
 
 		return nil
 	}

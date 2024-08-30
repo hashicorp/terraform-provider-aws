@@ -82,7 +82,7 @@ func (r *resourceLogicallyAirGappedVault) Schema(ctx context.Context, req resour
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
@@ -213,7 +213,7 @@ func (r *resourceLogicallyAirGappedVault) ModifyPlan(ctx context.Context, reques
 }
 
 func (r *resourceLogicallyAirGappedVault) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 type resourceLogicallyAirGappedVaultData struct {
