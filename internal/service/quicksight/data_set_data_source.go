@@ -6,12 +6,9 @@ package quicksight
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	quicksightschema "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight/schema"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -20,7 +17,7 @@ import (
 )
 
 // @SDKDataSource("aws_quicksight_data_set", name="Data Set")
-func DataSourceDataSet() *schema.Resource {
+func dataSourceDataSet() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDataSetRead,
 
@@ -596,70 +593,52 @@ func physicalTableMapDataSourceSchema() *schema.Resource {
 	}
 }
 
-const (
-	DSNameDataSet = "Data Set Data Source"
-)
-
 func dataSourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
+	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	awsAccountId := meta.(*conns.AWSClient).AccountID
+	awsAccountID := meta.(*conns.AWSClient).AccountID
 	if v, ok := d.GetOk(names.AttrAWSAccountID); ok {
-		awsAccountId = v.(string)
+		awsAccountID = v.(string)
 	}
-	dataSetId := d.Get("data_set_id").(string)
+	dataSetID := d.Get("data_set_id").(string)
+	id := dataSetCreateResourceID(awsAccountID, dataSetID)
 
-	descOpts := &quicksight.DescribeDataSetInput{
-		AwsAccountId: aws.String(awsAccountId),
-		DataSetId:    aws.String(dataSetId),
-	}
+	dataSet, err := findDataSetByTwoPartKey(ctx, conn, awsAccountID, dataSetID)
 
-	output, err := conn.DescribeDataSetWithContext(ctx, descOpts)
 	if err != nil {
-		return create.AppendDiagError(diags, names.QuickSight, create.ErrActionReading, DSNameDataSet, dataSetId, err)
+		return sdkdiag.AppendErrorf(diags, "reading QuickSight Data Set (%s): %s", id, err)
 	}
 
-	dataSet := output.DataSet
-
-	d.SetId(createDataSetID(awsAccountId, dataSetId))
-
+	d.SetId(id)
 	d.Set(names.AttrARN, dataSet.Arn)
-	d.Set(names.AttrAWSAccountID, awsAccountId)
-	d.Set("data_set_id", dataSet.DataSetId)
-	d.Set(names.AttrName, dataSet.Name)
-	d.Set("import_mode", dataSet.ImportMode)
-
+	d.Set(names.AttrAWSAccountID, awsAccountID)
 	if err := d.Set("column_groups", flattenColumnGroups(dataSet.ColumnGroups)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting column_groups: %s", err)
 	}
-
 	if err := d.Set("column_level_permission_rules", flattenColumnLevelPermissionRules(dataSet.ColumnLevelPermissionRules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting column_level_permission_rules: %s", err)
 	}
-
+	d.Set("data_set_id", dataSet.DataSetId)
 	if err := d.Set("data_set_usage_configuration", flattenDataSetUsageConfiguration(dataSet.DataSetUsageConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting data_set_usage_configuration: %s", err)
 	}
-
 	if err := d.Set("field_folders", flattenFieldFolders(dataSet.FieldFolders)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting field_folders: %s", err)
 	}
-
+	d.Set("import_mode", dataSet.ImportMode)
 	if err := d.Set("logical_table_map", flattenLogicalLogicalTableMap(dataSet.LogicalTableMap, logicalTableMapDataSourceSchema())); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting logical_table_map: %s", err)
 	}
-
+	d.Set(names.AttrName, dataSet.Name)
 	if err := d.Set("physical_table_map", flattenPhysicalTableMap(dataSet.PhysicalTableMap, physicalTableMapDataSourceSchema())); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting physical_table_map: %s", err)
 	}
-
 	if err := d.Set("row_level_permission_data_set", flattenRowLevelPermissionDataSet(dataSet.RowLevelPermissionDataSet)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting row_level_permission_data_set: %s", err)
 	}
-
 	if err := d.Set("row_level_permission_tag_configuration", flattenRowLevelPermissionTagConfiguration(dataSet.RowLevelPermissionTagConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting row_level_permission_tag_configuration: %s", err)
 	}
@@ -681,17 +660,15 @@ func dataSourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	permsResp, err := conn.DescribeDataSetPermissionsWithContext(ctx, &quicksight.DescribeDataSetPermissionsInput{
-		AwsAccountId: aws.String(awsAccountId),
-		DataSetId:    aws.String(dataSetId),
-	})
+	permissions, err := findDataSetPermissionsByTwoPartKey(ctx, conn, awsAccountID, dataSetID)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "describing QuickSight Data Source (%s) Permissions: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading QuickSight Data Set (%s) permissions: %s", d.Id(), err)
 	}
 
-	if err := d.Set(names.AttrPermissions, flattenPermissions(permsResp.Permissions)); err != nil {
+	if err := d.Set(names.AttrPermissions, quicksightschema.FlattenPermissions(permissions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting permissions: %s", err)
 	}
+
 	return diags
 }
