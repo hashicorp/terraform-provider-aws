@@ -215,12 +215,8 @@ func (sr ServiceRecord) EndpointOnly() bool {
 	return false // This should not happen
 }
 
-func (sr ServiceRecord) AllowedSubcategory() string {
-	if sr.service.AllowedSubcategory {
-		return "x"
-	} else {
-		return ""
-	}
+func (sr ServiceRecord) AllowedSubcategory() bool {
+	return sr.service.AllowedSubcategory
 }
 
 func (sr ServiceRecord) DeprecatedEnvVar() string {

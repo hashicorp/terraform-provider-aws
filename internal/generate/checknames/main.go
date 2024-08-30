@@ -122,7 +122,7 @@ func main() {
 			log.Fatalf("in service data, line %d, for service %s, Brand must be AWS, Amazon, or blank; found %s", l.HumanFriendly(), i, l.Brand())
 		}
 
-		if (!l.Exclude() || (l.Exclude() && l.AllowedSubcategory() != "")) && len(l.DocPrefix()) == 0 {
+		if (!l.Exclude() || (l.Exclude() && l.AllowedSubcategory())) && len(l.DocPrefix()) == 0 {
 			log.Fatalf("in service data, line %d, for service %s, DocPrefix cannot be blank unless Exclude is non-blank and AllowedSubcategory is blank", i+lineOffset, l.HumanFriendly())
 		}
 
@@ -143,7 +143,7 @@ func main() {
 		checkNotAllLowercase(i, l.HumanFriendly(), "GoV1ClientTypeName", l.GoV1ClientTypeName())
 		checkNotAllLowercase(i, l.HumanFriendly(), "HumanFriendly", l.HumanFriendly())
 
-		if !l.Exclude() && l.AllowedSubcategory() != "" {
+		if !l.Exclude() && l.AllowedSubcategory() {
 			log.Fatalf("in service data, line %d, for service %s, AllowedSubcategory can only be non-blank if Exclude is non-blank", i+lineOffset, l.HumanFriendly())
 		}
 
@@ -151,7 +151,7 @@ func main() {
 			log.Fatalf("in service data, line %d, for service %s, if Exclude is not blank, include a Note why", i+lineOffset, l.HumanFriendly())
 		}
 
-		if l.Exclude() && l.AllowedSubcategory() == "" {
+		if l.Exclude() && !l.AllowedSubcategory() {
 			continue
 		}
 
