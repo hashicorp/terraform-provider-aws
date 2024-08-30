@@ -73,7 +73,7 @@ func main() {
 		}
 
 		if l.ResourcePrefixCorrect() != "" && l.ResourcePrefixCorrect() != fmt.Sprintf("aws_%s_", l.ProviderPackageCorrect()) {
-			log.Fatalf("in service data, line %d, for service %s, ResourcePrefixCorrect should be aws_<package>_, where <package> is ProviderPackageCorrect", i+lineOffset, l.HumanFriendly())
+			log.Fatalf("in service data, line %d, for service %s, ResourcePrefixCorrect should be aws_<package>_, where <package> is ProviderPackage, had: prefix %q, package %q", i+lineOffset, l.HumanFriendly(), l.ResourcePrefixCorrect(), l.ProviderPackageCorrect())
 		}
 
 		packageToUse := l.ProviderPackage()
