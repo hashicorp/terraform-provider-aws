@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/tags"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -90,7 +89,7 @@ func (d *dataSourceInput) Schema(ctx context.Context, req datasource.SchemaReque
 				CustomType: fwtypes.StringEnumType[awstypes.InputState](),
 				Computed:   true,
 			},
-			names.AttrTags: tags.TagsAttributeComputedOnly(),
+			names.AttrTags: tftags.TagsAttributeComputedOnly(),
 			names.AttrType: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.InputType](),
 				Computed:   true,

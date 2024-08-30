@@ -25,7 +25,7 @@ type mapType struct {
 }
 
 var (
-	MapType mapType = newMapType()
+	MapType = newMapType()
 )
 
 func newMapType() mapType {
@@ -122,6 +122,7 @@ type Map struct {
 	basetypes.MapValue
 }
 
+// nolint: contextcheck // To match attr.Value interface
 func (v Map) Equal(o attr.Value) bool {
 	other, ok := o.(Map)
 	if !ok {
@@ -157,7 +158,7 @@ func (v Map) MapSemanticEquals(ctx context.Context, oValuable basetypes.MapValua
 	}
 
 	for k, v := range elements {
-		ov, _ := oElements[k]
+		ov := oElements[k]
 
 		if v.IsNull() {
 			if !ov.IsUnknown() && !ov.IsNull() {
