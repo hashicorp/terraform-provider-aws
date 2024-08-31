@@ -448,6 +448,44 @@ func TestAccQuickSightDataSet_refreshProperties(t *testing.T) {
 	})
 }
 
+func TestAccQuickSightDataSet_inputColumnSubType(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dataSet quicksight.DataSet
+	resourceName := "aws_quicksight_data_set.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataSetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSetConfigInputColumnSubType(rId, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSetExists(ctx, resourceName, &dataSet),
+					resource.TestCheckResourceAttr(resourceName, "data_set_id", rId),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "quicksight", fmt.Sprintf("dataset/%s", rId)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "import_mode", "SPICE"),
+					resource.TestCheckResourceAttr(resourceName, "physical_table_map.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "physical_table_map.0.s3_source.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "physical_table_map.0.s3_source.0.input_columns.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "physical_table_map.0.s3_source.0.input_columns.0.name", "Column1"),
+					resource.TestCheckResourceAttr(resourceName, "physical_table_map.0.s3_source.0.input_columns.0.type", "DECIMAL"),
+					resource.TestCheckResourceAttr(resourceName, "physical_table_map.0.s3_source.0.input_columns.0.sub_type", "FLOAT"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccQuickSightDataSet_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dataSet quicksight.DataSet
@@ -1092,6 +1130,33 @@ resource "aws_quicksight_data_set" "test" {
           size        = 1
           size_unit   = "DAY"
         }
+      }
+    }
+  }
+}
+`, rId, rName))
+}
+
+func testAccDataSetConfigInputColumnSubType(rId, rName string) string {
+	return acctest.ConfigCompose(
+		testAccDataSetConfigBase(rId, rName),
+		fmt.Sprintf(`
+resource "aws_quicksight_data_set" "test" {
+  data_set_id = %[1]q
+  name        = %[2]q
+  import_mode = "SPICE"
+
+  physical_table_map {
+    physical_table_map_id = %[1]q
+    s3_source {
+      data_source_arn = aws_quicksight_data_source.test.arn
+      input_columns {
+        name     = "Column1"
+        type     = "DECIMAL"
+        sub_type = "FLOAT"
+      }
+      upload_settings {
+        format = "JSON"
       }
     }
   }

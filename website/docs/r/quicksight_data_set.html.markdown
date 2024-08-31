@@ -203,6 +203,7 @@ For a `physical_table_map` item to be valid, only one of `custom_sql`, `relation
 
 * `name` - (Required) Name of this column in the underlying data source.
 * `type` - (Required) Data type of the column.
+* `sub_type` - (Optional) Sub data type of the column. Only available for decimal columns that are part of a SPICE dataset. Valid values are `FLOAT` or `FIXED`
 
 ### relational_table
 
@@ -216,6 +217,7 @@ For a `physical_table_map` item to be valid, only one of `custom_sql`, `relation
 
 * `name` - (Required) Name of this column in the underlying data source.
 * `type` - (Required) Data type of the column.
+* `sub_type` - (Optional) Sub data type of the column. Only available for decimal columns that are part of a SPICE dataset. Valid values are `FLOAT` or `FIXED`
 
 ### s3_source
 

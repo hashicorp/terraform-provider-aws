@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_quicksight_data_set: Add `sub_type` argument in `columns`
+```
+
+```release-note:enhancement
+resource/aws_quicksight_data_set: Add `sub_type` argument in `input_columns`
+```

@@ -688,6 +688,11 @@ func physicalTableMapSchema() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validation.StringInSlice(quicksight.InputColumnDataType_Values(), false),
 									},
+									"sub_type": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice(quicksight.ColumnDataSubType_Values(), false),
+									},
 								},
 							},
 						},
@@ -746,6 +751,11 @@ func physicalTableMapSchema() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validation.StringInSlice(quicksight.InputColumnDataType_Values(), false),
 									},
+									"sub_type": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice(quicksight.ColumnDataSubType_Values(), false),
+									},
 								},
 							},
 						},
@@ -789,6 +799,11 @@ func physicalTableMapSchema() *schema.Resource {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringInSlice(quicksight.InputColumnDataType_Values(), false),
+									},
+									"sub_type": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice(quicksight.ColumnDataSubType_Values(), false),
 									},
 								},
 							},
@@ -1743,6 +1758,9 @@ func expandDataSetInputColumn(tfMap map[string]interface{}) *quicksight.InputCol
 	if v, ok := tfMap[names.AttrType].(string); ok {
 		inputColumn.Type = aws.String(v)
 	}
+	if v, ok := tfMap["sub_type"].(string); ok {
+		inputColumn.SubType = aws.String(v)
+	}
 
 	return inputColumn
 }
@@ -2496,6 +2514,9 @@ func flattenInputColumns(apiObject []*quicksight.InputColumn) []interface{} {
 		}
 		if column.Type != nil {
 			tfMap[names.AttrType] = aws.StringValue(column.Type)
+		}
+		if column.SubType != nil {
+			tfMap["sub_type"] = aws.StringValue(column.SubType)
 		}
 		tfList = append(tfList, tfMap)
 	}
