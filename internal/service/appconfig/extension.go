@@ -70,7 +70,8 @@ func ResourceExtension() *schema.Resource {
 										Required: true,
 									},
 									names.AttrRoleARN: {
-										Type: schema.TypeString,
+										Type:     schema.TypeString,
+										Optional: true,
 									},
 									names.AttrURI: {
 										Type:     schema.TypeString,
