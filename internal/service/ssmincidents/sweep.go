@@ -47,9 +47,7 @@ func sweepReplicationSets(region string) error {
 			return fmt.Errorf("error retrieving SSMIncidents Replication Sets: %w", err)
 		}
 
-		for _, rs := range page.ReplicationSetArns {
-			id := rs
-
+		for _, id := range page.ReplicationSetArns {
 			r := ResourceReplicationSet()
 			d := r.Data(nil)
 			d.SetId(id)

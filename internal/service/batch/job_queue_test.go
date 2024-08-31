@@ -47,11 +47,12 @@ func TestAccBatchJobQueue_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobQueueConfig_state(rName, string(awstypes.JQStateEnabled)),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "batch", fmt.Sprintf("job-queue/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "compute_environments.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "compute_environments.0", "aws_batch_compute_environment.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "job_state_time_limit_action.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.JQStateEnabled)),
@@ -403,6 +404,41 @@ func TestAccBatchJobQueue_state(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccBatchJobQueue_jobStateTimeLimitActionsMultiple(t *testing.T) {
+	ctx := acctest.Context(t)
+	var jobQueue1 awstypes.JobQueueDetail
+	resourceName := "aws_batch_job_queue.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckJobQueueDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccJobQueueConfig_jobStateTimeLimitAction(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
+					resource.TestCheckResourceAttr(resourceName, "job_state_time_limit_action.#", acctest.Ct2),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccJobQueueConfig_jobStateTimeLimitActionUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
+					resource.TestCheckResourceAttr(resourceName, "job_state_time_limit_action.#", acctest.Ct2),
+				),
 			},
 		},
 	})
@@ -804,4 +840,54 @@ resource "aws_batch_compute_environment" "more" {
   depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName, state))
+}
+
+func testAccJobQueueConfig_jobStateTimeLimitAction(rName string) string {
+	return acctest.ConfigCompose(
+		testAccJobQueueConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_batch_job_queue" "test" {
+  compute_environments = [aws_batch_compute_environment.test.arn]
+  name                 = %[1]q
+  priority             = 1
+  state                = "DISABLED"
+  job_state_time_limit_action {
+    action           = "CANCEL"
+    max_time_seconds = 600
+    reason           = "MISCONFIGURATION:JOB_RESOURCE_REQUIREMENT"
+    state            = "RUNNABLE"
+  }
+  job_state_time_limit_action {
+    action           = "CANCEL"
+    max_time_seconds = 605
+    reason           = "CAPACITY:INSUFFICIENT_INSTANCE_CAPACITY"
+    state            = "RUNNABLE"
+  }
+}
+`, rName))
+}
+
+func testAccJobQueueConfig_jobStateTimeLimitActionUpdated(rName string) string {
+	return acctest.ConfigCompose(
+		testAccJobQueueConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_batch_job_queue" "test" {
+  compute_environments = [aws_batch_compute_environment.test.arn]
+  name                 = %[1]q
+  priority             = 1
+  state                = "DISABLED"
+  job_state_time_limit_action {
+    action           = "CANCEL"
+    max_time_seconds = 610
+    reason           = "MISCONFIGURATION:JOB_RESOURCE_REQUIREMENT"
+    state            = "RUNNABLE"
+  }
+  job_state_time_limit_action {
+    action           = "CANCEL"
+    max_time_seconds = 605
+    reason           = "MISCONFIGURATION:COMPUTE_ENVIRONMENT_MAX_RESOURCE"
+    state            = "RUNNABLE"
+  }
+}
+`, rName))
 }

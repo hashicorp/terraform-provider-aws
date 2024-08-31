@@ -203,7 +203,7 @@ docs-link-check: ## [CI] Documentation Checks / markdown-link-check
 	@echo "make: Documentation Checks / markdown-link-check..."
 	@docker run --rm \
 		-v "$(PWD):/markdown" \
-		ghcr.io/yakdriver/md-check-links:2.1.0 \
+		ghcr.io/yakdriver/md-check-links:2.2.0 \
 		--config /markdown/.ci/.markdownlinkcheck.json \
 		--verbose yes \
 		--quiet yes \
@@ -308,18 +308,24 @@ go-misspell: ## [CI] Provider Checks / misspell
 	@echo "make: Provider Checks / misspell..."
 	@misspell -error -source auto -i "littel,ceasar" internal/
 
-golangci-lint: golangci-lint1 golangci-lint2 ## [CI] All golangci-lint Checks
+golangci-lint: golangci-lint1 golangci-lint2 golangci-lint3 ## [CI] All golangci-lint Checks
 
-golangci-lint1: ## [CI] golangci-lint Checks / 1 of 2
-	@echo "make: golangci-lint Checks / 1 of 2..."
+golangci-lint1: ## [CI] golangci-lint Checks / 1 of 3
+	@echo "make: golangci-lint Checks / 1 of 3..."
 	@golangci-lint run \
 		--config .ci/.golangci.yml \
 		$(TEST)
 
-golangci-lint2: ## [CI] golangci-lint Checks / 2 of 2
-	@echo "make: golangci-lint Checks / 2 of 2..."
+golangci-lint2: ## [CI] golangci-lint Checks / 2 of 3
+	@echo "make: golangci-lint Checks / 2 of 3..."
 	@golangci-lint run \
 		--config .ci/.golangci2.yml \
+		$(TEST)
+
+golangci-lint3: ## [CI] golangci-lint Checks / 3 of 3
+	@echo "make: golangci-lint Checks / 3 of 3..."
+	@golangci-lint run \
+		--config .ci/.golangci3.yml \
 		$(TEST)
 
 help: ## Display this help
@@ -706,7 +712,7 @@ website-link-check-markdown: ## [CI] Website Checks / markdown-link-check-a-z-ma
 	@echo "make: Website Checks / markdown-link-check-a-z-markdown..."
 	@docker run --rm \
 		-v "$(PWD):/markdown" \
-		ghcr.io/yakdriver/md-check-links:2.1.0 \
+		ghcr.io/yakdriver/md-check-links:2.2.0 \
 		--config /markdown/.ci/.markdownlinkcheck.json \
 		--verbose yes \
 		--quiet yes \
@@ -718,7 +724,7 @@ website-link-check-md: ## [CI] Website Checks / markdown-link-check-md
 	@echo "make: Website Checks / markdown-link-check-md..."
 	@docker run --rm \
 		-v "$(PWD):/markdown" \
-		ghcr.io/yakdriver/md-check-links:2.1.0 \
+		ghcr.io/yakdriver/md-check-links:2.2.0 \
 		--config /markdown/.ci/.markdownlinkcheck.json \
 		--verbose yes \
 		--quiet yes \

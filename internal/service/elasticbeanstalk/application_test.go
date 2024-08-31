@@ -258,10 +258,6 @@ func testAccCheckApplicationExists(ctx context.Context, n string, v *awstypes.Ap
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Elastic Beanstalk Application ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkClient(ctx)
 
 		output, err := tfelasticbeanstalk.FindApplicationByName(ctx, conn, rs.Primary.ID)

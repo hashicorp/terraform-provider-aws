@@ -9,5 +9,5 @@ import (
 
 func TestAWSAT002(t *testing.T) {
 	testdata := analysistest.TestData()
-	analysistest.Run(t, testdata, AWSAT002.Analyzer, "a")
+	analysistest.Run(t, testdata, AWSAT002.Analyzer, "testdata/src/a")
 }
