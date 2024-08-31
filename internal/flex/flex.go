@@ -128,6 +128,12 @@ func FlattenTimeStringList(list []*time.Time, format string) []interface{} {
 	return vs
 }
 
+func FlattenTimeStringValueList(list []time.Time, format string) []interface{} {
+	return tfslices.ApplyToAll(list, func(v time.Time) any {
+		return v.Format(format)
+	})
+}
+
 // Takes list of strings. Expand to an array
 // of raw strings and returns a []interface{}
 // to keep compatibility w/ schema.NewSetschema.NewSet
