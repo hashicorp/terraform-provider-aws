@@ -49,7 +49,7 @@ func TestAccRolesAnywhereProfile_basic(t *testing.T) {
 	})
 }
 
-func TestAccRolesAnywhereProfile_noRoleArns(t *testing.T) {
+func TestAccRolesAnywhereProfile_noRoleARNs(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	roleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -62,7 +62,7 @@ func TestAccRolesAnywhereProfile_noRoleArns(t *testing.T) {
 		CheckDestroy:             testAccCheckProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProfileConfig_noRoleArns(rName),
+				Config: testAccProfileConfig_noRoleARNs(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProfileExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -284,7 +284,7 @@ resource "aws_rolesanywhere_profile" "test" {
 `, rName))
 }
 
-func testAccProfileConfig_noRoleArns(rName string) string {
+func testAccProfileConfig_noRoleARNs(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_rolesanywhere_profile" "test" {
   name = %[1]q
