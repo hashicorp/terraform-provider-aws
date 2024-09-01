@@ -834,7 +834,7 @@ func expandNumericRangeFilter(tfList []interface{}) *awstypes.NumericRangeFilter
 		apiObject.NullOption = awstypes.FilterNullOption(v)
 	}
 	if v, ok := tfMap["select_all_options"].(string); ok && v != "" {
-		apiObject.SelectAllOptions = aws.String(v)
+		apiObject.SelectAllOptions = awstypes.NumericFilterSelectAllOptions(v)
 	}
 	if v, ok := tfMap["aggregation_function"].([]interface{}); ok && len(v) > 0 {
 		apiObject.AggregationFunction = expandAggregationFunction(v)
@@ -1123,7 +1123,7 @@ func expandAggregationSortConfigurations(tfList []interface{}) []awstypes.Aggreg
 			continue
 		}
 
-		apiObjects = append(apiObjects, apiObject)
+		apiObjects = append(apiObjects, *apiObject)
 	}
 
 	return apiObjects

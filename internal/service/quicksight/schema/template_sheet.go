@@ -107,7 +107,7 @@ func interactiveLayoutConfigurationSchema() *schema.Schema {
 														Type:     schema.TypeString,
 														Optional: true,
 													},
-													"resize_option": stringSchema(true, enum.Validate[awstypes]()),
+													"resize_option": stringSchema(true, enum.Validate[awstypes.ResizeOption]()),
 												},
 											},
 										},
