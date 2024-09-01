@@ -141,7 +141,7 @@ func resourceTrustAnchor() *schema.Resource {
 	}
 }
 
-// The AWS API returns two default entries within notificationSettings. These entries are overwritten based on the notifications settings event when a user defines a notification setting with the same event type.
+// The AWS API returns two default entries for notification_settings. These entries are overwritten based on if a user defines a notification setting with the same event type.
 // Since notification settings cannot be updated, we need to force a resource recreation when they change, while at the same time allowing computed values.
 // Because both computed and user-defined arguments need to be supported, a custom diff function is required to handle this.
 // The function checks the diff, and if the difference is due to computed value change, the diff is suppressed based on the configuredBy attribute.
