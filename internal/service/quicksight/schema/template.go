@@ -115,12 +115,19 @@ func TemplateDefinitionSchema() *schema.Schema {
 	}
 }
 
-func stringOptionalComputedSchema(validateFunc schema.SchemaValidateFunc) *schema.Schema {
-	return &schema.Schema{
-		Type:         schema.TypeString,
-		Optional:     true,
-		Computed:     true,
-		ValidateFunc: validateFunc,
+func stringOptionalComputedSchema(validateFunc any) *schema.Schema {
+	switch v := validateFunc.(type) {
+	case schema.SchemaValidateDiagFunc:
+		return &schema.Schema{
+			Type:             schema.TypeString,
+			Optional:         true,
+			Computed:         true,
+			ValidateDiagFunc: v,
+		}
+	case schema.SchemaValidateFunc:
+		return stringOptionalComputedSchema(validation.ToDiagFunc(v))
+	default:
+		panic(fmt.Sprintf("unsupported validateFunc type: %T", v))
 	}
 }
 
