@@ -334,7 +334,7 @@ func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			_, err = conn.PutDataSetRefreshProperties(ctx, input)
 
 			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "putting QuickSight Data Set (%s) refresh properties (%s): %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "putting QuickSight Data Set (%s) refresh properties: %s", d.Id(), err)
 			}
 		}
 	}

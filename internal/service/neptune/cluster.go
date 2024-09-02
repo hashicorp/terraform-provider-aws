@@ -27,6 +27,7 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -201,7 +202,7 @@ func resourceCluster() *schema.Resource {
 			"neptune_cluster_parameter_group_name": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "default.neptune1",
+				Computed: true,
 			},
 			"neptune_instance_parameter_group_name": {
 				Type:     schema.TypeString,
@@ -480,7 +481,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.SetId(clusterID)
 
-	if _, err = waitDBClusterAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err = waitDBClusterAvailable(ctx, conn, d.Id(), false, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Neptune Cluster (%s) create: %s", d.Id(), err)
 	}
 
@@ -501,7 +502,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			return sdkdiag.AppendErrorf(diags, "modifying Neptune Cluster (%s): %s", d.Id(), err)
 		}
 
-		if _, err = waitDBClusterAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		if _, err = waitDBClusterAvailable(ctx, conn, d.Id(), true, d.Timeout(schema.TimeoutCreate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Neptune Cluster (%s) update: %s", d.Id(), err)
 		}
 	}
@@ -691,7 +692,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			return sdkdiag.AppendErrorf(diags, "modifying Neptune Cluster (%s): %s", d.Id(), err)
 		}
 
-		if _, err = waitDBClusterAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err = waitDBClusterAvailable(ctx, conn, d.Id(), true, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Neptune Cluster (%s) update: %s", d.Id(), err)
 		}
 	}
@@ -903,7 +904,7 @@ func findDBClusters(ctx context.Context, conn *neptune.Client, input *neptune.De
 	return output, nil
 }
 
-func statusDBCluster(ctx context.Context, conn *neptune.Client, id string) retry.StateRefreshFunc {
+func statusDBCluster(ctx context.Context, conn *neptune.Client, id string, waitNoPendingModifiedValues bool) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findDBClusterByID(ctx, conn, id)
 
@@ -915,23 +916,34 @@ func statusDBCluster(ctx context.Context, conn *neptune.Client, id string) retry
 			return nil, "", err
 		}
 
-		return output, aws.ToString(output.Status), nil
+		status := aws.ToString(output.Status)
+
+		if status == clusterStatusAvailable && waitNoPendingModifiedValues && !itypes.IsZero(output.PendingModifiedValues) {
+			status = clusterStatusAvailableWithPendingModifiedValues
+		}
+
+		return output, status, nil
 	}
 }
 
-func waitDBClusterAvailable(ctx context.Context, conn *neptune.Client, id string, timeout time.Duration) (*awstypes.DBCluster, error) { //nolint:unparam
+func waitDBClusterAvailable(ctx context.Context, conn *neptune.Client, id string, waitNoPendingModifiedValues bool, timeout time.Duration) (*awstypes.DBCluster, error) { //nolint:unparam
+	pendingStatuses := []string{
+		clusterStatusCreating,
+		clusterStatusBackingUp,
+		clusterStatusModifying,
+		clusterStatusPreparingDataMigration,
+		clusterStatusMigrating,
+		clusterStatusConfiguringIAMDatabaseAuth,
+		clusterStatusUpgrading,
+	}
+	if waitNoPendingModifiedValues {
+		pendingStatuses = append(pendingStatuses, clusterStatusAvailableWithPendingModifiedValues)
+	}
+
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{
-			clusterStatusCreating,
-			clusterStatusBackingUp,
-			clusterStatusModifying,
-			clusterStatusPreparingDataMigration,
-			clusterStatusMigrating,
-			clusterStatusConfiguringIAMDatabaseAuth,
-			clusterStatusUpgrading,
-		},
+		Pending:    pendingStatuses,
 		Target:     []string{clusterStatusAvailable},
-		Refresh:    statusDBCluster(ctx, conn, id),
+		Refresh:    statusDBCluster(ctx, conn, id, waitNoPendingModifiedValues),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -955,7 +967,7 @@ func waitDBClusterDeleted(ctx context.Context, conn *neptune.Client, id string, 
 			clusterStatusModifying,
 		},
 		Target:     []string{},
-		Refresh:    statusDBCluster(ctx, conn, id),
+		Refresh:    statusDBCluster(ctx, conn, id, false),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,

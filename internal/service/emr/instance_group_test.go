@@ -33,11 +33,12 @@ func TestAccEMRInstanceGroup_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceGroupConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "autoscaling_policy", ""),
 					resource.TestCheckResourceAttr(resourceName, "bid_price", ""),
 					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceCount, acctest.Ct1),
 				),
 			},
 			{
@@ -258,8 +259,8 @@ func TestAccEMRInstanceGroup_autoScalingPolicy(t *testing.T) {
 }
 
 // Confirm we can scale down the instance count.
-// Regression test for https://github.com/hashicorp/terraform-provider-aws/issues/1264
-func TestAccEMRInstanceGroup_instanceCount(t *testing.T) {
+// See https://github.com/hashicorp/terraform-provider-aws/issues/1264.
+func TestAccEMRInstanceGroup_instanceCountDecrease(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.InstanceGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -272,8 +273,11 @@ func TestAccEMRInstanceGroup_instanceCount(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceGroupConfig_basic(rName),
-				Check:  testAccCheckInstanceGroupExists(ctx, resourceName, &v),
+				Config: testAccInstanceGroupConfig_instanceCount(rName, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceGroupExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceCount, acctest.Ct2),
+				),
 			},
 			{
 				ResourceName:            resourceName,
@@ -283,8 +287,43 @@ func TestAccEMRInstanceGroup_instanceCount(t *testing.T) {
 				ImportStateVerifyIgnore: []string{names.AttrStatus},
 			},
 			{
-				Config: testAccInstanceGroupConfig_zeroCount(rName),
-				Check:  testAccCheckInstanceGroupExists(ctx, resourceName, &v),
+				Config: testAccInstanceGroupConfig_instanceCount(rName, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceGroupExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceCount, acctest.Ct0),
+				),
+			},
+		},
+	})
+}
+
+// Confirm we can create with a 0 instance count.
+// See https://github.com/hashicorp/terraform-provider-aws/issues/38837.
+func TestAccEMRInstanceGroup_instanceCountCreateZero(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.InstanceGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_emr_instance_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceGroupConfig_instanceCount(rName, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceGroupExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceCount, acctest.Ct0),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccInstanceGroupResourceImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrStatus},
 			},
 		},
 	})
@@ -518,12 +557,12 @@ resource "aws_emr_instance_group" "test" {
 `, o))
 }
 
-func testAccInstanceGroupConfig_zeroCount(rName string) string {
-	return acctest.ConfigCompose(testAccInstanceGroupConfig_base(rName), `
+func testAccInstanceGroupConfig_instanceCount(rName string, count int) string {
+	return acctest.ConfigCompose(testAccInstanceGroupConfig_base(rName), fmt.Sprintf(`
 resource "aws_emr_instance_group" "test" {
   cluster_id     = aws_emr_cluster.test.id
-  instance_count = 0
+  instance_count = %[1]d
   instance_type  = "c4.large"
 }
-`)
+`, count))
 }

@@ -30,13 +30,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Refresh Schedule")
+// @FrameworkResource("aws_quicksight_refresh_schedule", name="Refresh Schedule")
 func newRefreshScheduleResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &refreshScheduleResource{}, nil
 }
@@ -437,45 +438,53 @@ func (r *refreshScheduleResource) Delete(ctx context.Context, req resource.Delet
 }
 
 func (r *refreshScheduleResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
-	var state resourceRefreshScheduleData
-	resp.Diagnostics.Append(req.Config.Get(ctx, &state)...)
+	scheduleFrequencyPath := path.Root(names.AttrSchedule).AtListIndex(0).AtName("schedule_frequency").AtListIndex(0)
+
+	var scheduleFrequency refreshFrequencyData
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, scheduleFrequencyPath, &scheduleFrequency)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	apiObj, d := expandSchedule(ctx, "N/A", state)
-	resp.Diagnostics.Append(d...)
+	if scheduleFrequency.Interval.IsUnknown() {
+		// Field is required, if it's unknown, the value is likely coming from a dynamic block and
+		// ValidateConfig will be called again later with the actual value.
+		return
+	}
+
+	refreshOnDayPath := scheduleFrequencyPath.AtName("refresh_on_day")
+
+	var refreshOnDay []refreshOnDayData
+	resp.Diagnostics.Append(scheduleFrequency.RefreshOnDay.ElementsAs(ctx, &refreshOnDay, false)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	basePath := path.Root(names.AttrSchedule).AtName("schedule_frequency").AtName("refresh_on_day")
-
-	switch apiObj.ScheduleFrequency.Interval {
-	case awstypes.RefreshIntervalWeekly:
-		if apiObj.ScheduleFrequency.RefreshOnDay == nil || apiObj.ScheduleFrequency.RefreshOnDay.DayOfWeek == "" {
-			resp.Diagnostics.AddAttributeError(
-				basePath.AtName("day_of_week"),
-				"Invalid Attribute Configuration",
-				"day_of_week is required with WEEKLY interval",
-			)
+	switch interval := scheduleFrequency.Interval.ValueString(); interval {
+	case string(awstypes.RefreshIntervalWeekly):
+		if len(refreshOnDay) == 0 || refreshOnDay[0].DayOfWeek.IsNull() {
+			resp.Diagnostics.Append(fwdiag.NewAttributeRequiredWhenError(
+				refreshOnDayPath.AtListIndex(0).AtName("day_of_week"),
+				scheduleFrequencyPath.AtName(names.AttrInterval),
+				interval,
+			))
 		}
-	case awstypes.RefreshIntervalMonthly:
-		if apiObj.ScheduleFrequency.RefreshOnDay == nil || apiObj.ScheduleFrequency.RefreshOnDay.DayOfMonth == nil {
-			resp.Diagnostics.AddAttributeError(
-				basePath.AtName("day_of_month"),
-				"Invalid Attribute Configuration",
-				"day_of_month is required with MONTHLY interval",
-			)
+	case string(awstypes.RefreshIntervalMonthly):
+		if len(refreshOnDay) == 0 || refreshOnDay[0].DayOfMonth.IsNull() {
+			resp.Diagnostics.Append(fwdiag.NewAttributeRequiredWhenError(
+				refreshOnDayPath.AtListIndex(0).AtName("day_of_month"),
+				scheduleFrequencyPath.AtName(names.AttrInterval),
+				interval,
+			))
 		}
 
 	default:
-		if apiObj.ScheduleFrequency.RefreshOnDay != nil {
-			resp.Diagnostics.AddAttributeError(
-				basePath,
-				"Invalid Attribute Configuration",
-				"refresh_on_day is only valid with WEEKLY or MONTHLY interval",
-			)
+		if len(refreshOnDay) != 0 {
+			resp.Diagnostics.Append(fwdiag.NewAttributeConflictsWhenError(
+				refreshOnDayPath,
+				scheduleFrequencyPath.AtName(names.AttrInterval),
+				interval,
+			))
 		}
 	}
 }
