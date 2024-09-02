@@ -362,8 +362,8 @@ func flattenBarChartFieldWells(apiObject *awstypes.BarChartFieldWells) []interfa
 	}
 
 	tfMap := map[string]interface{}{}
-	if apiObject.BarChartAggregatedFieldWells != nil {
 
+	if apiObject.BarChartAggregatedFieldWells != nil {
 		tfMap["bar_chart_aggregated_field_wells"] = flattenBarChartAggregatedFieldWells(apiObject.BarChartAggregatedFieldWells)
 	}
 
