@@ -142,6 +142,8 @@ func stringSchema(required bool, validateFunc any) *schema.Schema {
 		}
 	case schema.SchemaValidateFunc:
 		return stringSchema(required, validation.ToDiagFunc(v))
+	case func(interface{}, string) ([]string, []error):
+		return stringSchema(required, schema.SchemaValidateFunc(v))
 	default:
 		panic(fmt.Sprintf("unsupported validateFunc type: %T", v))
 	}
@@ -158,6 +160,8 @@ func intSchema(required bool, validateFunc any) *schema.Schema {
 		}
 	case schema.SchemaValidateFunc:
 		return intSchema(required, validation.ToDiagFunc(v))
+	case func(interface{}, string) ([]string, []error):
+		return intSchema(required, schema.SchemaValidateFunc(v))
 	default:
 		panic(fmt.Sprintf("unsupported validateFunc type: %T", v))
 	}
@@ -174,6 +178,8 @@ func floatSchema(required bool, validateFunc any) *schema.Schema {
 		}
 	case schema.SchemaValidateFunc:
 		return floatSchema(required, validation.ToDiagFunc(v))
+	case func(interface{}, string) ([]string, []error):
+		return floatSchema(required, schema.SchemaValidateFunc(v))
 	default:
 		panic(fmt.Sprintf("unsupported validateFunc type: %T", v))
 	}
