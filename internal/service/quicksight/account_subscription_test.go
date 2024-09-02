@@ -5,7 +5,6 @@ package quicksight_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -17,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -115,19 +113,22 @@ func testAccCheckAccountSubscriptionDisableTerminationProtection(ctx context.Con
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.QuickSight, create.ErrActionCheckingExistence, tfquicksight.ResNameAccountSubscription, n, errors.New("not found"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightClient(ctx)
+
 		defaultNs := "default"
-		_, err := conn.UpdateAccountSettings(ctx, &quicksight.UpdateAccountSettingsInput{
+		input := &quicksight.UpdateAccountSettingsInput{
 			AwsAccountId:                 aws.String(rs.Primary.ID),
 			DefaultNamespace:             aws.String(defaultNs),
 			TerminationProtectionEnabled: false,
-		})
+		}
+
+		_, err := conn.UpdateAccountSettings(ctx, input)
 
 		if err != nil {
-			return create.Error(names.QuickSight, "setting termination protection to false", tfquicksight.ResNameAccountSubscription, rs.Primary.ID, err)
+			return err
 		}
 
 		return nil
@@ -138,7 +139,7 @@ func testAccCheckAccountSubscriptionExists(ctx context.Context, n string, v *aws
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.QuickSight, create.ErrActionCheckingExistence, tfquicksight.ResNameAccountSubscription, n, errors.New("not found"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightClient(ctx)
