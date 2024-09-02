@@ -6844,6 +6844,31 @@ service "pcaconnectorad" {
   brand                    = "AWS"
 }
 
+service "pcs" {
+
+  sdk {
+    id             = "PCS"
+    client_version = [2]
+  }
+
+  names {
+    provider_name_upper = "PCS"
+    human_friendly      = "Parallel Computing Service"
+  }
+
+  endpoint_info {
+    endpoint_api_call        = "ListClusters"
+  }
+
+  resource_prefix {
+    correct = "aws_pcs_"
+  }
+
+  provider_package_correct = "pcs"
+  doc_prefix               = ["pcs_"]
+  brand                    = "AWS"
+}
+
 service "personalize" {
 
   sdk {
