@@ -127,11 +127,7 @@ func testAccCheckAccountSubscriptionDisableTerminationProtection(ctx context.Con
 
 		_, err := conn.UpdateAccountSettings(ctx, input)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
