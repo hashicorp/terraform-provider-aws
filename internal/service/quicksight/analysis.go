@@ -41,7 +41,7 @@ func resourceAnalysis() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				d.Set("recovery_window_in_days", 30)
+				d.Set("recovery_window_in_days", 30) //nolint:mnd // 30days is the default value (see below)
 				return []*schema.ResourceData{d}, nil
 			},
 		},
