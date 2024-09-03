@@ -1,9 +1,9 @@
 ---
 subcategory: "Organizations"
 layout: "aws"
-page_title: "AWS: aws_organizations_organizational_unit_descendant_accounts"
+page_title: "AWS: aws_organizations_organizational_unit_descendant_organization_units"
 description: |-
-  Get all child accounts under a parent organizational unit. This provides all children.
+  Get all direct child organizational units under a parent organizational unit. This provides all children.
 ---
 
 # Data Source: aws_organizations_organizational_unit_descendant_organization_units
