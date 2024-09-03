@@ -16,10 +16,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_organizations_organizational_unit_descendant_organization_units", name="Organizational Unit Descendant Organization Units")
-func dataSourceOrganizationalUnitDescendantOrganizationUnits() *schema.Resource {
+// @SDKDataSource("aws_organizations_organizational_unit_descendant_organizational_units", name="Organizational Unit Descendant Organization Units")
+func dataSourceOrganizationalUnitDescendantOrganizationalUnits() *schema.Resource {
 	return &schema.Resource{
-		ReadWithoutTimeout: dataSourceOrganizationalUnitDescendantOrganizationUnitsRead,
+		ReadWithoutTimeout: dataSourceOrganizationalUnitDescendantOrganizationalUnitsRead,
 
 		Schema: map[string]*schema.Schema{
 			"children": {
@@ -50,28 +50,28 @@ func dataSourceOrganizationalUnitDescendantOrganizationUnits() *schema.Resource 
 	}
 }
 
-func dataSourceOrganizationalUnitDescendantOrganizationUnitsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceOrganizationalUnitDescendantOrganizationalUnitsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
 	parentID := d.Get("parent_id").(string)
-	organizationUnits, err := findAllOrganizationUnitsForParentAndBelow(ctx, conn, parentID)
+	organizationUnits, err := findAllOrganizationalUnitsForParentAndBelow(ctx, conn, parentID)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing Organizations Units for parent (%s) and descendants: %s", parentID, err)
+		return sdkdiag.AppendErrorf(diags, "listing Organizations Organizational Units for parent (%s) and descendants: %s", parentID, err)
 	}
 
 	d.SetId(parentID)
 
-	if err := d.Set("accounts", flattenOrganizationalUnits(organizationUnits)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting organization units: %s", err)
+	if err := d.Set("children", flattenOrganizationalUnits(organizationUnits)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting children: %s", err)
 	}
 
 	return diags
 }
 
-// findAllOrganizationUnitsForParentAndBelow recurses down an OU tree, returning all organization units at the specified parent and below.
-func findAllOrganizationUnitsForParentAndBelow(ctx context.Context, conn *organizations.Client, id string) ([]awstypes.OrganizationalUnit, error) {
+// findAllOrganizationalUnitsForParentAndBelow recurses down an OU tree, returning all organizational units at the specified parent and below.
+func findAllOrganizationalUnitsForParentAndBelow(ctx context.Context, conn *organizations.Client, id string) ([]awstypes.OrganizationalUnit, error) {
 	var output []awstypes.OrganizationalUnit
 
 	ous, err := findOrganizationalUnitsForParentByID(ctx, conn, id)
@@ -83,7 +83,7 @@ func findAllOrganizationUnitsForParentAndBelow(ctx context.Context, conn *organi
 	output = append(output, ous...)
 
 	for _, ou := range ous {
-		organizationUnits, err := findAllOrganizationUnitsForParentAndBelow(ctx, conn, aws.ToString(ou.Id))
+		organizationUnits, err := findAllOrganizationalUnitsForParentAndBelow(ctx, conn, aws.ToString(ou.Id))
 
 		if err != nil {
 			return nil, err

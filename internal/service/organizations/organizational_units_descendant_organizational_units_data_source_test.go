@@ -16,9 +16,9 @@ import (
 func testOrganizationalUnitDescendantOusDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	topOUDataSourceName := "data.aws_organizations_organizational_unit_descendant_organization_units.current"
-	newOU1DataSourceName := "data.aws_organizations_organizational_unit_descendant_organization_units.test0"
-	newOU2DataSourceName := "data.aws_organizations_organizational_unit_descendant_organization_units.test1"
+	topOUDataSourceName := "data.aws_organizations_organizational_unit_descendant_organizational_units.current"
+	newOU1DataSourceName := "data.aws_organizations_organizational_unit_descendant_organizational_units.test0"
+	newOU2DataSourceName := "data.aws_organizations_organizational_unit_descendant_organizational_units.test1"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -54,19 +54,19 @@ resource "aws_organizations_organizational_unit" "test1" {
   parent_id = aws_organizations_organizational_unit.test0.id
 }
 
-data "aws_organizations_organizational_unit_descendant_organization_units" "current" {
+data "aws_organizations_organizational_unit_descendant_organizational_units" "current" {
   parent_id = data.aws_organizations_organization.current.roots[0].id
 
   depends_on = [aws_organizations_organizational_unit.test0, aws_organizations_organizational_unit.test1]
 }
 
-data "aws_organizations_organizational_unit_descendant_organization_units" "test0" {
+data "aws_organizations_organizational_unit_descendant_organizational_units" "test0" {
   parent_id = aws_organizations_organizational_unit.test0.id
 
   depends_on = [aws_organizations_organizational_unit.test1]
 }
 
-data "aws_organizations_organizational_unit_descendant_organization_units" "test1" {
+data "aws_organizations_organizational_unit_descendant_organizational_units" "test1" {
   parent_id = aws_organizations_organizational_unit.test1.id
 }
 `, rName)

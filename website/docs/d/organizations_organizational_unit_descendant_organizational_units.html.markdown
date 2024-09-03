@@ -1,12 +1,12 @@
 ---
 subcategory: "Organizations"
 layout: "aws"
-page_title: "AWS: aws_organizations_organizational_unit_descendant_organization_units"
+page_title: "AWS: aws_organizations_organizational_unit_descendant_organizational_units"
 description: |-
   Get all direct child organizational units under a parent organizational unit. This provides all children.
 ---
 
-# Data Source: aws_organizations_organizational_unit_descendant_organization_units
+# Data Source: aws_organizations_organizational_unit_descendant_organizational_units
 
 Get all direct child organizational units under a parent organizational unit. This provides all children.
 
@@ -15,7 +15,7 @@ Get all direct child organizational units under a parent organizational unit. Th
 ```terraform
 data "aws_organizations_organization" "org" {}
 
-data "aws_organizations_organizational_unit_descendant_organization_units" "ous" {
+data "aws_organizations_organizational_unit_descendant_organizational_units" "ous" {
   parent_id = data.aws_organizations_organization.org.roots[0].id
 }
 ```
