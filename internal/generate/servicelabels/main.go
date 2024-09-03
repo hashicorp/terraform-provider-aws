@@ -40,7 +40,7 @@ func main() {
 	td := TemplateData{}
 
 	for _, l := range data {
-		if l.Exclude() && l.AllowedSubcategory() == "" {
+		if l.Exclude() && !l.AllowedSubcategory() {
 			continue
 		}
 
