@@ -2062,8 +2062,6 @@ func TestAccELBV2TargetGroup_ALBAlias_missing(t *testing.T) {
 	}
 
 	for name, tc := range testcases { //nolint:paralleltest // false positive
-		tc := tc
-
 		t.Run(name, func(t *testing.T) {
 			ctx := acctest.Context(t)
 			rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2803,8 +2801,6 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_defaults(t *testing.T) {
 			}
 
 			for _, healthCheckProtocol := range tfelbv2.HealthCheckProtocolEnumValues() {
-				healthCheckProtocol := healthCheckProtocol
-
 				t.Run(healthCheckProtocol, func(t *testing.T) {
 					tc, ok := protocolCase[healthCheckProtocol]
 					if !ok {
@@ -2950,8 +2946,6 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_matcher(t *testing.T) {
 			}
 
 			for _, healthCheckProtocol := range tfelbv2.HealthCheckProtocolEnumValues() {
-				healthCheckProtocol := healthCheckProtocol
-
 				t.Run(healthCheckProtocol, func(t *testing.T) {
 					tc, ok := protocolCase[healthCheckProtocol]
 					if !ok {
@@ -3092,8 +3086,6 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_path(t *testing.T) {
 			}
 
 			for _, healthCheckProtocol := range tfelbv2.HealthCheckProtocolEnumValues() {
-				healthCheckProtocol := healthCheckProtocol
-
 				t.Run(healthCheckProtocol, func(t *testing.T) {
 					tc, ok := protocolCase[healthCheckProtocol]
 					if !ok {
@@ -3245,8 +3237,6 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_matcherOutOfRange(t *testing.T
 			}
 
 			for _, healthCheckProtocol := range tfelbv2.HealthCheckProtocolEnumValues() {
-				healthCheckProtocol := healthCheckProtocol
-
 				t.Run(healthCheckProtocol, func(t *testing.T) {
 					tc, ok := protocolCase[healthCheckProtocol]
 					if !ok {
@@ -3308,8 +3298,6 @@ func TestAccELBV2TargetGroup_Instance_HealthCheckGeneve_defaults(t *testing.T) {
 	}
 
 	for _, healthCheckProtocol := range tfelbv2.HealthCheckProtocolEnumValues() { //nolint:paralleltest // false positive
-		healthCheckProtocol := healthCheckProtocol
-
 		t.Run(healthCheckProtocol, func(t *testing.T) {
 			tc, ok := testcases[healthCheckProtocol]
 			if !ok {
@@ -3375,14 +3363,10 @@ func TestAccELBV2TargetGroup_Instance_HealthCheckGRPC_defaults(t *testing.T) {
 	}
 
 	for _, protocol := range enum.Slice(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps) {
-		protocol := protocol
-
 		t.Run(protocol, func(t *testing.T) {
 			t.Parallel()
 
 			for _, healthCheckProtocol := range tfelbv2.HealthCheckProtocolEnumValues() {
-				healthCheckProtocol := healthCheckProtocol
-
 				t.Run(healthCheckProtocol, func(t *testing.T) {
 					tc, ok := testcases[healthCheckProtocol]
 					if !ok {
@@ -3452,14 +3436,10 @@ func TestAccELBV2TargetGroup_Instance_HealthCheckGRPC_path(t *testing.T) {
 	}
 
 	for _, protocol := range enum.Slice(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps) {
-		protocol := protocol
-
 		t.Run(protocol, func(t *testing.T) {
 			t.Parallel()
 
 			for _, healthCheckProtocol := range tfelbv2.HealthCheckProtocolEnumValues() {
-				healthCheckProtocol := healthCheckProtocol
-
 				t.Run(healthCheckProtocol, func(t *testing.T) {
 					tc, ok := testcases[healthCheckProtocol]
 					if !ok {
@@ -3520,14 +3500,10 @@ func TestAccELBV2TargetGroup_Instance_HealthCheckGRPC_matcherOutOfRange(t *testi
 	}
 
 	for _, protocol := range enum.Slice(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps) {
-		protocol := protocol
-
 		t.Run(protocol, func(t *testing.T) {
 			t.Parallel()
 
 			for _, healthCheckProtocol := range tfelbv2.HealthCheckProtocolEnumValues() {
-				healthCheckProtocol := healthCheckProtocol
-
 				t.Run(healthCheckProtocol, func(t *testing.T) {
 					tc, ok := testcases[healthCheckProtocol]
 					if !ok {
@@ -4110,8 +4086,6 @@ func TestAccELBV2TargetGroup_Lambda_HealthCheck_protocol(t *testing.T) {
 	}
 
 	for _, healthCheckProtocol := range tfelbv2.HealthCheckProtocolEnumValues() { //nolint:paralleltest // false positive
-		healthCheckProtocol := healthCheckProtocol
-
 		t.Run(healthCheckProtocol, func(t *testing.T) {
 			tc, ok := testcases[healthCheckProtocol]
 			if !ok {
@@ -4170,8 +4144,6 @@ func TestAccELBV2TargetGroup_Lambda_HealthCheck_protocol_MigrateV0(t *testing.T)
 	}
 
 	for _, healthCheckProtocol := range tfelbv2.HealthCheckProtocolEnumValues() { //nolint:paralleltest // false positive
-		healthCheckProtocol := healthCheckProtocol
-
 		t.Run(healthCheckProtocol, func(t *testing.T) {
 			tc, ok := testcases[healthCheckProtocol]
 			if !ok {

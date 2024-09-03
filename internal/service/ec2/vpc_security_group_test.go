@@ -2752,7 +2752,7 @@ func testRemoveRuleCycle(ctx context.Context, primary, secondary *awstypes.Secur
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 		for _, sg := range []*awstypes.SecurityGroup{primary, secondary} {
 			var err error
-			if sg.IpPermissions != nil && len(sg.IpPermissions) > 0 {
+			if len(sg.IpPermissions) > 0 {
 				req := &ec2.RevokeSecurityGroupIngressInput{
 					GroupId:       sg.GroupId,
 					IpPermissions: sg.IpPermissions,
@@ -2763,7 +2763,7 @@ func testRemoveRuleCycle(ctx context.Context, primary, secondary *awstypes.Secur
 				}
 			}
 
-			if sg.IpPermissionsEgress != nil && len(sg.IpPermissionsEgress) > 0 {
+			if len(sg.IpPermissionsEgress) > 0 {
 				req := &ec2.RevokeSecurityGroupEgressInput{
 					GroupId:       sg.GroupId,
 					IpPermissions: sg.IpPermissionsEgress,

@@ -23,6 +23,235 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func TestParameterGroupModifyChunk(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		Name              string
+		ChunkSize         int
+		Parameters        []types.Parameter
+		ExpectedModify    []types.Parameter
+		ExpectedRemainder []types.Parameter
+	}{
+		{
+			Name:              "Empty",
+			ChunkSize:         20,
+			Parameters:        nil,
+			ExpectedModify:    nil,
+			ExpectedRemainder: nil,
+		},
+		{
+			Name:      "A couple",
+			ChunkSize: 20,
+			Parameters: []types.Parameter{
+				{
+					ApplyMethod:    types.ApplyMethodImmediate,
+					ParameterName:  aws.String("tx_isolation"),
+					ParameterValue: aws.String("repeatable-read"),
+				},
+				{
+					ApplyMethod:    types.ApplyMethodImmediate,
+					ParameterName:  aws.String("binlog_cache_size"),
+					ParameterValue: aws.String("131072"),
+				},
+			},
+			ExpectedModify: []types.Parameter{
+				{
+					ApplyMethod:    types.ApplyMethodImmediate,
+					ParameterName:  aws.String("tx_isolation"),
+					ParameterValue: aws.String("repeatable-read"),
+				},
+				{
+					ApplyMethod:    types.ApplyMethodImmediate,
+					ParameterName:  aws.String("binlog_cache_size"),
+					ParameterValue: aws.String("131072"),
+				},
+			},
+			ExpectedRemainder: nil,
+		},
+		{
+			Name:      "Over 3 max, 6 in",
+			ChunkSize: 3,
+			Parameters: []types.Parameter{
+				{
+					ApplyMethod:    types.ApplyMethodImmediate,
+					ParameterName:  aws.String("tx_isolation"),
+					ParameterValue: aws.String("repeatable-read"),
+				},
+				{
+					ApplyMethod:    types.ApplyMethodImmediate,
+					ParameterName:  aws.String("binlog_cache_size"),
+					ParameterValue: aws.String("131072"),
+				},
+				{
+					ApplyMethod:    types.ApplyMethodPendingReboot,
+					ParameterName:  aws.String("innodb_read_io_threads"),
+					ParameterValue: aws.String("64"),
+				},
+				{
+					ApplyMethod:    types.ApplyMethodImmediate,
+					ParameterName:  aws.String("character_set_server"),
+					ParameterValue: aws.String("utf8"),
+				},
+				{
+					ApplyMethod:    types.ApplyMethodImmediate,
+					ParameterName:  aws.String("innodb_flush_log_at_trx_commit"),
+					ParameterValue: aws.String(acctest.Ct0),
+				},
+				{
+					ApplyMethod:    types.ApplyMethodImmediate,
+					ParameterName:  aws.String("character_set_filesystem"),
+					ParameterValue: aws.String("utf8"),
+				},
+			},
+			ExpectedModify: []types.Parameter{
+				{
+					ApplyMethod:    types.ApplyMethodImmediate,
+					ParameterName:  aws.String("character_set_server"),
+					ParameterValue: aws.String("utf8"),
+				},
+				{
+					ApplyMethod:    types.ApplyMethodImmediate,
+					ParameterName:  aws.String("character_set_filesystem"),
+					ParameterValue: aws.String("utf8"),
+				},
+				{
+					ApplyMethod:    types.ApplyMethodImmediate,
+					ParameterName:  aws.String("tx_isolation"),
+					ParameterValue: aws.String("repeatable-read"),
+				},
+			},
+			ExpectedRemainder: []types.Parameter{
+				{
+					ApplyMethod:    types.ApplyMethodImmediate,
+					ParameterName:  aws.String("binlog_cache_size"),
+					ParameterValue: aws.String("131072"),
+				},
+				{
+					ApplyMethod:    types.ApplyMethodPendingReboot,
+					ParameterName:  aws.String("innodb_read_io_threads"),
+					ParameterValue: aws.String("64"),
+				},
+				{
+					ApplyMethod:    types.ApplyMethodImmediate,
+					ParameterName:  aws.String("innodb_flush_log_at_trx_commit"),
+					ParameterValue: aws.String(acctest.Ct0),
+				},
+			},
+		},
+		{
+			Name:      "Over 3 max, 9 in",
+			ChunkSize: 3,
+			Parameters: []types.Parameter{
+				{
+					ApplyMethod:    types.ApplyMethodPendingReboot,
+					ParameterName:  aws.String("tx_isolation"),
+					ParameterValue: aws.String("repeatable-read"),
+				},
+				{
+					ApplyMethod:    types.ApplyMethodPendingReboot,
+					ParameterName:  aws.String("binlog_cache_size"),
+					ParameterValue: aws.String("131072"),
+				},
+				{
+					ApplyMethod:    types.ApplyMethodPendingReboot,
+					ParameterName:  aws.String("innodb_read_io_threads"),
+					ParameterValue: aws.String("64"),
+				},
+				{
+					ApplyMethod:    types.ApplyMethodPendingReboot,
+					ParameterName:  aws.String("character_set_server"),
+					ParameterValue: aws.String("utf8"),
+				},
+				{
+					ApplyMethod:    types.ApplyMethodImmediate,
+					ParameterName:  aws.String("innodb_flush_log_at_trx_commit"),
+					ParameterValue: aws.String(acctest.Ct0),
+				},
+				{
+					ApplyMethod:    types.ApplyMethodImmediate,
+					ParameterName:  aws.String("character_set_filesystem"),
+					ParameterValue: aws.String("utf8"),
+				},
+				{
+					ApplyMethod:    types.ApplyMethodPendingReboot,
+					ParameterName:  aws.String("innodb_max_dirty_pages_pct"),
+					ParameterValue: aws.String("90"),
+				},
+				{
+					ApplyMethod:    types.ApplyMethodImmediate,
+					ParameterName:  aws.String("character_set_connection"),
+					ParameterValue: aws.String("utf8"),
+				},
+				{
+					ApplyMethod:    types.ApplyMethodImmediate,
+					ParameterName:  aws.String("key_buffer_size"),
+					ParameterValue: aws.String("67108864"),
+				},
+			},
+			ExpectedModify: []types.Parameter{
+				{
+					ApplyMethod:    types.ApplyMethodImmediate,
+					ParameterName:  aws.String("character_set_filesystem"),
+					ParameterValue: aws.String("utf8"),
+				},
+				{
+					ApplyMethod:    types.ApplyMethodImmediate,
+					ParameterName:  aws.String("character_set_connection"),
+					ParameterValue: aws.String("utf8"),
+				},
+				{
+					ApplyMethod:    types.ApplyMethodImmediate,
+					ParameterName:  aws.String("innodb_flush_log_at_trx_commit"),
+					ParameterValue: aws.String(acctest.Ct0),
+				},
+			},
+			ExpectedRemainder: []types.Parameter{
+				{
+					ApplyMethod:    types.ApplyMethodPendingReboot,
+					ParameterName:  aws.String("tx_isolation"),
+					ParameterValue: aws.String("repeatable-read"),
+				},
+				{
+					ApplyMethod:    types.ApplyMethodPendingReboot,
+					ParameterName:  aws.String("binlog_cache_size"),
+					ParameterValue: aws.String("131072"),
+				},
+				{
+					ApplyMethod:    types.ApplyMethodPendingReboot,
+					ParameterName:  aws.String("innodb_read_io_threads"),
+					ParameterValue: aws.String("64"),
+				},
+				{
+					ApplyMethod:    types.ApplyMethodPendingReboot,
+					ParameterName:  aws.String("character_set_server"),
+					ParameterValue: aws.String("utf8"),
+				},
+				{
+					ApplyMethod:    types.ApplyMethodPendingReboot,
+					ParameterName:  aws.String("innodb_max_dirty_pages_pct"),
+					ParameterValue: aws.String("90"),
+				},
+				{
+					ApplyMethod:    types.ApplyMethodImmediate,
+					ParameterName:  aws.String("key_buffer_size"),
+					ParameterValue: aws.String("67108864"),
+				},
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		mod, rem := tfrds.ParameterGroupModifyChunk(tc.Parameters, tc.ChunkSize)
+		if !reflect.DeepEqual(mod, tc.ExpectedModify) {
+			t.Errorf("Case %q: Modify did not match\n%#v\n\nGot:\n%#v", tc.Name, tc.ExpectedModify, mod)
+		}
+		if !reflect.DeepEqual(rem, tc.ExpectedRemainder) {
+			t.Errorf("Case %q: Remainder did not match\n%#v\n\nGot:\n%#v", tc.Name, tc.ExpectedRemainder, rem)
+		}
+	}
+}
+
 func TestAccRDSParameterGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.DBParameterGroup
@@ -816,233 +1045,27 @@ func TestAccRDSParameterGroup_caseParameters(t *testing.T) {
 	})
 }
 
-func TestParameterGroupModifyChunk(t *testing.T) {
-	t.Parallel()
+func TestAccRDSParameterGroup_skipDestroy(t *testing.T) {
+	var v types.DBParameterGroup
+	ctx := acctest.Context(t)
+	resourceName := "aws_db_parameter_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	cases := []struct {
-		Name              string
-		ChunkSize         int
-		Parameters        []types.Parameter
-		ExpectedModify    []types.Parameter
-		ExpectedRemainder []types.Parameter
-	}{
-		{
-			Name:              "Empty",
-			ChunkSize:         20,
-			Parameters:        nil,
-			ExpectedModify:    nil,
-			ExpectedRemainder: nil,
-		},
-		{
-			Name:      "A couple",
-			ChunkSize: 20,
-			Parameters: []types.Parameter{
-				{
-					ApplyMethod:    types.ApplyMethodImmediate,
-					ParameterName:  aws.String("tx_isolation"),
-					ParameterValue: aws.String("repeatable-read"),
-				},
-				{
-					ApplyMethod:    types.ApplyMethodImmediate,
-					ParameterName:  aws.String("binlog_cache_size"),
-					ParameterValue: aws.String("131072"),
-				},
-			},
-			ExpectedModify: []types.Parameter{
-				{
-					ApplyMethod:    types.ApplyMethodImmediate,
-					ParameterName:  aws.String("tx_isolation"),
-					ParameterValue: aws.String("repeatable-read"),
-				},
-				{
-					ApplyMethod:    types.ApplyMethodImmediate,
-					ParameterName:  aws.String("binlog_cache_size"),
-					ParameterValue: aws.String("131072"),
-				},
-			},
-			ExpectedRemainder: nil,
-		},
-		{
-			Name:      "Over 3 max, 6 in",
-			ChunkSize: 3,
-			Parameters: []types.Parameter{
-				{
-					ApplyMethod:    types.ApplyMethodImmediate,
-					ParameterName:  aws.String("tx_isolation"),
-					ParameterValue: aws.String("repeatable-read"),
-				},
-				{
-					ApplyMethod:    types.ApplyMethodImmediate,
-					ParameterName:  aws.String("binlog_cache_size"),
-					ParameterValue: aws.String("131072"),
-				},
-				{
-					ApplyMethod:    types.ApplyMethodPendingReboot,
-					ParameterName:  aws.String("innodb_read_io_threads"),
-					ParameterValue: aws.String("64"),
-				},
-				{
-					ApplyMethod:    types.ApplyMethodImmediate,
-					ParameterName:  aws.String("character_set_server"),
-					ParameterValue: aws.String("utf8"),
-				},
-				{
-					ApplyMethod:    types.ApplyMethodImmediate,
-					ParameterName:  aws.String("innodb_flush_log_at_trx_commit"),
-					ParameterValue: aws.String(acctest.Ct0),
-				},
-				{
-					ApplyMethod:    types.ApplyMethodImmediate,
-					ParameterName:  aws.String("character_set_filesystem"),
-					ParameterValue: aws.String("utf8"),
-				},
-			},
-			ExpectedModify: []types.Parameter{
-				{
-					ApplyMethod:    types.ApplyMethodImmediate,
-					ParameterName:  aws.String("character_set_server"),
-					ParameterValue: aws.String("utf8"),
-				},
-				{
-					ApplyMethod:    types.ApplyMethodImmediate,
-					ParameterName:  aws.String("character_set_filesystem"),
-					ParameterValue: aws.String("utf8"),
-				},
-				{
-					ApplyMethod:    types.ApplyMethodImmediate,
-					ParameterName:  aws.String("tx_isolation"),
-					ParameterValue: aws.String("repeatable-read"),
-				},
-			},
-			ExpectedRemainder: []types.Parameter{
-				{
-					ApplyMethod:    types.ApplyMethodImmediate,
-					ParameterName:  aws.String("binlog_cache_size"),
-					ParameterValue: aws.String("131072"),
-				},
-				{
-					ApplyMethod:    types.ApplyMethodPendingReboot,
-					ParameterName:  aws.String("innodb_read_io_threads"),
-					ParameterValue: aws.String("64"),
-				},
-				{
-					ApplyMethod:    types.ApplyMethodImmediate,
-					ParameterName:  aws.String("innodb_flush_log_at_trx_commit"),
-					ParameterValue: aws.String(acctest.Ct0),
-				},
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterGroupNoDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccParameterGroupConfig_skipDestroy(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckParameterGroupExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, acctest.CtTrue),
+				),
 			},
 		},
-		{
-			Name:      "Over 3 max, 9 in",
-			ChunkSize: 3,
-			Parameters: []types.Parameter{
-				{
-					ApplyMethod:    types.ApplyMethodPendingReboot,
-					ParameterName:  aws.String("tx_isolation"),
-					ParameterValue: aws.String("repeatable-read"),
-				},
-				{
-					ApplyMethod:    types.ApplyMethodPendingReboot,
-					ParameterName:  aws.String("binlog_cache_size"),
-					ParameterValue: aws.String("131072"),
-				},
-				{
-					ApplyMethod:    types.ApplyMethodPendingReboot,
-					ParameterName:  aws.String("innodb_read_io_threads"),
-					ParameterValue: aws.String("64"),
-				},
-				{
-					ApplyMethod:    types.ApplyMethodPendingReboot,
-					ParameterName:  aws.String("character_set_server"),
-					ParameterValue: aws.String("utf8"),
-				},
-				{
-					ApplyMethod:    types.ApplyMethodImmediate,
-					ParameterName:  aws.String("innodb_flush_log_at_trx_commit"),
-					ParameterValue: aws.String(acctest.Ct0),
-				},
-				{
-					ApplyMethod:    types.ApplyMethodImmediate,
-					ParameterName:  aws.String("character_set_filesystem"),
-					ParameterValue: aws.String("utf8"),
-				},
-				{
-					ApplyMethod:    types.ApplyMethodPendingReboot,
-					ParameterName:  aws.String("innodb_max_dirty_pages_pct"),
-					ParameterValue: aws.String("90"),
-				},
-				{
-					ApplyMethod:    types.ApplyMethodImmediate,
-					ParameterName:  aws.String("character_set_connection"),
-					ParameterValue: aws.String("utf8"),
-				},
-				{
-					ApplyMethod:    types.ApplyMethodImmediate,
-					ParameterName:  aws.String("key_buffer_size"),
-					ParameterValue: aws.String("67108864"),
-				},
-			},
-			ExpectedModify: []types.Parameter{
-				{
-					ApplyMethod:    types.ApplyMethodImmediate,
-					ParameterName:  aws.String("character_set_filesystem"),
-					ParameterValue: aws.String("utf8"),
-				},
-				{
-					ApplyMethod:    types.ApplyMethodImmediate,
-					ParameterName:  aws.String("character_set_connection"),
-					ParameterValue: aws.String("utf8"),
-				},
-				{
-					ApplyMethod:    types.ApplyMethodImmediate,
-					ParameterName:  aws.String("innodb_flush_log_at_trx_commit"),
-					ParameterValue: aws.String(acctest.Ct0),
-				},
-			},
-			ExpectedRemainder: []types.Parameter{
-				{
-					ApplyMethod:    types.ApplyMethodPendingReboot,
-					ParameterName:  aws.String("tx_isolation"),
-					ParameterValue: aws.String("repeatable-read"),
-				},
-				{
-					ApplyMethod:    types.ApplyMethodPendingReboot,
-					ParameterName:  aws.String("binlog_cache_size"),
-					ParameterValue: aws.String("131072"),
-				},
-				{
-					ApplyMethod:    types.ApplyMethodPendingReboot,
-					ParameterName:  aws.String("innodb_read_io_threads"),
-					ParameterValue: aws.String("64"),
-				},
-				{
-					ApplyMethod:    types.ApplyMethodPendingReboot,
-					ParameterName:  aws.String("character_set_server"),
-					ParameterValue: aws.String("utf8"),
-				},
-				{
-					ApplyMethod:    types.ApplyMethodPendingReboot,
-					ParameterName:  aws.String("innodb_max_dirty_pages_pct"),
-					ParameterValue: aws.String("90"),
-				},
-				{
-					ApplyMethod:    types.ApplyMethodImmediate,
-					ParameterName:  aws.String("key_buffer_size"),
-					ParameterValue: aws.String("67108864"),
-				},
-			},
-		},
-	}
-
-	for _, tc := range cases {
-		mod, rem := tfrds.ParameterGroupModifyChunk(tc.Parameters, tc.ChunkSize)
-		if !reflect.DeepEqual(mod, tc.ExpectedModify) {
-			t.Errorf("Case %q: Modify did not match\n%#v\n\nGot:\n%#v", tc.Name, tc.ExpectedModify, mod)
-		}
-		if !reflect.DeepEqual(rem, tc.ExpectedRemainder) {
-			t.Errorf("Case %q: Remainder did not match\n%#v\n\nGot:\n%#v", tc.Name, tc.ExpectedRemainder, rem)
-		}
-	}
+	})
 }
 
 func testAccCheckParameterGroupDestroy(ctx context.Context) resource.TestCheckFunc {
@@ -1065,6 +1088,24 @@ func testAccCheckParameterGroupDestroy(ctx context.Context) resource.TestCheckFu
 			}
 
 			return fmt.Errorf("RDS DB Parameter Group %s still exists", rs.Primary.ID)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckParameterGroupNoDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_db_parameter_group" {
+				continue
+			}
+
+			_, err := tfrds.FindDBParameterGroupByName(ctx, conn, rs.Primary.ID)
+
+			return err
 		}
 
 		return nil
@@ -1878,3 +1919,14 @@ resource "aws_db_parameter_group" "test" {
   }
 }
 `
+
+func testAccParameterGroupConfig_skipDestroy(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_db_parameter_group" "test" {
+  name         = %[1]q
+  family       = "mysql5.6"
+  description  = "Test parameter group for terraform"
+  skip_destroy = true
+}
+`, rName)
+}

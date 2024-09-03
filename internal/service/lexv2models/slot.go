@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -331,7 +332,7 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 	promptAttemptsSpecificationLNB := schema.SetNestedBlock{
 		CustomType: fwtypes.NewSetNestedObjectTypeOf[PromptAttemptsSpecification](ctx),
 		NestedObject: schema.NestedBlockObject{
-			Attributes: map[string]schema.Attribute{
+			Attributes: map[string]schema.Attribute{ // nosemgrep:ci.semgrep.framework.map_block_key-meaningful-names
 				"map_block_key": schema.StringAttribute{
 					Required:   true,
 					CustomType: fwtypes.StringEnumType[PromptAttemptsType](),
@@ -448,6 +449,52 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 		},
 	}
 
+	subSlotValueElicitationSettingLNB := schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[SubSlotValueElicitationSettingData](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Blocks: map[string]schema.Block{
+				"default_value_specification":     defaultValueSpecificationLNB,
+				"prompt_specification":            promptSpecificationLNB,
+				"sample_utterance":                sampleUtteranceLNB,
+				"wait_and_continue_specification": waitAndContinueSpecificationLNB,
+			},
+		},
+	}
+
+	slotSpecificationsLNB := schema.SetNestedBlock{
+		Validators: []validator.Set{
+			setvalidator.SizeAtMost(6),
+		},
+		CustomType: fwtypes.NewSetNestedObjectTypeOf[SlotSpecificationsData](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{ // nosemgrep:ci.semgrep.framework.map_block_key-meaningful-names
+				"map_block_key": schema.StringAttribute{
+					Required: true,
+				},
+				"slot_type_id": schema.StringAttribute{
+					Required: true,
+				},
+			},
+			Blocks: map[string]schema.Block{
+				"value_elicitation_setting": subSlotValueElicitationSettingLNB,
+			},
+		},
+	}
+
+	subSlotSettingLNB := schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[SubSlotSettingData](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				names.AttrExpression: schema.StringAttribute{
+					Optional: true,
+				},
+			},
+			Blocks: map[string]schema.Block{
+				"slot_specification": slotSpecificationsLNB,
+			},
+		},
+	}
+
 	valueElicitationSettingLNB := schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[ValueElicitationSettingData](ctx),
 		Validators: []validator.List{
@@ -514,6 +561,7 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 				Required: true,
 			},
 			"slot_type_id": schema.StringAttribute{
+				Computed: true,
 				Optional: true,
 			},
 		},
@@ -521,7 +569,7 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 			"multiple_values_setting":   multValueSettingsLNB,
 			"obfuscation_setting":       obfuscationSettingLNB,
 			"value_elicitation_setting": valueElicitationSettingLNB,
-			//sub_slot_setting
+			"sub_slot_setting":          subSlotSettingLNB,
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
@@ -750,6 +798,25 @@ type resourceSlotData struct {
 	Timeouts                timeouts.Value                                               `tfsdk:"timeouts"`
 	SlotTypeID              types.String                                                 `tfsdk:"slot_type_id"`
 	ValueElicitationSetting fwtypes.ListNestedObjectValueOf[ValueElicitationSettingData] `tfsdk:"value_elicitation_setting"`
+	SubSlotSetting          fwtypes.ListNestedObjectValueOf[SubSlotSettingData]          `tfsdk:"sub_slot_setting"`
+}
+
+type SubSlotSettingData struct {
+	Expression        types.String                                           `tfsdk:"expression"`
+	SlotSpecification fwtypes.SetNestedObjectValueOf[SlotSpecificationsData] `tfsdk:"slot_specification"`
+}
+
+type SlotSpecificationsData struct {
+	SlotTypeID              types.String                                                        `tfsdk:"slot_type_id"`
+	ValueElicitationSetting fwtypes.ListNestedObjectValueOf[SubSlotValueElicitationSettingData] `tfsdk:"value_elicitation_setting"`
+	MapBlockKey             types.String                                                        `tfsdk:"map_block_key"`
+}
+
+type SubSlotValueElicitationSettingData struct {
+	PromptSpecification          fwtypes.ListNestedObjectValueOf[PromptSpecification]              `tfsdk:"prompt_specification"`
+	DefaultValueSpecification    fwtypes.ListNestedObjectValueOf[DefaultValueSpecificationData]    `tfsdk:"default_value_specification"`
+	SampleUtterance              fwtypes.ListNestedObjectValueOf[SampleUtterance]                  `tfsdk:"sample_utterance"`
+	WaitAndContinueSpecification fwtypes.ListNestedObjectValueOf[WaitAndContinueSpecificationData] `tfsdk:"wait_and_continue_specification"`
 }
 
 type MultipleValuesSettingData struct {

@@ -24,6 +24,13 @@ func TagsAttributeComputedOnly() schema.Attribute {
 	}
 }
 
+func TagsAttributeRequired() schema.Attribute {
+	return schema.MapAttribute{
+		ElementType: types.StringType,
+		Required:    true,
+	}
+}
+
 var (
 	Null    = types.MapNull(types.StringType)
 	Unknown = types.MapUnknown(types.StringType)

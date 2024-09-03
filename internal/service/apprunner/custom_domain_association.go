@@ -230,7 +230,6 @@ func findCustomDomains(ctx context.Context, conn *apprunner.Client, input *appru
 
 	err := forEachCustomDomainPage(ctx, conn, input, func(page *apprunner.DescribeCustomDomainsOutput) {
 		for _, v := range page.CustomDomains {
-			v := v
 			if v := &v; filter(v) {
 				output = append(output, v)
 			}

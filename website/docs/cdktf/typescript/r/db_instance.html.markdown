@@ -511,6 +511,7 @@ creating a cross-region replica of an encrypted database you will also need to
 specify a `kmsKeyId`. See [DB Instance Replication][instance-replication] and [Working with
 PostgreSQL and MySQL Read Replicas](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_ReadRepl.html)
 for more information on using Replication.
+* `upgradeStorageConfig` - (Optional) Whether to upgrade the storage file system configuration on the read replica. Can only be set with `replicateSourceDb`.
 * `restoreToPointInTime` - (Optional, Forces new resource) A configuration block for restoring a DB instance to an arbitrary point in time. Requires the `identifier` argument to be set with the name of the new DB instance to be created. See [Restore To Point In Time](#restore-to-point-in-time) below for details.
 * `s3Import` - (Optional) Restore from a Percona Xtrabackup in S3.  See [Importing Data into an Amazon RDS MySQL DB Instance](http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/MySQL.Procedural.Importing.html)
 * `skipFinalSnapshot` - (Optional) Determines whether a final DB snapshot is
@@ -707,4 +708,4 @@ Using `terraform import`, import DB Instances using the `identifier`. For exampl
 % terraform import aws_db_instance.default mydb-rds-instance
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-d391602da0747fa7b95b065f272b4c6ea8470c1a22cc4e2417fc9d96470e19b8 -->
+<!-- cache-key: cdktf-0.20.1 input-d9ab3c6ab96aec0cb8fc8a3ec3a6e2d68ad7952111ee0fbfcd59c9fef3e2baa7 -->

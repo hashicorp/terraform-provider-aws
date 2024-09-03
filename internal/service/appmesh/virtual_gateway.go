@@ -1296,7 +1296,7 @@ func flattenVirtualGatewaySpec(spec *awstypes.VirtualGatewaySpec) []interface{} 
 		mSpec["backend_defaults"] = []interface{}{mBackendDefaults}
 	}
 
-	if spec.Listeners != nil && len(spec.Listeners) > 0 {
+	if len(spec.Listeners) > 0 {
 		var mListeners []interface{}
 		for _, listener := range spec.Listeners {
 			mListener := map[string]interface{}{}

@@ -132,8 +132,6 @@ sso_start_url = https://d-123456789a.awsapps.com/start#
 	}
 
 	for name, tc := range testcases { //nolint:paralleltest
-		tc := tc
-
 		t.Run(name, func(t *testing.T) {
 			ctx := context.TODO()
 

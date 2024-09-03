@@ -65,8 +65,6 @@ resource "aws_wafv2_web_acl" "example" {
       }
     }
 
-    token_domains = ["mywebsite.com", "myotherwebsite.com"]
-
     visibility_config {
       cloudwatch_metrics_enabled = false
       metric_name                = "friendly-rule-metric-name"
@@ -78,6 +76,8 @@ resource "aws_wafv2_web_acl" "example" {
     Tag1 = "Value1"
     Tag2 = "Value2"
   }
+
+  token_domains = ["mywebsite.com", "myotherwebsite.com"]
 
   visibility_config {
     cloudwatch_metrics_enabled = false

@@ -9,8 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/gamelift"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/gamelift/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -23,7 +22,7 @@ import (
 
 func TestAccGameLiftScript_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf gamelift.Script
+	var conf awstypes.Script
 	resourceName := "aws_gamelift_script.test"
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -33,7 +32,7 @@ func TestAccGameLiftScript_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.GameLiftEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
@@ -74,7 +73,7 @@ func TestAccGameLiftScript_basic(t *testing.T) {
 
 func TestAccGameLiftScript_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf gamelift.Script
+	var conf awstypes.Script
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_gamelift_script.test"
@@ -82,7 +81,7 @@ func TestAccGameLiftScript_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.GameLiftEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
@@ -126,7 +125,7 @@ func TestAccGameLiftScript_tags(t *testing.T) {
 
 func TestAccGameLiftScript_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf gamelift.Script
+	var conf awstypes.Script
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_gamelift_script.test"
@@ -134,7 +133,7 @@ func TestAccGameLiftScript_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.GameLiftEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
@@ -154,29 +153,22 @@ func TestAccGameLiftScript_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckScriptExists(ctx context.Context, n string, res *gamelift.Script) resource.TestCheckFunc {
+func testAccCheckScriptExists(ctx context.Context, n string, v *awstypes.Script) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No GameLift Script ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn(ctx)
+		output, err := tfgamelift.FindScriptByID(ctx, conn, rs.Primary.ID)
 
-		script, err := tfgamelift.FindScriptByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		if aws.StringValue(script.ScriptId) != rs.Primary.ID {
-			return fmt.Errorf("GameLift Script not found")
-		}
-
-		*res = *script
+		*v = *output
 
 		return nil
 	}
@@ -184,7 +176,7 @@ func testAccCheckScriptExists(ctx context.Context, n string, res *gamelift.Scrip
 
 func testAccCheckScriptDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_gamelift_script" {

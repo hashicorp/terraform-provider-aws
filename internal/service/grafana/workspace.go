@@ -550,7 +550,7 @@ func waitWorkspaceDeleted(ctx context.Context, conn *grafana.Client, id string, 
 }
 
 func expandVPCConfiguration(tfList []interface{}) *awstypes.VpcConfiguration {
-	if len(tfList) < 1 {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -581,7 +581,7 @@ func flattenVPCConfiguration(apiObject *awstypes.VpcConfiguration) []interface{}
 }
 
 func expandNetworkAccessControl(tfList []interface{}) *awstypes.NetworkAccessConfiguration {
-	if len(tfList) < 1 {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 

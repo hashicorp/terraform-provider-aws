@@ -29,10 +29,7 @@ func main() {
 	g.Infof("Generating internal/namevaluesfilters/v1/%s", filename)
 
 	// Representing types such as []*fsx.Filter, []*rds.Filter, ...
-	sliceServiceNames := []string{
-		"rds",
-		"route53resolver",
-	}
+	sliceServiceNames := []string{}
 	// Always sort to reduce any potential generation churn
 	sort.Strings(sliceServiceNames)
 
