@@ -229,7 +229,7 @@ func TestAccQuickSightAnalysis_theme(t *testing.T) {
 	resourceName := "aws_quicksight_analysis.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	themeArn := "arn:aws:quicksight::aws:theme/MIDNIGHT" //lintignore:AWSAT005
+	themeArn := "arn:aws:quicksight::aws:theme/MIDNIGHT"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
