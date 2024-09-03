@@ -306,6 +306,7 @@ func (p *fwprovider) Configure(ctx context.Context, request provider.ConfigureRe
 	v := p.Primary.Meta()
 	response.DataSourceData = v
 	response.ResourceData = v
+	response.EphemeralResourceData = v
 }
 
 // DataSources returns a slice of functions to instantiate each DataSource
