@@ -60,6 +60,11 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
+			Factory:  dataSourceAnalysis,
+			TypeName: "aws_quicksight_analysis",
+			Name:     "Analysis",
+		},
+		{
 			Factory:  dataSourceDataSet,
 			TypeName: "aws_quicksight_data_set",
 			Name:     "Data Set",
