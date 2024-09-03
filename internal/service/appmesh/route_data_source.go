@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	schemahelper "github.com/hashicorp/terraform-provider-aws/internal/schema"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -49,7 +48,7 @@ func DataSourceRoute() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"spec":         schemahelper.DataSourcePropertyFromResourceProperty(resourceRouteSpecSchema()),
+			"spec":         dataSourcePropertyFromResourceProperty(resourceRouteSpecSchema()),
 			names.AttrTags: tftags.TagsSchemaComputed(),
 			"virtual_router_name": {
 				Type:     schema.TypeString,

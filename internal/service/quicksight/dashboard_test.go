@@ -194,42 +194,6 @@ func TestAccQuickSightDashboard_dashboardSpecificConfig(t *testing.T) {
 	})
 }
 
-func TestAccQuickSightDashboard_theme(t *testing.T) {
-	ctx := acctest.Context(t)
-
-	var dashboard quicksight.Dashboard
-	resourceName := "aws_quicksight_dashboard.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	themeArn := "arn:aws:quicksight::aws:theme/MIDNIGHT"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDashboardDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDashboardConfig_theme(rId, rName, themeArn),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDashboardExists(ctx, resourceName, &dashboard),
-					resource.TestCheckResourceAttr(resourceName, "dashboard_id", rId),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", quicksight.ResourceStatusCreationSuccessful),
-					resource.TestCheckResourceAttr(resourceName, "theme_arn", themeArn),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 func testAccCheckDashboardDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
@@ -592,73 +556,4 @@ resource "aws_quicksight_dashboard" "test" {
   }
 }
 `, rId, rName))
-}
-
-func testAccDashboardConfig_theme(rId, rName, themeArn string) string {
-	return acctest.ConfigCompose(
-		testAccDashboardConfigBase(rId, rName),
-		fmt.Sprintf(`
-resource "aws_quicksight_dashboard" "test" {
-  dashboard_id        = %[1]q
-  name                = %[2]q
-  version_description = "test"
-  definition {
-    data_set_identifiers_declarations {
-      data_set_arn = aws_quicksight_data_set.test.arn
-      identifier   = "1"
-    }
-    sheets {
-      title    = "Test"
-      sheet_id = "Test1"
-      visuals {
-        custom_content_visual {
-          data_set_identifier = "1"
-          title {
-            format_text {
-              plain_text = "Test"
-            }
-          }
-          visual_id = "Test1"
-        }
-      }
-      visuals {
-        line_chart_visual {
-          visual_id = "LineChart"
-          title {
-            format_text {
-              plain_text = "Line Chart Test"
-            }
-          }
-          chart_configuration {
-            field_wells {
-              line_chart_aggregated_field_wells {
-                category {
-                  categorical_dimension_field {
-                    field_id = "1"
-                    column {
-                      data_set_identifier = "1"
-                      column_name         = "Column1"
-                    }
-                  }
-                }
-                values {
-                  categorical_measure_field {
-                    field_id = "2"
-                    column {
-                      data_set_identifier = "1"
-                      column_name         = "Column1"
-                    }
-                    aggregation_function = "COUNT"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-  theme_arn = %[3]q
-}
-`, rId, rName, themeArn))
 }
