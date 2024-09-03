@@ -113,6 +113,7 @@ func TestAccQuickSightRefreshSchedule_weeklyRefresh(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_frequency.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_frequency.0.interval", "WEEKLY"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_frequency.0.refresh_on_day.#", acctest.Ct1),
+					resource.TestCheckNoResourceAttr(resourceName, "schedule.0.schedule_frequency.0.refresh_on_day.0.day_of_month"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_frequency.0.refresh_on_day.0.day_of_week", "MONDAY"),
 				),
 			},
@@ -182,7 +183,8 @@ func TestAccQuickSightRefreshSchedule_monthlyRefresh(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_frequency.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_frequency.0.interval", "MONTHLY"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_frequency.0.refresh_on_day.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_frequency.0.refresh_on_day.0.day_of_month", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_frequency.0.refresh_on_day.0.day_of_month", "15"),
+					resource.TestCheckNoResourceAttr(resourceName, "schedule.0.schedule_frequency.0.refresh_on_day.0.day_of_week"),
 				),
 			},
 			{
@@ -488,7 +490,7 @@ resource "aws_quicksight_refresh_schedule" "test" {
     schedule_frequency {
       interval = "MONTHLY"
       refresh_on_day {
-        day_of_month = "1"
+        day_of_month = "15"
       }
     }
   }
