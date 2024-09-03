@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testOrganizationalUnitDescendantOusDataSource_basic(t *testing.T) {
+func testOrganizationalUnitDescendantOUsDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	topOUDataSourceName := "data.aws_organizations_organizational_unit_descendant_organizational_units.current"
@@ -30,9 +30,9 @@ func testOrganizationalUnitDescendantOusDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testOrganizationalUnitDescendantOusDataSourceConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue(topOUDataSourceName, "children.#", 0),
-					resource.TestCheckResourceAttr(newOU1DataSourceName, "children.#", acctest.Ct0),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckResourceAttrGreaterThanOrEqualValue(topOUDataSourceName, "children.#", 2),
+					resource.TestCheckResourceAttr(newOU1DataSourceName, "children.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(newOU2DataSourceName, "children.#", acctest.Ct0),
 				),
 			},
