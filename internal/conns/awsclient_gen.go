@@ -171,6 +171,7 @@ import (
 	outposts_sdkv2 "github.com/aws/aws-sdk-go-v2/service/outposts"
 	paymentcryptography_sdkv2 "github.com/aws/aws-sdk-go-v2/service/paymentcryptography"
 	pcaconnectorad_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pcaconnectorad"
+	pcs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pcs"
 	pinpoint_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pinpoint"
 	pipes_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pipes"
 	polly_sdkv2 "github.com/aws/aws-sdk-go-v2/service/polly"
@@ -914,6 +915,10 @@ func (c *AWSClient) OutpostsClient(ctx context.Context) *outposts_sdkv2.Client {
 
 func (c *AWSClient) PCAConnectorADClient(ctx context.Context) *pcaconnectorad_sdkv2.Client {
 	return errs.Must(client[*pcaconnectorad_sdkv2.Client](ctx, c, names.PCAConnectorAD, make(map[string]any)))
+}
+
+func (c *AWSClient) PCSClient(ctx context.Context) *pcs_sdkv2.Client {
+	return errs.Must(client[*pcs_sdkv2.Client](ctx, c, names.PCS, make(map[string]any)))
 }
 
 func (c *AWSClient) PaymentCryptographyClient(ctx context.Context) *paymentcryptography_sdkv2.Client {
