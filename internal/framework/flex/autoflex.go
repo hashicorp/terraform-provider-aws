@@ -118,11 +118,11 @@ func autoFlexConvertStruct(ctx context.Context, sourcePath path.Path, from any, 
 
 	opts := flexer.getOptions()
 	for i, typFrom := 0, valFrom.Type(); i < typFrom.NumField(); i++ {
-		field := typFrom.Field(i)
-		if field.PkgPath != "" {
+		fromField := typFrom.Field(i)
+		if fromField.PkgPath != "" {
 			continue // Skip unexported fields.
 		}
-		fieldName := field.Name
+		fieldName := fromField.Name
 		if opts.isIgnoredField(fieldName) {
 			tflog.SubsystemTrace(ctx, subsystemName, "Skipping ignored field", map[string]any{
 				logAttrKeySourceFieldname: fieldName,
