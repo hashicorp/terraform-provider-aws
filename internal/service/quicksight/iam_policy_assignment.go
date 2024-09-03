@@ -191,10 +191,12 @@ func (r *iamPolicyAssignmentResource) Read(ctx context.Context, req resource.Rea
 	}
 
 	awsAccountID, namespace, assignmentName, err := iamPolicyAssignmentParseResourceID(state.ID.ValueString())
-	resp.Diagnostics.AddError(
-		create.ProblemStandardMessage(names.QuickSight, create.ErrActionDeleting, resNameIAMPolicyAssignment, state.ID.String(), nil),
-		err.Error(),
-	)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.QuickSight, create.ErrActionDeleting, resNameIAMPolicyAssignment, state.ID.String(), nil),
+			err.Error(),
+		)
+	}
 
 	out, err := findIAMPolicyAssignmentByThreePartKey(ctx, conn, awsAccountID, namespace, assignmentName)
 	if tfresource.NotFound(err) {
@@ -285,10 +287,12 @@ func (r *iamPolicyAssignmentResource) Delete(ctx context.Context, req resource.D
 	}
 
 	awsAccountID, namespace, assignmentName, err := iamPolicyAssignmentParseResourceID(state.ID.ValueString())
-	resp.Diagnostics.AddError(
-		create.ProblemStandardMessage(names.QuickSight, create.ErrActionDeleting, resNameIAMPolicyAssignment, state.ID.String(), nil),
-		err.Error(),
-	)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.QuickSight, create.ErrActionDeleting, resNameIAMPolicyAssignment, state.ID.String(), nil),
+			err.Error(),
+		)
+	}
 
 	_, err = conn.DeleteIAMPolicyAssignment(ctx, &quicksight.DeleteIAMPolicyAssignmentInput{
 		AssignmentName: aws.String(assignmentName),
