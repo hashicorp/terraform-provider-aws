@@ -119,5 +119,7 @@ func dataSourceServerRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Set(names.AttrURL, "")
 	}
 
+	setTagsOut(ctx, output.Tags)
+
 	return diags
 }
