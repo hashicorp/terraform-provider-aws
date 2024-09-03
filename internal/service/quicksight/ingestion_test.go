@@ -144,7 +144,7 @@ func isDestroyedStatus(status awstypes.IngestionStatus) bool {
 	}, status)
 }
 
-func testAccIngestionConfigBase(rId, rName string) string {
+func testAccIngestionConfig_base(rId, rName string) string {
 	return acctest.ConfigCompose(
 		testAccDataSetConfig_base(rId, rName),
 		fmt.Sprintf(`
@@ -172,7 +172,7 @@ resource "aws_quicksight_data_set" "test" {
 
 func testAccIngestionConfig_basic(rId, rName, ingestionType string) string {
 	return acctest.ConfigCompose(
-		testAccIngestionConfigBase(rId, rName),
+		testAccIngestionConfig_base(rId, rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_ingestion" "test" {
   data_set_id    = aws_quicksight_data_set.test.data_set_id

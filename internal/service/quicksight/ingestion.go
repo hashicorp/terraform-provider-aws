@@ -243,7 +243,7 @@ func findIngestion(ctx context.Context, conn *quicksight.Client, input *quicksig
 const ingestionResourceIDSeparator = ","
 
 func ingestionCreateResourceID(awsAccountID, dataSetID, ingestionID string) string {
-	parts := []string{awsAccountID, awsAccountID, dataSetID, ingestionID}
+	parts := []string{awsAccountID, dataSetID, ingestionID}
 	id := strings.Join(parts, ingestionResourceIDSeparator)
 
 	return id
