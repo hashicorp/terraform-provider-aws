@@ -1921,6 +1921,101 @@ func TestFlattenInt32(t *testing.T) {
 	}
 }
 
+func TestFlattenString(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]autoFlexTestCases{
+		"string to String": {
+			"value": {
+				Source: awsSingleStringValue{
+					Field1: "a",
+				},
+				Target: &tfSingleStringField{},
+				WantTarget: &tfSingleStringField{
+					Field1: types.StringValue("a"),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleStringValue](), reflect.TypeFor[*tfSingleStringField]()),
+					infoConverting(reflect.TypeFor[awsSingleStringValue](), reflect.TypeFor[*tfSingleStringField]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleStringValue](), "Field1", reflect.TypeFor[*tfSingleStringField]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[string](), "Field1", reflect.TypeFor[types.String]()),
+				},
+			},
+			"zero": {
+				Source: awsSingleStringValue{
+					Field1: "",
+				},
+				Target: &tfSingleStringField{},
+				WantTarget: &tfSingleStringField{
+					Field1: types.StringValue(""),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleStringValue](), reflect.TypeFor[*tfSingleStringField]()),
+					infoConverting(reflect.TypeFor[awsSingleStringValue](), reflect.TypeFor[*tfSingleStringField]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleStringValue](), "Field1", reflect.TypeFor[*tfSingleStringField]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[string](), "Field1", reflect.TypeFor[types.String]()),
+				},
+			},
+		},
+
+		"*string to String": {
+			"value": {
+				Source: awsSingleStringPointer{
+					Field1: aws.String("a"),
+				},
+				Target: &tfSingleStringField{},
+				WantTarget: &tfSingleStringField{
+					Field1: types.StringValue("a"),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleStringPointer](), reflect.TypeFor[*tfSingleStringField]()),
+					infoConverting(reflect.TypeFor[awsSingleStringPointer](), reflect.TypeFor[*tfSingleStringField]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleStringPointer](), "Field1", reflect.TypeFor[*tfSingleStringField]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[*string](), "Field1", reflect.TypeFor[types.String]()),
+				},
+			},
+			"zero": {
+				Source: awsSingleStringPointer{
+					Field1: aws.String(""),
+				},
+				Target: &tfSingleStringField{},
+				WantTarget: &tfSingleStringField{
+					Field1: types.StringValue(""),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleStringPointer](), reflect.TypeFor[*tfSingleStringField]()),
+					infoConverting(reflect.TypeFor[awsSingleStringPointer](), reflect.TypeFor[*tfSingleStringField]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleStringPointer](), "Field1", reflect.TypeFor[*tfSingleStringField]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[*string](), "Field1", reflect.TypeFor[types.String]()),
+				},
+			},
+			"null": {
+				Source: awsSingleStringPointer{
+					Field1: nil,
+				},
+				Target: &tfSingleStringField{},
+				WantTarget: &tfSingleStringField{
+					Field1: types.StringNull(),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleStringPointer](), reflect.TypeFor[*tfSingleStringField]()),
+					infoConverting(reflect.TypeFor[awsSingleStringPointer](), reflect.TypeFor[*tfSingleStringField]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleStringPointer](), "Field1", reflect.TypeFor[*tfSingleStringField]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[*string](), "Field1", reflect.TypeFor[types.String]()),
+				},
+			},
+		},
+	}
+
+	for testName, cases := range testCases {
+		t.Run(testName, func(t *testing.T) {
+			t.Parallel()
+
+			runAutoFlattenTestCases(t, cases)
+		})
+	}
+}
+
 func TestFlattenTopLevelStringPtr(t *testing.T) {
 	t.Parallel()
 
