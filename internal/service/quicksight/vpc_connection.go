@@ -398,7 +398,7 @@ func findVPCConnectionByTwoPartKey(ctx context.Context, conn *quicksight.Client,
 		return nil, err
 	}
 
-	if status := output.Status; status != awstypes.VPCConnectionResourceStatusDeleted {
+	if status := output.Status; status == awstypes.VPCConnectionResourceStatusDeleted {
 		return nil, &retry.NotFoundError{
 			Message:     string(status),
 			LastRequest: input,
