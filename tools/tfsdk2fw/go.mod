@@ -201,6 +201,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/outposts v1.42.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.12.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.7.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/pcs v1.0.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/pinpoint v1.32.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.14.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/polly v1.43.0 // indirect
