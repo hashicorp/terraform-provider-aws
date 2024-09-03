@@ -15,7 +15,7 @@ func TestAccQuickSightAnalysisDataSource_basic(t *testing.T) {
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_quicksight_analysis.test"
-	dataSourceName := "data.aws_quicksight_analysis.test"
+	analysisName := "data.aws_quicksight_analysis.test"
 	themeArn := "arn:aws:quicksight::aws:theme/MIDNIGHT" //lintignore:AWSAT005
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -28,9 +28,9 @@ func TestAccQuickSightAnalysisDataSource_basic(t *testing.T) {
 			{
 				Config: testAccAnalysisDataSourceConfig_basic(rId, rName, themeArn),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttr(dataSourceName, "theme_arn", themeArn),
-					resource.TestCheckResourceAttr(dataSourceName, "definition.0.data_set_identifiers_declarations.0.identifier", "1"),
+					resource.TestCheckResourceAttrPair(analysisName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "theme_arn", themeArn),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.data_set_identifiers_declarations.0.identifier", "1"),
 				),
 			},
 		},
