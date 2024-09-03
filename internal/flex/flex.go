@@ -64,6 +64,13 @@ func ExpandStringTimeList(configured []interface{}, format string) []*time.Time 
 	return vs
 }
 
+func ExpandStringTimeValueList(configured []interface{}, format string) []time.Time {
+	return tfslices.ApplyToAll(ExpandStringValueList(configured), func(v string) time.Time {
+		t, _ := time.Parse(format, v)
+		return t
+	})
+}
+
 // ExpandStringValueList takes the result of flatmap.Expand for an array of strings
 // and returns a []string
 func ExpandStringValueList(configured []interface{}) []string {
@@ -119,6 +126,12 @@ func FlattenTimeStringList(list []*time.Time, format string) []interface{} {
 		vs = append(vs, v.Format(format))
 	}
 	return vs
+}
+
+func FlattenTimeStringValueList(list []time.Time, format string) []interface{} {
+	return tfslices.ApplyToAll(list, func(v time.Time) any {
+		return v.Format(format)
+	})
 }
 
 // Takes list of strings. Expand to an array
@@ -302,11 +315,15 @@ func ExpandInt64List(configured []interface{}) []*int64 {
 	})
 }
 
-// Takes the result of flatmap.Expand for an array of float64
-// and returns a []*float64
 func ExpandFloat64List(configured []interface{}) []*float64 {
 	return tfslices.ApplyToAll(configured, func(v any) *float64 {
 		return aws.Float64(v.(float64))
+	})
+}
+
+func ExpandFloat64ValueList(configured []interface{}) []float64 {
+	return tfslices.ApplyToAll(configured, func(v any) float64 {
+		return v.(float64)
 	})
 }
 

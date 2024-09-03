@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/quicksight"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/quicksight"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/helpers/validatordiag"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -28,6 +28,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -36,12 +38,13 @@ import (
 )
 
 // @FrameworkResource("aws_quicksight_refresh_schedule", name="Refresh Schedule")
-func newResourceRefreshSchedule(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceRefreshSchedule{}, nil
+func newRefreshScheduleResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &refreshScheduleResource{}, nil
 }
 
 const (
-	ResNameRefreshSchedule   = "Refresh Schedule"
+	resNameRefreshSchedule = "Refresh Schedule"
+
 	dayOfMonthRegex          = "^(?:LAST_DAY_OF_MONTH|1[0-9]|2[0-8]|[12]|[3-9])$"
 	timeOfTheDayLayout       = "15:04"
 	timeOfTheDayFormat       = "HH:MM"
@@ -49,15 +52,16 @@ const (
 	startAfterDateTimeFormat = "YYYY-MM-DDTHH:MM:SS"
 )
 
-type resourceRefreshSchedule struct {
+type refreshScheduleResource struct {
 	framework.ResourceWithConfigure
+	framework.WithImportByID
 }
 
-func (r *resourceRefreshSchedule) Metadata(_ context.Context, _ resource.MetadataRequest, response *resource.MetadataResponse) {
+func (r *refreshScheduleResource) Metadata(_ context.Context, _ resource.MetadataRequest, response *resource.MetadataResponse) {
 	response.TypeName = "aws_quicksight_refresh_schedule"
 }
 
-func (r *resourceRefreshSchedule) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *refreshScheduleResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -94,7 +98,7 @@ func (r *resourceRefreshSchedule) Schema(ctx context.Context, req resource.Schem
 						"refresh_type": schema.StringAttribute{
 							Required: true,
 							Validators: []validator.String{
-								stringvalidator.OneOf(quicksight.IngestionType_Values()...),
+								enum.FrameworkValidate[awstypes.IngestionType](),
 							},
 						},
 						"start_after_date_time": schema.StringAttribute{
@@ -116,7 +120,7 @@ func (r *resourceRefreshSchedule) Schema(ctx context.Context, req resource.Schem
 									names.AttrInterval: schema.StringAttribute{
 										Required: true,
 										Validators: []validator.String{
-											stringvalidator.OneOf(quicksight.RefreshInterval_Values()...),
+											enum.FrameworkValidate[awstypes.RefreshInterval](),
 										},
 									},
 									"time_of_the_day": schema.StringAttribute{
@@ -150,7 +154,7 @@ func (r *resourceRefreshSchedule) Schema(ctx context.Context, req resource.Schem
 												"day_of_week": schema.StringAttribute{
 													Optional: true,
 													Validators: []validator.String{
-														stringvalidator.OneOf(quicksight.DayOfWeek_Values()...),
+														enum.FrameworkValidate[awstypes.DayOfWeek](),
 														stringvalidator.ConflictsWith(
 															path.MatchRelative().AtParent().AtName("day_of_month"),
 														),
@@ -222,8 +226,8 @@ var (
 	}
 )
 
-func (r *resourceRefreshSchedule) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().QuickSightConn(ctx)
+func (r *refreshScheduleResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	conn := r.Meta().QuickSightClient(ctx)
 
 	var plan resourceRefreshScheduleData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -234,40 +238,42 @@ func (r *resourceRefreshSchedule) Create(ctx context.Context, req resource.Creat
 	if plan.AWSAccountID.IsUnknown() || plan.AWSAccountID.IsNull() {
 		plan.AWSAccountID = types.StringValue(r.Meta().AccountID)
 	}
-	plan.ID = types.StringValue(createRefreshScheduleID(plan.AWSAccountID.ValueString(), plan.DataSetID.ValueString(), plan.ScheduleID.ValueString()))
+	awsAccountID, dataSetID, scheduleID := flex.StringValueFromFramework(ctx, plan.AWSAccountID), flex.StringValueFromFramework(ctx, plan.DataSetID), flex.StringValueFromFramework(ctx, plan.ScheduleID)
 
-	scheduleInput, d := expandSchedule(ctx, plan.ScheduleID.ValueString(), plan)
+	scheduleInput, d := expandSchedule(ctx, scheduleID, plan)
 	resp.Diagnostics.Append(d...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	in := quicksight.CreateRefreshScheduleInput{
-		AwsAccountId: aws.String(plan.AWSAccountID.ValueString()),
-		DataSetId:    aws.String(plan.DataSetID.ValueString()),
+		AwsAccountId: aws.String(awsAccountID),
+		DataSetId:    aws.String(dataSetID),
 		Schedule:     scheduleInput,
 	}
 
-	out, err := conn.CreateRefreshScheduleWithContext(ctx, &in)
+	out, err := conn.CreateRefreshSchedule(ctx, &in)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QuickSight, create.ErrActionCreating, ResNameRefreshSchedule, plan.ScheduleID.String(), nil),
+			create.ProblemStandardMessage(names.QuickSight, create.ErrActionCreating, resNameRefreshSchedule, plan.ScheduleID.String(), nil),
 			err.Error(),
 		)
 		return
 	}
 	if out == nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QuickSight, create.ErrActionCreating, ResNameRefreshSchedule, plan.ScheduleID.String(), nil),
+			create.ProblemStandardMessage(names.QuickSight, create.ErrActionCreating, resNameRefreshSchedule, plan.ScheduleID.String(), nil),
 			errors.New("empty output").Error(),
 		)
 		return
 	}
 
-	_, outFind, err := FindRefreshScheduleByID(ctx, conn, plan.ID.ValueString())
+	plan.ID = flex.StringValueToFramework(ctx, refreshScheduleCreateResourceID(awsAccountID, dataSetID, scheduleID))
+
+	_, outFind, err := findRefreshScheduleByThreePartKey(ctx, conn, awsAccountID, dataSetID, scheduleID)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QuickSight, create.ErrActionReading, ResNameRefreshSchedule, plan.ID.String(), nil),
+			create.ProblemStandardMessage(names.QuickSight, create.ErrActionReading, resNameRefreshSchedule, plan.ID.String(), nil),
 			err.Error(),
 		)
 		return
@@ -277,8 +283,8 @@ func (r *resourceRefreshSchedule) Create(ctx context.Context, req resource.Creat
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceRefreshSchedule) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().QuickSightConn(ctx)
+func (r *refreshScheduleResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	conn := r.Meta().QuickSightClient(ctx)
 
 	var state resourceRefreshScheduleData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -286,24 +292,37 @@ func (r *resourceRefreshSchedule) Read(ctx context.Context, req resource.ReadReq
 		return
 	}
 
-	arn, outFind, err := FindRefreshScheduleByID(ctx, conn, state.ID.ValueString())
+	awsAccountID, dataSetID, scheduleID, err := refreshScheduleParseResourceID(state.ID.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.QuickSight, create.ErrActionReading, resNameRefreshSchedule, state.ID.String(), nil),
+			err.Error(),
+		)
+		return
+	}
+
+	arn, outFind, err := findRefreshScheduleByThreePartKey(ctx, conn, awsAccountID, dataSetID, scheduleID)
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QuickSight, create.ErrActionReading, ResNameRefreshSchedule, state.ID.String(), nil),
+			create.ProblemStandardMessage(names.QuickSight, create.ErrActionReading, resNameRefreshSchedule, state.ID.String(), nil),
 			err.Error(),
 		)
 		return
 	}
+
+	state.AWSAccountID = flex.StringValueToFramework(ctx, awsAccountID)
+	state.DataSetID = flex.StringValueToFramework(ctx, dataSetID)
+	state.ScheduleID = flex.StringValueToFramework(ctx, scheduleID)
 	resp.Diagnostics.Append(state.refreshFromRead(ctx, arn, outFind)...)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceRefreshSchedule) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().QuickSightConn(ctx)
+func (r *refreshScheduleResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	conn := r.Meta().QuickSightClient(ctx)
 
 	var config, plan, state resourceRefreshScheduleData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
@@ -313,16 +332,25 @@ func (r *resourceRefreshSchedule) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
+	awsAccountID, dataSetID, scheduleID, err := refreshScheduleParseResourceID(plan.ID.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.QuickSight, create.ErrActionUpdating, resNameRefreshSchedule, plan.ID.String(), nil),
+			err.Error(),
+		)
+		return
+	}
+
 	if !plan.Schedule.Equal(state.Schedule) {
-		scheduleInput, d := expandSchedule(ctx, plan.ScheduleID.ValueString(), plan)
+		scheduleInput, d := expandSchedule(ctx, scheduleID, plan)
 		resp.Diagnostics.Append(d...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
 
 		in := quicksight.UpdateRefreshScheduleInput{
-			AwsAccountId: aws.String(plan.AWSAccountID.ValueString()),
-			DataSetId:    aws.String(plan.DataSetID.ValueString()),
+			AwsAccountId: aws.String(awsAccountID),
+			DataSetId:    aws.String(dataSetID),
 			Schedule:     scheduleInput,
 		}
 
@@ -343,26 +371,26 @@ func (r *resourceRefreshSchedule) Update(ctx context.Context, req resource.Updat
 			planSchedule.StartAfterDateTime.Equal(stateSchedule.StartAfterDateTime) {
 			in.Schedule.StartAfterDateTime = nil
 		}
-		out, err := conn.UpdateRefreshScheduleWithContext(ctx, &in)
+		out, err := conn.UpdateRefreshSchedule(ctx, &in)
 		if err != nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.QuickSight, create.ErrActionUpdating, ResNameRefreshSchedule, plan.ID.String(), nil),
+				create.ProblemStandardMessage(names.QuickSight, create.ErrActionUpdating, resNameRefreshSchedule, plan.ID.String(), nil),
 				err.Error(),
 			)
 			return
 		}
 		if out == nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.QuickSight, create.ErrActionUpdating, ResNameRefreshSchedule, plan.ID.String(), nil),
+				create.ProblemStandardMessage(names.QuickSight, create.ErrActionUpdating, resNameRefreshSchedule, plan.ID.String(), nil),
 				errors.New("empty output").Error(),
 			)
 			return
 		}
 
-		_, outFind, err := FindRefreshScheduleByID(ctx, conn, plan.ID.ValueString())
+		_, outFind, err := findRefreshScheduleByThreePartKey(ctx, conn, awsAccountID, dataSetID, scheduleID)
 		if err != nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.QuickSight, create.ErrActionReading, ResNameRefreshSchedule, plan.ID.String(), nil),
+				create.ProblemStandardMessage(names.QuickSight, create.ErrActionReading, resNameRefreshSchedule, plan.ID.String(), nil),
 				err.Error(),
 			)
 			return
@@ -373,8 +401,8 @@ func (r *resourceRefreshSchedule) Update(ctx context.Context, req resource.Updat
 	}
 }
 
-func (r *resourceRefreshSchedule) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().QuickSightConn(ctx)
+func (r *refreshScheduleResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	conn := r.Meta().QuickSightClient(ctx)
 
 	var state resourceRefreshScheduleData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -382,35 +410,34 @@ func (r *resourceRefreshSchedule) Delete(ctx context.Context, req resource.Delet
 		return
 	}
 
-	_, dataSetID, scheduleID, err := ParseRefreshScheduleID(state.ID.ValueString())
+	awsAccountID, dataSetID, scheduleID, err := refreshScheduleParseResourceID(state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QuickSight, create.ErrActionSetting, ResNameRefreshSchedule, state.ID.String(), nil),
+			create.ProblemStandardMessage(names.QuickSight, create.ErrActionDeleting, resNameRefreshSchedule, state.ID.String(), nil),
 			err.Error(),
 		)
 		return
 	}
-	_, err = conn.DeleteRefreshScheduleWithContext(ctx, &quicksight.DeleteRefreshScheduleInput{
-		AwsAccountId: aws.String(state.AWSAccountID.ValueString()),
+
+	_, err = conn.DeleteRefreshSchedule(ctx, &quicksight.DeleteRefreshScheduleInput{
+		AwsAccountId: aws.String(awsAccountID),
 		DataSetId:    aws.String(dataSetID),
 		ScheduleId:   aws.String(scheduleID),
 	})
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
-			return
-		}
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QuickSight, create.ErrActionDeleting, ResNameRefreshSchedule, state.ID.String(), nil),
+			create.ProblemStandardMessage(names.QuickSight, create.ErrActionDeleting, resNameRefreshSchedule, state.ID.String(), nil),
 			err.Error(),
 		)
 	}
 }
 
-func (r *resourceRefreshSchedule) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
-
-func (r *resourceRefreshSchedule) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+func (r *refreshScheduleResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
 	scheduleFrequencyPath := path.Root(names.AttrSchedule).AtListIndex(0).AtName("schedule_frequency").AtListIndex(0)
 
 	var scheduleFrequency refreshFrequencyData
@@ -434,7 +461,7 @@ func (r *resourceRefreshSchedule) ValidateConfig(ctx context.Context, req resour
 	}
 
 	switch interval := scheduleFrequency.Interval.ValueString(); interval {
-	case quicksight.RefreshIntervalWeekly:
+	case string(awstypes.RefreshIntervalWeekly):
 		if len(refreshOnDay) == 0 || refreshOnDay[0].DayOfWeek.IsNull() {
 			resp.Diagnostics.Append(fwdiag.NewAttributeRequiredWhenError(
 				refreshOnDayPath.AtListIndex(0).AtName("day_of_week"),
@@ -442,7 +469,7 @@ func (r *resourceRefreshSchedule) ValidateConfig(ctx context.Context, req resour
 				interval,
 			))
 		}
-	case quicksight.RefreshIntervalMonthly:
+	case string(awstypes.RefreshIntervalMonthly):
 		if len(refreshOnDay) == 0 || refreshOnDay[0].DayOfMonth.IsNull() {
 			resp.Diagnostics.Append(fwdiag.NewAttributeRequiredWhenError(
 				refreshOnDayPath.AtListIndex(0).AtName("day_of_month"),
@@ -462,56 +489,44 @@ func (r *resourceRefreshSchedule) ValidateConfig(ctx context.Context, req resour
 	}
 }
 
-func FindRefreshScheduleByID(ctx context.Context, conn *quicksight.QuickSight, id string) (*string, *quicksight.RefreshSchedule, error) {
-	awsAccountID, dataSetID, scheduleID, err := ParseRefreshScheduleID(id)
-	if err != nil {
-		return nil, nil, err
-	}
-	in := quicksight.DescribeRefreshScheduleInput{
+func findRefreshScheduleByThreePartKey(ctx context.Context, conn *quicksight.Client, awsAccountID, dataSetID, scheduleID string) (*string, *awstypes.RefreshSchedule, error) {
+	input := &quicksight.DescribeRefreshScheduleInput{
 		AwsAccountId: aws.String(awsAccountID),
 		DataSetId:    aws.String(dataSetID),
 		ScheduleId:   aws.String(scheduleID),
 	}
-	out, err := conn.DescribeRefreshScheduleWithContext(ctx, &in)
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
-			return nil, nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
 
+	return findRefreshSchedule(ctx, conn, input)
+}
+
+func findRefreshSchedule(ctx context.Context, conn *quicksight.Client, input *quicksight.DescribeRefreshScheduleInput) (*string, *awstypes.RefreshSchedule, error) {
+	output, err := conn.DescribeRefreshSchedule(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
 		return nil, nil, err
 	}
 
-	if out == nil || out.RefreshSchedule == nil {
-		return nil, nil, tfresource.NewEmptyResultError(in)
+	if output == nil || output.RefreshSchedule == nil {
+		return nil, nil, tfresource.NewEmptyResultError(input)
 	}
 
-	// NOTE: out.RefreshSchedule.Arn is always empty, so the root struct field out.Arn
-	// must be included as a separate return value instead.
-	return out.Arn, out.RefreshSchedule, nil
+	return output.Arn, output.RefreshSchedule, nil
 }
 
-func (rd *resourceRefreshScheduleData) refreshFromRead(ctx context.Context, arn *string, out *quicksight.RefreshSchedule) diag.Diagnostics {
+func (rd *resourceRefreshScheduleData) refreshFromRead(ctx context.Context, arn *string, out *awstypes.RefreshSchedule) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	if out == nil {
 		return diags
 	}
 
-	// Support import
-	awsAccountID, dataSetID, scheduleID, err := ParseRefreshScheduleID(rd.ID.ValueString())
-	if err != nil {
-		diags.AddError(
-			create.ProblemStandardMessage(names.QuickSight, create.ErrActionReading, ResNameRefreshSchedule, rd.ID.String(), nil),
-			err.Error(),
-		)
-		return diags
-	}
-	rd.AWSAccountID = types.StringValue(awsAccountID)
-	rd.DataSetID = types.StringValue(dataSetID)
-	rd.ScheduleID = types.StringValue(scheduleID)
 	rd.ARN = flex.StringToFramework(ctx, arn)
 
 	schedule, d := flattenSchedule(ctx, out)
@@ -521,7 +536,7 @@ func (rd *resourceRefreshScheduleData) refreshFromRead(ctx context.Context, arn 
 	return diags
 }
 
-func expandSchedule(ctx context.Context, scheduleId string, plan resourceRefreshScheduleData) (*quicksight.RefreshSchedule, diag.Diagnostics) {
+func expandSchedule(ctx context.Context, scheduleId string, plan resourceRefreshScheduleData) (*awstypes.RefreshSchedule, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	var tfList []scheduleData
@@ -531,9 +546,9 @@ func expandSchedule(ctx context.Context, scheduleId string, plan resourceRefresh
 	}
 
 	tfObj := tfList[0]
-	in := &quicksight.RefreshSchedule{
+	in := &awstypes.RefreshSchedule{
 		ScheduleId:  aws.String(scheduleId),
-		RefreshType: aws.String(tfObj.RefreshType.ValueString()),
+		RefreshType: awstypes.IngestionType(tfObj.RefreshType.ValueString()),
 	}
 
 	if !tfObj.StartAfterDateTime.IsUnknown() {
@@ -550,7 +565,7 @@ func expandSchedule(ctx context.Context, scheduleId string, plan resourceRefresh
 	return in, diags
 }
 
-func expandRefreshFrequency(ctx context.Context, plan scheduleData) (*quicksight.RefreshFrequency, diag.Diagnostics) {
+func expandRefreshFrequency(ctx context.Context, plan scheduleData) (*awstypes.RefreshFrequency, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	var tfList []refreshFrequencyData
 	diags.Append(plan.ScheduleFrequency.ElementsAs(ctx, &tfList, false)...)
@@ -559,8 +574,8 @@ func expandRefreshFrequency(ctx context.Context, plan scheduleData) (*quicksight
 	}
 
 	tfObj := tfList[0]
-	freq := &quicksight.RefreshFrequency{
-		Interval:     aws.String(tfObj.Interval.ValueString()),
+	freq := &awstypes.RefreshFrequency{
+		Interval:     awstypes.RefreshInterval(tfObj.Interval.ValueString()),
 		TimeOfTheDay: aws.String(tfObj.TimeOfTheDay.ValueString()),
 		Timezone:     aws.String(tfObj.Timezone.ValueString()),
 	}
@@ -576,7 +591,7 @@ func expandRefreshFrequency(ctx context.Context, plan scheduleData) (*quicksight
 	return freq, diags
 }
 
-func expandRefreshOnDayData(ctx context.Context, plan refreshFrequencyData) (*quicksight.ScheduleRefreshOnEntity, diag.Diagnostics) {
+func expandRefreshOnDayData(ctx context.Context, plan refreshFrequencyData) (*awstypes.ScheduleRefreshOnEntity, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	var tfList []refreshOnDayData
 	diags.Append(plan.RefreshOnDay.ElementsAs(ctx, &tfList, false)...)
@@ -585,17 +600,17 @@ func expandRefreshOnDayData(ctx context.Context, plan refreshFrequencyData) (*qu
 	}
 
 	tfObj := tfList[0]
-	entity := &quicksight.ScheduleRefreshOnEntity{}
+	entity := &awstypes.ScheduleRefreshOnEntity{}
 	if !tfObj.DayOfMonth.IsNull() {
 		entity.DayOfMonth = aws.String(tfObj.DayOfMonth.ValueString())
 	}
 	if !tfObj.DayOfWeek.IsNull() {
-		entity.DayOfWeek = aws.String(tfObj.DayOfWeek.ValueString())
+		entity.DayOfWeek = awstypes.DayOfWeek(tfObj.DayOfWeek.ValueString())
 	}
 	return entity, diags
 }
 
-func flattenSchedule(ctx context.Context, apiObject *quicksight.RefreshSchedule) (types.List, diag.Diagnostics) {
+func flattenSchedule(ctx context.Context, apiObject *awstypes.RefreshSchedule) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if apiObject == nil {
@@ -606,7 +621,7 @@ func flattenSchedule(ctx context.Context, apiObject *quicksight.RefreshSchedule)
 	diags.Append(d...)
 
 	scheduleAttrs := map[string]attr.Value{
-		"refresh_type":       flex.StringToFramework(ctx, apiObject.RefreshType),
+		"refresh_type":       flex.StringValueToFramework(ctx, apiObject.RefreshType),
 		"schedule_frequency": refreshFrequency,
 	}
 
@@ -621,7 +636,7 @@ func flattenSchedule(ctx context.Context, apiObject *quicksight.RefreshSchedule)
 	return listVal, diags
 }
 
-func flattenRefreshFrequency(ctx context.Context, apiObject *quicksight.RefreshFrequency) (types.List, diag.Diagnostics) {
+func flattenRefreshFrequency(ctx context.Context, apiObject *awstypes.RefreshFrequency) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if apiObject == nil {
@@ -632,7 +647,7 @@ func flattenRefreshFrequency(ctx context.Context, apiObject *quicksight.RefreshF
 	diags.Append(d...)
 
 	refreshFrequencyAttrs := map[string]attr.Value{
-		names.AttrInterval: flex.StringToFramework(ctx, apiObject.Interval),
+		names.AttrInterval: flex.StringValueToFramework(ctx, apiObject.Interval),
 		"time_of_the_day":  flex.StringToFramework(ctx, apiObject.TimeOfTheDay),
 		"timezone":         flex.StringToFramework(ctx, apiObject.Timezone),
 		"refresh_on_day":   refreshOnDay,
@@ -645,7 +660,7 @@ func flattenRefreshFrequency(ctx context.Context, apiObject *quicksight.RefreshF
 	return listVal, diags
 }
 
-func flattenRefreshOnDay(ctx context.Context, apiObject *quicksight.ScheduleRefreshOnEntity) (types.List, diag.Diagnostics) {
+func flattenRefreshOnDay(ctx context.Context, apiObject *awstypes.ScheduleRefreshOnEntity) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if apiObject == nil {
@@ -654,7 +669,7 @@ func flattenRefreshOnDay(ctx context.Context, apiObject *quicksight.ScheduleRefr
 
 	objVal, d := types.ObjectValue(refreshOnDayAttrTypes, map[string]attr.Value{
 		"day_of_month": flex.StringToFramework(ctx, apiObject.DayOfMonth),
-		"day_of_week":  flex.StringToFramework(ctx, apiObject.DayOfWeek),
+		"day_of_week":  flex.StringValueToFramework(ctx, apiObject.DayOfWeek),
 	})
 	diags.Append(d...)
 	listVal, d := types.ListValue(types.ObjectType{AttrTypes: refreshOnDayAttrTypes}, []attr.Value{objVal})
@@ -662,15 +677,22 @@ func flattenRefreshOnDay(ctx context.Context, apiObject *quicksight.ScheduleRefr
 	return listVal, diags
 }
 
-func createRefreshScheduleID(awsAccountID, dataSetId, scheduleID string) string {
-	return fmt.Sprintf("%s,%s,%s", awsAccountID, dataSetId, scheduleID)
+const refreshScheduleResourceIDSeparator = ","
+
+func refreshScheduleCreateResourceID(awsAccountID, dataSetID, scheduleID string) string {
+	parts := []string{awsAccountID, dataSetID, scheduleID}
+	id := strings.Join(parts, refreshScheduleResourceIDSeparator)
+
+	return id
 }
 
-func ParseRefreshScheduleID(id string) (string, string, string, error) {
-	parts := strings.SplitN(id, ",", 3)
+func refreshScheduleParseResourceID(id string) (string, string, string, error) {
+	parts := strings.SplitN(id, refreshScheduleResourceIDSeparator, 3)
+
 	if len(parts) != 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" {
-		return "", "", "", fmt.Errorf("unexpected format of ID (%s), expected AWS_ACCOUNT_ID,DATA_SET_ID,SCHEDULE_ID", id)
+		return "", "", "", fmt.Errorf("unexpected format of ID (%[1]s), expected AWS_ACCOUNT_ID%[2]sDATA_SET_ID%[2]sSCHEDULE_ID", id, refreshScheduleResourceIDSeparator)
 	}
+
 	return parts[0], parts[1], parts[2], nil
 }
 
