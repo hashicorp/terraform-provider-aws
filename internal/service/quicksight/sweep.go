@@ -414,6 +414,12 @@ func sweepVPCConnections(region string) error {
 
 		for _, v := range page.VPCConnectionSummaries {
 			vpcConnectionID := aws.ToString(v.VPCConnectionId)
+
+			if status := v.Status; status == awstypes.VPCConnectionResourceStatusDeleted {
+				log.Printf("[INFO] Skipping QuickSight Group %s: Status=%s", vpcConnectionID, status)
+				continue
+			}
+
 			sweepResources = append(sweepResources, framework.NewSweepResource(newVPCConnectionResource, client,
 				framework.NewAttribute(names.AttrID, vpcConnectionCreateResourceID(awsAccountID, vpcConnectionID)),
 				framework.NewAttribute(names.AttrAWSAccountID, awsAccountID),
