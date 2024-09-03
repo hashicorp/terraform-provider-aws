@@ -1,3 +1,7 @@
 ```release-note:new-data-source
 aws_quicksight_analysis
 ```
+
+```release-note:bug
+resource/aws_quicksight_analysis: Properly send `theme_arn` argument on create and update when configured
+```
