@@ -116,7 +116,7 @@ func (sr ServiceRecord) ClientSDKV1() bool {
 }
 
 func (sr ServiceRecord) ClientSDKV2() bool {
-	return slices.Contains(sr.service.ServiceSDK.Version, 2)
+	return slices.Contains(sr.service.ServiceSDK.Version, 2) //nolint:mnd
 }
 
 // SDKVersion returns:
@@ -348,36 +348,3 @@ type Services struct {
 
 //go:embed names_data.hcl
 var b []byte
-
-const (
-	colAWSCLIV2Command = iota
-	colAWSCLIV2CommandNoDashes
-	colGoV1Package
-	colGoV2Package
-	colProviderPackageActual
-	colProviderPackageCorrect
-	colSplitPackageRealPackage
-	colAliases
-	colProviderNameUpper
-	colGoV1ClientTypeName
-	colSkipClientGenerate
-	colClientSDKV1
-	colClientSDKV2
-	colResourcePrefixActual
-	colResourcePrefixCorrect
-	colFilePrefix
-	colDocPrefix
-	colHumanFriendly
-	colBrand
-	colExclude        // If set, the service is completely ignored
-	colNotImplemented // If set, the service will be included in, e.g. labels, but not have a service client
-	colEndpointOnly   // If set, the service is included in list of endpoints
-	colAllowedSubcategory
-	colDeprecatedEnvVar  // Deprecated `AWS_<service>_ENDPOINT` envvar defined for some services
-	colTFAWSEnvVar       // `TF_AWS_<service>_ENDPOINT` envvar defined for some services
-	colSDKID             // Service SDK ID from AWS SDK for Go v2
-	colEndpointAPICall   // API call to use for endpoint tests
-	colEndpointAPIParams // Any needed parameters for endpoint tests
-	colEndpointOverrideRegion
-	colNote
-)
