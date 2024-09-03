@@ -18,6 +18,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_appconfig_extension: Make `role_arn` attribute optional ([#38900](https://github.com/hashicorp/terraform-provider-aws/issues/38900))
+* resource/aws_lexv2models_slot_type: Fix `slot_type_values` validator which limited configurations to 1 element ([#39126](https://github.com/hashicorp/terraform-provider-aws/issues/39126))
 * resource/aws_rolesanywhere_profile: Fix `role_arns` to make it optional and sent an empty list if unset ([#39108](https://github.com/hashicorp/terraform-provider-aws/issues/39108))
 
 ## 5.65.0 (August 29, 2024)
