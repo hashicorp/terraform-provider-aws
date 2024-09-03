@@ -2,16 +2,23 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_organizations_organizational_unit_descendant_organizational_units` ([#39120](https://github.com/hashicorp/terraform-provider-aws/issues/39120))
 * **New Resource:** `aws_datazone_environment` ([#38811](https://github.com/hashicorp/terraform-provider-aws/issues/38811))
 
 ENHANCEMENTS:
 
+* data-source/aws_sns_topic: Add `tags` attribute ([#38959](https://github.com/hashicorp/terraform-provider-aws/issues/38959))
+* data-source/aws_transfer_server: Add `tags` attribute ([#39092](https://github.com/hashicorp/terraform-provider-aws/issues/39092))
 * resource/aws_datazone_domain: Add `skip_deletion_protection` attribute ([#38811](https://github.com/hashicorp/terraform-provider-aws/issues/38811))
+* resource/aws_rolesanywhere_trust_anchor: Add `notification_settings` argument ([#39108](https://github.com/hashicorp/terraform-provider-aws/issues/39108))
 * resource/aws_sagemaker_endpoint: Increase Create and Update `InService` timeouts to 60 minutes ([#39090](https://github.com/hashicorp/terraform-provider-aws/issues/39090))
+* resource/aws_wafv2_rule_group: Reduce `rate_based_statement.limit` minimum from `100` to `10` ([#39107](https://github.com/hashicorp/terraform-provider-aws/issues/39107))
+* resource/aws_wafv2_web_acl: Reduce `rate_based_statement.limit` minimum from `100` to `10` ([#39107](https://github.com/hashicorp/terraform-provider-aws/issues/39107))
 
 BUG FIXES:
 
 * resource/aws_appconfig_extension: Make `role_arn` attribute optional ([#38900](https://github.com/hashicorp/terraform-provider-aws/issues/38900))
+* resource/aws_rolesanywhere_profile: Fix `role_arns` to make it optional and sent an empty list if unset ([#39108](https://github.com/hashicorp/terraform-provider-aws/issues/39108))
 
 ## 5.65.0 (August 29, 2024)
 
