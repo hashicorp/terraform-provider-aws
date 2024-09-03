@@ -1066,8 +1066,12 @@ func FlattenDataSourceParameters(apiObject awstypes.DataSourceParameters) []inte
 	case *awstypes.DataSourceParametersMemberS3Parameters:
 		tfMap["s3"] = []interface{}{
 			map[string]interface{}{
-				names.AttrBucket: aws.ToString(v.Value.ManifestFileLocation.Bucket),
-				names.AttrKey:    aws.ToString(v.Value.ManifestFileLocation.Key),
+				"manifest_file_location": []interface{}{
+					map[string]interface{}{
+						names.AttrBucket: aws.ToString(v.Value.ManifestFileLocation.Bucket),
+						names.AttrKey:    aws.ToString(v.Value.ManifestFileLocation.Key),
+					},
+				},
 			},
 		}
 	case *awstypes.DataSourceParametersMemberServiceNowParameters:

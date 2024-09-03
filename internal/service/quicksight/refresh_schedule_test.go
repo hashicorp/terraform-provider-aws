@@ -35,7 +35,7 @@ func TestAccQuickSightRefreshSchedule_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckRefreshScheduleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRefreshScheduleConfigBasic(rId, rName, sId),
+				Config: testAccRefreshScheduleConfig_basic(rId, rName, sId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRefreshScheduleExists(ctx, resourceName, &schedule),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "quicksight",
@@ -73,7 +73,7 @@ func TestAccQuickSightRefreshSchedule_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckRefreshScheduleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRefreshScheduleConfigBasic(rId, rName, sId),
+				Config: testAccRefreshScheduleConfig_basic(rId, rName, sId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRefreshScheduleExists(ctx, resourceName, &schedule),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfquicksight.ResourceRefreshSchedule, resourceName),
@@ -99,7 +99,7 @@ func TestAccQuickSightRefreshSchedule_weeklyRefresh(t *testing.T) {
 		CheckDestroy:             testAccCheckRefreshScheduleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRefreshScheduleConfigWeeklyRefresh(rId, rName, sId),
+				Config: testAccRefreshScheduleConfig_WeeklyRefresh(rId, rName, sId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRefreshScheduleExists(ctx, resourceName, &schedule),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "quicksight",
@@ -168,7 +168,7 @@ func TestAccQuickSightRefreshSchedule_monthlyRefresh(t *testing.T) {
 		CheckDestroy:             testAccCheckRefreshScheduleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRefreshScheduleConfigMonthlyRefresh(rId, rName, sId),
+				Config: testAccRefreshScheduleConfig_MonthlyRefresh(rId, rName, sId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRefreshScheduleExists(ctx, resourceName, &schedule),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "quicksight",
@@ -317,7 +317,7 @@ func testAccCheckRefreshScheduleDestroy(ctx context.Context) resource.TestCheckF
 	}
 }
 
-func testAccBaseRefreshScheduleConfig(rId, rName string) string {
+func testAccRefreshScheduleConfig_base(rId, rName string) string {
 	return acctest.ConfigCompose(
 		testAccDataSourceConfig_base(rName),
 		fmt.Sprintf(`
@@ -359,9 +359,9 @@ resource "aws_quicksight_data_set" "test" {
 `, rId, rName))
 }
 
-func testAccRefreshScheduleConfigBasic(rId, rName, sId string) string {
+func testAccRefreshScheduleConfig_basic(rId, rName, sId string) string {
 	return acctest.ConfigCompose(
-		testAccBaseRefreshScheduleConfig(rId, rName),
+		testAccRefreshScheduleConfig_base(rId, rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_refresh_schedule" "test" {
   data_set_id = aws_quicksight_data_set.test.data_set_id
@@ -378,9 +378,9 @@ resource "aws_quicksight_refresh_schedule" "test" {
 `, sId))
 }
 
-func testAccRefreshScheduleConfigWeeklyRefresh(rId, rName, sId string) string {
+func testAccRefreshScheduleConfig_WeeklyRefresh(rId, rName, sId string) string {
 	return acctest.ConfigCompose(
-		testAccBaseRefreshScheduleConfig(rId, rName),
+		testAccRefreshScheduleConfig_base(rId, rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_refresh_schedule" "test" {
   data_set_id = aws_quicksight_data_set.test.data_set_id
@@ -400,7 +400,7 @@ resource "aws_quicksight_refresh_schedule" "test" {
 
 func testAccRefreshScheduleConfig_WeeklyRefresh_NoRefreshOnDay(rId, rName, sId string) string {
 	return acctest.ConfigCompose(
-		testAccBaseRefreshScheduleConfig(rId, rName),
+		testAccRefreshScheduleConfig_base(rId, rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_refresh_schedule" "test" {
   data_set_id = aws_quicksight_data_set.test.data_set_id
@@ -417,7 +417,7 @@ resource "aws_quicksight_refresh_schedule" "test" {
 
 func testAccRefreshScheduleConfig_WeeklyRefresh_NoDayOfWeek(rId, rName, sId string) string {
 	return acctest.ConfigCompose(
-		testAccBaseRefreshScheduleConfig(rId, rName),
+		testAccRefreshScheduleConfig_base(rId, rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_refresh_schedule" "test" {
   data_set_id = aws_quicksight_data_set.test.data_set_id
@@ -434,9 +434,9 @@ resource "aws_quicksight_refresh_schedule" "test" {
 `, sId))
 }
 
-func testAccRefreshScheduleConfigMonthlyRefresh(rId, rName, sId string) string {
+func testAccRefreshScheduleConfig_MonthlyRefresh(rId, rName, sId string) string {
 	return acctest.ConfigCompose(
-		testAccBaseRefreshScheduleConfig(rId, rName),
+		testAccRefreshScheduleConfig_base(rId, rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_refresh_schedule" "test" {
   data_set_id = aws_quicksight_data_set.test.data_set_id
@@ -456,7 +456,7 @@ resource "aws_quicksight_refresh_schedule" "test" {
 
 func testAccRefreshScheduleConfig_MonthlyRefresh_NoRefreshOnDay(rId, rName, sId string) string {
 	return acctest.ConfigCompose(
-		testAccBaseRefreshScheduleConfig(rId, rName),
+		testAccRefreshScheduleConfig_base(rId, rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_refresh_schedule" "test" {
   data_set_id = aws_quicksight_data_set.test.data_set_id
@@ -473,7 +473,7 @@ resource "aws_quicksight_refresh_schedule" "test" {
 
 func testAccRefreshScheduleConfig_MonthlyRefresh_NoDayOfMonth(rId, rName, sId string) string {
 	return acctest.ConfigCompose(
-		testAccBaseRefreshScheduleConfig(rId, rName),
+		testAccRefreshScheduleConfig_base(rId, rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_refresh_schedule" "test" {
   data_set_id = aws_quicksight_data_set.test.data_set_id
@@ -492,7 +492,7 @@ resource "aws_quicksight_refresh_schedule" "test" {
 
 func testAccRefreshScheduleConfig_InvalidRefreshInterval(rId, rName, sId, interval string) string {
 	return acctest.ConfigCompose(
-		testAccBaseRefreshScheduleConfig(rId, rName),
+		testAccRefreshScheduleConfig_base(rId, rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_refresh_schedule" "test" {
   data_set_id = aws_quicksight_data_set.test.data_set_id
