@@ -186,7 +186,7 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 	state.ID = fwflex.StringToFramework(ctx, createOut.Cluster.ClusterArn)
 
 	// set partial state
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("id"), createOut.Cluster.ClusterArn)...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), createOut.Cluster.ClusterArn)...)
 
 	if response.Diagnostics.HasError() {
 		return
