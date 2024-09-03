@@ -127,7 +127,7 @@ func stringOptionalComputedSchema(validateFunc any) *schema.Schema {
 	case schema.SchemaValidateFunc:
 		return stringOptionalComputedSchema(validation.ToDiagFunc(v))
 	default:
-		panic(fmt.Sprintf("unsupported validateFunc type: %T", v))
+		panic(fmt.Sprintf("unsupported validateFunc type: %T", v)) //lintignore:R009
 	}
 }
 
@@ -145,7 +145,7 @@ func stringSchema(required bool, validateFunc any) *schema.Schema {
 	case func(interface{}, string) ([]string, []error):
 		return stringSchema(required, schema.SchemaValidateFunc(v))
 	default:
-		panic(fmt.Sprintf("unsupported validateFunc type: %T", v))
+		panic(fmt.Sprintf("unsupported validateFunc type: %T", v)) //lintignore:R009
 	}
 }
 
@@ -163,7 +163,7 @@ func intSchema(required bool, validateFunc any) *schema.Schema {
 	case func(interface{}, string) ([]string, []error):
 		return intSchema(required, schema.SchemaValidateFunc(v))
 	default:
-		panic(fmt.Sprintf("unsupported validateFunc type: %T", v))
+		panic(fmt.Sprintf("unsupported validateFunc type: %T", v)) //lintignore:R009
 	}
 }
 
@@ -181,7 +181,7 @@ func floatSchema(required bool, validateFunc any) *schema.Schema {
 	case func(interface{}, string) ([]string, []error):
 		return floatSchema(required, schema.SchemaValidateFunc(v))
 	default:
-		panic(fmt.Sprintf("unsupported validateFunc type: %T", v))
+		panic(fmt.Sprintf("unsupported validateFunc type: %T", v)) //lintignore:R009
 	}
 }
 
