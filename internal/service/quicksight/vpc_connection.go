@@ -245,10 +245,6 @@ func (r *vpcConnectionResource) Read(ctx context.Context, req resource.ReadReque
 		)
 		return
 	}
-	if out.Status == awstypes.VPCConnectionResourceStatusDeleted {
-		resp.State.RemoveResource(ctx)
-		return
-	}
 
 	state.AWSAccountID = flex.StringValueToFramework(ctx, awsAccountID)
 	state.VPCConnectionID = flex.StringValueToFramework(ctx, vpcConnectionID)
@@ -396,8 +392,20 @@ func findVPCConnectionByTwoPartKey(ctx context.Context, conn *quicksight.Client,
 		AwsAccountId:    aws.String(awsAccountID),
 		VPCConnectionId: aws.String(vpcConnectionID),
 	}
+	output, err := findVPCConnection(ctx, conn, input)
 
-	return findVPCConnection(ctx, conn, input)
+	if err != nil {
+		return nil, err
+	}
+
+	if status := output.Status; status != awstypes.VPCConnectionResourceStatusDeleted {
+		return nil, &retry.NotFoundError{
+			Message:     string(status),
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
 }
 
 func findVPCConnection(ctx context.Context, conn *quicksight.Client, input *quicksight.DescribeVPCConnectionInput) (*awstypes.VPCConnection, error) {
@@ -479,7 +487,7 @@ func waitVPCConnectionUpdated(ctx context.Context, conn *quicksight.Client, awsA
 func waitVPCConnectionDeleted(ctx context.Context, conn *quicksight.Client, awsAccountID, vpcConnectionID string, timeout time.Duration) (*awstypes.VPCConnection, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.VPCConnectionResourceStatusDeletionInProgress),
-		Target:     enum.Slice(awstypes.VPCConnectionResourceStatusDeleted),
+		Target:     []string{},
 		Refresh:    statusVPCConnection(ctx, conn, awsAccountID, vpcConnectionID),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
