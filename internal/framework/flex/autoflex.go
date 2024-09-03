@@ -136,7 +136,7 @@ func autoFlexConvertStruct(ctx context.Context, sourcePath path.Path, from any, 
 			continue
 		}
 
-		toFieldVal, toFieldName := findFieldFuzzy(ctx, fieldName, valTo, valFrom, flexer)
+		toFieldVal, toFieldName := findFieldFuzzy(ctx, fieldName, valFrom, valTo, flexer)
 		if !toFieldVal.IsValid() {
 			// Corresponding field not found in to.
 			tflog.SubsystemDebug(ctx, subsystemName, "No corresponding field", map[string]any{
@@ -167,7 +167,7 @@ func autoFlexConvertStruct(ctx context.Context, sourcePath path.Path, from any, 
 	return diags
 }
 
-func findFieldFuzzy(ctx context.Context, fieldNameFrom string, valTo, valFrom reflect.Value, flexer autoFlexer) (reflect.Value, string) {
+func findFieldFuzzy(ctx context.Context, fieldNameFrom string, valFrom, valTo reflect.Value, flexer autoFlexer) (reflect.Value, string) {
 	// first precedence is exact match (case sensitive)
 	if v := valTo.FieldByName(fieldNameFrom); v.IsValid() {
 		return v, fieldNameFrom
@@ -218,9 +218,9 @@ func findFieldFuzzy(ctx context.Context, fieldNameFrom string, valTo, valFrom re
 			// so it will only recurse once
 			ctx = context.WithValue(ctx, fieldNamePrefixRecurse, true)
 			if strings.HasPrefix(fieldNameFrom, v) {
-				return findFieldFuzzy(ctx, strings.TrimPrefix(fieldNameFrom, v), valTo, valFrom, flexer)
+				return findFieldFuzzy(ctx, strings.TrimPrefix(fieldNameFrom, v), valFrom, valTo, flexer)
 			}
-			return findFieldFuzzy(ctx, v+fieldNameFrom, valTo, valFrom, flexer)
+			return findFieldFuzzy(ctx, v+fieldNameFrom, valFrom, valTo, flexer)
 		}
 	}
 
@@ -231,9 +231,9 @@ func findFieldFuzzy(ctx context.Context, fieldNameFrom string, valTo, valFrom re
 			// so it will only recurse once
 			ctx = context.WithValue(ctx, fieldNameSuffixRecurse, true)
 			if strings.HasSuffix(fieldNameFrom, v) {
-				return findFieldFuzzy(ctx, strings.TrimSuffix(fieldNameFrom, v), valTo, valFrom, flexer)
+				return findFieldFuzzy(ctx, strings.TrimSuffix(fieldNameFrom, v), valFrom, valTo, flexer)
 			}
-			return findFieldFuzzy(ctx, fieldNameFrom+v, valTo, valFrom, flexer)
+			return findFieldFuzzy(ctx, fieldNameFrom+v, valFrom, valTo, flexer)
 		}
 	}
 
