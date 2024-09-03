@@ -5,22 +5,18 @@ package quicksight
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_quicksight_group", name="Group")
-func DataSourceGroup() *schema.Resource {
+func dataSourceGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceGroupRead,
 
@@ -46,7 +42,7 @@ func DataSourceGroup() *schema.Resource {
 				names.AttrNamespace: {
 					Type:     schema.TypeString,
 					Optional: true,
-					Default:  DefaultGroupNamespace,
+					Default:  defaultGroupNamespace,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 63),
 						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "must contain only alphanumeric characters, hyphens, underscores, and periods"),
@@ -63,7 +59,7 @@ func DataSourceGroup() *schema.Resource {
 
 func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
+	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
 	awsAccountID := meta.(*conns.AWSClient).AccountID
 	if v, ok := d.GetOk(names.AttrAWSAccountID); ok {
@@ -71,22 +67,15 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	groupName := d.Get(names.AttrGroupName).(string)
 	namespace := d.Get(names.AttrNamespace).(string)
-	in := &quicksight.DescribeGroupInput{
-		GroupName:    aws.String(groupName),
-		AwsAccountId: aws.String(awsAccountID),
-		Namespace:    aws.String(namespace),
-	}
+	id := groupCreateResourceID(awsAccountID, namespace, groupName)
 
-	out, err := conn.DescribeGroupWithContext(ctx, in)
+	group, err := findGroupByThreePartKey(ctx, conn, awsAccountID, namespace, groupName)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading QuickSight Group (%s): %s", groupName, err)
-	}
-	if out == nil || out.Group == nil {
-		return sdkdiag.AppendErrorf(diags, "reading QuickSight Group (%s): %s", groupName, tfresource.NewEmptyResultError(in))
+		return sdkdiag.AppendErrorf(diags, "reading QuickSight Group (%s): %s", id, err)
 	}
 
-	group := out.Group
-	d.SetId(fmt.Sprintf("%s/%s/%s", awsAccountID, namespace, aws.StringValue(group.GroupName)))
+	d.SetId(id)
 	d.Set(names.AttrARN, group.Arn)
 	d.Set(names.AttrAWSAccountID, awsAccountID)
 	d.Set(names.AttrDescription, group.Description)

@@ -178,6 +178,7 @@ import (
 	pricing_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pricing"
 	qbusiness_sdkv2 "github.com/aws/aws-sdk-go-v2/service/qbusiness"
 	qldb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/qldb"
+	quicksight_sdkv2 "github.com/aws/aws-sdk-go-v2/service/quicksight"
 	ram_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ram"
 	rbin_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rbin"
 	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
@@ -243,7 +244,6 @@ import (
 	workspacesweb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/workspacesweb"
 	xray_sdkv2 "github.com/aws/aws-sdk-go-v2/service/xray"
 	imagebuilder_sdkv1 "github.com/aws/aws-sdk-go/service/imagebuilder"
-	quicksight_sdkv1 "github.com/aws/aws-sdk-go/service/quicksight"
 	simpledb_sdkv1 "github.com/aws/aws-sdk-go/service/simpledb"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -949,8 +949,8 @@ func (c *AWSClient) QLDBClient(ctx context.Context) *qldb_sdkv2.Client {
 	return errs.Must(client[*qldb_sdkv2.Client](ctx, c, names.QLDB, make(map[string]any)))
 }
 
-func (c *AWSClient) QuickSightConn(ctx context.Context) *quicksight_sdkv1.QuickSight {
-	return errs.Must(conn[*quicksight_sdkv1.QuickSight](ctx, c, names.QuickSight, make(map[string]any)))
+func (c *AWSClient) QuickSightClient(ctx context.Context) *quicksight_sdkv2.Client {
+	return errs.Must(client[*quicksight_sdkv2.Client](ctx, c, names.QuickSight, make(map[string]any)))
 }
 
 func (c *AWSClient) RAMClient(ctx context.Context) *ram_sdkv2.Client {

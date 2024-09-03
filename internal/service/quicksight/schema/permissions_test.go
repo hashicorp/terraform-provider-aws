@@ -1,28 +1,28 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package quicksight_test
+package schema
 
 import (
-	"reflect"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/quicksight"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestDataSourcePermissionsDiff(t *testing.T) {
+func TestDiffPermissions(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
 		name            string
 		oldPermissions  []interface{}
 		newPermissions  []interface{}
-		expectedGrants  []*quicksight.ResourcePermission
-		expectedRevokes []*quicksight.ResourcePermission
+		expectedGrants  []awstypes.ResourcePermission
+		expectedRevokes []awstypes.ResourcePermission
 	}{
 		{
 			name:            "no changes;empty",
@@ -66,9 +66,9 @@ func TestDataSourcePermissionsDiff(t *testing.T) {
 					}),
 				},
 			},
-			expectedGrants: []*quicksight.ResourcePermission{
+			expectedGrants: []awstypes.ResourcePermission{
 				{
-					Actions:   aws.StringSlice([]string{"action1", "action2"}),
+					Actions:   []string{"action1", "action2"},
 					Principal: aws.String("principal1"),
 				},
 			},
@@ -87,9 +87,9 @@ func TestDataSourcePermissionsDiff(t *testing.T) {
 			},
 			newPermissions: []interface{}{},
 			expectedGrants: nil,
-			expectedRevokes: []*quicksight.ResourcePermission{
+			expectedRevokes: []awstypes.ResourcePermission{
 				{
-					Actions:   aws.StringSlice([]string{"action1", "action2"}),
+					Actions:   []string{"action1", "action2"},
 					Principal: aws.String("principal1"),
 				},
 			},
@@ -113,9 +113,9 @@ func TestDataSourcePermissionsDiff(t *testing.T) {
 					}),
 				},
 			},
-			expectedGrants: []*quicksight.ResourcePermission{
+			expectedGrants: []awstypes.ResourcePermission{
 				{
-					Actions:   aws.StringSlice([]string{"action1", "action2"}),
+					Actions:   []string{"action1", "action2"},
 					Principal: aws.String("principal1"),
 				},
 			},
@@ -140,15 +140,15 @@ func TestDataSourcePermissionsDiff(t *testing.T) {
 					}),
 				},
 			},
-			expectedGrants: []*quicksight.ResourcePermission{
+			expectedGrants: []awstypes.ResourcePermission{
 				{
-					Actions:   aws.StringSlice([]string{"oldAction"}),
+					Actions:   []string{"oldAction"},
 					Principal: aws.String("principal1"),
 				},
 			},
-			expectedRevokes: []*quicksight.ResourcePermission{
+			expectedRevokes: []awstypes.ResourcePermission{
 				{
-					Actions:   aws.StringSlice([]string{"onlyOldAction"}),
+					Actions:   []string{"onlyOldAction"},
 					Principal: aws.String("principal1"),
 				},
 			},
@@ -194,36 +194,39 @@ func TestDataSourcePermissionsDiff(t *testing.T) {
 					}),
 				},
 			},
-			expectedGrants: []*quicksight.ResourcePermission{
+			expectedGrants: []awstypes.ResourcePermission{
 				{
-					Actions:   aws.StringSlice([]string{"action3", "action5"}),
+					Actions:   []string{"action3", "action5"},
 					Principal: aws.String("principal2"),
 				},
 			},
-			expectedRevokes: []*quicksight.ResourcePermission{
+			expectedRevokes: []awstypes.ResourcePermission{
 				{
-					Actions:   aws.StringSlice([]string{"action1", "action4"}),
+					Actions:   []string{"action1", "action4"},
 					Principal: aws.String("principal2"),
 				},
 				{
-					Actions:   aws.StringSlice([]string{"action5"}),
+					Actions:   []string{"action5"},
 					Principal: aws.String("principal3"),
 				},
 			},
 		},
 	}
 
+	ignoreExportedOpts := cmpopts.IgnoreUnexported(
+		awstypes.ResourcePermission{},
+	)
+
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
-			toGrant, toRevoke := tfquicksight.DiffPermissions(testCase.oldPermissions, testCase.newPermissions)
-			if !reflect.DeepEqual(toGrant, testCase.expectedGrants) {
-				t.Fatalf("Expected: %v, got: %v", testCase.expectedGrants, toGrant)
+			toGrant, toRevoke := DiffPermissions(testCase.oldPermissions, testCase.newPermissions)
+			if diff := cmp.Diff(toGrant, testCase.expectedGrants, ignoreExportedOpts); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 			}
-
-			if !reflect.DeepEqual(toRevoke, testCase.expectedRevokes) {
-				t.Fatalf("Expected: %v, got: %v", testCase.expectedRevokes, toRevoke)
+			if diff := cmp.Diff(toRevoke, testCase.expectedRevokes, ignoreExportedOpts); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 			}
 		})
 	}
