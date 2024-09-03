@@ -68,7 +68,7 @@ To specify data source connection parameters, exactly one of the following sub-o
 * `aurora` - (Optional) [Parameters](#aurora-argument-reference) for connecting to Aurora MySQL.
 * `aurora_postgresql` - (Optional) [Parameters](#aurora_postgresql-argument-reference) for connecting to Aurora Postgresql.
 * `aws_iot_analytics` - (Optional) [Parameters](#aws_iot_analytics-argument-reference) for connecting to AWS IOT Analytics.
-* `databricks` - (Optional) [Parameters](#databricks-argument-reference) for connecting to Databricks.
+* `databricks` - (Optional) [Parameters](#databricks-fargument-reference) for connecting to Databricks.
 * `jira` - (Optional) [Parameters](#jira-fargument-reference) for connecting to Jira.
 * `maria_db` - (Optional) [Parameters](#maria_db-argument-reference) for connecting to MariaDB.
 * `mysql` - (Optional) [Parameters](#mysql-argument-reference) for connecting to MySQL.
