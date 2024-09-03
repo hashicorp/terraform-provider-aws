@@ -485,6 +485,9 @@ func expandActions(l []interface{}) []awstypes.Action {
 	actions := []awstypes.Action{}
 
 	for _, mRaw := range l {
+		if mRaw == nil {
+			continue
+		}
 		m := mRaw.(map[string]interface{})
 
 		action := awstypes.Action{}
@@ -520,6 +523,9 @@ func expandActions(l []interface{}) []awstypes.Action {
 }
 
 func expandTriggerNotificationProperty(l []interface{}) *awstypes.NotificationProperty {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
 	m := l[0].(map[string]interface{})
 
 	property := &awstypes.NotificationProperty{}
@@ -535,6 +541,9 @@ func expandConditions(l []interface{}) []awstypes.Condition {
 	conditions := []awstypes.Condition{}
 
 	for _, mRaw := range l {
+		if mRaw == nil {
+			continue
+		}
 		m := mRaw.(map[string]interface{})
 
 		condition := awstypes.Condition{
@@ -564,6 +573,9 @@ func expandConditions(l []interface{}) []awstypes.Condition {
 }
 
 func expandPredicate(l []interface{}) *awstypes.Predicate {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
 	m := l[0].(map[string]interface{})
 
 	predicate := &awstypes.Predicate{
@@ -664,6 +676,9 @@ func flattenTriggerNotificationProperty(property *awstypes.NotificationProperty)
 }
 
 func expandEventBatchingCondition(l []interface{}) *awstypes.EventBatchingCondition {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
 	m := l[0].(map[string]interface{})
 
 	ebc := &awstypes.EventBatchingCondition{

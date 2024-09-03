@@ -756,6 +756,10 @@ func resourcePermissionsDelete(ctx context.Context, d *schema.ResourceData, meta
 		input.Resource.Catalog = ExpandCatalogResource()
 	}
 
+	if v, ok := d.GetOk("data_cells_filter"); ok {
+		input.Resource.DataCellsFilter = ExpandDataCellsFilter(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("data_location"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Resource.DataLocation = ExpandDataLocationResource(v.([]interface{})[0].(map[string]interface{}))
 	}
@@ -814,6 +818,10 @@ func resourcePermissionsDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "cannot grant/revoke permission on non-existent column") {
+		return diags
+	}
+
+	if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "Cell Filter not found") {
 		return diags
 	}
 

@@ -571,7 +571,6 @@ func New(ctx context.Context, i interface{}) KeyValueTags {
 		kvtm := make(KeyValueTags, len(value))
 
 		for k, v := range value {
-			v := v // Prevent referencing issues
 			kvtm[k] = &TagData{Value: &v}
 		}
 
@@ -580,8 +579,6 @@ func New(ctx context.Context, i interface{}) KeyValueTags {
 		kvtm := make(KeyValueTags, len(value))
 
 		for k, v := range value {
-			v := v
-
 			if v == nil {
 				kvtm[k] = nil
 				continue

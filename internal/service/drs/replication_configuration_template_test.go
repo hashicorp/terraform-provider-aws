@@ -28,6 +28,7 @@ func TestAccDRSReplicationConfigurationTemplate_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:      testAccReplicationConfigurationTemplate_basic,
 		acctest.CtDisappears: testAccReplicationConfigurationTemplate_disappears,
+		"tags":               testAccDRSReplicationConfigurationTemplate_tagsSerial,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 5*time.Second)

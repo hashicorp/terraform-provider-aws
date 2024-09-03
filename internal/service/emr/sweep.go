@@ -7,12 +7,13 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/emr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/emr"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/emr/types"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
 func RegisterSweepers() {
@@ -33,22 +34,31 @@ func sweepClusters(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.EMRConn(ctx)
+	conn := client.EMRClient(ctx)
 	input := &emr.ListClustersInput{
-		ClusterStates: aws.StringSlice([]string{emr.ClusterStateBootstrapping, emr.ClusterStateRunning, emr.ClusterStateStarting, emr.ClusterStateWaiting}),
+		ClusterStates: []awstypes.ClusterState{awstypes.ClusterStateBootstrapping, awstypes.ClusterStateRunning, awstypes.ClusterStateStarting, awstypes.ClusterStateWaiting},
 	}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListClustersPagesWithContext(ctx, input, func(page *emr.ListClustersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := emr.NewListClustersPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping EMR Clusters sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing EMR Clusters (%s): %w", region, err)
 		}
 
 		for _, v := range page.Clusters {
-			id := aws.StringValue(v.Id)
+			id := aws.ToString(v.Id)
 
-			_, err := conn.SetTerminationProtectionWithContext(ctx, &emr.SetTerminationProtectionInput{
-				JobFlowIds:           aws.StringSlice([]string{id}),
+			_, err := conn.SetTerminationProtection(ctx, &emr.SetTerminationProtectionInput{
+				JobFlowIds:           []string{id},
 				TerminationProtected: aws.Bool(false),
 			})
 
@@ -62,17 +72,6 @@ func sweepClusters(region string) error {
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EMR Clusters sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing EMR Clusters (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -92,33 +91,31 @@ func sweepStudios(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.EMRConn(ctx)
+	conn := client.EMRClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
 	input := &emr.ListStudiosInput{}
 
-	err = conn.ListStudiosPagesWithContext(ctx, input, func(page *emr.ListStudiosOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := emr.NewListStudiosPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping EMR Studios sweep for %s: %s", region, sweeperErrs)
+			return nil
+		}
+		if err != nil {
+			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EMR Studios for %s: %w", region, err))
 		}
 
 		for _, studio := range page.Studios {
 			r := resourceStudio()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(studio.StudioId))
+			d.SetId(aws.ToString(studio.StudioId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EMR Studios sweep for %s: %s", region, sweeperErrs)
-		return nil
-	}
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EMR Studios for %s: %w", region, err))
 	}
 
 	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {

@@ -137,7 +137,6 @@ func TestEquivalentNodePropertiesJSON(t *testing.T) {
 	}
 
 	for name, testCase := range testCases {
-		testCase := testCase
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
