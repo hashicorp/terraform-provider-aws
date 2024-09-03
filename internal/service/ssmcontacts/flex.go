@@ -1,8 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssmcontacts
 
 import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssmcontacts/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func expandContactChannelAddress(deliveryAddress []interface{}) *types.ContactChannelAddress {
@@ -43,7 +47,7 @@ func expandStages(stages []interface{}) []types.Stage {
 			s.DurationInMinutes = aws.Int32(int32(v))
 		}
 
-		if v, ok := stageData["target"].([]interface{}); ok {
+		if v, ok := stageData[names.AttrTarget].([]interface{}); ok {
 			s.Targets = expandTargets(v)
 		}
 
@@ -64,7 +68,7 @@ func flattenStages(stages []types.Stage) []interface{} {
 		}
 
 		if v := stage.Targets; v != nil {
-			s["target"] = flattenTargets(v)
+			s[names.AttrTarget] = flattenTargets(v)
 		}
 
 		result = append(result, s)

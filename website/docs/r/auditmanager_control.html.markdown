@@ -60,12 +60,12 @@ The following arguments are optional:
 
 The following arguments are required:
 
-* `keyword_input_type` - (Required) Input method for the keyword. Valid values are `SELECT_FROM_LIST`.
+* `keyword_input_type` - (Required) Input method for the keyword. Valid values are `INPUT_TEXT`, `SELECT_FROM_LIST`, or `UPLOAD_FILE`.
 * `keyword_value` - (Required) The value of the keyword that's used when mapping a control data source. For example, this can be a CloudTrail event name, a rule name for Config, a Security Hub control, or the name of an Amazon Web Services API call. See the [Audit Manager supported control data sources documentation](https://docs.aws.amazon.com/audit-manager/latest/userguide/control-data-sources.html) for more information.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the control.
 * `control_mapping_sources.*.source_id` - Unique identifier for the source.
@@ -74,8 +74,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-An Audit Manager Control can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import an Audit Manager Control using the `id`. For example:
 
+```terraform
+import {
+  to = aws_auditmanager_control.example
+  id = "abc123-de45"
+}
 ```
-$ terraform import aws_auditmanager_control.example abc123-de45
+
+Using `terraform import`, import an Audit Manager Control using the `id`. For example:
+
+```console
+% terraform import aws_auditmanager_control.example abc123-de45
 ```

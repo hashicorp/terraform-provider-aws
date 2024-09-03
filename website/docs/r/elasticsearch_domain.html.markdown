@@ -335,9 +335,9 @@ AWS documentation: [VPC Support for Amazon Elasticsearch Service Domains](https:
 * `security_group_ids` - (Optional) List of VPC Security Group IDs to be applied to the Elasticsearch domain endpoints. If omitted, the default Security Group for the VPC will be used.
 * `subnet_ids` - (Required) List of VPC Subnet IDs for the Elasticsearch domain endpoints to be created in.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the domain.
 * `domain_id` - Unique identifier for the domain.
@@ -358,8 +358,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Elasticsearch domains can be imported using the `domain_name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Elasticsearch domains using the `domain_name`. For example:
 
+```terraform
+import {
+  to = aws_elasticsearch_domain.example
+  id = "domain_name"
+}
 ```
-$ terraform import aws_elasticsearch_domain.example domain_name
+
+Using `terraform import`, import Elasticsearch domains using the `domain_name`. For example:
+
+```console
+% terraform import aws_elasticsearch_domain.example domain_name
 ```

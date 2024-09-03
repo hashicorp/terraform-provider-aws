@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package events_test
 
 import (
@@ -5,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/eventbridge"
+	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -14,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfevents "github.com/hashicorp/terraform-provider-aws/internal/service/events"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEventsEndpoint_basic(t *testing.T) {
@@ -25,7 +29,7 @@ func TestAccEventsEndpoint_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
 		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -33,21 +37,21 @@ func TestAccEventsEndpoint_basic(t *testing.T) {
 				Config: testAccEndpointConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "events", fmt.Sprintf("endpoint/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "events", fmt.Sprintf("endpoint/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_url"),
-					resource.TestCheckResourceAttr(resourceName, "event_bus.#", "2"),
-					resource.TestCheckResourceAttrPair(resourceName, "event_bus.0.event_bus_arn", "aws_cloudwatch_event_bus.primary", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "event_bus.1.event_bus_arn", "aws_cloudwatch_event_bus.secondary", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "replication_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "event_bus.#", acctest.Ct2),
+					resource.TestCheckResourceAttrPair(resourceName, "event_bus.0.event_bus_arn", "aws_cloudwatch_event_bus.primary", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "event_bus.1.event_bus_arn", "aws_cloudwatch_event_bus.secondary", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "replication_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "replication_config.0.state", "DISABLED"),
-					resource.TestCheckResourceAttr(resourceName, "role_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "routing_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "routing_config.0.failover_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "routing_config.0.failover_config.0.primary.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "routing_config.0.failover_config.0.primary.0.health_check", "aws_route53_health_check.test", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "routing_config.0.failover_config.0.secondary.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRoleARN, ""),
+					resource.TestCheckResourceAttr(resourceName, "routing_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "routing_config.0.failover_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "routing_config.0.failover_config.0.primary.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "routing_config.0.failover_config.0.primary.0.health_check", "aws_route53_health_check.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "routing_config.0.failover_config.0.secondary.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "routing_config.0.failover_config.0.secondary.0.route", acctest.AlternateRegion()),
 				),
 			},
@@ -69,7 +73,7 @@ func TestAccEventsEndpoint_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
 		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -94,7 +98,7 @@ func TestAccEventsEndpoint_roleARN(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
 		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -102,21 +106,21 @@ func TestAccEventsEndpoint_roleARN(t *testing.T) {
 				Config: testAccEndpointConfig_roleARN(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "events", fmt.Sprintf("endpoint/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "events", fmt.Sprintf("endpoint/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_url"),
-					resource.TestCheckResourceAttr(resourceName, "event_bus.#", "2"),
-					resource.TestCheckResourceAttrPair(resourceName, "event_bus.0.event_bus_arn", "aws_cloudwatch_event_bus.primary", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "event_bus.1.event_bus_arn", "aws_cloudwatch_event_bus.secondary", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "replication_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "event_bus.#", acctest.Ct2),
+					resource.TestCheckResourceAttrPair(resourceName, "event_bus.0.event_bus_arn", "aws_cloudwatch_event_bus.primary", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "event_bus.1.event_bus_arn", "aws_cloudwatch_event_bus.secondary", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "replication_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "replication_config.0.state", "ENABLED"),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "routing_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "routing_config.0.failover_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "routing_config.0.failover_config.0.primary.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "routing_config.0.failover_config.0.primary.0.health_check", "aws_route53_health_check.test", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "routing_config.0.failover_config.0.secondary.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "routing_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "routing_config.0.failover_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "routing_config.0.failover_config.0.primary.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "routing_config.0.failover_config.0.primary.0.health_check", "aws_route53_health_check.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "routing_config.0.failover_config.0.secondary.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "routing_config.0.failover_config.0.secondary.0.route", acctest.AlternateRegion()),
 				),
 			},
@@ -138,7 +142,7 @@ func TestAccEventsEndpoint_description(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
 		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -146,21 +150,21 @@ func TestAccEventsEndpoint_description(t *testing.T) {
 				Config: testAccEndpointConfig_description(rName, "description 1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "events", fmt.Sprintf("endpoint/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "description", "description 1"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "events", fmt.Sprintf("endpoint/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description 1"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_url"),
-					resource.TestCheckResourceAttr(resourceName, "event_bus.#", "2"),
-					resource.TestCheckResourceAttrPair(resourceName, "event_bus.0.event_bus_arn", "aws_cloudwatch_event_bus.primary", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "event_bus.1.event_bus_arn", "aws_cloudwatch_event_bus.secondary", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "replication_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "event_bus.#", acctest.Ct2),
+					resource.TestCheckResourceAttrPair(resourceName, "event_bus.0.event_bus_arn", "aws_cloudwatch_event_bus.primary", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "event_bus.1.event_bus_arn", "aws_cloudwatch_event_bus.secondary", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "replication_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "replication_config.0.state", "DISABLED"),
-					resource.TestCheckResourceAttr(resourceName, "role_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "routing_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "routing_config.0.failover_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "routing_config.0.failover_config.0.primary.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "routing_config.0.failover_config.0.primary.0.health_check", "aws_route53_health_check.test", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "routing_config.0.failover_config.0.secondary.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRoleARN, ""),
+					resource.TestCheckResourceAttr(resourceName, "routing_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "routing_config.0.failover_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "routing_config.0.failover_config.0.primary.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "routing_config.0.failover_config.0.primary.0.health_check", "aws_route53_health_check.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "routing_config.0.failover_config.0.secondary.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "routing_config.0.failover_config.0.secondary.0.route", acctest.AlternateRegion()),
 				),
 			},
@@ -173,21 +177,21 @@ func TestAccEventsEndpoint_description(t *testing.T) {
 				Config: testAccEndpointConfig_description(rName, "description 2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "events", fmt.Sprintf("endpoint/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "description", "description 2"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "events", fmt.Sprintf("endpoint/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description 2"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_url"),
-					resource.TestCheckResourceAttr(resourceName, "event_bus.#", "2"),
-					resource.TestCheckResourceAttrPair(resourceName, "event_bus.0.event_bus_arn", "aws_cloudwatch_event_bus.primary", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "event_bus.1.event_bus_arn", "aws_cloudwatch_event_bus.secondary", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "replication_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "event_bus.#", acctest.Ct2),
+					resource.TestCheckResourceAttrPair(resourceName, "event_bus.0.event_bus_arn", "aws_cloudwatch_event_bus.primary", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "event_bus.1.event_bus_arn", "aws_cloudwatch_event_bus.secondary", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "replication_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "replication_config.0.state", "DISABLED"),
-					resource.TestCheckResourceAttr(resourceName, "role_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "routing_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "routing_config.0.failover_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "routing_config.0.failover_config.0.primary.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "routing_config.0.failover_config.0.primary.0.health_check", "aws_route53_health_check.test", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "routing_config.0.failover_config.0.secondary.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRoleARN, ""),
+					resource.TestCheckResourceAttr(resourceName, "routing_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "routing_config.0.failover_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "routing_config.0.failover_config.0.primary.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "routing_config.0.failover_config.0.primary.0.health_check", "aws_route53_health_check.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "routing_config.0.failover_config.0.secondary.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "routing_config.0.failover_config.0.secondary.0.route", acctest.AlternateRegion()),
 				),
 			},
@@ -204,7 +208,7 @@ func TestAccEventsEndpoint_updateRoutingConfig(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
 		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -212,21 +216,21 @@ func TestAccEventsEndpoint_updateRoutingConfig(t *testing.T) {
 				Config: testAccEndpointConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "events", fmt.Sprintf("endpoint/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "events", fmt.Sprintf("endpoint/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_url"),
-					resource.TestCheckResourceAttr(resourceName, "event_bus.#", "2"),
-					resource.TestCheckResourceAttrPair(resourceName, "event_bus.0.event_bus_arn", "aws_cloudwatch_event_bus.primary", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "event_bus.1.event_bus_arn", "aws_cloudwatch_event_bus.secondary", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "replication_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "event_bus.#", acctest.Ct2),
+					resource.TestCheckResourceAttrPair(resourceName, "event_bus.0.event_bus_arn", "aws_cloudwatch_event_bus.primary", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "event_bus.1.event_bus_arn", "aws_cloudwatch_event_bus.secondary", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "replication_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "replication_config.0.state", "DISABLED"),
-					resource.TestCheckResourceAttr(resourceName, "role_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "routing_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "routing_config.0.failover_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "routing_config.0.failover_config.0.primary.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "routing_config.0.failover_config.0.primary.0.health_check", "aws_route53_health_check.test", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "routing_config.0.failover_config.0.secondary.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRoleARN, ""),
+					resource.TestCheckResourceAttr(resourceName, "routing_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "routing_config.0.failover_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "routing_config.0.failover_config.0.primary.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "routing_config.0.failover_config.0.primary.0.health_check", "aws_route53_health_check.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "routing_config.0.failover_config.0.secondary.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "routing_config.0.failover_config.0.secondary.0.route", acctest.AlternateRegion()),
 				),
 			},
@@ -234,21 +238,21 @@ func TestAccEventsEndpoint_updateRoutingConfig(t *testing.T) {
 				Config: testAccEndpointConfig_updateRoutingConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "events", fmt.Sprintf("endpoint/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "events", fmt.Sprintf("endpoint/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_url"),
-					resource.TestCheckResourceAttr(resourceName, "event_bus.#", "2"),
-					resource.TestCheckResourceAttrPair(resourceName, "event_bus.0.event_bus_arn", "aws_cloudwatch_event_bus.primary", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "event_bus.1.event_bus_arn", "aws_cloudwatch_event_bus.secondary", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "replication_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "event_bus.#", acctest.Ct2),
+					resource.TestCheckResourceAttrPair(resourceName, "event_bus.0.event_bus_arn", "aws_cloudwatch_event_bus.primary", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "event_bus.1.event_bus_arn", "aws_cloudwatch_event_bus.secondary", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "replication_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "replication_config.0.state", "DISABLED"),
-					resource.TestCheckResourceAttr(resourceName, "role_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "routing_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "routing_config.0.failover_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "routing_config.0.failover_config.0.primary.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "routing_config.0.failover_config.0.primary.0.health_check", "aws_route53_health_check.test2", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "routing_config.0.failover_config.0.secondary.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRoleARN, ""),
+					resource.TestCheckResourceAttr(resourceName, "routing_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "routing_config.0.failover_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "routing_config.0.failover_config.0.primary.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "routing_config.0.failover_config.0.primary.0.health_check", "aws_route53_health_check.test2", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "routing_config.0.failover_config.0.secondary.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "routing_config.0.failover_config.0.secondary.0.route", acctest.AlternateRegion()),
 				),
 			},
@@ -258,7 +262,7 @@ func TestAccEventsEndpoint_updateRoutingConfig(t *testing.T) {
 
 func testAccCheckEndpointDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudwatch_event_endpoint" {
@@ -289,7 +293,7 @@ func testAccCheckEndpointExists(ctx context.Context, n string, v *eventbridge.De
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsClient(ctx)
 
 		output, err := tfevents.FindEndpointByName(ctx, conn, rs.Primary.ID)
 

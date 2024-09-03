@@ -20,13 +20,13 @@ data "aws_arn" "db_instance" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `arn` - (Required) ARN to parse.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `partition` - Partition that the resource is in.
 

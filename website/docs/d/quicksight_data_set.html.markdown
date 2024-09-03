@@ -30,7 +30,7 @@ The following arguments are optional:
 
 * `aws_account_id` - (Optional) AWS account ID.
 
-## Attributes Reference
+## Attribute Reference
 
 See the [Data Set Resource](/docs/providers/aws/r/quicksight_data_set.html) for details on the
 returned attributes - they are identical.

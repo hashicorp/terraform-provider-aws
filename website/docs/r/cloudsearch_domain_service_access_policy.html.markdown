@@ -52,14 +52,14 @@ resource "aws_cloudsearch_domain_service_access_policy" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `access_policy` - (Required) The access rules you want to configure. These rules replace any existing rules. See the [AWS documentation](https://docs.aws.amazon.com/cloudsearch/latest/developerguide/configuring-access.html) for details.
 * `domain_name` - (Required) The CloudSearch domain name the policy applies to.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Timeouts
 
@@ -70,8 +70,17 @@ No additional attributes are exported.
 
 ## Import
 
-CloudSearch domain service access policies can be imported using the domain name, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudSearch domain service access policies using the domain name. For example:
 
+```terraform
+import {
+  to = aws_cloudsearch_domain_service_access_policy.example
+  id = "example-domain"
+}
 ```
-$ terraform import aws_cloudsearch_domain_service_access_policy.example example-domain
+
+Using `terraform import`, import CloudSearch domain service access policies using the domain name. For example:
+
+```console
+% terraform import aws_cloudsearch_domain_service_access_policy.example example-domain
 ```

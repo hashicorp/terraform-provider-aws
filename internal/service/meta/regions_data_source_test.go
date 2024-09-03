@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package meta_test
 
 import (
@@ -78,7 +81,7 @@ func TestAccMetaRegionsDataSource_nonExistentRegion(t *testing.T) {
 			{
 				Config: testAccRegionsDataSourceConfig_nonExistentRegion(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "names.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "names.#", acctest.Ct0),
 				),
 			},
 		},

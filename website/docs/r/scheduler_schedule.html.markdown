@@ -180,17 +180,26 @@ The following arguments are optional:
 
 * `message_group_id` - (Optional) FIFO message group ID to use as the target.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Name of the schedule.
 * `arn` - ARN of the schedule.
 
 ## Import
 
-Schedules can be imported using the combination `group_name/name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import schedules using the combination `group_name/name`. For example:
 
+```terraform
+import {
+  to = aws_scheduler_schedule.example
+  id = "my-schedule-group/my-schedule"
+}
 ```
-$ terraform import aws_scheduler_schedule.example my-schedule-group/my-schedule
+
+Using `terraform import`, import schedules using the combination `group_name/name`. For example:
+
+```console
+% terraform import aws_scheduler_schedule.example my-schedule-group/my-schedule
 ```

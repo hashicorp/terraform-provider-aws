@@ -20,13 +20,13 @@ data "aws_launch_configuration" "ubuntu" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `name` - (Required) Name of the launch configuration.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the launch configuration.
 * `arn` - Amazon Resource Name of the launch configuration.
@@ -41,6 +41,7 @@ In addition to all arguments above, the following attributes are exported:
     * `http_put_response_hop_limit` - The desired HTTP PUT response hop limit for instance metadata requests.
 * `security_groups` - List of associated Security Group IDS.
 * `associate_public_ip_address` - Whether a Public IP address is associated with the instance.
+* `primary_ipv6` - Whether the first IPv6 GUA will be made the primary IPv6 address.
 * `user_data` - User Data of the instance.
 * `enable_monitoring` - Whether Detailed Monitoring is Enabled.
 * `ebs_optimized` - Whether the launched EC2 instance will be EBS-optimized.

@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_lakeformation_lf_tag
 
-Creates an LF-Tag with the specified name and values. Each key must have at least one value. The maximum number of values permitted is 15.
+Creates an LF-Tag with the specified name and values. Each key must have at least one value. The maximum number of values permitted is 1000.
 
 ## Example Usage
 
@@ -21,22 +21,31 @@ resource "aws_lakeformation_lf_tag" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `catalog_id` - (Optional) ID of the Data Catalog to create the tag in. If omitted, this defaults to the AWS Account ID.
 * `key` - (Required) Key-name for the tag.
 * `values` - (Required) List of possible values an attribute can take.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Catalog ID and key-name of the tag
 
 ## Import
 
-Lake Formation LF-Tags can be imported using the `catalog_id:key`. If you have not set a Catalog ID specify the AWS Account ID that the database is in, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lake Formation LF-Tags using the `catalog_id:key`. If you have not set a Catalog ID specify the AWS Account ID that the database is in. For example:
 
+```terraform
+import {
+  to = aws_lakeformation_lf_tag.example
+  id = "123456789012:some_key"
+}
 ```
-$ terraform import aws_lakeformation_lf_tag.example 123456789012:some_key
+
+Using `terraform import`, import Lake Formation LF-Tags using the `catalog_id:key`. If you have not set a Catalog ID specify the AWS Account ID that the database is in. For example:
+
+```console
+% terraform import aws_lakeformation_lf_tag.example 123456789012:some_key
 ```

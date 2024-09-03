@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_s3_directory_bucket: Fix `NotImplemented: This bucket does not support Object Versioning` errors on resource Delete when `force_destroy` is `true`
+```

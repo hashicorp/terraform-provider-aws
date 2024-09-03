@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package tags
 
 import (
@@ -5,18 +8,18 @@ import (
 	"fmt"
 	"net/url"
 	"reflect"
-	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/go-cty/cty"
 	fwdiag "github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -25,6 +28,26 @@ const (
 	ElasticbeanstalkTagKeyPrefix                = `elasticbeanstalk:`
 	NameTagKey                                  = `Name`
 	ServerlessApplicationRepositoryTagKeyPrefix = `serverlessrepo:`
+
+	// Environment variables with this prefix will be treated as a `default_tags` key value pair
+	//
+	// The environment variable name after this suffix will be treated as the tag key. The
+	// value of the variable will be treated as the tag value. Empty values are permitted.
+	DefaultTagsEnvVarPrefix = "TF_AWS_DEFAULT_TAGS_"
+
+	// Environment variable specifying a list of tag keys to be ignored
+	//
+	// Values read from this environment variable are merged with those specified in the
+	// provider configuration. When multiple keys are provided, the values are
+	// comma-separated.
+	IgnoreTagsKeysEnvVar = "TF_AWS_IGNORE_TAGS_KEYS"
+
+	// Environment variable specifying a list of tag key prefixes to be ignored
+	//
+	// Values read from this environment variable are merged with those specified in the
+	// provider configuration. When multiple key prefixes are provided, the values are
+	// comma-separated.
+	IgnoreTagsKeyPrefixesEnvVar = "TF_AWS_IGNORE_TAGS_KEY_PREFIXES"
 )
 
 // DefaultConfig contains tags to default across all resources.
@@ -174,7 +197,7 @@ func (tags KeyValueTags) IgnoreServerlessApplicationRepository() KeyValueTags {
 	return result
 }
 
-// IgnoreAWS returns non-system tag keys.
+// IgnoreSystem returns non-system tag keys.
 // The ignored keys vary on the specified service.
 func (tags KeyValueTags) IgnoreSystem(serviceName string) KeyValueTags {
 	switch serviceName {
@@ -274,48 +297,6 @@ func (tags KeyValueTags) Keys() []string {
 
 	for k := range tags {
 		result = append(result, k)
-	}
-
-	return result
-}
-
-// ListofMap returns a list of flattened tags.
-// Compatible with setting Terraform state for strongly typed configuration blocks.
-func (tags KeyValueTags) ListofMap() []map[string]interface{} {
-	result := make([]map[string]interface{}, 0, len(tags))
-
-	for k, v := range tags {
-		m := map[string]interface{}{
-			"key":   k,
-			"value": "",
-		}
-
-		if v == nil {
-			result = append(result, m)
-			continue
-		}
-
-		if v.Value != nil {
-			m["value"] = *v.Value
-		}
-
-		for k, v := range v.AdditionalBoolFields {
-			m[ToSnakeCase(k)] = false
-
-			if v != nil {
-				m[ToSnakeCase(k)] = *v
-			}
-		}
-
-		for k, v := range v.AdditionalStringFields {
-			m[ToSnakeCase(k)] = ""
-
-			if v != nil {
-				m[ToSnakeCase(k)] = *v
-			}
-		}
-
-		result = append(result, m)
 	}
 
 	return result
@@ -590,7 +571,6 @@ func New(ctx context.Context, i interface{}) KeyValueTags {
 		kvtm := make(KeyValueTags, len(value))
 
 		for k, v := range value {
-			v := v // Prevent referencing issues
 			kvtm[k] = &TagData{Value: &v}
 		}
 
@@ -599,8 +579,6 @@ func New(ctx context.Context, i interface{}) KeyValueTags {
 		kvtm := make(KeyValueTags, len(value))
 
 		for k, v := range value {
-			v := v
-
 			if v == nil {
 				kvtm[k] = nil
 				continue
@@ -641,7 +619,7 @@ func New(ctx context.Context, i interface{}) KeyValueTags {
 
 		return kvtm
 	case types.Map:
-		return New(ctx, flex.ExpandFrameworkStringValueMap(ctx, value))
+		return New(ctx, flex.ExpandFrameworkStringMap(ctx, value))
 	default:
 		return make(KeyValueTags)
 	}
@@ -665,7 +643,7 @@ type TagData struct {
 }
 
 func (td *TagData) ValueString() string {
-	if td.Value == nil {
+	if td == nil || td.Value == nil {
 		return ""
 	}
 
@@ -871,8 +849,8 @@ func (tags KeyValueTags) ResolveDuplicatesFramework(ctx context.Context, default
 // For example, AWS Go SDK field names are in PascalCase,
 // while Terraform schema attribute names are in snake_case.
 func ToSnakeCase(str string) string {
-	result := regexp.MustCompile("(.)([A-Z][a-z]+)").ReplaceAllString(str, "${1}_${2}")
-	result = regexp.MustCompile("([a-z0-9])([A-Z])").ReplaceAllString(result, "${1}_${2}")
+	result := regexache.MustCompile("(.)([A-Z][a-z]+)").ReplaceAllString(str, "${1}_${2}")
+	result = regexache.MustCompile("([0-9a-z])([A-Z])").ReplaceAllString(result, "${1}_${2}")
 	return strings.ToLower(result)
 }
 

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_globalaccelerator_custom_routing_endpoint_group: Respect configured `endpoint_group_region` value on resource Create
+```

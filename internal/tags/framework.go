@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package tags
 
 import (
@@ -18,6 +21,13 @@ func TagsAttributeComputedOnly() schema.Attribute {
 	return schema.MapAttribute{
 		ElementType: types.StringType,
 		Computed:    true,
+	}
+}
+
+func TagsAttributeRequired() schema.Attribute {
+	return schema.MapAttribute{
+		ElementType: types.StringType,
+		Required:    true,
 	}
 }
 

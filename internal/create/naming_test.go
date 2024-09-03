@@ -1,11 +1,180 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package create
 
 import (
+	"fmt"
+	"regexp"
 	"testing"
+
+	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 )
 
 func strPtr(str string) *string {
 	return &str
+}
+
+func nameWithSuffix(name string, namePrefix string, nameSuffix string) string {
+	return NewNameGenerator(WithConfiguredName(name), WithConfiguredPrefix(namePrefix), WithSuffix(nameSuffix)).Generate()
+}
+
+func TestName(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		testName         string
+		configuredName   string
+		configuredPrefix string
+		expectedRegexp   *regexp.Regexp
+	}{
+		{
+			testName:       "no configured name or prefix",
+			expectedRegexp: regexache.MustCompile(fmt.Sprintf("^terraform-[[:xdigit:]]{%d}$", id.UniqueIDSuffixLength)),
+		},
+		{
+			testName:       "configured name only",
+			configuredName: "testing",
+			expectedRegexp: regexache.MustCompile(`^testing$`),
+		},
+		{
+			testName:         "configured prefix only",
+			configuredPrefix: "pfx-",
+			expectedRegexp:   regexache.MustCompile(fmt.Sprintf("^pfx-[[:xdigit:]]{%d}$", id.UniqueIDSuffixLength)),
+		},
+		{
+			testName:         "configured name and prefix",
+			configuredName:   "testing",
+			configuredPrefix: "pfx-",
+			expectedRegexp:   regexache.MustCompile(`^testing$`),
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.testName, func(t *testing.T) {
+			t.Parallel()
+
+			got := Name(testCase.configuredName, testCase.configuredPrefix)
+
+			if !testCase.expectedRegexp.MatchString(got) {
+				t.Errorf("Name(%q, %q) = %v, does not match %s", testCase.configuredName, testCase.configuredPrefix, got, testCase.expectedRegexp)
+			}
+		})
+	}
+}
+
+func TestNameWithSuffix(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		testName         string
+		configuredName   string
+		configuredPrefix string
+		suffix           string
+		expectedRegexp   *regexp.Regexp
+	}{
+		{
+			testName:       "no configured name or prefix, no suffix",
+			expectedRegexp: regexache.MustCompile(fmt.Sprintf("^terraform-[[:xdigit:]]{%d}$", id.UniqueIDSuffixLength)),
+		},
+		{
+			testName:       "configured name only, no suffix",
+			configuredName: "testing",
+			expectedRegexp: regexache.MustCompile(`^testing$`),
+		},
+		{
+			testName:         "configured prefix only, no suffix",
+			configuredPrefix: "pfx-",
+			expectedRegexp:   regexache.MustCompile(fmt.Sprintf("^pfx-[[:xdigit:]]{%d}$", id.UniqueIDSuffixLength)),
+		},
+		{
+			testName:         "configured name and prefix, no suffix",
+			configuredName:   "testing",
+			configuredPrefix: "pfx-",
+			expectedRegexp:   regexache.MustCompile(`^testing$`),
+		},
+		{
+			testName:       "no configured name or prefix, with suffix",
+			expectedRegexp: regexache.MustCompile(fmt.Sprintf("^terraform-[[:xdigit:]]{%d}-sfx$", id.UniqueIDSuffixLength)),
+			suffix:         "-sfx",
+		},
+		{
+			testName:       "configured name only, with suffix",
+			configuredName: "testing",
+			expectedRegexp: regexache.MustCompile(`^testing$`),
+			suffix:         "-sfx",
+		},
+		{
+			testName:         "configured prefix only, with suffix",
+			configuredPrefix: "pfx-",
+			expectedRegexp:   regexache.MustCompile(fmt.Sprintf("^pfx-[[:xdigit:]]{%d}-sfx$", id.UniqueIDSuffixLength)),
+			suffix:           "-sfx",
+		},
+		{
+			testName:         "configured name and prefix, with suffix",
+			configuredName:   "testing",
+			configuredPrefix: "pfx-",
+			expectedRegexp:   regexache.MustCompile(`^testing$`),
+			suffix:           "-sfx",
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.testName, func(t *testing.T) {
+			t.Parallel()
+
+			got := nameWithSuffix(testCase.configuredName, testCase.configuredPrefix, testCase.suffix)
+
+			if !testCase.expectedRegexp.MatchString(got) {
+				t.Errorf("NameWithSuffix(%q, %q, %q) = %v, does not match %s", testCase.configuredName, testCase.configuredPrefix, testCase.suffix, got, testCase.expectedRegexp)
+			}
+		})
+	}
+}
+
+func TestNameWithDefaultPrefix(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		testName         string
+		configuredName   string
+		configuredPrefix string
+		expectedRegexp   *regexp.Regexp
+	}{
+		{
+			testName:       "no configured name or prefix",
+			expectedRegexp: regexache.MustCompile(fmt.Sprintf("^def-[[:xdigit:]]{%d}$", id.UniqueIDSuffixLength)),
+		},
+		{
+			testName:       "configured name only",
+			configuredName: "testing",
+			expectedRegexp: regexache.MustCompile(`^testing$`),
+		},
+		{
+			testName:         "configured prefix only",
+			configuredPrefix: "pfx-",
+			expectedRegexp:   regexache.MustCompile(fmt.Sprintf("^pfx-[[:xdigit:]]{%d}$", id.UniqueIDSuffixLength)),
+		},
+		{
+			testName:         "configured name and prefix",
+			configuredName:   "testing",
+			configuredPrefix: "pfx-",
+			expectedRegexp:   regexache.MustCompile(`^testing$`),
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.testName, func(t *testing.T) {
+			t.Parallel()
+
+			got := NewNameGenerator(WithConfiguredName(testCase.configuredName), WithConfiguredPrefix(testCase.configuredPrefix), WithDefaultPrefix("def-")).Generate()
+
+			if !testCase.expectedRegexp.MatchString(got) {
+				t.Errorf("NameWithDefaultPrefix(%q, %q) = %v, does not match %s", testCase.configuredName, testCase.configuredPrefix, got, testCase.expectedRegexp)
+			}
+		})
+	}
 }
 
 func TestHasResourceUniqueIDPlusAdditionalSuffix(t *testing.T) {
@@ -49,7 +218,6 @@ func TestHasResourceUniqueIDPlusAdditionalSuffix(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
 			t.Parallel()
 
@@ -109,7 +277,6 @@ func TestNamePrefixFromName(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
 			t.Parallel()
 
@@ -211,7 +378,6 @@ func TestNamePrefixFromNameWithSuffix(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
 			t.Parallel()
 
@@ -237,7 +403,7 @@ func TestNamePrefixFromNameWithSuffix(t *testing.T) {
 
 		for i := 0; i < 10; i++ {
 			prefix := "test-"
-			input := NameWithSuffix("", prefix, "suffix")
+			input := nameWithSuffix("", prefix, "suffix")
 			got := NamePrefixFromNameWithSuffix(input, "suffix")
 
 			if got == nil {

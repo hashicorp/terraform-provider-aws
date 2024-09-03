@@ -32,21 +32,30 @@ The following arguments are required:
 
 * `name` - (Required) A name that identifies the Origin Access Control.
 * `description` - (Optional) The description of the Origin Access Control. Defaults to "Managed by Terraform" if omitted.
-* `origin_access_control_origin_type` - (Required) The type of origin that this Origin Access Control is for. Valid values are `s3`, and `mediastore`.
+* `origin_access_control_origin_type` - (Required) The type of origin that this Origin Access Control is for. Valid values are `lambda`, `mediapackagev2`, `mediastore`, and `s3`.
 * `signing_behavior` - (Required) Specifies which requests CloudFront signs. Specify `always` for the most common use case. Allowed values: `always`, `never`, and `no-override`.
 * `signing_protocol` - (Required) Determines how CloudFront signs (authenticates) requests. The only valid value is `sigv4`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The unique identifier of this Origin Access Control.
 * `etag` - The current version of this Origin Access Control.
 
 ## Import
 
-CloudFront Origin Access Control can be imported using the `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudFront Origin Access Control using the `id`. For example:
 
+```terraform
+import {
+  to = aws_cloudfront_origin_access_control.example
+  id = "E327GJI25M56DG"
+}
 ```
-$ terraform import aws_cloudfront_origin_access_control.example E327GJI25M56DG
+
+Using `terraform import`, import CloudFront Origin Access Control using the `id`. For example:
+
+```console
+% terraform import aws_cloudfront_origin_access_control.example E327GJI25M56DG
 ```

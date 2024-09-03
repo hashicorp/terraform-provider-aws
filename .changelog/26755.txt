@@ -1,0 +1,4 @@
+```release-note:bug
+resource/aws_cloudwatch_event_connection: Add plan-time validation preventing empty `auth_parameters.oauth.oauth_http_parameters` or `auth_parameters.invocation_http_parameters`
+`body`, `header` and `query_string` configuration blocks
+```

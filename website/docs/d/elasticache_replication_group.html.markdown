@@ -20,18 +20,19 @@ data "aws_elasticache_replication_group" "bar" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `replication_group_id` – (Required) Identifier for the replication group.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `description` - Description of the replication group.
 * `arn` - ARN of the created ElastiCache Replication Group.
 * `auth_token_enabled` - Whether an AuthToken (password) is enabled.
 * `automatic_failover_enabled` - A flag whether a read-only replica will be automatically promoted to read/write primary if the existing primary fails.
+* `cluster_mode` - Whether cluster mode is enabled or disabled.
 * `node_type` – The cluster node type.
 * `num_cache_clusters` – The number of cache clusters that the replication group has.
 * `num_node_groups` - Number of node groups (shards) for the replication group.

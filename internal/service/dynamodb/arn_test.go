@@ -1,8 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dynamodb_test
 
 import (
 	"testing"
 
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfdynamodb "github.com/hashicorp/terraform-provider-aws/internal/service/dynamodb"
 )
 
@@ -17,7 +21,7 @@ func TestARNForNewRegion(t *testing.T) {
 		ErrorExpected bool
 	}{
 		{
-			TestName:      "basic",
+			TestName:      acctest.CtBasic,
 			ARN:           "arn:aws:dynamodb:us-west-2:786648903940:table/tf-acc-test-7864711876941043153", //lintignore:AWSAT003,AWSAT005
 			NewRegion:     "us-east-2",                                                                     //lintignore:AWSAT003
 			ExpectedARN:   "arn:aws:dynamodb:us-east-2:786648903940:table/tf-acc-test-7864711876941043153", //lintignore:AWSAT003,AWSAT005
@@ -33,7 +37,6 @@ func TestARNForNewRegion(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
 			t.Parallel()
 

@@ -10,6 +10,8 @@ description: |-
 
 Provides a resource to manage S3 Bucket Ownership Controls. For more information, see the [S3 Developer Guide](https://docs.aws.amazon.com/AmazonS3/latest/dev/about-object-ownership.html).
 
+-> This resource cannot be used with S3 directory buckets.
+
 ## Example Usage
 
 ```terraform
@@ -42,16 +44,25 @@ The following arguments are required:
     * `ObjectWriter` - Uploading account will own the object if the object is uploaded with the `bucket-owner-full-control` canned ACL.
     * `BucketOwnerEnforced` - Bucket owner automatically owns and has full control over every object in the bucket. ACLs no longer affect permissions to data in the S3 bucket.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - S3 Bucket name.
 
 ## Import
 
-S3 Bucket Ownership Controls can be imported using S3 Bucket name, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 Bucket Ownership Controls using S3 Bucket name. For example:
 
+```terraform
+import {
+  to = aws_s3_bucket_ownership_controls.example
+  id = "my-bucket"
+}
 ```
-$ terraform import aws_s3_bucket_ownership_controls.example my-bucket
+
+Using `terraform import`, import S3 Bucket Ownership Controls using S3 Bucket name. For example:
+
+```console
+% terraform import aws_s3_bucket_ownership_controls.example my-bucket
 ```

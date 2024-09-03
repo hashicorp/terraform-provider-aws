@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_service_discovery_private_dns_namespace: Allow `description` to be updated in-place
+```
+
+```release-note:enhancement
+resource/aws_service_discovery_public_dns_namespace: Allow `description` to be updated in-place
+```

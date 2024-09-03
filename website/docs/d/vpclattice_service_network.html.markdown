@@ -16,7 +16,7 @@ Terraform data source for managing an AWS VPC Lattice Service Network.
 
 ```terraform
 data "aws_vpclattice_service_network" "example" {
-  service_network_identifier = ""
+  service_network_identifier = "snsa-01112223334445556"
 }
 ```
 
@@ -24,11 +24,11 @@ data "aws_vpclattice_service_network" "example" {
 
 The following arguments are required:
 
-* `service_network_identifier` - (Required) Identifier of the network service.
+* `service_network_identifier` - (Required) Identifier of the service network.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Service Network.
 * `auth_type` - Authentication type for the service network. Either `NONE` or `AWS_IAM`.

@@ -134,7 +134,7 @@ resource "aws_subnet" "example" {
 
 The following arguments are required:
 
-* `cluster_name` – (Required) Name of the EKS Cluster. Must be between 1-100 characters in length. Must begin with an alphanumeric character, and must only contain alphanumeric characters, dashes and underscores (`^[0-9A-Za-z][A-Za-z0-9\-_]+$`).
+* `cluster_name` – (Required) Name of the EKS Cluster.
 * `node_role_arn` – (Required) Amazon Resource Name (ARN) of the IAM Role that provides permissions for the EKS Node Group.
 * `scaling_config` - (Required) Configuration block with scaling settings. See [`scaling_config`](#scaling_config-configuration-block) below for details.
 * `subnet_ids` – (Required) Identifiers of EC2 Subnets to associate with the EKS Node Group.
@@ -147,11 +147,11 @@ The following arguments are optional:
 * `force_update_version` - (Optional) Force version update if existing pods are unable to be drained due to a pod disruption budget issue.
 * `instance_types` - (Optional) List of instance types associated with the EKS Node Group. Defaults to `["t3.medium"]`. Terraform will only perform drift detection if a configuration value is provided.
 * `labels` - (Optional) Key-value map of Kubernetes labels. Only labels that are applied with the EKS API are managed by this argument. Other Kubernetes labels applied to the EKS Node Group will not be managed.
-* `launch_template` - (Optional) Configuration block with Launch Template settings. See [`launch_template`](#launch_template-configuration-block) below for details.
+* `launch_template` - (Optional) Configuration block with Launch Template settings. See [`launch_template`](#launch_template-configuration-block) below for details. Conflicts with `remote_access`.
 * `node_group_name` – (Optional) Name of the EKS Node Group. If omitted, Terraform will assign a random, unique name. Conflicts with `node_group_name_prefix`. The node group name can't be longer than 63 characters. It must start with a letter or digit, but can also include hyphens and underscores for the remaining characters.
 * `node_group_name_prefix` – (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `node_group_name`.
 * `release_version` – (Optional) AMI version of the EKS Node Group. Defaults to latest version for Kubernetes version.
-* `remote_access` - (Optional) Configuration block with remote access settings. See [`remote_access`](#remote_access-configuration-block) below for details.
+* `remote_access` - (Optional) Configuration block with remote access settings. See [`remote_access`](#remote_access-configuration-block) below for details. Conflicts with `launch_template`.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `taint` - (Optional) The Kubernetes taints to be applied to the nodes in the node group. Maximum of 50 taints per node group. See [taint](#taint-configuration-block) below for details.
 * `update_config` - (Optional) Configuration block with update settings. See [`update_config`](#update_config-configuration-block) below for details.
@@ -189,9 +189,9 @@ The following arguments are mutually exclusive.
 * `max_unavailable` - (Optional) Desired max number of unavailable worker nodes during node group update.
 * `max_unavailable_percentage` - (Optional) Desired max percentage of unavailable worker nodes during node group update.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the EKS Node Group.
 * `id` - EKS Cluster name and EKS Node Group name separated by a colon (`:`).
@@ -212,8 +212,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-EKS Node Groups can be imported using the `cluster_name` and `node_group_name` separated by a colon (`:`), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EKS Node Groups using the `cluster_name` and `node_group_name` separated by a colon (`:`). For example:
 
+```terraform
+import {
+  to = aws_eks_node_group.my_node_group
+  id = "my_cluster:my_node_group"
+}
 ```
-$ terraform import aws_eks_node_group.my_node_group my_cluster:my_node_group
+
+Using `terraform import`, import EKS Node Groups using the `cluster_name` and `node_group_name` separated by a colon (`:`). For example:
+
+```console
+% terraform import aws_eks_node_group.my_node_group my_cluster:my_node_group
 ```

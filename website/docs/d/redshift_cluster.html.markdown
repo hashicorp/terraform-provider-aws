@@ -43,13 +43,13 @@ resource "aws_kinesis_firehose_delivery_stream" "example_stream" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `cluster_identifier` - (Required) Cluster identifier
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of cluster.
 * `allow_version_upgrade` - Whether major version upgrades can be applied during maintenance period
@@ -76,6 +76,7 @@ In addition to all arguments above, the following attributes are exported:
 * `iam_roles` - IAM roles associated to the cluster
 * `kms_key_id` - KMS encryption key associated to the cluster
 * `master_username` - Username for the master DB user
+* `multi_az` - If the cluster is a Multi-AZ deployment
 * `node_type` - Cluster node type
 * `number_of_nodes` - Number of nodes in the cluster
 * `maintenance_track_name` - The name of the maintenance track for the restored cluster.

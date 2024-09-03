@@ -26,17 +26,26 @@ The following arguments are required:
 * `tag_key` - (Required) The key for the cost allocation tag.
 * `status` - (Required) The status of a cost allocation tag. Valid values are `Active` and `Inactive`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The key for the cost allocation tag.
 * `type` - The type of cost allocation tag.
 
 ## Import
 
-`aws_ce_cost_allocation_tag` can be imported using the `id`, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_ce_cost_allocation_tag` using the `id`. For example:
 
+```terraform
+import {
+  to = aws_ce_cost_allocation_tag.example
+  id = "key"
+}
 ```
-$ terraform import aws_ce_cost_allocation_tag.example key
+
+Using `terraform import`, import `aws_ce_cost_allocation_tag` using the `id`. For example:
+
+```console
+% terraform import aws_ce_cost_allocation_tag.example key
 ```

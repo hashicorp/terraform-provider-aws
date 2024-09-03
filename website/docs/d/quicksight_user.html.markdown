@@ -33,7 +33,9 @@ The following arguments are optional:
 * `aws_account_id` - (Optional) AWS account ID.
 * `namespace` - (Optional) QuickSight namespace. Defaults to `default`.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `active` - The active status of user. When you create an Amazon QuickSight user that’s not an IAM user or an Active Directory user, that user is inactive until they sign in and provide a password.
 * `arn` - The Amazon Resource Name (ARN) for the user.
@@ -42,5 +44,5 @@ The following arguments are optional:
 * `principal_id` - The principal ID of the user.
 * `user_role` - The Amazon QuickSight role for the user. The user role can be one of the following:.
     - `READER`: A user who has read-only access to dashboards.
-    - `AUTHOR`: A user who can create data sources, datasets, analyses, and dashboards.
+    - `AUTHOR`: A user who can create data sources, datasets, analyzes, and dashboards.
     - `ADMIN`: A user who is an author, who can also manage Amazon QuickSight settings.

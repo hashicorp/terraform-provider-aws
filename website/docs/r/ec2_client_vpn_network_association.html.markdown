@@ -22,14 +22,14 @@ resource "aws_ec2_client_vpn_network_association" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `client_vpn_endpoint_id` - (Required) The ID of the Client VPN endpoint.
 * `subnet_id` - (Required) The ID of the subnet to associate with the Client VPN endpoint.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The unique ID of the target network association.
 * `association_id` - The unique ID of the target network association.
@@ -44,8 +44,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-AWS Client VPN network associations can be imported using the endpoint ID and the association ID. Values are separated by a `,`.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AWS Client VPN network associations using the endpoint ID and the association ID. Values are separated by a `,`. For example:
 
+```terraform
+import {
+  to = aws_ec2_client_vpn_network_association.example
+  id = "cvpn-endpoint-0ac3a1abbccddd666,cvpn-assoc-0b8db902465d069ad"
+}
 ```
-$ terraform import aws_ec2_client_vpn_network_association.example cvpn-endpoint-0ac3a1abbccddd666,vpn-assoc-0b8db902465d069ad
+
+Using `terraform import`, import AWS Client VPN network associations using the endpoint ID and the association ID. Values are separated by a `,`. For example:
+
+```console
+% terraform import aws_ec2_client_vpn_network_association.example cvpn-endpoint-0ac3a1abbccddd666,cvpn-assoc-0b8db902465d069ad
 ```

@@ -1,10 +1,14 @@
+import jetbrains.buildServer.configs.kotlin.AbsoluteId
+import jetbrains.buildServer.configs.kotlin.BuildSteps
+import jetbrains.buildServer.configs.kotlin.BuildType
+import jetbrains.buildServer.configs.kotlin.DslContext
+import jetbrains.buildServer.configs.kotlin.ParameterDisplay
+import jetbrains.buildServer.configs.kotlin.buildFeatures.notifications
+import jetbrains.buildServer.configs.kotlin.buildSteps.ScriptBuildStep
+import jetbrains.buildServer.configs.kotlin.buildSteps.script
+import jetbrains.buildServer.configs.kotlin.failureConditions.failOnText
+import jetbrains.buildServer.configs.kotlin.failureConditions.BuildFailureOnText
 import java.io.File
-import jetbrains.buildServer.configs.kotlin.v2019_2.AbsoluteId
-import jetbrains.buildServer.configs.kotlin.v2019_2.BuildType
-import jetbrains.buildServer.configs.kotlin.v2019_2.DslContext
-import jetbrains.buildServer.configs.kotlin.v2019_2.ParameterDisplay
-import jetbrains.buildServer.configs.kotlin.v2019_2.buildFeatures.notifications
-import jetbrains.buildServer.configs.kotlin.v2019_2.buildSteps.script
 
 data class ServiceSpec(
     val readableName: String,
@@ -12,6 +16,8 @@ data class ServiceSpec(
     val vpcLock: Boolean = false,
     val parallelismOverride: Int? = null,
     val regionOverride: String? = null,
+    val splitPackageRealPackage: String? = null,
+    val excludePattern: String? = null,
 )
 
 data class Notifier(
@@ -20,7 +26,7 @@ data class Notifier(
 )
 
 class Service(name: String, spec: ServiceSpec) {
-    val packageName = name
+    private var packageName = name
     val spec = spec
 
     fun buildType(notifier: Notifier?): BuildType {
@@ -49,13 +55,18 @@ class Service(name: String, spec: ServiceSpec) {
                     text("env.AWS_DEFAULT_REGION", spec.regionOverride, display = ParameterDisplay.HIDDEN)
                 }
             }
+            if (spec.excludePattern != null) {
+                params {
+                    text("TEST_EXCLUDE_PATTERN", spec.excludePattern, display = ParameterDisplay.HIDDEN)
+                }
+            }
+            if (spec.splitPackageRealPackage != null) {
+                packageName = spec.splitPackageRealPackage
+            }
 
             val serviceDir = "./internal/service/$packageName"
             steps {
-                script {
-                    name = "Setup GOENV"
-                    scriptContent = File("./scripts/setup_goenv.sh").readText()
-                }
+                ConfigureGoEnv()
                 script {
                     name = "Compile Test Binary"
                     workingDir = serviceDir
@@ -70,6 +81,17 @@ class Service(name: String, spec: ServiceSpec) {
                     name = "Run Acceptance Tests"
                     workingDir = serviceDir
                     scriptContent = File("./scripts/service_tests/acceptance_tests.sh").readText()
+                }
+            }
+
+            failureConditions {
+                failOnText {
+                    conditionType = BuildFailureOnText.ConditionType.REGEXP
+                    pattern = """(?i)build canceled"""
+                    failureMessage = "build canceled when agent unregistered"
+                    reverse = false
+                    stopBuildOnFailure = true
+                    reportOnlyFirstMatch = false
                 }
             }
 
@@ -104,4 +126,11 @@ class Service(name: String, spec: ServiceSpec) {
             }
         }
     }
+}
+
+fun BuildSteps.ConfigureGoEnv() {
+    step(ScriptBuildStep {
+        name = "Configure GOENV"
+        scriptContent = File("./scripts/configure_goenv.sh").readText()
+    })
 }

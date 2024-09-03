@@ -35,6 +35,8 @@ which take the following arguments:
 * `values` - (Required) Set of values that are accepted for the given field.
   Security group rule IDs will be selected if any one of the given values match.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `ids` - List of all the security group rule IDs found.

@@ -27,19 +27,28 @@ resource "aws_sesv2_email_identity_feedback_attributes" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `email_identity` - (Required) The email identity.
 * `email_forwarding_enabled` - (Optional) Sets the feedback forwarding configuration for the identity.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
-SESv2 (Simple Email V2) Email Identity Feedback Attributes can be imported using the `email_identity`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SESv2 (Simple Email V2) Email Identity Feedback Attributes using the `email_identity`. For example:
 
+```terraform
+import {
+  to = aws_sesv2_email_identity_feedback_attributes.example
+  id = "example.com"
+}
 ```
-$ terraform import aws_sesv2_email_identity_feedback_attributes.example example.com
+
+Using `terraform import`, import SESv2 (Simple Email V2) Email Identity Feedback Attributes using the `email_identity`. For example:
+
+```console
+% terraform import aws_sesv2_email_identity_feedback_attributes.example example.com
 ```

@@ -19,7 +19,7 @@ jobs:
     steps:
       - if: github.event_name == 'workflow_run'
         name: Download Artifact from Release workflow
-        uses: dawidd6/action-download-artifact@v2
+        uses: dawidd6/action-download-artifact@bf251b5aa9c2f7eeb574a96ee720e24f801b7c11 # v6
         with:
           workflow: release.yml
           name: release-tag
@@ -37,7 +37,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Tidy Jira
-        uses: breathingdust/github-jira-tidy@77daa2cf0f0574bb7be001eb6380939c1af31672
+        uses: breathingdust/github-jira-tidy@cfe2e142858405dad815f5d1e015e625a17ea057 # v0.9.2
         with:
           jira_host: 'hashicorp.atlassian.net'
           jira_username: 'sdavis@hashicorp.com'
@@ -47,16 +47,6 @@ jobs:
           jira_github_url_field_id: 'cf[10089]'
           github_release_name: ${{ needs.on-success-or-workflow-dispatch.outputs.release-tag }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  archive-release-cards:
-    needs: [on-success-or-workflow-dispatch]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Archive Release Cards
-        uses: breathingdust/github-project-archive@4be60b012447c51a5d60d988168f6360815d9ec9
-        with:
-          github_done_column_id: 11513756
-          github_release_name: ${{ needs.on-success-or-workflow-dispatch.outputs.release-tag }}
-          github_token: ${{ secrets.ORGSCOPED_GITHUB_TOKEN }}
   on-failure:
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'failure' }}

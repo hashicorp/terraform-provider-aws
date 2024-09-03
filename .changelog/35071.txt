@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_autoscaling_group: Fix `ValidationError: The instance ... is not part of Auto Scaling group ...` errors on resource Delete when disabling scale-in protection for instances that are already fully terminated
+```

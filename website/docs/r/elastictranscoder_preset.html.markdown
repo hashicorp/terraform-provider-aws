@@ -80,7 +80,7 @@ resource "aws_elastictranscoder_preset" "bar" {
 
 See ["Create Preset"](http://docs.aws.amazon.com/elastictranscoder/latest/developerguide/create-preset.html) in the AWS docs for reference.
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `audio` - (Optional, Forces new resource) Audio parameters object (documented below).
 * `audio_codec_options` - (Optional, Forces new resource) Codec options for the audio parameters (documented below)
@@ -159,16 +159,25 @@ The `video_codec_options` map supports the following:
 * `ChromaSubsampling` - The sampling pattern for the chroma (color) channels of the output video. Valid values are `yuv420p` and `yuv422p`.
 * `LoopCount` - The number of times you want the output gif to loop (Gif only)
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the Elastic Transcoder Preset.
 
 ## Import
 
-Elastic Transcoder presets can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Elastic Transcoder presets using the `id`. For example:
 
+```terraform
+import {
+  to = aws_elastictranscoder_preset.basic_preset
+  id = "1407981661351-cttk8b"
+}
 ```
-$ terraform import aws_elastictranscoder_preset.basic_preset 1407981661351-cttk8b
+
+Using `terraform import`, import Elastic Transcoder presets using the `id`. For example:
+
+```console
+% terraform import aws_elastictranscoder_preset.basic_preset 1407981661351-cttk8b
 ```

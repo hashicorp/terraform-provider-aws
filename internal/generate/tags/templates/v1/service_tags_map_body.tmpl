@@ -1,20 +1,20 @@
 // map[string]*string handling
 
-// Tags returns {{ .ServicePackage }} service tags.
-func Tags(tags tftags.KeyValueTags) map[string]*string {
+// {{ .TagsFunc }} returns {{ .ServicePackage }} service tags.
+func {{ .TagsFunc }}(tags tftags.KeyValueTags) map[string]*string {
 	return aws.StringMap(tags.Map())
 }
 
-// KeyValueTags creates KeyValueTags from {{ .ServicePackage }} service tags.
-func KeyValueTags(ctx context.Context, tags map[string]*string) tftags.KeyValueTags {
+// {{ .KeyValueTagsFunc }} creates tftags.KeyValueTags from {{ .ServicePackage }} service tags.
+func {{ .KeyValueTagsFunc }}(ctx context.Context, tags map[string]*string) tftags.KeyValueTags {
 	return tftags.New(ctx, tags)
 }
 
-// getTagsIn returns {{ .ServicePackage }} service tags from Context.
+// {{ .GetTagsInFunc }} returns {{ .ServicePackage }} service tags from Context.
 // nil is returned if there are no input tags.
-func getTagsIn(ctx context.Context) map[string]*string {
+func {{ .GetTagsInFunc }}(ctx context.Context) map[string]*string {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+		if tags := {{ .TagsFunc }}(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
 		}
 	}
@@ -22,10 +22,10 @@ func getTagsIn(ctx context.Context) map[string]*string {
 	return nil
 }
 
-// setTagsOut sets {{ .ServicePackage }} service tags in Context.
-func setTagsOut(ctx context.Context, tags map[string]*string) {
+// {{ .SetTagsOutFunc }} sets {{ .ServicePackage }} service tags in Context.
+func {{ .SetTagsOutFunc }}(ctx context.Context, tags map[string]*string) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
+		inContext.TagsOut = option.Some({{ .KeyValueTagsFunc }}(ctx, tags))
 	}
 }
 

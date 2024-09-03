@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_rds_cluster: Remove the provider default (previously, "1") and use the AWS default for `backup_retention_period` (also, "1") to allow integration with AWS Backup
+```
+
+```release-note:bug
+resource/aws_rds_cluster: Avoid an error on delete related to `unexpected state 'scaling-compute'`
+```

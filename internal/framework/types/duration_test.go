@@ -1,13 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package types_test
 
 import (
 	"context"
 	"testing"
-	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/attr/xattr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -30,7 +32,7 @@ func TestDurationTypeValueFromTerraform(t *testing.T) {
 		},
 		"valid duration": {
 			val:      tftypes.NewValue(tftypes.String, "2h"),
-			expected: fwtypes.DurationValue(2 * time.Hour),
+			expected: fwtypes.DurationValue("2h"),
 		},
 		"invalid duration": {
 			val:      tftypes.NewValue(tftypes.String, "not ok"),
@@ -39,7 +41,6 @@ func TestDurationTypeValueFromTerraform(t *testing.T) {
 	}
 
 	for name, test := range tests {
-		name, test := name, test
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -57,48 +58,41 @@ func TestDurationTypeValueFromTerraform(t *testing.T) {
 	}
 }
 
-func TestDurationTypeValidate(t *testing.T) {
+func TestDurationValidateAttribute(t *testing.T) {
 	t.Parallel()
 
 	type testCase struct {
-		val         tftypes.Value
+		val         fwtypes.Duration
 		expectError bool
 	}
 	tests := map[string]testCase{
-		"not a string": {
-			val:         tftypes.NewValue(tftypes.Bool, true),
-			expectError: true,
+		"unknown": {
+			val: fwtypes.DurationUnknown(),
 		},
-		"unknown string": {
-			val: tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+		"null": {
+			val: fwtypes.DurationNull(),
 		},
-		"null string": {
-			val: tftypes.NewValue(tftypes.String, nil),
+		"valid": {
+			val: fwtypes.DurationValue("2h"),
 		},
-		"valid string": {
-			val: tftypes.NewValue(tftypes.String, "2h"),
-		},
-		"invalid string": {
-			val:         tftypes.NewValue(tftypes.String, "not ok"),
+		"invalid": {
+			val:         fwtypes.DurationValue("not ok"),
 			expectError: true,
 		},
 	}
 
 	for name, test := range tests {
-		name, test := name, test
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
 			ctx := context.Background()
 
-			diags := fwtypes.DurationType.Validate(ctx, test.val, path.Root("test"))
+			req := xattr.ValidateAttributeRequest{}
+			resp := xattr.ValidateAttributeResponse{}
 
-			if !diags.HasError() && test.expectError {
-				t.Fatal("expected error, got no error")
-			}
-
-			if diags.HasError() && !test.expectError {
-				t.Fatalf("got unexpected error: %#v", diags)
+			test.val.ValidateAttribute(ctx, req, &resp)
+			if resp.Diagnostics.HasError() != test.expectError {
+				t.Errorf("resp.Diagnostics.HasError() = %t, want = %t", resp.Diagnostics.HasError(), test.expectError)
 			}
 		})
 	}
@@ -112,9 +106,8 @@ func TestDurationToStringValue(t *testing.T) {
 		expected types.String
 	}{
 		"value": {
-			// TODO: StringValue does not round-trip
-			duration: durationFromString(t, "2h"),
-			expected: types.StringValue("2h0m0s"),
+			duration: fwtypes.DurationValue("2h"),
+			expected: types.StringValue("2h"),
 		},
 		"null": {
 			duration: fwtypes.DurationNull(),
@@ -127,7 +120,6 @@ func TestDurationToStringValue(t *testing.T) {
 	}
 
 	for name, test := range tests {
-		name, test := name, test
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -140,17 +132,4 @@ func TestDurationToStringValue(t *testing.T) {
 			}
 		})
 	}
-}
-
-func durationFromString(t *testing.T, s string) fwtypes.Duration {
-	ctx := context.Background()
-
-	val := tftypes.NewValue(tftypes.String, s)
-
-	attr, err := fwtypes.DurationType.ValueFromTerraform(ctx, val)
-	if err != nil {
-		t.Fatalf("setting Duration: %s", err)
-	}
-
-	return attr.(fwtypes.Duration)
 }

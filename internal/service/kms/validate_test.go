@@ -1,8 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kms
 
 import (
 	"strings"
 	"testing"
+
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestValidGrantName(t *testing.T) {
@@ -16,7 +21,7 @@ func TestValidGrantName(t *testing.T) {
 	}
 
 	for _, s := range validValues {
-		_, errors := validGrantName(s, "name")
+		_, errors := validGrantName(s, names.AttrName)
 		if len(errors) > 0 {
 			t.Fatalf("%q AWS KMS Grant Name should have been valid: %v", s, errors)
 		}
@@ -30,7 +35,7 @@ func TestValidGrantName(t *testing.T) {
 	}
 
 	for _, s := range invalidValues {
-		_, errors := validGrantName(s, "name")
+		_, errors := validGrantName(s, names.AttrName)
 		if len(errors) == 0 {
 			t.Fatalf("%q should not be a valid AWS KMS Grant Name", s)
 		}
@@ -71,7 +76,7 @@ func TestValidNameForDataSource(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		_, errors := validNameForDataSource(tc.Value, "name")
+		_, errors := validNameForDataSource(tc.Value, names.AttrName)
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("AWS KMS Alias Name validation failed: %v", errors)
 		}
@@ -112,7 +117,7 @@ func TestValidNameForResource(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		_, errors := validNameForResource(tc.Value, "name")
+		_, errors := validNameForResource(tc.Value, names.AttrName)
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("AWS KMS Alias Name validation failed: %v", errors)
 		}
@@ -180,11 +185,10 @@ func TestValidateKeyOrAlias(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		tc := tc
 		t.Run(tc.Value, func(t *testing.T) {
 			t.Parallel()
 
-			_, errors := ValidateKeyOrAlias(tc.Value, "key_id")
+			_, errors := ValidateKeyOrAlias(tc.Value, names.AttrKeyID)
 			if (len(errors) == 0) != tc.valid {
 				t.Errorf("%q ValidateKMSKeyOrAlias failed: %v", tc.Value, errors)
 			}
@@ -226,11 +230,10 @@ func TestValidateKeyARN(t *testing.T) {
 	}
 
 	for name, testcase := range testcases {
-		testcase := testcase
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			aWs, aEs := validateKeyARN(testcase.in, "field")
+			aWs, aEs := validateKeyARN(testcase.in, names.AttrField)
 			if len(aWs) != 0 {
 				t.Errorf("expected no warnings, got %v", aWs)
 			}

@@ -23,13 +23,13 @@ data "aws_apigatewayv2_api" "example" {
 The arguments of this data source act as filters for querying the available APIs in the current region.
 The given filters must match exactly one API whose data will be exported as attributes.
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `api_id` - (Required) API identifier.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `api_endpoint` - URI of the API, of the form `https://{api-id}.execute-api.{region}.amazonaws.com` for HTTP APIs and `wss://{api-id}.execute-api.{region}.amazonaws.com` for WebSocket APIs.
 * `api_key_selection_expression` - An [API key selection expression](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-selection-expressions.html#apigateway-websocket-api-apikey-selection-expressions).

@@ -59,15 +59,15 @@ output "aws_iam_smtp_password_v4" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `pgp_key` - (Optional) Either a base-64 encoded PGP public key, or a keybase username in the form `keybase:some_person_that_exists`, for use in the `encrypted_secret` output attribute. If providing a base-64 encoded PGP public key, make sure to provide the "raw" version and not the "armored" one (e.g. avoid passing the `-a` option to `gpg --export`).
 * `status` - (Optional) Access key status to apply. Defaults to `Active`. Valid values are `Active` and `Inactive`.
 * `user` - (Required) IAM user to associate with this access key.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `create_date` - Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) that the access key was created.
 * `encrypted_secret` - Encrypted secret, base64 encoded, if `pgp_key` was specified. This attribute is not available for imported resources. The encrypted secret may be decrypted using the command line, for example: `terraform output -raw encrypted_secret | base64 --decode | keybase pgp decrypt`.
@@ -79,10 +79,19 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-IAM Access Keys can be imported using the identifier, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IAM Access Keys using the identifier. For example:
 
+```terraform
+import {
+  to = aws_iam_access_key.example
+  id = "AKIA1234567890"
+}
 ```
-$ terraform import aws_iam_access_key.example AKIA1234567890
+
+Using `terraform import`, import IAM Access Keys using the identifier. For example:
+
+```console
+% terraform import aws_iam_access_key.example AKIA1234567890
 ```
 
 Resource attributes such as `encrypted_secret`, `key_fingerprint`, `pgp_key`, `secret`, `ses_smtp_password_v4`, and `encrypted_ses_smtp_password_v4` are not available for imported resources as this information cannot be read from the IAM API.

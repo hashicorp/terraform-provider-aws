@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package datasync
 
 import "testing"
@@ -156,10 +159,14 @@ func TestSubdirectoryFromLocationURI(t *testing.T) {
 			InputURI:      "object-storage://192.168.1.1/tf-acc-test-5815577519131245007/tf-acc-test-5815577519131245008/",
 			ExpectedError: true,
 		},
+		{
+			TestName:             "Azure blob URI one level",
+			InputURI:             "azure-blob://example.com/path/",
+			ExpectedSubdirectory: "/path/",
+		},
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
 			t.Parallel()
 
@@ -225,7 +232,6 @@ func TestDecodeObjectStorageURI(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
 			t.Parallel()
 

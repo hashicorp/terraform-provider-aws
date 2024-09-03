@@ -24,7 +24,7 @@ output "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `filter` - (Optional) Custom filter block as described below.
 
@@ -40,9 +40,9 @@ which take the following arguments:
 * `values` - (Required) Set of values that are accepted for the given field.
   A Transit Gateway Route Table will be selected if any one of the given values matches.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - AWS Region.
 * `ids` - Set of Transit Gateway Route Table identifiers.

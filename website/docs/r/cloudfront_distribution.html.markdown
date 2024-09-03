@@ -16,7 +16,9 @@ For information about CloudFront distributions, see the [Amazon CloudFront Devel
 
 ## Example Usage
 
-The following example below creates a CloudFront distribution with an S3 origin.
+### S3 Origin
+
+The example below creates a CloudFront distribution with an S3 origin.
 
 ```terraform
 resource "aws_s3_bucket" "b" {
@@ -139,7 +141,9 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 }
 ```
 
-The example below creates a CloudFront distribution with an origin group for failover routing:
+### With Failover Routing
+
+The example below creates a CloudFront distribution with an origin group for failover routing.
 
 ```terraform
 resource "aws_cloudfront_distribution" "s3_distribution" {
@@ -186,7 +190,9 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 }
 ```
 
-CloudFront distribution using [managed policies](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-managed-cache-policies.html) (ex: CachingDisabled):
+### With Managed Caching Policy
+
+The example below creates a CloudFront distribution with an [AWS managed caching policy](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-managed-cache-policies.html).
 
 ```terraform
 locals {
@@ -212,7 +218,6 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
     # Using the CachingDisabled managed policy ID:
     cache_policy_id  = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"
     allowed_methods  = ["GET", "HEAD", "OPTIONS"]
-    path_pattern     = "/content/*"
     target_origin_id = local.s3_origin_id
   }
 
@@ -226,6 +231,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
   viewer_certificate {
     cloudfront_default_certificate = true
   }
+
   # ... other configuration ...
 }
 ```
@@ -238,6 +244,7 @@ The CloudFront distribution argument layout is a complex structure composed of s
 
 * `aliases` (Optional) - Extra CNAMEs (alternate domain names), if any, for this distribution.
 * `comment` (Optional) - Any comments you want to include about the distribution.
+* `continuous_deployment_policy_id` (Optional) - Identifier of a continuous deployment policy. This argument should only be set on a production distribution. See the [`aws_cloudfront_continuous_deployment_policy` resource](./cloudfront_continuous_deployment_policy.html.markdown) for additional details.
 * `custom_error_response` (Optional) - One or more [custom error response](#custom-error-response-arguments) elements (multiples allowed).
 * `default_cache_behavior` (Required) - [Default cache behavior](#default-cache-behavior-arguments) for this distribution (maximum one). Requires either `cache_policy_id` (preferred) or `forwarded_values` (deprecated) be set.
 * `default_root_object` (Optional) - Object that you want CloudFront to return (for example, index.html) when an end user requests the root URL.
@@ -250,6 +257,7 @@ The CloudFront distribution argument layout is a complex structure composed of s
 * `origin_group` (Optional) - One or more [origin_group](#origin-group-arguments) for this distribution (multiples allowed).
 * `price_class` (Optional) - Price class for this distribution. One of `PriceClass_All`, `PriceClass_200`, `PriceClass_100`.
 * `restrictions` (Required) - The [restriction configuration](#restrictions-arguments) for this distribution (maximum one).
+* `staging` (Optional) - A Boolean that indicates whether this is a staging distribution. Defaults to `false`.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `viewer_certificate` (Required) - The [SSL configuration](#viewer-certificate-arguments) for this distribution (maximum one).
 * `web_acl_id` (Optional) - Unique identifier that specifies the AWS WAF web ACL, if any, to associate with this distribution. To specify a web ACL created using the latest version of AWS WAF (WAFv2), use the ACL ARN, for example `aws_wafv2_web_acl.example.arn`. To specify a web ACL created using AWS WAF Classic, use the ACL ID, for example `aws_waf_web_acl.example.id`. The WAF Web ACL must exist in the WAF Global (CloudFront) region and the credentials configuring this argument must have `waf:GetWebACL` permissions assigned.
@@ -378,22 +386,22 @@ argument should not be specified.
 * `origin_access_control_id` (Optional) - Unique identifier of a [CloudFront origin access control][8] for this origin.
 * `origin_id` (Required) - Unique identifier for the origin.
 * `origin_path` (Optional) - Optional element that causes CloudFront to request your content from a directory in your Amazon S3 bucket or your custom origin.
-* `origin_shield` - The [CloudFront Origin Shield](#origin-shield-arguments) configuration information. Using Origin Shield can help reduce the load on your origin. For more information, see [Using Origin Shield](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/origin-shield.html) in the Amazon CloudFront Developer Guide.
-* `s3_origin_config` - The [CloudFront S3 origin](#s3-origin-config-arguments) configuration information. If a custom origin is required, use `custom_origin_config` instead.
+* `origin_shield` - (Optional) [CloudFront Origin Shield](#origin-shield-arguments) configuration information. Using Origin Shield can help reduce the load on your origin. For more information, see [Using Origin Shield](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/origin-shield.html) in the Amazon CloudFront Developer Guide.
+* `s3_origin_config` - (Optional) [CloudFront S3 origin](#s3-origin-config-arguments) configuration information. If a custom origin is required, use `custom_origin_config` instead.
 
 ##### Custom Origin Config Arguments
 
 * `http_port` (Required) - HTTP port the custom origin listens on.
 * `https_port` (Required) - HTTPS port the custom origin listens on.
 * `origin_protocol_policy` (Required) - Origin protocol policy to apply to your origin. One of `http-only`, `https-only`, or `match-viewer`.
-* `origin_ssl_protocols` (Required) - SSL/TLS protocols that you want CloudFront to use when communicating with your origin over HTTPS. A list of one or more of `SSLv3`, `TLSv1`, `TLSv1.1`, and `TLSv1.2`.
+* `origin_ssl_protocols` (Required) - List of SSL/TLS protocols that CloudFront can use when connecting to your origin over HTTPS. Valid values: `SSLv3`, `TLSv1`, `TLSv1.1`, `TLSv1.2`. For more information, see [Minimum Origin SSL Protocol](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/distribution-web-values-specify.html#DownloadDistValuesOriginSSLProtocols) in the Amazon CloudFront Developer Guide.
 * `origin_keepalive_timeout` - (Optional) The Custom KeepAlive timeout, in seconds. By default, AWS enforces an upper limit of `60`. But you can request an [increase](http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/RequestAndResponseBehaviorCustomOrigin.html#request-custom-request-timeout). Defaults to `5`.
 * `origin_read_timeout` - (Optional) The Custom Read timeout, in seconds. By default, AWS enforces an upper limit of `60`. But you can request an [increase](http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/RequestAndResponseBehaviorCustomOrigin.html#request-custom-request-timeout). Defaults to `30`.
 
 ##### Origin Shield Arguments
 
 * `enabled` (Required) - Whether Origin Shield is enabled.
-* `origin_shield_region` (Required) - AWS Region for Origin Shield. To specify a region, use the region code, not the region name. For example, specify the US East (Ohio) region as us-east-2.
+* `origin_shield_region` (Optional) - AWS Region for Origin Shield. To specify a region, use the region code, not the region name. For example, specify the US East (Ohio) region as `us-east-2`.
 
 ##### S3 Origin Config Arguments
 
@@ -428,11 +436,11 @@ The arguments of `geo_restriction` are:
 * `cloudfront_default_certificate` - `true` if you want viewers to use HTTPS to request your objects and you're using the CloudFront domain name for your distribution. Specify this, `acm_certificate_arn`, or `iam_certificate_id`.
 * `iam_certificate_id` - IAM certificate identifier of the custom viewer certificate for this distribution if you are using a custom domain. Specify this, `acm_certificate_arn`, or `cloudfront_default_certificate`.
 * `minimum_protocol_version` - Minimum version of the SSL protocol that you want CloudFront to use for HTTPS connections. Can only be set if `cloudfront_default_certificate = false`. See all possible values in [this](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/secure-connections-supported-viewer-protocols-ciphers.html) table under "Security policy." Some examples include: `TLSv1.2_2019` and `TLSv1.2_2021`. Default: `TLSv1`. **NOTE**: If you are using a custom certificate (specified with `acm_certificate_arn` or `iam_certificate_id`), and have specified `sni-only` in `ssl_support_method`, `TLSv1` or later must be specified. If you have specified `vip` in `ssl_support_method`, only `SSLv3` or `TLSv1` can be specified. If you have specified `cloudfront_default_certificate`, `TLSv1` must be specified.
-* `ssl_support_method` - How you want CloudFront to serve HTTPS requests. One of `vip` or `sni-only`. Required if you specify `acm_certificate_arn` or `iam_certificate_id`. **NOTE:** `vip` causes CloudFront to use a dedicated IP address and may incur extra charges.
+* `ssl_support_method` - How you want CloudFront to serve HTTPS requests. One of `vip`, `sni-only`, or `static-ip`. Required if you specify `acm_certificate_arn` or `iam_certificate_id`. **NOTE:** `vip` causes CloudFront to use a dedicated IP address and may incur extra charges.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Identifier for the distribution. For example: `EDFDVBD632BHDS5`.
 * `arn` - ARN for the distribution. For example: `arn:aws:cloudfront::123456789012:distribution/EDFDVBD632BHDS5`, where `123456789012` is your AWS account ID.
@@ -457,7 +465,6 @@ In addition to all arguments above, the following attributes are exported:
 
 [1]: http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Introduction.html
 [2]: https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_CreateDistribution.html
-[3]: http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-restricting-access-to-s3.html
 [4]: http://www.iso.org/iso/country_codes/iso_3166_code_lists/country_names_and_code_elements.htm
 [5]: /docs/providers/aws/r/cloudfront_origin_access_identity.html
 [6]: https://aws.amazon.com/certificate-manager/
@@ -466,8 +473,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CloudFront Distributions can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudFront Distributions using the `id`. For example:
 
+```terraform
+import {
+  to = aws_cloudfront_distribution.distribution
+  id = "E74FTE3EXAMPLE"
+}
 ```
-$ terraform import aws_cloudfront_distribution.distribution E74FTE3EXAMPLE
+
+Using `terraform import`, import CloudFront Distributions using the `id`. For example:
+
+```console
+% terraform import aws_cloudfront_distribution.distribution E74FTE3EXAMPLE
 ```

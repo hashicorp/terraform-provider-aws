@@ -60,37 +60,42 @@ More information about this can be found [here](https://docs.aws.amazon.com/Amaz
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
-* `name` - (Optional, Forces new resource) The name of the option group. If omitted, Terraform will assign a random, unique name. Must be lowercase, to match as it is stored in AWS.
+* `name` - (Optional, Forces new resource) Name of the option group. If omitted, Terraform will assign a random, unique name. Must be lowercase, to match as it is stored in AWS.
 * `name_prefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`. Must be lowercase, to match as it is stored in AWS.
-* `option_group_description` - (Optional) The description of the option group. Defaults to "Managed by Terraform".
+* `option_group_description` - (Optional) Description of the option group. Defaults to "Managed by Terraform".
 * `engine_name` - (Required) Specifies the name of the engine that this option group should be associated with.
 * `major_engine_version` - (Required) Specifies the major version of the engine that this option group should be associated with.
-* `option` - (Optional) A list of Options to apply.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `option` - (Optional) The options to apply. See [`option` Block](#option-block) below for more details.
+* `skip_destroy` - (Optional) Set to true if you do not wish the option group to be deleted at destroy time, and instead just remove the option group from the Terraform state.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-Option blocks support the following:
+### `option` Block
 
-* `option_name` - (Required) The Name of the Option (e.g., MEMCACHED).
-* `option_settings` - (Optional) A list of option settings to apply.
-* `port` - (Optional) The Port number when connecting to the Option (e.g., 11211).
-* `version` - (Optional) The version of the option (e.g., 13.1.0.0).
-* `db_security_group_memberships` - (Optional) A list of DB Security Groups for which the option is enabled.
-* `vpc_security_group_memberships` - (Optional) A list of VPC Security Groups for which the option is enabled.
+The `option` blocks support the following arguments:
 
-Option Settings blocks support the following:
+* `option_name` - (Required) Name of the option (e.g., MEMCACHED).
+* `option_settings` - (Optional) The option settings to apply. See [`option_settings` Block](#option_settings-block) below for more details.
+* `port` - (Optional) Port number when connecting to the option (e.g., 11211). Leaving out or removing `port` from your configuration does not remove or clear a port from the option in AWS. AWS may assign a default port. Not including `port` in your configuration means that the AWS provider will ignore a previously set value, a value set by AWS, and any port changes.
+* `version` - (Optional) Version of the option (e.g., 13.1.0.0). Leaving out or removing `version` from your configuration does not remove or clear a version from the option in AWS. AWS may assign a default version. Not including `version` in your configuration means that the AWS provider will ignore a previously set value, a value set by AWS, and any version changes.
+* `db_security_group_memberships` - (Optional) List of DB Security Groups for which the option is enabled.
+* `vpc_security_group_memberships` - (Optional) List of VPC Security Groups for which the option is enabled.
 
-* `name` - (Optional) The Name of the setting.
-* `value` - (Optional) The Value of the setting.
+#### `option_settings` Block
 
-## Attributes Reference
+The `option_settings` blocks support the following arguments:
 
-In addition to all arguments above, the following attributes are exported:
+* `name` - (Required) Name of the setting.
+* `value` - (Required) Value of the setting.
 
-* `id` - The db option group name.
-* `arn` - The ARN of the db option group.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
+
+* `id` - DB option group name.
+* `arn` - ARN of the DB option group.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
@@ -100,8 +105,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-DB Option groups can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DB option groups using the `name`. For example:
 
+```terraform
+import {
+  to = aws_db_option_group.example
+  id = "mysql-option-group"
+}
 ```
-$ terraform import aws_db_option_group.example mysql-option-group
+
+Using `terraform import`, import DB option groups using the `name`. For example:
+
+```console
+% terraform import aws_db_option_group.example mysql-option-group
 ```

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssmcontacts
 
 import (
@@ -21,7 +24,7 @@ func DataSourceContactChannel() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -41,11 +44,11 @@ func DataSourceContactChannel() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"type": {
+			names.AttrType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -58,20 +61,21 @@ const (
 )
 
 func dataSourceContactChannelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMContactsClient(ctx)
 
-	arn := d.Get("arn").(string)
+	arn := d.Get(names.AttrARN).(string)
 
 	out, err := findContactChannelByID(ctx, conn, arn)
 	if err != nil {
-		return create.DiagError(names.SSMContacts, create.ErrActionReading, DSNameContactChannel, arn, err)
+		return create.AppendDiagError(diags, names.SSMContacts, create.ErrActionReading, DSNameContactChannel, arn, err)
 	}
 
 	d.SetId(aws.ToString(out.ContactChannelArn))
 
 	if err := setContactChannelResourceData(d, out); err != nil {
-		return create.DiagError(names.SSMContacts, create.ErrActionSetting, ResNameContactChannel, d.Id(), err)
+		return create.AppendDiagError(diags, names.SSMContacts, create.ErrActionSetting, ResNameContactChannel, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lambda
 
 import (
@@ -6,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func resourceProvisionedConcurrencyConfigV0() *schema.Resource {
@@ -29,7 +33,7 @@ func resourceProvisionedConcurrencyConfigV0() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.NoZeroValues,
 			},
-			"skip_destroy": {
+			names.AttrSkipDestroy: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -49,11 +53,11 @@ func provisionedConcurrencyConfigStateUpgradeV0(ctx context.Context, rawState ma
 		rawState["qualifier"].(string),
 	}
 
-	id, err := flex.FlattenResourceId(parts, ProvisionedConcurrencyIDPartCount, false)
+	id, err := flex.FlattenResourceId(parts, provisionedConcurrencyConfigResourceIDPartCount, false)
 	if err != nil {
 		return rawState, err
 	}
-	rawState["id"] = id
+	rawState[names.AttrID] = id
 
 	return rawState, nil
 }

@@ -33,7 +33,7 @@ resource "aws_workspaces_ip_group" "contractors" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the IP group.
 * `description` - (Optional) The description of the IP group.
@@ -49,17 +49,26 @@ The following arguments are supported:
 * `source` - (Required) The IP address range, in CIDR notation, e.g., `10.0.0.0/16`
 * `description` - (Optional) The description.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The IP group identifier.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-WorkSpaces IP groups can be imported using their GroupID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WorkSpaces IP groups using their GroupID. For example:
 
+```terraform
+import {
+  to = aws_workspaces_ip_group.example
+  id = "wsipg-488lrtl3k"
+}
 ```
-$ terraform import aws_workspaces_ip_group.example wsipg-488lrtl3k
+
+Using `terraform import`, import WorkSpaces IP groups using their GroupID. For example:
+
+```console
+% terraform import aws_workspaces_ip_group.example wsipg-488lrtl3k
 ```
