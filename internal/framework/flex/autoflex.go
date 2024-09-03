@@ -116,9 +116,12 @@ func autoFlexConvertStruct(ctx context.Context, sourcePath path.Path, from any, 
 		return diags
 	}
 
+	typeFrom := valFrom.Type()
+	typeTo := valTo.Type()
+
 	opts := flexer.getOptions()
-	for i, typFrom := 0, valFrom.Type(); i < typFrom.NumField(); i++ {
-		fromField := typFrom.Field(i)
+	for i := 0; i < typeFrom.NumField(); i++ {
+		fromField := typeFrom.Field(i)
 		if fromField.PkgPath != "" {
 			continue // Skip unexported fields.
 		}
@@ -136,7 +139,7 @@ func autoFlexConvertStruct(ctx context.Context, sourcePath path.Path, from any, 
 			continue
 		}
 
-		toField, ok := findFieldFuzzy(ctx, fieldName, valFrom, valTo, flexer)
+		toField, ok := findFieldFuzzy(ctx, fieldName, typeFrom, typeTo, flexer)
 		if !ok {
 			// Corresponding field not found in to.
 			tflog.SubsystemDebug(ctx, subsystemName, "No corresponding field", map[string]any{
@@ -169,9 +172,7 @@ func autoFlexConvertStruct(ctx context.Context, sourcePath path.Path, from any, 
 	return diags
 }
 
-func findFieldFuzzy(ctx context.Context, fieldNameFrom string, valFrom, valTo reflect.Value, flexer autoFlexer) (reflect.StructField, bool) {
-	typeTo := valTo.Type()
-
+func findFieldFuzzy(ctx context.Context, fieldNameFrom string, typeFrom reflect.Type, typeTo reflect.Type, flexer autoFlexer) (reflect.StructField, bool) {
 	// first precedence is exact match (case sensitive)
 	if fieldTo, ok := typeTo.FieldByName(fieldNameFrom); ok {
 		return fieldTo, true
@@ -194,7 +195,7 @@ func findFieldFuzzy(ctx context.Context, fieldNameFrom string, valFrom, valTo re
 		if opts.isIgnoredField(fieldNameTo) {
 			continue
 		}
-		if fieldTo, ok := typeTo.FieldByName(fieldNameTo); ok && strings.EqualFold(fieldNameFrom, fieldNameTo) && !fieldExistsInStruct(fieldNameTo, valFrom) {
+		if fieldTo, ok := typeTo.FieldByName(fieldNameTo); ok && strings.EqualFold(fieldNameFrom, fieldNameTo) && !fieldExistsInStruct(fieldNameTo, typeFrom) {
 			// probably could assume validity here since reflect gave the field name
 			return fieldTo, true
 		}
@@ -202,14 +203,14 @@ func findFieldFuzzy(ctx context.Context, fieldNameFrom string, valFrom, valTo re
 
 	// third precedence is singular/plural
 	fieldNameTo := plural.Plural(fieldNameFrom)
-	if plural.IsSingular(fieldNameFrom) && !fieldExistsInStruct(fieldNameTo, valFrom) {
+	if plural.IsSingular(fieldNameFrom) && !fieldExistsInStruct(fieldNameTo, typeFrom) {
 		if fieldTo, ok := typeTo.FieldByName(fieldNameTo); ok {
 			return fieldTo, true
 		}
 	}
 
 	fieldNameTo = plural.Singular(fieldNameFrom)
-	if plural.IsPlural(fieldNameFrom) && !fieldExistsInStruct(fieldNameTo, valFrom) {
+	if plural.IsPlural(fieldNameFrom) && !fieldExistsInStruct(fieldNameTo, typeFrom) {
 		if fieldTo, ok := typeTo.FieldByName(fieldNameTo); ok {
 			return fieldTo, true
 		}
@@ -222,9 +223,9 @@ func findFieldFuzzy(ctx context.Context, fieldNameFrom string, valFrom, valTo re
 			// so it will only recurse once
 			ctx = context.WithValue(ctx, fieldNamePrefixRecurse, true)
 			if strings.HasPrefix(fieldNameFrom, v) {
-				return findFieldFuzzy(ctx, strings.TrimPrefix(fieldNameFrom, v), valFrom, valTo, flexer)
+				return findFieldFuzzy(ctx, strings.TrimPrefix(fieldNameFrom, v), typeFrom, typeTo, flexer)
 			}
-			return findFieldFuzzy(ctx, v+fieldNameFrom, valFrom, valTo, flexer)
+			return findFieldFuzzy(ctx, v+fieldNameFrom, typeFrom, typeTo, flexer)
 		}
 	}
 
@@ -235,9 +236,9 @@ func findFieldFuzzy(ctx context.Context, fieldNameFrom string, valFrom, valTo re
 			// so it will only recurse once
 			ctx = context.WithValue(ctx, fieldNameSuffixRecurse, true)
 			if strings.HasSuffix(fieldNameFrom, v) {
-				return findFieldFuzzy(ctx, strings.TrimSuffix(fieldNameFrom, v), valFrom, valTo, flexer)
+				return findFieldFuzzy(ctx, strings.TrimSuffix(fieldNameFrom, v), typeFrom, typeTo, flexer)
 			}
-			return findFieldFuzzy(ctx, fieldNameFrom+v, valFrom, valTo, flexer)
+			return findFieldFuzzy(ctx, fieldNameFrom+v, typeFrom, typeTo, flexer)
 		}
 	}
 
@@ -245,9 +246,9 @@ func findFieldFuzzy(ctx context.Context, fieldNameFrom string, valFrom, valTo re
 	return reflect.StructField{}, false
 }
 
-func fieldExistsInStruct(field string, structVal reflect.Value) bool {
-	v := structVal.FieldByName(field)
-	return v.IsValid()
+func fieldExistsInStruct(field string, structType reflect.Type) bool {
+	_, ok := structType.FieldByName(field)
+	return ok
 }
 
 // valueWithElementsAs extends the Value interface for values that have an ElementsAs method.
