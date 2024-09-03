@@ -58,6 +58,11 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Organizational Unit",
 		},
 		{
+			Factory:  dataSourceOrganizationalUnitDescendantOrganizationUnits,
+			TypeName: "aws_organizations_organizational_unit_descendant_organization_units",
+			Name:     "Organizational Unit Descendant Organization Units",
+		},
+		{
 			Factory:  dataSourcePolicies,
 			TypeName: "aws_organizations_policies",
 			Name:     "Policies",
