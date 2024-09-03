@@ -110,7 +110,7 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.Credentials = quicksightschema.ExpandDataSourceCredentials(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk(names.AttrPermissions); ok && v.(*schema.Set).Len() != 0 {
+	if v, ok := d.GetOk("permission"); ok && v.(*schema.Set).Len() != 0 {
 		input.Permissions = quicksightschema.ExpandResourcePermissions(v.(*schema.Set).List())
 	}
 
@@ -179,8 +179,8 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading QuickSight Data Source (%s) permissions: %s", d.Id(), err)
 	}
 
-	if err := d.Set(names.AttrPermissions, quicksightschema.FlattenPermissions(permissions)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting permissions: %s", err)
+	if err := d.Set("permission", quicksightschema.FlattenPermissions(permissions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting permission: %s", err)
 	}
 
 	return diags
