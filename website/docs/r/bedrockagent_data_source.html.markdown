@@ -106,7 +106,6 @@ The `semantic_chunking_configuration` block supports the following arguments:
 * `buffer_size` - (Required, Forces new resource) The buffer size.
 * `max_tokens` - (Required, Forces new resource) The maximum number of tokens a chunk can contain.
 
-
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
