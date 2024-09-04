@@ -616,8 +616,8 @@ type tlsInspectionConfigurationResourceModel struct {
 	EncryptionConfiguration        fwtypes.ListNestedObjectValueOf[encryptionConfigurationModel]    `tfsdk:"encryption_configuration"`
 	ID                             types.String                                                     `tfsdk:"id"`
 	NumberOfAssociations           types.Int64                                                      `tfsdk:"number_of_associations"`
-	Tags                           types.Map                                                        `tfsdk:"tags"`
-	TagsAll                        types.Map                                                        `tfsdk:"tags_all"`
+	Tags                           tftags.Map                                                       `tfsdk:"tags"`
+	TagsAll                        tftags.Map                                                       `tfsdk:"tags_all"`
 	Timeouts                       timeouts.Value                                                   `tfsdk:"timeouts"`
 	TLSInspectionConfiguration     fwtypes.ListNestedObjectValueOf[tlsInspectionConfigurationModel] `tfsdk:"tls_inspection_configuration"`
 	TLSInspectionConfigurationARN  types.String                                                     `tfsdk:"arn"`

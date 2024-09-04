@@ -35,6 +35,10 @@ service "batch" {
   vpc_lock = true
 }
 
+service "bcmdataexports" {
+  parallelism = 5
+}
+
 service "cloudformation" {
   vpc_lock = true
 }

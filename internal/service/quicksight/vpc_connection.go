@@ -548,7 +548,7 @@ type resourceVPCConnectionData struct {
 	SecurityGroupIds   types.Set      `tfsdk:"security_group_ids"`
 	SubnetIds          types.Set      `tfsdk:"subnet_ids"`
 	DnsResolvers       types.Set      `tfsdk:"dns_resolvers"`
-	Tags               types.Map      `tfsdk:"tags"`
-	TagsAll            types.Map      `tfsdk:"tags_all"`
+	Tags               tftags.Map     `tfsdk:"tags"`
+	TagsAll            tftags.Map     `tfsdk:"tags_all"`
 	Timeouts           timeouts.Value `tfsdk:"timeouts"`
 }

@@ -226,8 +226,6 @@ func testAccDRSReplicationConfigurationTemplate_tags(t *testing.T) {
 }
 
 func testAccDRSReplicationConfigurationTemplate_tags_null(t *testing.T) {
-	t.Skip("Tags with null values are not correctly handled with the Plugin Framework")
-
 	ctx := acctest.Context(t)
 	var v awstypes.ReplicationConfigurationTemplate
 	resourceName := "aws_drs_replication_configuration_template.test"
@@ -251,14 +249,22 @@ func testAccDRSReplicationConfigurationTemplate_tags_null(t *testing.T) {
 					testAccCheckReplicationConfigurationTemplateExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.Null(),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(""),
+					})),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.Null(),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(""),
+						})),
 					},
 				},
 			},
@@ -273,15 +279,9 @@ func testAccDRSReplicationConfigurationTemplate_tags_null(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-			},
-			{
-				ConfigDirectory: config.StaticDirectory("testdata/ReplicationConfigurationTemplate/tags/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
-					acctest.CtResourceTags: nil,
+				ImportStateVerifyIgnore: []string{
+					acctest.CtTagsKey1, // The canonical value returned by the AWS API is ""
 				},
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
 			},
 		},
 	})
@@ -1507,8 +1507,6 @@ func testAccDRSReplicationConfigurationTemplate_tags_DefaultTags_emptyProviderOn
 }
 
 func testAccDRSReplicationConfigurationTemplate_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
-	t.Skip("Tags with null values are not correctly handled with the Plugin Framework")
-
 	ctx := acctest.Context(t)
 	var v awstypes.ReplicationConfigurationTemplate
 	resourceName := "aws_drs_replication_configuration_template.test"
@@ -1535,17 +1533,21 @@ func testAccDRSReplicationConfigurationTemplate_tags_DefaultTags_nullOverlapping
 					testAccCheckReplicationConfigurationTemplateExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.Null(),
+					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
-						acctest.CtKey1: knownvalue.StringExact(acctest.CtProviderValue1),
+						acctest.CtKey1: knownvalue.StringExact(""),
 					})),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.Null(),
+						})),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
-							acctest.CtKey1: knownvalue.StringExact(acctest.CtProviderValue1),
+							acctest.CtKey1: knownvalue.StringExact(""),
 						})),
 					},
 				},
@@ -1565,14 +1567,15 @@ func testAccDRSReplicationConfigurationTemplate_tags_DefaultTags_nullOverlapping
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					acctest.CtTagsKey1, // The canonical value returned by the AWS API is ""
+				},
 			},
 		},
 	})
 }
 
 func testAccDRSReplicationConfigurationTemplate_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
-	t.Skip("Tags with null values are not correctly handled with the Plugin Framework")
-
 	ctx := acctest.Context(t)
 	var v awstypes.ReplicationConfigurationTemplate
 	resourceName := "aws_drs_replication_configuration_template.test"
@@ -1599,16 +1602,22 @@ func testAccDRSReplicationConfigurationTemplate_tags_DefaultTags_nullNonOverlapp
 					testAccCheckReplicationConfigurationTemplateExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtResourceKey1: knownvalue.Null(),
+					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtResourceKey1: knownvalue.StringExact(""),
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
 					})),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtResourceKey1: knownvalue.Null(),
+						})),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtResourceKey1: knownvalue.StringExact(""),
 							acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
 						})),
 					},
@@ -1629,6 +1638,9 @@ func testAccDRSReplicationConfigurationTemplate_tags_DefaultTags_nullNonOverlapp
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"tags.resourcekey1", // The canonical value returned by the AWS API is ""
+				},
 			},
 		},
 	})

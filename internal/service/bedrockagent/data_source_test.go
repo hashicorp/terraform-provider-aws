@@ -131,6 +131,133 @@ func testAccDataSource_full(t *testing.T) {
 	})
 }
 
+func testAccDataSource_fullSemantic(t *testing.T) {
+	acctest.SkipIfExeNotOnPath(t, "psql")
+	acctest.SkipIfExeNotOnPath(t, "jq")
+	acctest.SkipIfExeNotOnPath(t, "aws")
+
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dataSource types.DataSource
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagent_data_source.test"
+	foundationModel := "amazon.titan-embed-text-v1"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"null": {
+				Source:            "hashicorp/null",
+				VersionConstraint: "3.2.2",
+			},
+		},
+		CheckDestroy: testAccCheckDataSourceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceConfig_fullSemantic(rName, foundationModel),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
+					resource.TestCheckResourceAttr(resourceName, "data_deletion_policy", "RETAIN"),
+					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.s3_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttrSet(resourceName, "data_source_configuration.0.s3_configuration.0.bucket_arn"),
+					resource.TestCheckNoResourceAttr(resourceName, "data_source_configuration.0.s3_configuration.0.bucket_owner_account_id"),
+					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.s3_configuration.0.inclusion_prefixes.#", acctest.Ct1),
+					resource.TestCheckTypeSetElemAttr(resourceName, "data_source_configuration.0.s3_configuration.0.inclusion_prefixes.*", "Europe/France/Nouvelle-Aquitaine/Bordeaux"),
+					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.type", "S3"),
+					resource.TestCheckResourceAttrSet(resourceName, "data_source_id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "testing"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "vector_ingestion_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "vector_ingestion_configuration.0.chunking_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "vector_ingestion_configuration.0.chunking_configuration.0.chunking_strategy", "SEMANTIC"),
+					resource.TestCheckResourceAttr(resourceName, "vector_ingestion_configuration.0.chunking_configuration.0.semantic_chunking_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "vector_ingestion_configuration.0.chunking_configuration.0.semantic_chunking_configuration.0.breakpoint_percentile_threshold", "80"),
+					resource.TestCheckResourceAttr(resourceName, "vector_ingestion_configuration.0.chunking_configuration.0.semantic_chunking_configuration.0.buffer_size", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "vector_ingestion_configuration.0.chunking_configuration.0.semantic_chunking_configuration.0.max_token", acctest.Ct10),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccDataSource_fullHierarchical(t *testing.T) {
+	acctest.SkipIfExeNotOnPath(t, "psql")
+	acctest.SkipIfExeNotOnPath(t, "jq")
+	acctest.SkipIfExeNotOnPath(t, "aws")
+
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dataSource types.DataSource
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagent_data_source.test"
+	foundationModel := "amazon.titan-embed-text-v1"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"null": {
+				Source:            "hashicorp/null",
+				VersionConstraint: "3.2.2",
+			},
+		},
+		CheckDestroy: testAccCheckDataSourceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceConfig_fullHierarchical(rName, foundationModel),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
+					resource.TestCheckResourceAttr(resourceName, "data_deletion_policy", "RETAIN"),
+					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.s3_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttrSet(resourceName, "data_source_configuration.0.s3_configuration.0.bucket_arn"),
+					resource.TestCheckNoResourceAttr(resourceName, "data_source_configuration.0.s3_configuration.0.bucket_owner_account_id"),
+					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.s3_configuration.0.inclusion_prefixes.#", acctest.Ct1),
+					resource.TestCheckTypeSetElemAttr(resourceName, "data_source_configuration.0.s3_configuration.0.inclusion_prefixes.*", "Europe/France/Nouvelle-Aquitaine/Bordeaux"),
+					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.type", "S3"),
+					resource.TestCheckResourceAttrSet(resourceName, "data_source_id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "testing"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "vector_ingestion_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "vector_ingestion_configuration.0.chunking_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "vector_ingestion_configuration.0.chunking_configuration.0.chunking_strategy", "HIERARCHICAL"),
+					resource.TestCheckResourceAttr(resourceName, "vector_ingestion_configuration.0.chunking_configuration.0.hierarchical_chunking_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "vector_ingestion_configuration.0.chunking_configuration.0.hierarchical_chunking_configuration.0.overlap_tokens", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "vector_ingestion_configuration.0.chunking_configuration.0.hierarchical_chunking_configuration.0.level_configuration.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "vector_ingestion_configuration.0.chunking_configuration.0.hierarchical_chunking_configuration.0.level_configuration.0.max_tokens", "15"),
+					resource.TestCheckResourceAttr(resourceName, "vector_ingestion_configuration.0.chunking_configuration.0.hierarchical_chunking_configuration.0.level_configuration.1.max_tokens", acctest.Ct10),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 // Prerequisites:
 // * psql run via null_resource/provisioner "local-exec"
 // * jq for parsing output from aws cli to retrieve postgres password
@@ -349,6 +476,74 @@ resource "aws_bedrockagent_data_source" "test" {
       fixed_size_chunking_configuration {
         max_tokens         = 3
         overlap_percentage = 80
+      }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccDataSourceConfig_fullSemantic(rName, embeddingModel string) string {
+	return acctest.ConfigCompose(testAccDataSourceConfig_base(rName, embeddingModel), fmt.Sprintf(`
+resource "aws_bedrockagent_data_source" "test" {
+  name                 = %[1]q
+  knowledge_base_id    = aws_bedrockagent_knowledge_base.test.id
+  data_deletion_policy = "RETAIN"
+  description          = "testing"
+
+  data_source_configuration {
+    type = "S3"
+
+    s3_configuration {
+      bucket_arn         = aws_s3_bucket.test.arn
+      inclusion_prefixes = ["Europe/France/Nouvelle-Aquitaine/Bordeaux"]
+    }
+  }
+
+  vector_ingestion_configuration {
+    chunking_configuration {
+      chunking_strategy = "SEMANTIC"
+
+      semantic_chunking_configuration {
+        breakpoint_percentile_threshold = 80
+        buffer_size                     = 1
+        max_token                       = 10
+      }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccDataSourceConfig_fullHierarchical(rName, embeddingModel string) string {
+	return acctest.ConfigCompose(testAccDataSourceConfig_base(rName, embeddingModel), fmt.Sprintf(`
+resource "aws_bedrockagent_data_source" "test" {
+  name                 = %[1]q
+  knowledge_base_id    = aws_bedrockagent_knowledge_base.test.id
+  data_deletion_policy = "RETAIN"
+  description          = "testing"
+
+  data_source_configuration {
+    type = "S3"
+
+    s3_configuration {
+      bucket_arn         = aws_s3_bucket.test.arn
+      inclusion_prefixes = ["Europe/France/Nouvelle-Aquitaine/Bordeaux"]
+    }
+  }
+
+  vector_ingestion_configuration {
+    chunking_configuration {
+      chunking_strategy = "HIERARCHICAL"
+
+      hierarchical_chunking_configuration {
+        overlap_tokens = 2
+        level_configuration {
+          max_tokens = 15
+        }
+        level_configuration {
+          max_tokens = 10
+        }
       }
     }
   }

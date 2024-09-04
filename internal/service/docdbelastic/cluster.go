@@ -393,8 +393,8 @@ type resourceClusterData struct {
 	ShardCapacity              types.Int64                       `tfsdk:"shard_capacity"`
 	ShardCount                 types.Int64                       `tfsdk:"shard_count"`
 	SubnetIds                  fwtypes.SetValueOf[types.String]  `tfsdk:"subnet_ids"`
-	Tags                       types.Map                         `tfsdk:"tags"`
-	TagsAll                    types.Map                         `tfsdk:"tags_all"`
+	Tags                       tftags.Map                         `tfsdk:"tags"`
+	TagsAll                    tftags.Map                         `tfsdk:"tags_all"`
 	Timeouts                   timeouts.Value                    `tfsdk:"timeouts"`
 	VpcSecurityGroupIds        fwtypes.SetValueOf[types.String]  `tfsdk:"vpc_security_group_ids"`
 }

@@ -73,8 +73,10 @@ The `vector_ingestion_configuration` configuration block supports the following 
 
  The `chunking_configuration` configuration block supports the following arguments:
 
-* `chunking_strategy` - (Required, Forces new resource) Option for chunking your source data, either in fixed-sized chunks or as one chunk. Valid values: `FIXED_SIZE`, `NONE`.
-* `fixed_size_chunking_configuration` - (Optional, Forces new resource) Configurations for when you choose fixed-size chunking. If you set the chunking_strategy as `NONE`, exclude this field. See [`fixed_size_chunking_configuration`](#fixed_size_chunking_configuration-block) for details.
+* `chunking_strategy` - (Required, Forces new resource) Option for chunking your source data, either in fixed-sized chunks or as one chunk. Valid values: `FIXED_SIZE`, `HIERARCHICAL`, `SEMANTIC`, `NONE`.
+* `fixed_size_chunking_configuration` - (Optional, Forces new resource) Configurations for when you choose fixed-size chunking. Requires chunking_strategy as `FIXED_SIZE`. See [`fixed_size_chunking_configuration`](#fixed_size_chunking_configuration-block) for details.
+* `hierarchical_chunking_configuration` - (Optional, Forces new resource) Configurations for when you choose hierarchical chunking. Requires chunking_strategy as `HIERARCHICAL`. See [`hierarchical_chunking_configuration`](#hierarchical_chunking_configuration-block) for details.
+* `semantic_chunking_configuration` - (Optional, Forces new resource) Configurations for when you choose semantic chunking. Requires chunking_strategy as `SEMANTIC`. See [`semantic_chunking_configuration`](#semantic_chunking_configuration-block) for details.
 
 ### `fixed_size_chunking_configuration` block
 
@@ -82,6 +84,27 @@ The `fixed_size_chunking_configuration` block supports the following arguments:
 
 * `max_tokens` - (Required, Forces new resource) Maximum number of tokens to include in a chunk.
 * `overlap_percentage` - (Optional, Forces new resource) Percentage of overlap between adjacent chunks of a data source.
+
+### `hierarchical_chunking_configuration` block
+
+The `hierarchical_chunking_configuration` block supports the following arguments:
+
+* `level_configuration` - (Required, Forces new resource) Maximum number of tokens to include in a chunk. Must contain two `level_configurations`. See [`level_configurations`](#level_configuration-block) for details.
+* `overlap_tokens` - (Required, Forces new resource) The number of tokens to repeat across chunks in the same layer.
+
+### `level_configuration` block
+
+The `level_configuration` block supports the following arguments:
+
+* `max_tokens` - (Required) The maximum number of tokens that a chunk can contain in this layer.
+
+### `semantic_chunking_configuration` block
+
+The `semantic_chunking_configuration` block supports the following arguments:
+
+* `breakpoint_percentile_threshold` - (Required, Forces new resource) The dissimilarity threshold for splitting chunks.
+* `buffer_size` - (Required, Forces new resource) The buffer size.
+* `max_tokens` - (Required, Forces new resource) The maximum number of tokens a chunk can contain.
 
 ## Attribute Reference
 

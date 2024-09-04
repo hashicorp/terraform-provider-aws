@@ -252,8 +252,8 @@ func (r *resourceIndex) ModifyPlan(ctx context.Context, request resource.ModifyP
 type indexResourceModel struct {
 	ARN      types.String                           `tfsdk:"arn"`
 	ID       types.String                           `tfsdk:"id"`
-	Tags     types.Map                              `tfsdk:"tags"`
-	TagsAll  types.Map                              `tfsdk:"tags_all"`
+	Tags     tftags.Map                             `tfsdk:"tags"`
+	TagsAll  tftags.Map                             `tfsdk:"tags_all"`
 	Timeouts timeouts.Value                         `tfsdk:"timeouts"`
 	Type     fwtypes.StringEnum[awstypes.IndexType] `tfsdk:"type"`
 }

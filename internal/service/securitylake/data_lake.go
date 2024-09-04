@@ -525,8 +525,8 @@ type dataLakeResourceModel struct {
 	ID                      types.String                                                `tfsdk:"id"`
 	MetaStoreManagerRoleARN fwtypes.ARN                                                 `tfsdk:"meta_store_manager_role_arn"`
 	S3BucketARN             types.String                                                `tfsdk:"s3_bucket_arn"`
-	Tags                    types.Map                                                   `tfsdk:"tags"`
-	TagsAll                 types.Map                                                   `tfsdk:"tags_all"`
+	Tags                    tftags.Map                                                  `tfsdk:"tags"`
+	TagsAll                 tftags.Map                                                  `tfsdk:"tags_all"`
 	Timeouts                timeouts.Value                                              `tfsdk:"timeouts"`
 }
 

@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	fwtypes "github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -402,7 +401,7 @@ func (r tagsResourceInterceptor) create(ctx context.Context, request resource.Cr
 
 	switch when {
 	case Before:
-		var planTags fwtypes.Map
+		var planTags tftags.Map
 		diags.Append(request.Plan.GetAttribute(ctx, path.Root(names.AttrTags), &planTags)...)
 
 		if diags.HasError() {
@@ -420,7 +419,7 @@ func (r tagsResourceInterceptor) create(ctx context.Context, request resource.Cr
 		// Remove any provider configured ignore_tags and system tags from those passed to the service API.
 		// Computed tags_all include any provider configured default_tags.
 		stateTagsAll := flex.FlattenFrameworkStringValueMapLegacy(ctx, tagsInContext.TagsIn.MustUnwrap().IgnoreSystem(inContext.ServicePackageName).IgnoreConfig(tagsInContext.IgnoreConfig).Map())
-		diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrTagsAll), &stateTagsAll)...)
+		diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrTagsAll), tftags.NewMapFromMapValue(stateTagsAll))...)
 
 		if diags.HasError() {
 			return ctx, diags
@@ -519,8 +518,8 @@ func (r tagsResourceInterceptor) read(ctx context.Context, request resource.Read
 		stateTags := tftags.Null
 		// Remove any provider configured ignore_tags and system tags from those returned from the service API.
 		// The resource's configured tags do not include any provider configured default_tags.
-		if v := apiTags.IgnoreSystem(inContext.ServicePackageName).IgnoreConfig(tagsInContext.IgnoreConfig).ResolveDuplicatesFramework(ctx, tagsInContext.DefaultConfig, tagsInContext.IgnoreConfig, response, diags).Map(); len(v) > 0 {
-			stateTags = flex.FlattenFrameworkStringValueMapLegacy(ctx, v)
+		if v := apiTags.IgnoreSystem(inContext.ServicePackageName).IgnoreConfig(tagsInContext.IgnoreConfig).ResolveDuplicatesFramework(ctx, tagsInContext.DefaultConfig, tagsInContext.IgnoreConfig, response, &diags).Map(); len(v) > 0 {
+			stateTags = tftags.NewMapFromMapValue(flex.FlattenFrameworkStringValueMapLegacy(ctx, v))
 		}
 		diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrTags), &stateTags)...)
 
@@ -530,7 +529,7 @@ func (r tagsResourceInterceptor) read(ctx context.Context, request resource.Read
 
 		// Computed tags_all do.
 		stateTagsAll := flex.FlattenFrameworkStringValueMapLegacy(ctx, apiTags.IgnoreSystem(inContext.ServicePackageName).IgnoreConfig(tagsInContext.IgnoreConfig).Map())
-		diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrTagsAll), &stateTagsAll)...)
+		diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrTagsAll), tftags.NewMapFromMapValue(stateTagsAll))...)
 
 		if diags.HasError() {
 			return ctx, diags
@@ -572,7 +571,7 @@ func (r tagsResourceInterceptor) update(ctx context.Context, request resource.Up
 
 	switch when {
 	case Before:
-		var planTags fwtypes.Map
+		var planTags tftags.Map
 		diags.Append(request.Plan.GetAttribute(ctx, path.Root(names.AttrTags), &planTags)...)
 
 		if diags.HasError() {
@@ -586,7 +585,7 @@ func (r tagsResourceInterceptor) update(ctx context.Context, request resource.Up
 
 		tagsInContext.TagsIn = option.Some(tags)
 
-		var oldTagsAll, newTagsAll fwtypes.Map
+		var oldTagsAll, newTagsAll tftags.Map
 
 		diags.Append(request.State.GetAttribute(ctx, path.Root(names.AttrTagsAll), &oldTagsAll)...)
 
