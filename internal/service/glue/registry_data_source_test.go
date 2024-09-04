@@ -39,7 +39,7 @@ func TestAccGlueRegistryDataSource_basic(t *testing.T) {
 					testAccCheckRegistryExists(ctx, resourceName, &registry),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
-					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "registry_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, "registry_name"),
 				),
 			},
 		},
