@@ -24,7 +24,7 @@ Terraform data source for managing an AWS Glue Registry.
 
 ```terraform
 data "aws_glue_registry" "example" {
-  id = "arn:aws:glue:us-west-2:123456789012:registry/example"
+  name = "example"
 }
 ```
 
@@ -32,7 +32,7 @@ data "aws_glue_registry" "example" {
 
 The following arguments are required:
 
-* `id` - (Required) Amazon Resource Name (ARN) of Glue Registry.
+* `name` - (Required) Name of the Glue Registry.
 
 ## Attribute Reference
 
@@ -40,4 +40,3 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arn` - Amazon Resource Name (ARN) of Glue Registry.
 * `description` - A description of the registry.
-* `registry_name` - The Name of the registry.
