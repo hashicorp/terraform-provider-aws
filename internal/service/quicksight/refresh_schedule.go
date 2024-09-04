@@ -108,6 +108,9 @@ func (r *refreshScheduleResource) Schema(ctx context.Context, req resource.Schem
 							Validators: []validator.String{
 								startAfterDateTimeValidator(),
 							},
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.UseStateForUnknown(),
+							},
 						},
 					},
 					Blocks: map[string]schema.Block{
@@ -223,7 +226,6 @@ func (r *refreshScheduleResource) Create(ctx context.Context, req resource.Creat
 		return
 	}
 	in.Schedule.ScheduleId = plan.ScheduleID.ValueStringPointer()
-	in.Schedule.Arn = plan.ARN.ValueStringPointer()
 
 	// Because StartAfterDateTime is a string and not a time type, we have to handle it outside of AutoFlex
 	schedule, diags := plan.Schedule.ToPtr(ctx)
@@ -335,24 +337,20 @@ func (r *refreshScheduleResource) Update(ctx context.Context, req resource.Updat
 		if resp.Diagnostics.HasError() {
 			return
 		}
+		in.Schedule.ScheduleId = plan.ScheduleID.ValueStringPointer()
+		in.Schedule.Arn = plan.ARN.ValueStringPointer()
 
-		// NOTE: Do not set StartAfterDateTime if not defined in config anymore or the value is unchanged
-
-		var configTfList, planTfList, stateTfList []scheduleModel
-		resp.Diagnostics.Append(config.Schedule.ElementsAs(ctx, &configTfList, false)...)
-		resp.Diagnostics.Append(plan.Schedule.ElementsAs(ctx, &planTfList, false)...)
-		resp.Diagnostics.Append(state.Schedule.ElementsAs(ctx, &stateTfList, false)...)
+		// Because StartAfterDateTime is a string and not a time type, we have to handle it outside of AutoFlex
+		planSchedule, diags := plan.Schedule.ToPtr(ctx)
+		resp.Diagnostics.Append(diags...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		configSchedule := configTfList[0]
-		planSchedule := planTfList[0]
-		stateSchedule := stateTfList[0]
-
-		if configSchedule.StartAfterDateTime.IsNull() ||
-			planSchedule.StartAfterDateTime.Equal(stateSchedule.StartAfterDateTime) {
-			in.Schedule.StartAfterDateTime = nil
+		if !planSchedule.StartAfterDateTime.IsUnknown() && !planSchedule.StartAfterDateTime.IsNull() {
+			start, _ := time.Parse(startAfterDateTimeLayout, planSchedule.StartAfterDateTime.ValueString())
+			in.Schedule.StartAfterDateTime = aws.Time(start)
 		}
+
 		out, err := conn.UpdateRefreshSchedule(ctx, &in)
 		if err != nil {
 			resp.Diagnostics.AddError(
