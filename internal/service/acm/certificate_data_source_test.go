@@ -136,15 +136,15 @@ func TestAccACMCertificateDataSource_multipleIssued(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccCertificateDataSourceConfig_basic(domain),
-				ExpectError: regexache.MustCompile(`multiple ACM Certificates matching domain`),
+				ExpectError: regexache.MustCompile(`\d+ matching ACM Certificates found`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_status(domain, string(awstypes.CertificateStatusIssued)),
-				ExpectError: regexache.MustCompile(`multiple ACM Certificates matching domain`),
+				ExpectError: regexache.MustCompile(`\d+ matching ACM Certificates found`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_types(domain, string(awstypes.CertificateTypeAmazonIssued)),
-				ExpectError: regexache.MustCompile(`multiple ACM Certificates matching domain`),
+				ExpectError: regexache.MustCompile(`\d+ matching ACM Certificates found`),
 			},
 			{
 				Config: testAccCertificateDataSourceConfig_mostRecent(domain, true),
