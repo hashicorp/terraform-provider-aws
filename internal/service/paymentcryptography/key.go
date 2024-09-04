@@ -514,8 +514,8 @@ type resourceKeyModel struct {
 	KeyCheckValueAlgorithm fwtypes.StringEnum[awstypes.KeyCheckValueAlgorithm] `tfsdk:"key_check_value_algorithm"`
 	KeyOrigin              fwtypes.StringEnum[awstypes.KeyOrigin]              `tfsdk:"key_origin"`
 	KeyState               fwtypes.StringEnum[awstypes.KeyState]               `tfsdk:"key_state"`
-	Tags                   types.Map                                           `tfsdk:"tags"`
-	TagsAll                types.Map                                           `tfsdk:"tags_all"`
+	Tags                   tftags.Map                                          `tfsdk:"tags"`
+	TagsAll                tftags.Map                                          `tfsdk:"tags_all"`
 	Timeouts               timeouts.Value                                      `tfsdk:"timeouts"`
 }
 

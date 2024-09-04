@@ -104,54 +104,6 @@ func TestAccMediaLiveInputSecurityGroup_updateCIDR(t *testing.T) {
 	})
 }
 
-func TestAccMediaLiveInputSecurityGroup_updateTags(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var inputSecurityGroup medialive.DescribeInputSecurityGroupOutput
-	resourceName := "aws_medialive_input_security_group.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
-			testAccInputSecurityGroupsPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInputSecurityGroupDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccInputSecurityGroupConfig_tags1(acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(ctx, resourceName, &inputSecurityGroup),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				Config: testAccInputSecurityGroupConfig_tags2(acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(ctx, resourceName, &inputSecurityGroup),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccInputSecurityGroupConfig_tags1(acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(ctx, resourceName, &inputSecurityGroup),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-		},
-	})
-}
-
 func TestAccMediaLiveInputSecurityGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -260,35 +212,4 @@ resource "aws_medialive_input_security_group" "test" {
   }
 }
 `, rName, cidr)
-}
-
-func testAccInputSecurityGroupConfig_tags1(key1, value1 string) string {
-	return acctest.ConfigCompose(
-		fmt.Sprintf(`
-resource "aws_medialive_input_security_group" "test" {
-  whitelist_rules {
-    cidr = "10.2.0.0/16"
-  }
-
-  tags = {
-    %[1]q = %[2]q
-  }
-}
-`, key1, value1))
-}
-
-func testAccInputSecurityGroupConfig_tags2(key1, value1, key2, value2 string) string {
-	return acctest.ConfigCompose(
-		fmt.Sprintf(`
-resource "aws_medialive_input_security_group" "test" {
-  whitelist_rules {
-    cidr = "10.2.0.0/16"
-  }
-
-  tags = {
-    %[1]q = %[2]q
-    %[3]q = %[4]q
-  }
-}
-`, key1, value1, key2, value2))
 }

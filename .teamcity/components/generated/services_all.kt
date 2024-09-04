@@ -26,7 +26,7 @@ val services = mapOf(
     "autoscalingplans" to ServiceSpec("Auto Scaling Plans"),
     "backup" to ServiceSpec("Backup"),
     "batch" to ServiceSpec("Batch", vpcLock = true),
-    "bcmdataexports" to ServiceSpec("BCM Data Exports"),
+    "bcmdataexports" to ServiceSpec("BCM Data Exports", parallelismOverride = 5),
     "bedrock" to ServiceSpec("Bedrock"),
     "bedrockagent" to ServiceSpec("Bedrock Agents"),
     "budgets" to ServiceSpec("Web Services Budgets"),
