@@ -258,7 +258,7 @@ func (r *managedUserPoolClientResource) Schema(ctx context.Context, request reso
 		},
 		Blocks: map[string]schema.Block{
 			"analytics_configuration": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[analyticsConfiguration](ctx),
+				CustomType: fwtypes.NewListNestedObjectTypeOf[analyticsConfigurationModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
@@ -303,7 +303,7 @@ func (r *managedUserPoolClientResource) Schema(ctx context.Context, request reso
 				},
 			},
 			"token_validity_units": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[tokenValidityUnits](ctx),
+				CustomType: fwtypes.NewListNestedObjectTypeOf[tokenValidityUnitsModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
@@ -579,7 +579,7 @@ func (r *managedUserPoolClientResource) Read(ctx context.Context, request resour
 	state.RefreshTokenValidity = fwflex.Int32ValueToFramework(ctx, poolClient.RefreshTokenValidity)
 	state.SupportedIdentityProviders = fwflex.FlattenFrameworkStringValueSetLegacy(ctx, poolClient.SupportedIdentityProviders)
 	if state.TokenValidityUnits.IsNull() && isDefaultTokenValidityUnits(poolClient.TokenValidityUnits) {
-		state.TokenValidityUnits = fwtypes.NewListNestedObjectValueOfNull[tokenValidityUnits](ctx)
+		state.TokenValidityUnits = fwtypes.NewListNestedObjectValueOfNull[tokenValidityUnitsModel](ctx)
 	} else {
 		state.TokenValidityUnits = flattenTokenValidityUnits(ctx, poolClient.TokenValidityUnits, &response.Diagnostics)
 	}
@@ -666,7 +666,7 @@ func (r *managedUserPoolClientResource) Update(ctx context.Context, request reso
 	config.RefreshTokenValidity = fwflex.Int32ValueToFramework(ctx, poolClient.RefreshTokenValidity)
 	config.SupportedIdentityProviders = fwflex.FlattenFrameworkStringValueSetLegacy(ctx, poolClient.SupportedIdentityProviders)
 	if !state.TokenValidityUnits.IsNull() && plan.TokenValidityUnits.IsNull() && isDefaultTokenValidityUnits(poolClient.TokenValidityUnits) {
-		state.TokenValidityUnits = fwtypes.NewListNestedObjectValueOfNull[tokenValidityUnits](ctx)
+		state.TokenValidityUnits = fwtypes.NewListNestedObjectValueOfNull[tokenValidityUnitsModel](ctx)
 	} else {
 		config.TokenValidityUnits = flattenTokenValidityUnits(ctx, poolClient.TokenValidityUnits, &response.Diagnostics)
 	}
@@ -759,31 +759,31 @@ func findUserPoolClientByName(ctx context.Context, conn *cognitoidentityprovider
 }
 
 type resourceManagedUserPoolClientModel struct {
-	AccessTokenValidity                      types.Int64                                                 `tfsdk:"access_token_validity" autoflex:",legacy"`
-	AllowedOauthFlows                        types.Set                                                   `tfsdk:"allowed_oauth_flows"`
-	AllowedOauthFlowsUserPoolClient          types.Bool                                                  `tfsdk:"allowed_oauth_flows_user_pool_client"`
-	AllowedOauthScopes                       types.Set                                                   `tfsdk:"allowed_oauth_scopes"`
-	AnalyticsConfiguration                   fwtypes.ListNestedObjectValueOf[analyticsConfiguration]     `tfsdk:"analytics_configuration"`
-	AuthSessionValidity                      types.Int64                                                 `tfsdk:"auth_session_validity"`
-	CallbackUrls                             types.Set                                                   `tfsdk:"callback_urls"`
-	ClientSecret                             types.String                                                `tfsdk:"client_secret"`
-	DefaultRedirectUri                       types.String                                                `tfsdk:"default_redirect_uri" autoflex:",legacy"`
-	EnablePropagateAdditionalUserContextData types.Bool                                                  `tfsdk:"enable_propagate_additional_user_context_data"`
-	EnableTokenRevocation                    types.Bool                                                  `tfsdk:"enable_token_revocation"`
-	ExplicitAuthFlows                        types.Set                                                   `tfsdk:"explicit_auth_flows"`
-	ID                                       types.String                                                `tfsdk:"id"`
-	IdTokenValidity                          types.Int64                                                 `tfsdk:"id_token_validity" autoflex:",legacy"`
-	LogoutUrls                               types.Set                                                   `tfsdk:"logout_urls"`
-	Name                                     types.String                                                `tfsdk:"name"`
-	NamePattern                              fwtypes.Regexp                                              `tfsdk:"name_pattern"`
-	NamePrefix                               types.String                                                `tfsdk:"name_prefix"`
-	PreventUserExistenceErrors               fwtypes.StringEnum[awstypes.PreventUserExistenceErrorTypes] `tfsdk:"prevent_user_existence_errors"`
-	ReadAttributes                           types.Set                                                   `tfsdk:"read_attributes"`
-	RefreshTokenValidity                     types.Int64                                                 `tfsdk:"refresh_token_validity"`
-	SupportedIdentityProviders               types.Set                                                   `tfsdk:"supported_identity_providers"`
-	TokenValidityUnits                       fwtypes.ListNestedObjectValueOf[tokenValidityUnits]         `tfsdk:"token_validity_units"`
-	UserPoolID                               types.String                                                `tfsdk:"user_pool_id"`
-	WriteAttributes                          types.Set                                                   `tfsdk:"write_attributes"`
+	AccessTokenValidity                      types.Int64                                                  `tfsdk:"access_token_validity" autoflex:",legacy"`
+	AllowedOauthFlows                        types.Set                                                    `tfsdk:"allowed_oauth_flows"`
+	AllowedOauthFlowsUserPoolClient          types.Bool                                                   `tfsdk:"allowed_oauth_flows_user_pool_client"`
+	AllowedOauthScopes                       types.Set                                                    `tfsdk:"allowed_oauth_scopes"`
+	AnalyticsConfiguration                   fwtypes.ListNestedObjectValueOf[analyticsConfigurationModel] `tfsdk:"analytics_configuration"`
+	AuthSessionValidity                      types.Int64                                                  `tfsdk:"auth_session_validity"`
+	CallbackUrls                             types.Set                                                    `tfsdk:"callback_urls"`
+	ClientSecret                             types.String                                                 `tfsdk:"client_secret"`
+	DefaultRedirectUri                       types.String                                                 `tfsdk:"default_redirect_uri" autoflex:",legacy"`
+	EnablePropagateAdditionalUserContextData types.Bool                                                   `tfsdk:"enable_propagate_additional_user_context_data"`
+	EnableTokenRevocation                    types.Bool                                                   `tfsdk:"enable_token_revocation"`
+	ExplicitAuthFlows                        types.Set                                                    `tfsdk:"explicit_auth_flows"`
+	ID                                       types.String                                                 `tfsdk:"id"`
+	IdTokenValidity                          types.Int64                                                  `tfsdk:"id_token_validity" autoflex:",legacy"`
+	LogoutUrls                               types.Set                                                    `tfsdk:"logout_urls"`
+	Name                                     types.String                                                 `tfsdk:"name"`
+	NamePattern                              fwtypes.Regexp                                               `tfsdk:"name_pattern"`
+	NamePrefix                               types.String                                                 `tfsdk:"name_prefix"`
+	PreventUserExistenceErrors               fwtypes.StringEnum[awstypes.PreventUserExistenceErrorTypes]  `tfsdk:"prevent_user_existence_errors"`
+	ReadAttributes                           types.Set                                                    `tfsdk:"read_attributes"`
+	RefreshTokenValidity                     types.Int64                                                  `tfsdk:"refresh_token_validity"`
+	SupportedIdentityProviders               types.Set                                                    `tfsdk:"supported_identity_providers"`
+	TokenValidityUnits                       fwtypes.ListNestedObjectValueOf[tokenValidityUnitsModel]     `tfsdk:"token_validity_units"`
+	UserPoolID                               types.String                                                 `tfsdk:"user_pool_id"`
+	WriteAttributes                          types.Set                                                    `tfsdk:"write_attributes"`
 }
 
 var _ resource.ConfigValidator = &resourceManagedUserPoolClientAccessTokenValidityValidator{}
@@ -797,7 +797,7 @@ func (v resourceManagedUserPoolClientAccessTokenValidityValidator) ValidateResou
 		func(rupcd resourceManagedUserPoolClientModel) types.Int64 {
 			return rupcd.AccessTokenValidity
 		},
-		func(tvu *tokenValidityUnits) awstypes.TimeUnitsType {
+		func(tvu *tokenValidityUnitsModel) awstypes.TimeUnitsType {
 			return tvu.AccessToken.ValueEnum()
 		},
 	)
@@ -814,7 +814,7 @@ func (v resourceManagedUserPoolClientIDTokenValidityValidator) ValidateResource(
 		func(rupcd resourceManagedUserPoolClientModel) types.Int64 {
 			return rupcd.IdTokenValidity
 		},
-		func(tvu *tokenValidityUnits) awstypes.TimeUnitsType {
+		func(tvu *tokenValidityUnitsModel) awstypes.TimeUnitsType {
 			return tvu.IdToken.ValueEnum()
 		},
 	)
@@ -831,7 +831,7 @@ func (v resourceManagedUserPoolClientRefreshTokenValidityValidator) ValidateReso
 		func(rupcd resourceManagedUserPoolClientModel) types.Int64 {
 			return rupcd.RefreshTokenValidity
 		},
-		func(tvu *tokenValidityUnits) awstypes.TimeUnitsType {
+		func(tvu *tokenValidityUnitsModel) awstypes.TimeUnitsType {
 			return tvu.RefreshToken.ValueEnum()
 		},
 	)
@@ -852,7 +852,7 @@ func (v resourceManagedUserPoolClientValidityValidator) MarkdownDescription(_ co
 	return fmt.Sprintf("must have a duration between %s and %s", v.min, v.max)
 }
 
-func (v resourceManagedUserPoolClientValidityValidator) validate(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse, valF func(resourceManagedUserPoolClientModel) types.Int64, unitF func(*tokenValidityUnits) awstypes.TimeUnitsType) {
+func (v resourceManagedUserPoolClientValidityValidator) validate(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse, valF func(resourceManagedUserPoolClientModel) types.Int64, unitF func(*tokenValidityUnitsModel) awstypes.TimeUnitsType) {
 	var config resourceManagedUserPoolClientModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
