@@ -189,7 +189,7 @@ type resourceRefreshScheduleModel struct {
 type scheduleModel struct {
 	RefreshType        types.String                                           `tfsdk:"refresh_type"`
 	ScheduleFrequency  fwtypes.ListNestedObjectValueOf[refreshFrequencyModel] `tfsdk:"schedule_frequency"`
-	StartAfterDateTime types.String                                           `tfsdk:"start_after_date_time"`
+	StartAfterDateTime types.String                                           `tfsdk:"start_after_date_time" autoflex:"-"`
 }
 
 type refreshFrequencyModel struct {
@@ -251,6 +251,17 @@ func (r *refreshScheduleResource) Create(ctx context.Context, req resource.Creat
 	}
 	in.Schedule.ScheduleId = plan.ScheduleID.ValueStringPointer()
 	in.Schedule.Arn = plan.ARN.ValueStringPointer()
+
+	// Because StartAfterDateTime is a string and not a time type, we have to handle it outside of AutoFlex
+	schedule, diags := plan.Schedule.ToPtr(ctx)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !schedule.StartAfterDateTime.IsUnknown() && !schedule.StartAfterDateTime.IsNull() {
+		start, _ := time.Parse(startAfterDateTimeLayout, schedule.StartAfterDateTime.ValueString())
+		in.Schedule.StartAfterDateTime = aws.Time(start)
+	}
 
 	out, err := conn.CreateRefreshSchedule(ctx, &in)
 	if err != nil {
@@ -615,29 +626,4 @@ func (v timeMatchesValidator) ValidateString(ctx context.Context, request valida
 			value,
 		))
 	}
-}
-
-var _ flex.Expander = scheduleModel{}
-
-func (m scheduleModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	var refreshFrequency awstypes.RefreshFrequency
-	diags.Append(flex.Expand(ctx, m.ScheduleFrequency, &refreshFrequency)...)
-	if diags.HasError() {
-		return nil, diags
-	}
-
-	result := awstypes.RefreshSchedule{
-		RefreshType:       awstypes.IngestionType(m.RefreshType.ValueString()),
-		ScheduleFrequency: &refreshFrequency,
-	}
-
-	// Because StartAfterDateTime is a string and not a time type, we have to handle it outside of AutoFlex
-	if !m.StartAfterDateTime.IsUnknown() && !m.StartAfterDateTime.IsNull() {
-		start, _ := time.Parse(startAfterDateTimeLayout, m.StartAfterDateTime.ValueString())
-		result.StartAfterDateTime = aws.Time(start)
-	}
-
-	return &result, diags
 }
