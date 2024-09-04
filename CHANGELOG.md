@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_glue_registry` ([#37953](https://github.com/hashicorp/terraform-provider-aws/issues/37953))
 * **New Data Source:** `aws_organizations_organizational_unit_descendant_organizational_units` ([#39120](https://github.com/hashicorp/terraform-provider-aws/issues/39120))
 * **New Data Source:** `aws_quicksight_analysis` ([#31737](https://github.com/hashicorp/terraform-provider-aws/issues/31737))
 * **New Resource:** `aws_datazone_environment` ([#38811](https://github.com/hashicorp/terraform-provider-aws/issues/38811))
@@ -19,6 +20,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* many resources: Fixes perpetual diff when tag has a `null` value. ([#38869](https://github.com/hashicorp/terraform-provider-aws/issues/38869))
 * resource/aws_appconfig_extension: Mark `role_arn` as Optional ([#38900](https://github.com/hashicorp/terraform-provider-aws/issues/38900))
 * resource/aws_lexv2models_slot_type: Fix `slot_type_values` validator which limited configurations to 1 element ([#39126](https://github.com/hashicorp/terraform-provider-aws/issues/39126))
 * resource/aws_quicksight_analysis: Properly send `theme_arn` argument on create and update when configured ([#31737](https://github.com/hashicorp/terraform-provider-aws/issues/31737))
