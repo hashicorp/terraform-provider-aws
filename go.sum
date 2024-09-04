@@ -448,8 +448,8 @@ github.com/aws/aws-sdk-go-v2/service/s3control v1.46.6 h1:SMTJJQ2eincgXH17n+osJz
 github.com/aws/aws-sdk-go-v2/service/s3control v1.46.6/go.mod h1:5rTK8mtR2HvjZ2G9ebpJdaQmLgnme43M0nr6iG7d1cc=
 github.com/aws/aws-sdk-go-v2/service/s3outposts v1.26.5 h1:tCQhudmDgshQRHo/wPLvrWMVWPVqeQ9JZaIV8SQqftg=
 github.com/aws/aws-sdk-go-v2/service/s3outposts v1.26.5/go.mod h1:M+fYY5ITWtBj9JWpy7qk8MrZ3hZ+3IElypnuhcbHqx0=
-github.com/aws/aws-sdk-go-v2/service/sagemaker v1.154.0 h1:NDEbY45I7YFiSAW055YdE6fFoxmudl+jK/8qe//Bduk=
-github.com/aws/aws-sdk-go-v2/service/sagemaker v1.154.0/go.mod h1:tn9CZCzeX7NC+qhWtnsN7GUzXG64/QUqjxeZZetzjpo=
+github.com/aws/aws-sdk-go-v2/service/sagemaker v1.155.0 h1:VKnojaPW0oIBpMRhXMfEt8p1c2c54wEbvMH+fRcBRl8=
+github.com/aws/aws-sdk-go-v2/service/sagemaker v1.155.0/go.mod h1:xU5CLeB+kOnZ5G1I5/sMNvyI9Ogz6av2lgrT76nZHXQ=
 github.com/aws/aws-sdk-go-v2/service/scheduler v1.10.4 h1:vh2sqeiHm0L9aatuSTSbo/pq9XdZkLMhb8DwWL1Ta9s=
 github.com/aws/aws-sdk-go-v2/service/scheduler v1.10.4/go.mod h1:m014BftQaUEsNk/6VMkqSj16cmUwAvgXHejhGDC46Jc=
 github.com/aws/aws-sdk-go-v2/service/schemas v1.26.4 h1:QwtdnU+lr5vvHqnbJ/qGXvAPwdLwYGL9mn2kbDOr+4E=
