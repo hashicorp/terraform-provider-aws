@@ -7,7 +7,9 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
+	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -47,6 +49,8 @@ func TestAccQuickSightRefreshSchedule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_frequency.0.interval", "DAILY"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_frequency.0.time_of_the_day", "12:00"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_frequency.0.timezone", "Europe/London"),
+					// acctest.CheckResourceAttrRFC3339(resourceName, "schedule.0.start_after_date_time"),
+					resource.TestMatchResourceAttr(resourceName, "schedule.0.start_after_date_time", regexache.MustCompile(`^[0-9]{4}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])[Tt]([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$`)),
 				),
 			},
 			{
@@ -109,6 +113,7 @@ func TestAccQuickSightRefreshSchedule_weeklyRefresh(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_frequency.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_frequency.0.interval", "WEEKLY"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_frequency.0.refresh_on_day.#", acctest.Ct1),
+					resource.TestCheckNoResourceAttr(resourceName, "schedule.0.schedule_frequency.0.refresh_on_day.0.day_of_month"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_frequency.0.refresh_on_day.0.day_of_week", "MONDAY"),
 				),
 			},
@@ -178,7 +183,8 @@ func TestAccQuickSightRefreshSchedule_monthlyRefresh(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_frequency.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_frequency.0.interval", "MONTHLY"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_frequency.0.refresh_on_day.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_frequency.0.refresh_on_day.0.day_of_month", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_frequency.0.refresh_on_day.0.day_of_month", "15"),
+					resource.TestCheckNoResourceAttr(resourceName, "schedule.0.schedule_frequency.0.refresh_on_day.0.day_of_week"),
 				),
 			},
 			{
@@ -265,6 +271,44 @@ func TestAccQuickSightRefreshSchedule_invalidRefreshInterval(t *testing.T) {
 					"schedule[0].schedule_frequency[0].interval",
 					string(awstypes.RefreshIntervalMinute15),
 				),
+			},
+		},
+	})
+}
+
+func TestAccQuickSightRefreshSchedule_startAfterDateTime(t *testing.T) {
+	ctx := acctest.Context(t)
+	var schedule awstypes.RefreshSchedule
+	resourceName := "aws_quicksight_refresh_schedule.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	sId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	startTime := time.Now().AddDate(1, 0, 0).Format(tfquicksight.StartAfterDateTimeLayout)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRefreshScheduleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRefreshScheduleConfig_startAfterDateTime(rId, rName, sId, startTime),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRefreshScheduleExists(ctx, resourceName, &schedule),
+					resource.TestCheckResourceAttr(resourceName, "schedule.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.refresh_type", "FULL_REFRESH"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_frequency.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_frequency.0.interval", "DAILY"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_frequency.0.time_of_the_day", "12:00"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_frequency.0.timezone", "Europe/London"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.start_after_date_time", startTime),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -446,7 +490,7 @@ resource "aws_quicksight_refresh_schedule" "test" {
     schedule_frequency {
       interval = "MONTHLY"
       refresh_on_day {
-        day_of_month = "1"
+        day_of_month = "15"
       }
     }
   }
@@ -507,4 +551,24 @@ resource "aws_quicksight_refresh_schedule" "test" {
   }
 }
 `, sId, interval))
+}
+
+func testAccRefreshScheduleConfig_startAfterDateTime(rId, rName, sId, startAfter string) string {
+	return acctest.ConfigCompose(
+		testAccRefreshScheduleConfig_base(rId, rName),
+		fmt.Sprintf(`
+resource "aws_quicksight_refresh_schedule" "test" {
+  data_set_id = aws_quicksight_data_set.test.data_set_id
+  schedule_id = %[1]q
+  schedule {
+    refresh_type = "FULL_REFRESH"
+    schedule_frequency {
+      interval        = "DAILY"
+      time_of_the_day = "12:00"
+      timezone        = "Europe/London"
+    }
+    start_after_date_time = %[2]q
+  }
+}
+`, sId, startAfter))
 }

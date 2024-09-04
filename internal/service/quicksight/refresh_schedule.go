@@ -732,7 +732,7 @@ func (v timeMatchesValidator) ValidateString(ctx context.Context, request valida
 
 	_, err := time.Parse(v.layout, value)
 	if err != nil {
-		response.Diagnostics.Append(validatordiag.InvalidAttributeValueMatchDiagnostic(
+		response.Diagnostics.Append(validatordiag.InvalidAttributeValueDiagnostic(
 			request.Path,
 			v.Description(ctx),
 			value,
