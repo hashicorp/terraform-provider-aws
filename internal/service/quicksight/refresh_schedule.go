@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/helpers/validatordiag"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -203,32 +202,6 @@ type refreshOnDayModel struct {
 	DayOfMonth types.String `tfsdk:"day_of_month"`
 	DayOfWeek  types.String `tfsdk:"day_of_week" autoflex:",omitempty"`
 }
-
-var (
-	refreshOnDayAttrTypes = map[string]attr.Type{
-		"day_of_month": types.StringType,
-		"day_of_week":  types.StringType,
-	}
-	refreshFrequencyAttrTypes = map[string]attr.Type{
-		names.AttrInterval: types.StringType,
-		"refresh_on_day": types.ListType{
-			ElemType: types.ObjectType{
-				AttrTypes: refreshOnDayAttrTypes,
-			},
-		},
-		"time_of_the_day": types.StringType,
-		"timezone":        types.StringType,
-	}
-	scheduleAttrTypes = map[string]attr.Type{
-		"refresh_type": types.StringType,
-		"schedule_frequency": types.ListType{
-			ElemType: types.ObjectType{
-				AttrTypes: refreshFrequencyAttrTypes,
-			},
-		},
-		"start_after_date_time": types.StringType,
-	}
-)
 
 func (r *refreshScheduleResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().QuickSightClient(ctx)
