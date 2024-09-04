@@ -149,7 +149,7 @@ func FindRegistryByID(ctx context.Context, conn *glue.Client, id string) (*glue.
 	return output, nil
 }
 
-// FindRegistryByName returns the Registry corresponding to the specified ID.
+// FindRegistryByName returns the Registry corresponding to the specified name.
 func FindRegistryByName(ctx context.Context, conn *glue.Client, name string) (*glue.GetRegistryOutput, error) {
 	input := &glue.GetRegistryInput{
 		RegistryId: &awstypes.RegistryId{
