@@ -186,27 +186,27 @@ func TestAccACMCertificateDataSource_noMatchReturnsError(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccCertificateDataSourceConfig_basic(domain),
-				ExpectError: regexache.MustCompile(`no ACM Certificate matching domain`),
+				ExpectError: regexache.MustCompile(`no matching ACM Certificate found`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_status(domain, string(awstypes.CertificateStatusIssued)),
-				ExpectError: regexache.MustCompile(`no ACM Certificate matching domain`),
+				ExpectError: regexache.MustCompile(`no matching ACM Certificate found`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_types(domain, string(awstypes.CertificateTypeAmazonIssued)),
-				ExpectError: regexache.MustCompile(`no ACM Certificate matching domain`),
+				ExpectError: regexache.MustCompile(`no matching ACM Certificate found`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_mostRecent(domain, true),
-				ExpectError: regexache.MustCompile(`no ACM Certificate matching domain`),
+				ExpectError: regexache.MustCompile(`no matching ACM Certificate found`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_mostRecentAndStatus(domain, string(awstypes.CertificateStatusIssued), true),
-				ExpectError: regexache.MustCompile(`no ACM Certificate matching domain`),
+				ExpectError: regexache.MustCompile(`no matching ACM Certificate found`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_mostRecentAndTypes(domain, string(awstypes.CertificateTypeAmazonIssued), true),
-				ExpectError: regexache.MustCompile(`no ACM Certificate matching domain`),
+				ExpectError: regexache.MustCompile(`no matching ACM Certificate found`),
 			},
 		},
 	})
