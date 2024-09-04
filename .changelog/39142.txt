@@ -1,5 +1,5 @@
 ```release-note:bug
-datasource/aws_networkmanager_core_network_policy_document: Fix `use_edge`to `use_edge_location` and matching JSON
+datasource/aws_networkmanager_core_network_policy_document: Fix `use_edge` to `use_edge_location` and matching JSON
 ```
 
 ```release-note:bug
