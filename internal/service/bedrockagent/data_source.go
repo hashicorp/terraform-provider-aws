@@ -43,6 +43,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const (
+	hierarchicalLevelConfigurations          = 2
+	hierarchicalMaxTokens                    = 8192
+	semanticBreakpointPercentileThresholdMin = 50
+	semanticBreakpointPercentileThresholdMax = 99
+)
+
 // @FrameworkResource(name="Data Source")
 func newDataSourceResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &dataSourceResource{}
@@ -249,14 +256,14 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 														listplanmodifier.RequiresReplace(),
 													},
 													Validators: []validator.List{
-														listvalidator.SizeBetween(2, 2),
+														listvalidator.SizeBetween(hierarchicalLevelConfigurations, hierarchicalLevelConfigurations),
 													},
 													NestedObject: schema.NestedBlockObject{
 														Attributes: map[string]schema.Attribute{
 															"max_tokens": schema.Int32Attribute{
 																Required: true,
 																Validators: []validator.Int32{
-																	int32validator.Between(1, 8192),
+																	int32validator.Between(1, hierarchicalMaxTokens),
 																},
 															},
 														},
@@ -279,7 +286,7 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 												"breakpoint_percentile_threshold": schema.Int32Attribute{
 													Required: true,
 													Validators: []validator.Int32{
-														int32validator.Between(50, 99),
+														int32validator.Between(semanticBreakpointPercentileThresholdMin, semanticBreakpointPercentileThresholdMax),
 													},
 												},
 												"buffer_size": schema.Int32Attribute{
