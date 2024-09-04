@@ -184,11 +184,6 @@ When using the Terraform Plugin SDK v2, flattening and expanding functions must 
 AutoFlex provides two entry-point functions, `Flatten` and `Expand` defined in the package `github.com/hashicorp/terraform-provider-aws/internal/framework/flex`.
 Without configuration, these two functions should be able to convert most provider and AWS API structures.
 
-!!! note
-    AutoFlex should only be used when creating new resource and data source types.
-    It should not be used when converting a resource implementation from Terraform Plugin SDK v2 to Terraform Plugin Framework.
-    AutoFlex does not currently provide a mechanism for preserving zero-value behavior from Terraform Plugin SDK v2, which can cause breaking changes.
-
 AutoFlex uses field names to map between the source and target structures:
 
 1. An exact, case-sensitive match
@@ -219,6 +214,27 @@ AutoFlex is able to convert single-element lists from Terraform blocks into sing
 The flexing of individual struct fields can be customized by using Go struct tags, with the namespace `autoflex`.
 
 Tag values are comma-separated lists of options, with a leading comma.
+
+The option `legacy` can be used when migrating a resource or data source from the Terraform Plugin SDK to the Terraform Plugin Framework.
+This will preserve certain behaviors from the Plugin SDK, such as treating zero-values, i.e. the empty string or a numeric zero, equivalently to `null` values.
+This is equivalent to calling the `fwflex.<Type><To/From>FrameworkLegacy` functions.
+
+For example, from the struct `resourceManagedUserPoolClientModel` for the Cognito IDP Managed User Pool Client:
+
+```go
+type resourceManagedUserPoolClientModel struct {
+	AccessTokenValidity                      types.Int64  `tfsdk:"access_token_validity" autoflex:",legacy"`
+	AllowedOauthFlows                        types.Set    `tfsdk:"allowed_oauth_flows"`
+	...
+	ClientSecret                             types.String `tfsdk:"client_secret"`
+	DefaultRedirectUri                       types.String `tfsdk:"default_redirect_uri" autoflex:",legacy"`
+	...
+	ID                                       types.String `tfsdk:"id"`
+	IdTokenValidity                          types.Int64  `tfsdk:"id_token_validity" autoflex:",legacy"`
+	LogoutUrls                               types.Set    `tfsdk:"logout_urls"`
+	...
+}
+```
 
 The option `omitempty` can be used with `string` values to store a `null` value when an empty string is returned.
 
