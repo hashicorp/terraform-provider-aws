@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_bedrockagent_data_source: Add `semantic_chunking_configuration` and `hierarchical_chunking_configuration` arguments
+```
