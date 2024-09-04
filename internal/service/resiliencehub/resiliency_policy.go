@@ -622,8 +622,8 @@ type resourceResiliencyPolicyData struct {
 	PolicyDescription      types.String                                         `tfsdk:"policy_description"`
 	PolicyName             types.String                                         `tfsdk:"policy_name"`
 	Tier                   fwtypes.StringEnum[awstypes.ResiliencyPolicyTier]    `tfsdk:"tier"`
-	Tags                   types.Map                                            `tfsdk:"tags"`
-	TagsAll                types.Map                                            `tfsdk:"tags_all"`
+	Tags                   tftags.Map                                           `tfsdk:"tags"`
+	TagsAll                tftags.Map                                           `tfsdk:"tags_all"`
 	Timeouts               timeouts.Value                                       `tfsdk:"timeouts"`
 }
 
