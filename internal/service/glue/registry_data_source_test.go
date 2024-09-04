@@ -24,6 +24,7 @@ func TestAccGlueRegistryDataSource_basic(t *testing.T) {
 	var registry glue.GetRegistryOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_glue_registry.test"
+	resourceName := "aws_glue_registry.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -38,9 +39,9 @@ func TestAccGlueRegistryDataSource_basic(t *testing.T) {
 				Config: testAccRegistryDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRegistryExists(ctx, dataSourceName, &registry),
-					acctest.CheckResourceAttrRegionalARN(dataSourceName, names.AttrARN, "glue", fmt.Sprintf("registry/%s", rName)),
-					resource.TestCheckResourceAttr(dataSourceName, "registry_name", rName),
-					resource.TestCheckNoResourceAttr(dataSourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(dataSourceName, "registry_name", resourceName, "registry_name"),
 				),
 			},
 		},
@@ -51,6 +52,7 @@ func testAccRegistryDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_glue_registry" "test" {
   registry_name = %[1]q
+  description   = %[1]q
 }
 
 data "aws_glue_registry" "test" {
