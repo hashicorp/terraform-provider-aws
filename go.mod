@@ -243,7 +243,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/transfer v1.50.5
 	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.17.5
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.10.6
-	github.com/aws/aws-sdk-go-v2/service/waf v1.23.4
+	github.com/aws/aws-sdk-go-v2/service/waf v1.23.5
 	github.com/aws/aws-sdk-go-v2/service/wafregional v1.23.4
 	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.52.0
 	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.32.4
