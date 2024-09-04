@@ -39,11 +39,8 @@ func (d *dataSourceRegistry) Schema(ctx context.Context, req datasource.SchemaRe
 			names.AttrDescription: schema.StringAttribute{
 				Computed: true,
 			},
-			names.AttrID: schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Required: true,
-			},
-			"registry_name": schema.StringAttribute{
-				Computed: true,
 			},
 		},
 	}
@@ -58,17 +55,17 @@ func (d *dataSourceRegistry) Read(ctx context.Context, req datasource.ReadReques
 		return
 	}
 
-	out, err := FindRegistryByID(ctx, conn, data.ID.ValueString())
+	out, err := FindRegistryByName(ctx, conn, data.Name.ValueString())
 
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Glue, create.ErrActionReading, DSNameRegistry, data.RegistryName.String(), err),
+			create.ProblemStandardMessage(names.Glue, create.ErrActionReading, DSNameRegistry, data.Name.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &data)...)
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &data, flex.WithFieldNamePrefix("Registry"))...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -77,8 +74,7 @@ func (d *dataSourceRegistry) Read(ctx context.Context, req datasource.ReadReques
 }
 
 type dataSourceRegistryData struct {
-	RegistryArn  types.String `tfsdk:"arn"`
-	Description  types.String `tfsdk:"description"`
-	ID           types.String `tfsdk:"id"`
-	RegistryName types.String `tfsdk:"registry_name"`
+	ARN         types.String `tfsdk:"arn"`
+	Description types.String `tfsdk:"description"`
+	Name        types.String `tfsdk:"name"`
 }

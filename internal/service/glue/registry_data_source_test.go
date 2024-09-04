@@ -33,15 +33,14 @@ func TestAccGlueRegistryDataSource_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRegistryDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegistryDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRegistryExists(ctx, dataSourceName, &registry),
+					testAccCheckRegistryExists(ctx, resourceName, &registry),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
-					resource.TestCheckResourceAttrPair(dataSourceName, "registry_name", resourceName, "registry_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "registry_name"),
 				),
 			},
 		},
@@ -56,7 +55,7 @@ resource "aws_glue_registry" "test" {
 }
 
 data "aws_glue_registry" "test" {
-  id = aws_glue_registry.test.id
+  name = aws_glue_registry.test.registry_name
 }
 `, rName)
 }
