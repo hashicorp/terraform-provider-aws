@@ -7,7 +7,7 @@ require (
 	github.com/YakDriver/go-version v0.1.0
 	github.com/YakDriver/regexache v0.24.0
 	github.com/aws/aws-sdk-go v1.55.5
-	github.com/aws/aws-sdk-go-v2 v1.30.4
+	github.com/aws/aws-sdk-go-v2 v1.30.5
 	github.com/aws/aws-sdk-go-v2/config v1.27.31
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.30
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.12
