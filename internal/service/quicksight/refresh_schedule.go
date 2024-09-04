@@ -201,7 +201,7 @@ type refreshFrequencyModel struct {
 
 type refreshOnDayModel struct {
 	DayOfMonth types.String `tfsdk:"day_of_month"`
-	DayOfWeek  types.String `tfsdk:"day_of_week"`
+	DayOfWeek  types.String `tfsdk:"day_of_week" autoflex:",omitempty"`
 }
 
 var (
@@ -640,16 +640,4 @@ func (m scheduleModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
 	}
 
 	return &result, diags
-}
-
-var _ flex.Flattener = &refreshOnDayModel{}
-
-func (m *refreshOnDayModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
-	scheduleRefreshOn, ok := v.(awstypes.ScheduleRefreshOnEntity)
-	if !ok {
-		return diags
-	}
-	m.DayOfMonth = flex.StringToFramework(ctx, scheduleRefreshOn.DayOfMonth)
-	m.DayOfWeek = flex.StringValueToFramework(ctx, scheduleRefreshOn.DayOfWeek)
-	return diags
 }
