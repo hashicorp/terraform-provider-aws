@@ -29,7 +29,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// resp.TypeName = "aws_lambda_runtime_management_config"
 // @FrameworkResource("aws_lambda_recursion_config", name="Recursion Config")
 func newResourceRecursionConfig(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceRecursionConfig{}
@@ -100,6 +99,8 @@ func (r *resourceRecursionConfig) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
+	planFunctionName := plan.FunctionName.ValueString()
+
 	in := &lambda.PutFunctionRecursionConfigInput{}
 	resp.Diagnostics.Append(flex.Expand(ctx, &plan, in)...)
 	if resp.Diagnostics.HasError() {
@@ -109,14 +110,14 @@ func (r *resourceRecursionConfig) Create(ctx context.Context, req resource.Creat
 	out, err := conn.PutFunctionRecursionConfig(ctx, in)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Lambda, create.ErrActionCreating, ResNameRecursionConfig, "", err),
+			create.ProblemStandardMessage(names.Lambda, create.ErrActionCreating, ResNameRecursionConfig, planFunctionName, err),
 			err.Error(),
 		)
 		return
 	}
 	if out == nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Lambda, create.ErrActionCreating, ResNameRecursionConfig, "", nil),
+			create.ProblemStandardMessage(names.Lambda, create.ErrActionCreating, ResNameRecursionConfig, planFunctionName, nil),
 			errors.New("empty output").Error(),
 		)
 		return
@@ -152,6 +153,8 @@ func (r *resourceRecursionConfig) Read(ctx context.Context, req resource.ReadReq
 		return
 	}
 
+	stateFunctionName := state.FunctionName.ValueString()
+
 	out, err := findRecursionConfigByID(ctx, conn, state.ID.ValueString())
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
@@ -159,7 +162,7 @@ func (r *resourceRecursionConfig) Read(ctx context.Context, req resource.ReadReq
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Lambda, create.ErrActionSetting, ResNameRecursionConfig, state.ID.String(), err),
+			create.ProblemStandardMessage(names.Lambda, create.ErrActionSetting, ResNameRecursionConfig, stateFunctionName, err),
 			err.Error(),
 		)
 		return
@@ -184,6 +187,8 @@ func (r *resourceRecursionConfig) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
+	planFunctionName := plan.FunctionName.ValueString()
+
 	if !plan.RecursiveLoop.Equal(state.RecursiveLoop) {
 
 		in := &lambda.PutFunctionRecursionConfigInput{
@@ -197,14 +202,14 @@ func (r *resourceRecursionConfig) Update(ctx context.Context, req resource.Updat
 		out, err := conn.PutFunctionRecursionConfig(ctx, in)
 		if err != nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.Lambda, create.ErrActionUpdating, ResNameRecursionConfig, plan.ID.String(), err),
+				create.ProblemStandardMessage(names.Lambda, create.ErrActionUpdating, ResNameRecursionConfig, planFunctionName, err),
 				err.Error(),
 			)
 			return
 		}
 		if out == nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.Lambda, create.ErrActionUpdating, ResNameRecursionConfig, plan.ID.String(), nil),
+				create.ProblemStandardMessage(names.Lambda, create.ErrActionUpdating, ResNameRecursionConfig, planFunctionName, nil),
 				errors.New("empty output").Error(),
 			)
 			return
@@ -216,7 +221,7 @@ func (r *resourceRecursionConfig) Update(ctx context.Context, req resource.Updat
 		updated, err := waitRecursionConfigUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
 		if err != nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.Lambda, create.ErrActionWaitingForUpdate, ResNameRecursionConfig, plan.ID.String(), err),
+				create.ProblemStandardMessage(names.Lambda, create.ErrActionWaitingForUpdate, ResNameRecursionConfig, planFunctionName, err),
 				err.Error(),
 			)
 			return
@@ -232,7 +237,7 @@ func (r *resourceRecursionConfig) Update(ctx context.Context, req resource.Updat
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-// Delete sets theLambda function's recursion configuration to the default
+// Delete sets the Lambda function's recursion configuration to the default ("Terminate")
 // https://docs.aws.amazon.com/lambda/latest/api/API_PutFunctionRecursionConfig.html
 func (r *resourceRecursionConfig) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state resourceRecursionConfigData
@@ -243,6 +248,8 @@ func (r *resourceRecursionConfig) Delete(ctx context.Context, req resource.Delet
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	stateFunctionName := state.FunctionName.ValueString()
 
 	in := &lambda.PutFunctionRecursionConfigInput{
 		FunctionName:  aws.String(state.ID.ValueString()),
@@ -255,7 +262,7 @@ func (r *resourceRecursionConfig) Delete(ctx context.Context, req resource.Delet
 			return
 		}
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Lambda, create.ErrActionDeleting, ResNameRecursionConfig, state.ID.String(), err),
+			create.ProblemStandardMessage(names.Lambda, create.ErrActionDeleting, ResNameRecursionConfig, stateFunctionName, err),
 			err.Error(),
 		)
 		return
