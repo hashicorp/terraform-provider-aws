@@ -14,7 +14,7 @@ Manages a CloudFormation StackSet Instance. Instances are managed in the account
 
 After enabling stacksets for organizations, stack sets from the relevant management account can automatically deploy to all member accounts using 'self-managed' permissions.
 
-If you are using stacksets outside of this context, you must create the cross-account trusted role(s) ahead of time and refence this role with 'service-managed' permissions.
+If you are using stacksets outside of this context, you must create the relevant cross-account trusted role(s) ahead of time and reference this role with 'service-managed' permissions.
 
 See the [AWS CloudFormation User Guide](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/stacksets-prereqs.html) for more details.
 
@@ -105,7 +105,7 @@ This resource supports the following arguments:
 The `deployment_targets` configuration block supports the following arguments:
 
 * `organizational_unit_ids` - (Optional) Organization root ID or organizational unit (OU) IDs to which StackSets deploys. Typically used with 'stacksets for organizations'
-* `account_filter_type` - (Optional) Limit deployment targets to individual accounts or include additional accounts with provided OUs. Valid values: `INTERSECTION`, `DIFFERENCE`, `UNION`, `NONE`. Typically used with 'stacksets for organizations. Combine with targetting the root OU and INTERSECTION with a list of account ids to target accounts from the management accounts.
+* `account_filter_type` - (Optional) Limit deployment targets to individual accounts or include additional accounts with provided OUs. Valid values: `INTERSECTION`, `DIFFERENCE`, `UNION`, `NONE`. Typically used with 'stacksets for organizations. Combine with targetting the root OU and INTERSECTION with a list of account ids to target accounts from the management account.
 * `accounts` - (Optional) List of accounts to deploy stack set updates. Can only be used after setting up trusted roles with 'self-managed' permissions.
 * `accounts_url` - (Optional) S3 URL of the file containing the list of accounts.
 
