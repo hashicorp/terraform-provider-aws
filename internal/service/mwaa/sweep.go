@@ -45,7 +45,7 @@ func sweepEnvironment(region string) error {
 		}
 
 		for _, v := range page.Environments {
-			r := ResourceEnvironment()
+			r := resourceEnvironment()
 			d := r.Data(nil)
 			d.SetId(v)
 
