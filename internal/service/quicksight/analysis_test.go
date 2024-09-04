@@ -261,6 +261,38 @@ func TestAccQuickSightAnalysis_Definition_calculatedFields(t *testing.T) {
 	})
 }
 
+func TestAccQuickSightAnalysis_theme(t *testing.T) {
+	ctx := acctest.Context(t)
+	var analysis awstypes.Analysis
+	resourceName := "aws_quicksight_analysis.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	themeArn := "arn:aws:quicksight::aws:theme/MIDNIGHT" //lintignore:AWSAT005
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAnalysisDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAnalysisConfig_theme(rId, rName, themeArn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAnalysisExists(ctx, resourceName, &analysis),
+					resource.TestCheckResourceAttr(resourceName, "theme_arn", themeArn),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAnalysisDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightClient(ctx)
@@ -721,4 +753,72 @@ resource "aws_quicksight_analysis" "test" {
   }
 }
 `, rId, rName))
+}
+
+func testAccAnalysisConfig_theme(rId, rName, themeArn string) string {
+	return acctest.ConfigCompose(
+		testAccAnalysisConfig_base(rId, rName),
+		fmt.Sprintf(`
+resource "aws_quicksight_analysis" "test" {
+  analysis_id = %[1]q
+  name        = %[2]q
+  definition {
+    data_set_identifiers_declarations {
+      data_set_arn = aws_quicksight_data_set.test.arn
+      identifier   = "1"
+    }
+    sheets {
+      title    = "Test"
+      sheet_id = "Test1"
+      visuals {
+        custom_content_visual {
+          data_set_identifier = "1"
+          title {
+            format_text {
+              plain_text = "Test"
+            }
+          }
+          visual_id = "Test1"
+        }
+      }
+      visuals {
+        line_chart_visual {
+          visual_id = "LineChart"
+          title {
+            format_text {
+              plain_text = "Line Chart Test"
+            }
+          }
+          chart_configuration {
+            field_wells {
+              line_chart_aggregated_field_wells {
+                category {
+                  categorical_dimension_field {
+                    field_id = "1"
+                    column {
+                      data_set_identifier = "1"
+                      column_name         = "Column1"
+                    }
+                  }
+                }
+                values {
+                  categorical_measure_field {
+                    field_id = "2"
+                    column {
+                      data_set_identifier = "1"
+                      column_name         = "Column1"
+                    }
+                    aggregation_function = "COUNT"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  theme_arn = %[3]q
+}
+`, rId, rName, themeArn))
 }

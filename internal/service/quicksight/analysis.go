@@ -150,6 +150,10 @@ func resourceAnalysisCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.SourceEntity = quicksightschema.ExpandAnalysisSourceEntity(v.([]interface{}))
 	}
 
+	if v, ok := d.Get("theme_arn").(string); ok && v != "" {
+		input.ThemeArn = aws.String(v)
+	}
+
 	_, err := conn.CreateAnalysis(ctx, input)
 
 	if err != nil {
@@ -193,6 +197,7 @@ func resourceAnalysisRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set(names.AttrLastUpdatedTime, analysis.LastUpdatedTime.Format(time.RFC3339))
 	d.Set(names.AttrName, analysis.Name)
 	d.Set(names.AttrStatus, analysis.Status)
+	d.Set("theme_arn", analysis.ThemeArn)
 
 	definition, err := findAnalysisDefinitionByTwoPartKey(ctx, conn, awsAccountID, analysisID)
 
@@ -241,6 +246,10 @@ func resourceAnalysisUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if v, ok := d.GetOk(names.AttrParameters); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			input.Parameters = quicksightschema.ExpandParameters(d.Get(names.AttrParameters).([]interface{}))
+		}
+
+		if v, ok := d.Get("theme_arn").(string); ok && v != "" {
+			input.ThemeArn = aws.String(v)
 		}
 
 		_, err := conn.UpdateAnalysis(ctx, input)
