@@ -49,6 +49,45 @@ func TestAccRolesAnywhereProfile_basic(t *testing.T) {
 	})
 }
 
+func TestAccRolesAnywhereProfile_noRoleARNs(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	roleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rolesanywhere_profile.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RolesAnywhereServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProfileDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProfileConfig_noRoleARNs(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProfileExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "duration_seconds", "3600"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccProfileConfig_basic(rName, roleName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProfileExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "role_arns.#", acctest.Ct1),
+					acctest.CheckResourceAttrGlobalARN(resourceName, "role_arns.0", "iam", fmt.Sprintf("role/%s", roleName)),
+					resource.TestCheckResourceAttr(resourceName, "duration_seconds", "3600"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRolesAnywhereProfile_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -243,6 +282,14 @@ resource "aws_rolesanywhere_profile" "test" {
   role_arns = [aws_iam_role.test.arn]
 }
 `, rName))
+}
+
+func testAccProfileConfig_noRoleARNs(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_rolesanywhere_profile" "test" {
+  name = %[1]q
+}
+`, rName)
 }
 
 func testAccProfileConfig_tags1(rName, roleName, tag, value string) string {

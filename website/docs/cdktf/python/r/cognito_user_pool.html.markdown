@@ -188,6 +188,9 @@ The following arguments are optional:
 ### password_policy
 
 * `minimum_length` - (Optional) Minimum length of the password policy that you have set.
+* `password_history_size` - (Optional) Number of previous passwords that you want Amazon Cognito to restrict each user from reusing. Users can't set a password that matches any of number of previous passwords specified by this argument. A value of 0 means that password history is not enforced. Valid values are between 0 and 24.
+
+  **Note:** This argument requires advanced security features to be active in the user pool.
 * `require_lowercase` - (Optional) Whether you have required users to use at least one lowercase letter in their password.
 * `require_numbers` - (Optional) Whether you have required users to use at least one number in their password.
 * `require_symbols` - (Optional) Whether you have required users to use at least one symbol in their password.
@@ -321,4 +324,4 @@ Using `terraform import`, import Cognito User Pools using the `id`. For example:
 % terraform import aws_cognito_user_pool.pool us-west-2_abc123
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-d2add4de169176a18d535e64e6b4e2b8a61a2e7ab8a1120b63e928572a07990e -->
+<!-- cache-key: cdktf-0.20.1 input-a5026c8f072622eb3e4e8544e9cd32706d5985790507f537d138da4206879cc1 -->

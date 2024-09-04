@@ -164,9 +164,6 @@ func (r *resourceSlotType) Schema(ctx context.Context, req resource.SchemaReques
 				},
 			},
 			"slot_type_values": schema.ListNestedBlock{
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
 				CustomType: fwtypes.NewListNestedObjectTypeOf[SlotTypeValues](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{

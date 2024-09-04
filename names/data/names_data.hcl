@@ -6844,6 +6844,31 @@ service "pcaconnectorad" {
   brand                    = "AWS"
 }
 
+service "pcs" {
+
+  sdk {
+    id             = "PCS"
+    client_version = [2]
+  }
+
+  names {
+    provider_name_upper = "PCS"
+    human_friendly      = "Parallel Computing Service"
+  }
+
+  endpoint_info {
+    endpoint_api_call        = "ListClusters"
+  }
+
+  resource_prefix {
+    correct = "aws_pcs_"
+  }
+
+  provider_package_correct = "pcs"
+  doc_prefix               = ["pcs_"]
+  brand                    = "AWS"
+}
+
 service "personalize" {
 
   sdk {
@@ -7209,7 +7234,7 @@ service "quicksight" {
 
   sdk {
     id             = "QuickSight"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -7223,7 +7248,7 @@ service "quicksight" {
 
   endpoint_info {
     endpoint_api_call        = "ListDashboards"
-    endpoint_api_params      = "AwsAccountId: aws_sdkv1.String(\"123456789012\")"
+    endpoint_api_params      = "AwsAccountId: aws_sdkv2.String(\"123456789012\")"
   }
 
   resource_prefix {

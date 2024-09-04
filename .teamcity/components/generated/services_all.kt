@@ -169,6 +169,7 @@ val services = mapOf(
     "outposts" to ServiceSpec("Outposts"),
     "paymentcryptography" to ServiceSpec("Payment Cryptography Control Plane"),
     "pcaconnectorad" to ServiceSpec("Private CA Connector for Active Directory"),
+    "pcs" to ServiceSpec("Parallel Computing Service"),
     "pinpoint" to ServiceSpec("Pinpoint"),
     "pipes" to ServiceSpec("EventBridge Pipes"),
     "polly" to ServiceSpec("Polly"),
