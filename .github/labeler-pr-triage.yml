@@ -1617,6 +1617,12 @@ service/pcaconnectorad:
           - any-glob-to-any-file:
               - 'internal/service/pcaconnectorad/**/*'
               - 'website/**/pcaconnectorad_*'
+service/pcs:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/pcs/**/*'
+              - 'website/**/pcs_*'
 service/personalize:
   - any:
       - changed-files:

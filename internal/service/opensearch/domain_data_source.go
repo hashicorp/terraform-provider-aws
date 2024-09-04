@@ -213,8 +213,16 @@ func dataSourceDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"dashboard_endpoint_v2": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"deleted": {
 				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"domain_endpoint_v2_hosted_zone_id": {
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"domain_id": {
@@ -270,6 +278,10 @@ func dataSourceDomain() *schema.Resource {
 				},
 			},
 			names.AttrEndpoint: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"endpoint_v2": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -455,10 +467,11 @@ func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.Set(names.AttrARN, ds.ARN)
+	d.Set("domain_endpoint_v2_hosted_zone_id", ds.DomainEndpointV2HostedZoneId)
 	d.Set("domain_id", ds.DomainId)
 	d.Set(names.AttrEndpoint, ds.Endpoint)
-	d.Set("dashboard_endpoint", getDashboardEndpoint(d))
-	d.Set("kibana_endpoint", getKibanaEndpoint(d))
+	d.Set("dashboard_endpoint", getDashboardEndpoint(d.Get(names.AttrEndpoint).(string)))
+	d.Set("kibana_endpoint", getKibanaEndpoint(d.Get(names.AttrEndpoint).(string)))
 
 	if err := d.Set("advanced_security_options", flattenAdvancedSecurityOptions(ds.AdvancedSecurityOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting advanced_security_options: %s", err)
@@ -503,16 +516,27 @@ func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta inte
 		if err := d.Set(names.AttrEndpoint, endpoints["vpc"]); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting endpoint: %s", err)
 		}
-		d.Set("dashboard_endpoint", getDashboardEndpoint(d))
-		d.Set("kibana_endpoint", getKibanaEndpoint(d))
+		d.Set("dashboard_endpoint", getDashboardEndpoint(d.Get(names.AttrEndpoint).(string)))
+		d.Set("kibana_endpoint", getKibanaEndpoint(d.Get(names.AttrEndpoint).(string)))
+		if endpoints["vpcv2"] != nil {
+			d.Set("endpoint_v2", endpoints["vpcv2"])
+			d.Set("dashboard_endpoint_v2", getDashboardEndpoint(d.Get("endpoint_v2").(string)))
+		}
 		if ds.Endpoint != nil {
 			return sdkdiag.AppendErrorf(diags, "%q: OpenSearch domain in VPC expected to have null Endpoint value", d.Id())
+		}
+		if ds.EndpointV2 != nil {
+			return sdkdiag.AppendErrorf(diags, "%q: OpenSearch Domain in VPC expected to have null EndpointV2 value", d.Id())
 		}
 	} else {
 		if ds.Endpoint != nil {
 			d.Set(names.AttrEndpoint, ds.Endpoint)
-			d.Set("dashboard_endpoint", getDashboardEndpoint(d))
-			d.Set("kibana_endpoint", getKibanaEndpoint(d))
+			d.Set("dashboard_endpoint", getDashboardEndpoint(d.Get(names.AttrEndpoint).(string)))
+			d.Set("kibana_endpoint", getKibanaEndpoint(d.Get(names.AttrEndpoint).(string)))
+		}
+		if ds.EndpointV2 != nil {
+			d.Set("endpoint_v2", ds.EndpointV2)
+			d.Set("dashboard_endpoint_v2", getDashboardEndpoint(d.Get("endpoint_v2").(string)))
 		}
 		if ds.Endpoints != nil {
 			return sdkdiag.AppendErrorf(diags, "%q: OpenSearch domain not in VPC expected to have null Endpoints value", d.Id())

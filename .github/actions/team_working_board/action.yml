@@ -1,0 +1,149 @@
+name: Team Working Board
+description: Manages an item within the AWS Provider Team's working board
+
+inputs:
+  github_token:
+    description: The token used to authenticate with the GitHub API
+    required: true
+
+  item_url:
+    description: The URL of the Issue or Pull Request
+    required: true
+
+  move_to_top:
+    description: Whether to move the item to the top of the list
+    required: false
+
+  status:
+    description: The Status the item should be set to
+    required: false
+
+  view:
+    description: The View the item should be assigned to
+    required: false
+
+runs:
+  using: composite
+  steps:
+    - name: Add Item to Working Board
+      id: add_to_board
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
+      run: |
+        echo "project_item_id=$(gh project item-add 196 --owner hashicorp --url ${{ inputs.item_url }} --format json --jq '.id')" >> $GITHUB_OUTPUT
+
+    - name: Move Item to Top of Working Board
+      if: inputs.move_to_top == 'true'
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
+      run: |
+        gh api graphql \
+          --field itemId="${{ steps.add_to_board.outputs.project_item_id }}" \
+          --raw-field query='
+            mutation($itemId:ID!) {
+              updateProjectV2ItemPosition(input:{itemId:$itemId, projectId:"PVT_kwDOAAuecM4AF-7h"}) {
+                clientMutationId
+              }
+            }'
+
+    - name: Get Current Status
+      id: get_status
+      if: inputs.status != ''
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
+      run: |
+        echo "current=$(gh api graphql \
+          --field node=${{ steps.add_to_board.outputs.project_item_id }} \
+          --raw-field query='
+            query($node: ID!) {
+              node(id: $node) {
+                ...on ProjectV2Item {
+                  fieldValueByName(name: "Status") {
+                    ...on ProjectV2ItemFieldSingleSelectValue {
+                      name
+                    }
+                  }
+                }
+              }
+            }' --jq '.data.node.fieldValueByName.name')" >> $GITHUB_OUTPUT
+
+    - name: Get Desired Status ID
+      id: status_id
+      if: |
+        inputs.status != ''
+        && inputs.status != steps.get_status.outputs.current
+      shell: bash
+      run: |
+        echo "desired=$(echo '{
+          "To Do": "f75ad846",
+          "In Progress": "47fc9ee4",
+          "Maintainer PR": "28a034bc",
+          "Pending Merge": "043bc06e",
+          "Waiting": "e85f2e5d",
+          "Done": "98236657"
+        }' | jq --exit-status --arg desired "${{ inputs.status }}" '.[$desired]')" >> $GITHUB_OUTPUT
+
+    - name: Update Status
+      if: |
+        inputs.status != ''
+        && inputs.status != steps.get_status.outputs.current
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
+      run: |
+        gh project item-edit \
+          --id "${{ steps.add_to_board.outputs.project_item_id }}" \
+          --project-id "PVT_kwDOAAuecM4AF-7h" \
+          --field-id "PVTSSF_lADOAAuecM4AF-7hzgDcsQA" \
+          --single-select-option-id "${{ steps.status_id.outputs.desired }}"
+
+    - name: Get Current View
+      id: get_view
+      if: inputs.view != ''
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
+      run: |
+        echo "current=$(gh api graphql \
+          --field node=${{ steps.add_to_board.outputs.project_item_id }} \
+          --raw-field query='
+            query($node: ID!) {
+              node(id: $node) {
+                ...on ProjectV2Item {
+                  fieldValueByName(name: "View") {
+                    ...on ProjectV2ItemFieldSingleSelectValue {
+                      name
+                    }
+                  }
+                }
+              }
+            }' --jq '.data.node.fieldValueByName.name')" >> $GITHUB_OUTPUT
+
+    - name: Get Desired View ID
+      id: view_id
+      if: |
+        inputs.view != ''
+        && inputs.view != steps.get_view.outputs.current
+      shell: bash
+      run: |
+        echo "desired=$(echo '{
+          "working-board": "8d366764",
+          "engineering-initiative": "a62d09b9"
+        }' | jq --exit-status --arg desired "${{ inputs.view }}" '.[$desired]')" >> $GITHUB_OUTPUT
+
+    - name: Update View
+      if: |
+        inputs.view != ''
+        && inputs.view != steps.get_view.outputs.current
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
+      run: |
+        gh project item-edit \
+          --id "${{ steps.add_to_board.outputs.project_item_id }}" \
+          --project-id "PVT_kwDOAAuecM4AF-7h" \
+          --field-id "PVTSSF_lADOAAuecM4AF-7hzgMRB34" \
+          --single-select-option-id "${{ steps.view_id.outputs.desired }}"

@@ -25,7 +25,7 @@ const (
 	imageCreatedTimeout                = 10 * time.Minute
 	imageDeletedTimeout                = 10 * time.Minute
 	endpointDeletedTimeout             = 10 * time.Minute
-	endpointInServiceTimeout           = 10 * time.Minute
+	endpointInServiceTimeout           = 60 * time.Minute
 	imageVersionCreatedTimeout         = 10 * time.Minute
 	imageVersionDeletedTimeout         = 10 * time.Minute
 	domainInServiceTimeout             = 20 * time.Minute

@@ -73,7 +73,7 @@ The following arguments are optional:
 
 The following arguments are required:
 
-* `keyword_input_type` - (Required) Input method for the keyword. Valid values are `SELECT_FROM_LIST`.
+* `keyword_input_type` - (Required) Input method for the keyword. Valid values are `INPUT_TEXT`, `SELECT_FROM_LIST`, or `UPLOAD_FILE`.
 * `keyword_value` - (Required) The value of the keyword that's used when mapping a control data source. For example, this can be a CloudTrail event name, a rule name for Config, a Security Hub control, or the name of an Amazon Web Services API call. See the [Audit Manager supported control data sources documentation](https://docs.aws.amazon.com/audit-manager/latest/userguide/control-data-sources.html) for more information.
 
 ## Attribute Reference
@@ -110,4 +110,4 @@ Using `terraform import`, import an Audit Manager Control using the `id`. For ex
 % terraform import aws_auditmanager_control.example abc123-de45
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-b868688bbd20f6d5af9ab3798d86ae2370658daf4faa22e5cee0ffe9436e3cc0 -->
+<!-- cache-key: cdktf-0.20.1 input-bc2f89c5792b58fb108a1ff46386c011ac7aef5ec1461e6d9b303095ac1ea3b0 -->

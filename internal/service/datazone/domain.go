@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
@@ -88,6 +89,12 @@ func (r *resourceDomain) Schema(ctx context.Context, req resource.SchemaRequest,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"skip_deletion_check": schema.BoolAttribute{
+				Optional: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
 				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
@@ -326,6 +333,10 @@ func (r *resourceDomain) Delete(ctx context.Context, req resource.DeleteRequest,
 		Identifier:  aws.String(state.ID.ValueString()),
 	}
 
+	if !state.SkipDeletionCheck.IsNull() {
+		in.SkipDeletionCheck = state.SkipDeletionCheck.ValueBoolPointer()
+	}
+
 	_, err := conn.DeleteDomain(ctx, in)
 	if err != nil {
 		if isResourceMissing(err) {
@@ -477,6 +488,7 @@ type domainResourceModel struct {
 	KmsKeyIdentifier    fwtypes.ARN    `tfsdk:"kms_key_identifier"`
 	Name                types.String   `tfsdk:"name"`
 	PortalUrl           types.String   `tfsdk:"portal_url"`
+	SkipDeletionCheck   types.Bool     `tfsdk:"skip_deletion_check"`
 	SingleSignOn        types.List     `tfsdk:"single_sign_on"`
 	Tags                types.Map      `tfsdk:"tags"`
 	TagsAll             types.Map      `tfsdk:"tags_all"`

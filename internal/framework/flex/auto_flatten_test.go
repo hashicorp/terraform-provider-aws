@@ -1372,7 +1372,6 @@ func TestFlattenFloat64(t *testing.T) {
 	}
 
 	for testName, cases := range testCases {
-		cases := cases
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
@@ -1555,7 +1554,6 @@ func TestFlattenFloat32(t *testing.T) {
 	}
 
 	for testName, cases := range testCases {
-		cases := cases
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
@@ -1733,7 +1731,6 @@ func TestFlattenInt64(t *testing.T) {
 	}
 
 	for testName, cases := range testCases {
-		cases := cases
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
@@ -1916,7 +1913,6 @@ func TestFlattenInt32(t *testing.T) {
 	}
 
 	for testName, cases := range testCases {
-		cases := cases
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
@@ -1966,8 +1962,6 @@ func TestFlattenTopLevelStringPtr(t *testing.T) {
 	}
 
 	for testName, testCase := range testCases {
-		testCase := testCase
-
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
@@ -2044,8 +2038,6 @@ func TestFlattenTopLevelInt64Ptr(t *testing.T) {
 	}
 
 	for testName, testCase := range testCases {
-		testCase := testCase
-
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
@@ -3781,7 +3773,6 @@ func runAutoFlattenTestCases(t *testing.T, testCases autoFlexTestCases) {
 	t.Helper()
 
 	for testName, testCase := range testCases {
-		testCase := testCase
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
@@ -3849,7 +3840,6 @@ func TestFlattenPrePopulate(t *testing.T) {
 	}
 
 	for name, testCase := range testCases {
-		testCase := testCase
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 

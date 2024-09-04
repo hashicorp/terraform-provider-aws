@@ -103,8 +103,8 @@ The `option` blocks support the following arguments:
 
 The `optionSettings` blocks support the following arguments:
 
-* `name` - (Optional) Name of the setting.
-* `value` - (Optional) Value of the setting.
+* `name` - (Required) Name of the setting.
+* `value` - (Required) Value of the setting.
 
 ## Attribute Reference
 
@@ -152,4 +152,4 @@ Using `terraform import`, import DB option groups using the `name`. For example:
 % terraform import aws_db_option_group.example mysql-option-group
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-62ce6ccbb06a496ac34ee95f02b78a8f656e8aa8bcee5ecad549ba0dda3c07dd -->
+<!-- cache-key: cdktf-0.20.1 input-7c21a061374a3e140a82a5f64d30f96ee7632e4b0fbeba886f3b84b15cf34bd8 -->

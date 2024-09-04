@@ -82,7 +82,9 @@ This data source exports the following attributes in addition to the arguments a
     * `roleArn` - IAM Role with the AmazonOpenSearchServiceCognitoAccess policy attached.
 * `created` – Status of the creation of the domain.
 * `dashboardEndpoint` - Domain-specific endpoint used to access the [Dashboard application](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/dashboards.html).
+* `dashboardEndpointV2` - V2 domain-specific endpoint used to access the [Dashboard application](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/dashboards.html)
 * `deleted` – Status of the deletion of the domain.
+* `domainEndpointV2HostedZoneId` -  Dual stack hosted zone ID for the domain.
 * `domainId` – Unique identifier for the domain.
 * `ebsOptions` - EBS Options for the instances in the domain.
     * `ebsEnabled` - Whether EBS volumes are attached to data nodes in the domain.
@@ -95,6 +97,7 @@ This data source exports the following attributes in addition to the arguments a
     * `enabled` - Whether encryption at rest is enabled in the domain.
     * `kmsKeyId` - KMS key id used to encrypt data at rest.
 * `endpoint` – Domain-specific endpoint used to submit index, search, and data upload requests.
+* `endpointV2` - V2 domain-specific endpoint that works with both IPv4 and IPv6 addresses, used to submit index, search, and data upload requests.
 * `ipAddressType` - Type of IP addresses supported by the endpoint for the domain.
 * `kibanaEndpoint` - (**Deprecated**) Domain-specific endpoint for kibana without https scheme. Use the `dashboardEndpoint` attribute instead.
 * `logPublishingOptions` - Domain log publishing related options.
@@ -121,4 +124,4 @@ This data source exports the following attributes in addition to the arguments a
     * `subnetIds` - Subnets used by the domain.
     * `vpcId` - VPC used by the domain.
 
-<!-- cache-key: cdktf-0.20.1 input-9ad96ddccd055a8801cf41664d1bc56b8cf4e140901a238bc44f8b3314f475e2 -->
+<!-- cache-key: cdktf-0.20.1 input-206305f479449066996709d5dfec811f0b8097d8aa6496cf6fc11d73f4ca4b5b -->

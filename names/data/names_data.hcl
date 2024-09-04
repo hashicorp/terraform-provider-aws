@@ -2359,7 +2359,7 @@ service "connect" {
 
   sdk {
     id             = "Connect"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -3446,7 +3446,7 @@ service "elasticsearch" {
 
   sdk {
     id             = "Elasticsearch Service"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -3762,7 +3762,7 @@ service "emr" {
 
   sdk {
     id             = "EMR"
-    client_version = [1, 2]
+    client_version = [2]
   }
 
   names {
@@ -5412,7 +5412,7 @@ service "lexmodels" {
 
   sdk {
     id             = "Lex Model Building Service"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -5755,7 +5755,7 @@ service "macie2" {
 
   sdk {
     id             = "Macie2"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -6373,7 +6373,7 @@ service "neptune" {
 
   sdk {
     id             = "Neptune"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -6844,6 +6844,31 @@ service "pcaconnectorad" {
   brand                    = "AWS"
 }
 
+service "pcs" {
+
+  sdk {
+    id             = "PCS"
+    client_version = [2]
+  }
+
+  names {
+    provider_name_upper = "PCS"
+    human_friendly      = "Parallel Computing Service"
+  }
+
+  endpoint_info {
+    endpoint_api_call        = "ListClusters"
+  }
+
+  resource_prefix {
+    correct = "aws_pcs_"
+  }
+
+  provider_package_correct = "pcs"
+  doc_prefix               = ["pcs_"]
+  brand                    = "AWS"
+}
+
 service "personalize" {
 
   sdk {
@@ -7209,7 +7234,7 @@ service "quicksight" {
 
   sdk {
     id             = "QuickSight"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -7223,7 +7248,7 @@ service "quicksight" {
 
   endpoint_info {
     endpoint_api_call        = "ListDashboards"
-    endpoint_api_params      = "AwsAccountId: aws_sdkv1.String(\"123456789012\")"
+    endpoint_api_params      = "AwsAccountId: aws_sdkv2.String(\"123456789012\")"
   }
 
   resource_prefix {
