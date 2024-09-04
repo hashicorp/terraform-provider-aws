@@ -260,7 +260,7 @@ func testAccRecursionConfigConfig_basic(rName string) string {
 		testAccRecursionConfigConfigBase(rName),
 		`
 resource "aws_lambda_recursion_config" "test" {
-  function_name = aws_lambda_function.test.function_name
+  function_name  = aws_lambda_function.test.function_name
   recursive_loop = "Terminate"
 }
 `)
@@ -271,7 +271,7 @@ func testAccRecursionConfigConfig_updateRecursiveLoop(rName, resRecursiveLoopVal
 		testAccRecursionConfigConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_lambda_recursion_config" "test" {
-  function_name = aws_lambda_function.test.function_name
+  function_name  = aws_lambda_function.test.function_name
   recursive_loop = %[1]q
 }
 `, resRecursiveLoopValue))

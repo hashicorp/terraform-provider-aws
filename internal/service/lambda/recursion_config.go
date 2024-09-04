@@ -58,7 +58,7 @@ func (r *resourceRecursionConfig) Metadata(_ context.Context, req resource.Metad
 func (r *resourceRecursionConfig) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"function_name": schema.StringAttribute{
 				Description: "The name of the Lambda function.",
 				Required:    true,
@@ -80,7 +80,7 @@ func (r *resourceRecursionConfig) Schema(ctx context.Context, req resource.Schem
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
@@ -190,7 +190,6 @@ func (r *resourceRecursionConfig) Update(ctx context.Context, req resource.Updat
 	planFunctionName := plan.FunctionName.ValueString()
 
 	if !plan.RecursiveLoop.Equal(state.RecursiveLoop) {
-
 		in := &lambda.PutFunctionRecursionConfigInput{
 			FunctionName: flex.StringFromFramework(ctx, plan.ID),
 		}
@@ -231,7 +230,6 @@ func (r *resourceRecursionConfig) Update(ctx context.Context, req resource.Updat
 		if resp.Diagnostics.HasError() {
 			return
 		}
-
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
