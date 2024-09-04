@@ -28,7 +28,7 @@ type dataSourceRegistry struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourceRegistry) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
+func (d *dataSourceRegistry) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = "aws_glue_registry"
 }
 
@@ -50,7 +50,7 @@ func (d *dataSourceRegistry) Schema(ctx context.Context, req datasource.SchemaRe
 }
 
 func (d *dataSourceRegistry) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	conn := d.Meta().GlueConn(ctx)
+	conn := d.Meta().GlueClient(ctx)
 
 	var data dataSourceRegistryData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
