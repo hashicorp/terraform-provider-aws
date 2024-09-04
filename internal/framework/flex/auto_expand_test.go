@@ -2801,7 +2801,7 @@ func TestExpandOptions(t *testing.T) {
 				traceMatchedFields("Field1", reflect.TypeFor[tf01](), "Field1", reflect.TypeFor[*aws01]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[types.Bool](), "Field1", reflect.TypeFor[bool]()),
 				traceExpandingNullValue("Field1", reflect.TypeFor[types.Bool](), "Field1", reflect.TypeFor[bool]()),
-				traceSkipIgnoredField(reflect.TypeFor[tf01](), "Tags", reflect.TypeFor[*aws01]()),
+				traceSkipIgnoredSourceField(reflect.TypeFor[tf01](), "Tags", reflect.TypeFor[*aws01]()),
 			},
 		},
 		"ignore tags by default": {
@@ -2819,7 +2819,7 @@ func TestExpandOptions(t *testing.T) {
 				infoConverting(reflect.TypeFor[tf01](), reflect.TypeFor[*aws01]()),
 				traceMatchedFields("Field1", reflect.TypeFor[tf01](), "Field1", reflect.TypeFor[*aws01]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[types.Bool](), "Field1", reflect.TypeFor[bool]()),
-				traceSkipIgnoredField(reflect.TypeFor[tf01](), "Tags", reflect.TypeFor[*aws01]()),
+				traceSkipIgnoredSourceField(reflect.TypeFor[tf01](), "Tags", reflect.TypeFor[*aws01]()),
 			},
 		},
 		"include tags with option override": {
@@ -2862,13 +2862,46 @@ func TestExpandOptions(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				infoExpanding(reflect.TypeFor[*tf01](), reflect.TypeFor[*aws01]()),
 				infoConverting(reflect.TypeFor[tf01](), reflect.TypeFor[*aws01]()),
-				traceSkipIgnoredField(reflect.TypeFor[tf01](), "Field1", reflect.TypeFor[*aws01]()),
+				traceSkipIgnoredSourceField(reflect.TypeFor[tf01](), "Field1", reflect.TypeFor[*aws01]()),
 				traceMatchedFields("Tags", reflect.TypeFor[tf01](), "Tags", reflect.TypeFor[*aws01]()),
 				infoConvertingWithPath("Tags", reflect.TypeFor[fwtypes.MapValueOf[types.String]](), "Tags", reflect.TypeFor[map[string]string]()),
 				traceExpandingWithElementsAs("Tags", reflect.TypeFor[fwtypes.MapValueOf[types.String]](), 1, "Tags", reflect.TypeFor[map[string]string]()),
 			},
 		},
 	}
+	runAutoExpandTestCases(t, testCases)
+}
+
+func TestExpandIgnoreStructTag(t *testing.T) {
+	t.Parallel()
+
+	testCases := autoFlexTestCases{
+		"to value": {
+			Source: tfSingleStringFieldIgnore{
+				Field1: types.StringValue("value1"),
+			},
+			Target:     &awsSingleStringValue{},
+			WantTarget: &awsSingleStringValue{},
+			expectedLogLines: []map[string]any{
+				infoExpanding(reflect.TypeFor[tfSingleStringFieldIgnore](), reflect.TypeFor[*awsSingleStringValue]()),
+				infoConverting(reflect.TypeFor[tfSingleStringFieldIgnore](), reflect.TypeFor[*awsSingleStringValue]()),
+				traceSkipIgnoredSourceField(reflect.TypeFor[tfSingleStringFieldIgnore](), "Field1", reflect.TypeFor[*awsSingleStringValue]()),
+			},
+		},
+		"to pointer": {
+			Source: tfSingleStringFieldIgnore{
+				Field1: types.StringValue("value1"),
+			},
+			Target:     &awsSingleStringPointer{},
+			WantTarget: &awsSingleStringPointer{},
+			expectedLogLines: []map[string]any{
+				infoExpanding(reflect.TypeFor[tfSingleStringFieldIgnore](), reflect.TypeFor[*awsSingleStringPointer]()),
+				infoConverting(reflect.TypeFor[tfSingleStringFieldIgnore](), reflect.TypeFor[*awsSingleStringPointer]()),
+				traceSkipIgnoredSourceField(reflect.TypeFor[tfSingleStringFieldIgnore](), "Field1", reflect.TypeFor[*awsSingleStringPointer]()),
+			},
+		},
+	}
+
 	runAutoExpandTestCases(t, testCases)
 }
 

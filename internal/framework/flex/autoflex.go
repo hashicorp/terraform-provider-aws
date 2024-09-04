@@ -128,14 +128,14 @@ func autoFlexConvertStruct(ctx context.Context, sourcePath path.Path, from any, 
 		fromNameOverride, _ := autoflexTags(fromField)
 		fieldName := fromField.Name
 		if opts.isIgnoredField(fieldName) {
-			tflog.SubsystemTrace(ctx, subsystemName, "Skipping ignored field", map[string]any{
+			tflog.SubsystemTrace(ctx, subsystemName, "Skipping ignored source field", map[string]any{
 				logAttrKeySourceFieldname: fieldName,
 			})
 			continue
 		}
 		// TODO: this only applies when Expanding
 		if fromNameOverride == "-" {
-			tflog.SubsystemTrace(ctx, subsystemName, "Skipping ignored field", map[string]any{
+			tflog.SubsystemTrace(ctx, subsystemName, "Skipping ignored source field", map[string]any{
 				logAttrKeySourceFieldname: fieldName,
 			})
 			continue
@@ -157,8 +157,15 @@ func autoFlexConvertStruct(ctx context.Context, sourcePath path.Path, from any, 
 		}
 		toFieldName := toField.Name
 		// TODO: this only applies when Flattening
-		_, toOpts := autoflexTags(toField)
+		toNameOverride, toOpts := autoflexTags(toField)
 		toFieldVal := valTo.FieldByIndex(toField.Index)
+		if toNameOverride == "-" {
+			tflog.SubsystemTrace(ctx, subsystemName, "Skipping ignored target field", map[string]any{
+				logAttrKeySourceFieldname: fieldName,
+				logAttrKeyTargetFieldname: toFieldName,
+			})
+			continue
+		}
 		if !toFieldVal.CanSet() {
 			// Corresponding field value can't be changed.
 			tflog.SubsystemDebug(ctx, subsystemName, "Field cannot be set", map[string]any{

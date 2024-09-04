@@ -2984,7 +2984,7 @@ func TestFlattenOptions(t *testing.T) {
 				infoConverting(reflect.TypeFor[aws01](), reflect.TypeFor[*tf01]()),
 				traceMatchedFields("Field1", reflect.TypeFor[aws01](), "Field1", reflect.TypeFor[*tf01]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[bool](), "Field1", reflect.TypeFor[types.Bool]()),
-				traceSkipIgnoredField(reflect.TypeFor[aws01](), "Tags", reflect.TypeFor[*tf01]()),
+				traceSkipIgnoredSourceField(reflect.TypeFor[aws01](), "Tags", reflect.TypeFor[*tf01]()),
 			},
 		},
 		"ignore tags by default": {
@@ -3003,7 +3003,7 @@ func TestFlattenOptions(t *testing.T) {
 				infoConverting(reflect.TypeFor[aws01](), reflect.TypeFor[*tf01]()),
 				traceMatchedFields("Field1", reflect.TypeFor[aws01](), "Field1", reflect.TypeFor[*tf01]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[bool](), "Field1", reflect.TypeFor[types.Bool]()),
-				traceSkipIgnoredField(reflect.TypeFor[aws01](), "Tags", reflect.TypeFor[*tf01]()),
+				traceSkipIgnoredSourceField(reflect.TypeFor[aws01](), "Tags", reflect.TypeFor[*tf01]()),
 			},
 		},
 		"include tags with option override": {
@@ -3048,7 +3048,7 @@ func TestFlattenOptions(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				infoFlattening(reflect.TypeFor[*aws01](), reflect.TypeFor[*tf01]()),
 				infoConverting(reflect.TypeFor[aws01](), reflect.TypeFor[*tf01]()),
-				traceSkipIgnoredField(reflect.TypeFor[aws01](), "Field1", reflect.TypeFor[*tf01]()),
+				traceSkipIgnoredSourceField(reflect.TypeFor[aws01](), "Field1", reflect.TypeFor[*tf01]()),
 				traceMatchedFields("Tags", reflect.TypeFor[aws01](), "Tags", reflect.TypeFor[*tf01]()),
 				infoConvertingWithPath("Tags", reflect.TypeFor[map[string]string](), "Tags", reflect.TypeFor[fwtypes.MapValueOf[types.String]]()),
 				traceFlatteningWithMapValue("Tags", reflect.TypeFor[map[string]string](), 1, "Tags", reflect.TypeFor[fwtypes.MapValueOf[types.String]]()),
@@ -3056,6 +3056,39 @@ func TestFlattenOptions(t *testing.T) {
 		},
 	}
 	runAutoFlattenTestCases(t, testCases)
+}
+
+func TestFlattenIgnoreStructTag(t *testing.T) {
+	t.Parallel()
+
+	testCases := autoFlexTestCases{
+		"from value": {
+			Source: awsSingleStringValue{
+				Field1: "value1",
+			},
+			Target:     &tfSingleStringFieldIgnore{},
+			WantTarget: &tfSingleStringFieldIgnore{},
+			expectedLogLines: []map[string]any{
+				infoExpanding(reflect.TypeFor[awsSingleStringValue](), reflect.TypeFor[*tfSingleStringFieldIgnore]()),
+				infoConverting(reflect.TypeFor[awsSingleStringValue](), reflect.TypeFor[*tfSingleStringFieldIgnore]()),
+				traceSkipIgnoredTargetField(reflect.TypeFor[awsSingleStringValue](), "Field1", reflect.TypeFor[*tfSingleStringFieldIgnore](), "Field1"),
+			},
+		},
+		"from pointer": {
+			Source: awsSingleStringPointer{
+				Field1: aws.String("value1"),
+			},
+			Target:     &tfSingleStringFieldIgnore{},
+			WantTarget: &tfSingleStringFieldIgnore{},
+			expectedLogLines: []map[string]any{
+				infoExpanding(reflect.TypeFor[awsSingleStringPointer](), reflect.TypeFor[*tfSingleStringFieldIgnore]()),
+				infoConverting(reflect.TypeFor[awsSingleStringPointer](), reflect.TypeFor[*tfSingleStringFieldIgnore]()),
+				traceSkipIgnoredTargetField(reflect.TypeFor[awsSingleStringPointer](), "Field1", reflect.TypeFor[*tfSingleStringFieldIgnore](), "Field1"),
+			},
+		},
+	}
+
+	runAutoExpandTestCases(t, testCases)
 }
 
 func TestFlattenInterfaceToStringTypable(t *testing.T) {

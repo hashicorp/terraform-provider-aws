@@ -181,23 +181,44 @@ func infoConvertingWithPath(sourceFieldPath string, sourceType reflect.Type, tar
 	})
 }
 
-func traceSkipIgnoredField(sourceType reflect.Type, sourceFieldName string, targetType reflect.Type) map[string]any {
-	return traceSkipIgnoredFieldWithPath(
+func traceSkipIgnoredSourceField(sourceType reflect.Type, sourceFieldName string, targetType reflect.Type) map[string]any {
+	return traceSkipIgnoredSourceFieldWithPath(
 		"", sourceType, sourceFieldName,
 		"", targetType,
 	)
 }
 
-func traceSkipIgnoredFieldWithPath(sourcePath string, sourceType reflect.Type, sourceFieldName string, targetPath string, targetType reflect.Type) map[string]any {
+func traceSkipIgnoredSourceFieldWithPath(sourcePath string, sourceType reflect.Type, sourceFieldName string, targetPath string, targetType reflect.Type) map[string]any {
 	return map[string]any{
 		"@level":                  hclog.Trace.String(),
 		"@module":                 logModule,
-		"@message":                "Skipping ignored field",
+		"@message":                "Skipping ignored source field",
 		logAttrKeySourcePath:      sourcePath,
 		logAttrKeySourceType:      fullTypeName(sourceType),
 		logAttrKeySourceFieldname: sourceFieldName,
 		logAttrKeyTargetPath:      targetPath,
 		logAttrKeyTargetType:      fullTypeName(targetType),
+	}
+}
+
+func traceSkipIgnoredTargetField(sourceType reflect.Type, sourceFieldName string, targetType reflect.Type, targetFieldName string) map[string]any {
+	return traceSkipIgnoredTargetFieldWithPath(
+		"", sourceType, sourceFieldName,
+		"", targetType, targetFieldName,
+	)
+}
+
+func traceSkipIgnoredTargetFieldWithPath(sourcePath string, sourceType reflect.Type, sourceFieldName string, targetPath string, targetType reflect.Type, targetFieldName string) map[string]any {
+	return map[string]any{
+		"@level":                  hclog.Trace.String(),
+		"@module":                 logModule,
+		"@message":                "Skipping ignored target field",
+		logAttrKeySourcePath:      sourcePath,
+		logAttrKeySourceType:      fullTypeName(sourceType),
+		logAttrKeySourceFieldname: sourceFieldName,
+		logAttrKeyTargetPath:      targetPath,
+		logAttrKeyTargetType:      fullTypeName(targetType),
+		logAttrKeyTargetFieldname: targetFieldName,
 	}
 }
 
