@@ -507,7 +507,7 @@ resource "aws_bedrockagent_data_source" "test" {
       semantic_chunking_configuration {
         breakpoint_percentile_threshold = 80
         buffer_size                     = 1
-		max_token                       = 10
+        max_token                       = 10
       }
     }
   }
