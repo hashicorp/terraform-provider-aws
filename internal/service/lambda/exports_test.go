@@ -16,6 +16,7 @@ var (
 	ResourceLayerVersionPermission       = resourceLayerVersionPermission
 	ResourcePermission                   = resourcePermission
 	ResourceProvisionedConcurrencyConfig = resourceProvisionedConcurrencyConfig
+	ResourceRecursionConfig              = newResourceRecursionConfig
 
 	FindAliasByTwoPartKey                        = findAliasByTwoPartKey
 	FindCodeSigningConfigByARN                   = findCodeSigningConfigByARN
