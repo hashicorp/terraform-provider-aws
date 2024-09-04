@@ -657,8 +657,8 @@ type resourceGuardrailData struct {
 	Name                       types.String                                                      `tfsdk:"name"`
 	SensitiveInformationPolicy fwtypes.ListNestedObjectValueOf[sensitiveInformationPolicyConfig] `tfsdk:"sensitive_information_policy_config"`
 	Status                     fwtypes.StringEnum[awstypes.GuardrailStatus]                      `tfsdk:"status"`
-	Tags                       types.Map                                                         `tfsdk:"tags"`
-	TagsAll                    types.Map                                                         `tfsdk:"tags_all"`
+	Tags                       tftags.Map                                                        `tfsdk:"tags"`
+	TagsAll                    tftags.Map                                                        `tfsdk:"tags_all"`
 	Timeouts                   timeouts.Value                                                    `tfsdk:"timeouts"`
 	TopicPolicy                fwtypes.ListNestedObjectValueOf[topicPolicyConfig]                `tfsdk:"topic_policy_config"`
 	Version                    types.String                                                      `tfsdk:"version"`

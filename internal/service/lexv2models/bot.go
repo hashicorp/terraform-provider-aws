@@ -603,8 +603,8 @@ type resourceBotData struct {
 	Name                    types.String   `tfsdk:"name"`
 	Members                 types.List     `tfsdk:"members"`
 	RoleARN                 fwtypes.ARN    `tfsdk:"role_arn"`
-	Tags                    types.Map      `tfsdk:"tags"`
-	TagsAll                 types.Map      `tfsdk:"tags_all"`
+	Tags                    tftags.Map     `tfsdk:"tags"`
+	TagsAll                 tftags.Map     `tfsdk:"tags_all"`
 	TestBotAliasTags        types.Map      `tfsdk:"test_bot_alias_tags"`
 	Timeouts                timeouts.Value `tfsdk:"timeouts"`
 	Type                    types.String   `tfsdk:"type"`

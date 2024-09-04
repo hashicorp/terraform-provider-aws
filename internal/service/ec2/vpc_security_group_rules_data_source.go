@@ -88,5 +88,5 @@ type securityGroupRulesDataSourceModel struct {
 	Filters types.Set    `tfsdk:"filter"`
 	ID      types.String `tfsdk:"id"`
 	IDs     types.List   `tfsdk:"ids"`
-	Tags    types.Map    `tfsdk:"tags"`
+	Tags    tftags.Map   `tfsdk:"tags"`
 }

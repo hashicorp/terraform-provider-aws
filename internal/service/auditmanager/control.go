@@ -391,8 +391,8 @@ type resourceControlData struct {
 	Description            types.String `tfsdk:"description"`
 	ID                     types.String `tfsdk:"id"`
 	Name                   types.String `tfsdk:"name"`
-	Tags                   types.Map    `tfsdk:"tags"`
-	TagsAll                types.Map    `tfsdk:"tags_all"`
+	Tags                   tftags.Map   `tfsdk:"tags"`
+	TagsAll                tftags.Map   `tfsdk:"tags_all"`
 	TestingInformation     types.String `tfsdk:"testing_information"`
 	Type                   types.String `tfsdk:"type"`
 }

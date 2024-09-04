@@ -214,7 +214,7 @@ func (d *dataSource{{ .DataSource }}) Read(ctx context.Context, req datasource.R
 	{{- if .IncludeTags }}
 	ignoreTagsConfig := d.Meta().IgnoreTagsConfig
 	tags := KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-	data.Tags = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.Map())
+	data.Tags = tftags.FlattenStringValueMap(ctx, tags.Map())
 	{{- end }}
 
 	{{ if .IncludeComments -}}
@@ -244,7 +244,7 @@ type dataSource{{ .DataSource }}Model struct {
 	ID              types.String                                          `tfsdk:"id"`
 	Name            types.String                                          `tfsdk:"name"`
 	{{- if .IncludeTags }}
-	Tags            types.Map                                             `tfsdk:"tags"`
+	Tags            tftags.Map                                            `tfsdk:"tags"`
 	{{- end }}
 	Type            types.String                                          `tfsdk:"type"`
 }

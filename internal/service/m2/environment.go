@@ -578,8 +578,8 @@ type environmentResourceModel struct {
 	SecurityGroupIDs             fwtypes.SetValueOf[types.String]                             `tfsdk:"security_group_ids"`
 	StorageConfigurations        fwtypes.ListNestedObjectValueOf[storageConfigurationModel]   `tfsdk:"storage_configuration"`
 	SubnetIDs                    fwtypes.SetValueOf[types.String]                             `tfsdk:"subnet_ids"`
-	Tags                         types.Map                                                    `tfsdk:"tags"`
-	TagsAll                      types.Map                                                    `tfsdk:"tags_all"`
+	Tags                         tftags.Map                                                   `tfsdk:"tags"`
+	TagsAll                      tftags.Map                                                   `tfsdk:"tags_all"`
 	Timeouts                     timeouts.Value                                               `tfsdk:"timeouts"`
 }
 

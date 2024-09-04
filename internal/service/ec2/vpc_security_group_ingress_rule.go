@@ -442,8 +442,8 @@ type securityGroupRuleResourceModel struct {
 	ReferencedSecurityGroupID types.String `tfsdk:"referenced_security_group_id"`
 	SecurityGroupID           types.String `tfsdk:"security_group_id"`
 	SecurityGroupRuleID       types.String `tfsdk:"security_group_rule_id"`
-	Tags                      types.Map    `tfsdk:"tags"`
-	TagsAll                   types.Map    `tfsdk:"tags_all"`
+	Tags                      tftags.Map   `tfsdk:"tags"`
+	TagsAll                   tftags.Map   `tfsdk:"tags_all"`
 	ToPort                    types.Int64  `tfsdk:"to_port"`
 }
 

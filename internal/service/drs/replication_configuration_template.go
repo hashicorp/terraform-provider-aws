@@ -157,15 +157,15 @@ func (r *replicationConfigurationTemplateResource) Create(ctx context.Context, r
 
 	conn := r.Meta().DRSClient(ctx)
 
-	input := &drs.CreateReplicationConfigurationTemplateInput{}
-	response.Diagnostics.Append(flex.Expand(ctx, data, input, flexOpt)...)
+	var input drs.CreateReplicationConfigurationTemplateInput
+	response.Diagnostics.Append(flex.Expand(ctx, data, &input, flexOpt)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	input.Tags = getTagsIn(ctx)
 
-	_, err := conn.CreateReplicationConfigurationTemplate(ctx, input)
+	_, err := conn.CreateReplicationConfigurationTemplate(ctx, &input)
 	if err != nil {
 		create.AddError(&response.Diagnostics, names.DRS, create.ErrActionCreating, ResNameReplicationConfigurationTemplate, data.ID.ValueString(), err)
 
@@ -427,9 +427,9 @@ type replicationConfigurationTemplateResourceModel struct {
 	ReplicationServersSecurityGroupsIDs types.List                                                                       `tfsdk:"replication_servers_security_groups_ids"`
 	StagingAreaSubnetID                 types.String                                                                     `tfsdk:"staging_area_subnet_id"`
 	UseDedicatedReplicationServer       types.Bool                                                                       `tfsdk:"use_dedicated_replication_server"`
-	StagingAreaTags                     types.Map                                                                        `tfsdk:"staging_area_tags"`
-	Tags                                types.Map                                                                        `tfsdk:"tags"`
-	TagsAll                             types.Map                                                                        `tfsdk:"tags_all"`
+	StagingAreaTags                     tftags.Map                                                                       `tfsdk:"staging_area_tags"`
+	Tags                                tftags.Map                                                                       `tfsdk:"tags"`
+	TagsAll                             tftags.Map                                                                       `tfsdk:"tags_all"`
 	Timeouts                            timeouts.Value                                                                   `tfsdk:"timeouts"`
 }
 

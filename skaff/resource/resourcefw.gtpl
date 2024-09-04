@@ -787,8 +787,8 @@ type resource{{ .Resource }}Model struct {
 	ID              types.String                                          `tfsdk:"id"`
 	Name            types.String                                          `tfsdk:"name"`
 	{{- if .IncludeTags }}
-	Tags            types.Map                                             `tfsdk:"tags"`
-	TagsAll         types.Map                                             `tfsdk:"tags_all"`
+	Tags            tftags.Map                                            `tfsdk:"tags"`
+	TagsAll         tftags.Map                                            `tfsdk:"tags_all"`
 	{{- end }}
 	Timeouts        timeouts.Value                                        `tfsdk:"timeouts"`
 	Type            types.String                                          `tfsdk:"type"`

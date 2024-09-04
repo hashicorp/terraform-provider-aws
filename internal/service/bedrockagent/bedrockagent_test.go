@@ -25,6 +25,8 @@ func TestAccBedrockAgent_serial(t *testing.T) {
 			acctest.CtDisappears: testAccDataSource_disappears,
 			"full":               testAccDataSource_full,
 			"update":             testAccDataSource_update,
+			"semantic":           testAccDataSource_fullSemantic,
+			"hierarchical":       testAccDataSource_fullHierarchical,
 		},
 	}
 
