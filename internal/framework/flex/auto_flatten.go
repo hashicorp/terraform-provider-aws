@@ -113,12 +113,12 @@ func autoFlattenConvert(ctx context.Context, from, to any, flexer autoFlexer) di
 	valFrom = reflect.ValueOf(from)
 
 	// Anything else.
-	diags.Append(flexer.convert(ctx, sourcePath, valFrom, targetPath, valTo)...)
+	diags.Append(flexer.convert(ctx, sourcePath, valFrom, targetPath, valTo, fieldOpts{})...)
 	return diags
 }
 
 // convert converts a single AWS API value to its Plugin Framework equivalent.
-func (flattener autoFlattener) convert(ctx context.Context, sourcePath path.Path, vFrom reflect.Value, targetPath path.Path, vTo reflect.Value) diag.Diagnostics {
+func (flattener autoFlattener) convert(ctx context.Context, sourcePath path.Path, vFrom reflect.Value, targetPath path.Path, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourcePath, sourcePath.String())
@@ -166,11 +166,11 @@ func (flattener autoFlattener) convert(ctx context.Context, sourcePath path.Path
 		return diags
 
 	case reflect.String:
-		diags.Append(flattener.string(ctx, vFrom, false, tTo, vTo)...)
+		diags.Append(flattener.string(ctx, vFrom, false, tTo, vTo, fieldOpts)...)
 		return diags
 
 	case reflect.Pointer:
-		diags.Append(flattener.pointer(ctx, sourcePath, vFrom, targetPath, tTo, vTo)...)
+		diags.Append(flattener.pointer(ctx, sourcePath, vFrom, targetPath, tTo, vTo, fieldOpts)...)
 		return diags
 
 	case reflect.Slice:
@@ -418,7 +418,7 @@ func (flattener autoFlattener) int32(ctx context.Context, vFrom reflect.Value, i
 }
 
 // string copies an AWS API string value to a compatible Plugin Framework value.
-func (flattener autoFlattener) string(ctx context.Context, vFrom reflect.Value, isNullFrom bool, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+func (flattener autoFlattener) string(ctx context.Context, vFrom reflect.Value, isNullFrom bool, tTo attr.Type, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch tTo := tTo.(type) {
@@ -426,7 +426,7 @@ func (flattener autoFlattener) string(ctx context.Context, vFrom reflect.Value, 
 		stringValue := types.StringNull()
 		if !isNullFrom {
 			// If the target is a StringEnumType, an empty string value is converted to a null String.
-			if value := vFrom.String(); !strings.HasPrefix(tTo.String(), "StringEnumType[") || value != "" {
+			if value := vFrom.String(); !(value == "" && (strings.HasPrefix(tTo.String(), "StringEnumType[") || fieldOpts.omitempty)) {
 				stringValue = types.StringValue(value)
 			}
 		}
@@ -490,7 +490,7 @@ func (flattener autoFlattener) time(ctx context.Context, vFrom reflect.Value, is
 }
 
 // pointer copies an AWS API pointer value to a compatible Plugin Framework value.
-func (flattener autoFlattener) pointer(ctx context.Context, sourcePath path.Path, vFrom reflect.Value, targetPath path.Path, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+func (flattener autoFlattener) pointer(ctx context.Context, sourcePath path.Path, vFrom reflect.Value, targetPath path.Path, tTo attr.Type, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch vElem, isNilFrom := vFrom.Elem(), vFrom.IsNil(); vFrom.Type().Elem().Kind() {
@@ -515,7 +515,7 @@ func (flattener autoFlattener) pointer(ctx context.Context, sourcePath path.Path
 		return diags
 
 	case reflect.String:
-		diags.Append(flattener.string(ctx, vElem, isNilFrom, tTo, vTo)...)
+		diags.Append(flattener.string(ctx, vElem, isNilFrom, tTo, vTo, fieldOpts)...)
 		return diags
 
 	case reflect.Struct:

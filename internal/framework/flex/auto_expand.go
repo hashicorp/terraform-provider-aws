@@ -102,12 +102,12 @@ func autoExpandConvert(ctx context.Context, from, to any, flexer autoFlexer) dia
 	}
 
 	// Anything else.
-	diags.Append(flexer.convert(ctx, sourcePath, valFrom, targetPath, valTo)...)
+	diags.Append(flexer.convert(ctx, sourcePath, valFrom, targetPath, valTo, fieldOpts{})...)
 	return diags
 }
 
 // convert converts a single Plugin Framework value to its AWS API equivalent.
-func (expander autoExpander) convert(ctx context.Context, sourcePath path.Path, valFrom reflect.Value, targetPath path.Path, vTo reflect.Value) diag.Diagnostics {
+func (expander autoExpander) convert(ctx context.Context, sourcePath path.Path, valFrom reflect.Value, targetPath path.Path, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourcePath, sourcePath.String())
