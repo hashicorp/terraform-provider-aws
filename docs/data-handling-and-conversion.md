@@ -231,6 +231,18 @@ type refreshOnDayModel struct {
 }
 ```
 
+To completely ignore a field, use the tag value `-`.
+
+For example, from the struct `scheduleModel` for the QuickSight Refresh Schedule:
+
+```go
+type scheduleModel struct {
+	RefreshType        types.String                                           `tfsdk:"refresh_type"`
+	ScheduleFrequency  fwtypes.ListNestedObjectValueOf[refreshFrequencyModel] `tfsdk:"schedule_frequency"`
+	StartAfterDateTime types.String                                           `tfsdk:"start_after_date_time" autoflex:"-"`
+}
+```
+
 #### Overriding Default Behavior
 
 In some cases, flattening and expanding need conditional handling.

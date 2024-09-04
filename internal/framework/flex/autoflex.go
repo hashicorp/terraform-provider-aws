@@ -125,8 +125,16 @@ func autoFlexConvertStruct(ctx context.Context, sourcePath path.Path, from any, 
 		if fromField.PkgPath != "" {
 			continue // Skip unexported fields.
 		}
+		fromNameOverride, _ := autoflexTags(fromField)
 		fieldName := fromField.Name
 		if opts.isIgnoredField(fieldName) {
+			tflog.SubsystemTrace(ctx, subsystemName, "Skipping ignored field", map[string]any{
+				logAttrKeySourceFieldname: fieldName,
+			})
+			continue
+		}
+		// TODO: this only applies when Expanding
+		if fromNameOverride == "-" {
 			tflog.SubsystemTrace(ctx, subsystemName, "Skipping ignored field", map[string]any{
 				logAttrKeySourceFieldname: fieldName,
 			})
