@@ -42,7 +42,7 @@ func (t mapType) Equal(o attr.Type) bool {
 }
 
 func (t mapType) String() string {
-	return "fooMapType"
+	return "TagsMapType"
 }
 
 func (t mapType) ValueFromMap(ctx context.Context, in basetypes.MapValue) (basetypes.MapValuable, diag.Diagnostics) {
