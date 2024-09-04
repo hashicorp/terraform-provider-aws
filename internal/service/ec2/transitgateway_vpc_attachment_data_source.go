@@ -20,6 +20,7 @@ import (
 
 // @SDKDataSource("aws_ec2_transit_gateway_vpc_attachment", name="Transit Gateway VPC Attachment")
 // @Tags
+// @Testing(tagsTest=false)
 func dataSourceTransitGatewayVPCAttachment() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTransitGatewayVPCAttachmentRead,
@@ -75,7 +76,7 @@ func dataSourceTransitGatewayVPCAttachmentRead(ctx context.Context, d *schema.Re
 
 	input := &ec2.DescribeTransitGatewayVpcAttachmentsInput{}
 
-	input.Filters = append(input.Filters, newCustomFilterListV2(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
@@ -103,7 +104,7 @@ func dataSourceTransitGatewayVPCAttachmentRead(ctx context.Context, d *schema.Re
 	d.Set(names.AttrVPCID, transitGatewayVPCAttachment.VpcId)
 	d.Set("vpc_owner_id", transitGatewayVPCAttachment.VpcOwnerId)
 
-	setTagsOutV2(ctx, transitGatewayVPCAttachment.Tags)
+	setTagsOut(ctx, transitGatewayVPCAttachment.Tags)
 
 	return diags
 }

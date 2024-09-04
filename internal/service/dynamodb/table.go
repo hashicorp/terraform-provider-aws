@@ -17,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
@@ -102,6 +103,11 @@ func resourceTable() *schema.Resource {
 					return nil
 				}
 
+				if !diff.GetRawPlan().GetAttr("restore_source_table_arn").IsWhollyKnown() ||
+					diff.Get("restore_source_table_arn") != "" {
+					return nil
+				}
+
 				var errs []error
 				if err := validateProvisionedThroughputField(diff, "read_capacity"); err != nil {
 					errs = append(errs, err)
@@ -116,6 +122,10 @@ func resourceTable() *schema.Resource {
 				// https://github.com/hashicorp/terraform-provider-aws/issues/25214
 				return old.(string) != new.(string) && new.(string) != ""
 			}),
+			customdiff.ForceNewIfChange("restore_source_table_arn", func(_ context.Context, old, new, meta interface{}) bool {
+				return old.(string) != new.(string) && new.(string) != ""
+			}),
+			validateTTLCustomDiff,
 			verify.SetTagsDiff,
 		),
 
@@ -307,7 +317,7 @@ func resourceTable() *schema.Resource {
 				Type:          schema.TypeList,
 				Optional:      true,
 				MaxItems:      1,
-				ConflictsWith: []string{"restore_source_name"},
+				ConflictsWith: []string{"restore_source_name", "restore_source_table_arn"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"input_compression_type": {
@@ -378,10 +388,16 @@ func resourceTable() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidUTCTimestamp,
 			},
+			"restore_source_table_arn": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ValidateFunc:  verify.ValidARN,
+				ConflictsWith: []string{"import_table", "restore_source_name"},
+			},
 			"restore_source_name": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"import_table"},
+				ConflictsWith: []string{"import_table", "restore_source_table_arn"},
 			},
 			"restore_to_latest_time": {
 				Type:     schema.TypeBool,
@@ -450,7 +466,7 @@ func resourceTable() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"attribute_name": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 						},
 						names.AttrEnabled: {
 							Type:     schema.TypeBool,
@@ -482,10 +498,20 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		keySchemaMap["range_key"] = v.(string)
 	}
 
-	if v, ok := d.GetOk("restore_source_name"); ok {
+	sourceName, nameOk := d.GetOk("restore_source_name")
+	sourceArn, arnOk := d.GetOk("restore_source_table_arn")
+
+	if nameOk || arnOk {
 		input := &dynamodb.RestoreTableToPointInTimeInput{
-			SourceTableName: aws.String(v.(string)),
 			TargetTableName: aws.String(tableName),
+		}
+
+		if nameOk {
+			input.SourceTableName = aws.String(sourceName.(string))
+		}
+
+		if arnOk {
+			input.SourceTableArn = aws.String(sourceArn.(string))
 		}
 
 		if v, ok := d.GetOk("restore_date_time"); ok {
@@ -2388,4 +2414,65 @@ func validateProvisionedThroughputField(diff *schema.ResourceDiff, key string) e
 		}
 	}
 	return nil
+}
+
+func validateTTLCustomDiff(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+	var diags diag.Diagnostics
+
+	configRaw := d.GetRawConfig()
+	if !configRaw.IsKnown() || configRaw.IsNull() {
+		return nil
+	}
+
+	ttlPath := cty.GetAttrPath("ttl")
+	ttl := configRaw.GetAttr("ttl")
+	if ttl.IsKnown() && !ttl.IsNull() {
+		if ttl.LengthInt() == 1 {
+			idx := cty.NumberIntVal(0)
+			ttl := ttl.Index(idx)
+			ttlPath := ttlPath.Index(idx)
+			ttlPlantimeValidate(ttlPath, ttl, &diags)
+		}
+	}
+
+	return sdkdiag.DiagnosticsError(diags)
+}
+
+func ttlPlantimeValidate(ttlPath cty.Path, ttl cty.Value, diags *diag.Diagnostics) {
+	attribute := ttl.GetAttr("attribute_name")
+	if !attribute.IsKnown() {
+		return
+	}
+
+	enabled := ttl.GetAttr(names.AttrEnabled)
+	if !enabled.IsKnown() {
+		return
+	}
+	if enabled.IsNull() {
+		return
+	}
+
+	if enabled.True() {
+		if attribute.IsNull() {
+			*diags = append(*diags, errs.NewAttributeRequiredWhenError(
+				ttlPath.GetAttr("attribute_name"),
+				ttlPath.GetAttr(names.AttrEnabled),
+				"true",
+			))
+		} else if attribute.AsString() == "" {
+			*diags = append(*diags, errs.NewInvalidValueAttributeErrorf(
+				ttlPath.GetAttr("attribute_name"),
+				"Attribute %q cannot have an empty value",
+				errs.PathString(ttlPath.GetAttr("attribute_name")),
+			))
+		}
+	} else {
+		if !(attribute.IsNull() || attribute.AsString() == "") {
+			*diags = append(*diags, errs.NewAttributeConflictsWhenError(
+				ttlPath.GetAttr("attribute_name"),
+				ttlPath.GetAttr(names.AttrEnabled),
+				"false",
+			))
+		}
+	}
 }

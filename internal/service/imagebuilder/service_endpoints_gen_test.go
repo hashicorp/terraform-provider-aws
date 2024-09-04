@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"maps"
+	"net"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -83,7 +84,7 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 	testcases := map[string]endpointTestCase{
 		"no config": {
 			with:     []setupFunc{withNoConfig},
-			expected: expectDefaultEndpoint(expectedEndpointRegion),
+			expected: expectDefaultEndpoint(t, expectedEndpointRegion),
 		},
 
 		// Package name endpoint on Config
@@ -217,7 +218,7 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 			with: []setupFunc{
 				withUseFIPSInConfig,
 			},
-			expected: expectDefaultFIPSEndpoint(expectedEndpointRegion),
+			expected: expectDefaultFIPSEndpoint(t, expectedEndpointRegion),
 		},
 
 		"use fips config with package name endpoint config": {
@@ -230,22 +231,20 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 	}
 
 	for name, testcase := range testcases { //nolint:paralleltest // uses t.Setenv
-		testcase := testcase
-
 		t.Run(name, func(t *testing.T) {
 			testEndpointCase(t, providerRegion, testcase, callService)
 		})
 	}
 }
 
-func defaultEndpoint(region string) string {
+func defaultEndpoint(region string) (url.URL, error) {
 	r := endpoints.DefaultResolver()
 
 	ep, err := r.EndpointFor(imagebuilder_sdkv1.EndpointsID, region, func(opt *endpoints.Options) {
 		opt.ResolveUnknownService = true
 	})
 	if err != nil {
-		return err.Error()
+		return url.URL{}, err
 	}
 
 	url, _ := url.Parse(ep.URL)
@@ -254,10 +253,10 @@ func defaultEndpoint(region string) string {
 		url.Path = "/"
 	}
 
-	return url.String()
+	return *url, nil
 }
 
-func defaultFIPSEndpoint(region string) string {
+func defaultFIPSEndpoint(region string) (url.URL, error) {
 	r := endpoints.DefaultResolver()
 
 	ep, err := r.EndpointFor(imagebuilder_sdkv1.EndpointsID, region, func(opt *endpoints.Options) {
@@ -265,7 +264,7 @@ func defaultFIPSEndpoint(region string) string {
 		opt.UseFIPSEndpoint = endpoints.FIPSEndpointStateEnabled
 	})
 	if err != nil {
-		return err.Error()
+		return url.URL{}, err
 	}
 
 	url, _ := url.Parse(ep.URL)
@@ -274,7 +273,7 @@ func defaultFIPSEndpoint(region string) string {
 		url.Path = "/"
 	}
 
-	return url.String()
+	return *url, nil
 }
 
 func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCallParams {
@@ -326,16 +325,38 @@ func withUseFIPSInConfig(setup *caseSetup) {
 	setup.config["use_fips_endpoint"] = true
 }
 
-func expectDefaultEndpoint(region string) caseExpectations {
+func expectDefaultEndpoint(t *testing.T, region string) caseExpectations {
+	t.Helper()
+
+	endpoint, err := defaultEndpoint(region)
+	if err != nil {
+		t.Fatalf("resolving accessanalyzer default endpoint: %s", err)
+	}
+
 	return caseExpectations{
-		endpoint: defaultEndpoint(region),
+		endpoint: endpoint.String(),
 		region:   expectedCallRegion,
 	}
 }
 
-func expectDefaultFIPSEndpoint(region string) caseExpectations {
+func expectDefaultFIPSEndpoint(t *testing.T, region string) caseExpectations {
+	t.Helper()
+
+	endpoint, err := defaultFIPSEndpoint(region)
+	if err != nil {
+		t.Fatalf("resolving accessanalyzer FIPS endpoint: %s", err)
+	}
+
+	hostname := endpoint.Hostname()
+	_, err = net.LookupHost(hostname)
+	if dnsErr, ok := errs.As[*net.DNSError](err); ok && dnsErr.IsNotFound {
+		return expectDefaultEndpoint(t, region)
+	} else if err != nil {
+		t.Fatalf("looking up accessanalyzer endpoint %q: %s", hostname, err)
+	}
+
 	return caseExpectations{
-		endpoint: defaultFIPSEndpoint(region),
+		endpoint: endpoint.String(),
 		region:   expectedCallRegion,
 	}
 }

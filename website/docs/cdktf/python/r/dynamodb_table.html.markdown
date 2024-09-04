@@ -76,7 +76,7 @@ class MyConvertedCode(TerraformStack):
             },
             ttl=DynamodbTableTtl(
                 attribute_name="TimeToExist",
-                enabled=False
+                enabled=True
             ),
             write_capacity=20
         )
@@ -215,8 +215,9 @@ Optional arguments:
 * `replica` - (Optional) Configuration block(s) with [DynamoDB Global Tables V2 (version 2019.11.21)](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/globaltables.V2.html) replication configurations. See below.
 * `restore_date_time` - (Optional) Time of the point-in-time recovery point to restore.
 * `restore_source_name` - (Optional) Name of the table to restore. Must match the name of an existing table.
+* `restore_source_table_arn` - (Optional) ARN of the source table to restore. Must be supplied for cross-region restores.
 * `restore_to_latest_time` - (Optional) If set, restores table to the most recent point-in-time recovery point.
-* `server_side_encryption` - (Optional) Encryption at rest options. AWS DynamoDB tables are automatically encrypted at rest with an AWS-owned Customer Master Key if this argument isn't specified. See below.
+* `server_side_encryption` - (Optional) Encryption at rest options. AWS DynamoDB tables are automatically encrypted at rest with an AWS-owned Customer Master Key if this argument isn't specified. Must be supplied for cross-region restores. See below.
 * `stream_enabled` - (Optional) Whether Streams are enabled.
 * `stream_view_type` - (Optional) When an item in the table is modified, StreamViewType determines what information is written to the table's stream. Valid values are `KEYS_ONLY`, `NEW_IMAGE`, `OLD_IMAGE`, `NEW_AND_OLD_IMAGES`.
 * `table_class` - (Optional) Storage class of the table.
@@ -290,8 +291,10 @@ Optional arguments:
 
 ### `ttl`
 
-* `enabled` - (Required) Whether TTL is enabled.
-* `attribute_name` - (Required) Name of the table attribute to store the TTL timestamp in.
+* `attribute_name` - (Optional) Name of the table attribute to store the TTL timestamp in.
+  Required if `enabled` is `true`, must not be set otherwise.
+* `enabled` - (Optional) Whether TTL is enabled.
+  Default value is `false`.
 
 ## Attribute Reference
 
@@ -341,4 +344,4 @@ Using `terraform import`, import DynamoDB tables using the `name`. For example:
 % terraform import aws_dynamodb_table.basic-dynamodb-table GameScores
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-cbc2fa26bfb0676021ad41f620c12f481840c859d070c707ba0ad26685f33d84 -->
+<!-- cache-key: cdktf-0.20.1 input-810fbdca20fc8dae7684a0c0b7f8ed92177810a7dda66a1f28706f01663a494b -->

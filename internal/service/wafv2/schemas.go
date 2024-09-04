@@ -317,7 +317,12 @@ func sqliMatchStatementSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"field_to_match":      fieldToMatchSchema(),
+				"field_to_match": fieldToMatchSchema(),
+				"sensitivity_level": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.SensitivityLevel](),
+				},
 				"text_transformation": textTransformationSchema(),
 			},
 		},
@@ -1154,7 +1159,7 @@ func rateBasedStatementSchema(level int) *schema.Schema {
 				"limit": {
 					Type:         schema.TypeInt,
 					Required:     true,
-					ValidateFunc: validation.IntBetween(100, 2000000000),
+					ValidateFunc: validation.IntBetween(10, 2000000000),
 				},
 				"scope_down_statement": scopeDownStatementSchema(level - 1),
 			},
@@ -1272,6 +1277,11 @@ func managedRuleGroupConfigSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
+							"enable_machine_learning": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  true,
+							},
 							"inspection_level": {
 								Type:             schema.TypeString,
 								Required:         true,

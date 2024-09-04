@@ -22,8 +22,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_route_table")
-func DataSourceRouteTable() *schema.Resource {
+// @SDKDataSource("aws_route_table", name="Route Table")
+// @Testing(tagsTest=true)
+func dataSourceRouteTable() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRouteTableRead,
 
@@ -200,7 +201,7 @@ func dataSourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta 
 	if !rtbOk && !vpcIdOk && !subnetIdOk && !gatewayIdOk && !filterOk && !tagsOk {
 		return sdkdiag.AppendErrorf(diags, "one of route_table_id, vpc_id, subnet_id, gateway_id, filters, or tags must be assigned")
 	}
-	req.Filters = newAttributeFilterListV2(
+	req.Filters = newAttributeFilterList(
 		map[string]string{
 			"route-table-id":         rtbId.(string),
 			"vpc-id":                 vpcId.(string),
@@ -208,10 +209,10 @@ func dataSourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta 
 			"association.gateway-id": gatewayId.(string),
 		},
 	)
-	req.Filters = append(req.Filters, newTagFilterListV2(
-		TagsV2(tftags.New(ctx, tags.(map[string]interface{}))),
+	req.Filters = append(req.Filters, newTagFilterList(
+		Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 	)...)
-	req.Filters = append(req.Filters, newCustomFilterListV2(
+	req.Filters = append(req.Filters, newCustomFilterList(
 		filter.(*schema.Set),
 	)...)
 
@@ -245,7 +246,7 @@ func dataSourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrVPCID, rt.VpcId)
 
 	//Ignore the AmazonFSx service tag in addition to standard ignores
-	if err := d.Set(names.AttrTags, keyValueTagsV2(ctx, rt.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Ignore(tftags.New(ctx, []string{"AmazonFSx"})).Map()); err != nil {
+	if err := d.Set(names.AttrTags, keyValueTags(ctx, rt.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Ignore(tftags.New(ctx, []string{"AmazonFSx"})).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

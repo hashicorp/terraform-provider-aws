@@ -96,7 +96,6 @@ func TestSDKv1CompatibleCleanKey(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -1544,7 +1543,7 @@ func TestAccS3Object_ignoreTags(t *testing.T) {
 					testAccCheckObjectBody(&obj, "stuff"),
 					testAccCheckObjectUpdateTags(ctx, resourceName, nil, map[string]string{"ignorekey1": "ignorevalue1"}),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					testAccCheckObjectCheckTags(ctx, resourceName, map[string]string{
+					testAccCheckAllObjectTags(ctx, resourceName, map[string]string{
 						"ignorekey1": "ignorevalue1",
 					}),
 				),
@@ -1560,7 +1559,7 @@ func TestAccS3Object_ignoreTags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "A@AA"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
-					testAccCheckObjectCheckTags(ctx, resourceName, map[string]string{
+					testAccCheckAllObjectTags(ctx, resourceName, map[string]string{
 						"ignorekey1": "ignorevalue1",
 						"Key1":       "A@AA",
 						"Key2":       "BBB",
@@ -2102,7 +2101,7 @@ func testAccCheckObjectUpdateTags(ctx context.Context, n string, oldTags, newTag
 	}
 }
 
-func testAccCheckObjectCheckTags(ctx context.Context, n string, expectedTags map[string]string) resource.TestCheckFunc {
+func testAccCheckAllObjectTags(ctx context.Context, n string, expectedTags map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
 
@@ -2790,7 +2789,7 @@ func testAccObjectConfig_nonVersioned(rName string, source string) string {
   ]
 }`
 
-	return acctest.ConfigAssumeRolePolicy(policy) + fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAssumeRolePolicy(policy), fmt.Sprintf(`
 resource "aws_s3_bucket" "object_bucket_3" {
   bucket = %[1]q
 }
@@ -2801,7 +2800,7 @@ resource "aws_s3_object" "object" {
   source = %[2]q
   etag   = filemd5(%[2]q)
 }
-`, rName, source)
+`, rName, source))
 }
 
 func testAccObjectConfig_bucketKeyEnabled(rName string, content string) string {

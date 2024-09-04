@@ -1261,7 +1261,7 @@ func TestAccS3BucketObject_ignoreTags(t *testing.T) {
 					testAccCheckObjectBody(&obj, "stuff"),
 					testAccCheckObjectUpdateTags(ctx, resourceName, nil, map[string]string{"ignorekey1": "ignorevalue1"}),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					testAccCheckObjectCheckTags(ctx, resourceName, map[string]string{
+					testAccCheckAllObjectTags(ctx, resourceName, map[string]string{
 						"ignorekey1": "ignorevalue1",
 					}),
 				),
@@ -1278,7 +1278,7 @@ func TestAccS3BucketObject_ignoreTags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "A@AA"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
-					testAccCheckObjectCheckTags(ctx, resourceName, map[string]string{
+					testAccCheckAllObjectTags(ctx, resourceName, map[string]string{
 						"ignorekey1": "ignorevalue1",
 						"Key1":       "A@AA",
 						"Key2":       "BBB",
@@ -1849,7 +1849,7 @@ func testAccBucketObjectConfig_nonVersioned(rName string, source string) string 
   ]
 }`
 
-	return acctest.ConfigAssumeRolePolicy(policy) + fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAssumeRolePolicy(policy), fmt.Sprintf(`
 resource "aws_s3_bucket" "object_bucket_3" {
   bucket = %[1]q
 }
@@ -1860,7 +1860,7 @@ resource "aws_s3_bucket_object" "object" {
   source = %[2]q
   etag   = filemd5(%[2]q)
 }
-`, rName, source)
+`, rName, source))
 }
 
 func testAccBucketObjectConfig_objectKeyEnabled(rName string, content string) string {

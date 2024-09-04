@@ -76,7 +76,7 @@ func TestAccRedshiftResourcePolicy_disappears(t *testing.T) {
 
 func testAccCheckResourcePolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_redshift_resource_policy" {
@@ -110,7 +110,7 @@ func testAccCheckResourcePolicyExists(ctx context.Context, name string) resource
 			return fmt.Errorf("Redshift Resource Policy is not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
 
 		_, err := tfredshift.FindResourcePolicyByARN(ctx, conn, rs.Primary.ID)
 

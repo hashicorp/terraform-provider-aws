@@ -20,6 +20,7 @@ import (
 
 // @SDKDataSource("aws_ec2_transit_gateway_connect", name="Transit Gateway Connect")
 // @Tags
+// @Testing(tagsTest=false)
 func dataSourceTransitGatewayConnect() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTransitGatewayConnectRead,
@@ -62,7 +63,7 @@ func dataSourceTransitGatewayConnectRead(ctx context.Context, d *schema.Resource
 		input.TransitGatewayAttachmentIds = []string{v.(string)}
 	}
 
-	input.Filters = append(input.Filters, newCustomFilterListV2(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
@@ -78,7 +79,7 @@ func dataSourceTransitGatewayConnectRead(ctx context.Context, d *schema.Resource
 	d.Set(names.AttrTransitGatewayID, transitGatewayConnect.TransitGatewayId)
 	d.Set("transport_attachment_id", transitGatewayConnect.TransportTransitGatewayAttachmentId)
 
-	setTagsOutV2(ctx, transitGatewayConnect.Tags)
+	setTagsOut(ctx, transitGatewayConnect.Tags)
 
 	return diags
 }

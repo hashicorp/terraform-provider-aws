@@ -395,7 +395,6 @@ func findDataLakes(ctx context.Context, conn *securitylake.Client, input *securi
 	}
 
 	for _, v := range output.DataLakes {
-		v := v
 		if v := &v; filter(v) {
 			dataLakes = append(dataLakes, v)
 		}

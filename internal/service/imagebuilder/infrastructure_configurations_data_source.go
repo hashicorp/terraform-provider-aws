@@ -12,7 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfilters"
+	"github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters"
+	namevaluesfiltersv1 "github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters/v1"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -43,7 +44,7 @@ func dataSourceInfrastructureConfigurationsRead(ctx context.Context, d *schema.R
 	input := &imagebuilder.ListInfrastructureConfigurationsInput{}
 
 	if v, ok := d.GetOk(names.AttrFilter); ok {
-		input.Filters = namevaluesfilters.New(v.(*schema.Set)).ImagebuilderFilters()
+		input.Filters = namevaluesfiltersv1.New(v.(*schema.Set)).ImageBuilderFilters()
 	}
 
 	var results []*imagebuilder.InfrastructureConfigurationSummary

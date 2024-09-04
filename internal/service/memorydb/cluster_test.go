@@ -1062,7 +1062,7 @@ func TestAccMemoryDBCluster_Update_tags(t *testing.T) {
 
 func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_memorydb_cluster" {
@@ -1097,7 +1097,7 @@ func testAccCheckClusterExists(ctx context.Context, n string) resource.TestCheck
 			return fmt.Errorf("No MemoryDB Cluster ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBClient(ctx)
 
 		_, err := tfmemorydb.FindClusterByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 
@@ -1107,7 +1107,7 @@ func testAccCheckClusterExists(ctx context.Context, n string) resource.TestCheck
 
 func testAccCheckSnapshotExistsByName(ctx context.Context, snapshotName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBClient(ctx)
 
 		_, err := tfmemorydb.FindSnapshotByName(ctx, conn, snapshotName)
 

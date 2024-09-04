@@ -106,7 +106,7 @@ awssdkpatch: prereq-go ## Install awssdkpatch
 
 awssdkpatch-apply: awssdkpatch-gen ## Apply a patch generated with awssdkpatch
 	@echo "Applying patch for $(PKG)..."
-	@gopatch -p awssdk.patch ./$(PKG_NAME)/...
+	@gopatch --skip-generated -p awssdk.patch ./$(PKG_NAME)/...
 
 awssdkpatch-gen: awssdkpatch ## Generate a patch file using awssdkpatch
 	@if [ "$(PKG)" = "" ]; then \
@@ -124,9 +124,9 @@ changelog-misspell: ## [CI] CHANGELOG Misspell / misspell
 	@echo "make: CHANGELOG Misspell / misspell..."
 	@misspell -error -source text CHANGELOG.md .changelog
 
-ci: tools go-build gen-check acctest-lint copyright deps-check docs examples-tflint gh-workflow-lint golangci-lint import-lint preferred-lib provider-lint provider-markdown-lint semgrep skaff-check-compile sweeper-check test tfproviderdocs website yamllint ## [CI] Run all CI checks
+ci: tools go-build gen-check acctest-lint copyright deps-check docs examples-tflint gh-workflow-lint golangci-lint import-lint provider-lint provider-markdown-lint semgrep skaff-check-compile sweeper-check test tfproviderdocs website yamllint ## [CI] Run all CI checks
 
-ci-quick: tools go-build testacc-lint copyright deps-check docs examples-tflint gh-workflow-lint golangci-lint1 import-lint preferred-lib provider-lint provider-markdown-lint semgrep-code-quality semgrep-naming semgrep-naming-cae website-markdown-lint website-misspell website-terrafmt yamllint ## [CI] Run quicker CI checks
+ci-quick: tools go-build testacc-lint copyright deps-check docs examples-tflint gh-workflow-lint golangci-lint1 import-lint provider-lint provider-markdown-lint semgrep-code-quality semgrep-naming semgrep-naming-cae website-markdown-lint website-misspell website-terrafmt yamllint ## [CI] Run quicker CI checks
 
 clean: clean-make-tests clean-go clean-tidy build tools ## Clean up Go cache, tidy and re-install tools
 	@echo "make: Clean complete"
@@ -203,7 +203,7 @@ docs-link-check: ## [CI] Documentation Checks / markdown-link-check
 	@echo "make: Documentation Checks / markdown-link-check..."
 	@docker run --rm \
 		-v "$(PWD):/markdown" \
-		ghcr.io/yakdriver/md-check-links:2.1.0 \
+		ghcr.io/yakdriver/md-check-links:2.2.0 \
 		--config /markdown/.ci/.markdownlinkcheck.json \
 		--verbose yes \
 		--quiet yes \
@@ -308,18 +308,24 @@ go-misspell: ## [CI] Provider Checks / misspell
 	@echo "make: Provider Checks / misspell..."
 	@misspell -error -source auto -i "littel,ceasar" internal/
 
-golangci-lint: golangci-lint1 golangci-lint2 ## [CI] All golangci-lint Checks
+golangci-lint: golangci-lint1 golangci-lint2 golangci-lint3 ## [CI] All golangci-lint Checks
 
-golangci-lint1: ## [CI] golangci-lint Checks / 1 of 2
-	@echo "make: golangci-lint Checks / 1 of 2..."
+golangci-lint1: ## [CI] golangci-lint Checks / 1 of 3
+	@echo "make: golangci-lint Checks / 1 of 3..."
 	@golangci-lint run \
 		--config .ci/.golangci.yml \
 		$(TEST)
 
-golangci-lint2: ## [CI] golangci-lint Checks / 2 of 2
-	@echo "make: golangci-lint Checks / 2 of 2..."
+golangci-lint2: ## [CI] golangci-lint Checks / 2 of 3
+	@echo "make: golangci-lint Checks / 2 of 3..."
 	@golangci-lint run \
 		--config .ci/.golangci2.yml \
+		$(TEST)
+
+golangci-lint3: ## [CI] golangci-lint Checks / 3 of 3
+	@echo "make: golangci-lint Checks / 3 of 3..."
+	@golangci-lint run \
+		--config .ci/.golangci3.yml \
 		$(TEST)
 
 help: ## Display this help
@@ -336,14 +342,6 @@ lint: golangci-lint provider-lint import-lint ## Legacy target, use caution
 lint-fix: testacc-lint-fix website-lint-fix docs-lint-fix ## Fix acceptance test, website, and docs linter findings
 
 misspell: changelog-misspell docs-misspell website-misspell go-misspell ## [CI] Run all CI misspell checks
-
-preferred-lib: ## [CI] Preferred Library Version Check / diffgrep
-	@echo "make: Preferred Library Version Check / diffgrep..."
-	@found=`git diff origin/$(BASE_REF) internal/ | grep '^\+\s*"github.com/aws/aws-sdk-go/'` ; \
-	if [ "$$found" != "" ] ; then \
-		echo "Found a new reference to github.com/aws/aws-sdk-go in the codebase. Please use the preferred library github.com/aws/aws-sdk-go-v2 instead." ; \
-		exit 1 ; \
-	fi
 
 prereq-go: ## If $(GO_VER) is not installed, install it
 	@if ! type "$(GO_VER)" > /dev/null 2>&1 ; then \
@@ -458,7 +456,7 @@ sanity: prereq-go ## Run sanity check (failures allowed)
 
 semgrep: semgrep-code-quality semgrep-naming semgrep-naming-cae semgrep-service-naming ## [CI] Run all CI Semgrep checks
 
-semgrep-all: semgrep-validate ## Run semgrep on all files
+semgrep-all: semgrep-test semgrep-validate ## Run semgrep on all files
 	@echo "make: Running Semgrep checks locally (must have semgrep installed)..."
 	@semgrep $(SEMGREP_ARGS) \
 		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
@@ -479,10 +477,10 @@ semgrep-all: semgrep-validate ## Run semgrep on all files
 		--config 'r/dgryski.semgrep-go.oddifsequence' \
 		--config 'r/dgryski.semgrep-go.oserrors'
 
-semgrep-code-quality: semgrep-validate ## [CI] Semgrep Checks / Code Quality Scan
+semgrep-code-quality: semgrep-test semgrep-validate ## [CI] Semgrep Checks / Code Quality Scan
 	@echo "make: Semgrep Checks / Code Quality Scan..."
 	@echo "make: Running Semgrep checks locally (must have semgrep installed)"
-	semgrep $(SEMGREP_ARGS) \
+	@semgrep $(SEMGREP_ARGS) \
 		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
 		--config .ci/.semgrep.yml \
 		--config .ci/.semgrep-constants.yml \
@@ -542,6 +540,11 @@ semgrep-naming-cae: semgrep-validate ## [CI] Semgrep Checks / Naming Scan Caps/A
 	@semgrep $(SEMGREP_ARGS) \
 		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
 		--config .ci/.semgrep-caps-aws-ec2.yml
+
+semgrep-test: semgrep-validate ## Test Semgrep configuration files
+	@echo "make: Running Semgrep rule tests..."
+	@semgrep --quiet \
+		--test .ci/semgrep/
 
 semgrep-service-naming: semgrep-validate ## [CI] Semgrep Checks / Service Name Scan A-Z
 	@echo "make: Semgrep Checks / Service Name Scan A-Z..."
@@ -604,7 +607,7 @@ sweeper-unlinked: go-build ## [CI] Provider Checks / Sweeper Functions Not Linke
 		grep --count --extended-regexp 'internal/service/[a-zA-Z0-9]+\.sweep[a-zA-Z0-9]+$$'` ; \
 	echo "make: sweeper-unlinked: found $$count, expected 0" ; \
 	[ $$count -eq 0 ] || \
-        (echo "Expected `strings` to detect no sweeper function names in provider binary."; exit 1)
+		(echo "Expected `strings` to detect no sweeper function names in provider binary."; exit 1)
 
 t: prereq-go fmt-check ## Run acceptance tests (similar to testacc)
 	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
@@ -637,8 +640,8 @@ testacc: prereq-go fmt-check ## Run acceptance tests
 testacc-lint: ## [CI] Acceptance Test Linting / terrafmt
 	@echo "make: Acceptance Test Linting / terrafmt..."
 	@find $(SVC_DIR) -type f -name '*_test.go' \
-    	| sort -u \
-    	| xargs -I {} terrafmt diff --check --fmtcompat {}
+		| sort -u \
+		| xargs -I {} terrafmt diff --check --fmtcompat {}
 
 testacc-lint-fix: ## Fix acceptance test linter findings
 	@echo "make: Fixing Acceptance Test Linting / terrafmt..."
@@ -709,7 +712,7 @@ website-link-check-markdown: ## [CI] Website Checks / markdown-link-check-a-z-ma
 	@echo "make: Website Checks / markdown-link-check-a-z-markdown..."
 	@docker run --rm \
 		-v "$(PWD):/markdown" \
-		ghcr.io/yakdriver/md-check-links:2.1.0 \
+		ghcr.io/yakdriver/md-check-links:2.2.0 \
 		--config /markdown/.ci/.markdownlinkcheck.json \
 		--verbose yes \
 		--quiet yes \
@@ -721,7 +724,7 @@ website-link-check-md: ## [CI] Website Checks / markdown-link-check-md
 	@echo "make: Website Checks / markdown-link-check-md..."
 	@docker run --rm \
 		-v "$(PWD):/markdown" \
-		ghcr.io/yakdriver/md-check-links:2.1.0 \
+		ghcr.io/yakdriver/md-check-links:2.2.0 \
 		--config /markdown/.ci/.markdownlinkcheck.json \
 		--verbose yes \
 		--quiet yes \
@@ -868,7 +871,6 @@ yamllint: ## [CI] YAML Linting / yamllint
 	lint-fix \
 	lint \
 	misspell \
-	preferred-lib \
 	prereq-go \
 	provider-lint \
 	provider-markdown-lint \

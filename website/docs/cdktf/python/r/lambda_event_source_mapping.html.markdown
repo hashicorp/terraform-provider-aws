@@ -244,6 +244,7 @@ class MyConvertedCode(TerraformStack):
 * `filter_criteria` - (Optional) The criteria to use for [event filtering](https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventfiltering.html) Kinesis stream, DynamoDB stream, SQS queue event sources. Detailed below.
 * `function_name` - (Required) The name or the ARN of the Lambda function that will be subscribing to events.
 * `function_response_types` - (Optional) A list of current response type enums applied to the event source mapping for [AWS Lambda checkpointing](https://docs.aws.amazon.com/lambda/latest/dg/with-ddb.html#services-ddb-batchfailurereporting). Only available for SQS and stream sources (DynamoDB and Kinesis). Valid values: `ReportBatchItemFailures`.
+* `kms_key_arn` - (Optional) The ARN of the Key Management Service (KMS) customer managed key that Lambda uses to encrypt your function's filter criteria.
 * `maximum_batching_window_in_seconds` - (Optional) The maximum amount of time to gather records before invoking the function, in seconds (between 0 and 300). Records will continue to buffer (or accumulate in the case of an SQS queue event source) until either `maximum_batching_window_in_seconds` expires or `batch_size` has been met. For streaming event sources, defaults to as soon as records are available in the stream. If the batch it reads from the stream/queue only has one record in it, Lambda only sends one record to the function. Only available for stream sources (DynamoDB and Kinesis) and SQS standard queues.
 * `maximum_record_age_in_seconds`: - (Optional) The maximum age of a record that Lambda sends to a function for processing. Only available for stream sources (DynamoDB and Kinesis). Must be either -1 (forever, and the default value) or between 60 and 604800 (inclusive).
 * `maximum_retry_attempts`: - (Optional) The maximum number of times to retry when the function returns an error. Only available for stream sources (DynamoDB and Kinesis). Minimum and default of -1 (forever), maximum of 10000.
@@ -286,7 +287,7 @@ class MyConvertedCode(TerraformStack):
 
 ### scaling_config Configuration Block
 
-* `maximum_concurrency` - (Optional) Limits the number of concurrent instances that the Amazon SQS event source can invoke. Must be between `2` and `1000`. See [Configuring maximum concurrency for Amazon SQS event sources](https://docs.aws.amazon.com/lambda/latest/dg/with-sqs.html#events-sqs-max-concurrency).
+* `maximum_concurrency` - (Optional) Limits the number of concurrent instances that the Amazon SQS event source can invoke. Must be greater than or equal to `2`. See [Configuring maximum concurrency for Amazon SQS event sources](https://docs.aws.amazon.com/lambda/latest/dg/with-sqs.html#events-sqs-max-concurrency). You need to raise a [Service Quota Ticket](https://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html) to increase the concurrency beyond 1000.
 
 ### self_managed_event_source Configuration Block
 
@@ -340,4 +341,4 @@ Using `terraform import`, import Lambda event source mappings using the `UUID` (
 % terraform import aws_lambda_event_source_mapping.event_source_mapping 12345kxodurf3443
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-00ee66c5cd9e76c05e298bf7e1a3d6e18d8969eec360a49727be1901f2dea5d1 -->
+<!-- cache-key: cdktf-0.20.1 input-5f3c3aabaf385baa821790a8d13a49077fa6245f5ece998f08a81eb5bd7c6a1d -->

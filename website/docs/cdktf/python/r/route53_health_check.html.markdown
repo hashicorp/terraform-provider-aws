@@ -127,7 +127,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
-~> **Note:** At least one of either `fqdn` or `ip_address` must be specified.
+~> **Note:** At least one of either `fqdn` or `ip_address` must be specified for endpoint checks.
 
 * `reference_name` - (Optional) This is a reference name used in Caller Reference
     (helpful for identifying single health_check set amongst others)
@@ -190,4 +190,4 @@ Using `terraform import`, import Route53 Health Checks using the health check `i
 % terraform import aws_route53_health_check.http_check abcdef11-2222-3333-4444-555555fedcba
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-77cb2549229efadce71f35371e65ef572daabb8208abd05dfd647f7309112065 -->
+<!-- cache-key: cdktf-0.20.1 input-2ce4f528d67220c07e507923bce7743abf432546cd41f58cd6f985be01c9c9e9 -->
