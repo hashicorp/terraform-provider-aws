@@ -6,6 +6,7 @@ package acm
 import (
 	"context"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -90,7 +91,6 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).ACMClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	//domain := d.Get(names.AttrDomain).(string)
 	input := &acm.ListCertificatesInput{}
 
 	if v, ok := d.GetOk("key_types"); ok && v.(*schema.Set).Len() > 0 {
@@ -110,6 +110,11 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 		f = func(v *types.CertificateSummary) bool {
 			return aws.ToString(v.DomainName) == domain
 		}
+	}
+	if certificateTypes := flex.ExpandStringyValueList[types.CertificateType](d.Get("types").([]interface{})); len(certificateTypes) > 0 {
+		f = tfslices.PredicateAnd(f, func(v *types.CertificateSummary) bool {
+			return slices.Contains(certificateTypes, v.Type)
+		})
 	}
 
 	const (
@@ -146,84 +151,40 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 			return sdkdiag.AppendErrorf(diags, "reading ACM Certificate (%s): %s", certificateARN, err)
 		}
 
+		if tagsToMatch := getTagsIn(ctx); len(tagsToMatch) > 0 {
+			tags, err := listTags(ctx, conn, certificateARN)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "listing tags for ACM Certificate (%s): %s", certificateARN, err)
+			}
+
+			if !tags.ContainsAll(KeyValueTags(ctx, tagsToMatch)) {
+				continue
+			}
+		}
+
 		certificates = append(certificates, certificate)
 	}
 
-	filterMostRecent := d.Get(names.AttrMostRecent).(bool)
-	certificateTypes := flex.ExpandStringyValueList[types.CertificateType](d.Get("types").([]interface{}))
-
-	if !filterMostRecent && len(certificateTypes) == 0 && len(certificateSummaries) > 1 {
-		return sdkdiag.AppendErrorf(diags, "multiple ACM Certificates matching domain (%s)", domain)
+	if len(certificates) == 0 {
+		return sdkdiag.AppendErrorf(diags, "no matching ACM Certificate found")
 	}
 
 	var matchedCertificate *types.CertificateDetail
+	if d.Get(names.AttrMostRecent).(bool) {
+		matchedCertificate = certificates[0]
 
-	for _, certificateSummary := range certificateSummaries {
-		certificateARN := aws.ToString(certificateSummary.CertificateArn)
-		input := &acm.DescribeCertificateInput{
-			CertificateArn: aws.String(certificateARN),
-		}
-
-		certificate, err := findCertificate(ctx, conn, input)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading ACM Certificate (%s): %s", certificateARN, err)
-		}
-
-		if len(certificateTypes) > 0 {
-			for _, certificateType := range certificateTypes {
-				if certificate.Type == certificateType {
-					// We do not have a candidate certificate.
-					if matchedCertificate == nil {
-						matchedCertificate = certificate
-
-						break
-					}
-
-					// At this point, we already have a candidate certificate.
-					// Check if we are filtering by most recent and update if necessary.
-					if filterMostRecent {
-						matchedCertificate, err = mostRecentCertificate(certificate, matchedCertificate)
-
-						if err != nil {
-							return sdkdiag.AppendFromErr(diags, err)
-						}
-
-						break
-					}
-					// Now we have multiple candidate certificates and we only allow one certificate.
-					return sdkdiag.AppendErrorf(diags, "multiple ACM Certificates matching domain (%s)", domain)
-				}
-			}
-
-			continue
-		}
-
-		// We do not have a candidate certificate.
-		if matchedCertificate == nil {
-			matchedCertificate = certificate
-
-			continue
-		}
-
-		// At this point, we already have a candidate certificate.
-		// Check if we are filtering by most recent and update if necessary.
-		if filterMostRecent {
+		for _, certificate := range certificates {
 			matchedCertificate, err = mostRecentCertificate(certificate, matchedCertificate)
 
 			if err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
-
-			continue
 		}
-
-		// Now we have multiple candidate certificates and we only allow one certificate.
-		return sdkdiag.AppendErrorf(diags, "multiple ACM Certificates matching domain (%s)", domain)
-	}
-
-	if matchedCertificate == nil {
-		return sdkdiag.AppendErrorf(diags, "YYY no ACM Certificate matching domain (%s)", domain)
+	} else if n := len(certificates); n > 1 {
+		return sdkdiag.AppendErrorf(diags, "%d matching ACM Certificates found", n)
+	} else {
+		matchedCertificate = certificates[0]
 	}
 
 	// Get the certificate data if the status is issued
