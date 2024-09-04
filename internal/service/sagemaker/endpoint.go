@@ -380,10 +380,6 @@ func findEndpointByName(ctx context.Context, conn *sagemaker.Client, name string
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	if output.EndpointStatus == awstypes.EndpointStatusDeleting {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
 	return output, nil
 }
 
