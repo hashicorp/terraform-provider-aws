@@ -916,11 +916,11 @@ data "aws_networkmanager_core_network_policy_document" "test" {
 
     via {
       network_function_groups = ["InspectionVPC"]
-       with_edge_override { 
-  		edge_sets = [["corenetwork1", "corenetwork2"]] 
-		use_edge_location = "corenetwork2" 
-	  }
-    }	
+      with_edge_override {
+        edge_sets         = [["corenetwork1", "corenetwork2"]]
+        use_edge_location = "corenetwork2"
+      }
+    }
   }
 
   attachment_policies {
