@@ -220,10 +220,12 @@ The following arguments are required:
 The following arguments are optional:
 
 * `additional_authentication_provider` - (Optional) One or more additional authentication providers for the GraphSQL API. See [`additional_authentication_provider` Block](#additional_authentication_provider-block) for details.
+* `api_type` - (Optional) Set the API Type to `GRAPHQL | MERGED`. `MERGED` API type required `merged_api_execution_role_arn` to bet set.
 * `enhanced_metrics_config` - (Optional) Enables and controls the enhanced metrics feature. See [`enhanced_metrics_config` Block](#enhanced_metrics_config-block) for details.
 * `introspection_config` - (Optional) Sets the value of the GraphQL API to enable (`ENABLED`) or disable (`DISABLED`) introspection. If no value is provided, the introspection configuration will be set to ENABLED by default. This field will produce an error if the operation attempts to use the introspection feature while this field is disabled. For more information about introspection, see [GraphQL introspection](https://graphql.org/learn/introspection/).
 * `lambda_authorizer_config` - (Optional) Nested argument containing Lambda authorizer configuration. See [`lambda_authorizer_config` Block](#lambda_authorizer_config-block) for details.
 * `log_config` - (Optional) Nested argument containing logging configuration. See [`log_config` Block](#log_config-block) for details.
+* `merged_api_execution_role_arn` - (Optional) Sets the ARN of the execution role for `MERGED` API type.
 * `openid_connect_config` - (Optional) Nested argument containing OpenID Connect configuration. See [`openid_connect_config` Block](#openid_connect_config-block) for details.
 * `query_depth_limit` - (Optional) The maximum depth a query can have in a single request. Depth refers to the amount of nested levels allowed in the body of query. The default value is `0` (or unspecified), which indicates there's no depth limit. If you set a limit, it can be between `1` and `75` nested levels. This field will produce a limit error if the operation falls out of bounds.
 
