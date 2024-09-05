@@ -122,7 +122,7 @@ func TestAccQuickSightRefreshSchedule_weeklyRefresh(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_frequency.0.refresh_on_day.0.day_of_week", string(awstypes.DayOfWeekMonday)),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					expectNoChange.AddStateValue(resourceName, tfjsonpath.New("schedule").AtSliceIndex(0).AtMapKey("start_after_date_time")),
+					expectNoChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrSchedule).AtSliceIndex(0).AtMapKey("start_after_date_time")),
 				},
 			},
 			{
@@ -145,7 +145,7 @@ func TestAccQuickSightRefreshSchedule_weeklyRefresh(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_frequency.0.refresh_on_day.0.day_of_week", string(awstypes.DayOfWeekWednesday)),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					expectNoChange.AddStateValue(resourceName, tfjsonpath.New("schedule").AtSliceIndex(0).AtMapKey("start_after_date_time")),
+					expectNoChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrSchedule).AtSliceIndex(0).AtMapKey("start_after_date_time")),
 				},
 			},
 			{
@@ -220,7 +220,7 @@ func TestAccQuickSightRefreshSchedule_monthlyRefresh(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "schedule.0.schedule_frequency.0.refresh_on_day.0.day_of_week"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					expectNoChange.AddStateValue(resourceName, tfjsonpath.New("schedule").AtSliceIndex(0).AtMapKey("start_after_date_time")),
+					expectNoChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrSchedule).AtSliceIndex(0).AtMapKey("start_after_date_time")),
 				},
 			},
 			{
@@ -243,7 +243,7 @@ func TestAccQuickSightRefreshSchedule_monthlyRefresh(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "schedule.0.schedule_frequency.0.refresh_on_day.0.day_of_week"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					expectNoChange.AddStateValue(resourceName, tfjsonpath.New("schedule").AtSliceIndex(0).AtMapKey("start_after_date_time")),
+					expectNoChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrSchedule).AtSliceIndex(0).AtMapKey("start_after_date_time")),
 				},
 			},
 			{
@@ -371,7 +371,7 @@ func TestAccQuickSightRefreshSchedule_startAfterDateTime(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.start_after_date_time", startTime1),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					expectChange.AddStateValue(resourceName, tfjsonpath.New("schedule").AtSliceIndex(0).AtMapKey("start_after_date_time")),
+					expectChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrSchedule).AtSliceIndex(0).AtMapKey("start_after_date_time")),
 				},
 			},
 			{
@@ -392,8 +392,8 @@ func TestAccQuickSightRefreshSchedule_startAfterDateTime(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.start_after_date_time", startTime2),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					expectChange.AddStateValue(resourceName, tfjsonpath.New("schedule").AtSliceIndex(0).AtMapKey("start_after_date_time")),
-					expectNoChange.AddStateValue(resourceName, tfjsonpath.New("schedule").AtSliceIndex(0).AtMapKey("start_after_date_time")),
+					expectChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrSchedule).AtSliceIndex(0).AtMapKey("start_after_date_time")),
+					expectNoChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrSchedule).AtSliceIndex(0).AtMapKey("start_after_date_time")),
 				},
 			},
 			{
@@ -414,7 +414,7 @@ func TestAccQuickSightRefreshSchedule_startAfterDateTime(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.start_after_date_time", startTime2),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					expectNoChange.AddStateValue(resourceName, tfjsonpath.New("schedule").AtSliceIndex(0).AtMapKey("start_after_date_time")),
+					expectNoChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrSchedule).AtSliceIndex(0).AtMapKey("start_after_date_time")),
 				},
 			},
 			{
