@@ -2538,6 +2538,57 @@ func TestFlattenString(t *testing.T) {
 				},
 			},
 		},
+
+		"legacy *string to String": {
+			"value": {
+				Source: awsSingleStringPointer{
+					Field1: aws.String("a"),
+				},
+				Target: &tfSingleStringFieldLegacy{},
+				WantTarget: &tfSingleStringFieldLegacy{
+					Field1: types.StringValue("a"),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleStringPointer](), reflect.TypeFor[*tfSingleStringFieldLegacy]()),
+					infoConverting(reflect.TypeFor[awsSingleStringPointer](), reflect.TypeFor[*tfSingleStringFieldLegacy]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleStringPointer](), "Field1", reflect.TypeFor[*tfSingleStringFieldLegacy]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[*string](), "Field1", reflect.TypeFor[types.String]()),
+					debugUsingLegacyFlattener("Field1", reflect.TypeFor[*string](), "Field1", reflect.TypeFor[types.String]()),
+				},
+			},
+			"zero": {
+				Source: awsSingleStringPointer{
+					Field1: aws.String(""),
+				},
+				Target: &tfSingleStringFieldLegacy{},
+				WantTarget: &tfSingleStringFieldLegacy{
+					Field1: types.StringValue(""),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleStringPointer](), reflect.TypeFor[*tfSingleStringFieldLegacy]()),
+					infoConverting(reflect.TypeFor[awsSingleStringPointer](), reflect.TypeFor[*tfSingleStringFieldLegacy]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleStringPointer](), "Field1", reflect.TypeFor[*tfSingleStringFieldLegacy]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[*string](), "Field1", reflect.TypeFor[types.String]()),
+					debugUsingLegacyFlattener("Field1", reflect.TypeFor[*string](), "Field1", reflect.TypeFor[types.String]()),
+				},
+			},
+			"null": {
+				Source: awsSingleStringPointer{
+					Field1: nil,
+				},
+				Target: &tfSingleStringFieldLegacy{},
+				WantTarget: &tfSingleStringFieldLegacy{
+					Field1: types.StringValue(""),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleStringPointer](), reflect.TypeFor[*tfSingleStringFieldLegacy]()),
+					infoConverting(reflect.TypeFor[awsSingleStringPointer](), reflect.TypeFor[*tfSingleStringFieldLegacy]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleStringPointer](), "Field1", reflect.TypeFor[*tfSingleStringFieldLegacy]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[*string](), "Field1", reflect.TypeFor[types.String]()),
+					debugUsingLegacyFlattener("Field1", reflect.TypeFor[*string](), "Field1", reflect.TypeFor[types.String]()),
+				},
+			},
+		},
 	}
 
 	for testName, cases := range testCases {

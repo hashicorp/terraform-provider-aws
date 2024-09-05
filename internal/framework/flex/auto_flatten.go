@@ -490,10 +490,18 @@ func (flattener autoFlattener) string(ctx context.Context, vFrom reflect.Value, 
 	switch tTo := tTo.(type) {
 	case basetypes.StringTypable:
 		stringValue := types.StringNull()
-		if !isNullFrom {
-			// If the target is a StringEnumType, an empty string value is converted to a null String.
-			if value := vFrom.String(); !(value == "" && (strings.HasPrefix(tTo.String(), "StringEnumType[") || fieldOpts.omitempty)) {
-				stringValue = types.StringValue(value)
+		if fieldOpts.legacy {
+			tflog.SubsystemDebug(ctx, subsystemName, "Using legacy flattener")
+			if isNullFrom {
+				stringValue = types.StringValue("")
+			} else {
+				stringValue = types.StringValue(vFrom.String())
+			}
+		} else {
+			if !isNullFrom {
+				if value := vFrom.String(); !(value == "" && (strings.HasPrefix(tTo.String(), "StringEnumType[") || fieldOpts.omitempty)) {
+					stringValue = types.StringValue(value)
+				}
 			}
 		}
 		v, d := tTo.ValueFromString(ctx, stringValue)
