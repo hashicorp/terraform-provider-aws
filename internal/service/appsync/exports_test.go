@@ -14,15 +14,17 @@ var (
 	ResourceGraphQLAPI               = resourceGraphQLAPI
 	ResourceResolver                 = resourceResolver
 	ResourceType                     = resourceType
+	ResourceSourceApiAssociation     = newResourceSourceApiAssociation
 
-	DefaultAuthorizerResultTTLInSeconds = defaultAuthorizerResultTTLInSeconds
-	FindAPICacheByID                    = findAPICacheByID
-	FindAPIKeyByTwoPartKey              = findAPIKeyByTwoPartKey
-	FindDataSourceByTwoPartKey          = findDataSourceByTwoPartKey
-	FindDomainNameAPIAssociationByID    = findDomainNameAPIAssociationByID
-	FindDomainNameByID                  = findDomainNameByID
-	FindFunctionByTwoPartKey            = findFunctionByTwoPartKey
-	FindGraphQLAPIByID                  = findGraphQLAPIByID
-	FindResolverByThreePartKey          = findResolverByThreePartKey
-	FindTypeByThreePartKey              = findTypeByThreePartKey
+	DefaultAuthorizerResultTTLInSeconds  = defaultAuthorizerResultTTLInSeconds
+	FindAPICacheByID                     = findAPICacheByID
+	FindAPIKeyByTwoPartKey               = findAPIKeyByTwoPartKey
+	FindDataSourceByTwoPartKey           = findDataSourceByTwoPartKey
+	FindDomainNameAPIAssociationByID     = findDomainNameAPIAssociationByID
+	FindDomainNameByID                   = findDomainNameByID
+	FindFunctionByTwoPartKey             = findFunctionByTwoPartKey
+	FindGraphQLAPIByID                   = findGraphQLAPIByID
+	FindResolverByThreePartKey           = findResolverByThreePartKey
+	FindSourceApiAssociationByTwoPartKey = findSourceApiAssociationByTwoPartKey
+	FindTypeByThreePartKey               = findTypeByThreePartKey
 )
