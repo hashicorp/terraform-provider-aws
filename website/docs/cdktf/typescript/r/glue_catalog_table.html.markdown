@@ -117,23 +117,23 @@ The follow arguments are optional:
 * `catalogId` - (Optional) ID of the Glue Catalog and database to create the table in. If omitted, this defaults to the AWS Account ID plus the database name.
 * `description` - (Optional) Description of the table.
 * `owner` - (Optional) Owner of the table.
-* `openTableFormatInput` - (Optional) Configuration block for open table formats. See [`open_table_format_input`](#open_table_format_input) below.
+* `openTableFormatInput` - (Optional) Configuration block for open table formats. See [`openTableFormatInput`](#open_table_format_input) below.
 * `parameters` - (Optional) Properties associated with this table, as a list of key-value pairs.
-* `partitionIndex` - (Optional) Configuration block for a maximum of 3 partition indexes. See [`partition_index`](#partition_index) below.
-* `partitionKeys` - (Optional) Configuration block of columns by which the table is partitioned. Only primitive types are supported as partition keys. See [`partition_keys`](#partition_keys) below.
+* `partitionIndex` - (Optional) Configuration block for a maximum of 3 partition indexes. See [`partitionIndex`](#partition_index) below.
+* `partitionKeys` - (Optional) Configuration block of columns by which the table is partitioned. Only primitive types are supported as partition keys. See [`partitionKeys`](#partition_keys) below.
 * `retention` - (Optional) Retention time for this table.
-* `storageDescriptor` - (Optional) Configuration block for information about the physical storage of this table. For more information, refer to the [Glue Developer Guide](https://docs.aws.amazon.com/glue/latest/dg/aws-glue-api-catalog-tables.html#aws-glue-api-catalog-tables-StorageDescriptor). See [`storage_descriptor`](#storage_descriptor) below.
+* `storageDescriptor` - (Optional) Configuration block for information about the physical storage of this table. For more information, refer to the [Glue Developer Guide](https://docs.aws.amazon.com/glue/latest/dg/aws-glue-api-catalog-tables.html#aws-glue-api-catalog-tables-StorageDescriptor). See [`storageDescriptor`](#storage_descriptor) below.
 * `tableType` - (Optional) Type of this table (EXTERNAL_TABLE, VIRTUAL_VIEW, etc.). While optional, some Athena DDL queries such as `ALTER TABLE` and `SHOW CREATE TABLE` will fail if this argument is empty.
-* `targetTable` - (Optional) Configuration block of a target table for resource linking. See [`target_table`](#target_table) below.
+* `targetTable` - (Optional) Configuration block of a target table for resource linking. See [`targetTable`](#target_table) below.
 * `viewExpandedText` - (Optional) If the table is a view, the expanded text of the view; otherwise null.
 * `viewOriginalText` - (Optional) If the table is a view, the original text of the view; otherwise null.
 
 ### open_table_format_input
 
-~> **NOTE:** A `openTableFormatInput` cannot be added to an existing `glueCatalogTable`.
+~> **NOTE:** A `openTableFormatInput` cannot be added to an existing `glue_catalog_table`.
 This will destroy and recreate the table, possibly resulting in data loss.
 
-* `icebergInput` - (Required) Configuration block for iceberg table config. See [`iceberg_input`](#iceberg_input) below.
+* `icebergInput` - (Required) Configuration block for iceberg table config. See [`icebergInput`](#iceberg_input) below.
 
 ### iceberg_input
 
@@ -145,9 +145,9 @@ This will destroy and recreate the table, possibly resulting in data loss.
 
 ### partition_index
 
-~> **NOTE:** A `partitionIndex` cannot be added to an existing `glueCatalogTable`.
+~> **NOTE:** A `partitionIndex` cannot be added to an existing `glue_catalog_table`.
 This will destroy and recreate the table, possibly resulting in data loss.
-To add an index to an existing table, see the [`gluePartitionIndex` resource](/docs/providers/aws/r/glue_partition_index.html) for configuration details.
+To add an index to an existing table, see the [`glue_partition_index` resource](/docs/providers/aws/r/glue_partition_index.html) for configuration details.
 
 * `indexName` - (Required) Name of the partition index.
 * `keys` - (Required) Keys for the partition index.
@@ -160,6 +160,7 @@ To add an index to an existing table, see the [`gluePartitionIndex` resource](/d
 
 ### storage_descriptor
 
+* `additional_locations` - (Optional) List of locations that point to the path where a Delta table is located.
 * `bucketColumns` - (Optional) List of reducer grouping columns, clustering columns, and bucketing columns in the table.
 * `columns` - (Optional) Configuration block for columns in the table. See [`columns`](#columns) below.
 * `compressed` - (Optional) Whether the data in the table is compressed.
@@ -169,9 +170,9 @@ To add an index to an existing table, see the [`gluePartitionIndex` resource](/d
 * `outputFormat` - (Optional) Output format: SequenceFileOutputFormat (binary), or IgnoreKeyTextOutputFormat, or a custom format.
 * `parameters` - (Optional) User-supplied properties in key-value form.
 * `schemaReference` - (Optional) Object that references a schema stored in the AWS Glue Schema Registry. When creating a table, you can pass an empty list of columns for the schema, and instead use a schema reference. See [Schema Reference](#schema_reference) below.
-* `serDeInfo` - (Optional) Configuration block for serialization and deserialization ("SerDe") information. See [`ser_de_info`](#ser_de_info) below.
-* `skewedInfo` - (Optional) Configuration block with information about values that appear very frequently in a column (skewed values). See [`skewed_info`](#skewed_info) below.
-* `sortColumns` - (Optional) Configuration block for the sort order of each bucket in the table. See [`sort_columns`](#sort_columns) below.
+* `serDeInfo` - (Optional) Configuration block for serialization and deserialization ("SerDe") information. See [`serDeInfo`](#ser_de_info) below.
+* `skewedInfo` - (Optional) Configuration block with information about values that appear very frequently in a column (skewed values). See [`skewedInfo`](#skewed_info) below.
+* `sortColumns` - (Optional) Configuration block for the sort order of each bucket in the table. See [`sortColumns`](#sort_columns) below.
 * `storedAsSubDirectories` - (Optional) Whether the table data is stored in subdirectories.
 
 #### columns
@@ -183,15 +184,15 @@ To add an index to an existing table, see the [`gluePartitionIndex` resource](/d
 
 #### schema_reference
 
-* `schemaId` - (Optional) Configuration block that contains schema identity fields. Either this or the `schema_version_id` has to be provided. See [`schema_id`](#schema_id) below.
-* `schemaVersionId` - (Optional) Unique ID assigned to a version of the schema. Either this or the `schema_id` has to be provided.
+* `schemaId` - (Optional) Configuration block that contains schema identity fields. Either this or the `schemaVersionId` has to be provided. See [`schemaId`](#schema_id) below.
+* `schemaVersionId` - (Optional) Unique ID assigned to a version of the schema. Either this or the `schemaId` has to be provided.
 * `schemaVersionNumber` - (Required) Version number of the schema.
 
 ##### schema_id
 
-* `registryName` - (Optional) Name of the schema registry that contains the schema. Must be provided when `schema_name` is specified and conflicts with `schema_arn`.
-* `schemaArn` - (Optional) ARN of the schema. One of `schema_arn` or `schema_name` has to be provided.
-* `schemaName` - (Optional) Name of the schema. One of `schema_arn` or `schema_name` has to be provided.
+* `registryName` - (Optional) Name of the schema registry that contains the schema. Must be provided when `schemaName` is specified and conflicts with `schemaArn`.
+* `schemaArn` - (Optional) ARN of the schema. One of `schemaArn` or `schemaName` has to be provided.
+* `schemaName` - (Optional) Name of the schema. One of `schemaArn` or `schemaName` has to be provided.
 
 #### ser_de_info
 
@@ -215,6 +216,7 @@ To add an index to an existing table, see the [`gluePartitionIndex` resource](/d
 * `catalogId` - (Required) ID of the Data Catalog in which the table resides.
 * `databaseName` - (Required) Name of the catalog database that contains the target table.
 * `name` - (Required) Name of the target table.
+* `region` - (Optional) Region of the target table.
 
 ## Attribute Reference
 
@@ -231,9 +233,19 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { GlueCatalogTable } from "./.gen/providers/aws/glue-catalog-table";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    GlueCatalogTable.generateConfigForImport(
+      this,
+      "myTable",
+      "123456789012:MyDatabase:MyTable"
+    );
   }
 }
 
@@ -245,4 +257,4 @@ Using `terraform import`, import Glue Tables using the catalog ID (usually AWS a
 % terraform import aws_glue_catalog_table.MyTable 123456789012:MyDatabase:MyTable
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-45918d95d1ee42b18f0a38282d1c7f92c766f0d90f43a1e0cd1f7c41e6fd3936 -->
+<!-- cache-key: cdktf-0.20.1 input-75088d3c6c39c44bd5079c79ed51ebfb158cf71471233214605cf723a3b61c92 -->

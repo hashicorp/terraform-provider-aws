@@ -1,7 +1,8 @@
 # RDS Blue/Green Deployments
 
-**Summary:** Discussion of which resource types can support RDS Blue/Green Deployments for updates
-**Created:** 2023-11-24
+**Summary:** Discussion of which resource types can support RDS Blue/Green Deployments for updates<br>
+**Created:** 2023-11-24<br>
+**Updated:** 2024-01-24
 
 ---
 
@@ -12,21 +13,27 @@ Due to Terraform's resource model and how RDS implements Blue/Green Deployments,
 
 ## Background
 
-Terraform treats each resource as a persistent, self-contained object that can be created, modified, and deleted without interacting with other objects, other that having parameter value dependencies on other resources.
+Terraform treats each resource as a persistent, self-contained object that can be created, modified, and deleted without interacting with other objects, other than having parameter value dependencies on other resources.
 In most cases, this more or less corresponds to how objects within AWS interrelate.
 
-RDS Blue/Green Deployments are implemented using a temporary Blue/Green Deployment orchestation object, which manages both the old and new RDS Instances, data synchronization, switchover, and deletion of the old Instances. The orchestation object is typically deleted after switchover, though it can be retained to, for example, review the operation logs for the deployment.
+RDS Blue/Green Deployments are implemented using a temporary Blue/Green Deployment orchestration object, which manages both the old and new RDS Instances, data synchronization, switchover, and deletion of the old Instances. The orchestration object is typically deleted after switchover, though it can be retained to, for example, review the operation logs for the deployment.
 
 ## Implementations
 
 ### `aws_db_instance`
 
 Because the `aws_db_instance` resource type represents a single, self-contained object, we are able to fit within the Terraform resource model while using an RDS Blue/Green Deployment to reduce downtime for many Instance updates.
-For instance, changing the backing EC2 instance type or the engine version in-place can cause downtimes of over 15 minutes.
+For instance, changing the backing EC2 instance type or the engine version in place can cause downtimes of over 15 minutes.
 When the `blue_green_update.enabled` parameter is set, the AWS Provider will use a Blue/Green Deployment internally to perform the update, so that the downtime is only the length of the switchover.
 According to [AWS documentation](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/blue-green-deployments-overview.html), "switchover typically takes under a minute".
 
 The update takes place in a single `terraform apply`, and the Blue/Green Deployment object is not exposed by the provider, since it is only an implementation detail.
+
+### `aws_db_instance` Replicas
+
+Creating a replica RDS DB Instance involves one source `aws_db_instance` resource and one or more replica `aws_db_instance` resources.
+Because multiple resources are involved, Terraform cannot treat the source Instance and its replicas as a single unit.
+Therefore, Terraform cannot use a Blue/Green Deployment for updating an Instance and its replicas.
 
 ### `aws_rds_cluster`
 
@@ -37,7 +44,7 @@ If, at some point, Blue/Green Deployments are supported, multi-AZ clusters may b
 However, the multi-AZ cluster already performs a rolling update of the individual instances, so there may be no benefit to using a Blue/Green Deployment for updates.
 
 Aurora clusters do support Blue/Green Deployments.
-However, neither the AWS APIs nor the provider treat an Aurora cluster as a self-contained object:
+However, neither the AWS APIs nor the provider treats an Aurora cluster as a self-contained object:
 A cluster consists of a containing `aws_rds_cluster` resource and one or more `aws_rds_cluster_instance` resources.
 Because of this, a Blue/Green Deployment cannot be used for most updates on an Aurora cluster.
 
@@ -48,13 +55,13 @@ When it is created, it first creates replicas of any existing RDS Instances, con
 Once these operations are complete, any additional updates are performed on the new (or "Green") instances.
 After these updates are complete, the Green instances can be promoted to be the live instances.
 
-Using a stand-alone Blue/Green Deployment resource would require multiple iterations of editing the Terraform configuration, applying the configuration, or importing resources.
+Using a standalone Blue/Green Deployment resource would require multiple iterations of editing the Terraform configuration, applying the configuration, or importing resources.
 This isn't a good fit for Terraform.
 
 The following example shows the steps that would be needed to use a standalone Blue/Green Deployment resource with a single RDS Instance (`aws_db_instance`).
 Using it with an Aurora cluster would be similar, but require changes to all of the resources making up the cluster.
 
-We start with the an RDS Instance with the name `example-db`.
+We start with an RDS Instance with the name `example-db`.
 
 ```terraform
 resource "aws_db_instance" "example" {

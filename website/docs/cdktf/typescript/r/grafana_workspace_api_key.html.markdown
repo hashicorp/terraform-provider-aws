@@ -54,4 +54,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `key` - The key token in JSON format. Use this value as a bearer token to authenticate HTTP requests to the workspace.
 
-<!-- cache-key: cdktf-0.19.0 input-9633668281b65801757ef3306eb1542f89dab699a63f4f4b2b48d996c5bf8f4b -->
+<!-- cache-key: cdktf-0.20.1 input-9633668281b65801757ef3306eb1542f89dab699a63f4f4b2b48d996c5bf8f4b -->

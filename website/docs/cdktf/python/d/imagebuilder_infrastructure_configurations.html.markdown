@@ -53,4 +53,4 @@ This data source exports the following attributes in addition to the arguments a
 * `arns` - Set of ARNs of the matched Image Builder Infrastructure Configurations.
 * `names` - Set of names of the matched Image Builder Infrastructure Configurations.
 
-<!-- cache-key: cdktf-0.19.0 input-83d3086f6077a26f6422506516e6b719a5fbe82fb8b50beb21985166498185d9 -->
+<!-- cache-key: cdktf-0.20.1 input-83d3086f6077a26f6422506516e6b719a5fbe82fb8b50beb21985166498185d9 -->

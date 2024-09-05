@@ -13,7 +13,7 @@ description: |-
 The KMS ciphertext resource allows you to encrypt plaintext into ciphertext
 by using an AWS KMS customer master key. The value returned by this resource
 is stable across every apply. For a changing ciphertext value each apply, see
-the [`awsKmsCiphertext` data source](/docs/providers/aws/d/kms_ciphertext.html).
+the [`aws_kms_ciphertext` data source](/docs/providers/aws/d/kms_ciphertext.html).
 
 ~> **Note:** All arguments including the plaintext be stored in the raw state as plain-text.
 [Read more about sensitive data in state](https://www.terraform.io/docs/state/sensitive-data.html).
@@ -61,4 +61,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `ciphertextBlob` - Base64 encoded ciphertext
 
-<!-- cache-key: cdktf-0.19.0 input-ce598613e81130a177d236116781c8c718c56f4432df7d2ca84854a22e71b32b -->
+<!-- cache-key: cdktf-0.20.1 input-ce598613e81130a177d236116781c8c718c56f4432df7d2ca84854a22e71b32b -->

@@ -37,7 +37,7 @@ class MyConvertedCode extends TerraformStack {
 ~> **Note:** The unencrypted value of a SecureString will be stored in the raw state as plain-text.
 [Read more about sensitive data in state](https://www.terraform.io/docs/state/sensitive-data.html).
 
-~> **Note:** The data source is currently following the behavior of the [SSM API](https://docs.aws.amazon.com/sdk-for-go/api/service/ssm/#Parameter) to return a string value, regardless of parameter type. For type `stringList`, we can use the built-in [split()](https://www.terraform.io/docs/configuration/functions/split.html) function to get values in a list. Example: `split(",", data.aws_ssm_parameter.subnets.value)`
+~> **Note:** The data source is currently following the behavior of the [SSM API](https://docs.aws.amazon.com/sdk-for-go/api/service/ssm/#Parameter) to return a string value, regardless of parameter type. For type `StringList`, we can use the built-in [split()](https://www.terraform.io/docs/configuration/functions/split.html) function to get values in a list. Example: `split(",", data.aws_ssm_parameter.subnets.value)`
 
 ## Argument Reference
 
@@ -55,4 +55,4 @@ In addition to all arguments above, the following attributes are exported:
 * `insecureValue` - Value of the parameter. **Use caution:** This value is never marked as sensitive.
 * `version` - Version of the parameter.
 
-<!-- cache-key: cdktf-0.19.0 input-89a145f5b43a3c824da664ca5cd8985b70d4cc516d350f4aa2411cd727cc5e4b -->
+<!-- cache-key: cdktf-0.20.1 input-89a145f5b43a3c824da664ca5cd8985b70d4cc516d350f4aa2411cd727cc5e4b -->

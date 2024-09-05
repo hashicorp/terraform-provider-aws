@@ -12,7 +12,7 @@ Implementing name generation requires modifying the following:
 ## Resource Code
 
 - In the resource file (e.g., `internal/service/{service}/{thing}.go`), add the following import: `"github.com/hashicorp/terraform-provider-aws/internal/create"`.
-- Inside the resource schema, add the new `name_prefix` attribute and adjust the `name` attribute to be `Optional`, `Computed`, and conflict with the `name_prefix` attribute. Be sure to keep any existing validation functions already present on `name`.
+- Inside the resource schema, add the new `name_prefix` attribute and adjust the `name` attribute to be `Optional`, `Computed`, and conflict with the `name_prefix` attribute. Be sure to keep any existing validation functions already present on the `name`.
 
 === "Terraform Plugin Framework (Preferred)"
     ```go
@@ -91,7 +91,7 @@ Implementing name generation requires modifying the following:
 ## Resource Acceptance Tests
 
 - In the resource test file (e.g., `internal/service/{service}/{thing}_test.go`), add the following import: `"github.com/hashicorp/terraform-provider-aws/internal/create"`.
-- Implement two new tests named `_nameGenerated` and `_namePrefix` which verify creation of the resource without `name` and `name_prefix` arguments, and with only the `name_prefix` argument, respectively.
+- Implement two new tests named `_nameGenerated` and `_namePrefix` which verify the creation of the resource without `name` and `name_prefix` arguments, and with only the `name_prefix` argument, respectively.
 
 ```go
 func TestAccServiceThing_nameGenerated(t *testing.T) {
@@ -101,7 +101,7 @@ func TestAccServiceThing_nameGenerated(t *testing.T) {
 
   resource.ParallelTest(t, resource.TestCase{
     PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-    ErrorCheck:               acctest.ErrorCheck(t, service.EndpointsID),
+    ErrorCheck:               acctest.ErrorCheck(t, names.ServiceServiceID),
     ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
     CheckDestroy:             testAccCheckThingDestroy(ctx),
     Steps: []resource.TestStep{
@@ -130,7 +130,7 @@ func TestAccServiceThing_namePrefix(t *testing.T) {
 
   resource.ParallelTest(t, resource.TestCase{
     PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-    ErrorCheck:               acctest.ErrorCheck(t, service.EndpointsID),
+    ErrorCheck:               acctest.ErrorCheck(t, names.ServiceServiceID),
     ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
     CheckDestroy:             testAccCheckThingDestroy(ctx),
     Steps: []resource.TestStep{
@@ -179,7 +179,7 @@ resource "aws_service_thing" "test" {
 * `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 ```
 
-- Adjust the existing `name` argument description to ensure its denoted as `Optional`, mention that it can be generated, and that it conflicts with `name_prefix`.
+- Adjust the existing `name` argument description to ensure it is denoted as `Optional`, mention that it can be generated and that it conflicts with `name_prefix`.
 
 ```markdown
 * `name` - (Optional) Name of the thing. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.

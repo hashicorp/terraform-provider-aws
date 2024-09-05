@@ -29,7 +29,7 @@ func TestAccVerifiedPermissionsPolicyStoreDataSource_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissionsEndpointID)
 			testAccPolicyStoresPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyStoreDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -38,10 +38,10 @@ func TestAccVerifiedPermissionsPolicyStoreDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyStoreExists(ctx, dataSourceName, &policystore),
 					resource.TestCheckResourceAttrPair(resourceName, "validation_settings.0.mode", dataSourceName, "validation_settings.0.mode"),
-					resource.TestCheckResourceAttrPair(resourceName, "description", dataSourceName, "description"),
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "last_updated_date"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDescription, dataSourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrLastUpdatedDate),
 				),
 			},
 		},

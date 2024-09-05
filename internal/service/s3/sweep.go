@@ -22,12 +22,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
 	resource.AddTestSweepers("aws_s3_object", &resource.Sweeper{
 		Name: "aws_s3_object",
 		F:    sweepObjects,
+		Dependencies: []string{
+			"aws_m2_application",
+		},
 	})
 
 	resource.AddTestSweepers("aws_s3_bucket", &resource.Sweeper{
@@ -70,7 +74,7 @@ func sweepObjects(region string) error {
 		return fmt.Errorf("error listing S3 Buckets: %w", err)
 	}
 
-	buckets := tfslices.Filter(output.Buckets, bucketRegionFilter(ctx, conn, region, client.S3UsePathStyle()))
+	buckets := tfslices.Filter(output.Buckets, bucketRegionFilter(ctx, conn, region, client.S3UsePathStyle(ctx)))
 	buckets = tfslices.Filter(buckets, bucketNameFilter)
 	sweepables := make([]sweep.Sweepable, 0)
 
@@ -188,14 +192,14 @@ func sweepBuckets(region string) error {
 		return nil
 	}
 
-	buckets := tfslices.Filter(output.Buckets, bucketRegionFilter(ctx, conn, region, client.S3UsePathStyle()))
+	buckets := tfslices.Filter(output.Buckets, bucketRegionFilter(ctx, conn, region, client.S3UsePathStyle(ctx)))
 	buckets = tfslices.Filter(buckets, bucketNameFilter)
 	sweepables := make([]sweep.Sweepable, 0)
 
 	for _, bucket := range buckets {
 		name := aws.ToString(bucket.Name)
 
-		r := ResourceBucket()
+		r := resourceBucket()
 		d := r.Data(nil)
 		d.SetId(name)
 
@@ -237,6 +241,7 @@ func bucketNameFilter(bucket types.Bucket) bool {
 		"tftest.applicationversion",
 		"terraform-remote-s3-test",
 		"aws-security-data-lake-", // Orphaned by aws_securitylake_data_lake.
+		"resource-test-terraform",
 	}
 	for _, prefix := range prefixes {
 		if strings.HasPrefix(name, prefix) {
@@ -305,7 +310,7 @@ func sweepDirectoryBuckets(region string) error {
 			}
 
 			sweepResources = append(sweepResources, framework.NewSweepResource(newDirectoryBucketResource, client,
-				framework.NewAttribute("id", aws.ToString(v.Name)),
+				framework.NewAttribute(names.AttrID, aws.ToString(v.Name)),
 			))
 		}
 	}

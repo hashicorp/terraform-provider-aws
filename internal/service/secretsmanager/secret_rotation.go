@@ -9,8 +9,9 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/secretsmanager"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -19,10 +20,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_secretsmanager_secret_rotation")
-func ResourceSecretRotation() *schema.Resource {
+// @SDKResource("aws_secretsmanager_secret_rotation", name="Secret Rotation")
+func resourceSecretRotation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSecretRotationCreate,
 		ReadWithoutTimeout:   resourceSecretRotationRead,
@@ -33,7 +35,21 @@ func ResourceSecretRotation() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    secretRotationResourceV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: secretRotationStateUpgradeV0,
+				Version: 0,
+			},
+		},
+
 		Schema: map[string]*schema.Schema{
+			"rotate_immediately": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
 			"rotation_enabled": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -56,12 +72,12 @@ func ResourceSecretRotation() *schema.Resource {
 							ExactlyOneOf:  []string{"rotation_rules.0.automatically_after_days", "rotation_rules.0.schedule_expression"},
 							ValidateFunc:  validation.IntBetween(1, 1000),
 						},
-						"duration": {
+						names.AttrDuration: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9h]+`), ""),
 						},
-						"schedule_expression": {
+						names.AttrScheduleExpression: {
 							Type:          schema.TypeString,
 							Optional:      true,
 							ConflictsWith: []string{"rotation_rules.0.automatically_after_days"},
@@ -82,11 +98,12 @@ func ResourceSecretRotation() *schema.Resource {
 
 func resourceSecretRotationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
-	secretID := d.Get("secret_id").(string)
+	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
+	secretID := d.Get("secret_id").(string)
 	input := &secretsmanager.RotateSecretInput{
 		ClientRequestToken: aws.String(id.UniqueId()), // Needed because we're handling our own retries
+		RotateImmediately:  aws.Bool(d.Get("rotate_immediately").(bool)),
 		RotationRules:      expandRotationRules(d.Get("rotation_rules").([]interface{})),
 		SecretId:           aws.String(secretID),
 	}
@@ -97,25 +114,23 @@ func resourceSecretRotationCreate(ctx context.Context, d *schema.ResourceData, m
 
 	// AccessDeniedException: Secrets Manager cannot invoke the specified Lambda function.
 	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 1*time.Minute, func() (interface{}, error) {
-		return conn.RotateSecretWithContext(ctx, input)
+		return conn.RotateSecret(ctx, input)
 	}, "AccessDeniedException")
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Secrets Manager Secret Rotation (%s): %s", secretID, err)
 	}
 
-	d.SetId(aws.StringValue(outputRaw.(*secretsmanager.RotateSecretOutput).ARN))
+	d.SetId(aws.ToString(outputRaw.(*secretsmanager.RotateSecretOutput).ARN))
 
 	return append(diags, resourceSecretRotationRead(ctx, d, meta)...)
 }
 
 func resourceSecretRotationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
+	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, PropagationTimeout, func() (interface{}, error) {
-		return FindSecretByID(ctx, conn, d.Id())
-	}, d.IsNewResource())
+	output, err := findSecretByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Secrets Manager Secret Rotation (%s) not found, removing from state", d.Id())
@@ -127,11 +142,9 @@ func resourceSecretRotationRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret Rotation (%s): %s", d.Id(), err)
 	}
 
-	output := outputRaw.(*secretsmanager.DescribeSecretOutput)
-
-	d.Set("secret_id", d.Id())
-	d.Set("rotation_enabled", output.RotationEnabled)
-	if aws.BoolValue(output.RotationEnabled) {
+	rotationEnabled := aws.ToBool(output.RotationEnabled)
+	d.Set("rotation_enabled", rotationEnabled)
+	if rotationEnabled {
 		d.Set("rotation_lambda_arn", output.RotationLambdaARN)
 		if err := d.Set("rotation_rules", flattenRotationRules(output.RotationRules)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting rotation_rules: %s", err)
@@ -140,18 +153,20 @@ func resourceSecretRotationRead(ctx context.Context, d *schema.ResourceData, met
 		d.Set("rotation_lambda_arn", "")
 		d.Set("rotation_rules", []interface{}{})
 	}
+	d.Set("secret_id", d.Id())
 
 	return diags
 }
 
 func resourceSecretRotationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
-	secretID := d.Get("secret_id").(string)
+	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
 	if d.HasChanges("rotation_lambda_arn", "rotation_rules") {
+		secretID := d.Get("secret_id").(string)
 		input := &secretsmanager.RotateSecretInput{
 			ClientRequestToken: aws.String(id.UniqueId()), // Needed because we're handling our own retries
+			RotateImmediately:  aws.Bool(d.Get("rotate_immediately").(bool)),
 			RotationRules:      expandRotationRules(d.Get("rotation_rules").([]interface{})),
 			SecretId:           aws.String(secretID),
 		}
@@ -162,7 +177,7 @@ func resourceSecretRotationUpdate(ctx context.Context, d *schema.ResourceData, m
 
 		// AccessDeniedException: Secrets Manager cannot invoke the specified Lambda function.
 		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 1*time.Minute, func() (interface{}, error) {
-			return conn.RotateSecretWithContext(ctx, input)
+			return conn.RotateSecret(ctx, input)
 		}, "AccessDeniedException")
 
 		if err != nil {
@@ -175,9 +190,10 @@ func resourceSecretRotationUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceSecretRotationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
+	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
-	_, err := conn.CancelRotateSecretWithContext(ctx, &secretsmanager.CancelRotateSecretInput{
+	log.Printf("[DEBUG] Deleting Secrets Manager Secret Rotation: %s", d.Id())
+	_, err := conn.CancelRotateSecret(ctx, &secretsmanager.CancelRotateSecretInput{
 		SecretId: aws.String(d.Get("secret_id").(string)),
 	})
 
@@ -188,11 +204,11 @@ func resourceSecretRotationDelete(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func expandRotationRules(l []interface{}) *secretsmanager.RotationRulesType {
+func expandRotationRules(l []interface{}) *types.RotationRulesType {
 	if len(l) == 0 {
 		return nil
 	}
-	rules := &secretsmanager.RotationRulesType{}
+	rules := &types.RotationRulesType{}
 
 	tfMap := l[0].(map[string]interface{})
 
@@ -200,18 +216,18 @@ func expandRotationRules(l []interface{}) *secretsmanager.RotationRulesType {
 		rules.AutomaticallyAfterDays = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["duration"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDuration].(string); ok && v != "" {
 		rules.Duration = aws.String(v)
 	}
 
-	if v, ok := tfMap["schedule_expression"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrScheduleExpression].(string); ok && v != "" {
 		rules.ScheduleExpression = aws.String(v)
 	}
 
 	return rules
 }
 
-func flattenRotationRules(rules *secretsmanager.RotationRulesType) []interface{} {
+func flattenRotationRules(rules *types.RotationRulesType) []interface{} {
 	if rules == nil {
 		return nil
 	}
@@ -220,15 +236,15 @@ func flattenRotationRules(rules *secretsmanager.RotationRulesType) []interface{}
 
 	if v := rules.AutomaticallyAfterDays; v != nil && rules.ScheduleExpression == nil {
 		// Only populate automatically_after_days if schedule_expression is not set, otherwise we won't be able to update the resource
-		m["automatically_after_days"] = int(aws.Int64Value(v))
+		m["automatically_after_days"] = int(aws.ToInt64(v))
 	}
 
 	if v := rules.Duration; v != nil {
-		m["duration"] = aws.StringValue(v)
+		m[names.AttrDuration] = aws.ToString(v)
 	}
 
 	if v := rules.ScheduleExpression; v != nil {
-		m["schedule_expression"] = aws.StringValue(v)
+		m[names.AttrScheduleExpression] = aws.ToString(v)
 	}
 
 	return []interface{}{m}

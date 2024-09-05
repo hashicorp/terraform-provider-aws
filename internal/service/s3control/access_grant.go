@@ -71,7 +71,7 @@ func (r *accessGrantResource) Schema(ctx context.Context, request resource.Schem
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"account_id": schema.StringAttribute{
+			names.AttrAccountID: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -350,8 +350,8 @@ type accessGrantResourceModel struct {
 	ID                                types.String                                                            `tfsdk:"id"`
 	Permission                        fwtypes.StringEnum[awstypes.Permission]                                 `tfsdk:"permission"`
 	S3PrefixType                      fwtypes.StringEnum[awstypes.S3PrefixType]                               `tfsdk:"s3_prefix_type"`
-	Tags                              types.Map                                                               `tfsdk:"tags"`
-	TagsAll                           types.Map                                                               `tfsdk:"tags_all"`
+	Tags                              tftags.Map                                                              `tfsdk:"tags"`
+	TagsAll                           tftags.Map                                                              `tfsdk:"tags_all"`
 }
 
 type accessGrantsLocationConfigurationModel struct {

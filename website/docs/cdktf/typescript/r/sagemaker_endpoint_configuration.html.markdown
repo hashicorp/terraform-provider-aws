@@ -53,12 +53,12 @@ This resource supports the following arguments:
 
 * `productionVariants` - (Required) An list of ProductionVariant objects, one for each model that you want to host at this endpoint. Fields are documented below.
 * `kmsKeyArn` - (Optional) Amazon Resource Name (ARN) of a AWS Key Management Service key that Amazon SageMaker uses to encrypt data on the storage volume attached to the ML compute instance that hosts the endpoint.
-* `name` - (Optional) The name of the endpoint configuration. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
+* `name` - (Optional) The name of the endpoint configuration. If omitted, Terraform will assign a random, unique name. Conflicts with `namePrefix`.
 * `namePrefix` - (Optional) Creates a unique endpoint configuration name beginning with the specified prefix. Conflicts with `name`.
-* `tags` - (Optional) A mapping of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A mapping of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `dataCaptureConfig` - (Optional) Specifies the parameters to capture input/output of SageMaker models endpoints. Fields are documented below.
 * `asyncInferenceConfig` - (Optional) Specifies configuration for how an endpoint performs asynchronous inference.
-* `shadowProductionVariants` - (Optional) Array of ProductionVariant objects. There is one for each model that you want to host at this endpoint in shadow mode with production traffic replicated from the model specified on ProductionVariants.If you use this field, you can only specify one variant for ProductionVariants and one variant for ShadowProductionVariants. Fields are documented below.
+* `shadowProductionVariants` - (Optional) Array of ProductionVariant objects. There is one for each model that you want to host at this endpoint in shadow mode with production traffic replicated from the model specified on ProductionVariants. If you use this field, you can only specify one variant for ProductionVariants and one variant for ShadowProductionVariants. Fields are documented below.
 
 ### production_variants
 
@@ -66,11 +66,13 @@ This resource supports the following arguments:
 * `containerStartupHealthCheckTimeoutInSeconds` - (Optional) The timeout value, in seconds, for your inference container to pass health check by SageMaker Hosting. For more information about health check, see [How Your Container Should Respond to Health Check (Ping) Requests](https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-inference-code.html#your-algorithms-inference-algo-ping-requests). Valid values between `60` and `3600`.
 * `coreDumpConfig` - (Optional) Specifies configuration for a core dump from the model container when the process crashes. Fields are documented below.
 * `enableSsmAccess` - (Optional) You can use this parameter to turn on native Amazon Web Services Systems Manager (SSM) access for a production variant behind an endpoint. By default, SSM access is disabled for all production variants behind an endpoints.
+* `inferenceAmiVersion` - (Optional) Specifies an option from a collection of preconfigured Amazon Machine Image (AMI) images. Each image is configured by Amazon Web Services with a set of software and driver versions. Amazon Web Services optimizes these configurations for different machine learning workloads.
 * `initialInstanceCount` - (Optional) Initial number of instances used for auto-scaling.
 * `instanceType` - (Optional)  The type of instance to start.
 * `initialVariantWeight` - (Optional) Determines initial traffic distribution among all of the models that you specify in the endpoint configuration. If unspecified, it defaults to `1.0`.
 * `modelDataDownloadTimeoutInSeconds` - (Optional) The timeout value, in seconds, to download and extract the model that you want to host from Amazon S3 to the individual inference instance associated with this production variant. Valid values between `60` and `3600`.
 * `modelName` - (Required) The name of the model to use.
+* `routingConfig` - (Optional) Sets how the endpoint routes incoming traffic. See [routing_config](#routing_config) below.
 * `serverlessConfig` - (Optional) Specifies configuration for how an endpoint performs asynchronous inference.
 * `variantName` - (Optional) The name of the variant. If omitted, Terraform will assign a random, unique name.
 * `volumeSizeInGb` - (Optional) The size, in GB, of the ML storage volume attached to individual inference instance associated with the production variant. Valid values between `1` and `512`.
@@ -80,11 +82,15 @@ This resource supports the following arguments:
 * `destinationS3Uri` - (Required) The Amazon S3 bucket to send the core dump to.
 * `kmsKeyId` - (Required) The Amazon Web Services Key Management Service (Amazon Web Services KMS) key that SageMaker uses to encrypt the core dump data at rest using Amazon S3 server-side encryption.
 
+#### routing_config
+
+* `routingStrategy` - (Required) Sets how the endpoint routes incoming traffic. Valid values are `LEAST_OUTSTANDING_REQUESTS` and `RANDOM`. `LEAST_OUTSTANDING_REQUESTS` routes requests to the specific instances that have more capacity to process them. `RANDOM` routes each request to a randomly chosen instance.
+
 #### serverless_config
 
 * `maxConcurrency` - (Required) The maximum number of concurrent invocations your serverless endpoint can process. Valid values are between `1` and `200`.
 * `memorySizeInMb` - (Required) The memory size of your serverless endpoint. Valid values are in 1 GB increments: `1024` MB, `2048` MB, `3072` MB, `4096` MB, `5120` MB, or `6144` MB.
-* `provisionedConcurrency` - The amount of provisioned concurrency to allocate for the serverless endpoint. Should be less than or equal to `max_concurrency`. Valid values are between `1` and `200`.
+* `provisionedConcurrency` - The amount of provisioned concurrency to allocate for the serverless endpoint. Should be less than or equal to `maxConcurrency`. Valid values are between `1` and `200`.
 
 ### data_capture_config
 
@@ -97,7 +103,7 @@ This resource supports the following arguments:
 
 #### capture_options
 
-* `captureMode` - (Required) Specifies the data to be captured. Should be one of `Input` or `Output`.
+* `captureMode` - (Required) Specifies the data to be captured. Should be one of `Input`, `Output` or `InputAndOutput`.
 
 #### capture_content_type_header
 
@@ -132,7 +138,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this endpoint configuration.
 * `name` - The name of the endpoint configuration.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -142,9 +148,19 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { SagemakerEndpointConfiguration } from "./.gen/providers/aws/sagemaker-endpoint-configuration";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    SagemakerEndpointConfiguration.generateConfigForImport(
+      this,
+      "testEndpointConfig",
+      "endpoint-config-foo"
+    );
   }
 }
 
@@ -156,4 +172,4 @@ Using `terraform import`, import endpoint configurations using the `name`. For e
 % terraform import aws_sagemaker_endpoint_configuration.test_endpoint_config endpoint-config-foo
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-a480c542052fe4577930c727244f5ec85cceca16de58e98751ed63acbfadd2a7 -->
+<!-- cache-key: cdktf-0.20.1 input-492f8b7b466397adf784e457b315395272bfaf3f1ca8a0c2c0127878e6bc2a4c -->

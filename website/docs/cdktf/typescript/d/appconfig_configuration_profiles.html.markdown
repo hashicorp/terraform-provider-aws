@@ -65,4 +65,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `configurationProfileIds` - Set of Configuration Profile IDs associated with the AppConfig Application.
 
-<!-- cache-key: cdktf-0.19.0 input-b4fc2e385f4cf8f2b77339adbebe9e03369792e3c761bb5599667ff5bad6268d -->
+<!-- cache-key: cdktf-0.20.1 input-b4fc2e385f4cf8f2b77339adbebe9e03369792e3c761bb5599667ff5bad6268d -->

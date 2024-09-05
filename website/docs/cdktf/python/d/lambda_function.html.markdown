@@ -49,6 +49,7 @@ This data source exports the following attributes in addition to the arguments a
 
 * `architectures` - Instruction set architecture for the Lambda function.
 * `arn` - Unqualified (no `:QUALIFIER` or `:VERSION` suffix) ARN identifying your Lambda Function. See also `qualified_arn`.
+* `code_sha256` - Base64-encoded representation of raw SHA-256 sum of the zip file.
 * `code_signing_config_arn` - ARN for a Code Signing Configuration.
 * `dead_letter_config` - Configure the function's *dead letter queue*.
 * `description` - Description of what your Lambda Function does.
@@ -61,6 +62,7 @@ This data source exports the following attributes in addition to the arguments a
 * `kms_key_arn` - ARN for the KMS encryption key.
 * `last_modified` - Date this resource was last modified.
 * `layers` - List of Lambda Layer ARNs attached to your Lambda Function.
+* `logging_config` - Advanced logging settings.
 * `memory_size` - Amount of memory in MB your Lambda Function can use at runtime.
 * `qualified_arn` - Qualified (`:QUALIFIER` or `:VERSION` suffix) ARN identifying your Lambda Function. See also `arn`.
 * `qualified_invoke_arn` - Qualified (`:QUALIFIER` or `:VERSION` suffix) ARN to be used for invoking Lambda Function from API Gateway. See also `invoke_arn`.
@@ -69,11 +71,11 @@ This data source exports the following attributes in addition to the arguments a
 * `runtime` - Runtime environment for the Lambda function.
 * `signing_job_arn` - ARN of a signing job.
 * `signing_profile_version_arn` - The ARN for a signing profile version.
-* `source_code_hash` - Base64-encoded representation of raw SHA-256 sum of the zip file.
+* `source_code_hash` - (**Deprecated** use `code_sha256` instead) Base64-encoded representation of raw SHA-256 sum of the zip file.
 * `source_code_size` - Size in bytes of the function .zip file.
 * `timeout` - Function execution time at which Lambda should terminate the function.
 * `tracing_config` - Tracing settings of the function.
 * `version` - The version of the Lambda function returned. If `qualifier` is not set, this will resolve to the most recent published version. If no published version of the function exists, `version` will resolve to `$LATEST`.
 * `vpc_config` - VPC configuration associated with your Lambda function.
 
-<!-- cache-key: cdktf-0.19.0 input-aa23743032adbbcb3971ecbe81f2b393d5995f92cb64512014ac1d8c97a94023 -->
+<!-- cache-key: cdktf-0.20.1 input-3e9e50aa52c5f60bc0ddf382d319121cfde1c10a219b46de0598d1d35bcc2625 -->

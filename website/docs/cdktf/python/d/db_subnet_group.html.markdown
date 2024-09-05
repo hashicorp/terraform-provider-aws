@@ -48,4 +48,4 @@ This data source exports the following attributes in addition to the arguments a
 * `supported_network_types` - The network type of the DB subnet group.
 * `vpc_id` - Provides the VPC ID of the DB subnet group.
 
-<!-- cache-key: cdktf-0.19.0 input-c8c709e17391d65123c921a8b10fb4fd4c29d0c36a2dcc845c526ef3b4b3fda7 -->
+<!-- cache-key: cdktf-0.20.1 input-c8c709e17391d65123c921a8b10fb4fd4c29d0c36a2dcc845c526ef3b4b3fda7 -->

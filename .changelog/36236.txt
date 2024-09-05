@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_vpn_connection: Correct plan-time validation of `tunnel1_inside_ipv6_cidr` and `tunnel2_inside_ipv6_cidr`
+```

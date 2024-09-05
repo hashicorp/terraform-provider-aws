@@ -29,10 +29,10 @@ func TestAccChimeSDKVoiceVoiceProfileDomain_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"VoiceProfileDomain": {
-			"basic":      testAccVoiceProfileDomain_basic,
-			"disappears": testAccVoiceProfileDomain_disappears,
-			"update":     testAccVoiceProfileDomain_update,
-			"tags":       testAccVoiceProfileDomain_tags,
+			acctest.CtBasic:      testAccVoiceProfileDomain_basic,
+			acctest.CtDisappears: testAccVoiceProfileDomain_disappears,
+			"update":             testAccVoiceProfileDomain_update,
+			"tags":               testAccVoiceProfileDomain_tags,
 		},
 	}
 
@@ -51,7 +51,7 @@ func testAccVoiceProfileDomain_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.ChimeSDKVoiceEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVoiceProfileDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -59,9 +59,9 @@ func testAccVoiceProfileDomain_basic(t *testing.T) {
 				Config: testAccVoiceProfileDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVoiceProfileDomainExists(ctx, resourceName, &voiceprofiledomain),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "server_side_encryption_configuration.0.kms_key_arn"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "chime", regexache.MustCompile(`voice-profile-domain/+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "chime", regexache.MustCompile(`voice-profile-domain/+.`)),
 				),
 			},
 			{
@@ -86,7 +86,7 @@ func testAccVoiceProfileDomain_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.ChimeSDKVoiceEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVoiceProfileDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -116,7 +116,7 @@ func testAccVoiceProfileDomain_update(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.ChimeSDKVoiceEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVoiceProfileDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -124,9 +124,9 @@ func testAccVoiceProfileDomain_update(t *testing.T) {
 				Config: testAccVoiceProfileDomainConfig_basic(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVoiceProfileDomainExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "name", rName1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 					resource.TestCheckResourceAttrSet(resourceName, "server_side_encryption_configuration.0.kms_key_arn"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "chime", regexache.MustCompile(`voice-profile-domain/+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "chime", regexache.MustCompile(`voice-profile-domain/+.`)),
 				),
 			},
 			{
@@ -134,10 +134,10 @@ func testAccVoiceProfileDomain_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVoiceProfileDomainExists(ctx, resourceName, &v2),
 					testAccCheckVoiceProfileDomainNotRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 					resource.TestCheckResourceAttrSet(resourceName, "server_side_encryption_configuration.0.kms_key_arn"),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "chime", regexache.MustCompile(`voice-profile-domain/+.`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "chime", regexache.MustCompile(`voice-profile-domain/+.`)),
 				),
 			},
 		},
@@ -156,16 +156,16 @@ func testAccVoiceProfileDomain_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.ChimeSDKVoiceEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVoiceProfileDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVoiceProfileDomainConfig_tags1(rName, "key1", "value1"),
+				Config: testAccVoiceProfileDomainConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVoiceProfileDomainExists(ctx, resourceName, &voiceprofiledomain),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -174,20 +174,20 @@ func testAccVoiceProfileDomain_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVoiceProfileDomainConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccVoiceProfileDomainConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVoiceProfileDomainExists(ctx, resourceName, &voiceprofiledomain),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccVoiceProfileDomainConfig_tags1(rName, "key2", "value3"),
+				Config: testAccVoiceProfileDomainConfig_tags1(rName, acctest.CtKey2, "value3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVoiceProfileDomainExists(ctx, resourceName, &voiceprofiledomain),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, "value3"),
 				),
 			},
 		},

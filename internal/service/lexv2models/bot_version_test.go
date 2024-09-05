@@ -34,7 +34,7 @@ func TestAccLexV2ModelsBotVersion_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBotVersionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -42,7 +42,7 @@ func TestAccLexV2ModelsBotVersion_basic(t *testing.T) {
 				Config: testAccBotVersionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBotVersionExists(ctx, resourceName, &botversion),
-					resource.TestCheckResourceAttr(resourceName, "locale_specification.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "locale_specification.%", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "bot_id"),
 				),
 			},
@@ -71,7 +71,7 @@ func TestAccLexV2ModelsBotVersion_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBotVersionDestroy(ctx),
 		Steps: []resource.TestStep{

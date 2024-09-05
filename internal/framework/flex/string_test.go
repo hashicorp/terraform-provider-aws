@@ -41,7 +41,6 @@ func TestStringFromFramework(t *testing.T) {
 	}
 
 	for name, test := range tests {
-		name, test := name, test
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -77,7 +76,6 @@ func TestStringToFramework(t *testing.T) {
 	}
 
 	for name, test := range tests {
-		name, test := name, test
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -113,7 +111,6 @@ func TestStringToFrameworkLegacy(t *testing.T) {
 	}
 
 	for name, test := range tests {
-		name, test := name, test
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -129,8 +126,11 @@ func TestStringToFrameworkLegacy(t *testing.T) {
 func TestStringValueToFramework(t *testing.T) {
 	t.Parallel()
 
-	// AWS enums use custom types with an underlying string type
+	// AWS enums use custom types with an underlying string type.
 	type custom string
+	const (
+		test custom = "TEST"
+	)
 
 	type testCase struct {
 		input    custom
@@ -138,17 +138,16 @@ func TestStringValueToFramework(t *testing.T) {
 	}
 	tests := map[string]testCase{
 		"valid": {
-			input:    "TEST",
+			input:    test,
 			expected: types.StringValue("TEST"),
 		},
 		"empty": {
-			input:    "",
+			input:    custom(""),
 			expected: types.StringNull(),
 		},
 	}
 
 	for name, test := range tests {
-		name, test := name, test
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -183,7 +182,6 @@ func TestStringValueToFrameworkLegacy(t *testing.T) {
 	}
 
 	for name, test := range tests {
-		name, test := name, test
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -219,7 +217,6 @@ func TestARNStringFromFramework(t *testing.T) {
 	}
 
 	for name, test := range tests {
-		name, test := name, test
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -251,11 +248,49 @@ func TestStringToFrameworkARN(t *testing.T) {
 	}
 
 	for name, test := range tests {
-		name, test := name, test
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
 			got := flex.StringToFrameworkARN(context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func TestEmptyStringAsNull(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    types.String
+		expected types.String
+	}
+	tests := map[string]testCase{
+		"valid": {
+			input:    types.StringValue("TEST"),
+			expected: types.StringValue("TEST"),
+		},
+		"empty": {
+			input:    types.StringValue(""),
+			expected: types.StringNull(),
+		},
+		"null": {
+			input:    types.StringNull(),
+			expected: types.StringNull(),
+		},
+		"unknown": {
+			input:    types.StringUnknown(),
+			expected: types.StringUnknown(),
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := flex.EmptyStringAsNull(test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)

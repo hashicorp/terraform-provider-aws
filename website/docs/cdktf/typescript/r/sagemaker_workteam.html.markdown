@@ -87,9 +87,10 @@ This resource supports the following arguments:
 * `description` - (Required) A description of the work team.
 * `workforceName` - (Required) The name of the Workteam (must be unique).
 * `workteamName` - (Required) The name of the workforce.
-* `memberDefinition` - (Required) A list of Member Definitions that contains objects that identify the workers that make up the work team. Workforces can be created using Amazon Cognito or your own OIDC Identity Provider (IdP). For private workforces created using Amazon Cognito use `cognito_member_definition`. For workforces created using your own OIDC identity provider (IdP) use `oidc_member_definition`. Do not provide input for both of these parameters in a single request. see [Member Definition](#member-definition) details below.
+* `memberDefinition` - (Required) A list of Member Definitions that contains objects that identify the workers that make up the work team. Workforces can be created using Amazon Cognito or your own OIDC Identity Provider (IdP). For private workforces created using Amazon Cognito use `cognitoMemberDefinition`. For workforces created using your own OIDC identity provider (IdP) use `oidcMemberDefinition`. Do not provide input for both of these parameters in a single request. see [Member Definition](#member-definition) details below.
 * `notificationConfiguration` - (Optional) Configures notification of workers regarding available or expiring work items. see [Notification Configuration](#notification-configuration) details below.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `workerAccessConfiguration` - (Optional) Use this optional parameter to constrain access to an Amazon S3 resource based on the IP address using supported IAM global condition keys. The Amazon S3 resource is accessed in the worker portal using a Amazon S3 presigned URL. see [Worker Access Configuration](#worker-access-configuration) details below.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Member Definition
 
@@ -110,6 +111,19 @@ This resource supports the following arguments:
 
 * `notificationTopicArn` - (Required) The ARN for the SNS topic to which notifications should be published.
 
+### Worker Access Configuration
+
+* `s3Presign` - (Required) Defines any Amazon S3 resource constraints. see [S3 Presign](#s3-presign) details below.
+
+#### S3 Presign
+
+* `iamPolicyConstraints` - (Required) Use this parameter to specify the allowed request source. Possible sources are either SourceIp or VpcSourceIp. see [IAM Policy Constraints](#iam-policy-constraints) details below.
+
+##### IAM Policy Constraints
+
+* `sourceIp` - (Optional) When SourceIp is Enabled the worker's IP address when a task is rendered in the worker portal is added to the IAM policy as a Condition used to generate the Amazon S3 presigned URL. This IP address is checked by Amazon S3 and must match in order for the Amazon S3 resource to be rendered in the worker portal. Valid values are `Enabled` or `Disabled`
+* `vpcSourceIp` - (Optional) When VpcSourceIp is Enabled the worker's IP address when a task is rendered in private worker portal inside the VPC is added to the IAM policy as a Condition used to generate the Amazon S3 presigned URL. To render the task successfully Amazon S3 checks that the presigned URL is being accessed over an Amazon S3 VPC Endpoint, and that the worker's IP address matches the IP address in the IAM policy. To learn more about configuring private worker portal, see [Use Amazon VPC mode from a private worker portal](https://docs.aws.amazon.com/sagemaker/latest/dg/samurai-vpc-worker-portal.html). Valid values are `Enabled` or `Disabled`
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
@@ -117,7 +131,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this Workteam.
 * `id` - The name of the Workteam.
 * `subdomain` - The subdomain for your OIDC Identity Provider.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -127,9 +141,15 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { SagemakerWorkteam } from "./.gen/providers/aws/sagemaker-workteam";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    SagemakerWorkteam.generateConfigForImport(this, "example", "example");
   }
 }
 
@@ -141,4 +161,4 @@ Using `terraform import`, import SageMaker Workteams using the `workteamName`. F
 % terraform import aws_sagemaker_workteam.example example
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-3a7cf1fb125ebeb37f30bd90666ac5def329d2504804e10053f90547efe5df34 -->
+<!-- cache-key: cdktf-0.20.1 input-ff6a786e9c3394fb79bd4ef7cf52b0575c2ff64b4a93d504f6ea4709dcf17b1a -->

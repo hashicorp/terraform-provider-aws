@@ -8,15 +8,18 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iot"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iot"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iot/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfiot "github.com/hashicorp/terraform-provider-aws/internal/service/iot"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccIoTThingPrincipalAttachment_basic(t *testing.T) {
@@ -26,7 +29,7 @@ func TestAccIoTThingPrincipalAttachment_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckThingPrincipalAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -76,27 +79,24 @@ func TestAccIoTThingPrincipalAttachment_basic(t *testing.T) {
 
 func testAccCheckThingPrincipalAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iot_thing_principal_attachment" {
 				continue
 			}
 
-			principal := rs.Primary.Attributes["principal"]
-			thing := rs.Primary.Attributes["thing"]
+			_, err := tfiot.FindThingPrincipalAttachmentByTwoPartKey(ctx, conn, rs.Primary.Attributes["thing"], rs.Primary.Attributes[names.AttrPrincipal])
 
-			found, err := tfiot.GetThingPricipalAttachment(ctx, conn, thing, principal)
-
-			if err != nil {
-				return fmt.Errorf("Error: Failed listing principals for thing (%s): %s", thing, err)
-			}
-
-			if !found {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
-			return fmt.Errorf("IOT Thing Principal Attachment (%s) still exists", rs.Primary.Attributes["id"])
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("IoT Thing Principal Attachment %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -110,31 +110,17 @@ func testAccCheckThingPrincipalAttachmentExists(ctx context.Context, n string) r
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No attachment")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
-		thing := rs.Primary.Attributes["thing"]
-		principal := rs.Primary.Attributes["principal"]
+		_, err := tfiot.FindThingPrincipalAttachmentByTwoPartKey(ctx, conn, rs.Primary.Attributes["thing"], rs.Primary.Attributes[names.AttrPrincipal])
 
-		found, err := tfiot.GetThingPricipalAttachment(ctx, conn, thing, principal)
-
-		if err != nil {
-			return fmt.Errorf("Error: Failed listing principals for thing (%s), resource (%s): %s", thing, n, err)
-		}
-
-		if !found {
-			return fmt.Errorf("Error: Principal (%s) is not attached to thing (%s), resource (%s)", principal, thing, n)
-		}
-
-		return nil
+		return err
 	}
 }
 
 func testAccCheckThingPrincipalAttachmentStatus(ctx context.Context, thingName string, exists bool, principals []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTClient(ctx)
 
 		principalARNs := make(map[string]string)
 
@@ -143,14 +129,14 @@ func testAccCheckThingPrincipalAttachmentStatus(ctx context.Context, thingName s
 			if !ok {
 				return fmt.Errorf("Not found: %s", p)
 			}
-			principalARNs[pr.Primary.Attributes["arn"]] = p
+			principalARNs[pr.Primary.Attributes[names.AttrARN]] = p
 		}
 
-		thing, err := conn.DescribeThingWithContext(ctx, &iot.DescribeThingInput{
+		_, err := conn.DescribeThing(ctx, &iot.DescribeThingInput{
 			ThingName: aws.String(thingName),
 		})
 
-		if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			if exists {
 				return fmt.Errorf("Error: Thing (%s) exists, but expected to be removed", thingName)
 			} else {
@@ -162,7 +148,7 @@ func testAccCheckThingPrincipalAttachmentStatus(ctx context.Context, thingName s
 			return fmt.Errorf("Error: Thing (%s) does not exist, but expected to be", thingName)
 		}
 
-		res, err := conn.ListThingPrincipalsWithContext(ctx, &iot.ListThingPrincipalsInput{
+		res, err := conn.ListThingPrincipals(ctx, &iot.ListThingPrincipalsInput{
 			ThingName: aws.String(thingName),
 		})
 
@@ -171,11 +157,11 @@ func testAccCheckThingPrincipalAttachmentStatus(ctx context.Context, thingName s
 		}
 
 		if len(res.Principals) != len(principalARNs) {
-			return fmt.Errorf("Error: Thing (%s) has wrong number of principals attached", thing)
+			return fmt.Errorf("Error: Thing (%s) has wrong number of principals attached", thingName)
 		}
 
 		for _, p := range res.Principals {
-			if principal, ok := principalARNs[aws.StringValue(p)]; !ok {
+			if principal, ok := principalARNs[p]; !ok {
 				return fmt.Errorf("Error: Principal %s is not attached to thing %s", principal, thingName)
 			}
 		}

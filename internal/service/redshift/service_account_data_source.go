@@ -6,12 +6,12 @@ package redshift
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // See http://docs.aws.amazon.com/redshift/latest/mgmt/db-auditing.html#db-auditing-bucket-permissions
@@ -19,45 +19,45 @@ import (
 // See https://docs.amazonaws.cn/en_us/redshift/latest/mgmt/db-auditing.html#db-auditing-bucket-permissions
 
 var ServiceAccountPerRegionMap = map[string]string{
-	endpoints.AfSouth1RegionID:     "365689465814",
-	endpoints.ApEast1RegionID:      "313564881002",
-	endpoints.ApNortheast1RegionID: "404641285394",
-	endpoints.ApNortheast2RegionID: "760740231472",
-	endpoints.ApNortheast3RegionID: "090321488786",
-	endpoints.ApSouth1RegionID:     "865932855811",
-	endpoints.ApSoutheast1RegionID: "361669875840",
-	endpoints.ApSoutheast2RegionID: "762762565011",
-	endpoints.CaCentral1RegionID:   "907379612154",
-	endpoints.CnNorth1RegionID:     "111890595117",
-	endpoints.CnNorthwest1RegionID: "660998842044",
-	endpoints.EuCentral1RegionID:   "053454850223",
-	endpoints.EuNorth1RegionID:     "729911121831",
-	endpoints.EuSouth1RegionID:     "945612479654",
-	endpoints.EuWest1RegionID:      "210876761215",
-	endpoints.EuWest2RegionID:      "307160386991",
-	endpoints.EuWest3RegionID:      "915173422425",
-	// endpoints.MeCentral1RegionID:   "",
-	endpoints.MeSouth1RegionID:   "013126148197",
-	endpoints.SaEast1RegionID:    "075028567923",
-	endpoints.UsEast1RegionID:    "193672423079",
-	endpoints.UsEast2RegionID:    "391106570357",
-	endpoints.UsGovEast1RegionID: "665727464434",
-	endpoints.UsGovWest1RegionID: "665727464434",
-	endpoints.UsWest1RegionID:    "262260360010",
-	endpoints.UsWest2RegionID:    "902366379725",
+	names.AFSouth1RegionID:     "365689465814",
+	names.APEast1RegionID:      "313564881002",
+	names.APNortheast1RegionID: "404641285394",
+	names.APNortheast2RegionID: "760740231472",
+	names.APNortheast3RegionID: "090321488786",
+	names.APSouth1RegionID:     "865932855811",
+	names.APSoutheast1RegionID: "361669875840",
+	names.APSoutheast2RegionID: "762762565011",
+	names.CACentral1RegionID:   "907379612154",
+	names.CNNorth1RegionID:     "111890595117",
+	names.CNNorthwest1RegionID: "660998842044",
+	names.EUCentral1RegionID:   "053454850223",
+	names.EUNorth1RegionID:     "729911121831",
+	names.EUSouth1RegionID:     "945612479654",
+	names.EUWest1RegionID:      "210876761215",
+	names.EUWest2RegionID:      "307160386991",
+	names.EUWest3RegionID:      "915173422425",
+	// names.MECentral1RegionID:   "",
+	names.MESouth1RegionID:   "013126148197",
+	names.SAEast1RegionID:    "075028567923",
+	names.USEast1RegionID:    "193672423079",
+	names.USEast2RegionID:    "391106570357",
+	names.USGovEast1RegionID: "665727464434",
+	names.USGovWest1RegionID: "665727464434",
+	names.USWest1RegionID:    "262260360010",
+	names.USWest2RegionID:    "902366379725",
 }
 
-// @SDKDataSource("aws_redshift_service_account")
-func DataSourceServiceAccount() *schema.Resource {
+// @SDKDataSource("aws_redshift_service_account", name="Service Account")
+func dataSourceServiceAccount() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceServiceAccountRead,
 
 		Schema: map[string]*schema.Schema{
-			"region": {
+			names.AttrRegion: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -70,7 +70,7 @@ func DataSourceServiceAccount() *schema.Resource {
 func dataSourceServiceAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	region := meta.(*conns.AWSClient).Region
-	if v, ok := d.GetOk("region"); ok {
+	if v, ok := d.GetOk(names.AttrRegion); ok {
 		region = v.(string)
 	}
 
@@ -82,7 +82,7 @@ func dataSourceServiceAccountRead(ctx context.Context, d *schema.ResourceData, m
 			AccountID: accid,
 			Resource:  "user/logs",
 		}.String()
-		d.Set("arn", arn)
+		d.Set(names.AttrARN, arn)
 
 		return diags
 	}

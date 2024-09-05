@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestKeyPairMigrateState(t *testing.T) {
@@ -24,9 +25,9 @@ func TestKeyPairMigrateState(t *testing.T) {
 			StateVersion: 0,
 			ID:           "tf-testing-file",
 			Attributes: map[string]string{
-				"fingerprint": "1d:cd:46:31:a9:4a:e0:06:8a:a1:22:cb:3b:bf:8e:42",
-				"key_name":    "tf-testing-file",
-				"public_key":  "ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA4LBtwcFsQAYWw1cnOwRTZCJCzPSzq0dl3== comment", // nosemgrep:ci.ssh-key
+				"fingerprint":       "1d:cd:46:31:a9:4a:e0:06:8a:a1:22:cb:3b:bf:8e:42",
+				"key_name":          "tf-testing-file",
+				names.AttrPublicKey: "ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA4LBtwcFsQAYWw1cnOwRTZCJCzPSzq0dl3== comment", // nosemgrep:ci.ssh-key
 			},
 			Expected: "ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA4LBtwcFsQAYWw1cnOwRTZCJCzPSzq0dl3== comment", // nosemgrep:ci.ssh-key
 		},
@@ -34,9 +35,9 @@ func TestKeyPairMigrateState(t *testing.T) {
 			StateVersion: 0,
 			ID:           "tf-testing-file",
 			Attributes: map[string]string{
-				"fingerprint": "1d:cd:46:31:a9:4a:e0:06:8a:a1:22:cb:3b:bf:8e:42",
-				"key_name":    "tf-testing-file",
-				"public_key":  "ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA4LBtwcFsQAYWw1cnOwRTZCJCzPSzq0dl3== comment\n", // nosemgrep:ci.ssh-key
+				"fingerprint":       "1d:cd:46:31:a9:4a:e0:06:8a:a1:22:cb:3b:bf:8e:42",
+				"key_name":          "tf-testing-file",
+				names.AttrPublicKey: "ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA4LBtwcFsQAYWw1cnOwRTZCJCzPSzq0dl3== comment\n", // nosemgrep:ci.ssh-key
 			},
 			Expected: "ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA4LBtwcFsQAYWw1cnOwRTZCJCzPSzq0dl3== comment", // nosemgrep:ci.ssh-key
 		},
@@ -54,8 +55,8 @@ func TestKeyPairMigrateState(t *testing.T) {
 			t.Fatalf("bad: %s, err: %#v", tn, err)
 		}
 
-		if is.Attributes["public_key"] != tc.Expected {
-			t.Fatalf("Bad public_key migration: %s\n\n expected: %s", is.Attributes["public_key"], tc.Expected)
+		if is.Attributes[names.AttrPublicKey] != tc.Expected {
+			t.Fatalf("Bad public_key migration: %s\n\n expected: %s", is.Attributes[names.AttrPublicKey], tc.Expected)
 		}
 	}
 }

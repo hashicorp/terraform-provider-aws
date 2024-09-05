@@ -79,4 +79,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 [1]: https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/concepts.platforms.html
 
-<!-- cache-key: cdktf-0.19.0 input-abd91b17373f96fef9bb9422def3ab0d77d4ca67c22d5b83904d54987db262f7 -->
+<!-- cache-key: cdktf-0.20.1 input-abd91b17373f96fef9bb9422def3ab0d77d4ca67c22d5b83904d54987db262f7 -->

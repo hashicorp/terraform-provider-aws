@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_codebuild_project: Increase maximum values of `build_batch_config.timeout_in_mins` and `build_timeout` from `480` (8 hours) to `2160` (36 hours)
+```

@@ -12,7 +12,7 @@ description: |-
 
 Manages a FSx for Lustre Data Repository Association. See [Linking your file system to an S3 bucket](https://docs.aws.amazon.com/fsx/latest/LustreGuide/create-dra-linked-data-repo.html) for more information.
 
-~> **NOTE:** Data Repository Associations are only compatible with AWS FSx for Lustre File Systems and `persistent2` deployment type.
+~> **NOTE:** Data Repository Associations are only compatible with AWS FSx for Lustre File Systems and `PERSISTENT_2` deployment type.
 
 ## Example Usage
 
@@ -76,12 +76,12 @@ This resource supports the following arguments:
 * `batchImportMetaDataOnCreate` - (Optional) Set to true to run an import data repository task to import metadata from the data repository to the file system after the data repository association is created. Defaults to `false`.
 * `dataRepositoryPath` - (Required) The path to the Amazon S3 data repository that will be linked to the file system. The path must be an S3 bucket s3://myBucket/myPrefix/. This path specifies where in the S3 data repository files will be imported from or exported to. The same S3 bucket cannot be linked more than once to the same file system.
 * `fileSystemId` - (Required) The ID of the Amazon FSx file system to on which to create a data repository association.
-* `fileSystemPath` - (Required) A path on the file system that points to a high-level directory (such as `/ns1/`) or subdirectory (such as `/ns1/subdir/`) that will be mapped 1-1 with `data_repository_path`. The leading forward slash in the name is required. Two data repository associations cannot have overlapping file system paths. For example, if a data repository is associated with file system path `/ns1/`, then you cannot link another data repository with file system path `/ns1/ns2`. This path specifies where in your file system files will be exported from or imported to. This file system directory can be linked to only one Amazon S3 bucket, and no other S3 bucket can be linked to the directory.
+* `fileSystemPath` - (Required) A path on the file system that points to a high-level directory (such as `/ns1/`) or subdirectory (such as `/ns1/subdir/`) that will be mapped 1-1 with `dataRepositoryPath`. The leading forward slash in the name is required. Two data repository associations cannot have overlapping file system paths. For example, if a data repository is associated with file system path `/ns1/`, then you cannot link another data repository with file system path `/ns1/ns2`. This path specifies where in your file system files will be exported from or imported to. This file system directory can be linked to only one Amazon S3 bucket, and no other S3 bucket can be linked to the directory.
 * `importedFileChunkSize` - (Optional) For files imported from a data repository, this value determines the stripe count and maximum amount of data per file (in MiB) stored on a single physical disk. The maximum number of disks that a single file can be striped across is limited by the total number of disks that make up the file system.
 * `s3` - (Optional) See the [`s3` configuration](#s3-arguments) block. Max of 1.
 The configuration for an Amazon S3 data repository linked to an Amazon FSx Lustre file system with a data repository association. The configuration defines which file events (new, changed, or deleted files or directories) are automatically imported from the linked data repository to the file system or automatically exported from the file system to the data repository.
 * `deleteDataInFilesystem` - (Optional) Set to true to delete files from the file system upon deleting this data repository association. Defaults to `false`.
-* `tags` - (Optional) A map of tags to assign to the data repository association. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the data repository association. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 #### S3 arguments
 
@@ -98,7 +98,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - Amazon Resource Name of the file system.
 * `id` - Identifier of the data repository association, e.g., `dra-12345678`
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
@@ -116,9 +116,19 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { FsxDataRepositoryAssociation } from "./.gen/providers/aws/fsx-data-repository-association";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    FsxDataRepositoryAssociation.generateConfigForImport(
+      this,
+      "example",
+      "dra-0b1cfaeca11088b10"
+    );
   }
 }
 
@@ -130,4 +140,4 @@ Using `terraform import`, import FSx Data Repository Associations using the `id`
 % terraform import aws_fsx_data_repository_association.example dra-0b1cfaeca11088b10
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-ccbef1d76e1257a56bbcfd48884d7a6ba0aaf2b3d64139f2f28bb6a48fb634c8 -->
+<!-- cache-key: cdktf-0.20.1 input-ccbef1d76e1257a56bbcfd48884d7a6ba0aaf2b3d64139f2f28bb6a48fb634c8 -->

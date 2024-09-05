@@ -57,7 +57,7 @@ func (r *resourceIndex) Schema(ctx context.Context, request resource.SchemaReque
 			names.AttrID:      framework.IDAttribute(),
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
-			"type": schema.StringAttribute{
+			names.AttrType: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.IndexType](),
 				Required:   true,
 			},
@@ -224,7 +224,7 @@ func (r *resourceIndex) Delete(ctx context.Context, request resource.DeleteReque
 	conn := r.Meta().ResourceExplorer2Client(ctx)
 
 	tflog.Debug(ctx, "deleting Resource Explorer Index", map[string]interface{}{
-		"id": data.ID.ValueString(),
+		names.AttrID: data.ID.ValueString(),
 	})
 	_, err := conn.DeleteIndex(ctx, &resourceexplorer2.DeleteIndexInput{
 		Arn: flex.StringFromFramework(ctx, data.ARN),
@@ -252,8 +252,8 @@ func (r *resourceIndex) ModifyPlan(ctx context.Context, request resource.ModifyP
 type indexResourceModel struct {
 	ARN      types.String                           `tfsdk:"arn"`
 	ID       types.String                           `tfsdk:"id"`
-	Tags     types.Map                              `tfsdk:"tags"`
-	TagsAll  types.Map                              `tfsdk:"tags_all"`
+	Tags     tftags.Map                             `tfsdk:"tags"`
+	TagsAll  tftags.Map                             `tfsdk:"tags_all"`
 	Timeouts timeouts.Value                         `tfsdk:"timeouts"`
 	Type     fwtypes.StringEnum[awstypes.IndexType] `tfsdk:"type"`
 }

@@ -20,13 +20,13 @@ import (
 
 const keyRequestPageSize = 1000
 
-// @SDKDataSource("aws_s3_objects")
-func DataSourceObjects() *schema.Resource {
+// @SDKDataSource("aws_s3_objects", name="Objects")
+func dataSourceObjects() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceObjectsRead,
 
 		Schema: map[string]*schema.Schema{
-			"bucket": {
+			names.AttrBucket: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -63,7 +63,7 @@ func DataSourceObjects() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"prefix": {
+			names.AttrPrefix: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -89,7 +89,7 @@ func dataSourceObjectsRead(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 	var optFns []func(*s3.Options)
 
-	bucket := d.Get("bucket").(string)
+	bucket := d.Get(names.AttrBucket).(string)
 	if isDirectoryBucket(bucket) {
 		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
@@ -121,7 +121,7 @@ func dataSourceObjectsRead(ctx context.Context, d *schema.ResourceData, meta int
 		input.MaxKeys = aws.Int32(int32(maxKeys))
 	}
 
-	if v, ok := d.GetOk("prefix"); ok {
+	if v, ok := d.GetOk(names.AttrPrefix); ok {
 		input.Prefix = aws.String(v.(string))
 	}
 

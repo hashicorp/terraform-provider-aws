@@ -17,10 +17,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_s3_bucket_public_access_block")
-func ResourceBucketPublicAccessBlock() *schema.Resource {
+// @SDKResource("aws_s3_bucket_public_access_block", name="Bucket Public Access Block")
+func resourceBucketPublicAccessBlock() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketPublicAccessBlockCreate,
 		ReadWithoutTimeout:   resourceBucketPublicAccessBlockRead,
@@ -42,7 +43,7 @@ func ResourceBucketPublicAccessBlock() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"bucket": {
+			names.AttrBucket: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -65,7 +66,7 @@ func resourceBucketPublicAccessBlockCreate(ctx context.Context, d *schema.Resour
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	bucket := d.Get("bucket").(string)
+	bucket := d.Get(names.AttrBucket).(string)
 	input := &s3.PutPublicAccessBlockInput{
 		Bucket: aws.String(bucket),
 		PublicAccessBlockConfiguration: &types.PublicAccessBlockConfiguration{
@@ -117,7 +118,7 @@ func resourceBucketPublicAccessBlockRead(ctx context.Context, d *schema.Resource
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket Public Access Block (%s): %s", d.Id(), err)
 	}
 
-	d.Set("bucket", d.Id())
+	d.Set(names.AttrBucket, d.Id())
 	d.Set("block_public_acls", pabc.BlockPublicAcls)
 	d.Set("block_public_policy", pabc.BlockPublicPolicy)
 	d.Set("ignore_public_acls", pabc.IgnorePublicAcls)

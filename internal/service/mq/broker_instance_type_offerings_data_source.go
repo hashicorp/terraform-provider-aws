@@ -6,18 +6,19 @@ package mq
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/mq"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/mq"
+	"github.com/aws/aws-sdk-go-v2/service/mq/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_mq_broker_instance_type_offerings")
-func DataSourceBrokerInstanceTypeOfferings() *schema.Resource {
+// @SDKDataSource("aws_mq_broker_instance_type_offerings", name="Broker Instance Type Offerings")
+func dataSourceBrokerInstanceTypeOfferings() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceBrokerInstanceTypeOfferingsRead,
 
@@ -27,12 +28,12 @@ func DataSourceBrokerInstanceTypeOfferings() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"availability_zones": {
+						names.AttrAvailabilityZones: {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -47,7 +48,7 @@ func DataSourceBrokerInstanceTypeOfferings() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"storage_type": {
+						names.AttrStorageType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -65,18 +66,18 @@ func DataSourceBrokerInstanceTypeOfferings() *schema.Resource {
 				},
 			},
 			"engine_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(mq.EngineType_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[types.EngineType](),
 			},
 			"host_instance_type": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"storage_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(mq.BrokerStorageType_Values(), false),
+			names.AttrStorageType: {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[types.BrokerStorageType](),
 			},
 		},
 	}
@@ -85,7 +86,7 @@ func DataSourceBrokerInstanceTypeOfferings() *schema.Resource {
 func dataSourceBrokerInstanceTypeOfferingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).MQConn(ctx)
+	conn := meta.(*conns.AWSClient).MQClient(ctx)
 
 	input := &mq.DescribeBrokerInstanceOptionsInput{}
 
@@ -97,11 +98,11 @@ func dataSourceBrokerInstanceTypeOfferingsRead(ctx context.Context, d *schema.Re
 		input.HostInstanceType = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("storage_type"); ok {
+	if v, ok := d.GetOk(names.AttrStorageType); ok {
 		input.StorageType = aws.String(v.(string))
 	}
 
-	var output []*mq.BrokerInstanceOption
+	var output []types.BrokerInstanceOption
 
 	err := describeBrokerInstanceOptionsPages(ctx, conn, input, func(page *mq.DescribeBrokerInstanceOptionsOutput, lastPage bool) bool {
 		if page == nil {
@@ -126,7 +127,7 @@ func dataSourceBrokerInstanceTypeOfferingsRead(ctx context.Context, d *schema.Re
 	return diags
 }
 
-func flattenBrokerInstanceOptions(bios []*mq.BrokerInstanceOption) []interface{} {
+func flattenBrokerInstanceOptions(bios []types.BrokerInstanceOption) []interface{} {
 	if len(bios) == 0 {
 		return nil
 	}
@@ -134,34 +135,19 @@ func flattenBrokerInstanceOptions(bios []*mq.BrokerInstanceOption) []interface{}
 	var tfList []interface{}
 
 	for _, bio := range bios {
-		if bio == nil {
-			continue
-		}
-
-		tfMap := map[string]interface{}{}
-
-		if bio.EngineType != nil {
-			tfMap["engine_type"] = aws.StringValue(bio.EngineType)
-		}
-
-		if bio.StorageType != nil {
-			tfMap["storage_type"] = aws.StringValue(bio.StorageType)
+		tfMap := map[string]interface{}{
+			"engine_type":                bio.EngineType,
+			names.AttrStorageType:        bio.StorageType,
+			"supported_deployment_modes": bio.SupportedDeploymentModes,
+			"supported_engine_versions":  bio.SupportedEngineVersions,
 		}
 
 		if bio.HostInstanceType != nil {
-			tfMap["host_instance_type"] = aws.StringValue(bio.HostInstanceType)
+			tfMap["host_instance_type"] = aws.ToString(bio.HostInstanceType)
 		}
 
 		if bio.AvailabilityZones != nil {
-			tfMap["availability_zones"] = flattenAvailabilityZones(bio.AvailabilityZones)
-		}
-
-		if bio.SupportedDeploymentModes != nil {
-			tfMap["supported_deployment_modes"] = flex.FlattenStringSet(bio.SupportedDeploymentModes)
-		}
-
-		if bio.SupportedEngineVersions != nil {
-			tfMap["supported_engine_versions"] = flex.FlattenStringList(bio.SupportedEngineVersions)
+			tfMap[names.AttrAvailabilityZones] = flattenAvailabilityZones(bio.AvailabilityZones)
 		}
 
 		tfList = append(tfList, tfMap)
@@ -170,7 +156,7 @@ func flattenBrokerInstanceOptions(bios []*mq.BrokerInstanceOption) []interface{}
 	return tfList
 }
 
-func flattenAvailabilityZones(azs []*mq.AvailabilityZone) []interface{} {
+func flattenAvailabilityZones(azs []types.AvailabilityZone) []interface{} {
 	if len(azs) == 0 {
 		return nil
 	}
@@ -178,14 +164,10 @@ func flattenAvailabilityZones(azs []*mq.AvailabilityZone) []interface{} {
 	var tfList []interface{}
 
 	for _, az := range azs {
-		if az == nil {
-			continue
-		}
-
 		tfMap := map[string]interface{}{}
 
 		if az.Name != nil {
-			tfMap["name"] = aws.StringValue(az.Name)
+			tfMap[names.AttrName] = aws.ToString(az.Name)
 		}
 
 		tfList = append(tfList, tfMap)

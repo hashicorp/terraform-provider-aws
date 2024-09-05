@@ -23,10 +23,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_s3_bucket_inventory")
-func ResourceBucketInventory() *schema.Resource {
+// @SDKResource("aws_s3_bucket_inventory", name="Bucket Inventory")
+func resourceBucketInventory() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketInventoryPut,
 		ReadWithoutTimeout:   resourceBucketInventoryRead,
@@ -38,26 +39,26 @@ func ResourceBucketInventory() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"bucket": {
+			names.AttrBucket: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"destination": {
+			names.AttrDestination: {
 				Type:     schema.TypeList,
 				Required: true,
 				MaxItems: 1,
 				MinItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"bucket": {
+						names.AttrBucket: {
 							Type:     schema.TypeList,
 							Required: true,
 							MaxItems: 1,
 							MinItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"account_id": {
+									names.AttrAccountID: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: verify.ValidAccountID,
@@ -80,7 +81,7 @@ func ResourceBucketInventory() *schema.Resource {
 													ConflictsWith: []string{"destination.0.bucket.0.encryption.0.sse_s3"},
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"key_id": {
+															names.AttrKeyID: {
 																Type:         schema.TypeString,
 																Required:     true,
 																ValidateFunc: verify.ValidARN,
@@ -101,12 +102,12 @@ func ResourceBucketInventory() *schema.Resource {
 											},
 										},
 									},
-									"format": {
+									names.AttrFormat: {
 										Type:             schema.TypeString,
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[types.InventoryFormat](),
 									},
-									"prefix": {
+									names.AttrPrefix: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -116,18 +117,18 @@ func ResourceBucketInventory() *schema.Resource {
 					},
 				},
 			},
-			"enabled": {
+			names.AttrEnabled: {
 				Type:     schema.TypeBool,
 				Default:  true,
 				Optional: true,
 			},
-			"filter": {
+			names.AttrFilter: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"prefix": {
+						names.AttrPrefix: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -139,7 +140,7 @@ func ResourceBucketInventory() *schema.Resource {
 				Required:         true,
 				ValidateDiagFunc: enum.Validate[types.InventoryIncludedObjectVersions](),
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -153,7 +154,7 @@ func ResourceBucketInventory() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[types.InventoryOptionalField](),
 				},
 			},
-			"schedule": {
+			names.AttrSchedule: {
 				Type:     schema.TypeList,
 				Required: true,
 				MaxItems: 1,
@@ -176,20 +177,20 @@ func resourceBucketInventoryPut(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	inventoryConfiguration := &types.InventoryConfiguration{
 		Id:        aws.String(name),
-		IsEnabled: aws.Bool(d.Get("enabled").(bool)),
+		IsEnabled: aws.Bool(d.Get(names.AttrEnabled).(bool)),
 	}
 
-	if v, ok := d.GetOk("destination"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		tfMap := v.([]interface{})[0].(map[string]interface{})["bucket"].([]interface{})[0].(map[string]interface{})
+	if v, ok := d.GetOk(names.AttrDestination); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		tfMap := v.([]interface{})[0].(map[string]interface{})[names.AttrBucket].([]interface{})[0].(map[string]interface{})
 		inventoryConfiguration.Destination = &types.InventoryDestination{
 			S3BucketDestination: expandInventoryBucketDestination(tfMap),
 		}
 	}
 
-	if v, ok := d.GetOk("filter"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrFilter); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		inventoryConfiguration.Filter = expandInventoryFilter(v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -201,14 +202,14 @@ func resourceBucketInventoryPut(ctx context.Context, d *schema.ResourceData, met
 		inventoryConfiguration.OptionalFields = flex.ExpandStringyValueSet[types.InventoryOptionalField](v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("schedule"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrSchedule); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		tfMap := v.([]interface{})[0].(map[string]interface{})
 		inventoryConfiguration.Schedule = &types.InventorySchedule{
 			Frequency: types.InventoryFrequency(tfMap["frequency"].(string)),
 		}
 	}
 
-	bucket := d.Get("bucket").(string)
+	bucket := d.Get(names.AttrBucket).(string)
 	input := &s3.PutBucketInventoryConfigurationInput{
 		Bucket:                 aws.String(bucket),
 		Id:                     aws.String(name),
@@ -224,7 +225,7 @@ func resourceBucketInventoryPut(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if err != nil {
-		return diag.Errorf("creating S3 Bucket (%s) Inventory: %s", bucket, err)
+		return sdkdiag.AppendErrorf(diags, "creating S3 Bucket (%s) Inventory: %s", bucket, err)
 	}
 
 	if d.IsNewResource() {
@@ -256,30 +257,30 @@ func resourceBucketInventoryRead(ctx context.Context, d *schema.ResourceData, me
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Bucket Inventory (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading S3 Bucket Inventory (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket Inventory (%s): %s", d.Id(), err)
 	}
 
-	d.Set("bucket", bucket)
+	d.Set(names.AttrBucket, bucket)
 	if v := ic.Destination; v != nil {
 		tfMap := map[string]interface{}{
-			"bucket": flattenInventoryBucketDestination(v.S3BucketDestination),
+			names.AttrBucket: flattenInventoryBucketDestination(v.S3BucketDestination),
 		}
-		if err := d.Set("destination", []map[string]interface{}{tfMap}); err != nil {
+		if err := d.Set(names.AttrDestination, []map[string]interface{}{tfMap}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting destination: %s", err)
 		}
 	}
-	d.Set("enabled", ic.IsEnabled)
-	if err := d.Set("filter", flattenInventoryFilter(ic.Filter)); err != nil {
+	d.Set(names.AttrEnabled, ic.IsEnabled)
+	if err := d.Set(names.AttrFilter, flattenInventoryFilter(ic.Filter)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting filter: %s", err)
 	}
 	d.Set("included_object_versions", ic.IncludedObjectVersions)
-	d.Set("name", name)
+	d.Set(names.AttrName, name)
 	d.Set("optional_fields", ic.OptionalFields)
-	if err := d.Set("schedule", flattenInventorySchedule(ic.Schedule)); err != nil {
+	if err := d.Set(names.AttrSchedule, flattenInventorySchedule(ic.Schedule)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting schedule: %s", err)
 	}
 
@@ -323,7 +324,7 @@ func resourceBucketInventoryDelete(ctx context.Context, d *schema.ResourceData, 
 }
 
 func expandInventoryFilter(m map[string]interface{}) *types.InventoryFilter {
-	v, ok := m["prefix"]
+	v, ok := m[names.AttrPrefix]
 	if !ok {
 		return nil
 	}
@@ -341,7 +342,7 @@ func flattenInventoryFilter(filter *types.InventoryFilter) []map[string]interfac
 
 	m := make(map[string]interface{})
 	if filter.Prefix != nil {
-		m["prefix"] = aws.ToString(filter.Prefix)
+		m[names.AttrPrefix] = aws.ToString(filter.Prefix)
 	}
 
 	result = append(result, m)
@@ -361,15 +362,15 @@ func flattenInventorySchedule(schedule *types.InventorySchedule) []map[string]in
 
 func expandInventoryBucketDestination(m map[string]interface{}) *types.InventoryS3BucketDestination {
 	destination := &types.InventoryS3BucketDestination{
-		Format: types.InventoryFormat(m["format"].(string)),
+		Format: types.InventoryFormat(m[names.AttrFormat].(string)),
 		Bucket: aws.String(m["bucket_arn"].(string)),
 	}
 
-	if v, ok := m["account_id"]; ok && v.(string) != "" {
+	if v, ok := m[names.AttrAccountID]; ok && v.(string) != "" {
 		destination.AccountId = aws.String(v.(string))
 	}
 
-	if v, ok := m["prefix"]; ok && v.(string) != "" {
+	if v, ok := m[names.AttrPrefix]; ok && v.(string) != "" {
 		destination.Prefix = aws.String(v.(string))
 	}
 
@@ -389,7 +390,7 @@ func expandInventoryBucketDestination(m map[string]interface{}) *types.Inventory
 			case "sse_kms":
 				m := data[0].(map[string]interface{})
 				encryption.SSEKMS = &types.SSEKMS{
-					KeyId: aws.String(m["key_id"].(string)),
+					KeyId: aws.String(m[names.AttrKeyID].(string)),
 				}
 			case "sse_s3":
 				encryption.SSES3 = &types.SSES3{}
@@ -406,15 +407,15 @@ func flattenInventoryBucketDestination(destination *types.InventoryS3BucketDesti
 	result := make([]map[string]interface{}, 0, 1)
 
 	m := map[string]interface{}{
-		"format":     destination.Format,
-		"bucket_arn": aws.ToString(destination.Bucket),
+		names.AttrFormat: destination.Format,
+		"bucket_arn":     aws.ToString(destination.Bucket),
 	}
 
 	if destination.AccountId != nil {
-		m["account_id"] = aws.ToString(destination.AccountId)
+		m[names.AttrAccountID] = aws.ToString(destination.AccountId)
 	}
 	if destination.Prefix != nil {
-		m["prefix"] = aws.ToString(destination.Prefix)
+		m[names.AttrPrefix] = aws.ToString(destination.Prefix)
 	}
 
 	if destination.Encryption != nil {
@@ -424,7 +425,7 @@ func flattenInventoryBucketDestination(destination *types.InventoryS3BucketDesti
 		} else if destination.Encryption.SSEKMS != nil {
 			encryption["sse_kms"] = []map[string]interface{}{
 				{
-					"key_id": aws.ToString(destination.Encryption.SSEKMS.KeyId),
+					names.AttrKeyID: aws.ToString(destination.Encryption.SSEKMS.KeyId),
 				},
 			}
 		}

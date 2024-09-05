@@ -129,7 +129,7 @@ The following arguments are optional:
 * `maintenance` - (Optional) Maintenance settings for this channel. See [Maintenance](#maintenance) for more details.
 * `roleArn` - (Optional) Concise argument description.
 * `startChannel` - (Optional) Whether to start/stop channel. Default: `false`
-* `tags` - (Optional) A map of tags to assign to the channel. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the channel. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpc` - (Optional) Settings for the VPC outputs. See [VPC](#vpc) for more details.
 
 ### CDI Input Specification
@@ -145,15 +145,15 @@ The following arguments are optional:
 
 ### Encoder Settings
 
-* `audioDescriptions` - (Required) Audio descriptions for the channel. See [Audio Descriptions](#audio-descriptions) for more details.
 * `outputGroups` - (Required) Output groups for the channel. See [Output Groups](#output-groups) for more details.
 * `timecodeConfig` - (Required) Contains settings used to acquire and adjust timecode information from inputs. See [Timecode Config](#timecode-config) for more details.
 * `videoDescriptions` - (Required) Video Descriptions. See [Video Descriptions](#video-descriptions) for more details.
+* `audioDescriptions` - (Optional) Audio descriptions for the channel. See [Audio Descriptions](#audio-descriptions) for more details.
+* `availBlanking` - (Optional) Settings for ad avail blanking. See [Avail Blanking](#avail-blanking) for more details.
 * `captionDescriptions` - (Optional) Caption Descriptions. See [Caption Descriptions](#caption-descriptions) for more details.
 * `globalConfiguration` - (Optional) Configuration settings that apply to the event as a whole. See [Global Configuration](#global-configuration) for more details.
 * `motionGraphicsConfiguration` - (Optional) Settings for motion graphics. See [Motion Graphics Configuration](#motion-graphics-configuration) for more details.
 * `nielsenConfiguration` - (Optional) Nielsen configuration settings. See [Nielsen Configuration](#nielsen-configuration) for more details.
-* `availBlanking` - (Optional) Settings for ad avail blanking. See [Avail Blanking](#avail-blanking) for more details.
 
 ### Input Attachments
 
@@ -164,8 +164,8 @@ The following arguments are optional:
 
 ### Input Settings
 
-* `audioSelectors` - (Optional) Used to select the audio stream to decode for inputs that have multiple. See [Audio Selectors](#audio-selectors) for more details.
-* `captionSelectors` - (Optional) Used to select the caption input to use for inputs that have multiple available. See [Caption Selectors](#caption-selectors) for more details.
+* `audioSelector` - (Optional) Used to select the audio stream to decode for inputs that have multiple. See [Audio Selectors](#audio-selectors) for more details.
+* `captionSelector` - (Optional) Used to select the caption input to use for inputs that have multiple available. See [Caption Selectors](#caption-selectors) for more details.
 * `deblockFilter` - (Optional) Enable or disable the deblock filter when filtering.
 * `denoiseFilter` - (Optional) Enable or disable the denoise filter when filtering.
 * `filterStrength` - (Optional) Adjusts the magnitude of filtering from 1 (minimal) to 5 (strongest).
@@ -278,16 +278,16 @@ The following arguments are optional:
 * `bufferSegments` - (Optional) Buffer segments.
 * `retries` - (Optional) The number of consecutive times that attempts to read a manifest or segment must fail before the input is considered unavailable.
 * `retryInterval` - (Optional) The number of seconds between retries when an attempt to read a manifest or segment fails.
-* `scte35SourceType` - (Optional) Identifies the source for the SCTE-35 messages that MediaLive will ingest.
+* `scte35_source_type` - (Optional) Identifies the source for the SCTE-35 messages that MediaLive will ingest.
 
 ### Automatic Input Failover Settings
 
 * `secondaryInputId` - (Required) The input ID of the secondary input in the automatic input failover pair.
 * `errorClearTimeMsec` - (Optional) This clear time defines the requirement a recovered input must meet to be considered healthy. The input must have no failover conditions for this length of time. Enter a time in milliseconds. This value is particularly important if the input\_preference for the failover pair is set to PRIMARY\_INPUT\_PREFERRED, because after this time, MediaLive will switch back to the primary input.
-* `failoverConditions` - (Optional) A list of failover conditions. If any of these conditions occur, MediaLive will perform a failover to the other input. See [Failover Conditions](#failover-conditions) for more details.
+* `failoverCondition` - (Optional) A list of failover conditions. If any of these conditions occur, MediaLive will perform a failover to the other input. See [Failover Condition Block](#failover-condition-block) for more details.
 * `inputPreference` - (Optional) Input preference when deciding which input to make active when a previously failed input has recovered.
 
-### Failover Conditions
+### Failover Condition Block
 
 * `failoverConditionSettings` - (Optional) Failover condition type-specific settings. See [Failover Condition Settings](#failover-condition-settings) for more details.
 
@@ -350,7 +350,7 @@ The following arguments are optional:
 
 ### Audio Watermark Settings
 
-* `nielsenWatermarkSettings` - (Optional) Settings to configure Nielsen Watermarks in the audio encode. See [Nielsen Watermark Settings](#nielsen-watermark-settings) for more details.
+* `nielsen_watermark_settings` - (Optional) Settings to configure Nielsen Watermarks in the audio encode. See [Nielsen Watermark Settings](#nielsen-watermark-settings) for more details.
 
 ### Audio Codec Settings
 
@@ -406,13 +406,13 @@ The following arguments are optional:
 
 ### Nielsen CBET Settings
 
-* `cbetCheckDigit` - (Required) CBET check digits to use for the watermark.
+* `cbet_check_digit` - (Required) CBET check digits to use for the watermark.
 * `cbetStepaside` - (Required) Determines the method of CBET insertion mode when prior encoding is detected on the same layer.
 * `csid` - (Required) CBET source ID to use in the watermark.
 
 ### Nielsen NAES II NW Settings
 
-* `checkDigit` - (Required) Check digit string for the watermark.
+* `check_digit` - (Required) Check digit string for the watermark.
 * `sid` - (Required) The Nielsen Source ID to include in the watermark.
 
 ### Output Groups
@@ -425,9 +425,9 @@ The following arguments are optional:
 
 * `archiveGroupSettings` - (Optional) Archive group settings. See [Archive Group Settings](#archive-group-settings) for more details.
 * `mediaPackageGroupSettings` - (Optional) Media package group settings. See [Media Package Group Settings](#media-package-group-settings) for more details.
-* `multiplexGroupSttings` - (Optional) Multiplex group settings. Attribute can be passed as an empty block.
+* `multiplex_group_sttings` - (Optional) Multiplex group settings. Attribute can be passed as an empty block.
 * `rtmpGroupSettings` - (Optional) RTMP group settings. See [RTMP Group Settings](#rtmp-group-settings) for more details.
-* `udpGroupSttings` - (Optional) UDP group settings. See [UDP Group Settings](#udp-group-settings) for more details.
+* `udp_group_sttings` - (Optional) UDP group settings. See [UDP Group Settings](#udp-group-settings) for more details.
 
 ### Outputs
 
@@ -467,13 +467,13 @@ The following arguments are optional:
 * `adaptiveQuantization` - (Optional) Enables or disables adaptive quantization.
 * `afdSignaling` - (Optional) Indicates that AFD values will be written into the output stream.
 * `bitrate` - (Optional) Average bitrate in bits/second.
-* `bufFilPct` - (Optional) Percentage of the buffer that should initially be filled.
+* `buf_fil_pct` - (Optional) Percentage of the buffer that should initially be filled.
 * `bufSize` - (Optional) Size of buffer in bits.
 * `colorMetadata` - (Optional) Includes color space metadata in the output.
 * `entropyEncoding` - (Optional) Entropy encoding mode.
 * `filterSettings` - (Optional) Filters to apply to an encode. See [H264 Filter Settings](#h264-filter-settings) for more details.
 * `fixedAfd` - (Optional) Four bit AFD value to write on all frames of video in the output stream.
-* `flicerAq` - (Optional) Makes adjustments within each frame to reduce flicker on the I-frames.
+* `flicer_aq` - (Optional) Makes adjustments within each frame to reduce flicker on the I-frames.
 * `forceFieldPictures` - (Optional) Controls whether coding is performed on a field basis or on a frame basis.
 * `framerateControl` - (Optional) Indicates how the output video frame rate is specified.
 * `framerateDenominator` - (Optional) Framerate denominator.
@@ -481,12 +481,12 @@ The following arguments are optional:
 * `gopBReference` - (Optional) GOP-B reference.
 * `gopClosedCadence` - (Optional) Frequency of closed GOPs.
 * `gopNumBFrames` - (Optional) Number of B-frames between reference frames.
-* `gopSize` - (Optional) GOP size in units of either frames of seconds per `gop_size_units`.
-* `gopSizeUnits` - (Optional) Indicates if the `gop_size` is specified in frames or seconds.
+* `gopSize` - (Optional) GOP size in units of either frames of seconds per `gopSizeUnits`.
+* `gopSizeUnits` - (Optional) Indicates if the `gopSize` is specified in frames or seconds.
 * `level` - (Optional) H264 level.
 * `lookAheadRateControl` - (Optional) Amount of lookahead.
 * `maxBitrate` - (Optional) Set the maximum bitrate in order to accommodate expected spikes in the complexity of the video.
-* `minInterval` - (Optional) Min interval.
+* `min_interval` - (Optional) Min interval.
 * `numRefFrames` - (Optional) Number of reference frames to use.
 * `parControl` - (Optional) Indicates how the output pixel aspect ratio is specified.
 * `parDenominator` - (Optional) Pixel Aspect Ratio denominator.
@@ -520,16 +520,16 @@ The following arguments are optional:
 * `colorSpaceSettings` (Optional) Define the color metadata for the output. [H265 Color Space Settings](#h265-color-space-settings) for more details.
 * `filterSettings` - (Optional) Filters to apply to an encode. See [H265 Filter Settings](#h265-filter-settings) for more details.
 * `fixedAfd` - (Optional) Four bit AFD value to write on all frames of video in the output stream.
-* `flicerAq` - (Optional) Makes adjustments within each frame to reduce flicker on the I-frames.
+* `flicer_aq` - (Optional) Makes adjustments within each frame to reduce flicker on the I-frames.
 * `framerateDenominator` - (Required) Framerate denominator.
 * `framerateNumerator` - (Required) Framerate numerator.
 * `gopClosedCadence` - (Optional) Frequency of closed GOPs.
-* `gopSize` - (Optional) GOP size in units of either frames of seconds per `gop_size_units`.
-* `gopSizeUnits` - (Optional) Indicates if the `gop_size` is specified in frames or seconds.
+* `gopSize` - (Optional) GOP size in units of either frames of seconds per `gopSizeUnits`.
+* `gopSizeUnits` - (Optional) Indicates if the `gopSize` is specified in frames or seconds.
 * `level` - (Optional) H265 level.
 * `lookAheadRateControl` - (Optional) Amount of lookahead.
 * `maxBitrate` - (Optional) Set the maximum bitrate in order to accommodate expected spikes in the complexity of the video.
-* `minInterval` - (Optional) Min interval.
+* `min_interval` - (Optional) Min interval.
 * `parDenominator` - (Optional) Pixel Aspect Ratio denominator.
 * `parNumerator` - (Optional) Pixel Aspect Ratio numerator.
 * `profile` - (Optional) H265 profile.
@@ -720,7 +720,7 @@ The following arguments are optional:
 
 * `inputLossAction` - (Optional) Specifies behavior of last resort when input video os lost.
 * `timedMetadataId3Frame` - (Optional) Indicates ID3 frame that has the timecode.
-* `timedMetadtaId3Period`- (Optional) Timed metadata interval in seconds.
+* `timed_metadta_id3_period`- (Optional) Timed metadata interval in seconds.
 
 ### Destination
 
@@ -769,7 +769,7 @@ The following arguments are optional:
 * `containerSettings` - (Required) UDP container settings. See [Container Settings](#container-settings) for more details.
 * `destination` - (Required) Destination address and port number for RTP or UDP packets. See [Destination](#destination) for more details.
 * `bufferMsec` - (Optional) UDP output buffering in milliseconds.
-* `fecOutputSetting` - (Optional) Settings for enabling and adjusting Forward Error Correction on UDP outputs. See [FEC Output Settings](#fec-output-settings) for more details.
+* `fec_output_setting` - (Optional) Settings for enabling and adjusting Forward Error Correction on UDP outputs. See [FEC Output Settings](#fec-output-settings) for more details.
 
 ### FEC Output Settings
 
@@ -806,9 +806,15 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { MedialiveChannel } from "./.gen/providers/aws/medialive-channel";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    MedialiveChannel.generateConfigForImport(this, "example", "1234567");
   }
 }
 
@@ -820,4 +826,4 @@ Using `terraform import`, import MediaLive Channel using the `channelId`. For ex
 % terraform import aws_medialive_channel.example 1234567
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-d3f7e093a01633975d88f239894e4bccf4a8cd3abaf84dcdf67f0af047ec3f42 -->
+<!-- cache-key: cdktf-0.20.1 input-6f35c6a1bbf589049ab28f3a0305defb739be70f1415e2fba48e986109eecf3e -->

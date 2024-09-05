@@ -61,8 +61,8 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `alternateIdentifier` (Optional) A unique identifier for the group that is not the primary identifier. Conflicts with `group_id` and `filter`. Detailed below.
-* `filter` - (Optional, **Deprecated** use the `alternate_identifier` attribute instead) Configuration block for filtering by a unique attribute of the group. Detailed below.
+* `alternateIdentifier` (Optional) A unique identifier for the group that is not the primary identifier. Conflicts with `groupId` and `filter`. Detailed below.
+* `filter` - (Optional, **Deprecated** use the `alternateIdentifier` attribute instead) Configuration block for filtering by a unique attribute of the group. Detailed below.
 * `groupId` - (Optional) The identifier for a group in the Identity Store.
 
 -> Exactly one of the above arguments must be provided. Passing both `filter` and `groupId` is allowed for backwards compatibility.
@@ -110,4 +110,4 @@ This data source exports the following attributes in addition to the arguments a
     * `id` - The identifier issued to this resource by an external identity provider.
     * `issuer` - The issuer for an external identifier.
 
-<!-- cache-key: cdktf-0.19.0 input-e2ee8a1f184076e4923473e811d8cdcd0bbfa4b31daf2855f308b2e41de9934b -->
+<!-- cache-key: cdktf-0.20.1 input-e2ee8a1f184076e4923473e811d8cdcd0bbfa4b31daf2855f308b2e41de9934b -->

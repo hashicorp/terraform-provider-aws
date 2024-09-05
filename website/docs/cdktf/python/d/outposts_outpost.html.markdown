@@ -53,4 +53,4 @@ This data source exports the following attributes in addition to the arguments a
 * `supported_hardware_type` - The hardware type.
 * `tags` - The Outpost tags.
 
-<!-- cache-key: cdktf-0.19.0 input-35f3fde745d0b61be013964ef1d616fef90704512a6afea84fcf8f9bf3c2acd5 -->
+<!-- cache-key: cdktf-0.20.1 input-35f3fde745d0b61be013964ef1d616fef90704512a6afea84fcf8f9bf3c2acd5 -->
