@@ -21,7 +21,7 @@ func TestAccNetworkManagerCoreNetworkPolicyDocumentDataSource_basic(t *testing.T
 			{
 				Config: testAccCoreNetworkPolicyDocumentDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrEquivalentJSON("data.aws_networkmanager_core_network_policy_document.test", names.AttrJSON, testAccPolicyDocumentBasicExpectedJSON),
+					acctest.CheckResourceAttrJSONNoDiff("data.aws_networkmanager_core_network_policy_document.test", names.AttrJSON, testAccPolicyDocumentBasicExpectedJSON),
 				),
 			},
 		},
@@ -38,7 +38,7 @@ func TestAccNetworkManagerCoreNetworkPolicyDocumentDataSource_serviceInsertion(t
 			{
 				Config: testAccCoreNetworkPolicyDocumentDataSourceConfig_serviceInsertion,
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrEquivalentJSON("data.aws_networkmanager_core_network_policy_document.test", names.AttrJSON, testAccPolicyDocumentServiceInsertionExpectedJSON),
+					acctest.CheckResourceAttrJSONNoDiff("data.aws_networkmanager_core_network_policy_document.test", names.AttrJSON, testAccPolicyDocumentServiceInsertionExpectedJSON),
 				),
 			},
 		},
@@ -55,7 +55,7 @@ func TestAccNetworkManagerCoreNetworkPolicyDocumentDataSource_whenSentTo(t *test
 			{
 				Config: testAccCoreNetworkPolicyDocumentDataSourceConfig_whenSentTo,
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrEquivalentJSON("data.aws_networkmanager_core_network_policy_document.test", names.AttrJSON, testAccPolicyDocumentWildCardWhenSentToExpectedJSON),
+					acctest.CheckResourceAttrJSONNoDiff("data.aws_networkmanager_core_network_policy_document.test", names.AttrJSON, testAccPolicyDocumentWildCardWhenSentToExpectedJSON),
 				),
 			},
 		},
@@ -72,7 +72,7 @@ func TestAccNetworkManagerCoreNetworkPolicyDocumentDataSource_via(t *testing.T) 
 			{
 				Config: testAccCoreNetworkPolicyDocumentDataSourceConfig_via,
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrEquivalentJSON("data.aws_networkmanager_core_network_policy_document.test", names.AttrJSON, testAccPolicyDocumentViaExpectedJSON),
+					acctest.CheckResourceAttrJSONNoDiff("data.aws_networkmanager_core_network_policy_document.test", names.AttrJSON, testAccPolicyDocumentViaExpectedJSON),
 				),
 			},
 		},
@@ -89,7 +89,7 @@ func TestAccNetworkManagerCoreNetworkPolicyDocumentDataSource_viaCompat(t *testi
 			{
 				Config: testAccCoreNetworkPolicyDocumentDataSourceConfig_viaCompat,
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrEquivalentJSON("data.aws_networkmanager_core_network_policy_document.test", names.AttrJSON, testAccPolicyDocumentViaExpectedJSON),
+					acctest.CheckResourceAttrJSONNoDiff("data.aws_networkmanager_core_network_policy_document.test", names.AttrJSON, testAccPolicyDocumentViaExpectedJSON),
 				),
 			},
 		},
