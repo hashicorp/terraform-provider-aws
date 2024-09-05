@@ -11,10 +11,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/docdbelastic"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/docdbelastic/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -81,6 +83,16 @@ func (r *resourceCluster) Schema(ctx context.Context, _ resource.SchemaRequest, 
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			"backup_retention_period": schema.Int32Attribute{
+				Optional: true,
+				Computed: true,
+				Validators: []validator.Int32{
+					int32validator.Between(1, 35),
+				},
+				PlanModifiers: []planmodifier.Int32{
+					int32planmodifier.UseStateForUnknown(),
+				},
+			},
 			names.AttrEndpoint: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -100,6 +112,13 @@ func (r *resourceCluster) Schema(ctx context.Context, _ resource.SchemaRequest, 
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"preferred_backup_window": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			names.AttrPreferredMaintenanceWindow: schema.StringAttribute{
@@ -279,6 +298,14 @@ func (r *resourceCluster) Update(ctx context.Context, request resource.UpdateReq
 			input.AuthType = plan.AuthType.ValueEnum()
 		}
 
+		if !plan.BackupRetentionPeriod.Equal(state.BackupRetentionPeriod) {
+			input.BackupRetentionPeriod = plan.BackupRetentionPeriod.ValueInt32Pointer()
+		}
+
+		if !plan.PreferredBackupWindow.Equal(state.PreferredBackupWindow) {
+			input.PreferredBackupWindow = plan.PreferredBackupWindow.ValueStringPointer()
+		}
+
 		if !plan.PreferredMaintenanceWindow.Equal(state.PreferredMaintenanceWindow) {
 			input.PreferredMaintenanceWindow = plan.PreferredMaintenanceWindow.ValueStringPointer()
 		}
@@ -385,10 +412,12 @@ type resourceClusterData struct {
 	AdminUserPassword          types.String                      `tfsdk:"admin_user_password"`
 	ARN                        types.String                      `tfsdk:"arn"`
 	AuthType                   fwtypes.StringEnum[awstypes.Auth] `tfsdk:"auth_type"`
+	BackupRetentionPeriod      types.Int32                       `tfsdk:"backup_retention_period"`
 	Endpoint                   types.String                      `tfsdk:"endpoint"`
 	ID                         types.String                      `tfsdk:"id"`
 	KmsKeyID                   types.String                      `tfsdk:"kms_key_id"`
 	Name                       types.String                      `tfsdk:"name"`
+	PreferredBackupWindow      types.String                      `tfsdk:"preferred_backup_window"`
 	PreferredMaintenanceWindow fwtypes.OnceAWeekWindow           `tfsdk:"preferred_maintenance_window"`
 	ShardCapacity              types.Int64                       `tfsdk:"shard_capacity"`
 	ShardCount                 types.Int64                       `tfsdk:"shard_count"`
@@ -494,6 +523,8 @@ func clusterHasChanges(_ context.Context, plan, state resourceClusterData) bool 
 	return !plan.Name.Equal(state.Name) ||
 		!plan.AdminUserPassword.Equal(state.AdminUserPassword) ||
 		!plan.AuthType.Equal(state.AuthType) ||
+		!plan.BackupRetentionPeriod.Equal(state.BackupRetentionPeriod) ||
+		!plan.PreferredBackupWindow.Equal(state.PreferredBackupWindow) ||
 		!plan.PreferredMaintenanceWindow.Equal(state.PreferredMaintenanceWindow) ||
 		!plan.ShardCapacity.Equal(state.ShardCapacity) ||
 		!plan.ShardCount.Equal(state.ShardCount) ||
