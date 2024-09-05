@@ -174,12 +174,12 @@ func TestAccSyntheticsCanary_runtimeVersion(t *testing.T) {
 
 func TestAccSyntheticsCanary_rate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf1 synthetics.Canary
+	var conf1 awstypes.Canary
 	resourceName := "aws_synthetics_canary.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, synthetics.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SyntheticsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCanaryDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -944,7 +944,7 @@ resource "aws_synthetics_canary" "test" {
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
-  runtime_version      = "syn-nodejs-puppeteer-3.9"
+  runtime_version      = "syn-nodejs-puppeteer-6.1"
   delete_lambda        = true
 
   run_config {
