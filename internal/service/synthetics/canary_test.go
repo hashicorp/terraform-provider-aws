@@ -950,7 +950,7 @@ resource "aws_synthetics_canary" "test" {
   run_config {
     environment_variables = {
       test1 = "value1"
-	}
+    }
   }
   schedule {
     expression = %[2]q
