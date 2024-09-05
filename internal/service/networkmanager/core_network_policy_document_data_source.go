@@ -268,6 +268,11 @@ func dataSourceCoreNetworkPolicyDocument() *schema.Resource {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
+												"use_edge": {
+													Type:       schema.TypeString,
+													Optional:   true,
+													Deprecated: "Use use_edge_location",
+												},
 											},
 										},
 									},
@@ -542,6 +547,10 @@ func expandCoreNetworkPolicySegmentActions(tfList []interface{}) ([]*coreNetwork
 								edgeSets = append(edgeSets, flex.ExpandStringValueSet(es))
 							}
 							apiObject.EdgeSets = edgeSets
+						}
+
+						if v, ok := tfMap["use_edge"]; ok {
+							apiObject.UseEdgeLocation = v.(string)
 						}
 
 						if v, ok := tfMap["use_edge_location"]; ok {
