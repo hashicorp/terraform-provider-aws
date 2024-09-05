@@ -383,8 +383,7 @@ func deleteAllResourceRecordsFromHostedZone(ctx context.Context, conn *route53.C
 	const (
 		chunkSize = 100
 	)
-	chunks := tfslices.Chunks(resourceRecordSets, chunkSize)
-	for _, chunk := range chunks {
+	for chunk := range slices.Chunk(resourceRecordSets, chunkSize) {
 		changes := tfslices.ApplyToAll(chunk, func(v awstypes.ResourceRecordSet) awstypes.Change {
 			return awstypes.Change{
 				Action:            awstypes.ChangeActionDelete,
