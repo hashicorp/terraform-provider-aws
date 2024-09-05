@@ -264,9 +264,9 @@ func (r *resourceCluster) Update(ctx context.Context, request resource.UpdateReq
 		return
 	}
 
-	if ignoreOptions, ok := diff.HasChanges(ctx, plan, state); ok {
+	if changes := diff.HasChanges(ctx, plan, state); changes.Ok() {
 		input := docdbelastic.UpdateClusterInput{}
-		response.Diagnostics.Append(fwflex.Expand(ctx, plan, &input, ignoreOptions...)...)
+		response.Diagnostics.Append(fwflex.Expand(ctx, plan, &input, changes.IgnoredFieldNames()...)...)
 
 		if response.Diagnostics.HasError() {
 			return

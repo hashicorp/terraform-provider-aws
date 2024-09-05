@@ -13,7 +13,20 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 )
 
-func HasChanges(ctx context.Context, plan, state any) ([]fwflex.AutoFlexOptionsFunc, bool) {
+type Results struct {
+	hasChanges        bool
+	ignoredFieldNames []fwflex.AutoFlexOptionsFunc
+}
+
+func (r *Results) Ok() bool {
+	return r.hasChanges
+}
+
+func (r *Results) IgnoredFieldNames() []fwflex.AutoFlexOptionsFunc {
+	return r.ignoredFieldNames
+}
+
+func HasChanges(ctx context.Context, plan, state any) *Results {
 	p, s := reflect.ValueOf(plan), reflect.ValueOf(state)
 	typeOfP, typesOfS := p.Type(), s.Type()
 	var ignoredFields []fwflex.AutoFlexOptionsFunc
@@ -23,7 +36,7 @@ func HasChanges(ctx context.Context, plan, state any) ([]fwflex.AutoFlexOptionsF
 			"plan_type":  typeOfP,
 			"state_type": typesOfS,
 		})
-		return nil, false
+		return nil
 	}
 
 	var result bool
@@ -58,5 +71,8 @@ func HasChanges(ctx context.Context, plan, state any) ([]fwflex.AutoFlexOptionsF
 		}
 	}
 
-	return ignoredFields, result
+	return &Results{
+		hasChanges:        result,
+		ignoredFieldNames: ignoredFields,
+	}
 }
