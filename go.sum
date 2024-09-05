@@ -474,8 +474,8 @@ github.com/aws/aws-sdk-go-v2/service/ses v1.26.2 h1:hGWgo0Ckz68QbnzET2ZlirsgIhSw
 github.com/aws/aws-sdk-go-v2/service/ses v1.26.2/go.mod h1:PS2N1JNb+LsgIQA7Iu8PyoXWOUC5HAbt3esVYzWdVEg=
 github.com/aws/aws-sdk-go-v2/service/sesv2 v1.33.2 h1:aYiZpCyVxmQSdWdbwyL2215Lzfm/h3UIdPozX1cirm0=
 github.com/aws/aws-sdk-go-v2/service/sesv2 v1.33.2/go.mod h1:OQqMYY/a4+E+cZsZyaXNqM23vODOgCyRMG3WRYxUnqc=
-github.com/aws/aws-sdk-go-v2/service/sfn v1.31.1 h1:6pOj5te3OlUqC7JtqUJn5O8mgip+G3ntBwfTYd7RawM=
-github.com/aws/aws-sdk-go-v2/service/sfn v1.31.1/go.mod h1:ae7mWKnnn7j/l9Egr8HaUg9hsn6b4jIS7eryh3nqkLg=
+github.com/aws/aws-sdk-go-v2/service/sfn v1.31.2 h1:iup9+EgS++bWOyG5wx4rjnsfnCAv+xpqQdTsG61rUS8=
+github.com/aws/aws-sdk-go-v2/service/sfn v1.31.2/go.mod h1:ae7mWKnnn7j/l9Egr8HaUg9hsn6b4jIS7eryh3nqkLg=
 github.com/aws/aws-sdk-go-v2/service/shield v1.27.5 h1:a45KMBOnx0JNNVlttXyalH1vJbucFrQK/FHbJiu1KAQ=
 github.com/aws/aws-sdk-go-v2/service/shield v1.27.5/go.mod h1:6vpeffPxOOCXeYbfN9VQ4YkezaSfO8DZcJGgoweQGPs=
 github.com/aws/aws-sdk-go-v2/service/signer v1.24.5 h1:UfoY81/5674DJfvNPlDoUgIn2jWRFz60+4xrKpZjrkA=
