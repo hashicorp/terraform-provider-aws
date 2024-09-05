@@ -51,18 +51,18 @@ func ResourceFleet() *schema.Resource {
 				ValidateFunc: validation.IntAtLeast(1),
 			},
 			"compute_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(computeTypeValues(types.ComputeType("").Values()), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: enum.Validate[types.ComputeType](),
 			},
 			"created": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"environment_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(environmentTypeValues(types.EnvironmentType("").Values()), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: enum.Validate[types.EnvironmentType](),
 			},
 			"id": {
 				Type:     schema.TypeString,
@@ -79,10 +79,10 @@ func ResourceFleet() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(2, 128),
 			},
 			"overflow_behavior": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(fleetOverflowBehaviorValues(types.FleetOverflowBehavior("").Values()), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[types.FleetOverflowBehavior](),
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					if new == "" {
 						return true
@@ -115,9 +115,9 @@ func ResourceFleet() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"metric_type": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringInSlice(fleetScalingMetricTypeValues(types.FleetScalingMetricType("").Values()), false),
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[types.FleetScalingMetricType](),
 									},
 									"target_value": {
 										Type:         schema.TypeFloat,
@@ -534,44 +534,4 @@ func flattenStatus(apiObject *types.FleetStatus) map[string]interface{} {
 	}
 
 	return tfMap
-}
-
-func fleetOverflowBehaviorValues(in []types.FleetOverflowBehavior) []string {
-	var out []string
-
-	for _, v := range in {
-		out = append(out, string(v))
-	}
-
-	return out
-}
-
-func computeTypeValues(in []types.ComputeType) []string {
-	var out []string
-
-	for _, v := range in {
-		out = append(out, string(v))
-	}
-
-	return out
-}
-
-func environmentTypeValues(in []types.EnvironmentType) []string {
-	var out []string
-
-	for _, v := range in {
-		out = append(out, string(v))
-	}
-
-	return out
-}
-
-func fleetScalingMetricTypeValues(in []types.FleetScalingMetricType) []string {
-	var out []string
-
-	for _, v := range in {
-		out = append(out, string(v))
-	}
-
-	return out
 }
