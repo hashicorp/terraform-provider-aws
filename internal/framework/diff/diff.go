@@ -5,8 +5,8 @@ package diff
 
 import (
 	"context"
-	"log"
 	"reflect"
+	"slices"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -22,11 +22,16 @@ func (r *Results) Ok() bool {
 	return r.hasChanges
 }
 
-func (r *Results) IgnoredFieldNames() []fwflex.AutoFlexOptionsFunc {
+func (r *Results) FlexIgnoredFieldNames() []fwflex.AutoFlexOptionsFunc {
 	return r.ignoredFieldNames
 }
 
-func HasChanges(ctx context.Context, plan, state any) *Results {
+func HasChanges(ctx context.Context, plan, state any, options ...ChangeOptionsFunc) *Results {
+	opts := initChangeOptions()
+	for _, opt := range options {
+		opt(opts)
+	}
+
 	p, s := reflect.ValueOf(plan), reflect.ValueOf(state)
 	typeOfP, typesOfS := p.Type(), s.Type()
 	var ignoredFields []fwflex.AutoFlexOptionsFunc
@@ -36,15 +41,14 @@ func HasChanges(ctx context.Context, plan, state any) *Results {
 			"plan_type":  typeOfP,
 			"state_type": typesOfS,
 		})
-		return nil
+		return &Results{hasChanges: false}
 	}
 
 	var result bool
 	for i := 0; i < p.NumField(); i++ {
 		name := typeOfP.Field(i).Name
-		log.Printf("name: %s", name)
-		if name == "Tags" || name == "TagsAll" || name == "Timeouts" {
-			//ignoredFields = append(ignoredFields, fwflex.WithIgnoredFieldNamesAppend(name))
+
+		if slices.Contains(opts.ignoredFieldNames, name) {
 			continue
 		}
 
@@ -59,7 +63,7 @@ func HasChanges(ctx context.Context, plan, state any) *Results {
 			sValue := s.FieldByName(name).Interface().(attr.Value)
 
 			// check that the types are the same so that they can be compared
-			if pValue.Type(ctx) != sValue.Type(ctx) {
+			if !pValue.Type(ctx).Equal(sValue.Type(ctx)) {
 				continue
 			}
 
