@@ -190,7 +190,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ram v1.27.7
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.18.7
 	github.com/aws/aws-sdk-go-v2/service/rds v1.82.4
-	github.com/aws/aws-sdk-go-v2/service/redshift v1.46.7
+	github.com/aws/aws-sdk-go-v2/service/redshift v1.46.8
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.28.1
 	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.21.3
 	github.com/aws/aws-sdk-go-v2/service/rekognition v1.43.4
