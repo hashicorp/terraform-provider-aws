@@ -75,7 +75,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.19.6
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.16.7
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.26.6
-	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.40.5
+	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.40.6
 	github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.8.2
 	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.39.5
 	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.40.6
