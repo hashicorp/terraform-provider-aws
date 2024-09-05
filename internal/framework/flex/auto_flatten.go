@@ -146,7 +146,7 @@ func (flattener autoFlattener) convert(ctx context.Context, sourcePath path.Path
 	tTo := valTo.Type(ctx)
 	switch k := vFrom.Kind(); k {
 	case reflect.Bool:
-		diags.Append(flattener.bool(ctx, vFrom, false, tTo, vTo)...)
+		diags.Append(flattener.bool(ctx, vFrom, false, tTo, vTo, fieldOpts)...)
 		return diags
 
 	case reflect.Float64:
@@ -199,24 +199,34 @@ func (flattener autoFlattener) convert(ctx context.Context, sourcePath path.Path
 }
 
 // bool copies an AWS API bool value to a compatible Plugin Framework value.
-func (flattener autoFlattener) bool(ctx context.Context, vFrom reflect.Value, isNullFrom bool, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+func (flattener autoFlattener) bool(ctx context.Context, vFrom reflect.Value, isNullFrom bool, tTo attr.Type, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch tTo := tTo.(type) {
 	case basetypes.BoolTypable:
-		boolValue := types.BoolNull()
-		if !isNullFrom {
-			boolValue = types.BoolValue(vFrom.Bool())
+		//
+		// bool -> types.Bool.
+		//
+		var boolValue types.Bool
+		if fieldOpts.legacy {
+			tflog.SubsystemDebug(ctx, subsystemName, "Using legacy flattener")
+			if isNullFrom {
+				boolValue = types.BoolValue(false)
+			} else {
+				boolValue = types.BoolValue(vFrom.Bool())
+			}
+		} else {
+			if isNullFrom {
+				boolValue = types.BoolNull()
+			} else {
+				boolValue = types.BoolValue(vFrom.Bool())
+			}
 		}
 		v, d := tTo.ValueFromBool(ctx, boolValue)
 		diags.Append(d...)
 		if diags.HasError() {
 			return diags
 		}
-
-		//
-		// bool -> types.Bool.
-		//
 		vTo.Set(reflect.ValueOf(v))
 		return diags
 	}
@@ -341,7 +351,7 @@ func (flattener autoFlattener) int64(ctx context.Context, vFrom reflect.Value, s
 		//
 		// int32/int64 -> types.Int64.
 		//
-		var int64Value basetypes.Int64Value
+		var int64Value types.Int64
 		if fieldOpts.legacy {
 			tflog.SubsystemDebug(ctx, subsystemName, "Using legacy flattener")
 			if isNullFrom {
@@ -389,7 +399,7 @@ func (flattener autoFlattener) int32(ctx context.Context, vFrom reflect.Value, i
 		//
 		// int32/int64 -> types.Int64.
 		//
-		var int64Value basetypes.Int64Value
+		var int64Value types.Int64
 		if fieldOpts.legacy {
 			tflog.SubsystemDebug(ctx, subsystemName, "Using legacy flattener")
 			if isNullFrom {
@@ -528,7 +538,7 @@ func (flattener autoFlattener) pointer(ctx context.Context, sourcePath path.Path
 
 	switch vElem, isNilFrom := vFrom.Elem(), vFrom.IsNil(); vFrom.Type().Elem().Kind() {
 	case reflect.Bool:
-		diags.Append(flattener.bool(ctx, vElem, isNilFrom, tTo, vTo)...)
+		diags.Append(flattener.bool(ctx, vElem, isNilFrom, tTo, vTo, fieldOpts)...)
 		return diags
 
 	case reflect.Float64:

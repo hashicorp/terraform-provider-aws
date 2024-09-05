@@ -1287,6 +1287,57 @@ func TestFlattenBool(t *testing.T) {
 				},
 			},
 		},
+
+		"legacy *bool to String": {
+			"true": {
+				Source: awsSingleBoolPointer{
+					Field1: aws.Bool(true),
+				},
+				Target: &tfSingleBoolFieldLegacy{},
+				WantTarget: &tfSingleBoolFieldLegacy{
+					Field1: types.BoolValue(true),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleBoolPointer](), reflect.TypeFor[*tfSingleBoolFieldLegacy]()),
+					infoConverting(reflect.TypeFor[awsSingleBoolPointer](), reflect.TypeFor[*tfSingleBoolFieldLegacy]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleBoolPointer](), "Field1", reflect.TypeFor[*tfSingleBoolFieldLegacy]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[*bool](), "Field1", reflect.TypeFor[types.Bool]()),
+					debugUsingLegacyFlattener("Field1", reflect.TypeFor[*bool](), "Field1", reflect.TypeFor[types.Bool]()),
+				},
+			},
+			"false": {
+				Source: awsSingleBoolPointer{
+					Field1: aws.Bool(false),
+				},
+				Target: &tfSingleBoolFieldLegacy{},
+				WantTarget: &tfSingleBoolFieldLegacy{
+					Field1: types.BoolValue(false),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleBoolPointer](), reflect.TypeFor[*tfSingleBoolFieldLegacy]()),
+					infoConverting(reflect.TypeFor[awsSingleBoolPointer](), reflect.TypeFor[*tfSingleBoolFieldLegacy]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleBoolPointer](), "Field1", reflect.TypeFor[*tfSingleBoolFieldLegacy]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[*bool](), "Field1", reflect.TypeFor[types.Bool]()),
+					debugUsingLegacyFlattener("Field1", reflect.TypeFor[*bool](), "Field1", reflect.TypeFor[types.Bool]()),
+				},
+			},
+			"null": {
+				Source: awsSingleBoolPointer{
+					Field1: nil,
+				},
+				Target: &tfSingleBoolFieldLegacy{},
+				WantTarget: &tfSingleBoolFieldLegacy{
+					Field1: types.BoolValue(false),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleBoolPointer](), reflect.TypeFor[*tfSingleBoolFieldLegacy]()),
+					infoConverting(reflect.TypeFor[awsSingleBoolPointer](), reflect.TypeFor[*tfSingleBoolFieldLegacy]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleBoolPointer](), "Field1", reflect.TypeFor[*tfSingleBoolFieldLegacy]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[*bool](), "Field1", reflect.TypeFor[types.Bool]()),
+					debugUsingLegacyFlattener("Field1", reflect.TypeFor[*bool](), "Field1", reflect.TypeFor[types.Bool]()),
+				},
+			},
+		},
 	}
 
 	for testName, cases := range testCases {
