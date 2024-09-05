@@ -259,6 +259,25 @@ func TestAccACMCertificateDataSource_byDomain(t *testing.T) {
 	})
 }
 
+func TestAccACMCertificateDataSource_byDomainNoMatch(t *testing.T) {
+	ctx := acctest.Context(t)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048) // ListCertificates: Default filtering returns only RSA_2048 certificates.
+	domain := acctest.RandomDomain().String()
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, domain)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccCertificateDataSourceConfig_byDomainNoMatch(domain, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)),
+				ExpectError: regexache.MustCompile(`reading ACM Certificates: empty result`),
+			},
+		},
+	})
+}
+
 func TestAccACMCertificateDataSource_byTags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acm_certificate.test"
@@ -381,6 +400,21 @@ resource "aws_acm_certificate" "test" {
 
 data "aws_acm_certificate" "test" {
   domain = %[1]q
+
+  depends_on = [aws_acm_certificate.test]
+}
+`, domain, certificate, key)
+}
+
+func testAccCertificateDataSourceConfig_byDomainNoMatch(domain, certificate, key string) string {
+	return fmt.Sprintf(`
+resource "aws_acm_certificate" "test" {
+  certificate_body = "%[2]s"
+  private_key      = "%[3]s"
+}
+
+data "aws_acm_certificate" "test" {
+  domain = "not.%[1]s"
 
   depends_on = [aws_acm_certificate.test]
 }
