@@ -242,7 +242,7 @@ func modifyClusterParameterGroupParameters(ctx context.Context, conn *neptune.Cl
 		clusterParameterGroupMaxParamsBulkEdit = 20
 	)
 	// We can only modify 20 parameters at a time, so chunk them until we've got them all.
-	for _, chunk := range tfslices.Chunks(parameters, clusterParameterGroupMaxParamsBulkEdit) {
+	for chunk := range slices.Chunk(parameters, clusterParameterGroupMaxParamsBulkEdit) {
 		input := &neptune.ModifyDBClusterParameterGroupInput{
 			DBClusterParameterGroupName: aws.String(name),
 			Parameters:                  chunk,
