@@ -95,7 +95,6 @@ func resourceClientVPNRouteCreate(ctx context.Context, d *schema.ResourceData, m
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, ec2PropagationTimeout, func() (interface{}, error) {
 		return conn.CreateClientVpnRoute(ctx, input)
 	}, errCodeInvalidClientVPNActiveAssociationNotFound)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Client VPN Route (%s): %s", id, err)
 	}

@@ -153,7 +153,6 @@ func resourceTrafficMirrorFilterRuleCreate(ctx context.Context, d *schema.Resour
 	}
 
 	output, err := conn.CreateTrafficMirrorFilterRule(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Traffic Mirror Filter Rule: %s", err)
 	}
@@ -284,7 +283,6 @@ func resourceTrafficMirrorFilterRuleUpdate(ctx context.Context, d *schema.Resour
 	}
 
 	_, err := conn.ModifyTrafficMirrorFilterRule(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating EC2 Traffic Mirror Filter Rule (%s): %s", d.Id(), err)
 	}

@@ -73,7 +73,6 @@ func resourceTransitGatewayPolicyTableCreate(ctx context.Context, d *schema.Reso
 
 	log.Printf("[DEBUG] Creating EC2 Transit Gateway Policy Table: %+v", input)
 	output, err := conn.CreateTransitGatewayPolicyTable(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Transit Gateway (%s) Policy Table: %s", transitGatewayID, err)
 	}

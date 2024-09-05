@@ -63,7 +63,6 @@ func resourceVPCEndpointConnectionAccepterCreate(ctx context.Context, d *schema.
 	}
 
 	_, err := conn.AcceptVpcEndpointConnections(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "accepting VPC Endpoint Connection (%s): %s", id, err)
 	}

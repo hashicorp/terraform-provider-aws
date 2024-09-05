@@ -50,7 +50,6 @@ func TestKeyPairMigrateState(t *testing.T) {
 		}
 		is, err := tfec2.KeyPairMigrateState(
 			tc.StateVersion, is, tc.Meta)
-
 		if err != nil {
 			t.Fatalf("bad: %s, err: %#v", tn, err)
 		}

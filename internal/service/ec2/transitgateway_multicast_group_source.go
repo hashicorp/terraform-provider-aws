@@ -67,7 +67,6 @@ func resourceTransitGatewayMulticastGroupSourceCreate(ctx context.Context, d *sc
 
 	log.Printf("[DEBUG] Creating EC2 Transit Gateway Multicast Group Source: %+v", input)
 	_, err := conn.RegisterTransitGatewayMulticastGroupSources(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Transit Gateway Multicast Group Source (%s): %s", id, err)
 	}
@@ -154,7 +153,6 @@ func deregisterTransitGatewayMulticastGroupSource(ctx context.Context, conn *ec2
 	_, err = tfresource.RetryUntilNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
 		return findTransitGatewayMulticastGroupSourceByThreePartKey(ctx, conn, multicastDomainID, groupIPAddress, eniID)
 	})
-
 	if err != nil {
 		return fmt.Errorf("waiting for EC2 Transit Gateway Multicast Group Source (%s) delete: %w", id, err)
 	}

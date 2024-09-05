@@ -156,7 +156,6 @@ func dataSourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	vpc, err := findVPC(ctx, conn, input)
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 VPC", err))
 	}

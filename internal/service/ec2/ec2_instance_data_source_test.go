@@ -184,7 +184,7 @@ func TestAccEC2InstanceDataSource_blockDevices(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "root_block_device.0.volume_type", resourceName, "root_block_device.0.volume_type"),
 					resource.TestCheckResourceAttrPair(datasourceName, "root_block_device.0.device_name", resourceName, "root_block_device.0.device_name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "ebs_block_device.#", resourceName, "ebs_block_device.#"),
-					//resource.TestCheckResourceAttrPair(datasourceName, "ephemeral_block_device.#", resourceName, "ephemeral_block_device.#"),
+					// resource.TestCheckResourceAttrPair(datasourceName, "ephemeral_block_device.#", resourceName, "ephemeral_block_device.#"),
 					// ephemeral block devices don't get saved properly due to API limitations, so this can't actually be tested right now
 				),
 			},
@@ -640,7 +640,6 @@ func TestAccEC2InstanceDataSource_creditSpecification(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-
 				Config: testAccInstanceDataSourceConfig_creditSpecification(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrInstanceType, resourceName, names.AttrInstanceType),

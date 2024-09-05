@@ -52,7 +52,6 @@ func dataSourcePublicIPv4PoolsRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	output, err := findPublicIPv4Pools(ctx, conn, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Public IPv4 Pools: %s", err)
 	}

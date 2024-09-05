@@ -61,7 +61,6 @@ func dataSourceTransitGatewayRouteTablePropagationsRead(ctx context.Context, d *
 	}
 
 	output, err := findTransitGatewayRouteTablePropagations(ctx, conn, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway Route Table Propagations: %s", err)
 	}

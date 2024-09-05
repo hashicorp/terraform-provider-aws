@@ -98,7 +98,6 @@ func resourceVPCIPv4CIDRBlockAssociationCreate(ctx context.Context, d *schema.Re
 	}
 
 	output, err := conn.AssociateVpcCidrBlock(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 VPC (%s) IPv4 CIDR Block Association: %s", vpcID, err)
 	}

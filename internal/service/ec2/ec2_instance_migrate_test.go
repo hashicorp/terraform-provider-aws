@@ -127,7 +127,6 @@ func TestInstanceMigrateState(t *testing.T) {
 		}
 		is, err := tfec2.InstanceMigrateState(
 			tc.StateVersion, is, tc.Meta)
-
 		if err != nil {
 			t.Fatalf("bad: %s, err: %#v", tn, err)
 		}
@@ -150,7 +149,6 @@ func TestInstanceMigrateState_empty(t *testing.T) {
 
 	// should handle nil
 	is, err := tfec2.InstanceMigrateState(0, is, meta)
-
 	if err != nil {
 		t.Fatalf("err: %#v", err)
 	}
@@ -161,7 +159,6 @@ func TestInstanceMigrateState_empty(t *testing.T) {
 	// should handle non-nil but empty
 	is = &terraform.InstanceState{}
 	_, err = tfec2.InstanceMigrateState(0, is, meta)
-
 	if err != nil {
 		t.Fatalf("err: %#v", err)
 	}

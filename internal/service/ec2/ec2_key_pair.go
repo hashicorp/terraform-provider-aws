@@ -31,7 +31,7 @@ import (
 // @Tags(identifierAttribute="key_pair_id")
 // @Testing(tagsTest=false)
 func resourceKeyPair() *schema.Resource {
-	//lintignore:R011
+	// lintignore:R011
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceKeyPairCreate,
 		ReadWithoutTimeout:   resourceKeyPairRead,
@@ -111,7 +111,6 @@ func resourceKeyPairCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	output, err := conn.ImportKeyPair(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "importing EC2 Key Pair (%s): %s", keyName, err)
 	}
@@ -172,7 +171,6 @@ func resourceKeyPairDelete(ctx context.Context, d *schema.ResourceData, meta int
 	_, err := conn.DeleteKeyPair(ctx, &ec2.DeleteKeyPairInput{
 		KeyName: aws.String(d.Id()),
 	})
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting EC2 Key Pair (%s): %s", d.Id(), err)
 	}
@@ -184,13 +182,11 @@ func resourceKeyPairDelete(ctx context.Context, d *schema.ResourceData, meta int
 // Any key comment is ignored when comparing values.
 func openSSHPublicKeysEqual(v1, v2 string) bool {
 	key1, _, _, _, err := ssh.ParseAuthorizedKey([]byte(v1))
-
 	if err != nil {
 		return false
 	}
 
 	key2, _, _, _, err := ssh.ParseAuthorizedKey([]byte(v2))
-
 	if err != nil {
 		return false
 	}

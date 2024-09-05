@@ -50,7 +50,6 @@ func resourceVPCEndpointServiceAllowedPrincipalCreate(ctx context.Context, d *sc
 		AddAllowedPrincipals: []string{principalARN},
 		ServiceId:            aws.String(serviceID),
 	})
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "modifying EC2 VPC Endpoint Service (%s) permissions: %s", serviceID, err)
 	}

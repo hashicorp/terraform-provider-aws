@@ -280,7 +280,6 @@ func testAccCheckIPAMPoolCIDRAllocationExists(ctx context.Context, n string, v *
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindIPAMPoolAllocationByTwoPartKey(ctx, conn, rs.Primary.Attributes["ipam_pool_allocation_id"], rs.Primary.Attributes["ipam_pool_id"])
-
 		if err != nil {
 			return err
 		}
@@ -301,7 +300,6 @@ func testAccCheckIPAMPoolCIDRAllocationExistsWithProvider(ctx context.Context, n
 		conn := providerF().Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindIPAMPoolAllocationByTwoPartKey(ctx, conn, rs.Primary.Attributes["ipam_pool_allocation_id"], rs.Primary.Attributes["ipam_pool_id"])
-
 		if err != nil {
 			return err
 		}

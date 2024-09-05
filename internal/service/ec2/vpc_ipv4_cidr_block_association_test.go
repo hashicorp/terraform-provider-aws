@@ -196,7 +196,6 @@ func testAccCheckVPCIPv4CIDRBlockAssociationExists(ctx context.Context, n string
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, _, err := tfec2.FindVPCCIDRBlockAssociationByID(ctx, conn, rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}

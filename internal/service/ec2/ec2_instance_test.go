@@ -117,7 +117,6 @@ func TestParseInstanceType(t *testing.T) {
 	}
 
 	v, err := tfec2.ParseInstanceType("c4.large")
-
 	if err != nil {
 		t.Errorf("Unexpected error: %s", err)
 	}
@@ -143,7 +142,6 @@ func TestParseInstanceType(t *testing.T) {
 	}
 
 	v, err = tfec2.ParseInstanceType("im4gn.16xlarge")
-
 	if err != nil {
 		t.Errorf("Unexpected error: %s", err)
 	}
@@ -1494,7 +1492,7 @@ func TestAccEC2Instance_BlockDeviceTags_attachedVolume(t *testing.T) {
 				),
 			},
 			{
-				//https://github.com/hashicorp/terraform-provider-aws/issues/17074
+				// https://github.com/hashicorp/terraform-provider-aws/issues/17074
 				Config: testAccInstanceConfig_blockDeviceTagsAttachedVolumeTags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
@@ -5384,7 +5382,8 @@ func TestAccEC2Instance_CapacityReservation_modifyPreference(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_target.#", acctest.Ct0),
 				),
 			},
-			{Config: testAccInstanceConfig_capacityReservationSpecificationPreference(rName, "open"),
+			{
+				Config: testAccInstanceConfig_capacityReservationSpecificationPreference(rName, "open"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStopInstance(ctx, &original), // Stop instance to modify capacity reservation
 				),
@@ -5424,7 +5423,8 @@ func TestAccEC2Instance_CapacityReservation_modifyTarget(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_target.#", acctest.Ct0),
 				),
 			},
-			{Config: testAccInstanceConfig_capacityReservationSpecificationPreference(rName, "none"),
+			{
+				Config: testAccInstanceConfig_capacityReservationSpecificationPreference(rName, "none"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStopInstance(ctx, &original), // Stop instance to modify capacity reservation
 				),
@@ -5543,7 +5543,6 @@ func testAccCheckInstanceExists(ctx context.Context, n string, v *awstypes.Insta
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindInstanceByID(ctx, conn, rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}
@@ -6967,7 +6966,7 @@ func mapToTagConfig(m map[string]string, indent int) string {
 func testAccInstanceConfig_blockDeviceTagsDefaultVolumeRBDEBS(defTg, volTg, rbdTg, ebsTg map[string]string) string {
 	defTgCfg := ""
 	if len(defTg) > 0 {
-		//lintignore:AT004
+		// lintignore:AT004
 		defTgCfg = fmt.Sprintf(`
 provider "aws" {
   default_tags {

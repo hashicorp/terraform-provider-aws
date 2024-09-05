@@ -90,7 +90,6 @@ func dataSourceAMIIDsRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	images, err := findImages(ctx, conn, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 AMIs: %s", err)
 	}

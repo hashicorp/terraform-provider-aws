@@ -240,7 +240,6 @@ func testAccCheckTransitGatewayConnectPeerExists(ctx context.Context, n string, 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindTransitGatewayConnectPeerByID(ctx, conn, rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}

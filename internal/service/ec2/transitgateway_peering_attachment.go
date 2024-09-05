@@ -108,7 +108,6 @@ func resourceTransitGatewayPeeringAttachmentCreate(ctx context.Context, d *schem
 	}
 
 	output, err := conn.CreateTransitGatewayPeeringAttachment(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Transit Gateway Peering Attachment: %s", err)
 	}

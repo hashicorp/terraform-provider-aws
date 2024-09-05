@@ -93,7 +93,6 @@ func resourceAMILaunchPermissionCreate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	_, err := conn.ModifyImageAttribute(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating AMI Launch Permission (%s): %s", id, err)
 	}

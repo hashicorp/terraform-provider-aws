@@ -219,7 +219,6 @@ func testAccCheckManagedPrefixListEntryDestroy(ctx context.Context) resource.Tes
 			}
 
 			plID, cidr, err := tfec2.ManagedPrefixListEntryParseResourceID(rs.Primary.ID)
-
 			if err != nil {
 				return err
 			}
@@ -255,13 +254,11 @@ func testAccCheckManagedPrefixListEntryExists(ctx context.Context, n string, v *
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		plID, cidr, err := tfec2.ManagedPrefixListEntryParseResourceID(rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}
 
 		output, err := tfec2.FindManagedPrefixListEntryByIDAndCIDR(ctx, conn, plID, cidr)
-
 		if err != nil {
 			return err
 		}

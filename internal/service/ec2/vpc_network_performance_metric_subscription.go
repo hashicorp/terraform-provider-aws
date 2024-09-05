@@ -78,7 +78,6 @@ func resourceNetworkPerformanceMetricSubscriptionCreate(ctx context.Context, d *
 	}
 
 	_, err := conn.EnableAwsNetworkPerformanceMetricSubscription(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "enabling EC2 AWS Network Performance Metric Subscription (%s): %s", id, err)
 	}
@@ -134,7 +133,6 @@ func resourceNetworkPerformanceMetricSubscriptionDelete(ctx context.Context, d *
 		Source:      aws.String(source),
 		Statistic:   types.StatisticType(statistic),
 	})
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "disabling EC2 AWS Network Performance Metric Subscription (%s): %s", d.Id(), err)
 	}

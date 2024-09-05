@@ -205,7 +205,6 @@ func dataSourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	ep, err := findClientVPNEndpoint(ctx, conn, input)
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Client VPN Endpoint", err))
 	}

@@ -51,7 +51,8 @@ func TestSecurityGroupRuleMigrateState(t *testing.T) {
 				"cidr_blocks.1":     "172.16.2.0/24",
 				"cidr_blocks.2":     "172.16.3.0/24",
 				"cidr_blocks.3":     "172.16.4.0/24",
-				"cidr_blocks.#":     acctest.Ct4},
+				"cidr_blocks.#":     acctest.Ct4,
+			},
 			Expected: "sgrule-1826358977",
 		},
 	}
@@ -63,7 +64,6 @@ func TestSecurityGroupRuleMigrateState(t *testing.T) {
 		}
 		is, err := tfec2.SecurityGroupRuleMigrateState(
 			tc.StateVersion, is, tc.Meta)
-
 		if err != nil {
 			t.Fatalf("bad: %s, err: %#v", tn, err)
 		}

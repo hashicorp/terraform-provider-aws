@@ -26,7 +26,7 @@ import (
 // @Tags(identifierAttribute="id")
 // @Testing(tagsTest=false)
 func resourceDefaultSubnet() *schema.Resource {
-	//lintignore:R011
+	// lintignore:R011
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDefaultSubnetCreate,
 		ReadWithoutTimeout:   resourceSubnetRead,
@@ -199,7 +199,6 @@ func resourceDefaultSubnetCreate(ctx context.Context, d *schema.ResourceData, me
 
 		log.Printf("[DEBUG] Creating EC2 Default Subnet: %#v", input)
 		output, err := conn.CreateDefaultSubnet(ctx, input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating EC2 Default Subnet (%s): %s", availabilityZone, err)
 		}
@@ -210,18 +209,16 @@ func resourceDefaultSubnetCreate(ctx context.Context, d *schema.ResourceData, me
 		d.Set("existing_default_subnet", false)
 
 		subnet, err = waitSubnetAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for EC2 Default Subnet (%s) create: %s", d.Id(), err)
 		}
 
 		// Creating an IPv6-native default subnets associates an IPv6 CIDR block.
 		for i, v := range subnet.Ipv6CidrBlockAssociationSet {
-			if v.Ipv6CidrBlockState.State == awstypes.SubnetCidrBlockStateCodeAssociating { //we can only ever have 1 IPv6 block associated at once
+			if v.Ipv6CidrBlockState.State == awstypes.SubnetCidrBlockStateCodeAssociating { // we can only ever have 1 IPv6 block associated at once
 				associationID := aws.ToString(v.AssociationId)
 
 				subnetCidrBlockState, err := waitSubnetIPv6CIDRBlockAssociationCreated(ctx, conn, associationID)
-
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "waiting for EC2 Default Subnet (%s) IPv6 CIDR block (%s) to become associated: %s", d.Id(), associationID, err)
 				}

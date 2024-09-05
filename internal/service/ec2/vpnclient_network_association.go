@@ -73,7 +73,6 @@ func resourceClientVPNNetworkAssociationCreate(ctx context.Context, d *schema.Re
 	}
 
 	output, err := conn.AssociateClientVpnTargetNetwork(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Client VPN Network Association: %s", err)
 	}

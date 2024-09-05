@@ -245,7 +245,7 @@ func dataSourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("route_table_id", rt.RouteTableId)
 	d.Set(names.AttrVPCID, rt.VpcId)
 
-	//Ignore the AmazonFSx service tag in addition to standard ignores
+	// Ignore the AmazonFSx service tag in addition to standard ignores
 	if err := d.Set(names.AttrTags, keyValueTags(ctx, rt.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Ignore(tftags.New(ctx, []string{"AmazonFSx"})).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}

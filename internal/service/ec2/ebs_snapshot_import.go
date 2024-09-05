@@ -232,14 +232,12 @@ func resourceEBSSnapshotImportCreate(ctx context.Context, d *schema.ResourceData
 			return conn.ImportSnapshot(ctx, input)
 		},
 		errCodeInvalidParameter, "provided does not exist or does not have sufficient permissions")
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EBS Snapshot Import: %s", err)
 	}
 
 	taskID := aws.ToString(outputRaw.(*ec2.ImportSnapshotOutput).ImportTaskId)
 	output, err := waitEBSSnapshotImportComplete(ctx, conn, taskID, d.Timeout(schema.TimeoutCreate))
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EBS Snapshot Import (%s) create: %s", taskID, err)
 	}
@@ -255,13 +253,11 @@ func resourceEBSSnapshotImportCreate(ctx context.Context, d *schema.ResourceData
 			SnapshotId:  aws.String(d.Id()),
 			StorageTier: awstypes.TargetStorageTier(v.(string)),
 		})
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting EBS Snapshot Import (%s) Storage Tier: %s", d.Id(), err)
 		}
 
 		_, err = waitEBSSnapshotTierArchive(ctx, conn, d.Id(), ebsSnapshotArchivedTimeout)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for EBS Snapshot Import (%s) Storage Tier archive: %s", d.Id(), err)
 		}

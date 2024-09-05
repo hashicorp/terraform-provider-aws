@@ -1426,7 +1426,6 @@ func resourceNetworkInsightsAnalysisCreate(ctx context.Context, d *schema.Resour
 	}
 
 	output, err := conn.StartNetworkInsightsAnalysis(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Network Insights Analysis: %s", err)
 	}

@@ -279,7 +279,6 @@ func testAccCheckAvailabilityZonesBuildAvailable(attrs map[string]string) ([]str
 	}
 
 	groupNamesQty, err := strconv.Atoi(groupNames)
-
 	if err != nil {
 		return nil, err
 	}

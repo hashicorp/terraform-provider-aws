@@ -697,7 +697,6 @@ func resourceVPNConnectionCreate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	output, err := conn.CreateVpnConnection(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 VPN Connection: %s", err)
 	}
@@ -752,7 +751,6 @@ func resourceVPNConnectionRead(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		output, err := findTransitGatewayAttachment(ctx, conn, input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading EC2 VPN Connection (%s) Transit Gateway Attachment: %s", d.Id(), err)
 		}
@@ -871,7 +869,6 @@ func resourceVPNConnectionUpdate(ctx context.Context, d *schema.ResourceData, me
 		}
 
 		_, err := conn.ModifyVpnConnection(ctx, input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying EC2 VPN Connection (%s): %s", d.Id(), err)
 		}
@@ -903,7 +900,6 @@ func resourceVPNConnectionUpdate(ctx context.Context, d *schema.ResourceData, me
 		}
 
 		_, err := conn.ModifyVpnConnectionOptions(ctx, input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying EC2 VPN Connection (%s) connection options: %s", d.Id(), err)
 		}
@@ -922,7 +918,6 @@ func resourceVPNConnectionUpdate(ctx context.Context, d *schema.ResourceData, me
 			}
 
 			_, err := conn.ModifyVpnTunnelOptions(ctx, input)
-
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "modifying EC2 VPN Connection (%s) tunnel (%d) options: %s", d.Id(), i+1, err)
 			}

@@ -217,7 +217,6 @@ func testAccCheckRouteTableAssociationExists(ctx context.Context, n string, v *a
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		association, err := tfec2.FindRouteTableAssociationByID(ctx, conn, rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}

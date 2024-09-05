@@ -60,7 +60,6 @@ func dataSourceSubnetsRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	output, err := findSubnets(ctx, conn, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Subnets: %s", err)
 	}

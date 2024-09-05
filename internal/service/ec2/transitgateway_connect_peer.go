@@ -130,7 +130,6 @@ func resourceTransitGatewayConnectPeerCreate(ctx context.Context, d *schema.Reso
 
 	if v, ok := d.GetOk("bgp_asn"); ok {
 		v, err := strconv.ParseInt(v.(string), 10, 64)
-
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
@@ -146,7 +145,6 @@ func resourceTransitGatewayConnectPeerCreate(ctx context.Context, d *schema.Reso
 
 	log.Printf("[DEBUG] Creating EC2 Transit Gateway Connect Peer: %+v", input)
 	output, err := conn.CreateTransitGatewayConnectPeer(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Transit Gateway Connect Peer: %s", err)
 	}

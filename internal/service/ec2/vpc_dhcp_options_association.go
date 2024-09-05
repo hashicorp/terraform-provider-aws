@@ -60,7 +60,6 @@ func resourceVPCDHCPOptionsAssociationPut(ctx context.Context, d *schema.Resourc
 
 	log.Printf("[DEBUG] Creating EC2 VPC DHCP Options Set Association: %#v", input)
 	_, err := conn.AssociateDhcpOptions(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 VPC DHCP Options Set Association (%s): %s", id, err)
 	}
@@ -75,7 +74,6 @@ func resourceVPCDHCPOptionsAssociationRead(ctx context.Context, d *schema.Resour
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	dhcpOptionsID, vpcID, err := vpcDHCPOptionsAssociationParseResourceID(d.Id())
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC DHCP Options Set Association (%s): %s", d.Id(), err)
 	}
@@ -105,7 +103,6 @@ func resourceVPCDHCPOptionsAssociationDelete(ctx context.Context, d *schema.Reso
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	dhcpOptionsID, vpcID, err := vpcDHCPOptionsAssociationParseResourceID(d.Id())
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -138,7 +135,6 @@ func resourceVPCDHCPOptionsAssociationImport(ctx context.Context, d *schema.Reso
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	vpc, err := findVPCByID(ctx, conn, d.Id())
-
 	if err != nil {
 		return nil, fmt.Errorf("reading EC2 VPC (%s): %w", d.Id(), err)
 	}

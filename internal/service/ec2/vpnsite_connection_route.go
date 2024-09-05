@@ -54,7 +54,6 @@ func resourceVPNConnectionRouteCreate(ctx context.Context, d *schema.ResourceDat
 	}
 
 	_, err := conn.CreateVpnConnectionRoute(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 VPN Connection Route (%s): %s", id, err)
 	}

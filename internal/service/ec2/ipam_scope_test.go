@@ -140,7 +140,6 @@ func testAccCheckIPAMScopeExists(ctx context.Context, n string, v *awstypes.Ipam
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindIPAMScopeByID(ctx, conn, rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}

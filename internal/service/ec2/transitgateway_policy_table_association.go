@@ -66,7 +66,6 @@ func resourceTransitGatewayPolicyTableAssociationCreate(ctx context.Context, d *
 	// "IncorrectState: Cannot have both PolicyTableAssociation and RouteTableAssociation on the same TransitGateway Attachment".
 	transitGatewayAttachmentID := d.Get(names.AttrTransitGatewayAttachmentID).(string)
 	transitGatewayAttachment, err := findTransitGatewayAttachmentByID(ctx, conn, transitGatewayAttachmentID)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway Attachment (%s): %s", transitGatewayAttachmentID, err)
 	}
@@ -97,7 +96,6 @@ func resourceTransitGatewayPolicyTableAssociationCreate(ctx context.Context, d *
 	}
 
 	_, err = conn.AssociateTransitGatewayPolicyTable(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Transit Gateway Policy Table Association (%s): %s", id, err)
 	}

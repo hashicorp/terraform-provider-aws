@@ -113,7 +113,6 @@ func (r *instanceMetadataDefaultsResource) Create(ctx context.Context, request r
 	}
 
 	_, err := conn.ModifyInstanceMetadataDefaults(ctx, input)
-
 	if err != nil {
 		response.Diagnostics.AddError("creating EC2 Instance Metadata Defaults", err.Error())
 
@@ -191,7 +190,6 @@ func (r *instanceMetadataDefaultsResource) Update(ctx context.Context, request r
 	}
 
 	_, err := conn.ModifyInstanceMetadataDefaults(ctx, input)
-
 	if err != nil {
 		response.Diagnostics.AddError("updating EC2 Instance Metadata Defaults", err.Error())
 
@@ -212,7 +210,6 @@ func (r *instanceMetadataDefaultsResource) Delete(ctx context.Context, request r
 	}
 
 	_, err := conn.ModifyInstanceMetadataDefaults(ctx, input)
-
 	if err != nil {
 		response.Diagnostics.AddError("deleting EC2 Instance Metadata Defaults", err.Error())
 
@@ -224,7 +221,6 @@ func findInstanceMetadataDefaults(ctx context.Context, conn *ec2.Client) (*awsty
 	input := &ec2.GetInstanceMetadataDefaultsInput{}
 
 	output, err := conn.GetInstanceMetadataDefaults(ctx, &ec2.GetInstanceMetadataDefaultsInput{})
-
 	if err != nil {
 		return nil, err
 	}

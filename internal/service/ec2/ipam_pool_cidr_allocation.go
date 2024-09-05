@@ -126,7 +126,6 @@ func resourceIPAMPoolCIDRAllocationCreate(ctx context.Context, d *schema.Resourc
 	}
 
 	output, err := conn.AllocateIpamPoolCidr(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating IPAM Pool CIDR Allocation: %s", err)
 	}
@@ -137,7 +136,6 @@ func resourceIPAMPoolCIDRAllocationCreate(ctx context.Context, d *schema.Resourc
 	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
 		return findIPAMPoolAllocationByTwoPartKey(ctx, conn, allocationID, ipamPoolID)
 	})
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for IPAM Pool CIDR Allocation (%s) create: %s", d.Id(), err)
 	}

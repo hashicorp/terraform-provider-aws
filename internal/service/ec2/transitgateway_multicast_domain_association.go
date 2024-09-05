@@ -69,7 +69,6 @@ func resourceTransitGatewayMulticastDomainAssociationCreate(ctx context.Context,
 
 	log.Printf("[DEBUG] Creating EC2 Transit Gateway Multicast Domain Association: %+v", input)
 	_, err := conn.AssociateTransitGatewayMulticastDomain(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Transit Gateway Multicast Domain Association (%s): %s", id, err)
 	}

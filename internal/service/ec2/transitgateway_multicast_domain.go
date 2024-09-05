@@ -102,7 +102,6 @@ func resourceTransitGatewayMulticastDomainCreate(ctx context.Context, d *schema.
 
 	log.Printf("[DEBUG] Creating EC2 Transit Gateway Multicast Domain: %+v", input)
 	output, err := conn.CreateTransitGatewayMulticastDomain(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Transit Gateway Multicast Domain: %s", err)
 	}
@@ -170,13 +169,11 @@ func resourceTransitGatewayMulticastDomainDelete(ctx context.Context, d *schema.
 	for _, v := range groups {
 		if aws.ToBool(v.GroupMember) {
 			err := deregisterTransitGatewayMulticastGroupMember(ctx, conn, d.Id(), aws.ToString(v.GroupIpAddress), aws.ToString(v.NetworkInterfaceId))
-
 			if err != nil {
 				diags = sdkdiag.AppendFromErr(diags, err)
 			}
 		} else if aws.ToBool(v.GroupSource) {
 			err := deregisterTransitGatewayMulticastGroupSource(ctx, conn, d.Id(), aws.ToString(v.GroupIpAddress), aws.ToString(v.NetworkInterfaceId))
-
 			if err != nil {
 				diags = sdkdiag.AppendFromErr(diags, err)
 			}
@@ -201,7 +198,6 @@ func resourceTransitGatewayMulticastDomainDelete(ctx context.Context, d *schema.
 
 	for _, v := range associations {
 		err := disassociateTransitGatewayMulticastDomain(ctx, conn, d.Id(), aws.ToString(v.TransitGatewayAttachmentId), aws.ToString(v.Subnet.SubnetId), d.Timeout(schema.TimeoutDelete))
-
 		if err != nil {
 			diags = sdkdiag.AppendFromErr(diags, err)
 		}

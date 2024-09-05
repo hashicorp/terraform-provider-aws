@@ -106,7 +106,6 @@ func dataSourceManagedPrefixListRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	pl, err := findManagedPrefixList(ctx, conn, input)
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Managed Prefix List", err))
 	}
@@ -114,7 +113,6 @@ func dataSourceManagedPrefixListRead(ctx context.Context, d *schema.ResourceData
 	d.SetId(aws.ToString(pl.PrefixListId))
 
 	prefixListEntries, err := findManagedPrefixListEntriesByID(ctx, conn, d.Id())
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Managed Prefix List (%s) Entries: %s", d.Id(), err)
 	}

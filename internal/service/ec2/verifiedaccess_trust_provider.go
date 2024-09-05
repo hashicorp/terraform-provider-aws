@@ -174,7 +174,6 @@ func resourceVerifiedAccessTrustProviderCreate(ctx context.Context, d *schema.Re
 	}
 
 	output, err := conn.CreateVerifiedAccessTrustProvider(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Verified Access Trust Provider: %s", err)
 	}
@@ -246,7 +245,6 @@ func resourceVerifiedAccessTrustProviderUpdate(ctx context.Context, d *schema.Re
 		}
 
 		_, err := conn.ModifyVerifiedAccessTrustProvider(ctx, input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Verified Access Trust Provider (%s): %s", d.Id(), err)
 		}

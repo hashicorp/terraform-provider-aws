@@ -189,7 +189,6 @@ func dataSourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	subnet, err := findSubnet(ctx, conn, input)
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Subnet", err))
 	}
@@ -213,7 +212,7 @@ func dataSourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("ipv6_cidr_block", nil)
 
 	for _, v := range subnet.Ipv6CidrBlockAssociationSet {
-		if v.Ipv6CidrBlockState != nil && v.Ipv6CidrBlockState.State == awstypes.SubnetCidrBlockStateCodeAssociated { //we can only ever have 1 IPv6 block associated at once
+		if v.Ipv6CidrBlockState != nil && v.Ipv6CidrBlockState.State == awstypes.SubnetCidrBlockStateCodeAssociated { // we can only ever have 1 IPv6 block associated at once
 			d.Set("ipv6_cidr_block_association_id", v.AssociationId)
 			d.Set("ipv6_cidr_block", v.Ipv6CidrBlock)
 		}

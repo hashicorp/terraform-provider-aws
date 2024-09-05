@@ -61,7 +61,6 @@ func resourceEgressOnlyInternetGatewayCreate(ctx context.Context, d *schema.Reso
 	}
 
 	output, err := conn.CreateEgressOnlyInternetGateway(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Egress-only Internet Gateway: %s", err)
 	}

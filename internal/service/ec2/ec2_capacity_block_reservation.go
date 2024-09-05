@@ -182,7 +182,6 @@ func (r *capacityBlockReservationResource) Create(ctx context.Context, request r
 	input.TagSpecifications = getTagSpecificationsIn(ctx, awstypes.ResourceTypeCapacityReservation)
 
 	output, err := conn.PurchaseCapacityBlock(ctx, input)
-
 	if err != nil {
 		response.Diagnostics.AddError("purchasing EC2 Capacity Block Reservation", err.Error())
 
@@ -193,7 +192,6 @@ func (r *capacityBlockReservationResource) Create(ctx context.Context, request r
 	data.ID = fwflex.StringToFramework(ctx, output.CapacityReservation.CapacityReservationId)
 
 	cr, err := waitCapacityBlockReservationActive(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
-
 	if err != nil {
 		response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID) // Set 'id' so as to taint the resource.
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for EC2 Capacity Block Reservation (%s) active", data.ID.ValueString()), err.Error())

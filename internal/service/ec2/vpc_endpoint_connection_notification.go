@@ -88,7 +88,6 @@ func resourceVPCEndpointConnectionNotificationCreate(ctx context.Context, d *sch
 	}
 
 	output, err := conn.CreateVpcEndpointConnectionNotification(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 VPC Endpoint Connection Notification: %s", err)
 	}
@@ -141,7 +140,6 @@ func resourceVPCEndpointConnectionNotificationUpdate(ctx context.Context, d *sch
 	}
 
 	_, err := conn.ModifyVpcEndpointConnectionNotification(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating EC2 VPC Endpoint Connection Notification (%s): %s", d.Id(), err)
 	}

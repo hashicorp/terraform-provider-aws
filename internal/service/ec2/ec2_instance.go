@@ -46,7 +46,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.Instance")
 // @Testing(importIgnore="user_data_replace_on_change")
 func resourceInstance() *schema.Resource {
-	//lintignore:R011
+	// lintignore:R011
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceCreate,
 		ReadWithoutTimeout:   resourceInstanceRead,
@@ -856,20 +856,17 @@ func resourceInstance() *schema.Resource {
 					var launchTemplateID, instanceVersion, defaultVersion, latestVersion string
 
 					launchTemplateID, err = findInstanceLaunchTemplateID(ctx, conn, diff.Id())
-
 					if err != nil {
 						return err
 					}
 
 					if launchTemplateID != "" {
 						instanceVersion, err = findInstanceLaunchTemplateVersion(ctx, conn, diff.Id())
-
 						if err != nil {
 							return err
 						}
 
 						_, defaultVersion, latestVersion, err = findLaunchTemplateNameAndVersions(ctx, conn, launchTemplateID)
-
 						if err != nil {
 							return err
 						}
@@ -1037,7 +1034,6 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			return false, err
 		},
 	)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Instance: %s", err)
 	}
@@ -1047,7 +1043,6 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	d.SetId(aws.ToString(instanceId))
 
 	instance, err := waitInstanceCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Instance (%s) create: %s", d.Id(), err)
 	}
@@ -1133,7 +1128,6 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	instanceType := string(instance.InstanceType)
 	instanceTypeInfo, err := findInstanceTypeByName(ctx, conn, instanceType)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Instance Type (%s): %s", instanceType, err)
 	}
@@ -1205,7 +1199,6 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if instance.IamInstanceProfile != nil && instance.IamInstanceProfile.Arn != nil {
 		name, err := instanceProfileARNToName(aws.ToString(instance.IamInstanceProfile.Arn))
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting iam_instance_profile: %s", err)
 		}
@@ -1217,7 +1210,6 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	{
 		launchTemplate, err := flattenInstanceLaunchTemplate(ctx, conn, d.Id(), d.Get("launch_template.0.version").(string))
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s) launch template: %s", d.Id(), err)
 		}
@@ -1388,7 +1380,6 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 				Attribute:  awstypes.InstanceAttributeNameDisableApiTermination,
 				InstanceId: aws.String(d.Id()),
 			})
-
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "getting attribute (%s): %s", awstypes.InstanceAttributeNameDisableApiTermination, err)
 			}
@@ -1470,7 +1461,6 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 
 		apiObject, err := findSpotInstanceRequest(ctx, conn, input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading EC2 Spot Instance Request (%s): %s", spotInstanceRequestID, err)
 		}
@@ -1621,7 +1611,6 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 
 			_, err := conn.ModifyInstanceAttribute(ctx, input)
-
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "modifying EC2 Instance (%s) SourceDestCheck attribute: %s", d.Id(), err)
 			}
@@ -1656,7 +1645,6 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 
 			_, err := conn.AssignIpv6Addresses(ctx, input)
-
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "assigning EC2 Instance (%s) IPv6 addresses: %s", d.Id(), err)
 			}
@@ -1677,7 +1665,6 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 
 			_, err := conn.UnassignIpv6Addresses(ctx, input)
-
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "unassigning EC2 Instance (%s) IPv6 addresses: %s", d.Id(), err)
 			}
@@ -1686,7 +1673,6 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 	if d.HasChanges("secondary_private_ips", names.AttrVPCSecurityGroupIDs) && !d.IsNewResource() {
 		instance, err := findInstanceByID(ctx, conn, d.Id())
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", d.Id(), err)
 		}
@@ -1860,7 +1846,6 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		_, err := conn.ModifyInstanceAttribute(ctx, input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying EC2 Instance (%s) InstanceInitiatedShutdownBehavior attribute: %s", d.Id(), err)
 		}
@@ -1874,7 +1859,6 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			AutoRecovery: awstypes.InstanceAutoRecoveryState(autoRecovery),
 			InstanceId:   aws.String(d.Id()),
 		})
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s): modifying maintenance options: %s", d.Id(), err)
 		}
@@ -1913,7 +1897,6 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 			log.Printf("[DEBUG] Modifying EC2 Instance credit specification: %s", d.Id())
 			_, err := conn.ModifyInstanceCreditSpecification(ctx, input)
-
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s) credit specification: %s", d.Id(), err)
 			}
@@ -2001,7 +1984,6 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		if modifyVolume {
 			log.Printf("[DEBUG] Modifying volume: %s", d.Id())
 			_, err := conn.ModifyVolume(ctx, input)
-
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s) volume (%s): %s", d.Id(), volID, err)
 			}
@@ -2027,7 +2009,6 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				}
 
 				_, err := conn.ModifyInstanceAttribute(ctx, input)
-
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "modifying EC2 Instance (%s) BlockDeviceMappings (%s) attribute: %s", d.Id(), deviceName, err)
 				}
@@ -2086,7 +2067,6 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				log.Printf("[DEBUG] Modifying EC2 Instance capacity reservation attributes: %s", d.Id())
 
 				_, err := conn.ModifyInstanceCapacityReservationAttributes(ctx, input)
-
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s) capacity reservation attributes: %s", d.Id(), err)
 				}
@@ -2123,7 +2103,6 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 
 			_, err := conn.ModifyPrivateDnsNameOptions(ctx, input)
-
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s): modifying private DNS name options: %s", d.Id(), err)
 			}
@@ -2155,7 +2134,6 @@ func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta in
 		_, err := conn.CancelSpotInstanceRequests(ctx, &ec2.CancelSpotInstanceRequestsInput{
 			SpotInstanceRequestIds: []string{spotInstanceRequestID},
 		})
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "cancelling EC2 Spot Fleet Request (%s): %s", spotInstanceRequestID, err)
 		}
@@ -2430,7 +2408,6 @@ func findRootDeviceName(ctx context.Context, conn *ec2.Client, amiID string) (*s
 	}
 
 	image, err := findImageByID(ctx, conn, amiID)
-
 	if err != nil {
 		return nil, err
 	}
@@ -2674,7 +2651,6 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 
 			if v, ok := d.GetOk(names.AttrLaunchTemplate); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				launchTemplateData, err := findLaunchTemplateData(ctx, conn, expandLaunchTemplateSpecification(v.([]interface{})[0].(map[string]interface{})))
-
 				if err != nil {
 					return nil, err
 				}
@@ -2788,7 +2764,6 @@ func readInstanceShutdownBehavior(ctx context.Context, d *schema.ResourceData, c
 		InstanceId: aws.String(d.Id()),
 		Attribute:  awstypes.InstanceAttributeNameInstanceInitiatedShutdownBehavior,
 	})
-
 	if err != nil {
 		return fmt.Errorf("getting attribute (%s): %w", awstypes.InstanceAttributeNameInstanceInitiatedShutdownBehavior, err)
 	}
@@ -2811,7 +2786,6 @@ func getInstancePasswordData(ctx context.Context, instanceID string, conn *ec2.C
 	err := retry.RetryContext(ctx, timeout, func() *retry.RetryError {
 		var err error
 		resp, err = conn.GetPasswordData(ctx, input)
-
 		if err != nil {
 			return retry.NonRetryableError(err)
 		}
@@ -2902,7 +2876,6 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interfa
 	if v, ok := d.GetOk(names.AttrLaunchTemplate); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		launchTemplateSpecification := expandLaunchTemplateSpecification(v.([]interface{})[0].(map[string]interface{}))
 		launchTemplateData, err := findLaunchTemplateData(ctx, conn, launchTemplateSpecification)
-
 		if err != nil {
 			return nil, err
 		}
@@ -2926,7 +2899,6 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interfa
 	if v, ok := d.GetOk("credit_specification"); ok && len(v.([]interface{})) > 0 {
 		if instanceType != "" {
 			instanceTypeInfo, err := findInstanceTypeByName(ctx, conn, instanceType)
-
 			if err != nil {
 				return nil, fmt.Errorf("reading EC2 Instance Type (%s): %w", instanceType, err)
 			}
@@ -3157,7 +3129,6 @@ func stopInstance(ctx context.Context, conn *ec2.Client, id string, force bool, 
 		Force:       aws.Bool(force),
 		InstanceIds: []string{id},
 	})
-
 	if err != nil {
 		return fmt.Errorf("stopping EC2 Instance (%s): %w", id, err)
 	}
@@ -3812,7 +3783,6 @@ func expandLaunchTemplateSpecification(tfMap map[string]interface{}) *awstypes.L
 
 func flattenInstanceLaunchTemplate(ctx context.Context, conn *ec2.Client, instanceID, previousLaunchTemplateVersion string) ([]interface{}, error) {
 	launchTemplateID, err := findInstanceLaunchTemplateID(ctx, conn, instanceID)
-
 	if err != nil {
 		return nil, err
 	}
@@ -3837,7 +3807,6 @@ func flattenInstanceLaunchTemplate(ctx context.Context, conn *ec2.Client, instan
 	}
 
 	currentLaunchTemplateVersion, err := findInstanceLaunchTemplateVersion(ctx, conn, instanceID)
-
 	if err != nil {
 		return nil, err
 	}
@@ -3874,7 +3843,6 @@ func flattenInstanceLaunchTemplate(ctx context.Context, conn *ec2.Client, instan
 
 func findInstanceLaunchTemplateID(ctx context.Context, conn *ec2.Client, id string) (string, error) {
 	launchTemplateID, err := findInstanceTagValue(ctx, conn, id, "aws:ec2launchtemplate:id")
-
 	if err != nil {
 		return "", fmt.Errorf("reading EC2 Instance (%s) launch template ID tag: %w", id, err)
 	}
@@ -3884,7 +3852,6 @@ func findInstanceLaunchTemplateID(ctx context.Context, conn *ec2.Client, id stri
 
 func findInstanceLaunchTemplateVersion(ctx context.Context, conn *ec2.Client, id string) (string, error) {
 	launchTemplateVersion, err := findInstanceTagValue(ctx, conn, id, "aws:ec2launchtemplate:version")
-
 	if err != nil {
 		return "", fmt.Errorf("reading EC2 Instance (%s) launch template version tag: %w", id, err)
 	}
@@ -3917,7 +3884,6 @@ func findLaunchTemplateData(ctx context.Context, conn *ec2.Client, launchTemplat
 	}
 
 	output, err := findLaunchTemplateVersions(ctx, conn, input)
-
 	if err != nil {
 		return nil, fmt.Errorf("reading EC2 Launch Template versions: %w", err)
 	}
@@ -3932,7 +3898,6 @@ func findLaunchTemplateData(ctx context.Context, conn *ec2.Client, launchTemplat
 // findLaunchTemplateNameAndVersions returns the specified launch template's name, default version and latest version.
 func findLaunchTemplateNameAndVersions(ctx context.Context, conn *ec2.Client, id string) (string, string, string, error) {
 	lt, err := findLaunchTemplateByID(ctx, conn, id)
-
 	if err != nil {
 		return "", "", "", err
 	}
@@ -3949,7 +3914,6 @@ func findInstanceTagValue(ctx context.Context, conn *ec2.Client, instanceID, tag
 	}
 
 	output, err := conn.DescribeTags(ctx, input)
-
 	if err != nil {
 		return "", err
 	}
@@ -3991,7 +3955,6 @@ func parseInstanceType(s string) (*instanceType, error) {
 	}
 
 	generation, err := strconv.Atoi(matches[3])
-
 	if err != nil {
 		return nil, err
 	}

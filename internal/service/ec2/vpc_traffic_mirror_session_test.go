@@ -42,7 +42,7 @@ func TestAccVPCTrafficMirrorSession_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTrafficMirrorSessionDestroy(ctx),
 		Steps: []resource.TestStep{
-			//create
+			// create
 			{
 				Config: testAccVPCTrafficMirrorSessionConfig_basic(rName, session),
 				Check: resource.ComposeTestCheckFunc(
@@ -258,7 +258,6 @@ func testAccCheckTrafficMirrorSessionExists(ctx context.Context, n string, v *aw
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindTrafficMirrorSessionByID(ctx, conn, rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}

@@ -95,7 +95,6 @@ func testAccCheckTransitGatewayPolicyTableAssociationExists(ctx context.Context,
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindTransitGatewayPolicyTableAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["transit_gateway_policy_table_id"], rs.Primary.Attributes[names.AttrTransitGatewayAttachmentID])
-
 		if err != nil {
 			return err
 		}

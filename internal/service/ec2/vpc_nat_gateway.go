@@ -155,7 +155,6 @@ func resourceNATGatewayCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	output, err := conn.CreateNatGateway(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 NAT Gateway: %s", err)
 	}
@@ -235,7 +234,6 @@ func resourceNATGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta 
 				}
 
 				_, err := conn.AssignPrivateNatGatewayAddress(ctx, input)
-
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "assigning EC2 NAT Gateway (%s) private IP addresses: %s", d.Id(), err)
 				}
@@ -254,7 +252,6 @@ func resourceNATGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta 
 				}
 
 				_, err := conn.UnassignPrivateNatGatewayAddress(ctx, input)
-
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "unassigning EC2 NAT Gateway (%s) private IP addresses: %s", d.Id(), err)
 				}
@@ -288,7 +285,6 @@ func resourceNATGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta 
 				}
 
 				_, err := conn.AssociateNatGatewayAddress(ctx, input)
-
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "associating EC2 NAT Gateway (%s) allocation IDs: %s", d.Id(), err)
 				}
@@ -302,7 +298,6 @@ func resourceNATGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 			if del := o.Difference(n); del.Len() > 0 {
 				natGateway, err := findNATGatewayByID(ctx, conn, d.Id())
-
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "reading EC2 NAT Gateway (%s): %s", d.Id(), err)
 				}
@@ -323,7 +318,6 @@ func resourceNATGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta 
 				}
 
 				_, err = conn.DisassociateNatGatewayAddress(ctx, input)
-
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "disassociating EC2 NAT Gateway (%s) allocation IDs: %s", d.Id(), err)
 				}

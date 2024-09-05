@@ -85,7 +85,6 @@ func resourceVPCEndpointSubnetAssociationCreate(ctx context.Context, d *schema.R
 		},
 	}
 	_, err := c.WaitForStateContext(ctx)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating VPC Endpoint Subnet Association (%s): %s", id, err)
 	}
@@ -93,7 +92,6 @@ func resourceVPCEndpointSubnetAssociationCreate(ctx context.Context, d *schema.R
 	d.SetId(vpcEndpointSubnetAssociationCreateID(endpointID, subnetID))
 
 	_, err = waitVPCEndpointAvailable(ctx, conn, endpointID, d.Timeout(schema.TimeoutCreate))
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for VPC Endpoint (%s) to become available: %s", endpointID, err)
 	}
@@ -151,7 +149,6 @@ func resourceVPCEndpointSubnetAssociationDelete(ctx context.Context, d *schema.R
 	}
 
 	_, err = waitVPCEndpointAvailable(ctx, conn, endpointID, d.Timeout(schema.TimeoutDelete))
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for VPC Endpoint (%s) to become available: %s", endpointID, err)
 	}

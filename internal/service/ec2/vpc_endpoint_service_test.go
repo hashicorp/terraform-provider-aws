@@ -363,7 +363,6 @@ func testAccCheckVPCEndpointServiceExists(ctx context.Context, n string, v *awst
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindVPCEndpointServiceConfigurationByID(ctx, conn, rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}

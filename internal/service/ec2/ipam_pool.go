@@ -210,7 +210,6 @@ func resourceIPAMPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	output, err := conn.CreateIpamPool(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating IPAM Pool: %s", err)
 	}
@@ -305,7 +304,6 @@ func resourceIPAMPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		_, err := conn.ModifyIpamPool(ctx, input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating IPAM Pool (%s): %s", d.Id(), err)
 		}

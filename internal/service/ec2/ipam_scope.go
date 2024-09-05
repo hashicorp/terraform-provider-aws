@@ -96,7 +96,6 @@ func resourceIPAMScopeCreate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	output, err := conn.CreateIpamScope(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating IPAM Scope: %s", err)
 	}
@@ -154,7 +153,6 @@ func resourceIPAMScopeUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 
 		_, err := conn.ModifyIpamScope(ctx, input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating IPAM Scope (%s): %s", d.Id(), err)
 		}

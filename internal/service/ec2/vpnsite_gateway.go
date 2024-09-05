@@ -84,7 +84,6 @@ func resourceVPNGatewayCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	output, err := conn.CreateVpnGateway(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 VPN Gateway: %s", err)
 	}
@@ -215,7 +214,6 @@ func attachVPNGatewayToVPC(ctx context.Context, conn *ec2.Client, vpnGatewayID, 
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, ec2PropagationTimeout, func() (interface{}, error) {
 		return conn.AttachVpnGateway(ctx, input)
 	}, errCodeInvalidVPNGatewayIDNotFound)
-
 	if err != nil {
 		return fmt.Errorf("attaching EC2 VPN Gateway (%s) to VPC (%s): %w", vpnGatewayID, vpcID, err)
 	}

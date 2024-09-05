@@ -50,7 +50,6 @@ func resourceNetworkACLAssociationCreate(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	associationID, err := networkACLAssociationCreate(ctx, conn, d.Get("network_acl_id").(string), d.Get(names.AttrSubnetID).(string))
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -108,7 +107,6 @@ func resourceNetworkACLAssociationDelete(ctx context.Context, d *schema.Resource
 
 	vpcID := aws.ToString(nacl.VpcId)
 	defaultNACL, err := findVPCDefaultNetworkACL(ctx, conn, vpcID)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) default NACL: %s", vpcID, err)
 	}
@@ -124,7 +122,6 @@ func resourceNetworkACLAssociationDelete(ctx context.Context, d *schema.Resource
 // The subnet's current association is replaced and the new association's ID is returned.
 func networkACLAssociationCreate(ctx context.Context, conn *ec2.Client, naclID, subnetID string) (string, error) {
 	association, err := findNetworkACLAssociationBySubnetID(ctx, conn, subnetID)
-
 	if err != nil {
 		return "", fmt.Errorf("reading EC2 Network ACL Association for EC2 Subnet (%s): %w", subnetID, err)
 	}
@@ -138,7 +135,6 @@ func networkACLAssociationCreate(ctx context.Context, conn *ec2.Client, naclID, 
 	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, ec2PropagationTimeout, func() (interface{}, error) {
 		return conn.ReplaceNetworkAclAssociation(ctx, input)
 	}, errCodeInvalidAssociationIDNotFound)
-
 	if err != nil {
 		return "", fmt.Errorf("creating EC2 Network ACL (%s) Association: %w", naclID, err)
 	}
@@ -191,7 +187,6 @@ func networkACLAssociationDelete(ctx context.Context, conn *ec2.Client, associat
 // Each subnet's current association is replaced by an association with the specified VPC's default NACL.
 func networkACLAssociationsDelete(ctx context.Context, conn *ec2.Client, vpcID string, subnetIDs []interface{}) error {
 	defaultNACL, err := findVPCDefaultNetworkACL(ctx, conn, vpcID)
-
 	if err != nil {
 		return fmt.Errorf("reading EC2 VPC (%s) default NACL: %w", vpcID, err)
 	}

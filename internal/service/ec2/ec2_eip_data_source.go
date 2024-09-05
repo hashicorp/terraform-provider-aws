@@ -131,7 +131,6 @@ func dataSourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	eip, err := findEIP(ctx, conn, input)
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 EIP", err))
 	}

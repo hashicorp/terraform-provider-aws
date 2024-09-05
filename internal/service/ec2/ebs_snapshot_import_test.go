@@ -325,7 +325,6 @@ func testAccEBSSnapshotDisk(t *testing.T) string {
 	b64_compressed := "H4sIAAAAAAACA0vOz0tNLsmsYGBgYGJgZIACJgZ1789hZUn5FQxsDIzhmUbZMHEEzSIIJJj///+QlV1rMXFVnLzHwteXYmWDDfYxjIIhA5IrigsSi4pT/0MBRJSNAZoWGBkUGBj+//9SNhpSo2AUDD+AyPOjYESW/6P1/4gGAAvDpVcACgAA"
 	decoder := base64.NewDecoder(base64.StdEncoding, strings.NewReader(b64_compressed))
 	zr, err := gzip.NewReader(decoder)
-
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -334,7 +333,6 @@ func testAccEBSSnapshotDisk(t *testing.T) string {
 	encoder := base64.NewEncoder(base64.StdEncoding, &out)
 
 	_, err = io.Copy(encoder, zr)
-
 	if err != nil {
 		t.Fatal(err)
 	}

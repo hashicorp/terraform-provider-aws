@@ -127,7 +127,6 @@ func dataSourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	ngw, err := findNATGateway(ctx, conn, input)
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 NAT Gateway", err))
 	}

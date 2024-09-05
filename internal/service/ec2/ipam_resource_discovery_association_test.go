@@ -132,7 +132,6 @@ func testAccCheckIPAMResourceDiscoveryAssociationExists(ctx context.Context, n s
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindIPAMResourceDiscoveryAssociationByID(ctx, conn, rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}

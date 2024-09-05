@@ -178,7 +178,6 @@ func dataSourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	vpce, err := findVPCEndpoint(ctx, conn, input)
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 VPC Endpoint", err))
 	}
@@ -235,7 +234,6 @@ func dataSourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	policy, err := structure.NormalizeJsonString(aws.ToString(vpce.PolicyDocument))
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "policy contains invalid JSON: %s", err)
 	}

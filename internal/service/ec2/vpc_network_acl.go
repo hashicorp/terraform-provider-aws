@@ -45,7 +45,6 @@ func resourceNetworkACL() *schema.Resource {
 				conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 				nacl, err := findNetworkACLByID(ctx, conn, d.Id())
-
 				if err != nil {
 					return nil, err
 				}
@@ -145,7 +144,6 @@ func networkACLRuleNestedBlock() *schema.Resource {
 				Required: true,
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
 					_, err := networkACLProtocolNumber(v.(string))
-
 					if err != nil {
 						errors = append(errors, fmt.Errorf("%q : %w", k, err))
 					}
@@ -178,7 +176,6 @@ func resourceNetworkACLCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	output, err := conn.CreateNetworkAcl(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Network ACL: %s", err)
 	}
@@ -441,7 +438,6 @@ func createNetworkACLEntries(ctx context.Context, conn *ec2.Client, naclID strin
 
 		log.Printf("[INFO] Creating EC2 Network ACL Entry: %#v", input)
 		_, err := conn.CreateNetworkAclEntry(ctx, input)
-
 		if err != nil {
 			return fmt.Errorf("creating EC2 Network ACL (%s) Entry: %w", naclID, err)
 		}
@@ -472,7 +468,6 @@ func deleteNetworkACLEntries(ctx context.Context, conn *ec2.Client, naclID strin
 
 		log.Printf("[INFO] Deleting EC2 Network ACL Entry: %#v", input)
 		_, err := conn.DeleteNetworkAclEntry(ctx, input)
-
 		if err != nil {
 			return fmt.Errorf("deleting EC2 Network ACL (%s) Entry: %w", naclID, err)
 		}
@@ -529,7 +524,6 @@ func expandNetworkACLEntry(tfMap map[string]interface{}, egress bool) *awstypes.
 
 	if v, ok := tfMap[names.AttrProtocol].(string); ok && v != "" {
 		protocolNumber, err := networkACLProtocolNumber(v)
-
 		if err != nil {
 			log.Printf("[WARN] %s", err)
 			return nil
@@ -611,7 +605,6 @@ func flattenNetworkACLEntry(apiObject awstypes.NetworkAclEntry) map[string]inter
 		// The AWS network ACL API only speaks protocol numbers, and
 		// that's all we record.
 		protocolNumber, err := networkACLProtocolNumber(v)
-
 		if err != nil {
 			log.Printf("[WARN] %s", err)
 			return nil
@@ -669,8 +662,10 @@ func networkACLProtocolNumber(v string) (int, error) {
 	return i, nil
 }
 
-type ianaProtocolAToIType map[string]int
-type ianaProtocolIToAType map[int]string
+type (
+	ianaProtocolAToIType map[string]int
+	ianaProtocolIToAType map[int]string
+)
 
 func (m ianaProtocolAToIType) invert() ianaProtocolIToAType {
 	output := make(map[int]string, len(m))

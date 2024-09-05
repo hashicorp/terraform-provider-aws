@@ -76,7 +76,6 @@ func resourceTransitGatewayRouteTableCreate(ctx context.Context, d *schema.Resou
 
 	log.Printf("[DEBUG] Creating EC2 Transit Gateway Route Table: %+v", input)
 	output, err := conn.CreateTransitGatewayRouteTable(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Transit Gateway Route Table: %s", err)
 	}

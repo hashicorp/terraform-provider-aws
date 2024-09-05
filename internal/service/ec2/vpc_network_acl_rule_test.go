@@ -366,7 +366,6 @@ func testAccCheckNetworkACLRuleDestroy(ctx context.Context) resource.TestCheckFu
 			}
 
 			egress, err := strconv.ParseBool(rs.Primary.Attributes["egress"])
-
 			if err != nil {
 				return err
 			}
@@ -374,7 +373,6 @@ func testAccCheckNetworkACLRuleDestroy(ctx context.Context) resource.TestCheckFu
 			naclID := rs.Primary.Attributes["network_acl_id"]
 
 			ruleNumber, err := strconv.Atoi(rs.Primary.Attributes["rule_number"])
-
 			if err != nil {
 				return err
 			}
@@ -409,7 +407,6 @@ func testAccCheckNetworkACLRuleExists(ctx context.Context, n string) resource.Te
 		}
 
 		egress, err := strconv.ParseBool(rs.Primary.Attributes["egress"])
-
 		if err != nil {
 			return err
 		}
@@ -417,7 +414,6 @@ func testAccCheckNetworkACLRuleExists(ctx context.Context, n string) resource.Te
 		naclID := rs.Primary.Attributes["network_acl_id"]
 
 		ruleNumber, err := strconv.Atoi(rs.Primary.Attributes["rule_number"])
-
 		if err != nil {
 			return err
 		}

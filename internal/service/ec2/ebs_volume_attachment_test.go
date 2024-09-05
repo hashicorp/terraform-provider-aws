@@ -90,7 +90,6 @@ func TestAccEC2EBSVolumeAttachment_attachStopped(t *testing.T) {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		err := tfec2.StopEBSVolumeAttachmentInstance(ctx, conn, aws.ToString(i.InstanceId), false, 10*time.Minute)
-
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -266,7 +265,6 @@ func testAccCheckVolumeAttachmentInstanceExists(ctx context.Context, n string, v
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindVolumeAttachmentInstanceByID(ctx, conn, rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}

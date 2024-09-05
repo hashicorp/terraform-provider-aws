@@ -302,7 +302,6 @@ func dataSourceInstanceTypeRead(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	v, err := findInstanceTypeByName(ctx, conn, d.Get(names.AttrInstanceType).(string))
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Instance Type", err))
 	}

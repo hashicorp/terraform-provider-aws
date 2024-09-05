@@ -46,7 +46,7 @@ func resourceEBSEncryptionByDefaultCreate(ctx context.Context, d *schema.Resourc
 		return sdkdiag.AppendErrorf(diags, "creating EBS encryption by default (%t): %s", enabled, err)
 	}
 
-	//lintignore:R015 // Allow legacy unstable ID usage in managed resource
+	// lintignore:R015 // Allow legacy unstable ID usage in managed resource
 	d.SetId(id.UniqueId())
 
 	return append(diags, resourceEBSEncryptionByDefaultRead(ctx, d, meta)...)

@@ -119,7 +119,6 @@ func dataSourceIPAMPoolsRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	pools, err := findIPAMPools(ctx, conn, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading IPAM Pools: %s", err)
 	}

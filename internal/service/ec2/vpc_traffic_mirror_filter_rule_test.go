@@ -45,7 +45,7 @@ func TestAccVPCTrafficMirrorFilterRule_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTrafficMirrorFilterRuleDestroy(ctx),
 		Steps: []resource.TestStep{
-			//create
+			// create
 			{
 				Config: testAccVPCTrafficMirrorFilterRuleConfig_basic(dstCidr, srcCidr, action, direction, ruleNum1),
 				Check: resource.ComposeAggregateTestCheckFunc(

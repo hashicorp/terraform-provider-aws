@@ -32,7 +32,7 @@ import (
 
 // @SDKResource("aws_security_group_rule", name="Security Group Rule")
 func resourceSecurityGroupRule() *schema.Resource {
-	//lintignore:R011
+	// lintignore:R011
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSecurityGroupRuleCreate,
 		ReadWithoutTimeout:   resourceSecurityGroupRuleRead,
@@ -165,7 +165,6 @@ func resourceSecurityGroupRuleCreate(ctx context.Context, d *schema.ResourceData
 	defer conns.GlobalMutexKV.Unlock(securityGroupID)
 
 	sg, err := findSecurityGroupByID(ctx, conn, securityGroupID)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Security Group (%s): %s", securityGroupID, err)
 	}
@@ -224,7 +223,6 @@ information and instructions for recovery. Error: %s`, securityGroupID, err)
 
 	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
 		sg, err := findSecurityGroupByID(ctx, conn, securityGroupID)
-
 		if err != nil {
 			return nil, err
 		}
@@ -245,7 +243,6 @@ information and instructions for recovery. Error: %s`, securityGroupID, err)
 
 		return rule, nil
 	})
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Security Group (%s) Rule (%s) create: %s", securityGroupID, id, err)
 	}
@@ -339,7 +336,6 @@ func resourceSecurityGroupRuleUpdate(ctx context.Context, d *schema.ResourceData
 		defer conns.GlobalMutexKV.Unlock(securityGroupID)
 
 		sg, err := findSecurityGroupByID(ctx, conn, securityGroupID)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading Security Group (%s): %s", securityGroupID, err)
 		}
@@ -383,7 +379,6 @@ func resourceSecurityGroupRuleDelete(ctx context.Context, d *schema.ResourceData
 	defer conns.GlobalMutexKV.Unlock(securityGroupID)
 
 	sg, err := findSecurityGroupByID(ctx, conn, securityGroupID)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Security Group (%s): %s", securityGroupID, err)
 	}
@@ -687,7 +682,7 @@ func (b byGroupPair) Less(i, j int) bool {
 		return aws.ToString(b[i].GroupName) < aws.ToString(b[j].GroupName)
 	}
 
-	//lintignore:R009
+	// lintignore:R009
 	panic("mismatched security group rules, may be a terraform bug")
 }
 

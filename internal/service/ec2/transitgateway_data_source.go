@@ -114,7 +114,6 @@ func dataSourceTransitGatewayRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	transitGateway, err := findTransitGateway(ctx, conn, input)
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Transit Gateway", err))
 	}

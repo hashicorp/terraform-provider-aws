@@ -91,7 +91,6 @@ func dataSourceInternetGatewayRead(ctx context.Context, d *schema.ResourceData, 
 	)...)
 
 	igw, err := findInternetGateway(ctx, conn, input)
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Internet Gateway", err))
 	}

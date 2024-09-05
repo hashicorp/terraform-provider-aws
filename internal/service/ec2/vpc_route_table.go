@@ -179,7 +179,6 @@ func resourceRouteTableCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	output, err := conn.CreateRouteTable(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Route Table: %s", err)
 	}
@@ -520,7 +519,6 @@ func routeTableAddRoute(ctx context.Context, conn *ec2.Client, routeTableID stri
 		errCodeInvalidParameterException,
 		errCodeInvalidTransitGatewayIDNotFound,
 	)
-
 	if err != nil {
 		return fmt.Errorf("creating Route in Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
 	}
@@ -606,7 +604,6 @@ func routeTableUpdateRoute(ctx context.Context, conn *ec2.Client, routeTableID s
 	input.RouteTableId = aws.String(routeTableID)
 
 	_, err := conn.ReplaceRoute(ctx, input)
-
 	if err != nil {
 		return fmt.Errorf("updating Route in Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
 	}
@@ -627,7 +624,6 @@ func routeTableDisableVGWRoutePropagation(ctx context.Context, conn *ec2.Client,
 	}
 
 	_, err := conn.DisableVgwRoutePropagation(ctx, input)
-
 	if err != nil {
 		return fmt.Errorf("disabling Route Table (%s) VPN Gateway (%s) route propagation: %w", routeTableID, gatewayID, err)
 	}
@@ -650,7 +646,6 @@ func routeTableEnableVGWRoutePropagation(ctx context.Context, conn *ec2.Client, 
 		},
 		errCodeGatewayNotAttached,
 	)
-
 	if err != nil {
 		return fmt.Errorf("enabling Route Table (%s) VPN Gateway (%s) route propagation: %w", routeTableID, gatewayID, err)
 	}

@@ -45,7 +45,6 @@ func (r *securityGroupEgressRuleResource) create(ctx context.Context, data *secu
 	}
 
 	output, err := conn.AuthorizeSecurityGroupEgress(ctx, input)
-
 	if err != nil {
 		return "", err
 	}
@@ -58,7 +57,8 @@ func (r *securityGroupEgressRuleResource) delete(ctx context.Context, data *secu
 
 	_, err := conn.RevokeSecurityGroupEgress(ctx, &ec2.RevokeSecurityGroupEgressInput{
 		GroupId:              fwflex.StringFromFramework(ctx, data.SecurityGroupID),
-		SecurityGroupRuleIds: fwflex.StringSliceValueFromFramework(ctx, data.ID)},
+		SecurityGroupRuleIds: fwflex.StringSliceValueFromFramework(ctx, data.ID),
+	},
 	)
 
 	return err

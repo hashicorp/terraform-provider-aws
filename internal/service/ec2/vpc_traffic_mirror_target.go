@@ -117,7 +117,6 @@ func resourceTrafficMirrorTargetCreate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	output, err := conn.CreateTrafficMirrorTarget(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Traffic Mirror Target: %s", err)
 	}

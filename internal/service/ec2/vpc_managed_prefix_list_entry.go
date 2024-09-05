@@ -24,7 +24,7 @@ import (
 
 // @SDKResource("aws_ec2_managed_prefix_list_entry", name="Managed Prefix List Entry")
 func resourceManagedPrefixListEntry() *schema.Resource {
-	//lintignore:R011
+	// lintignore:R011
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceManagedPrefixListEntryCreate,
 		ReadWithoutTimeout:   resourceManagedPrefixListEntryRead,
@@ -77,7 +77,6 @@ func resourceManagedPrefixListEntryCreate(ctx context.Context, d *schema.Resourc
 		defer conns.GlobalMutexKV.Unlock(mutexKey)
 
 		pl, err := findManagedPrefixListByID(ctx, conn, plID)
-
 		if err != nil {
 			return nil, fmt.Errorf("reading VPC Managed Prefix List (%s): %w", plID, err)
 		}
@@ -90,7 +89,6 @@ func resourceManagedPrefixListEntryCreate(ctx context.Context, d *schema.Resourc
 
 		return conn.ModifyManagedPrefixList(ctx, input)
 	}, errCodeIncorrectState, errCodePrefixListVersionMismatch)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating VPC Managed Prefix List Entry (%s): %s", id, err)
 	}
@@ -110,7 +108,6 @@ func resourceManagedPrefixListEntryRead(ctx context.Context, d *schema.ResourceD
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	plID, cidr, err := managedPrefixListEntryParseResourceID(d.Id())
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -143,7 +140,6 @@ func resourceManagedPrefixListEntryDelete(ctx context.Context, d *schema.Resourc
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	plID, cidr, err := managedPrefixListEntryParseResourceID(d.Id())
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -154,7 +150,6 @@ func resourceManagedPrefixListEntryDelete(ctx context.Context, d *schema.Resourc
 		defer conns.GlobalMutexKV.Unlock(mutexKey)
 
 		pl, err := findManagedPrefixListByID(ctx, conn, plID)
-
 		if err != nil {
 			return nil, fmt.Errorf("reading VPC Managed Prefix List (%s): %w", plID, err)
 		}
@@ -177,7 +172,6 @@ func resourceManagedPrefixListEntryDelete(ctx context.Context, d *schema.Resourc
 	}
 
 	_, err = waitManagedPrefixListModified(ctx, conn, plID)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for VPC Managed Prefix List Entry (%s) delete: %s", d.Id(), err)
 	}
@@ -187,7 +181,6 @@ func resourceManagedPrefixListEntryDelete(ctx context.Context, d *schema.Resourc
 
 func resourceManagedPrefixListEntryImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	plID, cidr, err := managedPrefixListEntryParseResourceID(d.Id())
-
 	if err != nil {
 		return nil, err
 	}

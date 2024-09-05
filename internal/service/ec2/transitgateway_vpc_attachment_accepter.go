@@ -98,7 +98,6 @@ func resourceTransitGatewayVPCAttachmentAccepterCreate(ctx context.Context, d *s
 
 	log.Printf("[DEBUG] Accepting EC2 Transit Gateway VPC Attachment: %s", transitGatewayAttachmentID)
 	output, err := conn.AcceptTransitGatewayVpcAttachment(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "accepting EC2 Transit Gateway VPC Attachment (%s): %s", transitGatewayAttachmentID, err)
 	}
@@ -115,7 +114,6 @@ func resourceTransitGatewayVPCAttachmentAccepterCreate(ctx context.Context, d *s
 	}
 
 	transitGateway, err := findTransitGatewayByID(ctx, conn, transitGatewayID)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway (%s): %s", transitGatewayID, err)
 	}
@@ -149,7 +147,6 @@ func resourceTransitGatewayVPCAttachmentAccepterRead(ctx context.Context, d *sch
 
 	transitGatewayID := aws.ToString(transitGatewayVPCAttachment.TransitGatewayId)
 	transitGateway, err := findTransitGatewayByID(ctx, conn, transitGatewayID)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway (%s): %s", transitGatewayID, err)
 	}
@@ -204,7 +201,6 @@ func resourceTransitGatewayVPCAttachmentAccepterUpdate(ctx context.Context, d *s
 	if d.HasChanges("transit_gateway_default_route_table_association", "transit_gateway_default_route_table_propagation") {
 		transitGatewayID := d.Get(names.AttrTransitGatewayID).(string)
 		transitGateway, err := findTransitGatewayByID(ctx, conn, transitGatewayID)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway (%s): %s", transitGatewayID, err)
 		}

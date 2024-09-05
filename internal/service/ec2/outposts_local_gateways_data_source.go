@@ -59,7 +59,6 @@ func dataSourceLocalGatewaysRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	output, err := findLocalGateways(ctx, conn, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Local Gateways: %s", err)
 	}

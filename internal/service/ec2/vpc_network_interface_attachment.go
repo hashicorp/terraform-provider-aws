@@ -63,7 +63,6 @@ func resourceNetworkInterfaceAttachmentCreate(ctx context.Context, d *schema.Res
 		d.Get("device_index").(int),
 		networkInterfaceAttachedTimeout,
 	)
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}

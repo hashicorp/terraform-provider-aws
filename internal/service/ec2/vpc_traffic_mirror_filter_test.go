@@ -35,7 +35,7 @@ func TestAccVPCTrafficMirrorFilter_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTrafficMirrorFilterDestroy(ctx),
 		Steps: []resource.TestStep{
-			//create
+			// create
 			{
 				Config: testAccVPCTrafficMirrorFilterConfig_basic(description),
 				Check: resource.ComposeTestCheckFunc(
@@ -197,7 +197,6 @@ func testAccCheckTrafficMirrorFilterExists(ctx context.Context, n string, v *aws
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindTrafficMirrorFilterByID(ctx, conn, rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}

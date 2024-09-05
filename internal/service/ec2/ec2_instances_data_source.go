@@ -95,7 +95,6 @@ func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	output, err := findInstances(ctx, conn, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Instances: %s", err)
 	}

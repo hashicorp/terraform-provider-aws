@@ -75,7 +75,6 @@ func (r *vpcEndpointServicePrivateDNSVerificationResource) Create(ctx context.Co
 	}
 
 	_, err := conn.StartVpcEndpointServicePrivateDnsVerification(ctx, input)
-
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("starting VPC Endpoint Service Private DNS Verification (%s)", data.ServiceID.ValueString()), err.Error())
 

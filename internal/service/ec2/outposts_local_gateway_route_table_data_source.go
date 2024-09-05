@@ -88,7 +88,6 @@ func dataSourceLocalGatewayRouteTableRead(ctx context.Context, d *schema.Resourc
 	}
 
 	localGatewayRouteTable, err := findLocalGatewayRouteTable(ctx, conn, input)
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Local Gateway Route Table", err))
 	}

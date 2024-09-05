@@ -430,7 +430,6 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	instance, err := findInstance(ctx, conn, input)
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Instance", err))
 	}
@@ -468,7 +467,6 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 
 	instanceType := string(instance.InstanceType)
 	instanceTypeInfo, err := findInstanceTypeByName(ctx, conn, instanceType)
-
 	if err != nil {
 		return fmt.Errorf("reading EC2 Instance Type (%s): %w", instanceType, err)
 	}
@@ -494,7 +492,6 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 
 	if instance.IamInstanceProfile != nil && instance.IamInstanceProfile.Arn != nil {
 		name, err := instanceProfileARNToName(aws.ToString(instance.IamInstanceProfile.Arn))
-
 		if err != nil {
 			return fmt.Errorf("setting iam_instance_profile: %w", err)
 		}

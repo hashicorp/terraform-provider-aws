@@ -92,7 +92,6 @@ func resourceSubnetCIDRReservationCreate(ctx context.Context, d *schema.Resource
 
 	log.Printf("[DEBUG] Creating EC2 Subnet CIDR Reservation: %s", aws.ToString(input.SubnetId))
 	output, err := conn.CreateSubnetCidrReservation(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Subnet CIDR Reservation: %s", err)
 	}

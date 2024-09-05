@@ -119,7 +119,6 @@ func resourceManagedPrefixListCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	output, err := conn.CreateManagedPrefixList(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Managed Prefix List (%s): %s", name, err)
 	}
@@ -151,7 +150,6 @@ func resourceManagedPrefixListRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	prefixListEntries, err := findManagedPrefixListEntriesByID(ctx, conn, d.Id())
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Managed Prefix List (%s) Entries: %s", d.Id(), err)
 	}
@@ -255,13 +253,11 @@ func resourceManagedPrefixListUpdate(ctx context.Context, d *schema.ResourceData
 					PrefixListId:   aws.String(d.Id()),
 					RemoveEntries:  descriptionOnlyRemovals,
 				})
-
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "updating EC2 Managed Prefix List (%s): %s", d.Id(), err)
 				}
 
 				managedPrefixList, err := waitManagedPrefixListModified(ctx, conn, d.Id())
-
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "waiting for EC2 Managed Prefix List (%s) update: %s", d.Id(), err)
 				}
@@ -279,7 +275,6 @@ func resourceManagedPrefixListUpdate(ctx context.Context, d *schema.ResourceData
 		}
 
 		_, err := conn.ModifyManagedPrefixList(ctx, input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EC2 Managed Prefix List (%s): %s", d.Id(), err)
 		}
@@ -332,13 +327,11 @@ func updateMaxEntry(ctx context.Context, conn *ec2.Client, id string, maxEntries
 		PrefixListId: aws.String(id),
 		MaxEntries:   aws.Int32(maxEntries),
 	})
-
 	if err != nil {
 		return fmt.Errorf("updating MaxEntries for EC2 Managed Prefix List (%s): %s", id, err)
 	}
 
 	_, err = waitManagedPrefixListModified(ctx, conn, id)
-
 	if err != nil {
 		return fmt.Errorf("waiting for EC2 Managed Prefix List (%s) MaxEntries update: %s", id, err)
 	}

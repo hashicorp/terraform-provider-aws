@@ -44,7 +44,6 @@ func TestVPCMigrateState(t *testing.T) {
 		}
 		is, err := tfec2.VPCMigrateState(
 			tc.StateVersion, is, tc.Meta)
-
 		if err != nil {
 			t.Fatalf("bad: %s, err: %#v", tn, err)
 		}

@@ -68,7 +68,6 @@ func resourceLocalGatewayRouteCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	_, err := conn.CreateLocalGatewayRoute(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Local Gateway Route (%s): %s", id, err)
 	}

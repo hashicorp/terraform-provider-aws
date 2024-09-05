@@ -87,7 +87,6 @@ func resourceVPCEndpointPolicyPut(ctx context.Context, d *schema.ResourceData, m
 	d.SetId(endpointID)
 
 	_, err = waitVPCEndpointAvailable(ctx, conn, endpointID, d.Timeout(schema.TimeoutCreate))
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for VPC Endpoint (%s) to policy to set: %s", endpointID, err)
 	}
@@ -114,13 +113,11 @@ func resourceVPCEndpointPolicyRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set(names.AttrVPCEndpointID, d.Id())
 
 	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get(names.AttrPolicy).(string), aws.ToString(vpce.PolicyDocument))
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "while setting policy (%s), encountered: %s", policyToSet, err)
 	}
 
 	policyToSet, err = structure.NormalizeJsonString(policyToSet)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policyToSet, err)
 	}
@@ -147,7 +144,6 @@ func resourceVPCEndpointPolicyDelete(ctx context.Context, d *schema.ResourceData
 	}
 
 	_, err := waitVPCEndpointAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete))
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for VPC Endpoint (%s) to be reset: %s", d.Id(), err)
 	}

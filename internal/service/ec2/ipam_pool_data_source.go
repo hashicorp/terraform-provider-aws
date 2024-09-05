@@ -125,7 +125,6 @@ func dataSourceIPAMPoolRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	pool, err := findIPAMPool(ctx, conn, input)
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("IPAM Pool", err))
 	}

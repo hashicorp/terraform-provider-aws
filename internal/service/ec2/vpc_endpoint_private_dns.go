@@ -66,7 +66,6 @@ func (r *vpcEndpointPrivateDNSResource) Create(ctx context.Context, request reso
 	}
 
 	_, err := conn.ModifyVpcEndpoint(ctx, input)
-
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("creating VPC Endpoint Private DNS (%s)", data.VPCEndpointID.ValueString()), err.Error())
 
@@ -120,7 +119,6 @@ func (r *vpcEndpointPrivateDNSResource) Update(ctx context.Context, request reso
 	}
 
 	_, err := conn.ModifyVpcEndpoint(ctx, input)
-
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("Updating VPC Endpoint Private DNS (%s)", data.VPCEndpointID.ValueString()), err.Error())
 

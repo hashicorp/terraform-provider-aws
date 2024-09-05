@@ -94,7 +94,6 @@ func dataSourceLocalGatewayVirtualInterfaceRead(ctx context.Context, d *schema.R
 	}
 
 	localGatewayVirtualInterface, err := findLocalGatewayVirtualInterface(ctx, conn, input)
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Local Gateway Virtual Interface", err))
 	}

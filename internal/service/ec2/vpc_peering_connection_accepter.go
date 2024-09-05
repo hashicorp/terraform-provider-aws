@@ -93,7 +93,6 @@ func resourceVPCPeeringAccepterCreate(ctx context.Context, d *schema.ResourceDat
 
 	vpcPeeringConnectionID := d.Get("vpc_peering_connection_id").(string)
 	vpcPeeringConnection, err := findVPCPeeringConnectionByID(ctx, conn, vpcPeeringConnectionID)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC Peering Connection (%s): %s", vpcPeeringConnectionID, err)
 	}
@@ -102,7 +101,6 @@ func resourceVPCPeeringAccepterCreate(ctx context.Context, d *schema.ResourceDat
 
 	if _, ok := d.GetOk("auto_accept"); ok && vpcPeeringConnection.Status.Code == awstypes.VpcPeeringConnectionStateReasonCodePendingAcceptance {
 		vpcPeeringConnection, err = acceptVPCPeeringConnection(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
-
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}

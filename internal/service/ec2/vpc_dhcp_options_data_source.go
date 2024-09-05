@@ -96,7 +96,6 @@ func dataSourceVPCDHCPOptionsRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	opts, err := findDHCPOptions(ctx, conn, input)
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 DHCP Options Set", err))
 	}
@@ -116,7 +115,6 @@ func dataSourceVPCDHCPOptionsRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set(names.AttrOwnerID, ownerID)
 
 	err = optionsMap.dhcpConfigurationsToResourceData(opts.DhcpConfigurations, d)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 DHCP Options: %s", err)
 	}

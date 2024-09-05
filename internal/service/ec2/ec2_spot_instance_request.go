@@ -227,7 +227,6 @@ func resourceSpotInstanceRequestCreate(ctx context.Context, d *schema.ResourceDa
 			return false, err
 		},
 	)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "requesting EC2 Spot Instance: %s", err)
 	}
@@ -331,7 +330,6 @@ func readInstance(ctx context.Context, d *schema.ResourceData, meta interface{})
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	instance, err := findInstanceByID(ctx, conn, d.Get("spot_instance_id").(string))
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}

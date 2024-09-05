@@ -72,7 +72,6 @@ func dataSourceInstanceTypeOfferingsRead(ctx context.Context, d *schema.Resource
 	var locationTypes []string
 
 	instanceTypeOfferings, err := findInstanceTypeOfferings(ctx, conn, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Instance Type Offerings: %s", err)
 	}

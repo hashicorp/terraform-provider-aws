@@ -135,7 +135,6 @@ func resourceEBSSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta
 			return conn.CreateSnapshot(ctx, input)
 		},
 		errCodeSnapshotCreationPerVolumeRateExceeded, "The maximum per volume CreateSnapshot request rate has been exceeded")
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EBS Snapshot (%s): %s", volumeID, err)
 	}
@@ -150,7 +149,6 @@ func resourceEBSSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta
 			}, d.Timeout(schema.TimeoutCreate))
 		},
 		errCodeResourceNotReady)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EBS Snapshot (%s) create: %s", d.Id(), err)
 	}
@@ -160,7 +158,6 @@ func resourceEBSSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta
 			SnapshotId:  aws.String(d.Id()),
 			StorageTier: awstypes.TargetStorageTier(v.(string)),
 		})
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EBS Snapshot (%s) Storage Tier: %s", d.Id(), err)
 		}
@@ -222,7 +219,6 @@ func resourceEBSSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta
 				SnapshotId:  aws.String(d.Id()),
 				StorageTier: awstypes.TargetStorageTier(tier),
 			})
-
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating EBS Snapshot (%s) Storage Tier: %s", d.Id(), err)
 			}
@@ -243,9 +239,8 @@ func resourceEBSSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta
 				input.TemporaryRestoreDays = aws.Int32(int32(v.(int)))
 			}
 
-			//Skipping waiter as restoring a snapshot takes 24-72 hours so state will reamin (https://aws.amazon.com/blogs/aws/new-amazon-ebs-snapshots-archive/)
+			// Skipping waiter as restoring a snapshot takes 24-72 hours so state will reamin (https://aws.amazon.com/blogs/aws/new-amazon-ebs-snapshots-archive/)
 			_, err := conn.RestoreSnapshotTier(ctx, input)
-
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "restoring EBS Snapshot (%s): %s", d.Id(), err)
 			}

@@ -124,7 +124,6 @@ func resourceVerifiedAccessGroupCreate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	output, err := conn.CreateVerifiedAccessGroup(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Verified Access Group: %s", err)
 	}
@@ -169,7 +168,6 @@ func resourceVerifiedAccessGroupRead(ctx context.Context, d *schema.ResourceData
 	setTagsOut(ctx, group.Tags)
 
 	output, err := findVerifiedAccessGroupPolicyByID(ctx, conn, d.Id())
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Verified Access Group (%s) policy: %s", d.Id(), err)
 	}
@@ -198,7 +196,6 @@ func resourceVerifiedAccessGroupUpdate(ctx context.Context, d *schema.ResourceDa
 		}
 
 		_, err := conn.ModifyVerifiedAccessGroup(ctx, input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Verified Access Group (%s): %s", d.Id(), err)
 		}
@@ -212,7 +209,6 @@ func resourceVerifiedAccessGroupUpdate(ctx context.Context, d *schema.ResourceDa
 		}
 
 		_, err := conn.ModifyVerifiedAccessGroupPolicy(ctx, in)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Verified Access Group (%s) policy: %s", d.Id(), err)
 		}
@@ -228,7 +224,6 @@ func resourceVerifiedAccessGroupUpdate(ctx context.Context, d *schema.ResourceDa
 		}
 
 		_, err := conn.ModifyVerifiedAccessGroupPolicy(ctx, in)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating SSE on Verified Access Group (%s) policy: %s", d.Id(), err)
 		}

@@ -225,7 +225,6 @@ func resourceVerifiedAccessEndpointCreate(ctx context.Context, d *schema.Resourc
 	}
 
 	output, err := conn.CreateVerifiedAccessEndpoint(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Verified Access Endpoint: %s", err)
 	}
@@ -276,7 +275,6 @@ func resourceVerifiedAccessEndpointRead(ctx context.Context, d *schema.ResourceD
 	d.Set("verified_access_instance_id", ep.VerifiedAccessInstanceId)
 
 	output, err := findVerifiedAccessEndpointPolicyByID(ctx, conn, d.Id())
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Verified Access Endpoint (%s) policy: %s", d.Id(), err)
 	}
@@ -317,7 +315,6 @@ func resourceVerifiedAccessEndpointUpdate(ctx context.Context, d *schema.Resourc
 		}
 
 		_, err := conn.ModifyVerifiedAccessEndpoint(ctx, input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Verified Access Endpoint (%s): %s", d.Id(), err)
 		}
@@ -340,7 +337,6 @@ func resourceVerifiedAccessEndpointUpdate(ctx context.Context, d *schema.Resourc
 		}
 
 		_, err := conn.ModifyVerifiedAccessEndpointPolicy(ctx, input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Verified Access Endpoint (%s) policy: %s", d.Id(), err)
 		}

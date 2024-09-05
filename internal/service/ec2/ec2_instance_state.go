@@ -64,7 +64,6 @@ func resourceInstanceStateCreate(ctx context.Context, d *schema.ResourceData, me
 
 	instanceID := d.Get(names.AttrInstanceID).(string)
 	instance, err := waitInstanceReady(ctx, conn, instanceID, d.Timeout(schema.TimeoutCreate))
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Instance (%s) ready: %s", instanceID, err)
 	}

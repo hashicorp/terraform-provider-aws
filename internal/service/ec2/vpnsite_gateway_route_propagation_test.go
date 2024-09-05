@@ -74,7 +74,6 @@ func testAccCheckVPNGatewayRoutePropagationExists(ctx context.Context, n string)
 		}
 
 		routeTableID, gatewayID, err := tfec2.VPNGatewayRoutePropagationParseID(rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}
@@ -93,7 +92,6 @@ func testAccCheckVPNGatewayRoutePropagationDestroy(ctx context.Context) resource
 			}
 
 			routeTableID, gatewayID, err := tfec2.VPNGatewayRoutePropagationParseID(rs.Primary.ID)
-
 			if err != nil {
 				return err
 			}

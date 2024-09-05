@@ -152,7 +152,6 @@ func testAccCheckClientVPNRouteExists(ctx context.Context, name string, v *awsty
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindClientVPNRouteByThreePartKey(ctx, conn, rs.Primary.Attributes["client_vpn_endpoint_id"], rs.Primary.Attributes["target_vpc_subnet_id"], rs.Primary.Attributes["destination_cidr_block"])
-
 		if err != nil {
 			return err
 		}

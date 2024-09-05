@@ -31,7 +31,6 @@ func testAccManagedPrefixListGetIdByNameDataSource(ctx context.Context, name str
 				},
 			},
 		})
-
 		if err != nil {
 			return err
 		}

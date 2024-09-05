@@ -16,7 +16,8 @@ import (
 )
 
 func securityGroupRuleMigrateState(
-	v int, is *terraform.InstanceState, meta interface{}) (*terraform.InstanceState, error) {
+	v int, is *terraform.InstanceState, meta interface{},
+) (*terraform.InstanceState, error) {
 	switch v {
 	case 0:
 		log.Println("[INFO] Found AWS Security Group State v0; migrating to v1")
@@ -39,7 +40,6 @@ func migrateSGRuleStateV0toV1(is *terraform.InstanceState) (*terraform.InstanceS
 	}
 
 	perm, err := migrateExpandIPPerm(is.Attributes)
-
 	if err != nil {
 		return nil, fmt.Errorf("making new IP Permission in Security Group migration")
 	}

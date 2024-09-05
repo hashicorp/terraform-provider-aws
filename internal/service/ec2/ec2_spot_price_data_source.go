@@ -74,7 +74,6 @@ func dataSourceSpotPriceRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	resultSpotPrice, err := findSpotPrice(ctx, conn, input)
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Spot Price", err))
 	}

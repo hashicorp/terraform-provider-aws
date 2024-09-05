@@ -99,7 +99,6 @@ func resourceIPAMResourceDiscoveryAssociationCreate(ctx context.Context, d *sche
 	}
 
 	output, err := conn.AssociateIpamResourceDiscovery(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating IPAM (%s) Resource Discovery (%s) Association: %s", ipamID, ipamResourceDiscoveryID, err)
 	}

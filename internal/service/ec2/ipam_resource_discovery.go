@@ -118,7 +118,6 @@ func resourceIPAMResourceDiscoveryCreate(ctx context.Context, d *schema.Resource
 	}
 
 	output, err := conn.CreateIpamResourceDiscovery(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating IPAM Resource Discovery: %s", err)
 	}
@@ -199,7 +198,6 @@ func resourceIPAMResourceDiscoveryUpdate(ctx context.Context, d *schema.Resource
 		}
 
 		_, err := conn.ModifyIpamResourceDiscovery(ctx, input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying IPAM Resource Discovery (%s): %s", d.Id(), err)
 		}

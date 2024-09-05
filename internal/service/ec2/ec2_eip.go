@@ -180,7 +180,6 @@ func resourceEIPCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	output, err := conn.AllocateAddress(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 EIP: %s", err)
 	}
@@ -190,7 +189,6 @@ func resourceEIPCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
 		return findEIPByAllocationID(ctx, conn, d.Id())
 	})
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 EIP (%s) create: %s", d.Id(), err)
 	}
@@ -200,7 +198,6 @@ func resourceEIPCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 			func() (interface{}, error) {
 				return nil, associateEIP(ctx, conn, d.Id(), instanceID, eniID, d.Get("associate_with_private_ip").(string))
 			}, errCodeInvalidAllocationIDNotFound)
-
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
@@ -362,7 +359,6 @@ func associateEIP(ctx context.Context, conn *ec2.Client, allocationID, instanceI
 	}
 
 	output, err := conn.AssociateAddress(ctx, input)
-
 	if err != nil {
 		return fmt.Errorf("associating EC2 EIP (%s): %w", allocationID, err)
 	}
@@ -384,7 +380,6 @@ func associateEIP(ctx context.Context, conn *ec2.Client, allocationID, instanceI
 			return false, err
 		},
 	)
-
 	if err != nil {
 		return fmt.Errorf("waiting for EC2 EIP (%s) association: %w", allocationID, err)
 	}

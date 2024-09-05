@@ -248,7 +248,6 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	if v, ok := d.GetOk(names.AttrPolicy); ok {
 		policy, err := structure.NormalizeJsonString(v)
-
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
@@ -379,7 +378,6 @@ func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	subnetConfigurations, err := findSubnetConfigurationsByNetworkInterfaceIDs(ctx, conn, vpce.NetworkInterfaceIds)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading VPC Endpoint (%s) subnet configurations: %s", d.Id(), err)
 	}
@@ -389,13 +387,11 @@ func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get(names.AttrPolicy).(string), aws.ToString(vpce.PolicyDocument))
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	policyToSet, err = structure.NormalizeJsonString(policyToSet)
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -453,7 +449,6 @@ func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 			if equivalent, err := awspolicy.PoliciesAreEquivalent(o.(string), n.(string)); err != nil || !equivalent {
 				policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy))
-
 				if err != nil {
 					return sdkdiag.AppendFromErr(diags, err)
 				}
@@ -473,7 +468,6 @@ func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		_, err := conn.ModifyVpcEndpoint(ctx, input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EC2 VPC Endpoint (%s): %s", d.Id(), err)
 		}
@@ -516,7 +510,6 @@ func resourceVPCEndpointDelete(ctx context.Context, d *schema.ResourceData, meta
 
 func vpcEndpointAccept(ctx context.Context, conn *ec2.Client, vpceID, serviceName string, timeout time.Duration) error {
 	serviceConfiguration, err := findVPCEndpointServiceConfigurationByServiceName(ctx, conn, serviceName)
-
 	if err != nil {
 		return fmt.Errorf("reading EC2 VPC Endpoint Service Configuration (%s): %w", serviceName, err)
 	}
@@ -527,7 +520,6 @@ func vpcEndpointAccept(ctx context.Context, conn *ec2.Client, vpceID, serviceNam
 	}
 
 	_, err = conn.AcceptVpcEndpointConnections(ctx, input)
-
 	if err != nil {
 		return fmt.Errorf("accepting EC2 VPC Endpoint (%s) connection: %w", vpceID, err)
 	}
@@ -550,7 +542,6 @@ func findSubnetConfigurationsByNetworkInterfaceIDs(ctx context.Context, conn *ec
 
 	for _, v := range networkInterfaceIDs {
 		networkInterface, err := findNetworkInterfaceByID(ctx, conn, v)
-
 		if err != nil {
 			return nil, err
 		}

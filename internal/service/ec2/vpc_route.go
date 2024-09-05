@@ -284,7 +284,6 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	destinationAttributeKey, destination, err := routeDestinationAttribute(d)
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -349,13 +348,11 @@ func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	destinationAttributeKey, destination, err := routeDestinationAttribute(d)
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	targetAttributeKey, target, err := routeTargetAttribute(d)
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -413,7 +410,6 @@ func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	log.Printf("[DEBUG] Updating Route: %v", input)
 	_, err = conn.ReplaceRoute(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Route in Route Table (%s) with destination (%s): %s", routeTableID, destination, err)
 	}
@@ -430,7 +426,6 @@ func resourceRouteDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	destinationAttributeKey, destination, err := routeDestinationAttribute(d)
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}

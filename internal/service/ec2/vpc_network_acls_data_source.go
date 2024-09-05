@@ -69,7 +69,6 @@ func dataSourceNetworkACLsRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	output, err := findNetworkACLs(ctx, conn, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Network ACLs: %s", err)
 	}

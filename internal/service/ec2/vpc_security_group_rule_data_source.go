@@ -106,7 +106,6 @@ func (d *securityGroupRuleDataSource) Read(ctx context.Context, request datasour
 	}
 
 	output, err := findSecurityGroupRule(ctx, conn, input)
-
 	if err != nil {
 		response.Diagnostics.AddError("reading Security Group Rules", tfresource.SingularDataSourceFindError("Security Group Rule", err).Error())
 

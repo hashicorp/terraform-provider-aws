@@ -998,7 +998,6 @@ func testAccCheckENIExists(ctx context.Context, n string, v *types.NetworkInterf
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindNetworkInterfaceByID(ctx, conn, rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}
@@ -1065,7 +1064,6 @@ func testAccCheckENIRemoveExternalAttachment(ctx context.Context, attachmentId *
 		}
 
 		_, err := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx).DetachNetworkInterface(ctx, input)
-
 		if err != nil {
 			return fmt.Errorf("error detaching ENI: %w", err)
 		}

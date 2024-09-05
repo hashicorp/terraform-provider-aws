@@ -90,7 +90,6 @@ func (r *eipDomainNameResource) Create(ctx context.Context, request resource.Cre
 	}
 
 	output, err := conn.ModifyAddressAttribute(ctx, input)
-
 	if err != nil {
 		response.Diagnostics.AddError("creating EC2 EIP Domain Name", err.Error())
 
@@ -101,7 +100,6 @@ func (r *eipDomainNameResource) Create(ctx context.Context, request resource.Cre
 	data.ID = fwflex.StringToFramework(ctx, output.Address.AllocationId)
 
 	v, err := waitEIPDomainNameAttributeUpdated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
-
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for EC2 EIP Domain Name (%s) create", data.ID.ValueString()), err.Error())
 
@@ -166,7 +164,6 @@ func (r *eipDomainNameResource) Update(ctx context.Context, request resource.Upd
 		}
 
 		_, err := conn.ModifyAddressAttribute(ctx, input)
-
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("updating EC2 EIP Domain Name (%s)", new.ID.ValueString()), err.Error())
 

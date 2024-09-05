@@ -106,7 +106,6 @@ func (r *ebsFastSnapshotRestoreResource) Create(ctx context.Context, request res
 	data.setID()
 
 	v, err := waitFastSnapshotRestoreCreated(ctx, conn, availabilityZone, snapshotID, r.CreateTimeout(ctx, data.Timeouts))
-
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for EC2 EBS Fast Snapshot Restore (%s) create", data.ID.ValueString()), err.Error())
 
@@ -168,7 +167,6 @@ func (r *ebsFastSnapshotRestoreResource) Delete(ctx context.Context, request res
 		AvailabilityZones: []string{availabilityZone},
 		SourceSnapshotIds: []string{snapshotID},
 	})
-
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("deleting EC2 EBS Fast Snapshot Restore (%s)", data.ID.ValueString()), err.Error())
 
@@ -197,7 +195,6 @@ const (
 func (data *ebsFastSnapshotRestoreResourceModel) InitFromID() error {
 	id := data.ID.ValueString()
 	parts, err := flex.ExpandResourceId(id, ebsFastSnapshotRestoreIDPartCount, false)
-
 	if err != nil {
 		return err
 	}

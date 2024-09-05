@@ -28,7 +28,6 @@ func createTags(ctx context.Context, conn *ec2.Client, identifier string, tags [
 	_, err := tfresource.RetryWhenAWSErrCodeContains(ctx, eventualConsistencyTimeout, func() (interface{}, error) {
 		return nil, updateTags(ctx, conn, identifier, nil, newTagsMap, optFns...)
 	}, ".NotFound")
-
 	if err != nil {
 		return fmt.Errorf("tagging resource (%s): %w", identifier, err)
 	}

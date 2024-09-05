@@ -87,7 +87,6 @@ func dataSourceTransitGatewayPeeringAttachmentRead(ctx context.Context, d *schem
 	}
 
 	transitGatewayPeeringAttachment, err := findTransitGatewayPeeringAttachment(ctx, conn, input)
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Transit Gateway Peering Attachment", err))
 	}

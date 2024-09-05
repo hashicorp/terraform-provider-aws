@@ -107,7 +107,6 @@ func dataSourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	output, err := findEBSVolumes(ctx, conn, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EBS Volumes: %s", err)
 	}

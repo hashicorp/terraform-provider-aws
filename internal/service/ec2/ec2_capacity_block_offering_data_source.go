@@ -87,7 +87,6 @@ func (d *capacityBlockOfferingDataSource) Read(ctx context.Context, request data
 	}
 
 	output, err := findCapacityBlockOffering(ctx, conn, input)
-
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("reading EC2 Capacity Block Offering (%s)", data.InstanceType.ValueString()), err.Error())
 

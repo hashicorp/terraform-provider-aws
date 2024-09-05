@@ -35,7 +35,7 @@ import (
 // @Tags(identifierAttribute="id")
 // @Testing(tagsTest=false)
 func resourceSpotFleetRequest() *schema.Resource {
-	//lintignore:R011
+	// lintignore:R011
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSpotFleetRequestCreate,
 		ReadWithoutTimeout:   resourceSpotFleetRequestRead,
@@ -1005,7 +1005,6 @@ func resourceSpotFleetRequestCreate(ctx context.Context, d *schema.ResourceData,
 		},
 		errCodeInvalidSpotFleetRequestConfig, "SpotFleetRequestConfig.IamFleetRole",
 	)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Spot Fleet Request: %s", err)
 	}
@@ -1070,7 +1069,6 @@ func resourceSpotFleetRequestRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	launchSpec, err := launchSpecsToSet(ctx, conn, config.LaunchSpecifications)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Spot Fleet Request (%s) launch specifications: %s", d.Id(), err)
 	}
@@ -1192,7 +1190,6 @@ func resourceSpotFleetRequestDelete(ctx context.Context, d *schema.ResourceData,
 			SpotFleetRequestId: aws.String(d.Id()),
 		}
 		output, err := findSpotFleetInstances(ctx, conn, input)
-
 		if err != nil {
 			return nil, err
 		}
@@ -1203,7 +1200,6 @@ func resourceSpotFleetRequestDelete(ctx context.Context, d *schema.ResourceData,
 
 		return output, nil
 	})
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Spot Fleet Request (%s) active instance count to reach 0: %s", d.Id(), err)
 	}

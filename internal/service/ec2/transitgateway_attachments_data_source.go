@@ -55,7 +55,6 @@ func dataSourceTransitGatewayAttachmentsRead(ctx context.Context, d *schema.Reso
 	}
 
 	transitGatewayAttachments, err := findTransitGatewayAttachments(ctx, conn, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway Attachments: %s", err)
 	}

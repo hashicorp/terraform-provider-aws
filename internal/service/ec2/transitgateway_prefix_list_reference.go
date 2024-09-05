@@ -87,7 +87,6 @@ func resourceTransitGatewayPrefixListReferenceCreate(ctx context.Context, d *sch
 
 	log.Printf("[DEBUG] Creating EC2 Transit Gateway Prefix List Reference: %+v", input)
 	output, err := conn.CreateTransitGatewayPrefixListReference(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Transit Gateway Prefix List Reference: %s", err)
 	}
@@ -158,7 +157,6 @@ func resourceTransitGatewayPrefixListReferenceUpdate(ctx context.Context, d *sch
 	}
 
 	output, err := conn.ModifyTransitGatewayPrefixListReference(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating EC2 Transit Gateway Prefix List Reference (%s): %s", d.Id(), err)
 	}

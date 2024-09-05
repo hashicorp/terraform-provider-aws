@@ -767,7 +767,6 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	output, err := conn.CreateFleet(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Fleet: %s", err)
 	}
@@ -890,7 +889,6 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 
 		_, err := conn.ModifyFleet(ctx, input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying EC2 Fleet (%s): %s", d.Id(), err)
 		}

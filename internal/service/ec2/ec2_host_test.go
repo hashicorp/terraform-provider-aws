@@ -237,7 +237,6 @@ func testAccCheckHostExists(ctx context.Context, n string, v *awstypes.Host) res
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindHostByID(ctx, conn, rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}

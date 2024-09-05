@@ -25,7 +25,7 @@ import (
 // @Tags(identifierAttribute="id")
 // @Testing(tagsTest=false)
 func resourceDefaultVPC() *schema.Resource {
-	//lintignore:R011
+	// lintignore:R011
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDefaultVPCCreate,
 		ReadWithoutTimeout:   resourceVPCRead,
@@ -193,7 +193,6 @@ func resourceDefaultVPCCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input := &ec2.CreateDefaultVpcInput{}
 
 		output, err := conn.CreateDefaultVpc(ctx, input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating EC2 Default VPC: %s", err)
 		}
@@ -204,7 +203,6 @@ func resourceDefaultVPCCreate(ctx context.Context, d *schema.ResourceData, meta 
 		d.Set("existing_default_vpc", false)
 
 		vpc, err = waitVPCCreated(ctx, conn, d.Id())
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for EC2 Default VPC (%s) create: %s", d.Id(), err)
 		}
@@ -244,7 +242,6 @@ func resourceDefaultVPCCreate(ctx context.Context, d *schema.ResourceData, meta 
 			"",
 			0,
 			newIPv6CIDRBlockNetworkBorderGroup)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating EC2 Default VPC: %s", err)
 		}
@@ -260,7 +257,6 @@ func resourceDefaultVPCCreate(ctx context.Context, d *schema.ResourceData, meta 
 			newIPv6PoolID,
 			d.Get("ipv6_netmask_length").(int),
 			"")
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating EC2 Default VPC: %s", err)
 		}

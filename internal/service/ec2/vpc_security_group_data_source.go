@@ -92,7 +92,6 @@ func dataSourceSecurityGroupRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	sg, err := findSecurityGroup(ctx, conn, input)
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Security Group", err))
 	}

@@ -78,7 +78,6 @@ func (r *securityGroupIngressRuleResource) create(ctx context.Context, data *sec
 	}
 
 	output, err := conn.AuthorizeSecurityGroupIngress(ctx, input)
-
 	if err != nil {
 		return "", err
 	}
@@ -247,7 +246,6 @@ func (r *securityGroupRuleResource) Create(ctx context.Context, request resource
 	}
 
 	securityGroupRuleID, err := r.securityGroupRule.create(ctx, &data)
-
 	if err != nil {
 		response.Diagnostics.AddError("creating VPC Security Group Rule", err.Error())
 
@@ -347,7 +345,6 @@ func (r *securityGroupRuleResource) Update(ctx context.Context, request resource
 		}
 
 		_, err := conn.ModifySecurityGroupRules(ctx, input)
-
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("updating VPC Security Group Rule (%s)", new.ID.ValueString()), err.Error())
 

@@ -85,7 +85,6 @@ func dataSourceIPAMPreviewNextCIDRRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	output, err := conn.AllocateIpamPoolCidr(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "previewing next cidr from IPAM pool (%s): %s", d.Get("ipam_pool_id").(string), err)
 	}

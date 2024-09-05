@@ -56,7 +56,6 @@ func resourceSpotDataFeedSubscriptionCreate(ctx context.Context, d *schema.Resou
 	}
 
 	_, err := conn.CreateSpotDatafeedSubscription(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Spot Datafeed Subscription: %s", err)
 	}
@@ -94,7 +93,6 @@ func resourceSpotDataFeedSubscriptionDelete(ctx context.Context, d *schema.Resou
 
 	log.Printf("[INFO] Deleting EC2 Spot Datafeed Subscription: %s", d.Id())
 	_, err := conn.DeleteSpotDatafeedSubscription(ctx, &ec2.DeleteSpotDatafeedSubscriptionInput{})
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting EC2 Spot Datafeed Subscription (%s): %s", d.Id(), err)
 	}

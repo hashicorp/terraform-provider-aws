@@ -102,7 +102,6 @@ func resourceClientVPNAuthorizationRuleCreate(ctx context.Context, d *schema.Res
 
 	id := clientVPNAuthorizationRuleCreateResourceID(endpointID, targetNetworkCIDR, accessGroupID)
 	_, err := conn.AuthorizeClientVpnIngress(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "authorizing EC2 Client VPN Authorization Rule (%s): %s", id, err)
 	}

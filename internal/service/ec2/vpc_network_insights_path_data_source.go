@@ -92,7 +92,6 @@ func dataSourceNetworkInsightsPathRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	nip, err := findNetworkInsightsPath(ctx, conn, input)
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Network Insights Path", err))
 	}

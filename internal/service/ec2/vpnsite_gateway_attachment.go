@@ -53,7 +53,6 @@ func resourceVPNGatewayAttachmentCreate(ctx context.Context, d *schema.ResourceD
 
 	log.Printf("[DEBUG] Creating EC2 VPN Gateway Attachment: %s", vpnGatewayID)
 	_, err := conn.AttachVpnGateway(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 VPN Gateway (%s) Attachment (%s): %s", vpnGatewayID, vpcID, err)
 	}
@@ -61,7 +60,6 @@ func resourceVPNGatewayAttachmentCreate(ctx context.Context, d *schema.ResourceD
 	d.SetId(vpnGatewayVPCAttachmentCreateID(vpnGatewayID, vpcID))
 
 	_, err = waitVPNGatewayVPCAttachmentAttached(ctx, conn, vpnGatewayID, vpcID)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 VPN Gateway (%s) Attachment (%s) to become attached: %s", vpnGatewayID, vpcID, err)
 	}
@@ -113,7 +111,6 @@ func resourceVPNGatewayAttachmentDelete(ctx context.Context, d *schema.ResourceD
 	}
 
 	_, err = waitVPNGatewayVPCAttachmentDetached(ctx, conn, vpnGatewayID, vpcID)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 VPN Gateway (%s) Attachment (%s) to become detached: %s", vpnGatewayID, vpcID, err)
 	}

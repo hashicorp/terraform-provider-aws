@@ -3204,7 +3204,6 @@ func testAccCheckFleetHistory(ctx context.Context, resourceName string, errorMsg
 		}
 
 		output, err := conn.DescribeFleetHistory(ctx, input)
-
 		if err != nil {
 			return err
 		}
@@ -3241,7 +3240,6 @@ func testAccCheckFleetExists(ctx context.Context, n string, v *awstypes.FleetDat
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindFleetByID(ctx, conn, rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}

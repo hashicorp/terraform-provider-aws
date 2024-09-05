@@ -144,7 +144,6 @@ func testAccCheckIPAMPoolCIDRExists(ctx context.Context, n string, v *awstypes.I
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindIPAMPoolCIDRByTwoPartKey(ctx, conn, rs.Primary.Attributes["cidr"], rs.Primary.Attributes["ipam_pool_id"])
-
 		if err != nil {
 			return err
 		}

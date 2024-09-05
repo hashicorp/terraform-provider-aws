@@ -46,7 +46,6 @@ func dataSourceInstanceTypesRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	output, err := findInstanceTypes(ctx, conn, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Instance Types: %s", err)
 	}

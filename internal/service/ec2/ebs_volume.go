@@ -173,7 +173,6 @@ func resourceEBSVolumeCreate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	output, err := conn.CreateVolume(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EBS Volume: %s", err)
 	}
@@ -264,7 +263,6 @@ func resourceEBSVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 
 		_, err := conn.ModifyVolume(ctx, input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying EBS Volume (%s): %s", d.Id(), err)
 		}
@@ -292,7 +290,6 @@ func resourceEBSVolumeDelete(ctx context.Context, d *schema.ResourceData, meta i
 				return conn.CreateSnapshot(ctx, input)
 			},
 			errCodeSnapshotCreationPerVolumeRateExceeded, "The maximum per volume CreateSnapshot request rate has been exceeded")
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating EBS Snapshot (%s): %s", d.Id(), err)
 		}
@@ -307,7 +304,6 @@ func resourceEBSVolumeDelete(ctx context.Context, d *schema.ResourceData, meta i
 				}, d.Timeout(schema.TimeoutDelete))
 			},
 			errCodeResourceNotReady)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for EBS Snapshot (%s) create: %s", snapshotID, err)
 		}

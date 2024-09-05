@@ -1777,7 +1777,8 @@ func TestAccEC2SpotFleetRequest_noTerminateInstancesWithExpiration(t *testing.T)
 }
 
 func testAccCheckSpotFleetRequestRecreatedConfig(t *testing.T,
-	before, after *awstypes.SpotFleetRequestConfig) resource.TestCheckFunc {
+	before, after *awstypes.SpotFleetRequestConfig,
+) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if before.SpotFleetRequestId == after.SpotFleetRequestId {
 			t.Fatalf("Expected change of Spot Fleet Request IDs, but both were %v", before.SpotFleetRequestId)
@@ -1800,7 +1801,6 @@ func testAccCheckSpotFleetRequestExists(ctx context.Context, n string, v *awstyp
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindSpotFleetRequestByID(ctx, conn, rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}
@@ -1862,7 +1862,8 @@ func testAccCheckSpotFleetRequest_EBSAttributes(sfr *awstypes.SpotFleetRequestCo
 }
 
 func testAccCheckSpotFleetRequest_PlacementAttributes(
-	sfr *awstypes.SpotFleetRequestConfig, rName string) resource.TestCheckFunc {
+	sfr *awstypes.SpotFleetRequestConfig, rName string,
+) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if len(sfr.SpotFleetRequestConfig.LaunchSpecifications) == 0 {
 			return errors.New("Missing launch specification")
@@ -1912,7 +1913,7 @@ func testAccCheckSpotFleetRequest_IAMInstanceProfileARN(sfr *awstypes.SpotFleetR
 		if profile == nil {
 			return fmt.Errorf("Expected IamInstanceProfile to be set, got nil")
 		}
-		//Validate the string whether it is ARN
+		// Validate the string whether it is ARN
 		re := regexache.MustCompile(fmt.Sprintf(`arn:%s:iam::\d{12}:instance-profile/?[0-9A-Za-z@-_+=,.].*`, acctest.Partition())) // regex seems suspicious, @-_ is a range
 		if !re.MatchString(*profile.Arn) {
 			return fmt.Errorf("Expected IamInstanceProfile input as ARN, got %s", *profile.Arn)

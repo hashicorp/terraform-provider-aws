@@ -267,7 +267,6 @@ func resourceAMIFromInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	output, err := conn.CreateImage(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 AMI (%s) from EC2 Instance (%s): %s", name, instanceID, err)
 	}

@@ -2818,7 +2818,6 @@ func testAccCheckSecurityGroupExists(ctx context.Context, n string, v *awstypes.
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindSecurityGroupByID(ctx, conn, rs.Primary.ID)
-
 		if err != nil {
 			return create.Error(names.EC2, create.ErrActionCheckingExistence, "Security Group", rs.Primary.ID, err)
 		}

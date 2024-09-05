@@ -424,7 +424,6 @@ func resourceNetworkInterfaceCreate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	output, err := conn.CreateNetworkInterface(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Network Interface: %s", err)
 	}
@@ -447,7 +446,6 @@ func resourceNetworkInterfaceCreate(ctx context.Context, d *schema.ResourceData,
 					}
 
 					_, err := conn.AssignPrivateIpAddresses(ctx, input)
-
 					if err != nil {
 						return sdkdiag.AppendErrorf(diags, "assigning EC2 Network Interface (%s) private IPv4 addresses: %s", d.Id(), err)
 					}
@@ -470,7 +468,6 @@ func resourceNetworkInterfaceCreate(ctx context.Context, d *schema.ResourceData,
 		}
 
 		_, err := conn.ModifyNetworkInterfaceAttribute(ctx, input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying EC2 Network Interface (%s) SourceDestCheck: %s", d.Id(), err)
 		}
@@ -480,7 +477,6 @@ func resourceNetworkInterfaceCreate(ctx context.Context, d *schema.ResourceData,
 		attachment := v.(*schema.Set).List()[0].(map[string]interface{})
 
 		_, err := attachNetworkInterface(ctx, conn, d.Id(), attachment["instance"].(string), attachment["device_index"].(int), networkInterfaceAttachedTimeout)
-
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
@@ -611,7 +607,6 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 			}
 
 			_, err := conn.UnassignPrivateIpAddresses(ctx, input)
-
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "unassigning EC2 Network Interface (%s) private IPv4 addresses: %s", d.Id(), err)
 			}
@@ -628,7 +623,6 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 			}
 
 			_, err := conn.AssignPrivateIpAddresses(ctx, input)
-
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "assigning EC2 Network Interface (%s) private IPv4 addresses: %s", d.Id(), err)
 			}
@@ -663,7 +657,6 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 			}
 
 			_, err := conn.UnassignPrivateIpAddresses(ctx, input)
-
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "unassigning EC2 Network Interface (%s) private IPv4 addresses: %s", d.Id(), err)
 			}
@@ -683,7 +676,6 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 			}
 
 			_, err := conn.AssignPrivateIpAddresses(ctx, input)
-
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "assigning EC2 Network Interface (%s) private IPv4 addresses: %s", d.Id(), err)
 			}
@@ -710,7 +702,6 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 				}
 
 				_, err := conn.AssignPrivateIpAddresses(ctx, input)
-
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "assigning EC2 Network Interface (%s) private IPv4 addresses: %s", d.Id(), err)
 				}
@@ -721,7 +712,6 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 				}
 
 				_, err := conn.UnassignPrivateIpAddresses(ctx, input)
-
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "unassigning EC2 Network Interface (%s) private IPv4 addresses: %s", d.Id(), err)
 				}
@@ -741,7 +731,6 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 				}
 
 				_, err := conn.AssignPrivateIpAddresses(ctx, input)
-
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "assigning EC2 Network Interface (%s) private IPv4 addresses: %s", d.Id(), err)
 				}
@@ -752,7 +741,6 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 				}
 
 				_, err := conn.UnassignPrivateIpAddresses(ctx, input)
-
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "unassigning EC2 Network Interface (%s) private IPv4 addresses: %s", d.Id(), err)
 				}
@@ -781,7 +769,6 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 			}
 
 			_, err := conn.UnassignPrivateIpAddresses(ctx, input)
-
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "unassigning EC2 Network Interface (%s) private IPv4 addresses: %s", d.Id(), err)
 			}
@@ -796,7 +783,6 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 			}
 
 			_, err := conn.AssignPrivateIpAddresses(ctx, input)
-
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "assigning EC2 Network Interface (%s) private IPv4 addresses: %s", d.Id(), err)
 			}
@@ -824,7 +810,6 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 			}
 
 			_, err := conn.UnassignIpv6Addresses(ctx, input)
-
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "unassigning EC2 Network Interface (%s) IPv6 addresses: %s", d.Id(), err)
 			}
@@ -839,7 +824,6 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 			}
 
 			_, err := conn.AssignIpv6Addresses(ctx, input)
-
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "assigning EC2 Network Interface (%s) IPv6 addresses: %s", d.Id(), err)
 			}
@@ -858,7 +842,6 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 				}
 
 				_, err := conn.AssignIpv6Addresses(ctx, input)
-
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "assigning EC2 Network Interface (%s) IPv6 addresses: %s", d.Id(), err)
 				}
@@ -869,7 +852,6 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 				}
 
 				_, err := conn.UnassignIpv6Addresses(ctx, input)
-
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "unassigning EC2 Network Interface (%s) IPv6 addresses: %s", d.Id(), err)
 				}
@@ -897,7 +879,6 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 			}
 
 			_, err := conn.UnassignIpv6Addresses(ctx, input)
-
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "unassigning EC2 Network Interface (%s) private IPv6 addresses: %s", d.Id(), err)
 			}
@@ -913,7 +894,6 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 			}
 
 			_, err := conn.AssignIpv6Addresses(ctx, input)
-
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "assigning EC2 Network Interface (%s) private IPv6 addresses: %s", d.Id(), err)
 			}
@@ -941,7 +921,6 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 			}
 
 			_, err := conn.UnassignIpv6Addresses(ctx, input)
-
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "unassigning EC2 Network Interface (%s) IPv6 addresses: %s", d.Id(), err)
 			}
@@ -956,7 +935,6 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 			}
 
 			_, err := conn.AssignIpv6Addresses(ctx, input)
-
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "assigning EC2 Network Interface (%s) IPv6 addresses: %s", d.Id(), err)
 			}
@@ -975,7 +953,6 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 				}
 
 				_, err := conn.AssignIpv6Addresses(ctx, input)
-
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "assigning EC2 Network Interface (%s) IPv6 addresses: %s", d.Id(), err)
 				}
@@ -986,7 +963,6 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 				}
 
 				_, err := conn.UnassignIpv6Addresses(ctx, input)
-
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "unassigning EC2 Network Interface (%s) IPv6 addresses: %s", d.Id(), err)
 				}
@@ -1001,7 +977,6 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 		}
 
 		_, err := conn.ModifyNetworkInterfaceAttribute(ctx, input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying EC2 Network Interface (%s) SourceDestCheck: %s", d.Id(), err)
 		}
@@ -1014,7 +989,6 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 		}
 
 		_, err := conn.ModifyNetworkInterfaceAttribute(ctx, input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying EC2 Network Interface (%s) Groups: %s", d.Id(), err)
 		}
@@ -1027,7 +1001,6 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 		}
 
 		_, err := conn.ModifyNetworkInterfaceAttribute(ctx, input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying EC2 Network Interface (%s) Description: %s", d.Id(), err)
 		}
@@ -1062,7 +1035,6 @@ func attachNetworkInterface(ctx context.Context, conn *ec2.Client, networkInterf
 	}
 
 	output, err := conn.AttachNetworkInterface(ctx, input)
-
 	if err != nil {
 		return "", fmt.Errorf("attaching EC2 Network Interface (%s/%s): %w", networkInterfaceID, instanceID, err)
 	}

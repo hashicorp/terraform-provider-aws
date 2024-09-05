@@ -76,7 +76,6 @@ func resourceInternetGatewayCreate(ctx context.Context, d *schema.ResourceData, 
 
 	log.Printf("[DEBUG] Creating EC2 Internet Gateway: %#v", input)
 	output, err := conn.CreateInternetGateway(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Internet Gateway: %s", err)
 	}
@@ -198,13 +197,11 @@ func attachInternetGateway(ctx context.Context, conn *ec2.Client, internetGatewa
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, func() (interface{}, error) {
 		return conn.AttachInternetGateway(ctx, input)
 	}, errCodeInvalidInternetGatewayIDNotFound)
-
 	if err != nil {
 		return fmt.Errorf("attaching EC2 Internet Gateway (%s) to VPC (%s): %w", internetGatewayID, vpcID, err)
 	}
 
 	_, err = waitInternetGatewayAttached(ctx, conn, internetGatewayID, vpcID, timeout)
-
 	if err != nil {
 		return fmt.Errorf("waiting for EC2 Internet Gateway (%s) to attach to VPC (%s): %w", internetGatewayID, vpcID, err)
 	}
@@ -232,7 +229,6 @@ func detachInternetGateway(ctx context.Context, conn *ec2.Client, internetGatewa
 	}
 
 	_, err = waitInternetGatewayDetached(ctx, conn, internetGatewayID, vpcID, timeout)
-
 	if err != nil {
 		return fmt.Errorf("waiting for EC2 Internet Gateway (%s) to detach from VPC (%s): %w", internetGatewayID, vpcID, err)
 	}

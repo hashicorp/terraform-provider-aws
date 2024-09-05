@@ -324,6 +324,7 @@ func testAccVerifiedAccessGroup_updatePolicy(t *testing.T, semaphore tfsync.Sema
 		},
 	})
 }
+
 func testAccVerifiedAccessGroup_setPolicy(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var v types.VerifiedAccessGroup
@@ -392,7 +393,6 @@ func testAccCheckVerifiedAccessGroupExists(ctx context.Context, n string, v *typ
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindVerifiedAccessGroupByID(ctx, conn, rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}

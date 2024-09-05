@@ -237,7 +237,6 @@ func testAccCheckVPCPeeringConnectionOptionsWithProvider(ctx context.Context, n,
 		conn := providerF().Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindVPCPeeringConnectionByID(ctx, conn, rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}

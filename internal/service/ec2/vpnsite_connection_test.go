@@ -1743,7 +1743,6 @@ func testAccVPNConnectionExists(ctx context.Context, n string, v *awstypes.VpnCo
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindVPNConnectionByID(ctx, conn, rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}

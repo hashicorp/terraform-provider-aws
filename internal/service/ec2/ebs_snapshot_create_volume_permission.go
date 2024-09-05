@@ -69,7 +69,6 @@ func resourceSnapshotCreateVolumePermissionCreate(ctx context.Context, d *schema
 	}
 
 	_, err := conn.ModifySnapshotAttribute(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EBS Snapshot CreateVolumePermission (%s): %s", id, err)
 	}
@@ -79,7 +78,6 @@ func resourceSnapshotCreateVolumePermissionCreate(ctx context.Context, d *schema
 	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
 		return findCreateSnapshotCreateVolumePermissionByTwoPartKey(ctx, conn, snapshotID, accountID)
 	})
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EBS Snapshot CreateVolumePermission create (%s): %s", d.Id(), err)
 	}
@@ -142,7 +140,6 @@ func resourceSnapshotCreateVolumePermissionDelete(ctx context.Context, d *schema
 	_, err = tfresource.RetryUntilNotFound(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
 		return findCreateSnapshotCreateVolumePermissionByTwoPartKey(ctx, conn, snapshotID, accountID)
 	})
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EBS Snapshot CreateVolumePermission delete (%s): %s", d.Id(), err)
 	}
@@ -156,7 +153,6 @@ func resourceSnapshotCreateVolumePermissionCustomizeDiff(ctx context.Context, di
 			conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 			snapshot, err := findSnapshotByID(ctx, conn, snapshotID)
-
 			if err != nil {
 				return fmt.Errorf("reading EBS Snapshot (%s): %w", snapshotID, err)
 			}

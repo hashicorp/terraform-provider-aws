@@ -58,7 +58,6 @@ func resourceVPCEndpointSecurityGroupAssociationCreate(ctx context.Context, d *s
 	defaultSecurityGroupID := ""
 	if replaceDefaultAssociation {
 		vpcEndpoint, err := findVPCEndpointByID(ctx, conn, vpcEndpointID)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading VPC Endpoint (%s): %s", vpcEndpointID, err)
 		}
@@ -66,7 +65,6 @@ func resourceVPCEndpointSecurityGroupAssociationCreate(ctx context.Context, d *s
 		vpcID := aws.ToString(vpcEndpoint.VpcId)
 
 		defaultSecurityGroup, err := findVPCDefaultSecurityGroup(ctx, conn, vpcID)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) default Security Group: %s", vpcID, err)
 		}
@@ -92,7 +90,6 @@ func resourceVPCEndpointSecurityGroupAssociationCreate(ctx context.Context, d *s
 	}
 
 	err := createVPCEndpointSecurityGroupAssociation(ctx, conn, vpcEndpointID, securityGroupID)
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -143,7 +140,6 @@ func resourceVPCEndpointSecurityGroupAssociationDelete(ctx context.Context, d *s
 
 	if replaceDefaultAssociation {
 		vpcEndpoint, err := findVPCEndpointByID(ctx, conn, vpcEndpointID)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading VPC Endpoint (%s): %s", vpcEndpointID, err)
 		}
@@ -151,14 +147,12 @@ func resourceVPCEndpointSecurityGroupAssociationDelete(ctx context.Context, d *s
 		vpcID := aws.ToString(vpcEndpoint.VpcId)
 
 		defaultSecurityGroup, err := findVPCDefaultSecurityGroup(ctx, conn, vpcID)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) default Security Group: %s", vpcID, err)
 		}
 
 		// Add back the VPC endpoint/default security group association.
 		err = createVPCEndpointSecurityGroupAssociation(ctx, conn, vpcEndpointID, aws.ToString(defaultSecurityGroup.GroupId))
-
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
@@ -179,7 +173,6 @@ func createVPCEndpointSecurityGroupAssociation(ctx context.Context, conn *ec2.Cl
 
 	log.Printf("[DEBUG] Creating VPC Endpoint Security Group Association: %v", input)
 	_, err := conn.ModifyVpcEndpoint(ctx, input)
-
 	if err != nil {
 		return fmt.Errorf("creating VPC Endpoint (%s) Security Group (%s) Association: %w", vpcEndpointID, securityGroupID, err)
 	}

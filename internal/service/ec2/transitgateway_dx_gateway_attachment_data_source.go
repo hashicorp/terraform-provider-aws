@@ -79,7 +79,6 @@ func dataSourceTransitGatewayDxGatewayAttachmentRead(ctx context.Context, d *sch
 	}
 
 	transitGatewayAttachment, err := findTransitGatewayAttachment(ctx, conn, input)
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Transit Gateway Direct Connect Gateway Attachment", err))
 	}

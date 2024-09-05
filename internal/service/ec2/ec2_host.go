@@ -132,7 +132,6 @@ func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	output, err := conn.AllocateHosts(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "allocating EC2 Host: %s", err)
 	}

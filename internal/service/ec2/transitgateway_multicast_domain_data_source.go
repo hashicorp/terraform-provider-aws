@@ -141,7 +141,6 @@ func dataSourceTransitGatewayMulticastDomainRead(ctx context.Context, d *schema.
 	}
 
 	transitGatewayMulticastDomain, err := findTransitGatewayMulticastDomain(ctx, conn, input)
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Transit Gateway Multicast Domain", err))
 	}
@@ -161,7 +160,6 @@ func dataSourceTransitGatewayMulticastDomainRead(ctx context.Context, d *schema.
 	associations, err := findTransitGatewayMulticastDomainAssociations(ctx, conn, &ec2.GetTransitGatewayMulticastDomainAssociationsInput{
 		TransitGatewayMulticastDomainId: aws.String(d.Id()),
 	})
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing EC2 Transit Gateway Multicast Domain Associations (%s): %s", d.Id(), err)
 	}
@@ -177,7 +175,6 @@ func dataSourceTransitGatewayMulticastDomainRead(ctx context.Context, d *schema.
 		}),
 		TransitGatewayMulticastDomainId: aws.String(d.Id()),
 	})
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing EC2 Transit Gateway Multicast Group Members (%s): %s", d.Id(), err)
 	}
@@ -193,7 +190,6 @@ func dataSourceTransitGatewayMulticastDomainRead(ctx context.Context, d *schema.
 		}),
 		TransitGatewayMulticastDomainId: aws.String(d.Id()),
 	})
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing EC2 Transit Gateway Multicast Group Members (%s): %s", d.Id(), err)
 	}

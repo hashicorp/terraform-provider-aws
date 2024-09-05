@@ -174,7 +174,6 @@ func resourceCapacityReservationCreate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	output, err := conn.CreateCapacityReservation(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Capacity Reservation: %s", err)
 	}
@@ -246,7 +245,6 @@ func resourceCapacityReservationUpdate(ctx context.Context, d *schema.ResourceDa
 		}
 
 		_, err := conn.ModifyCapacityReservation(ctx, input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EC2 Capacity Reservation (%s): %s", d.Id(), err)
 		}

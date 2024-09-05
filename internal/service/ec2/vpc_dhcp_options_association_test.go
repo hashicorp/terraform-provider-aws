@@ -162,7 +162,6 @@ func testAccCheckVPCDHCPOptionsAssociationDestroy(ctx context.Context) resource.
 			}
 
 			dhcpOptionsID, vpcID, err := tfec2.VPCDHCPOptionsAssociationParseResourceID(rs.Primary.ID)
-
 			if err != nil {
 				return err
 			}
@@ -196,7 +195,6 @@ func testAccCheckVPCDHCPOptionsAssociationExist(ctx context.Context, n string) r
 		}
 
 		dhcpOptionsID, vpcID, err := tfec2.VPCDHCPOptionsAssociationParseResourceID(rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}

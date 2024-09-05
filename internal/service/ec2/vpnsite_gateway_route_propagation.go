@@ -50,7 +50,6 @@ func resourceVPNGatewayRoutePropagationEnable(ctx context.Context, d *schema.Res
 	gatewayID := d.Get("vpn_gateway_id").(string)
 	routeTableID := d.Get("route_table_id").(string)
 	err := routeTableEnableVGWRoutePropagation(ctx, conn, routeTableID, gatewayID, d.Timeout(schema.TimeoutCreate))
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -65,7 +64,6 @@ func resourceVPNGatewayRoutePropagationDisable(ctx context.Context, d *schema.Re
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	routeTableID, gatewayID, err := vpnGatewayRoutePropagationParseID(d.Id())
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -84,7 +82,6 @@ func resourceVPNGatewayRoutePropagationRead(ctx context.Context, d *schema.Resou
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	routeTableID, gatewayID, err := vpnGatewayRoutePropagationParseID(d.Id())
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}

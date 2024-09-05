@@ -61,7 +61,6 @@ func dataSourceTransitGatewayRouteTableAssociationsRead(ctx context.Context, d *
 	}
 
 	output, err := findTransitGatewayRouteTableAssociations(ctx, conn, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway Route Table Associations: %s", err)
 	}

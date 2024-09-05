@@ -112,7 +112,6 @@ func dataSourceVPNGatewayRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	vgw, err := findVPNGateway(ctx, conn, input)
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 VPN Gateway", err))
 	}

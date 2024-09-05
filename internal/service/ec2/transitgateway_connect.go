@@ -98,7 +98,6 @@ func resourceTransitGatewayConnectCreate(ctx context.Context, d *schema.Resource
 
 	log.Printf("[DEBUG] Creating EC2 Transit Gateway Connect: %+v", input)
 	output, err := conn.CreateTransitGatewayConnect(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Transit Gateway Connect: %s", err)
 	}
@@ -110,14 +109,12 @@ func resourceTransitGatewayConnectCreate(ctx context.Context, d *schema.Resource
 	}
 
 	transportAttachment, err := findTransitGatewayAttachmentByID(ctx, conn, transportAttachmentID)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway Attachment (%s): %s", transportAttachmentID, err)
 	}
 
 	transitGatewayID := aws.ToString(transportAttachment.TransitGatewayId)
 	transitGateway, err := findTransitGatewayByID(ctx, conn, transitGatewayID)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway (%s): %s", transitGatewayID, err)
 	}
@@ -155,13 +152,11 @@ func resourceTransitGatewayConnectRead(ctx context.Context, d *schema.ResourceDa
 
 	transitGatewayID := aws.ToString(transitGatewayConnect.TransitGatewayId)
 	transitGateway, err := findTransitGatewayByID(ctx, conn, transitGatewayID)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway (%s): %s", transitGatewayID, err)
 	}
 
 	transitGatewayAttachment, err := findTransitGatewayAttachmentByID(ctx, conn, d.Id())
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway Attachment (%s): %s", d.Id(), err)
 	}
@@ -215,7 +210,6 @@ func resourceTransitGatewayConnectUpdate(ctx context.Context, d *schema.Resource
 	if d.HasChanges("transit_gateway_default_route_table_association", "transit_gateway_default_route_table_propagation") {
 		transitGatewayID := d.Get(names.AttrTransitGatewayID).(string)
 		transitGateway, err := findTransitGatewayByID(ctx, conn, transitGatewayID)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway (%s): %s", transitGatewayID, err)
 		}

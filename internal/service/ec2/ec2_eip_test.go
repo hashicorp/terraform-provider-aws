@@ -690,7 +690,6 @@ func testAccCheckEIPExists(ctx context.Context, n string, v *types.Address) reso
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindEIPByAllocationID(ctx, conn, rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}

@@ -102,7 +102,6 @@ func resourceEIPAssociationCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	output, err := conn.AssociateAddress(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 EIP Association: %s", err)
 	}
@@ -126,7 +125,6 @@ func resourceEIPAssociationCreate(ctx context.Context, d *schema.ResourceData, m
 			return false, err
 		},
 	)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 EIP Association (%s) create: %s", d.Id(), err)
 	}

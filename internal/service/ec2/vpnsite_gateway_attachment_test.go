@@ -79,7 +79,6 @@ func testAccCheckVPNGatewayAttachmentExists(ctx context.Context, n string, v *aw
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindVPNGatewayVPCAttachmentByTwoPartKey(ctx, conn, rs.Primary.Attributes["vpn_gateway_id"], rs.Primary.Attributes[names.AttrVPCID])
-
 		if err != nil {
 			return err
 		}

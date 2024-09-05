@@ -107,7 +107,6 @@ func resourceDefaultNetworkACLCreate(ctx context.Context, d *schema.ResourceData
 
 	naclID := d.Get("default_network_acl_id").(string)
 	nacl, err := findNetworkACLByID(ctx, conn, naclID)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Network ACL (%s): %s", naclID, err)
 	}

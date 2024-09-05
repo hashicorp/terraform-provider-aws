@@ -158,7 +158,6 @@ func testAccCheckClientVPNNetworkAssociationExists(ctx context.Context, name str
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindClientVPNNetworkAssociationByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["client_vpn_endpoint_id"])
-
 		if err != nil {
 			return err
 		}

@@ -278,7 +278,6 @@ func testAccCheckClientVPNAuthorizationRuleExists(ctx context.Context, name stri
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindClientVPNAuthorizationRuleByThreePartKey(ctx, conn, rs.Primary.Attributes["client_vpn_endpoint_id"], rs.Primary.Attributes["target_network_cidr"], rs.Primary.Attributes["access_group_id"])
-
 		if err != nil {
 			return err
 		}

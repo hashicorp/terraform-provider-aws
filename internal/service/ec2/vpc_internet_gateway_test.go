@@ -196,7 +196,6 @@ func testAccCheckInternetGatewayExists(ctx context.Context, n string, v *awstype
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindInternetGatewayByID(ctx, conn, rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}

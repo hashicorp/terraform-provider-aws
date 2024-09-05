@@ -294,7 +294,6 @@ func resourceAMICopyCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	output, err := conn.CopyImage(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 AMI (%s) from source EC2 AMI (%s): %s", name, sourceImageID, err)
 	}

@@ -59,7 +59,6 @@ func resourceMainRouteTableAssociationCreate(ctx context.Context, d *schema.Reso
 
 	vpcID := d.Get(names.AttrVPCID).(string)
 	association, err := findMainRouteTableAssociationByVPCID(ctx, conn, vpcID)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Main Route Table Association (%s): %s", vpcID, err)
 	}
@@ -71,7 +70,6 @@ func resourceMainRouteTableAssociationCreate(ctx context.Context, d *schema.Reso
 	}
 
 	output, err := conn.ReplaceRouteTableAssociation(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Main Route Table Association (%s): %s", routeTableID, err)
 	}
@@ -117,7 +115,6 @@ func resourceMainRouteTableAssociationUpdate(ctx context.Context, d *schema.Reso
 	}
 
 	output, err := conn.ReplaceRouteTableAssociation(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Main Route Table Association (%s): %s", routeTableID, err)
 	}
@@ -143,7 +140,6 @@ func resourceMainRouteTableAssociationDelete(ctx context.Context, d *schema.Reso
 		AssociationId: aws.String(d.Id()),
 		RouteTableId:  aws.String(d.Get("original_route_table_id").(string)),
 	})
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Main Route Table Association (%s): %s", d.Get("route_table_id").(string), err)
 	}

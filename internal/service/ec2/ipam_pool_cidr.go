@@ -128,7 +128,6 @@ func resourceIPAMPoolCIDRCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	output, err := conn.ProvisionIpamPoolCidr(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating IPAM Pool (%s) CIDR: %s", poolID, err)
 	}
@@ -138,7 +137,6 @@ func resourceIPAMPoolCIDRCreate(ctx context.Context, d *schema.ResourceData, met
 	poolCidrID := aws.ToString(output.IpamPoolCidr.IpamPoolCidrId)
 
 	ipamPoolCidr, err := waitIPAMPoolCIDRCreated(ctx, conn, poolCidrID, poolID, cidrBlock, d.Timeout(schema.TimeoutDelete))
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for IPAM Pool CIDR (%s) create: %s", poolCidrID, err)
 	}

@@ -60,7 +60,6 @@ func dataSourceVPCsRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	output, err := findVPCs(ctx, conn, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPCs: %s", err)
 	}

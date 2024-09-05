@@ -87,7 +87,6 @@ func dataSourceCustomerGatewayRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	cgw, err := findCustomerGateway(ctx, conn, input)
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Customer Gateway", err))
 	}
@@ -104,7 +103,6 @@ func dataSourceCustomerGatewayRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set(names.AttrARN, arn)
 	if v := aws.ToString(cgw.BgpAsn); v != "" {
 		v, err := strconv.ParseInt(v, 0, 0)
-
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
@@ -115,7 +113,6 @@ func dataSourceCustomerGatewayRead(ctx context.Context, d *schema.ResourceData, 
 	}
 	if v := aws.ToString(cgw.BgpAsnExtended); v != "" {
 		v, err := strconv.ParseInt(v, 0, 0)
-
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}

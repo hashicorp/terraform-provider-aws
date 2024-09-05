@@ -136,7 +136,6 @@ func resourceEBSSnapshotCopyCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	output, err := conn.CopySnapshot(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EBS Snapshot Copy: %s", err)
 	}
@@ -151,7 +150,6 @@ func resourceEBSSnapshotCopyCreate(ctx context.Context, d *schema.ResourceData, 
 			}, d.Timeout(schema.TimeoutCreate))
 		},
 		errCodeResourceNotReady)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EBS Snapshot Copy (%s) create: %s", d.Id(), err)
 	}
@@ -161,13 +159,11 @@ func resourceEBSSnapshotCopyCreate(ctx context.Context, d *schema.ResourceData, 
 			SnapshotId:  aws.String(d.Id()),
 			StorageTier: awstypes.TargetStorageTier(v.(string)),
 		})
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting EBS Snapshot Copy (%s) Storage Tier: %s", d.Id(), err)
 		}
 
 		_, err = waitEBSSnapshotTierArchive(ctx, conn, d.Id(), ebsSnapshotArchivedTimeout)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for EBS Snapshot Copy (%s) Storage Tier archive: %s", d.Id(), err)
 		}

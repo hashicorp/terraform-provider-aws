@@ -75,7 +75,6 @@ func resourceTransitGatewayPeeringAttachmentAccepterCreate(ctx context.Context, 
 
 	log.Printf("[DEBUG] Accepting EC2 Transit Gateway Peering Attachment: %s", transitGatewayAttachmentID)
 	output, err := conn.AcceptTransitGatewayPeeringAttachment(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "accepting EC2 Transit Gateway Peering Attachment (%s): %s", transitGatewayAttachmentID, err)
 	}
@@ -111,7 +110,6 @@ func resourceTransitGatewayPeeringAttachmentAccepterRead(ctx context.Context, d 
 
 	transitGatewayID := aws.ToString(transitGatewayPeeringAttachment.AccepterTgwInfo.TransitGatewayId)
 	_, err = findTransitGatewayByID(ctx, conn, transitGatewayID)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway (%s): %s", transitGatewayID, err)
 	}

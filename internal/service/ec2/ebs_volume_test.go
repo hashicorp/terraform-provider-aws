@@ -949,7 +949,6 @@ func testAccCheckVolumeExists(ctx context.Context, n string, v *awstypes.Volume)
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindEBSVolumeByID(ctx, conn, rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}
@@ -972,7 +971,6 @@ func testAccCheckVolumeFinalSnapshotExists(ctx context.Context, v *awstypes.Volu
 		}
 
 		output, err := tfec2.FindSnapshot(ctx, conn, input)
-
 		if err != nil {
 			return err
 		}

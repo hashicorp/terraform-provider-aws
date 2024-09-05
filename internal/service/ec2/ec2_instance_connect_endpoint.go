@@ -155,7 +155,6 @@ func (r *instanceConnectEndpointResource) Create(ctx context.Context, request re
 	input.TagSpecifications = getTagSpecificationsIn(ctx, awstypes.ResourceTypeInstanceConnectEndpoint)
 
 	output, err := conn.CreateInstanceConnectEndpoint(ctx, input)
-
 	if err != nil {
 		response.Diagnostics.AddError("creating EC2 Instance Connect Endpoint", err.Error())
 
@@ -166,7 +165,6 @@ func (r *instanceConnectEndpointResource) Create(ctx context.Context, request re
 	id := data.InstanceConnectEndpointId.ValueString()
 
 	instanceConnectEndpoint, err := waitInstanceConnectEndpointCreated(ctx, conn, id, r.CreateTimeout(ctx, data.Timeouts))
-
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for EC2 Instance Connect Endpoint (%s) create", id), err.Error())
 

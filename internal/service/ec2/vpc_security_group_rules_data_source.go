@@ -69,7 +69,6 @@ func (d *securityGroupRulesDataSource) Read(ctx context.Context, request datasou
 	}
 
 	output, err := findSecurityGroupRules(ctx, conn, input)
-
 	if err != nil {
 		response.Diagnostics.AddError("reading Security Group Rules", err.Error())
 

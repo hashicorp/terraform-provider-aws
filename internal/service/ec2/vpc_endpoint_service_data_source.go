@@ -138,7 +138,6 @@ func dataSourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceDat
 	}
 
 	serviceDetails, serviceNames, err := findVPCEndpointServices(ctx, conn, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC Endpoint Services: %s", err)
 	}
@@ -198,7 +197,6 @@ func dataSourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("vpc_endpoint_policy_supported", sd.VpcEndpointPolicySupported)
 
 	err = d.Set(names.AttrTags, keyValueTags(ctx, sd.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}

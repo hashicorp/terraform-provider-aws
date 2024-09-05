@@ -71,7 +71,6 @@ func resourceCarrierGatewayCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	output, err := conn.CreateCarrierGateway(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Carrier Gateway: %s", err)
 	}

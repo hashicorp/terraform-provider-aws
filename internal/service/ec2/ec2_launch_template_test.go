@@ -3064,7 +3064,7 @@ func TestAccEC2LaunchTemplate_metadataOptions(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_endpoint", names.AttrEnabled), //Setting any of the values in metadata options will set the http_endpoint to enabled, you will not see it via the Console, but will in the API for any instance made from the template
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_endpoint", names.AttrEnabled), // Setting any of the values in metadata options will set the http_endpoint to enabled, you will not see it via the Console, but will in the API for any instance made from the template
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_tokens", "required"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_put_response_hop_limit", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_protocol_ipv6", names.AttrEnabled),
@@ -3279,7 +3279,6 @@ func testAccCheckLaunchTemplateExists(ctx context.Context, n string, v *awstypes
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindLaunchTemplateByID(ctx, conn, rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}
@@ -3580,7 +3579,7 @@ resource "aws_launch_template" "test" {
     }
   }
 }
-`, rName)) //lintignore:AWSAT002
+`, rName)) // lintignore:AWSAT002
 }
 
 func testAccLaunchTemplateConfig_tags1(rName, tagKey1, tagValue1 string) string {
@@ -4232,6 +4231,7 @@ resource "aws_launch_template" "test" {
 }
 `, rName)
 }
+
 func testAccLaunchTemplateConfig_metadataOptionsNoHTTPEndpoint(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_launch_template" "test" {
@@ -4245,6 +4245,7 @@ resource "aws_launch_template" "test" {
 }
 `, rName)
 }
+
 func testAccLaunchTemplateConfig_enclaveOptions(rName string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_launch_template" "test" {

@@ -207,7 +207,6 @@ func resourceVerifiedAccessInstanceLoggingConfigurationUpdate(ctx context.Contex
 		}
 
 		_, err = conn.ModifyVerifiedAccessInstanceLoggingConfiguration(ctx, input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Verified Access Instance Logging Configuration (%s): %s", vaiID, err)
 		}

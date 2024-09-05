@@ -113,7 +113,6 @@ func testAccCheckTransitGatewayMulticastGroupSourceExists(ctx context.Context, n
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindTransitGatewayMulticastGroupSourceByThreePartKey(ctx, conn, rs.Primary.Attributes["transit_gateway_multicast_domain_id"], rs.Primary.Attributes["group_ip_address"], rs.Primary.Attributes[names.AttrNetworkInterfaceID])
-
 		if err != nil {
 			return err
 		}

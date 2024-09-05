@@ -78,7 +78,6 @@ func dataSourcePublicIPv4PoolRead(ctx context.Context, d *schema.ResourceData, m
 
 	poolID := d.Get("pool_id").(string)
 	pool, err := findPublicIPv4PoolByID(ctx, conn, poolID)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Public IPv4 Pool (%s): %s", poolID, err)
 	}

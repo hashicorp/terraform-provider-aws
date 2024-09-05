@@ -59,7 +59,6 @@ func testAccPreCheckDefaultVPCNotFound(ctx context.Context, t *testing.T) {
 		t.Logf("Deleting existing default VPC: %s", vpcID)
 
 		err := testAccEmptyDefaultVPC(ctx, vpcID)
-
 		if err != nil {
 			t.Fatalf("error emptying default VPC: %s", err)
 		}
@@ -69,7 +68,6 @@ func testAccPreCheckDefaultVPCNotFound(ctx context.Context, t *testing.T) {
 		d.SetId(vpcID)
 
 		err = acctest.DeleteResource(ctx, r, d, acctest.Provider.Meta())
-
 		if err != nil {
 			t.Fatalf("error deleting default VPC: %s", err)
 		}
@@ -422,7 +420,6 @@ func testAccCheckDefaultVPCDestroyExists(ctx context.Context) resource.TestCheck
 			}
 
 			_, err := tfec2.FindVPCByID(ctx, conn, rs.Primary.ID)
-
 			if err != nil {
 				return err
 			}
@@ -458,7 +455,6 @@ func testAccCheckDefaultVPCDestroyNotFound(ctx context.Context) resource.TestChe
 		}
 
 		_, err := conn.CreateDefaultVpc(ctx, &ec2.CreateDefaultVpcInput{})
-
 		if err != nil {
 			return fmt.Errorf("error creating new default VPC: %w", err)
 		}
@@ -495,7 +491,6 @@ func testAccEmptyDefaultVPC(ctx context.Context, vpcID string) error {
 		d.Set(names.AttrVPCID, vpcID)
 
 		err := acctest.DeleteResource(ctx, r, d, acctest.Provider.Meta())
-
 		if err != nil {
 			return err
 		}
@@ -511,7 +506,6 @@ func testAccEmptyDefaultVPC(ctx context.Context, vpcID string) error {
 			},
 		),
 	})
-
 	if err != nil {
 		return err
 	}
@@ -522,7 +516,6 @@ func testAccEmptyDefaultVPC(ctx context.Context, vpcID string) error {
 		d.SetId(aws.ToString(v.SubnetId))
 
 		err := acctest.DeleteResource(ctx, r, d, acctest.Provider.Meta())
-
 		if err != nil {
 			return err
 		}

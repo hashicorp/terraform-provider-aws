@@ -142,7 +142,6 @@ func resourceIPAMCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	output, err := conn.CreateIpam(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating IPAM: %s", err)
 	}
@@ -230,7 +229,6 @@ func resourceIPAMUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 
 		_, err := conn.ModifyIpam(ctx, input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating IPAM (%s): %s", d.Id(), err)
 		}

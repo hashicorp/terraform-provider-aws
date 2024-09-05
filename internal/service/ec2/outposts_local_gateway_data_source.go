@@ -86,7 +86,6 @@ func dataSourceLocalGatewayRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	localGateway, err := findLocalGateway(ctx, conn, input)
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Local Gateway", err))
 	}

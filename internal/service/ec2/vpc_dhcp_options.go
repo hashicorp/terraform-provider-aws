@@ -95,23 +95,20 @@ func resourceVPCDHCPOptions() *schema.Resource {
 	}
 }
 
-var (
-	optionsMap = newDHCPOptionsMap(map[string]string{
-		names.AttrDomainName:                "domain-name",
-		"domain_name_servers":               "domain-name-servers",
-		"ipv6_address_preferred_lease_time": "ipv6-address-preferred-lease-time",
-		"netbios_name_servers":              "netbios-name-servers",
-		"netbios_node_type":                 "netbios-node-type",
-		"ntp_servers":                       "ntp-servers",
-	})
-)
+var optionsMap = newDHCPOptionsMap(map[string]string{
+	names.AttrDomainName:                "domain-name",
+	"domain_name_servers":               "domain-name-servers",
+	"ipv6_address_preferred_lease_time": "ipv6-address-preferred-lease-time",
+	"netbios_name_servers":              "netbios-name-servers",
+	"netbios_node_type":                 "netbios-node-type",
+	"ntp_servers":                       "ntp-servers",
+})
 
 func resourceVPCDHCPOptionsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	dhcpConfigurations, err := optionsMap.resourceDataToDHCPConfigurations(d)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 DHCP Options: %s", err)
 	}
@@ -122,7 +119,6 @@ func resourceVPCDHCPOptionsCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	output, err := conn.CreateDhcpOptions(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 DHCP Options: %s", err)
 	}
@@ -164,7 +160,6 @@ func resourceVPCDHCPOptionsRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set(names.AttrOwnerID, ownerID)
 
 	err = optionsMap.dhcpConfigurationsToResourceData(opts.DhcpConfigurations, d)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 DHCP Options (%s): %s", d.Id(), err)
 	}
@@ -191,7 +186,6 @@ func resourceVPCDHCPOptionsDelete(ctx context.Context, d *schema.ResourceData, m
 			"dhcp-options-id": d.Id(),
 		}),
 	})
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 DHCP Options Set (%s) associated VPCs: %s", d.Id(), err)
 	}

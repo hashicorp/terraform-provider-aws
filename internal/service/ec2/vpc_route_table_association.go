@@ -83,7 +83,6 @@ func resourceRouteTableAssociationCreate(ctx context.Context, d *schema.Resource
 		},
 		errCodeInvalidRouteTableIDNotFound,
 	)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Route Table (%s) Association: %s", routeTableID, err)
 	}
@@ -184,7 +183,6 @@ func resourceRouteTableAssociationImport(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	routeTable, err := findRouteTableByID(ctx, conn, routeTableID)
-
 	if err != nil {
 		return nil, err
 	}

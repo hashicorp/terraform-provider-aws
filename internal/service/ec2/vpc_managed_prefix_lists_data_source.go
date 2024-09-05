@@ -54,7 +54,6 @@ func dataSourceManagedPrefixListsRead(ctx context.Context, d *schema.ResourceDat
 	}
 
 	prefixLists, err := findManagedPrefixLists(ctx, conn, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Managed Prefix Lists: %s", err)
 	}

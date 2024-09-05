@@ -107,6 +107,7 @@ func TestAccVPCEndpoint_interfaceBasic(t *testing.T) {
 		},
 	})
 }
+
 func TestAccVPCEndpoint_interfaceNoPrivateDNS(t *testing.T) {
 	ctx := acctest.Context(t)
 	var endpoint awstypes.VpcEndpoint
@@ -900,7 +901,6 @@ func testAccCheckVPCEndpointExists(ctx context.Context, n string, v *awstypes.Vp
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindVPCEndpointByID(ctx, conn, rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}

@@ -62,7 +62,6 @@ func dataSourceLocalGatewayVirtualInterfaceGroupsRead(ctx context.Context, d *sc
 	}
 
 	output, err := findLocalGatewayVirtualInterfaceGroups(ctx, conn, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Local Gateway Virtual Interface Groups: %s", err)
 	}

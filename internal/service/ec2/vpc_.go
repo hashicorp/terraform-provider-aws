@@ -53,7 +53,7 @@ var (
 // @Tags(identifierAttribute="id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.Vpc")
 func resourceVPC() *schema.Resource {
-	//lintignore:R011
+	// lintignore:R011
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCCreate,
 		ReadWithoutTimeout:   resourceVPCRead,
@@ -228,7 +228,6 @@ func resourceVPCCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, ec2PropagationTimeout, func() (interface{}, error) {
 		return conn.CreateVpc(ctx, input)
 	}, errCodeUnsupportedOperation, "is not monitored by IPAM")
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 VPC: %s", err)
 	}
@@ -238,7 +237,6 @@ func resourceVPCCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.SetId(aws.ToString(output.Vpc.VpcId))
 
 	vpc, err := waitVPCCreated(ctx, conn, d.Id())
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 VPC (%s) create: %s", d.Id(), err)
 	}
@@ -425,7 +423,6 @@ func resourceVPCUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 			"",
 			0,
 			d.Get("ipv6_cidr_block_network_border_group").(string))
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EC2 VPC (%s): %s", d.Id(), err)
 		}
@@ -441,7 +438,6 @@ func resourceVPCUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 			d.Get("ipv6_ipam_pool_id").(string),
 			d.Get("ipv6_netmask_length").(int),
 			"")
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EC2 VPC (%s): %s", d.Id(), err)
 		}
@@ -476,7 +472,6 @@ func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 	_, err = tfresource.RetryUntilNotFound(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
 		return findVPCByID(ctx, conn, d.Id())
 	})
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 VPC (%s) delete: %s", d.Id(), err)
 	}
@@ -498,7 +493,6 @@ func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 		_, err := tfresource.RetryUntilNotFound(ctx, timeout, func() (interface{}, error) {
 			return findIPAMPoolAllocationsForVPC(ctx, conn, ipamPoolID, d.Id())
 		})
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for EC2 VPC (%s) IPAM Pool (%s) Allocation delete: %s", d.Id(), ipamPoolID, err)
 		}
@@ -664,7 +658,6 @@ func modifyVPCIPv6CIDRBlockAssociation(ctx context.Context, conn *ec2.Client, vp
 		}
 
 		_, err := conn.DisassociateVpcCidrBlock(ctx, input)
-
 		if err != nil {
 			return "", fmt.Errorf("disassociating IPv6 CIDR block (%s): %w", associationID, err)
 		}
@@ -700,7 +693,6 @@ func modifyVPCIPv6CIDRBlockAssociation(ctx context.Context, conn *ec2.Client, vp
 		}
 
 		output, err := conn.AssociateVpcCidrBlock(ctx, input)
-
 		if err != nil {
 			return "", fmt.Errorf("associating IPv6 CIDR block: %w", err)
 		}
@@ -734,7 +726,6 @@ func findIPAMPoolAllocationsForVPC(ctx context.Context, conn *ec2.Client, poolID
 	}
 
 	output, err := findIPAMPoolAllocations(ctx, conn, input)
-
 	if err != nil {
 		return nil, err
 	}

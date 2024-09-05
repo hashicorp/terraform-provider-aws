@@ -79,7 +79,6 @@ func resourceTransitGatewayRouteCreate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	_, err := conn.CreateTransitGatewayRoute(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Transit Gateway Route (%s): %s", id, err)
 	}

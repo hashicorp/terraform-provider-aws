@@ -106,7 +106,6 @@ func resourcePlacementGroupCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	_, err := conn.CreatePlacementGroup(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Placement Group (%s): %s", name, err)
 	}
@@ -114,7 +113,6 @@ func resourcePlacementGroupCreate(ctx context.Context, d *schema.ResourceData, m
 	d.SetId(name)
 
 	_, err = waitPlacementGroupCreated(ctx, conn, d.Id())
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Placement Group (%s) create: %s", d.Id(), err)
 	}
@@ -183,7 +181,6 @@ func resourcePlacementGroupDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	_, err = waitPlacementGroupDeleted(ctx, conn, d.Id())
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Placement Group (%s) delete: %s", d.Id(), err)
 	}

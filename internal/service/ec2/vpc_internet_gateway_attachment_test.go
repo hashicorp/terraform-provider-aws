@@ -84,7 +84,6 @@ func testAccCheckInternetGatewayAttachmentDestroy(ctx context.Context) resource.
 			}
 
 			igwID, vpcID, err := tfec2.InternetGatewayAttachmentParseResourceID(rs.Primary.ID)
-
 			if err != nil {
 				return err
 			}
@@ -120,13 +119,11 @@ func testAccCheckInternetGatewayAttachmentExists(ctx context.Context, n string, 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		igwID, vpcID, err := tfec2.InternetGatewayAttachmentParseResourceID(rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}
 
 		output, err := tfec2.FindInternetGatewayAttachment(ctx, conn, igwID, vpcID)
-
 		if err != nil {
 			return err
 		}

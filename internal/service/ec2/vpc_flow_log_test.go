@@ -589,7 +589,6 @@ func testAccCheckFlowLogExists(ctx context.Context, n string, v *awstypes.FlowLo
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindFlowLogByID(ctx, conn, rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}

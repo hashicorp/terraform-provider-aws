@@ -60,7 +60,6 @@ func resourceVerifiedAccessInstanceTrustProviderAttachmentCreate(ctx context.Con
 	}
 
 	_, err := conn.AttachVerifiedAccessTrustProvider(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Verified Access Instance Trust Provider Attachment (%s): %s", resourceID, err)
 	}

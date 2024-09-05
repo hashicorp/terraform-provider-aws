@@ -109,7 +109,6 @@ func dataSourceHostRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	host, err := findHost(ctx, conn, input)
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Host", err))
 	}

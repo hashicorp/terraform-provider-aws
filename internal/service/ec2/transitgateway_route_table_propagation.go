@@ -70,7 +70,6 @@ func resourceTransitGatewayRouteTablePropagationCreate(ctx context.Context, d *s
 	}
 
 	_, err := conn.EnableTransitGatewayRouteTablePropagation(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Transit Gateway Route Table Propagation (%s): %s", id, err)
 	}

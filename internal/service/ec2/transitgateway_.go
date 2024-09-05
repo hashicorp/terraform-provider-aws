@@ -173,7 +173,6 @@ func resourceTransitGatewayCreate(ctx context.Context, d *schema.ResourceData, m
 
 	log.Printf("[DEBUG] Creating EC2 Transit Gateway: %+v", input)
 	output, err := conn.CreateTransitGateway(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Transit Gateway: %s", err)
 	}

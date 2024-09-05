@@ -71,7 +71,6 @@ func resourceInternetGatewayAttachmentRead(ctx context.Context, d *schema.Resour
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	igwID, vpcID, err := internetGatewayAttachmentParseResourceID(d.Id())
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Internet Gateway Attachment (%s): %s", d.Id(), err)
 	}

@@ -568,7 +568,6 @@ func testAccCheckSpotInstanceRequestExists(ctx context.Context, n string, v *aws
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindSpotInstanceRequestByID(ctx, conn, rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}
@@ -580,7 +579,8 @@ func testAccCheckSpotInstanceRequestExists(ctx context.Context, n string, v *aws
 }
 
 func testAccCheckSpotInstanceRequestAttributes(
-	sir *awstypes.SpotInstanceRequest) resource.TestCheckFunc {
+	sir *awstypes.SpotInstanceRequest,
+) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if v := aws.ToString(sir.SpotPrice); v != "0.050000" {
 			return fmt.Errorf("Unexpected spot price: %s", v)
@@ -596,7 +596,8 @@ func testAccCheckSpotInstanceRequestAttributes(
 }
 
 func testAccCheckSpotInstanceRequestAttributesValidUntil(
-	sir *awstypes.SpotInstanceRequest, validUntil string) resource.TestCheckFunc {
+	sir *awstypes.SpotInstanceRequest, validUntil string,
+) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if sir.ValidUntil.Format(time.RFC3339) != validUntil {
 			return fmt.Errorf("Unexpected valid_until time: %s", sir.ValidUntil.String())
@@ -606,7 +607,8 @@ func testAccCheckSpotInstanceRequestAttributesValidUntil(
 }
 
 func testAccCheckSpotInstanceRequestAttributesCheckSIRWithoutSpot(
-	sir *awstypes.SpotInstanceRequest) resource.TestCheckFunc {
+	sir *awstypes.SpotInstanceRequest,
+) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if sir.State != awstypes.SpotInstanceStateActive {
 			return fmt.Errorf("Unexpected request state: %s", sir.State)
@@ -623,7 +625,6 @@ func testAccCheckSpotInstanceRequest_InstanceAttributes(ctx context.Context, v *
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		instance, err := tfec2.FindInstanceByID(ctx, conn, aws.ToString(v.InstanceId))
-
 		if err != nil {
 			return err
 		}
@@ -639,7 +640,8 @@ func testAccCheckSpotInstanceRequest_InstanceAttributes(ctx context.Context, v *
 }
 
 func testAccCheckSpotInstanceRequest_NetworkInterfaceAttributes(
-	sir *awstypes.SpotInstanceRequest) resource.TestCheckFunc {
+	sir *awstypes.SpotInstanceRequest,
+) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		nis := sir.LaunchSpecification.NetworkInterfaces
 		if nis == nil || len(nis) != 1 {
@@ -651,7 +653,8 @@ func testAccCheckSpotInstanceRequest_NetworkInterfaceAttributes(
 }
 
 func testAccCheckSpotInstanceRequestAttributesVPC(
-	sir *awstypes.SpotInstanceRequest) resource.TestCheckFunc {
+	sir *awstypes.SpotInstanceRequest,
+) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if sir.LaunchSpecification.SubnetId == nil {
 			return fmt.Errorf("Expected SubnetId not be non-empty for %s as the instance belongs to a VPC", *sir.InstanceId)

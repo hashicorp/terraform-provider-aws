@@ -363,7 +363,6 @@ func resourceAMICreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	output, err := conn.RegisterImage(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 AMI (%s): %s", name, err)
 	}
@@ -414,7 +413,6 @@ func resourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interface
 		// circumstances since we would've waited for availability during
 		// the "Create" step.
 		image, err = waitImageAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for EC2 AMI (%s) create: %s", d.Id(), err)
 		}
@@ -570,13 +568,11 @@ func enableImageDeprecation(ctx context.Context, conn *ec2.Client, id string, de
 	}
 
 	_, err := conn.EnableImageDeprecation(ctx, input)
-
 	if err != nil {
 		return fmt.Errorf("enabling deprecation: %w", err)
 	}
 
 	err = waitImageDeprecationTimeUpdated(ctx, conn, id, deprecateAt)
-
 	if err != nil {
 		return fmt.Errorf("enabling deprecation: waiting for completion: %w", err)
 	}
@@ -590,13 +586,11 @@ func disableImageDeprecation(ctx context.Context, conn *ec2.Client, id string) e
 	}
 
 	_, err := conn.DisableImageDeprecation(ctx, input)
-
 	if err != nil {
 		return fmt.Errorf("disabling deprecation: %w", err)
 	}
 
 	err = waitImageDeprecationTimeDisabled(ctx, conn, id)
-
 	if err != nil {
 		return fmt.Errorf("disabling deprecation: waiting for completion: %w", err)
 	}

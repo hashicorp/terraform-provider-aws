@@ -151,7 +151,6 @@ func testAccCheckIPAMOrganizationAdminAccountExists(ctx context.Context, n strin
 		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsClient(ctx)
 
 		output, err := tforganizations.FindDelegatedAdministratorByTwoPartKey(ctx, conn, rs.Primary.Attributes["delegated_admin_account_id"], rs.Primary.Attributes["service_principal"])
-
 		if err != nil {
 			return err
 		}

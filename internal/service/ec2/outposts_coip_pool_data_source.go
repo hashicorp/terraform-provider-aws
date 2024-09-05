@@ -87,7 +87,6 @@ func dataSourceCoIPPoolRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	coip, err := findCOIPPool(ctx, conn, input)
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 COIP Pool", err))
 	}

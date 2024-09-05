@@ -43,7 +43,6 @@ func resourceVPCPeeringConnectionOptionsCreate(ctx context.Context, d *schema.Re
 
 	vpcPeeringConnectionID := d.Get("vpc_peering_connection_id").(string)
 	vpcPeeringConnection, err := findVPCPeeringConnectionByID(ctx, conn, vpcPeeringConnectionID)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC Peering Connection (%s): %s", vpcPeeringConnectionID, err)
 	}
@@ -99,7 +98,6 @@ func resourceVPCPeeringConnectionOptionsUpdate(ctx context.Context, d *schema.Re
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	vpcPeeringConnection, err := findVPCPeeringConnectionByID(ctx, conn, d.Id())
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC Peering Connection (%s): %s", d.Id(), err)
 	}

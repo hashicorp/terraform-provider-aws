@@ -81,7 +81,6 @@ func dataSourceLocalGatewayVirtualInterfaceGroupRead(ctx context.Context, d *sch
 	}
 
 	localGatewayVirtualInterfaceGroup, err := findLocalGatewayVirtualInterfaceGroup(ctx, conn, input)
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Local Gateway Virtual Interface Group", err))
 	}

@@ -93,7 +93,6 @@ func dataSourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	keyPair, err := findKeyPair(ctx, conn, input)
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Key Pair", err))
 	}

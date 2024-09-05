@@ -197,7 +197,6 @@ func testAccCheckTransitGatewayRouteExists(ctx context.Context, n string, v *aws
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindTransitGatewayStaticRoute(ctx, conn, rs.Primary.Attributes["transit_gateway_route_table_id"], rs.Primary.Attributes["destination_cidr_block"])
-
 		if err != nil {
 			return err
 		}

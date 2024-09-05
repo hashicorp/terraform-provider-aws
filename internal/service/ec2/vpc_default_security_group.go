@@ -21,7 +21,7 @@ import (
 // @Tags(identifierAttribute="id")
 // @Testing(tagsTest=false)
 func resourceDefaultSecurityGroup() *schema.Resource {
-	//lintignore:R011
+	// lintignore:R011
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDefaultSecurityGroupCreate,
 		ReadWithoutTimeout:   resourceSecurityGroupRead,
@@ -110,7 +110,6 @@ func resourceDefaultSecurityGroupCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	sg, err := findSecurityGroup(ctx, conn, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Default Security Group: %s", err)
 	}

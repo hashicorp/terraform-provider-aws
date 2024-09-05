@@ -78,7 +78,6 @@ func dataSourceTransitGatewayVPNAttachmentRead(ctx context.Context, d *schema.Re
 	}
 
 	transitGatewayAttachment, err := findTransitGatewayAttachment(ctx, conn, input)
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Transit Gateway VPN Attachment", err))
 	}

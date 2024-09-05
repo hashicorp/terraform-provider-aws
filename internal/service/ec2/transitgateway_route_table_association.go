@@ -74,7 +74,6 @@ func resourceTransitGatewayRouteTableAssociationCreate(ctx context.Context, d *s
 
 	if d.Get("replace_existing_association").(bool) {
 		transitGatewayAttachment, err := findTransitGatewayAttachmentByID(ctx, conn, transitGatewayAttachmentID)
-
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
@@ -99,7 +98,6 @@ func resourceTransitGatewayRouteTableAssociationCreate(ctx context.Context, d *s
 	}
 
 	_, err := conn.AssociateTransitGatewayRouteTable(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Transit Gateway Route Table Association (%s): %s", id, err)
 	}
@@ -184,7 +182,6 @@ func transitGatewayRouteTableAssociationUpdate(ctx context.Context, conn *ec2.Cl
 			}
 
 			_, err := conn.AssociateTransitGatewayRouteTable(ctx, input)
-
 			if err != nil {
 				return fmt.Errorf("creating EC2 Transit Gateway Route Table Association (%s): %w", id, err)
 			}

@@ -1182,7 +1182,6 @@ func testAccCheckRouteTableExists(ctx context.Context, n string, v *awstypes.Rou
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		routeTable, err := tfec2.FindRouteTableByID(ctx, conn, rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}
@@ -2180,7 +2179,8 @@ resource "aws_vpc_endpoint" "test" {
 func testAccVPCRouteTableConfig_multiples(rName,
 	destinationAttr1, destinationValue1, targetAttribute1, targetValue1,
 	destinationAttr2, destinationValue2, targetAttribute2, targetValue2,
-	destinationAttr3, destinationValue3, targetAttribute3, targetValue3 string) string {
+	destinationAttr3, destinationValue3, targetAttribute3, targetValue3 string,
+) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),

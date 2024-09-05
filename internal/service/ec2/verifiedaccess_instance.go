@@ -108,7 +108,6 @@ func resourceVerifiedAccessInstanceCreate(ctx context.Context, d *schema.Resourc
 	}
 
 	output, err := conn.CreateVerifiedAccessInstance(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Verified Access Instance: %s", err)
 	}
@@ -167,7 +166,6 @@ func resourceVerifiedAccessInstanceUpdate(ctx context.Context, d *schema.Resourc
 		}
 
 		_, err := conn.ModifyVerifiedAccessInstance(ctx, input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Verified Access Instance (%s): %s", d.Id(), err)
 		}

@@ -65,7 +65,6 @@ func resourceNetworkInterfaceSGAttachmentCreate(ctx context.Context, d *schema.R
 	defer conns.GlobalMutexKV.Unlock(mutexKey)
 
 	eni, err := findNetworkInterfaceByID(ctx, conn, networkInterfaceID)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Network Interface (%s): %s", networkInterfaceID, err)
 	}
@@ -89,7 +88,6 @@ func resourceNetworkInterfaceSGAttachmentCreate(ctx context.Context, d *schema.R
 
 	log.Printf("[INFO] Modifying EC2 Network Interface: %#v", input)
 	_, err = conn.ModifyNetworkInterfaceAttribute(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "modifying EC2 Network Interface (%s): %s", networkInterfaceID, err)
 	}
@@ -200,7 +198,6 @@ func resourceNetworkInterfaceSGAttachmentImport(ctx context.Context, d *schema.R
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	networkInterface, err := findNetworkInterfaceByID(ctx, conn, networkInterfaceID)
-
 	if err != nil {
 		return nil, err
 	}

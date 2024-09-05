@@ -55,7 +55,6 @@ func resourceImageBlockPublicAccessPut(ctx context.Context, d *schema.ResourceDa
 		}
 
 		_, err := conn.EnableImageBlockPublicAccess(ctx, input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "enabling EC2 Image Block Public Access: %s", err)
 		}
@@ -63,7 +62,6 @@ func resourceImageBlockPublicAccessPut(ctx context.Context, d *schema.ResourceDa
 		input := &ec2.DisableImageBlockPublicAccessInput{}
 
 		_, err := conn.DisableImageBlockPublicAccess(ctx, input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "disabling EC2 Image Block Public Access: %s", err)
 		}

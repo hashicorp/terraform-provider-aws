@@ -117,7 +117,6 @@ func resourceTrafficMirrorSessionCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	output, err := conn.CreateTrafficMirrorSession(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Traffic Mirror Session: %s", err)
 	}
@@ -218,7 +217,6 @@ func resourceTrafficMirrorSessionUpdate(ctx context.Context, d *schema.ResourceD
 		}
 
 		_, err := conn.ModifyTrafficMirrorSession(ctx, input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EC2 Traffic Mirror Session (%s): %s", d.Id(), err)
 		}

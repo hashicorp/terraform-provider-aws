@@ -31,7 +31,7 @@ import (
 // @Tags(identifierAttribute="id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;types.Subnet")
 func resourceSubnet() *schema.Resource {
-	//lintignore:R011
+	// lintignore:R011
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSubnetCreate,
 		ReadWithoutTimeout:   resourceSubnetRead,
@@ -194,7 +194,6 @@ func resourceSubnetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	output, err := conn.CreateSubnet(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Subnet: %s", err)
 	}
@@ -202,17 +201,15 @@ func resourceSubnetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	d.SetId(aws.ToString(output.Subnet.SubnetId))
 
 	subnet, err := waitSubnetAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Subnet (%s) create: %s", d.Id(), err)
 	}
 
 	for i, v := range subnet.Ipv6CidrBlockAssociationSet {
-		if v.Ipv6CidrBlockState.State == awstypes.SubnetCidrBlockStateCodeAssociating { //we can only ever have 1 IPv6 block associated at once
+		if v.Ipv6CidrBlockState.State == awstypes.SubnetCidrBlockStateCodeAssociating { // we can only ever have 1 IPv6 block associated at once
 			associationID := aws.ToString(v.AssociationId)
 
 			subnetCidrBlockState, err := waitSubnetIPv6CIDRBlockAssociationCreated(ctx, conn, associationID)
-
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for EC2 Subnet (%s) IPv6 CIDR block (%s) to become associated: %s", d.Id(), associationID, err)
 			}
@@ -268,7 +265,7 @@ func resourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("ipv6_cidr_block", nil)
 
 	for _, v := range subnet.Ipv6CidrBlockAssociationSet {
-		if v.Ipv6CidrBlockState.State == awstypes.SubnetCidrBlockStateCodeAssociated { //we can only ever have 1 IPv6 block associated at once
+		if v.Ipv6CidrBlockState.State == awstypes.SubnetCidrBlockStateCodeAssociated { // we can only ever have 1 IPv6 block associated at once
 			d.Set("ipv6_cidr_block_association_id", v.AssociationId)
 			d.Set("ipv6_cidr_block", v.Ipv6CidrBlock)
 			break
@@ -415,7 +412,7 @@ func modifySubnetAttributesOnCreate(ctx context.Context, conn *ec2.Client, d *sc
 	if !computedIPv6CidrBlock {
 		var oldAssociationID, oldIPv6CIDRBlock string
 		for _, v := range subnet.Ipv6CidrBlockAssociationSet {
-			if v.Ipv6CidrBlockState.State == awstypes.SubnetCidrBlockStateCodeAssociated { //we can only ever have 1 IPv6 block associated at once
+			if v.Ipv6CidrBlockState.State == awstypes.SubnetCidrBlockStateCodeAssociated { // we can only ever have 1 IPv6 block associated at once
 				oldAssociationID = aws.ToString(v.AssociationId)
 				oldIPv6CIDRBlock = aws.ToString(v.Ipv6CidrBlock)
 
@@ -436,8 +433,7 @@ func modifySubnetAttributesOnCreate(ctx context.Context, conn *ec2.Client, d *sc
 		}
 	}
 
-	if newCustomerOwnedIPOnLaunch, oldCustomerOwnedIPOnLaunch, newMapCustomerOwnedIPOnLaunch, oldMapCustomerOwnedIPOnLaunch :=
-		d.Get("customer_owned_ipv4_pool").(string), aws.ToString(subnet.CustomerOwnedIpv4Pool), d.Get("map_customer_owned_ip_on_launch").(bool), aws.ToBool(subnet.MapCustomerOwnedIpOnLaunch); oldCustomerOwnedIPOnLaunch != newCustomerOwnedIPOnLaunch || oldMapCustomerOwnedIPOnLaunch != newMapCustomerOwnedIPOnLaunch {
+	if newCustomerOwnedIPOnLaunch, oldCustomerOwnedIPOnLaunch, newMapCustomerOwnedIPOnLaunch, oldMapCustomerOwnedIPOnLaunch := d.Get("customer_owned_ipv4_pool").(string), aws.ToString(subnet.CustomerOwnedIpv4Pool), d.Get("map_customer_owned_ip_on_launch").(bool), aws.ToBool(subnet.MapCustomerOwnedIpOnLaunch); oldCustomerOwnedIPOnLaunch != newCustomerOwnedIPOnLaunch || oldMapCustomerOwnedIPOnLaunch != newMapCustomerOwnedIPOnLaunch {
 		if err := modifySubnetOutpostRackAttributes(ctx, conn, d.Id(), newCustomerOwnedIPOnLaunch, newMapCustomerOwnedIPOnLaunch); err != nil {
 			return err
 		}
@@ -589,13 +585,11 @@ func modifySubnetIPv6CIDRBlockAssociation(ctx context.Context, conn *ec2.Client,
 		}
 
 		_, err := conn.DisassociateSubnetCidrBlock(ctx, input)
-
 		if err != nil {
 			return fmt.Errorf("disassociating EC2 Subnet (%s) IPv6 CIDR block (%s): %w", subnetID, associationID, err)
 		}
 
 		_, err = waitSubnetIPv6CIDRBlockAssociationDeleted(ctx, conn, associationID)
-
 		if err != nil {
 			return fmt.Errorf("waiting for EC2 Subnet (%s) IPv6 CIDR block (%s) to become disassociated: %w", subnetID, associationID, err)
 		}
@@ -608,17 +602,15 @@ func modifySubnetIPv6CIDRBlockAssociation(ctx context.Context, conn *ec2.Client,
 		}
 
 		output, err := conn.AssociateSubnetCidrBlock(ctx, input)
-
 		if err != nil {
-			//The big question here is, do we want to try to reassociate the old one??
-			//If we have a failure here, then we may be in a situation that we have nothing associated
+			// The big question here is, do we want to try to reassociate the old one??
+			// If we have a failure here, then we may be in a situation that we have nothing associated
 			return fmt.Errorf("associating EC2 Subnet (%s) IPv6 CIDR block (%s): %w", subnetID, cidrBlock, err)
 		}
 
 		associationID := aws.ToString(output.Ipv6CidrBlockAssociation.AssociationId)
 
 		_, err = waitSubnetIPv6CIDRBlockAssociationCreated(ctx, conn, associationID)
-
 		if err != nil {
 			return fmt.Errorf("waiting for EC2 Subnet (%s) IPv6 CIDR block (%s) to become associated: %w", subnetID, associationID, err)
 		}

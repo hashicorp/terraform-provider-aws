@@ -133,7 +133,6 @@ func statusInstanceIAMInstanceProfile(ctx context.Context, conn *ec2.Client, id 
 		}
 
 		name, err := instanceProfileARNToName(aws.ToString(instance.IamInstanceProfile.Arn))
-
 		if err != nil {
 			return instance, "", err
 		}

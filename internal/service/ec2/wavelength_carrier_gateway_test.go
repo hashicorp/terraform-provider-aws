@@ -163,7 +163,6 @@ func testAccCheckCarrierGatewayExists(ctx context.Context, n string, v *awstypes
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindCarrierGatewayByID(ctx, conn, rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}

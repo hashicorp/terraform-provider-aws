@@ -286,7 +286,6 @@ func resourceClientVPNEndpointCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	output, err := conn.CreateClientVpnEndpoint(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Client VPN Endpoint: %s", err)
 	}

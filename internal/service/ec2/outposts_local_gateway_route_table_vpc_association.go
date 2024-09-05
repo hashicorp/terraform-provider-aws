@@ -69,7 +69,6 @@ func resourceLocalGatewayRouteTableVPCAssociationCreate(ctx context.Context, d *
 	}
 
 	output, err := conn.CreateLocalGatewayRouteTableVpcAssociation(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Local Gateway Route Table VPC Association: %s", err)
 	}

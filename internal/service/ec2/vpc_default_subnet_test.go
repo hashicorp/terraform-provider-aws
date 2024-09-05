@@ -34,7 +34,6 @@ func testAccPreCheckDefaultSubnetExists(ctx context.Context, t *testing.T) {
 	}
 
 	subnets, err := tfec2.FindSubnets(ctx, conn, input)
-
 	if err != nil {
 		t.Fatalf("error listing default subnets: %s", err)
 	}
@@ -56,7 +55,6 @@ func testAccPreCheckDefaultSubnetNotFound(ctx context.Context, t *testing.T) {
 	}
 
 	subnets, err := tfec2.FindSubnets(ctx, conn, input)
-
 	if err != nil {
 		t.Fatalf("error listing default subnets: %s", err)
 	}
@@ -71,7 +69,6 @@ func testAccPreCheckDefaultSubnetNotFound(ctx context.Context, t *testing.T) {
 		d.SetId(subnetID)
 
 		err := acctest.DeleteResource(ctx, r, d, acctest.Provider.Meta())
-
 		if err != nil {
 			t.Fatalf("error deleting default subnet: %s", err)
 		}
@@ -350,7 +347,6 @@ func testAccCheckDefaultSubnetDestroyExists(ctx context.Context) resource.TestCh
 			}
 
 			_, err := tfec2.FindSubnetByID(ctx, conn, rs.Primary.ID)
-
 			if err != nil {
 				return err
 			}
@@ -400,7 +396,6 @@ func testAccCreateMissingDefaultSubnets(ctx context.Context) error {
 			},
 		),
 	})
-
 	if err != nil {
 		return err
 	}

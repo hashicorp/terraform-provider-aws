@@ -54,7 +54,6 @@ func dataSourceTransitGatewayPeeringAttachmentsRead(ctx context.Context, d *sche
 	}
 
 	output, err := findTransitGatewayPeeringAttachments(ctx, conn, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway Peering Attachments: %s", err)
 	}

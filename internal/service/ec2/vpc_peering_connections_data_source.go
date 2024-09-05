@@ -55,7 +55,6 @@ func dataSourceVPCPeeringConnectionsRead(ctx context.Context, d *schema.Resource
 	}
 
 	output, err := findVPCPeeringConnections(ctx, conn, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC Peering Connections: %s", err)
 	}

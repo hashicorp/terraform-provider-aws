@@ -180,7 +180,6 @@ func dataSourceVPCPeeringConnectionRead(ctx context.Context, d *schema.ResourceD
 	}
 
 	vpcPeeringConnection, err := findVPCPeeringConnection(ctx, conn, input)
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 VPC Peering Connection", err))
 	}

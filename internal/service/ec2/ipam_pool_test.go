@@ -248,7 +248,6 @@ func testAccCheckIPAMPoolExists(ctx context.Context, n string, v *awstypes.IpamP
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindIPAMPoolByID(ctx, conn, rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}

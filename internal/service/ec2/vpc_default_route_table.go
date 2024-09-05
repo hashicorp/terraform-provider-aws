@@ -150,7 +150,6 @@ func resourceDefaultRouteTableCreate(ctx context.Context, d *schema.ResourceData
 	routeTableID := d.Get("default_route_table_id").(string)
 
 	routeTable, err := findRouteTableByID(ctx, conn, routeTableID)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Default Route Table (%s): %s", routeTableID, err)
 	}
@@ -257,7 +256,6 @@ func resourceDefaultRouteTableImport(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	routeTable, err := findMainRouteTableByVPCID(ctx, conn, d.Id())
-
 	if err != nil {
 		return nil, err
 	}

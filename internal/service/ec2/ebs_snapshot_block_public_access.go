@@ -48,7 +48,6 @@ func resourceEBSSnapshotBlockPublicAccessPut(ctx context.Context, d *schema.Reso
 	}
 
 	_, err := conn.EnableSnapshotBlockPublicAccess(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "enabling EBS Snapshot Block Public Access (%s): %s", state, err)
 	}
@@ -66,7 +65,6 @@ func resourceEBSSnapshotBlockPublicAccessRead(ctx context.Context, d *schema.Res
 
 	input := &ec2.GetSnapshotBlockPublicAccessStateInput{}
 	output, err := conn.GetSnapshotBlockPublicAccessState(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EBS Snapshot Block Public Access: %s", err)
 	}
@@ -82,7 +80,6 @@ func resourceEBSSnapshotBlockPublicAccessDelete(ctx context.Context, d *schema.R
 
 	// Removing the resource disables blocking of EBS snapshot sharing.
 	_, err := conn.DisableSnapshotBlockPublicAccess(ctx, &ec2.DisableSnapshotBlockPublicAccessInput{})
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "disabling EBS Snapshot Block Public Access: %s", err)
 	}

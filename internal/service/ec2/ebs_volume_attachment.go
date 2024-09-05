@@ -117,7 +117,6 @@ func resourceVolumeAttachmentCreate(ctx context.Context, d *schema.ResourceData,
 		}
 
 		_, err := conn.AttachVolume(ctx, input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "attaching EBS Volume (%s) to EC2 Instance (%s): %s", volumeID, instanceID, err)
 		}
@@ -218,7 +217,6 @@ func findVolumeAttachment(ctx context.Context, conn *ec2.Client, volumeID, insta
 	}
 
 	output, err := findEBSVolume(ctx, conn, input)
-
 	if err != nil {
 		return nil, err
 	}
@@ -259,7 +257,6 @@ func stopVolumeAttachmentInstance(ctx context.Context, conn *ec2.Client, id stri
 		Force:       aws.Bool(force),
 		InstanceIds: []string{id},
 	})
-
 	if err != nil {
 		return fmt.Errorf("stopping EC2 Instance (%s): %w", id, err)
 	}

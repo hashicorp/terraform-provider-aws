@@ -39,7 +39,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;types.SecurityGroup")
 // @Testing(importIgnore="revoke_rules_on_delete")
 func resourceSecurityGroup() *schema.Resource {
-	//lintignore:R011
+	// lintignore:R011
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSecurityGroupCreate,
 		ReadWithoutTimeout:   resourceSecurityGroupRead,
@@ -207,7 +207,6 @@ func resourceSecurityGroupCreate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	output, err := conn.CreateSecurityGroup(ctx, inputC)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Security Group (%s): %s", name, err)
 	}
@@ -329,19 +328,16 @@ func resourceSecurityGroupUpdate(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	group, err := findSecurityGroupByID(ctx, conn, d.Id())
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Security Group (%s): %s", d.Id(), err)
 	}
 
 	err = updateSecurityGroupRules(ctx, conn, d, "ingress", group)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Security Group (%s) ingress rules: %s", d.Id(), err)
 	}
 
 	err = updateSecurityGroupRules(ctx, conn, d, "egress", group)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Security Group (%s) egress rules: %s", d.Id(), err)
 	}
@@ -363,7 +359,6 @@ func resourceSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, me
 	// conditionally revoke rules first before attempting to delete the group
 	if v := d.Get("revoke_rules_on_delete").(bool); v {
 		err := forceRevokeSecurityGroupRules(ctx, conn, d.Id(), false)
-
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
@@ -391,7 +386,6 @@ func resourceSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, me
 	if tfawserr.ErrCodeEquals(err, errCodeDependencyViolation) || tfawserr.ErrCodeEquals(err, errCodeInvalidGroupInUse) {
 		if v := d.Get("revoke_rules_on_delete").(bool); v {
 			err := forceRevokeSecurityGroupRules(ctx, conn, d.Id(), true)
-
 			if err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
@@ -420,7 +414,6 @@ func resourceSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, me
 	_, err = tfresource.RetryUntilNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
 		return findSecurityGroupByID(ctx, conn, d.Id())
 	})
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Security Group (%s) delete: %s", d.Id(), err)
 	}
@@ -522,7 +515,6 @@ func rulesInSGsTouchingThis(ctx context.Context, conn *ec2.Client, id string, se
 	pages := ec2.NewDescribeSecurityGroupRulesPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-
 		if err != nil {
 			return nil, fmt.Errorf("reading Security Group rules: %w", err)
 		}
@@ -752,13 +744,11 @@ func updateSecurityGroupRules(ctx context.Context, conn *ec2.Client, d *schema.R
 	ns := securityGroupExpandRules(n.(*schema.Set))
 
 	del, err := expandIPPerms(group, securityGroupCollapseRules(ruleType, os.Difference(ns).List()))
-
 	if err != nil {
 		return fmt.Errorf("updating rules: %w", err)
 	}
 
 	add, err := expandIPPerms(group, securityGroupCollapseRules(ruleType, ns.Difference(os).List()))
-
 	if err != nil {
 		return fmt.Errorf("updating rules: %w", err)
 	}
@@ -1084,7 +1074,7 @@ func matchRules(rType string, local []interface{}, remote []map[string]interface
 					}
 				}
 
-				//IPV6 CIDRs
+				// IPV6 CIDRs
 				var localIpv6Cidrs []interface{}
 				if liRaw != nil {
 					localIpv6Cidrs = liRaw.([]interface{})
@@ -1278,7 +1268,7 @@ func matchRules(rType string, local []interface{}, remote []map[string]interface
 // Duplicate ingress/egress block structure and fill out all
 // the required fields
 func resourceSecurityGroupCopyRule(src map[string]interface{}, self bool, k string, v interface{}) map[string]interface{} {
-	var keys_to_copy = []string{names.AttrDescription, "from_port", "to_port", names.AttrProtocol}
+	keys_to_copy := []string{names.AttrDescription, "from_port", "to_port", names.AttrProtocol}
 
 	dst := make(map[string]interface{})
 	for _, key := range keys_to_copy {
@@ -1303,7 +1293,7 @@ func resourceSecurityGroupCopyRule(src map[string]interface{}, self bool, k stri
 // For more detail, see comments for
 // securityGroupExpandRules()
 func securityGroupCollapseRules(ruleset string, rules []interface{}) []interface{} {
-	var keys_to_collapse = []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids", names.AttrSecurityGroups}
+	keys_to_collapse := []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids", names.AttrSecurityGroups}
 
 	collapsed := make(map[string]map[string]interface{})
 
@@ -1389,7 +1379,7 @@ func securityGroupCollapseRules(ruleset string, rules []interface{}) []interface
 // execution. Such compact form helps reduce the number of
 // API calls.
 func securityGroupExpandRules(rules *schema.Set) *schema.Set {
-	var keys_to_expand = []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids", names.AttrSecurityGroups}
+	keys_to_expand := []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids", names.AttrSecurityGroups}
 
 	normalized := schema.NewSet(securityGroupRuleHash, nil)
 

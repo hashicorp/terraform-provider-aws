@@ -91,7 +91,6 @@ func resourceNetworkACLRule() *schema.Resource {
 				},
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
 					_, err := networkACLProtocolNumber(v.(string))
-
 					if err != nil {
 						errors = append(errors, fmt.Errorf("%q : %w", k, err))
 					}
@@ -177,7 +176,6 @@ func resourceNetworkACLRuleCreate(ctx context.Context, d *schema.ResourceData, m
 
 	log.Printf("[DEBUG] Creating EC2 Network ACL Rule: %#v", input)
 	_, err = conn.CreateNetworkAclEntry(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Network ACL (%s) Rule (egress: %t)(%d): %s", naclID, egress, ruleNumber, err)
 	}
@@ -229,7 +227,6 @@ func resourceNetworkACLRuleRead(ctx context.Context, d *schema.ResourceData, met
 		// The AWS network ACL API only speaks protocol numbers, and
 		// that's all we record.
 		protocolNumber, err := networkACLProtocolNumber(v)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading EC2 Network ACL Rule (%s): %s", d.Id(), err)
 		}
@@ -273,14 +270,12 @@ func resourceNetworkACLRuleImport(ctx context.Context, d *schema.ResourceData, m
 
 	naclID := parts[0]
 	ruleNumber, err := strconv.Atoi(parts[1])
-
 	if err != nil {
 		return nil, err
 	}
 
 	protocol := parts[2]
 	egress, err := strconv.ParseBool(parts[3])
-
 	if err != nil {
 		return nil, err
 	}

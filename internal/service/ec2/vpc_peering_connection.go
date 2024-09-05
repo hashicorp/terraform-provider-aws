@@ -127,7 +127,6 @@ func resourceVPCPeeringConnectionCreate(ctx context.Context, d *schema.ResourceD
 
 	log.Printf("[DEBUG] Creating EC2 VPC Peering Connection: %#v", input)
 	output, err := conn.CreateVpcPeeringConnection(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 VPC Peering Connection: %s", err)
 	}
@@ -135,14 +134,12 @@ func resourceVPCPeeringConnectionCreate(ctx context.Context, d *schema.ResourceD
 	d.SetId(aws.ToString(output.VpcPeeringConnection.VpcPeeringConnectionId))
 
 	vpcPeeringConnection, err := waitVPCPeeringConnectionActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 VPC Peering Connection (%s) create: %s", d.Id(), err)
 	}
 
 	if _, ok := d.GetOk("auto_accept"); ok && vpcPeeringConnection.Status.Code == awstypes.VpcPeeringConnectionStateReasonCodePendingAcceptance {
 		vpcPeeringConnection, err = acceptVPCPeeringConnection(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
-
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
@@ -212,14 +209,12 @@ func resourceVPCPeeringConnectionUpdate(ctx context.Context, d *schema.ResourceD
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	vpcPeeringConnection, err := findVPCPeeringConnectionByID(ctx, conn, d.Id())
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC Peering Connection (%s): %s", d.Id(), err)
 	}
 
 	if _, ok := d.GetOk("auto_accept"); ok && vpcPeeringConnection.Status.Code == awstypes.VpcPeeringConnectionStateReasonCodePendingAcceptance {
 		vpcPeeringConnection, err = acceptVPCPeeringConnection(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
-
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
@@ -268,14 +263,12 @@ func acceptVPCPeeringConnection(ctx context.Context, conn *ec2.Client, vpcPeerin
 	_, err := conn.AcceptVpcPeeringConnection(ctx, &ec2.AcceptVpcPeeringConnectionInput{
 		VpcPeeringConnectionId: aws.String(vpcPeeringConnectionID),
 	})
-
 	if err != nil {
 		return nil, fmt.Errorf("accepting EC2 VPC Peering Connection (%s): %w", vpcPeeringConnectionID, err)
 	}
 
 	// "OperationNotPermitted: Peering pcx-0000000000000000 is not active. Peering options can be added only to active peerings."
 	vpcPeeringConnection, err := waitVPCPeeringConnectionActive(ctx, conn, vpcPeeringConnectionID, timeout)
-
 	if err != nil {
 		return nil, fmt.Errorf("accepting EC2 VPC Peering Connection (%s): waiting for completion: %w", vpcPeeringConnectionID, err)
 	}
@@ -328,7 +321,6 @@ func modifyVPCPeeringConnectionOptions(ctx context.Context, conn *ec2.Client, d 
 	// Often this is to do with a delay transitioning from pending-acceptance to active.
 	err := retry.RetryContext(ctx, ec2PropagationTimeout, func() *retry.RetryError { // nosemgrep:ci.helper-schema-retry-RetryContext-without-TimeoutError-check
 		vpcPeeringConnection, err := findVPCPeeringConnectionByID(ctx, conn, d.Id())
-
 		if err != nil {
 			return retry.NonRetryableError(err)
 		}
@@ -347,7 +339,6 @@ func modifyVPCPeeringConnectionOptions(ctx context.Context, conn *ec2.Client, d 
 
 		return nil
 	})
-
 	if err != nil {
 		return fmt.Errorf("modifying EC2 VPC Peering Connection (%s) Options: waiting for completion: %w", d.Id(), err)
 	}

@@ -120,7 +120,6 @@ func resourceNetworkInsightsPathCreate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	output, err := conn.CreateNetworkInsightsPath(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Network Insights Path: %s", err)
 	}

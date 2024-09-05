@@ -21,7 +21,7 @@ import (
 // @Tags(identifierAttribute="id")
 // @Testing(tagsTest=false)
 func resourceDefaultVPCDHCPOptions() *schema.Resource {
-	//lintignore:R011
+	// lintignore:R011
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDefaultVPCDHCPOptionsCreate,
 		ReadWithoutTimeout:   resourceVPCDHCPOptionsRead,
@@ -102,7 +102,6 @@ func resourceDefaultVPCDHCPOptionsCreate(ctx context.Context, d *schema.Resource
 	}
 
 	dhcpOptions, err := findDHCPOptions(ctx, conn, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Default DHCP Options Set: %s", err)
 	}

@@ -19,7 +19,6 @@ func instanceProfileARNToName(inputARN string) (string, error) {
 	)
 
 	parsedARN, err := arn.Parse(inputARN)
-
 	if err != nil {
 		return "", fmt.Errorf("parsing ARN (%s): %w", inputARN, err)
 	}

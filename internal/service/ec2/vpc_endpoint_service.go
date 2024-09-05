@@ -180,7 +180,6 @@ func resourceVPCEndpointServiceCreate(ctx context.Context, d *schema.ResourceDat
 
 	log.Printf("[DEBUG] Creating EC2 VPC Endpoint Service: %v", input)
 	output, err := conn.CreateVpcEndpointServiceConfiguration(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 VPC Endpoint Service: %s", err)
 	}
@@ -256,7 +255,6 @@ func resourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceData,
 	setTagsOut(ctx, svcCfg.Tags)
 
 	allowedPrincipals, err := findVPCEndpointServicePermissionsByServiceID(ctx, conn, d.Id())
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC Endpoint Service (%s) permissions: %s", d.Id(), err)
 	}
@@ -290,7 +288,6 @@ func resourceVPCEndpointServiceUpdate(ctx context.Context, d *schema.ResourceDat
 
 		log.Printf("[DEBUG] Updating EC2 VPC Endpoint Service: %v", input)
 		_, err := conn.ModifyVpcEndpointServiceConfiguration(ctx, input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EC2 VPC Endpoint Service (%s): %s", d.Id(), err)
 		}
