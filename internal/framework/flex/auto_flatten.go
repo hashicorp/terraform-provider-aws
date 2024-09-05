@@ -417,9 +417,20 @@ func (flattener autoFlattener) int32(ctx context.Context, vFrom reflect.Value, i
 		//
 		// int32/int64 -> types.Int32.
 		//
-		int32Value := types.Int32Null()
-		if !isNullFrom {
-			int32Value = types.Int32Value(int32(vFrom.Int()))
+		var int32Value basetypes.Int32Value
+		if fieldOpts.legacy {
+			tflog.SubsystemDebug(ctx, subsystemName, "Using legacy flattener")
+			if isNullFrom {
+				int32Value = types.Int32Value(0)
+			} else {
+				int32Value = types.Int32Value(int32(vFrom.Int()))
+			}
+		} else {
+			if isNullFrom {
+				int32Value = types.Int32Null()
+			} else {
+				int32Value = types.Int32Value(int32(vFrom.Int()))
+			}
 		}
 		v, d := tTo.ValueFromInt32(ctx, int32Value)
 		diags.Append(d...)

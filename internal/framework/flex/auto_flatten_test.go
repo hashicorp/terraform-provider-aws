@@ -1926,6 +1926,57 @@ func TestFlattenInt32(t *testing.T) {
 			},
 		},
 
+		"legacy *int32 to Int32": {
+			"value": {
+				Source: awsSingleInt32Pointer{
+					Field1: aws.Int32(42),
+				},
+				Target: &tfSingleInt32FieldLegacy{},
+				WantTarget: &tfSingleInt32FieldLegacy{
+					Field1: types.Int32Value(42),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleInt32Pointer](), reflect.TypeFor[*tfSingleInt32FieldLegacy]()),
+					infoConverting(reflect.TypeFor[awsSingleInt32Pointer](), reflect.TypeFor[*tfSingleInt32FieldLegacy]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleInt32Pointer](), "Field1", reflect.TypeFor[*tfSingleInt32FieldLegacy]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[*int32](), "Field1", reflect.TypeFor[types.Int32]()),
+					debugUsingLegacyFlattener("Field1", reflect.TypeFor[*int32](), "Field1", reflect.TypeFor[types.Int32]()),
+				},
+			},
+			"zero": {
+				Source: awsSingleInt32Pointer{
+					Field1: aws.Int32(0),
+				},
+				Target: &tfSingleInt32FieldLegacy{},
+				WantTarget: &tfSingleInt32FieldLegacy{
+					Field1: types.Int32Value(0),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleInt32Pointer](), reflect.TypeFor[*tfSingleInt32FieldLegacy]()),
+					infoConverting(reflect.TypeFor[awsSingleInt32Pointer](), reflect.TypeFor[*tfSingleInt32FieldLegacy]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleInt32Pointer](), "Field1", reflect.TypeFor[*tfSingleInt32FieldLegacy]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[*int32](), "Field1", reflect.TypeFor[types.Int32]()),
+					debugUsingLegacyFlattener("Field1", reflect.TypeFor[*int32](), "Field1", reflect.TypeFor[types.Int32]()),
+				},
+			},
+			"null": {
+				Source: awsSingleInt32Pointer{
+					Field1: nil,
+				},
+				Target: &tfSingleInt32FieldLegacy{},
+				WantTarget: &tfSingleInt32FieldLegacy{
+					Field1: types.Int32Value(0),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleInt32Pointer](), reflect.TypeFor[*tfSingleInt32FieldLegacy]()),
+					infoConverting(reflect.TypeFor[awsSingleInt32Pointer](), reflect.TypeFor[*tfSingleInt32FieldLegacy]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleInt32Pointer](), "Field1", reflect.TypeFor[*tfSingleInt32FieldLegacy]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[*int32](), "Field1", reflect.TypeFor[types.Int32]()),
+					debugUsingLegacyFlattener("Field1", reflect.TypeFor[*int32](), "Field1", reflect.TypeFor[types.Int32]()),
+				},
+			},
+		},
+
 		// int64 cannot be flattened to Int32
 		"int64 to Int32": {
 			"value": {
