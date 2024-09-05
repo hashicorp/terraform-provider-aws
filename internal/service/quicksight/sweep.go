@@ -441,10 +441,9 @@ func skipSweepError(err error) bool {
 	if errs.IsA[*awstypes.UnsupportedUserEditionException](err) {
 		return true
 	}
-	if errs.IsAErrorMessageContains[*awstypes.ResourceNotFoundException](err, "Directory information for account") {
-		return true
-	}
-	if errs.IsAErrorMessageContains[*awstypes.ResourceNotFoundException](err, "Account information for account") {
+	if errs.IsAErrorMessageContains[*awstypes.ResourceNotFoundException](err, "Directory information for account") ||
+		errs.IsAErrorMessageContains[*awstypes.ResourceNotFoundException](err, "Account information for account") ||
+		errs.IsAErrorMessageContains[*awstypes.ResourceNotFoundException](err, "is not signed up with QuickSight") {
 		return true
 	}
 
