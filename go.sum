@@ -480,8 +480,8 @@ github.com/aws/aws-sdk-go-v2/service/shield v1.27.6 h1:uk6DxAkxlcuiCNrKsUEI6QOGU
 github.com/aws/aws-sdk-go-v2/service/shield v1.27.6/go.mod h1:6vpeffPxOOCXeYbfN9VQ4YkezaSfO8DZcJGgoweQGPs=
 github.com/aws/aws-sdk-go-v2/service/signer v1.24.6 h1:0AZDjCrbzXD3pride4Nyis+7FOiiscot8+uHrqaMY0U=
 github.com/aws/aws-sdk-go-v2/service/signer v1.24.6/go.mod h1:JtAWXrX+4ZDxy2xBP0MmC80+Q/tHkU4MGetpcsTIKjo=
-github.com/aws/aws-sdk-go-v2/service/sns v1.31.6 h1:VgljXzE7enGPjledya69C5kn4jDTh/iczxIBdJlcqPw=
-github.com/aws/aws-sdk-go-v2/service/sns v1.31.6/go.mod h1:wjhxA9hlVu75dCL/5Wcx8Cwmszvu6t0i8WEDypcB4+s=
+github.com/aws/aws-sdk-go-v2/service/sns v1.31.7 h1:3MWDVQ1pS3e/S4ADKg+mMETqIbOuQDY9FqH7XCb5ISA=
+github.com/aws/aws-sdk-go-v2/service/sns v1.31.7/go.mod h1:wjhxA9hlVu75dCL/5Wcx8Cwmszvu6t0i8WEDypcB4+s=
 github.com/aws/aws-sdk-go-v2/service/sqs v1.34.7 h1:RxETYGXhRlRxL96mtab1lQ9fPVPIJFXuOI3uRL/MuHI=
 github.com/aws/aws-sdk-go-v2/service/sqs v1.34.7/go.mod h1:zn0Oy7oNni7XIGoAd6bHBTVtX06OrnpvT1kww8jxyi8=
 github.com/aws/aws-sdk-go-v2/service/ssm v1.52.7 h1:1UfdVi84wNLY2GZrp3fxldNemzVQ+uA2Nke7kZ6Nwik=
