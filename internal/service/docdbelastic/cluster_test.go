@@ -356,35 +356,6 @@ resource "aws_docdbelastic_cluster" "test" {
 `, rName, shardCapacity, backupRetentionPeriod))
 }
 
-func testAccClusterConfig_update2(rName string, backupRetentionPeriod int) string {
-	return acctest.ConfigCompose(
-		testAccClusterBaseConfig(rName),
-		fmt.Sprintf(`
-resource "aws_docdbelastic_cluster" "test" {
-  name           = %[1]q
-  shard_count    = 1
-  shard_capacity = 4
-
-  admin_user_name     = "testuser"
-  admin_user_password = "testpassword"
-  auth_type           = "PLAIN_TEXT"
-
-  backup_retention_period = %[2]d
-
-  preferred_maintenance_window = "Tue:04:00-Tue:04:30"
-
-  vpc_security_group_ids = [
-    aws_security_group.test.id
-  ]
-
-  subnet_ids = [
-    aws_subnet.test[0].id,
-    aws_subnet.test[1].id
-  ]
-}
-`, rName, backupRetentionPeriod))
-}
-
 func testAccClusterConfig_tags1(rName, key1, value1 string) string {
 	return acctest.ConfigCompose(
 		testAccClusterBaseConfig(rName),
