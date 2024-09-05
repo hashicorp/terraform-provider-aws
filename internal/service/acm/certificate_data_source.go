@@ -11,11 +11,12 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/acm"
-	"github.com/aws/aws-sdk-go-v2/service/acm/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/acm/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -53,7 +54,7 @@ func dataSourceCertificate() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Schema{
 					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[types.KeyAlgorithm](),
+					ValidateDiagFunc: enum.Validate[awstypes.KeyAlgorithm](),
 				},
 			},
 			names.AttrMostRecent: {
@@ -94,25 +95,25 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 	input := &acm.ListCertificatesInput{}
 
 	if v, ok := d.GetOk("key_types"); ok && v.(*schema.Set).Len() > 0 {
-		input.Includes = &types.Filters{
-			KeyTypes: flex.ExpandStringyValueSet[types.KeyAlgorithm](v.(*schema.Set)),
+		input.Includes = &awstypes.Filters{
+			KeyTypes: flex.ExpandStringyValueSet[awstypes.KeyAlgorithm](v.(*schema.Set)),
 		}
 	}
 
 	if v, ok := d.GetOk("statuses"); ok && len(v.([]interface{})) > 0 {
-		input.CertificateStatuses = flex.ExpandStringyValueList[types.CertificateStatus](v.([]interface{}))
+		input.CertificateStatuses = flex.ExpandStringyValueList[awstypes.CertificateStatus](v.([]interface{}))
 	} else {
-		input.CertificateStatuses = []types.CertificateStatus{types.CertificateStatusIssued}
+		input.CertificateStatuses = []awstypes.CertificateStatus{awstypes.CertificateStatusIssued}
 	}
 
-	f := tfslices.PredicateTrue[*types.CertificateSummary]()
+	f := tfslices.PredicateTrue[*awstypes.CertificateSummary]()
 	if domain, ok := d.GetOk("domain"); ok {
-		f = func(v *types.CertificateSummary) bool {
+		f = func(v *awstypes.CertificateSummary) bool {
 			return aws.ToString(v.DomainName) == domain
 		}
 	}
-	if certificateTypes := flex.ExpandStringyValueList[types.CertificateType](d.Get("types").([]interface{})); len(certificateTypes) > 0 {
-		f = tfslices.PredicateAnd(f, func(v *types.CertificateSummary) bool {
+	if certificateTypes := flex.ExpandStringyValueList[awstypes.CertificateType](d.Get("types").([]interface{})); len(certificateTypes) > 0 {
+		f = tfslices.PredicateAnd(f, func(v *awstypes.CertificateSummary) bool {
 			return slices.Contains(certificateTypes, v.Type)
 		})
 	}
@@ -121,7 +122,7 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 		timeout = 1 * time.Minute
 	)
 	certificateSummaries, err := tfresource.RetryGWhenNotFound(ctx, timeout,
-		func() ([]types.CertificateSummary, error) {
+		func() ([]awstypes.CertificateSummary, error) {
 			output, err := findCertificates(ctx, conn, input, f)
 			switch {
 			case err != nil:
@@ -138,7 +139,7 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "reading ACM Certificates: %s", err)
 	}
 
-	var certificates []*types.CertificateDetail
+	var certificates []*awstypes.CertificateDetail
 	for _, certificateSummary := range certificateSummaries {
 		certificateARN := aws.ToString(certificateSummary.CertificateArn)
 		input := &acm.DescribeCertificateInput{
@@ -147,12 +148,20 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 
 		certificate, err := findCertificate(ctx, conn, input)
 
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			continue
+		}
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading ACM Certificate (%s): %s", certificateARN, err)
 		}
 
 		if tagsToMatch := getTagsIn(ctx); len(tagsToMatch) > 0 {
 			tags, err := listTags(ctx, conn, certificateARN)
+
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+				continue
+			}
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "listing tags for ACM Certificate (%s): %s", certificateARN, err)
@@ -170,7 +179,7 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "no matching ACM Certificate found")
 	}
 
-	var matchedCertificate *types.CertificateDetail
+	var matchedCertificate *awstypes.CertificateDetail
 	if d.Get(names.AttrMostRecent).(bool) {
 		matchedCertificate = certificates[0]
 
@@ -189,7 +198,7 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 
 	// Get the certificate data if the status is issued
 	var output *acm.GetCertificateOutput
-	if matchedCertificate.Status == types.CertificateStatusIssued {
+	if matchedCertificate.Status == awstypes.CertificateStatusIssued {
 		arn := aws.ToString(matchedCertificate.CertificateArn)
 		input := &acm.GetCertificateInput{
 			CertificateArn: aws.String(arn),
@@ -227,12 +236,12 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func mostRecentCertificate(i, j *types.CertificateDetail) (*types.CertificateDetail, error) {
+func mostRecentCertificate(i, j *awstypes.CertificateDetail) (*awstypes.CertificateDetail, error) {
 	if i.Status != j.Status {
 		return nil, fmt.Errorf("most_recent filtering on different ACM certificate statues is not supported")
 	}
 	// Cover IMPORTED and ISSUED AMAZON_ISSUED certificates
-	if i.Status == types.CertificateStatusIssued {
+	if i.Status == awstypes.CertificateStatusIssued {
 		if aws.ToTime(i.NotBefore).After(aws.ToTime(j.NotBefore)) {
 			return i, nil
 		}
@@ -245,8 +254,8 @@ func mostRecentCertificate(i, j *types.CertificateDetail) (*types.CertificateDet
 	return j, nil
 }
 
-func findCertificates(ctx context.Context, conn *acm.Client, input *acm.ListCertificatesInput, filter tfslices.Predicate[*types.CertificateSummary]) ([]types.CertificateSummary, error) {
-	var output []types.CertificateSummary
+func findCertificates(ctx context.Context, conn *acm.Client, input *acm.ListCertificatesInput, filter tfslices.Predicate[*awstypes.CertificateSummary]) ([]awstypes.CertificateSummary, error) {
+	var output []awstypes.CertificateSummary
 
 	pages := acm.NewListCertificatesPaginator(conn, input)
 	for pages.HasMorePages() {

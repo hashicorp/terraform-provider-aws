@@ -11,6 +11,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/acm/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -234,6 +235,48 @@ func TestAccACMCertificateDataSource_keyTypes(t *testing.T) {
 	})
 }
 
+func TestAccACMCertificateDataSource_byTags(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_acm_certificate.test"
+	dataSourceName := "data.aws_acm_certificate.test"
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048) // ListCertificates: Default filtering returns only RSA_2048 certificates.
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, acctest.RandomDomain().String())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCertificateDataSourceConfig_byTags(rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
+				),
+			},
+		},
+	})
+}
+
+func TestAccACMCertificateDataSource_byTagsNoMatch(t *testing.T) {
+	ctx := acctest.Context(t)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048) // ListCertificates: Default filtering returns only RSA_2048 certificates.
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, acctest.RandomDomain().String())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccCertificateDataSourceConfig_byTagsNoMatch(rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)),
+				ExpectError: regexache.MustCompile(`no matching ACM Certificate found`),
+			},
+		},
+	})
+}
+
 func testAccCertificateDataSourceConfig_basic(domain string) string {
 	return fmt.Sprintf(`
 data "aws_acm_certificate" "test" {
@@ -301,4 +344,49 @@ data "aws_acm_certificate" "test" {
   key_types = ["RSA_4096"]
 }
 `, certificate, key)
+}
+
+func testAccCertificateDataSourceConfig_byTags(rName, certificate, key string) string {
+	return fmt.Sprintf(`
+resource "aws_acm_certificate" "test" {
+  certificate_body = "%[2]s"
+  private_key      = "%[3]s"
+
+  tags = {
+    Key1 = "Value1"
+    Key2 = "Value2"
+    Name = %[1]q
+  }
+}
+
+data "aws_acm_certificate" "test" {
+  tags = {
+    Key1 = "Value1"
+    Name = aws_acm_certificate.test.tags["Name"]
+  }
+}
+`, rName, certificate, key)
+}
+
+func testAccCertificateDataSourceConfig_byTagsNoMatch(rName, certificate, key string) string {
+	return fmt.Sprintf(`
+resource "aws_acm_certificate" "test" {
+  certificate_body = "%[2]s"
+  private_key      = "%[3]s"
+
+  tags = {
+    Key1 = "Value1"
+    Key2 = "Value2"
+    Name = %[1]q
+  }
+}
+
+data "aws_acm_certificate" "test" {
+  tags = {
+    Key1 = "Value1"
+    Key3 = "Value3"
+    Name = aws_acm_certificate.test.tags["Name"]
+  }
+}
+`, rName, certificate, key)
 }
