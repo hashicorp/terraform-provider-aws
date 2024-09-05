@@ -47,6 +47,7 @@ func dataSourceCertificate() *schema.Resource {
 			names.AttrDomain: {
 				Type:         schema.TypeString,
 				Optional:     true,
+				Computed:     true,
 				AtLeastOneOf: []string{"domain", names.AttrTags},
 			},
 			"key_types": {
@@ -221,6 +222,7 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 
 	d.SetId(aws.ToString(matchedCertificate.CertificateArn))
 	d.Set(names.AttrARN, matchedCertificate.CertificateArn)
+	d.Set(names.AttrDomain, matchedCertificate.DomainName)
 	d.Set(names.AttrStatus, matchedCertificate.Status)
 
 	tags, err := listTags(ctx, conn, aws.ToString(matchedCertificate.CertificateArn))

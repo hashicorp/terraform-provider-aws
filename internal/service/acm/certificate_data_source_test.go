@@ -235,12 +235,37 @@ func TestAccACMCertificateDataSource_keyTypes(t *testing.T) {
 	})
 }
 
+func TestAccACMCertificateDataSource_byDomain(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_acm_certificate.test"
+	dataSourceName := "data.aws_acm_certificate.test"
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048) // ListCertificates: Default filtering returns only RSA_2048 certificates.
+	domain := acctest.RandomDomain().String()
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, domain)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCertificateDataSourceConfig_byDomain(domain, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrDomain, domain),
+				),
+			},
+		},
+	})
+}
+
 func TestAccACMCertificateDataSource_byTags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acm_certificate.test"
 	dataSourceName := "data.aws_acm_certificate.test"
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048) // ListCertificates: Default filtering returns only RSA_2048 certificates.
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, acctest.RandomDomain().String())
+	domain := acctest.RandomDomain().String()
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, domain)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -252,6 +277,7 @@ func TestAccACMCertificateDataSource_byTags(t *testing.T) {
 				Config: testAccCertificateDataSourceConfig_byTags(rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrDomain, domain),
 				),
 			},
 		},
@@ -344,6 +370,21 @@ data "aws_acm_certificate" "test" {
   key_types = ["RSA_4096"]
 }
 `, certificate, key)
+}
+
+func testAccCertificateDataSourceConfig_byDomain(domain, certificate, key string) string {
+	return fmt.Sprintf(`
+resource "aws_acm_certificate" "test" {
+  certificate_body = "%[2]s"
+  private_key      = "%[3]s"
+}
+
+data "aws_acm_certificate" "test" {
+  domain = %[1]q
+
+  depends_on = [aws_acm_certificate.test]
+}
+`, domain, certificate, key)
 }
 
 func testAccCertificateDataSourceConfig_byTags(rName, certificate, key string) string {
