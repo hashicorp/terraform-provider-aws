@@ -504,8 +504,8 @@ type resourceTrustedTokenIssuerData struct {
 	Name                            types.String `tfsdk:"name"`
 	TrustedTokenIssuerConfiguration types.List   `tfsdk:"trusted_token_issuer_configuration"`
 	TrustedTokenIssuerType          types.String `tfsdk:"trusted_token_issuer_type"`
-	Tags                            types.Map    `tfsdk:"tags"`
-	TagsAll                         types.Map    `tfsdk:"tags_all"`
+	Tags                            tftags.Map   `tfsdk:"tags"`
+	TagsAll                         tftags.Map   `tfsdk:"tags_all"`
 }
 
 type TrustedTokenIssuerConfigurationData struct {

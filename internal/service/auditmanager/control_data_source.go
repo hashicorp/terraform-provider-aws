@@ -175,7 +175,7 @@ type dataSourceControlData struct {
 	Description            types.String `tfsdk:"description"`
 	ID                     types.String `tfsdk:"id"`
 	Name                   types.String `tfsdk:"name"`
-	Tags                   types.Map    `tfsdk:"tags"`
+	Tags                   tftags.Map   `tfsdk:"tags"`
 	TestingInformation     types.String `tfsdk:"testing_information"`
 	Type                   types.String `tfsdk:"type"`
 }
@@ -203,7 +203,7 @@ func (rd *dataSourceControlData) refreshFromOutput(ctx context.Context, meta *co
 
 	ignoreTagsConfig := meta.IgnoreTagsConfig
 	tags := KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-	rd.Tags = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.Map())
+	rd.Tags = tftags.FlattenStringValueMap(ctx, tags.Map())
 
 	return diags
 }

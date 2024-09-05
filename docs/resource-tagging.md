@@ -550,6 +550,9 @@ For example, 3 minutes and 30 seconds is `3m30s`.
 Some services do not support tags with an empty string value.
 In that case, use the annotation `@Testing(skipEmptyTags=true)`.
 
+Some services do not support tags with an null string value.
+In that case, use the annotation `@Testing(skipNullTags=true)`.
+
 Some resource types use the no-op `CheckDestroy` function `acctest.CheckDestroyNoop`.
 Use the annotation `@Testing(checkDestroyNoop=true)`.
 

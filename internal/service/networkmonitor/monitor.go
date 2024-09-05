@@ -315,8 +315,8 @@ type monitorResourceModel struct {
 	ID                types.String `tfsdk:"id"`
 	MonitorARN        types.String `tfsdk:"arn"`
 	MonitorName       types.String `tfsdk:"monitor_name"`
-	Tags              types.Map    `tfsdk:"tags"`
-	TagsAll           types.Map    `tfsdk:"tags_all"`
+	Tags              tftags.Map   `tfsdk:"tags"`
+	TagsAll           tftags.Map   `tfsdk:"tags_all"`
 }
 
 func (model *monitorResourceModel) InitFromID() error {
