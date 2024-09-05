@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_bedrockagent_data_source: Add `parsing_configuration` argument
-```
