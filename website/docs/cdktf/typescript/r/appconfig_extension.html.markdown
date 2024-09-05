@@ -105,8 +105,8 @@ Defines the actions the extension performs during the AppConfig workflow and at 
 The `action` configuration block supports configuring any number of the following arguments:
 
 * `name` - (Required) The action name.
-* `roleArn` - (Required) An Amazon Resource Name (ARN) for an Identity and Access Management assume role.
 * `uri` - (Required) The extension URI associated to the action point in the extension definition. The URI can be an Amazon Resource Name (ARN) for one of the following: an Lambda function, an Amazon Simple Queue Service queue, an Amazon Simple Notification Service topic, or the Amazon EventBridge default event bus.
+* `roleArn` - (Optional) An Amazon Resource Name (ARN) for an Identity and Access Management assume role.
 * `description` - (Optional) Information about the action.
 
 #### `parameter`
@@ -153,4 +153,4 @@ Using `terraform import`, import AppConfig Extensions using their extension ID. 
 % terraform import aws_appconfig_extension.example 71rxuzt
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-a57e9661c333d971fc98cbdd2a1d95de7a9014d90bd4fdbf0d526c04df1b2f9d -->
+<!-- cache-key: cdktf-0.20.1 input-dc3aefea2329478318f849122336f0b2be77d040d49129d32b5456797deed301 -->

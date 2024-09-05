@@ -6,9 +6,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/accessanalyzer"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/acm"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/amp"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/appautoscaling"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appconfig"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appflow"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/applicationinsights"
@@ -29,7 +31,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudhsmv2"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudsearch"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudtrail"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatch"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codeartifact"
@@ -74,6 +75,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/finspace"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/firehose"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/fis"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/fms"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/gamelift"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/glacier"
@@ -112,7 +114,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/opensearch"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/opensearchserverless"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/opsworks"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pinpoint"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pipes"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/qldb"
@@ -150,6 +151,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/swf"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/synthetics"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/timestreaminfluxdb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/timestreamwrite"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/transcribe"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
@@ -166,9 +168,11 @@ func registerSweepers() {
 	accessanalyzer.RegisterSweepers()
 	acm.RegisterSweepers()
 	acmpca.RegisterSweepers()
+	amp.RegisterSweepers()
 	amplify.RegisterSweepers()
 	apigateway.RegisterSweepers()
 	apigatewayv2.RegisterSweepers()
+	appautoscaling.RegisterSweepers()
 	appconfig.RegisterSweepers()
 	appflow.RegisterSweepers()
 	applicationinsights.RegisterSweepers()
@@ -189,7 +193,6 @@ func registerSweepers() {
 	cloudformation.RegisterSweepers()
 	cloudfront.RegisterSweepers()
 	cloudhsmv2.RegisterSweepers()
-	cloudsearch.RegisterSweepers()
 	cloudtrail.RegisterSweepers()
 	cloudwatch.RegisterSweepers()
 	codeartifact.RegisterSweepers()
@@ -234,6 +237,7 @@ func registerSweepers() {
 	finspace.RegisterSweepers()
 	firehose.RegisterSweepers()
 	fis.RegisterSweepers()
+	fms.RegisterSweepers()
 	fsx.RegisterSweepers()
 	gamelift.RegisterSweepers()
 	glacier.RegisterSweepers()
@@ -272,7 +276,6 @@ func registerSweepers() {
 	networkmanager.RegisterSweepers()
 	opensearch.RegisterSweepers()
 	opensearchserverless.RegisterSweepers()
-	opsworks.RegisterSweepers()
 	pinpoint.RegisterSweepers()
 	pipes.RegisterSweepers()
 	qldb.RegisterSweepers()
@@ -310,6 +313,7 @@ func registerSweepers() {
 	storagegateway.RegisterSweepers()
 	swf.RegisterSweepers()
 	synthetics.RegisterSweepers()
+	timestreaminfluxdb.RegisterSweepers()
 	timestreamwrite.RegisterSweepers()
 	transcribe.RegisterSweepers()
 	transfer.RegisterSweepers()

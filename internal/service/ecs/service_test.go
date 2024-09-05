@@ -13,7 +13,6 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
-	"github.com/aws/aws-sdk-go/service/servicediscovery"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -51,7 +50,6 @@ func Test_GetRoleNameFromARN(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			if got := tfecs.RoleNameFromARN(tt.arn); got != tt.want {
@@ -77,7 +75,6 @@ func TestClustereNameFromARN(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			if got := tfecs.ClusterNameFromARN(tt.arn); got != tt.want {
@@ -356,6 +353,53 @@ func TestAccECSService_VolumeConfiguration_update(t *testing.T) {
 				Config: testAccServiceConfig_volumeConfiguration_update(rName, "gp3", 16),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
+				),
+			},
+		},
+	})
+}
+
+// https://github.com/hashicorp/terraform-provider-aws/issues/38475
+func TestAccECSService_VolumeConfiguration_throughputTypeChange(t *testing.T) {
+	ctx := acctest.Context(t)
+	var service awstypes.Service
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.ECSServiceID),
+		CheckDestroy: testAccCheckServiceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.58.0",
+					},
+				},
+				Config: testAccServiceConfig_volumeConfiguration_gp3(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "volume_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "volume_configuration.0.name", "vol1"),
+					resource.TestCheckResourceAttr(resourceName, "volume_configuration.0.managed_ebs_volume.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "volume_configuration.0.managed_ebs_volume.0.size_in_gb", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "volume_configuration.0.managed_ebs_volume.0.throughput", ""),
+					resource.TestCheckResourceAttr(resourceName, "volume_configuration.0.managed_ebs_volume.0.volume_type", "gp3"),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccServiceConfig_volumeConfiguration_gp3(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "volume_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "volume_configuration.0.name", "vol1"),
+					resource.TestCheckResourceAttr(resourceName, "volume_configuration.0.managed_ebs_volume.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "volume_configuration.0.managed_ebs_volume.0.size_in_gb", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "volume_configuration.0.managed_ebs_volume.0.throughput", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "volume_configuration.0.managed_ebs_volume.0.volume_type", "gp3"),
 				),
 			},
 		},
@@ -1269,7 +1313,10 @@ func TestAccECSService_ServiceRegistries_basic(t *testing.T) {
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, servicediscovery.EndpointsID) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ServiceDiscoveryEndpointID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServiceDestroy(ctx),
@@ -1292,7 +1339,10 @@ func TestAccECSService_ServiceRegistries_container(t *testing.T) {
 	resourceName := "aws_ecs_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, servicediscovery.EndpointsID) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ServiceDiscoveryEndpointID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServiceDestroy(ctx),
@@ -1321,7 +1371,10 @@ func TestAccECSService_ServiceRegistries_changes(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, servicediscovery.EndpointsID) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ServiceDiscoveryEndpointID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServiceDestroy(ctx),
@@ -1356,7 +1409,10 @@ func TestAccECSService_ServiceRegistries_removal(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, servicediscovery.EndpointsID) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ServiceDiscoveryEndpointID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServiceDestroy(ctx),
@@ -2144,7 +2200,7 @@ resource "aws_ecs_service" "test" {
 `, rName))
 }
 
-func testAccServiceConfig_volumeConfiguration_basic(rName string) string {
+func testAccServiceConfig_baseVolumeConfiguration(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
@@ -2218,7 +2274,11 @@ resource "aws_iam_role_policy" "ecs_service" {
 }
 EOF
 }
+`, rName)
+}
 
+func testAccServiceConfig_volumeConfiguration_basic(rName string) string {
+	return acctest.ConfigCompose(testAccServiceConfig_baseVolumeConfiguration(rName), fmt.Sprintf(`
 resource "aws_ecs_service" "test" {
   name            = %[1]q
   cluster         = aws_ecs_cluster.test.id
@@ -2235,84 +2295,11 @@ resource "aws_ecs_service" "test" {
 
   depends_on = [aws_iam_role_policy.ecs_service]
 }
-`, rName)
+`, rName))
 }
 
 func testAccServiceConfig_volumeConfiguration_update(rName, volumeType string, size int) string {
-	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
-data "aws_partition" "current" {}
-
-resource "aws_ecs_cluster" "test" {
-  name = %[1]q
-}
-
-resource "aws_ecs_task_definition" "test" {
-  family = %[1]q
-
-  container_definitions = <<TASK_DEFINITION
-[
-  {
-    "cpu": 128,
-    "essential": true,
-    "image": "mongo:latest",
-    "memory": 128,
-    "name": "mongodb",
-    "mountPoints": [
-      {"sourceVolume": "vol1", "containerPath": "/vol1"}
-    ]
-  }
-]
-TASK_DEFINITION
-
-  volume {
-    name                = "vol1"
-    configure_at_launch = true
-  }
-}
-
-resource "aws_iam_role" "ecs_service" {
-  name = %[1]q
-
-  assume_role_policy = <<EOF
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Action": "sts:AssumeRole",
-            "Principal": {"AWS": "*"},
-            "Effect": "Allow",
-            "Sid": ""
-        }
-    ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy" "ecs_service" {
-  name = %[1]q
-  role = aws_iam_role.ecs_service.name
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "elasticloadbalancing:*",
-        "ec2:*",
-        "ecs:*"
-      ],
-      "Resource": [
-        "*"
-      ]
-    }
-  ]
-}
-EOF
-}
-
+	return acctest.ConfigCompose(testAccServiceConfig_baseVolumeConfiguration(rName), fmt.Sprintf(`
 resource "aws_ecs_service" "test" {
   name            = %[1]q
   cluster         = aws_ecs_cluster.test.id
@@ -2330,7 +2317,29 @@ resource "aws_ecs_service" "test" {
 
   depends_on = [aws_iam_role_policy.ecs_service]
 }
-`, rName, volumeType, size)
+`, rName, volumeType, size))
+}
+
+func testAccServiceConfig_volumeConfiguration_gp3(rName string) string {
+	return acctest.ConfigCompose(testAccServiceConfig_baseVolumeConfiguration(rName), fmt.Sprintf(`
+resource "aws_ecs_service" "test" {
+  name            = %[1]q
+  cluster         = aws_ecs_cluster.test.id
+  task_definition = aws_ecs_task_definition.test.arn
+  desired_count   = 1
+
+  volume_configuration {
+    name = "vol1"
+    managed_ebs_volume {
+      role_arn    = aws_iam_role.ecs_service.arn
+      size_in_gb  = 10
+      volume_type = "gp3"
+    }
+  }
+
+  depends_on = [aws_iam_role_policy.ecs_service]
+}
+`, rName))
 }
 
 func testAccServiceConfig_forceNewDeployment(rName string) string {

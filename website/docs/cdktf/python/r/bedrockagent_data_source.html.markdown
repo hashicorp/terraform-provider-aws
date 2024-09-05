@@ -88,7 +88,7 @@ The `vector_ingestion_configuration` configuration block supports the following 
 
  The `chunking_configuration` configuration block supports the following arguments:
 
-* `chunking_strategy` - (Required, Forces new resource) Option for chunking your source data, either in fixed-sized chunks or as one chunk. Valid values: `FIX_SIZE`, `NONE`.
+* `chunking_strategy` - (Required, Forces new resource) Option for chunking your source data, either in fixed-sized chunks or as one chunk. Valid values: `FIXED_SIZE`, `NONE`.
 * `fixed_size_chunking_configuration` - (Optional, Forces new resource) Configurations for when you choose fixed-size chunking. If you set the chunking_strategy as `NONE`, exclude this field. See [`fixed_size_chunking_configuration`](#fixed_size_chunking_configuration-block) for details.
 
 ### `fixed_size_chunking_configuration` block
@@ -137,4 +137,4 @@ Using `terraform import`, import Agents for Amazon Bedrock Data Source using the
 % terraform import aws_bedrockagent_data_source.example GWCMFMQF6T,EMDPPAYPZI
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-8aaedb087a1462247c32851ffac6f1813521a188a65dba1f8f50fc7a093a3677 -->
+<!-- cache-key: cdktf-0.20.1 input-f67618ecf6e1d1ae137807f97a96039325a6f9251e8adb1721eca36998dce190 -->

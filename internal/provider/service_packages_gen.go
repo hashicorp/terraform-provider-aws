@@ -176,6 +176,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/outposts"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/paymentcryptography"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pcaconnectorad"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/pcs"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pinpoint"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pipes"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/polly"
@@ -190,6 +191,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshiftdata"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshiftserverless"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/rekognition"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/resiliencehub"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/resourceexplorer2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/resourcegroups"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/resourcegroupstaggingapi"
@@ -420,6 +422,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		outposts.ServicePackage(ctx),
 		paymentcryptography.ServicePackage(ctx),
 		pcaconnectorad.ServicePackage(ctx),
+		pcs.ServicePackage(ctx),
 		pinpoint.ServicePackage(ctx),
 		pipes.ServicePackage(ctx),
 		polly.ServicePackage(ctx),
@@ -434,6 +437,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		redshiftdata.ServicePackage(ctx),
 		redshiftserverless.ServicePackage(ctx),
 		rekognition.ServicePackage(ctx),
+		resiliencehub.ServicePackage(ctx),
 		resourceexplorer2.ServicePackage(ctx),
 		resourcegroups.ServicePackage(ctx),
 		resourcegroupstaggingapi.ServicePackage(ctx),

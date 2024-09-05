@@ -24,7 +24,9 @@ import (
 	accounttypes "github.com/aws/aws-sdk-go-v2/service/account/types"
 	"github.com/aws/aws-sdk-go-v2/service/acmpca"
 	acmpcatypes "github.com/aws/aws-sdk-go-v2/service/acmpca/types"
+	"github.com/aws/aws-sdk-go-v2/service/cloudsearch"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
+	"github.com/aws/aws-sdk-go-v2/service/costexplorer"
 	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	dstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
@@ -33,6 +35,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
 	inspector2types "github.com/aws/aws-sdk-go-v2/service/inspector2/types"
 	organizationstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
+	"github.com/aws/aws-sdk-go-v2/service/outposts"
+	"github.com/aws/aws-sdk-go-v2/service/pinpoint"
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
 	ssoadmintypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
@@ -40,9 +44,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/outposts"
-	"github.com/aws/aws-sdk-go/service/pinpoint"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	tfawserr_sdkv1 "github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	tfawserr_sdkv2 "github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
@@ -52,6 +55,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest/jsoncmp"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -675,6 +679,16 @@ func CheckResourceAttrEquivalentJSON(n, key, expectedJSON string) resource.TestC
 	})
 }
 
+func CheckResourceAttrJSONNoDiff(n, key, expectedJSON string) resource.TestCheckFunc {
+	return resource.TestCheckResourceAttrWith(n, key, func(value string) error {
+		if diff := jsoncmp.Diff(expectedJSON, value); diff != "" {
+			return fmt.Errorf("unexpected diff (+wanted, -got): %s", diff)
+		}
+
+		return nil
+	})
+}
+
 func CheckResourceAttrJMES(name, key, jmesPath, value string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		is, err := PrimaryInstanceState(s, name)
@@ -771,6 +785,47 @@ func CheckResourceAttrJMESPair(nameFirst, keyFirst, jmesPath, nameSecond, keySec
 	}
 }
 
+func CheckResourceAttrJMESNotExists(name, key, jmesPath string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		is, err := PrimaryInstanceState(s, name)
+		if err != nil {
+			return err
+		}
+
+		attr, ok := is.Attributes[key]
+		if !ok {
+			return fmt.Errorf("%s: Attribute %q not set", name, key)
+		}
+
+		var jsonData any
+		err = json.Unmarshal([]byte(attr), &jsonData)
+		if err != nil {
+			return fmt.Errorf("%s: Expected attribute %q to be JSON: %w", name, key, err)
+		}
+
+		result, err := jmespath.Search(jmesPath, jsonData)
+		if err != nil {
+			return fmt.Errorf("invalid JMESPath %q: %w", jmesPath, err)
+		}
+
+		var v string
+		switch x := result.(type) {
+		case nil:
+			return nil
+		case string:
+			v = x
+		case float64:
+			v = strconv.FormatFloat(x, 'f', -1, 64)
+		case bool:
+			v = fmt.Sprint(x)
+		default:
+			return fmt.Errorf(`%[1]s: Attribute %[2]q, JMESPath %[3]q got "%#[4]v" (%[4]T), expected no attribute`, name, key, jmesPath, result)
+		}
+
+		return fmt.Errorf("%s: Attribute %q, JMESPath %q expected no attribute, got %#v", name, key, jmesPath, v)
+	}
+}
+
 // CheckResourceAttrContains ensures the Terraform state value contains the specified substr.
 func CheckResourceAttrContains(name, key, substr string) resource.TestCheckFunc {
 	return resource.TestCheckResourceAttrWith(name, key, func(value string) error {
@@ -838,6 +893,10 @@ func Partition() string {
 	return names.PartitionForRegion(Region())
 }
 
+func PartitionRegions() []string {
+	return RegionsInPartition(Partition())
+}
+
 func PartitionDNSSuffix() string {
 	return names.DNSSuffixForPartition(Partition())
 }
@@ -886,6 +945,10 @@ func PreCheckPartitionHasService(t *testing.T, serviceID string) {
 
 func PreCheckMultipleRegion(t *testing.T, regions int) {
 	t.Helper()
+
+	if len(PartitionRegions()) <= 1 {
+		t.Skipf("Skipping multiple region test as 1 or fewer regions detected in partion (%s)", Partition())
+	}
 
 	if Region() == AlternateRegion() {
 		t.Fatalf("%s and %s must be set to different values for acceptance tests", envvar.DefaultRegion, envvar.AlternateRegion)
@@ -1001,6 +1064,54 @@ func PreCheckCognitoIdentityProvider(ctx context.Context, t *testing.T) {
 	}
 }
 
+func PreCheckCECostAllocationTagPayerAccount(ctx context.Context, t *testing.T) {
+	t.Helper()
+
+	conn := Provider.Meta().(*conns.AWSClient).CEClient(ctx)
+
+	_, err := conn.ListCostAllocationTags(ctx, &costexplorer.ListCostAllocationTagsInput{})
+
+	if errs.MessageContains(err, "AccessDeniedException", "Linked account doesn't have access to") {
+		t.Skip("skipping tests; this AWS account must be a payer account")
+	}
+
+	if err != nil {
+		t.Fatalf("listing Cost Explorer Cost Allocation Tags: %s", err)
+	}
+}
+
+func PreCheckCECostCategoryPayerAccount(ctx context.Context, t *testing.T) {
+	t.Helper()
+
+	conn := Provider.Meta().(*conns.AWSClient).CEClient(ctx)
+
+	_, err := conn.ListCostCategoryDefinitions(ctx, &costexplorer.ListCostCategoryDefinitionsInput{})
+
+	if errs.MessageContains(err, "AccessDeniedException", "Linked account doesn't have access to") {
+		t.Skip("skipping tests; this AWS account must be a payer account")
+	}
+
+	if err != nil {
+		t.Fatalf("listing Cost Explorer Cost Categories: %s", err)
+	}
+}
+
+func PreCheckCloudSearchAccountAllowListed(ctx context.Context, t *testing.T) {
+	t.Helper()
+
+	conn := Provider.Meta().(*conns.AWSClient).CloudSearchClient(ctx)
+
+	_, err := conn.ListDomainNames(ctx, &cloudsearch.ListDomainNamesInput{})
+
+	if errs.MessageContains(err, "NotAuthorized", "New domain creation not supported on this account") {
+		t.Skip("skipping tests; this AWS account does not support new CloudSearch domain creation")
+	}
+
+	if err != nil {
+		t.Fatalf("listing CloudSearch Domain Names: %s", err)
+	}
+}
+
 func PreCheckInspector2(ctx context.Context, t *testing.T) {
 	t.Helper()
 
@@ -1100,11 +1211,11 @@ func PreCheckOrganizationMemberAccountWithProvider(ctx context.Context, t *testi
 }
 
 func PreCheckPinpointApp(ctx context.Context, t *testing.T) {
-	conn := Provider.Meta().(*conns.AWSClient).PinpointConn(ctx)
+	conn := Provider.Meta().(*conns.AWSClient).PinpointClient(ctx)
 
 	input := &pinpoint.GetAppsInput{}
 
-	_, err := conn.GetAppsWithContext(ctx, input)
+	_, err := conn.GetApps(ctx, input)
 
 	if PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -1254,10 +1365,10 @@ func PreCheckDirectoryServiceSimpleDirectory(ctx context.Context, t *testing.T) 
 func PreCheckOutpostsOutposts(ctx context.Context, t *testing.T) {
 	t.Helper()
 
-	conn := Provider.Meta().(*conns.AWSClient).OutpostsConn(ctx)
+	conn := Provider.Meta().(*conns.AWSClient).OutpostsClient(ctx)
 	input := &outposts.ListOutpostsInput{}
 
-	output, err := conn.ListOutpostsWithContext(ctx, input)
+	output, err := conn.ListOutposts(ctx, input)
 
 	if PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -1722,31 +1833,31 @@ func PreCheckSkipError(err error) bool {
 	// GovCloud has endpoints that respond with (no message provided after the error code):
 	// AccessDeniedException:
 	// Ignore these API endpoints that exist but are not officially enabled
-	if tfawserr.ErrCodeEquals(err, "AccessDeniedException") {
+	if tfawserr_sdkv1.ErrCodeEquals(err, "AccessDeniedException") || tfawserr_sdkv2.ErrCodeEquals(err, "AccessDeniedException") {
 		return true
 	}
 	// Ignore missing API endpoints
-	if tfawserr.ErrMessageContains(err, "RequestError", "send request failed") {
+	if tfawserr_sdkv1.ErrMessageContains(err, "RequestError", "send request failed") || tfawserr_sdkv2.ErrMessageContains(err, "RequestError", "send request failed") {
 		return true
 	}
 	// Ignore unsupported API calls
-	if tfawserr.ErrCodeEquals(err, "UnknownOperationException") {
+	if tfawserr_sdkv1.ErrCodeEquals(err, "UnknownOperationException") || tfawserr_sdkv2.ErrCodeEquals(err, "UnknownOperationException") {
 		return true
 	}
-	if tfawserr.ErrCodeEquals(err, "UnsupportedOperation") {
+	if tfawserr_sdkv1.ErrCodeEquals(err, "UnsupportedOperation") || tfawserr_sdkv2.ErrCodeEquals(err, "UnsupportedOperation") {
 		return true
 	}
-	if tfawserr.ErrMessageContains(err, "InvalidInputException", "Unknown operation") {
+	if tfawserr_sdkv1.ErrMessageContains(err, "InvalidInputException", "Unknown operation") || tfawserr_sdkv2.ErrMessageContains(err, "InvalidInputException", "Unknown operation") {
 		return true
 	}
-	if tfawserr.ErrMessageContains(err, "InvalidAction", "is not valid") {
+	if tfawserr_sdkv1.ErrMessageContains(err, "InvalidAction", "is not valid") || tfawserr_sdkv2.ErrMessageContains(err, "InvalidAction", "is not valid") {
 		return true
 	}
-	if tfawserr.ErrMessageContains(err, "InvalidAction", "Unavailable Operation") {
+	if tfawserr_sdkv1.ErrMessageContains(err, "InvalidAction", "Unavailable Operation") || tfawserr_sdkv2.ErrMessageContains(err, "InvalidAction", "Unavailable Operation") {
 		return true
 	}
 	// ignore when not authorized to call API from account
-	if tfawserr.ErrCodeEquals(err, "ForbiddenException") {
+	if tfawserr_sdkv1.ErrCodeEquals(err, "ForbiddenException") || tfawserr_sdkv2.ErrCodeEquals(err, "ForbiddenException") {
 		return true
 	}
 	// Ignore missing API endpoints
@@ -2619,7 +2730,6 @@ func RunSerialTests1Level(t *testing.T, testCases map[string]func(*testing.T), d
 	t.Helper()
 
 	for name, tc := range testCases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			tc(t)
 			time.Sleep(d)
@@ -2632,7 +2742,6 @@ func RunSerialTests2Levels(t *testing.T, testCases map[string]map[string]func(*t
 	t.Helper()
 
 	for group, m := range testCases {
-		m := m
 		t.Run(group, func(t *testing.T) {
 			RunSerialTests1Level(t, m, d)
 		})
@@ -2644,9 +2753,7 @@ func RunLimitedConcurrencyTests2Levels(t *testing.T, semaphore tfsync.Semaphore,
 	t.Helper()
 
 	for group, m := range testCases {
-		m := m
 		for name, tc := range m {
-			tc := tc
 			t.Run(fmt.Sprintf("%s_%s", group, name), func(t *testing.T) {
 				t.Cleanup(func() {
 					if os.Getenv(resource.EnvTfAcc) != "" {

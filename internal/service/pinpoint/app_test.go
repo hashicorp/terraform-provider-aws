@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/pinpoint"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpoint/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -25,7 +25,7 @@ import (
 
 func TestAccPinpointApp_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var application pinpoint.ApplicationResponse
+	var application awstypes.ApplicationResponse
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_pinpoint_app.test"
 
@@ -81,7 +81,7 @@ func TestAccPinpointApp_basic(t *testing.T) {
 
 func TestAccPinpointApp_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var application pinpoint.ApplicationResponse
+	var application awstypes.ApplicationResponse
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_pinpoint_app.test"
 
@@ -105,7 +105,7 @@ func TestAccPinpointApp_disappears(t *testing.T) {
 
 func TestAccPinpointApp_nameGenerated(t *testing.T) {
 	ctx := acctest.Context(t)
-	var application pinpoint.ApplicationResponse
+	var application awstypes.ApplicationResponse
 	resourceName := "aws_pinpoint_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -128,7 +128,7 @@ func TestAccPinpointApp_nameGenerated(t *testing.T) {
 
 func TestAccPinpointApp_namePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
-	var application pinpoint.ApplicationResponse
+	var application awstypes.ApplicationResponse
 	resourceName := "aws_pinpoint_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -151,7 +151,7 @@ func TestAccPinpointApp_namePrefix(t *testing.T) {
 
 func TestAccPinpointApp_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var application pinpoint.ApplicationResponse
+	var application awstypes.ApplicationResponse
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_pinpoint_app.test"
 
@@ -197,7 +197,7 @@ func TestAccPinpointApp_tags(t *testing.T) {
 
 func TestAccPinpointApp_campaignHookLambda(t *testing.T) {
 	ctx := acctest.Context(t)
-	var application pinpoint.ApplicationResponse
+	var application awstypes.ApplicationResponse
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_pinpoint_app.test"
 
@@ -217,7 +217,7 @@ func TestAccPinpointApp_campaignHookLambda(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("campaign_hook"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"lambda_function_name": knownvalue.NotNull(), // Should be a Pair function, waiting on https://github.com/hashicorp/terraform-plugin-testing/pull/330
-							names.AttrMode:         knownvalue.StringExact(pinpoint.ModeDelivery),
+							names.AttrMode:         knownvalue.StringExact(string(awstypes.ModeDelivery)),
 							"web_url":              knownvalue.StringExact(""),
 						}),
 					})),
@@ -234,7 +234,7 @@ func TestAccPinpointApp_campaignHookLambda(t *testing.T) {
 
 func TestAccPinpointApp_campaignHookEmpty(t *testing.T) {
 	ctx := acctest.Context(t)
-	var application pinpoint.ApplicationResponse
+	var application awstypes.ApplicationResponse
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_pinpoint_app.test"
 
@@ -270,7 +270,7 @@ func TestAccPinpointApp_campaignHookEmpty(t *testing.T) {
 
 func TestAccPinpointApp_limits(t *testing.T) {
 	ctx := acctest.Context(t)
-	var application pinpoint.ApplicationResponse
+	var application awstypes.ApplicationResponse
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_pinpoint_app.test"
 
@@ -307,7 +307,7 @@ func TestAccPinpointApp_limits(t *testing.T) {
 
 func TestAccPinpointApp_limitsEmpty(t *testing.T) {
 	ctx := acctest.Context(t)
-	var application pinpoint.ApplicationResponse
+	var application awstypes.ApplicationResponse
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_pinpoint_app.test"
 
@@ -344,7 +344,7 @@ func TestAccPinpointApp_limitsEmpty(t *testing.T) {
 
 func TestAccPinpointApp_quietTime(t *testing.T) {
 	ctx := acctest.Context(t)
-	var application pinpoint.ApplicationResponse
+	var application awstypes.ApplicationResponse
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_pinpoint_app.test"
 
@@ -379,7 +379,7 @@ func TestAccPinpointApp_quietTime(t *testing.T) {
 
 func TestAccPinpointApp_quietTimeEmpty(t *testing.T) {
 	ctx := acctest.Context(t)
-	var application pinpoint.ApplicationResponse
+	var application awstypes.ApplicationResponse
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_pinpoint_app.test"
 
@@ -419,7 +419,7 @@ func testAccPreCheckApp(ctx context.Context, t *testing.T) {
 
 func testAccCheckAppDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_pinpoint_app" {
@@ -443,14 +443,14 @@ func testAccCheckAppDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckAppExists(ctx context.Context, n string, v *pinpoint.ApplicationResponse) resource.TestCheckFunc {
+func testAccCheckAppExists(ctx context.Context, n string, v *awstypes.ApplicationResponse) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointClient(ctx)
 
 		output, err := tfpinpoint.FindAppByID(ctx, conn, rs.Primary.ID)
 

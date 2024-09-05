@@ -28,7 +28,7 @@ func TestAccCECostCategory_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckCECostCategoryPayerAccount(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCostCategoryDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, names.CEServiceID),
@@ -64,7 +64,7 @@ func TestAccCECostCategory_effectiveStart(t *testing.T) {
 	firstOfLastMonth := firstDayOfMonth(now.AddDate(0, -1, 0))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckCECostCategoryPayerAccount(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCostCategoryDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, names.CEServiceID),
@@ -101,7 +101,7 @@ func TestAccCECostCategory_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckCECostCategoryPayerAccount(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCostCategoryDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, names.CEServiceID),
@@ -125,7 +125,7 @@ func TestAccCECostCategory_complete(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckCECostCategoryPayerAccount(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCostCategoryDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, names.CEServiceID),
@@ -160,7 +160,7 @@ func TestAccCECostCategory_notWithAnd(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckCECostCategoryPayerAccount(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCostCategoryDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, names.CEServiceID),
@@ -188,7 +188,7 @@ func TestAccCECostCategory_splitCharge(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckCECostCategoryPayerAccount(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCostCategoryDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, names.CEServiceID),
@@ -223,7 +223,7 @@ func TestAccCECostCategory_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckCECostCategoryPayerAccount(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCostCategoryDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, names.CEServiceID),

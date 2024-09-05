@@ -72,8 +72,9 @@ func (r *securityGroupIngressRuleResource) create(ctx context.Context, data *sec
 	conn := r.Meta().EC2Client(ctx)
 
 	input := &ec2.AuthorizeSecurityGroupIngressInput{
-		GroupId:       fwflex.StringFromFramework(ctx, data.SecurityGroupID),
-		IpPermissions: []awstypes.IpPermission{data.expandIPPermission(ctx)},
+		GroupId:           fwflex.StringFromFramework(ctx, data.SecurityGroupID),
+		IpPermissions:     []awstypes.IpPermission{data.expandIPPermission(ctx)},
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeSecurityGroupRule),
 	}
 
 	output, err := conn.AuthorizeSecurityGroupIngress(ctx, input)
@@ -258,13 +259,6 @@ func (r *securityGroupRuleResource) Create(ctx context.Context, request resource
 	data.SecurityGroupRuleID = types.StringValue(securityGroupRuleID)
 	data.setID()
 
-	conn := r.Meta().EC2Client(ctx)
-	if err := createTags(ctx, conn, data.ID.ValueString(), getTagsIn(ctx)); err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("setting VPC Security Group Rule (%s) tags", data.ID.ValueString()), err.Error())
-
-		return
-	}
-
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
@@ -448,8 +442,8 @@ type securityGroupRuleResourceModel struct {
 	ReferencedSecurityGroupID types.String `tfsdk:"referenced_security_group_id"`
 	SecurityGroupID           types.String `tfsdk:"security_group_id"`
 	SecurityGroupRuleID       types.String `tfsdk:"security_group_rule_id"`
-	Tags                      types.Map    `tfsdk:"tags"`
-	TagsAll                   types.Map    `tfsdk:"tags_all"`
+	Tags                      tftags.Map   `tfsdk:"tags"`
+	TagsAll                   tftags.Map   `tfsdk:"tags_all"`
 	ToPort                    types.Int64  `tfsdk:"to_port"`
 }
 

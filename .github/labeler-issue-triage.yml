@@ -460,7 +460,7 @@ service/mediatailor:
 service/memorydb:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_memorydb_'
 service/meta:
-  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_(arn|billing_service_account|default_tags|ip_ranges|partition|regions?|service)$'
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_(arn|billing_service_account|default_tags|ip_ranges|partition|regions?|service|service_principal)$'
 service/mgh:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_mgh_'
 service/mgn:
@@ -513,6 +513,8 @@ service/paymentcryptography:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_paymentcryptography_'
 service/pcaconnectorad:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_pcaconnectorad_'
+service/pcs:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_pcs_'
 service/personalize:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_personalize_'
 service/personalizeevents:

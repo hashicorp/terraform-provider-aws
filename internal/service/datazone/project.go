@@ -318,7 +318,9 @@ func (r *resourceProject) ImportState(ctx context.Context, req resource.ImportSt
 
 	if len(parts) != 2 {
 		resp.Diagnostics.AddError("Resource Import Invalid ID", fmt.Sprintf(`Unexpected format for import ID (%s), use: "DomainIdentifier:Id"`, req.ID))
+		return
 	}
+
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("domain_identifier"), parts[0])...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), parts[1])...)
 }
@@ -326,7 +328,7 @@ func (r *resourceProject) ImportState(ctx context.Context, req resource.ImportSt
 func waitProjectCreated(ctx context.Context, conn *datazone.Client, domain string, identifier string, timeout time.Duration) (*datazone.GetProjectOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
-		Target:                    enum.Slice[awstypes.ProjectStatus](awstypes.ProjectStatusActive),
+		Target:                    enum.Slice(awstypes.ProjectStatusActive),
 		Refresh:                   statusProject(ctx, conn, domain, identifier),
 		Timeout:                   timeout,
 		NotFoundChecks:            40,
@@ -343,7 +345,7 @@ func waitProjectCreated(ctx context.Context, conn *datazone.Client, domain strin
 
 func waitProjectDeleted(ctx context.Context, conn *datazone.Client, domain string, identifier string, timeout time.Duration) (*datazone.GetProjectOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice[awstypes.ProjectStatus](awstypes.ProjectStatusDeleting, awstypes.ProjectStatusActive),
+		Pending: enum.Slice(awstypes.ProjectStatusDeleting, awstypes.ProjectStatusActive),
 		Target:  []string{},
 		Refresh: statusProject(ctx, conn, domain, identifier),
 		Timeout: timeout,

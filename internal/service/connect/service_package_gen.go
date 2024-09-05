@@ -5,10 +5,8 @@ package connect
 import (
 	"context"
 
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	connect_sdkv1 "github.com/aws/aws-sdk-go/service/connect"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	connect_sdkv2 "github.com/aws/aws-sdk-go-v2/service/connect"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -27,68 +25,93 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceBotAssociation,
+			Factory:  dataSourceBotAssociation,
 			TypeName: "aws_connect_bot_association",
+			Name:     "Bot Association",
 		},
 		{
-			Factory:  DataSourceContactFlow,
+			Factory:  dataSourceContactFlow,
 			TypeName: "aws_connect_contact_flow",
+			Name:     "Contact Flow",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceContactFlowModule,
+			Factory:  dataSourceContactFlowModule,
 			TypeName: "aws_connect_contact_flow_module",
+			Name:     "Contact Flow Module",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceHoursOfOperation,
+			Factory:  dataSourceHoursOfOperation,
 			TypeName: "aws_connect_hours_of_operation",
+			Name:     "Hours Of Operation",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceInstance,
+			Factory:  dataSourceInstance,
 			TypeName: "aws_connect_instance",
+			Name:     "Instance",
 		},
 		{
-			Factory:  DataSourceInstanceStorageConfig,
+			Factory:  dataSourceInstanceStorageConfig,
 			TypeName: "aws_connect_instance_storage_config",
+			Name:     "Instance Storage Config",
 		},
 		{
-			Factory:  DataSourceLambdaFunctionAssociation,
+			Factory:  dataSourceLambdaFunctionAssociation,
 			TypeName: "aws_connect_lambda_function_association",
 		},
 		{
-			Factory:  DataSourcePrompt,
+			Factory:  dataSourcePrompt,
 			TypeName: "aws_connect_prompt",
+			Name:     "Prompt",
 		},
 		{
-			Factory:  DataSourceQueue,
+			Factory:  dataSourceQueue,
 			TypeName: "aws_connect_queue",
+			Name:     "Queue",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceQuickConnect,
+			Factory:  dataSourceQuickConnect,
 			TypeName: "aws_connect_quick_connect",
+			Name:     "Quick Connect",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceRoutingProfile,
+			Factory:  dataSourceRoutingProfile,
 			TypeName: "aws_connect_routing_profile",
+			Name:     "Routing Profile",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceSecurityProfile,
+			Factory:  dataSourceSecurityProfile,
 			TypeName: "aws_connect_security_profile",
+			Name:     "Security Profile",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  DataSourceUser,
 			TypeName: "aws_connect_user",
+			Name:     "User",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceUserHierarchyGroup,
+			Factory:  dataSourceUserHierarchyGroup,
 			TypeName: "aws_connect_user_hierarchy_group",
+			Name:     "User Hierarchy Group",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceUserHierarchyStructure,
+			Factory:  dataSourceUserHierarchyStructure,
 			TypeName: "aws_connect_user_hierarchy_structure",
+			Name:     "User Hierarchy Structure",
 		},
 		{
-			Factory:  DataSourceVocabulary,
+			Factory:  dataSourceVocabulary,
 			TypeName: "aws_connect_vocabulary",
+			Name:     "Vocabulary",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 	}
 }
@@ -96,11 +119,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceBotAssociation,
+			Factory:  resourceBotAssociation,
 			TypeName: "aws_connect_bot_association",
+			Name:     "Bot Association",
 		},
 		{
-			Factory:  ResourceContactFlow,
+			Factory:  resourceContactFlow,
 			TypeName: "aws_connect_contact_flow",
 			Name:     "Contact Flow",
 			Tags: &types.ServicePackageResourceTags{
@@ -108,7 +132,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceContactFlowModule,
+			Factory:  resourceContactFlowModule,
 			TypeName: "aws_connect_contact_flow_module",
 			Name:     "Contact Flow Module",
 			Tags: &types.ServicePackageResourceTags{
@@ -116,7 +140,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceHoursOfOperation,
+			Factory:  resourceHoursOfOperation,
 			TypeName: "aws_connect_hours_of_operation",
 			Name:     "Hours Of Operation",
 			Tags: &types.ServicePackageResourceTags{
@@ -124,19 +148,22 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceInstance,
+			Factory:  resourceInstance,
 			TypeName: "aws_connect_instance",
+			Name:     "Instance",
 		},
 		{
-			Factory:  ResourceInstanceStorageConfig,
+			Factory:  resourceInstanceStorageConfig,
 			TypeName: "aws_connect_instance_storage_config",
+			Name:     "Instance Storage Config",
 		},
 		{
-			Factory:  ResourceLambdaFunctionAssociation,
+			Factory:  resourceLambdaFunctionAssociation,
 			TypeName: "aws_connect_lambda_function_association",
+			Name:     "Lambda Function Association",
 		},
 		{
-			Factory:  ResourcePhoneNumber,
+			Factory:  resourcePhoneNumber,
 			TypeName: "aws_connect_phone_number",
 			Name:     "Phone Number",
 			Tags: &types.ServicePackageResourceTags{
@@ -144,7 +171,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceQueue,
+			Factory:  resourceQueue,
 			TypeName: "aws_connect_queue",
 			Name:     "Queue",
 			Tags: &types.ServicePackageResourceTags{
@@ -152,7 +179,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceQuickConnect,
+			Factory:  resourceQuickConnect,
 			TypeName: "aws_connect_quick_connect",
 			Name:     "Quick Connect",
 			Tags: &types.ServicePackageResourceTags{
@@ -160,7 +187,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceRoutingProfile,
+			Factory:  resourceRoutingProfile,
 			TypeName: "aws_connect_routing_profile",
 			Name:     "Routing Profile",
 			Tags: &types.ServicePackageResourceTags{
@@ -168,7 +195,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceSecurityProfile,
+			Factory:  resourceSecurityProfile,
 			TypeName: "aws_connect_security_profile",
 			Name:     "Security Profile",
 			Tags: &types.ServicePackageResourceTags{
@@ -176,7 +203,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceUser,
+			Factory:  resourceUser,
 			TypeName: "aws_connect_user",
 			Name:     "User",
 			Tags: &types.ServicePackageResourceTags{
@@ -184,7 +211,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceUserHierarchyGroup,
+			Factory:  resourceUserHierarchyGroup,
 			TypeName: "aws_connect_user_hierarchy_group",
 			Name:     "User Hierarchy Group",
 			Tags: &types.ServicePackageResourceTags{
@@ -192,11 +219,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceUserHierarchyStructure,
+			Factory:  resourceUserHierarchyStructure,
 			TypeName: "aws_connect_user_hierarchy_structure",
+			Name:     "User Hierarchy Structure",
 		},
 		{
-			Factory:  ResourceVocabulary,
+			Factory:  resourceVocabulary,
 			TypeName: "aws_connect_vocabulary",
 			Name:     "Vocabulary",
 			Tags: &types.ServicePackageResourceTags{
@@ -210,22 +238,14 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.Connect
 }
 
-// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*connect_sdkv1.Connect, error) {
-	sess := config[names.AttrSession].(*session_sdkv1.Session)
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*connect_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
 
-	cfg := aws_sdkv1.Config{}
-
-	if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
-		tflog.Debug(ctx, "setting endpoint", map[string]any{
-			"tf_aws.endpoint": endpoint,
-		})
-		cfg.Endpoint = aws_sdkv1.String(endpoint)
-	} else {
-		cfg.EndpointResolver = newEndpointResolverSDKv1(ctx)
-	}
-
-	return connect_sdkv1.New(sess.Copy(&cfg)), nil
+	return connect_sdkv2.NewFromConfig(cfg,
+		connect_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+	), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

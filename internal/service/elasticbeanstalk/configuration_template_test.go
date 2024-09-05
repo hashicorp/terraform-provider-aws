@@ -170,10 +170,6 @@ func testAccCheckConfigurationTemplateExists(ctx context.Context, n string, v *a
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Elastic Beanstalk Configuration Template ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkClient(ctx)
 
 		output, err := tfelasticbeanstalk.FindConfigurationSettingsByTwoPartKey(ctx, conn, rs.Primary.Attributes["application"], rs.Primary.ID)

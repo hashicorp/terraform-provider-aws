@@ -191,6 +191,7 @@ func TestAccVPCPeeringConnection_options(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"accepter.0.allow_remote_vpc_dns_resolution",
 					"auto_accept",
 				},
 			},

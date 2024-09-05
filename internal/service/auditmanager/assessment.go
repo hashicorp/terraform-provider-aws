@@ -433,8 +433,8 @@ type resourceAssessmentData struct {
 	RolesAll                     types.Set    `tfsdk:"roles_all"`
 	Scope                        types.List   `tfsdk:"scope"`
 	Status                       types.String `tfsdk:"status"`
-	Tags                         types.Map    `tfsdk:"tags"`
-	TagsAll                      types.Map    `tfsdk:"tags_all"`
+	Tags                         tftags.Map   `tfsdk:"tags"`
+	TagsAll                      tftags.Map   `tfsdk:"tags_all"`
 }
 
 type assessmentReportsDestinationData struct {
