@@ -158,11 +158,11 @@ func (flattener autoFlattener) convert(ctx context.Context, sourcePath path.Path
 		return diags
 
 	case reflect.Int64:
-		diags.Append(flattener.int64(ctx, vFrom, vFrom.Type(), false, tTo, vTo)...)
+		diags.Append(flattener.int64(ctx, vFrom, vFrom.Type(), false, tTo, vTo, fieldOpts)...)
 		return diags
 
 	case reflect.Int32:
-		diags.Append(flattener.int32(ctx, vFrom, false, tTo, vTo)...)
+		diags.Append(flattener.int32(ctx, vFrom, false, tTo, vTo, fieldOpts)...)
 		return diags
 
 	case reflect.String:
@@ -333,7 +333,7 @@ func (flattener autoFlattener) float32(ctx context.Context, vFrom reflect.Value,
 }
 
 // int64 copies an AWS API int64 value to a compatible Plugin Framework value.
-func (flattener autoFlattener) int64(ctx context.Context, vFrom reflect.Value, sourceType reflect.Type, isNullFrom bool, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+func (flattener autoFlattener) int64(ctx context.Context, vFrom reflect.Value, sourceType reflect.Type, isNullFrom bool, tTo attr.Type, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch tTo := tTo.(type) {
@@ -341,9 +341,20 @@ func (flattener autoFlattener) int64(ctx context.Context, vFrom reflect.Value, s
 		//
 		// int32/int64 -> types.Int64.
 		//
-		int64Value := types.Int64Null()
-		if !isNullFrom {
-			int64Value = types.Int64Value(vFrom.Int())
+		var int64Value basetypes.Int64Value
+		if fieldOpts.legacy {
+			tflog.SubsystemDebug(ctx, subsystemName, "Using legacy flattener")
+			if isNullFrom {
+				int64Value = types.Int64Value(0)
+			} else {
+				int64Value = types.Int64Value(vFrom.Int())
+			}
+		} else {
+			if isNullFrom {
+				int64Value = types.Int64Null()
+			} else {
+				int64Value = types.Int64Value(vFrom.Int())
+			}
 		}
 		v, d := tTo.ValueFromInt64(ctx, int64Value)
 		diags.Append(d...)
@@ -370,7 +381,7 @@ func (flattener autoFlattener) int64(ctx context.Context, vFrom reflect.Value, s
 }
 
 // int32 copies an AWS API int32 value to a compatible Plugin Framework value.
-func (flattener autoFlattener) int32(ctx context.Context, vFrom reflect.Value, isNullFrom bool, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+func (flattener autoFlattener) int32(ctx context.Context, vFrom reflect.Value, isNullFrom bool, tTo attr.Type, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch tTo := tTo.(type) {
@@ -378,9 +389,20 @@ func (flattener autoFlattener) int32(ctx context.Context, vFrom reflect.Value, i
 		//
 		// int32/int64 -> types.Int64.
 		//
-		int64Value := types.Int64Null()
-		if !isNullFrom {
-			int64Value = types.Int64Value(vFrom.Int())
+		var int64Value basetypes.Int64Value
+		if fieldOpts.legacy {
+			tflog.SubsystemDebug(ctx, subsystemName, "Using legacy flattener")
+			if isNullFrom {
+				int64Value = types.Int64Value(0)
+			} else {
+				int64Value = types.Int64Value(vFrom.Int())
+			}
+		} else {
+			if isNullFrom {
+				int64Value = types.Int64Null()
+			} else {
+				int64Value = types.Int64Value(vFrom.Int())
+			}
 		}
 		v, d := tTo.ValueFromInt64(ctx, int64Value)
 		diags.Append(d...)
@@ -507,11 +529,11 @@ func (flattener autoFlattener) pointer(ctx context.Context, sourcePath path.Path
 		return diags
 
 	case reflect.Int64:
-		diags.Append(flattener.int64(ctx, vElem, vFrom.Type(), isNilFrom, tTo, vTo)...)
+		diags.Append(flattener.int64(ctx, vElem, vFrom.Type(), isNilFrom, tTo, vTo, fieldOpts)...)
 		return diags
 
 	case reflect.Int32:
-		diags.Append(flattener.int32(ctx, vElem, isNilFrom, tTo, vTo)...)
+		diags.Append(flattener.int32(ctx, vElem, isNilFrom, tTo, vTo, fieldOpts)...)
 		return diags
 
 	case reflect.String:
