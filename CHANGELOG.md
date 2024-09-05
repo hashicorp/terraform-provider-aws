@@ -11,7 +11,8 @@ ENHANCEMENTS:
 
 * data-source/aws_sns_topic: Add `tags` attribute ([#38959](https://github.com/hashicorp/terraform-provider-aws/issues/38959))
 * data-source/aws_transfer_server: Add `tags` attribute ([#39092](https://github.com/hashicorp/terraform-provider-aws/issues/39092))
-* resource/aws_bedrockagent_data_source: Add `semantic_chunking_configuration` and `hierarchical_chunking_configuration` arguments ([#39138](https://github.com/hashicorp/terraform-provider-aws/issues/39138))
+* resource/aws_appsync_graphql_api: Add `api_type` and `merged_api_execution_role_arn` arguments ([#39159](https://github.com/hashicorp/terraform-provider-aws/issues/39159))
+* resource/aws_bedrockagent_data_source: Add `vector_ingestion_configuration.chunking_configuration.semantic_chunking_configuration`, `vector_ingestion_configuration.chunking_configuration.hierarchical_chunking_configuration`, and `vector_ingestion_configuration.parsing_configuration` configuration blocks ([#39138](https://github.com/hashicorp/terraform-provider-aws/issues/39138))
 * resource/aws_datazone_domain: Add `skip_deletion_protection` attribute ([#38811](https://github.com/hashicorp/terraform-provider-aws/issues/38811))
 * resource/aws_quicksight_data_source: Add `parameters.databricks` argument ([#31737](https://github.com/hashicorp/terraform-provider-aws/issues/31737))
 * resource/aws_rolesanywhere_trust_anchor: Add `notification_settings` argument ([#39108](https://github.com/hashicorp/terraform-provider-aws/issues/39108))
@@ -21,6 +22,8 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* data-source/aws_networkmanager_core_network_policy_document: Change `segment_actions.via.with_edge_override.use_edge` to be nested set of edges, matching JSON ([#39142](https://github.com/hashicorp/terraform-provider-aws/issues/39142))
+* data-source/aws_networkmanager_core_network_policy_document: Deprecate `segment_actions.via.with_edge_override.use_edge`. Use `segment_actions.via.with_edge_override.use_edge_location` instead ([#39142](https://github.com/hashicorp/terraform-provider-aws/issues/39142))
 * many resources: Fixes perpetual diff when tag has a `null` value. ([#38869](https://github.com/hashicorp/terraform-provider-aws/issues/38869))
 * resource/aws_appconfig_extension: Mark `role_arn` as Optional ([#38900](https://github.com/hashicorp/terraform-provider-aws/issues/38900))
 * resource/aws_lexv2models_slot_type: Fix `slot_type_values` validator which limited configurations to 1 element ([#39126](https://github.com/hashicorp/terraform-provider-aws/issues/39126))
