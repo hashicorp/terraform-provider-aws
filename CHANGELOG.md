@@ -231,7 +231,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * data-source/aws_appstream_image: Fix issue where the most recent image is not returned ([#38571](https://github.com/hashicorp/terraform-provider-aws/issues/38571))
-* datasource/aws_networkmanager_core_network_policy_document: Fix `CoreNetworkPolicyException` when putting policy with single wildcard in `when_sent_to` ([#38595](https://github.com/hashicorp/terraform-provider-aws/issues/38595))
+* data-source/aws_networkmanager_core_network_policy_document: Fix `CoreNetworkPolicyException` when putting policy with single wildcard in `when_sent_to` ([#38595](https://github.com/hashicorp/terraform-provider-aws/issues/38595))
 * resource/aws_cloudsearch_domain: Fix `index_name` character length validation ([#38509](https://github.com/hashicorp/terraform-provider-aws/issues/38509))
 * resource/aws_ecs_task_definition: Ensure that JSON keys in `container_definitions` start with a lowercase letter ([#38622](https://github.com/hashicorp/terraform-provider-aws/issues/38622))
 * resource/aws_iot_provisioning_template: Properly send `type` argument on create when configured ([#38640](https://github.com/hashicorp/terraform-provider-aws/issues/38640))
