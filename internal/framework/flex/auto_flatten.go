@@ -150,11 +150,11 @@ func (flattener autoFlattener) convert(ctx context.Context, sourcePath path.Path
 		return diags
 
 	case reflect.Float64:
-		diags.Append(flattener.float64(ctx, vFrom, vFrom.Type(), false, tTo, vTo)...)
+		diags.Append(flattener.float64(ctx, vFrom, vFrom.Type(), false, tTo, vTo, fieldOpts)...)
 		return diags
 
 	case reflect.Float32:
-		diags.Append(flattener.float32(ctx, vFrom, false, tTo, vTo)...)
+		diags.Append(flattener.float32(ctx, vFrom, false, tTo, vTo, fieldOpts)...)
 		return diags
 
 	case reflect.Int64:
@@ -240,21 +240,26 @@ func (flattener autoFlattener) bool(ctx context.Context, vFrom reflect.Value, is
 }
 
 // float64 copies an AWS API float64 value to a compatible Plugin Framework value.
-func (flattener autoFlattener) float64(ctx context.Context, vFrom reflect.Value, sourceType reflect.Type, isNullFrom bool, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+func (flattener autoFlattener) float64(ctx context.Context, vFrom reflect.Value, sourceType reflect.Type, isNullFrom bool, tTo attr.Type, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch tTo := tTo.(type) {
 	case basetypes.Float64Typable:
 		//
-		// float32/float64 -> types.Float64.
+		// float64 -> types.Float64.
 		//
-		float64Value := types.Float64Null()
-		if !isNullFrom {
-			switch from := vFrom.Interface().(type) {
-			// Avoid loss of equivalence.
-			case float32:
-				float64Value = types.Float64Value(decimal.NewFromFloat32(from).InexactFloat64())
-			default:
+		var float64Value types.Float64
+		if fieldOpts.legacy {
+			tflog.SubsystemDebug(ctx, subsystemName, "Using legacy flattener")
+			if isNullFrom {
+				float64Value = types.Float64Value(0)
+			} else {
+				float64Value = types.Float64Value(vFrom.Float())
+			}
+		} else {
+			if isNullFrom {
+				float64Value = types.Float64Null()
+			} else {
 				float64Value = types.Float64Value(vFrom.Float())
 			}
 		}
@@ -283,22 +288,31 @@ func (flattener autoFlattener) float64(ctx context.Context, vFrom reflect.Value,
 }
 
 // float32 copies an AWS API float32 value to a compatible Plugin Framework value.
-func (flattener autoFlattener) float32(ctx context.Context, vFrom reflect.Value, isNullFrom bool, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+func (flattener autoFlattener) float32(ctx context.Context, vFrom reflect.Value, isNullFrom bool, tTo attr.Type, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch tTo := tTo.(type) {
 	case basetypes.Float64Typable:
 		//
-		// float32/float64 -> types.Float64.
+		// float32 -> types.Float64.
 		//
-		float64Value := types.Float64Null()
-		if !isNullFrom {
-			switch from := vFrom.Interface().(type) {
-			// Avoid loss of equivalence.
-			case float32:
+		var float64Value types.Float64
+		if fieldOpts.legacy {
+			tflog.SubsystemDebug(ctx, subsystemName, "Using legacy flattener")
+			if isNullFrom {
+				float64Value = types.Float64Value(0)
+			} else {
+				// Avoid loss of equivalence.
+				from := vFrom.Interface().(float32)
 				float64Value = types.Float64Value(decimal.NewFromFloat32(from).InexactFloat64())
-			default:
-				float64Value = types.Float64Value(vFrom.Float())
+			}
+		} else {
+			if isNullFrom {
+				float64Value = types.Float64Null()
+			} else {
+				// Avoid loss of equivalence.
+				from := vFrom.Interface().(float32)
+				float64Value = types.Float64Value(decimal.NewFromFloat32(from).InexactFloat64())
 			}
 		}
 		v, d := tTo.ValueFromFloat64(ctx, float64Value)
@@ -316,13 +330,9 @@ func (flattener autoFlattener) float32(ctx context.Context, vFrom reflect.Value,
 		//
 		float32Value := types.Float32Null()
 		if !isNullFrom {
-			switch from := vFrom.Interface().(type) {
 			// Avoid loss of equivalence.
-			case float32:
-				float32Value = types.Float32Value(float32(decimal.NewFromFloat32(from).InexactFloat64()))
-			default:
-				float32Value = types.Float32Value(float32(vFrom.Float()))
-			}
+			from := vFrom.Interface().(float32)
+			float32Value = types.Float32Value(float32(decimal.NewFromFloat32(from).InexactFloat64()))
 		}
 		v, d := tTo.ValueFromFloat32(ctx, float32Value)
 		diags.Append(d...)
@@ -542,11 +552,11 @@ func (flattener autoFlattener) pointer(ctx context.Context, sourcePath path.Path
 		return diags
 
 	case reflect.Float64:
-		diags.Append(flattener.float64(ctx, vElem, vFrom.Type(), isNilFrom, tTo, vTo)...)
+		diags.Append(flattener.float64(ctx, vElem, vFrom.Type(), isNilFrom, tTo, vTo, fieldOpts)...)
 		return diags
 
 	case reflect.Float32:
-		diags.Append(flattener.float32(ctx, vElem, isNilFrom, tTo, vTo)...)
+		diags.Append(flattener.float32(ctx, vElem, isNilFrom, tTo, vTo, fieldOpts)...)
 		return diags
 
 	case reflect.Int64:
