@@ -1203,6 +1203,101 @@ func TestFlattenGeneric(t *testing.T) {
 	runAutoFlattenTestCases(t, testCases)
 }
 
+func TestFlattenBool(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]autoFlexTestCases{
+		"Bool to bool": {
+			"true": {
+				Source: awsSingleBoolValue{
+					Field1: true,
+				},
+				Target: &tfSingleBoolField{},
+				WantTarget: &tfSingleBoolField{
+					Field1: types.BoolValue(true),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleBoolValue](), reflect.TypeFor[*tfSingleBoolField]()),
+					infoConverting(reflect.TypeFor[awsSingleBoolValue](), reflect.TypeFor[*tfSingleBoolField]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleBoolValue](), "Field1", reflect.TypeFor[*tfSingleBoolField]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[bool](), "Field1", reflect.TypeFor[types.Bool]()),
+				},
+			},
+			"false": {
+				Source: awsSingleBoolValue{
+					Field1: false,
+				},
+				Target: &tfSingleBoolField{},
+				WantTarget: &tfSingleBoolField{
+					Field1: types.BoolValue(false),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleBoolValue](), reflect.TypeFor[*tfSingleBoolField]()),
+					infoConverting(reflect.TypeFor[awsSingleBoolValue](), reflect.TypeFor[*tfSingleBoolField]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleBoolValue](), "Field1", reflect.TypeFor[*tfSingleBoolField]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[bool](), "Field1", reflect.TypeFor[types.Bool]()),
+				},
+			},
+		},
+
+		"*bool to String": {
+			"true": {
+				Source: awsSingleBoolPointer{
+					Field1: aws.Bool(true),
+				},
+				Target: &tfSingleBoolField{},
+				WantTarget: &tfSingleBoolField{
+					Field1: types.BoolValue(true),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleBoolPointer](), reflect.TypeFor[*tfSingleBoolField]()),
+					infoConverting(reflect.TypeFor[awsSingleBoolPointer](), reflect.TypeFor[*tfSingleBoolField]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleBoolPointer](), "Field1", reflect.TypeFor[*tfSingleBoolField]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[*bool](), "Field1", reflect.TypeFor[types.Bool]()),
+				},
+			},
+			"false": {
+				Source: awsSingleBoolPointer{
+					Field1: aws.Bool(false),
+				},
+				Target: &tfSingleBoolField{},
+				WantTarget: &tfSingleBoolField{
+					Field1: types.BoolValue(false),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleBoolPointer](), reflect.TypeFor[*tfSingleBoolField]()),
+					infoConverting(reflect.TypeFor[awsSingleBoolPointer](), reflect.TypeFor[*tfSingleBoolField]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleBoolPointer](), "Field1", reflect.TypeFor[*tfSingleBoolField]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[*bool](), "Field1", reflect.TypeFor[types.Bool]()),
+				},
+			},
+			"null": {
+				Source: awsSingleBoolPointer{
+					Field1: nil,
+				},
+				Target: &tfSingleBoolField{},
+				WantTarget: &tfSingleBoolField{
+					Field1: types.BoolNull(),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleBoolPointer](), reflect.TypeFor[*tfSingleBoolField]()),
+					infoConverting(reflect.TypeFor[awsSingleBoolPointer](), reflect.TypeFor[*tfSingleBoolField]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleBoolPointer](), "Field1", reflect.TypeFor[*tfSingleBoolField]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[*bool](), "Field1", reflect.TypeFor[types.Bool]()),
+				},
+			},
+		},
+	}
+
+	for testName, cases := range testCases {
+		t.Run(testName, func(t *testing.T) {
+			t.Parallel()
+
+			runAutoFlattenTestCases(t, cases)
+		})
+	}
+}
+
 func TestFlattenFloat64(t *testing.T) {
 	t.Parallel()
 
