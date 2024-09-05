@@ -11,8 +11,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/quicksight"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
@@ -438,12 +438,13 @@ func sweepVPCConnections(region string) error {
 }
 
 func skipSweepError(err error) bool {
-	if errs.IsA[*awstypes.UnsupportedUserEditionException](err) {
+	if tfawserr.ErrCodeContains(err, "UnsupportedUserEditionException") {
 		return true
 	}
-	if errs.IsAErrorMessageContains[*awstypes.ResourceNotFoundException](err, "Directory information for account") ||
-		errs.IsAErrorMessageContains[*awstypes.ResourceNotFoundException](err, "Account information for account") ||
-		errs.IsAErrorMessageContains[*awstypes.ResourceNotFoundException](err, "is not signed up with QuickSight") {
+
+	if tfawserr.ErrMessageContains(err, "ResourceNotFoundException", "Directory information for account") ||
+		tfawserr.ErrMessageContains(err, "ResourceNotFoundException", "Account information for account") ||
+		tfawserr.ErrMessageContains(err, "ResourceNotFoundException", "is not signed up with QuickSight") {
 		return true
 	}
 
@@ -451,10 +452,8 @@ func skipSweepError(err error) bool {
 }
 
 func skipSweepUsersError(err error) bool {
-	if errs.IsAErrorMessageContains[*awstypes.ResourceNotFoundException](err, "not signed up with QuickSight") {
-		return true
-	}
-	if errs.IsAErrorMessageContains[*awstypes.ResourceNotFoundException](err, "Namespace default not found in account") {
+	if tfawserr.ErrMessageContains(err, "ResourceNotFoundException", "is not signed up with QuickSight") ||
+		tfawserr.ErrMessageContains(err, "ResourceNotFoundException", "Namespace default not found in account") {
 		return true
 	}
 
