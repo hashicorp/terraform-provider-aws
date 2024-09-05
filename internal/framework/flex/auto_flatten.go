@@ -328,11 +328,24 @@ func (flattener autoFlattener) float32(ctx context.Context, vFrom reflect.Value,
 		//
 		// float32/float64 -> types.Float32.
 		//
-		float32Value := types.Float32Null()
-		if !isNullFrom {
-			// Avoid loss of equivalence.
-			from := vFrom.Interface().(float32)
-			float32Value = types.Float32Value(float32(decimal.NewFromFloat32(from).InexactFloat64()))
+		var float32Value types.Float32
+		if fieldOpts.legacy {
+			tflog.SubsystemDebug(ctx, subsystemName, "Using legacy flattener")
+			if isNullFrom {
+				float32Value = types.Float32Value(0)
+			} else {
+				// Avoid loss of equivalence.
+				from := vFrom.Interface().(float32)
+				float32Value = types.Float32Value(float32(decimal.NewFromFloat32(from).InexactFloat64()))
+			}
+		} else {
+			if isNullFrom {
+				float32Value = types.Float32Null()
+			} else {
+				// Avoid loss of equivalence.
+				from := vFrom.Interface().(float32)
+				float32Value = types.Float32Value(float32(decimal.NewFromFloat32(from).InexactFloat64()))
+			}
 		}
 		v, d := tTo.ValueFromFloat32(ctx, float32Value)
 		diags.Append(d...)

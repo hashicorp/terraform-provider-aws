@@ -1713,6 +1713,57 @@ func TestFlattenFloat32(t *testing.T) {
 			},
 		},
 
+		"legacy *float32 to Float32": {
+			"value": {
+				Source: awsSingleFloat32Pointer{
+					Field1: aws.Float32(42),
+				},
+				Target: &tfSingleFloat32FieldLegacy{},
+				WantTarget: &tfSingleFloat32FieldLegacy{
+					Field1: types.Float32Value(42),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleFloat32Pointer](), reflect.TypeFor[*tfSingleFloat32FieldLegacy]()),
+					infoConverting(reflect.TypeFor[awsSingleFloat32Pointer](), reflect.TypeFor[*tfSingleFloat32FieldLegacy]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleFloat32Pointer](), "Field1", reflect.TypeFor[*tfSingleFloat32FieldLegacy]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[*float32](), "Field1", reflect.TypeFor[types.Float32]()),
+					debugUsingLegacyFlattener("Field1", reflect.TypeFor[*float32](), "Field1", reflect.TypeFor[types.Float32]()),
+				},
+			},
+			"zero": {
+				Source: awsSingleFloat32Pointer{
+					Field1: aws.Float32(0),
+				},
+				Target: &tfSingleFloat32FieldLegacy{},
+				WantTarget: &tfSingleFloat32FieldLegacy{
+					Field1: types.Float32Value(0),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleFloat32Pointer](), reflect.TypeFor[*tfSingleFloat32FieldLegacy]()),
+					infoConverting(reflect.TypeFor[awsSingleFloat32Pointer](), reflect.TypeFor[*tfSingleFloat32FieldLegacy]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleFloat32Pointer](), "Field1", reflect.TypeFor[*tfSingleFloat32FieldLegacy]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[*float32](), "Field1", reflect.TypeFor[types.Float32]()),
+					debugUsingLegacyFlattener("Field1", reflect.TypeFor[*float32](), "Field1", reflect.TypeFor[types.Float32]()),
+				},
+			},
+			"null": {
+				Source: awsSingleFloat32Pointer{
+					Field1: nil,
+				},
+				Target: &tfSingleFloat32FieldLegacy{},
+				WantTarget: &tfSingleFloat32FieldLegacy{
+					Field1: types.Float32Value(0),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSingleFloat32Pointer](), reflect.TypeFor[*tfSingleFloat32FieldLegacy]()),
+					infoConverting(reflect.TypeFor[awsSingleFloat32Pointer](), reflect.TypeFor[*tfSingleFloat32FieldLegacy]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSingleFloat32Pointer](), "Field1", reflect.TypeFor[*tfSingleFloat32FieldLegacy]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[*float32](), "Field1", reflect.TypeFor[types.Float32]()),
+					debugUsingLegacyFlattener("Field1", reflect.TypeFor[*float32](), "Field1", reflect.TypeFor[types.Float32]()),
+				},
+			},
+		},
+
 		// float64 cannot be flattened to Float32
 		"float64 to Float32": {
 			"value": {
