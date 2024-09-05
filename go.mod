@@ -221,7 +221,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/servicediscovery v1.31.7
 	github.com/aws/aws-sdk-go-v2/service/servicequotas v1.23.7
 	github.com/aws/aws-sdk-go-v2/service/ses v1.26.2
-	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.33.1
+	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.33.2
 	github.com/aws/aws-sdk-go-v2/service/sfn v1.31.1
 	github.com/aws/aws-sdk-go-v2/service/shield v1.27.5
 	github.com/aws/aws-sdk-go-v2/service/signer v1.24.5
