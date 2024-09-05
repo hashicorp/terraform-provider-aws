@@ -278,6 +278,74 @@ func TestAccACMCertificateDataSource_byDomainNoMatch(t *testing.T) {
 	})
 }
 
+func TestAccACMCertificateDataSource_byDomainMultiple(t *testing.T) {
+	ctx := acctest.Context(t)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048) // ListCertificates: Default filtering returns only RSA_2048 certificates.
+	domain := acctest.RandomDomain().String()
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, domain)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccCertificateDataSourceConfig_byDomainMultiple(domain, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)),
+				ExpectError: regexache.MustCompile(`2 matching ACM Certificates found`),
+			},
+		},
+	})
+}
+
+func TestAccACMCertificateDataSource_byDomainAndTags(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_acm_certificate.test"
+	dataSourceName := "data.aws_acm_certificate.test"
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048) // ListCertificates: Default filtering returns only RSA_2048 certificates.
+	domain := acctest.RandomDomain().String()
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, domain)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCertificateDataSourceConfig_byDomainAndTags(domain, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrDomain, domain),
+				),
+			},
+		},
+	})
+}
+
+func TestAccACMCertificateDataSource_byDomainAndStatuses(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_acm_certificate.test"
+	dataSourceName := "data.aws_acm_certificate.test"
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048) // ListCertificates: Default filtering returns only RSA_2048 certificates.
+	domain := acctest.RandomDomain().String()
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, domain)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCertificateDataSourceConfig_byDomainAndStatuses(domain, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrDomain, domain),
+				),
+			},
+		},
+	})
+}
+
 func TestAccACMCertificateDataSource_byTags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acm_certificate.test"
@@ -420,6 +488,68 @@ data "aws_acm_certificate" "test" {
 }
 `, domain, certificate, key)
 }
+
+func testAccCertificateDataSourceConfig_byDomainMultiple(domain, certificate, key string) string {
+	return fmt.Sprintf(`
+resource "aws_acm_certificate" "test1" {
+  certificate_body = "%[2]s"
+  private_key      = "%[3]s"
+}
+
+resource "aws_acm_certificate" "test2" {
+  certificate_body = "%[2]s"
+  private_key      = "%[3]s"
+}
+
+data "aws_acm_certificate" "test" {
+  domain = %[1]q
+
+  depends_on = [aws_acm_certificate.test1, aws_acm_certificate.test2]
+}
+`, domain, certificate, key)
+}
+
+func testAccCertificateDataSourceConfig_byDomainAndTags(domain, rName, certificate, key string) string {
+	return fmt.Sprintf(`
+resource "aws_acm_certificate" "test" {
+  certificate_body = "%[3]s"
+  private_key      = "%[4]s"
+
+  tags = {
+    Key1 = "Value1"
+    Key2 = "Value2"
+    Name = %[2]q
+  }
+}
+
+data "aws_acm_certificate" "test" {
+  domain = %[1]q
+
+  tags = {
+    Key1 = "Value1"
+    Name = aws_acm_certificate.test.tags["Name"]
+  }
+}
+`, domain, rName, certificate, key)
+}
+
+func testAccCertificateDataSourceConfig_byDomainAndStatuses(domain, certificate, key string) string {
+	return fmt.Sprintf(`
+resource "aws_acm_certificate" "test" {
+  certificate_body = "%[2]s"
+  private_key      = "%[3]s"
+}
+
+data "aws_acm_certificate" "test" {
+  domain   = %[1]q
+  statuses = ["EXPIRED", "ISSUED"]
+
+  depends_on = [aws_acm_certificate.test]
+}
+`, domain, certificate, key)
+}
+
+//   statuses = [%[2]q]
 
 func testAccCertificateDataSourceConfig_byTags(rName, certificate, key string) string {
 	return fmt.Sprintf(`
