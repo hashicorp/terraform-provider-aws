@@ -549,11 +549,9 @@ func expandCoreNetworkPolicySegmentActions(tfList []interface{}) ([]*coreNetwork
 							apiObject.EdgeSets = edgeSets
 						}
 
-						if v, ok := tfMap["use_edge"]; ok {
-							apiObject.UseEdgeLocation = v.(string)
-						}
-
 						if v, ok := tfMap["use_edge_location"]; ok {
+							apiObject.UseEdgeLocation = v.(string)
+						} else if v, ok := tfMap["use_edge"]; ok {
 							apiObject.UseEdgeLocation = v.(string)
 						}
 
