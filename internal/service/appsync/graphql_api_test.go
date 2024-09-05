@@ -1416,11 +1416,11 @@ func testAccGraphQLAPI_apiType(t *testing.T) {
 		CheckDestroy:             testAccCheckGraphQLAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGraphQLAPIConfig_apiType(rName, "MERGED"),
+				Config: testAccGraphQLAPIConfig_apiType(rName, string(awstypes.GraphQLApiTypeMerged)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGraphQLAPIExists(ctx, resourceName, &api1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "api_type", "MERGED"),
+					resource.TestCheckResourceAttr(resourceName, "api_type", string(awstypes.GraphQLApiTypeMerged)),
 				),
 			},
 			{
