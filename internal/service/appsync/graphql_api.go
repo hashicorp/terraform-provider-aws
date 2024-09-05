@@ -131,15 +131,16 @@ func resourceGraphQLAPI() *schema.Resource {
 					},
 				},
 			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"api_type": {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.GraphQLApiType](),
 				ForceNew:         true,
+				Default:          awstypes.GraphQLApiTypeGraphql,
+			},
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"authentication_type": {
 				Type:             schema.TypeString,

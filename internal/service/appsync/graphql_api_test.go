@@ -1947,9 +1947,9 @@ data "aws_iam_policy_document" "test" {
 }
 
 resource "aws_appsync_graphql_api" "test" {
-  authentication_type = "API_KEY"
-  name                = %[1]q
-  api_type            = %[2]q
+  authentication_type           = "API_KEY"
+  name                          = %[1]q
+  api_type                      = %[2]q
   merged_api_execution_role_arn = aws_iam_role.test.arn
 }
 `, rName, apiType)
