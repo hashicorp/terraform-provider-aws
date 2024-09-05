@@ -1,0 +1,7 @@
+```release-note:bug
+data-source/aws_eks_cluster: The cluster `created_at` timestamp should be a Unix epoch time stamp in seconds
+```
+
+```release-note:bug
+resource/aws_eks_cluster: The cluster `created_at` timestamp should be a Unix epoch time stamp in seconds
+```
