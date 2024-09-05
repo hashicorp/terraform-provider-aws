@@ -106,8 +106,9 @@ func ResourceFleet() *schema.Resource {
 							ValidateFunc: validation.IntAtLeast(1),
 						},
 						"scaling_type": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[types.FleetScalingType](),
 						},
 						"target_tracking_scaling_configs": {
 							Type:     schema.TypeList,
