@@ -223,7 +223,7 @@ func resourceCluster() *schema.Resource {
 				Type:          schema.TypeList,
 				MaxItems:      1,
 				Optional:      true,
-				ConflictsWith: []string{"encryption_config", "kubernetes_network_config"},
+				ConflictsWith: []string{"encryption_config", "kubernetes_network_config", "remote_network_config"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"control_plane_instance_type": {
@@ -259,6 +259,64 @@ func resourceCluster() *schema.Resource {
 			"platform_version": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"remote_network_config": {
+				Type:          schema.TypeList,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				MaxItems:      1,
+				ConflictsWith: []string{"outpost_config"},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"remote_node_networks": {
+							Type:     schema.TypeList,
+							MinItems: 1,
+							MaxItems: 1,
+							Required: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"cidrs": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Computed: true,
+										MinItems: 1,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+											ValidateFunc: validation.All(
+												verify.ValidIPv4CIDRNetworkAddress,
+												validation.StringMatch(regexache.MustCompile(`^(10|172\.(1[6-9]|2[0-9]|3[0-1])|192\.168)\..*`), "must be within 10.0.0.0/8, 172.16.0.0/12, or 192.168.0.0/16"),
+											),
+										},
+									},
+								},
+							},
+						},
+						"remote_pod_networks": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"cidrs": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Computed: true,
+										MinItems: 1,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+											ValidateFunc: validation.All(
+												verify.ValidIPv4CIDRNetworkAddress,
+												validation.StringMatch(regexache.MustCompile(`^(10|172\.(1[6-9]|2[0-9]|3[0-1])|192\.168)\..*`), "must be within 10.0.0.0/8, 172.16.0.0/12, or 192.168.0.0/16"),
+											),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 			names.AttrRoleARN: {
 				Type:         schema.TypeString,
@@ -386,6 +444,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.OutpostConfig = expandOutpostConfigRequest(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("remote_network_config"); ok {
+		input.RemoteNetworkConfig = expandRemoteNetworkConfigRequest(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("upgrade_policy"); ok {
 		input.UpgradePolicy = expandUpgradePolicy(v.([]interface{}))
 	}
@@ -499,6 +561,9 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "setting outpost_config: %s", err)
 	}
 	d.Set("platform_version", cluster.PlatformVersion)
+	if err := d.Set("remote_network_config", flattenRemoteNetworkConfigResponse(cluster.RemoteNetworkConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting remote_network_config: %s", err)
+	}
 	d.Set(names.AttrRoleARN, cluster.RoleArn)
 	d.Set(names.AttrStatus, cluster.Status)
 	if err := d.Set("upgrade_policy", flattenUpgradePolicy(cluster.UpgradePolicy)); err != nil {
@@ -1085,6 +1150,73 @@ func expandKubernetesNetworkConfigRequest(tfList []interface{}) *types.Kubernete
 	return apiObject
 }
 
+func expandRemoteNetworkConfigRequest(tfList []interface{}) *types.RemoteNetworkConfigRequest {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	apiObject := &types.RemoteNetworkConfigRequest{
+		RemoteNodeNetworks: expandRemoteNodeNetworks(tfMap["remote_node_networks"].([]interface{})),
+	}
+
+	if v, ok := tfMap["remote_pod_networks"].([]interface{}); ok {
+		apiObject.RemotePodNetworks = expandRemotePodNetworks(v)
+	}
+
+	return apiObject
+}
+
+func expandRemoteNodeNetworks(tfList []interface{}) []types.RemoteNodeNetwork {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []types.RemoteNodeNetwork
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		apiObject := types.RemoteNodeNetwork{
+			Cidrs: flex.ExpandStringValueSet(tfMap["cidrs"].(*schema.Set)),
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandRemotePodNetworks(tfList []interface{}) []types.RemotePodNetwork {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []types.RemotePodNetwork
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		apiObject := types.RemotePodNetwork{
+			Cidrs: flex.ExpandStringValueSet(tfMap["cidrs"].(*schema.Set)),
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
 func expandLogging(vEnabledLogTypes *schema.Set) *types.Logging {
 	allLogTypes := enum.EnumValues[types.LogType]()
 	enabledLogTypes := flex.ExpandStringyValueSet[types.LogType](vEnabledLogTypes)
@@ -1288,6 +1420,55 @@ func flattenOutpostConfigResponse(apiObject *types.OutpostConfigResponse) []inte
 	}
 
 	return []interface{}{tfMap}
+}
+
+func flattenRemoteNetworkConfigResponse(apiObject *types.RemoteNetworkConfigResponse) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"remote_node_networks": flattenRemoteNodeNetwork(apiObject.RemoteNodeNetworks),
+		"remote_pod_networks":  flattenRemotePodNetwork(apiObject.RemotePodNetworks),
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenRemoteNodeNetwork(apiObjects []types.RemoteNodeNetwork) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]interface{}{
+			"cidrs": flex.FlattenStringValueList(apiObject.Cidrs),
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenRemotePodNetwork(apiObjects []types.RemotePodNetwork) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]interface{}{
+			"cidrs": flex.FlattenStringValueList(apiObject.Cidrs),
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
 }
 
 func flattenControlPlanePlacementResponse(apiObject *types.ControlPlanePlacementResponse) []interface{} {

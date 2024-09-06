@@ -65,7 +65,7 @@ func TestAccEKSCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "outpost_config.#", "0"),
 					resource.TestMatchResourceAttr(resourceName, "platform_version", regexache.MustCompile(`^eks\.\d+$`)),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.cluster", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.ClusterStatusActive)),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestMatchResourceAttr(resourceName, names.AttrVersion, regexache.MustCompile(`^\d+\.\d+$`)),
@@ -917,6 +917,39 @@ func TestAccEKSCluster_Outpost_placement(t *testing.T) {
 	})
 }
 
+func TestAccEKSCluster_RemoteNetwork(t *testing.T) {
+	ctx := acctest.Context(t)
+	var cluster types.Cluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_eks_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_remoteNetwork(rName, `"10.90.0.0/22"`, `"10.80.0.0/22"`),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "remote_network_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "remote_network_config.0.remote_node_networks.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "remote_network_config.0.remote_node_networks.0.cidrs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "remote_network_config.0.remote_pod_networks.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "remote_network_config.0.remote_pod_networks.0.cidrs.#", "1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
+			},
+		},
+	})
+}
+
 func TestAccEKSCluster_upgradePolicy(t *testing.T) {
 	ctx := acctest.Context(t)
 	var cluster types.Cluster
@@ -1086,7 +1119,7 @@ func testAccClusterConfig_base(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
-resource "aws_iam_role" "test" {
+resource "aws_iam_role" "cluster" {
   name = %[1]q
 
   assume_role_policy = <<POLICY
@@ -1105,9 +1138,9 @@ resource "aws_iam_role" "test" {
 POLICY
 }
 
-resource "aws_iam_role_policy_attachment" "test-AmazonEKSClusterPolicy" {
+resource "aws_iam_role_policy_attachment" "cluster_AmazonEKSClusterPolicy" {
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEKSClusterPolicy"
-  role       = aws_iam_role.test.name
+  role       = aws_iam_role.cluster.name
 }
 
 resource "aws_vpc" "test" {
@@ -1143,13 +1176,13 @@ func testAccClusterConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
-  role_arn = aws_iam_role.test.arn
+  role_arn = aws_iam_role.cluster.arn
 
   vpc_config {
     subnet_ids = aws_subnet.test[*].id
   }
 
-  depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
+  depends_on = [aws_iam_role_policy_attachment.cluster_AmazonEKSClusterPolicy]
 }
 `, rName))
 }
@@ -1158,7 +1191,7 @@ func testAccClusterConfig_accessConfig(rName string, authenticationMode types.Au
 	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
-  role_arn = aws_iam_role.test.arn
+  role_arn = aws_iam_role.cluster.arn
 
   access_config {
     bootstrap_cluster_creator_admin_permissions = true
@@ -1169,7 +1202,7 @@ resource "aws_eks_cluster" "test" {
     subnet_ids = aws_subnet.test[*].id
   }
 
-  depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
+  depends_on = [aws_iam_role_policy_attachment.cluster_AmazonEKSClusterPolicy]
 }
 `, rName, authenticationMode))
 }
@@ -1178,14 +1211,14 @@ func testAccClusterConfig_bootstrapSelfManagedAddons(rName string, bootstrapSelf
 	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
   name                          = %[1]q
-  role_arn                      = aws_iam_role.test.arn
+  role_arn                      = aws_iam_role.cluster.arn
   bootstrap_self_managed_addons = %[2]t
 
   vpc_config {
     subnet_ids = aws_subnet.test[*].id
   }
 
-  depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
+  depends_on = [aws_iam_role_policy_attachment.cluster_AmazonEKSClusterPolicy]
 }
 `, rName, bootstrapSelfManagedAddons))
 }
@@ -1194,14 +1227,14 @@ func testAccClusterConfig_version(rName, version string) string {
 	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
-  role_arn = aws_iam_role.test.arn
+  role_arn = aws_iam_role.cluster.arn
   version  = %[2]q
 
   vpc_config {
     subnet_ids = aws_subnet.test[*].id
   }
 
-  depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
+  depends_on = [aws_iam_role_policy_attachment.cluster_AmazonEKSClusterPolicy]
 }
 `, rName, version))
 }
@@ -1210,14 +1243,14 @@ func testAccClusterConfig_logging(rName string, logTypes []string) string {
 	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
   name                      = %[1]q
-  role_arn                  = aws_iam_role.test.arn
+  role_arn                  = aws_iam_role.cluster.arn
   enabled_cluster_log_types = ["%[2]v"]
 
   vpc_config {
     subnet_ids = aws_subnet.test[*].id
   }
 
-  depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
+  depends_on = [aws_iam_role_policy_attachment.cluster_AmazonEKSClusterPolicy]
 }
 `, rName, strings.Join(logTypes, "\", \"")))
 }
@@ -1226,7 +1259,7 @@ func testAccClusterConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
-  role_arn = aws_iam_role.test.arn
+  role_arn = aws_iam_role.cluster.arn
 
   tags = {
     %[2]q = %[3]q
@@ -1236,7 +1269,7 @@ resource "aws_eks_cluster" "test" {
     subnet_ids = aws_subnet.test[*].id
   }
 
-  depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
+  depends_on = [aws_iam_role_policy_attachment.cluster_AmazonEKSClusterPolicy]
 }
 `, rName, tagKey1, tagValue1))
 }
@@ -1245,7 +1278,7 @@ func testAccClusterConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 st
 	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
-  role_arn = aws_iam_role.test.arn
+  role_arn = aws_iam_role.cluster.arn
 
   tags = {
     %[2]q = %[3]q
@@ -1256,7 +1289,7 @@ resource "aws_eks_cluster" "test" {
     subnet_ids = aws_subnet.test[*].id
   }
 
-  depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
+  depends_on = [aws_iam_role_policy_attachment.cluster_AmazonEKSClusterPolicy]
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
@@ -1270,7 +1303,7 @@ resource "aws_kms_key" "test" {
 
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
-  role_arn = aws_iam_role.test.arn
+  role_arn = aws_iam_role.cluster.arn
 
   encryption_config {
     resources = ["secrets"]
@@ -1284,7 +1317,7 @@ resource "aws_eks_cluster" "test" {
     subnet_ids = aws_subnet.test[*].id
   }
 
-  depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
+  depends_on = [aws_iam_role_policy_attachment.cluster_AmazonEKSClusterPolicy]
 }
 `, rName))
 }
@@ -1298,7 +1331,7 @@ resource "aws_kms_key" "test" {
 
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
-  role_arn = aws_iam_role.test.arn
+  role_arn = aws_iam_role.cluster.arn
   version  = %[2]q
 
   encryption_config {
@@ -1313,7 +1346,7 @@ resource "aws_eks_cluster" "test" {
     subnet_ids = aws_subnet.test[*].id
   }
 
-  depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
+  depends_on = [aws_iam_role_policy_attachment.cluster_AmazonEKSClusterPolicy]
 }
 `, rName, version))
 }
@@ -1330,14 +1363,14 @@ resource "aws_security_group" "test" {
 
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
-  role_arn = aws_iam_role.test.arn
+  role_arn = aws_iam_role.cluster.arn
 
   vpc_config {
     security_group_ids = [aws_security_group.test.id]
     subnet_ids         = aws_subnet.test[*].id
   }
 
-  depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
+  depends_on = [aws_iam_role_policy_attachment.cluster_AmazonEKSClusterPolicy]
 }
 `, rName))
 }
@@ -1378,14 +1411,14 @@ resource "aws_subnet" "new" {
 
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
-  role_arn = aws_iam_role.test.arn
+  role_arn = aws_iam_role.cluster.arn
 
   vpc_config {
     security_group_ids = [aws_security_group.test.id, aws_security_group.test2.id]
     subnet_ids         = aws_subnet.new[*].id
   }
 
-  depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
+  depends_on = [aws_iam_role_policy_attachment.cluster_AmazonEKSClusterPolicy]
 }
 `, rName))
 }
@@ -1394,7 +1427,7 @@ func testAccClusterConfig_vpcEndpointPrivateAccess(rName string, endpointPrivate
 	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
-  role_arn = aws_iam_role.test.arn
+  role_arn = aws_iam_role.cluster.arn
 
   vpc_config {
     endpoint_private_access = %[2]t
@@ -1402,7 +1435,7 @@ resource "aws_eks_cluster" "test" {
     subnet_ids              = aws_subnet.test[*].id
   }
 
-  depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
+  depends_on = [aws_iam_role_policy_attachment.cluster_AmazonEKSClusterPolicy]
 }
 `, rName, endpointPrivateAccess))
 }
@@ -1411,7 +1444,7 @@ func testAccClusterConfig_vpcEndpointPublicAccess(rName string, endpointPublicAc
 	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
-  role_arn = aws_iam_role.test.arn
+  role_arn = aws_iam_role.cluster.arn
 
   vpc_config {
     endpoint_private_access = true
@@ -1419,7 +1452,7 @@ resource "aws_eks_cluster" "test" {
     subnet_ids              = aws_subnet.test[*].id
   }
 
-  depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
+  depends_on = [aws_iam_role_policy_attachment.cluster_AmazonEKSClusterPolicy]
 }
 `, rName, endpointPublicAccess))
 }
@@ -1428,7 +1461,7 @@ func testAccClusterConfig_vpcPublicAccessCIDRs(rName string, publicAccessCidr st
 	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
-  role_arn = aws_iam_role.test.arn
+  role_arn = aws_iam_role.cluster.arn
 
   vpc_config {
     endpoint_private_access = true
@@ -1437,7 +1470,7 @@ resource "aws_eks_cluster" "test" {
     subnet_ids              = aws_subnet.test[*].id
   }
 
-  depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
+  depends_on = [aws_iam_role_policy_attachment.cluster_AmazonEKSClusterPolicy]
 }
 `, rName, publicAccessCidr))
 }
@@ -1446,7 +1479,7 @@ func testAccClusterConfig_networkServiceIPv4CIDR(rName string, serviceIpv4Cidr s
 	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
-  role_arn = aws_iam_role.test.arn
+  role_arn = aws_iam_role.cluster.arn
 
   vpc_config {
     subnet_ids = aws_subnet.test[*].id
@@ -1456,7 +1489,7 @@ resource "aws_eks_cluster" "test" {
     service_ipv4_cidr = %[2]s
   }
 
-  depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
+  depends_on = [aws_iam_role_policy_attachment.cluster_AmazonEKSClusterPolicy]
 }
 `, rName, serviceIpv4Cidr))
 }
@@ -1465,7 +1498,7 @@ func testAccClusterConfig_networkIPFamily(rName string, ipFamily string) string 
 	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
-  role_arn = aws_iam_role.test.arn
+  role_arn = aws_iam_role.cluster.arn
 
   vpc_config {
     subnet_ids = aws_subnet.test[*].id
@@ -1475,7 +1508,7 @@ resource "aws_eks_cluster" "test" {
     ip_family = %[2]s
   }
 
-  depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
+  depends_on = [aws_iam_role_policy_attachment.cluster_AmazonEKSClusterPolicy]
 }
 `, rName, ipFamily))
 }
@@ -1499,7 +1532,7 @@ data "aws_subnets" test {
 
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
-  role_arn = data.aws_iam_role.test.arn
+  role_arn = data.aws_iam_role.cluster.arn
 
   outpost_config {
     control_plane_instance_type = "m5d.large"
@@ -1541,7 +1574,7 @@ resource "aws_placement_group" "test" {
 
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
-  role_arn = data.aws_iam_role.test.arn
+  role_arn = data.aws_iam_role.cluster.arn
 
   outpost_config {
     control_plane_instance_type = "m5d.large"
@@ -1560,11 +1593,41 @@ resource "aws_eks_cluster" "test" {
 `, rName))
 }
 
+func testAccClusterConfig_remoteNetwork(rName, nodeCIDR, podCIDR string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
+resource "aws_eks_cluster" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.cluster.arn
+
+  access_config {
+    # Either "API" or "API_AND_CONFIG_MAP" is required with remote network config
+    authentication_mode                         = "API"
+    bootstrap_cluster_creator_admin_permissions = true
+  }
+
+  remote_network_config {
+    remote_node_networks {
+      cidrs = ["10.90.0.0/22"]
+    }
+    remote_pod_networks {
+      cidrs = ["10.80.0.0/22"]
+    }
+  }
+
+  vpc_config {
+    subnet_ids = aws_subnet.test[*].id
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.cluster_AmazonEKSClusterPolicy]
+}
+`, rName, nodeCIDR, podCIDR))
+}
+
 func testAccClusterConfig_upgradePolicy(rName, supportType string) string {
 	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
-  role_arn = aws_iam_role.test.arn
+  role_arn = aws_iam_role.cluster.arn
 
   vpc_config {
     subnet_ids = aws_subnet.test[*].id
@@ -1574,7 +1637,7 @@ resource "aws_eks_cluster" "test" {
     support_type = %[2]q
   }
 
-  depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
+  depends_on = [aws_iam_role_policy_attachment.cluster_AmazonEKSClusterPolicy]
 }
 `, rName, supportType))
 }
@@ -1583,7 +1646,7 @@ func testAccClusterConfig_zonalShiftConfig(rName string, enabled bool) string {
 	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
-  role_arn = aws_iam_role.test.arn
+  role_arn = aws_iam_role.cluster.arn
 
   vpc_config {
     subnet_ids = aws_subnet.test[*].id
@@ -1593,7 +1656,7 @@ resource "aws_eks_cluster" "test" {
     enabled = %[2]t
   }
 
-  depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
+  depends_on = [aws_iam_role_policy_attachment.cluster_AmazonEKSClusterPolicy]
 }
 `, rName, enabled))
 }
