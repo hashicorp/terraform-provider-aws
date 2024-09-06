@@ -48,7 +48,7 @@ func dataSourceCertificate() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				AtLeastOneOf: []string{"domain", names.AttrTags},
+				AtLeastOneOf: []string{names.AttrDomain, names.AttrTags},
 			},
 			"key_types": {
 				Type:     schema.TypeSet,
@@ -77,7 +77,7 @@ func dataSourceCertificate() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				Elem:         &schema.Schema{Type: schema.TypeString},
-				AtLeastOneOf: []string{"domain", names.AttrTags},
+				AtLeastOneOf: []string{names.AttrDomain, names.AttrTags},
 			},
 			"types": {
 				Type:     schema.TypeList,
@@ -108,7 +108,7 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	f := tfslices.PredicateTrue[*awstypes.CertificateSummary]()
-	if domain, ok := d.GetOk("domain"); ok {
+	if domain, ok := d.GetOk(names.AttrDomain); ok {
 		f = func(v *awstypes.CertificateSummary) bool {
 			return aws.ToString(v.DomainName) == domain
 		}
