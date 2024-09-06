@@ -143,13 +143,9 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 	var certificates []*awstypes.CertificateDetail
 	for _, certificateSummary := range certificateSummaries {
 		certificateARN := aws.ToString(certificateSummary.CertificateArn)
-		input := &acm.DescribeCertificateInput{
-			CertificateArn: aws.String(certificateARN),
-		}
+		certificate, err := findCertificateByARN(ctx, conn, certificateARN)
 
-		certificate, err := findCertificate(ctx, conn, input)
-
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
