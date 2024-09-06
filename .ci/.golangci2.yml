@@ -79,6 +79,7 @@ linters-settings:
       - schema.DefaultTimeout
       - validation.*
       # Terraform Plugin Framework
+      - int32validator.*
       - int64validator.*
       - listvalidator.*
       - setvalidator.*
