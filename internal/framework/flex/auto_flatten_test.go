@@ -332,7 +332,7 @@ func TestFlatten(t *testing.T) {
 				infoConvertingWithPath("Field12", reflect.TypeFor[*bool](), "Field12", reflect.TypeFor[types.Bool]()),
 			},
 		},
-		"zero value slice or map of primtive types Source and Collection of primtive types Target": {
+		"zero value slice or map of primitive types Source and Collection of primtive types Target": {
 			Source: &awsCollectionsOfPrimitiveElements{},
 			Target: &tfCollectionsOfPrimitiveElements{},
 			WantTarget: &tfCollectionsOfPrimitiveElements{
@@ -348,8 +348,10 @@ func TestFlatten(t *testing.T) {
 				infoConverting(reflect.TypeFor[awsCollectionsOfPrimitiveElements](), reflect.TypeFor[*tfCollectionsOfPrimitiveElements]()),
 				traceMatchedFields("Field1", reflect.TypeFor[awsCollectionsOfPrimitiveElements](), "Field1", reflect.TypeFor[*tfCollectionsOfPrimitiveElements]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[[]string](), "Field1", reflect.TypeFor[types.List]()),
+				traceFlatteningWithListNull("Field1", reflect.TypeFor[[]string](), "Field1", reflect.TypeFor[types.List]()),
 				traceMatchedFields("Field2", reflect.TypeFor[awsCollectionsOfPrimitiveElements](), "Field2", reflect.TypeFor[*tfCollectionsOfPrimitiveElements]()),
 				infoConvertingWithPath("Field2", reflect.TypeFor[[]*string](), "Field2", reflect.TypeFor[types.List]()),
+				traceFlatteningWithListNull("Field2", reflect.TypeFor[[]*string](), "Field2", reflect.TypeFor[types.List]()),
 				traceMatchedFields("Field3", reflect.TypeFor[awsCollectionsOfPrimitiveElements](), "Field3", reflect.TypeFor[*tfCollectionsOfPrimitiveElements]()),
 				infoConvertingWithPath("Field3", reflect.TypeFor[[]string](), "Field3", reflect.TypeFor[types.Set]()),
 				traceFlatteningWithSetNull("Field3", reflect.TypeFor[[]string](), "Field3", reflect.TypeFor[types.Set]()),
@@ -364,7 +366,7 @@ func TestFlatten(t *testing.T) {
 				traceFlatteningWithMapNull("Field6", reflect.TypeFor[map[string]*string](), "Field6", reflect.TypeFor[types.Map]()),
 			},
 		},
-		"slice or map of primtive types Source and Collection of primtive types Target": {
+		"slice or map of primitive types Source and Collection of primtive types Target": {
 			Source: &awsCollectionsOfPrimitiveElements{
 				Field1: []string{"a", "b"},
 				Field2: aws.StringSlice([]string{"a", "b"}),
@@ -405,8 +407,10 @@ func TestFlatten(t *testing.T) {
 				infoConverting(reflect.TypeFor[awsCollectionsOfPrimitiveElements](), reflect.TypeFor[*tfCollectionsOfPrimitiveElements]()),
 				traceMatchedFields("Field1", reflect.TypeFor[awsCollectionsOfPrimitiveElements](), "Field1", reflect.TypeFor[*tfCollectionsOfPrimitiveElements]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[[]string](), "Field1", reflect.TypeFor[types.List]()),
+				traceFlatteningWithListValue("Field1", reflect.TypeFor[[]string](), 2, "Field1", reflect.TypeFor[types.List]()),
 				traceMatchedFields("Field2", reflect.TypeFor[awsCollectionsOfPrimitiveElements](), "Field2", reflect.TypeFor[*tfCollectionsOfPrimitiveElements]()),
 				infoConvertingWithPath("Field2", reflect.TypeFor[[]*string](), "Field2", reflect.TypeFor[types.List]()),
+				traceFlatteningWithListValue("Field2", reflect.TypeFor[[]*string](), 2, "Field2", reflect.TypeFor[types.List]()),
 				traceMatchedFields("Field3", reflect.TypeFor[awsCollectionsOfPrimitiveElements](), "Field3", reflect.TypeFor[*tfCollectionsOfPrimitiveElements]()),
 				infoConvertingWithPath("Field3", reflect.TypeFor[[]string](), "Field3", reflect.TypeFor[types.Set]()),
 				traceFlatteningWithSetValue("Field3", reflect.TypeFor[[]string](), 2, "Field3", reflect.TypeFor[types.Set]()),
@@ -437,8 +441,10 @@ func TestFlatten(t *testing.T) {
 				infoConverting(reflect.TypeFor[awsCollectionsOfPrimitiveElements](), reflect.TypeFor[*tfTypedCollectionsOfPrimitiveElements]()),
 				traceMatchedFields("Field1", reflect.TypeFor[awsCollectionsOfPrimitiveElements](), "Field1", reflect.TypeFor[*tfTypedCollectionsOfPrimitiveElements]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[[]string](), "Field1", reflect.TypeFor[fwtypes.ListValueOf[types.String]]()),
+				traceFlatteningWithListNull("Field1", reflect.TypeFor[[]string](), "Field1", reflect.TypeFor[fwtypes.ListValueOf[types.String]]()),
 				traceMatchedFields("Field2", reflect.TypeFor[awsCollectionsOfPrimitiveElements](), "Field2", reflect.TypeFor[*tfTypedCollectionsOfPrimitiveElements]()),
 				infoConvertingWithPath("Field2", reflect.TypeFor[[]*string](), "Field2", reflect.TypeFor[fwtypes.ListValueOf[types.String]]()),
+				traceFlatteningWithListNull("Field2", reflect.TypeFor[[]*string](), "Field2", reflect.TypeFor[fwtypes.ListValueOf[types.String]]()),
 				traceMatchedFields("Field3", reflect.TypeFor[awsCollectionsOfPrimitiveElements](), "Field3", reflect.TypeFor[*tfTypedCollectionsOfPrimitiveElements]()),
 				infoConvertingWithPath("Field3", reflect.TypeFor[[]string](), "Field3", reflect.TypeFor[fwtypes.SetValueOf[types.String]]()),
 				traceFlatteningWithSetNull("Field3", reflect.TypeFor[[]string](), "Field3", reflect.TypeFor[fwtypes.SetValueOf[types.String]]()),
@@ -494,8 +500,10 @@ func TestFlatten(t *testing.T) {
 				infoConverting(reflect.TypeFor[awsCollectionsOfPrimitiveElements](), reflect.TypeFor[*tfTypedCollectionsOfPrimitiveElements]()),
 				traceMatchedFields("Field1", reflect.TypeFor[awsCollectionsOfPrimitiveElements](), "Field1", reflect.TypeFor[*tfTypedCollectionsOfPrimitiveElements]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[[]string](), "Field1", reflect.TypeFor[fwtypes.ListValueOf[types.String]]()),
+				traceFlatteningWithListValue("Field1", reflect.TypeFor[[]string](), 2, "Field1", reflect.TypeFor[fwtypes.ListValueOf[types.String]]()),
 				traceMatchedFields("Field2", reflect.TypeFor[awsCollectionsOfPrimitiveElements](), "Field2", reflect.TypeFor[*tfTypedCollectionsOfPrimitiveElements]()),
 				infoConvertingWithPath("Field2", reflect.TypeFor[[]*string](), "Field2", reflect.TypeFor[fwtypes.ListValueOf[types.String]]()),
+				traceFlatteningWithListValue("Field2", reflect.TypeFor[[]*string](), 2, "Field2", reflect.TypeFor[fwtypes.ListValueOf[types.String]]()),
 				traceMatchedFields("Field3", reflect.TypeFor[awsCollectionsOfPrimitiveElements](), "Field3", reflect.TypeFor[*tfTypedCollectionsOfPrimitiveElements]()),
 				infoConvertingWithPath("Field3", reflect.TypeFor[[]string](), "Field3", reflect.TypeFor[fwtypes.SetValueOf[types.String]]()),
 				traceFlatteningWithSetValue("Field3", reflect.TypeFor[[]string](), 2, "Field3", reflect.TypeFor[fwtypes.SetValueOf[types.String]]()),
@@ -596,18 +604,25 @@ func TestFlatten(t *testing.T) {
 				infoConverting(reflect.TypeFor[awsSpecialPluralization](), reflect.TypeFor[*tfSpecialPluralization]()),
 				traceMatchedFields("Cities", reflect.TypeFor[awsSpecialPluralization](), "City", reflect.TypeFor[*tfSpecialPluralization]()),
 				infoConvertingWithPath("Cities", reflect.TypeFor[[]*string](), "City", reflect.TypeFor[types.List]()),
+				traceFlatteningWithListValue("Cities", reflect.TypeFor[[]*string](), 2, "City", reflect.TypeFor[types.List]()),
 				traceMatchedFields("Coaches", reflect.TypeFor[awsSpecialPluralization](), "Coach", reflect.TypeFor[*tfSpecialPluralization]()),
 				infoConvertingWithPath("Coaches", reflect.TypeFor[[]*string](), "Coach", reflect.TypeFor[types.List]()),
+				traceFlatteningWithListValue("Coaches", reflect.TypeFor[[]*string](), 2, "Coach", reflect.TypeFor[types.List]()),
 				traceMatchedFields("Tomatoes", reflect.TypeFor[awsSpecialPluralization](), "Tomato", reflect.TypeFor[*tfSpecialPluralization]()),
 				infoConvertingWithPath("Tomatoes", reflect.TypeFor[[]*string](), "Tomato", reflect.TypeFor[types.List]()),
+				traceFlatteningWithListValue("Tomatoes", reflect.TypeFor[[]*string](), 2, "Tomato", reflect.TypeFor[types.List]()),
 				traceMatchedFields("Vertices", reflect.TypeFor[awsSpecialPluralization](), "Vertex", reflect.TypeFor[*tfSpecialPluralization]()),
 				infoConvertingWithPath("Vertices", reflect.TypeFor[[]*string](), "Vertex", reflect.TypeFor[types.List]()),
+				traceFlatteningWithListValue("Vertices", reflect.TypeFor[[]*string](), 2, "Vertex", reflect.TypeFor[types.List]()),
 				traceMatchedFields("Criteria", reflect.TypeFor[awsSpecialPluralization](), "Criterion", reflect.TypeFor[*tfSpecialPluralization]()),
 				infoConvertingWithPath("Criteria", reflect.TypeFor[[]*string](), "Criterion", reflect.TypeFor[types.List]()),
+				traceFlatteningWithListValue("Criteria", reflect.TypeFor[[]*string](), 2, "Criterion", reflect.TypeFor[types.List]()),
 				traceMatchedFields("Data", reflect.TypeFor[awsSpecialPluralization](), "Datum", reflect.TypeFor[*tfSpecialPluralization]()),
 				infoConvertingWithPath("Data", reflect.TypeFor[[]*string](), "Datum", reflect.TypeFor[types.List]()),
+				traceFlatteningWithListValue("Data", reflect.TypeFor[[]*string](), 2, "Datum", reflect.TypeFor[types.List]()),
 				traceMatchedFields("Hives", reflect.TypeFor[awsSpecialPluralization](), "Hive", reflect.TypeFor[*tfSpecialPluralization]()),
 				infoConvertingWithPath("Hives", reflect.TypeFor[[]*string](), "Hive", reflect.TypeFor[types.List]()),
+				traceFlatteningWithListValue("Hives", reflect.TypeFor[[]*string](), 2, "Hive", reflect.TypeFor[types.List]()),
 			},
 		},
 		"strange plurality": {
@@ -2853,6 +2868,7 @@ func TestFlattenComplexSingleNestedBlock(t *testing.T) {
 				infoConvertingWithPath("Field1.Field1.Field1", reflect.TypeFor[bool](), "Field1.Field1.Field1", reflect.TypeFor[types.Bool]()),
 				traceMatchedFieldsWithPath("Field1.Field1", "Field2", reflect.TypeFor[aws01](), "Field1.Field1", "Field2", reflect.TypeFor[*tf01]()),
 				infoConvertingWithPath("Field1.Field1.Field2", reflect.TypeFor[[]string](), "Field1.Field1.Field2", reflect.TypeFor[fwtypes.ListValueOf[types.String]]()),
+				traceFlatteningWithListValue("Field1.Field1.Field2", reflect.TypeFor[[]string](), 2, "Field1.Field1.Field2", reflect.TypeFor[fwtypes.ListValueOf[types.String]]()),
 			},
 		},
 	}
@@ -3549,6 +3565,77 @@ func TestFlattenMapBlock(t *testing.T) {
 		},
 	}
 	runAutoFlattenTestCases(t, testCases)
+}
+
+func TestFlattenSimpleListOfPrimitiveValues(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]autoFlexTestCases{
+		"regular": {
+			"values": {
+				Source: awsSimpleStringValueSlice{
+					Field1: []string{"a", "b"},
+				},
+				Target: &tfSimpleList{},
+				WantTarget: &tfSimpleList{
+					Field1: types.ListValueMust(types.StringType, []attr.Value{
+						types.StringValue("a"),
+						types.StringValue("b"),
+					}),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSimpleStringValueSlice](), reflect.TypeFor[*tfSimpleList]()),
+					infoConverting(reflect.TypeFor[awsSimpleStringValueSlice](), reflect.TypeFor[*tfSimpleList]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSimpleStringValueSlice](), "Field1", reflect.TypeFor[*tfSimpleList]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[[]string](), "Field1", reflect.TypeFor[types.List]()),
+					traceFlatteningWithListValue("Field1", reflect.TypeFor[[]string](), 2, "Field1", reflect.TypeFor[types.List]()),
+				},
+			},
+
+			"empty": {
+				Source: awsSimpleStringValueSlice{
+					Field1: []string{},
+				},
+				Target: &tfSimpleList{},
+				WantTarget: &tfSimpleList{
+					Field1: types.ListValueMust(types.StringType, []attr.Value{}),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSimpleStringValueSlice](), reflect.TypeFor[*tfSimpleList]()),
+					infoConverting(reflect.TypeFor[awsSimpleStringValueSlice](), reflect.TypeFor[*tfSimpleList]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSimpleStringValueSlice](), "Field1", reflect.TypeFor[*tfSimpleList]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[[]string](), "Field1", reflect.TypeFor[types.List]()),
+					traceFlatteningWithListValue("Field1", reflect.TypeFor[[]string](), 0, "Field1", reflect.TypeFor[types.List]()),
+				},
+			},
+
+			"null": {
+				Source: awsSimpleStringValueSlice{
+					Field1: nil,
+				},
+				Target: &tfSimpleList{},
+				WantTarget: &tfSimpleList{
+					Field1: types.ListNull(types.StringType),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSimpleStringValueSlice](), reflect.TypeFor[*tfSimpleList]()),
+					infoConverting(reflect.TypeFor[awsSimpleStringValueSlice](), reflect.TypeFor[*tfSimpleList]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSimpleStringValueSlice](), "Field1", reflect.TypeFor[*tfSimpleList]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[[]string](), "Field1", reflect.TypeFor[types.List]()),
+					traceFlatteningWithListNull("Field1", reflect.TypeFor[[]string](), "Field1", reflect.TypeFor[types.List]()),
+				},
+			},
+		},
+	}
+
+	for testName, cases := range testCases {
+		cases := cases
+		t.Run(testName, func(t *testing.T) {
+			t.Parallel()
+
+			runAutoFlattenTestCases(t, cases)
+		})
+	}
 }
 
 func TestFlattenSimpleSetOfPrimitiveValues(t *testing.T) {

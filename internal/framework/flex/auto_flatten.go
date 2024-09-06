@@ -1231,6 +1231,7 @@ func (flattener autoFlattener) sliceOfPrimtiveToList(ctx context.Context, vFrom 
 	var diags diag.Diagnostics
 
 	if vFrom.IsNil() {
+		tflog.SubsystemTrace(ctx, subsystemName, "Flattening with ListNull")
 		to, d := tTo.ValueFromList(ctx, types.ListNull(elementType))
 		diags.Append(d...)
 		if diags.HasError() {
@@ -1241,6 +1242,9 @@ func (flattener autoFlattener) sliceOfPrimtiveToList(ctx context.Context, vFrom 
 		return diags
 	}
 
+	tflog.SubsystemTrace(ctx, subsystemName, "Flattening with ListValue", map[string]any{
+		logAttrKeySourceSize: vFrom.Len(),
+	})
 	elements := make([]attr.Value, vFrom.Len())
 	for i := 0; i < vFrom.Len(); i++ {
 		elements[i] = f(vFrom.Index(i))
