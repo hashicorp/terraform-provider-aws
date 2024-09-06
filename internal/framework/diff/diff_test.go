@@ -22,6 +22,8 @@ type testResourceData2 struct {
 }
 
 func TestCalculate(t *testing.T) {
+	t.Parallel()
+	
 	testCases := map[string]struct {
 		plan                      any
 		state                     any
@@ -69,5 +71,4 @@ func TestCalculate(t *testing.T) {
 			}
 		})
 	}
-
 }
