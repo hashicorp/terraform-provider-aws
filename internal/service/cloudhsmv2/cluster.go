@@ -88,7 +88,13 @@ func resourceCluster() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice([]string{"hsm1.medium"}, false),
+				ValidateFunc: validation.StringInSlice([]string{"hsm1.medium", "hsm2m.medium"}, false),
+			},
+			"mode": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      string(types.ClusterModeFips),
+				ValidateFunc: validation.StringInSlice(validClusterModes(), false),
 			},
 			"security_group_id": {
 				Type:     schema.TypeString,
@@ -125,6 +131,17 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		HsmType:   aws.String(d.Get("hsm_type").(string)),
 		SubnetIds: flex.ExpandStringValueSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
 		TagList:   getTagsIn(ctx),
+	}
+
+	if v, ok := d.GetOk("mode"); ok && v != "" {
+		switch v.(string) {
+		case string(types.ClusterModeFips):
+			input.Mode = types.ClusterModeFips
+		case string(types.ClusterModeNonFips):
+			input.Mode = types.ClusterModeNonFips
+		default:
+			sdkdiag.AppendErrorf(diags, "invalid cluster mode: %s", v)
+		}
 	}
 
 	if v, ok := d.GetOk("source_backup_identifier"); ok {
@@ -173,6 +190,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("cluster_id", cluster.ClusterId)
 	d.Set("cluster_state", cluster.State)
 	d.Set("hsm_type", cluster.HsmType)
+	d.Set("mode", cluster.Mode)
 	d.Set("security_group_id", cluster.SecurityGroup)
 	d.Set("source_backup_identifier", cluster.SourceBackupId)
 	d.Set(names.AttrSubnetIDs, tfmaps.Values(cluster.SubnetMapping))
@@ -370,4 +388,13 @@ func flattenCertificates(apiObject *types.Cluster) []map[string]interface{} {
 	}
 
 	return []map[string]interface{}{}
+}
+
+func validClusterModes() []string {
+	var clusterModeStrings []string
+	for _, mode := range types.ClusterModeFips.Values() {
+		clusterModeStrings = append(clusterModeStrings, string(mode))
+	}
+
+	return clusterModeStrings
 }

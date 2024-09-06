@@ -126,6 +126,34 @@ func testAccCluster_tags(t *testing.T) {
 	})
 }
 
+func testAccCluster_hsmtype(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_cloudhsm_v2_cluster.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudHSMV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_hsm2m_medium(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "hsm_type", "hsm2m.medium"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"cluster_certificates"},
+			},
+		},
+	})
+}
+
 func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudHSMV2Client(ctx)
@@ -175,6 +203,16 @@ func testAccClusterConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccClusterConfig_base(rName), `
 resource "aws_cloudhsm_v2_cluster" "test" {
   hsm_type   = "hsm1.medium"
+  subnet_ids = aws_subnet.test[*].id
+}
+`)
+}
+
+func testAccClusterConfig_hsm2m_medium(rName string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), `
+resource "aws_cloudhsm_v2_cluster" "test" {
+  hsm_type   = "hsm2m.medium"
+  mode 		 = "NON_FIPS"
   subnet_ids = aws_subnet.test[*].id
 }
 `)
