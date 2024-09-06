@@ -8,6 +8,7 @@ import (
 	"os"
 	"regexp"
 	"testing"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/acm/types"
@@ -228,7 +229,7 @@ func TestAccACMCertificateDataSource_keyTypes(t *testing.T) {
 			{
 				Config: testAccCertificateDataSourceConfig_keyTypes(acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 				),
 			},
 		},
@@ -251,7 +252,7 @@ func TestAccACMCertificateDataSource_byDomain(t *testing.T) {
 			{
 				Config: testAccCertificateDataSourceConfig_byDomain(domain, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrDomain, domain),
 				),
 			},
@@ -314,7 +315,7 @@ func TestAccACMCertificateDataSource_byDomainAndTags(t *testing.T) {
 			{
 				Config: testAccCertificateDataSourceConfig_byDomainAndTags(domain, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrDomain, domain),
 				),
 			},
@@ -338,7 +339,7 @@ func TestAccACMCertificateDataSource_byDomainAndStatuses(t *testing.T) {
 			{
 				Config: testAccCertificateDataSourceConfig_byDomainAndStatuses(domain, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrDomain, domain),
 				),
 			},
@@ -362,7 +363,7 @@ func TestAccACMCertificateDataSource_byDomainAndKeyTypes(t *testing.T) {
 			{
 				Config: testAccCertificateDataSourceConfig_byDomainAndKeyTypes(domain, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrDomain, domain),
 				),
 			},
@@ -386,7 +387,7 @@ func TestAccACMCertificateDataSource_byDomainAndTypes(t *testing.T) {
 			{
 				Config: testAccCertificateDataSourceConfig_byDomainAndTypes(domain, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrDomain, domain),
 				),
 			},
@@ -413,6 +414,52 @@ func TestAccACMCertificateDataSource_byDomainAndTypesNoMatch(t *testing.T) {
 	})
 }
 
+func TestAccACMCertificateDataSource_byDomainAndKeyTypesMostRecent(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_acm_certificate.test3"
+	dataSourceName := "data.aws_acm_certificate.test"
+	key := acctest.TLSRSAPrivateKeyPEM(t, 4096)
+	domain := acctest.RandomDomain().String()
+
+	// Create 3 certificates, a minute apart.
+	certificate1 := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, domain)
+	time.Sleep(1 * time.Minute)
+	certificate2 := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, domain)
+	time.Sleep(1 * time.Minute)
+	certificate3 := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, domain)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: acctest.ConfigCompose(
+					testAccCertificateDataSourceConfig_importedCertificate(acctest.TLSPEMEscapeNewlines(certificate1), acctest.TLSPEMEscapeNewlines(key), 1),
+					testAccCertificateDataSourceConfig_importedCertificate(acctest.TLSPEMEscapeNewlines(certificate2), acctest.TLSPEMEscapeNewlines(key), 2),
+					testAccCertificateDataSourceConfig_importedCertificate(acctest.TLSPEMEscapeNewlines(certificate3), acctest.TLSPEMEscapeNewlines(key), 3),
+				),
+				Check: resource.ComposeTestCheckFunc(
+					// Sleep an additional minute after resource creation.
+					acctest.CheckSleep(t, 1*time.Minute),
+				),
+			},
+			{
+				Config: acctest.ConfigCompose(
+					testAccCertificateDataSourceConfig_importedCertificate(acctest.TLSPEMEscapeNewlines(certificate1), acctest.TLSPEMEscapeNewlines(key), 1),
+					testAccCertificateDataSourceConfig_importedCertificate(acctest.TLSPEMEscapeNewlines(certificate2), acctest.TLSPEMEscapeNewlines(key), 2),
+					testAccCertificateDataSourceConfig_importedCertificate(acctest.TLSPEMEscapeNewlines(certificate3), acctest.TLSPEMEscapeNewlines(key), 3),
+					testAccCertificateDataSourceConfig_byDomainAndKeyTypesMostRecent(domain),
+				),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrDomain, domain),
+				),
+			},
+		},
+	})
+}
+
 func TestAccACMCertificateDataSource_byTags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acm_certificate.test"
@@ -430,7 +477,7 @@ func TestAccACMCertificateDataSource_byTags(t *testing.T) {
 			{
 				Config: testAccCertificateDataSourceConfig_byTags(rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrDomain, domain),
 				),
 			},
@@ -474,7 +521,7 @@ func TestAccACMCertificateDataSource_byTagsAndKeyTypes(t *testing.T) {
 			{
 				Config: testAccCertificateDataSourceConfig_byTagsAndKeyTypes(rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrDomain, domain),
 				),
 			},
@@ -655,6 +702,25 @@ data "aws_acm_certificate" "test" {
   depends_on = [aws_acm_certificate.test]
 }
 `, domain, certificate, key)
+}
+
+func testAccCertificateDataSourceConfig_importedCertificate(certificate, key string, i int) string {
+	return fmt.Sprintf(`
+resource "aws_acm_certificate" "test%[1]d" {
+  certificate_body = "%[2]s"
+  private_key      = "%[3]s"
+}
+`, i, certificate, key)
+}
+
+func testAccCertificateDataSourceConfig_byDomainAndKeyTypesMostRecent(domain string) string {
+	return fmt.Sprintf(`
+data "aws_acm_certificate" "test" {
+  domain      = %[1]q
+  key_types   = ["RSA_4096"]
+  most_recent = true
+}
+`, domain)
 }
 
 func testAccCertificateDataSourceConfig_byDomainAndTypes(domain, certificate, key string) string {

@@ -240,7 +240,7 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 
 func mostRecentCertificate(i, j *awstypes.CertificateDetail) (*awstypes.CertificateDetail, error) {
 	if i.Status != j.Status {
-		return nil, fmt.Errorf("most_recent filtering on different ACM certificate statues is not supported")
+		return nil, fmt.Errorf("most_recent filtering on different ACM certificate statuses is not supported")
 	}
 	// Cover IMPORTED and ISSUED AMAZON_ISSUED certificates
 	if i.Status == awstypes.CertificateStatusIssued {
