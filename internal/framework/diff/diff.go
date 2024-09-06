@@ -15,8 +15,9 @@ import (
 )
 
 type Results struct {
-	hasChanges        bool
-	ignoredFieldNames []fwflex.AutoFlexOptionsFunc
+	hasChanges            bool
+	ignoredFieldNames     []string
+	flexIgnoredFieldNames []fwflex.AutoFlexOptionsFunc
 }
 
 // HasChanges returns whether there are changes between the plan and state values
@@ -24,8 +25,16 @@ func (r *Results) HasChanges() bool {
 	return r.hasChanges
 }
 
-// FlexIgnoredFieldNames returns the list of ignored field names for AutoFlex
+// FlexIgnoredFieldNames returns the list of ignored field names as AutoFlexOptionsFunc
 func (r *Results) FlexIgnoredFieldNames() []fwflex.AutoFlexOptionsFunc {
+	for _, v := range r.ignoredFieldNames {
+		r.flexIgnoredFieldNames = append(r.flexIgnoredFieldNames, fwflex.WithIgnoredFieldNamesAppend(v))
+	}
+
+	return r.flexIgnoredFieldNames
+}
+
+func (r *Results) IgnoredFieldNames() []string {
 	return r.ignoredFieldNames
 }
 
@@ -34,9 +43,9 @@ func Calculate(ctx context.Context, plan, state any, options ...ChangeOptionsFun
 	var diags diag.Diagnostics
 	opts := initChangeOptions(options)
 
-	p, s := reflect.ValueOf(plan), reflect.ValueOf(state)
+	p, s := setValue(reflect.ValueOf(plan)), setValue(reflect.ValueOf(state))
 	typeOfP, typesOfS := p.Type(), s.Type()
-	var ignoredFields []fwflex.AutoFlexOptionsFunc
+	var ignoredFields []string
 	result := Results{}
 
 	if typeOfP != typesOfS {
@@ -80,7 +89,7 @@ func Calculate(ctx context.Context, plan, state any, options ...ChangeOptionsFun
 		if ok := !pValue.Equal(sValue); ok {
 			hasChanges = ok
 		} else {
-			ignoredFields = append(ignoredFields, fwflex.WithIgnoredFieldNamesAppend(name))
+			ignoredFields = append(ignoredFields, name)
 		}
 	}
 
@@ -88,4 +97,11 @@ func Calculate(ctx context.Context, plan, state any, options ...ChangeOptionsFun
 	result.ignoredFieldNames = ignoredFields
 
 	return &result, diags
+}
+
+func setValue(value reflect.Value) reflect.Value {
+	if value.Kind() == reflect.Ptr {
+		return value.Elem()
+	}
+	return value
 }
