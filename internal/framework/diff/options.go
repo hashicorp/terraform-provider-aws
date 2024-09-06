@@ -3,16 +3,23 @@
 
 package diff
 
+// ChangeOptionsFunc is a type alias for a changeOptions functional option
 type ChangeOptionsFunc func(*changeOptions)
 
 type changeOptions struct {
 	ignoredFieldNames []string
 }
 
-func initChangeOptions() *changeOptions {
-	return &changeOptions{
+func initChangeOptions(options []ChangeOptionsFunc) *changeOptions {
+	o := changeOptions{
 		ignoredFieldNames: defaultIgnoredFieldNames,
 	}
+
+	for _, opt := range options {
+		opt(&o)
+	}
+
+	return &o
 }
 
 var defaultIgnoredFieldNames = []string{
