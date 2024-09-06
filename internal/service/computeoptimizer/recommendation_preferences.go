@@ -202,15 +202,12 @@ func resourceRecommendationPreferencesCreate(ctx context.Context, d *schema.Reso
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ComputeOptimizerClient(ctx)
 
-	// resourceType := d.Get("resource_type").(string)
-	resourceType := "Ec2Instance"
 	in := &computeoptimizer.PutRecommendationPreferencesInput{
-		// ResourceType: types.ResourceType(*aws.String(d.Get("resource_type").(string))),
-		ResourceType: types.ResourceType(resourceType),
+		ResourceType: types.ResourceType(*aws.String(d.Get("resource_type").(string))),
 	}
 
 	recommendationPreferences := []string{}
-	recommendationPreferences = append(recommendationPreferences, resourceType)
+	recommendationPreferences = append(recommendationPreferences, d.Get("resource_type").(string))
 
 	if v, ok := d.GetOk("enhanced_infrastructure_metrics"); ok {
 		in.EnhancedInfrastructureMetrics = types.EnhancedInfrastructureMetrics(*aws.String(v.(string)))
