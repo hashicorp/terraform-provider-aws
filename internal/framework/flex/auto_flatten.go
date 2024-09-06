@@ -782,7 +782,7 @@ func (flattener autoFlattener) slice(ctx context.Context, sourcePath path.Path, 
 				//
 				// []*struct -> types.List(OfObject).
 				//
-				diags.Append(flattener.sliceOfStructToNestedObjectCollection(ctx, sourcePath, vFrom, targetPath, tTo, vTo)...)
+				diags.Append(flattener.sliceOfStructToNestedObjectCollection(ctx, sourcePath, vFrom, targetPath, tTo, vTo, fieldOpts)...)
 				return diags
 			}
 		}
@@ -792,7 +792,7 @@ func (flattener autoFlattener) slice(ctx context.Context, sourcePath path.Path, 
 			//
 			// []struct -> types.List(OfObject).
 			//
-			diags.Append(flattener.sliceOfStructToNestedObjectCollection(ctx, sourcePath, vFrom, targetPath, tTo, vTo)...)
+			diags.Append(flattener.sliceOfStructToNestedObjectCollection(ctx, sourcePath, vFrom, targetPath, tTo, vTo, fieldOpts)...)
 			return diags
 		}
 
@@ -801,7 +801,7 @@ func (flattener autoFlattener) slice(ctx context.Context, sourcePath path.Path, 
 			//
 			// []interface -> types.List(OfObject).
 			//
-			diags.Append(flattener.sliceOfStructToNestedObjectCollection(ctx, sourcePath, vFrom, targetPath, tTo, vTo)...)
+			diags.Append(flattener.sliceOfStructToNestedObjectCollection(ctx, sourcePath, vFrom, targetPath, tTo, vTo, fieldOpts)...)
 			return diags
 		}
 	}
@@ -1365,18 +1365,38 @@ func (flattener autoFlattener) sliceOfPrimitiveToSet(ctx context.Context, vFrom 
 }
 
 // sliceOfStructToNestedObjectCollection copies an AWS API []struct value to a compatible Plugin Framework NestedObjectCollectionValue value.
-func (flattener autoFlattener) sliceOfStructToNestedObjectCollection(ctx context.Context, sourcePath path.Path, vFrom reflect.Value, targetPath path.Path, tTo fwtypes.NestedObjectCollectionType, vTo reflect.Value) diag.Diagnostics {
+func (flattener autoFlattener) sliceOfStructToNestedObjectCollection(ctx context.Context, sourcePath path.Path, vFrom reflect.Value, targetPath path.Path, tTo fwtypes.NestedObjectCollectionType, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	if vFrom.IsNil() {
-		val, d := tTo.NullValue(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
+	if fieldOpts.legacy {
+		tflog.SubsystemDebug(ctx, subsystemName, "Using legacy flattener")
+		if vFrom.IsNil() {
+			to, d := tTo.NewObjectSlice(ctx, 0, 0)
+			diags.Append(d...)
+			if diags.HasError() {
+				return diags
+			}
+
+			val, d := tTo.ValueFromObjectSlice(ctx, to)
+			diags.Append(d...)
+			if diags.HasError() {
+				return diags
+			}
+
+			vTo.Set(reflect.ValueOf(val))
 			return diags
 		}
+	} else {
+		if vFrom.IsNil() {
+			val, d := tTo.NullValue(ctx)
+			diags.Append(d...)
+			if diags.HasError() {
+				return diags
+			}
 
-		vTo.Set(reflect.ValueOf(val))
-		return diags
+			vTo.Set(reflect.ValueOf(val))
+			return diags
+		}
 	}
 
 	// Create a new target slice and flatten each element.
