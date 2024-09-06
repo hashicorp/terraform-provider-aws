@@ -457,7 +457,7 @@ accounts is enabled.
 * `identifierPrefix` - (Optional) Creates a unique identifier beginning with the specified prefix. Conflicts with `identifier`.
 * `instanceClass` - (Required) The instance type of the RDS instance.
 * `iops` - (Optional) The amount of provisioned IOPS. Setting this implies a
-storage_type of "io1". Can only be set when `storageType` is `"io1"` or `"gp3"`.
+storage_type of "io1" or "io2". Can only be set when `storageType` is `"io1"`, `"io2` or `"gp3"`.
 Cannot be specified for gp3 storage if the `allocatedStorage` value is below a per-`engine` threshold.
 See the [RDS User Guide](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Storage.html#gp3-storage) for details.
 * `kmsKeyId` - (Optional) The ARN for the KMS encryption key. If creating an
@@ -527,9 +527,9 @@ encrypted. Note that if you are creating a cross-region read replica this field
 is ignored and you should instead declare `kmsKeyId` with a valid ARN. The
 default is `false` if not specified.
 * `storageType` - (Optional) One of "standard" (magnetic), "gp2" (general
-purpose SSD), "gp3" (general purpose SSD that needs `iops` independently)
-or "io1" (provisioned IOPS SSD). The default is "io1" if `iops` is specified,
-"gp2" if not.
+purpose SSD), "gp3" (general purpose SSD that needs `iops` independently),
+"io1" (provisioned IOPS SSD) or "io2" (block express storage provisioned IOPS
+SSD). The default is "io1" if `iops` is specified, "gp2" if not.
 * `storageThroughput` - (Optional) The storage throughput value for the DB instance. Can only be set when `storageType` is `"gp3"`. Cannot be specified if the `allocatedStorage` value is below a per-`engine` threshold. See the [RDS User Guide](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Storage.html#gp3-storage) for details.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `timezone` - (Optional) Time zone of the DB instance. `timezone` is currently
