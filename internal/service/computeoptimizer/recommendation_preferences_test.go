@@ -4,6 +4,8 @@
 package computeoptimizer_test
 
 import (
+	// "context"
+	// "errors"
 	"context"
 	"errors"
 	"fmt"
@@ -14,10 +16,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 
+	// "github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 
+	// "github.com/hashicorp/terraform-provider-aws/internal/create"
+
+	// "github.com/hashicorp/terraform-provider-aws/internal/conns"
+	// "github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfcomputeoptimizer "github.com/hashicorp/terraform-provider-aws/internal/service/computeoptimizer"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -46,6 +53,12 @@ func TestAccComputeOptimizerRecommendationPreferences_basic(t *testing.T) {
 					testAccCheckRecommendationPreferencesExists(ctx, resourceName, &recommendationpreferences),
 				),
 			},
+			// {
+			// 	ResourceName:            resourceName,
+			// 	ImportState:             true,
+			// 	ImportStateVerify:       true,
+			// 	ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+			// },
 		},
 	})
 }
