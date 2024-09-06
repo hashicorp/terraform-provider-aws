@@ -235,11 +235,11 @@ func findAutoScalingConfigurationSummary(ctx context.Context, conn *apprunner.Cl
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findAutoScalingConfigurationSummaries(ctx context.Context, conn *apprunner.Client, input *apprunner.ListAutoScalingConfigurationsInput, filter tfslices.Predicate[*types.AutoScalingConfigurationSummary]) ([]*types.AutoScalingConfigurationSummary, error) {
-	var output []*types.AutoScalingConfigurationSummary
+func findAutoScalingConfigurationSummaries(ctx context.Context, conn *apprunner.Client, input *apprunner.ListAutoScalingConfigurationsInput, filter tfslices.Predicate[*types.AutoScalingConfigurationSummary]) ([]types.AutoScalingConfigurationSummary, error) {
+	var output []types.AutoScalingConfigurationSummary
 
 	pages := apprunner.NewListAutoScalingConfigurationsPaginator(conn, input)
 	for pages.HasMorePages() {
@@ -250,7 +250,7 @@ func findAutoScalingConfigurationSummaries(ctx context.Context, conn *apprunner.
 		}
 
 		for _, v := range page.AutoScalingConfigurationSummaryList {
-			if v := &v; filter(v) {
+			if filter(&v) {
 				output = append(output, v)
 			}
 		}
