@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 )
 
-func ListConfigurationSetsPages(ctx context.Context, conn *sesv2.Client, in *sesv2.ListConfigurationSetsInput, fn func(*sesv2.ListConfigurationSetsOutput, bool) bool) error {
+func listConfigurationSetsPages(ctx context.Context, conn *sesv2.Client, in *sesv2.ListConfigurationSetsInput, fn func(*sesv2.ListConfigurationSetsOutput, bool) bool) error {
 	for {
 		out, err := conn.ListConfigurationSets(ctx, in)
 		if err != nil {
@@ -28,7 +28,7 @@ func ListConfigurationSetsPages(ctx context.Context, conn *sesv2.Client, in *ses
 	return nil
 }
 
-func ListContactListsPages(ctx context.Context, conn *sesv2.Client, in *sesv2.ListContactListsInput, fn func(*sesv2.ListContactListsOutput, bool) bool) error {
+func listContactListsPages(ctx context.Context, conn *sesv2.Client, in *sesv2.ListContactListsInput, fn func(*sesv2.ListContactListsOutput, bool) bool) error {
 	for {
 		out, err := conn.ListContactLists(ctx, in)
 		if err != nil {
