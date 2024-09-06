@@ -3045,6 +3045,59 @@ func TestFlattenComplexNestedBlockWithFloat64(t *testing.T) {
 	runAutoFlattenTestCases(t, testCases)
 }
 
+func TestFlattenObjectValueField(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	testCases := map[string]autoFlexTestCases{
+		"*struct to ObjectValue": {
+			"nil": {
+				Source: awsNestedObjectPointer{},
+				Target: &tfObjectValue[tfSingleStringField]{},
+				WantTarget: &tfObjectValue[tfSingleStringField]{
+					Field1: fwtypes.NewObjectValueOfNull[tfSingleStringField](ctx),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsNestedObjectPointer](), reflect.TypeFor[*tfObjectValue[tfSingleStringField]]()),
+					infoConverting(reflect.TypeFor[awsNestedObjectPointer](), reflect.TypeFor[*tfObjectValue[tfSingleStringField]]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsNestedObjectPointer](), "Field1", reflect.TypeFor[*tfObjectValue[tfSingleStringField]]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[*awsSingleStringValue](), "Field1", reflect.TypeFor[fwtypes.ObjectValueOf[tfSingleStringField]]()),
+				},
+			},
+			"value": {
+				Source: awsNestedObjectPointer{
+					Field1: &awsSingleStringValue{
+						Field1: "a",
+					},
+				},
+				Target: &tfObjectValue[tfSingleStringField]{},
+				WantTarget: &tfObjectValue[tfSingleStringField]{
+					Field1: fwtypes.NewObjectValueOfMust(ctx, &tfSingleStringField{
+						Field1: types.StringValue("a"),
+					}),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsNestedObjectPointer](), reflect.TypeFor[*tfObjectValue[tfSingleStringField]]()),
+					infoConverting(reflect.TypeFor[awsNestedObjectPointer](), reflect.TypeFor[*tfObjectValue[tfSingleStringField]]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsNestedObjectPointer](), "Field1", reflect.TypeFor[*tfObjectValue[tfSingleStringField]]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[*awsSingleStringValue](), "Field1", reflect.TypeFor[fwtypes.ObjectValueOf[tfSingleStringField]]()),
+					traceMatchedFieldsWithPath("Field1", "Field1", reflect.TypeFor[awsSingleStringValue](), "Field1", "Field1", reflect.TypeFor[*tfSingleStringField]()),
+					infoConvertingWithPath("Field1.Field1", reflect.TypeFor[string](), "Field1.Field1", reflect.TypeFor[types.String]()),
+				},
+			},
+		},
+	}
+
+	for testName, cases := range testCases {
+		t.Run(testName, func(t *testing.T) {
+			t.Parallel()
+
+			runAutoFlattenTestCases(t, cases)
+		})
+	}
+}
+
 func TestFlattenListOfNestedObjectField(t *testing.T) {
 	t.Parallel()
 
