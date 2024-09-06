@@ -153,6 +153,10 @@ type tfSimpleList struct {
 	Field1 types.List `tfsdk:"field1"`
 }
 
+type tfSimpleListLegacy struct {
+	Field1 types.List `tfsdk:"field1" autoflex:",legacy"`
+}
+
 type tfListOfNestedObject struct {
 	Field1 fwtypes.ListNestedObjectValueOf[tfSingleStringField] `tfsdk:"field1"`
 }

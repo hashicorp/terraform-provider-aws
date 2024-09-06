@@ -696,7 +696,7 @@ func (flattener autoFlattener) slice(ctx context.Context, sourcePath path.Path, 
 			//
 			// []int32 or []int64 -> types.List(OfInt64).
 			//
-			diags.Append(flattener.sliceOfPrimtiveToList(ctx, vFrom, tTo, vTo, types.Int64Type, newInt64ValueFromReflectValue)...)
+			diags.Append(flattener.sliceOfPrimtiveToList(ctx, vFrom, tTo, vTo, types.Int64Type, newInt64ValueFromReflectValue, fieldOpts)...)
 			return diags
 
 		case basetypes.SetTypable:
@@ -713,7 +713,7 @@ func (flattener autoFlattener) slice(ctx context.Context, sourcePath path.Path, 
 			//
 			// []string -> types.List(OfString).
 			//
-			diags.Append(flattener.sliceOfPrimtiveToList(ctx, vFrom, tTo, vTo, types.StringType, newStringValueFromReflectValue)...)
+			diags.Append(flattener.sliceOfPrimtiveToList(ctx, vFrom, tTo, vTo, types.StringType, newStringValueFromReflectValue, fieldOpts)...)
 			return diags
 
 		case basetypes.SetTypable:
@@ -732,7 +732,7 @@ func (flattener autoFlattener) slice(ctx context.Context, sourcePath path.Path, 
 				//
 				// []*int32 -> types.List(OfInt64).
 				//
-				diags.Append(flattener.sliceOfPrimtiveToList(ctx, vFrom, tTo, vTo, types.Int64Type, newInt64ValueFromReflectPointerValue)...)
+				diags.Append(flattener.sliceOfPrimtiveToList(ctx, vFrom, tTo, vTo, types.Int64Type, newInt64ValueFromReflectPointerValue, fieldOpts)...)
 				return diags
 
 			case basetypes.SetTypable:
@@ -749,7 +749,7 @@ func (flattener autoFlattener) slice(ctx context.Context, sourcePath path.Path, 
 				//
 				// []*int64 -> types.List(OfInt64).
 				//
-				diags.Append(flattener.sliceOfPrimtiveToList(ctx, vFrom, tTo, vTo, types.Int64Type, newInt64ValueFromReflectPointerValue)...)
+				diags.Append(flattener.sliceOfPrimtiveToList(ctx, vFrom, tTo, vTo, types.Int64Type, newInt64ValueFromReflectPointerValue, fieldOpts)...)
 				return diags
 
 			case basetypes.SetTypable:
@@ -766,7 +766,7 @@ func (flattener autoFlattener) slice(ctx context.Context, sourcePath path.Path, 
 				//
 				// []*string -> types.List(OfString).
 				//
-				diags.Append(flattener.sliceOfPrimtiveToList(ctx, vFrom, tTo, vTo, types.StringType, newStringValueFromReflectPointerValue)...)
+				diags.Append(flattener.sliceOfPrimtiveToList(ctx, vFrom, tTo, vTo, types.StringType, newStringValueFromReflectPointerValue, fieldOpts)...)
 				return diags
 
 			case basetypes.SetTypable:
@@ -1227,19 +1227,39 @@ func (flattener autoFlattener) interfaceToNestedObject(ctx context.Context, vFro
 }
 
 // sliceOfPrimtiveToList copies an AWS API slice of primitive (or pointer to primitive) value to a compatible Plugin Framework List value.
-func (flattener autoFlattener) sliceOfPrimtiveToList(ctx context.Context, vFrom reflect.Value, tTo basetypes.ListTypable, vTo reflect.Value, elementType attr.Type, f attrValueFromReflectValueFunc) diag.Diagnostics {
+func (flattener autoFlattener) sliceOfPrimtiveToList(ctx context.Context, vFrom reflect.Value, tTo basetypes.ListTypable, vTo reflect.Value, elementType attr.Type, f attrValueFromReflectValueFunc, fieldOpts fieldOpts) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	if vFrom.IsNil() {
-		tflog.SubsystemTrace(ctx, subsystemName, "Flattening with ListNull")
-		to, d := tTo.ValueFromList(ctx, types.ListNull(elementType))
-		diags.Append(d...)
-		if diags.HasError() {
+	if fieldOpts.legacy {
+		tflog.SubsystemDebug(ctx, subsystemName, "Using legacy flattener")
+		if vFrom.IsNil() {
+			list, d := types.ListValue(elementType, []attr.Value{})
+			diags.Append(d...)
+			if diags.HasError() {
+				return diags
+			}
+
+			to, d := tTo.ValueFromList(ctx, list)
+			diags.Append(d...)
+			if diags.HasError() {
+				return diags
+			}
+
+			vTo.Set(reflect.ValueOf(to))
 			return diags
 		}
+	} else {
+		if vFrom.IsNil() {
+			tflog.SubsystemTrace(ctx, subsystemName, "Flattening with ListNull")
+			to, d := tTo.ValueFromList(ctx, types.ListNull(elementType))
+			diags.Append(d...)
+			if diags.HasError() {
+				return diags
+			}
 
-		vTo.Set(reflect.ValueOf(to))
-		return diags
+			vTo.Set(reflect.ValueOf(to))
+			return diags
+		}
 	}
 
 	tflog.SubsystemTrace(ctx, subsystemName, "Flattening with ListValue", map[string]any{

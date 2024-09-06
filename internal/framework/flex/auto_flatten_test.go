@@ -3626,6 +3626,64 @@ func TestFlattenSimpleListOfPrimitiveValues(t *testing.T) {
 				},
 			},
 		},
+
+		"legacy": {
+			"values": {
+				Source: awsSimpleStringValueSlice{
+					Field1: []string{"a", "b"},
+				},
+				Target: &tfSimpleListLegacy{},
+				WantTarget: &tfSimpleListLegacy{
+					Field1: types.ListValueMust(types.StringType, []attr.Value{
+						types.StringValue("a"),
+						types.StringValue("b"),
+					}),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSimpleStringValueSlice](), reflect.TypeFor[*tfSimpleListLegacy]()),
+					infoConverting(reflect.TypeFor[awsSimpleStringValueSlice](), reflect.TypeFor[*tfSimpleListLegacy]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSimpleStringValueSlice](), "Field1", reflect.TypeFor[*tfSimpleListLegacy]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[[]string](), "Field1", reflect.TypeFor[types.List]()),
+					debugUsingLegacyFlattener("Field1", reflect.TypeFor[[]string](), "Field1", reflect.TypeFor[types.List]()),
+					traceFlatteningWithListValue("Field1", reflect.TypeFor[[]string](), 2, "Field1", reflect.TypeFor[types.List]()),
+				},
+			},
+
+			"empty": {
+				Source: awsSimpleStringValueSlice{
+					Field1: []string{},
+				},
+				Target: &tfSimpleListLegacy{},
+				WantTarget: &tfSimpleListLegacy{
+					Field1: types.ListValueMust(types.StringType, []attr.Value{}),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSimpleStringValueSlice](), reflect.TypeFor[*tfSimpleListLegacy]()),
+					infoConverting(reflect.TypeFor[awsSimpleStringValueSlice](), reflect.TypeFor[*tfSimpleListLegacy]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSimpleStringValueSlice](), "Field1", reflect.TypeFor[*tfSimpleListLegacy]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[[]string](), "Field1", reflect.TypeFor[types.List]()),
+					debugUsingLegacyFlattener("Field1", reflect.TypeFor[[]string](), "Field1", reflect.TypeFor[types.List]()),
+					traceFlatteningWithListValue("Field1", reflect.TypeFor[[]string](), 0, "Field1", reflect.TypeFor[types.List]()),
+				},
+			},
+
+			"null": {
+				Source: awsSimpleStringValueSlice{
+					Field1: nil,
+				},
+				Target: &tfSimpleListLegacy{},
+				WantTarget: &tfSimpleListLegacy{
+					Field1: types.ListValueMust(types.StringType, []attr.Value{}),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSimpleStringValueSlice](), reflect.TypeFor[*tfSimpleListLegacy]()),
+					infoConverting(reflect.TypeFor[awsSimpleStringValueSlice](), reflect.TypeFor[*tfSimpleListLegacy]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSimpleStringValueSlice](), "Field1", reflect.TypeFor[*tfSimpleListLegacy]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[[]string](), "Field1", reflect.TypeFor[types.List]()),
+					debugUsingLegacyFlattener("Field1", reflect.TypeFor[[]string](), "Field1", reflect.TypeFor[types.List]()),
+				},
+			},
+		},
 	}
 
 	for testName, cases := range testCases {
