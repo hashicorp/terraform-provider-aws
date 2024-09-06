@@ -3463,9 +3463,11 @@ func TestFlattenSetOfNestedObjectField(t *testing.T) {
 
 		"[]struct to SetNestedObject": {
 			"nil": {
-				Source:     &awsSliceOfNestedObjectValues{},
-				Target:     &tfSetOfNestedObject{},
-				WantTarget: &tfSetOfNestedObject{Field1: fwtypes.NewSetNestedObjectValueOfNull[tfSingleStringField](ctx)},
+				Source: &awsSliceOfNestedObjectValues{},
+				Target: &tfSetOfNestedObject{},
+				WantTarget: &tfSetOfNestedObject{
+					Field1: fwtypes.NewSetNestedObjectValueOfNull[tfSingleStringField](ctx),
+				},
 				expectedLogLines: []map[string]any{
 					infoFlattening(reflect.TypeFor[*awsSliceOfNestedObjectValues](), reflect.TypeFor[*tfSetOfNestedObject]()),
 					infoConverting(reflect.TypeFor[awsSliceOfNestedObjectValues](), reflect.TypeFor[*tfSetOfNestedObject]()),
@@ -3474,9 +3476,13 @@ func TestFlattenSetOfNestedObjectField(t *testing.T) {
 				},
 			},
 			"empty": {
-				Source:     &awsSliceOfNestedObjectValues{Field1: []awsSingleStringValue{}},
-				Target:     &tfSetOfNestedObject{},
-				WantTarget: &tfSetOfNestedObject{Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []tfSingleStringField{})},
+				Source: &awsSliceOfNestedObjectValues{
+					Field1: []awsSingleStringValue{},
+				},
+				Target: &tfSetOfNestedObject{},
+				WantTarget: &tfSetOfNestedObject{
+					Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []tfSingleStringField{}),
+				},
 				expectedLogLines: []map[string]any{
 					infoFlattening(reflect.TypeFor[*awsSliceOfNestedObjectValues](), reflect.TypeFor[*tfSetOfNestedObject]()),
 					infoConverting(reflect.TypeFor[awsSliceOfNestedObjectValues](), reflect.TypeFor[*tfSetOfNestedObject]()),
@@ -3485,15 +3491,19 @@ func TestFlattenSetOfNestedObjectField(t *testing.T) {
 				},
 			},
 			"values": {
-				Source: &awsSliceOfNestedObjectValues{Field1: []awsSingleStringValue{
-					{Field1: "a"},
-					{Field1: "b"},
-				}},
+				Source: &awsSliceOfNestedObjectValues{
+					Field1: []awsSingleStringValue{
+						{Field1: "a"},
+						{Field1: "b"},
+					},
+				},
 				Target: &tfSetOfNestedObject{},
-				WantTarget: &tfSetOfNestedObject{Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []tfSingleStringField{
-					{Field1: types.StringValue("a")},
-					{Field1: types.StringValue("b")},
-				})},
+				WantTarget: &tfSetOfNestedObject{
+					Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []tfSingleStringField{
+						{Field1: types.StringValue("a")},
+						{Field1: types.StringValue("b")},
+					}),
+				},
 				expectedLogLines: []map[string]any{
 					infoFlattening(reflect.TypeFor[*awsSliceOfNestedObjectValues](), reflect.TypeFor[*tfSetOfNestedObject]()),
 					infoConverting(reflect.TypeFor[awsSliceOfNestedObjectValues](), reflect.TypeFor[*tfSetOfNestedObject]()),
@@ -3507,11 +3517,72 @@ func TestFlattenSetOfNestedObjectField(t *testing.T) {
 			},
 		},
 
+		"legacy []struct to SetNestedObject": {
+			"nil": {
+				Source: &awsSliceOfNestedObjectValues{},
+				Target: &tfSetOfNestedObjectLegacy{},
+				WantTarget: &tfSetOfNestedObjectLegacy{
+					Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []tfSingleStringField{}),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[*awsSliceOfNestedObjectValues](), reflect.TypeFor[*tfSetOfNestedObjectLegacy]()),
+					infoConverting(reflect.TypeFor[awsSliceOfNestedObjectValues](), reflect.TypeFor[*tfSetOfNestedObjectLegacy]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSliceOfNestedObjectValues](), "Field1", reflect.TypeFor[*tfSetOfNestedObjectLegacy]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[[]awsSingleStringValue](), "Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfSingleStringField]]()),
+					debugUsingLegacyFlattener("Field1", reflect.TypeFor[[]awsSingleStringValue](), "Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfSingleStringField]]()),
+				},
+			},
+			"empty": {
+				Source: &awsSliceOfNestedObjectValues{
+					Field1: []awsSingleStringValue{},
+				},
+				Target: &tfSetOfNestedObjectLegacy{},
+				WantTarget: &tfSetOfNestedObjectLegacy{
+					Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []tfSingleStringField{}),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[*awsSliceOfNestedObjectValues](), reflect.TypeFor[*tfSetOfNestedObjectLegacy]()),
+					infoConverting(reflect.TypeFor[awsSliceOfNestedObjectValues](), reflect.TypeFor[*tfSetOfNestedObjectLegacy]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSliceOfNestedObjectValues](), "Field1", reflect.TypeFor[*tfSetOfNestedObjectLegacy]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[[]awsSingleStringValue](), "Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfSingleStringField]]()),
+					debugUsingLegacyFlattener("Field1", reflect.TypeFor[[]awsSingleStringValue](), "Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfSingleStringField]]()),
+				},
+			},
+			"values": {
+				Source: &awsSliceOfNestedObjectValues{
+					Field1: []awsSingleStringValue{
+						{Field1: "a"},
+						{Field1: "b"},
+					},
+				},
+				Target: &tfSetOfNestedObjectLegacy{},
+				WantTarget: &tfSetOfNestedObjectLegacy{
+					Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []tfSingleStringField{
+						{Field1: types.StringValue("a")},
+						{Field1: types.StringValue("b")},
+					}),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[*awsSliceOfNestedObjectValues](), reflect.TypeFor[*tfSetOfNestedObjectLegacy]()),
+					infoConverting(reflect.TypeFor[awsSliceOfNestedObjectValues](), reflect.TypeFor[*tfSetOfNestedObjectLegacy]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSliceOfNestedObjectValues](), "Field1", reflect.TypeFor[*tfSetOfNestedObjectLegacy]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[[]awsSingleStringValue](), "Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfSingleStringField]]()),
+					debugUsingLegacyFlattener("Field1", reflect.TypeFor[[]awsSingleStringValue](), "Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfSingleStringField]]()),
+					traceMatchedFieldsWithPath("Field1[0]", "Field1", reflect.TypeFor[awsSingleStringValue](), "Field1[0]", "Field1", reflect.TypeFor[*tfSingleStringField]()),
+					infoConvertingWithPath("Field1[0].Field1", reflect.TypeFor[string](), "Field1[0].Field1", reflect.TypeFor[types.String]()),
+					traceMatchedFieldsWithPath("Field1[1]", "Field1", reflect.TypeFor[awsSingleStringValue](), "Field1[1]", "Field1", reflect.TypeFor[*tfSingleStringField]()),
+					infoConvertingWithPath("Field1[1].Field1", reflect.TypeFor[string](), "Field1[1].Field1", reflect.TypeFor[types.String]()),
+				},
+			},
+		},
+
 		"[]*struct to SetNestedObject": {
 			"nil": {
-				Source:     &awsSliceOfNestedObjectPointers{},
-				Target:     &tfSetOfNestedObject{},
-				WantTarget: &tfSetOfNestedObject{Field1: fwtypes.NewSetNestedObjectValueOfNull[tfSingleStringField](ctx)},
+				Source: &awsSliceOfNestedObjectPointers{},
+				Target: &tfSetOfNestedObject{},
+				WantTarget: &tfSetOfNestedObject{
+					Field1: fwtypes.NewSetNestedObjectValueOfNull[tfSingleStringField](ctx),
+				},
 				expectedLogLines: []map[string]any{
 					infoFlattening(reflect.TypeFor[*awsSliceOfNestedObjectPointers](), reflect.TypeFor[*tfSetOfNestedObject]()),
 					infoConverting(reflect.TypeFor[awsSliceOfNestedObjectPointers](), reflect.TypeFor[*tfSetOfNestedObject]()),
@@ -3520,9 +3591,13 @@ func TestFlattenSetOfNestedObjectField(t *testing.T) {
 				},
 			},
 			"empty": {
-				Source:     &awsSliceOfNestedObjectPointers{Field1: []*awsSingleStringValue{}},
-				Target:     &tfSetOfNestedObject{},
-				WantTarget: &tfSetOfNestedObject{Field1: fwtypes.NewSetNestedObjectValueOfSliceMust(ctx, []*tfSingleStringField{})},
+				Source: &awsSliceOfNestedObjectPointers{
+					Field1: []*awsSingleStringValue{},
+				},
+				Target: &tfSetOfNestedObject{},
+				WantTarget: &tfSetOfNestedObject{
+					Field1: fwtypes.NewSetNestedObjectValueOfSliceMust(ctx, []*tfSingleStringField{}),
+				},
 				expectedLogLines: []map[string]any{
 					infoFlattening(reflect.TypeFor[*awsSliceOfNestedObjectPointers](), reflect.TypeFor[*tfSetOfNestedObject]()),
 					infoConverting(reflect.TypeFor[awsSliceOfNestedObjectPointers](), reflect.TypeFor[*tfSetOfNestedObject]()),
@@ -3531,20 +3606,83 @@ func TestFlattenSetOfNestedObjectField(t *testing.T) {
 				},
 			},
 			"values": {
-				Source: &awsSliceOfNestedObjectPointers{Field1: []*awsSingleStringValue{
-					{Field1: "a"},
-					{Field1: "b"},
-				}},
+				Source: &awsSliceOfNestedObjectPointers{
+					Field1: []*awsSingleStringValue{
+						{Field1: "a"},
+						{Field1: "b"},
+					},
+				},
 				Target: &tfSetOfNestedObject{},
-				WantTarget: &tfSetOfNestedObject{Field1: fwtypes.NewSetNestedObjectValueOfSliceMust(ctx, []*tfSingleStringField{
-					{Field1: types.StringValue("a")},
-					{Field1: types.StringValue("b")},
-				})},
+				WantTarget: &tfSetOfNestedObject{
+					Field1: fwtypes.NewSetNestedObjectValueOfSliceMust(ctx, []*tfSingleStringField{
+						{Field1: types.StringValue("a")},
+						{Field1: types.StringValue("b")},
+					}),
+				},
 				expectedLogLines: []map[string]any{
 					infoFlattening(reflect.TypeFor[*awsSliceOfNestedObjectPointers](), reflect.TypeFor[*tfSetOfNestedObject]()),
 					infoConverting(reflect.TypeFor[awsSliceOfNestedObjectPointers](), reflect.TypeFor[*tfSetOfNestedObject]()),
 					traceMatchedFields("Field1", reflect.TypeFor[awsSliceOfNestedObjectPointers](), "Field1", reflect.TypeFor[*tfSetOfNestedObject]()),
 					infoConvertingWithPath("Field1", reflect.TypeFor[[]*awsSingleStringValue](), "Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfSingleStringField]]()),
+					traceMatchedFieldsWithPath("Field1[0]", "Field1", reflect.TypeFor[awsSingleStringValue](), "Field1[0]", "Field1", reflect.TypeFor[*tfSingleStringField]()),
+					infoConvertingWithPath("Field1[0].Field1", reflect.TypeFor[string](), "Field1[0].Field1", reflect.TypeFor[types.String]()),
+					traceMatchedFieldsWithPath("Field1[1]", "Field1", reflect.TypeFor[awsSingleStringValue](), "Field1[1]", "Field1", reflect.TypeFor[*tfSingleStringField]()),
+					infoConvertingWithPath("Field1[1].Field1", reflect.TypeFor[string](), "Field1[1].Field1", reflect.TypeFor[types.String]()),
+				},
+			},
+		},
+
+		"legacy []*struct to SetNestedObject": {
+			"nil": {
+				Source: &awsSliceOfNestedObjectPointers{},
+				Target: &tfSetOfNestedObjectLegacy{},
+				WantTarget: &tfSetOfNestedObjectLegacy{
+					Field1: fwtypes.NewSetNestedObjectValueOfSliceMust(ctx, []*tfSingleStringField{}),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[*awsSliceOfNestedObjectPointers](), reflect.TypeFor[*tfSetOfNestedObjectLegacy]()),
+					infoConverting(reflect.TypeFor[awsSliceOfNestedObjectPointers](), reflect.TypeFor[*tfSetOfNestedObjectLegacy]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSliceOfNestedObjectPointers](), "Field1", reflect.TypeFor[*tfSetOfNestedObjectLegacy]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[[]*awsSingleStringValue](), "Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfSingleStringField]]()),
+					debugUsingLegacyFlattener("Field1", reflect.TypeFor[[]*awsSingleStringValue](), "Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfSingleStringField]]()),
+				},
+			},
+			"empty": {
+				Source: &awsSliceOfNestedObjectPointers{
+					Field1: []*awsSingleStringValue{},
+				},
+				Target: &tfSetOfNestedObjectLegacy{},
+				WantTarget: &tfSetOfNestedObjectLegacy{
+					Field1: fwtypes.NewSetNestedObjectValueOfSliceMust(ctx, []*tfSingleStringField{}),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[*awsSliceOfNestedObjectPointers](), reflect.TypeFor[*tfSetOfNestedObjectLegacy]()),
+					infoConverting(reflect.TypeFor[awsSliceOfNestedObjectPointers](), reflect.TypeFor[*tfSetOfNestedObjectLegacy]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSliceOfNestedObjectPointers](), "Field1", reflect.TypeFor[*tfSetOfNestedObjectLegacy]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[[]*awsSingleStringValue](), "Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfSingleStringField]]()),
+					debugUsingLegacyFlattener("Field1", reflect.TypeFor[[]*awsSingleStringValue](), "Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfSingleStringField]]()),
+				},
+			},
+			"values": {
+				Source: &awsSliceOfNestedObjectPointers{
+					Field1: []*awsSingleStringValue{
+						{Field1: "a"},
+						{Field1: "b"},
+					},
+				},
+				Target: &tfSetOfNestedObjectLegacy{},
+				WantTarget: &tfSetOfNestedObjectLegacy{
+					Field1: fwtypes.NewSetNestedObjectValueOfSliceMust(ctx, []*tfSingleStringField{
+						{Field1: types.StringValue("a")},
+						{Field1: types.StringValue("b")},
+					}),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[*awsSliceOfNestedObjectPointers](), reflect.TypeFor[*tfSetOfNestedObjectLegacy]()),
+					infoConverting(reflect.TypeFor[awsSliceOfNestedObjectPointers](), reflect.TypeFor[*tfSetOfNestedObjectLegacy]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSliceOfNestedObjectPointers](), "Field1", reflect.TypeFor[*tfSetOfNestedObjectLegacy]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[[]*awsSingleStringValue](), "Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfSingleStringField]]()),
+					debugUsingLegacyFlattener("Field1", reflect.TypeFor[[]*awsSingleStringValue](), "Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[tfSingleStringField]]()),
 					traceMatchedFieldsWithPath("Field1[0]", "Field1", reflect.TypeFor[awsSingleStringValue](), "Field1[0]", "Field1", reflect.TypeFor[*tfSingleStringField]()),
 					infoConvertingWithPath("Field1[0].Field1", reflect.TypeFor[string](), "Field1[0].Field1", reflect.TypeFor[types.String]()),
 					traceMatchedFieldsWithPath("Field1[1]", "Field1", reflect.TypeFor[awsSingleStringValue](), "Field1[1]", "Field1", reflect.TypeFor[*tfSingleStringField]()),

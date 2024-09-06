@@ -169,6 +169,10 @@ type tfSetOfNestedObject struct {
 	Field1 fwtypes.SetNestedObjectValueOf[tfSingleStringField] `tfsdk:"field1"`
 }
 
+type tfSetOfNestedObjectLegacy struct {
+	Field1 fwtypes.SetNestedObjectValueOf[tfSingleStringField] `tfsdk:"field1" autoflex:",legacy"`
+}
+
 type tfComplexValue struct {
 	Field1 types.String                                          `tfsdk:"field1"`
 	Field2 fwtypes.ListNestedObjectValueOf[tfListOfNestedObject] `tfsdk:"field2"`
