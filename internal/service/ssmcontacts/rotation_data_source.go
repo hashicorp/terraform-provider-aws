@@ -37,7 +37,7 @@ func (d *dataSourceRotation) Metadata(_ context.Context, request datasource.Meta
 func (d *dataSourceRotation) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": schema.StringAttribute{
+			names.AttrARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
 			},
@@ -46,8 +46,8 @@ func (d *dataSourceRotation) Schema(ctx context.Context, request datasource.Sche
 				ElementType: types.StringType,
 				Computed:    true,
 			},
-			"id": framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			names.AttrID: framework.IDAttribute(),
+			names.AttrName: schema.StringAttribute{
 				Computed: true,
 			},
 			"recurrence": schema.ListAttribute{
@@ -55,11 +55,11 @@ func (d *dataSourceRotation) Schema(ctx context.Context, request datasource.Sche
 				ElementType: fwtypes.NewObjectTypeOf[dsRecurrenceData](ctx),
 				Computed:    true,
 			},
-			"start_time": schema.StringAttribute{
+			names.AttrStartTime: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 			},
-			"tags": tftags.TagsAttributeComputedOnly(),
+			names.AttrTags: tftags.TagsAttributeComputedOnly(),
 			"time_zone_id": schema.StringAttribute{
 				Computed: true,
 			},
@@ -129,7 +129,7 @@ func (d *dataSourceRotation) Read(ctx context.Context, request datasource.ReadRe
 		return
 	}
 
-	data.Tags = fwflex.FlattenFrameworkStringValueMap(ctx, tags.Map())
+	data.Tags = tftags.FlattenStringValueMap(ctx, tags.Map())
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -141,7 +141,7 @@ type dataSourceRotationData struct {
 	Recurrence fwtypes.ListNestedObjectValueOf[dsRecurrenceData] `tfsdk:"recurrence"`
 	Name       types.String                                      `tfsdk:"name"`
 	StartTime  timetypes.RFC3339                                 `tfsdk:"start_time"`
-	Tags       types.Map                                         `tfsdk:"tags"`
+	Tags       tftags.Map                                        `tfsdk:"tags"`
 	TimeZoneID types.String                                      `tfsdk:"time_zone_id"`
 }
 

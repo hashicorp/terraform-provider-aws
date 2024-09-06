@@ -80,6 +80,7 @@ class MyConvertedCode(TerraformStack):
         aws_instance_this = Instance(self, "this_1",
             ami=Token.as_string(this_var.id),
             instance_market_options=InstanceInstanceMarketOptions(
+                market_type="spot",
                 spot_options=InstanceInstanceMarketOptionsSpotOptions(
                     max_price=Token.as_string(0.0031)
                 )
@@ -205,7 +206,7 @@ class MyConvertedCode(TerraformStack):
         aws_instance_example.override_logical_id("example")
 ```
 
-### Host resource group or Licence Manager registered AMI example
+### Host resource group or License Manager registered AMI example
 
 A host resource group is a collection of Dedicated Hosts that you can manage as a single entity. As you launch instances, License Manager allocates the hosts and launches instances on them based on the settings that you configured. You can add existing Dedicated Hosts to a host resource group and take advantage of automated host management through License Manager.
 
@@ -410,7 +411,7 @@ The `maintenance_options` block supports the following:
 
 The `instance_market_options` block supports the following:
 
-* `market_type` - (Optional) Type of market for the instance. Valid value is `spot`. Defaults to `spot`.
+* `market_type` - (Optional) Type of market for the instance. Valid values are `spot` and `capacity-block`. Defaults to `spot`. Required if `spot_options` is specified.
 * `spot_options` - (Optional) Block to configure the options for Spot Instances. See [Spot Options](#spot-options) below for details on attributes.
 
 ### Metadata Options
@@ -422,7 +423,7 @@ The `metadata_options` block supports the following:
 * `http_endpoint` - (Optional) Whether the metadata service is available. Valid values include `enabled` or `disabled`. Defaults to `enabled`.
 * `http_protocol_ipv6` - (Optional) Whether the IPv6 endpoint for the instance metadata service is enabled. Defaults to `disabled`.
 * `http_put_response_hop_limit` - (Optional) Desired HTTP PUT response hop limit for instance metadata requests. The larger the number, the further instance metadata requests can travel. Valid values are integer from `1` to `64`. Defaults to `1`.
-* `http_tokens` - (Optional) Whether or not the metadata service requires session tokens, also referred to as _Instance Metadata Service Version 2 (IMDSv2)_. Valid values include `optional` or `required`. Defaults to `optional`.
+* `http_tokens` - (Optional) Whether or not the metadata service requires session tokens, also referred to as _Instance Metadata Service Version 2 (IMDSv2)_. Valid values include `optional` or `required`.
 * `instance_metadata_tags` - (Optional) Enables or disables access to instance tags from the instance metadata service. Valid values include `enabled` or `disabled`. Defaults to `disabled`.
 
 For more information, see the documentation on the [Instance Metadata Service](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-metadata.html).
@@ -536,4 +537,4 @@ Using `terraform import`, import instances using the `id`. For example:
 % terraform import aws_instance.web i-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-67ef2c8ff896e0ca74cabe3df836f7f729bff46945ada7b8471c2e4bdf0cc046 -->
+<!-- cache-key: cdktf-0.20.1 input-37244e9e9462c7af98d7a696acd02d926dea0967817de2ceb33442a3e9d4488d -->

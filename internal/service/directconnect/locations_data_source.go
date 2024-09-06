@@ -6,16 +6,18 @@ package directconnect
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/directconnect"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/directconnect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
-// @SDKDataSource("aws_dx_locations")
-func DataSourceLocations() *schema.Resource {
+// @SDKDataSource("aws_dx_locations", name="Locations")
+func dataSourceLocations() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLocationsRead,
 
@@ -31,22 +33,19 @@ func DataSourceLocations() *schema.Resource {
 
 func dataSourceLocationsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
-	locations, err := FindLocations(ctx, conn, &directconnect.DescribeLocationsInput{})
+	input := &directconnect.DescribeLocationsInput{}
+	locations, err := findLocations(ctx, conn, input, tfslices.PredicateTrue[*awstypes.Location]())
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Direct Connect locations: %s", err)
-	}
-
-	var locationCodes []*string
-
-	for _, location := range locations {
-		locationCodes = append(locationCodes, location.LocationCode)
+		return sdkdiag.AppendErrorf(diags, "reading Direct Connect Locations: %s", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("location_codes", aws.StringValueSlice(locationCodes))
+	d.Set("location_codes", tfslices.ApplyToAll(locations, func(v awstypes.Location) string {
+		return aws.ToString(v.LocationCode)
+	}))
 
 	return diags
 }

@@ -1,13 +1,13 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package route53_test
+package route53
 
 import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestRecordMigrateState(t *testing.T) {
@@ -24,7 +24,7 @@ func TestRecordMigrateState(t *testing.T) {
 			StateVersion: 0,
 			ID:           "some_id",
 			Attributes: map[string]string{
-				"name": "www",
+				names.AttrName: "www",
 			},
 			Expected: "www",
 		},
@@ -32,7 +32,7 @@ func TestRecordMigrateState(t *testing.T) {
 			StateVersion: 0,
 			ID:           "some_id",
 			Attributes: map[string]string{
-				"name": "www.example.com.",
+				names.AttrName: "www.example.com.",
 			},
 			Expected: "www.example.com",
 		},
@@ -40,7 +40,7 @@ func TestRecordMigrateState(t *testing.T) {
 			StateVersion: 0,
 			ID:           "some_id",
 			Attributes: map[string]string{
-				"name": "www.example.com",
+				names.AttrName: "www.example.com",
 			},
 			Expected: "www.example.com",
 		},
@@ -51,15 +51,15 @@ func TestRecordMigrateState(t *testing.T) {
 			ID:         tc.ID,
 			Attributes: tc.Attributes,
 		}
-		is, err := tfroute53.RecordMigrateState(
+		is, err := recordMigrateState(
 			tc.StateVersion, is, tc.Meta)
 
 		if err != nil {
 			t.Fatalf("bad: %s, err: %#v", tn, err)
 		}
 
-		if is.Attributes["name"] != tc.Expected {
-			t.Fatalf("bad Route 53 Migrate: %s\n\n expected: %s", is.Attributes["name"], tc.Expected)
+		if is.Attributes[names.AttrName] != tc.Expected {
+			t.Fatalf("bad Route 53 Migrate: %s\n\n expected: %s", is.Attributes[names.AttrName], tc.Expected)
 		}
 	}
 }
@@ -76,20 +76,20 @@ func TestRecordMigrateStateV1toV2(t *testing.T) {
 		"v0_1": {
 			StateVersion: 1,
 			Attributes: map[string]string{
-				"weight":   "0",
-				"failover": "PRIMARY",
+				names.AttrWeight: "0", // nosemgrep: ci.literal-0-string-test-constant
+				"failover":       "PRIMARY",
 			},
 			Expected: map[string]string{
-				"weighted_routing_policy.#":        "1",
-				"weighted_routing_policy.0.weight": "0",
-				"failover_routing_policy.#":        "1",
+				"weighted_routing_policy.#":        "1", // nosemgrep: ci.literal-1-string-test-constant
+				"weighted_routing_policy.0.weight": "0", // nosemgrep: ci.literal-0-string-test-constant
+				"failover_routing_policy.#":        "1", // nosemgrep: ci.literal-1-string-test-constant
 				"failover_routing_policy.0.type":   "PRIMARY",
 			},
 		},
 		"v0_2": {
 			StateVersion: 0,
 			Attributes: map[string]string{
-				"weight": "-1",
+				names.AttrWeight: "-1",
 			},
 			Expected: map[string]string{},
 		},
@@ -100,7 +100,7 @@ func TestRecordMigrateStateV1toV2(t *testing.T) {
 			ID:         "route53_record",
 			Attributes: tc.Attributes,
 		}
-		is, err := tfroute53.ResourceRecord().MigrateState(
+		is, err := ResourceRecord().MigrateState(
 			tc.StateVersion, is, tc.Meta)
 
 		if err != nil {

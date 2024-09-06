@@ -6,9 +6,9 @@ package route53_test
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -60,7 +60,7 @@ func testAccCheckTrafficPolicySameJSON(resourceName, jsonExpected string) resour
 		}
 
 		var j, j2 tfrouter53.Route53TrafficPolicyDoc
-		if err := json.Unmarshal([]byte(rs.Primary.Attributes["json"]), &j); err != nil {
+		if err := json.Unmarshal([]byte(rs.Primary.Attributes[names.AttrJSON]), &j); err != nil {
 			return fmt.Errorf("json.Unmarshal: %w", err)
 		}
 		if err := json.Unmarshal([]byte(jsonExpected), &j2); err != nil {
@@ -82,7 +82,7 @@ func testAccCheckTrafficPolicySameJSON(resourceName, jsonExpected string) resour
 			return fmt.Errorf("json.Unmarshal: %w", err)
 		}
 
-		if !awsutil.DeepEqual(&j, &j2) {
+		if !reflect.DeepEqual(&j, &j2) {
 			return fmt.Errorf("expected out to be %v, got %v", j, j2)
 		}
 

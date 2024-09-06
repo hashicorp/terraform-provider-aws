@@ -29,7 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Deployment")
+// @FrameworkResource("aws_apprunner_deployment", name="Deployment")
 func newDeploymentResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &deploymentResource{}
 
@@ -66,12 +66,12 @@ func (r *deploymentResource) Schema(ctx context.Context, request resource.Schema
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"status": schema.StringAttribute{
+			names.AttrStatus: schema.StringAttribute{
 				Computed: true,
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 			}),
 		},

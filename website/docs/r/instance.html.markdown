@@ -60,6 +60,7 @@ data "aws_ami" "this" {
 resource "aws_instance" "this" {
   ami = data.aws_ami.this.id
   instance_market_options {
+    market_type = "spot"
     spot_options {
       max_price = 0.0031
     }
@@ -163,7 +164,7 @@ resource "aws_instance" "example" {
 }
 ```
 
-### Host resource group or Licence Manager registered AMI example
+### Host resource group or License Manager registered AMI example
 
 A host resource group is a collection of Dedicated Hosts that you can manage as a single entity. As you launch instances, License Manager allocates the hosts and launches instances on them based on the settings that you configured. You can add existing Dedicated Hosts to a host resource group and take advantage of automated host management through License Manager.
 
@@ -357,7 +358,7 @@ The `maintenance_options` block supports the following:
 
 The `instance_market_options` block supports the following:
 
-* `market_type` - (Optional) Type of market for the instance. Valid value is `spot`. Defaults to `spot`. Required if `spot_options` is specified.
+* `market_type` - (Optional) Type of market for the instance. Valid values are `spot` and `capacity-block`. Defaults to `spot`. Required if `spot_options` is specified.
 * `spot_options` - (Optional) Block to configure the options for Spot Instances. See [Spot Options](#spot-options) below for details on attributes.
 
 ### Metadata Options
@@ -369,7 +370,7 @@ The `metadata_options` block supports the following:
 * `http_endpoint` - (Optional) Whether the metadata service is available. Valid values include `enabled` or `disabled`. Defaults to `enabled`.
 * `http_protocol_ipv6` - (Optional) Whether the IPv6 endpoint for the instance metadata service is enabled. Defaults to `disabled`.
 * `http_put_response_hop_limit` - (Optional) Desired HTTP PUT response hop limit for instance metadata requests. The larger the number, the further instance metadata requests can travel. Valid values are integer from `1` to `64`. Defaults to `1`.
-* `http_tokens` - (Optional) Whether or not the metadata service requires session tokens, also referred to as _Instance Metadata Service Version 2 (IMDSv2)_. Valid values include `optional` or `required`. Defaults to `optional`.
+* `http_tokens` - (Optional) Whether or not the metadata service requires session tokens, also referred to as _Instance Metadata Service Version 2 (IMDSv2)_. Valid values include `optional` or `required`.
 * `instance_metadata_tags` - (Optional) Enables or disables access to instance tags from the instance metadata service. Valid values include `enabled` or `disabled`. Defaults to `disabled`.
 
 For more information, see the documentation on the [Instance Metadata Service](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-metadata.html).

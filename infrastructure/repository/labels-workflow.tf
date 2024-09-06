@@ -9,6 +9,10 @@ variable "workflow_labels" {
       color       = "844fba", # color:terraform (main)
       description = "Pertains to authentication; to the provider itself of otherwise."
     },
+    "autoflex" = {
+      color       = "844fba", # color:terraform (main)
+      description = "Pertains to AutoFlex."
+    },
     "aws-sdk-go-migration" = {
       color       = "844fba", # color:terraform (main)
       description = "Issues that are related to the providers migration to AWS SDK for Go v2."
@@ -68,6 +72,10 @@ variable "workflow_labels" {
     "fips" = {
       color       = "844fba", # color:terraform (main)
       description = "Pertains to the Federal Information Processing Standard (FIPS)."
+    },
+    "function" = {
+      color       = "844fba", # color:terraform (main)
+      description = "Pertains to provider functions."
     },
     "generators" = {
       color       = "60dea9", # color:nomad

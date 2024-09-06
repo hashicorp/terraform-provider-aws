@@ -12,14 +12,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkDataSource
 func newDataSourceDefaultTags(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceDefaultTags{}
-	d.SetMigratedFromPluginSDK(true)
 
 	return d, nil
 }
@@ -38,11 +37,11 @@ func (d *dataSourceDefaultTags) Metadata(_ context.Context, request datasource.M
 func (d *dataSourceDefaultTags) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
+			names.AttrID: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},
-			"tags": tftags.TagsAttributeComputedOnly(),
+			names.AttrTags: tftags.TagsAttributeComputedOnly(),
 		},
 	}
 }
@@ -63,12 +62,12 @@ func (d *dataSourceDefaultTags) Read(ctx context.Context, request datasource.Rea
 	tags := defaultTagsConfig.GetTags()
 
 	data.ID = types.StringValue(d.Meta().Partition)
-	data.Tags = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
+	data.Tags = tftags.FlattenStringValueMap(ctx, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 type dataSourceDefaultTagsData struct {
 	ID   types.String `tfsdk:"id"`
-	Tags types.Map    `tfsdk:"tags"`
+	Tags tftags.Map   `tfsdk:"tags"`
 }

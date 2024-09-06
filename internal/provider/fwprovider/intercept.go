@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	fwtypes "github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -21,6 +21,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+type interceptorFunc[Request, Response any] func(context.Context, Request, *Response, *conns.AWSClient, when, diag.Diagnostics) (context.Context, diag.Diagnostics)
 
 // A data source interceptor is functionality invoked during the data source's CRUD request lifecycle.
 // If a Before interceptor returns Diagnostics indicating an error occurred then
@@ -32,6 +34,15 @@ type dataSourceInterceptor interface {
 }
 
 type dataSourceInterceptors []dataSourceInterceptor
+
+type dataSourceInterceptorReadFunc interceptorFunc[datasource.ReadRequest, datasource.ReadResponse]
+
+// read returns a slice of interceptors that run on data source Read.
+func (s dataSourceInterceptors) read() []dataSourceInterceptorReadFunc {
+	return slices.ApplyToAll(s, func(e dataSourceInterceptor) dataSourceInterceptorReadFunc {
+		return e.read
+	})
+}
 
 type resourceCRUDRequest interface {
 	resource.CreateRequest | resource.ReadRequest | resource.UpdateRequest | resource.DeleteRequest
@@ -57,7 +68,7 @@ type resourceInterceptor interface {
 
 type resourceInterceptors []resourceInterceptor
 
-type resourceInterceptorFunc[Request resourceCRUDRequest, Response resourceCRUDResponse] func(context.Context, Request, *Response, *conns.AWSClient, when, diag.Diagnostics) (context.Context, diag.Diagnostics)
+type resourceInterceptorFunc[Request resourceCRUDRequest, Response resourceCRUDResponse] interceptorFunc[Request, Response]
 
 // create returns a slice of interceptors that run on resource Create.
 func (s resourceInterceptors) create() []resourceInterceptorFunc[resource.CreateRequest, resource.CreateResponse] {
@@ -98,8 +109,49 @@ const (
 	Finally                  // Interceptor is invoked after After or OnError
 )
 
-// interceptedHandler returns a handler that invokes the specified CRUD handler, running any interceptors.
-func interceptedHandler[Request resourceCRUDRequest, Response resourceCRUDResponse](interceptors []resourceInterceptorFunc[Request, Response], f func(context.Context, Request, *Response) diag.Diagnostics, meta *conns.AWSClient) func(context.Context, Request, *Response) diag.Diagnostics {
+// TODO Share the intercepted handler logic between data sources and resources..
+
+// interceptedDataSourceHandler returns a handler that invokes the specified data source Read handler, running any interceptors.
+func interceptedDataSourceReadHandler(interceptors []dataSourceInterceptorReadFunc, f func(context.Context, datasource.ReadRequest, *datasource.ReadResponse) diag.Diagnostics, meta *conns.AWSClient) func(context.Context, datasource.ReadRequest, *datasource.ReadResponse) diag.Diagnostics {
+	return func(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) diag.Diagnostics {
+		var diags diag.Diagnostics
+		// Before interceptors are run first to last.
+		forward := interceptors
+
+		when := Before
+		for _, v := range forward {
+			ctx, diags = v(ctx, request, response, meta, when, diags)
+
+			// Short circuit if any Before interceptor errors.
+			if diags.HasError() {
+				return diags
+			}
+		}
+
+		// All other interceptors are run last to first.
+		reverse := slices.Reverse(forward)
+		diags = f(ctx, request, response)
+
+		if diags.HasError() {
+			when = OnError
+		} else {
+			when = After
+		}
+		for _, v := range reverse {
+			ctx, diags = v(ctx, request, response, meta, when, diags)
+		}
+
+		when = Finally
+		for _, v := range reverse {
+			ctx, diags = v(ctx, request, response, meta, when, diags)
+		}
+
+		return diags
+	}
+}
+
+// interceptedResourceHandler returns a handler that invokes the specified resource CRUD handler, running any interceptors.
+func interceptedResourceHandler[Request resourceCRUDRequest, Response resourceCRUDResponse](interceptors []resourceInterceptorFunc[Request, Response], f func(context.Context, Request, *Response) diag.Diagnostics, meta *conns.AWSClient) func(context.Context, Request, *Response) diag.Diagnostics {
 	return func(ctx context.Context, request Request, response *Response) diag.Diagnostics {
 		var diags diag.Diagnostics
 		// Before interceptors are run first to last.
@@ -168,9 +220,13 @@ func (w *wrappedDataSource) Schema(ctx context.Context, request datasource.Schem
 }
 
 func (w *wrappedDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	f := func(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) diag.Diagnostics {
+		w.inner.Read(ctx, request, response)
+		return response.Diagnostics
+	}
 	ctx = w.bootstrapContext(ctx, w.meta)
-	// TODO Run interceptors.
-	w.inner.Read(ctx, request, response)
+	diags := interceptedDataSourceReadHandler(w.interceptors.read(), f, w.meta)(ctx, request, response)
+	response.Diagnostics = diags
 }
 
 func (w *wrappedDataSource) Configure(ctx context.Context, request datasource.ConfigureRequest, response *datasource.ConfigureResponse) {
@@ -224,7 +280,7 @@ func (w *wrappedResource) Create(ctx context.Context, request resource.CreateReq
 		return response.Diagnostics
 	}
 	ctx = w.bootstrapContext(ctx, w.meta)
-	diags := interceptedHandler(w.interceptors.create(), f, w.meta)(ctx, request, response)
+	diags := interceptedResourceHandler(w.interceptors.create(), f, w.meta)(ctx, request, response)
 	response.Diagnostics = diags
 }
 
@@ -234,7 +290,7 @@ func (w *wrappedResource) Read(ctx context.Context, request resource.ReadRequest
 		return response.Diagnostics
 	}
 	ctx = w.bootstrapContext(ctx, w.meta)
-	diags := interceptedHandler(w.interceptors.read(), f, w.meta)(ctx, request, response)
+	diags := interceptedResourceHandler(w.interceptors.read(), f, w.meta)(ctx, request, response)
 	response.Diagnostics = diags
 }
 
@@ -244,7 +300,7 @@ func (w *wrappedResource) Update(ctx context.Context, request resource.UpdateReq
 		return response.Diagnostics
 	}
 	ctx = w.bootstrapContext(ctx, w.meta)
-	diags := interceptedHandler(w.interceptors.update(), f, w.meta)(ctx, request, response)
+	diags := interceptedResourceHandler(w.interceptors.update(), f, w.meta)(ctx, request, response)
 	response.Diagnostics = diags
 }
 
@@ -254,7 +310,7 @@ func (w *wrappedResource) Delete(ctx context.Context, request resource.DeleteReq
 		return response.Diagnostics
 	}
 	ctx = w.bootstrapContext(ctx, w.meta)
-	diags := interceptedHandler(w.interceptors.delete(), f, w.meta)(ctx, request, response)
+	diags := interceptedResourceHandler(w.interceptors.delete(), f, w.meta)(ctx, request, response)
 	response.Diagnostics = diags
 }
 
@@ -284,8 +340,6 @@ func (w *wrappedResource) ModifyPlan(ctx context.Context, request resource.Modif
 	if v, ok := w.inner.(resource.ResourceWithModifyPlan); ok {
 		ctx = w.bootstrapContext(ctx, w.meta)
 		v.ModifyPlan(ctx, request, response)
-
-		return
 	}
 }
 
@@ -315,6 +369,16 @@ func (w *wrappedResource) UpgradeState(ctx context.Context) map[int64]resource.S
 	return nil
 }
 
+func (w *wrappedResource) MoveState(ctx context.Context) []resource.StateMover {
+	if v, ok := w.inner.(resource.ResourceWithMoveState); ok {
+		ctx = w.bootstrapContext(ctx, w.meta)
+
+		return v.MoveState(ctx)
+	}
+
+	return nil
+}
+
 // tagsResourceInterceptor implements transparent tagging for resources.
 type tagsResourceInterceptor struct {
 	tags *types.ServicePackageResourceTags
@@ -337,7 +401,7 @@ func (r tagsResourceInterceptor) create(ctx context.Context, request resource.Cr
 
 	switch when {
 	case Before:
-		var planTags fwtypes.Map
+		var planTags tftags.Map
 		diags.Append(request.Plan.GetAttribute(ctx, path.Root(names.AttrTags), &planTags)...)
 
 		if diags.HasError() {
@@ -355,7 +419,7 @@ func (r tagsResourceInterceptor) create(ctx context.Context, request resource.Cr
 		// Remove any provider configured ignore_tags and system tags from those passed to the service API.
 		// Computed tags_all include any provider configured default_tags.
 		stateTagsAll := flex.FlattenFrameworkStringValueMapLegacy(ctx, tagsInContext.TagsIn.MustUnwrap().IgnoreSystem(inContext.ServicePackageName).IgnoreConfig(tagsInContext.IgnoreConfig).Map())
-		diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrTagsAll), &stateTagsAll)...)
+		diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrTagsAll), tftags.NewMapFromMapValue(stateTagsAll))...)
 
 		if diags.HasError() {
 			return ctx, diags
@@ -427,6 +491,11 @@ func (r tagsResourceInterceptor) read(ctx context.Context, request resource.Read
 						ListTags(context.Context, any, string, string) error
 					}); ok && r.tags.ResourceType != "" {
 						err = v.ListTags(ctx, meta, identifier, r.tags.ResourceType) // Sets tags in Context
+					} else {
+						tflog.Warn(ctx, "No ListTags method found", map[string]interface{}{
+							"ServicePackage": sp.ServicePackageName(),
+							"ResourceType":   r.tags.ResourceType,
+						})
 					}
 
 					// ISO partitions may not support tagging, giving error.
@@ -449,8 +518,8 @@ func (r tagsResourceInterceptor) read(ctx context.Context, request resource.Read
 		stateTags := tftags.Null
 		// Remove any provider configured ignore_tags and system tags from those returned from the service API.
 		// The resource's configured tags do not include any provider configured default_tags.
-		if v := apiTags.IgnoreSystem(inContext.ServicePackageName).IgnoreConfig(tagsInContext.IgnoreConfig).ResolveDuplicatesFramework(ctx, tagsInContext.DefaultConfig, tagsInContext.IgnoreConfig, response, diags).Map(); len(v) > 0 {
-			stateTags = flex.FlattenFrameworkStringValueMapLegacy(ctx, v)
+		if v := apiTags.IgnoreSystem(inContext.ServicePackageName).IgnoreConfig(tagsInContext.IgnoreConfig).ResolveDuplicatesFramework(ctx, tagsInContext.DefaultConfig, tagsInContext.IgnoreConfig, response, &diags).Map(); len(v) > 0 {
+			stateTags = tftags.NewMapFromMapValue(flex.FlattenFrameworkStringValueMapLegacy(ctx, v))
 		}
 		diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrTags), &stateTags)...)
 
@@ -460,7 +529,7 @@ func (r tagsResourceInterceptor) read(ctx context.Context, request resource.Read
 
 		// Computed tags_all do.
 		stateTagsAll := flex.FlattenFrameworkStringValueMapLegacy(ctx, apiTags.IgnoreSystem(inContext.ServicePackageName).IgnoreConfig(tagsInContext.IgnoreConfig).Map())
-		diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrTagsAll), &stateTagsAll)...)
+		diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrTagsAll), tftags.NewMapFromMapValue(stateTagsAll))...)
 
 		if diags.HasError() {
 			return ctx, diags
@@ -502,7 +571,7 @@ func (r tagsResourceInterceptor) update(ctx context.Context, request resource.Up
 
 	switch when {
 	case Before:
-		var planTags fwtypes.Map
+		var planTags tftags.Map
 		diags.Append(request.Plan.GetAttribute(ctx, path.Root(names.AttrTags), &planTags)...)
 
 		if diags.HasError() {
@@ -516,7 +585,7 @@ func (r tagsResourceInterceptor) update(ctx context.Context, request resource.Up
 
 		tagsInContext.TagsIn = option.Some(tags)
 
-		var oldTagsAll, newTagsAll fwtypes.Map
+		var oldTagsAll, newTagsAll tftags.Map
 
 		diags.Append(request.State.GetAttribute(ctx, path.Root(names.AttrTagsAll), &oldTagsAll)...)
 
@@ -554,6 +623,11 @@ func (r tagsResourceInterceptor) update(ctx context.Context, request resource.Up
 						UpdateTags(context.Context, any, string, string, any, any) error
 					}); ok && r.tags.ResourceType != "" {
 						err = v.UpdateTags(ctx, meta, identifier, r.tags.ResourceType, oldTagsAll, newTagsAll)
+					} else {
+						tflog.Warn(ctx, "No UpdateTags method found", map[string]interface{}{
+							"ServicePackage": sp.ServicePackageName(),
+							"ResourceType":   r.tags.ResourceType,
+						})
 					}
 
 					// ISO partitions may not support tagging, giving error.

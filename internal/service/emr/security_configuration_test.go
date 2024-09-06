@@ -33,10 +33,10 @@ func TestAccEMRSecurityConfiguration_basic(t *testing.T) {
 				Config: testAccSecurityConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "configuration"),
-					acctest.CheckResourceAttrRFC3339(resourceName, "creation_date"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrConfiguration),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreationDate),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 				),
 			},
 			{
@@ -85,8 +85,8 @@ func TestAccEMRSecurityConfiguration_nameGenerated(t *testing.T) {
 				Config: testAccSecurityConfigurationConfig_nameGenerated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityConfigurationExists(ctx, resourceName),
-					acctest.CheckResourceAttrNameGeneratedWithPrefix(resourceName, "name", "tf-emr-sc-"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-emr-sc-"),
+					acctest.CheckResourceAttrNameGeneratedWithPrefix(resourceName, names.AttrName, "tf-emr-sc-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf-emr-sc-"),
 				),
 			},
 			{
@@ -112,8 +112,8 @@ func TestAccEMRSecurityConfiguration_namePrefix(t *testing.T) {
 				Config: testAccSecurityConfigurationConfig_namePrefix("tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityConfigurationExists(ctx, resourceName),
-					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf-acc-test-prefix-"),
 				),
 			},
 			{
@@ -127,7 +127,7 @@ func TestAccEMRSecurityConfiguration_namePrefix(t *testing.T) {
 
 func testAccCheckSecurityConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_emr_security_configuration" {
@@ -158,7 +158,7 @@ func testAccCheckSecurityConfigurationExists(ctx context.Context, n string) reso
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRClient(ctx)
 
 		_, err := tfemr.FindSecurityConfigurationByName(ctx, conn, rs.Primary.ID)
 

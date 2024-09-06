@@ -4,5 +4,5 @@
 package amplify
 
 const (
-	StageNone = "NONE"
+	stageNone = "NONE"
 )

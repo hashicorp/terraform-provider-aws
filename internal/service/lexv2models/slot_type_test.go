@@ -44,10 +44,50 @@ func TestAccLexV2ModelsSlotType_basic(t *testing.T) {
 				Config: testAccSlotTypeConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSlotTypeExists(ctx, resourceName, &slottype),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccLexV2ModelsSlotType_values(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var slottype lexmodelsv2.DescribeSlotTypeOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lexv2models_slot_type.test"
+	botLocaleName := "aws_lexv2models_bot_locale.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSlotTypeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSlotTypeConfig_values(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSlotTypeExists(ctx, resourceName, &slottype),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
+					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "slot_type_values.#"),
+					resource.TestCheckResourceAttrSet(resourceName, "slot_type_values.0.%"),
+					resource.TestCheckResourceAttr(resourceName, "slot_type_values.0.sample_value.0.value", "testval"),
 				),
 			},
 			{
@@ -204,6 +244,34 @@ resource "aws_lexv2models_slot_type" "test" {
 
   value_selection_setting {
     resolution_strategy = "OriginalValue"
+  }
+}
+`, rName))
+}
+
+func testAccSlotTypeConfig_values(rName string) string {
+	return acctest.ConfigCompose(
+		testAccSlotTypeConfig_base(rName, 60, true),
+		fmt.Sprintf(`
+resource "aws_lexv2models_slot_type" "test" {
+  bot_id      = aws_lexv2models_bot.test.id
+  bot_version = aws_lexv2models_bot_locale.test.bot_version
+  name        = %[1]q
+  locale_id   = aws_lexv2models_bot_locale.test.locale_id
+
+  value_selection_setting {
+    resolution_strategy = "OriginalValue"
+  }
+
+  slot_type_values {
+    sample_value {
+      value = "testval"
+    }
+  }
+  slot_type_values {
+    sample_value {
+      value = "testval2"
+    }
   }
 }
 `, rName))

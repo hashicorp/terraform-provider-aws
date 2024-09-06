@@ -14,11 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/tags"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Input")
+// @FrameworkDataSource("aws_medialive_input", name="Input")
+// @Testing(tagsTest=true)
 func newDataSourceInput(_ context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceInput{}, nil
 }
@@ -38,7 +39,7 @@ func (d *dataSourceInput) Metadata(_ context.Context, _ datasource.MetadataReque
 func (d *dataSourceInput) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"attached_channels": schema.ListAttribute{
 				CustomType: fwtypes.ListOfStringType,
 				Computed:   true,
@@ -47,7 +48,7 @@ func (d *dataSourceInput) Schema(ctx context.Context, req datasource.SchemaReque
 				CustomType: fwtypes.NewListNestedObjectTypeOf[dsDestination](ctx),
 				Computed:   true,
 			},
-			"id": schema.StringAttribute{
+			names.AttrID: schema.StringAttribute{
 				Required: true,
 			},
 			"input_class": schema.StringAttribute{
@@ -70,13 +71,13 @@ func (d *dataSourceInput) Schema(ctx context.Context, req datasource.SchemaReque
 				CustomType: fwtypes.NewListNestedObjectTypeOf[dsMediaConnectFlow](ctx),
 				Computed:   true,
 			},
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Computed: true,
 			},
-			"role_arn": schema.StringAttribute{
+			names.AttrRoleARN: schema.StringAttribute{
 				Computed: true,
 			},
-			"security_groups": schema.ListAttribute{
+			names.AttrSecurityGroups: schema.ListAttribute{
 				CustomType: fwtypes.ListOfStringType,
 				Computed:   true,
 			},
@@ -84,12 +85,12 @@ func (d *dataSourceInput) Schema(ctx context.Context, req datasource.SchemaReque
 				CustomType: fwtypes.NewListNestedObjectTypeOf[dsInputSource](ctx),
 				Computed:   true,
 			},
-			"state": schema.StringAttribute{
+			names.AttrState: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.InputState](),
 				Computed:   true,
 			},
-			names.AttrTags: tags.TagsAttributeComputedOnly(),
-			"type": schema.StringAttribute{
+			names.AttrTags: tftags.TagsAttributeComputedOnly(),
+			names.AttrType: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.InputType](),
 				Computed:   true,
 			},
@@ -121,7 +122,7 @@ func (d *dataSourceInput) Read(ctx context.Context, req datasource.ReadRequest, 
 		return
 	}
 
-	data.Tags = fwflex.FlattenFrameworkStringValueMap(ctx, out.Tags)
+	data.Tags = tftags.FlattenStringValueMap(ctx, out.Tags)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -141,7 +142,7 @@ type dataSourceInputData struct {
 	SecurityGroups    fwtypes.ListValueOf[types.String]                   `tfsdk:"security_groups"`
 	Sources           fwtypes.ListNestedObjectValueOf[dsInputSource]      `tfsdk:"sources"`
 	State             fwtypes.StringEnum[awstypes.InputState]             `tfsdk:"state"`
-	Tags              types.Map                                           `tfsdk:"tags"`
+	Tags              tftags.Map                                          `tfsdk:"tags"`
 	Type              fwtypes.StringEnum[awstypes.InputType]              `tfsdk:"type"`
 }
 
