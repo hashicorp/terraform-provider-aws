@@ -182,7 +182,7 @@ func (flattener autoFlattener) convert(ctx context.Context, sourcePath path.Path
 		return diags
 
 	case reflect.Struct:
-		diags.Append(flattener.struct_(ctx, sourcePath, vFrom, false, targetPath, tTo, vTo)...)
+		diags.Append(flattener.struct_(ctx, sourcePath, vFrom, false, targetPath, tTo, vTo, fieldOpts)...)
 		return diags
 
 	case reflect.Interface:
@@ -593,7 +593,7 @@ func (flattener autoFlattener) pointer(ctx context.Context, sourcePath path.Path
 		return diags
 
 	case reflect.Struct:
-		diags.Append(flattener.struct_(ctx, sourcePath, vElem, isNilFrom, targetPath, tTo, vTo)...)
+		diags.Append(flattener.struct_(ctx, sourcePath, vElem, isNilFrom, targetPath, tTo, vTo, fieldOpts)...)
 		return diags
 	}
 
@@ -659,14 +659,14 @@ func (flattener autoFlattener) interface_(ctx context.Context, vFrom reflect.Val
 }
 
 // struct_ copies an AWS API struct value to a compatible Plugin Framework value.
-func (flattener autoFlattener) struct_(ctx context.Context, sourcePath path.Path, vFrom reflect.Value, isNilFrom bool, targetPath path.Path, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+func (flattener autoFlattener) struct_(ctx context.Context, sourcePath path.Path, vFrom reflect.Value, isNilFrom bool, targetPath path.Path, tTo attr.Type, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	if tTo, ok := tTo.(fwtypes.NestedObjectType); ok {
 		//
 		// *struct -> types.List(OfObject) or types.Object.
 		//
-		diags.Append(flattener.structToNestedObject(ctx, sourcePath, vFrom, isNilFrom, targetPath, tTo, vTo)...)
+		diags.Append(flattener.structToNestedObject(ctx, sourcePath, vFrom, isNilFrom, targetPath, tTo, vTo, fieldOpts)...)
 		return diags
 	}
 
@@ -1126,18 +1126,38 @@ func (flattener autoFlattener) structMapToObjectList(ctx context.Context, source
 }
 
 // structToNestedObject copies an AWS API struct value to a compatible Plugin Framework NestedObjectValue value.
-func (flattener autoFlattener) structToNestedObject(ctx context.Context, sourcePath path.Path, vFrom reflect.Value, isNullFrom bool, targetPath path.Path, tTo fwtypes.NestedObjectType, vTo reflect.Value) diag.Diagnostics {
+func (flattener autoFlattener) structToNestedObject(ctx context.Context, sourcePath path.Path, vFrom reflect.Value, isNullFrom bool, targetPath path.Path, tTo fwtypes.NestedObjectType, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	if isNullFrom {
-		val, d := tTo.NullValue(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
+	if fieldOpts.legacy {
+		tflog.SubsystemDebug(ctx, subsystemName, "Using legacy flattener")
+		if isNullFrom {
+			to, d := tTo.NewObjectPtr(ctx)
+			diags.Append(d...)
+			if diags.HasError() {
+				return diags
+			}
+
+			val, d := tTo.ValueFromObjectPtr(ctx, to)
+			diags.Append(d...)
+			if diags.HasError() {
+				return diags
+			}
+
+			vTo.Set(reflect.ValueOf(val))
 			return diags
 		}
+	} else {
+		if isNullFrom {
+			val, d := tTo.NullValue(ctx)
+			diags.Append(d...)
+			if diags.HasError() {
+				return diags
+			}
 
-		vTo.Set(reflect.ValueOf(val))
-		return diags
+			vTo.Set(reflect.ValueOf(val))
+			return diags
+		}
 	}
 
 	// Create a new target structure and walk its fields.
