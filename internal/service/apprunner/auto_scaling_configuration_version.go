@@ -181,7 +181,7 @@ func resourceAutoScalingConfigurationDelete(ctx context.Context, d *schema.Resou
 		AutoScalingConfigurationArn: aws.String(d.Id()),
 	})
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if errs.IsA[*types.ResourceNotFoundException](err) || errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "The auto scaling configuration you specified has been deleted") {
 		return diags
 	}
 
