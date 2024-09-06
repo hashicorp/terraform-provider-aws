@@ -203,7 +203,7 @@ docs-link-check: ## [CI] Documentation Checks / markdown-link-check
 	@echo "make: Documentation Checks / markdown-link-check..."
 	@docker run --rm \
 		-v "$(PWD):/markdown" \
-		ghcr.io/yakdriver/md-check-links:2.1.0 \
+		ghcr.io/yakdriver/md-check-links:2.2.0 \
 		--config /markdown/.ci/.markdownlinkcheck.json \
 		--verbose yes \
 		--quiet yes \
@@ -712,7 +712,7 @@ website-link-check-markdown: ## [CI] Website Checks / markdown-link-check-a-z-ma
 	@echo "make: Website Checks / markdown-link-check-a-z-markdown..."
 	@docker run --rm \
 		-v "$(PWD):/markdown" \
-		ghcr.io/yakdriver/md-check-links:2.1.0 \
+		ghcr.io/yakdriver/md-check-links:2.2.0 \
 		--config /markdown/.ci/.markdownlinkcheck.json \
 		--verbose yes \
 		--quiet yes \
@@ -724,7 +724,7 @@ website-link-check-md: ## [CI] Website Checks / markdown-link-check-md
 	@echo "make: Website Checks / markdown-link-check-md..."
 	@docker run --rm \
 		-v "$(PWD):/markdown" \
-		ghcr.io/yakdriver/md-check-links:2.1.0 \
+		ghcr.io/yakdriver/md-check-links:2.2.0 \
 		--config /markdown/.ci/.markdownlinkcheck.json \
 		--verbose yes \
 		--quiet yes \
@@ -864,6 +864,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	go-misspell \
 	golangci-lint1 \
 	golangci-lint2 \
+	golangci-lint3 \
 	golangci-lint \
 	help \
 	import-lint \

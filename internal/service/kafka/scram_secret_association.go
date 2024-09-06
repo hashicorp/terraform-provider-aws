@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/kafka"
@@ -19,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -163,7 +163,7 @@ func findSCRAMSecretsByClusterARN(ctx context.Context, conn *kafka.Client, clust
 }
 
 func associateSRAMSecrets(ctx context.Context, conn *kafka.Client, clusterARN string, secretARNs []string) error {
-	for _, chunk := range tfslices.Chunks(secretARNs, scramSecretBatchSize) {
+	for chunk := range slices.Chunk(secretARNs, scramSecretBatchSize) {
 		input := &kafka.BatchAssociateScramSecretInput{
 			ClusterArn:    aws.String(clusterARN),
 			SecretArnList: chunk,
@@ -184,7 +184,7 @@ func associateSRAMSecrets(ctx context.Context, conn *kafka.Client, clusterARN st
 }
 
 func disassociateSRAMSecrets(ctx context.Context, conn *kafka.Client, clusterARN string, secretARNs []string) error {
-	for _, chunk := range tfslices.Chunks(secretARNs, scramSecretBatchSize) {
+	for chunk := range slices.Chunk(secretARNs, scramSecretBatchSize) {
 		input := &kafka.BatchDisassociateScramSecretInput{
 			ClusterArn:    aws.String(clusterARN),
 			SecretArnList: chunk,

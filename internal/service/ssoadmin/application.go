@@ -521,8 +521,8 @@ type resourceApplicationData struct {
 	Name                   types.String `tfsdk:"name"`
 	PortalOptions          types.List   `tfsdk:"portal_options"`
 	Status                 types.String `tfsdk:"status"`
-	Tags                   types.Map    `tfsdk:"tags"`
-	TagsAll                types.Map    `tfsdk:"tags_all"`
+	Tags                   tftags.Map   `tfsdk:"tags"`
+	TagsAll                tftags.Map   `tfsdk:"tags_all"`
 }
 
 type portalOptionsData struct {

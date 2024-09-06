@@ -1403,6 +1403,35 @@ func testAccCheckGraphQLAPITypeExists(ctx context.Context, n, typeName string) r
 	}
 }
 
+func testAccGraphQLAPI_apiType(t *testing.T) {
+	ctx := acctest.Context(t)
+	var api1 awstypes.GraphqlApi
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_appsync_graphql_api.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGraphQLAPIDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGraphQLAPIConfig_apiType(rName, string(awstypes.GraphQLApiTypeMerged)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "api_type", string(awstypes.GraphQLApiTypeMerged)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccGraphQLAPIConfig_authenticationType(rName, authenticationType string) string {
 	return fmt.Sprintf(`
 resource "aws_appsync_graphql_api" "test" {
@@ -1881,4 +1910,47 @@ resource "aws_appsync_graphql_api" "test" {
   resolver_count_limit = %[2]d
 }
 `, rName, resolverCountLimit)
+}
+
+func testAccGraphQLAPIConfig_apiType(rName, apiType string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  assume_role_policy = data.aws_iam_policy_document.test.json
+  name_prefix        = %[1]q
+}
+
+data "aws_caller_identity" "current" {}
+
+data "aws_partition" "current" {}
+
+data "aws_region" "current" {}
+
+data "aws_iam_policy_document" "test" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      identifiers = ["appsync.amazonaws.com"]
+      type        = "Service"
+    }
+    condition {
+      test     = "StringEquals"
+      values   = [data.aws_caller_identity.current.account_id]
+      variable = "aws:SourceAccount"
+    }
+
+    condition {
+      test     = "ArnLike"
+      values   = ["arn:${data.aws_partition.current.partition}:appsync:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}::apis/*"]
+      variable = "aws:SourceArn"
+    }
+  }
+}
+
+resource "aws_appsync_graphql_api" "test" {
+  authentication_type           = "API_KEY"
+  name                          = %[1]q
+  api_type                      = %[2]q
+  merged_api_execution_role_arn = aws_iam_role.test.arn
+}
+`, rName, apiType)
 }

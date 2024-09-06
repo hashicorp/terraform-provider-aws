@@ -80,6 +80,7 @@ class MyConvertedCode(TerraformStack):
         aws_instance_this = Instance(self, "this_1",
             ami=Token.as_string(this_var.id),
             instance_market_options=InstanceInstanceMarketOptions(
+                market_type="spot",
                 spot_options=InstanceInstanceMarketOptionsSpotOptions(
                     max_price=Token.as_string(0.0031)
                 )
@@ -536,4 +537,4 @@ Using `terraform import`, import instances using the `id`. For example:
 % terraform import aws_instance.web i-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-3985aca46bf8090d5c3b195b1827ddbc47234b8d84b5ceda5eeb1e979f701d25 -->
+<!-- cache-key: cdktf-0.20.1 input-37244e9e9462c7af98d7a696acd02d926dea0967817de2ceb33442a3e9d4488d -->

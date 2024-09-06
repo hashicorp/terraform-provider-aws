@@ -296,8 +296,8 @@ type accessGrantsLocationResourceModel struct {
 	IAMRoleARN              fwtypes.ARN  `tfsdk:"iam_role_arn"`
 	ID                      types.String `tfsdk:"id"`
 	LocationScope           types.String `tfsdk:"location_scope"`
-	Tags                    types.Map    `tfsdk:"tags"`
-	TagsAll                 types.Map    `tfsdk:"tags_all"`
+	Tags                    tftags.Map   `tfsdk:"tags"`
+	TagsAll                 tftags.Map   `tfsdk:"tags_all"`
 }
 
 const (

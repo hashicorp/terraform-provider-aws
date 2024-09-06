@@ -68,8 +68,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceInviteAccepter,
+			Factory:  resourceInviteAccepter,
 			TypeName: "aws_guardduty_invite_accepter",
+			Name:     "Invite Accepter",
 		},
 		{
 			Factory:  ResourceIPSet,

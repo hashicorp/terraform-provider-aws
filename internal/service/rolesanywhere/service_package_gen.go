@@ -29,7 +29,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceProfile,
+			Factory:  resourceProfile,
 			TypeName: "aws_rolesanywhere_profile",
 			Name:     "Profile",
 			Tags: &types.ServicePackageResourceTags{
@@ -37,7 +37,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceTrustAnchor,
+			Factory:  resourceTrustAnchor,
 			TypeName: "aws_rolesanywhere_trust_anchor",
 			Name:     "Trust Anchor",
 			Tags: &types.ServicePackageResourceTags{

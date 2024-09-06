@@ -513,6 +513,8 @@ service/paymentcryptography:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_paymentcryptography_'
 service/pcaconnectorad:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_pcaconnectorad_'
+service/pcs:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_pcs_'
 service/personalize:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_personalize_'
 service/personalizeevents:
