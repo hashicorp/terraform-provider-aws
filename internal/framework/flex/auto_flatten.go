@@ -174,7 +174,7 @@ func (flattener autoFlattener) convert(ctx context.Context, sourcePath path.Path
 		return diags
 
 	case reflect.Slice:
-		diags.Append(flattener.slice(ctx, sourcePath, vFrom, targetPath, tTo, vTo)...)
+		diags.Append(flattener.slice(ctx, sourcePath, vFrom, targetPath, tTo, vTo, fieldOpts)...)
 		return diags
 
 	case reflect.Map:
@@ -686,7 +686,7 @@ func (flattener autoFlattener) struct_(ctx context.Context, sourcePath path.Path
 }
 
 // slice copies an AWS API slice value to a compatible Plugin Framework value.
-func (flattener autoFlattener) slice(ctx context.Context, sourcePath path.Path, vFrom reflect.Value, targetPath path.Path, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+func (flattener autoFlattener) slice(ctx context.Context, sourcePath path.Path, vFrom reflect.Value, targetPath path.Path, tTo attr.Type, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch tSliceElem := vFrom.Type().Elem(); tSliceElem.Kind() {
@@ -703,7 +703,7 @@ func (flattener autoFlattener) slice(ctx context.Context, sourcePath path.Path, 
 			//
 			// []int32 or []int64 -> types.Set(OfInt64).
 			//
-			diags.Append(flattener.sliceOfPrimitiveToSet(ctx, vFrom, tTo, vTo, types.Int64Type, newInt64ValueFromReflectValue)...)
+			diags.Append(flattener.sliceOfPrimitiveToSet(ctx, vFrom, tTo, vTo, types.Int64Type, newInt64ValueFromReflectValue, fieldOpts)...)
 			return diags
 		}
 
@@ -720,7 +720,7 @@ func (flattener autoFlattener) slice(ctx context.Context, sourcePath path.Path, 
 			//
 			// []string -> types.Set(OfString).
 			//
-			diags.Append(flattener.sliceOfPrimitiveToSet(ctx, vFrom, tTo, vTo, types.StringType, newStringValueFromReflectValue)...)
+			diags.Append(flattener.sliceOfPrimitiveToSet(ctx, vFrom, tTo, vTo, types.StringType, newStringValueFromReflectValue, fieldOpts)...)
 			return diags
 		}
 
@@ -739,7 +739,7 @@ func (flattener autoFlattener) slice(ctx context.Context, sourcePath path.Path, 
 				//
 				// []*int32 -> types.Set(OfInt64).
 				//
-				diags.Append(flattener.sliceOfPrimitiveToSet(ctx, vFrom, tTo, vTo, types.Int64Type, newInt64ValueFromReflectPointerValue)...)
+				diags.Append(flattener.sliceOfPrimitiveToSet(ctx, vFrom, tTo, vTo, types.Int64Type, newInt64ValueFromReflectPointerValue, fieldOpts)...)
 				return diags
 			}
 
@@ -756,7 +756,7 @@ func (flattener autoFlattener) slice(ctx context.Context, sourcePath path.Path, 
 				//
 				// []*int64 -> types.Set(OfInt64).
 				//
-				diags.Append(flattener.sliceOfPrimitiveToSet(ctx, vFrom, tTo, vTo, types.Int64Type, newInt64ValueFromReflectPointerValue)...)
+				diags.Append(flattener.sliceOfPrimitiveToSet(ctx, vFrom, tTo, vTo, types.Int64Type, newInt64ValueFromReflectPointerValue, fieldOpts)...)
 				return diags
 			}
 
@@ -773,7 +773,7 @@ func (flattener autoFlattener) slice(ctx context.Context, sourcePath path.Path, 
 				//
 				// []*string -> types.Set(OfString).
 				//
-				diags.Append(flattener.sliceOfPrimitiveToSet(ctx, vFrom, tTo, vTo, types.StringType, newStringValueFromReflectPointerValue)...)
+				diags.Append(flattener.sliceOfPrimitiveToSet(ctx, vFrom, tTo, vTo, types.StringType, newStringValueFromReflectPointerValue, fieldOpts)...)
 				return diags
 			}
 
@@ -1262,20 +1262,44 @@ func (flattener autoFlattener) sliceOfPrimtiveToList(ctx context.Context, vFrom 
 }
 
 // sliceOfPrimitiveToSet copies an AWS API slice of primitive (or pointer to primitive) value to a compatible Plugin Framework Set value.
-func (flattener autoFlattener) sliceOfPrimitiveToSet(ctx context.Context, vFrom reflect.Value, tTo basetypes.SetTypable, vTo reflect.Value, elementType attr.Type, f attrValueFromReflectValueFunc) diag.Diagnostics {
+func (flattener autoFlattener) sliceOfPrimitiveToSet(ctx context.Context, vFrom reflect.Value, tTo basetypes.SetTypable, vTo reflect.Value, elementType attr.Type, f attrValueFromReflectValueFunc, fieldOpts fieldOpts) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	if vFrom.IsNil() {
-		to, d := tTo.ValueFromSet(ctx, types.SetNull(elementType))
-		diags.Append(d...)
-		if diags.HasError() {
+	if fieldOpts.legacy {
+		tflog.SubsystemDebug(ctx, subsystemName, "Using legacy flattener")
+		if vFrom.IsNil() {
+			set, d := types.SetValue(elementType, []attr.Value{})
+			diags.Append(d...)
+			if diags.HasError() {
+				return diags
+			}
+
+			to, d := tTo.ValueFromSet(ctx, set)
+			diags.Append(d...)
+			if diags.HasError() {
+				return diags
+			}
+
+			vTo.Set(reflect.ValueOf(to))
 			return diags
 		}
+	} else {
+		if vFrom.IsNil() {
+			tflog.SubsystemTrace(ctx, subsystemName, "Flattening with SetNull")
+			to, d := tTo.ValueFromSet(ctx, types.SetNull(elementType))
+			diags.Append(d...)
+			if diags.HasError() {
+				return diags
+			}
 
-		vTo.Set(reflect.ValueOf(to))
-		return diags
+			vTo.Set(reflect.ValueOf(to))
+			return diags
+		}
 	}
 
+	tflog.SubsystemTrace(ctx, subsystemName, "Flattening with SetValue", map[string]any{
+		logAttrKeySourceSize: vFrom.Len(),
+	})
 	elements := make([]attr.Value, vFrom.Len())
 	for i := 0; i < vFrom.Len(); i++ {
 		elements[i] = f(vFrom.Index(i))

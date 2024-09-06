@@ -137,6 +137,18 @@ type awsCollectionsOfPrimitiveElements struct {
 	Field6 map[string]*string
 }
 
+type awsSimpleStringValueSlice struct {
+	Field1 []string
+}
+
+type tfSimpleSet struct {
+	Field1 types.Set `tfsdk:"field1"`
+}
+
+type tfSimpleSetLegacy struct {
+	Field1 types.Set `tfsdk:"field1" autoflex:",legacy"`
+}
+
 type tfListOfNestedObject struct {
 	Field1 fwtypes.ListNestedObjectValueOf[tfSingleStringField] `tfsdk:"field1"`
 }

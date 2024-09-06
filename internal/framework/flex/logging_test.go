@@ -357,6 +357,31 @@ func traceFlatteningWithMapValue(sourcePath string, sourceType reflect.Type, sou
 	}
 }
 
+func traceFlatteningWithSetNull(sourcePath string, sourceType reflect.Type, targetPath string, targetType reflect.Type) map[string]any {
+	return map[string]any{
+		"@level":             hclog.Trace.String(),
+		"@module":            logModule,
+		"@message":           "Flattening with SetNull",
+		logAttrKeySourcePath: sourcePath,
+		logAttrKeySourceType: fullTypeName(sourceType),
+		logAttrKeyTargetPath: targetPath,
+		logAttrKeyTargetType: fullTypeName(targetType),
+	}
+}
+
+func traceFlatteningWithSetValue(sourcePath string, sourceType reflect.Type, sourceLen int, targetPath string, targetType reflect.Type) map[string]any {
+	return map[string]any{
+		"@level":             hclog.Trace.String(),
+		"@module":            logModule,
+		"@message":           "Flattening with SetValue",
+		logAttrKeySourcePath: sourcePath,
+		logAttrKeySourceType: fullTypeName(sourceType),
+		logAttrKeySourceSize: float64(sourceLen), // numbers are deserialized from JSON as float64
+		logAttrKeyTargetPath: targetPath,
+		logAttrKeyTargetType: fullTypeName(targetType),
+	}
+}
+
 func traceFlatteningWithNewMapValueOf(sourcePath string, sourceType reflect.Type, sourceLen int, targetPath string, targetType reflect.Type) map[string]any {
 	return map[string]any{
 		"@level":             hclog.Trace.String(),
