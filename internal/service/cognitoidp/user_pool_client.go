@@ -363,30 +363,8 @@ func (r *userPoolClientResource) Create(ctx context.Context, request resource.Cr
 
 	poolClient := resp.UserPoolClient
 
-	config.AccessTokenValidity = fwflex.Int32ToFrameworkLegacy(ctx, poolClient.AccessTokenValidity)
-	config.AllowedOauthFlows = fwflex.FlattenFrameworkStringValueSetLegacy(ctx, poolClient.AllowedOAuthFlows)
-	config.AllowedOauthFlowsUserPoolClient = fwflex.BoolToFramework(ctx, poolClient.AllowedOAuthFlowsUserPoolClient)
-	config.AllowedOauthScopes = fwflex.FlattenFrameworkStringValueSetLegacy(ctx, poolClient.AllowedOAuthScopes)
-	config.AnalyticsConfiguration = flattenAnaylticsConfiguration(ctx, poolClient.AnalyticsConfiguration, &response.Diagnostics)
-	config.AuthSessionValidity = fwflex.Int32ToFramework(ctx, poolClient.AuthSessionValidity)
-	config.CallbackUrls = fwflex.FlattenFrameworkStringValueSetLegacy(ctx, poolClient.CallbackURLs)
-	config.ClientSecret = fwflex.StringToFrameworkLegacy(ctx, poolClient.ClientSecret)
-	config.DefaultRedirectUri = fwflex.StringToFrameworkLegacy(ctx, poolClient.DefaultRedirectURI)
-	config.EnablePropagateAdditionalUserContextData = fwflex.BoolToFramework(ctx, poolClient.EnablePropagateAdditionalUserContextData)
-	config.EnableTokenRevocation = fwflex.BoolToFramework(ctx, poolClient.EnableTokenRevocation)
-	config.ExplicitAuthFlows = fwflex.FlattenFrameworkStringValueSetLegacy(ctx, poolClient.ExplicitAuthFlows)
-	config.ID = fwflex.StringToFramework(ctx, poolClient.ClientId)
-	config.IdTokenValidity = fwflex.Int32ToFrameworkLegacy(ctx, poolClient.IdTokenValidity)
-	config.LogoutUrls = fwflex.FlattenFrameworkStringValueSetLegacy(ctx, poolClient.LogoutURLs)
-	config.Name = fwflex.StringToFramework(ctx, poolClient.ClientName)
-	config.PreventUserExistenceErrors = fwtypes.StringEnumValue(poolClient.PreventUserExistenceErrors)
-	config.ReadAttributes = fwflex.FlattenFrameworkStringValueSetLegacy(ctx, poolClient.ReadAttributes)
-	config.RefreshTokenValidity = fwflex.Int32ValueToFramework(ctx, poolClient.RefreshTokenValidity)
-	config.SupportedIdentityProviders = fwflex.FlattenFrameworkStringValueSetLegacy(ctx, poolClient.SupportedIdentityProviders)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, poolClient, &config, fwflex.WithFieldNamePrefix("Client"))...)
 	config.TokenValidityUnits = flattenTokenValidityUnits(ctx, poolClient.TokenValidityUnits, &response.Diagnostics)
-	config.UserPoolID = fwflex.StringToFramework(ctx, poolClient.UserPoolId)
-	config.WriteAttributes = fwflex.FlattenFrameworkStringValueSetLegacy(ctx, poolClient.WriteAttributes)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -408,44 +386,22 @@ func (r *userPoolClientResource) Read(ctx context.Context, request resource.Read
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
-
 		return
 	}
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("reading Cognito User Pool Client (%s)", state.ID.ValueString()), err.Error())
-
 		return
 	}
 
-	state.AccessTokenValidity = fwflex.Int32ToFrameworkLegacy(ctx, poolClient.AccessTokenValidity)
-	state.AllowedOauthFlows = fwflex.FlattenFrameworkStringValueSetLegacy(ctx, poolClient.AllowedOAuthFlows)
-	state.AllowedOauthFlowsUserPoolClient = fwflex.BoolToFramework(ctx, poolClient.AllowedOAuthFlowsUserPoolClient)
-	state.AllowedOauthScopes = fwflex.FlattenFrameworkStringValueSetLegacy(ctx, poolClient.AllowedOAuthScopes)
-	state.AnalyticsConfiguration = flattenAnaylticsConfiguration(ctx, poolClient.AnalyticsConfiguration, &response.Diagnostics)
-	state.AuthSessionValidity = fwflex.Int32ToFramework(ctx, poolClient.AuthSessionValidity)
-	state.CallbackUrls = fwflex.FlattenFrameworkStringValueSetLegacy(ctx, poolClient.CallbackURLs)
-	state.ClientSecret = fwflex.StringToFrameworkLegacy(ctx, poolClient.ClientSecret)
-	state.DefaultRedirectUri = fwflex.StringToFrameworkLegacy(ctx, poolClient.DefaultRedirectURI)
-	state.EnablePropagateAdditionalUserContextData = fwflex.BoolToFramework(ctx, poolClient.EnablePropagateAdditionalUserContextData)
-	state.EnableTokenRevocation = fwflex.BoolToFramework(ctx, poolClient.EnableTokenRevocation)
-	state.ExplicitAuthFlows = fwflex.FlattenFrameworkStringValueSetLegacy(ctx, poolClient.ExplicitAuthFlows)
-	state.ID = fwflex.StringToFramework(ctx, poolClient.ClientId)
-	state.IdTokenValidity = fwflex.Int32ToFrameworkLegacy(ctx, poolClient.IdTokenValidity)
-	state.LogoutUrls = fwflex.FlattenFrameworkStringValueSetLegacy(ctx, poolClient.LogoutURLs)
-	state.Name = fwflex.StringToFramework(ctx, poolClient.ClientName)
-	state.PreventUserExistenceErrors = fwtypes.StringEnumValue(poolClient.PreventUserExistenceErrors)
-	state.ReadAttributes = fwflex.FlattenFrameworkStringValueSetLegacy(ctx, poolClient.ReadAttributes)
-	state.RefreshTokenValidity = fwflex.Int32ValueToFramework(ctx, poolClient.RefreshTokenValidity)
-	state.SupportedIdentityProviders = fwflex.FlattenFrameworkStringValueSetLegacy(ctx, poolClient.SupportedIdentityProviders)
-	if state.TokenValidityUnits.IsNull() && isDefaultTokenValidityUnits(poolClient.TokenValidityUnits) {
+	tokenValidityUnitsNull := state.TokenValidityUnits.IsNull()
+
+	response.Diagnostics.Append(fwflex.Flatten(ctx, poolClient, &state, fwflex.WithFieldNamePrefix("Client"))...)
+	if tokenValidityUnitsNull && isDefaultTokenValidityUnits(poolClient.TokenValidityUnits) {
 		state.TokenValidityUnits = fwtypes.NewListNestedObjectValueOfNull[tokenValidityUnitsModel](ctx)
 	} else {
 		state.TokenValidityUnits = flattenTokenValidityUnits(ctx, poolClient.TokenValidityUnits, &response.Diagnostics)
 	}
-	state.UserPoolID = fwflex.StringToFramework(ctx, poolClient.UserPoolId)
-	state.WriteAttributes = fwflex.FlattenFrameworkStringValueSetLegacy(ctx, poolClient.WriteAttributes)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -505,34 +461,12 @@ func (r *userPoolClientResource) Update(ctx context.Context, request resource.Up
 
 	poolClient := output.(*cognitoidentityprovider.UpdateUserPoolClientOutput).UserPoolClient
 
-	config.AccessTokenValidity = fwflex.Int32ToFrameworkLegacy(ctx, poolClient.AccessTokenValidity)
-	config.AllowedOauthFlows = fwflex.FlattenFrameworkStringValueSetLegacy(ctx, poolClient.AllowedOAuthFlows)
-	config.AllowedOauthFlowsUserPoolClient = fwflex.BoolToFramework(ctx, poolClient.AllowedOAuthFlowsUserPoolClient)
-	config.AllowedOauthScopes = fwflex.FlattenFrameworkStringValueSetLegacy(ctx, poolClient.AllowedOAuthScopes)
-	config.AnalyticsConfiguration = flattenAnaylticsConfiguration(ctx, poolClient.AnalyticsConfiguration, &response.Diagnostics)
-	config.AuthSessionValidity = fwflex.Int32ToFramework(ctx, poolClient.AuthSessionValidity)
-	config.CallbackUrls = fwflex.FlattenFrameworkStringValueSetLegacy(ctx, poolClient.CallbackURLs)
-	config.ClientSecret = fwflex.StringToFrameworkLegacy(ctx, poolClient.ClientSecret)
-	config.DefaultRedirectUri = fwflex.StringToFrameworkLegacy(ctx, poolClient.DefaultRedirectURI)
-	config.EnablePropagateAdditionalUserContextData = fwflex.BoolToFramework(ctx, poolClient.EnablePropagateAdditionalUserContextData)
-	config.EnableTokenRevocation = fwflex.BoolToFramework(ctx, poolClient.EnableTokenRevocation)
-	config.ExplicitAuthFlows = fwflex.FlattenFrameworkStringValueSetLegacy(ctx, poolClient.ExplicitAuthFlows)
-	config.ID = fwflex.StringToFramework(ctx, poolClient.ClientId)
-	config.IdTokenValidity = fwflex.Int32ToFrameworkLegacy(ctx, poolClient.IdTokenValidity)
-	config.LogoutUrls = fwflex.FlattenFrameworkStringValueSetLegacy(ctx, poolClient.LogoutURLs)
-	config.Name = fwflex.StringToFramework(ctx, poolClient.ClientName)
-	config.PreventUserExistenceErrors = fwtypes.StringEnumValue(poolClient.PreventUserExistenceErrors)
-	config.ReadAttributes = fwflex.FlattenFrameworkStringValueSetLegacy(ctx, poolClient.ReadAttributes)
-	config.RefreshTokenValidity = fwflex.Int32ValueToFramework(ctx, poolClient.RefreshTokenValidity)
-	config.SupportedIdentityProviders = fwflex.FlattenFrameworkStringValueSetLegacy(ctx, poolClient.SupportedIdentityProviders)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, poolClient, &config, fwflex.WithFieldNamePrefix("Client"))...)
 	if !state.TokenValidityUnits.IsNull() && plan.TokenValidityUnits.IsNull() && isDefaultTokenValidityUnits(poolClient.TokenValidityUnits) {
 		config.TokenValidityUnits = fwtypes.NewListNestedObjectValueOfNull[tokenValidityUnitsModel](ctx)
 	} else {
 		config.TokenValidityUnits = flattenTokenValidityUnits(ctx, poolClient.TokenValidityUnits, &response.Diagnostics)
 	}
-	config.UserPoolID = fwflex.StringToFramework(ctx, poolClient.UserPoolId)
-	config.WriteAttributes = fwflex.FlattenFrameworkStringValueSetLegacy(ctx, poolClient.WriteAttributes)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -639,29 +573,29 @@ func findUserPoolClientByTwoPartKey(ctx context.Context, conn *cognitoidentitypr
 
 type resourceUserPoolClientModel struct {
 	AccessTokenValidity                      types.Int64                                                  `tfsdk:"access_token_validity" autoflex:",legacy"`
-	AllowedOauthFlows                        types.Set                                                    `tfsdk:"allowed_oauth_flows"`
+	AllowedOauthFlows                        types.Set                                                    `tfsdk:"allowed_oauth_flows" autoflex:",legacy"`
 	AllowedOauthFlowsUserPoolClient          types.Bool                                                   `tfsdk:"allowed_oauth_flows_user_pool_client"`
-	AllowedOauthScopes                       types.Set                                                    `tfsdk:"allowed_oauth_scopes"`
+	AllowedOauthScopes                       types.Set                                                    `tfsdk:"allowed_oauth_scopes" autoflex:",legacy"`
 	AnalyticsConfiguration                   fwtypes.ListNestedObjectValueOf[analyticsConfigurationModel] `tfsdk:"analytics_configuration"`
 	AuthSessionValidity                      types.Int64                                                  `tfsdk:"auth_session_validity"`
-	CallbackUrls                             types.Set                                                    `tfsdk:"callback_urls"`
-	ClientSecret                             types.String                                                 `tfsdk:"client_secret"`
+	CallbackUrls                             types.Set                                                    `tfsdk:"callback_urls" autoflex:",legacy"`
+	ClientSecret                             types.String                                                 `tfsdk:"client_secret" autoflex:",legacy"`
 	DefaultRedirectUri                       types.String                                                 `tfsdk:"default_redirect_uri" autoflex:",legacy"`
 	EnablePropagateAdditionalUserContextData types.Bool                                                   `tfsdk:"enable_propagate_additional_user_context_data"`
 	EnableTokenRevocation                    types.Bool                                                   `tfsdk:"enable_token_revocation"`
-	ExplicitAuthFlows                        types.Set                                                    `tfsdk:"explicit_auth_flows"`
+	ExplicitAuthFlows                        types.Set                                                    `tfsdk:"explicit_auth_flows" autoflex:",legacy"`
 	GenerateSecret                           types.Bool                                                   `tfsdk:"generate_secret"`
 	ID                                       types.String                                                 `tfsdk:"id"`
 	IdTokenValidity                          types.Int64                                                  `tfsdk:"id_token_validity" autoflex:",legacy"`
-	LogoutUrls                               types.Set                                                    `tfsdk:"logout_urls"`
+	LogoutUrls                               types.Set                                                    `tfsdk:"logout_urls" autoflex:",legacy"`
 	Name                                     types.String                                                 `tfsdk:"name"`
-	PreventUserExistenceErrors               fwtypes.StringEnum[awstypes.PreventUserExistenceErrorTypes]  `tfsdk:"prevent_user_existence_errors"`
-	ReadAttributes                           types.Set                                                    `tfsdk:"read_attributes"`
+	PreventUserExistenceErrors               fwtypes.StringEnum[awstypes.PreventUserExistenceErrorTypes]  `tfsdk:"prevent_user_existence_errors" autoflex:",legacy"`
+	ReadAttributes                           types.Set                                                    `tfsdk:"read_attributes" autoflex:",legacy"`
 	RefreshTokenValidity                     types.Int64                                                  `tfsdk:"refresh_token_validity"`
-	SupportedIdentityProviders               types.Set                                                    `tfsdk:"supported_identity_providers"`
+	SupportedIdentityProviders               types.Set                                                    `tfsdk:"supported_identity_providers" autoflex:",legacy"`
 	TokenValidityUnits                       fwtypes.ListNestedObjectValueOf[tokenValidityUnitsModel]     `tfsdk:"token_validity_units"`
 	UserPoolID                               types.String                                                 `tfsdk:"user_pool_id"`
-	WriteAttributes                          types.Set                                                    `tfsdk:"write_attributes"`
+	WriteAttributes                          types.Set                                                    `tfsdk:"write_attributes" autoflex:",legacy"`
 }
 
 func (data resourceUserPoolClientModel) deleteInput(ctx context.Context) *cognitoidentityprovider.DeleteUserPoolClientInput {
