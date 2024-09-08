@@ -1,4 +1,3 @@
-@@ -0,0 +1,7 @@
 ```release-note:enhancement
 resource/aws_sagemaker_model: Add `primary_container.model_data_source.model_access_config` block and `container.model_data_source.model_access_config` block
 resource/aws_sagemaker_model: Add `primary_container.multi_model_config` block and `container.multi_model_config` block
