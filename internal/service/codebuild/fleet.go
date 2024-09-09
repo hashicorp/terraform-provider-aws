@@ -39,7 +39,7 @@ func ResourceFleet() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -67,7 +67,7 @@ func ResourceFleet() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"id": {
+			names.AttrID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -79,7 +79,7 @@ func ResourceFleet() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -107,7 +107,7 @@ func ResourceFleet() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"max_capacity": {
+						names.AttrMaxCapacity: {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							ValidateFunc: validation.IntAtLeast(1),
@@ -138,7 +138,7 @@ func ResourceFleet() *schema.Resource {
 					},
 				},
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -147,11 +147,11 @@ func ResourceFleet() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"message": {
+						names.AttrMessage: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"status_code": {
+						names.AttrStatusCode: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -206,7 +206,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		BaseCapacity:    aws.Int32(int32(d.Get("base_capacity").(int))),
 		ComputeType:     types.ComputeType(d.Get("compute_type").(string)),
 		EnvironmentType: types.EnvironmentType(d.Get("environment_type").(string)),
-		Name:            aws.String(d.Get("name").(string)),
+		Name:            aws.String(d.Get(names.AttrName).(string)),
 		Tags:            getTagsIn(ctx),
 	}
 
@@ -236,7 +236,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}, "ot authorized to perform")
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionCreating, ResNameFleet, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionCreating, ResNameFleet, d.Get(names.AttrName).(string), err)
 	}
 
 	d.SetId(aws.ToString(outputRaw.(*codebuild.CreateFleetOutput).Fleet.Arn))
@@ -267,16 +267,16 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	fleet := out.Fleets[0]
 
-	d.Set("arn", fleet.Arn)
+	d.Set(names.AttrARN, fleet.Arn)
 	d.Set("base_capacity", fleet.BaseCapacity)
 	d.Set("compute_type", fleet.ComputeType)
 	d.Set("created", fleet.Created.String())
 	d.Set("environment_type", fleet.EnvironmentType)
 	d.Set("fleet_service_role", fleet.FleetServiceRole)
-	d.Set("id", fleet.Id)
+	d.Set(names.AttrID, fleet.Id)
 	d.Set("image_id", fleet.ImageId)
 	d.Set("last_modified", fleet.LastModified.String())
-	d.Set("name", fleet.Name)
+	d.Set(names.AttrName, fleet.Name)
 	d.Set("overflow_behavior", fleet.OverflowBehavior)
 
 	if fleet.ScalingConfiguration != nil {
@@ -288,11 +288,11 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if fleet.Status != nil {
-		if err := d.Set("status", []interface{}{flattenStatus(fleet.Status)}); err != nil {
+		if err := d.Set(names.AttrStatus, []interface{}{flattenStatus(fleet.Status)}); err != nil {
 			return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionSetting, ResNameFleet, d.Id(), err)
 		}
 	} else {
-		d.Set("status", nil)
+		d.Set(names.AttrStatus, nil)
 	}
 
 	if err := d.Set(names.AttrVPCConfig, flattenVPCConfig(fleet.VpcConfig)); err != nil {
@@ -465,7 +465,7 @@ func expandScalingConfiguration(tfMap map[string]interface{}) *types.ScalingConf
 
 	apiObject := &types.ScalingConfigurationInput{}
 
-	if v, ok := tfMap["max_capacity"].(int); ok {
+	if v, ok := tfMap[names.AttrMaxCapacity].(int); ok {
 		apiObject.MaxCapacity = aws.Int32(int32(v))
 	}
 
@@ -532,7 +532,7 @@ func flattenScalingConfiguration(apiObject *types.ScalingConfigurationOutput) ma
 		}
 
 		if v := apiObject.MaxCapacity; v != nil {
-			tfMap["max_capacity"] = aws.ToInt32(v)
+			tfMap[names.AttrMaxCapacity] = aws.ToInt32(v)
 		}
 
 		if v := apiObject.ScalingType; v != "" {
@@ -587,11 +587,11 @@ func flattenStatus(apiObject *types.FleetStatus) map[string]interface{} {
 	}
 
 	if v := apiObject.Message; v != nil {
-		tfMap["message"] = aws.ToString(v)
+		tfMap[names.AttrMessage] = aws.ToString(v)
 	}
 
 	if v := apiObject.StatusCode; v != "" {
-		tfMap["status_code"] = v
+		tfMap[names.AttrStatusCode] = v
 	}
 
 	return tfMap

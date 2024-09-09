@@ -22,7 +22,7 @@ func DataSourceFleet() *schema.Resource {
 		ReadWithoutTimeout: dataSourceFleetRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -46,7 +46,7 @@ func DataSourceFleet() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"id": {
+			names.AttrID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -58,7 +58,7 @@ func DataSourceFleet() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(2, 128),
@@ -76,7 +76,7 @@ func DataSourceFleet() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"max_capacity": {
+						names.AttrMaxCapacity: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
@@ -103,7 +103,7 @@ func DataSourceFleet() *schema.Resource {
 					},
 				},
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -112,18 +112,18 @@ func DataSourceFleet() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"message": {
+						names.AttrMessage: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"status_code": {
+						names.AttrStatusCode: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			names.AttrVPCConfig: {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -158,7 +158,7 @@ func dataSourceFleetRead(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).CodeBuildClient(ctx)
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 
 	out, err := findFleetByARNOrNames(ctx, conn, name)
 	if err != nil {
@@ -169,7 +169,7 @@ func dataSourceFleetRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.SetId(aws.StringValue(fleet.Arn))
 
-	d.Set("arn", fleet.Arn)
+	d.Set(names.AttrARN, fleet.Arn)
 	d.Set("base_capacity", fleet.BaseCapacity)
 	d.Set("compute_type", fleet.ComputeType)
 	d.Set("created", fleet.Created.String())
@@ -178,7 +178,7 @@ func dataSourceFleetRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("image_id", fleet.ImageId)
 	d.Set("last_modified", fleet.LastModified.String())
 	d.Set("overflow_behavior", fleet.OverflowBehavior)
-	d.Set("name", fleet.Name)
+	d.Set(names.AttrName, fleet.Name)
 
 	if fleet.ScalingConfiguration != nil {
 		if err := d.Set("scaling_configuration", []interface{}{flattenScalingConfiguration(fleet.ScalingConfiguration)}); err != nil {
@@ -186,7 +186,7 @@ func dataSourceFleetRead(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 	if fleet.Status != nil {
-		if err := d.Set("status", []interface{}{flattenStatus(fleet.Status)}); err != nil {
+		if err := d.Set(names.AttrStatus, []interface{}{flattenStatus(fleet.Status)}); err != nil {
 			return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionSetting, DSNameFleet, d.Id(), err)
 		}
 	}
@@ -197,7 +197,7 @@ func dataSourceFleetRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 	//lintignore:AWSR002
-	if err := d.Set("tags", KeyValueTags(ctx, fleet.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, KeyValueTags(ctx, fleet.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionSetting, DSNameFleet, d.Id(), err)
 	}
 

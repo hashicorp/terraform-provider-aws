@@ -27,14 +27,14 @@ func TestAccCodeBuildFleetDataSource_basic(t *testing.T) {
 			{
 				Config: testAccFleetDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, "base_capacity", resourceName, "base_capacity"),
 					resource.TestCheckResourceAttrPair(datasourceName, "compute_type", resourceName, "compute_type"),
 					resource.TestCheckResourceAttrPair(datasourceName, "created", resourceName, "created"),
 					resource.TestCheckResourceAttrPair(datasourceName, "environment_type", resourceName, "environment_type"),
-					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrID, resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(datasourceName, "last_modified", resourceName, "last_modified"),
-					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(datasourceName, "overflow_behavior", resourceName, "overflow_behavior"),
 					resource.TestCheckResourceAttrPair(datasourceName, "scaling_configuration.0.max_capacity", resourceName, "scaling_configuration.0.max_capacity"),
 					resource.TestCheckResourceAttrPair(datasourceName, "scaling_configuration.0.scaling_type", resourceName, "scaling_configuration.0.scaling_type"),

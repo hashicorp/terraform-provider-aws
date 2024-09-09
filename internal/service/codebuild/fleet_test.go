@@ -35,10 +35,10 @@ func TestAccCodeBuildFleet_basic(t *testing.T) {
 				Config: testAccFleetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "base_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, "base_capacity", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "compute_type", "BUILD_GENERAL1_SMALL"),
 					resource.TestCheckResourceAttr(resourceName, "environment_type", "LINUX_CONTAINER"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "overflow_behavior", "ON_DEMAND"),
 				),
 			},
@@ -86,28 +86,28 @@ func TestAccCodeBuildFleet_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_tags1(rName, "key1", "value1"),
+				Config: testAccFleetConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
-				Config: testAccFleetConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccFleetConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccFleetConfig_tags1(rName, "key2", "value2"),
+				Config: testAccFleetConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -129,14 +129,14 @@ func TestAccCodeBuildFleet_baseCapacity(t *testing.T) {
 				Config: testAccFleetConfig_baseCapacity(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "base_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, "base_capacity", acctest.Ct1),
 				),
 			},
 			{
 				Config: testAccFleetConfig_baseCapacity(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "base_capacity", "2"),
+					resource.TestCheckResourceAttr(resourceName, "base_capacity", acctest.Ct2),
 				),
 			},
 		},
@@ -285,7 +285,7 @@ func TestAccCodeBuildFleet_vpcConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnets.#", acctest.Ct1),
-					resource.TestCheckResourceAttrPair(resourceName, "vpc_config.0.subnets.0", "aws_subnet.test.1", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_config.0.subnets.0", "aws_subnet.test.1", names.AttrID),
 					resource.TestMatchResourceAttr(resourceName, "vpc_config.0.vpc_id", regexache.MustCompile(`^vpc-`)),
 				),
 			},
@@ -301,7 +301,7 @@ func TestAccCodeBuildFleet_vpcConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnets.#", acctest.Ct1),
-					resource.TestCheckResourceAttrPair(resourceName, "vpc_config.0.subnets.0", "aws_subnet.test.0", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_config.0.subnets.0", "aws_subnet.test.0", names.AttrID),
 					resource.TestMatchResourceAttr(resourceName, "vpc_config.0.vpc_id", regexache.MustCompile(`^vpc-`)),
 				),
 			},
@@ -353,7 +353,7 @@ func testAccCheckFleetExists(ctx context.Context, n string) resource.TestCheckFu
 			return fmt.Errorf("Fleet not found: %s", rs.Primary.ID)
 		}
 
-		expectedName := rs.Primary.Attributes["name"]
+		expectedName := rs.Primary.Attributes[names.AttrName]
 		if *fleet.Fleets[0].Name != expectedName {
 			return fmt.Errorf("Fleet name mismatch, expected: %s, got: %s", expectedName, *fleet.Fleets[0].Name)
 		}
