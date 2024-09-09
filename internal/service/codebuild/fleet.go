@@ -5,7 +5,6 @@ package codebuild
 
 import (
 	"context"
-	"errors"
 	"log"
 	"time"
 
@@ -20,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -157,6 +157,34 @@ func ResourceFleet() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"vpc_config": {
+				Type:         schema.TypeList,
+				Optional:     true,
+				MinItems:     1,
+				RequiredWith: []string{"fleet_service_role"},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"security_group_ids": {
+							Type:     schema.TypeSet,
+							Required: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							MinItems: 1,
+							MaxItems: 5,
+						},
+						"subnets": {
+							Type:     schema.TypeSet,
+							Required: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							MinItems: 1,
+							MaxItems: 16,
+						},
+						"vpc_id": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 	}
@@ -191,17 +219,20 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.ScalingConfiguration = expandScalingConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	out, err := conn.CreateFleet(ctx, input)
+	if v, ok := d.GetOk("vpc_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.VpcConfig = expandVpcConfig(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	// InvalidInputException: CodeBuild is not authorized to perform
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidInputException](ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.CreateFleet(ctx, input)
+	}, "ot authorized to perform")
 
 	if err != nil {
 		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionCreating, ResNameFleet, d.Get("name").(string), err)
 	}
 
-	if out == nil || out.Fleet == nil {
-		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionCreating, ResNameFleet, d.Get("name").(string), errors.New("empty output"))
-	}
-
-	d.SetId(aws.ToString(out.Fleet.Arn))
+	d.SetId(aws.ToString(outputRaw.(*codebuild.CreateFleetOutput).Fleet.Arn))
 
 	if err := waitFleetActive(ctx, conn, d.Id()); err != nil {
 		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionWaitingForCreation, ResNameFleet, d.Id(), err)
@@ -256,6 +287,14 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set("status", nil)
 	}
 
+	if fleet.VpcConfig != nil {
+		if err := d.Set("vpc_config", []interface{}{flattenVpcConfig(fleet.VpcConfig)}); err != nil {
+			return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionSetting, ResNameFleet, d.Id(), err)
+		}
+	} else {
+		d.Set("vpc_config", nil)
+	}
+
 	setTagsOut(ctx, fleet.Tags)
 
 	return diags
@@ -296,10 +335,19 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
+	if d.HasChange("vpc_config") {
+		if v, ok := d.GetOk("vpc_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.VpcConfig = expandVpcConfig(v.([]interface{})[0].(map[string]interface{}))
+		}
+	}
+
 	input.Tags = getTagsIn(ctx)
 
 	log.Printf("[DEBUG] Updating CodeBuild Fleet (%s): %#v", d.Id(), input)
-	_, err := conn.UpdateFleet(ctx, input)
+
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidInputException](ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.UpdateFleet(ctx, input)
+	}, "ot authorized to perform")
 
 	if err != nil {
 		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionUpdating, ResNameFleet, d.Id(), err)
@@ -467,6 +515,28 @@ func expandTargetTrackingScalingConfig(tfMap map[string]interface{}) *types.Targ
 	return apiObject
 }
 
+func expandVpcConfig(tfMap map[string]interface{}) *types.VpcConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.VpcConfig{}
+
+	if v, ok := tfMap["security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.SecurityGroupIds = flex.ExpandStringValueSet(v)
+	}
+
+	if v, ok := tfMap["subnets"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.Subnets = flex.ExpandStringValueSet(v)
+	}
+
+	if v, ok := tfMap["vpc_id"].(string); ok && v != "" {
+		apiObject.VpcId = aws.String(v)
+	}
+
+	return apiObject
+}
+
 func flattenScalingConfiguration(apiObject *types.ScalingConfigurationOutput) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
@@ -536,6 +606,28 @@ func flattenStatus(apiObject *types.FleetStatus) map[string]interface{} {
 
 	if v := apiObject.StatusCode; v != "" {
 		tfMap["status_code"] = v
+	}
+
+	return tfMap
+}
+
+func flattenVpcConfig(apiObject *types.VpcConfig) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.SecurityGroupIds; v != nil {
+		tfMap["security_group_ids"] = v
+	}
+
+	if v := apiObject.Subnets; v != nil {
+		tfMap["subnets"] = v
+	}
+
+	if v := apiObject.VpcId; v != nil {
+		tfMap["vpc_id"] = aws.ToString(v)
 	}
 
 	return tfMap
