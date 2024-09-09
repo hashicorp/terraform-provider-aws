@@ -216,6 +216,162 @@ func resourceDomain() *schema.Resource {
 							MaxItems: 5,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
+						"jupyter_lab_app_settings": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"code_repository": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										MaxItems: 10,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"repository_url": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringLenBetween(1, 1024),
+												},
+											},
+										},
+									},
+									"custom_image": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 200,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"app_image_config_name": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"image_name": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"image_version_number": {
+													Type:     schema.TypeInt,
+													Optional: true,
+												},
+											},
+										},
+									},
+									"default_resource_spec": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												names.AttrInstanceType: {
+													Type:             schema.TypeString,
+													Optional:         true,
+													ValidateDiagFunc: enum.Validate[awstypes.AppInstanceType](),
+												},
+												"lifecycle_config_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+												"sagemaker_image_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+												"sagemaker_image_version_alias": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"sagemaker_image_version_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+											},
+										},
+									},
+									"lifecycle_config_arns": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: verify.ValidARN,
+										},
+									},
+								},
+							},
+						},
+						"space_storage_settings": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"default_ebs_storage_settings": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"default_ebs_volume_size_in_gb": {
+													Type:     schema.TypeInt,
+													Required: true,
+												},
+												"maximum_ebs_volume_size_in_gb": {
+													Type:     schema.TypeInt,
+													Required: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"custom_file_system_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"efs_file_system_config": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												names.AttrFileSystemID: {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"file_system_path": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"custom_posix_user_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"gid": {
+										Type:         schema.TypeInt,
+										Required:     true,
+										ValidateFunc: validation.IntAtLeast(1001),
+									},
+									"uid": {
+										Type:         schema.TypeInt,
+										Required:     true,
+										ValidateFunc: validation.IntAtLeast(10000),
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -886,6 +1042,31 @@ func resourceDomain() *schema.Resource {
 													ValidateFunc: verify.ValidARN,
 												},
 											},
+										},
+									},
+								},
+							},
+						},
+						"studio_web_portal_settings": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"hidden_app_types": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type:             schema.TypeString,
+											ValidateDiagFunc: enum.Validate[awstypes.AppType](),
+										},
+									},
+									"hidden_ml_tools": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type:             schema.TypeString,
+											ValidateDiagFunc: enum.Validate[awstypes.MlTools](),
 										},
 									},
 								},
@@ -2370,6 +2551,22 @@ func expanDefaultSpaceSettings(l []interface{}) *awstypes.DefaultSpaceSettings {
 		config.SecurityGroups = flex.ExpandStringValueSet(v)
 	}
 
+	if v, ok := m["jupyter_lab_app_settings"].([]interface{}); ok && len(v) > 0 {
+		config.JupyterLabAppSettings = expandDomainJupyterLabAppSettings(v)
+	}
+
+	if v, ok := m["space_storage_settings"].([]interface{}); ok && len(v) > 0 {
+		config.SpaceStorageSettings = expandDefaultSpaceStorageSettings(v)
+	}
+
+	if v, ok := m["custom_file_system_config"].([]interface{}); ok && len(v) > 0 {
+		config.CustomFileSystemConfigs = expandCustomFileSystemConfigs(v)
+	}
+
+	if v, ok := m["custom_posix_user_config"].([]interface{}); ok && len(v) > 0 {
+		config.CustomPosixUserConfig = expandCustomPOSIXUserConfig(v)
+	}
+
 	return config
 }
 
@@ -2394,6 +2591,22 @@ func flattenDefaultSpaceSettings(config *awstypes.DefaultSpaceSettings) []map[st
 
 	if config.SecurityGroups != nil {
 		m[names.AttrSecurityGroups] = flex.FlattenStringValueSet(config.SecurityGroups)
+	}
+
+	if config.JupyterLabAppSettings != nil {
+		m["jupyter_lab_app_settings"] = flattenDomainJupyterLabAppSettings(config.JupyterLabAppSettings)
+	}
+
+	if config.SpaceStorageSettings != nil {
+		m["space_storage_settings"] = flattenDefaultSpaceStorageSettings(config.SpaceStorageSettings)
+	}
+
+	if config.CustomFileSystemConfigs != nil {
+		m["custom_file_system_config"] = flattenCustomFileSystemConfigs(config.CustomFileSystemConfigs)
+	}
+
+	if config.CustomPosixUserConfig != nil {
+		m["custom_posix_user_config"] = flattenCustomPOSIXUserConfig(config.CustomPosixUserConfig)
 	}
 
 	return []map[string]interface{}{m}
