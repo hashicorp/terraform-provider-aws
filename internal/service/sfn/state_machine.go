@@ -192,6 +192,7 @@ func resourceStateMachine() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
+			customdiff.ValidateChange("definition", stateMachineDefinitionValidate),
 			stateMachineUpdateComputedAttributesOnPublish,
 			verify.SetTagsDiff,
 		),
@@ -557,4 +558,32 @@ func stateMachineNeedsConfigUpdate(d sdkv2.ResourceDiffer) bool {
 		}
 	}
 	return false
+}
+
+func stateMachineDefinitionValidate(ctx context.Context, oldValue, newValue, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).SFNClient(ctx)
+
+	config := newValue.(string)
+
+	if config == "" {
+		return nil
+	}
+
+	definitionOutput, err := conn.ValidateStateMachineDefinition(ctx, &sfn.ValidateStateMachineDefinitionInput{
+		Definition: aws.String(config),
+	})
+
+	if err != nil {
+		return fmt.Errorf("failed to validate state machine definition: %w", err)
+	}
+
+	if definitionOutput.Result != awstypes.ValidateStateMachineDefinitionResultCodeOk {
+		err := fmt.Errorf("invalid state machine definition:")
+		for _, diag := range definitionOutput.Diagnostics {
+			err = fmt.Errorf("%w\n%s (%s): %s", err, diag.Severity, *diag.Code, *diag.Message)
+		}
+		return err
+	}
+
+	return nil
 }
