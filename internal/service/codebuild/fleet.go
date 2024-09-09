@@ -63,6 +63,11 @@ func ResourceFleet() *schema.Resource {
 				Required:         true,
 				ValidateDiagFunc: enum.Validate[types.EnvironmentType](),
 			},
+			"fleet_service_role": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: verify.ValidARN,
+			},
 			"id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -174,6 +179,10 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		Tags:            getTagsIn(ctx),
 	}
 
+	if v, ok := d.GetOk("fleet_service_role"); ok {
+		input.FleetServiceRole = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("overflow_behavior"); ok {
 		input.OverflowBehavior = types.FleetOverflowBehavior(v.(string))
 	}
@@ -225,6 +234,7 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("compute_type", fleet.ComputeType)
 	d.Set("created", fleet.Created.String())
 	d.Set("environment_type", fleet.EnvironmentType)
+	d.Set("fleet_service_role", fleet.FleetServiceRole)
 	d.Set("id", fleet.Id)
 	d.Set("last_modified", fleet.LastModified.String())
 	d.Set("name", fleet.Name)
@@ -269,6 +279,10 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if d.HasChange("environment_type") {
 		input.EnvironmentType = types.EnvironmentType(d.Get("environment_type").(string))
+	}
+
+	if d.HasChange("fleet_service_role") {
+		input.FleetServiceRole = aws.String(d.Get("fleet_service_role").(string))
 	}
 
 	// Make sure that overflow_behavior is set (if defined) on update - API omits it on updates.
