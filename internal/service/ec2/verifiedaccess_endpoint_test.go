@@ -276,8 +276,8 @@ func testAccVerifiedAccessEndpoint_subnetIDs(t *testing.T, semaphore tfsync.Sema
 				Config: testAccVerifiedAccessEndpointConfig_subnetIDs(rName, acctest.TLSPEMEscapeNewlines(key), acctest.TLSPEMEscapeNewlines(certificate)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.subnet_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.subnet_ids.#", acctest.Ct1),
 				),
 			},
 			{
@@ -292,8 +292,8 @@ func testAccVerifiedAccessEndpoint_subnetIDs(t *testing.T, semaphore tfsync.Sema
 				Config: testAccVerifiedAccessEndpointConfig_subnetIDsUpdate(rName, acctest.TLSPEMEscapeNewlines(key), acctest.TLSPEMEscapeNewlines(certificate)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.subnet_ids.#", acctest.Ct2),
 				),
 			},
 		},
