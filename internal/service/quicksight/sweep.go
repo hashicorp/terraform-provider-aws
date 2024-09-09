@@ -11,8 +11,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/quicksight"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
@@ -256,7 +256,7 @@ func sweepGroups(region string) error {
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if skipSweepError(err) {
+		if skipSweepUsersOrGroupsError(err) {
 			log.Printf("[WARN] Skipping QuickSight Group sweep for %s: %s", region, err)
 			return nil
 		}
@@ -352,7 +352,7 @@ func sweepUsers(region string) error {
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if skipSweepUsersError(err) {
+		if skipSweepUsersOrGroupsError(err) {
 			log.Printf("[WARN] Skipping QuickSight User sweep for %s: %s", region, err)
 			return nil
 		}
@@ -438,24 +438,22 @@ func sweepVPCConnections(region string) error {
 }
 
 func skipSweepError(err error) bool {
-	if errs.IsA[*awstypes.UnsupportedUserEditionException](err) {
+	if tfawserr.ErrCodeContains(err, "UnsupportedUserEditionException") {
 		return true
 	}
-	if errs.IsAErrorMessageContains[*awstypes.ResourceNotFoundException](err, "Directory information for account") {
-		return true
-	}
-	if errs.IsAErrorMessageContains[*awstypes.ResourceNotFoundException](err, "Account information for account") {
+
+	if tfawserr.ErrMessageContains(err, "ResourceNotFoundException", "Directory information for account") ||
+		tfawserr.ErrMessageContains(err, "ResourceNotFoundException", "Account information for account") ||
+		tfawserr.ErrMessageContains(err, "ResourceNotFoundException", "is not signed up with QuickSight") {
 		return true
 	}
 
 	return awsv2.SkipSweepError(err)
 }
 
-func skipSweepUsersError(err error) bool {
-	if errs.IsAErrorMessageContains[*awstypes.ResourceNotFoundException](err, "not signed up with QuickSight") {
-		return true
-	}
-	if errs.IsAErrorMessageContains[*awstypes.ResourceNotFoundException](err, "Namespace default not found in account") {
+func skipSweepUsersOrGroupsError(err error) bool {
+	if tfawserr.ErrMessageContains(err, "ResourceNotFoundException", "is not signed up with QuickSight") ||
+		tfawserr.ErrMessageContains(err, "ResourceNotFoundException", "Namespace default not found in account") {
 		return true
 	}
 
