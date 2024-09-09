@@ -23,9 +23,11 @@ resource "aws_codebuild_fleet" "test" {
   environment_type  = "LINUX_CONTAINER"
   name              = "full-example-codebuild-fleet"
   overflow_behavior = "QUEUE"
+
   scaling_configuration {
     max_capacity = 5
     scaling_type = "TARGET_TRACKING_SCALING"
+
     target_tracking_scaling_configs {
       metric_type  = "FLEET_UTILIZATION_RATE"
       target_value = 97.5
@@ -57,7 +59,9 @@ This data source exports the following attributes in addition to the arguments a
 * `compute_type` - Compute resources the compute fleet uses.
 * `created` - Creation time of the fleet.
 * `environment_type` - Environment type of the compute fleet.
+* `fleet_service_role` - The service role associated with the compute fleet.
 * `id` - ARN of the Fleet.
+* `image_id` - The Amazon Machine Image (AMI) of the compute fleet.
 * `last_modified` - Last modification time of the fleet.
 * `overflow_behavior` - Overflow behavior for compute fleet.
 * `scaling_configuration` -  Nested attribute containing information about the scaling configuration.
@@ -72,3 +76,7 @@ This data source exports the following attributes in addition to the arguments a
     * `message` - Message associated with the status of a compute fleet.
     * `status_code` - Status code of the compute fleet.
 * `tags` - Mapping of Key-Value tags for the resource.
+* `vpc_config` - Nested attribute containing information about the VPC configuration.
+    * `security_group_ids` - A list of one or more security groups IDs in your Amazon VPC.
+    * `subnets` - A list of one or more subnet IDs in your Amazon VPC.
+    * `vpc_id` - The ID of the Amazon VPC.

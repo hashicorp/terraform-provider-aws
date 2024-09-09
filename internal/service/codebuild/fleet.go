@@ -386,7 +386,7 @@ func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if err := waitFleetDeleted(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting CodeBuild Fleet (%s): %s", d.Id(), err)
+		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionDeleting, ResNameFleet, d.Id(), err)
 	}
 
 	return diags

@@ -42,7 +42,15 @@ func DataSourceFleet() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"fleet_service_role": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"image_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -116,6 +124,28 @@ func DataSourceFleet() *schema.Resource {
 				},
 			},
 			"tags": tftags.TagsSchemaComputed(),
+			names.AttrVPCConfig: {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrSecurityGroupIDs: {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						names.AttrSubnets: {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						names.AttrVPCID: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -134,30 +164,40 @@ func dataSourceFleetRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if err != nil {
 		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionReading, DSNameFleet, name, err)
 	}
-	d.SetId(aws.StringValue(out.Fleets[0].Arn))
 
-	d.Set("arn", out.Fleets[0].Arn)
-	d.Set("base_capacity", out.Fleets[0].BaseCapacity)
-	d.Set("compute_type", out.Fleets[0].ComputeType)
-	d.Set("created", out.Fleets[0].Created.String())
-	d.Set("environment_type", out.Fleets[0].EnvironmentType)
-	d.Set("last_modified", out.Fleets[0].LastModified.String())
-	d.Set("overflow_behavior", out.Fleets[0].OverflowBehavior)
-	d.Set("name", out.Fleets[0].Name)
-	if out.Fleets[0].ScalingConfiguration != nil {
-		if err := d.Set("scaling_configuration", []interface{}{flattenScalingConfiguration(out.Fleets[0].ScalingConfiguration)}); err != nil {
+	fleet := out.Fleets[0]
+
+	d.SetId(aws.StringValue(fleet.Arn))
+
+	d.Set("arn", fleet.Arn)
+	d.Set("base_capacity", fleet.BaseCapacity)
+	d.Set("compute_type", fleet.ComputeType)
+	d.Set("created", fleet.Created.String())
+	d.Set("environment_type", fleet.EnvironmentType)
+	d.Set("fleet_service_role", fleet.FleetServiceRole)
+	d.Set("image_id", fleet.ImageId)
+	d.Set("last_modified", fleet.LastModified.String())
+	d.Set("overflow_behavior", fleet.OverflowBehavior)
+	d.Set("name", fleet.Name)
+
+	if fleet.ScalingConfiguration != nil {
+		if err := d.Set("scaling_configuration", []interface{}{flattenScalingConfiguration(fleet.ScalingConfiguration)}); err != nil {
 			return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionSetting, DSNameFleet, d.Id(), err)
 		}
 	}
-	if out.Fleets[0].Status != nil {
-		if err := d.Set("status", []interface{}{flattenStatus(out.Fleets[0].Status)}); err != nil {
+	if fleet.Status != nil {
+		if err := d.Set("status", []interface{}{flattenStatus(fleet.Status)}); err != nil {
 			return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionSetting, DSNameFleet, d.Id(), err)
 		}
+	}
+
+	if err := d.Set(names.AttrVPCConfig, flattenVPCConfig(fleet.VpcConfig)); err != nil {
+		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionSetting, DSNameFleet, d.Id(), err)
 	}
 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 	//lintignore:AWSR002
-	if err := d.Set("tags", KeyValueTags(ctx, out.Fleets[0].Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, fleet.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionSetting, DSNameFleet, d.Id(), err)
 	}
 
