@@ -418,7 +418,7 @@ resource "aws_codebuild_fleet" "test" {
   environment_type  = "MAC_ARM"
   name              = %[1]q
   overflow_behavior = "QUEUE"
-  image_id = "aws/codebuild/macos-arm-base:14"
+  image_id          = "aws/codebuild/macos-arm-base:14"
 }
 `, rName)
 }
@@ -535,11 +535,11 @@ func testAccFleetConfig_vpcConfig1(rName string) string {
 		testAccFleetConfig_baseVPC(rName),
 		fmt.Sprintf(`
 resource "aws_codebuild_fleet" "test" {
-  base_capacity     = 1
-  compute_type      = "BUILD_GENERAL1_SMALL"
-  environment_type  = "LINUX_CONTAINER"
-  name              = %[1]q
-  overflow_behavior = "ON_DEMAND"
+  base_capacity      = 1
+  compute_type       = "BUILD_GENERAL1_SMALL"
+  environment_type   = "LINUX_CONTAINER"
+  name               = %[1]q
+  overflow_behavior  = "ON_DEMAND"
   fleet_service_role = aws_iam_role.test.arn
 
   vpc_config {
@@ -557,11 +557,11 @@ func testAccFleetConfig_vpcConfig2(rName string) string {
 		testAccFleetConfig_baseVPC(rName),
 		fmt.Sprintf(`
 resource "aws_codebuild_fleet" "test" {
-  base_capacity     = 1
-  compute_type      = "BUILD_GENERAL1_SMALL"
-  environment_type  = "LINUX_CONTAINER"
-  name              = %[1]q
-  overflow_behavior = "ON_DEMAND"
+  base_capacity      = 1
+  compute_type       = "BUILD_GENERAL1_SMALL"
+  environment_type   = "LINUX_CONTAINER"
+  name               = %[1]q
+  overflow_behavior  = "ON_DEMAND"
   fleet_service_role = aws_iam_role.test.arn
 
   vpc_config {
