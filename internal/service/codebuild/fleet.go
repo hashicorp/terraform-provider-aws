@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -157,28 +156,28 @@ func ResourceFleet() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc_config": {
+			names.AttrVPCConfig: {
 				Type:         schema.TypeList,
 				Optional:     true,
 				MinItems:     1,
 				RequiredWith: []string{"fleet_service_role"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"security_group_ids": {
+						names.AttrSecurityGroupIDs: {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							MinItems: 1,
 							MaxItems: 5,
 						},
-						"subnets": {
+						names.AttrSubnets: {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							MinItems: 1,
 							MaxItems: 16,
 						},
-						"vpc_id": {
+						names.AttrVPCID: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -219,8 +218,8 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.ScalingConfiguration = expandScalingConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("vpc_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.VpcConfig = expandVpcConfig(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk(names.AttrVPCConfig); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.VpcConfig = expandVPCConfig(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	// InvalidInputException: CodeBuild is not authorized to perform
@@ -287,12 +286,8 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set("status", nil)
 	}
 
-	if fleet.VpcConfig != nil {
-		if err := d.Set("vpc_config", []interface{}{flattenVpcConfig(fleet.VpcConfig)}); err != nil {
-			return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionSetting, ResNameFleet, d.Id(), err)
-		}
-	} else {
-		d.Set("vpc_config", nil)
+	if err := d.Set(names.AttrVPCConfig, flattenVPCConfig(fleet.VpcConfig)); err != nil {
+		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionSetting, ResNameFleet, d.Id(), err)
 	}
 
 	setTagsOut(ctx, fleet.Tags)
@@ -335,9 +330,11 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	if d.HasChange("vpc_config") {
-		if v, ok := d.GetOk("vpc_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.VpcConfig = expandVpcConfig(v.([]interface{})[0].(map[string]interface{}))
+	if d.HasChange(names.AttrVPCConfig) {
+		if v, ok := d.GetOk(names.AttrVPCConfig); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.VpcConfig = expandVPCConfig(v.([]interface{})[0].(map[string]interface{}))
+		} else {
+			input.VpcConfig = &types.VpcConfig{}
 		}
 	}
 
@@ -515,28 +512,6 @@ func expandTargetTrackingScalingConfig(tfMap map[string]interface{}) *types.Targ
 	return apiObject
 }
 
-func expandVpcConfig(tfMap map[string]interface{}) *types.VpcConfig {
-	if tfMap == nil {
-		return nil
-	}
-
-	apiObject := &types.VpcConfig{}
-
-	if v, ok := tfMap["security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.SecurityGroupIds = flex.ExpandStringValueSet(v)
-	}
-
-	if v, ok := tfMap["subnets"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.Subnets = flex.ExpandStringValueSet(v)
-	}
-
-	if v, ok := tfMap["vpc_id"].(string); ok && v != "" {
-		apiObject.VpcId = aws.String(v)
-	}
-
-	return apiObject
-}
-
 func flattenScalingConfiguration(apiObject *types.ScalingConfigurationOutput) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
@@ -606,28 +581,6 @@ func flattenStatus(apiObject *types.FleetStatus) map[string]interface{} {
 
 	if v := apiObject.StatusCode; v != "" {
 		tfMap["status_code"] = v
-	}
-
-	return tfMap
-}
-
-func flattenVpcConfig(apiObject *types.VpcConfig) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.SecurityGroupIds; v != nil {
-		tfMap["security_group_ids"] = v
-	}
-
-	if v := apiObject.Subnets; v != nil {
-		tfMap["subnets"] = v
-	}
-
-	if v := apiObject.VpcId; v != nil {
-		tfMap["vpc_id"] = aws.ToString(v)
 	}
 
 	return tfMap
