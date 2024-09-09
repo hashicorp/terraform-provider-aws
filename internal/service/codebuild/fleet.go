@@ -362,7 +362,7 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if err := waitFleetActive(ctx, conn, d.Id()); err != nil {
-		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionUpdating, ResNameFleet, d.Id(), err)
+		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionWaitingForUpdate, ResNameFleet, d.Id(), err)
 	}
 
 	return append(diags, resourceFleetRead(ctx, d, meta)...)
@@ -386,7 +386,7 @@ func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if err := waitFleetDeleted(ctx, conn, d.Id()); err != nil {
-		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionDeleting, ResNameFleet, d.Id(), err)
+		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionWaitingForDeletion, ResNameFleet, d.Id(), err)
 	}
 
 	return diags
