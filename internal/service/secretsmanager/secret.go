@@ -105,7 +105,6 @@ func resourceSecret() *schema.Resource {
 			"replica": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				Computed: true,
 				Set: func(v interface{}) int {
 					var buf bytes.Buffer
 
