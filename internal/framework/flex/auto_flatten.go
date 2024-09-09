@@ -1388,6 +1388,7 @@ func (flattener autoFlattener) sliceOfStructToNestedObjectCollection(ctx context
 		}
 	} else {
 		if vFrom.IsNil() {
+			tflog.SubsystemTrace(ctx, subsystemName, "Flattening with NullValue")
 			val, d := tTo.NullValue(ctx)
 			diags.Append(d...)
 			if diags.HasError() {
@@ -1401,6 +1402,11 @@ func (flattener autoFlattener) sliceOfStructToNestedObjectCollection(ctx context
 
 	// Create a new target slice and flatten each element.
 	n := vFrom.Len()
+
+	tflog.SubsystemTrace(ctx, subsystemName, "Flattening nested object collection", map[string]any{
+		logAttrKeySourceSize: n,
+	})
+
 	to, d := tTo.NewObjectSlice(ctx, n, n)
 	diags.Append(d...)
 	if diags.HasError() {
