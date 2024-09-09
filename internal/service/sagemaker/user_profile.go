@@ -981,7 +981,7 @@ func statusUserProfile(ctx context.Context, conn *sagemaker.Client, domainID, us
 	}
 }
 
-func waitUserProfileInService(ctx context.Context, conn *sagemaker.Client, domainID, userProfileName string) (*sagemaker.DescribeUserProfileOutput, error) {
+func waitUserProfileInService(ctx context.Context, conn *sagemaker.Client, domainID, userProfileName string) (*sagemaker.DescribeUserProfileOutput, error) { //nolint:unparam
 	const (
 		timeout = 10 * time.Minute
 	)
