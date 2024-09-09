@@ -16,7 +16,7 @@ Terraform resource for managing an AWS Lambda Function Recursion Config.
 
 ```terraform
 resource "aws_lambda_function_recursion_config" "example" {
-  function_name  = "testexample"
+  function_name  = "SomeFunction"
   recursive_loop = "Allow"
 }
 ```
@@ -39,12 +39,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_lambda_function_recursion_config.example
-  id = "example"
+  id = "SomeFunction"
 }
 ```
 
 Using `terraform import`, import AWS Lambda Function Recursion Config using the `function_name`. For example:
 
 ```console
-% terraform import aws_lambda_function_recursion_config.example example
+% terraform import aws_lambda_function_recursion_config.example SomeFunction
 ```

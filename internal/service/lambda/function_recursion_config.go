@@ -48,8 +48,7 @@ func (r *resourceFunctionRecursionConfig) Schema(ctx context.Context, req resour
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"function_name": schema.StringAttribute{
-				Description: "The name of the Lambda function.",
-				Required:    true,
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -58,9 +57,8 @@ func (r *resourceFunctionRecursionConfig) Schema(ctx context.Context, req resour
 				},
 			},
 			"recursive_loop": schema.StringAttribute{
-				Description: "The Lambda function's recursive loop detection configuration.",
-				CustomType:  fwtypes.StringEnumType[awstypes.RecursiveLoop](),
-				Required:    true,
+				CustomType: fwtypes.StringEnumType[awstypes.RecursiveLoop](),
+				Required:   true,
 			},
 		},
 	}
