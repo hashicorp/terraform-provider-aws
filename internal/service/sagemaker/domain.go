@@ -1379,6 +1379,10 @@ func expandUserSettings(l []interface{}) *awstypes.UserSettings {
 		config.RStudioServerProAppSettings = expandRStudioServerProAppSettings(v)
 	}
 
+	if v, ok := m["studio_web_portal_settings"].([]interface{}); ok && len(v) > 0 {
+		config.StudioWebPortalSettings = expandStudioWebPortalSettings(v)
+	}
+
 	return config
 }
 
@@ -1839,6 +1843,26 @@ func expandDomainCustomImages(l []interface{}) []awstypes.CustomImage {
 	return images
 }
 
+func expandStudioWebPortalSettings(l []interface{}) *awstypes.StudioWebPortalSettings {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &awstypes.StudioWebPortalSettings{}
+
+	if v, ok := m["hidden_app_types"].(*schema.Set); ok && v.Len() > 0 {
+		config.HiddenAppTypes = flex.ExpandStringyValueSet[awstypes.AppType](v)
+	}
+
+	if v, ok := m["hidden_ml_tools"].(*schema.Set); ok && v.Len() > 0 {
+		config.HiddenMlTools = flex.ExpandStringyValueSet[awstypes.MlTools](v)
+	}
+
+	return config
+}
+
 func flattenUserSettings(config *awstypes.UserSettings) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
@@ -1906,6 +1930,10 @@ func flattenUserSettings(config *awstypes.UserSettings) []map[string]interface{}
 
 	if config.RStudioServerProAppSettings != nil {
 		m["r_studio_server_pro_app_settings"] = flattenRStudioServerProAppSettings(config.RStudioServerProAppSettings)
+	}
+
+	if config.StudioWebPortalSettings != nil {
+		m["studio_web_portal_settings"] = flattenStudioWebPortalSettings(config.StudioWebPortalSettings)
 	}
 
 	return []map[string]interface{}{m}
@@ -2507,4 +2535,22 @@ func flattenEFSFileSystemConfig(apiObject awstypes.EFSFileSystemConfig) []map[st
 	}
 
 	return []map[string]interface{}{tfMap}
+}
+
+func flattenStudioWebPortalSettings(config *awstypes.StudioWebPortalSettings) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if config.HiddenAppTypes != nil {
+		m["hidden_app_types"] = flex.FlattenStringyValueSet[awstypes.AppType](config.HiddenAppTypes)
+	}
+
+	if config.HiddenMlTools != nil {
+		m["hidden_ml_tools"] = flex.FlattenStringyValueSet[awstypes.MlTools](config.HiddenMlTools)
+	}
+
+	return []map[string]interface{}{m}
 }
