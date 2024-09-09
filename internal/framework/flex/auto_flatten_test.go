@@ -2419,12 +2419,7 @@ func TestFlattenString(t *testing.T) {
 func TestFlattenTopLevelStringPtr(t *testing.T) {
 	t.Parallel()
 
-	testCases := map[string]struct {
-		source           *string
-		expectedValue    types.String
-		expectedDiags    diag.Diagnostics
-		expectedLogLines []map[string]any
-	}{
+	testCases := toplevelTestCases[*string, types.String]{
 		"value": {
 			source:        aws.String("value"),
 			expectedValue: types.StringValue("value"),
@@ -2456,51 +2451,13 @@ func TestFlattenTopLevelStringPtr(t *testing.T) {
 		},
 	}
 
-	for testName, testCase := range testCases {
-		t.Run(testName, func(t *testing.T) {
-			t.Parallel()
-
-			ctx := context.Background()
-
-			var buf bytes.Buffer
-			ctx = tflogtest.RootLogger(ctx, &buf)
-
-			ctx = registerTestingLogger(ctx)
-
-			var target types.String
-			diags := Flatten(ctx, testCase.source, &target)
-
-			if diff := cmp.Diff(diags, testCase.expectedDiags); diff != "" {
-				t.Errorf("unexpected diagnostics difference: %s", diff)
-			}
-
-			lines, err := tflogtest.MultilineJSONDecode(&buf)
-			if err != nil {
-				t.Fatalf("Flatten: decoding log lines: %s", err)
-			}
-			if diff := cmp.Diff(lines, testCase.expectedLogLines); diff != "" {
-				t.Errorf("unexpected log lines diff (+wanted, -got): %s", diff)
-			}
-
-			if !diags.HasError() {
-				less := func(a, b any) bool { return fmt.Sprintf("%+v", a) < fmt.Sprintf("%+v", b) }
-				if diff := cmp.Diff(target, testCase.expectedValue, cmpopts.SortSlices(less)); diff != "" {
-					t.Errorf("unexpected diff (+wanted, -got): %s", diff)
-				}
-			}
-		})
-	}
+	runTopLevelTestCases(t, testCases)
 }
 
 func TestFlattenTopLevelInt64Ptr(t *testing.T) {
 	t.Parallel()
 
-	testCases := map[string]struct {
-		source           *int64
-		expectedValue    types.Int64
-		expectedDiags    diag.Diagnostics
-		expectedLogLines []map[string]any
-	}{
+	testCases := toplevelTestCases[*int64, types.Int64]{
 		"value": {
 			source:        aws.Int64(42),
 			expectedValue: types.Int64Value(42),
@@ -2532,40 +2489,7 @@ func TestFlattenTopLevelInt64Ptr(t *testing.T) {
 		},
 	}
 
-	for testName, testCase := range testCases {
-		t.Run(testName, func(t *testing.T) {
-			t.Parallel()
-
-			ctx := context.Background()
-
-			var buf bytes.Buffer
-			ctx = tflogtest.RootLogger(ctx, &buf)
-
-			ctx = registerTestingLogger(ctx)
-
-			var target types.Int64
-			diags := Flatten(ctx, testCase.source, &target)
-
-			if diff := cmp.Diff(diags, testCase.expectedDiags); diff != "" {
-				t.Errorf("unexpected diagnostics difference: %s", diff)
-			}
-
-			lines, err := tflogtest.MultilineJSONDecode(&buf)
-			if err != nil {
-				t.Fatalf("Flatten: decoding log lines: %s", err)
-			}
-			if diff := cmp.Diff(lines, testCase.expectedLogLines); diff != "" {
-				t.Errorf("unexpected log lines diff (+wanted, -got): %s", diff)
-			}
-
-			if !diags.HasError() {
-				less := func(a, b any) bool { return fmt.Sprintf("%+v", a) < fmt.Sprintf("%+v", b) }
-				if diff := cmp.Diff(target, testCase.expectedValue, cmpopts.SortSlices(less)); diff != "" {
-					t.Errorf("unexpected diff (+wanted, -got): %s", diff)
-				}
-			}
-		})
-	}
+	runTopLevelTestCases(t, testCases)
 }
 
 func TestFlattenSimpleNestedBlockWithStringEnum(t *testing.T) {
@@ -3437,12 +3361,7 @@ func TestFlattenTopLevelListOfNestedObject(t *testing.T) {
 
 	ctx := context.Background()
 
-	testCases := map[string]struct {
-		source           []awsSingleStringValue
-		expectedValue    fwtypes.ListNestedObjectValueOf[tfSingleStringField]
-		expectedDiags    diag.Diagnostics
-		expectedLogLines []map[string]any
-	}{
+	testCases := map[string]toplevelTestCase[[]awsSingleStringValue, fwtypes.ListNestedObjectValueOf[tfSingleStringField]]{
 		"values": {
 			source: []awsSingleStringValue{
 				{
@@ -3492,40 +3411,7 @@ func TestFlattenTopLevelListOfNestedObject(t *testing.T) {
 		},
 	}
 
-	for testName, testCase := range testCases {
-		t.Run(testName, func(t *testing.T) {
-			t.Parallel()
-
-			ctx := context.Background()
-
-			var buf bytes.Buffer
-			ctx = tflogtest.RootLogger(ctx, &buf)
-
-			ctx = registerTestingLogger(ctx)
-
-			var target fwtypes.ListNestedObjectValueOf[tfSingleStringField]
-			diags := Flatten(ctx, testCase.source, &target)
-
-			if diff := cmp.Diff(diags, testCase.expectedDiags); diff != "" {
-				t.Errorf("unexpected diagnostics difference: %s", diff)
-			}
-
-			lines, err := tflogtest.MultilineJSONDecode(&buf)
-			if err != nil {
-				t.Fatalf("Flatten: decoding log lines: %s", err)
-			}
-			if diff := cmp.Diff(lines, testCase.expectedLogLines); diff != "" {
-				t.Errorf("unexpected log lines diff (+wanted, -got): %s", diff)
-			}
-
-			if !diags.HasError() {
-				less := func(a, b any) bool { return fmt.Sprintf("%+v", a) < fmt.Sprintf("%+v", b) }
-				if diff := cmp.Diff(target, testCase.expectedValue, cmpopts.SortSlices(less)); diff != "" {
-					t.Errorf("unexpected diff (+wanted, -got): %s", diff)
-				}
-			}
-		})
-	}
+	runTopLevelTestCases(t, testCases)
 }
 
 func TestFlattenSetOfNestedObjectField(t *testing.T) {
@@ -5376,6 +5262,55 @@ func runAutoFlattenTestCases(t *testing.T, testCases autoFlexTestCases) {
 					if !testCase.WantDiff {
 						t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 					}
+				}
+			}
+		})
+	}
+}
+
+// Top-level tests need a concrete target type for some reason when calling `cmp.Diff`
+type toplevelTestCase[Tsource, Ttarget any] struct {
+	source           Tsource
+	expectedValue    Ttarget
+	expectedDiags    diag.Diagnostics
+	expectedLogLines []map[string]any
+}
+
+type toplevelTestCases[Tsource, Ttarget any] map[string]toplevelTestCase[Tsource, Ttarget]
+
+func runTopLevelTestCases[Tsource, Ttarget any](t *testing.T, testCases toplevelTestCases[Tsource, Ttarget]) {
+	t.Helper()
+
+	for testName, testCase := range testCases {
+		t.Run(testName, func(t *testing.T) {
+			t.Parallel()
+
+			ctx := context.Background()
+
+			var buf bytes.Buffer
+			ctx = tflogtest.RootLogger(ctx, &buf)
+
+			ctx = registerTestingLogger(ctx)
+
+			var target Ttarget
+			diags := Flatten(ctx, testCase.source, &target)
+
+			if diff := cmp.Diff(diags, testCase.expectedDiags); diff != "" {
+				t.Errorf("unexpected diagnostics difference: %s", diff)
+			}
+
+			lines, err := tflogtest.MultilineJSONDecode(&buf)
+			if err != nil {
+				t.Fatalf("Flatten: decoding log lines: %s", err)
+			}
+			if diff := cmp.Diff(lines, testCase.expectedLogLines); diff != "" {
+				t.Errorf("unexpected log lines diff (+wanted, -got): %s", diff)
+			}
+
+			if !diags.HasError() {
+				less := func(a, b any) bool { return fmt.Sprintf("%+v", a) < fmt.Sprintf("%+v", b) }
+				if diff := cmp.Diff(target, testCase.expectedValue, cmpopts.SortSlices(less)); diff != "" {
+					t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 				}
 			}
 		})
