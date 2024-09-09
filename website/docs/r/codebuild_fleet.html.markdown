@@ -19,9 +19,11 @@ resource "aws_codebuild_fleet" "test" {
   environment_type  = "LINUX_CONTAINER"
   name              = "full-example-codebuild-fleet"
   overflow_behavior = "QUEUE"
+
   scaling_configuration {
     max_capacity = 5
     scaling_type = "TARGET_TRACKING_SCALING"
+
     target_tracking_scaling_configs {
       metric_type  = "FLEET_UTILIZATION_RATE"
       target_value = 97.5
@@ -43,15 +45,17 @@ resource "aws_codebuild_fleet" "example" {
 The following arguments are required:
 
 * `name` - (Required) Fleet name.
+* `base_capacity` - (Required) Number of machines allocated to the ﬂeet.
+* `compute_type` - (Required) Compute resources the compute fleet uses. See [compute types](https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-compute-types.html#environment.types) for more information and valid values.
+* `environment_type` - (Required) Environment type of the compute fleet. See [environment types](https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-compute-types.html#environment.types) for more information and valid values.
 
 The following arguments are optional:
-
-* `base_capacity` - (Optional) Number of machines allocated to the ﬂeet.
-* `compute_type` - (Optional) Compute resources the compute fleet uses. See [compute types](https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-compute-types.html#environment.types) for more information and valid values.
-* `environment_type` - (Optional) Environment type of the compute fleet. See [environment types](https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-compute-types.html#environment.types) for more information and valid values.
+* `fleet_service_role` - (Optional) The service role associated with the compute fleet.
+* `image_id` - (Optional) The Amazon Machine Image (AMI) of the compute fleet.
 * `overflow_behavior` - (Optional) Overflow behavior for compute fleet. Valid values: `ON_DEMAND`, `QUEUE`.
 * `scaling_configuration` - (Optional) Configuration block. Detailed below. This option is only valid when your overflow behavior is `QUEUE`.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `vpc_config` - (Optional) Configuration block. Detailed below.
 
 ### scaling_configuration
 
@@ -59,10 +63,16 @@ The following arguments are optional:
 * `scaling_type` - (Optional) Scaling type for a compute fleet. Valid value: `TARGET_TRACKING_SCALING`.
 * `target_tracking_scaling_configs` - (Optional) Configuration block. Detailed below.
 
-#### scaling_configuration:target_tracking_scaling_configs
+#### scaling_configuration: target_tracking_scaling_configs
 
 * `metric_type` - (Optional) Metric type to determine auto-scaling. Valid value: `FLEET_UTILIZATION_RATE`.
 * `target_value` - (Optional) Value of metricType when to start scaling.
+
+### vpc_config
+
+* `security_group_ids` - (Required) A list of one or more security groups IDs in your Amazon VPC.
+* `subnets` - (Required) A list of one or more subnet IDs in your Amazon VPC.
+* `vpc_id` - (Required) The ID of the Amazon VPC.
 
 ## Attribute Reference
 
