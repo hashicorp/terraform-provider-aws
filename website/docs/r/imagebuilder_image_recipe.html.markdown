@@ -102,7 +102,7 @@ The following arguments are required:
 
 The following arguments are required:
 
-* `uninstall_after_build` - Whether to remove the Systems Manager Agent after the image has been built. Defaults to `false`.
+* `uninstall_after_build` - Whether to remove the Systems Manager Agent after the image has been built.
 
 ## Attribute Reference
 
