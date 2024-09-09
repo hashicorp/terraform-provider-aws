@@ -201,6 +201,33 @@ func TestAccCodeBuildFleet_environmentType(t *testing.T) {
 	})
 }
 
+func TestAccCodeBuildFleet_imageId(t *testing.T) {
+	ctx := context.Background()
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_codebuild_fleet.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFleetConfig_imageId(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFleetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "image_id", "aws/codebuild/macos-arm-base:14"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccCodeBuildFleet_scalingConfiguration(t *testing.T) {
 	ctx := context.Background()
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -381,6 +408,19 @@ resource "aws_codebuild_fleet" "test" {
   overflow_behavior = "ON_DEMAND"
 }
 `, rName, string(environmentType))
+}
+
+func testAccFleetConfig_imageId(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_codebuild_fleet" "test" {
+  base_capacity     = 1
+  compute_type      = "BUILD_GENERAL1_MEDIUM"
+  environment_type  = "MAC_ARM"
+  name              = %[1]q
+  overflow_behavior = "QUEUE"
+  image_id = "aws/codebuild/macos-arm-base:14"
+}
+`, rName)
 }
 
 func testAccFleetConfig_scalingConfiguration1(rName string) string {

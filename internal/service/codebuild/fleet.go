@@ -71,6 +71,10 @@ func ResourceFleet() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"image_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"last_modified": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -210,6 +214,10 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.FleetServiceRole = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("image_id"); ok {
+		input.ImageId = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("overflow_behavior"); ok {
 		input.OverflowBehavior = types.FleetOverflowBehavior(v.(string))
 	}
@@ -266,6 +274,7 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("environment_type", fleet.EnvironmentType)
 	d.Set("fleet_service_role", fleet.FleetServiceRole)
 	d.Set("id", fleet.Id)
+	d.Set("image_id", fleet.ImageId)
 	d.Set("last_modified", fleet.LastModified.String())
 	d.Set("name", fleet.Name)
 	d.Set("overflow_behavior", fleet.OverflowBehavior)
@@ -317,6 +326,10 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if d.HasChange("fleet_service_role") {
 		input.FleetServiceRole = aws.String(d.Get("fleet_service_role").(string))
+	}
+
+	if d.HasChange("image_id") {
+		input.ImageId = aws.String(d.Get("image_id").(string))
 	}
 
 	// Make sure that overflow_behavior is set (if defined) on update - API omits it on updates.
