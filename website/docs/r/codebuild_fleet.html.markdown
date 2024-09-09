@@ -50,6 +50,7 @@ The following arguments are required:
 * `environment_type` - (Required) Environment type of the compute fleet. See [environment types](https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-compute-types.html#environment.types) for more information and valid values.
 
 The following arguments are optional:
+
 * `fleet_service_role` - (Optional) The service role associated with the compute fleet.
 * `image_id` - (Optional) The Amazon Machine Image (AMI) of the compute fleet.
 * `overflow_behavior` - (Optional) Overflow behavior for compute fleet. Valid values: `ON_DEMAND`, `QUEUE`.
