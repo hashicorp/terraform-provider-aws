@@ -21,6 +21,7 @@ import (
 
 // @SDKDataSource("aws_ec2_transit_gateway_multicast_domain", name="Transit Gateway Multicast Domain")
 // @Tags
+// @Testing(tagsTest=false)
 func dataSourceTransitGatewayMulticastDomain() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTransitGatewayMulticastDomainRead,

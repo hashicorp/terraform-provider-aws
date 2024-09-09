@@ -32,6 +32,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  dataSourceGroup,
 			TypeName: "aws_cloudwatch_log_group",
+			Name:     "Log Group",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},

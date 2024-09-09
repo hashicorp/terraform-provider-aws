@@ -45,14 +45,20 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceComputeEnvironment,
 			TypeName: "aws_batch_compute_environment",
+			Name:     "Compute Environment",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  DataSourceJobQueue,
 			TypeName: "aws_batch_job_queue",
+			Name:     "Job Queue",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  DataSourceSchedulingPolicy,
 			TypeName: "aws_batch_scheduling_policy",
+			Name:     "Scheduling Policy",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 	}
 }

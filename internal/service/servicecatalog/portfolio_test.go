@@ -137,17 +137,3 @@ resource "aws_servicecatalog_portfolio" "test" {
 }
 `, name)
 }
-
-func testAccPortfolioConfig_tags1(name, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_servicecatalog_portfolio" "test" {
-  name          = %[1]q
-  description   = "test-b"
-  provider_name = "test-c"
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, name, tagKey1, tagValue1)
-}

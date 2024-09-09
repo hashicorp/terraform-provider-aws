@@ -38,6 +38,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourcePortfolio,
 			TypeName: "aws_servicecatalog_portfolio",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  DataSourcePortfolioConstraints,
@@ -46,6 +47,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceProduct,
 			TypeName: "aws_servicecatalog_product",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  DataSourceProvisioningArtifacts,

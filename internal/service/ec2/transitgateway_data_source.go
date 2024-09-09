@@ -20,6 +20,7 @@ import (
 
 // @SDKDataSource("aws_ec2_transit_gateway", name="Transit Gateway")
 // @Tags
+// @Testing(tagsTest=false)
 func dataSourceTransitGateway() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTransitGatewayRead,

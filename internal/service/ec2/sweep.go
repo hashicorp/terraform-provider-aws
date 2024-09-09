@@ -1807,7 +1807,7 @@ func sweepTrafficMirrorFilters(region string) error {
 		}
 
 		for _, v := range page.TrafficMirrorFilters {
-			r := ResourceTrafficMirrorFilter()
+			r := resourceTrafficMirrorFilter()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.TrafficMirrorFilterId))
 
@@ -1848,7 +1848,7 @@ func sweepTrafficMirrorSessions(region string) error {
 		}
 
 		for _, v := range page.TrafficMirrorSessions {
-			r := ResourceTrafficMirrorSession()
+			r := resourceTrafficMirrorSession()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.TrafficMirrorSessionId))
 
@@ -1889,7 +1889,7 @@ func sweepTrafficMirrorTargets(region string) error {
 		}
 
 		for _, v := range page.TrafficMirrorTargets {
-			r := ResourceTrafficMirrorTarget()
+			r := resourceTrafficMirrorTarget()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.TrafficMirrorTargetId))
 

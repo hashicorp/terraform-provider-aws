@@ -22,6 +22,7 @@ import (
 
 // @SDKDataSource("aws_ec2_host", name="Host")
 // @Tags
+// @Testing(tagsTest=false)
 func dataSourceHost() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceHostRead,

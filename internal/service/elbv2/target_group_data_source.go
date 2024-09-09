@@ -23,6 +23,7 @@ import (
 
 // @SDKDataSource("aws_alb_target_group")
 // @SDKDataSource("aws_lb_target_group")
+// @Testing(tagsTest=true)
 func DataSourceTargetGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTargetGroupRead,

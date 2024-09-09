@@ -212,6 +212,10 @@ func ExpandStringValueSet(configured *schema.Set) []string {
 	return ExpandStringValueList(configured.List()) // nosemgrep:ci.helper-schema-Set-extraneous-ExpandStringList-with-List
 }
 
+func ExpandStringValueEmptySet(configured *schema.Set) []string {
+	return ExpandStringValueListEmpty(configured.List()) // nosemgrep:ci.helper-schema-Set-extraneous-ExpandStringList-with-List
+}
+
 func ExpandStringyValueSet[E ~string](configured *schema.Set) []E {
 	return ExpandStringyValueList[E](configured.List())
 }
