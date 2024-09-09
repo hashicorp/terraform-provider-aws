@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -179,15 +178,12 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.OverflowBehavior = types.FleetOverflowBehavior(v.(string))
 	}
 
-	if v, ok := d.GetOk("scaling_configuration"); ok {
-		if len(v.([]interface{})) == 0 || v.([]interface{})[0] == nil {
-			return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionCreating, ResNameFleet, d.Get("name").(string), errors.New("scaling_configuration cannot be empty"))
-		} else {
-			input.ScalingConfiguration = expandScalingConfiguration(v.([]interface{})[0].(map[string]interface{}))
-		}
+	if v, ok := d.GetOk("scaling_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.ScalingConfiguration = expandScalingConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	out, err := conn.CreateFleet(ctx, input)
+
 	if err != nil {
 		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionCreating, ResNameFleet, d.Get("name").(string), err)
 	}
@@ -222,39 +218,36 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionReading, ResNameFleet, d.Id(), err)
 	}
 
-	d.Set("arn", out.Fleets[0].Arn)
-	d.Set("base_capacity", out.Fleets[0].BaseCapacity)
-	d.Set("compute_type", out.Fleets[0].ComputeType)
-	d.Set("created", out.Fleets[0].Created.String())
-	d.Set("environment_type", out.Fleets[0].EnvironmentType)
-	d.Set("id", out.Fleets[0].Id)
-	d.Set("last_modified", out.Fleets[0].LastModified.String())
-	d.Set("name", out.Fleets[0].Name)
-	d.Set("overflow_behavior", out.Fleets[0].OverflowBehavior)
-	if len(out.Fleets) > 0 && out.Fleets[0].ScalingConfiguration != nil {
-		empty_scaling_configuration := out.Fleets[0].ScalingConfiguration.DesiredCapacity == nil &&
-			out.Fleets[0].ScalingConfiguration.MaxCapacity == nil &&
-			out.Fleets[0].ScalingConfiguration.ScalingType == "" &&
-			out.Fleets[0].ScalingConfiguration.TargetTrackingScalingConfigs == nil
+	fleet := out.Fleets[0]
 
-		if !empty_scaling_configuration {
-			if err := d.Set("scaling_configuration", []interface{}{flattenScalingConfiguration(out.Fleets[0].ScalingConfiguration)}); err != nil {
-				return sdkdiag.AppendErrorf(diags, "setting overflow behavior: %s", err)
-			}
-		} else {
-			d.Set("scaling_configuration", nil)
+	d.Set("arn", fleet.Arn)
+	d.Set("base_capacity", fleet.BaseCapacity)
+	d.Set("compute_type", fleet.ComputeType)
+	d.Set("created", fleet.Created.String())
+	d.Set("environment_type", fleet.EnvironmentType)
+	d.Set("id", fleet.Id)
+	d.Set("last_modified", fleet.LastModified.String())
+	d.Set("name", fleet.Name)
+	d.Set("overflow_behavior", fleet.OverflowBehavior)
+
+	if fleet.ScalingConfiguration != nil {
+		if err := d.Set("scaling_configuration", []interface{}{flattenScalingConfiguration(fleet.ScalingConfiguration)}); err != nil {
+			return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionSetting, ResNameFleet, d.Id(), err)
 		}
 	} else {
 		d.Set("scaling_configuration", nil)
 	}
-	if out.Fleets[0].Status != nil {
-		if err := d.Set("status", []interface{}{flattenStatus(out.Fleets[0].Status)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting status: %s", err)
+
+	if fleet.Status != nil {
+		if err := d.Set("status", []interface{}{flattenStatus(fleet.Status)}); err != nil {
+			return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionSetting, ResNameFleet, d.Id(), err)
 		}
 	} else {
 		d.Set("status", nil)
 	}
-	setTagsOut(ctx, out.Fleets[0].Tags)
+
+	setTagsOut(ctx, fleet.Tags)
+
 	return diags
 }
 
@@ -278,20 +271,14 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.EnvironmentType = types.EnvironmentType(d.Get("environment_type").(string))
 	}
 
-	// Make sure that overflow_behavior is set (if defined) on update - api ommit it on updates
+	// Make sure that overflow_behavior is set (if defined) on update - API omits it on updates.
 	if v, ok := d.GetOk("overflow_behavior"); ok {
 		input.OverflowBehavior = types.FleetOverflowBehavior(v.(string))
 	}
 
 	if d.HasChange("scaling_configuration") {
-		if v, ok := d.GetOk("scaling_configuration"); ok {
-			if len(v.([]interface{})) == 0 || v.([]interface{})[0] == nil {
-				return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionCreating, ResNameFleet, d.Get("name").(string), errors.New("scaling_configuration cannot be empty"))
-			} else {
-				input.ScalingConfiguration = expandScalingConfiguration(v.([]interface{})[0].(map[string]interface{}))
-			}
-		} else {
-			input.ScalingConfiguration = &types.ScalingConfigurationInput{}
+		if v, ok := d.GetOk("scaling_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.ScalingConfiguration = expandScalingConfiguration(v.([]interface{})[0].(map[string]interface{}))
 		}
 	}
 
@@ -299,12 +286,13 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	log.Printf("[DEBUG] Updating CodeBuild Fleet (%s): %#v", d.Id(), input)
 	_, err := conn.UpdateFleet(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating CodeBuild Fleet (%s): %s", d.Id(), err)
+		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionUpdating, ResNameFleet, d.Id(), err)
 	}
 
 	if err := waitFleetActive(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating CodeBuild Fleet (%s): %s", d.Id(), err)
+		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionUpdating, ResNameFleet, d.Id(), err)
 	}
 
 	return append(diags, resourceFleetRead(ctx, d, meta)...)
@@ -324,7 +312,7 @@ func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		return diags
 	}
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting CodeBuild Fleet (%s): %s", d.Id(), err)
+		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionDeleting, ResNameFleet, d.Id(), err)
 	}
 
 	if err := waitFleetDeleted(ctx, conn, d.Id()); err != nil {
@@ -376,7 +364,7 @@ func statusFleet(ctx context.Context, conn *codebuild.Client, id string, delete 
 			return nil, "", err
 		}
 
-		return out, aws.ToString((*string)(&out.Fleets[0].Status.StatusCode)), nil
+		return out, string(out.Fleets[0].Status.StatusCode), nil
 	}
 }
 
@@ -401,14 +389,14 @@ func findFleetByARNOrNames(ctx context.Context, conn *codebuild.Client, arn stri
 }
 
 func expandScalingConfiguration(tfMap map[string]interface{}) *types.ScalingConfigurationInput {
-	if len(tfMap) == 0 {
+	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.ScalingConfigurationInput{}
+
 	if v, ok := tfMap["max_capacity"].(int); ok {
-		int32Value := int32(v)
-		apiObject.MaxCapacity = &int32Value
+		apiObject.MaxCapacity = aws.Int32(int32(v))
 	}
 
 	if v, ok := tfMap["scaling_type"].(string); ok && v != "" {
@@ -431,11 +419,13 @@ func expandTargetTrackingScalingConfigs(tfList []interface{}) []types.TargetTrac
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
+
 		if !ok {
 			continue
 		}
 
 		apiObject := expandTargetTrackingScalingConfig(tfMap)
+
 		if apiObject == nil {
 			continue
 		}
@@ -457,7 +447,7 @@ func expandTargetTrackingScalingConfig(tfMap map[string]interface{}) *types.Targ
 	}
 
 	if v, ok := tfMap["target_value"].(float64); ok {
-		apiObject.TargetValue = &v
+		apiObject.TargetValue = aws.Float64(v)
 	}
 
 	return apiObject
