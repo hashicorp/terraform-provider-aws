@@ -33,14 +33,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` Name of Lambda Function.
 * `function_name` Name of Lambda Function.
 
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `30m`)
-* `update` - (Default `30m`)
-* `delete` - (Default `30m`)
-
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AWS Lambda Function Recursion Config using the `function_name`. For example:

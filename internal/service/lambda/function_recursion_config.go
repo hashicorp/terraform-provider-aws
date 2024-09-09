@@ -6,12 +6,10 @@ package lambda
 import (
 	"context"
 	"errors"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
-	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -31,13 +29,7 @@ import (
 
 // @FrameworkResource("aws_lambda_function_recursion_config", name="Function Recursion Config")
 func newResourceFunctionRecursionConfig(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceFunctionRecursionConfig{}
-
-	r.SetDefaultCreateTimeout(30 * time.Minute)
-	r.SetDefaultUpdateTimeout(30 * time.Minute)
-	r.SetDefaultDeleteTimeout(30 * time.Minute)
-
-	return r, nil
+	return &resourceFunctionRecursionConfig{}, nil
 }
 
 const (
@@ -47,7 +39,6 @@ const (
 type resourceFunctionRecursionConfig struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
-	framework.WithTimeouts
 	framework.WithNoOpDelete
 }
 
@@ -63,7 +54,6 @@ func (r *resourceFunctionRecursionConfig) Schema(ctx context.Context, req resour
 				Description: "The name of the Lambda function.",
 				Required:    true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
 					stringplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.String{
@@ -74,17 +64,7 @@ func (r *resourceFunctionRecursionConfig) Schema(ctx context.Context, req resour
 				Description: "The Lambda function's recursive loop detection configuration.",
 				CustomType:  fwtypes.StringEnumType[awstypes.RecursiveLoop](),
 				Required:    true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
-		},
-		Blocks: map[string]schema.Block{
-			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
-				Create: true,
-				Update: true,
-				Delete: true,
-			}),
 		},
 	}
 }
@@ -125,17 +105,7 @@ func (r *resourceFunctionRecursionConfig) Create(ctx context.Context, req resour
 
 	plan.setId()
 
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	created, err := waitRecursionConfigCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Lambda, create.ErrActionWaitingForCreation, ResNameFunctionRecursionConfig, plan.ID.String(), err),
-			err.Error(),
-		)
-		return
-	}
-
-	resp.Diagnostics.Append(flex.Flatten(ctx, created, &plan)...)
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -152,7 +122,6 @@ func (r *resourceFunctionRecursionConfig) Read(ctx context.Context, req resource
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
 	stateFunctionName := state.FunctionName.ValueString()
 
 	out, err := findRecursionConfigByID(ctx, conn, state.ID.ValueString())
@@ -191,11 +160,8 @@ func (r *resourceFunctionRecursionConfig) Update(ctx context.Context, req resour
 
 	if !plan.RecursiveLoop.Equal(state.RecursiveLoop) {
 		in := &lambda.PutFunctionRecursionConfigInput{
-			FunctionName: flex.StringFromFramework(ctx, plan.ID),
-		}
-
-		if !plan.RecursiveLoop.Equal(state.RecursiveLoop) {
-			in.RecursiveLoop = plan.RecursiveLoop.ValueEnum()
+			FunctionName:  flex.StringFromFramework(ctx, plan.ID),
+			RecursiveLoop: plan.RecursiveLoop.ValueEnum(),
 		}
 
 		out, err := conn.PutFunctionRecursionConfig(ctx, in)
@@ -216,17 +182,7 @@ func (r *resourceFunctionRecursionConfig) Update(ctx context.Context, req resour
 
 		plan.setId()
 
-		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-		updated, err := waitRecursionConfigUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.Lambda, create.ErrActionWaitingForUpdate, ResNameFunctionRecursionConfig, planFunctionName, err),
-				err.Error(),
-			)
-			return
-		}
-
-		resp.Diagnostics.Append(flex.Flatten(ctx, updated, &plan)...)
+		resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -265,16 +221,6 @@ func (r *resourceFunctionRecursionConfig) Delete(ctx context.Context, req resour
 		)
 		return
 	}
-
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitRecursionConfigDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Lambda, create.ErrActionWaitingForDeletion, ResNameFunctionRecursionConfig, state.ID.String(), err),
-			err.Error(),
-		)
-		return
-	}
 }
 
 func (r *resourceFunctionRecursionConfig) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
@@ -287,81 +233,6 @@ func (r *resourceFunctionRecursionConfig) ImportState(ctx context.Context, req r
 	}
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), req.ID)...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("function_name"), req.ID)...)
-}
-
-const (
-	statusChangePending = "Pending"
-	statusCompleted     = "Completed"
-	statusDeleting      = "Deleting"
-	statusNormal        = "Normal"
-	statusUpdated       = "Updated"
-)
-
-func waitRecursionConfigCreated(ctx context.Context, conn *lambda.Client, id string, timeout time.Duration) (*lambda.GetFunctionRecursionConfigOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{},
-		Target:                    []string{statusCompleted},
-		Refresh:                   statusRecursionConfig(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*lambda.GetFunctionRecursionConfigOutput); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func waitRecursionConfigUpdated(ctx context.Context, conn *lambda.Client, id string, timeout time.Duration) (*lambda.GetFunctionRecursionConfigOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{},
-		Target:                    []string{statusCompleted},
-		Refresh:                   statusRecursionConfig(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*lambda.GetFunctionRecursionConfigOutput); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func waitRecursionConfigDeleted(ctx context.Context, conn *lambda.Client, id string, timeout time.Duration) (*lambda.GetFunctionRecursionConfigOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{},
-		Target:  []string{statusCompleted},
-		Refresh: statusRecursionConfig(ctx, conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*lambda.GetFunctionRecursionConfigOutput); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func statusRecursionConfig(ctx context.Context, conn *lambda.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		out, err := findRecursionConfigByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return out, statusCompleted, nil
-	}
 }
 
 func findRecursionConfigByID(ctx context.Context, conn *lambda.Client, id string) (*lambda.GetFunctionRecursionConfigOutput, error) {
@@ -396,5 +267,4 @@ type resourceFunctionRecursionConfigData struct {
 	ID            types.String                               `tfsdk:"id"`
 	FunctionName  types.String                               `tfsdk:"function_name"`
 	RecursiveLoop fwtypes.StringEnum[awstypes.RecursiveLoop] `tfsdk:"recursive_loop"`
-	Timeouts      timeouts.Value                             `tfsdk:"timeouts"`
 }
