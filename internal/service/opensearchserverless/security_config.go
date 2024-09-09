@@ -26,10 +26,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwdiff "github.com/hashicorp/terraform-provider-aws/internal/framework/diff"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -75,12 +75,10 @@ func (r *resourceSecurityConfig) Schema(ctx context.Context, req resource.Schema
 				},
 			},
 			names.AttrType: schema.StringAttribute{
-				Required: true,
+				CustomType: fwtypes.StringEnumType[awstypes.SecurityConfigType](),
+				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
-				},
-				Validators: []validator.String{
-					enum.FrameworkValidate[awstypes.SecurityConfigType](),
 				},
 			},
 		},
@@ -129,18 +127,31 @@ func (r *resourceSecurityConfig) Create(ctx context.Context, req resource.Create
 
 	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
-	in := &opensearchserverless.CreateSecurityConfigInput{
-		ClientToken: aws.String(sdkid.UniqueId()),
-		Name:        flex.StringFromFramework(ctx, plan.Name),
-		Type:        awstypes.SecurityConfigType(*flex.StringFromFramework(ctx, plan.Type)),
-		SamlOptions: expandSAMLOptions(ctx, plan.SamlOptions, &resp.Diagnostics),
+	//in := &opensearchserverless.CreateSecurityConfigInput{
+	//	ClientToken: aws.String(sdkid.UniqueId()),
+	//	Name:        fwflex.StringFromFramework(ctx, plan.Name),
+	//	Type:        awstypes.SecurityConfigType(*fwflex.StringFromFramework(ctx, plan.Type)),
+	//	SamlOptions: expandSAMLOptions(ctx, plan.SamlOptions, &resp.Diagnostics),
+	//}
+
+	input := opensearchserverless.CreateSecurityConfigInput{}
+	ignoreFieldOption := fwflex.WithIgnoredFieldNamesAppend("SamlOptions")
+	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &input, ignoreFieldOption)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	if !plan.Description.IsNull() {
-		in.Description = flex.StringFromFramework(ctx, plan.Description)
+	input.ClientToken = aws.String(sdkid.UniqueId())
+	input.SamlOptions = expandSAMLOptions(ctx, plan.SamlOptions, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	out, err := conn.CreateSecurityConfig(ctx, in)
+	//if !plan.Description.IsNull() {
+	//	in.Description = fwflex.StringFromFramework(ctx, plan.Description)
+	//}
+
+	out, err := conn.CreateSecurityConfig(ctx, &input)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionCreating, ResNameSecurityConfig, plan.Name.String(), nil),
@@ -158,7 +169,14 @@ func (r *resourceSecurityConfig) Create(ctx context.Context, req resource.Create
 	}
 
 	state := plan
-	state.refreshFromOutput(ctx, out.SecurityConfigDetail)
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, out.SecurityConfigDetail, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	state.SamlOptions = flattenSAMLOptions(ctx, out.SecurityConfigDetail.SamlOptions)
+
+	// state.refreshFromOutput(ctx, out.SecurityConfigDetail)
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -186,7 +204,14 @@ func (r *resourceSecurityConfig) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	state.refreshFromOutput(ctx, out)
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &state, fwflex.WithIgnoredFieldNamesAppend("SamlOptions"))...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	state.SamlOptions = flattenSAMLOptions(ctx, out.SamlOptions)
+	//state.refreshFromOutput(ctx, out)
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -200,35 +225,69 @@ func (r *resourceSecurityConfig) Update(ctx context.Context, req resource.Update
 		return
 	}
 
-	update := false
+	//update := false
 
-	input := &opensearchserverless.UpdateSecurityConfigInput{
-		ClientToken:   aws.String(sdkid.UniqueId()),
-		ConfigVersion: flex.StringFromFramework(ctx, state.ConfigVersion),
-		Id:            flex.StringFromFramework(ctx, plan.ID),
+	diff, diags := fwdiff.Calculate(ctx, plan, state)
+	if diags.HasError() {
+		resp.Diagnostics.Append(diags...)
+		return
 	}
 
-	if !plan.Description.Equal(state.Description) {
-		input.Description = aws.String(plan.Description.ValueString())
-		update = true
-	}
+	if diff.HasChanges() {
+		input := opensearchserverless.UpdateSecurityConfigInput{}
+		flexIgnoreOption := fwflex.WithIgnoredFieldNamesAppend("SamlOptions")
+		resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &input, flexIgnoreOption)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 
-	if !plan.SamlOptions.Equal(state.SamlOptions) {
+		input.ClientToken = aws.String(sdkid.UniqueId())
+		input.ConfigVersion = state.ConfigVersion.ValueStringPointer()
 		input.SamlOptions = expandSAMLOptions(ctx, plan.SamlOptions, &resp.Diagnostics)
-		update = true
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		out, err := conn.UpdateSecurityConfig(ctx, &input)
+		if err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("updating Security Policy (%s)", plan.Name.ValueString()), err.Error())
+			return
+		}
+
+		resp.Diagnostics.Append(fwflex.Flatten(ctx, out.SecurityConfigDetail, &plan, flexIgnoreOption)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
 	}
 
-	if !update {
-		return
-	}
+	//input := &opensearchserverless.UpdateSecurityConfigInput{
+	//	ClientToken:   aws.String(sdkid.UniqueId()),
+	//	ConfigVersion: flex.StringFromFramework(ctx, state.ConfigVersion),
+	//	Id:            flex.StringFromFramework(ctx, plan.ID),
+	//}
+	//
+	//if !plan.Description.Equal(state.Description) {
+	//	input.Description = aws.String(plan.Description.ValueString())
+	//	update = true
+	//}
+	//
+	//if !plan.SamlOptions.Equal(state.SamlOptions) {
+	//	input.SamlOptions = expandSAMLOptions(ctx, plan.SamlOptions, &resp.Diagnostics)
+	//	update = true
+	//}
+	//
+	//if !update {
+	//	return
+	//}
 
-	out, err := conn.UpdateSecurityConfig(ctx, input)
-
-	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("updating Security Policy (%s)", plan.Name.ValueString()), err.Error())
-		return
-	}
-	plan.refreshFromOutput(ctx, out.SecurityConfigDetail)
+	//out, err := conn.UpdateSecurityConfig(ctx, &input)
+	//
+	//if err != nil {
+	//	resp.Diagnostics.AddError(fmt.Sprintf("updating Security Policy (%s)", plan.Name.ValueString()), err.Error())
+	//	return
+	//}
+	// plan.refreshFromOutput(ctx, out.SecurityConfigDetail)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
@@ -244,7 +303,7 @@ func (r *resourceSecurityConfig) Delete(ctx context.Context, req resource.Delete
 
 	_, err := conn.DeleteSecurityConfig(ctx, &opensearchserverless.DeleteSecurityConfigInput{
 		ClientToken: aws.String(sdkid.UniqueId()),
-		Id:          flex.StringFromFramework(ctx, state.ID),
+		Id:          state.ID.ValueStringPointer(),
 	})
 	if err != nil {
 		var nfe *awstypes.ResourceNotFoundException
@@ -271,26 +330,26 @@ func (r *resourceSecurityConfig) ImportState(ctx context.Context, req resource.I
 }
 
 type resourceSecurityConfigData struct {
-	ID            types.String `tfsdk:"id"`
-	ConfigVersion types.String `tfsdk:"config_version"`
-	Description   types.String `tfsdk:"description"`
-	Name          types.String `tfsdk:"name"`
-	SamlOptions   types.Object `tfsdk:"saml_options"`
-	Type          types.String `tfsdk:"type"`
+	ID            types.String                                    `tfsdk:"id"`
+	ConfigVersion types.String                                    `tfsdk:"config_version"`
+	Description   types.String                                    `tfsdk:"description"`
+	Name          types.String                                    `tfsdk:"name"`
+	SamlOptions   types.Object                                    `tfsdk:"saml_options"`
+	Type          fwtypes.StringEnum[awstypes.SecurityConfigType] `tfsdk:"type"`
 }
 
 // refreshFromOutput writes state data from an AWS response object
-func (rd *resourceSecurityConfigData) refreshFromOutput(ctx context.Context, out *awstypes.SecurityConfigDetail) {
-	if out == nil {
-		return
-	}
-
-	rd.ID = flex.StringToFramework(ctx, out.Id)
-	rd.ConfigVersion = flex.StringToFramework(ctx, out.ConfigVersion)
-	rd.Description = flex.StringToFramework(ctx, out.Description)
-	rd.SamlOptions = flattenSAMLOptions(ctx, out.SamlOptions)
-	rd.Type = flex.StringValueToFramework(ctx, out.Type)
-}
+//func (rd *resourceSecurityConfigData) refreshFromOutput(ctx context.Context, out *awstypes.SecurityConfigDetail) {
+//	if out == nil {
+//		return
+//	}
+//
+//	rd.ID = fwflex.StringToFramework(ctx, out.Id)
+//	rd.ConfigVersion = flex.StringToFramework(ctx, out.ConfigVersion)
+//	rd.Description = flex.StringToFramework(ctx, out.Description)
+//	rd.SamlOptions = flattenSAMLOptions(ctx, out.SamlOptions)
+//	rd.Type = flex.StringValueToFramework(ctx, out.Type)
+//}
 
 type samlOptions struct {
 	GroupAttribute types.String `tfsdk:"group_attribute"`
@@ -299,15 +358,15 @@ type samlOptions struct {
 	UserAttribute  types.String `tfsdk:"user_attribute"`
 }
 
-func (so *samlOptions) expand(ctx context.Context) *awstypes.SamlConfigOptions {
+func (so *samlOptions) expand(_ context.Context) *awstypes.SamlConfigOptions {
 	if so == nil {
 		return nil
 	}
 
 	result := &awstypes.SamlConfigOptions{
-		Metadata:       flex.StringFromFramework(ctx, so.Metadata),
-		GroupAttribute: flex.StringFromFramework(ctx, so.GroupAttribute),
-		UserAttribute:  flex.StringFromFramework(ctx, so.UserAttribute),
+		Metadata:       so.Metadata.ValueStringPointer(),
+		GroupAttribute: so.GroupAttribute.ValueStringPointer(),
+		UserAttribute:  so.UserAttribute.ValueStringPointer(),
 	}
 
 	if so.SessionTimeout.ValueInt64() != 0 {
@@ -334,11 +393,11 @@ func flattenSAMLOptions(ctx context.Context, so *awstypes.SamlConfigOptions) typ
 
 	attributeTypes := fwtypes.AttributeTypesMust[samlOptions](ctx)
 	attrs := map[string]attr.Value{}
-	attrs["group_attribute"] = flex.StringToFramework(ctx, so.GroupAttribute)
-	attrs["metadata"] = flex.StringToFramework(ctx, so.Metadata)
+	attrs["group_attribute"] = fwflex.StringToFramework(ctx, so.GroupAttribute)
+	attrs["metadata"] = fwflex.StringToFramework(ctx, so.Metadata)
 	timeout := int64(*so.SessionTimeout)
-	attrs["session_timeout"] = flex.Int64ToFramework(ctx, &timeout)
-	attrs["user_attribute"] = flex.StringToFramework(ctx, so.UserAttribute)
+	attrs["session_timeout"] = fwflex.Int64ToFramework(ctx, &timeout)
+	attrs["user_attribute"] = fwflex.StringToFramework(ctx, so.UserAttribute)
 
 	return types.ObjectValueMust(attributeTypes, attrs)
 }
