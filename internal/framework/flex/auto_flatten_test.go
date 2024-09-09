@@ -3432,6 +3432,102 @@ func TestFlattenListOfNestedObjectField(t *testing.T) {
 	}
 }
 
+func TestFlattenTopLevelListOfNestedObject(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	testCases := map[string]struct {
+		source           []awsSingleStringValue
+		expectedValue    fwtypes.ListNestedObjectValueOf[tfSingleStringField]
+		expectedDiags    diag.Diagnostics
+		expectedLogLines []map[string]any
+	}{
+		"values": {
+			source: []awsSingleStringValue{
+				{
+					Field1: "value1",
+				},
+				{
+					Field1: "value2",
+				},
+			},
+			expectedValue: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfSingleStringField{
+				{
+					Field1: types.StringValue("value1"),
+				},
+				{
+					Field1: types.StringValue("value2"),
+				},
+			}),
+			expectedLogLines: []map[string]any{
+				infoFlattening(reflect.TypeFor[[]awsSingleStringValue](), reflect.TypeFor[*fwtypes.ListNestedObjectValueOf[tfSingleStringField]]()),
+				infoConverting(reflect.TypeFor[[]awsSingleStringValue](), reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfSingleStringField]]()),
+				traceFlatteningNestedObjectCollection("", reflect.TypeFor[[]awsSingleStringValue](), 2, "", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfSingleStringField]]()),
+				traceMatchedFieldsWithPath("[0]", "Field1", reflect.TypeFor[awsSingleStringValue](), "[0]", "Field1", reflect.TypeFor[*tfSingleStringField]()),
+				infoConvertingWithPath("[0].Field1", reflect.TypeFor[string](), "[0].Field1", reflect.TypeFor[types.String]()),
+				traceMatchedFieldsWithPath("[1]", "Field1", reflect.TypeFor[awsSingleStringValue](), "[1]", "Field1", reflect.TypeFor[*tfSingleStringField]()),
+				infoConvertingWithPath("[1].Field1", reflect.TypeFor[string](), "[1].Field1", reflect.TypeFor[types.String]()),
+			},
+		},
+
+		"empty": {
+			source:        []awsSingleStringValue{},
+			expectedValue: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfSingleStringField{}),
+			expectedLogLines: []map[string]any{
+				infoFlattening(reflect.TypeFor[[]awsSingleStringValue](), reflect.TypeFor[*fwtypes.ListNestedObjectValueOf[tfSingleStringField]]()),
+				infoConverting(reflect.TypeFor[[]awsSingleStringValue](), reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfSingleStringField]]()),
+				traceFlatteningNestedObjectCollection("", reflect.TypeFor[[]awsSingleStringValue](), 0, "", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfSingleStringField]]()),
+			},
+		},
+
+		"null": {
+			source:        nil,
+			expectedValue: fwtypes.NewListNestedObjectValueOfNull[tfSingleStringField](ctx),
+			expectedLogLines: []map[string]any{
+				infoFlattening(reflect.TypeFor[[]awsSingleStringValue](), reflect.TypeFor[*fwtypes.ListNestedObjectValueOf[tfSingleStringField]]()),
+				infoConverting(reflect.TypeFor[[]awsSingleStringValue](), reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfSingleStringField]]()),
+				traceFlatteningWithNullValue("", reflect.TypeFor[[]awsSingleStringValue](), "", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfSingleStringField]]()),
+			},
+		},
+	}
+
+	for testName, testCase := range testCases {
+		t.Run(testName, func(t *testing.T) {
+			t.Parallel()
+
+			ctx := context.Background()
+
+			var buf bytes.Buffer
+			ctx = tflogtest.RootLogger(ctx, &buf)
+
+			ctx = registerTestingLogger(ctx)
+
+			var target fwtypes.ListNestedObjectValueOf[tfSingleStringField]
+			diags := Flatten(ctx, testCase.source, &target)
+
+			if diff := cmp.Diff(diags, testCase.expectedDiags); diff != "" {
+				t.Errorf("unexpected diagnostics difference: %s", diff)
+			}
+
+			lines, err := tflogtest.MultilineJSONDecode(&buf)
+			if err != nil {
+				t.Fatalf("Flatten: decoding log lines: %s", err)
+			}
+			if diff := cmp.Diff(lines, testCase.expectedLogLines); diff != "" {
+				t.Errorf("unexpected log lines diff (+wanted, -got): %s", diff)
+			}
+
+			if !diags.HasError() {
+				less := func(a, b any) bool { return fmt.Sprintf("%+v", a) < fmt.Sprintf("%+v", b) }
+				if diff := cmp.Diff(target, testCase.expectedValue, cmpopts.SortSlices(less)); diff != "" {
+					t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+				}
+			}
+		})
+	}
+}
+
 func TestFlattenSetOfNestedObjectField(t *testing.T) {
 	t.Parallel()
 

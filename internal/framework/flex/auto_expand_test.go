@@ -3410,7 +3410,7 @@ func TestExpandSetOfStringEnum(t *testing.T) {
 	runAutoExpandTestCases(t, testCases)
 }
 
-func TestExpandListOfNestedObject(t *testing.T) {
+func TestExpandTopLevelListOfNestedObject(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()

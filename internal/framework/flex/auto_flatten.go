@@ -103,7 +103,9 @@ func autoFlattenConvert(ctx context.Context, from, to any, flexer autoFlexer) di
 
 	// Top-level struct to struct conversion.
 	if valFrom.IsValid() && valTo.IsValid() {
-		if typFrom, typTo := valFrom.Type(), valTo.Type(); typFrom.Kind() == reflect.Struct && typTo.Kind() == reflect.Struct {
+		if typFrom, typTo := valFrom.Type(), valTo.Type(); typFrom.Kind() == reflect.Struct && typTo.Kind() == reflect.Struct &&
+			!typTo.Implements(reflect.TypeFor[basetypes.ListValuable]()) &&
+			!typTo.Implements(reflect.TypeFor[basetypes.SetValuable]()) {
 			tflog.SubsystemInfo(ctx, subsystemName, "Converting")
 			diags.Append(autoFlexConvertStruct(ctx, sourcePath, from, targetPath, to, flexer)...)
 			return diags
