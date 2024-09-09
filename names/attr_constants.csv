@@ -6,6 +6,7 @@ address,Address
 alias,Alias
 allocated_storage,AllocatedStorage
 allow_major_version_upgrade,AllowMajorVersionUpgrade
+api_key,APIKey
 application_id,ApplicationID
 apply_immediately,ApplyImmediately
 arn,ARN
@@ -46,6 +47,7 @@ creation_time,CreationTime
 database,Database
 database_name,DatabaseName
 default_action,DefaultAction
+default_authentication_method,DefaultAuthenticationMethod
 default_value,DefaultValue
 delete_on_termination,DeleteOnTermination
 deletion_protection,DeletionProtection
@@ -169,6 +171,7 @@ scope,Scope
 secret_key,SecretKey
 security_group_ids,SecurityGroupIDs
 security_groups,SecurityGroups
+service_json,ServiceJSON
 service_name,ServiceName
 service_role,ServiceRole
 service_role_arn,ServiceRoleARN

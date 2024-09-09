@@ -34,12 +34,11 @@ func ResourceGCMChannel() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"api_key": {
+			names.AttrAPIKey: {
 				Type:      schema.TypeString,
-				Required:  false,
 				Sensitive: true,
 			},
-			"default_authentication_method": {
+			names.AttrDefaultAuthenticationMethod: {
 				Type:     schema.TypeString,
 				Required: true,
 				Default:  "KEY",
@@ -49,7 +48,7 @@ func ResourceGCMChannel() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
-			"service_json": {
+			names.AttrServiceJSON: {
 				Type:     schema.TypeString,
 				Required: false,
 			},
@@ -65,10 +64,10 @@ func resourceGCMChannelUpsert(ctx context.Context, d *schema.ResourceData, meta 
 
 	params := &pinpoint.GCMChannelRequest{}
 
-	params.ApiKey = aws.String(d.Get("api_key").(string))
-	params.DefaultAuthenticationMethod = aws.String(d.Get("default_authentication_method").(string))
+	params.ApiKey = aws.String(d.Get(names.AttrAPIKey).(string))
+	params.DefaultAuthenticationMethod = aws.String(d.Get(names.AttrDefaultAuthenticationMethod).(string))
 	params.Enabled = aws.Bool(d.Get(names.AttrEnabled).(bool))
-	params.ServiceJson = aws.String(d.Get("service_json").(string))
+	params.ServiceJson = aws.String(d.Get(names.AttrServiceJSON).(string))
 
 	req := pinpoint.UpdateGcmChannelInput{
 		ApplicationId:     aws.String(applicationId),

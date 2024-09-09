@@ -13,6 +13,7 @@ import (
 // generated code and templates.
 func ConstOrQuote(constant string) string {
 	allConstants := map[string]string{
+		"api_key":                       "AttrAPIKey",
 		"arn":                           "AttrARN",
 		"arns":                          "AttrARNs",
 		"aws_account_id":                "AttrAWSAccountID",
@@ -62,6 +63,7 @@ func ConstOrQuote(constant string) string {
 		"database":                      "AttrDatabase",
 		"database_name":                 "AttrDatabaseName",
 		"default_action":                "AttrDefaultAction",
+		"default_authentication_method": "AttrDefaultAuthenticationMethod",
 		"default_value":                 "AttrDefaultValue",
 		"delete_on_termination":         "AttrDeleteOnTermination",
 		"deletion_protection":           "AttrDeletionProtection",
@@ -185,6 +187,7 @@ func ConstOrQuote(constant string) string {
 		"secret_key":                    "AttrSecretKey",
 		"security_group_ids":            "AttrSecurityGroupIDs",
 		"security_groups":               "AttrSecurityGroups",
+		"service_json":                  "AttrServiceJSON",
 		"service_name":                  "AttrServiceName",
 		"service_role":                  "AttrServiceRole",
 		"service_role_arn":              "AttrServiceRoleARN",
