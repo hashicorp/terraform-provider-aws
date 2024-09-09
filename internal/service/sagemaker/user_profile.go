@@ -36,6 +36,7 @@ func resourceUserProfile() *schema.Resource {
 		ReadWithoutTimeout:   resourceUserProfileRead,
 		UpdateWithoutTimeout: resourceUserProfileUpdate,
 		DeleteWithoutTimeout: resourceUserProfileDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -45,19 +46,14 @@ func resourceUserProfile() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"user_profile_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 63),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z]){0,62}`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
-				),
-			},
 			"domain_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+			},
+			"home_efs_file_system_uid": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"single_sign_on_user_identifier": {
 				Type:     schema.TypeString,
@@ -68,6 +64,17 @@ func resourceUserProfile() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
+			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"user_profile_name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 63),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z]){0,62}`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
+				),
 			},
 			"user_settings": {
 				Type:     schema.TypeList,
@@ -698,6 +705,31 @@ func resourceUserProfile() *schema.Resource {
 								},
 							},
 						},
+						"studio_web_portal_settings": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"hidden_app_types": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type:             schema.TypeString,
+											ValidateDiagFunc: enum.Validate[awstypes.AppType](),
+										},
+									},
+									"hidden_ml_tools": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type:             schema.TypeString,
+											ValidateDiagFunc: enum.Validate[awstypes.MlTools](),
+										},
+									},
+								},
+							},
+						},
 						"tensor_board_app_settings": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -740,39 +772,8 @@ func resourceUserProfile() *schema.Resource {
 								},
 							},
 						},
-						"studio_web_portal_settings": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"hidden_app_types": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem: &schema.Schema{
-											Type:             schema.TypeString,
-											ValidateDiagFunc: enum.Validate[awstypes.AppType](),
-										},
-									},
-									"hidden_ml_tools": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem: &schema.Schema{
-											Type:             schema.TypeString,
-											ValidateDiagFunc: enum.Validate[awstypes.MlTools](),
-										},
-									},
-								},
-							},
-						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"home_efs_file_system_uid": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 		},
 
