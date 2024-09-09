@@ -38,8 +38,6 @@ const (
 
 type resourceFunctionRecursionConfig struct {
 	framework.ResourceWithConfigure
-	framework.WithImportByID
-	framework.WithNoOpDelete
 }
 
 func (r *resourceFunctionRecursionConfig) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -49,7 +47,6 @@ func (r *resourceFunctionRecursionConfig) Metadata(_ context.Context, req resour
 func (r *resourceFunctionRecursionConfig) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: framework.IDAttribute(),
 			"function_name": schema.StringAttribute{
 				Description: "The name of the Lambda function.",
 				Required:    true,
@@ -71,15 +68,12 @@ func (r *resourceFunctionRecursionConfig) Schema(ctx context.Context, req resour
 
 func (r *resourceFunctionRecursionConfig) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan resourceFunctionRecursionConfigData
-
 	conn := r.Meta().LambdaClient(ctx)
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	planFunctionName := plan.FunctionName.ValueString()
 
 	in := &lambda.PutFunctionRecursionConfigInput{}
 	resp.Diagnostics.Append(flex.Expand(ctx, &plan, in)...)
@@ -90,20 +84,18 @@ func (r *resourceFunctionRecursionConfig) Create(ctx context.Context, req resour
 	out, err := conn.PutFunctionRecursionConfig(ctx, in)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Lambda, create.ErrActionCreating, ResNameFunctionRecursionConfig, planFunctionName, err),
+			create.ProblemStandardMessage(names.Lambda, create.ErrActionCreating, ResNameFunctionRecursionConfig, plan.FunctionName.String(), err),
 			err.Error(),
 		)
 		return
 	}
 	if out == nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Lambda, create.ErrActionCreating, ResNameFunctionRecursionConfig, planFunctionName, nil),
+			create.ProblemStandardMessage(names.Lambda, create.ErrActionCreating, ResNameFunctionRecursionConfig, plan.FunctionName.String(), nil),
 			errors.New("empty output").Error(),
 		)
 		return
 	}
-
-	plan.setId()
 
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
 	if resp.Diagnostics.HasError() {
@@ -115,23 +107,21 @@ func (r *resourceFunctionRecursionConfig) Create(ctx context.Context, req resour
 
 func (r *resourceFunctionRecursionConfig) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var state resourceFunctionRecursionConfigData
-
 	conn := r.Meta().LambdaClient(ctx)
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	stateFunctionName := state.FunctionName.ValueString()
 
-	out, err := findRecursionConfigByID(ctx, conn, state.ID.ValueString())
+	out, err := findFunctionRecursionConfigByName(ctx, conn, state.FunctionName.ValueString())
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Lambda, create.ErrActionSetting, ResNameFunctionRecursionConfig, stateFunctionName, err),
+			create.ProblemStandardMessage(names.Lambda, create.ErrActionSetting, ResNameFunctionRecursionConfig, state.FunctionName.String(), err),
 			err.Error(),
 		)
 		return
@@ -147,7 +137,6 @@ func (r *resourceFunctionRecursionConfig) Read(ctx context.Context, req resource
 
 func (r *resourceFunctionRecursionConfig) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan, state resourceFunctionRecursionConfigData
-
 	conn := r.Meta().LambdaClient(ctx)
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -156,31 +145,27 @@ func (r *resourceFunctionRecursionConfig) Update(ctx context.Context, req resour
 		return
 	}
 
-	planFunctionName := plan.FunctionName.ValueString()
-
 	if !plan.RecursiveLoop.Equal(state.RecursiveLoop) {
 		in := &lambda.PutFunctionRecursionConfigInput{
-			FunctionName:  flex.StringFromFramework(ctx, plan.ID),
+			FunctionName:  plan.FunctionName.ValueStringPointer(),
 			RecursiveLoop: plan.RecursiveLoop.ValueEnum(),
 		}
 
 		out, err := conn.PutFunctionRecursionConfig(ctx, in)
 		if err != nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.Lambda, create.ErrActionUpdating, ResNameFunctionRecursionConfig, planFunctionName, err),
+				create.ProblemStandardMessage(names.Lambda, create.ErrActionUpdating, ResNameFunctionRecursionConfig, plan.FunctionName.String(), err),
 				err.Error(),
 			)
 			return
 		}
 		if out == nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.Lambda, create.ErrActionUpdating, ResNameFunctionRecursionConfig, planFunctionName, nil),
+				create.ProblemStandardMessage(names.Lambda, create.ErrActionUpdating, ResNameFunctionRecursionConfig, plan.FunctionName.String(), nil),
 				errors.New("empty output").Error(),
 			)
 			return
 		}
-
-		plan.setId()
 
 		resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
 		if resp.Diagnostics.HasError() {
@@ -192,10 +177,10 @@ func (r *resourceFunctionRecursionConfig) Update(ctx context.Context, req resour
 }
 
 // Delete sets the Lambda function's recursion configuration to the default ("Terminate")
-// https://docs.aws.amazon.com/lambda/latest/api/API_PutFunctionRecursionConfig.html
+//
+// Ref: https://docs.aws.amazon.com/lambda/latest/api/API_PutFunctionRecursionConfig.html
 func (r *resourceFunctionRecursionConfig) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state resourceFunctionRecursionConfigData
-
 	conn := r.Meta().LambdaClient(ctx)
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -203,10 +188,8 @@ func (r *resourceFunctionRecursionConfig) Delete(ctx context.Context, req resour
 		return
 	}
 
-	stateFunctionName := state.FunctionName.ValueString()
-
 	in := &lambda.PutFunctionRecursionConfigInput{
-		FunctionName:  aws.String(state.ID.ValueString()),
+		FunctionName:  state.FunctionName.ValueStringPointer(),
 		RecursiveLoop: awstypes.RecursiveLoopTerminate,
 	}
 
@@ -216,7 +199,7 @@ func (r *resourceFunctionRecursionConfig) Delete(ctx context.Context, req resour
 			return
 		}
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Lambda, create.ErrActionDeleting, ResNameFunctionRecursionConfig, stateFunctionName, err),
+			create.ProblemStandardMessage(names.Lambda, create.ErrActionDeleting, ResNameFunctionRecursionConfig, state.FunctionName.String(), err),
 			err.Error(),
 		)
 		return
@@ -224,18 +207,10 @@ func (r *resourceFunctionRecursionConfig) Delete(ctx context.Context, req resour
 }
 
 func (r *resourceFunctionRecursionConfig) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	if path.Root(names.AttrID).Equal(path.Empty()) {
-		resp.Diagnostics.AddError(
-			"Resource Import Passthrough Missing Attribute Path",
-			"This is always an error in the provider. Please report the following to the provider developer:\n\n"+
-				"Resource ImportState method call to ImportStatePassthroughID path must be set to a valid attribute path that can accept a string value.",
-		)
-	}
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), req.ID)...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("function_name"), req.ID)...)
 }
 
-func findRecursionConfigByID(ctx context.Context, conn *lambda.Client, id string) (*lambda.GetFunctionRecursionConfigOutput, error) {
+func findFunctionRecursionConfigByName(ctx context.Context, conn *lambda.Client, id string) (*lambda.GetFunctionRecursionConfigOutput, error) {
 	in := &lambda.GetFunctionRecursionConfigInput{
 		FunctionName: aws.String(id),
 	}
@@ -259,12 +234,7 @@ func findRecursionConfigByID(ctx context.Context, conn *lambda.Client, id string
 	return out, nil
 }
 
-func (m *resourceFunctionRecursionConfigData) setId() {
-	m.ID = m.FunctionName
-}
-
 type resourceFunctionRecursionConfigData struct {
-	ID            types.String                               `tfsdk:"id"`
 	FunctionName  types.String                               `tfsdk:"function_name"`
 	RecursiveLoop fwtypes.StringEnum[awstypes.RecursiveLoop] `tfsdk:"recursive_loop"`
 }

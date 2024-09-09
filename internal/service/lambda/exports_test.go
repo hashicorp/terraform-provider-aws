@@ -23,6 +23,7 @@ var (
 	FindEventSourceMappingByID                   = findEventSourceMappingByID
 	FindFunctionByName                           = findFunctionByName
 	FindFunctionEventInvokeConfigByTwoPartKey    = findFunctionEventInvokeConfigByTwoPartKey
+	FindFunctionRecursionConfigByName            = findFunctionRecursionConfigByName
 	FindFunctionURLByTwoPartKey                  = findFunctionURLByTwoPartKey
 	FindLayerVersionByTwoPartKey                 = findLayerVersionByTwoPartKey
 	FindLayerVersionPolicyByTwoPartKey           = findLayerVersionPolicyByTwoPartKey

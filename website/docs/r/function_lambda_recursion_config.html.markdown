@@ -10,6 +10,8 @@ description: |-
 
 Terraform resource for managing an AWS Lambda Function Recursion Config.
 
+~> Destruction of this resource will return the `recursive_loop` configuration back to the default value of `Terminate`.
+
 ## Example Usage
 
 ```terraform
@@ -28,10 +30,7 @@ The following arguments are required:
 
 ## Attribute Reference
 
-This resource exports the following attributes in addition to the arguments above:
-
-* `id` Name of Lambda Function.
-* `function_name` Name of Lambda Function.
+This resource exports no additional attributes.
 
 ## Import
 
@@ -40,12 +39,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_lambda_function_recursion_config.example
-  id = "testexample"
+  id = "example"
 }
 ```
 
 Using `terraform import`, import AWS Lambda Function Recursion Config using the `function_name`. For example:
 
 ```console
-% terraform import aws_lambda_function_recursion_config.example testexample
+% terraform import aws_lambda_function_recursion_config.example example
 ```

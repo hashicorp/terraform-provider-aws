@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -47,7 +46,6 @@ func TestAccLambdaFunctionRecursionConfig_basic(t *testing.T) {
 				Config: testAccFunctionRecursionConfigConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionRecursionConfigExists(ctx, resourceName, &recursionConfig),
-					resource.TestCheckResourceAttr(resourceName, names.AttrID, rName),
 					resource.TestCheckResourceAttr(resourceName, "function_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "recursive_loop", string(awstypes.RecursiveLoopTerminate)),
 				),
@@ -89,7 +87,6 @@ func TestAccLambdaFunctionRecursionConfig_update(t *testing.T) {
 				Config: testAccFunctionRecursionConfigConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionRecursionConfigExists(ctx, resourceName, &recursionConfig1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrID, rName),
 					resource.TestCheckResourceAttr(resourceName, "function_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "recursive_loop", string(awstypes.RecursiveLoopTerminate)),
 				),
@@ -105,8 +102,6 @@ func TestAccLambdaFunctionRecursionConfig_update(t *testing.T) {
 				Config: testAccFunctionRecursionConfigConfig_updateRecursiveLoop(rName, updatedRecursiveLoopAllow),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionRecursionConfigExists(ctx, resourceName, &recursionConfig2),
-					testAccCheckFunctionRecursionConfigNotRecreated(&recursionConfig1, &recursionConfig2),
-					resource.TestCheckResourceAttr(resourceName, names.AttrID, rName),
 					resource.TestCheckResourceAttr(resourceName, "function_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "recursive_loop", updatedRecursiveLoopAllow),
 				),
@@ -115,7 +110,7 @@ func TestAccLambdaFunctionRecursionConfig_update(t *testing.T) {
 	})
 }
 
-func TestAccLambdaFunctionRecursionConfig_disappears(t *testing.T) {
+func TestAccLambdaFunctionRecursionConfig_disappears_Function(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -157,18 +152,16 @@ func testAccCheckFunctionRecursionConfigDestroy(ctx context.Context) resource.Te
 				continue
 			}
 
-			input := &lambda.GetFunctionRecursionConfigInput{
-				FunctionName: aws.String(rs.Primary.ID),
-			}
-			_, err := conn.GetFunctionRecursionConfig(ctx, input)
+			functionName := rs.Primary.Attributes["function_name"]
+			_, err := tflambda.FindFunctionRecursionConfigByName(ctx, conn, functionName)
 			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 				return nil
 			}
 			if err != nil {
-				return create.Error(names.Lambda, create.ErrActionCheckingDestroyed, tflambda.ResNameFunctionRecursionConfig, rs.Primary.ID, err)
+				return create.Error(names.Lambda, create.ErrActionCheckingDestroyed, tflambda.ResNameFunctionRecursionConfig, functionName, err)
 			}
 
-			return create.Error(names.Lambda, create.ErrActionCheckingDestroyed, tflambda.ResNameFunctionRecursionConfig, rs.Primary.ID, errors.New("not destroyed"))
+			return create.Error(names.Lambda, create.ErrActionCheckingDestroyed, tflambda.ResNameFunctionRecursionConfig, functionName, errors.New("not destroyed"))
 		}
 
 		return nil
@@ -182,17 +175,16 @@ func testAccCheckFunctionRecursionConfigExists(ctx context.Context, name string,
 			return create.Error(names.Lambda, create.ErrActionCheckingExistence, tflambda.ResNameFunctionRecursionConfig, name, errors.New("not found"))
 		}
 
-		if rs.Primary.ID == "" {
+		functionName := rs.Primary.Attributes["function_name"]
+		if functionName == "" {
 			return create.Error(names.Lambda, create.ErrActionCheckingExistence, tflambda.ResNameFunctionRecursionConfig, name, errors.New("not set"))
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient(ctx)
-		resp, err := conn.GetFunctionRecursionConfig(ctx, &lambda.GetFunctionRecursionConfigInput{
-			FunctionName: aws.String(rs.Primary.ID),
-		})
 
+		resp, err := tflambda.FindFunctionRecursionConfigByName(ctx, conn, functionName)
 		if err != nil {
-			return create.Error(names.Lambda, create.ErrActionCheckingExistence, tflambda.ResNameFunctionRecursionConfig, rs.Primary.ID, err)
+			return create.Error(names.Lambda, create.ErrActionCheckingExistence, tflambda.ResNameFunctionRecursionConfig, functionName, err)
 		}
 
 		recursionconfig = resp
@@ -209,16 +201,6 @@ func testAccCheckFunctionRecursionConfigImportStateIdFunc(resourceName string) r
 		}
 
 		return rs.Primary.Attributes["function_name"], nil
-	}
-}
-
-func testAccCheckFunctionRecursionConfigNotRecreated(before, after *lambda.GetFunctionRecursionConfigOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := string(before.RecursiveLoop), string(after.RecursiveLoop); before != after {
-			return create.Error(names.Lambda, create.ErrActionCheckingNotRecreated, tflambda.ResNameFunctionRecursionConfig, before, errors.New("recreated"))
-		}
-
-		return nil
 	}
 }
 
