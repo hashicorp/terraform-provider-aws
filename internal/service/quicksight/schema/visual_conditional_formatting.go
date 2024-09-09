@@ -5,10 +5,11 @@ package schema
 
 import (
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/quicksight"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -101,7 +102,7 @@ func conditionalFormattingIconSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"icon":         stringSchema(false, validation.StringInSlice(quicksight.Icon_Values(), false)),
+										"icon":         stringSchema(false, enum.Validate[awstypes.Icon]()),
 										"unicode_icon": stringSchema(false, validation.StringMatch(regexache.MustCompile(`^[^\\u0000-\\u00FF]$`), "")),
 									},
 								},
@@ -113,7 +114,7 @@ func conditionalFormattingIconSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"icon_display_option": stringSchema(false, validation.StringInSlice(quicksight.ConditionalFormattingIconDisplayOption_Values(), false))},
+										"icon_display_option": stringSchema(false, enum.Validate[awstypes.ConditionalFormattingIconDisplayOption]())},
 								},
 							},
 						},
@@ -127,7 +128,7 @@ func conditionalFormattingIconSchema() *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							names.AttrExpression: stringSchema(true, validation.StringLenBetween(1, 4096)),
-							"icon_set_type":      stringSchema(false, validation.StringInSlice(quicksight.ConditionalFormattingIconSetType_Values(), false)),
+							"icon_set_type":      stringSchema(false, enum.Validate[awstypes.ConditionalFormattingIconSetType]()),
 						},
 					},
 				},
@@ -136,7 +137,7 @@ func conditionalFormattingIconSchema() *schema.Schema {
 	}
 }
 
-func expandConditionalFormattingColor(tfList []interface{}) *quicksight.ConditionalFormattingColor {
+func expandConditionalFormattingColor(tfList []interface{}) *awstypes.ConditionalFormattingColor {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -146,19 +147,19 @@ func expandConditionalFormattingColor(tfList []interface{}) *quicksight.Conditio
 		return nil
 	}
 
-	color := &quicksight.ConditionalFormattingColor{}
+	apiObject := &awstypes.ConditionalFormattingColor{}
 
 	if v, ok := tfMap["gradient"].([]interface{}); ok && len(v) > 0 {
-		color.Gradient = expandConditionalFormattingGradientColor(v)
+		apiObject.Gradient = expandConditionalFormattingGradientColor(v)
 	}
 	if v, ok := tfMap["solid"].([]interface{}); ok && len(v) > 0 {
-		color.Solid = expandConditionalFormattingSolidColor(v)
+		apiObject.Solid = expandConditionalFormattingSolidColor(v)
 	}
 
-	return color
+	return apiObject
 }
 
-func expandConditionalFormattingGradientColor(tfList []interface{}) *quicksight.ConditionalFormattingGradientColor {
+func expandConditionalFormattingGradientColor(tfList []interface{}) *awstypes.ConditionalFormattingGradientColor {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -168,19 +169,19 @@ func expandConditionalFormattingGradientColor(tfList []interface{}) *quicksight.
 		return nil
 	}
 
-	color := &quicksight.ConditionalFormattingGradientColor{}
+	apiObject := &awstypes.ConditionalFormattingGradientColor{}
 
 	if v, ok := tfMap[names.AttrExpression].(string); ok && v != "" {
-		color.Expression = aws.String(v)
+		apiObject.Expression = aws.String(v)
 	}
 	if v, ok := tfMap["color"].([]interface{}); ok && len(v) > 0 {
-		color.Color = expandGradientColor(v)
+		apiObject.Color = expandGradientColor(v)
 	}
 
-	return color
+	return apiObject
 }
 
-func expandGradientColor(tfList []interface{}) *quicksight.GradientColor {
+func expandGradientColor(tfList []interface{}) *awstypes.GradientColor {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -190,59 +191,60 @@ func expandGradientColor(tfList []interface{}) *quicksight.GradientColor {
 		return nil
 	}
 
-	color := &quicksight.GradientColor{}
+	apiObject := &awstypes.GradientColor{}
 
 	if v, ok := tfMap["stops"].([]interface{}); ok && len(v) > 0 {
-		color.Stops = expandGradientStops(v)
+		apiObject.Stops = expandGradientStops(v)
 	}
 
-	return color
+	return apiObject
 }
 
-func expandGradientStops(tfList []interface{}) []*quicksight.GradientStop {
+func expandGradientStops(tfList []interface{}) []awstypes.GradientStop {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var options []*quicksight.GradientStop
+	var apiObjects []awstypes.GradientStop
+
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
 		if !ok {
 			continue
 		}
 
-		opts := expandGradientStop(tfMap)
-		if opts == nil {
+		apiObject := expandGradientStop(tfMap)
+		if apiObject == nil {
 			continue
 		}
 
-		options = append(options, opts)
+		apiObjects = append(apiObjects, *apiObject)
 	}
 
-	return options
+	return apiObjects
 }
 
-func expandGradientStop(tfMap map[string]interface{}) *quicksight.GradientStop {
+func expandGradientStop(tfMap map[string]interface{}) *awstypes.GradientStop {
 	if tfMap == nil {
 		return nil
 	}
 
-	options := &quicksight.GradientStop{}
+	apiObject := &awstypes.GradientStop{}
 
 	if v, ok := tfMap["gradient_offset"].(float64); ok {
-		options.GradientOffset = aws.Float64(v)
+		apiObject.GradientOffset = v
 	}
 	if v, ok := tfMap["color"].(string); ok && v != "" {
-		options.Color = aws.String(v)
+		apiObject.Color = aws.String(v)
 	}
 	if v, ok := tfMap["data_value"].(float64); ok {
-		options.DataValue = aws.Float64(v)
+		apiObject.DataValue = aws.Float64(v)
 	}
 
-	return options
+	return apiObject
 }
 
-func expandConditionalFormattingSolidColor(tfList []interface{}) *quicksight.ConditionalFormattingSolidColor {
+func expandConditionalFormattingSolidColor(tfList []interface{}) *awstypes.ConditionalFormattingSolidColor {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -252,19 +254,19 @@ func expandConditionalFormattingSolidColor(tfList []interface{}) *quicksight.Con
 		return nil
 	}
 
-	color := &quicksight.ConditionalFormattingSolidColor{}
+	apiObject := &awstypes.ConditionalFormattingSolidColor{}
 
 	if v, ok := tfMap["color"].(string); ok && v != "" {
-		color.Color = aws.String(v)
+		apiObject.Color = aws.String(v)
 	}
 	if v, ok := tfMap[names.AttrExpression].(string); ok && v != "" {
-		color.Expression = aws.String(v)
+		apiObject.Expression = aws.String(v)
 	}
 
-	return color
+	return apiObject
 }
 
-func expandConditionalFormattingIcon(tfList []interface{}) *quicksight.ConditionalFormattingIcon {
+func expandConditionalFormattingIcon(tfList []interface{}) *awstypes.ConditionalFormattingIcon {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -274,19 +276,19 @@ func expandConditionalFormattingIcon(tfList []interface{}) *quicksight.Condition
 		return nil
 	}
 
-	icon := &quicksight.ConditionalFormattingIcon{}
+	apiObject := &awstypes.ConditionalFormattingIcon{}
 
 	if v, ok := tfMap["custom_condition"].([]interface{}); ok && len(v) > 0 {
-		icon.CustomCondition = expandConditionalFormattingCustomIconCondition(v)
+		apiObject.CustomCondition = expandConditionalFormattingCustomIconCondition(v)
 	}
 	if v, ok := tfMap["icon_set"].([]interface{}); ok && len(v) > 0 {
-		icon.IconSet = expandConditionalFormattingIconSet(v)
+		apiObject.IconSet = expandConditionalFormattingIconSet(v)
 	}
 
-	return icon
+	return apiObject
 }
 
-func expandConditionalFormattingCustomIconCondition(tfList []interface{}) *quicksight.ConditionalFormattingCustomIconCondition {
+func expandConditionalFormattingCustomIconCondition(tfList []interface{}) *awstypes.ConditionalFormattingCustomIconCondition {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -296,25 +298,25 @@ func expandConditionalFormattingCustomIconCondition(tfList []interface{}) *quick
 		return nil
 	}
 
-	icon := &quicksight.ConditionalFormattingCustomIconCondition{}
+	apiObject := &awstypes.ConditionalFormattingCustomIconCondition{}
 
 	if v, ok := tfMap["color"].(string); ok && v != "" {
-		icon.Color = aws.String(v)
+		apiObject.Color = aws.String(v)
 	}
 	if v, ok := tfMap[names.AttrExpression].(string); ok && v != "" {
-		icon.Expression = aws.String(v)
+		apiObject.Expression = aws.String(v)
 	}
 	if v, ok := tfMap["icon_options"].([]interface{}); ok && len(v) > 0 {
-		icon.IconOptions = expandConditionalFormattingCustomIconOptions(v)
+		apiObject.IconOptions = expandConditionalFormattingCustomIconOptions(v)
 	}
 	if v, ok := tfMap["display_configuration"].([]interface{}); ok && len(v) > 0 {
-		icon.DisplayConfiguration = expandConditionalFormattingIconDisplayConfiguration(v)
+		apiObject.DisplayConfiguration = expandConditionalFormattingIconDisplayConfiguration(v)
 	}
 
-	return icon
+	return apiObject
 }
 
-func expandConditionalFormattingCustomIconOptions(tfList []interface{}) *quicksight.ConditionalFormattingCustomIconOptions {
+func expandConditionalFormattingCustomIconOptions(tfList []interface{}) *awstypes.ConditionalFormattingCustomIconOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -324,19 +326,19 @@ func expandConditionalFormattingCustomIconOptions(tfList []interface{}) *quicksi
 		return nil
 	}
 
-	options := &quicksight.ConditionalFormattingCustomIconOptions{}
+	apiObject := &awstypes.ConditionalFormattingCustomIconOptions{}
 
 	if v, ok := tfMap["icon"].(string); ok && v != "" {
-		options.Icon = aws.String(v)
+		apiObject.Icon = awstypes.Icon(v)
 	}
 	if v, ok := tfMap["unicode_icon"].(string); ok && v != "" {
-		options.UnicodeIcon = aws.String(v)
+		apiObject.UnicodeIcon = aws.String(v)
 	}
 
-	return options
+	return apiObject
 }
 
-func expandConditionalFormattingIconDisplayConfiguration(tfList []interface{}) *quicksight.ConditionalFormattingIconDisplayConfiguration {
+func expandConditionalFormattingIconDisplayConfiguration(tfList []interface{}) *awstypes.ConditionalFormattingIconDisplayConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -346,16 +348,16 @@ func expandConditionalFormattingIconDisplayConfiguration(tfList []interface{}) *
 		return nil
 	}
 
-	config := &quicksight.ConditionalFormattingIconDisplayConfiguration{}
+	apiObject := &awstypes.ConditionalFormattingIconDisplayConfiguration{}
 
 	if v, ok := tfMap["icon_display_option"].(string); ok && v != "" {
-		config.IconDisplayOption = aws.String(v)
+		apiObject.IconDisplayOption = awstypes.ConditionalFormattingIconDisplayOption(v)
 	}
 
-	return config
+	return apiObject
 }
 
-func expandConditionalFormattingIconSet(tfList []interface{}) *quicksight.ConditionalFormattingIconSet {
+func expandConditionalFormattingIconSet(tfList []interface{}) *awstypes.ConditionalFormattingIconSet {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -365,19 +367,19 @@ func expandConditionalFormattingIconSet(tfList []interface{}) *quicksight.Condit
 		return nil
 	}
 
-	options := &quicksight.ConditionalFormattingIconSet{}
+	apiObject := &awstypes.ConditionalFormattingIconSet{}
 
 	if v, ok := tfMap[names.AttrExpression].(string); ok && v != "" {
-		options.Expression = aws.String(v)
+		apiObject.Expression = aws.String(v)
 	}
 	if v, ok := tfMap["icon_set_type"].(string); ok && v != "" {
-		options.IconSetType = aws.String(v)
+		apiObject.IconSetType = awstypes.ConditionalFormattingIconSetType(v)
 	}
 
-	return options
+	return apiObject
 }
 
-func expandTextConditionalFormat(tfList []interface{}) *quicksight.TextConditionalFormat {
+func expandTextConditionalFormat(tfList []interface{}) *awstypes.TextConditionalFormat {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -387,27 +389,28 @@ func expandTextConditionalFormat(tfList []interface{}) *quicksight.TextCondition
 		return nil
 	}
 
-	options := &quicksight.TextConditionalFormat{}
+	apiObject := &awstypes.TextConditionalFormat{}
 
 	if v, ok := tfMap["background_color"].([]interface{}); ok && len(v) > 0 {
-		options.BackgroundColor = expandConditionalFormattingColor(v)
+		apiObject.BackgroundColor = expandConditionalFormattingColor(v)
 	}
 	if v, ok := tfMap["icon"].([]interface{}); ok && len(v) > 0 {
-		options.Icon = expandConditionalFormattingIcon(v)
+		apiObject.Icon = expandConditionalFormattingIcon(v)
 	}
 	if v, ok := tfMap["text_color"].([]interface{}); ok && len(v) > 0 {
-		options.TextColor = expandConditionalFormattingColor(v)
+		apiObject.TextColor = expandConditionalFormattingColor(v)
 	}
 
-	return options
+	return apiObject
 }
 
-func flattenConditionalFormattingColor(apiObject *quicksight.ConditionalFormattingColor) []interface{} {
+func flattenConditionalFormattingColor(apiObject *awstypes.ConditionalFormattingColor) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
+
 	if apiObject.Gradient != nil {
 		tfMap["gradient"] = flattenConditionalFormattingGradientColor(apiObject.Gradient)
 	}
@@ -418,28 +421,30 @@ func flattenConditionalFormattingColor(apiObject *quicksight.ConditionalFormatti
 	return []interface{}{tfMap}
 }
 
-func flattenConditionalFormattingGradientColor(apiObject *quicksight.ConditionalFormattingGradientColor) []interface{} {
+func flattenConditionalFormattingGradientColor(apiObject *awstypes.ConditionalFormattingGradientColor) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
+
 	if apiObject.Color != nil {
 		tfMap["color"] = flattenGradientColor(apiObject.Color)
 	}
 	if apiObject.Expression != nil {
-		tfMap[names.AttrExpression] = aws.StringValue(apiObject.Expression)
+		tfMap[names.AttrExpression] = aws.ToString(apiObject.Expression)
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenGradientColor(apiObject *quicksight.GradientColor) []interface{} {
+func flattenGradientColor(apiObject *awstypes.GradientColor) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
+
 	if apiObject.Stops != nil {
 		tfMap["stops"] = flattenGradientStop(apiObject.Stops)
 	}
@@ -447,26 +452,22 @@ func flattenGradientColor(apiObject *quicksight.GradientColor) []interface{} {
 	return []interface{}{tfMap}
 }
 
-func flattenGradientStop(apiObject []*quicksight.GradientStop) []interface{} {
-	if len(apiObject) == 0 {
+func flattenGradientStop(apiObjects []awstypes.GradientStop) []interface{} {
+	if len(apiObjects) == 0 {
 		return nil
 	}
 
 	var tfList []interface{}
-	for _, config := range apiObject {
-		if config == nil {
-			continue
-		}
 
+	for _, apiObject := range apiObjects {
 		tfMap := map[string]interface{}{}
-		if config.GradientOffset != nil {
-			tfMap["gradient_offset"] = aws.Float64Value(config.GradientOffset)
+
+		tfMap["gradient_offset"] = apiObject.GradientOffset
+		if apiObject.Color != nil {
+			tfMap["color"] = aws.ToString(apiObject.Color)
 		}
-		if config.Color != nil {
-			tfMap["color"] = aws.StringValue(config.Color)
-		}
-		if config.DataValue != nil {
-			tfMap["data_value"] = aws.Float64Value(config.DataValue)
+		if apiObject.DataValue != nil {
+			tfMap["data_value"] = aws.ToFloat64(apiObject.DataValue)
 		}
 
 		tfList = append(tfList, tfMap)
@@ -475,28 +476,30 @@ func flattenGradientStop(apiObject []*quicksight.GradientStop) []interface{} {
 	return tfList
 }
 
-func flattenConditionalFormattingSolidColor(apiObject *quicksight.ConditionalFormattingSolidColor) []interface{} {
+func flattenConditionalFormattingSolidColor(apiObject *awstypes.ConditionalFormattingSolidColor) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
+
 	if apiObject.Color != nil {
-		tfMap["color"] = aws.StringValue(apiObject.Color)
+		tfMap["color"] = aws.ToString(apiObject.Color)
 	}
 	if apiObject.Expression != nil {
-		tfMap[names.AttrExpression] = aws.StringValue(apiObject.Expression)
+		tfMap[names.AttrExpression] = aws.ToString(apiObject.Expression)
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenConditionalFormattingIcon(apiObject *quicksight.ConditionalFormattingIcon) []interface{} {
+func flattenConditionalFormattingIcon(apiObject *awstypes.ConditionalFormattingIcon) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
+
 	if apiObject.CustomCondition != nil {
 		tfMap["custom_condition"] = flattenConditionalFormattingCustomIconCondition(apiObject.CustomCondition)
 	}
@@ -507,17 +510,18 @@ func flattenConditionalFormattingIcon(apiObject *quicksight.ConditionalFormattin
 	return []interface{}{tfMap}
 }
 
-func flattenConditionalFormattingCustomIconCondition(apiObject *quicksight.ConditionalFormattingCustomIconCondition) []interface{} {
+func flattenConditionalFormattingCustomIconCondition(apiObject *awstypes.ConditionalFormattingCustomIconCondition) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
+
 	if apiObject.Color != nil {
-		tfMap["color"] = aws.StringValue(apiObject.Color)
+		tfMap["color"] = aws.ToString(apiObject.Color)
 	}
 	if apiObject.Expression != nil {
-		tfMap[names.AttrExpression] = aws.StringValue(apiObject.Expression)
+		tfMap[names.AttrExpression] = aws.ToString(apiObject.Expression)
 	}
 	if apiObject.IconOptions != nil {
 		tfMap["icon_options"] = flattenConditionalFormattingCustomIconOptions(apiObject.IconOptions)
@@ -529,47 +533,44 @@ func flattenConditionalFormattingCustomIconCondition(apiObject *quicksight.Condi
 	return []interface{}{tfMap}
 }
 
-func flattenConditionalFormattingCustomIconOptions(apiObject *quicksight.ConditionalFormattingCustomIconOptions) []interface{} {
+func flattenConditionalFormattingCustomIconOptions(apiObject *awstypes.ConditionalFormattingCustomIconOptions) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-	if apiObject.Icon != nil {
-		tfMap["icon"] = aws.StringValue(apiObject.Icon)
-	}
+
+	tfMap["icon"] = apiObject.Icon
 	if apiObject.UnicodeIcon != nil {
-		tfMap["unicode_icon"] = aws.StringValue(apiObject.UnicodeIcon)
+		tfMap["unicode_icon"] = aws.ToString(apiObject.UnicodeIcon)
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenConditionalFormattingIconDisplayConfiguration(apiObject *quicksight.ConditionalFormattingIconDisplayConfiguration) []interface{} {
+func flattenConditionalFormattingIconDisplayConfiguration(apiObject *awstypes.ConditionalFormattingIconDisplayConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
-	if apiObject.IconDisplayOption != nil {
-		tfMap["icon_display_option"] = aws.StringValue(apiObject.IconDisplayOption)
+	tfMap := map[string]interface{}{
+		"icon_display_option": apiObject.IconDisplayOption,
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenConditionalFormattingIconSet(apiObject *quicksight.ConditionalFormattingIconSet) []interface{} {
+func flattenConditionalFormattingIconSet(apiObject *awstypes.ConditionalFormattingIconSet) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
+
 	if apiObject.Expression != nil {
-		tfMap[names.AttrExpression] = aws.StringValue(apiObject.Expression)
+		tfMap[names.AttrExpression] = aws.ToString(apiObject.Expression)
 	}
-	if apiObject.IconSetType != nil {
-		tfMap["icon_set_type"] = aws.StringValue(apiObject.IconSetType)
-	}
+	tfMap["icon_set_type"] = apiObject.IconSetType
 
 	return []interface{}{tfMap}
 }

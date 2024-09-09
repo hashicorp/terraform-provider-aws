@@ -33,6 +33,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			},
 		},
 		{
+			Factory: newResourceEnvironment,
+			Name:    "Environment",
+		},
+		{
 			Factory: newResourceEnvironmentBlueprintConfiguration,
 			Name:    "Environment Blueprint Configuration",
 		},

@@ -357,8 +357,8 @@ type integrationResourceModel struct {
 	IntegrationName             types.String                     `tfsdk:"integration_name"`
 	KMSKeyID                    types.String                     `tfsdk:"kms_key_id"`
 	SourceARN                   fwtypes.ARN                      `tfsdk:"source_arn"`
-	Tags                        types.Map                        `tfsdk:"tags"`
-	TagsAll                     types.Map                        `tfsdk:"tags_all"`
+	Tags                        tftags.Map                       `tfsdk:"tags"`
+	TagsAll                     tftags.Map                       `tfsdk:"tags_all"`
 	TargetARN                   fwtypes.ARN                      `tfsdk:"target_arn"`
 	Timeouts                    timeouts.Value                   `tfsdk:"timeouts"`
 }

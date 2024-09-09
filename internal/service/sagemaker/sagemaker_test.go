@@ -112,6 +112,8 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"kernelGatewayAppSettings_imageConfig":     testAccUserProfile_kernelGatewayAppSettings_imageconfig,
 			"codeEditorAppSettings_customImage":        testAccUserProfile_codeEditorAppSettings_customImage,
 			"jupyterServerAppSettings":                 testAccUserProfile_jupyterServerAppSettings,
+			"studioWebPortalSettings_hiddenAppTypes":   testAccUserProfile_studioWebPortalSettings_hiddenAppTypes,
+			"studioWebPortalSettings_hiddenMlTools":    testAccUserProfile_studioWebPortalSettings_hiddenMlTools,
 		},
 		"Workforce": {
 			acctest.CtDisappears: testAccWorkforce_disappears,

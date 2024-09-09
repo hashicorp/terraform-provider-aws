@@ -595,8 +595,8 @@ type knowledgeBaseResourceModel struct {
 	Name                       types.String                                                     `tfsdk:"name"`
 	RoleARN                    fwtypes.ARN                                                      `tfsdk:"role_arn"`
 	StorageConfiguration       fwtypes.ListNestedObjectValueOf[storageConfigurationModel]       `tfsdk:"storage_configuration"`
-	Tags                       types.Map                                                        `tfsdk:"tags"`
-	TagsAll                    types.Map                                                        `tfsdk:"tags_all"`
+	Tags                       tftags.Map                                                       `tfsdk:"tags"`
+	TagsAll                    tftags.Map                                                       `tfsdk:"tags_all"`
 	Timeouts                   timeouts.Value                                                   `tfsdk:"timeouts"`
 	UpdatedAt                  timetypes.RFC3339                                                `tfsdk:"updated_at"`
 }
