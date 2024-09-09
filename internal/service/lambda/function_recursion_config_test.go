@@ -248,7 +248,7 @@ resource "aws_lambda_function_recursion_config" "test" {
 `)
 }
 
-func testAccFunctionRecursionConfigConfig_updateRecursiveLoop(rName, resRecursiveLoopValue string) string {
+func testAccFunctionRecursionConfigConfig_updateRecursiveLoop(rName, recursiveLoop string) string {
 	return acctest.ConfigCompose(
 		testAccFunctionRecursionConfigConfigBase(rName),
 		fmt.Sprintf(`
@@ -256,5 +256,5 @@ resource "aws_lambda_function_recursion_config" "test" {
   function_name  = aws_lambda_function.test.function_name
   recursive_loop = %[1]q
 }
-`, resRecursiveLoopValue))
+`, recursiveLoop))
 }

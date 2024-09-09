@@ -208,9 +208,9 @@ func (r *resourceFunctionRecursionConfig) ImportState(ctx context.Context, req r
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("function_name"), req.ID)...)
 }
 
-func findFunctionRecursionConfigByName(ctx context.Context, conn *lambda.Client, id string) (*lambda.GetFunctionRecursionConfigOutput, error) {
+func findFunctionRecursionConfigByName(ctx context.Context, conn *lambda.Client, functionName string) (*lambda.GetFunctionRecursionConfigOutput, error) {
 	in := &lambda.GetFunctionRecursionConfigInput{
-		FunctionName: aws.String(id),
+		FunctionName: aws.String(functionName),
 	}
 
 	out, err := conn.GetFunctionRecursionConfig(ctx, in)
