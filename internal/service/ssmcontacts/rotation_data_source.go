@@ -129,7 +129,7 @@ func (d *dataSourceRotation) Read(ctx context.Context, request datasource.ReadRe
 		return
 	}
 
-	data.Tags = fwflex.FlattenFrameworkStringValueMap(ctx, tags.Map())
+	data.Tags = tftags.FlattenStringValueMap(ctx, tags.Map())
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -141,7 +141,7 @@ type dataSourceRotationData struct {
 	Recurrence fwtypes.ListNestedObjectValueOf[dsRecurrenceData] `tfsdk:"recurrence"`
 	Name       types.String                                      `tfsdk:"name"`
 	StartTime  timetypes.RFC3339                                 `tfsdk:"start_time"`
-	Tags       types.Map                                         `tfsdk:"tags"`
+	Tags       tftags.Map                                        `tfsdk:"tags"`
 	TimeZoneID types.String                                      `tfsdk:"time_zone_id"`
 }
 

@@ -6,9 +6,9 @@ package framework
 import (
 	"context"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -38,7 +38,7 @@ func (r *ResourceWithConfigure) SetTagsAll(ctx context.Context, request resource
 	defaultTagsConfig := r.Meta().DefaultTagsConfig
 	ignoreTagsConfig := r.Meta().IgnoreTagsConfig
 
-	var planTags types.Map
+	var planTags tftags.Map
 
 	response.Diagnostics.Append(request.Plan.GetAttribute(ctx, path.Root(names.AttrTags), &planTags)...)
 
@@ -60,7 +60,11 @@ func (r *ResourceWithConfigure) SetTagsAll(ctx context.Context, request resource
 	}
 }
 
-func mapHasUnknownElements(m types.Map) bool {
+type mapValueElementsable interface {
+	Elements() map[string]attr.Value
+}
+
+func mapHasUnknownElements(m mapValueElementsable) bool {
 	for _, v := range m.Elements() {
 		if v.IsUnknown() {
 			return true

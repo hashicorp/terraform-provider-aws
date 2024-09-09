@@ -82,6 +82,7 @@ To specify data source connection parameters, exactly one of the following sub-o
 * `aurora` - (Optional) [Parameters](#aurora-argument-reference) for connecting to Aurora MySQL.
 * `auroraPostgresql` - (Optional) [Parameters](#aurora_postgresql-argument-reference) for connecting to Aurora Postgresql.
 * `awsIotAnalytics` - (Optional) [Parameters](#aws_iot_analytics-argument-reference) for connecting to AWS IOT Analytics.
+* `databricks` - (Optional) [Parameters](#databricks-argument-reference) for connecting to Databricks.
 * `jira` - (Optional) [Parameters](#jira-fargument-reference) for connecting to Jira.
 * `mariaDb` - (Optional) [Parameters](#maria_db-argument-reference) for connecting to MariaDB.
 * `mysql` - (Optional) [Parameters](#mysql-argument-reference) for connecting to MySQL.
@@ -134,6 +135,12 @@ To specify data source connection parameters, exactly one of the following sub-o
 ### aws_iot_analytics Argument Reference
 
 * `dataSetName` - (Required) The name of the data set to which to connect.
+
+### databricks Argument Reference
+
+* `host` - (Required) The host name of the Databricks data source.
+* `port` - (Required) The port for the Databricks data source.
+* `sqlEndpointPath` - (Required) The HTTP path of the Databricks data source.
 
 ### jira fArgument Reference
 
@@ -261,4 +268,4 @@ Using `terraform import`, import a QuickSight data source using the AWS account 
 % terraform import aws_quicksight_data_source.example 123456789123/my-data-source-id
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-2de42ab036dbf7d192e1e61ccf217d0b3cc58fb437a7906bb08bf538070833e7 -->
+<!-- cache-key: cdktf-0.20.1 input-732cebf6b94f654b8b8908760776dbdf9c7af425b6776f784b27505e58ab770c -->

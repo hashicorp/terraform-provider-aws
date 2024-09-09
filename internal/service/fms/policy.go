@@ -30,6 +30,8 @@ import (
 
 // @SDKResource("aws_fms_policy", name="Policy")
 // @Tags(identifierAttribute="arn")
+// @Testing(serialize=true)
+// @Testing(importIgnore="delete_all_policy_resources;policy_update_token")
 func resourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePolicyCreate,
