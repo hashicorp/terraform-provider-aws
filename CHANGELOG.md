@@ -12,6 +12,7 @@ BUG FIXES:
 
 * data-source/aws_eks_cluster: Return `created_at` as an [RFC3339](https://www.rfc-editor.org/rfc/rfc3339) formatted timestamp ([#24183](https://github.com/hashicorp/terraform-provider-aws/issues/24183))
 * resource/aws_eks_cluster: Return `created_at` as an [RFC3339](https://www.rfc-editor.org/rfc/rfc3339) formatted timestamp ([#24183](https://github.com/hashicorp/terraform-provider-aws/issues/24183))
+* resource/aws_verifiedaccess_endpoint: fix crash when updating `load_balancer_options.subnet_ids` ([#39196](https://github.com/hashicorp/terraform-provider-aws/issues/39196))
 
 ## 5.66.0 (September  5, 2024)
 
