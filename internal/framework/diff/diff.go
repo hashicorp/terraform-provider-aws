@@ -61,8 +61,13 @@ func Calculate(ctx context.Context, plan, state any, options ...ChangeOptionsFun
 	for i := 0; i < p.NumField(); i++ {
 		name := typeOfP.Field(i).Name
 
-		// if the field is in the ignored list, skip it
+		// skip fields that are handled outside of regular update flow
+		if slices.Contains(skippedFields(), name) {
+			continue
+		}
+
 		if slices.Contains(opts.ignoredFieldNames, name) {
+			ignoredFields = append(ignoredFields, name)
 			continue
 		}
 
@@ -104,4 +109,12 @@ func setValue(value reflect.Value) reflect.Value {
 		return value.Elem()
 	}
 	return value
+}
+
+func skippedFields() []string {
+	return []string{
+		"Tags",
+		"TagsAll",
+		"Timeouts",
+	}
 }

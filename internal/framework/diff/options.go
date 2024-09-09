@@ -19,7 +19,7 @@ func WithException(s string) ChangeOptionsFunc {
 
 func initChangeOptions(options []ChangeOptionsFunc) *changeOptions {
 	o := changeOptions{
-		ignoredFieldNames: defaultIgnoredFieldNames,
+		ignoredFieldNames: make([]string, 0),
 	}
 
 	for _, opt := range options {
@@ -27,10 +27,4 @@ func initChangeOptions(options []ChangeOptionsFunc) *changeOptions {
 	}
 
 	return &o
-}
-
-var defaultIgnoredFieldNames = []string{
-	"Tags",
-	"TagsAll",
-	"Timeouts",
 }
