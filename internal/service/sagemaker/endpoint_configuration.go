@@ -384,11 +384,11 @@ func resourceEndpointConfiguration() *schema.Resource {
 							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrStatus: {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ForceNew:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.ManagedInstanceScalingStatus](),
+									"max_instance_count": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.IntAtLeast(1),
 									},
 									"min_instance_count": {
 										Type:         schema.TypeInt,
@@ -396,11 +396,11 @@ func resourceEndpointConfiguration() *schema.Resource {
 										ForceNew:     true,
 										ValidateFunc: validation.IntAtLeast(1),
 									},
-									"max_instance_count": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.IntAtLeast(1),
+									names.AttrStatus: {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ForceNew:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.ManagedInstanceScalingStatus](),
 									},
 								},
 							},
@@ -556,11 +556,11 @@ func resourceEndpointConfiguration() *schema.Resource {
 							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrStatus: {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ForceNew:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.ManagedInstanceScalingStatus](),
+									"max_instance_count": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.IntAtLeast(1),
 									},
 									"min_instance_count": {
 										Type:         schema.TypeInt,
@@ -568,11 +568,11 @@ func resourceEndpointConfiguration() *schema.Resource {
 										ForceNew:     true,
 										ValidateFunc: validation.IntAtLeast(1),
 									},
-									"max_instance_count": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.IntAtLeast(1),
+									names.AttrStatus: {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ForceNew:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.ManagedInstanceScalingStatus](),
 									},
 								},
 							},
