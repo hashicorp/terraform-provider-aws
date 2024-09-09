@@ -333,8 +333,6 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange(names.AttrVPCConfig) {
 		if v, ok := d.GetOk(names.AttrVPCConfig); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			input.VpcConfig = expandVPCConfig(v.([]interface{})[0].(map[string]interface{}))
-		} else {
-			input.VpcConfig = &types.VpcConfig{}
 		}
 	}
 

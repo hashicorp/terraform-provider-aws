@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/service/codebuild/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,6 +24,7 @@ func TestAccCodeBuildFleet_basic(t *testing.T) {
 	ctx := context.Background()
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_fleet.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
@@ -51,7 +54,6 @@ func TestAccCodeBuildFleet_basic(t *testing.T) {
 func TestAccCodeBuildFleet_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
 	resourceName := "aws_codebuild_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -112,10 +114,11 @@ func TestAccCodeBuildFleet_tags(t *testing.T) {
 	})
 }
 
-func TestAccCodeBuildFleet_updateBasicParameters(t *testing.T) {
+func TestAccCodeBuildFleet_baseCapacity(t *testing.T) {
 	ctx := context.Background()
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_fleet.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
@@ -123,57 +126,28 @@ func TestAccCodeBuildFleet_updateBasicParameters(t *testing.T) {
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_basic(rName),
+				Config: testAccFleetConfig_baseCapacity(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "base_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName, "compute_type", "BUILD_GENERAL1_SMALL"),
-					resource.TestCheckResourceAttr(resourceName, "environment_type", "LINUX_CONTAINER"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "overflow_behavior", "ON_DEMAND"),
 				),
 			},
 			{
-				Config: testAccFleetConfig_updateBaseCapacity(rName),
+				Config: testAccFleetConfig_baseCapacity(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "base_capacity", "2"),
-					resource.TestCheckResourceAttr(resourceName, "compute_type", "BUILD_GENERAL1_SMALL"),
-					resource.TestCheckResourceAttr(resourceName, "environment_type", "LINUX_CONTAINER"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "overflow_behavior", "ON_DEMAND"),
-				),
-			},
-			{
-				Config: testAccFleetConfig_updateComputeType(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFleetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "base_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName, "compute_type", "BUILD_GENERAL1_LARGE"),
-					resource.TestCheckResourceAttr(resourceName, "environment_type", "LINUX_CONTAINER"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "overflow_behavior", "ON_DEMAND"),
-				),
-			},
-			{
-				Config: testAccFleetConfig_updateEnvironmentType(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFleetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "base_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName, "compute_type", "BUILD_GENERAL1_LARGE"),
-					resource.TestCheckResourceAttr(resourceName, "environment_type", "ARM_CONTAINER"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "overflow_behavior", "ON_DEMAND"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccCodeBuildFleet_updateScalingConfiguration(t *testing.T) {
+func TestAccCodeBuildFleet_computeType(t *testing.T) {
 	ctx := context.Background()
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_fleet.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
@@ -181,29 +155,127 @@ func TestAccCodeBuildFleet_updateScalingConfiguration(t *testing.T) {
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_scalingConfiguration(rName),
+				Config: testAccFleetConfig_computeType(rName, types.ComputeTypeBuildGeneral1Small),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "base_capacity", "1"),
 					resource.TestCheckResourceAttr(resourceName, "compute_type", "BUILD_GENERAL1_SMALL"),
+				),
+			},
+			{
+				Config: testAccFleetConfig_computeType(rName, types.ComputeTypeBuildGeneral1Medium),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFleetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "compute_type", "BUILD_GENERAL1_MEDIUM"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCodeBuildFleet_environmentType(t *testing.T) {
+	ctx := context.Background()
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_codebuild_fleet.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFleetConfig_environmentType(rName, types.EnvironmentTypeLinuxContainer),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFleetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "environment_type", "LINUX_CONTAINER"),
+				),
+			},
+			{
+				Config: testAccFleetConfig_environmentType(rName, types.EnvironmentTypeArmContainer),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFleetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "environment_type", "ARM_CONTAINER"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "overflow_behavior", "QUEUE"),
-					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.max_capacity", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCodeBuildFleet_scalingConfiguration(t *testing.T) {
+	ctx := context.Background()
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_codebuild_fleet.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFleetConfig_scalingConfiguration1(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFleetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.max_capacity", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.scaling_type", "TARGET_TRACKING_SCALING"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.target_tracking_scaling_configs.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.target_tracking_scaling_configs.0.metric_type", "FLEET_UTILIZATION_RATE"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.target_tracking_scaling_configs.0.target_value", "97.5"),
 				),
 			},
 			{
-				Config: testAccFleetConfig_noScalingConfiguration(rName),
+				Config: testAccFleetConfig_scalingConfiguration2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "base_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName, "compute_type", "BUILD_GENERAL1_SMALL"),
-					resource.TestCheckResourceAttr(resourceName, "environment_type", "ARM_CONTAINER"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "overflow_behavior", "ON_DEMAND"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.max_capacity", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.scaling_type", "TARGET_TRACKING_SCALING"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.target_tracking_scaling_configs.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.target_tracking_scaling_configs.0.metric_type", "FLEET_UTILIZATION_RATE"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.target_tracking_scaling_configs.0.target_value", "90.5"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCodeBuildFleet_vpcConfig(t *testing.T) {
+	ctx := context.Background()
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_codebuild_fleet.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFleetConfig_vpcConfig2(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFleetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnets.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_config.0.subnets.0", "aws_subnet.test.1", "id"),
+					resource.TestMatchResourceAttr(resourceName, "vpc_config.0.vpc_id", regexache.MustCompile(`^vpc-`)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccFleetConfig_vpcConfig1(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFleetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnets.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_config.0.subnets.0", "aws_subnet.test.0", "id"),
+					resource.TestMatchResourceAttr(resourceName, "vpc_config.0.vpc_id", regexache.MustCompile(`^vpc-`)),
 				),
 			},
 		},
@@ -269,59 +341,61 @@ resource "aws_codebuild_fleet" "test" {
   base_capacity     = 1
   compute_type      = "BUILD_GENERAL1_SMALL"
   environment_type  = "LINUX_CONTAINER"
-  name              = %q
+  name              = %[1]q
   overflow_behavior = "ON_DEMAND"
 }
 `, rName)
 }
 
-func testAccFleetConfig_updateBaseCapacity(rName string) string {
+func testAccFleetConfig_baseCapacity(rName string, baseCapacity int) string {
 	return fmt.Sprintf(`
 resource "aws_codebuild_fleet" "test" {
-  base_capacity     = 2
+  base_capacity     = %[2]d
   compute_type      = "BUILD_GENERAL1_SMALL"
   environment_type  = "LINUX_CONTAINER"
-  name              = %q
+  name              = %[1]q
   overflow_behavior = "ON_DEMAND"
 }
-`, rName)
+`, rName, baseCapacity)
 }
 
-func testAccFleetConfig_updateComputeType(rName string) string {
+func testAccFleetConfig_computeType(rName string, computeType types.ComputeType) string {
+	return fmt.Sprintf(`
+resource "aws_codebuild_fleet" "test" {
+  base_capacity     = 1
+  compute_type      = %[2]q
+  environment_type  = "LINUX_CONTAINER"
+  name              = %[1]q
+  overflow_behavior = "ON_DEMAND"
+}
+`, rName, string(computeType))
+}
+
+func testAccFleetConfig_environmentType(rName string, environmentType types.EnvironmentType) string {
 	return fmt.Sprintf(`
 resource "aws_codebuild_fleet" "test" {
   base_capacity     = 1
   compute_type      = "BUILD_GENERAL1_LARGE"
-  environment_type  = "LINUX_CONTAINER"
-  name              = %q
+  environment_type  = %[2]q
+  name              = %[1]q
   overflow_behavior = "ON_DEMAND"
 }
-`, rName)
+`, rName, string(environmentType))
 }
 
-func testAccFleetConfig_updateEnvironmentType(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_codebuild_fleet" "test" {
-  base_capacity     = 1
-  compute_type      = "BUILD_GENERAL1_LARGE"
-  environment_type  = "ARM_CONTAINER"
-  name              = %q
-  overflow_behavior = "ON_DEMAND"
-}
-`, rName)
-}
-
-func testAccFleetConfig_scalingConfiguration(rName string) string {
+func testAccFleetConfig_scalingConfiguration1(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codebuild_fleet" "test" {
   base_capacity     = 1
   compute_type      = "BUILD_GENERAL1_SMALL"
   environment_type  = "ARM_CONTAINER"
-  name              = %q
+  name              = %[1]q
   overflow_behavior = "QUEUE"
+
   scaling_configuration {
     max_capacity = 2
     scaling_type = "TARGET_TRACKING_SCALING"
+
     target_tracking_scaling_configs {
       metric_type  = "FLEET_UTILIZATION_RATE"
       target_value = 97.5
@@ -331,16 +405,132 @@ resource "aws_codebuild_fleet" "test" {
 `, rName)
 }
 
-func testAccFleetConfig_noScalingConfiguration(rName string) string {
+func testAccFleetConfig_scalingConfiguration2(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codebuild_fleet" "test" {
   base_capacity     = 1
   compute_type      = "BUILD_GENERAL1_SMALL"
   environment_type  = "ARM_CONTAINER"
-  name              = %q
-  overflow_behavior = "ON_DEMAND"
+  name              = %[1]q
+  overflow_behavior = "QUEUE"
+
+  scaling_configuration {
+    max_capacity = 3
+    scaling_type = "TARGET_TRACKING_SCALING"
+
+    target_tracking_scaling_configs {
+      metric_type  = "FLEET_UTILIZATION_RATE"
+      target_value = 90.5
+    }
+  }
 }
 `, rName)
+}
+
+func testAccFleetConfig_baseFleetServiceRole(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Principal": {
+      "Service": "codebuild.amazonaws.com"
+    },
+    "Action": "sts:AssumeRole"
+  }]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.name
+
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Resource": "*",
+      "Action": [
+        "ec2:CreateNetworkInterface",
+        "ec2:CreateNetworkInterfacePermission",
+        "ec2:DescribeDhcpOptions",
+        "ec2:DescribeNetworkInterfaces",
+        "ec2:DescribeSecurityGroups",
+        "ec2:DescribeSubnets",
+        "ec2:DescribeVpcs",
+        "ec2:ModifyNetworkInterfaceAttribute",
+        "ec2:DeleteNetworkInterface"
+      ]
+    }
+  ]
+}
+POLICY
+}
+`, rName)
+}
+
+func testAccFleetConfig_baseVPC(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccFleetConfig_vpcConfig1(rName string) string {
+	return acctest.ConfigCompose(
+		testAccFleetConfig_baseFleetServiceRole(rName),
+		testAccFleetConfig_baseVPC(rName),
+		fmt.Sprintf(`
+resource "aws_codebuild_fleet" "test" {
+  base_capacity     = 1
+  compute_type      = "BUILD_GENERAL1_SMALL"
+  environment_type  = "LINUX_CONTAINER"
+  name              = %[1]q
+  overflow_behavior = "ON_DEMAND"
+  fleet_service_role = aws_iam_role.test.arn
+
+  vpc_config {
+    security_group_ids = [aws_security_group.test.id]
+    subnets            = [aws_subnet.test[0].id]
+    vpc_id             = aws_vpc.test.id
+  }
+}
+`, rName))
+}
+
+func testAccFleetConfig_vpcConfig2(rName string) string {
+	return acctest.ConfigCompose(
+		testAccFleetConfig_baseFleetServiceRole(rName),
+		testAccFleetConfig_baseVPC(rName),
+		fmt.Sprintf(`
+resource "aws_codebuild_fleet" "test" {
+  base_capacity     = 1
+  compute_type      = "BUILD_GENERAL1_SMALL"
+  environment_type  = "LINUX_CONTAINER"
+  name              = %[1]q
+  overflow_behavior = "ON_DEMAND"
+  fleet_service_role = aws_iam_role.test.arn
+
+  vpc_config {
+    security_group_ids = [aws_security_group.test.id]
+    subnets            = [aws_subnet.test[1].id]
+    vpc_id             = aws_vpc.test.id
+  }
+}
+`, rName))
 }
 
 func testAccFleetConfig_tags1(rName string, tagKey1, tagValue1 string) string {
@@ -349,7 +539,7 @@ resource "aws_codebuild_fleet" "test" {
   base_capacity     = 1
   compute_type      = "BUILD_GENERAL1_SMALL"
   environment_type  = "LINUX_CONTAINER"
-  name              = %q
+  name              = %[1]q
   overflow_behavior = "ON_DEMAND"
   tags = {
     %[2]q = %[3]q
@@ -364,7 +554,7 @@ resource "aws_codebuild_fleet" "test" {
   base_capacity     = 1
   compute_type      = "BUILD_GENERAL1_SMALL"
   environment_type  = "LINUX_CONTAINER"
-  name              = %q
+  name              = %[1]q
   overflow_behavior = "ON_DEMAND"
   tags = {
     %[2]q = %[3]q
