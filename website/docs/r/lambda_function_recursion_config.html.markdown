@@ -25,8 +25,8 @@ resource "aws_lambda_function_recursion_config" "example" {
 
 The following arguments are required:
 
-* `function_name` (String) Lambda function name.
-* `recursive_loop` (String) Lambda function recursion configuration. Valid values are `Allow` or `Terminate`.
+* `function_name` - (Required) Lambda function name.
+* `recursive_loop` - (Required) Lambda function recursion configuration. Valid values are `Allow` or `Terminate`.
 
 ## Attribute Reference
 
