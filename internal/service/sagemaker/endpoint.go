@@ -339,6 +339,10 @@ func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta in
 
 	_, err := conn.DeleteEndpoint(ctx, deleteEndpointOpts)
 
+	if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Cannot update in-progress endpoint") {
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Endpoint (%s): %s", d.Id(), err)
+	}
+
 	if tfawserr.ErrCodeEquals(err, ErrCodeValidationException) {
 		return diags
 	}
@@ -373,10 +377,6 @@ func findEndpointByName(ctx context.Context, conn *sagemaker.Client, name string
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if output.EndpointStatus == awstypes.EndpointStatusDeleting {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
