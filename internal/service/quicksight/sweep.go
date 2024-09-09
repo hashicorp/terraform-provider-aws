@@ -256,7 +256,7 @@ func sweepGroups(region string) error {
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if skipSweepError(err) {
+		if skipSweepUsersOrGroupsError(err) {
 			log.Printf("[WARN] Skipping QuickSight Group sweep for %s: %s", region, err)
 			return nil
 		}
@@ -352,7 +352,7 @@ func sweepUsers(region string) error {
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if skipSweepUsersError(err) {
+		if skipSweepUsersOrGroupsError(err) {
 			log.Printf("[WARN] Skipping QuickSight User sweep for %s: %s", region, err)
 			return nil
 		}
@@ -451,7 +451,7 @@ func skipSweepError(err error) bool {
 	return awsv2.SkipSweepError(err)
 }
 
-func skipSweepUsersError(err error) bool {
+func skipSweepUsersOrGroupsError(err error) bool {
 	if tfawserr.ErrMessageContains(err, "ResourceNotFoundException", "is not signed up with QuickSight") ||
 		tfawserr.ErrMessageContains(err, "ResourceNotFoundException", "Namespace default not found in account") {
 		return true
