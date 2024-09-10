@@ -613,17 +613,6 @@ type analyticsConfigurationModel struct {
 	UserDataShared types.Bool   `tfsdk:"user_data_shared"`
 }
 
-func flattenAnaylticsConfiguration(ctx context.Context, ac *awstypes.AnalyticsConfigurationType, diags *diag.Diagnostics) fwtypes.ListNestedObjectValueOf[analyticsConfigurationModel] {
-	if ac == nil {
-		return fwtypes.NewListNestedObjectValueOfNull[analyticsConfigurationModel](ctx)
-	}
-
-	var result analyticsConfigurationModel
-	diags.Append(fwflex.Flatten(ctx, ac, &result)...)
-
-	return fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &result)
-}
-
 type tokenValidityUnitsModel struct {
 	AccessToken  fwtypes.StringEnum[awstypes.TimeUnitsType] `tfsdk:"access_token"`
 	IdToken      fwtypes.StringEnum[awstypes.TimeUnitsType] `tfsdk:"id_token"`

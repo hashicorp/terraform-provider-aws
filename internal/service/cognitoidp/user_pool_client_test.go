@@ -29,7 +29,7 @@ const (
 	oauthScopeOpenID                    = "openid"
 	oauthScopePhone                     = "phone"
 	oauthScopeProfile                   = "profile"
-	oauthScopeAWSCognitoSignInUserAdmin = "aws.cognito.signin.user.admin"
+	oauthScopeAWSCognitoSignInUserAdmin = "aws.cognito.signin.user.admin" // nosemgrep:ci.aws-in-const-name,ci.aws-in-var-name
 )
 
 func TestAccCognitoIDPUserPoolClient_basic(t *testing.T) {

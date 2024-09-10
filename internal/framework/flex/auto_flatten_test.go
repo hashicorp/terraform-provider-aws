@@ -4039,7 +4039,6 @@ func TestFlattenSimpleListOfPrimitiveValues(t *testing.T) {
 	}
 
 	for testName, cases := range testCases {
-		cases := cases
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
@@ -4168,7 +4167,6 @@ func TestFlattenSimpleSetOfPrimitiveValues(t *testing.T) {
 	}
 
 	for testName, cases := range testCases {
-		cases := cases
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 

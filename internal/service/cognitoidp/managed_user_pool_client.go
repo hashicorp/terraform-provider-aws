@@ -378,10 +378,6 @@ func (r *managedUserPoolClientResource) Create(ctx context.Context, request reso
 		return
 	}
 
-	if response.Diagnostics.HasError() {
-		return
-	}
-
 	needsUpdate := false
 
 	if !plan.AccessTokenValidity.IsUnknown() && !plan.AccessTokenValidity.Equal(config.AccessTokenValidity) {

@@ -985,7 +985,6 @@ func TestExpandBool(t *testing.T) {
 	}
 
 	for testName, cases := range testCases {
-		cases := cases
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
@@ -2861,7 +2860,6 @@ func TestExpandString(t *testing.T) {
 	}
 
 	for testName, cases := range testCases {
-		cases := cases
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
