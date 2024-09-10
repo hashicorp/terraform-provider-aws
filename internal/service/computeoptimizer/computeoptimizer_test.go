@@ -24,6 +24,7 @@ func TestAccComputeOptimizer_serial(t *testing.T) {
 		"RecommendationPreferences": {
 			acctest.CtBasic:      testAccRecommendationPreferences_basic,
 			acctest.CtDisappears: testAccRecommendationPreferences_disappears,
+			"preferredResources": testAccRecommendationPreferences_preferredResources,
 		},
 	}
 
