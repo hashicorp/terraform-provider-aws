@@ -12,8 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
-	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 )
 
 var (
@@ -184,13 +182,13 @@ func (v Map) MapSemanticEquals(ctx context.Context, oValuable basetypes.MapValua
 	return true, diags
 }
 
-func FlattenStringValueMap(ctx context.Context, v map[string]string) Map {
-	if len(v) == 0 {
-		return NewMapValueNull()
+// FlattenStringValueMap returns an empty, non-nil Map when the source map has no elements
+func FlattenStringValueMap(ctx context.Context, m map[string]string) Map {
+	elems := make(map[string]attr.Value, len(m))
+
+	for k, v := range m {
+		elems[k] = types.StringValue(v)
 	}
 
-	var output Map
-	fwdiag.Must[any](nil, fwflex.Flatten(ctx, v, &output))
-
-	return output
+	return NewMapFromMapValue(types.MapValueMust(types.StringType, elems))
 }
