@@ -1,4 +1,37 @@
 ## 5.67.0 (Unreleased)
+
+BREAKING CHANGES:
+
+* resource/aws_lexv2models_slot_type: Within the `value_selection_setting.advanced_recognition_setting` block, the `audio_recognition_setting` argument has been renamed `audio_recognition_strategy` ([#39254](https://github.com/hashicorp/terraform-provider-aws/issues/39254))
+
+NOTES:
+
+* resource/aws_lexv2models_slot_type: Within the `value_selection_setting.advanced_recognition_setting` block, the `audio_recognition_setting` argument has been renamed `audio_recognition_strategy`. See the [linked pull request](https://github.com/hashicorp/terraform-provider-aws/pull/39254) for additional justification on this change. The previous misnaming effectively made this argument unusable, therefore a breaking change in a minor version was deemed acceptable. ([#39254](https://github.com/hashicorp/terraform-provider-aws/issues/39254))
+
+FEATURES:
+
+* **New Resource:** `aws_computeoptimizer_enrollment_status` ([#35349](https://github.com/hashicorp/terraform-provider-aws/issues/35349))
+* **New Resource:** `aws_computeoptimizer_recommendation_preferences` ([#35349](https://github.com/hashicorp/terraform-provider-aws/issues/35349))
+* **New Resource:** `aws_datazone_environment_profile` ([#38581](https://github.com/hashicorp/terraform-provider-aws/issues/38581))
+* **New Resource:** `aws_lambda_function_recursion_config` ([#39153](https://github.com/hashicorp/terraform-provider-aws/issues/39153))
+
+ENHANCEMENTS:
+
+* data-source/aws_acm_certificate: Mark `domain` and `tags` as Optional. This enables certificates to be matched based on tags ([#31453](https://github.com/hashicorp/terraform-provider-aws/issues/31453))
+* resource/aws_quicksight_user: Add `READER_PRO`, `AUTHOR_PRO`, and `ADMIN_PRO` as valid values for the `user_role` argument ([#39220](https://github.com/hashicorp/terraform-provider-aws/issues/39220))
+* resource/aws_sagemaker_domain: Add `default_user_settings.studio_web_portal_settings`, `default_space_settings.jupyter_lab_app_settings`, `default_space_settings.space_storage_settings`, `default_space_settings.custom_posix_user_config`, and `default_space_settings.custom_file_system_config` configuration blocks ([#38457](https://github.com/hashicorp/terraform-provider-aws/issues/38457))
+* resource/aws_sagemaker_endpoint_configuration: Add `production_variants.managed_instance_scaling` and `shadow_production_variants.managed_instance_scaling` configuration blocks ([#35479](https://github.com/hashicorp/terraform-provider-aws/issues/35479))
+* resource/aws_sagemaker_user_profile: Add `user_settings.studio_web_portal_settings` configuration block ([#38567](https://github.com/hashicorp/terraform-provider-aws/issues/38567))
+
+BUG FIXES:
+
+* data-source/aws_eks_cluster: Return `created_at` as an [RFC3339](https://www.rfc-editor.org/rfc/rfc3339) formatted timestamp ([#24183](https://github.com/hashicorp/terraform-provider-aws/issues/24183))
+* resource/aws_ecr_repository_policy: Fix retry logic handling eventual consistency of newly created IAM roles ([#39190](https://github.com/hashicorp/terraform-provider-aws/issues/39190))
+* resource/aws_eks_cluster: Return `created_at` as an [RFC3339](https://www.rfc-editor.org/rfc/rfc3339) formatted timestamp ([#24183](https://github.com/hashicorp/terraform-provider-aws/issues/24183))
+* resource/aws_quicksight_data_set: Change `permissions.actions` `MaxItems` from `16` to `20`. This fixes a regression introduced in [v5.66.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5660-september--5-2024) ([#39226](https://github.com/hashicorp/terraform-provider-aws/issues/39226))
+* resource/aws_quicksight_vpc_connection: Remove `vpc_connection_id` regular expression validator. This fixes a regression introduced in [v5.66.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5660-september--5-2024) ([#39231](https://github.com/hashicorp/terraform-provider-aws/issues/39231))
+* resource/aws_verifiedaccess_endpoint: fix crash when updating `load_balancer_options.subnet_ids` ([#39196](https://github.com/hashicorp/terraform-provider-aws/issues/39196))
+
 ## 5.66.0 (September  5, 2024)
 
 FEATURES:
@@ -117,7 +150,7 @@ FEATURES:
 * **New Data Source:** `aws_bedrockagent_agent_versions` ([#38792](https://github.com/hashicorp/terraform-provider-aws/issues/38792))
 * **New Resource:** `aws_bedrock_guardrail` ([#38757](https://github.com/hashicorp/terraform-provider-aws/issues/38757))
 * **New Resource:** `aws_cloudtrail_organization_delegated_admin_account` ([#38817](https://github.com/hashicorp/terraform-provider-aws/issues/38817))
-* **New Resource:** `aws_datazone_environment_profile` ([#35603](https://github.com/hashicorp/terraform-provider-aws/issues/35603))
+* **New Resource:** `aws_datazone_environment_profile` ([#38581](https://github.com/hashicorp/terraform-provider-aws/issues/38581))
 * **New Resource:** `aws_datazone_form_type` ([#38746](https://github.com/hashicorp/terraform-provider-aws/issues/38746))
 * **New Resource:** `aws_datazone_glossary_term` ([#38706](https://github.com/hashicorp/terraform-provider-aws/issues/38706))
 * **New Resource:** `aws_pinpoint_email_template` ([#33266](https://github.com/hashicorp/terraform-provider-aws/issues/33266))

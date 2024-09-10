@@ -21,6 +21,7 @@ func TestAccVerifiedAccess_serial(t *testing.T) {
 			"tags":               testAccVerifiedAccessEndpoint_tags,
 			acctest.CtDisappears: testAccVerifiedAccessEndpoint_disappears,
 			"policyDocument":     testAccVerifiedAccessEndpoint_policyDocument,
+			"subnetIDs":          testAccVerifiedAccessEndpoint_subnetIDs,
 		},
 		"Group": {
 			acctest.CtBasic:      testAccVerifiedAccessGroup_basic,
