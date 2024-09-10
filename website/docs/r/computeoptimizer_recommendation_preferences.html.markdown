@@ -26,6 +26,29 @@ resource "aws_computeoptimizer_recommendation_preferences" "example" {
 }
 ```
 
+### Multiple Preferences
+
+```terraform
+resource "aws_computeoptimizer_recommendation_preferences" "example" {
+  resource_type = "Ec2Instance"
+  scope {
+    name  = "AccountId"
+    value = "123456789012"
+  }
+
+  enhanced_infrastructure_metrics = "Active"
+
+  external_metrics_preference {
+    source = "Datadog"
+  }
+
+  preferred_resource {
+    include_list = ["m5.xlarge", "r5"]
+    name         = "Ec2InstanceTypes"
+  }
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
