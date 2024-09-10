@@ -73,16 +73,20 @@ The following arguments are optional:
 
 ### slot_type_values
 
-* `sample_value` - (Optional) Value of the slot type entry.  See [`sample_value`](#sample_value) for more details.
-* `synonyms` - (Optional) Additional values related to the slot type entry. See [`sample_value`](#sample_value) for more details.
+* `sample_value` - (Optional) An object containing the value of the slot type entry.  See [`sample_value`](#sample_value) for more details.
+* `synonyms` - (Optional) A list of additional objects with values related to the slot type entry. See [`synonyms`](#synonyms) for more details.
 
 ### sample_value
 
 * `value` - (Required) Value that can be used for a slot type.
 
+### synonyms
+
+* `value` - (Required) Value that can be used for a slot type.
+
 ### external_source_setting
 
-*`grammar_slot_type_setting` - (Optional) Settings required for a slot type based on a grammar that you provide. See [`grammar_slot_type_setting`](#grammar_slot_type_setting) for more details.
+* `grammar_slot_type_setting` - (Optional) Settings required for a slot type based on a grammar that you provide. See [`grammar_slot_type_setting`](#grammar_slot_type_setting) for more details.
 
 ### grammar_slot_type_setting
 
