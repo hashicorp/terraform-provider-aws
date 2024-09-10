@@ -643,6 +643,7 @@ func TestAccProvider_Region_stsRegion(t *testing.T) {
 	})
 }
 
+// For historical reasons, ignore a single empty `assume_role` block
 func TestAccProvider_AssumeRole_empty(t *testing.T) {
 	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
